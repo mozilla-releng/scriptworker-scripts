@@ -6,6 +6,7 @@ setup(
     description="TaskCluster Signing Worker",
     author="Mozilla Release Engineering",
     packages=["signingworker"],
+     package_data={"signingworker": ["data/*.json"]},
     entry_points={
         "console_scripts": [
             "signing-worker = signingworker.consumer:main",
