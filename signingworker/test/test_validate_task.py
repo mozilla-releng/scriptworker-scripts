@@ -23,7 +23,7 @@ valid_task = json.loads("""
 }
 """)
 
-supported_scopes = ["signing"]
+allowed_scopes = ["signing"]
 no_scopes = copy.deepcopy(valid_task)
 no_scopes["scopes"] = []
 no_signing_in_scopes = copy.deepcopy(valid_task)
@@ -32,12 +32,12 @@ no_signing_in_scopes["scopes"] = ["no-signing"]
 
 class TestValidateTask(TestCase):
     def test_valid_task(self):
-        self.assertIsNone(validate_task(valid_task, supported_scopes))
+        self.assertIsNone(validate_task(valid_task, allowed_scopes))
 
     def test_no_scopes(self):
         self.assertRaises(ValidationError, validate_task, no_scopes,
-                          supported_scopes)
+                          allowed_scopes)
 
     def test_no_signing_in_scopes(self):
         self.assertRaises(TaskVerificationError, validate_task,
-                          no_signing_in_scopes, supported_scopes)
+                          no_signing_in_scopes, allowed_scopes)

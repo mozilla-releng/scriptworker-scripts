@@ -19,7 +19,7 @@ from signingworker.task import validate_task, task_cert_type, \
     task_signing_formats
 from signingworker.exceptions import TaskVerificationError, \
     ChecksumMismatchError, SigningServerError
-from signingworker.utils import my_ip, get_hash, load_signing_server_config
+from signingworker.utils import get_hash, load_signing_server_config
 
 log = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class SigningConsumer(ConsumerMixin):
 
     def __init__(self, connection, exchange, queue_name, worker_type,
                  taskcluster_config, signing_server_config,
-                 supported_signing_scopes, tools_checkout):
+                 allowed_signing_scopes, tools_checkout, my_ip, worker_id):
         self.connection = connection
         self.exchange = Exchange(exchange, type='topic', passive=True)
         self.queue_name = queue_name
@@ -37,10 +37,12 @@ class SigningConsumer(ConsumerMixin):
         self.tc_queue = taskcluster.Queue(taskcluster_config)
         self.signing_servers = load_signing_server_config(
             signing_server_config)
-        self.supported_signing_scopes = supported_signing_scopes
+        self.allowed_signing_scopes = allowed_signing_scopes
         self.tools_checkout = tools_checkout
         self.cert = os.path.join(self.tools_checkout,
                                  "release/signing/host.cert")
+        self.my_ip = my_ip
+        self.worker_id = worker_id
 
     def get_consumers(self, consumer_cls, channel):
         queue = Queue(name=self.queue_name, exchange=self.exchange,
@@ -57,11 +59,11 @@ class SigningConsumer(ConsumerMixin):
             log.debug("Claiming task %s, run %s", task_id, run_id)
             self.tc_queue.claimTask(
                 task_id, run_id,
-                {"workerGroup": self.worker_type, "workerId": self.worker_type}
+                {"workerGroup": self.worker_type, "workerId": self.worker_id}
             )
             task = self.tc_queue.task(task_id)
             task_graph_id = task["taskGroupId"]
-            validate_task(task, self.supported_signing_scopes)
+            validate_task(task, self.allowed_signing_scopes)
             self.sign(task_id, run_id, task)
             log.debug("Completing: %s, r: %s", task_id, run_id)
             self.tc_queue.reportCompleted(task_id, run_id)
@@ -154,9 +156,9 @@ class SigningConsumer(ConsumerMixin):
         taskcluster.utils.putFile(abs_filename, put_url, content_type)
 
     @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
-    def get_token(self, output_file, cert_type, signing_formats):
+    def get_token(self, output_file, cert_type, signing_formats, source_ip):
         token = None
-        data = {"slave_ip": my_ip, "duration": 5 * 60}
+        data = {"slave_ip": self.my_ip, "duration": 5 * 60}
         signing_servers = self.get_suitable_signing_servers(cert_type,
                                                             signing_formats)
         random.shuffle(signing_servers)

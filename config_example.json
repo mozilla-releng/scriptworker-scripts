@@ -8,7 +8,9 @@
     "taskcluster_client_id": "...",
     "taskcluster_access_token": "...",
     "signing_server_config": "/home/worker/.signing_servers.json",
-    "supported_signing_scopes": ["signing:cert:dep"],
+    "allowed_signing_scopes": ["signing:cert:dep"],
     "tools_checkout": "/home/worker/tools",
+    "my_ip": "127.0.0.1",
+    "worker_id": "my_hostname",
     "verbose": true
 }
