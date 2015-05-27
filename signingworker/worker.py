@@ -156,7 +156,7 @@ class SigningConsumer(ConsumerMixin):
         taskcluster.utils.putFile(abs_filename, put_url, content_type)
 
     @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
-    def get_token(self, output_file, cert_type, signing_formats, source_ip):
+    def get_token(self, output_file, cert_type, signing_formats):
         token = None
         data = {"slave_ip": self.my_ip, "duration": 5 * 60}
         signing_servers = self.get_suitable_signing_servers(cert_type,
