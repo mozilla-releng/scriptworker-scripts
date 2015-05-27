@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="signingworker",
-    version="0.1",
+    version="0.2",
     description="TaskCluster Signing Worker",
     author="Mozilla Release Engineering",
     packages=["signingworker"],
