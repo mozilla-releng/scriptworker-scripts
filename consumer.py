@@ -25,11 +25,11 @@ def main(config):
             taskcluster_config=taskcluster_config,
             # TODO: use the same format we use for buildbot masters in
             #  passwords.py
-            signing_servers=config.signing_servers,
-            signing_server_auth=config.signing_server_auth,
+            signing_server_config=config.signing_server_config,
             supported_signing_scopes=config.supported_signing_scopes,
             tools_checkout=config.tools_checkout)
         worker.run()
+
 
 def define_config():
     ns = Namespace()
@@ -41,8 +41,7 @@ def define_config():
     ns.add_option(name="exchange")
     ns.add_option(name="taskcluster_client_id")
     ns.add_option(name="taskcluster_access_token")
-    ns.add_option(name="signing_servers")
-    ns.add_option(name="signing_server_auth")
+    ns.add_option(name="signing_server_config")
     ns.add_option(name="supported_signing_scopes")
     ns.add_option(name="tools_checkout")
     ns.add_option(name="verbose", default=False)

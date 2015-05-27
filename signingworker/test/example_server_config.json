@@ -1,0 +1,10 @@
+{
+  "dep": [
+    ["server1:9000", "user1", "pass1", ["f1", "f2"]],
+    ["server2:8000", "user2", "pass2", ["f2", "f3"]]
+  ],
+  "notdep": [
+    ["server1:9100", "user1", "pass1", ["f1", "f2"]],
+    ["server2:8100", "user2", "pass2", ["f2", "f3"]]
+  ]
+}
