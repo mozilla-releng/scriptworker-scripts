@@ -7,8 +7,7 @@
     "worker_type": "signing-worker-v1",
     "taskcluster_client_id": "...",
     "taskcluster_access_token": "...",
-    "signing_servers": ["signing4.srv.releng.scl3.mozilla.com:9110", "signing5.srv.releng.scl3.mozilla.com:9110", "signing6.srv.releng.scl3.mozilla.com:9110"],
-    "signing_server_auth": ["user", "pass"],
+    "signing_server_config": "/home/worker/.signing_servers.json",
     "supported_signing_scopes": ["signing:cert:dep"],
     "tools_checkout": "/home/worker/tools",
     "verbose": true

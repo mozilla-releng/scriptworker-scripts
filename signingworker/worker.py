@@ -3,21 +3,23 @@ import random
 import shutil
 import tempfile
 import urlparse
+import logging
+import json
+
 import arrow
 from jsonschema import ValidationError
 from kombu import Exchange, Queue
 from kombu.mixins import ConsumerMixin
 import redo
-import logging
 import requests
 import sh
-import json
 import taskcluster
 
-from signingworker.task import validate_task
+from signingworker.task import validate_task, task_cert_type, \
+    task_signing_formats
 from signingworker.exceptions import TaskVerificationError, \
     ChecksumMismatchError, SigningServerError
-from signingworker.utils import my_ip, get_hash
+from signingworker.utils import my_ip, get_hash, load_signing_server_config
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ log = logging.getLogger(__name__)
 class SigningConsumer(ConsumerMixin):
 
     def __init__(self, connection, exchange, queue_name, worker_type,
-                 taskcluster_config, signing_servers, signing_server_auth,
+                 taskcluster_config, signing_server_config,
                  supported_signing_scopes, tools_checkout):
         self.connection = connection
         self.exchange = Exchange(exchange, type='topic', passive=True)
@@ -33,10 +35,8 @@ class SigningConsumer(ConsumerMixin):
         self.worker_type = worker_type
         self.routing_key = "*.*.*.*.*.*.{}.#".format(self.worker_type)
         self.tc_queue = taskcluster.Queue(taskcluster_config)
-        self.signing_servers = signing_servers
-        # TODO: Explicitly set formats in manifest
-        self.signing_formats = ["mar", "gpg"]
-        self.signing_server_auth = signing_server_auth
+        self.signing_servers = load_signing_server_config(
+            signing_server_config)
         self.supported_signing_scopes = supported_signing_scopes
         self.tools_checkout = tools_checkout
         self.cert = os.path.join(self.tools_checkout,
@@ -94,11 +94,14 @@ class SigningConsumer(ConsumerMixin):
         signing_manifest = self.get_manifest(manifest_url)
         # TODO: better way to extract filename
         url_prefix = "/".join(manifest_url.split("/")[:-1])
+        cert_type = task_cert_type(task)
+        signing_formats = task_signing_formats(task)
         for e in signing_manifest:
             # TODO: "mar" is too specific, change the manifest
             file_url = "{}/{}".format(url_prefix, e["mar"])
             abs_filename = self.download_and_sign_file(
-                task_id, run_id, file_url, e["hash"])
+                task_id, run_id, file_url, e["hash"], cert_type,
+                signing_formats)
             # Update manifest data with new values
             e["hash"] = get_hash(abs_filename)
             e["size"] = os.path.getsize(abs_filename)
@@ -109,7 +112,8 @@ class SigningConsumer(ConsumerMixin):
         self.create_artifact(task_id, run_id, "public/env/manifest.json",
                              manifest_file, "application/json")
 
-    def download_and_sign_file(self, task_id, run_id, url, checksum):
+    def download_and_sign_file(self, task_id, run_id, url, checksum, cert_type,
+                               signing_formats):
         work_dir = tempfile.mkdtemp()
         # TODO: better parsing
         filename = urlparse.urlsplit(url).path.split("/")[-1]
@@ -126,7 +130,7 @@ class SigningConsumer(ConsumerMixin):
             raise ChecksumMismatchError("Expected {}, got {} for {}".format(
                 checksum, got_checksum, url
             ))
-        self.sign_file(work_dir, filename)
+        self.sign_file(work_dir, filename, cert_type, signing_formats)
         self.create_artifact(task_id, run_id, "public/env/%s" % filename,
                              abs_filename)
         return abs_filename
@@ -150,16 +154,18 @@ class SigningConsumer(ConsumerMixin):
         taskcluster.utils.putFile(abs_filename, put_url, content_type)
 
     @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
-    def get_token(self, output_file):
+    def get_token(self, output_file, cert_type, signing_formats):
         token = None
         data = {"slave_ip": my_ip, "duration": 5 * 60}
-        random.shuffle(self.signing_servers)
-        for server in self.signing_servers:
-            log.debug("getting token from %s", server)
+        signing_servers = self.get_suitable_signing_servers(cert_type,
+                                                            signing_formats)
+        random.shuffle(signing_servers)
+        for s in signing_servers:
+            log.debug("getting token from %s", s.server)
             # TODO: Figure out how to deal with certs not matching hostname,
             #  error: https://gist.github.com/rail/cbacf2d297decb68affa
-            r = requests.post("https://{}/token".format(server), data=data,
-                              auth=tuple(self.signing_server_auth),
+            r = requests.post("https://{}/token".format(s.server), data=data,
+                              auth=(s.user, s.password),
                               verify=False)
             r.raise_for_status()
             if r.content:
@@ -170,18 +176,22 @@ class SigningConsumer(ConsumerMixin):
         with open(output_file, "wb") as f:
             f.write(token)
 
-    def sign_file(self, work_dir, from_, to=None):
+    def sign_file(self, work_dir, from_, cert_type, signing_formats, to=None):
         if to is None:
             to = from_
         token = os.path.join(work_dir, "token")
         nonce = os.path.join(work_dir, "nonce")
-        self.get_token(token)
+        self.get_token(token, cert_type, signing_formats)
         signtool = os.path.join(self.tools_checkout,
                                 "release/signing/signtool.py")
         cmd = [signtool, "-n", nonce, "-t", token, "-c", self.cert]
-        for s in self.signing_servers:
-            cmd.extend(["-H", s])
-        for f in self.signing_formats:
+        for s in self.get_suitable_signing_servers(cert_type, signing_formats):
+            cmd.extend(["-H", s.server])
+        for f in signing_formats:
             cmd.extend(["-f", f])
         cmd.extend(["-o", to, from_])
         sh.python(*cmd, _err_to_out=True, _cwd=work_dir)
+
+    def get_suitable_signing_servers(self, cert_type, signing_formats):
+        return [s for s in self.signing_servers[cert_type] if
+                set(signing_formats) & set(s.formats)]
