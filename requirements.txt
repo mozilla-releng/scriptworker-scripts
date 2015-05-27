@@ -1,0 +1,8 @@
+kombu
+configman
+taskcluster
+jsonschema
+requests
+arrow
+sh
+redo

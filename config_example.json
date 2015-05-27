@@ -1,0 +1,15 @@
+{
+    "exchange": "exchange/taskcluster-queue/v1/task-pending",
+    "pulse_host": "pulse.mozilla.org",
+    "pulse_password": "...",
+    "pulse_port": 5671,
+    "pulse_user": "...",
+    "worker_type": "signing-worker-v1",
+    "taskcluster_client_id": "...",
+    "taskcluster_access_token": "...",
+    "signing_servers": ["signing4.srv.releng.scl3.mozilla.com:9110", "signing5.srv.releng.scl3.mozilla.com:9110", "signing6.srv.releng.scl3.mozilla.com:9110"],
+    "signing_server_auth": ["user", "pass"],
+    "supported_signing_scopes": ["signing:cert:dep"],
+    "tools_checkout": "/home/worker/tools",
+    "verbose": true
+}
