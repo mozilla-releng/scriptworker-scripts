@@ -62,8 +62,8 @@ def define_config():
     ns.add_option(name="signing_server_config")
     ns.add_option(name="allowed_signing_scopes")
     ns.add_option(name="tools_checkout")
-    ns.add_option(name="my_ip", required=True)
-    ns.add_option(name="worker_id", required=True)
+    ns.add_option(name="my_ip")
+    ns.add_option(name="worker_id")
     ns.add_option(name="verbose", default=False)
     return ns
 
