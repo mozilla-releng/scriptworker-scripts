@@ -8,8 +8,23 @@ from signingworker.worker import SigningConsumer
 log = logging.getLogger(__name__)
 
 
-def main(config):
-    queue_name = 'queue/{}/{}'.format(config.pulse_user, config.worker_type)
+def main():
+    config = ConfigurationManager(define_config()).get_config()
+    if config.verbose:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.WARNING
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=log_level
+    )
+    logging.getLogger("taskcluster").setLevel(logging.WARNING)
+    logging.getLogger("requests").setLevel(logging.ERROR)
+    logging.getLogger("hawk").setLevel(logging.WARNING)
+    logging.getLogger("sh").setLevel(logging.WARNING)
+
+    queue_name = 'queue/{}/{}/pending'.format(config.pulse_user,
+                                              config.worker_type)
     taskcluster_config = {
         "credentials": {
             "clientId": config.taskcluster_client_id,
@@ -26,8 +41,11 @@ def main(config):
             # TODO: use the same format we use for buildbot masters in
             #  passwords.py
             signing_server_config=config.signing_server_config,
-            supported_signing_scopes=config.supported_signing_scopes,
-            tools_checkout=config.tools_checkout)
+            allowed_signing_scopes=config.allowed_signing_scopes,
+            tools_checkout=config.tools_checkout,
+            my_ip=config.my_ip,
+            worker_id=config.worker_id
+        )
         worker.run()
 
 
@@ -42,23 +60,12 @@ def define_config():
     ns.add_option(name="taskcluster_client_id")
     ns.add_option(name="taskcluster_access_token")
     ns.add_option(name="signing_server_config")
-    ns.add_option(name="supported_signing_scopes")
+    ns.add_option(name="allowed_signing_scopes")
     ns.add_option(name="tools_checkout")
+    ns.add_option(name="my_ip")
+    ns.add_option(name="worker_id")
     ns.add_option(name="verbose", default=False)
     return ns
 
 if __name__ == "__main__":
-    config = ConfigurationManager(define_config()).get_config()
-    if config.verbose:
-        log_level = logging.DEBUG
-    else:
-        log_level = logging.WARNING
-    logging.basicConfig(
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        level=log_level
-    )
-    logging.getLogger("taskcluster").setLevel(logging.WARNING)
-    logging.getLogger("requests").setLevel(logging.ERROR)
-    logging.getLogger("hawk").setLevel(logging.WARNING)
-    logging.getLogger("sh").setLevel(logging.WARNING)
-    main(config)
+    main()
