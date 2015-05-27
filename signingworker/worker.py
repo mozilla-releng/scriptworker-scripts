@@ -53,6 +53,7 @@ class SigningConsumer(ConsumerMixin):
     def process_message(self, body, message):
         task_id = None
         run_id = None
+        work_dir = tempfile.mkdtemp()
         try:
             task_id = body["status"]["taskId"]
             run_id = body["status"]["runs"][-1]["runId"]
@@ -64,7 +65,7 @@ class SigningConsumer(ConsumerMixin):
             task = self.tc_queue.task(task_id)
             task_graph_id = task["taskGroupId"]
             validate_task(task, self.allowed_signing_scopes)
-            self.sign(task_id, run_id, task)
+            self.sign(task_id, run_id, task, work_dir)
             log.debug("Completing: %s, r: %s", task_id, run_id)
             self.tc_queue.reportCompleted(task_id, run_id)
             log.debug("Complete: %s, r: %s, tg: %s", task_id, run_id,
@@ -83,6 +84,7 @@ class SigningConsumer(ConsumerMixin):
             log.exception("Error processing %s", body)
 
         message.ack()
+        shutil.rmtree(work_dir)
 
     @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
     def get_manifest(self, url):
@@ -90,7 +92,7 @@ class SigningConsumer(ConsumerMixin):
         r.raise_for_status()
         return r.json()
 
-    def sign(self, task_id, run_id, task):
+    def sign(self, task_id, run_id, task, work_dir):
         payload = task["payload"]
         manifest_url = payload["signingManifest"]
         signing_manifest = self.get_manifest(manifest_url)
@@ -103,11 +105,11 @@ class SigningConsumer(ConsumerMixin):
             file_url = "{}/{}".format(url_prefix, e["mar"])
             abs_filename = self.download_and_sign_file(
                 task_id, run_id, file_url, e["hash"], cert_type,
-                signing_formats)
+                signing_formats, work_dir)
             # Update manifest data with new values
             e["hash"] = get_hash(abs_filename)
             e["size"] = os.path.getsize(abs_filename)
-        _, manifest_file = tempfile.mkstemp()
+        manifest_file = os.path.join(work_dir, "manifest.json")
         with open(manifest_file, "wb") as f:
             json.dump(signing_manifest, f, indent=2, sort_keys=True)
         log.debug("Uploading manifest for t: %s, r: %s", task_id, run_id)
@@ -115,8 +117,7 @@ class SigningConsumer(ConsumerMixin):
                              manifest_file, "application/json")
 
     def download_and_sign_file(self, task_id, run_id, url, checksum, cert_type,
-                               signing_formats):
-        work_dir = tempfile.mkdtemp()
+                               signing_formats, work_dir):
         # TODO: better parsing
         filename = urlparse.urlsplit(url).path.split("/")[-1]
         abs_filename = os.path.join(work_dir, filename)
@@ -128,7 +129,6 @@ class SigningConsumer(ConsumerMixin):
         got_checksum = get_hash(abs_filename)
         if not got_checksum == checksum:
             log.debug("Checksum mismatch, cleaning up...")
-            shutil.rmtree(work_dir)
             raise ChecksumMismatchError("Expected {}, got {} for {}".format(
                 checksum, got_checksum, url
             ))
