@@ -7,7 +7,7 @@ from signingworker.exceptions import TaskVerificationError
 log = logging.getLogger(__name__)
 
 
-def validate_task(task, allowed_scopes):
+def validate_task(task):
     # TODO: verify source (signed payload?)
     task_schema = json.load(
         open(
@@ -16,11 +16,6 @@ def validate_task(task, allowed_scopes):
         )
     )
     validate(task, task_schema)
-    if not set(task["scopes"]) & set(allowed_scopes):
-        raise TaskVerificationError(
-            "No allowed scopes ({}) defined in task's scopes ({})".format(
-                allowed_scopes, task["scopes"])
-        )
 
 
 def task_cert_type(task):

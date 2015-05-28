@@ -28,8 +28,8 @@ log = logging.getLogger(__name__)
 class SigningConsumer(ConsumerMixin):
 
     def __init__(self, connection, exchange, queue_name, worker_type,
-                 taskcluster_config, signing_server_config,
-                 allowed_signing_scopes, tools_checkout, my_ip, worker_id):
+                 taskcluster_config, signing_server_config, tools_checkout,
+                 my_ip, worker_id):
         self.connection = connection
         self.exchange = Exchange(exchange, type='topic', passive=True)
         self.queue_name = queue_name
@@ -38,7 +38,6 @@ class SigningConsumer(ConsumerMixin):
         self.tc_queue = taskcluster.Queue(taskcluster_config)
         self.signing_servers = load_signing_server_config(
             signing_server_config)
-        self.allowed_signing_scopes = allowed_signing_scopes
         self.tools_checkout = tools_checkout
         self.cert = os.path.join(self.tools_checkout,
                                  "release/signing/host.cert")
@@ -66,7 +65,7 @@ class SigningConsumer(ConsumerMixin):
             )
             task = self.tc_queue.task(task_id)
             task_graph_id = task["taskGroupId"]
-            validate_task(task, self.allowed_signing_scopes)
+            validate_task(task)
             self.sign(task_id, run_id, task, work_dir)
             log.debug("Completing: %s, r: %s", task_id, run_id)
             self.tc_queue.reportCompleted(task_id, run_id)
