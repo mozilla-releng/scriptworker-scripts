@@ -5,6 +5,7 @@ import tempfile
 import urlparse
 import logging
 import json
+import re
 
 import arrow
 from jsonschema import ValidationError
@@ -42,7 +43,8 @@ class SigningConsumer(ConsumerMixin):
         self.cert = os.path.join(self.tools_checkout,
                                  "release/signing/host.cert")
         self.my_ip = my_ip
-        self.worker_id = worker_id
+        # make sure we meet TC requirements
+        self.worker_id = re.sub(r"[^a-zA-Z0-9-_]", "_", worker_id)[:22]
 
     def get_consumers(self, consumer_cls, channel):
         queue = Queue(name=self.queue_name, exchange=self.exchange,
