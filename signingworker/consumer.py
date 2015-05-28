@@ -38,8 +38,6 @@ def main():
             connection=connection, exchange=config.exchange,
             queue_name=queue_name, worker_type=config.worker_type,
             taskcluster_config=taskcluster_config,
-            # TODO: use the same format we use for buildbot masters in
-            #  passwords.py
             signing_server_config=config.signing_server_config,
             tools_checkout=config.tools_checkout,
             my_ip=config.my_ip,

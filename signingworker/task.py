@@ -8,7 +8,6 @@ log = logging.getLogger(__name__)
 
 
 def validate_task(task):
-    # TODO: verify source (signed payload?)
     task_schema = json.load(
         open(
             os.path.join(os.path.dirname(__file__),
