@@ -41,7 +41,6 @@ def main():
             # TODO: use the same format we use for buildbot masters in
             #  passwords.py
             signing_server_config=config.signing_server_config,
-            allowed_signing_scopes=config.allowed_signing_scopes,
             tools_checkout=config.tools_checkout,
             my_ip=config.my_ip,
             worker_id=config.worker_id
@@ -60,7 +59,6 @@ def define_config():
     ns.add_option(name="taskcluster_client_id")
     ns.add_option(name="taskcluster_access_token")
     ns.add_option(name="signing_server_config")
-    ns.add_option(name="allowed_signing_scopes")
     ns.add_option(name="tools_checkout")
     ns.add_option(name="my_ip")
     ns.add_option(name="worker_id")
