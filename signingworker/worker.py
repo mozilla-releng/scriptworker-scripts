@@ -20,7 +20,8 @@ from signingworker.task import validate_task, task_cert_type, \
     task_signing_formats
 from signingworker.exceptions import TaskVerificationError, \
     ChecksumMismatchError, SigningServerError
-from signingworker.utils import get_hash, load_signing_server_config
+from signingworker.utils import get_hash, load_signing_server_config, \
+    get_detached_signatures
 
 log = logging.getLogger(__name__)
 
@@ -104,12 +105,15 @@ class SigningConsumer(ConsumerMixin):
         for e in signing_manifest:
             # TODO: "mar" is too specific, change the manifest
             file_url = "{}/{}".format(url_prefix, e["mar"])
-            abs_filename = self.download_and_sign_file(
+            abs_filename, detached_signatures = self.download_and_sign_file(
                 task_id, run_id, file_url, e["hash"], cert_type,
                 signing_formats, work_dir)
             # Update manifest data with new values
             e["hash"] = get_hash(abs_filename)
             e["size"] = os.path.getsize(abs_filename)
+            e["detached_signatures"] = None
+            for sig_type, sig_filename in detached_signatures:
+                e["detached_signatures"][sig_type] = sig_filename
         manifest_file = os.path.join(work_dir, "manifest.json")
         with open(manifest_file, "wb") as f:
             json.dump(signing_manifest, f, indent=2, sort_keys=True)
@@ -122,21 +126,32 @@ class SigningConsumer(ConsumerMixin):
         # TODO: better parsing
         filename = urlparse.urlsplit(url).path.split("/")[-1]
         abs_filename = os.path.join(work_dir, filename)
+        log.debug("Downloading %s", url)
         r = requests.get(url)
         r.raise_for_status()
         with open(abs_filename, 'wb') as fd:
             for chunk in r.iter_content(4096):
                 fd.write(chunk)
+        log.debug("Done")
         got_checksum = get_hash(abs_filename)
         if not got_checksum == checksum:
             log.debug("Checksum mismatch, cleaning up...")
             raise ChecksumMismatchError("Expected {}, got {} for {}".format(
                 checksum, got_checksum, url
             ))
+        log.debug("Signing %s", filename)
         self.sign_file(work_dir, filename, cert_type, signing_formats)
         self.create_artifact(task_id, run_id, "public/env/%s" % filename,
                              abs_filename)
-        return abs_filename
+        detached_signatures = []
+        for sig_type, sig_ext in get_detached_signatures(signing_formats):
+            d_filename = "{filename}{ext}".format(filename=filename,
+                                                  ext=sig_ext)
+            d_abs_filename = os.path.join(work_dir, d_filename)
+            self.create_artifact(task_id, run_id, "public/env/%s" % d_filename,
+                                 d_abs_filename)
+            detached_signatures.append(sig_type, d_filename)
+        return abs_filename, detached_signatures
 
     def create_artifact(self, task_id, run_id, dest, abs_filename,
                         content_type="application/octet-stream"):
@@ -155,6 +170,7 @@ class SigningConsumer(ConsumerMixin):
         put_url = res["putUrl"]
         log.debug("Uploading to %s", put_url)
         taskcluster.utils.putFile(abs_filename, put_url, content_type)
+        log.debug("Done")
 
     @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
     def get_token(self, output_file, cert_type, signing_formats):
@@ -173,6 +189,7 @@ class SigningConsumer(ConsumerMixin):
             r.raise_for_status()
             if r.content:
                 token = r.content
+                log.debug("Got token")
                 break
         if not token:
             raise SigningServerError("Cannot retrieve signing token")
@@ -193,7 +210,9 @@ class SigningConsumer(ConsumerMixin):
         for f in signing_formats:
             cmd.extend(["-f", f])
         cmd.extend(["-o", to, from_])
+        log.debug("Running python %s", " ".join(cmd))
         sh.python(*cmd, _err_to_out=True, _cwd=work_dir)
+        log.debug("Finished signing")
 
     def get_suitable_signing_servers(self, cert_type, signing_formats):
         return [s for s in self.signing_servers[cert_type] if
