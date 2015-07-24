@@ -6,9 +6,9 @@ from collections import namedtuple
 
 log = logging.getLogger(__name__)
 # Mapping between signing client formats and file extensions
-DETACHED_SIGNATURES = {
-    'gpg': '.asc'
-}
+DETACHED_SIGNATURES = [
+    ('gpg', '.asc', 'text/plain')
+]
 
 
 def get_hash(path, hash_type="sha512"):
@@ -36,5 +36,5 @@ def load_signing_server_config(config):
 def get_detached_signatures(signing_formats):
     """Returns a list of tuples with detached signature types and corresponding
     file extensions"""
-    return [(sig_type, sig_ext) for sig_type, sig_ext in
-            DETACHED_SIGNATURES.iteritems() if sig_type in signing_formats]
+    return [(sig_type, sig_ext, sig_mime) for sig_type, sig_ext, sig_mime in
+            DETACHED_SIGNATURES if sig_type in signing_formats]

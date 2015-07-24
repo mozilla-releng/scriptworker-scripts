@@ -6,5 +6,5 @@ class TestDetachedSignatures(TestCase):
     def test_detached_signatures(self):
         self.assertEqual(
             get_detached_signatures(["mar", "gpg", "pgp"]),
-            [("gpg", ".asc")]
+            [("gpg", ".asc", "text/plain")]
         )

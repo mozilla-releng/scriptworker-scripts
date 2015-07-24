@@ -144,13 +144,13 @@ class SigningConsumer(ConsumerMixin):
         self.create_artifact(task_id, run_id, "public/env/%s" % filename,
                              abs_filename)
         detached_signatures = []
-        for sig_type, sig_ext in get_detached_signatures(signing_formats):
+        for s_type, s_ext, s_mime in get_detached_signatures(signing_formats):
             d_filename = "{filename}{ext}".format(filename=filename,
-                                                  ext=sig_ext)
+                                                  ext=s_ext)
             d_abs_filename = os.path.join(work_dir, d_filename)
             self.create_artifact(task_id, run_id, "public/env/%s" % d_filename,
-                                 d_abs_filename)
-            detached_signatures.append(sig_type, d_filename)
+                                 d_abs_filename, content_type=s_mime)
+            detached_signatures.append((s_type, d_filename))
         return abs_filename, detached_signatures
 
     def create_artifact(self, task_id, run_id, dest, abs_filename,
