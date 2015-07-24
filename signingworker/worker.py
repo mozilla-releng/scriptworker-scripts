@@ -111,7 +111,7 @@ class SigningConsumer(ConsumerMixin):
             # Update manifest data with new values
             e["hash"] = get_hash(abs_filename)
             e["size"] = os.path.getsize(abs_filename)
-            e["detached_signatures"] = None
+            e["detached_signatures"] = {}
             for sig_type, sig_filename in detached_signatures:
                 e["detached_signatures"][sig_type] = sig_filename
         manifest_file = os.path.join(work_dir, "manifest.json")
