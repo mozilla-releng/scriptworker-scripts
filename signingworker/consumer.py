@@ -33,7 +33,7 @@ def main():
     }
     with Connection(hostname=config.pulse_host, port=config.pulse_port,
                     userid=config.pulse_user, password=config.pulse_password,
-                    virtual_host='/', ssl=True) as connection:
+                    virtual_host='/', ssl=True, heartbeat=5) as connection:
         worker = SigningConsumer(
             connection=connection, exchange=config.exchange,
             queue_name=queue_name, worker_type=config.worker_type,
