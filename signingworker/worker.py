@@ -47,6 +47,8 @@ class SigningConsumer(ConsumerMixin):
         self.worker_id = re.sub(r"[^a-zA-Z0-9-_]", "_", worker_id)[:22]
 
     def get_consumers(self, consumer_cls, channel):
+        # Set prefetch_count to 1 to avoid blocking other workers
+        channel.basic_qos(prefetch_size=0, prefetch_count=1, a_global=False)
         queue = Queue(name=self.queue_name, exchange=self.exchange,
                       routing_key=self.routing_key, durable=True,
                       exclusive=False, auto_delete=False)
