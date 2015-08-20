@@ -105,8 +105,9 @@ class SigningConsumer(ConsumerMixin):
         cert_type = task_cert_type(task)
         signing_formats = task_signing_formats(task)
         for e in signing_manifest:
-            # TODO: "mar" is too specific, change the manifest
-            file_url = "{}/{}".format(url_prefix, e["mar"])
+            # Fallback to "mar" if "file_to_sign" is not specified
+            file_to_sign = e.get("file_to_sign", e["mar"])
+            file_url = "{}/{}".format(url_prefix, file_to_sign)
             abs_filename, detached_signatures = self.download_and_sign_file(
                 task_id, run_id, file_url, e["hash"], cert_type,
                 signing_formats, work_dir)
