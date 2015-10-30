@@ -51,7 +51,7 @@ FSKgLoOcQ1yvi6s1ZZgvlb4ZCM_xBdqO9vFpp79Z9F7WirvU7x7GIB15SsYWt9EcR7MIjq1XakDx-n
 x2H4UxWRMnziEbOFQTmqwKkEZVcdPrBlr7bL-xlIOptkyftyKGgtOnpwXnYWUtr2OxdCetxQil3mX9
 81JHu66HQ2_wYOoeo5NhTaWhu_rqMZhLyNN-IWQxwtJyzeQHheNTAtt406cHAog5W3GfDCSha6Kjsk
 KHPilsSodPAQNpiQQ""".replace("\n", "")
-no_taks_id_signature = """eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE0NDY
+no_task_id_signature = """eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE0NDY
 yMjk5NjgsInRhc2siOiJibGFoIiwidmVyc2lvbiI6IjEiLCJleHAiOjE3NjE1ODk5Njh9.maHJCUgs
 PN_2yjKAa24MRriGsZOn98o5oyJKvLzl-xZCI7Fk5IMRgbi4S3-VIWES0KEqnfpf1aUdUD-FGvCbiz
 0PQjdChpSD5zrZV84TZDdZ8mbNVvGzGZsX84p0uEZO5CLTcqbQ7lIoMANxUrU1HOxGfwcRixL07DDf
@@ -72,7 +72,7 @@ class TestValidateTask(TestCase):
 
     def test_signature(self):
         self.assertRaises(TaskVerificationError, validate_signature, "blah",
-                          no_taks_id_signature, PUB_KEY)
+                          no_task_id_signature, PUB_KEY)
 
     def test_expired_signature(self):
         self.assertRaises(ExpiredSignatureError, validate_signature, "blah",
