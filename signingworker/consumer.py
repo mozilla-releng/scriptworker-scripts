@@ -31,6 +31,8 @@ def main():
             "accessToken": config.taskcluster_access_token
         }
     }
+    with open(config.pub_key) as f:
+        pub_key = f.read()
     with Connection(hostname=config.pulse_host, port=config.pulse_port,
                     userid=config.pulse_user, password=config.pulse_password,
                     virtual_host='/', ssl=True, heartbeat=5) as connection:
@@ -41,7 +43,8 @@ def main():
             signing_server_config=config.signing_server_config,
             tools_checkout=config.tools_checkout,
             my_ip=config.my_ip,
-            worker_id=config.worker_id
+            worker_id=config.worker_id,
+            pub_key=pub_key,
         )
         worker.run()
 
@@ -61,6 +64,7 @@ def define_config():
     ns.add_option(name="my_ip")
     ns.add_option(name="worker_id")
     ns.add_option(name="verbose", default=False)
+    ns.add_option(name="pub_key")
     return ns
 
 if __name__ == "__main__":
