@@ -71,7 +71,7 @@ class SigningConsumer(ConsumerMixin):
             task = self.tc_queue.task(task_id)
             task_graph_id = task["taskGroupId"]
             validate_task(task)
-            validate_signature(task["taskId"],
+            validate_signature(task_id,
                                task["extra"]["signing"]["signature"],
                                self.pub_key)
             self.sign(task_id, run_id, task, work_dir)
