@@ -18,7 +18,22 @@
                 }
             },
             "required": ["signingManifest"]
+        },
+        "extra": {
+            "type": "object",
+            "properties": {
+                "signing": {
+                    "type": "object",
+                    "properties": {
+                        "signature": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["signature"]
+                }
+            },
+            "required": ["signing"]
         }
     },
-    "required": ["scopes", "payload"]
+    "required": ["scopes", "payload", "extra"]
 }

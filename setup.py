@@ -23,6 +23,7 @@ setup(
         "configman",
         "jsonschema",
         "kombu",
+        "python-jose",
         "redo",
         "requests==2.4.3",  # Because taskcluster hard pins this version...
         "sh",

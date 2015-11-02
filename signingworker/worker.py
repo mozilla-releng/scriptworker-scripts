@@ -15,9 +15,10 @@ import redo
 import requests
 import sh
 import taskcluster
+from jose.exceptions import JOSEError
 
 from signingworker.task import validate_task, task_cert_type, \
-    task_signing_formats
+    task_signing_formats, validate_signature
 from signingworker.exceptions import TaskVerificationError, \
     ChecksumMismatchError, SigningServerError
 from signingworker.utils import get_hash, load_signing_server_config, \
@@ -30,7 +31,7 @@ class SigningConsumer(ConsumerMixin):
 
     def __init__(self, connection, exchange, queue_name, worker_type,
                  taskcluster_config, signing_server_config, tools_checkout,
-                 my_ip, worker_id):
+                 my_ip, worker_id, pub_key):
         self.connection = connection
         self.exchange = Exchange(exchange, type='topic', passive=True)
         self.queue_name = queue_name
@@ -45,6 +46,7 @@ class SigningConsumer(ConsumerMixin):
         self.my_ip = my_ip
         # make sure we meet TC requirements
         self.worker_id = re.sub(r"[^a-zA-Z0-9-_]", "_", worker_id)[:22]
+        self.pub_key = pub_key
 
     def get_consumers(self, consumer_cls, channel):
         # Set prefetch_count to 1 to avoid blocking other workers
@@ -69,6 +71,9 @@ class SigningConsumer(ConsumerMixin):
             task = self.tc_queue.task(task_id)
             task_graph_id = task["taskGroupId"]
             validate_task(task)
+            validate_signature(task_id,
+                               task["extra"]["signing"]["signature"],
+                               self.pub_key)
             self.sign(task_id, run_id, task, work_dir)
             log.debug("Completing: %s, r: %s", task_id, run_id)
             self.tc_queue.reportCompleted(task_id, run_id)
@@ -80,7 +85,7 @@ class SigningConsumer(ConsumerMixin):
                 log.debug("Task already claimed, acking...")
             else:
                 raise
-        except (TaskVerificationError, ValidationError):
+        except (TaskVerificationError, ValidationError, JOSEError):
             log.exception("Cannot verify task, %s", body)
             self.tc_queue.reportException(
                 task_id, run_id, {"reason": "malformed-payload"})
