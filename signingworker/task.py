@@ -22,8 +22,6 @@ def validate_task(task):
 def task_cert_type(task):
     """Extract task certificate type"""
     certs = [s for s in task["scopes"] if
-             # TODO: remove the following line when migrated to project:releng
-             s.startswith("signing:cert:") or
              s.startswith("project:releng:signing:cert:")]
     log.debug("Certificate types: %s", certs)
     if len(certs) != 1:
@@ -33,9 +31,7 @@ def task_cert_type(task):
 
 def task_signing_formats(task):
     """Extract last part of signing format scope"""
-    return [s.split(":")[-1] for s in task["scopes"]
-            # TODO: remove the following line when migrated to project:releng
-            if s.startswith("signing:format:") or
+    return [s.split(":")[-1] for s in task["scopes"] if
             s.startswith("project:releng:signing:format:")]
 
 
