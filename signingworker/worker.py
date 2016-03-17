@@ -97,7 +97,7 @@ class SigningConsumer(ConsumerMixin):
 
     @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
     def get_manifest(self, url):
-        r = requests.get(url)
+        r = requests.get(url, timeout=60)
         r.raise_for_status()
         return r.json()
 
@@ -135,7 +135,7 @@ class SigningConsumer(ConsumerMixin):
         filename = urlparse.urlsplit(url).path.split("/")[-1]
         abs_filename = os.path.join(work_dir, filename)
         log.debug("Downloading %s", url)
-        r = requests.get(url)
+        r = requests.get(url, timeout=60)
         r.raise_for_status()
         with open(abs_filename, 'wb') as fd:
             for chunk in r.iter_content(4096):
@@ -192,7 +192,7 @@ class SigningConsumer(ConsumerMixin):
             # TODO: Figure out how to deal with certs not matching hostname,
             #  error: https://gist.github.com/rail/cbacf2d297decb68affa
             r = requests.post("https://{}/token".format(s.server), data=data,
-                              auth=(s.user, s.password),
+                              auth=(s.user, s.password), timeout=60,
                               verify=False)
             r.raise_for_status()
             if r.content:
