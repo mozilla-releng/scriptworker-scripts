@@ -142,11 +142,13 @@ class SigningConsumer(ConsumerMixin):
                 fd.write(chunk)
         log.debug("Done")
         got_checksum = get_hash(abs_filename)
+        log.info("SHA512SUM: %s URL: %s", got_checksum, url)
+        log.info("SHA1SUM: %s URL: %s", get_hash(abs_filename, "sha1"), url)
         if not got_checksum == checksum:
-            log.debug("Checksum mismatch, cleaning up...")
-            raise ChecksumMismatchError("Expected {}, got {} for {}".format(
-                checksum, got_checksum, url
-            ))
+            msg = "CHECKSUM MISMATCH: Expected {}, got {} for {}".format(
+                checksum, got_checksum, url)
+            log.debug(msg)
+            raise ChecksumMismatchError(msg)
         log.debug("Signing %s", filename)
         self.sign_file(work_dir, filename, cert_type, signing_formats)
         self.create_artifact(task_id, run_id, "public/env/%s" % filename,
@@ -219,7 +221,10 @@ class SigningConsumer(ConsumerMixin):
             cmd.extend(["-f", f])
         cmd.extend(["-o", to, from_])
         log.debug("Running python %s", " ".join(cmd))
-        sh.python(*cmd, _err_to_out=True, _cwd=work_dir)
+        out = sh.python(*cmd, _err_to_out=True, _cwd=work_dir)
+        log.debug("COMMAND OUTPUT: %s", out)
+        log.info("SHA512SUM: %s SIGNED_FILE: %s", get_hash(to, "sha512"), to)
+        log.info("SHA1SUM: %s SIGNED_FILE: %s", get_hash(to, "sha1"), to)
         log.debug("Finished signing")
 
     def get_suitable_signing_servers(self, cert_type, signing_formats):
