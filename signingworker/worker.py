@@ -223,8 +223,11 @@ class SigningConsumer(ConsumerMixin):
         log.debug("Running python %s", " ".join(cmd))
         out = sh.python(*cmd, _err_to_out=True, _cwd=work_dir)
         log.debug("COMMAND OUTPUT: %s", out)
-        log.info("SHA512SUM: %s SIGNED_FILE: %s", get_hash(to, "sha512"), to)
-        log.info("SHA1SUM: %s SIGNED_FILE: %s", get_hash(to, "sha1"), to)
+        abs_to = os.path.join(work_dir, to)
+        log.info("SHA512SUM: %s SIGNED_FILE: %s",
+                 get_hash(abs_to, "sha512"), to)
+        log.info("SHA1SUM: %s SIGNED_FILE: %s",
+                 get_hash(abs_to, "sha1"), to)
         log.debug("Finished signing")
 
     def get_suitable_signing_servers(self, cert_type, signing_formats):
