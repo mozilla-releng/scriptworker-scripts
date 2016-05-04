@@ -1,0 +1,2 @@
+* split out task schema verification, signature verification into library
+* helper script to generate test tasks for integration tests
