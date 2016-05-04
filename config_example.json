@@ -1,15 +1,4 @@
 {
-    "exchange": "exchange/taskcluster-queue/v1/task-pending",
-    "pulse_host": "pulse.mozilla.org",
-    "pulse_password": "...",
-    "pulse_port": 5671,
-    "pulse_user": "...",
-    "worker_type": "signing-worker-v1",
-    "taskcluster_client_id": "...",
-    "taskcluster_access_token": "...",
     "signing_server_config": "/home/worker/.signing_servers.json",
-    "tools_checkout": "/home/worker/tools",
-    "my_ip": "127.0.0.1",
-    "worker_id": "my_hostname",
     "verbose": true
 }
