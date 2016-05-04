@@ -8,7 +8,7 @@ setup(
     author_email="release+python@mozilla.com",
     url="https://github.com/escapewindow/signingscript",
     packages=["signingscript", "scriptworkerclient"],
-    package_data={"signingscript": ["data/*.json"]},
+    package_data={"scriptworkerclient": ["data/*.json"]},
     include_package_data=True,
     zip_safe=False,
     entry_points={

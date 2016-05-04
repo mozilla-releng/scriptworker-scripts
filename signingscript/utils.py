@@ -27,7 +27,7 @@ def load_signing_server_config(config):
         raw_cfg = json.load(f)
 
     cfg = {}
-    for signing_type, server_data in raw_cfg.iteritems():
+    for signing_type, server_data in raw_cfg.items():
         cfg[signing_type] = [SigningServer(*s) for s in server_data]
     log.debug("Signing server config loaded from %s", config)
     return cfg
