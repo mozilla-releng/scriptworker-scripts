@@ -1,6 +1,6 @@
 from unittest import TestCase
 import os
-from signingworker.utils import load_signing_server_config
+from signingscript.utils import load_signing_server_config
 
 
 class TestLoadSigningServerConfig(TestCase):

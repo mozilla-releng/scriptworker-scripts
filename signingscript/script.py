@@ -17,4 +17,3 @@ def main():
         level=log_level
     )
     logging.getLogger("taskcluster").setLevel(logging.WARNING)
-    }

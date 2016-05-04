@@ -1,6 +1,6 @@
 from unittest import TestCase
-from signingworker.task import task_signing_formats, task_cert_type
-from signingworker.exceptions import TaskVerificationError
+from scriptworkerclient.task import task_signing_formats, task_cert_type
+from signingscript.exceptions import TaskVerificationError  # TODO move this
 
 
 class TestTaskSigningFormats(TestCase):

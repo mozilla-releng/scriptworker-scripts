@@ -12,12 +12,11 @@ import requests
 import arrow
 import taskcluster
 
-from signingworker.task import validate_task, task_cert_type, \
+from scriptworkerclient.task import validate_task, task_cert_type, \
     task_signing_formats, validate_signature
-from signingworker.exceptions import TaskVerificationError, \
+from signingscript.exceptions import TaskVerificationError, \
     ChecksumMismatchError, SigningServerError
-from signingworker.utils import get_hash, load_signing_server_config, \
-    get_detached_signatures
+from signingscript.utils import get_hash, get_detached_signatures
 
 log = logging.getLogger(__name__)
 

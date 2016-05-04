@@ -1,5 +1,5 @@
 from unittest import TestCase
-from signingworker.utils import get_detached_signatures
+from signingscript.utils import get_detached_signatures
 
 
 class TestDetachedSignatures(TestCase):
