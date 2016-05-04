@@ -5,17 +5,12 @@ import tempfile
 import urlparse
 import logging
 import json
-import re
+
+import sh
+import requests
 
 import arrow
-from jsonschema import ValidationError
-from kombu import Exchange, Queue
-from kombu.mixins import ConsumerMixin
-import redo
-import requests
-import sh
 import taskcluster
-from jose.exceptions import JOSEError
 
 from signingworker.task import validate_task, task_cert_type, \
     task_signing_formats, validate_signature
@@ -27,34 +22,10 @@ from signingworker.utils import get_hash, load_signing_server_config, \
 log = logging.getLogger(__name__)
 
 
-class SigningConsumer(ConsumerMixin):
+class SigningConsumer(object):
 
-    def __init__(self, connection, exchange, queue_name, worker_type,
-                 taskcluster_config, signing_server_config, tools_checkout,
-                 my_ip, worker_id, pub_key):
-        self.connection = connection
-        self.exchange = Exchange(exchange, type='topic', passive=True)
-        self.queue_name = queue_name
-        self.worker_type = worker_type
-        self.routing_key = "*.*.*.*.*.*.{}.#".format(self.worker_type)
-        self.tc_queue = taskcluster.Queue(taskcluster_config)
-        self.signing_servers = load_signing_server_config(
-            signing_server_config)
-        self.tools_checkout = tools_checkout
-        self.cert = os.path.join(self.tools_checkout,
-                                 "release/signing/host.cert")
-        self.my_ip = my_ip
-        # make sure we meet TC requirements
-        self.worker_id = re.sub(r"[^a-zA-Z0-9-_]", "_", worker_id)[:22]
+    def __init__(self, pub_key):
         self.pub_key = pub_key
-
-    def get_consumers(self, consumer_cls, channel):
-        # Set prefetch_count to 1 to avoid blocking other workers
-        channel.basic_qos(prefetch_size=0, prefetch_count=1, a_global=False)
-        queue = Queue(name=self.queue_name, exchange=self.exchange,
-                      routing_key=self.routing_key, durable=True,
-                      exclusive=False, auto_delete=False)
-        return [consumer_cls(queues=[queue], callbacks=[self.process_message])]
 
     def process_message(self, body, message):
         task_id = None
@@ -85,7 +56,7 @@ class SigningConsumer(ConsumerMixin):
                 log.debug("Task already claimed, acking...")
             else:
                 raise
-        except (TaskVerificationError, ValidationError, JOSEError):
+        except (TaskVerificationError, ):
             log.exception("Cannot verify task, %s", body)
             self.tc_queue.reportException(
                 task_id, run_id, {"reason": "malformed-payload"})
@@ -95,7 +66,7 @@ class SigningConsumer(ConsumerMixin):
         message.ack()
         shutil.rmtree(work_dir)
 
-    @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
+#    @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
     def get_manifest(self, url):
         r = requests.get(url, timeout=60)
         r.raise_for_status()
@@ -182,7 +153,7 @@ class SigningConsumer(ConsumerMixin):
         taskcluster.utils.putFile(abs_filename, put_url, content_type)
         log.debug("Done")
 
-    @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
+#    @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
     def get_token(self, output_file, cert_type, signing_formats):
         token = None
         data = {"slave_ip": self.my_ip, "duration": 5 * 60}

@@ -8,6 +8,9 @@ setup(
     author_email="release+python@mozilla.com",
     url="https://github.com/escapewindow/signingscript",
     packages=["signingscript"],
+    package_data={"signingscript": ["data/*.json"]},
+    include_package_data=True,
+    zip_safe=False,
     entry_points={
         "console_scripts": [
             "signingscript = signingscript.script:main",
@@ -16,6 +19,8 @@ setup(
     license="MPL2",
     install_requires=[
         "arrow",
+        "jsonschema",
+        "python-jose",
         "taskcluster",
     ],
 )
