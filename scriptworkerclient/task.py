@@ -4,7 +4,7 @@ import logging
 from jose import jwt
 from jose.constants import ALGORITHMS
 from jsonschema import validate
-from signingworker.exceptions import TaskVerificationError
+from signingscript.exceptions import TaskVerificationError  # TODO move
 
 log = logging.getLogger(__name__)
 
