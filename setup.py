@@ -19,8 +19,8 @@ setup(
     license="MPL2",
     install_requires=[
         "arrow",
-        "jsonschema",
         "python-jose",
+        # "scriptworker",
         "taskcluster",
     ],
 )

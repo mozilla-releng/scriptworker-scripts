@@ -9,6 +9,7 @@ from signingscript.exceptions import TaskVerificationError  # TODO move
 log = logging.getLogger(__name__)
 
 
+# TODO take a schema path or json
 def validate_task(task):
     task_schema = json.load(
         open(
