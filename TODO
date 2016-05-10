@@ -1,4 +1,0 @@
-X split out task schema verification, signature verification into library
- _ get that library into a separate repo?
-_ helper script to generate test tasks for integration tests
-_ library functions to read task/tempcreds from scriptworker work_dir

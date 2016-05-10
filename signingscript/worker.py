@@ -12,7 +12,7 @@ import requests
 import arrow
 import taskcluster
 
-from scriptworkerclient.task import validate_task, task_cert_type, \
+from signingscript.task import validate_task, task_cert_type, \
     task_signing_formats, validate_signature
 from signingscript.exceptions import TaskVerificationError, \
     ChecksumMismatchError, SigningServerError

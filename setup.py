@@ -7,8 +7,8 @@ setup(
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
     url="https://github.com/escapewindow/signingscript",
-    packages=["signingscript", "scriptworkerclient"],
-    package_data={"scriptworkerclient": ["data/*.json"]},
+    packages=["signingscript"],
+    package_data={"signingscript": ["data/*.json"]},
     include_package_data=True,
     zip_safe=False,
     entry_points={
@@ -20,7 +20,7 @@ setup(
     install_requires=[
         "arrow",
         "python-jose",
-        # "scriptworker",
+        "scriptworker",
         "taskcluster",
     ],
 )

@@ -1,6 +1,5 @@
 recursive-include signingscript/test *
-recursive-include scriptworkerclient/test *
-recursive-include scriptworkerclient/data *
+recursive-include signingscript/data *
 
 include LICENSE
 include README.md

@@ -1,7 +1,7 @@
 from unittest import TestCase
 import json
 import copy
-from scriptworkerclient.task import validate_task, validate_signature, \
+from signingscript.task import validate_task, validate_signature, \
     TaskVerificationError
 from jsonschema.exceptions import ValidationError
 from jose.exceptions import ExpiredSignatureError, JWSError
