@@ -15,7 +15,12 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 log = logging.getLogger(__name__)
 
 
-class ClientContext(Context):
+class SigningContext(Context):
+    signing_servers = None
+
+    def __init__(self):
+        super(SigningContext, self).__init__()
+
     def write_json(self, *args):
         pass
 
@@ -28,7 +33,7 @@ async def async_main(context):
 def main(name=None):
     if name in (None, '__main__'):
         # TODO config
-        context = ClientContext()
+        context = SigningContext()
         context.config = {
             'work_dir': '/src/signing/work_dir',
             'artifact_dir': '/src/signing/artifact_dir',
