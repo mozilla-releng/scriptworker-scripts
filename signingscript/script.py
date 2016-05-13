@@ -30,10 +30,10 @@ async def async_main(context):
     # validate:
     # - scriptworker.client.validate_task_schema(context.task, schema)
     # - listTaskGroup(taskGroupId, {continuationToken, limit}) : result
-    # - -(does this need to be done in the scriptworker?)
+    # - - (does this need to be done in scriptworker?  The temp creds need more scopes otherwise)
     # - - find decision task
-    # - - query artifacts
-    # - - download graph
+    # - - query artifacts listArtifacts(taskId, runId, {continuationToken, limit})
+    # - - download graph getArtifact(taskId, runId, name)
     # - - verify artifact graph against taskgroup
     # - if/when audit service is available, query it
     # download artifacts
@@ -41,6 +41,7 @@ async def async_main(context):
     # get token
     # sign bits
     # copy bits to artifact dir
+    # periodically update temp creds from disk
 
 
 # main {{{1
