@@ -27,9 +27,23 @@ class SigningContext(Context):
 
 async def async_main(context):
     context.task = scriptworker.client.get_task(context.config)
-    # scriptworker.client.validate_task_schema(context.task, schema)
+    # validate:
+    # - scriptworker.client.validate_task_schema(context.task, schema)
+    # - listTaskGroup(taskGroupId, {continuationToken, limit}) : result
+    # - -(does this need to be done in the scriptworker?)
+    # - - find decision task
+    # - - query artifacts
+    # - - download graph
+    # - - verify artifact graph against taskgroup
+    # - if/when audit service is available, query it
+    # download artifacts
+    # - any checks here?
+    # get token
+    # sign bits
+    # copy bits to artifact dir
 
 
+# main {{{1
 def main(name=None):
     if name in (None, '__main__'):
         # TODO config
