@@ -1,23 +1,9 @@
-import os
-import json
 import logging
 from jose import jwt
 from jose.constants import ALGORITHMS
-from jsonschema import validate
-from signingscript.exceptions import TaskVerificationError  # TODO move
+from signingscript.exceptions import TaskVerificationError
 
 log = logging.getLogger(__name__)
-
-
-# TODO take a schema path or json
-def validate_task(task):
-    task_schema = json.load(
-        open(
-            os.path.join(os.path.dirname(__file__),
-                         "data", "signing_task_schema.json")
-        )
-    )
-    validate(task, task_schema)
 
 
 def task_cert_type(task):
@@ -40,6 +26,6 @@ def validate_signature(task_id, token, pub_key, algorithms=[ALGORITHMS.RS512]):
     claims = jwt.decode(token, pub_key, algorithms=algorithms)
     if task_id != claims.get("taskId"):
         raise TaskVerificationError(
-            "Task IDs do not match. Expected %s, got %s" %
-            (task_id, claims.get("taskId")))
+            "Task IDs do not match. Expected {}, got {}".format(task_id, claims.get("taskId"))
+        )
     return claims

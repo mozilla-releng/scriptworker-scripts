@@ -1,5 +1,5 @@
 from unittest import TestCase
-from signingscript.exceptions import TaskVerificationError
+from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.task import task_signing_formats, task_cert_type
 
 
@@ -22,4 +22,4 @@ class TestTaskCertType(TestCase):
         task = {"scopes": ["project:releng:signing:cert:dep",
                            "project:releng:signing:cert:notdep",
                            "project:releng:signing:type:gpg"]}
-        self.assertRaises(TaskVerificationError, task_cert_type, task)
+        self.assertRaises(ScriptWorkerTaskException, task_cert_type, task)

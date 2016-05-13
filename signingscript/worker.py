@@ -1,6 +1,5 @@
 import os
 import random
-import shutil
 import tempfile
 import urlparse
 import logging
@@ -12,8 +11,8 @@ import requests
 import arrow
 import taskcluster
 
-from signingscript.task import validate_task, task_cert_type, \
-    task_signing_formats, validate_signature
+from signingscript.task import task_cert_type, \
+    task_signing_formats
 from signingscript.exceptions import TaskVerificationError, \
     ChecksumMismatchError, SigningServerError
 from signingscript.utils import get_hash, get_detached_signatures
@@ -30,25 +29,11 @@ class SigningConsumer(object):
         task_id = None
         run_id = None
         work_dir = tempfile.mkdtemp()
+        task = {}
         try:
-            task_id = body["status"]["taskId"]
-            run_id = body["status"]["runs"][-1]["runId"]
-            log.debug("Claiming task %s, run %s", task_id, run_id)
-            self.tc_queue.claimTask(
-                task_id, run_id,
-                {"workerGroup": self.worker_type, "workerId": self.worker_id}
-            )
-            task = self.tc_queue.task(task_id)
-            task_graph_id = task["taskGroupId"]
-            validate_task(task)
-            validate_signature(task_id,
-                               task["extra"]["signing"]["signature"],
-                               self.pub_key)
+            # validate_task(task)
             self.sign(task_id, run_id, task, work_dir)
-            log.debug("Completing: %s, r: %s", task_id, run_id)
-            self.tc_queue.reportCompleted(task_id, run_id)
-            log.debug("Complete: %s, r: %s, tg: %s", task_id, run_id,
-                      task_graph_id)
+            # copy to artifact_dir
         except taskcluster.exceptions.TaskclusterRestFailure as e:
             log.exception("TC REST failure, %s", e.status_code)
             if e.status_code == 409:
@@ -61,9 +46,6 @@ class SigningConsumer(object):
                 task_id, run_id, {"reason": "malformed-payload"})
         except Exception:
             log.exception("Error processing %s", body)
-
-        message.ack()
-        shutil.rmtree(work_dir)
 
 #    @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
     def get_manifest(self, url):
