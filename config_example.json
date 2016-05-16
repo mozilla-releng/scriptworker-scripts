@@ -1,5 +1,6 @@
 {
     "work_dir": "scriptworker_work_dir",
+    "tools_dir": "tools_checkout_dir",
     "artifact_dir": "scriptworker_artifact_dir",
     "signing_server_config": "/home/worker/.signing_servers.json",
     "verbose": true
