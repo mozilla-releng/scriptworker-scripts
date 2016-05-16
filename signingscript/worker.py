@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import random
-# from shutil import copyfile
+from shutil import copyfile
 import traceback
 import urlparse
 
@@ -32,7 +32,6 @@ async def process_message(context, body, message):
         await validate_task_schema(context)
         # TODO validate graph/decision task?
         await sign(task_id, run_id, task, work_dir)
-        # copy to artifact_dir
     except (TaskVerificationError, ):
         log.exception("Cannot verify task, %s", body)
         raise
@@ -41,7 +40,7 @@ async def process_message(context, body, message):
         # what to do here?
 
 
-async def download_and_sign_file(context, task_id, run_id, url, checksum, cert_type,
+async def download_and_sign_file(context, url, checksum, cert_type,
                                  signing_formats, work_dir):
     # TODO: better parsing
     filename = urlparse.urlsplit(url).path.split("/")[-1]
@@ -64,19 +63,13 @@ async def download_and_sign_file(context, task_id, run_id, url, checksum, cert_t
         raise ChecksumMismatchError(msg)
     log.debug("Signing %s", filename)
     await sign_file(work_dir, filename, cert_type, signing_formats)
-    # TODO
-    # create_artifact(task_id, run_id, "public/env/%s" % filename,
-    #                abs_filename)
+    copy_to_artifact_dir(abs_filename)
     detached_signatures = []
     for s_type, s_ext, s_mime in get_detached_signatures(signing_formats):
         d_filename = "{filename}{ext}".format(filename=filename,
                                               ext=s_ext)
         d_abs_filename = os.path.join(work_dir, d_filename)
-        assert d_abs_filename  # TODO silence flake8 until we copy
-    # TODO
-    #    create_artifact(task_id, run_id, "public/env/%s" % d_filename,
-    #                    d_abs_filename, content_type=s_mime)
-    # copy detached_signatures to artifact dir
+        copy_to_artifact_dir(d_abs_filename)
         detached_signatures.append((s_type, d_filename))
     return abs_filename, detached_signatures
 
@@ -95,7 +88,6 @@ async def get_token(context, output_file, cert_type, signing_formats):
         log.debug("getting token from %s", s.server)
         # TODO: Figure out how to deal with certs not matching hostname,
         #  error: https://gist.github.com/rail/cbacf2d297decb68affa
-        # TODO aiohttp
         url = "https://{}/token".format(s.server)
         try:
             token = retry_request(context, url, method='post', data=data,
@@ -115,10 +107,10 @@ async def sign_file(context, work_dir, from_, cert_type, signing_formats, cert, 
     if to is None:
         to = from_
     token = os.path.join(work_dir, "token")
+    # TODO where do we get the nonce and cert from?
     nonce = os.path.join(work_dir, "nonce")
-    get_token(token, cert_type, signing_formats)
-    # TODO path to tools
-    signtool = os.path.join("tools_checkout", "release/signing/signtool.py")
+    get_token(context, token, cert_type, signing_formats)
+    signtool = os.path.join(context.config['tools_dir'], "release/signing/signtool.py")
     cmd = [signtool, "-n", nonce, "-t", token, "-c", cert]
     for s in get_suitable_signing_servers(cert_type, signing_formats):
         cmd.extend(["-H", s.server])
@@ -146,7 +138,18 @@ async def read_temp_creds(context):
     await get_temp_creds_from_file(context.config)
 
 
-async def sign(context, task_id, run_id):
+def copy_to_artifact_dir(context, source, target=None):
+    artifact_dir = context.config['artifact_dir']
+    target = target or os.path.basename(source)
+    target_path = os.path.join(artifact_dir, target)
+    try:
+        copyfile(source, target_path)
+    except IOError:
+        traceback.print_exc()
+        raise SigningServerError("Can't copy {} to {}!".format(source, target_path))
+
+
+async def sign(context):
     payload = context.task["payload"]
     # Will we know the artifacts, be able to create the manifest at decision task time?
     manifest_url = payload["signingManifest"]
@@ -165,8 +168,7 @@ async def sign(context, task_id, run_id):
         file_to_sign = e.get("file_to_sign", e.get("mar"))
         file_url = "{}/{}".format(url_prefix, file_to_sign)
         abs_filename, detached_signatures = download_and_sign_file(
-            task_id, run_id, file_url, e["hash"], cert_type,
-            signing_formats, work_dir)
+            file_url, e["hash"], cert_type, signing_formats, work_dir)
         # Update manifest data with new values
         e["hash"] = get_hash(abs_filename)
         e["size"] = os.path.getsize(abs_filename)
@@ -176,7 +178,5 @@ async def sign(context, task_id, run_id):
     manifest_file = os.path.join(work_dir, "manifest.json")
     with open(manifest_file, "wb") as f:
         json.dump(signing_manifest, f, indent=2, sort_keys=True)
-    log.debug("Uploading manifest for t: %s, r: %s", task_id, run_id)
-    # TODO move to artifact_dir
-    # create_artifact(task_id, run_id, "public/env/manifest.json",
-    #                manifest_file, "application/json")
+    log.debug("Uploading manifest")
+    copy_to_artifact_dir(manifest_file)
