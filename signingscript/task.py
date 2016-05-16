@@ -20,6 +20,7 @@ def task_cert_type(task):
 
 def task_signing_formats(task):
     """Extract last part of signing format scope"""
+    # TODO we probably want to control this in a different way than scopes
     return [s.split(":")[-1] for s in task["scopes"] if
             s.startswith("project:releng:signing:format:")]
 

@@ -11,6 +11,7 @@ import sh
 import requests
 
 from scriptworker.client import get_temp_creds_from_file
+from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_request
 from signingscript.task import task_cert_type, \
     task_signing_formats, validate_task_schema
@@ -98,7 +99,7 @@ async def get_token(context, output_file, cert_type, signing_formats):
         url = "https://{}/token".format(s.server)
         try:
             token = retry_request(context, url, method='post', data=data,
-                                    auth=(s.user, s.password), return_type='content')
+                                  auth=(s.user, s.password), return_type='content')
             if token:
                 break
         except ScriptWorkerException:
@@ -145,7 +146,7 @@ async def read_temp_creds(context):
     await get_temp_creds_from_file(context.config)
 
 
-def sign(context, task_id, run_id):
+async def sign(context, task_id, run_id):
     payload = context.task["payload"]
     # Will we know the artifacts, be able to create the manifest at decision task time?
     manifest_url = payload["signingManifest"]

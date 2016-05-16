@@ -19,17 +19,18 @@ def get_hash(path, hash_type="sha512"):
     return h.hexdigest()
 
 
-def load_signing_server_config(config):
-    log.debug("Loading signing server config from %s", config)
+def load_signing_server_config(context):
+    path = context.config['signing_server_config']
+    log.debug("Loading signing server config from {}".format(path))
     SigningServer = namedtuple("SigningServer", ["server", "user", "password",
                                                  "formats"])
-    with open(config) as f:
+    with open(path) as f:
         raw_cfg = json.load(f)
 
     cfg = {}
     for signing_type, server_data in raw_cfg.items():
         cfg[signing_type] = [SigningServer(*s) for s in server_data]
-    log.debug("Signing server config loaded from %s", config)
+    log.debug("Signing server config loaded from {}".format(path))
     return cfg
 
 
