@@ -12,7 +12,7 @@ import arrow
 import taskcluster
 
 from signingscript.task import task_cert_type, \
-    task_signing_formats
+    task_signing_formats, validate_task_schema
 from signingscript.exceptions import TaskVerificationError, \
     ChecksumMismatchError, SigningServerError
 from signingscript.utils import get_hash, get_detached_signatures
@@ -24,10 +24,10 @@ def process_message(context, body, message):
     # move this to async_main ?
     task_id = None
     run_id = None
-    work_dir = tempfile.mkdtemp()
+    work_dir = context.config['work_dir']
     task = {}
     try:
-        # validate_task(task)
+        validate_task_schema(context)
         sign(task_id, run_id, task, work_dir)
         # copy to artifact_dir
     except taskcluster.exceptions.TaskclusterRestFailure as e:
@@ -187,5 +187,6 @@ def sign(context, task_id, run_id):
     with open(manifest_file, "wb") as f:
         json.dump(signing_manifest, f, indent=2, sort_keys=True)
     log.debug("Uploading manifest for t: %s, r: %s", task_id, run_id)
+    # TODO move to artifact_dir
     create_artifact(task_id, run_id, "public/env/manifest.json",
                     manifest_file, "application/json")
