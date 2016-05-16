@@ -1,7 +1,8 @@
 {
+    "signing_server_config": "/home/worker/.signing_servers.json",
     "work_dir": "scriptworker_work_dir",
     "tools_dir": "tools_checkout_dir",
     "artifact_dir": "scriptworker_artifact_dir",
-    "signing_server_config": "/home/worker/.signing_servers.json",
+    "my_ip": "127.0.0.1",
     "verbose": true
 }

@@ -4,18 +4,19 @@ import logging
 import os
 import random
 # from shutil import copyfile
+import traceback
 import urlparse
 
 import sh
 import requests
 
 from scriptworker.client import get_temp_creds_from_file
-# from scriptworker.utils import retry_request
+from scriptworker.utils import retry_request
 from signingscript.task import task_cert_type, \
     task_signing_formats, validate_task_schema
 from signingscript.exceptions import TaskVerificationError, \
     ChecksumMismatchError, SigningServerError
-from signingscript.utils import get_hash, get_detached_signatures
+from signingscript.utils import get_hash, get_detached_signatures, load_signing_server_config
 
 log = logging.getLogger(__name__)
 
@@ -80,26 +81,30 @@ async def download_and_sign_file(context, task_id, run_id, url, checksum, cert_t
 
 
 # @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
-async def get_token(all_signing_servers, output_file, cert_type, signing_formats, my_ip):
+async def get_token(context, output_file, cert_type, signing_formats):
     token = None
-    data = {"slave_ip": my_ip, "duration": 5 * 60}
-    signing_servers = get_suitable_signing_servers(all_signing_servers, cert_type,
-                                                   signing_formats)
+    data = {"slave_ip": context.config['my_ip'], "duration": 5 * 60}
+    all_signing_servers = load_signing_server_config(context)
+    signing_servers = get_suitable_signing_servers(
+        all_signing_servers, cert_type,
+        signing_formats
+    )
     random.shuffle(signing_servers)
     for s in signing_servers:
         log.debug("getting token from %s", s.server)
         # TODO: Figure out how to deal with certs not matching hostname,
         #  error: https://gist.github.com/rail/cbacf2d297decb68affa
         # TODO aiohttp
-        r = requests.post("https://{}/token".format(s.server), data=data,
-                          auth=(s.user, s.password), timeout=60,
-                          verify=False)
-        r.raise_for_status()
-        if r.content:
-            token = r.content
-            log.debug("Got token")
-            break
-    if not token:
+        url = "https://{}/token".format(s.server)
+        try:
+            token = retry_request(context, url, method='post', data=data,
+                                    auth=(s.user, s.password), return_type='content')
+            if token:
+                break
+        except ScriptWorkerException:
+            traceback.print_exc()
+            continue
+    else:
         raise SigningServerError("Cannot retrieve signing token")
     with open(output_file, "wb") as f:
         f.write(token)
@@ -132,16 +137,7 @@ async def sign_file(context, work_dir, from_, cert_type, signing_formats, cert, 
 
 
 def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
-    return [s for s in signing_servers[cert_type] if
-            set(signing_formats) & set(s.formats)]
-
-
-#    @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
-async def get_manifest(url):
-    # TODO aiohttp
-    r = requests.get(url, timeout=60)
-    r.raise_for_status()
-    return r.json()
+    return [s for s in signing_servers[cert_type] if set(signing_formats) & set(s.formats)]
 
 
 async def read_temp_creds(context):
@@ -154,7 +150,11 @@ def sign(context, task_id, run_id):
     # Will we know the artifacts, be able to create the manifest at decision task time?
     manifest_url = payload["signingManifest"]
     work_dir = context.config['work_dir']
-    signing_manifest = get_manifest(manifest_url)
+    try:
+        signing_manifest = await retry_request(context, manifest_url, return_type=json)
+    except ScriptWorkerException:
+        traceback.print_exc()
+        continue
     # TODO: better way to extract filename
     url_prefix = "/".join(manifest_url.split("/")[:-1])
     cert_type = task_cert_type(context.task)

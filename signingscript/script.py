@@ -54,11 +54,13 @@ def main(name=None):
         context = SigningContext()
         context.config = {
             # TODO genericize
+            'signing_server_config': '/Users/asasaki/secrets/signing.json',
             'tools_dir': '/src/signing/tools',
             'work_dir': '/src/signing/work_dir',
             'artifact_dir': '/src/signing/artifact_dir',
             'temp_creds_refresh_seconds': 330,
-            'schema_file': os.path.join(os.getcwd(), "data", "signing_task_schema.json"),
+            'my_ip': "127.0.0.1",
+            'schema_file': os.path.join(os.getcwd(), 'data', 'signing_task_schema.json'),
             'verbose': True,
         }
         if context.config.get('verbose'):
