@@ -11,6 +11,7 @@ import traceback
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
+from signingscript.worker import read_temp_creds
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +27,9 @@ class SigningContext(Context):
 
 
 async def async_main(context):
+    loop = asyncio.get_event_loop()
     context.task = scriptworker.client.get_task(context.config)
+    loop.create_task(read_temp_creds(context))
     # validate:
     # - scriptworker.client.validate_task_schema(context.task, schema)
     # - listTaskGroup(taskGroupId, {continuationToken, limit}) : result
@@ -50,8 +53,11 @@ def main(name=None):
         # TODO config
         context = SigningContext()
         context.config = {
+            # TODO genericize
+            'tools_dir': '/src/signing/tools',
             'work_dir': '/src/signing/work_dir',
             'artifact_dir': '/src/signing/artifact_dir',
+            'temp_creds_refresh_seconds': 330,
             'schema_file': os.path.join(os.getcwd(), "data", "signing_task_schema.json"),
             'verbose': True,
         }

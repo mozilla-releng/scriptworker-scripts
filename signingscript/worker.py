@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -8,6 +9,7 @@ import urlparse
 import sh
 import requests
 
+from scriptworker.client import get_temp_creds_from_file
 # from scriptworker.utils import retry_request
 from signingscript.task import task_cert_type, \
     task_signing_formats, validate_task_schema
@@ -140,6 +142,11 @@ async def get_manifest(url):
     r = requests.get(url, timeout=60)
     r.raise_for_status()
     return r.json()
+
+
+async def read_temp_creds(context):
+    await asyncio.sleep(context.config['temp_creds_refresh_seconds'])
+    await get_temp_creds_from_file(context.config)
 
 
 def sign(context, task_id, run_id):
