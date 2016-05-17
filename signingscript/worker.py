@@ -8,49 +8,30 @@ import traceback
 import urlparse
 
 import sh
-import requests
 
 from scriptworker.client import get_temp_creds_from_file
 from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_request
-from signingscript.task import task_cert_type, \
-    task_signing_formats, validate_task_schema
-from signingscript.exceptions import TaskVerificationError, \
-    ChecksumMismatchError, SigningServerError
+from signingscript.task import task_cert_type, task_signing_formats
+from signingscript.exceptions import ChecksumMismatchError, SigningServerError
 from signingscript.utils import get_hash, get_detached_signatures, load_signing_server_config
 
 log = logging.getLogger(__name__)
 
 
-async def process_message(context, body, message):
-    # move this to async_main ?
-    task_id = None
-    run_id = None
-    work_dir = context.config['work_dir']
-    task = {}
-    try:
-        await validate_task_schema(context)
-        # TODO validate graph/decision task?
-        await sign(task_id, run_id, task, work_dir)
-    except (TaskVerificationError, ):
-        log.exception("Cannot verify task, %s", body)
-        raise
-    except Exception:
-        log.exception("Error processing %s", body)
-        # what to do here?
-
-
 async def download_and_sign_file(context, url, checksum, cert_type,
-                                 signing_formats, work_dir):
+                                 signing_formats, chunk_size=128):
     # TODO: better parsing
+    work_dir = context.config['work_dir']
     filename = urlparse.urlsplit(url).path.split("/")[-1]
     abs_filename = os.path.join(work_dir, filename)
     log.debug("Downloading %s", url)
-    # TODO aiohttp
-    r = requests.get(url, timeout=60)
-    r.raise_for_status()
+    resp = await retry_request(url, return_type='response')
     with open(abs_filename, 'wb') as fd:
-        for chunk in r.iter_content(4096):
+        while True:
+            chunk = await resp.content.read(chunk_size)
+            if not chunk:
+                break
             fd.write(chunk)
     log.debug("Done")
     got_checksum = get_hash(abs_filename)
@@ -62,7 +43,7 @@ async def download_and_sign_file(context, url, checksum, cert_type,
         log.debug(msg)
         raise ChecksumMismatchError(msg)
     log.debug("Signing %s", filename)
-    await sign_file(work_dir, filename, cert_type, signing_formats)
+    await sign_file(context, filename, cert_type, signing_formats)
     copy_to_artifact_dir(abs_filename)
     detached_signatures = []
     for s_type, s_ext, s_mime in get_detached_signatures(signing_formats):
@@ -103,9 +84,10 @@ async def get_token(context, output_file, cert_type, signing_formats):
         f.write(token)
 
 
-async def sign_file(context, work_dir, from_, cert_type, signing_formats, cert, to=None):
+async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     if to is None:
         to = from_
+    work_dir = context.config['work_dir']
     token = os.path.join(work_dir, "token")
     # TODO where do we get the nonce and cert from?
     nonce = os.path.join(work_dir, "nonce")
@@ -168,7 +150,7 @@ async def sign(context):
         file_to_sign = e.get("file_to_sign", e.get("mar"))
         file_url = "{}/{}".format(url_prefix, file_to_sign)
         abs_filename, detached_signatures = download_and_sign_file(
-            file_url, e["hash"], cert_type, signing_formats, work_dir)
+            context, file_url, e["hash"], cert_type, signing_formats, work_dir)
         # Update manifest data with new values
         e["hash"] = get_hash(abs_filename)
         e["size"] = os.path.getsize(abs_filename)

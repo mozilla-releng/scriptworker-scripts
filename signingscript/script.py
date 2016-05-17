@@ -11,7 +11,8 @@ import traceback
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-from signingscript.worker import read_temp_creds
+from signingscript.task import validate_task_schema
+from signingscript.worker import read_temp_creds, sign
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ async def async_main(context):
     loop = asyncio.get_event_loop()
     context.task = scriptworker.client.get_task(context.config)
     loop.create_task(read_temp_creds(context))
+    await validate_task_schema(context)
     # validate:
     # - scriptworker.client.validate_task_schema(context.task, schema)
     # - listTaskGroup(taskGroupId, {continuationToken, limit}) : result
@@ -39,12 +41,13 @@ async def async_main(context):
     # - - download graph getArtifact(taskId, runId, name)
     # - - verify artifact graph against taskgroup
     # - if/when audit service is available, query it
-    # download artifacts
-    # - any checks here?
-    # get token
-    # sign bits
-    # copy bits to artifact dir
-    # periodically update temp creds from disk
+    await sign(context)
+    # X download artifacts
+    # _ _ any checks here?
+    # X get token
+    # X sign bits
+    # X copy bits to artifact dir
+    # X periodically update temp creds from disk
 
 
 # main {{{1
