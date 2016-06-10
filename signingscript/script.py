@@ -5,6 +5,7 @@ import aiohttp
 import asyncio
 import logging
 import os
+import ssl
 import sys
 import traceback
 from urllib.parse import urlparse
@@ -79,7 +80,15 @@ def main(name=None):
         )
         logging.getLogger("taskcluster").setLevel(logging.WARNING)
         loop = asyncio.get_event_loop()
-        with aiohttp.ClientSession() as session:
+        kwargs = {}
+        # XXX can we get the signing servers' CA cert on the scriptworkers?
+        if context.config.get('ssl_cert'):
+            sslcontext = ssl.create_default_context(cafile='/path/to/ca-bundle.crt')
+            kwargs['ssl_context'] = sslcontext
+        else:
+            kwargs['verify_ssl'] = False
+        conn = aiohttp.TCPConnector(**kwargs)
+        with aiohttp.ClientSession(connector=conn) as session:
             context.session = session
             try:
                 loop.run_until_complete(async_main(context))

@@ -69,8 +69,8 @@ async def get_token(context, output_file, cert_type, signing_formats):
         #  error: https://gist.github.com/rail/cbacf2d297decb68affa
         url = "https://{}/token".format(s.server)
         try:
-            token = await  retry_request(context, url, method='post', data=data,
-                                         auth=(s.user, s.password), return_type='content')
+            token = await retry_request(context, url, method='post', data=data,
+                                        auth=(s.user, s.password), return_type='text')
             if token:
                 break
         except ScriptWorkerException:
@@ -78,8 +78,8 @@ async def get_token(context, output_file, cert_type, signing_formats):
             continue
     else:
         raise SigningServerError("Cannot retrieve signing token")
-    with open(output_file, "wb") as f:
-        f.write(token)
+    with open(output_file, "w") as fh:
+        print(token, file=fh, end="")
 
 
 async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
