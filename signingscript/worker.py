@@ -115,8 +115,9 @@ def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
 
 
 async def read_temp_creds(context):
-    await asyncio.sleep(context.config['temp_creds_refresh_seconds'])
-    await get_temp_creds_from_file(context.config)
+    while True:
+        await asyncio.sleep(context.config['temp_creds_refresh_seconds'])
+        await get_temp_creds_from_file(context.config)
 
 
 def copy_to_artifact_dir(context, source, target=None):
