@@ -7,12 +7,14 @@ from shutil import copyfile
 import traceback
 from urllib.parse import urlsplit
 
+import sh
+
 from scriptworker.client import get_temp_creds_from_file
 from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_request
 from signingscript.task import task_cert_type, task_signing_formats
 from signingscript.exceptions import ChecksumMismatchError, SigningServerError
-from signingscript.utils import get_hash, get_detached_signatures, load_signing_server_config
+from signingscript.utils import get_hash, get_detached_signatures
 
 log = logging.getLogger(__name__)
 
@@ -57,9 +59,8 @@ async def download_and_sign_file(context, url, checksum, cert_type,
 async def get_token(context, output_file, cert_type, signing_formats):
     token = None
     data = {"slave_ip": context.config['my_ip'], "duration": 5 * 60}
-    all_signing_servers = load_signing_server_config(context)
     signing_servers = get_suitable_signing_servers(
-        all_signing_servers, cert_type,
+        context.signing_servers, cert_type,
         signing_formats
     )
     random.shuffle(signing_servers)
@@ -92,15 +93,14 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     get_token(context, token, cert_type, signing_formats)
     signtool = os.path.join(context.config['tools_dir'], "release/signing/signtool.py")
     cmd = [signtool, "-n", nonce, "-t", token, "-c", cert]
-    for s in get_suitable_signing_servers(cert_type, signing_formats):
+    for s in get_suitable_signing_servers(context.signing_servers, cert_type, signing_formats):
         cmd.extend(["-H", s.server])
     for f in signing_formats:
         cmd.extend(["-f", f])
     cmd.extend(["-o", to, from_])
     log.debug("Running python %s", " ".join(cmd))
     # TODO aiohttp.subprocess?
-#    out = sh.python(*cmd, _err_to_out=True, _cwd=work_dir)
-    out = ""
+    out = sh.python(*cmd, _err_to_out=True, _cwd=work_dir)
     log.debug("COMMAND OUTPUT: %s", out)
     abs_to = os.path.join(work_dir, to)
     log.info("SHA512SUM: %s SIGNED_FILE: %s",

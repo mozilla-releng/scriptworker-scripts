@@ -14,7 +14,8 @@ import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.task import validate_task_schema
-from signingscript.worker import get_token, read_temp_creds, sign
+from signingscript.utils import load_signing_server_config
+from signingscript.worker import get_token, read_temp_creds, sign, sign_file
 
 log = logging.getLogger(__name__)
 
@@ -35,11 +36,15 @@ async def async_main(context):
     context.task = scriptworker.client.get_task(context.config)
     temp_creds_future = loop.create_task(read_temp_creds(context))
     validate_task_schema(context)
+    context.signing_servers = load_signing_server_config(context)
     # _ scriptworker needs to validate CoT artifact
     await get_token(context, os.path.join(work_dir, 'token'), 'nightly', 'gpg')
     # X download artifacts
     # _ _ any checks here?
     # X sign bits
+    await sign_file(context, "/Users/asasaki/wrk/signingserver/test.mar",
+                    "nightly", ("gpg", ), "/Users/asasaki/wrk/signingserver/host.cert",
+                    to=os.path.join(work_dir, "test.mar.sig"))
     # await sign(context)
     # X copy bits to artifact dir
     temp_creds_future.cancel()
