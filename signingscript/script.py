@@ -44,9 +44,9 @@ async def async_main(context):
     # _ _ any checks here?
     # X sign bits
     log.debug("signing file")
-    await sign_file(context, "/Users/asasaki/wrk/signingserver/test.mar",
+    await sign_file(context, os.path.join(work_dir, "test.mar"),
                     "nightly", ("gpg", ), "/Users/asasaki/wrk/signingserver/host.cert",
-                    to=os.path.join(work_dir, "test.mar.sig"))
+                    to=os.path.join(work_dir, "test.mar.asc"))
     # await sign(context)
     # X copy bits to artifact dir
     temp_creds_future.cancel()

@@ -116,7 +116,7 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     for f in signing_formats:
         cmd.extend(["-f", f])
     cmd.extend(["-o", to, from_])
-    log.debug("Running python %s", " ".join(cmd))
+    log.debug("Running %s", " ".join(cmd))
     proc = await asyncio.create_subprocess_exec(*cmd, stdout=PIPE, stderr=STDOUT)
     log.debug("COMMAND OUTPUT: ")
     await log_output(proc.stdout)
