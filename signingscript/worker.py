@@ -83,25 +83,33 @@ async def get_token(context, output_file, cert_type, signing_formats):
         print(token, file=fh, end="")
 
 
+async def log_output(fh):
+    while True:
+        line = await fh.readline()
+        if line:
+            log.debug(line.decode("utf-8").rstrip())
+        else:
+            break
+
+
 async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     if to is None:
         to = from_
     work_dir = context.config['work_dir']
     token = os.path.join(work_dir, "token")
-    # TODO where do we get the nonce and cert from?
     nonce = os.path.join(work_dir, "nonce")
     signtool = os.path.join(context.config['tools_dir'], "release/signing/signtool.py")
-    proc = await asyncio.create_subprocess_exec("openssl", "sha1", from_, stdout=PIPE)
-    out = []
-    while True:
-        line = await proc.stdout.readline()
-        if line:
-            out.append(line.decode('utf-8').rstrip())
-        else:
-            break
-    parts = out[0].split(' ')
-    sha1 = parts[1].rstrip()
-#    sha1 = get_hash(from_, "sha1")
+#    proc = await asyncio.create_subprocess_exec("openssl", "sha1", from_, stdout=PIPE)
+#    out = []
+#    while True:
+#        line = await proc.stdout.readline()
+#        if line:
+#            out.append(line.decode('utf-8').rstrip())
+#        else:
+#            break
+#    parts = out[0].split(' ')
+#    sha1 = parts[1].rstrip()
+    sha1 = get_hash(from_, "sha1")
     cmd = [sys.executable, signtool, "-n", nonce, "-t", token, "-c", cert]
     for s in get_suitable_signing_servers(context.signing_servers, cert_type, signing_formats):
         cmd.extend(["-H", s.server])
@@ -109,16 +117,11 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
         cmd.extend(["-f", f])
     cmd.extend(["-o", to, from_])
     log.debug("Running python %s", " ".join(cmd))
-    # TODO asyncio.subprocess?
     proc = await asyncio.create_subprocess_exec(*cmd, stdout=PIPE, stderr=STDOUT)
-#    out = sh.python(*cmd, _err_to_out=True, _cwd=work_dir)
     log.debug("COMMAND OUTPUT: ")
-    while True:
-        line = await proc.stdout.readline()
-        if line:
-            log.debug(line.decode('utf-8').rstrip())
-        else:
-            break
+    await log_output(proc.stdout)
+    exitcode = await proc.wait()
+    log.info("exitcode {}".format(exitcode))
     abs_to = os.path.join(work_dir, to)
     log.info("SHA512SUM: %s SIGNED_FILE: %s",
              get_hash(abs_to, "sha512"), to)
@@ -153,12 +156,7 @@ async def sign(context):
     # Will we know the artifacts, be able to create the manifest at decision task time?
     manifest_url = payload["signingManifest"]
     work_dir = context.config['work_dir']
-    try:
-        signing_manifest = await retry_request(context, manifest_url, return_type='json')
-    except ScriptWorkerException:
-        traceback.print_exc()
-        # TODO what to do here?
-        return
+    signing_manifest = await retry_request(context, manifest_url, return_type='json')
     # TODO: better way to extract filename
     url_prefix = "/".join(manifest_url.split("/")[:-1])
     cert_type = task_cert_type(context.task)
@@ -171,18 +169,7 @@ async def sign(context):
             context, file_url, e["hash"], cert_type, signing_formats, work_dir)
         # Update manifest data with new values
         log.debug("Getting hash of {}".format(abs_filename))
-#        e["hash"] = get_hash(abs_filename)
-        proc = await asyncio.create_subprocess_exec(
-            "openssl", "sha512", abs_filename, stdout=PIPE
-        )
-        out = []
-        while True:
-            line = await proc.stdout.readline()
-            if line:
-                out.append(line.decode('utf-8').rstrip())
-            else:
-                break
-        e["hash"] = out[1]
+        e["hash"] = get_hash(abs_filename)
         e["size"] = os.path.getsize(abs_filename)
         e["detached_signatures"] = {}
         for sig_type, sig_filename in detached_signatures:

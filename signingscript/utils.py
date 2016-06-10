@@ -14,7 +14,7 @@ DETACHED_SIGNATURES = [
 def get_hash(path, hash_type="sha512"):
     h = hashlib.new(hash_type)
     with open(path, "rb") as f:
-        for chunk in iter(functools.partial(f.read, 4096), ''):
+        for chunk in iter(functools.partial(f.read, 4096), b''):
             h.update(chunk)
     return h.hexdigest()
 
