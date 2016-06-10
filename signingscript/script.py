@@ -32,15 +32,7 @@ async def async_main(context):
     context.task = scriptworker.client.get_task(context.config)
     loop.create_task(read_temp_creds(context))
     await validate_task_schema(context)
-    # validate:
-    # - scriptworker.client.validate_task_schema(context.task, schema)
-    # - listTaskGroup(taskGroupId, {continuationToken, limit}) : result
-    # - - (does this need to be done in scriptworker?  The temp creds need more scopes otherwise)
-    # - - find decision task
-    # - - query artifacts listArtifacts(taskId, runId, {continuationToken, limit})
-    # - - download graph getArtifact(taskId, runId, name)
-    # - - verify artifact graph against taskgroup
-    # - if/when audit service is available, query it
+    # _ scriptworker needs to validate CoT artifact
     await sign(context)
     # X download artifacts
     # _ _ any checks here?
@@ -55,15 +47,20 @@ def main(name=None):
     if name in (None, '__main__'):
         # TODO config
         context = SigningContext()
+        if os.environ.get('DOCKER_HOST'):
+            parts = os.environ['DOCKER_HOST'].split(':')
+            my_ip = parts[1].replace('//', '')
+        else:
+            my_ip = "127.0.0.1"
         context.config = {
             # TODO genericize
-            'signing_server_config': '/Users/asasaki/secrets/signing.json',
+            'signing_server_config': 'signing_server_config.json',
             'tools_dir': '/src/signing/tools',
             'work_dir': '/src/signing/work_dir',
             'artifact_dir': '/src/signing/artifact_dir',
             'temp_creds_refresh_seconds': 330,
-            'my_ip': "127.0.0.1",
-            'schema_file': os.path.join(os.getcwd(), 'data', 'signing_task_schema.json'),
+            'my_ip': my_ip,
+            'schema_file': os.path.join(os.getcwd(), 'signingscript', 'data', 'signing_task_schema.json'),
             'verbose': True,
         }
         if context.config.get('verbose'):

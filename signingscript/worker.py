@@ -5,9 +5,7 @@ import os
 import random
 from shutil import copyfile
 import traceback
-import urlparse
-
-import sh
+from urllib.parse import urlsplit
 
 from scriptworker.client import get_temp_creds_from_file
 from scriptworker.exceptions import ScriptWorkerException
@@ -23,7 +21,7 @@ async def download_and_sign_file(context, url, checksum, cert_type,
                                  signing_formats, chunk_size=128):
     # TODO: better parsing
     work_dir = context.config['work_dir']
-    filename = urlparse.urlsplit(url).path.split("/")[-1]
+    filename = urlsplit(url).path.split("/")[-1]
     abs_filename = os.path.join(work_dir, filename)
     log.debug("Downloading %s", url)
     resp = await retry_request(url, return_type='response')
@@ -100,8 +98,9 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
         cmd.extend(["-f", f])
     cmd.extend(["-o", to, from_])
     log.debug("Running python %s", " ".join(cmd))
-    # aiohttp.subprocess?
-    out = sh.python(*cmd, _err_to_out=True, _cwd=work_dir)
+    # TODO aiohttp.subprocess?
+#    out = sh.python(*cmd, _err_to_out=True, _cwd=work_dir)
+    out = ""
     log.debug("COMMAND OUTPUT: %s", out)
     abs_to = os.path.join(work_dir, to)
     log.info("SHA512SUM: %s SIGNED_FILE: %s",
@@ -140,7 +139,8 @@ async def sign(context):
         signing_manifest = await retry_request(context, manifest_url, return_type=json)
     except ScriptWorkerException:
         traceback.print_exc()
-        continue
+        # TODO what to do here?
+        return
     # TODO: better way to extract filename
     url_prefix = "/".join(manifest_url.split("/")[:-1])
     cert_type = task_cert_type(context.task)
