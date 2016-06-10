@@ -90,8 +90,13 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     token = os.path.join(work_dir, "token")
     # TODO where do we get the nonce and cert from?
     nonce = os.path.join(work_dir, "nonce")
-    get_token(context, token, cert_type, signing_formats)
     signtool = os.path.join(context.config['tools_dir'], "release/signing/signtool.py")
+    import subprocess
+    proc = subprocess.Popen(["openssl", "sha1", from_], stdout=subprocess.PIPE)
+    (out, _) = proc.communicate()
+    parts = out.decode('utf-8').split(" ")
+    sha1 = parts[1].rstrip()
+#    sha1 = get_hash(from_, "sha1")
     cmd = [signtool, "-n", nonce, "-t", token, "-c", cert]
     for s in get_suitable_signing_servers(context.signing_servers, cert_type, signing_formats):
         cmd.extend(["-H", s.server])
@@ -99,7 +104,7 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
         cmd.extend(["-f", f])
     cmd.extend(["-o", to, from_])
     log.debug("Running python %s", " ".join(cmd))
-    # TODO aiohttp.subprocess?
+    # TODO asyncio.subprocess?
     out = sh.python(*cmd, _err_to_out=True, _cwd=work_dir)
     log.debug("COMMAND OUTPUT: %s", out)
     abs_to = os.path.join(work_dir, to)
@@ -153,7 +158,11 @@ async def sign(context):
         abs_filename, detached_signatures = download_and_sign_file(
             context, file_url, e["hash"], cert_type, signing_formats, work_dir)
         # Update manifest data with new values
-        e["hash"] = get_hash(abs_filename)
+        log.debug("Getting hash of {}".format(abs_filename))
+#        e["hash"] = get_hash(abs_filename)
+        output = os.popen("openssl sha512 {}".format(abs_filename))
+        parts = output.split(" ")
+        e["hash"] = parts[1].rstrip()
         e["size"] = os.path.getsize(abs_filename)
         e["detached_signatures"] = {}
         for sig_type, sig_filename in detached_signatures:

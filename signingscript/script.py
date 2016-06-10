@@ -38,10 +38,12 @@ async def async_main(context):
     validate_task_schema(context)
     context.signing_servers = load_signing_server_config(context)
     # _ scriptworker needs to validate CoT artifact
-    await get_token(context, os.path.join(work_dir, 'token'), 'nightly', 'gpg')
+    log.debug("getting token")
+    await get_token(context, os.path.join(work_dir, 'token'), 'nightly', ('gpg', ))
     # X download artifacts
     # _ _ any checks here?
     # X sign bits
+    log.debug("signing file")
     await sign_file(context, "/Users/asasaki/wrk/signingserver/test.mar",
                     "nightly", ("gpg", ), "/Users/asasaki/wrk/signingserver/host.cert",
                     to=os.path.join(work_dir, "test.mar.sig"))
@@ -67,7 +69,7 @@ def main(name=None):
     context.config = {
         # TODO genericize
         'signing_server_config': 'signing_server_config.json',
-        'tools_dir': '/src/signing/tools',
+        'tools_dir': '/src/signing/build-tools',
         'work_dir': '/src/signing/work_dir',
         'artifact_dir': '/src/signing/artifact_dir',
         'temp_creds_refresh_seconds': 330,
