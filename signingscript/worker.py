@@ -69,8 +69,8 @@ async def get_token(context, output_file, cert_type, signing_formats):
         #  error: https://gist.github.com/rail/cbacf2d297decb68affa
         url = "https://{}/token".format(s.server)
         try:
-            token = retry_request(context, url, method='post', data=data,
-                                  auth=(s.user, s.password), return_type='content')
+            token = await  retry_request(context, url, method='post', data=data,
+                                         auth=(s.user, s.password), return_type='content')
             if token:
                 break
         except ScriptWorkerException:
@@ -136,7 +136,7 @@ async def sign(context):
     manifest_url = payload["signingManifest"]
     work_dir = context.config['work_dir']
     try:
-        signing_manifest = await retry_request(context, manifest_url, return_type=json)
+        signing_manifest = await retry_request(context, manifest_url, return_type='json')
     except ScriptWorkerException:
         traceback.print_exc()
         # TODO what to do here?

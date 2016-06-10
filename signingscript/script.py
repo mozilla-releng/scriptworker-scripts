@@ -7,12 +7,13 @@ import logging
 import os
 import sys
 import traceback
+from urllib.parse import urlparse
 
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.task import validate_task_schema
-from signingscript.worker import read_temp_creds, sign
+from signingscript.worker import get_token, read_temp_creds, sign
 
 log = logging.getLogger(__name__)
 
@@ -29,14 +30,16 @@ class SigningContext(Context):
 
 async def async_main(context):
     loop = asyncio.get_event_loop()
+    work_dir = context.config['work_dir']
     context.task = scriptworker.client.get_task(context.config)
     loop.create_task(read_temp_creds(context))
-    await validate_task_schema(context)
+    validate_task_schema(context)
     # _ scriptworker needs to validate CoT artifact
-    await sign(context)
+    # await sign(context)
     # X download artifacts
     # _ _ any checks here?
     # X get token
+    await get_token(context, os.path.join(work_dir, 'token'), 'nightly', 'gpg')
     # X sign bits
     # X copy bits to artifact dir
     # X periodically update temp creds from disk
@@ -48,8 +51,11 @@ def main(name=None):
         # TODO config
         context = SigningContext()
         if os.environ.get('DOCKER_HOST'):
-            parts = os.environ['DOCKER_HOST'].split(':')
-            my_ip = parts[1].replace('//', '')
+            # The .1 on the same subnet as the DOCKER_HOST ip
+            parsed = urlparse(os.environ['DOCKER_HOST'])
+            parts = parsed.hostname.split('.')
+            parts[3] = "1"
+            my_ip = '.'.join(parts)
         else:
             my_ip = "127.0.0.1"
         context.config = {
