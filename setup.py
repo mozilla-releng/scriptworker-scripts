@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="signingscript",
@@ -7,7 +7,7 @@ setup(
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
     url="https://github.com/escapewindow/signingscript",
-    packages=["signingscript"],
+    packages=find_packages(),
     package_data={"signingscript": ["data/*.json"]},
     include_package_data=True,
     zip_safe=False,
@@ -18,9 +18,10 @@ setup(
     },
     license="MPL2",
     install_requires=[
-        "arrow",
-        "python-jose",
-        "scriptworker",
-        "taskcluster",
+        "arrow==0.8.0",
+        "python-jose==0.7.0",
+        "scriptworker==0.1.2",
+        "signtool==1.0.8",
+        "taskcluster==0.3.3",
     ],
 )
