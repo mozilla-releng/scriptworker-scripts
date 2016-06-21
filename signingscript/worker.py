@@ -109,7 +109,6 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
 #            break
 #    parts = out[0].split(' ')
 #    sha1 = parts[1].rstrip()
-    sha1 = get_hash(from_, "sha1")
     cmd = [sys.executable, signtool, "-n", nonce, "-t", token, "-c", cert]
     for s in get_suitable_signing_servers(context.signing_servers, cert_type, signing_formats):
         cmd.extend(["-H", s.server])

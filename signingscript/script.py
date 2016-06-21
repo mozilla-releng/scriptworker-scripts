@@ -3,6 +3,7 @@
 """
 import aiohttp
 import asyncio
+import json
 import logging
 import os
 import ssl
@@ -52,12 +53,12 @@ async def async_main(context):
     temp_creds_future.cancel()
 
 
-# main {{{1
-def main(name=None):
-    if name not in (None, '__main__'):
-        return
-    # TODO config
-    context = SigningContext()
+def get_default_config():
+    """ Create the default config to work from.
+
+    `my_ip` is special: when working with a docker signing server, the default
+    ip becomes the .1 of the docker subnet.
+    """
     if os.environ.get('DOCKER_HOST'):
         # The .1 on the same subnet as the DOCKER_HOST ip
         parsed = urlparse(os.environ['DOCKER_HOST'])
@@ -66,21 +67,39 @@ def main(name=None):
         my_ip = '.'.join(parts)
     else:
         my_ip = "127.0.0.1"
-    context.config = {
+    cwd = os.getcwd()
+    parent_dir = os.path.dirname(cwd)
+    default_config = {
         # TODO genericize
         'signing_server_config': 'signing_server_config.json',
-        'tools_dir': '/src/signing/build-tools',
-        'work_dir': '/src/signing/work_dir',
-        'artifact_dir': '/src/signing/artifact_dir',
+        'tools_dir': os.path.join(parent_dir, 'build-tools'),
+        'work_dir': os.path.join(parent_dir, 'work_dir'),
+        'artifact_dir': os.path.join(parent_dir, '/src/signing/artifact_dir'),
         'temp_creds_refresh_seconds': 330,
         'my_ip': my_ip,
-        'schema_file': os.path.join(os.getcwd(), 'signingscript', 'data', 'signing_task_schema.json'),
+        'schema_file': os.path.join(cwd, 'signingscript', 'data', 'signing_task_schema.json'),
         'verbose': True,
     }
+    return default_config
+
+
+def read_config(path="config.json"):
+    with open(path, "r") as fh:
+        return json.load(fh)
+
+
+# main {{{1
+def main(name=None):
+    if name not in (None, '__main__'):
+        return
+    context = SigningContext()
+    context.config = get_default_config()
+    context.config.update(read_config())
     if context.config.get('verbose'):
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
+
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=log_level
