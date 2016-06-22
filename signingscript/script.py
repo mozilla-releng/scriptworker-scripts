@@ -16,7 +16,7 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.task import validate_task_schema
 from signingscript.utils import load_signing_server_config
-from signingscript.worker import get_token, read_temp_creds, sign, sign_file
+from signingscript.worker import copy_to_artifact_dir, get_token, read_temp_creds, sign_file
 
 log = logging.getLogger(__name__)
 
@@ -41,15 +41,16 @@ async def async_main(context):
     # _ scriptworker needs to validate CoT artifact
     log.debug("getting token")
     await get_token(context, os.path.join(work_dir, 'token'), 'nightly', ('gpg', ))
-    # X download artifacts
-    # _ _ any checks here?
-    # X sign bits
     log.debug("signing file")
-    await sign_file(context, os.path.join(work_dir, "test.mar"),
-                    "nightly", ("gpg", ), "/Users/asasaki/wrk/signingserver/host.cert",
-                    to=os.path.join(work_dir, "test.mar.asc"))
-    # await sign(context)
-    # X copy bits to artifact dir
+    filename = "test.mar"  # TODO get from manifest
+    # _ SHA checks
+    # _ download artifacts
+    artifacts = [filename, "{}.asc".format(filename)]
+    await sign_file(context, os.path.join(work_dir, filename),
+                    "nightly", ("gpg", ), context.config["ssl_cert"],
+                    to=os.path.join(work_dir, "{}.asc".format(filename)))
+    for source in artifacts:
+        copy_to_artifact_dir(context, source)
     temp_creds_future.cancel()
 
 
@@ -77,6 +78,7 @@ def get_default_config():
         'artifact_dir': os.path.join(parent_dir, '/src/signing/artifact_dir'),
         'temp_creds_refresh_seconds': 330,
         'my_ip': my_ip,
+        'ssl_cert': None,
         'schema_file': os.path.join(cwd, 'signingscript', 'data', 'signing_task_schema.json'),
         'verbose': True,
     }

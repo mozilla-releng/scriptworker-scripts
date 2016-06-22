@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 async def download_and_sign_file(context, url, checksum, cert_type,
                                  signing_formats, chunk_size=128):
-    # TODO: better parsing
+    # TODO split up
     work_dir = context.config['work_dir']
     filename = urlsplit(url).path.split("/")[-1]
     abs_filename = os.path.join(work_dir, filename)
@@ -55,7 +55,6 @@ async def download_and_sign_file(context, url, checksum, cert_type,
     return abs_filename, detached_signatures
 
 
-# @redo.retriable(attempts=10, sleeptime=5, max_sleeptime=30)
 async def get_token(context, output_file, cert_type, signing_formats):
     token = None
     data = {"slave_ip": context.config['my_ip'], "duration": 5 * 60}
@@ -99,16 +98,6 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     token = os.path.join(work_dir, "token")
     nonce = os.path.join(work_dir, "nonce")
     signtool = os.path.join(context.config['tools_dir'], "release/signing/signtool.py")
-#    proc = await asyncio.create_subprocess_exec("openssl", "sha1", from_, stdout=PIPE)
-#    out = []
-#    while True:
-#        line = await proc.stdout.readline()
-#        if line:
-#            out.append(line.decode('utf-8').rstrip())
-#        else:
-#            break
-#    parts = out[0].split(' ')
-#    sha1 = parts[1].rstrip()
     cmd = [sys.executable, signtool, "-n", nonce, "-t", token, "-c", cert]
     for s in get_suitable_signing_servers(context.signing_servers, cert_type, signing_formats):
         cmd.extend(["-H", s.server])
@@ -151,6 +140,7 @@ def copy_to_artifact_dir(context, source, target=None):
 
 
 async def sign(context):
+    # TODO move to async_main
     payload = context.task["payload"]
     # Will we know the artifacts, be able to create the manifest at decision task time?
     manifest_url = payload["signingManifest"]
