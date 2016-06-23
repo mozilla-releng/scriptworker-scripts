@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-from signingscript.task import validate_task_schema
+from signingscript.task import task_cert_type, task_signing_formats, validate_task
 from signingscript.utils import load_signing_server_config
 from signingscript.worker import copy_to_artifact_dir, get_token, read_temp_creds, sign_file
 
@@ -36,18 +36,22 @@ async def async_main(context):
     work_dir = context.config['work_dir']
     context.task = scriptworker.client.get_task(context.config)
     temp_creds_future = loop.create_task(read_temp_creds(context))
-    validate_task_schema(context)
+    validate_task(context)
     context.signing_servers = load_signing_server_config(context)
+    cert_type = task_cert_type(context.task)
+    signing_formats = task_signing_formats(context.task)
     # _ scriptworker needs to validate CoT artifact
     log.debug("getting token")
-    await get_token(context, os.path.join(work_dir, 'token'), 'nightly', ('gpg', ))
+#    await get_token(context, os.path.join(work_dir, 'token'), 'nightly', ('gpg', ))
+    await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
     log.debug("signing file")
     filename = "test.mar"  # TODO get from manifest
     # _ SHA checks
     # _ download artifacts
+    # TODO .asc only if we're gpg
     artifacts = [filename, "{}.asc".format(filename)]
     await sign_file(context, os.path.join(work_dir, filename),
-                    "nightly", ("gpg", ), context.config["ssl_cert"],
+                    cert_type, signing_formats, context.config["ssl_cert"],
                     to=os.path.join(work_dir, "{}.asc".format(filename)))
     for source in artifacts:
         copy_to_artifact_dir(context, source)
@@ -71,7 +75,6 @@ def get_default_config():
     cwd = os.getcwd()
     parent_dir = os.path.dirname(cwd)
     default_config = {
-        # TODO genericize
         'signing_server_config': 'signing_server_config.json',
         'tools_dir': os.path.join(parent_dir, 'build-tools'),
         'work_dir': os.path.join(parent_dir, 'work_dir'),
@@ -109,8 +112,8 @@ def main(name=None):
     logging.getLogger("taskcluster").setLevel(logging.WARNING)
     loop = asyncio.get_event_loop()
     kwargs = {}
-    # XXX can we get the signing servers' CA cert on the scriptworkers?
-    # XXX if they're real certs, we can skip this
+    # TODO can we get the signing servers' CA cert on the scriptworkers?
+    # if they're real certs, we can skip this
     if context.config.get('ssl_cert'):
         sslcontext = ssl.create_default_context(cafile=context.config['ssl_cert'])
         kwargs['ssl_context'] = sslcontext

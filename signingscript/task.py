@@ -20,12 +20,11 @@ def task_cert_type(task):
 
 def task_signing_formats(task):
     """Extract last part of signing format scope"""
-    # TODO we probably want to control this in a different way than scopes
     return [s.split(":")[-1] for s in task["scopes"] if
             s.startswith("project:releng:signing:format:")]
 
 
-def validate_signature(task_id, token, pub_key, algorithms=[ALGORITHMS.RS512]):
+def validate_signature(task_id, token, pub_key, algorithms=(ALGORITHMS.RS512, )):
     claims = jwt.decode(token, pub_key, algorithms=algorithms)
     if task_id != claims.get("taskId"):
         raise TaskVerificationError(
@@ -38,3 +37,7 @@ def validate_task_schema(context):
     with open(context.config['schema_file']) as fh:
         task_schema = json.load(fh)
     scriptworker.client.validate_task_schema(context.task, task_schema)
+
+
+def validate_task(context):
+    validate_task_schema(context)
