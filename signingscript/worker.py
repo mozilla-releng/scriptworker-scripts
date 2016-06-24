@@ -7,7 +7,6 @@ import random
 from shutil import copyfile
 import sys
 import traceback
-from urllib.parse import urlsplit
 
 from scriptworker.client import get_temp_creds_from_file
 from scriptworker.exceptions import ScriptWorkerException
@@ -19,14 +18,9 @@ from signingscript.utils import get_hash, get_detached_signatures
 log = logging.getLogger(__name__)
 
 
-async def download_and_sign_file(context, url, checksum, cert_type,
-                                 signing_formats, chunk_size=128):
-    # TODO split up
-    work_dir = context.config['work_dir']
-    filename = urlsplit(url).path.split("/")[-1]
-    abs_filename = os.path.join(work_dir, filename)
+async def download_file(context, url, abs_filename, chunk_size=128):
     log.debug("Downloading %s", url)
-    resp = await retry_request(url, return_type='response')
+    resp = await retry_request(context, url, return_type='response')
     with open(abs_filename, 'wb') as fd:
         while True:
             chunk = await resp.content.read(chunk_size)
@@ -34,25 +28,26 @@ async def download_and_sign_file(context, url, checksum, cert_type,
                 break
             fd.write(chunk)
     log.debug("Done")
-    got_checksum = get_hash(abs_filename)
-    log.info("SHA512SUM: %s URL: %s", got_checksum, url)
-    log.info("SHA1SUM: %s URL: %s", get_hash(abs_filename, "sha1"), url)
+
+
+async def verify_checksum(context, abs_filename, checksum):
+    got_checksum = get_hash(abs_filename, "sha512")
+    log.info("SHA512SUM: %s file: %s", got_checksum, abs_filename)
+    log.info("SHA1SUM: %s file: %s", get_hash(abs_filename, "sha1"), abs_filename)
     if not got_checksum == checksum:
         msg = "CHECKSUM MISMATCH: Expected {}, got {} for {}".format(
-            checksum, got_checksum, url)
+            checksum, got_checksum, abs_filename)
         log.debug(msg)
         raise ChecksumMismatchError(msg)
-    log.debug("Signing %s", filename)
-    await sign_file(context, filename, cert_type, signing_formats)
-    copy_to_artifact_dir(abs_filename)
+
+
+def detached_sigfiles(filename, signing_formats):
     detached_signatures = []
     for s_type, s_ext, s_mime in get_detached_signatures(signing_formats):
         d_filename = "{filename}{ext}".format(filename=filename,
                                               ext=s_ext)
-        d_abs_filename = os.path.join(work_dir, d_filename)
-        copy_to_artifact_dir(d_abs_filename)
         detached_signatures.append((s_type, d_filename))
-    return abs_filename, detached_signatures
+    return detached_signatures
 
 
 async def get_token(context, output_file, cert_type, signing_formats):
@@ -140,7 +135,6 @@ def copy_to_artifact_dir(context, source, target=None):
 
 
 async def sign(context):
-    # TODO move to async_main
     payload = context.task["payload"]
     # Will we know the artifacts, be able to create the manifest at decision task time?
     manifest_url = payload["signingManifest"]
@@ -148,14 +142,11 @@ async def sign(context):
     signing_manifest = await retry_request(context, manifest_url, return_type='json')
     # TODO: better way to extract filename
     url_prefix = "/".join(manifest_url.split("/")[:-1])
-    cert_type = task_cert_type(context.task)
-    signing_formats = task_signing_formats(context.task)
     for e in signing_manifest:
         # Fallback to "mar" if "file_to_sign" is not specified
         file_to_sign = e.get("file_to_sign", e.get("mar"))
         file_url = "{}/{}".format(url_prefix, file_to_sign)
-        abs_filename, detached_signatures = download_and_sign_file(
-            context, file_url, e["hash"], cert_type, signing_formats, work_dir)
+        abs_filename, detached_signatures = None,
         # Update manifest data with new values
         log.debug("Getting hash of {}".format(abs_filename))
         e["hash"] = get_hash(abs_filename)
