@@ -36,6 +36,7 @@ def validate_signature(task_id, token, pub_key, algorithms=(ALGORITHMS.RS512, ))
 def validate_task_schema(context):
     with open(context.config['schema_file']) as fh:
         task_schema = json.load(fh)
+    log.debug(task_schema)
     scriptworker.client.validate_task_schema(context.task, task_schema)
 
 

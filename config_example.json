@@ -4,6 +4,6 @@
     "work_dir": "work_dir",
     "artifact_dir": "artifact_dir",
     "temp_creds_refresh_seconds": 330,
-    "schema_file": true
+    "schema_file": "signingscript/data/signing_task_schema.json",
     "verbose": true
 }

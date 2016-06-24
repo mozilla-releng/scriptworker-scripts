@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-from signingscript.task import task_cert_type, task_signing_formats, validate_task
+from signingscript.task import task_cert_type, task_signing_formats, validate_task_schema
 from signingscript.utils import load_signing_server_config
 from signingscript.worker import copy_to_artifact_dir, get_token, read_temp_creds, sign_file
 
@@ -35,11 +35,16 @@ async def async_main(context):
     loop = asyncio.get_event_loop()
     work_dir = context.config['work_dir']
     context.task = scriptworker.client.get_task(context.config)
+    log.debug(context.task)
     temp_creds_future = loop.create_task(read_temp_creds(context))
-    validate_task(context)
+    log.debug("validating task")
+    validate_task_schema(context)
     context.signing_servers = load_signing_server_config(context)
+    log.debug(context.signing_servers)
     cert_type = task_cert_type(context.task)
+    log.debug(cert_type)
     signing_formats = task_signing_formats(context.task)
+    log.debug(signing_formats)
     # _ scriptworker needs to validate CoT artifact
     log.debug("getting token")
 #    await get_token(context, os.path.join(work_dir, 'token'), 'nightly', ('gpg', ))
@@ -99,6 +104,7 @@ def main(name=None):
         return
     context = SigningContext()
     context.config = get_default_config()
+#    context.config.update(read_config(path=os.path.join(os.getcwd(), "config.json")))
     context.config.update(read_config())
     if context.config.get('verbose'):
         log_level = logging.DEBUG
@@ -110,6 +116,7 @@ def main(name=None):
         level=log_level
     )
     logging.getLogger("taskcluster").setLevel(logging.WARNING)
+    log.debug(context.config)
     loop = asyncio.get_event_loop()
     kwargs = {}
     # TODO can we get the signing servers' CA cert on the scriptworkers?
