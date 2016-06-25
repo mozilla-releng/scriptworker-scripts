@@ -79,8 +79,8 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     work_dir = context.config['work_dir']
     token = os.path.join(work_dir, "token")
     nonce = os.path.join(work_dir, "nonce")
-    signtool = os.path.join(context.config['tools_dir'], "release/signing/signtool.py")
-    cmd = [sys.executable, signtool, "-n", nonce, "-t", token, "-c", cert]
+    signtool = os.path.join(os.path.dirname(sys.executable), "signtool")
+    cmd = [signtool, "-n", nonce, "-t", token, "-c", cert]
     for s in get_suitable_signing_servers(context.signing_servers, cert_type, signing_formats):
         cmd.extend(["-H", s.server])
     for f in signing_formats:
@@ -121,31 +121,55 @@ def copy_to_artifact_dir(context, source, target=None):
         raise SigningServerError("Can't copy {} to {}!".format(source, target_path))
 
 
+async def raise_future_exceptions(tasks):
+    await asyncio.wait(tasks)
+    for task in tasks:
+        exc = task.exception()
+        if exc is not None:
+            raise exc
+
+
 async def download_files(context):
     payload = context.task["payload"]
     # Will we know the artifacts, be able to create the manifest at decision task time?
     manifest_url = payload["signingManifest"]
     work_dir = context.config['work_dir']
     abs_manifest_path = os.path.join(work_dir, "signing_manifest.json")
-    await download_file(context, manifest_url, abs_manifest_path)
-    signing_manifest = load_json(abs_manifest_path)
+    signing_manifest = json.loads(await retry_request(context, manifest_url))
+    log.debug(signing_manifest)
 
+    tasks = []
     # TODO: better way to extract filename
     url_prefix = "/".join(manifest_url.split("/")[:-1])
+    files = {}
     for e in signing_manifest:
         # Fallback to "mar" if "file_to_sign" is not specified
         file_to_sign = e.get("file_to_sign", e.get("mar"))
         file_url = "{}/{}".format(url_prefix, file_to_sign)
-        abs_filename, detached_signatures = None,
-        # Update manifest data with new values
-        log.debug("Getting hash of {}".format(abs_filename))
-        e["hash"] = get_hash(abs_filename)
-        e["size"] = os.path.getsize(abs_filename)
-        e["detached_signatures"] = {}
-        for sig_type, sig_filename in detached_signatures:
-            e["detached_signatures"][sig_type] = sig_filename
-    manifest_file = os.path.join(work_dir, "manifest.json")
-    with open(manifest_file, "wb") as f:
-        json.dump(signing_manifest, f, indent=2, sort_keys=True)
-    log.debug("Uploading manifest")
-    copy_to_artifact_dir(manifest_file)
+        abs_file_path = os.path.join(work_dir, file_to_sign)
+        files[file_to_sign] = {
+            "path": abs_file_path,
+            "sha": e["sha"]
+        }
+        tasks.append(asyncio.ensure_future(download_file(context, file_url, abs_file_path)))
+
+    await raise_future_exceptions(tasks)
+    tasks = []
+    for filename, filedef in files.items():
+        tasks.append(asyncio.ensure_future(verify_checksum(context, filedef["path"], filedef["sha"])))
+    await raise_future_exceptions(tasks)
+    return files.keys()
+
+    #     abs_filename, detached_signatures = None,
+    #     # Update manifest data with new values
+    #     log.debug("Getting hash of {}".format(abs_filename))
+    #     e["hash"] = get_hash(abs_filename)
+    #     e["size"] = os.path.getsize(abs_filename)
+    #     e["detached_signatures"] = {}
+    #     for sig_type, sig_filename in detached_signatures:
+    #         e["detached_signatures"][sig_type] = sig_filename
+    # manifest_file = os.path.join(work_dir, "manifest.json")
+    # with open(manifest_file, "wb") as f:
+    #     json.dump(signing_manifest, f, indent=2, sort_keys=True)
+    # log.debug("Uploading manifest")
+    # copy_to_artifact_dir(manifest_file)

@@ -11,13 +11,13 @@ class TaskVerificationError(ScriptWorkerTaskException):
 
 class ChecksumMismatchError(ScriptWorkerTaskException):
     def __init__(self, msg):
-        super(TaskVerificationError, self).__init__(
+        super(ChecksumMismatchError, self).__init__(
             msg, exit_code=STATUSES['malformed-payload']
         )
 
 
 class SigningServerError(ScriptWorkerTaskException):
     def __init__(self, msg):
-        super(TaskVerificationError, self).__init__(
+        super(SigningServerError, self).__init__(
             msg, exit_code=STATUSES['internal-error']
         )

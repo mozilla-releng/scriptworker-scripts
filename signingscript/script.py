@@ -47,22 +47,20 @@ async def async_main(context):
     signing_formats = task_signing_formats(context.task)
     log.debug(signing_formats)
     # _ scriptworker needs to validate CoT artifact
-    # _ download manifest
-    # _ download artifacts
-    download_files(context)
-    filename = "test.mar"  # TODO get from manifest
-    # _ SHA checks
+    filelist = await download_files(context)
     log.debug("getting token")
 #    await get_token(context, os.path.join(work_dir, 'token'), 'nightly', ('gpg', ))
     await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
-    log.debug("signing file")
-    # TODO .asc only if we're gpg
-    artifacts = [filename, "{}.asc".format(filename)]
-    await sign_file(context, os.path.join(work_dir, filename),
-                    cert_type, signing_formats, context.config["ssl_cert"],
-                    to=os.path.join(work_dir, "{}.asc".format(filename)))
-    for source in artifacts:
-        copy_to_artifact_dir(context, source)
+    # TODO async?
+    for filename in filelist:
+        log.debug("signing %s", filename)
+        # TODO .asc only if we're gpg
+        artifacts = [filename, "{}.asc".format(filename)]
+        await sign_file(context, os.path.join(work_dir, filename),
+                        cert_type, signing_formats, context.config["ssl_cert"],
+                        to=os.path.join(work_dir, "{}.asc".format(filename)))
+        for source in artifacts:
+            copy_to_artifact_dir(context, source)
     temp_creds_future.cancel()
 
 
