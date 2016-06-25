@@ -1,9 +1,9 @@
 {
     "signing_server_config": "server_config.json",
-    "tools_dir": "build-tools",
     "work_dir": "work_dir",
     "artifact_dir": "artifact_dir",
     "temp_creds_refresh_seconds": 330,
     "schema_file": "signingscript/data/signing_task_schema.json",
+    "signtool": ["python2", "../build-tools/release/signing/signtool.py"],
     "verbose": true
 }

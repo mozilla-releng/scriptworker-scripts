@@ -60,8 +60,9 @@ async def async_main(context):
                         cert_type, signing_formats, context.config["ssl_cert"],
                         to=os.path.join(work_dir, "{}.asc".format(filename)))
         for source in artifacts:
-            copy_to_artifact_dir(context, source)
+            copy_to_artifact_dir(context, os.path.join(work_dir, source))
     temp_creds_future.cancel()
+    log.info("Done!")
 
 
 # config {{{1
@@ -130,6 +131,7 @@ def main(name=None):
         except ScriptWorkerTaskException as exc:
             traceback.print_exc()
             sys.exit(exc.exit_code)
+    loop.close()
 
 
 main(name=__name__)
