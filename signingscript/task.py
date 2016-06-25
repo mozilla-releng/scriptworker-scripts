@@ -38,7 +38,3 @@ def validate_task_schema(context):
         task_schema = json.load(fh)
     log.debug(task_schema)
     scriptworker.client.validate_task_schema(context.task, task_schema)
-
-
-def validate_task(context):
-    validate_task_schema(context)

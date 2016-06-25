@@ -4,11 +4,25 @@ import functools
 import logging
 from collections import namedtuple
 
+from scriptworker.utils import retry_request
+
 log = logging.getLogger(__name__)
 # Mapping between signing client formats and file extensions
 DETACHED_SIGNATURES = [
     ('gpg', '.asc', 'text/plain')
 ]
+
+
+async def download_file(context, url, abs_filename, chunk_size=128):
+    log.debug("Downloading %s", url)
+    resp = await retry_request(context, url, return_type='response')
+    with open(abs_filename, 'wb') as fd:
+        while True:
+            chunk = await resp.content.read(chunk_size)
+            if not chunk:
+                break
+            fd.write(chunk)
+    log.debug("Done")
 
 
 def get_hash(path, hash_type="sha512"):
@@ -18,6 +32,11 @@ def get_hash(path, hash_type="sha512"):
         for chunk in iter(functools.partial(f.read, 4096), b''):
             h.update(chunk)
     return h.hexdigest()
+
+
+def load_json(path):
+    with open(path, "r") as fh:
+        return json.load(fh)
 
 
 def load_signing_server_config(context):

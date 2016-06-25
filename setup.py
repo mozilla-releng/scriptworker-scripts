@@ -20,7 +20,7 @@ setup(
     install_requires=[
         "arrow==0.8.0",
         "python-jose==0.7.0",
-#        "scriptworker==0.1.2",
+        # "scriptworker==0.1.2",
         "scriptworker",
         "signtool==1.0.8",
         "taskcluster==0.3.3",

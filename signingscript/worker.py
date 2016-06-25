@@ -11,23 +11,10 @@ import traceback
 from scriptworker.client import get_temp_creds_from_file
 from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_request
-from signingscript.task import task_cert_type, task_signing_formats
 from signingscript.exceptions import ChecksumMismatchError, SigningServerError
-from signingscript.utils import get_hash, get_detached_signatures
+from signingscript.utils import download_file, get_hash, get_detached_signatures, load_json
 
 log = logging.getLogger(__name__)
-
-
-async def download_file(context, url, abs_filename, chunk_size=128):
-    log.debug("Downloading %s", url)
-    resp = await retry_request(context, url, return_type='response')
-    with open(abs_filename, 'wb') as fd:
-        while True:
-            chunk = await resp.content.read(chunk_size)
-            if not chunk:
-                break
-            fd.write(chunk)
-    log.debug("Done")
 
 
 async def verify_checksum(context, abs_filename, checksum):
@@ -134,12 +121,15 @@ def copy_to_artifact_dir(context, source, target=None):
         raise SigningServerError("Can't copy {} to {}!".format(source, target_path))
 
 
-async def sign(context):
+async def download_files(context):
     payload = context.task["payload"]
     # Will we know the artifacts, be able to create the manifest at decision task time?
     manifest_url = payload["signingManifest"]
     work_dir = context.config['work_dir']
-    signing_manifest = await retry_request(context, manifest_url, return_type='json')
+    abs_manifest_path = os.path.join(work_dir, "signing_manifest.json")
+    await download_file(context, manifest_url, abs_manifest_path)
+    signing_manifest = load_json(abs_manifest_path)
+
     # TODO: better way to extract filename
     url_prefix = "/".join(manifest_url.split("/")[:-1])
     for e in signing_manifest:

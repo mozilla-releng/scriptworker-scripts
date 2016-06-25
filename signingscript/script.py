@@ -3,7 +3,6 @@
 """
 import aiohttp
 import asyncio
-import json
 import logging
 import os
 import ssl
@@ -15,12 +14,13 @@ import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.task import task_cert_type, task_signing_formats, validate_task_schema
-from signingscript.utils import load_signing_server_config
-from signingscript.worker import copy_to_artifact_dir, get_token, read_temp_creds, sign_file
+from signingscript.utils import load_json, load_signing_server_config
+from signingscript.worker import copy_to_artifact_dir, download_files, get_token, read_temp_creds, sign_file
 
 log = logging.getLogger(__name__)
 
 
+# SigningContext {{{1
 class SigningContext(Context):
     signing_servers = None
 
@@ -31,6 +31,7 @@ class SigningContext(Context):
         pass
 
 
+# async_main {{{1
 async def async_main(context):
     loop = asyncio.get_event_loop()
     work_dir = context.config['work_dir']
@@ -46,13 +47,15 @@ async def async_main(context):
     signing_formats = task_signing_formats(context.task)
     log.debug(signing_formats)
     # _ scriptworker needs to validate CoT artifact
+    # _ download manifest
+    # _ download artifacts
+    download_files(context)
+    filename = "test.mar"  # TODO get from manifest
+    # _ SHA checks
     log.debug("getting token")
 #    await get_token(context, os.path.join(work_dir, 'token'), 'nightly', ('gpg', ))
     await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
     log.debug("signing file")
-    filename = "test.mar"  # TODO get from manifest
-    # _ SHA checks
-    # _ download artifacts
     # TODO .asc only if we're gpg
     artifacts = [filename, "{}.asc".format(filename)]
     await sign_file(context, os.path.join(work_dir, filename),
@@ -63,6 +66,7 @@ async def async_main(context):
     temp_creds_future.cancel()
 
 
+# config {{{1
 def get_default_config():
     """ Create the default config to work from.
 
@@ -80,7 +84,7 @@ def get_default_config():
     cwd = os.getcwd()
     parent_dir = os.path.dirname(cwd)
     default_config = {
-        'signing_server_config': 'signing_server_config.json',
+        'signing_server_config': 'server_config.json',
         'tools_dir': os.path.join(parent_dir, 'build-tools'),
         'work_dir': os.path.join(parent_dir, 'work_dir'),
         'artifact_dir': os.path.join(parent_dir, '/src/signing/artifact_dir'),
@@ -93,19 +97,13 @@ def get_default_config():
     return default_config
 
 
-def read_config(path="config.json"):
-    with open(path, "r") as fh:
-        return json.load(fh)
-
-
 # main {{{1
 def main(name=None):
     if name not in (None, '__main__'):
         return
     context = SigningContext()
     context.config = get_default_config()
-#    context.config.update(read_config(path=os.path.join(os.getcwd(), "config.json")))
-    context.config.update(read_config())
+    context.config.update(load_json(path=os.path.join(os.getcwd(), "config.json")))
     if context.config.get('verbose'):
         log_level = logging.DEBUG
     else:
