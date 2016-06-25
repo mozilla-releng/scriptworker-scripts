@@ -5,6 +5,7 @@ import logging
 from collections import namedtuple
 
 from scriptworker.utils import retry_request
+from signingscript.exceptions import DownloadError
 
 log = logging.getLogger(__name__)
 # Mapping between signing client formats and file extensions
@@ -15,13 +16,15 @@ DETACHED_SIGNATURES = [
 
 async def download_file(context, url, abs_filename, chunk_size=128):
     log.debug("Downloading %s", url)
-    resp = await retry_request(context, url, return_type='response')
-    with open(abs_filename, 'wb') as fd:
-        while True:
-            chunk = await resp.content.read(chunk_size)
-            if not chunk:
-                break
-            fd.write(chunk)
+    async with context.session.get(url) as resp:
+        if resp.status != 200:
+            raise DownloadError("{} status {} is not 200!".format(url, resp.status))
+        with open(abs_filename, 'wb') as fd:
+            while True:
+                chunk = await resp.content.read(chunk_size)
+                if not chunk:
+                    break
+                fd.write(chunk)
     log.debug("Done")
 
 

@@ -10,7 +10,7 @@ import traceback
 
 from scriptworker.client import get_temp_creds_from_file
 from scriptworker.exceptions import ScriptWorkerException
-from scriptworker.utils import retry_request
+from scriptworker.utils import retry_async, retry_request
 from signingscript.exceptions import ChecksumMismatchError, SigningServerError
 from signingscript.utils import download_file, get_hash, get_detached_signatures, load_json
 
@@ -151,7 +151,11 @@ async def download_files(context):
             "path": abs_file_path,
             "sha": e["sha"]
         }
-        tasks.append(asyncio.ensure_future(download_file(context, file_url, abs_file_path)))
+        tasks.append(
+            asyncio.ensure_future(
+                retry_async(download_file, args=(context, file_url, abs_file_path))
+            )
+        )
 
     await raise_future_exceptions(tasks)
     tasks = []
