@@ -1,0 +1,53 @@
+FROM ubuntu:xenial
+MAINTAINER Rail Aliiev <rail@mozilla.com>
+
+# Required software
+ENV DEBIAN_FRONTEND noninteractive
+# Chain apt-get commands with apt-get clean in a single docker RUN
+# to make sure that files are removed within a single docker layer
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh && \
+    apt-get update -q && apt-get install -y software-properties-common && \
+#    add-apt-repository ppa:fkrull/deadsnakes && apt-get update -q && \
+    apt-get install -yyq --no-install-recommends \
+    python3.5 mercurial curl python-cryptography virtualenv && \
+    apt-get clean
+
+# python-pip installs a lot of dependencies increasing the size of an image
+# drastically.
+
+RUN virtualenv /home/worker/py3.5 --python=/usr/bin/python3.5 && \
+    source /home/worker/py3.5/bin/activate && pip install scriptworker
+
+#RUN easy_install pip
+#RUN pip install -r /tmp/requirements.txt
+COPY requirements.txt /tmp/
+
+RUN virtualenv /home/worker/py2 --python=/usr/bin/python --system-site-packages \
+    && source /home/worker/py2/bin/activate && \
+    pip install -r /tmp/requirements.txt && deactivate
+
+RUN hg clone https://hg.mozilla.org/build/tools /home/worker/tools
+
+RUN useradd -d /home/worker -s /bin/bash -m worker
+
+RUN mkdir /home/worker/bin
+COPY scripts/* /home/worker/bin/
+COPY *.pubkey /home/worker/keys/
+COPY runme.sh /runme.sh
+RUN chmod 755 /home/worker/bin/* /runme.sh
+
+
+COPY *config.json /home/worker/
+
+
+ENV           HOME          /home/worker
+ENV           SHELL         /bin/bash
+ENV           USER          worker
+ENV           LOGNAME       worker
+ENV           BALROG_API_ROOT     "http://192.168.99.100:8080/api"
+ENV           SIGNING_CERT  nightly
+ENV           BALROG_USERNAME ...
+ENV           BALROG_PASSWORD ...
+ENV           S3_BUCKET     ...
+ENV           AWS_ACCESS_KEY_ID ...
+ENV           AWS_SECRET_ACCESS_KEY ...

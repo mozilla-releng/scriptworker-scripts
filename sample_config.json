@@ -1,0 +1,25 @@
+{
+    "provisioner_id": "test-dummy-provisioner",
+    "scheduler_id": "test-dummy-scheduler",
+    "worker_group": "test-dummy-workers",
+    "worker_type": "dummy-worker-francis",
+    "worker_id": "dummy-worker-francis2",
+
+    "work_dir": "/home/worker/work",
+    "log_dir": "/home/worker/log",
+    "artifact_dir": "/home/worker/artifacts",
+    "artifact_expiration_hours": 24,
+    "artifact_upload_timeout": 1200,
+    "task_script": ["/home/worker/py2/bin/python","funsize-balrog-submitter.py",
+                    "--taskdef","/home/worker/work/task.json",
+                    "-a", "http://192.168.99.100:8080/api",
+                    "--verbose"],
+    "task_max_timeout": 1200,
+
+    "credentials": {
+        "clientId": "...",
+        "accessToken": "...",
+        "certificate": ""
+    },
+    "verbose": true
+}
