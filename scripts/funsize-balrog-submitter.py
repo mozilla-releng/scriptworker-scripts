@@ -153,9 +153,7 @@ def main():
         raise RuntimeError("BALROG_USERNAME and BALROG_PASSWORD environment "
                            "variables should be set")
 
-    signing_cert_name = os.environ.get("SIGNING_CERT")
-    if not signing_cert_name:
-        raise RuntimeError("SIGNING_CERT environment variable should be set")
+    signing_cert_name = task_definition['payload']['signing_cert']
     signing_cert = "/home/worker/keys/{}.pubkey".format(signing_cert_name)
 
     s3_bucket = os.environ.get("S3_BUCKET")
