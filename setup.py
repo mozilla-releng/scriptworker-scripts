@@ -21,6 +21,6 @@ setup(
         "arrow==0.8.0",
         "python-jose==0.7.0",
         "scriptworker",
-        "taskcluster==0.3.3",
+        "taskcluster==0.3.4",
     ],
 )

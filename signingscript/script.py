@@ -108,7 +108,7 @@ def main(name=None, config_path=None):
     context = SigningContext()
     context.config = get_default_config()
     if config_path is None:
-        if len(sys.argv != 2):
+        if len(sys.argv) != 2:
             usage()
         config_path = sys.argv[1]
     context.config.update(load_json(path=config_path))
