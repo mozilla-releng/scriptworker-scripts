@@ -11,7 +11,7 @@ from scriptworker.client import get_temp_creds_from_file
 from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_async, retry_request
 from signingscript.exceptions import ChecksumMismatchError, SigningServerError
-from signingscript.utils import download_file, get_hash, get_detached_signatures
+from signingscript.utils import download_file, get_hash, get_detached_signatures, load_json
 
 log = logging.getLogger(__name__)
 
@@ -142,7 +142,8 @@ async def download_files(context):
     manifest_url = payload["signingManifest"]
     work_dir = context.config['work_dir']
     abs_manifest_path = os.path.join(work_dir, "signing_manifest.json")
-    signing_manifest = json.loads(await retry_request(context, manifest_url))
+    await retry_async(download_file, args=(context, manifest_url, abs_manifest_path))
+    signing_manifest = load_json(abs_manifest_path)
     log.debug(signing_manifest)
 
     tasks = []
