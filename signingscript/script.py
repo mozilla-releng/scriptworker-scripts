@@ -97,17 +97,25 @@ def get_default_config():
 
 
 # main {{{1
-def main(name=None):
+def usage():
+    print("Usage: {} CONFIG_FILE".format(sys.argv[0]), file=sys.stderr)
+    sys.exit(1)
+
+
+def main(name=None, config_path=None):
     if name not in (None, '__main__'):
         return
     context = SigningContext()
     context.config = get_default_config()
-    context.config.update(load_json(path=os.path.join(os.getcwd(), "config.json")))
+    if config_path is None:
+        if len(sys.argv != 2):
+            usage()
+        config_path = sys.argv[1]
+    context.config.update(load_json(path=config_path))
     if context.config.get('verbose'):
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
-
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=log_level

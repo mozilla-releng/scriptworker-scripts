@@ -4,7 +4,6 @@ import functools
 import logging
 from collections import namedtuple
 
-from scriptworker.utils import retry_request
 from signingscript.exceptions import DownloadError
 
 log = logging.getLogger(__name__)

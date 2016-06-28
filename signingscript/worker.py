@@ -5,14 +5,13 @@ import logging
 import os
 import random
 from shutil import copyfile
-import sys
 import traceback
 
 from scriptworker.client import get_temp_creds_from_file
 from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_async, retry_request
 from signingscript.exceptions import ChecksumMismatchError, SigningServerError
-from signingscript.utils import download_file, get_hash, get_detached_signatures, load_json
+from signingscript.utils import download_file, get_hash, get_detached_signatures
 
 log = logging.getLogger(__name__)
 
