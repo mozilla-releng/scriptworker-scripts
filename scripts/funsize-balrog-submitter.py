@@ -122,9 +122,6 @@ def main():
     parser.add_argument("--manifest", required=True)'''
 
 
-    parser.add_argument("-a", "--api-root", required=True,
-                        help="Balrog API root")
-
     parser.add_argument("--taskdef", required=True,
                         help="File location of task graph"),
 
@@ -146,6 +143,11 @@ def main():
     parent_url = task_definition['payload']['parent_task_artifacts_url']
 
     manifest = get_manifest(parent_url)
+
+    api_root = os.environ.get("BALROG_API_ROOT")
+    if not api_root:
+        raise RuntimeError("BALROG_API_ROOT environment variable not set")
+
 
     balrog_username = os.environ.get("BALROG_USERNAME")
     balrog_password = os.environ.get("BALROG_PASSWORD")
@@ -181,7 +183,7 @@ def main():
             log.info("Release style balrog submission")
             partial_info[0]["previousVersion"] = e["previousVersion"]
             partial_info[0]["previousBuildNumber"] = e["previousBuildNumber"]
-            submitter = ReleaseSubmitterV4(api_root=args.api_root, auth=auth,
+            submitter = ReleaseSubmitterV4(api_root=api_root, auth=auth,
                                            dummy=args.dummy)
             retry(lambda: submitter.run(
                 platform=e["platform"], productName=e["appName"],
@@ -216,7 +218,7 @@ def main():
                 s3_bucket, aws_access_key_id, aws_secret_access_key,
                 complete_mar_url, complete_mar_dest, signing_cert)
             partial_info[0]["from_buildid"] = e["from_buildid"]
-            submitter = NightlySubmitterV4(api_root=args.api_root, auth=auth,
+            submitter = NightlySubmitterV4(api_root=api_root, auth=auth,
                                            dummy=args.dummy)
             retry(lambda: submitter.run(
                 platform=e["platform"], buildID=e["to_buildid"],
