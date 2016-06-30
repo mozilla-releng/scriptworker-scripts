@@ -117,14 +117,8 @@ def main():
     parser = argparse.ArgumentParser()
     # TODO: replace artifacts_url_prefix, manifest, and api_root with teh values
     # obtained from the configuratioan file and the task definition
-    '''parser.add_argument("--artifacts-url-prefix", required=True,
-                        help="URL prefix for MAR")
-    parser.add_argument("--manifest", required=True)'''
-
-
     parser.add_argument("--taskdef", required=True,
                         help="File location of task graph"),
-
     parser.add_argument("-d", "--dummy", action="store_true",
                         help="Add '-dummy' suffix to branch name")
     parser.add_argument("-v", "--verbose", action="store_const",
