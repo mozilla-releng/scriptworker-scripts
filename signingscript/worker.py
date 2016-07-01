@@ -172,7 +172,6 @@ async def download_files(context):
     await raise_future_exceptions(tasks)
     return files.keys()
 
-    #     abs_filename, detached_signatures = None,
     #     # Update manifest data with new values
     #     log.debug("Getting hash of {}".format(abs_filename))
     #     e["hash"] = get_hash(abs_filename)

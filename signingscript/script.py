@@ -49,7 +49,6 @@ async def async_main(context):
     # _ scriptworker needs to validate CoT artifact
     filelist = await download_files(context)
     log.debug("getting token")
-#    await get_token(context, os.path.join(work_dir, 'token'), 'nightly', ('gpg', ))
     await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
     # TODO async?
     for filename in filelist:
@@ -61,6 +60,7 @@ async def async_main(context):
                         to=os.path.join(work_dir, "{}.asc".format(filename)))
         for source in artifacts:
             copy_to_artifact_dir(context, os.path.join(work_dir, source))
+    # TODO manifest
     temp_creds_future.cancel()
     log.info("Done!")
 

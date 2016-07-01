@@ -18,9 +18,9 @@ setup(
     },
     license="MPL2",
     install_requires=[
-        "arrow==0.8.0",
-        "python-jose==0.7.0",
+        "arrow",
+        "python-jose",
         "scriptworker",
-        "taskcluster==0.3.4",
+        "taskcluster",
     ],
 )
