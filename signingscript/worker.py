@@ -86,7 +86,6 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     signtool = context.config['signtool']
     if not isinstance(signtool, (list, tuple)):
         signtool = [signtool]
-#    signtool = os.path.join(context.config["tools_dir"], "release", "signing", "signtool.py")
     cmd = signtool + ["-v", "-n", nonce, "-t", token, "-c", cert]
     for s in get_suitable_signing_servers(context.signing_servers, cert_type, signing_formats):
         cmd.extend(["-H", s.server])

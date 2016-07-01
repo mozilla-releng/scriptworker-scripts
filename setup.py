@@ -21,6 +21,7 @@ setup(
         "arrow",
         "python-jose",
         "scriptworker",
+        "signtool",
         "taskcluster",
     ],
 )

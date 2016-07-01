@@ -1,1 +1,0 @@
--e git+https://github.com/escapewindow/poster-0.8.1-for-Python-3.4.git@f078f8a61ce980930b5b6d64c322e26a65ffc687#egg=poster
