@@ -10,7 +10,7 @@
     "artifact_dir": "/home/worker/artifacts",
     "artifact_expiration_hours": 24,
     "artifact_upload_timeout": 1200,
-    "task_script": ["/home/worker/py2/bin/python","funsize-balrog-submitter.py",
+    "task_script": ["/home/worker/py2/bin/python","/home/worker/bin/funsize-balrog-submitter.py",
                     "--taskdef","/home/worker/work/task.json",
                     "--verbose"],
     "task_max_timeout": 1200,

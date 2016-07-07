@@ -17,8 +17,10 @@ sys.path.insert(0, os.path.join(
 from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4
 from util.retry import retry, retriable
 
+
+format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 log = logging.getLogger(__name__)
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=format)
 
 
 def get_hash(content, hash_type="md5"):
@@ -105,6 +107,8 @@ def possible_names(initial_name, amount):
     return [initial_name] + ["{}-{}{}".format(prefix, n, ext) for n in
                              range(1, amount + 1)]
 
+
+@retriable()
 def get_manifest(parent_url):
     manifest_url = parent_url + '/manifest.json'
     log.info("Downloading manifest file from parent: %s" % manifest_url)
