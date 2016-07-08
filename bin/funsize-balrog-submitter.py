@@ -9,18 +9,15 @@ import requests
 import tempfile
 from boto.s3.connection import S3Connection
 from mardor.marfile import MarFile
-import shutil
 
 sys.path.insert(0, os.path.join(
-    os.path.dirname(__file__), "/home/worker/tools/lib/python"))
+    os.path.dirname(__file__), "/app/tools/lib/python"))
 
 from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4
 from util.retry import retry, retriable
 
 
-format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 log = logging.getLogger(__name__)
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=format)
 
 
 def get_hash(content, hash_type="md5"):
@@ -130,6 +127,7 @@ def main():
                         default=logging.INFO)
     args = parser.parse_args()
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
+                        stream=sys.stdout,
                         level=args.loglevel)
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("boto").setLevel(logging.WARNING)
@@ -137,7 +135,6 @@ def main():
     with open(args.taskdef,'r') as f:
         task_definition = json.load(f)
 
-    shutil.copyfile(args.taskdef,"/home/worker/artifacts/task.json")
     parent_url = task_definition['payload']['parent_task_artifacts_url']
 
     manifest = get_manifest(parent_url)
@@ -154,7 +151,7 @@ def main():
                            "variables should be set")
 
     signing_cert_name = task_definition['payload']['signing_cert']
-    signing_cert = "/home/worker/keys/{}.pubkey".format(signing_cert_name)
+    signing_cert = "/app/keys/{}.pubkey".format(signing_cert_name)
 
     s3_bucket = os.environ.get("S3_BUCKET")
     aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")

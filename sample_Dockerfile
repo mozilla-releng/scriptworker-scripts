@@ -8,42 +8,38 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh && \
     apt-get update -q && apt-get install -y software-properties-common && \
     apt-get install -yyq --no-install-recommends \
-    python3.5 mercurial curl python-cryptography virtualenv && \
+    python3.5 mercurial git curl python-cryptography virtualenv && \
     apt-get clean
 
 # python-pip installs a lot of dependencies increasing the size of an image
 # drastically.
 
-RUN virtualenv /home/worker/py3.5 --python=/usr/bin/python3.5 && \
-    source /home/worker/py3.5/bin/activate && pip install scriptworker
+RUN groupadd --gid 10001 app && \
+    useradd --uid 10001 --gid 10001 --home /app --create-home app
+USER app
+COPY *.txt /app/
+RUN virtualenv /app/py3.5 --python=/usr/bin/python3.5 && \
+    source /app/py3.5/bin/activate && pip install -r /app/sw_requirements.txt
+RUN virtualenv /app/py2 --python=/usr/bin/python --system-site-packages \
+    && source /app/py2/bin/activate && \
+    pip install -r /app/fbs_requirements.txt && deactivate
 
-COPY requirements.txt /tmp/
+RUN hg clone https://hg.mozilla.org/build/tools /app/tools
 
-RUN virtualenv /home/worker/py2 --python=/usr/bin/python --system-site-packages \
-    && source /home/worker/py2/bin/activate && \
-    pip install -r /tmp/requirements.txt && deactivate
+COPY ./ /app
+WORKDIR /app
+ENTRYPOINT ["/app/py3.5/bin/scriptworker"]
+CMD ["/app/config.json"]
 
-RUN hg clone https://hg.mozilla.org/build/tools /home/worker/tools
-
-RUN useradd -d /home/worker -s /bin/bash -m worker
-
-RUN mkdir /home/worker/bin
-COPY scripts/* /home/worker/bin/
-COPY *.pubkey /home/worker/keys/
-COPY runme.sh /runme.sh
-RUN chmod 755 /home/worker/bin/* /runme.sh
-
-
-COPY *config.json /home/worker/
-
-
-ENV           HOME          /home/worker
-ENV           SHELL         /bin/bash
-ENV           USER          worker
-ENV           LOGNAME       worker
-ENV           BALROG_API_ROOT     "http://192.168.99.100:8080/api"
-ENV           BALROG_USERNAME ...
-ENV           BALROG_PASSWORD ...
-ENV           S3_BUCKET     ...
-ENV           AWS_ACCESS_KEY_ID ...
-ENV           AWS_SECRET_ACCESS_KEY ...
+ENV         HOME                /app
+ENV         SHELL               /bin/bash
+ENV         USER                app
+ENV         LOGNAME             app
+ENV         TASKCLUSTER_CLIENT_ID
+ENV         TASKCLUSTER_ACCESS_TOKEN
+ENV         BALROG_API_ROOT
+ENV         BALROG_USERNAME
+ENV         BALROG_PASSWORD
+ENV         S3_BUCKET
+ENV         AWS_ACCESS_KEY_ID
+ENV         AWS_SECRET_ACCESS_KEY
