@@ -90,6 +90,7 @@ def get_default_config():
         'temp_creds_refresh_seconds': 330,
         'my_ip': my_ip,
         'ssl_cert': None,
+        'signtool': "signtool",
         'schema_file': os.path.join(cwd, 'signingscript', 'data', 'signing_task_schema.json'),
         'verbose': True,
     }
