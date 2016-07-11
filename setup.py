@@ -1,8 +1,12 @@
+import os
 from setuptools import setup, find_packages
+
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "version.txt")) as f:
+    version = f.read().rstrip()
 
 setup(
     name="signingscript",
-    version="0.1.0",
+    version=version,
     description="TaskCluster Signing Script",
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
