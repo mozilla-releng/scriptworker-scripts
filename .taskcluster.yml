@@ -17,8 +17,10 @@ tasks:
       command:
         - "/bin/bash"
         - "-c"
-        - "git clone $GITHUB_HEAD_REPO_URL && cd funsize-balrog-scriptworker && git checkout $GITHUB_HEAD_BRANCH && \
-           make update_pubkeys && make build"
+        - "git clone $GITHUB_HEAD_REPO_URL && cd funsize-balrogworker && git checkout $GITHUB_HEAD_BRANCH && \
+           ./tc_build.sh"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/funsize-balrogworker:branch:master
     extra:
       github:
         env: true

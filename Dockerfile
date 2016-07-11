@@ -34,12 +34,12 @@ ENV         USER                        app
 ENV         LOGNAME                     app
 
 # ENVVARS for authentication
-ENV         TASKCLUSTER_CLIENT_ID       *clientId
-ENV         TASKCLUSTER_ACCESS_TOKEN    *AccessToken
-ENV         SCRIPTWORKER_WORKER_ID      *dummy-worker-francis3
-ENV         BALROG_API_ROOT             *not-balrog-vpn-proxy
-ENV         BALROG_USERNAME             *username
-ENV         BALROG_PASSWORD             *password
-ENV         S3_BUCKET                   *bucketwalrus
-ENV         AWS_ACCESS_KEY_ID           *awskeyid
-ENV         AWS_SECRET_ACCESS_KEY       *awssecret
+#ENV         TASKCLUSTER_CLIENT_ID       *clientId
+#ENV         TASKCLUSTER_ACCESS_TOKEN    *AccessToken
+#ENV         SCRIPTWORKER_WORKER_ID      *dummy-worker-francis3
+#ENV         BALROG_API_ROOT             *not-balrog-vpn-proxy
+#ENV         BALROG_USERNAME             *username
+#ENV         BALROG_PASSWORD             *password
+#ENV         S3_BUCKET                   *bucketwalrus
+#ENV         AWS_ACCESS_KEY_ID           *awskeyid
+#ENV         AWS_SECRET_ACCESS_KEY       *awssecret
