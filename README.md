@@ -20,4 +20,8 @@ In the dockerfile, the following environment variables need to be set:
 - BALROG_PASSWORD
 - S3_BUCKET
 - AWS_ACCESS_KEY_ID
-- AWS_SECRET_ACCESS_KEY       
+- AWS_SECRET_ACCESS_KEY     
+
+## Deployment
+
+TODO. Will be deployed via [CloudOps Dockerflow](https://github.com/mozilla-services/Dockerflow/)
