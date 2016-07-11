@@ -1,7 +1,7 @@
 IMAGE_NAME = fbs
 
 build:
-	docker build -t $(IMAGE_NAME)  --rm .
+	docker build -t $(IMAGE_NAME) --no-cache --rm .
 
 start:
 	docker run -it --rm --name $(IMAGE_NAME)-container $(IMAGE_NAME)

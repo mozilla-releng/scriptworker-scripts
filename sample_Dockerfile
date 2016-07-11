@@ -11,9 +11,6 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh && \
     python3.5 mercurial git curl python-cryptography virtualenv && \
     apt-get clean
 
-# python-pip installs a lot of dependencies increasing the size of an image
-# drastically.
-
 RUN groupadd --gid 10001 app && \
     useradd --uid 10001 --gid 10001 --home /app --create-home app
 USER app
@@ -31,15 +28,18 @@ WORKDIR /app
 ENTRYPOINT ["/app/py3.5/bin/scriptworker"]
 CMD ["/app/config.json"]
 
-ENV         HOME                /app
-ENV         SHELL               /bin/bash
-ENV         USER                app
-ENV         LOGNAME             app
-ENV         TASKCLUSTER_CLIENT_ID
-ENV         TASKCLUSTER_ACCESS_TOKEN
-ENV         BALROG_API_ROOT
-ENV         BALROG_USERNAME
-ENV         BALROG_PASSWORD
-ENV         S3_BUCKET
-ENV         AWS_ACCESS_KEY_ID
-ENV         AWS_SECRET_ACCESS_KEY
+ENV         HOME                        /app
+ENV         SHELL                       /bin/bash
+ENV         USER                        app
+ENV         LOGNAME                     app
+
+# ENVVARS for authentication
+ENV         TASKCLUSTER_CLIENT_ID       *clientId
+ENV         TASKCLUSTER_ACCESS_TOKEN    *AccessToken
+ENV         SCRIPTWORKER_WORKER_ID      *dummy-worker-francis3
+ENV         BALROG_API_ROOT             *not-balrog-vpn-proxy
+ENV         BALROG_USERNAME             *username
+ENV         BALROG_PASSWORD             *password
+ENV         S3_BUCKET                   *bucketwalrus
+ENV         AWS_ACCESS_KEY_ID           *awskeyid
+ENV         AWS_SECRET_ACCESS_KEY       *awssecret

@@ -1,0 +1,17 @@
+{   "provisioner_id": "test-dummy-provisioner",
+    "scheduler_id": "test-dummy-scheduler",
+    "worker_group": "test-dummy-workers",
+    "worker_type": "dummy-worker-francis",
+    "work_dir": "/app/work",
+    "log_dir": "/app/log",
+    "artifact_dir": "/app/artifacts",
+    "artifact_expiration_hours": 24,
+    "artifact_upload_timeout": 1200,
+    "task_script": ["/app/py2/bin/python","/app/bin/funsize-balrog-submitter.py",
+                    "--taskdef","/app/work/task.json",
+                    "--verbose"],
+    "task_max_timeout": 1200,
+    "verbose": true,
+    "poll_interval": 10,
+    "reclaim_interval": 60
+}
