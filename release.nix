@@ -4,12 +4,12 @@ let
   signingscript = import ./default.nix { inherit pkgs; };
 in {
   docker = pkgs.dockerTools.buildImage {
-    name = “docker-${signingscript.name}”;
+    name = "docker-${signingscript.name}";
     tag = (builtins.parseDrvName signingscript.name).version;
     fromImage = null;
-    contents = [ busybox signingscript ];
+    contents = [ pkgs.busybox signingscript ];
     config = {
-      Cmd = [ "python" "-m” “signingscript" ];
+      Cmd = [ "python" "-m" "signingscript" ];
     };
   };
 }
