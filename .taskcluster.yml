@@ -1,6 +1,6 @@
 version: 0
 metadata:
-  name: Funsize Balrogworker
+  name: Balrogworker Image Creation
   description: Funsize Submission to Balrog
   owner: "{{ event.head.user.email }}"
   source: "{{ event.head.repo.url }}"
@@ -27,7 +27,7 @@ tasks:
         branches:
           - master
     metadata:
-      name: Funsize Balrogworker Docker Image Creation
+      name: Balrogworker Docker Image Creation
       description: Funsize Balrogworker Docker Image Creation
       owner: "{{ event.head.user.email }}"
       source: "{{ event.head.repo.url }}"
