@@ -16,7 +16,6 @@ sys.path.insert(0, os.path.join(
 from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4
 from util.retry import retry, retriable
 
-
 log = logging.getLogger(__name__)
 
 
@@ -114,10 +113,15 @@ def get_manifest(parent_url):
     manifest = json.loads(data)
     return manifest
 
+def verify_task_schema(task_definition):
+    task_reqs = ('parent_task_artifacts_url', 'signing_cert')
+    for req in task_reqs:
+        if req not in task_definition['payload']:
+            raise KeyError('%s missing from taskdef!' % req)
+
+
 def main():
     parser = argparse.ArgumentParser()
-    # TODO: replace artifacts_url_prefix, manifest, and api_root with teh values
-    # obtained from the configuratioan file and the task definition
     parser.add_argument("--taskdef", required=True,
                         help="File location of task graph"),
     parser.add_argument("-d", "--dummy", action="store_true",
@@ -134,15 +138,14 @@ def main():
 
     with open(args.taskdef,'r') as f:
         task_definition = json.load(f)
+    verify_task_schema(task_definition)
 
     parent_url = task_definition['payload']['parent_task_artifacts_url']
-
     manifest = get_manifest(parent_url)
 
     api_root = os.environ.get("BALROG_API_ROOT")
     if not api_root:
         raise RuntimeError("BALROG_API_ROOT environment variable not set")
-
 
     balrog_username = os.environ.get("BALROG_USERNAME")
     balrog_password = os.environ.get("BALROG_PASSWORD")

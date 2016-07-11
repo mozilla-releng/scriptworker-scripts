@@ -8,6 +8,9 @@ make build
 make start
 ```
 
+Note, currently scriptworker is installed from the head of the 
+[github repo](https://github.com/escapewindow/scriptworker). 
+
 ## Configuration
 In the dockerfile, the following environment variables need to be set:
 (They can be found in the sample_Dockerfile)
@@ -25,3 +28,14 @@ In the dockerfile, the following environment variables need to be set:
 ## Deployment
 
 TODO. Will be deployed via [CloudOps Dockerflow](https://github.com/mozilla-services/Dockerflow/)
+
+## Creating Tasks
+
+The task schema that the program expects is: 
+
+```json
+"payload": {
+    "parent_task_artifacts_url": "https://queue.taskcluster.net/v1/task/<taskID>/artifacts/public/env",
+    "signing_cert": ("nightly","release","dep")
+}
+```
