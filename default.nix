@@ -3,7 +3,7 @@
 }:
 
 let
-  python = import ./requirements-dev.nix { inherit pkgs; };
+  python = import ./requirements-nix.nix { inherit pkgs; };
   version = pkgs.lib.removeSuffix "\n" (builtins.readFile ./version.txt);
 in python.mkDerivation {
   name = "signingscript-${version}";

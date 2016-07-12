@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -r requirements-dev.txt -V 3.5
+#   pypi2nix -r requirements-nix.txt -V 3.5
 #
 
 { pkgs ? import <nixpkgs> {}
@@ -30,8 +30,8 @@ let
       inherit buildEnv pkgs modules;
     };
 
-  generated = import ./requirements-dev_generated.nix { inherit pkgs python commonBuildInputs commonDoCheck; };
-  overrides = import ./requirements-dev_override.nix { inherit pkgs python; };
+  generated = import ./requirements-nix_generated.nix { inherit pkgs python commonBuildInputs commonDoCheck; };
+  overrides = import ./requirements-nix_override.nix { inherit pkgs python; };
 
   python = buildEnv {
     pkgs = fix' (extends overrides generated);

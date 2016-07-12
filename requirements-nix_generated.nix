@@ -1,7 +1,7 @@
 # generated using pypi2nix tool (version: 1.2.0)
 #
 # COMMAND:
-#   pypi2nix -r requirements-dev.txt -V 3.5
+#   pypi2nix -r requirements-nix.txt -V 3.5
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:

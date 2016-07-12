@@ -1,0 +1,15 @@
+arrow
+python-jose
+scriptworker
+#pefile==2016.3.4
+-e git://github.com/erocarrera/pefile.git@master#egg=pefile
+signtool
+taskcluster
+coverage
+flake8
+pytest
+pytest-cov
+
+setuptools_scm
+vcversioner==2.16.0.0
+pytest-runner
