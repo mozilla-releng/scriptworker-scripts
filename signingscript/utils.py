@@ -1,10 +1,14 @@
-import json
-import hashlib
+import asyncio
 import functools
+import hashlib
+import json
 import logging
+import os
+from shutil import copyfile
+import traceback
 from collections import namedtuple
 
-from signingscript.exceptions import DownloadError
+from signingscript.exceptions import DownloadError, SigningServerError
 
 log = logging.getLogger(__name__)
 # Mapping between signing client formats and file extensions
@@ -61,3 +65,31 @@ def get_detached_signatures(signing_formats):
     file extensions"""
     return [(sig_type, sig_ext, sig_mime) for sig_type, sig_ext, sig_mime in
             DETACHED_SIGNATURES if sig_type in signing_formats]
+
+
+async def log_output(fh):
+    while True:
+        line = await fh.readline()
+        if line:
+            log.debug(line.decode("utf-8").rstrip())
+        else:
+            break
+
+
+def copy_to_artifact_dir(context, source, target=None):
+    artifact_dir = context.config['artifact_dir']
+    target = target or os.path.basename(source)
+    target_path = os.path.join(artifact_dir, target)
+    try:
+        copyfile(source, target_path)
+    except IOError:
+        traceback.print_exc()
+        raise SigningServerError("Can't copy {} to {}!".format(source, target_path))
+
+
+async def raise_future_exceptions(tasks):
+    await asyncio.wait(tasks)
+    for task in tasks:
+        exc = task.exception()
+        if exc is not None:
+            raise exc

@@ -14,8 +14,8 @@ import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.task import task_cert_type, task_signing_formats, validate_task_schema
-from signingscript.utils import load_json, load_signing_server_config
-from signingscript.worker import copy_to_artifact_dir, download_files, get_token, read_temp_creds, sign_file
+from signingscript.utils import copy_to_artifact_dir, load_json, load_signing_server_config
+from signingscript.worker import download_files, get_token, read_temp_creds, sign_file
 
 log = logging.getLogger(__name__)
 

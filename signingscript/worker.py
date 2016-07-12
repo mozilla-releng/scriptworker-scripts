@@ -3,12 +3,11 @@ from asyncio.subprocess import PIPE, STDOUT
 import logging
 import os
 import random
-from shutil import copyfile
 import traceback
 
 from scriptworker.client import get_temp_creds_from_file
 from scriptworker.exceptions import ScriptWorkerException
-from scriptworker.utils import retry_async, retry_request
+from scriptworker.utils import log_output, raise_future_exceptions, retry_async, retry_request
 from signingscript.exceptions import ChecksumMismatchError, SigningServerError
 from signingscript.utils import download_file, get_hash, get_detached_signatures, load_json
 
@@ -67,15 +66,6 @@ async def get_token(context, output_file, cert_type, signing_formats):
         print(token, file=fh, end="")
 
 
-async def log_output(fh):
-    while True:
-        line = await fh.readline()
-        if line:
-            log.debug(line.decode("utf-8").rstrip())
-        else:
-            break
-
-
 async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     if to is None:
         to = from_
@@ -113,25 +103,6 @@ async def read_temp_creds(context):
     while True:
         await asyncio.sleep(context.config['temp_creds_refresh_seconds'])
         await get_temp_creds_from_file(context.config)
-
-
-def copy_to_artifact_dir(context, source, target=None):
-    artifact_dir = context.config['artifact_dir']
-    target = target or os.path.basename(source)
-    target_path = os.path.join(artifact_dir, target)
-    try:
-        copyfile(source, target_path)
-    except IOError:
-        traceback.print_exc()
-        raise SigningServerError("Can't copy {} to {}!".format(source, target_path))
-
-
-async def raise_future_exceptions(tasks):
-    await asyncio.wait(tasks)
-    for task in tasks:
-        exc = task.exception()
-        if exc is not None:
-            raise exc
 
 
 async def download_files(context):
