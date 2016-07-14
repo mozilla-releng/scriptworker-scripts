@@ -3,8 +3,9 @@ recursive-include signingscript/data *
 
 include LICENSE
 include README.rst
-include version.txt
 include config_example.json
+include host.cert
+include version.txt
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
