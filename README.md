@@ -1,5 +1,8 @@
 # Funsize Balrogworker
 
+A small scriptworker used for submitting [funsize](https://wiki.mozilla.org/ReleaseEngineering/Funsize) metadata to [balrog](https://wiki.mozilla.org/Balrog).
+
+
 ## Installation
 
 The application is dockerized and can be built and run with the following
@@ -44,3 +47,6 @@ The task schema that the program expects is:
     "signing_cert": ["nightly","release","dep"] # (Pick one)
 }
 ```
+
+If testing locally, make sure that the `worker_type` in the
+task definition is the same as the one declared in `config.json`

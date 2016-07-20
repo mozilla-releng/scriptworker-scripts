@@ -1,3 +1,11 @@
 my_Dockerfile
 .idea/*
 scriptworker/*
+.DS_Store
+.idea/
+bin/__pycache__/
+*.pyc
+localtest.sh
+tools/*
+*.coverage
+*task.json

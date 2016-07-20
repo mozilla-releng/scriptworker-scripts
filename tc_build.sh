@@ -1,4 +1,5 @@
 #!/bin/bash
+# Execute CI builds on taskcluster for Dockerflow!
 
 set -e
 
