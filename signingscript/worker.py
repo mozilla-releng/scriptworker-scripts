@@ -7,9 +7,9 @@ import traceback
 
 from scriptworker.client import get_temp_creds_from_file
 from scriptworker.exceptions import ScriptWorkerException
-from scriptworker.utils import log_output, raise_future_exceptions, retry_async, retry_request
+from scriptworker.utils import raise_future_exceptions, retry_async, retry_request
 from signingscript.exceptions import ChecksumMismatchError, SigningServerError
-from signingscript.utils import download_file, get_hash, get_detached_signatures, load_json
+from signingscript.utils import download_file, get_hash, get_detached_signatures, load_json, log_output
 
 log = logging.getLogger(__name__)
 
