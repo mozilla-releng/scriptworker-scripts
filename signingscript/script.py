@@ -36,21 +36,16 @@ async def async_main(context):
     loop = asyncio.get_event_loop()
     work_dir = context.config['work_dir']
     context.task = scriptworker.client.get_task(context.config)
-    log.debug(context.task)
     temp_creds_future = loop.create_task(read_temp_creds(context))
     log.debug("validating task")
     validate_task_schema(context)
     context.signing_servers = load_signing_server_config(context)
-    log.debug(context.signing_servers)
     cert_type = task_cert_type(context.task)
-    log.debug(cert_type)
     signing_formats = task_signing_formats(context.task)
-    log.debug(signing_formats)
     # _ scriptworker needs to validate CoT artifact
     filelist = await download_files(context)
     log.debug("getting token")
     await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
-    # TODO async?
     for filename in filelist:
         log.debug("signing %s", filename)
         # TODO .asc only if we're gpg
@@ -122,7 +117,6 @@ def main(name=None, config_path=None):
         level=log_level
     )
     logging.getLogger("taskcluster").setLevel(logging.WARNING)
-    log.debug(context.config)
     loop = asyncio.get_event_loop()
     kwargs = {}
     # TODO can we get the signing servers' CA cert on the scriptworkers?

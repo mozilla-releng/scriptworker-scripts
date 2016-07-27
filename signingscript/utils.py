@@ -81,6 +81,7 @@ def copy_to_artifact_dir(context, source, target=None):
     target = target or os.path.basename(source)
     target_path = os.path.join(artifact_dir, target)
     try:
+        log.debug("Copying %s to %s" % (source, target_path))
         copyfile(source, target_path)
     except IOError:
         traceback.print_exc()
