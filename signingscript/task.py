@@ -10,7 +10,7 @@ def task_cert_type(task):
     """Extract task certificate type"""
     certs = [s for s in task["scopes"] if
              s.startswith("project:releng:signing:cert:")]
-    log.debug("Certificate types: %s", certs)
+    log.info("Certificate types: %s", certs)
     if len(certs) != 1:
         raise TaskVerificationError("Only one certificate type can be used")
     return certs[0]

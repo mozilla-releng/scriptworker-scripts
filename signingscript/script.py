@@ -37,17 +37,17 @@ async def async_main(context):
     work_dir = context.config['work_dir']
     context.task = scriptworker.client.get_task(context.config)
     temp_creds_future = loop.create_task(read_temp_creds(context))
-    log.debug("validating task")
+    log.info("validating task")
     validate_task_schema(context)
     context.signing_servers = load_signing_server_config(context)
     cert_type = task_cert_type(context.task)
     signing_formats = task_signing_formats(context.task)
     # _ scriptworker needs to validate CoT artifact
     filelist = await download_files(context)
-    log.debug("getting token")
+    log.info("getting token")
     await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
     for filename in filelist:
-        log.debug("signing %s", filename)
+        log.info("signing %s", filename)
         # TODO .asc only if we're gpg
         artifacts = [filename, "{}.asc".format(filename)]
         await sign_file(context, os.path.join(work_dir, filename),

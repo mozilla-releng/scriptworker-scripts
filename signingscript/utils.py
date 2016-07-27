@@ -18,7 +18,7 @@ DETACHED_SIGNATURES = [
 
 
 async def download_file(context, url, abs_filename, chunk_size=128):
-    log.debug("Downloading %s", url)
+    log.info("Downloading %s", url)
     async with context.session.get(url) as resp:
         if resp.status != 200:
             raise DownloadError("{} status {} is not 200!".format(url, resp.status))
@@ -28,7 +28,7 @@ async def download_file(context, url, abs_filename, chunk_size=128):
                 if not chunk:
                     break
                 fd.write(chunk)
-    log.debug("Done")
+    log.info("Done")
 
 
 def get_hash(path, hash_type="sha512"):
@@ -47,7 +47,7 @@ def load_json(path):
 
 def load_signing_server_config(context):
     path = context.config['signing_server_config']
-    log.debug("Loading signing server config from {}".format(path))
+    log.info("Loading signing server config from {}".format(path))
     SigningServer = namedtuple("SigningServer", ["server", "user", "password",
                                                  "formats"])
     with open(path) as f:
@@ -56,7 +56,7 @@ def load_signing_server_config(context):
     cfg = {}
     for signing_type, server_data in raw_cfg.items():
         cfg[signing_type] = [SigningServer(*s) for s in server_data]
-    log.debug("Signing server config loaded from {}".format(path))
+    log.info("Signing server config loaded from {}".format(path))
     return cfg
 
 
@@ -71,7 +71,7 @@ async def log_output(fh):
     while True:
         line = await fh.readline()
         if line:
-            log.debug(line.decode("utf-8").rstrip())
+            log.info(line.decode("utf-8").rstrip())
         else:
             break
 
@@ -81,7 +81,7 @@ def copy_to_artifact_dir(context, source, target=None):
     target = target or os.path.basename(source)
     target_path = os.path.join(artifact_dir, target)
     try:
-        log.debug("Copying %s to %s" % (source, target_path))
+        log.info("Copying %s to %s" % (source, target_path))
         copyfile(source, target_path)
     except IOError:
         traceback.print_exc()

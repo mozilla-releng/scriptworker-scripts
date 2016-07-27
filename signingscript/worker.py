@@ -21,7 +21,7 @@ async def verify_checksum(context, abs_filename, checksum):
     if not got_checksum == checksum:
         msg = "CHECKSUM MISMATCH: Expected {}, got {} for {}".format(
             checksum, got_checksum, abs_filename)
-        log.debug(msg)
+        log.error(msg)
         raise ChecksumMismatchError(msg)
 
 
@@ -45,7 +45,7 @@ async def get_token(context, output_file, cert_type, signing_formats):
     )
     random.shuffle(signing_servers)
     for s in signing_servers:
-        log.debug("getting token from %s", s.server)
+        log.info("getting token from %s", s.server)
         # TODO: Figure out how to deal with certs not matching hostname,
         #  error: https://gist.github.com/rail/cbacf2d297decb68affa
         url = "https://{}/token".format(s.server)
@@ -78,9 +78,9 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     for f in signing_formats:
         cmd.extend(["-f", f])
     cmd.extend(["-o", to, from_])
-    log.debug("Running %s", " ".join(cmd))
+    log.info("Running %s", " ".join(cmd))
     proc = await asyncio.create_subprocess_exec(*cmd, stdout=PIPE, stderr=STDOUT)
-    log.debug("COMMAND OUTPUT: ")
+    log.info("COMMAND OUTPUT: ")
     await log_output(proc.stdout)
     exitcode = await proc.wait()
     log.info("exitcode {}".format(exitcode))
@@ -89,7 +89,7 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
              get_hash(abs_to, "sha512"), to)
     log.info("SHA1SUM: %s SIGNED_FILE: %s",
              get_hash(abs_to, "sha1"), to)
-    log.debug("Finished signing")
+    log.info("Finished signing")
 
 
 def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
@@ -110,7 +110,7 @@ async def download_files(context):
     abs_manifest_path = os.path.join(work_dir, "signing_manifest.json")
     await retry_async(download_file, args=(context, manifest_url, abs_manifest_path))
     signing_manifest = load_json(abs_manifest_path)
-    log.debug(signing_manifest)
+    log.info(signing_manifest)
 
     tasks = []
     # TODO: better way to extract filename
