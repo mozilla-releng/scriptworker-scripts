@@ -8,8 +8,8 @@ tasks:
   - provisionerId: "{{ taskcluster.docker.provisionerId }}"
     workerType: "{{ taskcluster.docker.workerType }}"
     payload:
-      maxRunTime: 1200
-      image: "rail/python-test-runner"
+      maxRunTime: 2400
+      image: "taskcluster/image_builder:0.1.3"
       command:
         - "/bin/bash"
         - "-c"
