@@ -1,3 +1,4 @@
+import aiohttp
 import asyncio
 from asyncio.subprocess import PIPE, STDOUT
 import logging
@@ -49,9 +50,10 @@ async def get_token(context, output_file, cert_type, signing_formats):
         # TODO: Figure out how to deal with certs not matching hostname,
         #  error: https://gist.github.com/rail/cbacf2d297decb68affa
         url = "https://{}/token".format(s.server)
+        auth = aiohttp.BasicAuth(s.user, password=s.password)
         try:
             token = await retry_request(context, url, method='post', data=data,
-                                        auth=(s.user, s.password), return_type='text')
+                                        auth=auth, return_type='text')
             if token:
                 break
         except ScriptWorkerException:
