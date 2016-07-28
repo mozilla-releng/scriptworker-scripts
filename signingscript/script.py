@@ -63,18 +63,7 @@ async def async_main(context):
 # config {{{1
 def get_default_config():
     """ Create the default config to work from.
-
-    `my_ip` is special: when working with a docker signing server, the default
-    ip becomes the .1 of the docker subnet.
     """
-    if os.environ.get('DOCKER_HOST'):
-        # The .1 on the same subnet as the DOCKER_HOST ip
-        parsed = urlparse(os.environ['DOCKER_HOST'])
-        parts = parsed.hostname.split('.')
-        parts[3] = "1"
-        my_ip = '.'.join(parts)
-    else:
-        my_ip = "127.0.0.1"
     cwd = os.getcwd()
     parent_dir = os.path.dirname(cwd)
     default_config = {
@@ -83,7 +72,7 @@ def get_default_config():
         'work_dir': os.path.join(parent_dir, 'work_dir'),
         'artifact_dir': os.path.join(parent_dir, '/src/signing/artifact_dir'),
         'temp_creds_refresh_seconds': 330,
-        'my_ip': my_ip,
+        'my_ip': "127.0.0.1",
         'ssl_cert': None,
         'signtool': "signtool",
         'schema_file': os.path.join(cwd, 'signingscript', 'data', 'signing_task_schema.json'),
