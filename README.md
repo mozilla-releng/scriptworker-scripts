@@ -6,7 +6,7 @@ A small scriptworker used for submitting [funsize](https://wiki.mozilla.org/Rele
 ## Installation
 
 The application is dockerized and can be built and run with the following
-commands. 
+commands. Or just pull latest from dockerhub at mozilla/balrogworker.  
 
 ```bash
 make update_pubkeys
@@ -29,6 +29,7 @@ Balrog Specific:
 - BALROG_API_ROOT
 - BALROG_USERNAME
 - BALROG_PASSWORD
+(Optional):
 - S3_BUCKET
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY     
@@ -36,6 +37,27 @@ Balrog Specific:
 ## Deployment
 
 TODO. Will be deployed via [CloudOps Dockerflow](https://github.com/mozilla-services/Dockerflow/)
+For now, you can run it locally
+
+```bash
+docker run -ti \
+    --name balrogworker \
+-e TASKCLUSTER_CLIENT_ID="tc-client-id" \
+-e TASKCLUSTER_ACCESS_TOKEN="tc-access-token" \
+-e SCRIPTWORKER_WORKER_ID="dummy-worker-yourname1" \
+-e BALROG_API_ROOT="balrog" \
+-e BALROG_USERNAME="balrogadmin" \
+-e BALROG_PASSWORD="wootwoot" \
+-e S3_BUCKET="bucket-name" \
+-e AWS_ACCESS_KEY_ID="key-id" \
+-e AWS_SECRET_ACCESS_KEY="key-secret" \
+mozilla/balrogworker
+```
+
+## Testing
+
+Tests are run on taskcluster, and are triggered by pull requests or any
+branch activity. 
 
 ## Creating Tasks
 

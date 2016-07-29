@@ -1,4 +1,4 @@
-IMAGE_NAME = fbs
+IMAGE_NAME = balrogworker
 
 build:
 	docker build -t $(IMAGE_NAME)  --rm .
