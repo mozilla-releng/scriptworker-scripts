@@ -259,10 +259,13 @@ def main():
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("boto").setLevel(logging.WARNING)
 
+    # Download the manifest.json from the provided task
     manifest = get_manifest(args.parent_url)
 
     for e in manifest:
+        # Get release metadata from manifest, and upload to S3 if necessary
         submitter, release = create_submitter(e, args)
+        # Connect to balrog and submit the metadata
         retry(lambda: submitter.run(**release))
 
 

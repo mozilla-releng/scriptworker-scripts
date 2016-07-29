@@ -34,10 +34,16 @@ Balrog Specific:
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY     
 
+If any of the S3 credentials are missing, balrogworker will skip uploads
+and pass through the taskcluster artifact url directly to balrog. This 
+can also be manually forced via the `--disable-s3` flag. Note that you 
+may need to whitelist taskcluster's domain name on your installation of 
+balrog. 
+
 ## Deployment
 
 TODO. Will be deployed via [CloudOps Dockerflow](https://github.com/mozilla-services/Dockerflow/)
-For now, you can run it locally
+For now, you can run it locally:
 
 ```bash
 docker run -ti \
@@ -66,7 +72,7 @@ The task schema that the program expects is:
 ```json
 "payload": {
     "parent_task_artifacts_url": "https://queue.taskcluster.net/v1/task/<taskID>/artifacts/public/env",
-    "signing_cert": ["nightly","release","dep"] # (Pick one)
+    "signing_cert": ["nightly","release","dep"] (Pick one)
 }
 ```
 
