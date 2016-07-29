@@ -25,8 +25,7 @@ RUN hg clone https://hg.mozilla.org/build/tools /app/tools
 
 COPY ./ /app
 WORKDIR /app
-ENTRYPOINT ["/app/py3.5/bin/scriptworker"]
-CMD ["/app/config.json"]
+ENTRYPOINT ["/app/bin/app_entrypoint.sh"]
 
 ENV         HOME                        /app
 ENV         SHELL                       /bin/bash

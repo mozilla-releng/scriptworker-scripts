@@ -1,16 +1,15 @@
 #!/bin/bash
 # Execute CI builds on taskcluster for Dockerflow!
+# Note: this script was copied from https://github.com/mozilla/balrog/blob/master/scripts/push-dockerimage.sh
 
 set -e
 
-echo "Setting up credentials"
 password_url="taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/funsize-balrogworker:branch:master"
 artifact_url="taskcluster/queue/v1/task/${TASK_ID}/runs/${RUN_ID}/artifacts/public/docker-image-shasum256.txt"
 artifact_expiry=$(date -d "+1 year" -u +%FT%TZ)
 dockerhub_email=fkang@mozilla.com
 dockerhub_username=mozillabalrog
 dockerhub_password=$(curl ${password_url} | python -c 'import json, sys; a = json.load(sys.stdin); print a["secret"]["dockerhub_password"]')
-
 
 if [ -z $dockerhub_password ]; then
     echo "Dockerhub password not set, can't continue!"

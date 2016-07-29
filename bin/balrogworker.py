@@ -143,44 +143,6 @@ def load_task(task_file):
     return parent_url, signing_cert
 
 
-def verify_args(argv):
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("--taskdef", required=True,
-                        help="File location of task graph"),
-    parser.add_argument("-d", "--dummy", action="store_true",
-                        help="Add '-dummy' suffix to branch name")
-    parser.add_argument("-v", "--verbose", action="store_const",
-                        dest="loglevel", const=logging.DEBUG,
-                        default=logging.INFO)
-    parser.add_argument("--balrog-api-root", default=os.environ.get("BALROG_API_ROOT"),
-                        dest="api_root", help="Balrog api url")
-    parser.add_argument("--balrog-username", default=os.environ.get("BALROG_USERNAME"),
-                        dest="balrog_username", help="Balrog admin api username")
-    parser.add_argument("--balrog-password", default=os.environ.get("BALROG_PASSWORD"),
-                        dest="balrog_password", help="Balrog admin api password")
-    parser.add_argument("--s3-bucket", default=os.environ.get("S3_BUCKET"),
-                        dest="s3_bucket", help="S3 Bucket Name: used for uploading partials")
-    parser.add_argument("--aws-access-key-id", default=os.environ.get("AWS_ACCESS_KEY_ID"),
-                        dest="aws_key_id", help="AWS Access Key ID: S3 Credentials")
-    parser.add_argument("--aws-secret-access-key", default=os.environ.get("AWS_SECRET_ACCESS_KEY"),
-                        dest="aws_key_secret", help="AWS Secret Key: S3 Credentials")
-    parser.add_argument("--disable-s3", default=False, action='store_true',
-                        help="Instead of uploading artifacts to S3, send balrog the tc artifact url")
-    parser.add_argument("--disable-certs", dest="disable_certs", action="store_true",
-                        help="Disable mar signature verification")
-
-    args = parser.parse_args(argv)
-
-    # Disable uploading to S3 if any of the credentials are missing, or if specified as a cli argument
-    args.disable_s3 = args.disable_s3 or not (args.s3_bucket and args.aws_key_id and args.aws_key_secret)
-    if args.disable_s3:
-        log.info("Skipping S3 uploads, submitting taskcluster artifact urls instead.")
-
-    args.parent_url, args.signing_cert = load_task(args.taskdef)
-
-    return args
-
 def create_submitter(e, args):
     auth = (args.balrog_username, args.balrog_password)
 
@@ -237,17 +199,56 @@ def create_submitter(e, args):
                                        dummy=args.dummy)
 
         return submitter, {'platform': e["platform"],
-                          'buildID': e["to_buildid"],
-                          'productName': e["appName"],
-                          'branch': e["branch"],
-                          'appVersion': e["version"],
-                          'locale': e["locale"],
-                          'hashFunction': 'sha512',
-                          'extVersion': e["version"],
-                          'partialInfo': partial_info,
-                          'completeInfo': complete_info}
+                           'buildID': e["to_buildid"],
+                           'productName': e["appName"],
+                           'branch': e["branch"],
+                           'appVersion': e["version"],
+                           'locale': e["locale"],
+                           'hashFunction': 'sha512',
+                           'extVersion': e["version"],
+                           'partialInfo': partial_info,
+                           'completeInfo': complete_info}
     else:
         raise RuntimeError("Cannot determine Balrog submission style. Check manifest.json")
+
+
+def verify_args(argv):
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--taskdef", required=True,
+                        help="File location of task graph"),
+    parser.add_argument("-d", "--dummy", action="store_true",
+                        help="Add '-dummy' suffix to branch name")
+    parser.add_argument("-v", "--verbose", action="store_const",
+                        dest="loglevel", const=logging.DEBUG,
+                        default=logging.INFO)
+    parser.add_argument("--balrog-api-root", default=os.environ.get("BALROG_API_ROOT"),
+                        dest="api_root", help="Balrog api url")
+    parser.add_argument("--balrog-username", default=os.environ.get("BALROG_USERNAME"),
+                        dest="balrog_username", help="Balrog admin api username")
+    parser.add_argument("--balrog-password", default=os.environ.get("BALROG_PASSWORD"),
+                        dest="balrog_password", help="Balrog admin api password")
+    parser.add_argument("--s3-bucket", default=os.environ.get("S3_BUCKET"),
+                        dest="s3_bucket", help="S3 Bucket Name: used for uploading partials")
+    parser.add_argument("--aws-access-key-id", default=os.environ.get("AWS_ACCESS_KEY_ID"),
+                        dest="aws_key_id", help="AWS Access Key ID: S3 Credentials")
+    parser.add_argument("--aws-secret-access-key", default=os.environ.get("AWS_SECRET_ACCESS_KEY"),
+                        dest="aws_key_secret", help="AWS Secret Key: S3 Credentials")
+    parser.add_argument("--disable-s3", default=False, action='store_true',
+                        help="Instead of uploading artifacts to S3, send balrog the tc artifact url")
+    parser.add_argument("--disable-certs", dest="disable_certs", action="store_true",
+                        help="Disable mar signature verification")
+
+    args = parser.parse_args(argv)
+
+    # Disable uploading to S3 if any of the credentials are missing, or if specified as a cli argument
+    args.disable_s3 = args.disable_s3 or not (args.s3_bucket and args.aws_key_id and args.aws_key_secret)
+    if args.disable_s3:
+        log.info("Skipping S3 uploads, submitting taskcluster artifact urls instead.")
+
+    args.parent_url, args.signing_cert = load_task(args.taskdef)
+
+    return args
 
 
 def main():
