@@ -8,7 +8,6 @@ import os
 import ssl
 import sys
 import traceback
-from urllib.parse import urlparse
 
 import scriptworker.client
 from scriptworker.context import Context
