@@ -10,7 +10,7 @@ setup(
     description="TaskCluster Signing Script",
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
-    url="https://github.com/escapewindow/signingscript",
+    url="https://github.com/mozilla-releng/signingscript",
     packages=find_packages(),
     package_data={"signingscript": ["data/*"]},
     include_package_data=True,
