@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.3.0] - 2016-08-12
 ### Changed
 
 - moved repo to github.com/mozilla-releng/signingscript
