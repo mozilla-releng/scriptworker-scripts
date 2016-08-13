@@ -14,7 +14,8 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.task import task_cert_type, task_signing_formats, validate_task_schema
 from signingscript.utils import copy_to_artifact_dir, load_json, load_signing_server_config
-from signingscript.worker import download_files, get_token, read_temp_creds, sign_file
+from signingscript.worker import detached_sigfiles, download_files, get_token, \
+    read_temp_creds, sign_file
 
 log = logging.getLogger(__name__)
 
@@ -41,19 +42,19 @@ async def async_main(context):
     context.signing_servers = load_signing_server_config(context)
     cert_type = task_cert_type(context.task)
     signing_formats = task_signing_formats(context.task)
-    # _ scriptworker needs to validate CoT artifact
+    # TODO scriptworker needs to validate CoT artifact
     filelist = await download_files(context)
     log.info("getting token")
     await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
     for filename in filelist:
         log.info("signing %s", filename)
-        # TODO .asc only if we're gpg
-        artifacts = [filename, "{}.asc".format(filename)]
-        await sign_file(context, os.path.join(work_dir, filename),
-                        cert_type, signing_formats, context.config["ssl_cert"],
-                        to=os.path.join(work_dir, "{}.asc".format(filename)))
-        for source in artifacts:
-            copy_to_artifact_dir(context, os.path.join(work_dir, source))
+        source = os.path.join(work_dir, filename)
+        await sign_file(context, source, cert_type, signing_formats,
+                        context.config["ssl_cert"])
+        detached_signatures = detached_sigfiles(source, signing_formats)
+        copy_to_artifact_dir(context, source)
+        for detached_tuple in detached_signatures:
+            copy_to_artifact_dir(context, detached_tuple[1])
     # TODO manifest
     temp_creds_future.cancel()
     log.info("Done!")

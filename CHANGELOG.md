@@ -7,6 +7,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 - moved repo to github.com/mozilla-releng/signingscript
 
+### Fixed
+
+- fixed non-gpg signing - don't always expect an .asc file
+
 ## [0.2.1] - 2016-08-11
 ### Changed
 

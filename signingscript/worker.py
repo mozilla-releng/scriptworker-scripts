@@ -28,10 +28,10 @@ async def verify_checksum(context, abs_filename, checksum):
 
 def detached_sigfiles(filename, signing_formats):
     detached_signatures = []
-    for s_type, s_ext, s_mime in get_detached_signatures(signing_formats):
-        d_filename = "{filename}{ext}".format(filename=filename,
-                                              ext=s_ext)
-        detached_signatures.append((s_type, d_filename))
+    for sig_type, sig_ext, sig_mime in get_detached_signatures(signing_formats):
+        detached_filename = "{filename}{ext}".format(filename=filename,
+                                                     ext=sig_ext)
+        detached_signatures.append((sig_type, detached_filename))
     return detached_signatures
 
 
