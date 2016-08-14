@@ -6,7 +6,6 @@ import os
 import random
 import traceback
 
-from scriptworker.client import get_temp_creds_from_file
 from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_async, retry_request
 from signingscript.exceptions import ChecksumMismatchError, SigningServerError
@@ -94,12 +93,6 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
 
 def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
     return [s for s in signing_servers[cert_type] if set(signing_formats) & set(s.formats)]
-
-
-async def read_temp_creds(context):
-    while True:
-        await asyncio.sleep(context.config['temp_creds_refresh_seconds'])
-        await get_temp_creds_from_file(context.config)
 
 
 async def download_files(context):

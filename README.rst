@@ -1,5 +1,265 @@
-==============
 Signingscript
-==============
+=============
 
-This is designed to be run from scriptworker.
+This is designed to be run from scriptworker, but runs perfectly fine as
+a standalone script.
+
+Testing
+-------
+
+Testing takes a few steps to set up. Here's how:
+
+docker-signing-server
+~~~~~~~~~~~~~~~~~~~~~
+
+To test, you will need to point at a signing server. Since production
+signing servers have restricted access and sensitive keys, it's easiest
+to point at a docker-signing-server instance locally during development.
+
+To do so:
+
+::
+
+    git clone https://github.com/escapewindow/docker-signing-server
+    cd docker-signing-server
+    # Follow ./README.md to set up and run the docker instance
+
+Remember the path to ``./fake_ca/ca.crt`` ; this will be the file that
+signingscript will use to verify the SSL connection.
+
+virtualenv
+~~~~~~~~~~
+
+First, you need ``python>=3.5.0``.
+
+Next, create a python35 virtualenv, and install signingscript:
+
+::
+
+    # create the virtualenv in ./venv3
+    virtualenv3 venv3
+    # activate it
+    . venv3/bin/activate
+    # install signingscript from pypi
+    pip install signingscript
+
+If you want to use local clones of
+`signingscript <https://github.com/mozilla-releng/signingscript>`__,
+`signtool <https://github.com/mozilla-releng/signtool>`__, and/or
+`scriptworker <https://github.com/mozilla-releng/scriptworker>`__, you
+can
+
+::
+
+    python setup.py develop
+
+in each of the applicable directories after, or instead of the
+``pip install`` command.
+
+password json
+~~~~~~~~~~~~~
+
+You'll need a password json file. The format is
+
+::
+
+    {
+      "BASE_CERT_SCOPE:dep-signing": [
+        ["IPADDRESS:PORT", "USERNAME", "PASSWORD", ["SIGNING_FORMAT1", "SIGNING_FORMAT2"...]],
+        ["SECOND_IPADDRESS:PORT", "USERNAME", "PASSWORD", ["SIGNING_FORMAT1", "SIGNING_FORMAT2"...]],
+        ...
+      ],
+      "BASE_CERT_SCOPE:nightly-signing": [
+        ["IPADDRESS:PORT", "USERNAME", "PASSWORD", ["SIGNING_FORMAT1", "SIGNING_FORMAT2"...]],
+        ["SECOND_IPADDRESS:PORT", "USERNAME", "PASSWORD", ["SIGNING_FORMAT1", "SIGNING_FORMAT2"...]],
+        ...
+      ],
+      "BASE_CERT_SCOPE:release-signing": [
+        ["IPADDRESS:PORT", "USERNAME", "PASSWORD", ["SIGNING_FORMAT1", "SIGNING_FORMAT2"...]],
+        ["SECOND_IPADDRESS:PORT", "USERNAME", "PASSWORD", ["SIGNING_FORMAT1", "SIGNING_FORMAT2"...]],
+        ...
+      ]
+    }
+
+This stripped down version will work with docker-signing-server:
+
+::
+
+    {
+      "project:releng:signing:cert:dep-signing": [
+        ["127.0.0.1:9110", "user", "pass", ["gpg"]]
+      ]
+    }
+
+The user/pass for the docker-signing-server are ``user`` and ``pass``
+for super sekrit security.
+
+config json
+~~~~~~~~~~~
+
+The config json looks like this (comments are not valid json, but I'm
+inserting comments for clarity. Don't include the comments in the
+file!):
+
+::
+
+    {
+      // path to the password json you created above
+      "signing_server_config": "/src/signing/signingscript/server_config.json",
+
+      // the work directory path.  task.json will live here, as well as downloaded binaries
+      "work_dir": "/src/signing/work_dir",
+
+      // the artifact directory path.  the signed binaries will be copied here for scriptworker to upload
+      "artifact_dir": "/src/signing/artifact_dir",
+
+      // the IP that docker-signing-server thinks you're coming from.
+      // I got this value from running `docker network inspect bridge` and using the gateway.
+      "my_ip": "172.17.0.1",
+
+      // the path to the docker-signing-server fake_ca cert that you generated above.
+      "ssl_cert": "/src/signing/docker-signing-server/fake_ca/ca.crt",
+
+      // the path to signtool in your virtualenv that you created above
+      "signtool": "/src/signing/venv3/bin/signtool",
+
+      // enable debug logging
+      "verbose": true
+    }
+
+Since scriptworker isn't going to be doing it for you, you need to
+manually create the directories that ``work_dir`` and ``artifact_dir``
+point to. It's better to use new directories for these rather than
+cluttering and potentially overwriting an existing directory. Once you
+set up scriptworker, the ``work_dir`` and ``artifact_dir`` will be
+regularly wiped and recreated.
+
+Scriptworker will expect to find a config.json for the scriptworker
+config, so I name the signingscript config json ``script_config.json``.
+You can name it whatever you'd like.
+
+signing manifest json
+~~~~~~~~~~~~~~~~~~~~~
+
+The signing manifest may or may not stick around (see `bug 1277579
+comment
+16 <https://bugzilla.mozilla.org/show_bug.cgi?id=1277579#c16>`__). Until
+we change things, this is the format:
+
+::
+
+    [{
+      // the filename of the file to sign.
+      "file_to_sign": "test.mar",
+
+      // the sha512 of the file to sign.  generate this via `openssl sha512 FILE`
+      "sha": "d6d523d65bbcd2ba72f3eacfc2ba57bf87fa64804fb48cee61e0c56a26146f7499baf42332b490698108b71d7984845bea9e2ca2e1336e6fbe4707449df0901d"
+    }]
+
+Multiple files may be listed, each in their own dictionary in the list.
+
+Put the signing manifest json + the file(s) to sign somewhere where they
+can be reached via the web; you'll point to the signing manifest's URL
+in the task.json below.
+
+task.json
+~~~~~~~~~
+
+Ordinarily, scriptworker would get the task definition from TaskCluster,
+and write it to a ``task.json`` in the ``work_dir``. Since you're
+initially not going to run through scriptworker, you need to put this
+file on disk yourself.
+
+It will look like this:
+
+::
+
+    {
+      "created": "2016-05-04T23:15:17.908Z",
+      "deadline": "2016-05-05T00:15:17.908Z",
+      "dependencies": [],
+      "expires": "2017-05-05T00:15:17.908Z",
+      "extra": {
+        "signing": {
+          "signature": ""
+        }
+      },
+      "metadata": {
+        "description": "Markdown description of **what** this task does",
+        "name": "Example Task",
+        "owner": "name@example.com",
+        "source": "https://tools.taskcluster.net/task-creator/"
+      },
+      "payload": {
+        "signingManifest": "http://people.mozilla.org/~asasaki/signing/signingManifest.json",
+        "maxRunTime": 600
+      },
+      "priority": "normal",
+      "provisionerId": "test-dummy-provisioner",
+      "requires": "all-completed",
+      "retries": 0,
+      "routes": [],
+      "schedulerId": "-",
+      "scopes": [
+        "project:releng:signing:cert:dep-signing",
+        "project:releng:signing:format:gpg"
+      ],
+      "tags": {},
+      "taskGroupId": "CRzxWtujTYa2hOs20evVCA",
+      "workerType": "dummy-worker-aki"
+    }
+
+The important entries to edit are the ``signingManifest`` (point this at
+the signing manifest you created above), and the scopes. The first
+scope, ``project:releng:signing:cert:dep-signing``, matches the scope in
+your password json that you created. The second scope,
+``project:releng:signing:format:gpg``, specifies which signing format to
+use. (You can specify multiple formats by adding multiple
+``project:releng:signing:format:`` scopes)
+
+Write this to ``task.json`` in your ``work_dir``.
+
+run
+~~~
+
+You're ready to run signingscript!
+
+::
+
+    signingscript CONFIG_FILE
+
+where ``CONFIG_FILE`` is the config json you created above.
+
+This should download the ``signingManifest``, download the file(s)
+specified in the manifest, download a token from the
+docker-signing-server, upload the file(s) to the docker-signing-server
+to sign, download the signed bits from the docker-signing-server, and
+then copy the signed bits into the ``artifact_dir``.
+
+troubleshooting
+~~~~~~~~~~~~~~~
+
+Invalid json is a common error. Validate your json with this command:
+
+::
+
+    python -mjson.tool JSON_FILE
+
+Your docker-signing-server shell should be able to read the
+``signing.log``, which should help troubleshoot.
+
+running through scriptworker
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+`Scriptworker <https://github.com/mozilla-releng/scriptworker>`__ can
+deal with the TaskCluster specific parts, and run signingscript.
+
+Follow the `scriptworker
+readme <https://github.com/mozilla-releng/scriptworker/blob/master/README.rst>`__
+to set up scriptworker, and use
+``["path/to/signingscript", "path/to/script_config.json"]`` as your
+``task_script``.
+
+Make sure your ``work_dir`` and ``artifact_dir`` point to the same
+directories between the scriptworker config and the signingscript
+config!

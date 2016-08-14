@@ -15,7 +15,7 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.task import task_cert_type, task_signing_formats, validate_task_schema
 from signingscript.utils import copy_to_artifact_dir, load_json, load_signing_server_config
 from signingscript.worker import detached_sigfiles, download_files, get_token, \
-    read_temp_creds, sign_file
+    sign_file
 
 log = logging.getLogger(__name__)
 
@@ -33,10 +33,8 @@ class SigningContext(Context):
 
 # async_main {{{1
 async def async_main(context):
-    loop = asyncio.get_event_loop()
     work_dir = context.config['work_dir']
     context.task = scriptworker.client.get_task(context.config)
-    temp_creds_future = loop.create_task(read_temp_creds(context))
     log.info("validating task")
     validate_task_schema(context)
     context.signing_servers = load_signing_server_config(context)
@@ -56,7 +54,6 @@ async def async_main(context):
         for detached_tuple in detached_signatures:
             copy_to_artifact_dir(context, detached_tuple[1])
     # TODO manifest
-    temp_creds_future.cancel()
     log.info("Done!")
 
 
@@ -71,7 +68,6 @@ def get_default_config():
         'tools_dir': os.path.join(parent_dir, 'build-tools'),
         'work_dir': os.path.join(parent_dir, 'work_dir'),
         'artifact_dir': os.path.join(parent_dir, '/src/signing/artifact_dir'),
-        'temp_creds_refresh_seconds': 330,
         'my_ip': "127.0.0.1",
         'ssl_cert': None,
         'signtool': "signtool",
