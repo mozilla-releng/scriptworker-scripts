@@ -53,7 +53,6 @@ async def async_main(context):
         copy_to_artifact_dir(context, source)
         for detached_tuple in detached_signatures:
             copy_to_artifact_dir(context, detached_tuple[1])
-    # TODO manifest
     log.info("Done!")
 
 
@@ -104,8 +103,6 @@ def main(name=None, config_path=None):
     logging.getLogger("taskcluster").setLevel(logging.WARNING)
     loop = asyncio.get_event_loop()
     kwargs = {}
-    # TODO can we get the signing servers' CA cert on the scriptworkers?
-    # if they're real certs, we can skip this
     if context.config.get('ssl_cert'):
         sslcontext = ssl.create_default_context(cafile=context.config['ssl_cert'])
         kwargs['ssl_context'] = sslcontext
