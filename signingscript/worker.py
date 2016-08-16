@@ -4,12 +4,13 @@ from asyncio.subprocess import PIPE, STDOUT
 import logging
 import os
 import random
+from six.moves.urllib import urlparse
 import traceback
 
 from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_async, retry_request
 from signingscript.exceptions import ChecksumMismatchError, SigningServerError
-from signingscript.utils import download_file, get_hash, get_detached_signatures, load_json, log_output, raise_future_exceptions
+from signingscript.utils import download_file, get_hash, get_detached_signatures, log_output, raise_future_exceptions
 
 log = logging.getLogger(__name__)
 
@@ -97,27 +98,18 @@ def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
 
 async def download_files(context):
     payload = context.task["payload"]
-    # Will we know the artifacts, be able to create the manifest at decision task time?
-    manifest_url = payload["signingManifest"]
+    file_urls = payload["unsignedArtifacts"]
     work_dir = context.config['work_dir']
-    abs_manifest_path = os.path.join(work_dir, "signing_manifest.json")
-    await retry_async(download_file, args=(context, manifest_url, abs_manifest_path))
-    signing_manifest = load_json(abs_manifest_path)
-    log.info(signing_manifest)
 
     tasks = []
-    # TODO: better way to extract filename
-    url_prefix = "/".join(manifest_url.split("/")[:-1])
-    files = {}
-    for e in signing_manifest:
-        # Fallback to "mar" if "file_to_sign" is not specified
-        file_to_sign = e.get("file_to_sign", e.get("mar"))
-        file_url = "{}/{}".format(url_prefix, file_to_sign)
-        abs_file_path = os.path.join(work_dir, file_to_sign)
-        files[file_to_sign] = {
-            "path": abs_file_path,
-            "sha": e["sha"]
-        }
+    files = []
+    # TODO we need to make sure that these urls are all valid, e.g. artifacts
+    # of parent tasks in the graph
+    for file_url in file_urls:
+        parts = urlparse(file_url)
+        filename = parts.path.split('/')[-1]
+        abs_file_path = os.path.join(work_dir, filename)
+        files.append(filename)
         tasks.append(
             asyncio.ensure_future(
                 retry_async(download_file, args=(context, file_url, abs_file_path))
@@ -126,20 +118,4 @@ async def download_files(context):
 
     await raise_future_exceptions(tasks)
     tasks = []
-    for filename, filedef in files.items():
-        tasks.append(asyncio.ensure_future(verify_checksum(context, filedef["path"], filedef["sha"])))
-    await raise_future_exceptions(tasks)
     return files.keys()
-
-    #     # Update manifest data with new values
-    #     log.debug("Getting hash of {}".format(abs_filename))
-    #     e["hash"] = get_hash(abs_filename)
-    #     e["size"] = os.path.getsize(abs_filename)
-    #     e["detached_signatures"] = {}
-    #     for sig_type, sig_filename in detached_signatures:
-    #         e["detached_signatures"][sig_type] = sig_filename
-    # manifest_file = os.path.join(work_dir, "manifest.json")
-    # with open(manifest_file, "wb") as f:
-    #     json.dump(signing_manifest, f, indent=2, sort_keys=True)
-    # log.debug("Uploading manifest")
-    # copy_to_artifact_dir(manifest_file)
