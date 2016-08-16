@@ -7,6 +7,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 - documented how to test signingscript in `README.rst`.
 
+### Changed
+
+- switched from `task.payload.signingManifest` to `task.payload.unsignedArtifacts`.
+
 ## [0.3.0] - 2016-08-12
 ### Changed
 
