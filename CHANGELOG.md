@@ -11,6 +11,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 - switched from `task.payload.signingManifest` to `task.payload.unsignedArtifacts`.
 
+### Removed
+
+- cleaned up the old CONTRIBUTING.rst and nix files.
+
 ## [0.3.0] - 2016-08-12
 ### Changed
 
