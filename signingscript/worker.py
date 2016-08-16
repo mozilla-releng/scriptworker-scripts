@@ -4,7 +4,7 @@ from asyncio.subprocess import PIPE, STDOUT
 import logging
 import os
 import random
-from six.moves.urllib import urlparse
+from six.moves.urllib.parse import urlparse
 import traceback
 
 from scriptworker.exceptions import ScriptWorkerException
@@ -118,4 +118,4 @@ async def download_files(context):
 
     await raise_future_exceptions(tasks)
     tasks = []
-    return files.keys()
+    return files
