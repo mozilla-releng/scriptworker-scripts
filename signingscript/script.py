@@ -12,10 +12,10 @@ import traceback
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-from signingscript.task import task_cert_type, task_signing_formats, validate_task_schema
+from signingscript.task import detached_sigfiles, download_files, get_token, \
+    sign_file, task_cert_type, task_signing_formats, validate_task_schema
 from signingscript.utils import copy_to_artifact_dir, load_json, load_signing_server_config
-from signingscript.worker import detached_sigfiles, download_files, get_token, \
-    sign_file
+
 
 log = logging.getLogger(__name__)
 
