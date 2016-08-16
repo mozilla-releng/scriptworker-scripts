@@ -1,5 +1,5 @@
 {
-    "title": "Taskcluster MAR signing task minimal schema",
+    "title": "Taskcluster signing task minimal schema",
     "type": "object",
     "properties": {
         "scopes": {
@@ -11,29 +11,19 @@
             }
         },
         "payload": {
-            "type": "object",
-            "properties": {
-                "signingManifest": {
-                    "type": "string"
-                }
-            },
-            "required": ["signingManifest"]
-        },
-        "extra": {
-            "type": "object",
-            "properties": {
-                "signing": {
-                    "type": "object",
-                    "properties": {
-                        "signature": {
-                            "type": "string"
-                        }
-                    },
-                    "required": ["signature"]
-                }
-            },
-            "required": ["signing"]
+          "type": "object",
+          "properties": {
+            "unsignedArtifacts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          },
+          "required": ["unsignedArtifacts"]
         }
     },
-    "required": ["scopes", "payload", "extra"]
+    "required": ["scopes", "payload"]
 }

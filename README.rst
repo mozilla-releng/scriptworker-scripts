@@ -138,29 +138,11 @@ Scriptworker will expect to find a config.json for the scriptworker
 config, so I name the signingscript config json ``script_config.json``.
 You can name it whatever you'd like.
 
-signing manifest json
-~~~~~~~~~~~~~~~~~~~~~
+file to sign
+~~~~~~~~~~~~
 
-The signing manifest may or may not stick around (see `bug 1277579
-comment
-16 <https://bugzilla.mozilla.org/show_bug.cgi?id=1277579#c16>`__). Until
-we change things, this is the format:
-
-::
-
-    [{
-      // the filename of the file to sign.
-      "file_to_sign": "test.mar",
-
-      // the sha512 of the file to sign.  generate this via `openssl sha512 FILE`
-      "sha": "d6d523d65bbcd2ba72f3eacfc2ba57bf87fa64804fb48cee61e0c56a26146f7499baf42332b490698108b71d7984845bea9e2ca2e1336e6fbe4707449df0901d"
-    }]
-
-Multiple files may be listed, each in their own dictionary in the list.
-
-Put the signing manifest json + the file(s) to sign somewhere where they
-can be reached via the web; you'll point to the signing manifest's URL
-in the task.json below.
+Put the file(s) to sign somewhere where they can be reached via the web;
+you'll point to their URL(s) in the task.json below.
 
 task.json
 ~~~~~~~~~
@@ -191,7 +173,9 @@ It will look like this:
         "source": "https://tools.taskcluster.net/task-creator/"
       },
       "payload": {
-        "signingManifest": "http://people.mozilla.org/~asasaki/signing/signingManifest.json",
+        "unsignedArtifacts": [
+          "http://people.mozilla.org/~asasaki/signing/test.mar"
+        ],
         "maxRunTime": 600
       },
       "priority": "normal",
@@ -209,9 +193,9 @@ It will look like this:
       "workerType": "dummy-worker-aki"
     }
 
-The important entries to edit are the ``signingManifest`` (point this at
-the signing manifest you created above), and the scopes. The first
-scope, ``project:releng:signing:cert:dep-signing``, matches the scope in
+The important entries to edit are the ``unsignedArtifacts`` (point this
+at URLs of the file(s) to sign), and the scopes. The first scope,
+``project:releng:signing:cert:dep-signing``, matches the scope in
 your password json that you created. The second scope,
 ``project:releng:signing:format:gpg``, specifies which signing format to
 use. (You can specify multiple formats by adding multiple
@@ -230,11 +214,11 @@ You're ready to run signingscript!
 
 where ``CONFIG_FILE`` is the config json you created above.
 
-This should download the ``signingManifest``, download the file(s)
-specified in the manifest, download a token from the
-docker-signing-server, upload the file(s) to the docker-signing-server
-to sign, download the signed bits from the docker-signing-server, and
-then copy the signed bits into the ``artifact_dir``.
+This should download the file(s) specified in the payload, download a
+token from the docker-signing-server, upload the file(s) to the
+docker-signing-server to sign, download the signed bits from the
+docker-signing-server, and then copy the signed bits into the
+``artifact_dir``.
 
 troubleshooting
 ~~~~~~~~~~~~~~~

@@ -15,12 +15,9 @@ valid_task = json.loads("""
   "expires": "2016-05-08T18:15:59.010Z",
   "scopes": ["signing"],
   "payload": {
-    "signingManifest": "manifest.json"
-  },
-  "extra": {
-    "signing": {
-      "signature": "blah"
-    }
+    "unsignedArtifacts": [
+      "url"
+    ]
   }
 }
 """)
