@@ -41,7 +41,12 @@ async def async_main(context):
     cert_type = task_cert_type(context.task)
     signing_formats = task_signing_formats(context.task)
     # TODO scriptworker needs to validate CoT artifact
-    filelist = await download_files(context)
+    # Use standard SSL for downloading files.
+    with aiohttp.ClientSession() as base_ssl_session:
+        orig_session = context.session
+        context.session = base_ssl_session
+        filelist = await download_files(context)
+        context.session = orig_session
     log.info("getting token")
     await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
     for filename in filelist:

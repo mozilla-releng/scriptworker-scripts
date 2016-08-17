@@ -3,8 +3,13 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.4.2] - 2016-08-17
 ### Changed
 - moved signingscript.worker functions into signingscript.task
+
+### Fixed
+- `download_files` now uses the standard SSL trusted CAs.
 
 ## [0.4.1] - 2016-08-16
 ### Fixed
