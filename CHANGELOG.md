@@ -6,6 +6,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - moved signingscript.worker functions into signingscript.task
 
+### Fixed
+- `download_files` now uses the standard SSL trusted CAs.
+
 ## [0.4.1] - 2016-08-16
 ### Fixed
 - bustage fix - import error, list.keys() error.  someday we'll have 100% coverage
