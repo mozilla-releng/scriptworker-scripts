@@ -4,6 +4,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2016-08-19
+### Changed
+- `unsignedArtifacts` URLs will now be verified as valid TaskCluster artifact URLs for dependent tasks by default.
+- tests no longer use nosetest syntax; they've been all ported to pytest syntax.
+
+### Fixed
+- multiple `unsignedArtifacts` with different paths but the same filenames will no longer clobber each other.
+
 ## [0.4.2] - 2016-08-17
 ### Changed
 - moved signingscript.worker functions into signingscript.task

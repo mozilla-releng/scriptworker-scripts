@@ -49,15 +49,15 @@ async def async_main(context):
         context.session = orig_session
     log.info("getting token")
     await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
-    for filename in filelist:
-        log.info("signing %s", filename)
-        source = os.path.join(work_dir, filename)
+    for filepath in filelist:
+        log.info("signing %s", filepath)
+        source = os.path.join(work_dir, filepath)
         await sign_file(context, source, cert_type, signing_formats,
                         context.config["ssl_cert"])
-        detached_signatures = detached_sigfiles(source, signing_formats)
-        copy_to_artifact_dir(context, source)
-        for detached_tuple in detached_signatures:
-            copy_to_artifact_dir(context, detached_tuple[1])
+        sigfiles = detached_sigfiles(filepath, signing_formats)
+        copy_to_artifact_dir(context, source, target=filepath)
+        for sigpath in sigfiles:
+            copy_to_artifact_dir(context, os.path.join(work_dir, sigpath), target=sigpath)
     log.info("Done!")
 
 
@@ -76,6 +76,9 @@ def get_default_config():
         'ssl_cert': None,
         'signtool': "signtool",
         'schema_file': os.path.join(cwd, 'signingscript', 'data', 'signing_task_schema.json'),
+        'valid_artifact_schemes': ['https'],
+        'valid_artifact_netlocs': ['queue.taskcluster.net'],
+        'valid_artifact_regexes': [r'''/v1/task/(?P<taskId>[^/]+)(/runs/\d+)?/artifacts/(?P<filepath>.*)$'''],
         'verbose': True,
     }
     return default_config
