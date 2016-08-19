@@ -17,11 +17,21 @@ DETACHED_SIGNATURES = [
 ]
 
 
+def mkdir(path):
+    try:
+        os.makedirs(path)
+        log.info("mkdir {}".format(path))
+    except OSError:
+        pass
+
+
 async def download_file(context, url, abs_filename, chunk_size=128):
     log.info("Downloading %s", url)
+    parent_dir = os.path.dirname(abs_filename)
     async with context.session.get(url) as resp:
         if resp.status != 200:
             raise DownloadError("{} status {} is not 200!".format(url, resp.status))
+        mkdir(parent_dir)
         with open(abs_filename, 'wb') as fd:
             while True:
                 chunk = await resp.content.read(chunk_size)
@@ -81,6 +91,8 @@ def copy_to_artifact_dir(context, source, target=None):
     target = target or os.path.basename(source)
     target_path = os.path.join(artifact_dir, target)
     try:
+        parent_dir = os.path.dirname(target_path)
+        mkdir(parent_dir)
         log.info("Copying %s to %s" % (source, target_path))
         copyfile(source, target_path)
     except IOError:

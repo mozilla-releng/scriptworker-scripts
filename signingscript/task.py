@@ -1,18 +1,17 @@
 import aiohttp
 import asyncio
 from asyncio.subprocess import PIPE, STDOUT
+from copy import deepcopy
 import json
 import logging
 import os
 import random
-import scriptworker.client
-from signingscript.exceptions import TaskVerificationError
-from six.moves.urllib.parse import urlparse
 import traceback
 
+import scriptworker.client
 from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_async, retry_request
-from signingscript.exceptions import SigningServerError
+from signingscript.exceptions import SigningServerError, TaskVerificationError
 from signingscript.utils import download_file, get_hash, get_detached_signatures, log_output, raise_future_exceptions
 
 log = logging.getLogger(__name__)
@@ -100,12 +99,12 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     log.info("Finished signing")
 
 
-def detached_sigfiles(filename, signing_formats):
+def detached_sigfiles(filepath, signing_formats):
     detached_signatures = []
     for sig_type, sig_ext, sig_mime in get_detached_signatures(signing_formats):
-        detached_filename = "{filename}{ext}".format(filename=filename,
+        detached_filepath = "{filepath}{ext}".format(filepath=filepath,
                                                      ext=sig_ext)
-        detached_signatures.append((sig_type, detached_filename))
+        detached_signatures.append(detached_filepath)
     return detached_signatures
 
 
@@ -116,13 +115,12 @@ async def download_files(context):
 
     tasks = []
     files = []
-    # TODO we need to make sure that these urls are all valid, e.g. artifacts
-    # of parent tasks in the graph
+    download_config = deepcopy(context.config)
+    download_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
     for file_url in file_urls:
-        parts = urlparse(file_url)
-        filename = parts.path.split('/')[-1]
-        abs_file_path = os.path.join(work_dir, filename)
-        files.append(filename)
+        rel_path = scriptworker.client.validate_artifact_url(download_config, file_url)
+        abs_file_path = os.path.join(work_dir, rel_path)
+        files.append(rel_path)
         tasks.append(
             asyncio.ensure_future(
                 retry_async(download_file, args=(context, file_url, abs_file_path))

@@ -49,15 +49,15 @@ async def async_main(context):
         context.session = orig_session
     log.info("getting token")
     await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
-    for filename in filelist:
-        log.info("signing %s", filename)
-        source = os.path.join(work_dir, filename)
+    for filepath in filelist:
+        log.info("signing %s", filepath)
+        source = os.path.join(work_dir, filepath)
         await sign_file(context, source, cert_type, signing_formats,
                         context.config["ssl_cert"])
-        detached_signatures = detached_sigfiles(source, signing_formats)
-        copy_to_artifact_dir(context, source)
-        for detached_tuple in detached_signatures:
-            copy_to_artifact_dir(context, detached_tuple[1])
+        sigfiles = detached_sigfiles(filepath, signing_formats)
+        copy_to_artifact_dir(context, source, target=filepath)
+        for sigpath in sigfiles:
+            copy_to_artifact_dir(context, os.path.join(work_dir, sigpath), target=sigpath)
     log.info("Done!")
 
 
