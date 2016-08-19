@@ -3,6 +3,9 @@ Signingscript
 
 .. image:: https://travis-ci.org/mozilla-releng/signingscript.svg?branch=master
     :target: https://travis-ci.org/mozilla-releng/signingscript
+.. image:: https://coveralls.io/repos/github/mozilla-releng/signingscript/badge.svg?branch=master
+    :target: https://coveralls.io/github/mozilla-releng/signingscript?branch=master
+
 
 This is designed to be run from scriptworker, but runs perfectly fine as
 a standalone script.
