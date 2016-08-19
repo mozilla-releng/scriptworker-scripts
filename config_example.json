@@ -5,5 +5,8 @@
     "schema_file": "signingscript/data/signing_task_schema.json",
     "signtool": "signtool",
     "ssl_cert": "host.cert",
+    "valid_artifact_schemes": ["https"],
+    "valid_artifact_netlocs": ["queue.taskcluster.net"],
+    "valid_artifact_regexes": ["/v1/task/(?P<taskId>[^/]+)/artifacts/(?P<filepath>.*)$"],
     "verbose": true
 }

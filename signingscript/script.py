@@ -76,6 +76,9 @@ def get_default_config():
         'ssl_cert': None,
         'signtool': "signtool",
         'schema_file': os.path.join(cwd, 'signingscript', 'data', 'signing_task_schema.json'),
+        'valid_artifact_schemes': ['https'],
+        'valid_artifact_netlocs': ['queue.taskcluster.net'],
+        'valid_artifact_regexes': [r'''/v1/task/(?P<taskId>[^/]+)/artifacts/(?P<filepath>.*)$'''],
         'verbose': True,
     }
     return default_config
