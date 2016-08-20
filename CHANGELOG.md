@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `README.md` is now checked in.  Generate `README.rst` via pandoc.
+
+### Changed
+- update the READMEs to describe how the new `validate_artifact_url` calls change testing.
+
+### Fixed
+- `valid_artifact_regexes` should be spelled `valid_artifact_path_regexes`.  fixed.
 
 ## [0.5.0] - 2016-08-19
 ### Changed
