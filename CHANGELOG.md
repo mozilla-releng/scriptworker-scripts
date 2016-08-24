@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - update the READMEs to describe how the new `validate_artifact_url` calls change testing.
+- `scriptworker.client.validate_task_schema` -> `scriptworker.client.validate_json_schema`
 
 ### Fixed
 - `valid_artifact_regexes` should be spelled `valid_artifact_path_regexes`.  fixed.
