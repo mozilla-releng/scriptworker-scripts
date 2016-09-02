@@ -37,7 +37,7 @@ def validate_task_schema(context):
     with open(context.config['schema_file']) as fh:
         task_schema = json.load(fh)
     log.debug(task_schema)
-    scriptworker.client.validate_task_schema(context.task, task_schema)
+    scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
 def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
