@@ -114,8 +114,6 @@ def main(name=None, config_path=None):
     if context.config.get('ssl_cert'):
         sslcontext = ssl.create_default_context(cafile=context.config['ssl_cert'])
         kwargs['ssl_context'] = sslcontext
-    else:
-        kwargs['verify_ssl'] = False
     conn = aiohttp.TCPConnector(**kwargs)
     with aiohttp.ClientSession(connector=conn) as session:
         context.session = session
