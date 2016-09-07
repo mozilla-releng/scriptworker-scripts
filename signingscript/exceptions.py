@@ -11,7 +11,7 @@ class TaskVerificationError(ScriptWorkerTaskException):
 
 class DownloadError(ScriptWorkerTaskException):
     def __init__(self, msg):
-        super(ChecksumMismatchError, self).__init__(
+        super(DownloadError, self).__init__(
             msg, exit_code=STATUSES['malformed-payload']
         )
 
