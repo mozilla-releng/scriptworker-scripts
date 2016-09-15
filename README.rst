@@ -124,9 +124,11 @@ file!):
       "signing_server_config": "/src/signing/signingscript/server_config.json",
 
       // the work directory path.  task.json will live here, as well as downloaded binaries
+      // this should be an absolute path.
       "work_dir": "/src/signing/work_dir",
 
       // the artifact directory path.  the signed binaries will be copied here for scriptworker to upload
+      // this should be an absolute path.
       "artifact_dir": "/src/signing/artifact_dir",
 
       // the IP that docker-signing-server thinks you're coming from.
