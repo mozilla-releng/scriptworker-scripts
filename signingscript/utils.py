@@ -8,7 +8,7 @@ from shutil import copyfile
 import traceback
 from collections import namedtuple
 
-from signingscript.exceptions import DownloadError, SigningServerError
+from signingscript.exceptions import SigningServerError
 
 log = logging.getLogger(__name__)
 # Mapping between signing client formats and file extensions
@@ -23,22 +23,6 @@ def mkdir(path):
         log.info("mkdir {}".format(path))
     except OSError:
         pass
-
-
-async def download_file(context, url, abs_filename, chunk_size=128):
-    log.info("Downloading %s", url)
-    parent_dir = os.path.dirname(abs_filename)
-    async with context.session.get(url) as resp:
-        if resp.status != 200:
-            raise DownloadError("{} status {} is not 200!".format(url, resp.status))
-        mkdir(parent_dir)
-        with open(abs_filename, 'wb') as fd:
-            while True:
-                chunk = await resp.content.read(chunk_size)
-                if not chunk:
-                    break
-                fd.write(chunk)
-    log.info("Done")
 
 
 def get_hash(path, hash_type="sha512"):

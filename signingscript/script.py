@@ -12,7 +12,8 @@ import traceback
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-from signingscript.task import detached_sigfiles, download_files, get_token, \
+from scriptworker.task import download_artifacts
+from signingscript.task import detached_sigfiles, get_token, \
     sign_file, task_cert_type, task_signing_formats, validate_task_schema
 from signingscript.utils import copy_to_artifact_dir, load_json, load_signing_server_config
 
@@ -45,7 +46,8 @@ async def async_main(context):
     with aiohttp.ClientSession() as base_ssl_session:
         orig_session = context.session
         context.session = base_ssl_session
-        filelist = await download_files(context)
+        file_urls = context.task["payload"]["unsignedArtifacts"]
+        filelist = await download_artifacts(context, file_urls)
         context.session = orig_session
     log.info("getting token")
     await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
