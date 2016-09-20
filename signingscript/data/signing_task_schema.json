@@ -21,16 +21,11 @@
         "payload": {
           "type": "object",
           "properties": {
-            "unsignedArtifacts": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "minItems": 1,
-              "uniqueItems": true
+            "apks": {
+              "type": "object"
             }
           },
-          "required": ["unsignedArtifacts"]
+          "required": ["apks"]
         }
     },
     "required": ["scopes", "payload"]

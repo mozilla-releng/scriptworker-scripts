@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Signing script
 """
 import aiohttp
@@ -12,52 +12,62 @@ import traceback
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-from signingscript.task import detached_sigfiles, download_files, get_token, \
-    sign_file, task_cert_type, task_signing_formats, validate_task_schema
-from signingscript.utils import copy_to_artifact_dir, load_json, load_signing_server_config
+from signingscript.task import download_files, task_cert_type, task_signing_formats, validate_task_schema
+from signingscript.utils import load_json
+from signingscript.push_apk import PushAPK
 
 
 log = logging.getLogger(__name__)
 
 
 # SigningContext {{{1
-class SigningContext(Context):
+class PushApkContext(Context):
     signing_servers = None
 
     def __init__(self):
-        super(SigningContext, self).__init__()
+        super(PushApkContext, self).__init__()
 
     def write_json(self, *args):
         pass
 
+    def craft_push_config(self, apks):
+        # Example (config={
+        #    'package_name': 'org.mozilla.fennec_aurora',
+        #    'track': 'alpha',
+        #    'service_account': 'johan-lorenzo-service-account@boxwood-axon-825.iam.gserviceaccount.com',
+        #    'credentials': 'googleplay.p12',
+        #    'apk_x86': './fennec-46.0a2.en-US.android-i386.apk',
+        #    'apk_armv7_v15': './fennec-46.0a2.en-US.android-arm.apk',
+        # })
+
+        push_apk_config = {
+            'apk_{}'.format(apk_type): os.path.join(self.config['work_dir'], apk_path)
+            for apk_type, apk_path in apks.items()
+        }
+        push_apk_config['service_account'] = 'johan-lorenzo-service-account@boxwood-axon-825.iam.gserviceaccount.com'
+        push_apk_config['credentials'] = os.path.join('/home/jlorenzo/git/mozilla-releng/signingscript/signingscript/data/', 'googleplay.p12')
+
+        push_apk_config['track'] = 'alpha'
+        push_apk_config['package_name'] = 'org.mozilla.fennec_aurora'
+        return push_apk_config
+
 
 # async_main {{{1
 async def async_main(context):
-    work_dir = context.config['work_dir']
     context.task = scriptworker.client.get_task(context.config)
     log.info("validating task")
     validate_task_schema(context)
-    context.signing_servers = load_signing_server_config(context)
-    cert_type = task_cert_type(context.task)
-    signing_formats = task_signing_formats(context.task)
     # TODO scriptworker needs to validate CoT artifact
     # Use standard SSL for downloading files.
     with aiohttp.ClientSession() as base_ssl_session:
         orig_session = context.session
         context.session = base_ssl_session
-        filelist = await download_files(context)
+        downloaded_apks = await download_files(context)
         context.session = orig_session
-    log.info("getting token")
-    await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
-    for filepath in filelist:
-        log.info("signing %s", filepath)
-        source = os.path.join(work_dir, filepath)
-        await sign_file(context, source, cert_type, signing_formats,
-                        context.config["ssl_cert"])
-        sigfiles = detached_sigfiles(filepath, signing_formats)
-        copy_to_artifact_dir(context, source, target=filepath)
-        for sigpath in sigfiles:
-            copy_to_artifact_dir(context, os.path.join(work_dir, sigpath), target=sigpath)
+
+    log.info('pushing APKs to playstore')
+    push_apk = PushAPK(config=context.craft_push_config(downloaded_apks))
+    push_apk.run()
     log.info("Done!")
 
 
@@ -67,6 +77,8 @@ def get_default_config():
     """
     cwd = os.getcwd()
     parent_dir = os.path.dirname(cwd)
+    data_dir = os.path.join(cwd, 'signingscript', 'data')
+
     default_config = {
         'signing_server_config': 'server_config.json',
         'tools_dir': os.path.join(parent_dir, 'build-tools'),
@@ -75,7 +87,8 @@ def get_default_config():
         'my_ip': "127.0.0.1",
         'ssl_cert': None,
         'signtool': "signtool",
-        'schema_file': os.path.join(cwd, 'signingscript', 'data', 'signing_task_schema.json'),
+        'data_dir': data_dir,
+        'schema_file': os.path.join(data_dir, 'signing_task_schema.json'),
         'valid_artifact_schemes': ['https'],
         'valid_artifact_netlocs': ['queue.taskcluster.net'],
         'valid_artifact_path_regexes': [r'''/v1/task/(?P<taskId>[^/]+)(/runs/\d+)?/artifacts/(?P<filepath>.*)$'''],
@@ -93,7 +106,7 @@ def usage():
 def main(name=None, config_path=None):
     if name not in (None, '__main__'):
         return
-    context = SigningContext()
+    context = PushApkContext()
     context.config = get_default_config()
     if config_path is None:
         if len(sys.argv) != 2:

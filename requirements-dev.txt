@@ -1,4 +1,7 @@
 arrow
+google-api-python-client
+oauth2client
+pyOpenSsl
 python-jose
 scriptworker
 signtool
