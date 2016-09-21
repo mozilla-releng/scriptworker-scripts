@@ -9,10 +9,7 @@ from oauth2client import client
 from signingscript.push_apk import googleplay
 from signingscript.push_apk.storel10n import StoreL10n
 
-FORMAT = '%(asctime)s - %(filename)s - %(levelname)s - %(message)s'
-logging.basicConfig(format=FORMAT)
-logger = logging.getLogger(__file__)
-logger.setLevel(10)
+logger = logging.getLogger(__name__)
 
 
 class WrongArgumentGiven(Exception):
@@ -171,6 +168,9 @@ class PushAPK():
 
 def main(name=None):
     if name == '__main__':
+        FORMAT = '%(asctime)s - %(filename)s - %(levelname)s - %(message)s'
+        logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+
         try:
             push_apk = PushAPK()
             push_apk.run()
