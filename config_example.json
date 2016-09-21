@@ -1,10 +1,11 @@
 {
-    "signing_server_config": "server_config.json",
-    "work_dir": "work_dir",
-    "artifact_dir": "artifact_dir",
+    "work_dir": "/absolute/path/to/work_dir",
     "schema_file": "signingscript/data/signing_task_schema.json",
-    "signtool": "signtool",
-    "ssl_cert": "host.cert",
+
+    "google_play_service_account": "my-service-account@iam.gserviceaccount.com",
+    "google_play_certificate": "/absolute/path/to/googleplay.p12",
+    "google_play_package_name": "org.mozilla.fennec_aurora",
+
     "valid_artifact_schemes": ["https"],
     "valid_artifact_netlocs": ["queue.taskcluster.net"],
     "valid_artifact_path_regexes": ["/v1/task/(?P<taskId>[^/]+)(/runs/\\d+)?/artifacts/(?P<filepath>.*)$"],

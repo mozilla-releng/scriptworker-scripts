@@ -23,9 +23,12 @@
           "properties": {
             "apks": {
               "type": "object"
+            },
+            "google_play_track": {
+              "type": "string"
             }
           },
-          "required": ["apks"]
+          "required": ["apks", "google_play_track"]
         }
     },
     "required": ["scopes", "payload"]

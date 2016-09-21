@@ -21,24 +21,12 @@ log = logging.getLogger(__name__)
 
 class PushApkContext(Context):
     def craft_push_config(self, apks):
-        # Example (config={
-        #    'package_name': 'org.mozilla.fennec_aurora',
-        #    'track': 'alpha',
-        #    'service_account': 'johan-lorenzo-service-account@boxwood-axon-825.iam.gserviceaccount.com',
-        #    'credentials': 'googleplay.p12',
-        #    'apk_x86': './fennec-46.0a2.en-US.android-i386.apk',
-        #    'apk_armv7_v15': './fennec-46.0a2.en-US.android-arm.apk',
-        # })
+        push_apk_config = {'apk_{}'.format(apk_type): apk_path for apk_type, apk_path in apks.items()}
+        push_apk_config['service_account'] = self.config['google_play_service_account']
+        push_apk_config['credentials'] = self.config['google_play_certificate']
 
-        push_apk_config = {
-            'apk_{}'.format(apk_type): os.path.join(self.config['work_dir'], apk_path)
-            for apk_type, apk_path in apks.items()
-        }
-        push_apk_config['service_account'] = 'johan-lorenzo-service-account@boxwood-axon-825.iam.gserviceaccount.com'
-        push_apk_config['credentials'] = os.path.join('/home/jlorenzo/git/mozilla-releng/signingscript/signingscript/data/', 'googleplay.p12')
-
-        push_apk_config['track'] = 'alpha'
-        push_apk_config['package_name'] = 'org.mozilla.fennec_aurora'
+        push_apk_config['track'] = self.task['payload']['google_play_track']
+        push_apk_config['package_name'] = self.config['google_play_package_name']
         return push_apk_config
 
 
