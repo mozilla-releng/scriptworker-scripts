@@ -14,6 +14,7 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.task import download_files, validate_task_schema
 from signingscript.utils import load_json
 from signingscript.push_apk import PushAPK
+from signingscript.jarsigner import JarSigner
 
 
 log = logging.getLogger(__name__)
@@ -31,24 +32,28 @@ class PushApkContext(Context):
 
 
 # async_main {{{1
-async def async_main(context):
+async def async_main(context, jar_signer):
     context.task = scriptworker.client.get_task(context.config)
     log.info("validating task")
     validate_task_schema(context)
 
+    log.info('Downloading APKs...')
     with aiohttp.ClientSession() as base_ssl_session:
         orig_session = context.session
         context.session = base_ssl_session
         downloaded_apks = await download_files(context)
         context.session = orig_session
 
-    log.info('Pushing APKs to playstore...')
+    log.info('Verifying APKs\' signatures...')
+    for _, apk_path in downloaded_apks.items():
+        jar_signer.verify(apk_path)
+
+    log.info('Pushing APKs to Google Play Store...')
     push_apk = PushAPK(config=context.craft_push_config(downloaded_apks))
     push_apk.run()
     log.info('Done!')
 
 
-# config {{{1
 def get_default_config():
     """ Create the default config to work from.
     """
@@ -66,10 +71,21 @@ def get_default_config():
     return default_config
 
 
-# main {{{1
 def usage():
     print("Usage: {} CONFIG_FILE".format(sys.argv[0]), file=sys.stderr)
     sys.exit(1)
+
+
+def setup_logging(context):
+    if context.config.get('verbose'):
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=log_level
+    )
+    logging.getLogger('taskcluster').setLevel(logging.WARNING)
 
 
 def main(name=None, config_path=None):
@@ -82,21 +98,15 @@ def main(name=None, config_path=None):
             usage()
         config_path = sys.argv[1]
     context.config.update(load_json(path=config_path))
-    if context.config.get('verbose'):
-        log_level = logging.DEBUG
-    else:
-        log_level = logging.INFO
-    logging.basicConfig(
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        level=log_level
-    )
-    logging.getLogger("taskcluster").setLevel(logging.WARNING)
-    loop = asyncio.get_event_loop()
+    setup_logging(context)
 
+    jar_signer = JarSigner(context)
+
+    loop = asyncio.get_event_loop()
     with aiohttp.ClientSession() as session:
         context.session = session
         try:
-            loop.run_until_complete(async_main(context))
+            loop.run_until_complete(async_main(context, jar_signer))
         except ScriptWorkerTaskException as exc:
             traceback.print_exc()
             sys.exit(exc.exit_code)

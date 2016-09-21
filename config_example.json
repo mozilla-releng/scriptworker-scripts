@@ -6,6 +6,10 @@
     "google_play_certificate": "/absolute/path/to/googleplay.p12",
     "google_play_package_name": "org.mozilla.fennec_aurora",
 
+    "jarsigner_binary": "jarsigner",
+    "jarsigner_key_store": "/absolute/path/to/keystore",
+    "jarsigner_certificate_alias": "certificate-alias-within-keystore",
+
     "valid_artifact_schemes": ["https"],
     "valid_artifact_netlocs": ["queue.taskcluster.net"],
     "valid_artifact_path_regexes": ["/v1/task/(?P<taskId>[^/]+)(/runs/\\d+)?/artifacts/(?P<filepath>.*)$"],
