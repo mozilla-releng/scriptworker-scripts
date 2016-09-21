@@ -1,14 +1,11 @@
-import aiohttp
 import asyncio
-from asyncio.subprocess import PIPE, STDOUT
 from copy import deepcopy
 import json
 import logging
 import os
 
 import scriptworker.client
-from scriptworker.exceptions import ScriptWorkerException
-from scriptworker.utils import retry_async, retry_request
+from scriptworker.utils import retry_async
 from signingscript.exceptions import TaskVerificationError
 from signingscript.utils import download_file, raise_future_exceptions
 
@@ -25,8 +22,9 @@ def validate_task_schema(context):
 def check_mandatory_apks_are_present(apks):
     MANDATORIES = ('armv7_v15', 'x86')
     if not all([mandatory in apks for mandatory in MANDATORIES]):
-        print(apks)
-        raise Exception('')
+        raise TaskVerificationError(
+            'One of the mandatory apk is missing. Mandatories APKs: {}. Given APKs: {}.'.format(MANDATORIES, apks)
+        )
 
 
 async def download_files(context):
