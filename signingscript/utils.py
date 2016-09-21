@@ -6,10 +6,6 @@ import os
 from signingscript.exceptions import DownloadError
 
 log = logging.getLogger(__name__)
-# Mapping between signing client formats and file extensions
-DETACHED_SIGNATURES = [
-    ('gpg', '.asc', 'text/plain')
-]
 
 
 def mkdir(path):
@@ -39,15 +35,6 @@ async def download_file(context, url, abs_filename, chunk_size=128):
 def load_json(path):
     with open(path, "r") as fh:
         return json.load(fh)
-
-
-async def log_output(fh):
-    while True:
-        line = await fh.readline()
-        if line:
-            log.info(line.decode("utf-8").rstrip())
-        else:
-            break
 
 
 async def raise_future_exceptions(tasks):
