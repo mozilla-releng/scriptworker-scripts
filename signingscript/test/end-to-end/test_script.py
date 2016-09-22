@@ -6,6 +6,7 @@ import json
 import subprocess
 
 from signingscript.script import main
+from signingscript.test.helpers.task_generator import TaskGenerator
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.join(this_dir, '..', '..', '..')
@@ -70,38 +71,6 @@ class ConfigFileGenerator(object):
         ))
 
 
-class TaskFileGenerator(object):
-    def __init__(self, work_dir):
-        self.task_file = os.path.join(work_dir, 'task.json')
-
-    def generate(self):
-        with open(self.task_file, 'w') as f:
-            json.dump(self._generate_json(), f)
-        return self.task_file
-
-    def _generate_json(self):
-        return json.loads('''{
-          "provisionerId": "meh",
-          "workerType": "workertype",
-          "schedulerId": "task-graph-scheduler",
-          "taskGroupId": "some",
-          "routes": [],
-          "retries": 5,
-          "created": "2015-05-08T16:15:58.903Z",
-          "deadline": "2015-05-08T18:15:59.010Z",
-          "expires": "2016-05-08T18:15:59.010Z",
-          "dependencies": ["DIYnEVJ_SaSLGWtd3_n3VA", "EZJ0suL7St65V_MM0iBhKw"],
-          "scopes": ["signing"],
-          "payload": {
-            "apks": {
-              "armv7_v15": "https://queue.taskcluster.net/v1/task/DIYnEVJ_SaSLGWtd3_n3VA/artifacts/public%2Fbuild%2Ffennec-46.0a2.en-US.android-arm.apk",
-              "x86": "https://queue.taskcluster.net/v1/task/EZJ0suL7St65V_MM0iBhKw/artifacts/public%2Fbuild%2Ffennec-46.0a2.en-US.android-i386.apk"
-            },
-            "google_play_track": "alpha"
-          }
-        }''')
-
-
 class MainTest(unittest.TestCase):
 
     def test_validate_task(self):
@@ -112,7 +81,7 @@ class MainTest(unittest.TestCase):
             google_play_manager = GooglePlayManager(test_data_dir)
 
             config_generator = ConfigFileGenerator(test_data_dir, keystore_manager, google_play_manager)
-            task_generator = TaskFileGenerator(config_generator.work_dir)
-            task_generator.generate()
+            task_generator = TaskGenerator()
+            task_generator.generate_file(config_generator.work_dir)
 
             main(config_path=config_generator.generate())

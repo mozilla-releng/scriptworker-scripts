@@ -6,8 +6,8 @@ import os
 
 import scriptworker.client
 from scriptworker.utils import retry_async
-from signingscript.exceptions import TaskVerificationError
 from signingscript.utils import download_file, raise_future_exceptions
+
 
 log = logging.getLogger(__name__)
 
@@ -19,19 +19,9 @@ def validate_task_schema(context):
     scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
-def check_mandatory_apks_are_present(apks):
-    MANDATORIES = ('armv7_v15', 'x86')
-    if not all([mandatory in apks for mandatory in MANDATORIES]):
-        raise TaskVerificationError(
-            'One of the mandatory apk is missing. Mandatories APKs: {}. Given APKs: {}.'.format(MANDATORIES, apks)
-        )
-
-
 async def download_files(context):
     payload = context.task['payload']
     apks_to_download = payload['apks']
-    check_mandatory_apks_are_present(apks_to_download)
-
     work_dir = context.config['work_dir']
 
     tasks = []

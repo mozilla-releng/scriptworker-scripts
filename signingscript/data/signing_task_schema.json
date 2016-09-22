@@ -22,7 +22,16 @@
           "type": "object",
           "properties": {
             "apks": {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "armv7_v15": {
+                  "type": "string"
+                },
+                "x86": {
+                  "type": "string"
+                }
+              },
+              "required": ["armv7_v15", "x86"]
             },
             "google_play_track": {
               "type": "string"

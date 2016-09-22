@@ -1,38 +1,34 @@
-import json
-import copy
+import unittest
+
 from signingscript.script import get_default_config
 from signingscript.task import validate_task_schema
+
 from scriptworker.context import Context
+from scriptworker.exceptions import ScriptWorkerTaskException
 
-valid_task = json.loads("""
-{
-  "provisionerId": "meh",
-  "workerType": "workertype",
-  "schedulerId": "task-graph-scheduler",
-  "taskGroupId": "some",
-  "routes": [],
-  "retries": 5,
-  "created": "2015-05-08T16:15:58.903Z",
-  "deadline": "2015-05-08T18:15:59.010Z",
-  "expires": "2016-05-08T18:15:59.010Z",
-  "dependencies": ["VALID_TASK_ID"],
-  "scopes": ["signing"],
-  "payload": {
-    "apks": {
-      "armv7_v15": "https://queue.taskcluster.net/v1/task/DIYnEVJ_SaSLGWtd3_n3VA/artifacts/public%2Fbuild%2Ffennec-46.0a2.en-US.android-arm.apk",
-      "x86": "https://queue.taskcluster.net/v1/task/EZJ0suL7St65V_MM0iBhKw/artifacts/public%2Fbuild%2Ffennec-46.0a2.en-US.android-i386.apk"
-    },
-    "google_play_track": "alpha"
-  }
-}
-""")
-
-no_scopes = copy.deepcopy(valid_task)
-no_scopes["scopes"] = []
+from signingscript.test.helpers.task_generator import TaskGenerator
 
 
-def test_validate_task():
-    context = Context()
-    context.task = valid_task
-    context.config = get_default_config()
-    validate_task_schema(context)
+class TaskTest(unittest.TestCase):
+    def setUp(self):
+        self.context = Context()
+        self.context.config = get_default_config()
+
+    def test_validate_task(self):
+        self.context.task = TaskGenerator().generate_json()
+        validate_task_schema(self.context)
+
+    def test_missing_mandatory_apks_are_reported(self):
+        self.context.task = TaskGenerator(
+            apks={'armv7_v15': ''}  # x86 is missing, for instance
+        ).generate_json()
+
+        with self.assertRaises(ScriptWorkerTaskException):
+            validate_task_schema(self.context)
+
+    def test_no_error_is_reported_when_no_missing_apk(self):
+        self.context.task = TaskGenerator(
+            apks={'armv7_v15': '', 'x86': ''}
+        ).generate_json()
+
+        validate_task_schema(self.context)
