@@ -7,6 +7,7 @@ import logging
 from oauth2client import client
 
 from mozapkpublisher import googleplay
+from mozapkpublisher.base import Base
 from mozapkpublisher.storel10n import StoreL10n
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class ArgumentParser(argparse.ArgumentParser):
         raise WrongArgumentGiven(message)
 
 
-class PushAPK():
+class PushAPK(Base):
     # Google play has currently 3 tracks. Rollout deploys
     # to a limited percentage of users
     TRACK_VALUES = ('production', 'beta', 'alpha', 'rollout')
@@ -34,23 +35,12 @@ class PushAPK():
         'org.mozilla.firefox': 'release'
     }
 
-    parser = None
-
     def __init__(self, config=None):
         self.config = self._parse_config(config)
         if self.config.track == 'rollout' and self.config.rollout_percentage is None:
             raise WrongArgumentGiven("When using track='rollout', rollout percentage must be provided too")
 
         self.translationMgmt = StoreL10n()
-
-    @classmethod
-    def _parse_config(cls, config=None):
-        if cls.parser is None:
-            cls._init_parser()
-
-        args = None if config is None else PushAPK._convert_dict_into_args(config)
-        # Parses sys.argv if args is None
-        return cls.parser.parse_args(args)
 
     @classmethod
     def _init_parser(cls):
@@ -82,13 +72,6 @@ class PushAPK():
                                 help='The path to the x86 APK file', required=True)
         cls.parser.add_argument('--apk-armv7-v15', dest='apk_file_armv7_v15', type=argparse.FileType(),
                                 help='The path to the ARM v7 API v15 APK file', required=True)
-
-    @staticmethod
-    def _convert_dict_into_args(dict_):
-        dash_dash_dict = {'--{}'.format(key.replace('_', '-')): value for key, value in dict_.items()}
-        flatten_args = [item for tuples in dash_dash_dict.items() for item in tuples]
-        logger.debug('dict_ converveted into these args: %s', flatten_args)
-        return flatten_args
 
     def upload_apks(self, service, apk_files):
         """ Upload the APK to google play
@@ -178,12 +161,9 @@ class PushAPK():
         self.upload_apks(service, apks)
 
 
-def main(name=None):
-    if name not in (None, '__main__'):
-        return
-
-    FORMAT = '%(asctime)s - %(filename)s - %(levelname)s - %(message)s'
-    logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+if __name__ == '__main__':
+    from mozapkpublisher import main_logging
+    main_logging.init()
 
     try:
         push_apk = PushAPK()
@@ -192,6 +172,3 @@ def main(name=None):
         PushAPK.parser.print_help(sys.stderr)
         sys.stderr.write('{}: error: {}\n'.format(PushAPK.parser.prog, e))
         sys.exit(2)
-
-
-main(name=__name__)
