@@ -25,16 +25,6 @@ class ArgumentParser(argparse.ArgumentParser):
 
 
 class PushAPK(Base):
-    # Google play has currently 3 tracks. Rollout deploys
-    # to a limited percentage of users
-    TRACK_VALUES = ('production', 'beta', 'alpha', 'rollout')
-
-    PACKAGE_NAME_VALUES = {
-        'org.mozilla.fennec_aurora': 'aurora',
-        'org.mozilla.firefox_beta': 'beta',
-        'org.mozilla.firefox': 'release'
-    }
-
     def __init__(self, config=None):
         self.config = self._parse_config(config)
         if self.config.track == 'rollout' and self.config.rollout_percentage is None:
@@ -55,18 +45,14 @@ class PushAPK(Base):
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
 
-        cls.parser.add_argument('--package-name', choices=PushAPK.PACKAGE_NAME_VALUES.keys(),
-                                help='The Google play name of the app', required=True)
-        cls.parser.add_argument('--track', choices=PushAPK.TRACK_VALUES,
+        googleplay.add_general_google_play_arguments(cls.parser)
+
+        cls.parser.add_argument('--track', choices=googleplay.TRACK_VALUES,
                                 default='alpha',    # We are not using alpha but we default to it to avoid mistake
                                 help='Track on which to upload')
         cls.parser.add_argument('--rollout-percentage', type=int, choices=range(0, 101), metavar='[0-100]',
                                 default=None,
                                 help='The percentage of user who will get the update. Specify only if track is rollout')
-
-        cls.parser.add_argument('--service-account', help='The service account email', required=True)
-        cls.parser.add_argument('--credentials', dest='google_play_credentials_file', type=argparse.FileType(mode='rb'),
-                                default='key.p12', help='The p12 authentication file')
 
         cls.parser.add_argument('--apk-x86', dest='apk_file_x86', type=argparse.FileType(),
                                 help='The path to the x86 APK file', required=True)
@@ -81,7 +67,7 @@ class PushAPK(Base):
         """
         edit_request = service.edits().insert(body={},
                                               packageName=self.config.package_name)
-        package_code = self.PACKAGE_NAME_VALUES[self.config.package_name]
+        package_code = googleplay.PACKAGE_NAME_VALUES[self.config.package_name]
         result = edit_request.execute()
         edit_id = result['id']
         # Store all the versions to set the tracks (needs to happen
@@ -107,7 +93,8 @@ class PushAPK(Base):
                 versions.append(apk_response['versionCode'])
 
                 if 'aurora' in self.config.package_name:
-                    logger.warning('Aurora is not supported by store_l10n. Skipping what\'s new.')
+                    logger.warning('Aurora is not supported by the L10n Store (see \
+https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
                 else:
                     self._push_whats_new(package_code, service, edit_id, apk_response)
 

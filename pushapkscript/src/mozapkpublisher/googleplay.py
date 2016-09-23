@@ -12,9 +12,29 @@
          'key.p12' or use the --credentials option
 """
 
+import argparse
 import httplib2
 from oauth2client.service_account import ServiceAccountCredentials
 from apiclient.discovery import build
+
+# Google play has currently 3 tracks. Rollout deploys
+# to a limited percentage of users
+TRACK_VALUES = ('production', 'beta', 'alpha', 'rollout')
+
+PACKAGE_NAME_VALUES = {
+    'org.mozilla.fennec_aurora': 'aurora',
+    'org.mozilla.firefox_beta': 'beta',
+    'org.mozilla.firefox': 'release'
+}
+
+
+def add_general_google_play_arguments(parser):
+    parser.add_argument('--package-name', choices=PACKAGE_NAME_VALUES.keys(),
+                        help='The Google play name of the app', required=True)
+
+    parser.add_argument('--service-account', help='The service account email', required=True)
+    parser.add_argument('--credentials', dest='google_play_credentials_file', type=argparse.FileType(mode='rb'),
+                        default='key.p12', help='The p12 authentication file')
 
 
 def connect(service_account, credentials_file_path):
