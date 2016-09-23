@@ -1,27 +1,19 @@
-""" storel10n.py
-
-    Manage the localization of the Google play store
-
-"""
-
-from mozharness.base.log import LogMixin
-from mozharness.base.script import ScriptMixin
+import requests
 
 
-class storel10n(ScriptMixin, LogMixin):
+class StoreL10n(object):
+    """ Manage the localization of the Google play store
+    """
 
     l10n_api_url = "https://l10n.mozilla-community.org/stores_l10n/"
     all_locales_url = l10n_api_url + "api/google/listing/{channel}/"
     locale_url = l10n_api_url + "api/google/translation/{channel}/{locale}/"
     mapping_url = l10n_api_url + "api/google/localesmapping/?reverse"
 
-    def __init__(self, config, log):
-        self.config = config
-        self.log_obj = log
+    def __init__(self):
         self.mappings = []
 
     def get_list_locales(self, package_name):
-
         """ Get all the translated locales supported by Google play
         So, locale unsupported by Google play won't be downloaded
         Idem for not translated locale
@@ -46,3 +38,6 @@ class storel10n(ScriptMixin, LogMixin):
             return self.mappings[locale]
         else:
             return locale
+
+    def load_json_url(self, url):
+        return requests.get(url).json()

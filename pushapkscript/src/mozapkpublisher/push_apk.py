@@ -1,144 +1,94 @@
 #!/usr/bin/env python
-""" push_apk.py
 
-    Upload the apk of a Firefox app on Google play
-    Example for a beta upload:
-    $ python push_apk.py --package-name org.mozilla.firefox_beta --service-account foo@developer.gserviceaccount.com --credentials key.p12 --apk-x86=/path/to/fennec-XX.0bY.multi.android-i386.apk --apk-armv7-v15=/path/to/fennec-XX.0bY.multi.android-arm-v15.apk --track production --push_apk
-
-    Debian/Ubuntu dependencies: python-googleapi python-oauth2client
-"""
 import sys
-import os
+import argparse
+import logging
 
 from oauth2client import client
 
-# load modules from parent dir
-sys.path.insert(1, os.path.dirname(sys.path[0]))
+from mozapkpublisher import googleplay
+from mozapkpublisher.storel10n import StoreL10n
 
-# import the guts
-from mozharness.base.script import BaseScript
-from mozharness.base.python import VirtualenvMixin
-from mozapkpublisher.googleplay import GooglePlayMixin
-from mozapkpublisher.storel10n import storel10n
+logger = logging.getLogger(__name__)
 
-class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
-    all_actions = [
-        'create-virtualenv',
-        'push_apk',
-        'test',
-    ]
 
-    default_actions = [
-        'create-virtualenv',
-        'test',
-    ]
-    config_options = [
-        [["--track"], {
-            "dest": "track",
-            "help": "Track on which to upload "
-            "(production, beta, alpha, rollout)",
-            # We are not using alpha but we default to it to avoid mistake
-            "default": "alpha"
-        }],
-        [["--service-account"], {
-            "dest": "service_account",
-            "help": "The service account email",
-        }],
-        [["--credentials"], {
-            "dest": "google_play_credentials_file",
-            "help": "The p12 authentication file",
-            "default": "key.p12"
-        }],
-        [["--package-name"], {
-            "dest": "package_name",
-            "help": "The Google play name of the app",
-        }],
-        [["--apk-x86"], {
-            "dest": "apk_file_x86",
-            "help": "The path to the x86 APK file",
-        }],
-        [["--apk-armv7-v15"], {
-            "dest": "apk_file_armv7_v15",
-            "help": "The path to the ARM v7 API v15 APK file",
-        }],
-        [["--rollout-percentage"], {
-            "dest": "rollout_percentage",
-            "help": "The rollout percentage (update percentage)",
-            "default": "None"
-        }],
+class WrongArgumentGiven(Exception):
+    def __init__(self, msg):
+        logger.fatal(msg)
+        Exception.__init__(self, WrongArgumentGiven, msg)
 
-    ]
 
+class ArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise WrongArgumentGiven(message)
+
+
+class PushAPK():
     # Google play has currently 3 tracks. Rollout deploys
     # to a limited percentage of users
-    track_values = ("production", "beta", "alpha", "rollout")
+    TRACK_VALUES = ('production', 'beta', 'alpha', 'rollout')
 
-    # We have 3 apps. Make sure that their names are correct
-    package_name_values = {"org.mozilla.fennec_aurora": "aurora",
-                           "org.mozilla.firefox_beta": "beta",
-                           "org.mozilla.firefox": "release"}
+    PACKAGE_NAME_VALUES = {
+        'org.mozilla.fennec_aurora': 'aurora',
+        'org.mozilla.firefox_beta': 'beta',
+        'org.mozilla.firefox': 'release'
+    }
 
-    def __init__(self, require_config_file=False, config={},
-                 all_actions=all_actions,
-                 default_actions=default_actions):
+    parser = None
 
-        # Default configuration
-        default_config = {
-            'debug_build': False,
-            'pip_index': True,
-            # this will pip install it automajically when we call the create-virtualenv action
-            'virtualenv_modules': ['google-api-python-client'],
-            "find_links": [   # so mozharness knows where to look for the package
-                "http://pypi.pvt.build.mozilla.org/pub",
-                "http://pypi.pub.build.mozilla.org/pub",
-            ],
-            # the path inside the work_dir ('build') of where we will install the env.
-            # pretty sure it's the default and not needed.
-            'virtualenv_path': 'venv',
-        }
-        default_config.update(config)
+    def __init__(self, config=None):
+        self.config = self._parse_config(config)
+        if self.config.track == 'rollout' and self.config.rollout_percentage is None:
+            raise WrongArgumentGiven("When using track='rollout', rollout percentage must be provided too")
 
-        BaseScript.__init__(
-            self,
-            config_options=self.config_options,
-            require_config_file=require_config_file,
-            config=default_config,
-            all_actions=all_actions,
-            default_actions=default_actions,
+        self.translationMgmt = StoreL10n()
+
+    @classmethod
+    def _parse_config(cls, config=None):
+        if cls.parser is None:
+            cls._init_parser()
+
+        args = None if config is None else PushAPK._convert_dict_into_args(config)
+        # Parses sys.argv if args is None
+        return cls.parser.parse_args(args)
+
+    @classmethod
+    def _init_parser(cls):
+        cls.parser = ArgumentParser(
+            description="""Upload the apk of a Firefox app on Google play.
+
+    Example for a beta upload:
+    $ python push_apk.py --package-name org.mozilla.firefox_beta --track production \
+    --service-account foo@developer.gserviceaccount.com --credentials key.p12 \
+    --apk-x86=/path/to/fennec-XX.0bY.multi.android-i386.apk \
+    --apk-armv7-v15=/path/to/fennec-XX.0bY.multi.android-arm-v15.apk""",
+            formatter_class=argparse.RawDescriptionHelpFormatter,
         )
 
-        self.translationMgmt = storel10n(config, {})
+        cls.parser.add_argument('--package-name', choices=PushAPK.PACKAGE_NAME_VALUES.keys(),
+                                help='The Google play name of the app', required=True)
+        cls.parser.add_argument('--track', choices=PushAPK.TRACK_VALUES,
+                                default='alpha',    # We are not using alpha but we default to it to avoid mistake
+                                help='Track on which to upload')
+        cls.parser.add_argument('--rollout-percentage', type=int, choices=range(0, 101), metavar='[0-100]',
+                                default=None,
+                                help='The percentage of user who will get the update. Specify only if track is rollout')
 
-    def check_argument(self):
-        """ Check that the given values are correct,
-        files exists, etc
-        """
-        if "package_name" not in self.config:
-            self.fatal("--package-name is mandatory")
+        cls.parser.add_argument('--service-account', help='The service account email', required=True)
+        cls.parser.add_argument('--credentials', dest='google_play_credentials_file', type=argparse.FileType(mode='rb'),
+                                default='key.p12', help='The p12 authentication file')
 
-        if self.config['track'] not in self.track_values:
-            self.fatal("Unknown track value " + self.config['track'])
+        cls.parser.add_argument('--apk-x86', dest='apk_file_x86', type=argparse.FileType(),
+                                help='The path to the x86 APK file', required=True)
+        cls.parser.add_argument('--apk-armv7-v15', dest='apk_file_armv7_v15', type=argparse.FileType(),
+                                help='The path to the ARM v7 API v15 APK file', required=True)
 
-        if self.config['package_name'] not in self.package_name_values:
-            self.fatal("Unknown package name value " +
-                       self.config['package_name'])
-
-        if self.config['track'] == "rollout" and self.config["rollout_percentage"] is "None":
-            self.fatal("When using track='rollout', --rollout-percentage must be provided too")
-
-        if self.config["rollout_percentage"] is not "None":
-            self.percentage = float(self.config["rollout_percentage"])
-            if self.percentage < 0 or self.percentage > 100:
-                self.fatal("Percentage should be between 0 and 100")
-
-        if not os.path.isfile(self.config['apk_file_x86']):
-            self.fatal("Could not find " + self.config['apk_file_x86'])
-
-        if not os.path.isfile(self.config['apk_file_armv7_v15']):
-            self.fatal("Could not find " + self.config['apk_file_armv7_v15'])
-
-        if not os.path.isfile(self.config['google_play_credentials_file']):
-            self.fatal("Could not find " + self.config['google_play_credentials_file'])
+    @staticmethod
+    def _convert_dict_into_args(dict_):
+        dash_dash_dict = {'--{}'.format(key.replace('_', '-')): value for key, value in dict_.items()}
+        flatten_args = [item for tuples in dash_dash_dict.items() for item in tuples]
+        logger.debug('dict_ converveted into these args: %s', flatten_args)
+        return flatten_args
 
     def upload_apks(self, service, apk_files):
         """ Upload the APK to google play
@@ -147,8 +97,8 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
         apk_files -- The files
         """
         edit_request = service.edits().insert(body={},
-                                              packageName=self.config['package_name'])
-        package_code = self.package_name_values[self.config['package_name']]
+                                              packageName=self.config.package_name)
+        package_code = self.PACKAGE_NAME_VALUES[self.config.package_name]
         result = edit_request.execute()
         edit_id = result['id']
         # Store all the versions to set the tracks (needs to happen
@@ -160,44 +110,45 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
 
         # For each files, upload it
         for apk_file in apk_files:
+            apk_file_name = apk_file.name
             try:
                 # Upload the file
                 apk_response = service.edits().apks().upload(
                     editId=edit_id,
-                    packageName=self.config['package_name'],
-                    media_body=apk_file).execute()
-                self.log('Version code %d has been uploaded. '
-                         'Filename "%s" edit_id %s' %
-                         (apk_response['versionCode'], apk_file, edit_id))
+                    packageName=self.config.package_name,
+                    media_body=apk_file_name).execute()
+                logger.info('Version code %d has been uploaded. '
+                            'Filename "%s" edit_id %s' %
+                            (apk_response['versionCode'], apk_file_name, edit_id))
 
                 versions.append(apk_response['versionCode'])
 
-                if 'aurora' in self.config['package_name']:
-                    self.warning('Aurora is not supported by store_l10n. Skipping what\'s new.')
+                if 'aurora' in self.config.package_name:
+                    logger.warning('Aurora is not supported by store_l10n. Skipping what\'s new.')
                 else:
                     self._push_whats_new(package_code, service, edit_id, apk_response)
 
             except client.AccessTokenRefreshError:
-                self.log('The credentials have been revoked or expired,'
-                         'please re-run the application to re-authorize')
+                logger.critical('The credentials have been revoked or expired,'
+                                'please re-run the application to re-authorize')
 
         upload_body = {u'versionCodes': versions}
-        if self.config["rollout_percentage"] is not "None":
-            upload_body[u'userFraction'] = self.percentage/100
+        if self.config.rollout_percentage is not None:
+            upload_body[u'userFraction'] = self.config.rollout_percentage / 100
 
         # Set the track for all apk
         service.edits().tracks().update(
             editId=edit_id,
-            track=self.config['track'],
-            packageName=self.config['package_name'],
+            track=self.config.track,
+            packageName=self.config.package_name,
             body=upload_body).execute()
-        self.log('Application "%s" set to track "%s" for versions %s' %
-                 (self.config['package_name'], self.config['track'], versions))
+        logger.info('Application "%s" set to track "%s" for versions %s' %
+                    (self.config.package_name, self.config.track, versions))
 
         # Commit our changes
         commit_request = service.edits().commit(
-            editId=edit_id, packageName=self.config['package_name']).execute()
-        self.log('Edit "%s" has been committed' % (commit_request['id']))
+            editId=edit_id, packageName=self.config.package_name).execute()
+        logger.debug('Edit "%s" has been committed' % (commit_request['id']))
 
     def _push_whats_new(self, package_code, service, edit_id, apk_response):
         locales = self.translationMgmt.get_list_locales(package_code)
@@ -207,32 +158,40 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
             translation = self.translationMgmt.get_translation(package_code, locale)
             whatsnew = translation.get("whatsnew")
             if locale == "en-GB":
-                self.log("Ignoring en-GB as locale")
+                logger.info("Ignoring en-GB as locale")
                 continue
             locale = self.translationMgmt.locale_mapping(locale)
-            self.log('Locale "%s" what\'s new has been updated to "%s"'
-                     % (locale, whatsnew))
+            logger.info('Locale "%s" what\'s new has been updated to "%s"'
+                        % (locale, whatsnew))
 
             listing_response = service.edits().apklistings().update(
-                editId=edit_id, packageName=self.config['package_name'], language=locale,
+                editId=edit_id, packageName=self.config.package_name, language=locale,
                 apkVersionCode=apk_response['versionCode'],
                 body={'recentChanges': whatsnew}).execute()
 
-            self.log('Listing for language %s was updated.' % listing_response['language'])
+            logger.info('Listing for language %s was updated.' % listing_response['language'])
 
-    def push_apk(self):
+    def run(self):
         """ Upload the APK files """
-        self.check_argument()
-        service = self.connect_to_play()
-        apks = [self.config['apk_file_armv7_v15'], self.config['apk_file_x86']]
+        service = googleplay.connect(self.config.service_account, self.config.google_play_credentials_file.name)
+        apks = (self.config.apk_file_armv7_v15, self.config.apk_file_x86)
         self.upload_apks(service, apks)
 
-    def test(self):
-        """ Test if the connexion can be done """
-        self.check_argument()
-        self.connect_to_play()
 
-# main {{{1
-if __name__ == '__main__':
-    myScript = PushAPK()
-    myScript.run_and_exit()
+def main(name=None):
+    if name not in (None, '__main__'):
+        return
+
+    FORMAT = '%(asctime)s - %(filename)s - %(levelname)s - %(message)s'
+    logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+
+    try:
+        push_apk = PushAPK()
+        push_apk.run()
+    except WrongArgumentGiven as e:
+        PushAPK.parser.print_help(sys.stderr)
+        sys.stderr.write('{}: error: {}\n'.format(PushAPK.parser.prog, e))
+        sys.exit(2)
+
+
+main(name=__name__)
