@@ -7,9 +7,11 @@ import traceback
 
 import aiohttp
 import asyncio
+import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-from beetmoverscript.utils import load_json
+from beetmoverscript.task import validate_task_schema
+from beetmoverscript.utils import load_json, generate_candidates_manifest
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +20,13 @@ log = logging.getLogger(__name__)
 async def async_main(context):
     log.info("Hello Scriptworker!")
     # 1. parse the task
-    # 2. for each artifact in taskid
+    context.task = scriptworker.client.get_task(context.config)  # e.g. $cfg['work_dir']/task.json
+    # 2. validate the task
+    validate_task_schema(context)
+    # 3. generate manifest
+    manifest = generate_candidates_manifest(context)
+
+    # 3. for each artifact in taskid
     #   a. download
     #   b. scan
     #   c. upload
@@ -38,6 +46,7 @@ def main(name=None, config_path=None):
             usage()
         config_path = sys.argv[1]
     context = Context()
+    context.config = {}
     context.config.update(load_json(path=config_path))
 
     log_level = logging.DEBUG
@@ -56,7 +65,5 @@ def main(name=None, config_path=None):
             traceback.print_exc()
             sys.exit(exc.exit_code)
     loop.close()
-
-    async_main(config_path)
 
 main(name=__name__)

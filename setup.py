@@ -20,9 +20,10 @@ setup(
     license="MPL2",
     install_requires=[
         "arrow",
-        "python-jose",
         "scriptworker",
-        "signtool",
         "taskcluster",
+        "boto",
+        "PyYAML",
+        "Jinja2",
     ],
 )

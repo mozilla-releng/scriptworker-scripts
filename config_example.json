@@ -1,5 +1,8 @@
 {
     "work_dir": "work_dir",
     "artifact_dir": "artifact_dir",
-    "verbose": true
+    "verbose": true,
+    "template_files": {
+        "fennec_nightly": "beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi.yml"
+    }
 }
