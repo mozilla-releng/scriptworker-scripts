@@ -1,7 +1,6 @@
 import aiohttp
 import asyncio
 from asyncio.subprocess import PIPE, STDOUT
-from copy import deepcopy
 import json
 import logging
 import os
@@ -10,9 +9,9 @@ import traceback
 
 import scriptworker.client
 from scriptworker.exceptions import ScriptWorkerException
-from scriptworker.utils import retry_async, retry_request
+from scriptworker.utils import retry_request
 from signingscript.exceptions import SigningServerError, TaskVerificationError
-from signingscript.utils import download_file, get_hash, get_detached_signatures, log_output, raise_future_exceptions
+from signingscript.utils import get_hash, get_detached_signatures, log_output
 
 log = logging.getLogger(__name__)
 
@@ -106,27 +105,3 @@ def detached_sigfiles(filepath, signing_formats):
                                                      ext=sig_ext)
         detached_signatures.append(detached_filepath)
     return detached_signatures
-
-
-async def download_files(context):
-    payload = context.task["payload"]
-    file_urls = payload["unsignedArtifacts"]
-    work_dir = context.config['work_dir']
-
-    tasks = []
-    files = []
-    download_config = deepcopy(context.config)
-    download_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
-    for file_url in file_urls:
-        rel_path = scriptworker.client.validate_artifact_url(download_config, file_url)
-        abs_file_path = os.path.join(work_dir, rel_path)
-        files.append(rel_path)
-        tasks.append(
-            asyncio.ensure_future(
-                retry_async(download_file, args=(context, file_url, abs_file_path))
-            )
-        )
-
-    await raise_future_exceptions(tasks)
-    tasks = []
-    return files
