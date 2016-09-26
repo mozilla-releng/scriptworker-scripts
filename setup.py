@@ -22,7 +22,7 @@ setup(
         "arrow",
         "scriptworker",
         "taskcluster",
-        "boto",
+        "boto3",
         "PyYAML",
         "Jinja2",
     ],
