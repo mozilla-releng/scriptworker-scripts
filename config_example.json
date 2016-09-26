@@ -1,6 +1,6 @@
 {
     "work_dir": "/absolute/path/to/work_dir",
-    "schema_file": "signingscript/data/signing_task_schema.json",
+    "schema_file": "pushapkworker/data/signing_task_schema.json",
 
     "google_play_service_account": "my-service-account@iam.gserviceaccount.com",
     "google_play_certificate": "/absolute/path/to/googleplay.p12",

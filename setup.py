@@ -1,31 +1,31 @@
 import os
 from setuptools import setup, find_packages
 
-with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "version.txt")) as f:
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'version.txt')) as f:
     version = f.read().rstrip()
 
 setup(
-    name="signingscript",
+    name='pushapkworker',
     version=version,
-    description="TaskCluster Signing Script",
-    author="Mozilla Release Engineering",
-    author_email="release+python@mozilla.com",
-    url="https://github.com/mozilla-releng/signingscript",
+    description='TaskCluster Push APK Worker',
+    author='Mozilla Release Engineering',
+    author_email='release+python@mozilla.com',
+    url='https://github.com/mozilla-releng/push-apk-worker',
     packages=find_packages(),
-    package_data={"signingscript": ["data/*"]},
+    package_data={'pushapkworker': ['data/*']},
     include_package_data=True,
     zip_safe=False,
     entry_points={
-        "console_scripts": [
-            "signingscript = signingscript.script:main",
+        'console_scripts': [
+            'pushapkworker = pushapkworker.script:main',
         ],
     },
-    license="MPL2",
+    license='MPL2',
     install_requires=[
-        "arrow",
-        "python-jose",
-        "scriptworker",
-        "signtool",
-        "taskcluster",
+        'arrow',
+        'python-jose',
+        'scriptworker',
+        'signtool',
+        'taskcluster',
     ],
 )

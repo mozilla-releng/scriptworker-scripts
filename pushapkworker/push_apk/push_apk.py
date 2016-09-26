@@ -6,8 +6,8 @@ import logging
 
 from oauth2client import client
 
-from signingscript.push_apk import googleplay
-from signingscript.push_apk.storel10n import StoreL10n
+from pushapkworker.push_apk import googleplay
+from pushapkworker.push_apk.storel10n import StoreL10n
 
 logger = logging.getLogger(__name__)
 

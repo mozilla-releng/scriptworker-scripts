@@ -11,10 +11,10 @@ import traceback
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-from signingscript.task import download_files, validate_task_schema
-from signingscript.utils import load_json
-from signingscript.push_apk import PushAPK
-from signingscript.jarsigner import JarSigner
+from pushapkworker.task import download_files, validate_task_schema
+from pushapkworker.utils import load_json
+from pushapkworker.push_apk import PushAPK
+from pushapkworker.jarsigner import JarSigner
 
 
 log = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ def get_default_config():
 
     default_config = {
         'work_dir': os.path.join(parent_dir, 'work_dir'),
-        'schema_file': os.path.join(cwd, 'signingscript', 'data', 'signing_task_schema.json'),
+        'schema_file': os.path.join(cwd, 'pushapkworker', 'data', 'signing_task_schema.json'),
         'valid_artifact_schemes': ['https'],
         'valid_artifact_netlocs': ['queue.taskcluster.net'],
         'valid_artifact_path_regexes': [r'''/v1/task/(?P<taskId>[^/]+)(/runs/\d+)?/artifacts/(?P<filepath>.*)$'''],

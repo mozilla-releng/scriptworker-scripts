@@ -5,8 +5,8 @@ import tempfile
 import json
 import subprocess
 
-from signingscript.script import main
-from signingscript.test.helpers.task_generator import TaskGenerator
+from pushapkworker.script import main
+from pushapkworker.test.helpers.task_generator import TaskGenerator
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.join(this_dir, '..', '..', '..')
@@ -30,7 +30,7 @@ class GooglePlayManager(object):
     def __init__(self, test_data_dir):
         self.certificate_file = os.path.join(test_data_dir, 'googleplay.p12')
         shutil.copy(
-            os.path.join(project_dir, 'signingscript', 'data', 'googleplay.p12'),
+            os.path.join(project_dir, 'pushapkworker', 'data', 'googleplay.p12'),
             self.certificate_file
         )
 
@@ -54,7 +54,7 @@ class ConfigFileGenerator(object):
         # TODO Change service_account
         return json.loads('''{{
             "work_dir": "{work_dir}",
-            "schema_file": "{project_dir}/signingscript/data/signing_task_schema.json",
+            "schema_file": "{project_dir}/pushapkworker/data/signing_task_schema.json",
             "verbose": true,
 
             "google_play_service_account": "a-service-account@.iam.gserviceaccount.com",

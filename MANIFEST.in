@@ -1,5 +1,5 @@
-recursive-include signingscript/test *
-recursive-include signingscript/data *
+recursive-include pushapkworker/test *
+recursive-include pushapkworker/data *
 
 include LICENSE
 include README.rst

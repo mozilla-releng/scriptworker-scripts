@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 
 import subprocess
 
-from signingscript.jarsigner import JarSigner
-from signingscript.exceptions import SignatureError
+from pushapkworker.jarsigner import JarSigner
+from pushapkworker.exceptions import SignatureError
 
 
 class AttrDict(dict):

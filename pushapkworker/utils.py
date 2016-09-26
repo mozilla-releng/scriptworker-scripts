@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-from signingscript.exceptions import DownloadError
+from pushapkworker.exceptions import DownloadError
 
 log = logging.getLogger(__name__)
 
