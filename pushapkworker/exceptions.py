@@ -1,5 +1,5 @@
 from scriptworker.exceptions import ScriptWorkerTaskException
-from scriptworker.task import STATUSES
+from scriptworker.constants import STATUSES
 
 
 class TaskVerificationError(ScriptWorkerTaskException):
