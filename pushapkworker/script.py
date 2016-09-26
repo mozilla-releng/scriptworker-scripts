@@ -11,9 +11,11 @@ import traceback
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
+
+from mozapkpublisher.push_apk import PushAPK
+
 from pushapkworker.task import download_files, validate_task_schema
 from pushapkworker.utils import load_json
-from pushapkworker.push_apk import PushAPK
 from pushapkworker.jarsigner import JarSigner
 
 

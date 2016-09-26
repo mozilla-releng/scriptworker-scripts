@@ -76,3 +76,5 @@ taskcluster==0.3.4 \
 virtualenv==15.0.3 \
     --hash=sha512:34486ae905ea83c092418efaf6abae05cdd2d36c32f452ad25775452412c1b6c97de7dccb0f634a3f8a7b1768ed9975b5f16a79fe711ac1cecffd0a46e245583 \
     --hash=sha512:f417dbefe8864be9028ab9efd69844b94550dc7f739688b00c32c15ad4f84a2b0d4885564ed0d0e0b43960a328fe81092cebfb8dd0d4b10a804b42122d9c9621
+  # TODO Use a Pypi once uploaded
+  ../mozapkpublisher/
