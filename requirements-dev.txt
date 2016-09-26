@@ -1,10 +1,7 @@
-arrow
 google-api-python-client
 oauth2client
 pyOpenSsl
-python-jose
 scriptworker
-signtool
 taskcluster
 # TODO Use a Pypi once uploaded
 ../mozapkpublisher/
