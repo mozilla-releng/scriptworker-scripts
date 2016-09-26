@@ -1,6 +1,5 @@
 import unittest
 import os
-import shutil
 import tempfile
 import json
 import subprocess
@@ -26,20 +25,10 @@ class KeystoreManager(object):
         ])
 
 
-class GooglePlayManager(object):
-    def __init__(self, test_data_dir):
-        self.certificate_file = os.path.join(test_data_dir, 'googleplay.p12')
-        shutil.copy(
-            os.path.join(project_dir, 'pushapkworker', 'data', 'googleplay.p12'),
-            self.certificate_file
-        )
-
-
 class ConfigFileGenerator(object):
-    def __init__(self, test_data_dir, keystore_manager, google_play_manager):
+    def __init__(self, test_data_dir, keystore_manager):
         self.test_data_dir = test_data_dir
         self.keystore_manager = keystore_manager
-        self.google_play_manager = google_play_manager
         self.config_file = os.path.join(self.test_data_dir, 'config.json')
 
         self.work_dir = os.path.join(test_data_dir, 'work')
@@ -51,21 +40,19 @@ class ConfigFileGenerator(object):
         return self.config_file
 
     def _generate_json(self):
-        # TODO Change service_account
         return json.loads('''{{
             "work_dir": "{work_dir}",
             "schema_file": "{project_dir}/pushapkworker/data/signing_task_schema.json",
             "verbose": true,
 
             "google_play_service_account": "a-service-account@.iam.gserviceaccount.com",
-            "google_play_certificate": "{google_play_certificate_path}",
+            "google_play_certificate": "/dummy/path/to/certificate.p12",
             "google_play_package_name": "org.mozilla.fennec_aurora",
 
             "jarsigner_key_store": "{keystore_path}",
             "jarsigner_certificate_alias": "{certificate_alias}"
         }}'''.format(
             work_dir=self.work_dir, test_data_dir=self.test_data_dir, project_dir=project_dir,
-            google_play_certificate_path=self.google_play_manager.certificate_file,
             keystore_path=self.keystore_manager.keystore_path,
             certificate_alias=self.keystore_manager.certificate_alias
         ))
@@ -73,15 +60,23 @@ class ConfigFileGenerator(object):
 
 class MainTest(unittest.TestCase):
 
-    def test_validate_task(self):
+    @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
+    def test_main_downloads_verifies_signature_and_gives_the_right_config_to_mozapkpublisher(self, PushAPK):
         with tempfile.TemporaryDirectory() as test_data_dir:
             keystore_manager = KeystoreManager(test_data_dir)
             keystore_manager.add_certificate('/home/jlorenzo/git/mozilla-releng/private/passwords/android-nightly.cer')
 
-            google_play_manager = GooglePlayManager(test_data_dir)
-
-            config_generator = ConfigFileGenerator(test_data_dir, keystore_manager, google_play_manager)
+            config_generator = ConfigFileGenerator(test_data_dir, keystore_manager)
             task_generator = TaskGenerator()
             task_generator.generate_file(config_generator.work_dir)
 
             main(config_path=config_generator.generate())
+
+            PushAPK.assert_called_with(config={
+                'credentials': '/dummy/path/to/certificate.p12',
+                'apk_armv7_v15': '{}/work/public/build/fennec-46.0a2.en-US.android-arm.apk'.format(test_data_dir),
+                'apk_x86': '{}/work/public/build/fennec-46.0a2.en-US.android-i386.apk'.format(test_data_dir),
+                'package_name': 'org.mozilla.fennec_aurora',
+                'service_account': 'a-service-account@.iam.gserviceaccount.com',
+                'track': 'alpha'
+            })

@@ -12,8 +12,6 @@ import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-from mozapkpublisher.push_apk import PushAPK
-
 from pushapkworker.task import download_files, validate_task_schema
 from pushapkworker.utils import load_json
 from pushapkworker.jarsigner import JarSigner
@@ -51,6 +49,9 @@ async def async_main(context, jar_signer):
         jar_signer.verify(apk_path)
 
     log.info('Pushing APKs to Google Play Store...')
+
+    # XXX Import done here in order to mock the dependency out
+    from mozapkpublisher.push_apk import PushAPK
     push_apk = PushAPK(config=context.craft_push_config(downloaded_apks))
     push_apk.run()
     log.info('Done!')
