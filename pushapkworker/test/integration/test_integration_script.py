@@ -3,6 +3,7 @@ import os
 import tempfile
 import json
 import subprocess
+from distutils.util import strtobool
 
 from pushapkworker.script import main
 from pushapkworker.test.helpers.task_generator import TaskGenerator
@@ -61,7 +62,7 @@ class ConfigFileGenerator(object):
 class MainTest(unittest.TestCase):
 
     @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
-    @unittest.skipIf(os.environ.get('RUN_NETWORK_TESTS') != 1, 'Tests requiring network are skipped')
+    @unittest.skipIf(strtobool(os.environ.get('SKIP_NETWORK_TESTS', 'true')), 'Tests requiring network are skipped')
     def test_main_downloads_verifies_signature_and_gives_the_right_config_to_mozapkpublisher(self, PushAPK):
         with tempfile.TemporaryDirectory() as test_data_dir:
             keystore_manager = KeystoreManager(test_data_dir)
