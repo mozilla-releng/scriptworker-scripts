@@ -6,11 +6,10 @@ import re
 import signal
 import argparse
 import shutil
-import hashlib
 import logging
 
 from mozapkpublisher.base import Base
-from mozapkpublisher.utils import load_json_url, download_file
+from mozapkpublisher.utils import load_json_url, download_file, file_sha512sum
 from mozapkpublisher.exceptions import CheckSumMismatch
 
 logger = logging.getLogger(__name__)
@@ -88,7 +87,7 @@ class GetAPK(Base):
             checksum = f.read()
         checksum = re.sub("\s(.*)", "", checksum.splitlines()[0])
 
-        apk_checksum = self.file_sha512sum(apk_file)
+        apk_checksum = file_sha512sum(apk_file)
 
         if checksum == apk_checksum:
             logger.info("APK checksum check succeeded!")
@@ -96,16 +95,6 @@ class GetAPK(Base):
         else:
             shutil.rmtree(self.download_dir)
             raise CheckSumMismatch(apk_file, expected=apk_checksum, actual=checksum)
-
-    def file_sha512sum(self, file_path):
-        bs = 65536
-        hasher = hashlib.sha512()
-        with open(file_path, 'rb') as fh:
-            buf = fh.read(bs)
-            while len(buf) > 0:
-                hasher.update(buf)
-                buf = fh.read(bs)
-        return hasher.hexdigest()
 
     # Helper functions
     def generate_url(self, version, build, locale, api_suffix, arch_file):

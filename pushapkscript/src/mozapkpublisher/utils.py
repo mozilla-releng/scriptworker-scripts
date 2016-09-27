@@ -1,4 +1,5 @@
 import requests
+import hashlib
 
 
 def load_json_url(url):
@@ -13,3 +14,14 @@ def download_file(self, url, local_file_path):
         for chunk in r.iter_content(chunk_size=1024):
             if chunk:   # filter out keep-alive new chunks
                 f.write(chunk)
+
+
+def file_sha512sum(file_path):
+    bs = 65536
+    hasher = hashlib.sha512()
+    with open(file_path, 'rb') as fh:
+        buf = fh.read(bs)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = fh.read(bs)
+    return hasher.hexdigest()
