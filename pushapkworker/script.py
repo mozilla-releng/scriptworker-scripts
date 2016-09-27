@@ -20,17 +20,6 @@ from pushapkworker.jarsigner import JarSigner
 log = logging.getLogger(__name__)
 
 
-class PushApkContext(Context):
-    def craft_push_config(self, apks):
-        push_apk_config = {'apk_{}'.format(apk_type): apk_path for apk_type, apk_path in apks.items()}
-        push_apk_config['service_account'] = self.config['google_play_service_account']
-        push_apk_config['credentials'] = self.config['google_play_certificate']
-
-        push_apk_config['track'] = self.task['payload']['google_play_track']
-        push_apk_config['package_name'] = self.config['google_play_package_name']
-        return push_apk_config
-
-
 # async_main {{{1
 async def async_main(context, jar_signer):
     context.task = scriptworker.client.get_task(context.config)
@@ -52,9 +41,19 @@ async def async_main(context, jar_signer):
 
     # XXX Import done here in order to mock the dependency out
     from mozapkpublisher.push_apk import PushAPK
-    push_apk = PushAPK(config=context.craft_push_config(downloaded_apks))
+    push_apk = PushAPK(config=craft_push_config(context, downloaded_apks))
     push_apk.run()
     log.info('Done!')
+
+
+def craft_push_config(context, apks):
+    push_apk_config = {'apk_{}'.format(apk_type): apk_path for apk_type, apk_path in apks.items()}
+    push_apk_config['service_account'] = context.config['google_play_service_account']
+    push_apk_config['credentials'] = context.config['google_play_certificate']
+
+    push_apk_config['track'] = context.task['payload']['google_play_track']
+    push_apk_config['package_name'] = context.config['google_play_package_name']
+    return push_apk_config
 
 
 def get_default_config():
@@ -79,29 +78,19 @@ def usage():
     sys.exit(1)
 
 
-def setup_logging(context):
-    if context.config.get('verbose'):
-        log_level = logging.DEBUG
-    else:
-        log_level = logging.INFO
-    logging.basicConfig(
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        level=log_level
-    )
-    logging.getLogger('taskcluster').setLevel(logging.WARNING)
-
-
 def main(name=None, config_path=None):
     if name not in (None, '__main__'):
         return
-    context = PushApkContext()
+    context = Context()
     context.config = get_default_config()
     if config_path is None:
         if len(sys.argv) != 2:
             usage()
         config_path = sys.argv[1]
     context.config.update(load_json(path=config_path))
-    setup_logging(context)
+
+    logging.basicConfig(**craft_logging_config(context))
+    logging.getLogger('taskcluster').setLevel(logging.WARNING)
 
     jar_signer = JarSigner(context)
 
@@ -114,6 +103,13 @@ def main(name=None, config_path=None):
             traceback.print_exc()
             sys.exit(exc.exit_code)
     loop.close()
+
+
+def craft_logging_config(context):
+    return {
+        'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        'level': logging.DEBUG if context.config.get('verbose') else logging.INFO
+    }
 
 
 main(name=__name__)
