@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import sys
 import argparse
 import logging
 
@@ -8,6 +7,7 @@ from oauth2client import client
 
 from mozapkpublisher import googleplay
 from mozapkpublisher.base import Base
+from mozapkpublisher.exceptions import WrongArgumentGiven
 from mozapkpublisher.storel10n import StoreL10n
 
 logger = logging.getLogger(__name__)
@@ -19,10 +19,8 @@ class UpdateDescriptionAPK(Base):
         self.config = self._parse_config(config)
 
         if 'aurora' in self.config.package_name:
-            message = 'Aurora is not yet supported by the L10n Store. \
-See bug https://github.com/mozilla-l10n/stores_l10n/issues/71'
-            logger.fatal(message)
-            sys.exit(1)
+            raise WrongArgumentGiven('Aurora is not yet supported by the L10n Store. \
+See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
 
         self.all_locales_url = self.config.l10n_api_url + "api/?done&channel={channel}"
         self.locale_url = self.config.l10n_api_url + "api/?locale={locale}&channel={channel}"

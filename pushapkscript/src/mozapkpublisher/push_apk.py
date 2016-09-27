@@ -8,15 +8,10 @@ from oauth2client import client
 
 from mozapkpublisher import googleplay
 from mozapkpublisher.base import Base
+from mozapkpublisher.exceptions import WrongArgumentGiven
 from mozapkpublisher.storel10n import StoreL10n
 
 logger = logging.getLogger(__name__)
-
-
-class WrongArgumentGiven(Exception):
-    def __init__(self, msg):
-        logger.fatal(msg)
-        Exception.__init__(self, WrongArgumentGiven, msg)
 
 
 class ArgumentParser(argparse.ArgumentParser):

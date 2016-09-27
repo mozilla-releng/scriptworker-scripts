@@ -11,6 +11,7 @@ import logging
 
 from mozapkpublisher.base import Base
 from mozapkpublisher.utils import load_json_url, download_file
+from mozapkpublisher.exceptions import CheckSumMismatch
 
 logger = logging.getLogger(__name__)
 
@@ -72,11 +73,6 @@ class GetAPK(Base):
         logger.info(apk_file + " has been downloaded successfully")
         os.remove(checksum_file)
 
-    # Called if download fails due to 404 error or some other connection failure
-    def download_error(self):
-        self.cleanup()
-        logger.fatal("Download failed!")
-
     # Check the given values are correct
     def check_argument(self):
         if self.config.clean:
@@ -99,7 +95,7 @@ class GetAPK(Base):
             self.download_complete(apk_file, checksum_file)
         else:
             shutil.rmtree(self.download_dir)
-            logger.fatal("Downloading " + apk_file + " failed!")
+            raise CheckSumMismatch(apk_file, expected=apk_checksum, actual=checksum)
 
     def file_sha512sum(self, file_path):
         bs = 65536
