@@ -77,14 +77,14 @@ async def upload_to_s3(context, s3_key, path):
     api_kwargs = {
         'Bucket': context.config['s3']['bucket'],
         'Key': s3_key,
-        'ContentType': mimetypes.guess_type(path)
+        'ContentType': mimetypes.guess_type(path)[0]
     }
     headers = {
-        'Content-Type': mimetypes.guess_type(path)
+        'Content-Type': mimetypes.guess_type(path)[0]
     }
     creds = context.config['s3']['credentials']
     s3 = boto3.client('s3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key'],)
-    url = s3.generate_presigned_url('put_object', api_kwargs, expires_in=30, HttpMethod='PUT')
+    url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=30, HttpMethod='PUT')
 
     await retry_async(upload_file, args=(context, url, headers, path),
                       kwargs={'session': context.session})
@@ -118,7 +118,10 @@ def setup_logging():
 
 def setup_mimetypes():
     mimetypes.init()
-    map(lambda ext_mimetype: mimetypes.add_type(ext_mimetype[1], ext_mimetype[0]), MIME_MAP.items())
+    # in py3 we must exhaust the map so that add_type is actually invoked
+    list(map(
+        lambda ext_mimetype: mimetypes.add_type(ext_mimetype[1], ext_mimetype[0]), MIME_MAP.items()
+    ))
 
 
 def main(name=None, config_path=None):
