@@ -5,12 +5,12 @@ from copy import deepcopy
 
 import aiohttp
 import asyncio
+import boto3
 import logging
+import mimetypes
 import os
 import sys
 import traceback
-import boto3
-import mimetypes
 
 from scriptworker.client import get_task, validate_artifact_url
 from scriptworker.context import Context
@@ -29,7 +29,7 @@ async def async_main(context):
     log.info("Hello Scriptworker!")
     # 1. parse the task
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
-    # 2. validate the task
+    # 2. validate the task: TODO
     validate_task_schema(context)
     # 3. generate manifest
     manifest = generate_candidates_manifest(context)

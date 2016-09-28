@@ -4,5 +4,12 @@
     "verbose": true,
     "template_files": {
         "fennec_nightly": "beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi.yml"
+    },
+    "s3": {
+        "bucket": "mozilla-releng-beetmoverscript",
+        "credentials": {
+            "id": "...",
+            "key": "..."
+        }
     }
 }
