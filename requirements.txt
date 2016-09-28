@@ -3,5 +3,4 @@ oauth2client
 pyOpenSsl
 scriptworker
 taskcluster
-# TODO Use a Pypi once uploaded
-../mozapkpublisher/
+mozapkpublisher
