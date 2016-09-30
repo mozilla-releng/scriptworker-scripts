@@ -2,9 +2,10 @@
     "work_dir": "work_dir",
     "artifact_dir": "artifact_dir",
     "verbose": true,
+    "schema_file": "/path/to/beetmoverscript/beetmoverscript/data/beetmover_task_schema.json",
     "template_files": {
-        "fennec_nightly_unsigned": "beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_unsigned.yml",
-        "fennec_nightly_signed": "beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_signed.yml"
+        "fennec_nightly_unsigned": "/path/to/beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_unsigned.yml",
+        "fennec_nightly_signed": "/path/to/beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_signed.yml"
     },
     "s3": {
         "bucket": "mozilla-releng-beetmoverscript",

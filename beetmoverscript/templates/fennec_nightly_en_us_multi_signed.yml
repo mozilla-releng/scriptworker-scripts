@@ -4,7 +4,7 @@ metadata:
     description: "Maps Fennec Nightly artifacts to pretty names for the en-US and multi locale"
     owner: "release@mozilla.com"
 
-artifact_base_url: https://queue.taskcluster.net/v1/task/{{ artifact_taskid }}/artifacts/public/build/
+artifact_base_url: https://queue.taskcluster.net/v1/task/{{ taskid_to_beetmove }}/artifacts/public/build/
 s3_prefix_dated: pub/mobile/nightly/{{ upload_date }}-mozilla-central-android-api-15/
 s3_prefix_latest: pub/mobile/nightly/latest-mozilla-central-android-api-15/
 

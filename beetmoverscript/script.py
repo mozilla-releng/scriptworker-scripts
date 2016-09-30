@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 async def async_main(context):
     # 1. parse the task
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
-    # 2. validate the task: TODO
+    # 2. validate the task
     validate_task_schema(context)
     # 3. generate manifest
     manifest = generate_candidates_manifest(context)

@@ -1,0 +1,33 @@
+{
+    "title": "Taskcluster beetmover task minimal schema",
+    "type": "object",
+    "properties": {
+        "dependencies": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "payload": {
+            "type": "object",
+            "properties": {
+                "version": {
+                    "type": "string"
+                },
+                "upload_date": {
+                    "type": "number"
+                },
+                "taskid_to_beetmove": {
+                    "type": "string"
+                },
+                "template_key": {
+                    "type": "string"
+                }
+            },
+            "required": ["version", "upload_date", "taskid_to_beetmove", "template_key"]
+        }
+    },
+    "required": ["payload", "dependencies"]
+}

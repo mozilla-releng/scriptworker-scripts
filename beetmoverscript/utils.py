@@ -25,7 +25,7 @@ def generate_candidates_manifest(context):
         "version": payload['version'],
         # payload['upload_date'] is a timestamp defined by params['pushdate'] in mach taskgraph
         "upload_date": arrow.get(payload['upload_date']).format('YYYY/MM/YYYY-MM-DD-HH-mm-ss'),
-        "artifact_taskid": payload["artifact_taskid"]
+        "taskid_to_beetmove": payload["taskid_to_beetmove"]
     }
     template_path = context.config['template_files'][payload['template_key']]
     log.info('generating manifest from: {}'.format(template_path))

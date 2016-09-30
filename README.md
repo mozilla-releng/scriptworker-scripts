@@ -55,7 +55,7 @@ touch work_dir/task.json  # see below for example
         "accessToken": "...",
         "clientId": "..."
     },
-    "task_script": ["/Users/jlund/.virtualenvs/beetmoverscript/bin/beetmoverscript", "/app/beetmoverworker/beetmoverscript/script_config.json"],
+    "task_script": ["/path/to/beetmoverscript_venv/bin/beetmoverscript", "/app/beetmoverworker/beetmoverscript/script_config.json"],
     "verbose": true,
     "task_max_timeout": 2400
 }
@@ -67,9 +67,10 @@ touch work_dir/task.json  # see below for example
     "work_dir": "work_dir",
     "artifact_dir": "artifact_dir",
     "verbose": true,
+    "schema_file": "/app/beetmoverworker/beetmoverscript/beetmoverscript/data/beetmover_task_schema.json",
     "template_files": {
-        "fennec_nightly_unsigned": "beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_unsigned.yml",
-        "fennec_nightly_signed": "beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_signed.yml"
+        "fennec_nightly_unsigned": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_unsigned.yml",
+        "fennec_nightly_signed": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_signed.yml"
     },
     "s3": {
         "bucket": "mozilla-releng-beetmoverscript",
@@ -100,10 +101,9 @@ touch work_dir/task.json  # see below for example
   "expires": "2017-08-31T23:20:18.165Z",
   "scopes": [],
   "payload": {
-    "maxRunTime": 600,
     "version": "52.0a1",
     "upload_date": 1472747174,
-    "artifact_taskid": "YVq4WkdlTmSz4on_FwuGIw",
+    "taskid_to_beetmove": "YVq4WkdlTmSz4on_FwuGIw",
     "template_key": "fennec_nightly_unsigned"
   },
   "metadata": {
@@ -119,15 +119,15 @@ touch work_dir/task.json  # see below for example
 
 #### setup py3 venv
 
+##### local
+
 ```
 mkvirtualenv --python=/usr/local/bin/python3 beetmoverscript
-# currently, beetmoverscript depends on criptworker 0.7.0 + the following patch applied:
-#   http://people.mozilla.org/~jlund/scriptworker_add_upload_file_method.patch
-# For this reason and also so you can develop on scriptworker itself as you go,
+# currently, beetmoverscript depends on criptworker 0.7.0
+# so you can develop on scriptworker itself as you go,
 # checkout scriptworker locally and install that custom repo in your venv
 git clone https://github.com/mozilla-releng/scriptworker.git
 cd scriptworker
-# apply http://people.mozilla.org/~jlund/scriptworker_add_upload_file_method.patch
 python setup.py develop
 # only after first installing your own scriptworker module, install the rest of beetmoverscript's deps
 cd /app/beetmoverworker/beetmoverscript
