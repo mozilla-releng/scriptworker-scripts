@@ -52,13 +52,13 @@ async def move_beets(context, manifest):
                                       manifest['mapping'][locale][deliverable]['s3_key'])
             beets.append(
                 asyncio.ensure_future(
-                    beetmove_bit(context, source, destinations=(dest_dated, dest_latest))
+                    move_beet(context, source, destinations=(dest_dated, dest_latest))
                 )
             )
     await raise_future_exceptions(beets)
 
 
-async def beetmove_bit(context, source, destinations):
+async def move_beet(context, source, destinations):
     beet_config = deepcopy(context.config)
     beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
     rel_path = validate_artifact_url(beet_config, source)

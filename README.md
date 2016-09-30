@@ -68,7 +68,8 @@ touch work_dir/task.json  # see below for example
     "artifact_dir": "artifact_dir",
     "verbose": true,
     "template_files": {
-        "fennec_nightly": "beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi.yml"
+        "fennec_nightly_unsigned": "beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_unsigned.yml",
+        "fennec_nightly_signed": "beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_signed.yml"
     },
     "s3": {
         "bucket": "mozilla-releng-beetmoverscript",
@@ -103,7 +104,7 @@ touch work_dir/task.json  # see below for example
     "version": "52.0a1",
     "upload_date": 1472747174,
     "artifact_taskid": "YVq4WkdlTmSz4on_FwuGIw",
-    "template_key": "fennec_nightly"
+    "template_key": "fennec_nightly_unsigned"
   },
   "metadata": {
     "owner": "jlund@mozilla.com",

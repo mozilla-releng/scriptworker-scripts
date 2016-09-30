@@ -1,0 +1,19 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps Fennec Nightly artifacts to pretty names for the en-US and multi locale"
+    owner: "release@mozilla.com"
+
+artifact_base_url: https://queue.taskcluster.net/v1/task/{{ artifact_taskid }}/artifacts/public/build/
+s3_prefix_dated: pub/mobile/nightly/{{ upload_date }}-mozilla-central-android-api-15/
+s3_prefix_latest: pub/mobile/nightly/latest-mozilla-central-android-api-15/
+
+mapping:
+  # common deliverables
+{% for locale in ['multi', 'en-US'] %}
+  {{ locale }}:
+  {% set locale_prefix = 'en-US/' if locale == 'en-US' else '' %}
+    apk:
+      artifact: {{ locale_prefix }}target.apk
+      s3_key: {{ locale_prefix  }}fennec-{{ version }}.{{ locale }}.android.arm.apk
+{% endfor %}
