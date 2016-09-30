@@ -12,55 +12,55 @@ mapping:
   # common deliverables
 {% for locale in ['multi', 'en-US'] %}
   {{ locale }}:
-    apk:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.apk
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.apk
+#    apk:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.apk
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.apk
     checksums:
       artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.checksums
       s3_key: fennec-{{ version }}.{{ locale }}.android.arm.checksums
     common:
       artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.common.tests.zip
       s3_key: fennec-{{ version }}.{{ locale }}.android.arm.common.tests.zip
-    cppunittest:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.cppunittest.tests.zip
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.cppunittest.tests.zip
-    crashreporter:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.crashreporter-symbols.zip
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.crashreporter-symbols.zip
-    json:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.json
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.json
-    mochitest:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.mochitest.tests.zip
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.mochitest.tests.zip
-    mozinfo:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.mozinfo.json
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.mozinfo.json
-    reftest:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.reftest.tests.zip
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.reftest.tests.zip
-    talos:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.talos.tests.zip
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.talos.tests.zip
-    test_packages:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.test_packages.json
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.test_packages.json
-    txt:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.txt
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.txt
-    webplatform:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.web-platform.tests.zip
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.web-platform.tests.zip
-    xpcshell:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.xpcshell.tests.zip
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.xpcshell.tests.zip
-    jsshell:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.jsshell.zip
-      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.jsshell.zip
-    info:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target_info.txt
-      s3_key: fennec-{{ version }}.{{ locale }}.android_info.txt
-    bouncer:
-      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}bouncer.apk
-      s3_key: bouncer.apk
+#    cppunittest:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.cppunittest.tests.zip
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.cppunittest.tests.zip
+#    crashreporter:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.crashreporter-symbols.zip
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.crashreporter-symbols.zip
+#    json:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.json
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.json
+#    mochitest:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.mochitest.tests.zip
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.mochitest.tests.zip
+#    mozinfo:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.mozinfo.json
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.mozinfo.json
+#    reftest:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.reftest.tests.zip
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.reftest.tests.zip
+#    talos:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.talos.tests.zip
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.talos.tests.zip
+#    test_packages:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.test_packages.json
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.test_packages.json
+#    txt:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.txt
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.txt
+#    webplatform:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.web-platform.tests.zip
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.web-platform.tests.zip
+#    xpcshell:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.xpcshell.tests.zip
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.xpcshell.tests.zip
+#    jsshell:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target.jsshell.zip
+#      s3_key: fennec-{{ version }}.{{ locale }}.android.arm.jsshell.zip
+#    info:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}target_info.txt
+#      s3_key: fennec-{{ version }}.{{ locale }}.android_info.txt
+#    bouncer:
+#      artifact: {{ 'en-US/' if locale == 'en-US' else '' }}bouncer.apk
+#      s3_key: bouncer.apk
 {% endfor %}

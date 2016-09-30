@@ -15,7 +15,7 @@ import traceback
 from scriptworker.client import get_task, validate_artifact_url
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
-from scriptworker.utils import retry_async, download_file, upload_file
+from scriptworker.utils import retry_async, download_file
 
 from beetmoverscript.constants import MIME_MAP
 from beetmoverscript.task import validate_task_schema
@@ -26,7 +26,6 @@ log = logging.getLogger(__name__)
 
 # async_main {{{1
 async def async_main(context):
-    log.info("Hello Scriptworker!")
     # 1. parse the task
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
     # 2. validate the task: TODO
@@ -86,7 +85,19 @@ async def upload_to_s3(context, s3_key, path):
     s3 = boto3.client('s3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key'],)
     url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=30, HttpMethod='PUT')
 
-    await retry_async(upload_file, args=(context, url, headers, path),
+    async def put(context, url, headers, abs_filename, session=None):
+        with open(abs_filename, "rb") as fh:
+            async with session.put(url, data=fh, headers=headers, compress=False) as resp:
+                log.info(resp.status)
+                response_text = await resp.text()
+                log.info(response_text)
+                if resp.status not in (200, 204):
+                    raise ScriptWorkerRetryException(
+                        "Bad status {}".format(resp.status),
+                    )
+        log.info("Done")
+
+    await retry_async(put, args=(context, url, headers, path),
                       kwargs={'session': context.session})
 
 
