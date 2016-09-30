@@ -35,7 +35,7 @@ class TaskTest(unittest.TestCase):
 
         validate_task_schema(self.context)
 
-    def test_extract_channel(self):
+    def test_extract_supported_channels(self):
         data = ({
             'task': {'scopes': ['project:releng:googleplay:aurora']},
             'expected': 'aurora'
@@ -50,9 +50,16 @@ class TaskTest(unittest.TestCase):
         for item in data:
             self.assertEqual(extract_channel(item['task']), item['expected'])
 
+    def test_extract_channel_fails_when_too_many_channels_are_given(self):
         with self.assertRaises(TaskVerificationError):
             extract_channel({
                 'scopes': ['project:releng:googleplay:beta', 'project:releng:googleplay:release']
+            })
+
+    def test_extract_channel_fails_when_given_unsupported_channel(self):
+        with self.assertRaises(TaskVerificationError):
+            extract_channel({
+                'scopes': ['project:releng:googleplay:unexistingchannel']
             })
 
 
