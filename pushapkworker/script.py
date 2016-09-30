@@ -38,8 +38,9 @@ async def async_main(context, jar_signer):
         context.session = orig_session
 
     log.info('Verifying APKs\' signatures...')
+    channel = extract_channel(context.task)
     for _, apk_path in downloaded_apks.items():
-        jar_signer.verify(apk_path)
+        jar_signer.verify(apk_path, channel)
 
     log.info('Pushing APKs to Google Play Store...')
 

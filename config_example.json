@@ -8,7 +8,11 @@
 
     "jarsigner_binary": "jarsigner",
     "jarsigner_key_store": "/absolute/path/to/keystore",
-    "jarsigner_certificate_alias": "certificate-alias-within-keystore",
+    "jarsigner_certificate_aliases": {
+        "aurora": "nightly",
+        "beta": "nightly",
+        "release": "release"
+    },
 
     "valid_artifact_schemes": ["https"],
     "valid_artifact_netlocs": ["queue.taskcluster.net"],
