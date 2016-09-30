@@ -6,10 +6,26 @@ import os
 
 import scriptworker.client
 from scriptworker.utils import retry_async
+from pushapkworker.exceptions import TaskVerificationError
 from pushapkworker.utils import raise_future_exceptions
 
 
 log = logging.getLogger(__name__)
+
+
+GOOGLE_PLAY_SCOPE_PREFIX = 'project:releng:googleplay:'
+
+
+def extract_channel(task):
+    channels = [
+        s[len(GOOGLE_PLAY_SCOPE_PREFIX):]
+        for s in task['scopes']
+        if s.startswith(GOOGLE_PLAY_SCOPE_PREFIX)
+    ]
+    log.info('Channel: %s', channels)
+    if len(channels) != 1:
+        raise TaskVerificationError('Only one channel can be used')
+    return channels[0]
 
 
 def validate_task_schema(context):

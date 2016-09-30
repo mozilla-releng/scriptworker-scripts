@@ -2,8 +2,8 @@ import unittest
 import asynctest
 
 from pushapkworker.script import get_default_config
-from pushapkworker.task import validate_task_schema, download_files
-from pushapkworker.exceptions import DownloadError
+from pushapkworker.task import validate_task_schema, download_files, extract_channel
+from pushapkworker.exceptions import DownloadError, TaskVerificationError
 
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -34,6 +34,26 @@ class TaskTest(unittest.TestCase):
         ).generate_json()
 
         validate_task_schema(self.context)
+
+    def test_extract_channel(self):
+        data = ({
+            'task': {'scopes': ['project:releng:googleplay:aurora']},
+            'expected': 'aurora'
+        }, {
+            'task': {'scopes': ['project:releng:googleplay:beta']},
+            'expected': 'beta'
+        }, {
+            'task': {'scopes': ['project:releng:googleplay:release']},
+            'expected': 'release'
+        })
+
+        for item in data:
+            self.assertEqual(extract_channel(item['task']), item['expected'])
+
+        with self.assertRaises(TaskVerificationError):
+            extract_channel({
+                'scopes': ['project:releng:googleplay:beta', 'project:releng:googleplay:release']
+            })
 
 
 class TaskTestAsync(asynctest.TestCase):

@@ -12,12 +12,16 @@ import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-from pushapkworker.task import download_files, validate_task_schema
+from mozapkpublisher.googleplay import PACKAGE_NAME_VALUES
+
+from pushapkworker.task import download_files, validate_task_schema, extract_channel
 from pushapkworker.utils import load_json
 from pushapkworker.jarsigner import JarSigner
 
 
 log = logging.getLogger(__name__)
+
+CHANNEL_TO_PACKAGE_NAME = {value: key for key, value in PACKAGE_NAME_VALUES.items()}
 
 
 # async_main {{{1
@@ -52,8 +56,12 @@ def craft_push_config(context, apks):
     push_apk_config['credentials'] = context.config['google_play_certificate']
 
     push_apk_config['track'] = context.task['payload']['google_play_track']
-    push_apk_config['package_name'] = context.config['google_play_package_name']
+    push_apk_config['package_name'] = get_google_play_package_name(extract_channel(context.task))
     return push_apk_config
+
+
+def get_google_play_package_name(channel):
+    return CHANNEL_TO_PACKAGE_NAME[channel]
 
 
 def get_default_config():

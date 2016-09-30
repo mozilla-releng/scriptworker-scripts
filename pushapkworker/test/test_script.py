@@ -3,7 +3,7 @@ import logging
 import unittest
 from unittest.mock import MagicMock
 
-from pushapkworker.script import craft_push_config, craft_logging_config
+from pushapkworker.script import craft_push_config, craft_logging_config, get_google_play_package_name
 
 
 class ScriptTest(unittest.TestCase):
@@ -12,12 +12,14 @@ class ScriptTest(unittest.TestCase):
         context.config = {
             'google_play_service_account': 'a@service-account.org',
             'google_play_certificate': '/path/to/certificate.p12',
-            'google_play_package_name': 'org.mozilla.random_firefox'
         }
         context.task = {
             'payload': {
                 'google_play_track': 'alpha'
-            }
+            },
+            'scopes': {
+                'project:releng:googleplay:aurora'
+            },
         }
         apks = {
             'x86': '/path/to/x86.apk',
@@ -28,7 +30,7 @@ class ScriptTest(unittest.TestCase):
             'service_account': 'a@service-account.org',
             'credentials': '/path/to/certificate.p12',
             'track': 'alpha',
-            'package_name': 'org.mozilla.random_firefox',
+            'package_name': 'org.mozilla.fennec_aurora',
             'apk_x86': '/path/to/x86.apk',
             'apk_arm_v15': '/path/to/arm_v15.apk',
         })
@@ -47,3 +49,8 @@ class ScriptTest(unittest.TestCase):
             'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             'level': logging.INFO
         })
+
+    def test_get_google_play_package_name(self):
+        self.assertEqual(get_google_play_package_name('aurora'), 'org.mozilla.fennec_aurora')
+        self.assertEqual(get_google_play_package_name('beta'), 'org.mozilla.firefox_beta')
+        self.assertEqual(get_google_play_package_name('release'), 'org.mozilla.firefox')
