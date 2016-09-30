@@ -12,16 +12,13 @@ import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-from mozapkpublisher.googleplay import PACKAGE_NAME_VALUES
-
 from pushapkworker.task import download_files, validate_task_schema, extract_channel
 from pushapkworker.utils import load_json
 from pushapkworker.jarsigner import JarSigner
+from pushapkworker.googleplay import publish_to_googleplay
 
 
 log = logging.getLogger(__name__)
-
-CHANNEL_TO_PACKAGE_NAME = {value: key for key, value in PACKAGE_NAME_VALUES.items()}
 
 
 # async_main {{{1
@@ -43,26 +40,9 @@ async def async_main(context, jar_signer):
         jar_signer.verify(apk_path, channel)
 
     log.info('Pushing APKs to Google Play Store...')
+    publish_to_googleplay(context, downloaded_apks)
 
-    # XXX Import done here in order to mock the dependency out
-    from mozapkpublisher.push_apk import PushAPK
-    push_apk = PushAPK(config=craft_push_config(context, downloaded_apks))
-    push_apk.run()
     log.info('Done!')
-
-
-def craft_push_config(context, apks):
-    push_apk_config = {'apk_{}'.format(apk_type): apk_path for apk_type, apk_path in apks.items()}
-    push_apk_config['service_account'] = context.config['google_play_service_account']
-    push_apk_config['credentials'] = context.config['google_play_certificate']
-
-    push_apk_config['track'] = context.task['payload']['google_play_track']
-    push_apk_config['package_name'] = get_google_play_package_name(extract_channel(context.task))
-    return push_apk_config
-
-
-def get_google_play_package_name(channel):
-    return CHANNEL_TO_PACKAGE_NAME[channel]
 
 
 def get_default_config():

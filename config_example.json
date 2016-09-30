@@ -2,9 +2,20 @@
     "work_dir": "/absolute/path/to/work_dir",
     "schema_file": "pushapkworker/data/signing_task_schema.json",
 
-    "google_play_service_account": "my-service-account@iam.gserviceaccount.com",
-    "google_play_certificate": "/absolute/path/to/googleplay.p12",
-    "google_play_package_name": "org.mozilla.fennec_aurora",
+    "google_play_accounts": {
+        "aurora": {
+            "service_account": "service-account-which-have-access-to-aurora@iam.gserviceaccount.com",
+            "certificate": "/absolute/path/to/certificate-for-aurora-service-account.p12"
+        },
+        "beta": {
+            "service_account": "service-account-which-have-access-to-beta@iam.gserviceaccount.com",
+            "certificate": "/absolute/path/to/certificate-for-beta-service-account.p12"
+        },
+        "release": {
+            "service_account": "service-account-which-have-access-to-release@iam.gserviceaccount.com",
+            "certificate": "/absolute/path/to/certificate-for-release-service-account.p12"
+        }
+    },
 
     "jarsigner_binary": "jarsigner",
     "jarsigner_key_store": "/absolute/path/to/keystore",
