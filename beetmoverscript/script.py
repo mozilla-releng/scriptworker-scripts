@@ -15,7 +15,7 @@ import traceback
 from scriptworker.client import get_task, validate_artifact_url
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
-from scriptworker.utils import retry_async, download_file
+from scriptworker.utils import retry_async, download_file, raise_future_exceptions
 
 from beetmoverscript.constants import MIME_MAP
 from beetmoverscript.task import validate_task_schema
@@ -35,12 +35,13 @@ async def async_main(context):
     # 4. for each artifact in manifest
     #   a. download artifact
     #   b. upload to candidates/dated location
-    await beetmove_bits(context, manifest)
+    await move_beets(context, manifest)
     # 5. copy to releases/latest location
     log.info('Success!')
 
 
-async def beetmove_bits(context, manifest):
+async def move_beets(context, manifest):
+    beets = []
     for locale in manifest['mapping']:
         for deliverable in manifest['mapping'][locale]:
             source = os.path.join(manifest["artifact_base_url"],
@@ -49,22 +50,36 @@ async def beetmove_bits(context, manifest):
                                       manifest['mapping'][locale][deliverable]['s3_key'])
             dest_latest = os.path.join(manifest["s3_prefix_latest"],
                                       manifest['mapping'][locale][deliverable]['s3_key'])
-            await beetmove_bit(context, source, destinations=(dest_dated, dest_latest))
+            beets.append(
+                asyncio.ensure_future(
+                    beetmove_bit(context, source, destinations=(dest_dated, dest_latest))
+                )
+            )
+    await raise_future_exceptions(beets)
 
 
 async def beetmove_bit(context, source, destinations):
     beet_config = deepcopy(context.config)
     beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
-
     rel_path = validate_artifact_url(beet_config, source)
     abs_file_path = os.path.join(context.config['work_dir'], rel_path)
 
+    await download(context=context, url=source, path=abs_file_path)
+    await upload(context=context, destinations=destinations, path=abs_file_path)
+
+
+async def upload(context, destinations, path):
     # TODO rather than upload twice, use something like boto's bucket.copy_key
     #   probably via the awscli subproc directly.
     # For now, this will be faster than using copy_key() as boto would block
-    await download(context=context, url=source, path=abs_file_path)
+    uploads = []
     for dest in destinations:
-        await upload_to_s3(context=context, s3_key=dest, path=abs_file_path)
+        uploads.append(
+            asyncio.ensure_future(
+                upload_to_s3(context=context, s3_key=dest, path=path)
+            )
+        )
+    await raise_future_exceptions(uploads)
 
 
 async def download(context, url, path):
