@@ -1,0 +1,17 @@
+{
+    "work_dir": "beetmoverscript/test/test_work_dir",
+    "artifact_dir": "beetmoverscript/test/test_artifact_dir",
+    "verbose": true,
+    "schema_file": "beetmoverscript/data/beetmover_task_schema.json",
+    "template_files": {
+        "fennec_nightly_unsigned": "beetmoverscript/templates/fennec_nightly_en_us_multi_unsigned.yml",
+        "fennec_nightly_signed": "beetmoverscript/templates/fennec_nightly_en_us_multi_signed.yml"
+    },
+    "s3": {
+        "bucket": "fake-test-bucket",
+        "credentials": {
+            "id": "...",
+            "key": "..."
+        }
+    }
+}

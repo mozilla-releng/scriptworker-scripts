@@ -12,6 +12,9 @@ setup(
     author_email="release+python@mozilla.com",
     url="https://github.com/lundjordan/beetmoverscript",
     packages=find_packages(),
+    package_data={"beetmoverscript": ["data/*", "templates/*"]},
+    include_package_data=True,
+    zip_safe=False,
     entry_points={
         "console_scripts": [
             "beetmoverscript = beetmoverscript.script:main",

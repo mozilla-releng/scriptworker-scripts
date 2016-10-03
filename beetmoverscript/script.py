@@ -49,7 +49,7 @@ async def move_beets(context, manifest):
             dest_dated = os.path.join(manifest["s3_prefix_dated"],
                                       manifest['mapping'][locale][deliverable]['s3_key'])
             dest_latest = os.path.join(manifest["s3_prefix_latest"],
-                                      manifest['mapping'][locale][deliverable]['s3_key'])
+                                       manifest['mapping'][locale][deliverable]['s3_key'])
             beets.append(
                 asyncio.ensure_future(
                     move_beet(context, source, destinations=(dest_dated, dest_latest))
