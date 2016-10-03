@@ -6,7 +6,7 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.task import task_signing_formats, task_cert_type, validate_task_schema
 from signingscript.script import get_default_config
 
-from signingscript.test.helpers.task_generator import TaskGenerator
+from signingscript.test.helpers import task_generator
 
 
 class TaskTest(unittest.TestCase):
@@ -34,13 +34,11 @@ class TaskTest(unittest.TestCase):
         self.context.config = get_default_config()
 
     def test_missing_mandatory_urls_are_reported(self):
-        self.context.task = TaskGenerator(
-            urls=[]  # no URLs provided
-        ).generate()
+        self.context.task = task_generator.generate_object(urls=[])  # no URLs provided
 
         with self.assertRaises(ScriptWorkerTaskException):
             validate_task_schema(self.context)
 
     def test_no_error_is_reported_when_no_missing_url(self):
-        self.context.task = TaskGenerator().generate()
+        self.context.task = task_generator.generate_object()
         validate_task_schema(self.context)
