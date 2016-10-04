@@ -23,7 +23,6 @@ setup(
     author_email='release+python@mozilla.com',
     url='https://github.com/mozilla-releng/push-apk-worker',
     packages=find_packages(),
-    package_data={'pushapkworker': ['data/*']},
     include_package_data=True,
     zip_safe=False,
     entry_points={
@@ -33,4 +32,7 @@ setup(
     },
     license='MPL2',
     install_requires=requirements,
+    classifiers=(
+        'Programming Language :: Python :: 3.5',
+    ),
 )

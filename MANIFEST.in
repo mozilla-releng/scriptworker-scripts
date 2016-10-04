@@ -1,10 +1,10 @@
-recursive-include pushapkworker/test *
 recursive-include pushapkworker/data *
 
 include LICENSE
 include README.rst
 include config_example.json
 include version.txt
+include requirements*.txt
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
