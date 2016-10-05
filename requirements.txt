@@ -1,6 +1,6 @@
-google-api-python-client
-oauth2client
-pyOpenSsl
-scriptworker
-taskcluster
-mozapkpublisher
+google-api-python-client==1.5.3
+mozapkpublisher==0.1.2
+oauth2client==3.0.0
+pyOpenSSL==16.1.0
+scriptworker==0.7.0
+taskcluster==0.3.4
