@@ -64,11 +64,11 @@ async def move_beet(context, source, destinations):
     rel_path = validate_artifact_url(beet_config, source)
     abs_file_path = os.path.join(context.config['work_dir'], rel_path)
 
-    await download(context=context, url=source, path=abs_file_path)
-    await upload(context=context, destinations=destinations, path=abs_file_path)
+    await retry_download(context=context, url=source, path=abs_file_path)
+    await retry_upload(context=context, destinations=destinations, path=abs_file_path)
 
 
-async def upload(context, destinations, path):
+async def retry_upload(context, destinations, path):
     # TODO rather than upload twice, use something like boto's bucket.copy_key
     #   probably via the awscli subproc directly.
     # For now, this will be faster than using copy_key() as boto would block
@@ -82,9 +82,22 @@ async def upload(context, destinations, path):
     await raise_future_exceptions(uploads)
 
 
-async def download(context, url, path):
-    await retry_async(download_file, args=(context, url, path),
-                      kwargs={'session': context.session})
+async def retry_download(context, url, path):
+    return await retry_async(download_file, args=(context, url, path),
+                             kwargs={'session': context.session})
+
+
+async def put(context, url, headers, abs_filename, session=None):
+    with open(abs_filename, "rb") as fh:
+        async with session.put(url, data=fh, headers=headers, compress=False) as resp:
+            log.info(resp.status)
+            response_text = await resp.text()
+            log.info(response_text)
+            if resp.status not in (200, 204):
+                raise ScriptWorkerRetryException(
+                    "Bad status {}".format(resp.status),
+                )
+    return resp
 
 
 async def upload_to_s3(context, s3_key, path):
@@ -99,18 +112,6 @@ async def upload_to_s3(context, s3_key, path):
     creds = context.config['s3']['credentials']
     s3 = boto3.client('s3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key'],)
     url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=30, HttpMethod='PUT')
-
-    async def put(context, url, headers, abs_filename, session=None):
-        with open(abs_filename, "rb") as fh:
-            async with session.put(url, data=fh, headers=headers, compress=False) as resp:
-                log.info(resp.status)
-                response_text = await resp.text()
-                log.info(response_text)
-                if resp.status not in (200, 204):
-                    raise ScriptWorkerRetryException(
-                        "Bad status {}".format(resp.status),
-                    )
-        log.info("Done")
 
     await retry_async(put, args=(context, url, headers, path),
                       kwargs={'session': context.session})

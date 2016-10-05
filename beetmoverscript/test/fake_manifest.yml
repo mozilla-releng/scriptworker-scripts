@@ -1,0 +1,19 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps Fake Nightly artifacts to pretty names for the en-US and multi locale"
+    owner: "release@mozilla.com"
+
+artifact_base_url: https://queue.taskcluster.net/v1/task/{{ taskid_to_beetmove }}/artifacts/public/build/
+s3_prefix_dated: pub/mobile/nightly/{{ upload_date }}-mozilla-central-fake/
+s3_prefix_latest: pub/mobile/nightly/latest-mozilla-central-fake/
+
+mapping:
+  # common deliverables
+{% for locale in ['multi', 'en-US'] %}
+  {{ locale }}:
+  {% set locale_prefix = 'en-US/' if locale == 'en-US' else '' %}
+    package:
+      artifact: {{ locale_prefix }}target.package
+      s3_key: {{ locale_prefix  }}fake-{{ version }}.{{ locale }}.fake.package
+{% endfor %}

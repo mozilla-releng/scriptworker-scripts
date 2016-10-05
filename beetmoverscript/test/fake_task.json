@@ -1,0 +1,19 @@
+{
+    "provisionerId": "meh",
+    "workerType": "workertype",
+    "schedulerId": "task-graph-scheduler",
+    "taskGroupId": "some",
+    "routes": [],
+    "retries": 5,
+    "created": "2015-05-08T16:15:58.903Z",
+    "deadline": "2015-05-08T18:15:59.010Z",
+    "expires": "2016-05-08T18:15:59.010Z",
+    "dependencies": ["VALID_TASK_ID"],
+    "scopes": ["signing"],
+    "payload": {
+        "version": "99.0a1",
+        "upload_date": 1472747174,
+        "taskid_to_beetmove": "VALID_TASK_ID",
+        "template_key": "some_template_key"
+    }
+}
