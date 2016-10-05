@@ -6,4 +6,4 @@ def get_fake_valid_config():
 
 
 def get_fake_valid_task():
-    return load_json(path="beetmoverscript/test/fake_task.json")
+    return load_json(path="beetmoverscript/test/test_work_dir/task.json")

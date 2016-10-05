@@ -5,7 +5,7 @@ import pytest
 import sys
 
 from beetmoverscript.script import setup_mimetypes, setup_config, put, retry_download, move_beets, \
-    move_beet
+    move_beet, async_main, main
 from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task
 from beetmoverscript.utils import generate_candidates_manifest
 from scriptworker.context import Context
@@ -140,11 +140,11 @@ def test_move_beet(event_loop):
         'https://queue.taskcluster.net/v1/task/VALID_TASK_ID/artifacts/public/build/target.package',
         'beetmoverscript/test/test_work_dir/public/build/target.package'
     ]
-    # expected_upload_args = [
-    #     ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/fake-99.0a1.multi.fake.package',
-    #      'pub/mobile/nightly/latest-mozilla-central-fake/fake-99.0a1.multi.fake.package'),
-    #     'beetmoverscript/test/test_work_dir/public/build/target.package'
-    # ]
+    expected_upload_args = [
+        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/fake-99.0a1.multi.fake.package',
+         'pub/mobile/nightly/latest-mozilla-central-fake/fake-99.0a1.multi.fake.package'),
+        'beetmoverscript/test/test_work_dir/public/build/target.package'
+    ]
     actual_download_args = []
     actual_upload_args = []
 
@@ -160,4 +160,28 @@ def test_move_beet(event_loop):
             )
 
     assert sorted(expected_download_args) == sorted(actual_download_args)
-    # assert sorted(expected_upload_args) == sorted(actual_upload_args)
+    assert expected_upload_args == actual_upload_args
+
+
+def test_async_main(event_loop):
+    context = Context()
+    context.config = get_fake_valid_config()
+
+    async def fake_move_beets(context, manifest):
+        pass
+
+    with mock.patch('beetmoverscript.script.move_beets', new=fake_move_beets):
+        event_loop.run_until_complete(
+            async_main(context)
+        )
+
+
+def test_main(event_loop, fake_session):
+    context = Context()
+    context.config = get_fake_valid_config()
+
+    async def fake_async_main(context):
+        pass
+
+    with mock.patch('beetmoverscript.script.async_main', new=fake_async_main):
+        main(name='__main__', config_path='beetmoverscript/test/fake_config.json')
