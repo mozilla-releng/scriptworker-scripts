@@ -155,3 +155,10 @@ scriptworker /app/beetmoverworker/worker_config.json
 create task via that uses same provisioner/worker-type that your scriptworker clientid and config expects:
 
 see https://tools.taskcluster.net/task-creator/ and example here: https://queue.taskcluster.net/v1/task/S-lth0jTThKBjmpt386kUA
+
+## testing
+
+to run tests (py.test and coverage), use tox (see tox.ini for configuration)
+```
+$tox
+```
