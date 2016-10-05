@@ -1,4 +1,4 @@
-an implmentation of scriptworker for moving TC artifacts to release buckets
+an implementation of scriptworker for moving TC artifacts to release buckets
 
 
 ## install
@@ -123,7 +123,7 @@ touch work_dir/task.json  # see below for example
 
 ```
 mkvirtualenv --python=/usr/local/bin/python3 beetmoverscript
-# currently, beetmoverscript depends on criptworker 0.7.0
+# currently, beetmoverscript depends on scriptworker 0.7.0
 # so you can develop on scriptworker itself as you go,
 # checkout scriptworker locally and install that custom repo in your venv
 git clone https://github.com/mozilla-releng/scriptworker.git
