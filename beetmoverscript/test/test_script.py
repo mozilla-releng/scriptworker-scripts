@@ -4,8 +4,10 @@ import mock
 import pytest
 import sys
 
-from beetmoverscript.script import setup_mimetypes, setup_config, put, retry_download
-from beetmoverscript.test import get_fake_valid_config
+from beetmoverscript.script import setup_mimetypes, setup_config, put, retry_download, move_beets, \
+    move_beet
+from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task
+from beetmoverscript.utils import generate_candidates_manifest
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerRetryException
 from scriptworker.test import event_loop, fake_session, fake_session_500
@@ -85,3 +87,77 @@ def test_download(event_loop):
             retry_download(context, url, path)
         )
         assert result == (context, url, path, context.session)
+
+
+# def test_upload_to_s3():
+#     async def fake_aws_client(service, key, id):
+#         s3_client = object()
+#         s
+
+def test_move_beets(event_loop):
+    context = Context()
+    context.config = get_fake_valid_config()
+    context.task = get_fake_valid_task()
+    manifest = generate_candidates_manifest(context)
+
+    expected_sources = [
+        'https://queue.taskcluster.net/v1/task/VALID_TASK_ID/artifacts/public/build/target.package',
+        'https://queue.taskcluster.net/v1/task/VALID_TASK_ID/artifacts/public/build/en-US/target.package'
+    ]
+    expected_destinations = [
+        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/fake-99.0a1.multi.fake.package',
+         'pub/mobile/nightly/latest-mozilla-central-fake/fake-99.0a1.multi.fake.package'),
+        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.fake.package',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.fake.package')
+    ]
+
+    actual_sources = []
+    actual_destinations = []
+    async def fake_move_beet(context, source, destinations):
+        actual_sources.append(source)
+        actual_destinations.append(destinations)
+
+    with mock.patch('beetmoverscript.script.move_beet', fake_move_beet):
+        event_loop.run_until_complete(
+            move_beets(context, manifest)
+        )
+
+    assert sorted(expected_sources) == sorted(actual_sources)
+    assert sorted(expected_destinations) == sorted(actual_destinations)
+
+
+def test_move_beet(event_loop):
+    context = Context()
+    context.config = get_fake_valid_config()
+    context.task = get_fake_valid_task()
+
+    target_source = 'https://queue.taskcluster.net/v1/task/VALID_TASK_ID/artifacts/public/build/target.package'
+    target_destinations = (
+        'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/fake-99.0a1.multi.fake.package',
+        'pub/mobile/nightly/latest-mozilla-central-fake/fake-99.0a1.multi.fake.package'
+    )
+    expected_download_args = [
+        'https://queue.taskcluster.net/v1/task/VALID_TASK_ID/artifacts/public/build/target.package',
+        'beetmoverscript/test/test_work_dir/public/build/target.package'
+    ]
+    # expected_upload_args = [
+    #     ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/fake-99.0a1.multi.fake.package',
+    #      'pub/mobile/nightly/latest-mozilla-central-fake/fake-99.0a1.multi.fake.package'),
+    #     'beetmoverscript/test/test_work_dir/public/build/target.package'
+    # ]
+    actual_download_args = []
+    actual_upload_args = []
+
+    async def fake_retry_download(context, url, path):
+        actual_download_args.extend([url, path])
+    async def fake_retry_upload(context, destinations, path):
+        actual_upload_args.extend([destinations, path])
+
+    with mock.patch('beetmoverscript.script.retry_download', fake_retry_download):
+        with mock.patch('beetmoverscript.script.retry_upload', fake_retry_upload):
+            event_loop.run_until_complete(
+                move_beet(context, target_source, target_destinations)
+            )
+
+    assert sorted(expected_download_args) == sorted(actual_download_args)
+    # assert sorted(expected_upload_args) == sorted(actual_upload_args)
