@@ -1,11 +1,8 @@
-import asyncio
-from copy import deepcopy
 import json
 import logging
 import os
 
 import scriptworker.client
-from scriptworker.utils import retry_async, raise_future_exceptions
 from pushapkworker.exceptions import TaskVerificationError
 
 
@@ -46,26 +43,22 @@ def validate_task_schema(context):
 async def download_files(context):
     payload = context.task['payload']
     apks_to_download = payload['apks']
-    work_dir = context.config['work_dir']
 
-    tasks = []
+    # XXX: download_artifacts() takes a list of urls. In order to not loose the association between
+    # an apk_type and an apk_url, we set an order once and for all.
+    # Warning: This relies on download_artifacts() not changing the order of the files
+    ordered_apks = [(apk_type, apk_url) for apk_type, apk_url in apks_to_download.items()]
+    file_urls = [apk_url for _, apk_url in ordered_apks]
+
+    # XXX download_artifacts() is imported here, in order to patch it
+    from scriptworker.task import download_artifacts
+    ordered_files = await download_artifacts(context, file_urls)
+
     files = {}
-    download_config = deepcopy(context.config)
-    download_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
-    for apk_type, apk_url in apks_to_download.items():
-        rel_path = scriptworker.client.validate_artifact_url(download_config, apk_url)
-        abs_file_path = os.path.join(work_dir, rel_path)
-        files[apk_type] = abs_file_path
+    work_dir = context.config['work_dir']
+    for i in range(0, len(ordered_apks)):
+        apk_type = ordered_apks[i][0]
+        apk_relative_path = ordered_files[i]
+        files[apk_type] = os.path.join(work_dir, apk_relative_path)
 
-        # XXX download_file() is imported here, in order to patch it.
-        # This is due to retry_async() taking it as an argument
-        from scriptworker.utils import download_file
-        tasks.append(
-            asyncio.ensure_future(
-                retry_async(download_file, args=(context, apk_url, abs_file_path))
-            )
-        )
-
-    await raise_future_exceptions(tasks)
-    tasks = []
     return files

@@ -3,7 +3,7 @@ import asynctest
 
 from pushapkworker.script import get_default_config
 from pushapkworker.task import validate_task_schema, download_files, extract_channel
-from pushapkworker.exceptions import DownloadError, TaskVerificationError
+from pushapkworker.exceptions import TaskVerificationError
 
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -69,20 +69,18 @@ class TaskTestAsync(asynctest.TestCase):
         self.context.config = get_default_config()
         self.context.task = TaskGenerator().generate_json()
 
-    @asynctest.patch('scriptworker.utils.download_file')
-    async def test_download_files_returns_absolute_paths(self, _):
-        files = await download_files(self.context)
+    @asynctest.patch('scriptworker.task.download_artifacts')
+    async def test_download_files_returns_absolute_paths(self, download_artifacts):
+        def convert_url_into_paths(_, file_urls):
+            url_with_all_slashes = [url.replace('%2F', '/') for url in file_urls]
+            file_names = [url.split('/')[-1] for url in url_with_all_slashes]
+            return ['public/build/{}'.format(file_name) for file_name in file_names]
+
+        download_artifacts.side_effect = convert_url_into_paths
         path_prefix = '{}/public/build/fennec-46.0a2.en-US.android'.format(self.context.config['work_dir'])
+        files = await download_files(self.context)
+
         self.assertEqual(files, {
             'armv7_v15': '{}-arm.apk'.format(path_prefix),
             'x86': '{}-i386.apk'.format(path_prefix),
         })
-
-    @asynctest.patch('scriptworker.utils.download_file')
-    async def test_download_files_raises_download_error(self, download_file):
-        def download_error(*args):
-            raise DownloadError("Not 200!")
-
-        download_file.side_effect = download_error
-        with self.assertRaises(DownloadError):
-            await download_files(self.context)
