@@ -28,11 +28,7 @@ async def async_main(context):
     validate_task_schema(context)
 
     log.info('Downloading APKs...')
-    with aiohttp.ClientSession() as base_ssl_session:
-        orig_session = context.session
-        context.session = base_ssl_session
-        downloaded_apks = await download_files(context)
-        context.session = orig_session
+    downloaded_apks = await download_files(context)
 
     log.info('Verifying APKs\' signatures...')
     channel = extract_channel(context.task)
