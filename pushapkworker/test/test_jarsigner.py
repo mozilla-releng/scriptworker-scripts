@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import subprocess
 
-from pushapkworker.jarsigner import JarSigner
+from pushapkworker import jarsigner
 from pushapkworker.exceptions import SignatureError
 
 
@@ -20,37 +20,28 @@ class JarSignerTest(unittest.TestCase):
                 'release': 'release_alias',
             }
         }
-        self.jar_signer = JarSigner(self.context)
 
-    def test_allows_binary_to_be_set(self):
-        binary_path = '/path/to/jarsigner'
-        self.context.config['jarsigner_binary'] = binary_path
-        jar_signer = JarSigner(self.context)
-        self.assertEqual(jar_signer.binary_path, binary_path)
+        self.minimal_context = MagicMock()
+        self.minimal_context.config = {
+            'jarsigner_key_store': '/path/to/keystore',
+        }
 
     def test_verify_should_call_executable_with_right_arguments(self):
         for channel, alias in self.context.config['jarsigner_certificate_aliases'].items():
             with patch('subprocess.run') as run:
                 run.return_value = MagicMock()
                 run.return_value.returncode = 0
-                self.jar_signer.verify('/path/to/apk', channel)
+                jarsigner.verify(self.context, '/path/to/apk', channel)
 
                 run.assert_called_with([
                     '/path/to/jarsigner', '-verify', '-strict', '-keystore', '/path/to/keystore', '/path/to/apk', alias
                 ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
 
     def test_verify_should_call_executable_with_defaults_arguments(self):
-        minimal_context = MagicMock()
-        minimal_context.config = {
-            'jarsigner_key_store': '/path/to/keystore',
-        }
-
-        jar_signer = JarSigner(minimal_context)
-
         with patch('subprocess.run') as run:
             run.return_value = MagicMock()
             run.return_value.returncode = 0
-            jar_signer.verify('/path/to/apk', channel='aurora')
+            jarsigner.verify(self.minimal_context, '/path/to/apk', channel='aurora')
 
             run.assert_called_with([
                 'jarsigner', '-verify', '-strict', '-keystore', '/path/to/keystore', '/path/to/apk', 'nightly'
@@ -62,4 +53,32 @@ class JarSignerTest(unittest.TestCase):
             run.return_value.returncode = 1
 
             with self.assertRaises(SignatureError):
-                self.jar_signer.verify('/path/to/apk', channel='aurora')
+                jarsigner.verify(self.context, '/path/to/apk', channel='aurora')
+
+    def test_pluck_configuration_sets_every_argument(self):
+        self.assertEqual(
+            jarsigner._pluck_configuration(self.context),
+            (
+                '/path/to/jarsigner',
+                '/path/to/keystore',
+                {
+                    'aurora': 'aurora_alias',
+                    'beta': 'beta_alias',
+                    'release': 'release_alias',
+                }
+            )
+        )
+
+    def test_pluck_configuration_uses_defaults(self):
+        self.assertEqual(
+            jarsigner._pluck_configuration(self.minimal_context),
+            (
+                'jarsigner',
+                '/path/to/keystore',
+                {
+                    'aurora': 'nightly',
+                    'beta': 'nightly',
+                    'release': 'release',
+                }
+            )
+        )

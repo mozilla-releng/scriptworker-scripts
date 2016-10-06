@@ -12,9 +12,9 @@ import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
+from pushapkworker import jarsigner
 from pushapkworker.task import download_files, validate_task_schema, extract_channel
 from pushapkworker.utils import load_json
-from pushapkworker.jarsigner import JarSigner
 from pushapkworker.googleplay import publish_to_googleplay
 
 
@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 
 
 # async_main {{{1
-async def async_main(context, jar_signer):
+async def async_main(context):
     context.task = scriptworker.client.get_task(context.config)
     log.info("validating task")
     validate_task_schema(context)
@@ -37,7 +37,7 @@ async def async_main(context, jar_signer):
     log.info('Verifying APKs\' signatures...')
     channel = extract_channel(context.task)
     for _, apk_path in downloaded_apks.items():
-        jar_signer.verify(apk_path, channel)
+        jarsigner.verify(context, apk_path, channel)
 
     log.info('Pushing APKs to Google Play Store...')
     publish_to_googleplay(context, downloaded_apks)
@@ -81,13 +81,11 @@ def main(name=None, config_path=None):
     logging.basicConfig(**craft_logging_config(context))
     logging.getLogger('taskcluster').setLevel(logging.WARNING)
 
-    jar_signer = JarSigner(context)
-
     loop = asyncio.get_event_loop()
     with aiohttp.ClientSession() as session:
         context.session = session
         try:
-            loop.run_until_complete(async_main(context, jar_signer))
+            loop.run_until_complete(async_main(context))
         except ScriptWorkerTaskException as exc:
             traceback.print_exc()
             sys.exit(exc.exit_code)

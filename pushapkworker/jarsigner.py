@@ -6,38 +6,33 @@ from pushapkworker.exceptions import SignatureError
 log = logging.getLogger(__name__)
 
 
-class JarSigner(object):
-    def __init__(self, context):
-        self.keystore_path = context.config['jarsigner_key_store']
+def verify(context, apk_path, channel):
+    binary_path, keystore_path, certificate_aliases = _pluck_configuration(context)
+    certificate_alias = certificate_aliases[channel]
 
-        # Uses jarsigner in PATH if config doesn't provide it
-        try:
-            self.binary_path = context.config['jarsigner_binary']
-        except KeyError:
-            self.binary_path = 'jarsigner'
+    completed_process = subprocess.run([
+        binary_path, '-verify', '-strict',
+        '-keystore', keystore_path,
+        apk_path,
+        certificate_alias
+    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
 
-        try:
-            self.certificate_aliases = context.config['jarsigner_certificate_aliases']
-        except KeyError:
-            self.certificate_aliases = {
-                'aurora': 'nightly',
-                'beta': 'nightly',
-                'release': 'release'
-            }
+    if completed_process.returncode != 0:
+        log.critical(completed_process.stdout)
+        raise SignatureError(
+            '{} doesn\'t verify apk "{}". It compared certificate against "{}", located in keystore "{}"'
+            .format(binary_path, apk_path, certificate_alias, keystore_path)
+        )
 
-    def verify(self, apk_path, channel):
-        certificate_alias = self.certificate_aliases[channel]
 
-        completed_process = subprocess.run([
-            self.binary_path, '-verify', '-strict',
-            '-keystore', self.keystore_path,
-            apk_path,
-            certificate_alias
-        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+def _pluck_configuration(context):
+    keystore_path = context.config['jarsigner_key_store']
+    # Uses jarsigner in PATH if config doesn't provide it
+    binary_path = context.config.get('jarsigner_binary', 'jarsigner')
+    certificate_aliases = context.config.get('jarsigner_certificate_aliases', {
+        'aurora': 'nightly',
+        'beta': 'nightly',
+        'release': 'release'
+    })
 
-        if completed_process.returncode != 0:
-            log.critical(completed_process.stdout)
-            raise SignatureError(
-                '{} doesn\'t verify apk "{}". It compared certificate against "{}", located in keystore "{}"'
-                .format(self.binary_path, apk_path, certificate_alias, self.keystore_path)
-            )
+    return binary_path, keystore_path, certificate_aliases
