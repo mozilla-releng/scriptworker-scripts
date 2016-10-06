@@ -69,7 +69,7 @@ class TaskTestAsync(asynctest.TestCase):
         self.context.config = get_default_config()
         self.context.task = TaskGenerator().generate_json()
 
-    @asynctest.patch('pushapkworker.utils.download_file')
+    @asynctest.patch('scriptworker.utils.download_file')
     async def test_download_files_returns_absolute_paths(self, _):
         files = await download_files(self.context)
         path_prefix = '{}/public/build/fennec-46.0a2.en-US.android'.format(self.context.config['work_dir'])
@@ -78,7 +78,7 @@ class TaskTestAsync(asynctest.TestCase):
             'x86': '{}-i386.apk'.format(path_prefix),
         })
 
-    @asynctest.patch('pushapkworker.utils.download_file')
+    @asynctest.patch('scriptworker.utils.download_file')
     async def test_download_files_raises_download_error(self, download_file):
         def download_error(*args):
             raise DownloadError("Not 200!")

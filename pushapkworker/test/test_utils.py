@@ -5,10 +5,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-import asyncio
-import asynctest
-
-from pushapkworker.utils import mkdir, load_json, raise_future_exceptions
+from pushapkworker.utils import mkdir, load_json
 
 
 class UtilsTest(unittest.TestCase):
@@ -43,27 +40,3 @@ class UtilsTest(unittest.TestCase):
                 json.dump(json_object, f)
 
             self.assertEqual(load_json(output_file), json_object)
-
-
-class UtilsTestAsync(asynctest.TestCase):
-    async def default_coroutine(_):
-        return 'ok'
-
-    async def test_raises_future_exceptions(self):
-        class CorountineError(Exception):
-            pass
-
-        async def failing_coroutine():
-            raise CorountineError()
-
-        tasks = [
-            asyncio.Task(self.default_coroutine()),
-            asyncio.Task(failing_coroutine())
-        ]
-
-        with self.assertRaises(CorountineError):
-            await raise_future_exceptions(tasks)
-
-    async def test_raise_future_exceptions_does_nothing_if_no_exception(self):
-        tasks = [asyncio.Task(self.default_coroutine())]
-        await raise_future_exceptions(tasks)

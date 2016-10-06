@@ -5,9 +5,8 @@ import logging
 import os
 
 import scriptworker.client
-from scriptworker.utils import retry_async
+from scriptworker.utils import retry_async, raise_future_exceptions
 from pushapkworker.exceptions import TaskVerificationError
-from pushapkworker.utils import raise_future_exceptions
 
 
 log = logging.getLogger(__name__)
@@ -60,7 +59,7 @@ async def download_files(context):
 
         # XXX download_file() is imported here, in order to patch it.
         # This is due to retry_async() taking it as an argument
-        from pushapkworker.utils import download_file
+        from scriptworker.utils import download_file
         tasks.append(
             asyncio.ensure_future(
                 retry_async(download_file, args=(context, apk_url, abs_file_path))
