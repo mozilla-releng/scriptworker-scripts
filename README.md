@@ -18,8 +18,7 @@ First, you need `python>=3.5.0`.
     . venv3/bin/activate
     git clone https://github.com/mozilla-releng/pushapkworker
     cd pushapkworker
-    # install pushapkworker from pypi
-    python setup.py develop
+    pip install pushapkworker
 
 ### Configure
 
