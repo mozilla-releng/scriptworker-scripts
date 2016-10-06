@@ -1,6 +1,6 @@
 {
     "work_dir": "/absolute/path/to/work_dir",
-    "schema_file": "pushapkworker/data/signing_task_schema.json",
+    "schema_file": "pushapkworker/data/pushapk_task_schema.json",
 
     "google_play_accounts": {
         "aurora": {

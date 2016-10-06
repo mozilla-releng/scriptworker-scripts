@@ -53,7 +53,7 @@ def get_default_config():
 
     default_config = {
         'work_dir': os.path.join(parent_dir, 'work_dir'),
-        'schema_file': os.path.join(cwd, 'pushapkworker', 'data', 'signing_task_schema.json'),
+        'schema_file': os.path.join(cwd, 'pushapkworker', 'data', 'pushapk_task_schema.json'),
         'valid_artifact_schemes': ['https'],
         'valid_artifact_netlocs': ['queue.taskcluster.net'],
         'valid_artifact_path_regexes': [r'''/v1/task/(?P<taskId>[^/]+)(/runs/\d+)?/artifacts/(?P<filepath>.*)$'''],

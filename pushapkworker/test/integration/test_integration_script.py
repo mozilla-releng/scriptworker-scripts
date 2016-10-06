@@ -43,7 +43,7 @@ class ConfigFileGenerator(object):
     def _generate_json(self):
         return json.loads('''{{
             "work_dir": "{work_dir}",
-            "schema_file": "{project_dir}/pushapkworker/data/signing_task_schema.json",
+            "schema_file": "{project_dir}/pushapkworker/data/pushapk_task_schema.json",
             "verbose": true,
 
             "google_play_service_account": "a-service-account@.iam.gserviceaccount.com",
