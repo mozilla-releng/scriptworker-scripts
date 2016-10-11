@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- moved `download_artifacts` and `download_files` to scriptworker; compatible with `scriptworker>=0.7.0`
+
+### Fixed
+- noted that the various `*_dir`s need to be absolute paths.
+
+### Removed
+- `DownloadError`, which is now in scriptworker, and `ChecksumMismatchError`, which wasn't used.
 
 ## [0.5.1] - 2016-08-29
 ### Added
