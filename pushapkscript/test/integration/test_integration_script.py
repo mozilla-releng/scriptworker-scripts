@@ -10,6 +10,7 @@ from pushapkscript.test.helpers.task_generator import TaskGenerator
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.join(this_dir, '..', '..', '..')
+project_data_dir = os.path.join(project_dir, 'pushapkscript', 'data')
 
 
 class KeystoreManager(object):
@@ -43,7 +44,7 @@ class ConfigFileGenerator(object):
     def _generate_json(self):
         return json.loads('''{{
             "work_dir": "{work_dir}",
-            "schema_file": "{project_dir}/pushapkscript/data/pushapk_task_schema.json",
+            "schema_file": "{project_data_dir}/pushapk_task_schema.json",
             "verbose": true,
 
             "jarsigner_key_store": "{keystore_path}",
@@ -55,7 +56,7 @@ class ConfigFileGenerator(object):
                 }}
             }}
         }}'''.format(
-            work_dir=self.work_dir, test_data_dir=self.test_data_dir, project_dir=project_dir,
+            work_dir=self.work_dir, test_data_dir=self.test_data_dir, project_data_dir=project_data_dir,
             keystore_path=self.keystore_manager.keystore_path,
             certificate_alias=self.keystore_manager.certificate_alias
         ))
@@ -68,8 +69,7 @@ class MainTest(unittest.TestCase):
     def test_main_downloads_verifies_signature_and_gives_the_right_config_to_mozapkpublisher(self, PushAPK):
         with tempfile.TemporaryDirectory() as test_data_dir:
             keystore_manager = KeystoreManager(test_data_dir)
-            # TODO Publish certificate in repo, instead of relying on a local copy
-            keystore_manager.add_certificate(os.path.join(this_dir, 'android-nightly.cer'))
+            keystore_manager.add_certificate(os.path.join(project_data_dir, 'android-nightly.cer'))
 
             config_generator = ConfigFileGenerator(test_data_dir, keystore_manager)
             task_generator = TaskGenerator()
@@ -83,5 +83,6 @@ class MainTest(unittest.TestCase):
                 'apk_x86': '{}/work/public/build/fennec-46.0a2.en-US.android-i386.apk'.format(test_data_dir),
                 'package_name': 'org.mozilla.fennec_aurora',
                 'service_account': 'dummy-service-account@iam.gserviceaccount.com',
-                'track': 'alpha'
+                'track': 'alpha',
+                'dry_run': True,
             })
