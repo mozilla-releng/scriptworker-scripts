@@ -21,7 +21,8 @@ setup(
     description='TaskCluster Push APK Worker',
     author='Mozilla Release Engineering',
     author_email='release+python@mozilla.com',
-    url='https://github.com/mozilla-releng/push-apk-worker',
+    # TODO update Github URL once repo has been renamed
+    url='https://github.com/mozilla-releng/pushapkworker',
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
