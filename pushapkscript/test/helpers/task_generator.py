@@ -19,17 +19,17 @@ public%2Fbuild%2Ffennec-46.0a2.en-US.android-i386.apk'
 
     def generate_json(self):
         return json.loads('''{{
-          "provisionerId": "meh",
-          "workerType": "workertype",
-          "schedulerId": "task-graph-scheduler",
-          "taskGroupId": "some",
+          "provisionerId": "some-provisioner-id",
+          "workerType": "some-worker-type",
+          "schedulerId": "some-scheduler-id",
+          "taskGroupId": "some-task-group-id",
           "routes": [],
           "retries": 5,
           "created": "2015-05-08T16:15:58.903Z",
           "deadline": "2015-05-08T18:15:59.010Z",
           "expires": "2016-05-08T18:15:59.010Z",
           "dependencies": ["DIYnEVJ_SaSLGWtd3_n3VA", "EZJ0suL7St65V_MM0iBhKw"],
-          "scopes": ["signing"],
+          "scopes": ["project:releng:googleplay:aurora"],
           "payload": {{
             "apks": {apks},
             "google_play_track": "alpha"

@@ -1,5 +1,4 @@
 from mozapkpublisher.googleplay import PACKAGE_NAME_VALUES
-from mozapkpublisher.push_apk import PushAPK
 
 from pushapkscript.task import extract_channel
 
@@ -8,6 +7,7 @@ CHANNEL_TO_PACKAGE_NAME = {value: key for key, value in PACKAGE_NAME_VALUES.item
 
 
 def publish_to_googleplay(context, apks):
+    from mozapkpublisher.push_apk import PushAPK
     push_apk = PushAPK(config=craft_push_apk_config(context, apks))
     push_apk.run()
 

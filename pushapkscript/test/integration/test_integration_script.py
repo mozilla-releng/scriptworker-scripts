@@ -46,12 +46,14 @@ class ConfigFileGenerator(object):
             "schema_file": "{project_dir}/pushapkscript/data/pushapk_task_schema.json",
             "verbose": true,
 
-            "google_play_service_account": "a-service-account@.iam.gserviceaccount.com",
-            "google_play_certificate": "/dummy/path/to/certificate.p12",
-            "google_play_package_name": "org.mozilla.fennec_aurora",
-
             "jarsigner_key_store": "{keystore_path}",
-            "jarsigner_certificate_alias": "{certificate_alias}"
+            "jarsigner_certificate_alias": "{certificate_alias}",
+            "google_play_accounts": {{
+                "aurora": {{
+                    "service_account": "dummy-service-account@iam.gserviceaccount.com",
+                    "certificate": "/dummy/path/to/certificate.p12"
+                }}
+            }}
         }}'''.format(
             work_dir=self.work_dir, test_data_dir=self.test_data_dir, project_dir=project_dir,
             keystore_path=self.keystore_manager.keystore_path,
@@ -61,13 +63,13 @@ class ConfigFileGenerator(object):
 
 class MainTest(unittest.TestCase):
 
-    @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
     @unittest.skipIf(strtobool(os.environ.get('SKIP_NETWORK_TESTS', 'true')), 'Tests requiring network are skipped')
+    @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
     def test_main_downloads_verifies_signature_and_gives_the_right_config_to_mozapkpublisher(self, PushAPK):
         with tempfile.TemporaryDirectory() as test_data_dir:
             keystore_manager = KeystoreManager(test_data_dir)
-            # TODO Download the certificate once it's public
-            keystore_manager.add_certificate('/home/jlorenzo/git/mozilla-releng/private/passwords/android-nightly.cer')
+            # TODO Publish certificate in repo, instead of relying on a local copy
+            keystore_manager.add_certificate(os.path.join(this_dir, 'android-nightly.cer'))
 
             config_generator = ConfigFileGenerator(test_data_dir, keystore_manager)
             task_generator = TaskGenerator()
@@ -80,6 +82,6 @@ class MainTest(unittest.TestCase):
                 'apk_armv7_v15': '{}/work/public/build/fennec-46.0a2.en-US.android-arm.apk'.format(test_data_dir),
                 'apk_x86': '{}/work/public/build/fennec-46.0a2.en-US.android-i386.apk'.format(test_data_dir),
                 'package_name': 'org.mozilla.fennec_aurora',
-                'service_account': 'a-service-account@.iam.gserviceaccount.com',
+                'service_account': 'dummy-service-account@iam.gserviceaccount.com',
                 'track': 'alpha'
             })
