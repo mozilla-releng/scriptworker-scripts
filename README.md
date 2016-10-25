@@ -1,7 +1,7 @@
-Pushapkworker
+pushapkscript
 ==============
 
-[![Build Status](https://travis-ci.org/mozilla-releng/pushapkworker.svg?branch=master)](https://travis-ci.org/mozilla-releng/pushapkworker) [![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/pushapkworker/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/pushapkworker?branch=master)
+[![Build Status](https://travis-ci.org/mozilla-releng/pushapkscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/pushapkscript) [![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/pushapkscript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/pushapkscript?branch=master)
 
 Main script that is aimed to be run with [scriptworker](https://github.com/mozilla-releng/scriptworker) (but runs perfectly fine as a standalone script). This project is a fork of [signingscript](https://github.com/mozilla-releng/signingscript). Most of the documentation from signing script applies to this project.
 
@@ -16,9 +16,9 @@ First, you need `python>=3.5.0`.
     virtualenv3 venv3
     # activate it
     . venv3/bin/activate
-    git clone https://github.com/mozilla-releng/pushapkworker
-    cd pushapkworker
-    pip install pushapkworker
+    git clone https://github.com/mozilla-releng/pushapkscript
+    cd pushapkscript
+    pip install pushapkscript
 
 ### Configure
 
@@ -61,9 +61,9 @@ Note: For development purpose, aurora on the `alpha` track can also be used.
 
 ### run
 
-You're ready to run pushapkworker!
+You're ready to run pushapkscript!
 
-    pushapkworker CONFIG_FILE
+    pushapkscript CONFIG_FILE
 
 where `CONFIG_FILE` is the config json you created above.
 
@@ -71,9 +71,9 @@ This should download the file(s) specified in the payload, check their signature
 
 ### running through scriptworker
 
-Follow the [scriptworker readme](https://github.com/mozilla-releng/scriptworker/blob/master/README.rst) to set up scriptworker, and use `["path/to/pushapkworker", "path/to/script_config.json"]` as your `task_script`.
+Follow the [scriptworker readme](https://github.com/mozilla-releng/scriptworker/blob/master/README.rst) to set up scriptworker, and use `["path/to/pushapkscript", "path/to/script_config.json"]` as your `task_script`.
 
-:warning: Make sure your `work_dir` and `artifact_dir` point to the same directories between the scriptworker config and the pushapkworker config!
+:warning: Make sure your `work_dir` and `artifact_dir` point to the same directories between the scriptworker config and the pushapkscript config!
 
 
 Docs

@@ -1,4 +1,4 @@
-Pushapkworker
+pushapkscript
 =============
 
 |Build Status| |Coverage Status|
@@ -20,9 +20,9 @@ First, you need ``python>=3.5.0``.
     virtualenv3 venv3
     # activate it
     . venv3/bin/activate
-    git clone https://github.com/mozilla-releng/pushapkworker
-    cd pushapkworker
-    pip install pushapkworker
+    git clone https://github.com/mozilla-releng/pushapkscript
+    cd pushapkscript
+    pip install pushapkscript
 
 Configure
 ~~~~~~~~~
@@ -118,11 +118,11 @@ used.
 run
 ~~~
 
-You're ready to run pushapkworker!
+You're ready to run pushapkscript!
 
 ::
 
-    pushapkworker CONFIG_FILE
+    pushapkscript CONFIG_FILE
 
 where ``CONFIG_FILE`` is the config json you created above.
 
@@ -135,7 +135,7 @@ running through scriptworker
 Follow the `scriptworker
 readme <https://github.com/mozilla-releng/scriptworker/blob/master/README.rst>`__
 to set up scriptworker, and use
-``["path/to/pushapkworker", "path/to/script_config.json"]`` as your
+``["path/to/pushapkscript", "path/to/script_config.json"]`` as your
 ``task_script``.
 
 +---------------------------------------------------------------------------+
@@ -146,7 +146,7 @@ to set up scriptworker, and use
 
 Table: warning: Make sure your ``work_dir`` and ``artifact_dir`` point
 to the same directories between the scriptworker config and the
-pushapkworker config!
+pushapkscript config!
 
 ::
 
@@ -157,7 +157,7 @@ This is purely because
 1. @escapewindow prefers writing markdown, and
 2. pypi appears to deal with rst better than markdown.
 
-.. |Build Status| image:: https://travis-ci.org/mozilla-releng/pushapkworker.svg?branch=master
-   :target: https://travis-ci.org/mozilla-releng/pushapkworker
-.. |Coverage Status| image:: https://coveralls.io/repos/github/mozilla-releng/pushapkworker/badge.svg?branch=master
-   :target: https://coveralls.io/github/mozilla-releng/pushapkworker?branch=master
+.. |Build Status| image:: https://travis-ci.org/mozilla-releng/pushapkscript.svg?branch=master
+   :target: https://travis-ci.org/mozilla-releng/pushapkscript
+.. |Coverage Status| image:: https://coveralls.io/repos/github/mozilla-releng/pushapkscript/badge.svg?branch=master
+   :target: https://coveralls.io/github/mozilla-releng/pushapkscript?branch=master

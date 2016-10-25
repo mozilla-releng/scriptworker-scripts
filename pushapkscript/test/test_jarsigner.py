@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 
 import subprocess
 
-from pushapkworker import jarsigner
-from pushapkworker.exceptions import SignatureError
+from pushapkscript import jarsigner
+from pushapkscript.exceptions import SignatureError
 
 
 class JarSignerTest(unittest.TestCase):

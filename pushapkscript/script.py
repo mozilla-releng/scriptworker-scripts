@@ -12,10 +12,10 @@ import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-from pushapkworker import jarsigner
-from pushapkworker.task import download_files, validate_task_schema, extract_channel
-from pushapkworker.utils import load_json
-from pushapkworker.googleplay import publish_to_googleplay
+from pushapkscript import jarsigner
+from pushapkscript.task import download_files, validate_task_schema, extract_channel
+from pushapkscript.utils import load_json
+from pushapkscript.googleplay import publish_to_googleplay
 
 
 log = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ def get_default_config():
 
     default_config = {
         'work_dir': os.path.join(parent_dir, 'work_dir'),
-        'schema_file': os.path.join(cwd, 'pushapkworker', 'data', 'pushapk_task_schema.json'),
+        'schema_file': os.path.join(cwd, 'pushapkscript', 'data', 'pushapk_task_schema.json'),
         'valid_artifact_schemes': ['https'],
         'valid_artifact_netlocs': ['queue.taskcluster.net'],
         'valid_artifact_path_regexes': [r'''/v1/task/(?P<taskId>[^/]+)(/runs/\d+)?/artifacts/(?P<filepath>.*)$'''],

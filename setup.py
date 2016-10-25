@@ -16,7 +16,7 @@ with open(os.path.join(project_dir, 'requirements.txt')) as f:
 
 
 setup(
-    name='pushapkworker',
+    name='pushapkscript',
     version=version,
     description='TaskCluster Push APK Worker',
     author='Mozilla Release Engineering',
@@ -27,7 +27,7 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            'pushapkworker = pushapkworker.script:main',
+            'pushapkscript = pushapkscript.script:main',
         ],
     },
     license='MPL2',

@@ -1,7 +1,7 @@
 import logging
 import subprocess
 
-from pushapkworker.exceptions import SignatureError
+from pushapkscript.exceptions import SignatureError
 
 log = logging.getLogger(__name__)
 

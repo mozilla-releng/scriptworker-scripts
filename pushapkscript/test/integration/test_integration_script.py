@@ -5,8 +5,8 @@ import json
 import subprocess
 from distutils.util import strtobool
 
-from pushapkworker.script import main
-from pushapkworker.test.helpers.task_generator import TaskGenerator
+from pushapkscript.script import main
+from pushapkscript.test.helpers.task_generator import TaskGenerator
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.join(this_dir, '..', '..', '..')
@@ -43,7 +43,7 @@ class ConfigFileGenerator(object):
     def _generate_json(self):
         return json.loads('''{{
             "work_dir": "{work_dir}",
-            "schema_file": "{project_dir}/pushapkworker/data/pushapk_task_schema.json",
+            "schema_file": "{project_dir}/pushapkscript/data/pushapk_task_schema.json",
             "verbose": true,
 
             "google_play_service_account": "a-service-account@.iam.gserviceaccount.com",

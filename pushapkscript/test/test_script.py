@@ -3,7 +3,7 @@ import logging
 import unittest
 from unittest.mock import MagicMock
 
-from pushapkworker.script import craft_logging_config
+from pushapkscript.script import craft_logging_config
 
 
 class ScriptTest(unittest.TestCase):

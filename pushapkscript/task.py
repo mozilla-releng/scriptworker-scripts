@@ -3,7 +3,7 @@ import logging
 import os
 
 import scriptworker.client
-from pushapkworker.exceptions import TaskVerificationError
+from pushapkscript.exceptions import TaskVerificationError
 
 
 log = logging.getLogger(__name__)

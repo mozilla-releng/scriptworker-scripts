@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 
-from pushapkworker.googleplay import craft_push_apk_config, get_package_name, get_service_account, get_certificate_path
+from pushapkscript.googleplay import craft_push_apk_config, get_package_name, get_service_account, get_certificate_path
 
 
 class GooglePlayTest(unittest.TestCase):

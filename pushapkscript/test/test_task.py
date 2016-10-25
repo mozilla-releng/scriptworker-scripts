@@ -1,14 +1,14 @@
 import unittest
 import asynctest
 
-from pushapkworker.script import get_default_config
-from pushapkworker.task import validate_task_schema, download_files, extract_channel
-from pushapkworker.exceptions import TaskVerificationError
+from pushapkscript.script import get_default_config
+from pushapkscript.task import validate_task_schema, download_files, extract_channel
+from pushapkscript.exceptions import TaskVerificationError
 
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-from pushapkworker.test.helpers.task_generator import TaskGenerator
+from pushapkscript.test.helpers.task_generator import TaskGenerator
 
 
 class TaskTest(unittest.TestCase):

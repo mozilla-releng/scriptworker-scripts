@@ -1,7 +1,7 @@
 from mozapkpublisher.googleplay import PACKAGE_NAME_VALUES
 from mozapkpublisher.push_apk import PushAPK
 
-from pushapkworker.task import extract_channel
+from pushapkscript.task import extract_channel
 
 
 CHANNEL_TO_PACKAGE_NAME = {value: key for key, value in PACKAGE_NAME_VALUES.items()}

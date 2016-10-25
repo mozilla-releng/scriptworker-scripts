@@ -5,7 +5,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-from pushapkworker.utils import mkdir, load_json
+from pushapkscript.utils import mkdir, load_json
 
 
 class UtilsTest(unittest.TestCase):
