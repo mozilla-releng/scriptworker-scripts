@@ -146,8 +146,8 @@ class GetAPK(Base):
             filename_apk = os.path.join(self.download_dir, filename + self.apk_ext)
             filename_checksums = os.path.join(self.download_dir, filename + self.checksums_ext)
 
-            download_file(self, apk_url, filename_apk)
-            download_file(self, checksum_url, filename_checksums)
+            download_file(apk_url, filename_apk)
+            download_file(checksum_url, filename_checksums)
 
             self.check_apk(filename_apk, filename_checksums)
 

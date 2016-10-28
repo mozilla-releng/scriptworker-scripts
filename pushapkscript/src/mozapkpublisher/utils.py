@@ -6,7 +6,7 @@ def load_json_url(url):
     return requests.get(url).json()
 
 
-def download_file(self, url, local_file_path):
+def download_file(url, local_file_path):
     r = requests.get(url, stream=True)
     r.raise_for_status()
 
