@@ -4,8 +4,6 @@ import sys
 import argparse
 import logging
 
-from oauth2client import client
-
 from mozapkpublisher import googleplay
 from mozapkpublisher.apk import check_if_apk_is_multilocale
 from mozapkpublisher.base import Base
@@ -25,8 +23,6 @@ class PushAPK(Base):
         self.config = self._parse_config(config)
         if self.config.track == 'rollout' and self.config.rollout_percentage is None:
             raise WrongArgumentGiven("When using track='rollout', rollout percentage must be provided too")
-
-        self.translationMgmt = StoreL10n()
 
     @classmethod
     def _init_parser(cls):
@@ -54,7 +50,7 @@ class PushAPK(Base):
         cls.parser.add_argument('--apk-armv7-v15', dest='apk_file_armv7_v15', type=argparse.FileType(),
                                 help='The path to the ARM v7 API v15 APK file', required=True)
 
-    def upload_apks(self, service, apk_files):
+    def upload_apks(self, apk_files):
         """ Upload the APK to google play
 
         service -- The session to Google play
@@ -62,93 +58,62 @@ class PushAPK(Base):
         """
         [check_if_apk_is_multilocale(apk_file.name) for apk_file in apk_files]
 
-        edit_request = service.edits().insert(body={},
-                                              packageName=self.config.package_name)
-        package_code = googleplay.PACKAGE_NAME_VALUES[self.config.package_name]
-        result = edit_request.execute()
-        edit_id = result['id']
+        edit_service = googleplay.EditService(
+            self.config.service_account, self.config.google_play_credentials_file.name, self.config.package_name,
+            self.config.dry_run
+        )
+        release_channel = googleplay.PACKAGE_NAME_VALUES[self.config.package_name]
         # Store all the versions to set the tracks (needs to happen
         # at the same time
         versions = []
 
-        # Retrieve the mapping
-        self.translationMgmt.load_mapping()
+        store_l10n = StoreL10n()
+        store_l10n.load_mapping()
 
         # For each files, upload it
         for apk_file in apk_files:
             apk_file_name = apk_file.name
-            try:
-                # Upload the file
-                apk_response = service.edits().apks().upload(
-                    editId=edit_id,
-                    packageName=self.config.package_name,
-                    media_body=apk_file_name).execute()
-                logger.info('Version code %d has been uploaded. '
-                            'Filename "%s" edit_id %s' %
-                            (apk_response['versionCode'], apk_file_name, edit_id))
+            apk_response = edit_service.upload_apk(apk_file_name)
+            versions.append(apk_response['versionCode'])
 
-                versions.append(apk_response['versionCode'])
-
-                if 'aurora' in self.config.package_name:
-                    logger.warning('Aurora is not supported by the L10n Store (see \
+            if 'aurora' in self.config.package_name:
+                logger.warning('Aurora is not supported by the L10n Store (see \
 https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
-                else:
-                    self._push_whats_new(package_code, service, edit_id, apk_response)
-
-            except client.AccessTokenRefreshError:
-                logger.critical('The credentials have been revoked or expired,'
-                                'please re-run the application to re-authorize')
+            else:
+                self._push_whats_new(store_l10n, edit_service, release_channel, apk_response['versionCode'])
 
         upload_body = {u'versionCodes': versions}
         if self.config.rollout_percentage is not None:
             upload_body[u'userFraction'] = self.config.rollout_percentage / 100
 
-        # Set the track for all apk
-        service.edits().tracks().update(
-            editId=edit_id,
-            track=self.config.track,
-            packageName=self.config.package_name,
-            body=upload_body).execute()
-        logger.info('Application "%s" set to track "%s" for versions %s' %
-                    (self.config.package_name, self.config.track, versions))
+        edit_service.update_track(self.config.track, upload_body)
+        edit_service.commit_transaction()
 
-        self._commit_if_needed(service, edit_id)
+    def run(self):
+        """ Upload the APK files """
+        apks = (self.config.apk_file_armv7_v15, self.config.apk_file_x86)
+        self.upload_apks(apks)
 
     def _push_whats_new(self, package_code, service, edit_id, apk_response):
         locales = self.translationMgmt.get_list_locales(package_code)
         locales.append(u'en-US')
 
-        for locale in locales:
-            translation = self.translationMgmt.get_translation(package_code, locale)
-            whatsnew = translation.get("whatsnew")
-            if locale == "en-GB":
-                logger.info("Ignoring en-GB as locale")
-                continue
-            locale = self.translationMgmt.locale_mapping(locale)
-            logger.info('Locale "%s" what\'s new has been updated to "%s"'
-                        % (locale, whatsnew))
 
-            listing_response = service.edits().apklistings().update(
-                editId=edit_id, packageName=self.config.package_name, language=locale,
-                apkVersionCode=apk_response['versionCode'],
-                body={'recentChanges': whatsnew}).execute()
+def _push_whats_new(store_l10n, edit_service, release_channel, apk_version_code):
+    locales = store_l10n.get_list_locales(release_channel)
+    locales.append(u'en-US')
 
-            logger.info('Listing for language %s was updated.' % listing_response['language'])
+    for locale in locales:
+        translation = store_l10n.get_translation(release_channel, locale)
+        whatsnew = translation.get("whatsnew")
+        if locale == "en-GB":
+            logger.info("Ignoring en-GB as locale")
+            continue
+        locale = store_l10n.locale_mapping(locale)
+        logger.info('Locale "%s" what\'s new has been updated to "%s"'
+                    % (locale, whatsnew))
 
-    def _commit_if_needed(self, service, edit_id):
-        if self.config.dry_run:
-            logger.warn('Dry run option was given, transaction not committed.')
-        else:
-            service.edits().commit(
-                editId=edit_id, packageName=self.config.package_name
-            ).execute()
-            logger.info('Changes committed')
-
-    def run(self):
-        """ Upload the APK files """
-        service = googleplay.connect(self.config.service_account, self.config.google_play_credentials_file.name)
-        apks = (self.config.apk_file_armv7_v15, self.config.apk_file_x86)
-        self.upload_apks(service, apks)
+        edit_service.update_apk_listings(locale, apk_version_code, body={'recentChanges': whatsnew})
 
 
 if __name__ == '__main__':

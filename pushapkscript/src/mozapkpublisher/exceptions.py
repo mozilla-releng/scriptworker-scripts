@@ -19,3 +19,10 @@ class CheckSumMismatch(LoggedError):
             msg='Downloading "{}" failed!. Checksum "{}" was expected, but actually got "{}"'
                 .format(checked_file, expected, actual)
         )
+
+
+class NoTransactionError(Exception):
+    def __init__(self, package_name):
+        super(NoTransactionError, self).__init__(
+            'Transaction has not been started for package "{}"'.format(package_name)
+        )

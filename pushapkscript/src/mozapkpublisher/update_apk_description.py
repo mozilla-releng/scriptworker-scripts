@@ -3,8 +3,6 @@
 import argparse
 import logging
 
-from oauth2client import client
-
 from mozapkpublisher import googleplay
 from mozapkpublisher.base import Base
 from mozapkpublisher.exceptions import WrongArgumentGiven
@@ -42,68 +40,37 @@ See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
 
         cls.parser.add_argument('--l10n-api-url', default='https://l10n.mozilla-community.org/stores_l10n/',
                                 help='The L10N URL')
-
         cls.parser.add_argument('--force-locale', help='Force to a specific locale (instead of all)')
 
-    def update_desc(self, service, package_name):
-        edit_request = service.edits().insert(body={},
-                                              packageName=package_name)
-        result = edit_request.execute()
-        edit_id = result['id']
+    def update_apk_description(self, package_name):
+        edit_service = googleplay.EditService(
+            self.config.service_account, self.config.google_play_credentials_file.name, self.config.package_name,
+            self.config.dry_run
+        )
 
-        # Retrieve the mapping
-        self.translationMgmt.load_mapping()
-        package_code = googleplay.PACKAGE_NAME_VALUES[self.config.package_name]
+        store_l10n = StoreL10n()
+        store_l10n.load_mapping()
 
-        if self.config.force_locale:
-            # The user forced a locale, don't need to retrieve the full list
-            locales = [self.config.force_locale]
-        else:
-            # Get all the locales from the web interface
-            locales = self.translationMgmt.get_list_locales(package_code)
-        nb_locales = 0
+        release_channel = googleplay.PACKAGE_NAME_VALUES[self.config.package_name]
+
+        locales = [self.config.force_locale] if self.config.force_locale \
+            else store_l10n.get_list_locales(release_channel)
+
         for locale in locales:
-            translation = self.translationMgmt.get_translation(package_code, locale)
-            title = translation.get("title")
-            short_desc = translation.get("short_desc")
-            long_desc = translation.get("long_desc")
-
+            translation = store_l10n.get_translation(release_channel, locale)
             # Google play expects some locales codes (de-DE instead of de)
-            locale = self.translationMgmt.locale_mapping(locale)
+            locale = store_l10n.locale_mapping(locale)
+            edit_service.update_listings(locale, body={
+                'fullDescription': translation.get('long_desc'),
+                'shortDescription': translation.get('short_desc'),
+                'title': translation.get('title')
+            })
 
-            try:
-                logger.info("Updating " + package_code + " for '" + locale +
-                            "' /  title: '" + title + "', short_desc: '" +
-                            short_desc[0:20] + "'..., long_desc: '" +
-                            long_desc[0:20] + "...'")
-                service.edits().listings().update(
-                    editId=edit_id, packageName=package_name, language=locale,
-                    body={'fullDescription': long_desc,
-                          'shortDescription': short_desc,
-                          'title': title}).execute()
-                nb_locales += 1
-            except client.AccessTokenRefreshError:
-                logger.info('The credentials have been revoked or expired,'
-                            'please re-run the application to re-authorize')
-
-        self._commit_if_needed(service, edit_id, nb_locales)
-
-    def _commit_if_needed(self, service, edit_id, nb_locales):
-        if self.config.dry_run:
-            logger.warn('Dry run option was given, transaction not committed.')
-        else:
-            service.edits().commit(
-                editId=edit_id, packageName=self.config.package_name
-            ).execute()
-            logger.info('Changes committed. %d locale(s) updated'.format(nb_locales))
-
-    def update_apk_description(self):
-        """ Update the description """
-        service = googleplay.connect(self.config.service_account, self.config.google_play_credentials_file.name)
-        self.update_desc(service, self.config.package_name)
+        edit_service.commit_transaction()
+        logger.info('Done. {} locale(s) updated'.format(len(locales)))
 
     def run(self):
-        self.update_apk_description()
+        self.update_apk_description(self.config.package_name)
 
 
 if __name__ == '__main__':
