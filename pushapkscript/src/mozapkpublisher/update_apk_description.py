@@ -3,10 +3,9 @@
 import argparse
 import logging
 
-from mozapkpublisher import googleplay
+from mozapkpublisher import googleplay, store_l10n
 from mozapkpublisher.base import Base
 from mozapkpublisher.exceptions import WrongArgumentGiven
-from mozapkpublisher.storel10n import StoreL10n
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,6 @@ See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
         self.all_locales_url = self.config.l10n_api_url + "api/?done&channel={channel}"
         self.locale_url = self.config.l10n_api_url + "api/?locale={locale}&channel={channel}"
         self.mapping_url = self.config.l10n_api_url + "api/?locale_mapping&reverse"
-        self.translationMgmt = StoreL10n()
 
     @classmethod
     def _init_parser(cls):
@@ -47,9 +45,6 @@ See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
             self.config.service_account, self.config.google_play_credentials_file.name, self.config.package_name,
             self.config.dry_run
         )
-
-        store_l10n = StoreL10n()
-        store_l10n.load_mapping()
 
         release_channel = googleplay.PACKAGE_NAME_VALUES[self.config.package_name]
 

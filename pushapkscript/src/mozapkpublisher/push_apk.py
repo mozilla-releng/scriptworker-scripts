@@ -4,11 +4,10 @@ import sys
 import argparse
 import logging
 
-from mozapkpublisher import googleplay
+from mozapkpublisher import googleplay, store_l10n
 from mozapkpublisher.apk import check_if_apk_is_multilocale
 from mozapkpublisher.base import Base
 from mozapkpublisher.exceptions import WrongArgumentGiven
-from mozapkpublisher.storel10n import StoreL10n
 
 logger = logging.getLogger(__name__)
 
@@ -67,10 +66,6 @@ class PushAPK(Base):
         # at the same time
         versions = []
 
-        store_l10n = StoreL10n()
-        store_l10n.load_mapping()
-
-        # For each files, upload it
         for apk_file in apk_files:
             apk_file_name = apk_file.name
             apk_response = edit_service.upload_apk(apk_file_name)
@@ -80,7 +75,7 @@ class PushAPK(Base):
                 logger.warning('Aurora is not supported by the L10n Store (see \
 https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
             else:
-                self._push_whats_new(store_l10n, edit_service, release_channel, apk_response['versionCode'])
+                _push_whats_new(edit_service, release_channel, apk_response['versionCode'])
 
         upload_body = {u'versionCodes': versions}
         if self.config.rollout_percentage is not None:
@@ -94,12 +89,8 @@ https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
         apks = (self.config.apk_file_armv7_v15, self.config.apk_file_x86)
         self.upload_apks(apks)
 
-    def _push_whats_new(self, package_code, service, edit_id, apk_response):
-        locales = self.translationMgmt.get_list_locales(package_code)
-        locales.append(u'en-US')
 
-
-def _push_whats_new(store_l10n, edit_service, release_channel, apk_version_code):
+def _push_whats_new(edit_service, release_channel, apk_version_code):
     locales = store_l10n.get_list_locales(release_channel)
     locales.append(u'en-US')
 
