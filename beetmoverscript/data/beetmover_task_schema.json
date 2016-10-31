@@ -24,7 +24,7 @@
                 },
                 "update_manifest": {
                     "type": "boolean"
-                },
+                }
             },
             "required": ["upload_date", "taskid_to_beetmove", "taskid_of_manifest", "update_manifest"]
         }

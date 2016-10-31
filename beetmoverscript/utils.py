@@ -6,6 +6,7 @@ import pprint
 import arrow
 import jinja2
 import yaml
+import requests
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +16,22 @@ def load_json(path):
         return json.load(fh)
 
 
+def infer_template_args(context):
+    props = context.properties
+    tmpl_key_option = "signed" if context.task["payload"]["update_manifest"] is True else "unsigned"
+
+    return {
+        "version": props["appVersion"],
+        "branch": props["branch"],
+        "product": props["appName"],
+        "stage_platform": props["stage_platform"],
+        "template_key": "%s_nightly_%s" % (
+            props["appName"].lower(),
+            tmpl_key_option
+        )
+    }
+
+
 def generate_candidates_manifest(context):
     """
     generates and outputs a manifest that maps expected Taskcluster artifact names
@@ -22,12 +39,15 @@ def generate_candidates_manifest(context):
     """
     payload = context.task['payload']
     template_args = {
-        "version": payload['version'],
-        # payload['upload_date'] is a timestamp defined by params['pushdate'] in mach taskgraph
-        "upload_date": arrow.get(payload['upload_date']).format('YYYY/MM/YYYY-MM-DD-HH-mm-ss'),
-        "taskid_to_beetmove": payload["taskid_to_beetmove"]
+        "taskid_to_beetmove": payload["taskid_to_beetmove"],
+        "taskid_of_manifest": payload["taskid_of_manifest"],
+        "update_manifest": payload["update_manifest"],
+        # payload['upload_date'] is a timestamp defined by params['pushdate']
+        # in mach taskgraph0
+        "upload_date": arrow.get(payload['upload_date']).format('YYYY/MM/YYYY-MM-DD-HH-mm-ss')
     }
-    template_path = context.config['template_files'][payload['template_key']]
+    template_args.update(infer_template_args(context))
+    template_path = context.config['template_files'][template_args["template_key"]]
     log.info('generating manifest from: {}'.format(template_path))
     log.info(os.path.abspath(template_path))
     template_dir, template_name = os.path.split(os.path.abspath(template_path))
@@ -40,3 +60,9 @@ def generate_candidates_manifest(context):
     log.info(pprint.pformat(manifest))
 
     return manifest
+
+
+def make_generic_get_request(page_url):
+    req = requests.get(page_url, timeout=60)
+    req.raise_for_status()
+    return req.json()

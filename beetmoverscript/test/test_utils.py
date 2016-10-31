@@ -1,4 +1,5 @@
-from beetmoverscript.test import get_fake_valid_task, get_fake_valid_config
+from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
+                                  get_fake_balrog_props)
 from beetmoverscript.utils import generate_candidates_manifest
 from scriptworker.context import Context
 
@@ -7,6 +8,7 @@ def test_generate_manifest():
     context = Context()
     context.task = get_fake_valid_task()
     context.config = get_fake_valid_config()
+    context.properties = get_fake_balrog_props(context)["properties"]
     manifest = generate_candidates_manifest(context)
     mapping = manifest['mapping']
     artifacts = [mapping[m].get('package', {}).get('artifact') for m in mapping]

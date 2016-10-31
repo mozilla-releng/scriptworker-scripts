@@ -19,10 +19,13 @@ from scriptworker.utils import retry_async, download_file, raise_future_exceptio
 
 from beetmoverscript.constants import MIME_MAP
 from beetmoverscript.task import validate_task_schema
-from beetmoverscript.utils import load_json, generate_candidates_manifest
+from beetmoverscript.utils import (load_json, generate_candidates_manifest,
+                                   make_generic_get_request)
 
 log = logging.getLogger(__name__)
 
+# TODO: put this somewhere else?
+MANIFEST_URL_TMPL = "https://queue.taskcluster.net/v1/task/%s/artifacts/public/build/balrog_props.json"
 
 # async_main {{{1
 async def async_main(context):
@@ -30,14 +33,30 @@ async def async_main(context):
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
     # 2. validate the task
     validate_task_schema(context)
-    # 3. generate manifest
+    # 3 grab manifest props with all the useful data
+    context.properties = get_props(context)
+    # 4. generate manifest
     manifest = generate_candidates_manifest(context)
-    # 4. for each artifact in manifest
+    # 5. for each artifact in manifest
     #   a. download artifact
     #   b. upload to candidates/dated location
     await move_beets(context, manifest)
-    # 5. copy to releases/latest location
+    # 6. copy to releases/latest location
     log.info('Success!')
+
+
+# TODO: make this method async'ed
+def get_props(context):
+    taskid_of_manifest = context.task['payload']['taskid_of_manifest']
+    source = MANIFEST_URL_TMPL % taskid_of_manifest
+
+    beet_config = deepcopy(context.config)
+    beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
+    validate_artifact_url(beet_config, source)
+
+    # using blocking requests call to grab this page whose content is blocer
+    # for all the following async calls
+    return make_generic_get_request(source)["properties"]
 
 
 async def move_beets(context, manifest):
@@ -154,7 +173,6 @@ def setup_mimetypes():
 def main(name=None, config_path=None):
     if name not in (None, '__main__'):
         return
-
     context = setup_config(config_path)
     setup_logging()
     setup_mimetypes()

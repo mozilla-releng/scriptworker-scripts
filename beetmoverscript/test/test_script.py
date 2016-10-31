@@ -6,7 +6,7 @@ import sys
 
 from beetmoverscript.script import setup_mimetypes, setup_config, put, retry_download, move_beets, \
     move_beet, async_main, main
-from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task
+from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props
 from beetmoverscript.utils import generate_candidates_manifest
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerRetryException
@@ -98,6 +98,7 @@ def test_move_beets(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
+    context.properties = get_fake_balrog_props(context)["properties"]
     manifest = generate_candidates_manifest(context)
 
     expected_sources = [
@@ -170,10 +171,14 @@ def test_async_main(event_loop):
     async def fake_move_beets(context, manifest):
         pass
 
+    def get_fake_props(context):
+        return get_fake_balrog_props(context)["properties"]
+
     with mock.patch('beetmoverscript.script.move_beets', new=fake_move_beets):
-        event_loop.run_until_complete(
-            async_main(context)
-        )
+        with mock.patch('beetmoverscript.script.get_props', new=get_fake_props):
+            event_loop.run_until_complete(
+                async_main(context)
+            )
 
 
 def test_main(event_loop, fake_session):
