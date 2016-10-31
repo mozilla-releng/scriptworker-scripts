@@ -17,15 +17,13 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
 from scriptworker.utils import retry_async, download_file, raise_future_exceptions
 
-from beetmoverscript.constants import MIME_MAP
+from beetmoverscript.constants import MIME_MAP, MANIFEST_URL_TMPL
 from beetmoverscript.task import validate_task_schema
 from beetmoverscript.utils import (load_json, generate_candidates_manifest,
                                    make_generic_get_request)
 
 log = logging.getLogger(__name__)
 
-# TODO: put this somewhere else?
-MANIFEST_URL_TMPL = "https://queue.taskcluster.net/v1/task/%s/artifacts/public/build/balrog_props.json"
 
 # async_main {{{1
 async def async_main(context):
