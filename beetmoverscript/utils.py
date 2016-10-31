@@ -37,6 +37,7 @@ def generate_candidates_manifest(context):
     to release deliverable names
     """
     payload = context.task['payload']
+
     template_args = {
         "taskid_to_beetmove": payload["taskid_to_beetmove"],
         "taskid_of_manifest": payload["taskid_of_manifest"],
@@ -45,10 +46,13 @@ def generate_candidates_manifest(context):
         # in mach taskgraph0
         "upload_date": arrow.get(payload['upload_date']).format('YYYY/MM/YYYY-MM-DD-HH-mm-ss')
     }
+
     template_args.update(infer_template_args(context))
     template_path = context.config['template_files'][template_args["template_key"]]
+
     log.info('generating manifest from: {}'.format(template_path))
     log.info(os.path.abspath(template_path))
+
     template_dir, template_name = os.path.split(os.path.abspath(template_path))
     jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
                                    undefined=jinja2.StrictUndefined)

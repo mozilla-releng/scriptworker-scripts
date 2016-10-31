@@ -8,10 +8,19 @@
         "fennec_nightly_signed": "/path/to/beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_signed.yml"
     },
     "s3": {
-        "bucket": "mozilla-releng-beetmoverscript",
-        "credentials": {
-            "id": "...",
-            "key": "..."
+        "firefox": {
+            "bucket": "mozilla-releng-beetmoverscript-firefox",
+            "credentials": {
+                "id": "dummy",
+                "key": "dummy"
+            }
+        },
+        "fennec": {
+            "bucket": "mozilla-releng-beetmoverscript-fennec",
+            "credentials": {
+                "id": "dummy",
+                "key": "dummy"
+            }
         }
     }
 }
