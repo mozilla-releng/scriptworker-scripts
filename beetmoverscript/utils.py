@@ -6,7 +6,6 @@ import pprint
 import arrow
 import jinja2
 import yaml
-import requests
 
 log = logging.getLogger(__name__)
 
@@ -60,9 +59,3 @@ def generate_candidates_manifest(context):
     log.info(pprint.pformat(manifest))
 
     return manifest
-
-
-def make_generic_get_request(page_url):
-    req = requests.get(page_url, timeout=60)
-    req.raise_for_status()
-    return req.json()

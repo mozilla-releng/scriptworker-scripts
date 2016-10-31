@@ -171,7 +171,7 @@ def test_async_main(event_loop):
     async def fake_move_beets(context, manifest):
         pass
 
-    def get_fake_props(context):
+    async def get_fake_props(context):
         return get_fake_balrog_props(context)["properties"]
 
     with mock.patch('beetmoverscript.script.move_beets', new=fake_move_beets):

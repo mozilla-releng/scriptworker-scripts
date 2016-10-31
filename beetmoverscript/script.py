@@ -15,12 +15,12 @@ import traceback
 from scriptworker.client import get_task, validate_artifact_url
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
-from scriptworker.utils import retry_async, download_file, raise_future_exceptions
+from scriptworker.utils import (retry_async, download_file,
+                                raise_future_exceptions, retry_request)
 
 from beetmoverscript.constants import MIME_MAP, MANIFEST_URL_TMPL
 from beetmoverscript.task import validate_task_schema
-from beetmoverscript.utils import (load_json, generate_candidates_manifest,
-                                   make_generic_get_request)
+from beetmoverscript.utils import load_json, generate_candidates_manifest
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ async def async_main(context):
     # 2. validate the task
     validate_task_schema(context)
     # 3 grab manifest props with all the useful data
-    context.properties = get_props(context)
+    context.properties = await get_props(context)
     # 4. generate manifest
     manifest = generate_candidates_manifest(context)
     # 5. for each artifact in manifest
@@ -43,8 +43,7 @@ async def async_main(context):
     log.info('Success!')
 
 
-# TODO: make this method async'ed
-def get_props(context):
+async def get_props(context):
     taskid_of_manifest = context.task['payload']['taskid_of_manifest']
     source = MANIFEST_URL_TMPL % taskid_of_manifest
 
@@ -52,9 +51,8 @@ def get_props(context):
     beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
     validate_artifact_url(beet_config, source)
 
-    # using blocking requests call to grab this page whose content is blocer
-    # for all the following async calls
-    return make_generic_get_request(source)["properties"]
+    return (await retry_request(context, source, method='get',
+                                return_type='json'))['properties']
 
 
 async def move_beets(context, manifest):
