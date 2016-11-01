@@ -114,7 +114,7 @@ def test_move_beets(event_loop):
 
     actual_sources = []
     actual_destinations = []
-    async def fake_move_beet(context, source, destinations):
+    async def fake_move_beet(context, source, locale, destinations):
         actual_sources.append(source)
         actual_destinations.append(destinations)
 
@@ -131,6 +131,7 @@ def test_move_beet(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
+    locale = "sample-locale"
 
     target_source = 'https://queue.taskcluster.net/v1/task/VALID_TASK_ID/artifacts/public/build/target.package'
     target_destinations = (
@@ -157,7 +158,7 @@ def test_move_beet(event_loop):
     with mock.patch('beetmoverscript.script.retry_download', fake_retry_download):
         with mock.patch('beetmoverscript.script.retry_upload', fake_retry_upload):
             event_loop.run_until_complete(
-                move_beet(context, target_source, target_destinations)
+                move_beet(context, target_source, locale, target_destinations)
             )
 
     assert sorted(expected_download_args) == sorted(actual_download_args)

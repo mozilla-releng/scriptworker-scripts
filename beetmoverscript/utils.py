@@ -1,6 +1,7 @@
+import hashlib
 import json
-import os
 import logging
+import os
 import pprint
 
 import arrow
@@ -8,6 +9,17 @@ import jinja2
 import yaml
 
 log = logging.getLogger(__name__)
+
+
+def get_hash(filepath, hash_type="sha512"):
+    digest = hashlib.new(hash_type)
+    with open(filepath, "rb") as fobj:
+        while True:
+            chunk = fobj.read(1024*1024)
+            if not chunk:
+                break
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def load_json(path):

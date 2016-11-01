@@ -3,14 +3,14 @@
 """
 from copy import deepcopy
 
-import aiohttp
 import asyncio
-import boto3
 import logging
-import mimetypes
 import os
 import sys
 import traceback
+import mimetypes
+import aiohttp
+import boto3
 
 from scriptworker.client import get_task, validate_artifact_url
 from scriptworker.context import Context
@@ -20,7 +20,8 @@ from scriptworker.utils import (retry_async, download_file,
 
 from beetmoverscript.constants import MIME_MAP, MANIFEST_URL_TMPL
 from beetmoverscript.task import validate_task_schema
-from beetmoverscript.utils import load_json, generate_candidates_manifest
+from beetmoverscript.utils import (load_json, generate_candidates_manifest,
+                                   get_hash)
 
 log = logging.getLogger(__name__)
 
@@ -35,11 +36,15 @@ async def async_main(context):
     context.properties = await get_props(context)
     # 4. generate manifest
     manifest = generate_candidates_manifest(context)
+    # prepare balrog manifest output if it's a signing task
+    if context.task['payload']['update_manifest']:
+        context.balrog_manifest = list()
     # 5. for each artifact in manifest
     #   a. download artifact
     #   b. upload to candidates/dated location
     await move_beets(context, manifest)
     # 6. copy to releases/latest location
+    # 7. TODO: make sure manifest.json gets in the artifacts
     log.info('Success!')
 
 
@@ -47,6 +52,8 @@ async def get_props(context):
     taskid_of_manifest = context.task['payload']['taskid_of_manifest']
     source = MANIFEST_URL_TMPL % taskid_of_manifest
 
+    # extra validation check is useful for the url scheme, netloc and path
+    # restrictions
     beet_config = deepcopy(context.config)
     beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
     validate_artifact_url(beet_config, source)
@@ -67,13 +74,13 @@ async def move_beets(context, manifest):
                                        manifest['mapping'][locale][deliverable]['s3_key'])
             beets.append(
                 asyncio.ensure_future(
-                    move_beet(context, source, destinations=(dest_dated, dest_latest))
+                    move_beet(context, source, locale, destinations=(dest_dated, dest_latest))
                 )
             )
     await raise_future_exceptions(beets)
 
 
-async def move_beet(context, source, destinations):
+async def move_beet(context, source, locale, destinations):
     beet_config = deepcopy(context.config)
     beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
     rel_path = validate_artifact_url(beet_config, source)
@@ -81,6 +88,27 @@ async def move_beet(context, source, destinations):
 
     await retry_download(context=context, url=source, path=abs_file_path)
     await retry_upload(context=context, destinations=destinations, path=abs_file_path)
+
+    if context.task['payload']['update_manifest']:
+        enrich_balrog_manifest(context, abs_file_path, locale)
+
+
+def enrich_balrog_manifest(context, path, locale):
+    props = context.properties
+    # we extract the dated destination as the 'latest' is useless
+    item = {
+        "to_buildid": props["buildid"],
+        "appName": props["appName"],
+        "branch": props["branch"],
+        "version": props["appVersion"],
+        "hash_type": props["hashType"],
+        "platform": props["stage_platform"],
+        "locale": locale,
+        "to_hash": get_hash(path, hash_type=props["hashType"]),
+        "to_size": os.path.getsize(path),
+        "url": "TODO"
+    }
+    context.balrog_manifest.append(item)
 
 
 async def retry_upload(context, destinations, path):
