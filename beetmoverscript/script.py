@@ -15,9 +15,10 @@ import traceback
 from scriptworker.client import get_task, validate_artifact_url
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
-from scriptworker.utils import retry_async, download_file, raise_future_exceptions
+from scriptworker.utils import (retry_async, download_file,
+                                raise_future_exceptions, retry_request)
 
-from beetmoverscript.constants import MIME_MAP
+from beetmoverscript.constants import MIME_MAP, MANIFEST_URL_TMPL
 from beetmoverscript.task import validate_task_schema
 from beetmoverscript.utils import load_json, generate_candidates_manifest
 
@@ -30,14 +31,28 @@ async def async_main(context):
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
     # 2. validate the task
     validate_task_schema(context)
-    # 3. generate manifest
+    # 3 grab manifest props with all the useful data
+    context.properties = await get_props(context)
+    # 4. generate manifest
     manifest = generate_candidates_manifest(context)
-    # 4. for each artifact in manifest
+    # 5. for each artifact in manifest
     #   a. download artifact
     #   b. upload to candidates/dated location
     await move_beets(context, manifest)
-    # 5. copy to releases/latest location
+
     log.info('Success!')
+
+
+async def get_props(context):
+    taskid_of_manifest = context.task['payload']['taskid_of_manifest']
+    source = MANIFEST_URL_TMPL % taskid_of_manifest
+
+    beet_config = deepcopy(context.config)
+    beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
+    validate_artifact_url(beet_config, source)
+
+    return (await retry_request(context, source, method='get',
+                                return_type='json'))['properties']
 
 
 async def move_beets(context, manifest):
@@ -101,15 +116,16 @@ async def put(context, url, headers, abs_filename, session=None):
 
 
 async def upload_to_s3(context, s3_key, path):
+    app = context.properties['appName'].lower()
     api_kwargs = {
-        'Bucket': context.config['s3']['bucket'],
+        'Bucket': context.config['s3'][app]['bucket'],
         'Key': s3_key,
         'ContentType': mimetypes.guess_type(path)[0]
     }
     headers = {
         'Content-Type': mimetypes.guess_type(path)[0]
     }
-    creds = context.config['s3']['credentials']
+    creds = context.config['s3'][app]['credentials']
     s3 = boto3.client('s3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key'],)
     url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=30, HttpMethod='PUT')
 
@@ -154,7 +170,6 @@ def setup_mimetypes():
 def main(name=None, config_path=None):
     if name not in (None, '__main__'):
         return
-
     context = setup_config(config_path)
     setup_logging()
     setup_mimetypes()

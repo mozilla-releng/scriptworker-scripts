@@ -13,20 +13,20 @@
         "payload": {
             "type": "object",
             "properties": {
-                "version": {
-                    "type": "string"
-                },
                 "upload_date": {
                     "type": "number"
                 },
                 "taskid_to_beetmove": {
                     "type": "string"
                 },
-                "template_key": {
+                "taskid_of_manifest": {
                     "type": "string"
+                },
+                "update_manifest": {
+                    "type": "boolean"
                 }
             },
-            "required": ["version", "upload_date", "taskid_to_beetmove", "template_key"]
+            "required": ["upload_date", "taskid_to_beetmove", "taskid_of_manifest", "update_manifest"]
         }
     },
     "required": ["payload", "dependencies"]

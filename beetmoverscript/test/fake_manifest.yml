@@ -5,8 +5,8 @@ metadata:
     owner: "release@mozilla.com"
 
 artifact_base_url: https://queue.taskcluster.net/v1/task/{{ taskid_to_beetmove }}/artifacts/public/build/
-s3_prefix_dated: pub/mobile/nightly/{{ upload_date }}-mozilla-central-fake/
-s3_prefix_latest: pub/mobile/nightly/latest-mozilla-central-fake/
+s3_prefix_dated: pub/mobile/nightly/{{ upload_date }}-{{ branch }}-fake/
+s3_prefix_latest: pub/mobile/nightly/latest-{{ branch }}-fake/
 
 mapping:
   # common deliverables

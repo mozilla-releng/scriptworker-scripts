@@ -11,9 +11,9 @@
     "dependencies": ["VALID_TASK_ID"],
     "scopes": ["signing"],
     "payload": {
-        "version": "99.0a1",
         "upload_date": 1472747174,
         "taskid_to_beetmove": "VALID_TASK_ID",
-        "template_key": "some_template_key"
+        "taskid_of_manifest": "VALID_TASK_ID",
+        "update_manifest": false
     }
 }

@@ -11,3 +11,5 @@ MIME_MAP = {
     '.xpi': 'application/zip',
     '.apk': 'application/vnd.android.package-archive',
 }
+
+MANIFEST_URL_TMPL = "https://queue.taskcluster.net/v1/task/%s/artifacts/public/build/balrog_props.json"
