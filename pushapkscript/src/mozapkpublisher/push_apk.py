@@ -7,6 +7,7 @@ import logging
 from oauth2client import client
 
 from mozapkpublisher import googleplay
+from mozapkpublisher.apk import check_if_apk_is_multilocale
 from mozapkpublisher.base import Base
 from mozapkpublisher.exceptions import WrongArgumentGiven
 from mozapkpublisher.storel10n import StoreL10n
@@ -60,6 +61,8 @@ class PushAPK(Base):
         service -- The session to Google play
         apk_files -- The files
         """
+        [check_if_apk_is_multilocale(apk_file.name) for apk_file in apk_files]
+
         edit_request = service.edits().insert(body={},
                                               packageName=self.config.package_name)
         package_code = googleplay.PACKAGE_NAME_VALUES[self.config.package_name]
