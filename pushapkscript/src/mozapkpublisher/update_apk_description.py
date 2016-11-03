@@ -86,10 +86,16 @@ See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
                 logger.info('The credentials have been revoked or expired,'
                            'please re-run the application to re-authorize')
 
-        # Commit our changes
-        commit_request = service.edits().commit(
-            editId=edit_id, packageName=package_name).execute()
-        logger.info('Edit "%s" has been committed. %d locale(s) updated.' % (commit_request['id'], nb_locales))
+        self._commit_if_needed(service, edit_id, nb_locales)
+
+    def _commit_if_needed(self, service, edit_id, nb_locales):
+        if self.config.dry_run:
+            logger.warn('Dry run option was given, transaction not committed.')
+        else:
+            service.edits().commit(
+                editId=edit_id, packageName=self.config.package_name
+            ).execute()
+            logger.info('Changes committed. %d locale(s) updated'.format(nb_locales))
 
     def update_apk_description(self):
         """ Update the description """

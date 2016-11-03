@@ -43,8 +43,7 @@ class PushAPK(Base):
 
         googleplay.add_general_google_play_arguments(cls.parser)
 
-        cls.parser.add_argument('--track', choices=googleplay.TRACK_VALUES,
-                                default='alpha',    # We are not using alpha but we default to it to avoid mistake
+        cls.parser.add_argument('--track', choices=googleplay.TRACK_VALUES, default='alpha',
                                 help='Track on which to upload')
         cls.parser.add_argument('--rollout-percentage', type=int, choices=range(0, 101), metavar='[0-100]',
                                 default=None,
@@ -113,10 +112,7 @@ https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
         logger.info('Application "%s" set to track "%s" for versions %s' %
                     (self.config.package_name, self.config.track, versions))
 
-        # Commit our changes
-        commit_request = service.edits().commit(
-            editId=edit_id, packageName=self.config.package_name).execute()
-        logger.debug('Edit "%s" has been committed' % (commit_request['id']))
+        self._commit_if_needed(service, edit_id)
 
     def _push_whats_new(self, package_code, service, edit_id, apk_response):
         locales = self.translationMgmt.get_list_locales(package_code)
@@ -138,6 +134,15 @@ https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
                 body={'recentChanges': whatsnew}).execute()
 
             logger.info('Listing for language %s was updated.' % listing_response['language'])
+
+    def _commit_if_needed(self, service, edit_id):
+        if self.config.dry_run:
+            logger.warn('Dry run option was given, transaction not committed.')
+        else:
+            service.edits().commit(
+                editId=edit_id, packageName=self.config.package_name
+            ).execute()
+            logger.info('Changes committed')
 
     def run(self):
         """ Upload the APK files """

@@ -36,6 +36,10 @@ def add_general_google_play_arguments(parser):
     parser.add_argument('--credentials', dest='google_play_credentials_file', type=argparse.FileType(mode='rb'),
                         default='key.p12', help='The p12 authentication file')
 
+    parser.add_argument('--dry-run', action='store_true',
+                        help='''Perform every operation of the transation, except committing. No data will be
+stored on Google Play. Use this option if you want to test the script with the same data more than once.''')
+
 
 def connect(service_account, credentials_file_path):
     """ Connect to the google play interface
