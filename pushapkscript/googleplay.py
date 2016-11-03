@@ -21,7 +21,14 @@ def craft_push_apk_config(context, apks):
     push_apk_config['service_account'] = get_service_account(context, channel)
     push_apk_config['credentials'] = get_certificate_path(context, channel)
 
-    push_apk_config['track'] = context.task['payload']['google_play_track']
+    payload = context.task['payload']
+    push_apk_config['track'] = payload['google_play_track']
+
+    # Don't commit anything, by default. Commited APKs can't be deleted (only unpublished).
+    # This may become an issue if somebody pushes an APK with the same version code than
+    # the one we intend to ship. See bug 1314063, as a real life example
+    push_apk_config['dry_run'] = payload.get('dry_run', True)
+
     return push_apk_config
 
 

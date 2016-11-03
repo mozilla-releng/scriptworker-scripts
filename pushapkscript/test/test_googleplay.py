@@ -28,13 +28,12 @@ class GooglePlayTest(unittest.TestCase):
                 'google_play_track': 'alpha'
             },
         }
-
-    def test_craft_push_config(self):
-        apks = {
+        self.apks = {
             'x86': '/path/to/x86.apk',
             'arm_v15': '/path/to/arm_v15.apk',
         }
 
+    def test_craft_push_config(self):
         data = {
             'aurora': 'org.mozilla.fennec_aurora',
             'beta': 'org.mozilla.firefox_beta',
@@ -42,14 +41,21 @@ class GooglePlayTest(unittest.TestCase):
         }
         for channel, package_name in data.items():
             self.context.task['scopes'] = ['project:releng:googleplay:{}'.format(channel)]
-            self.assertEqual(craft_push_apk_config(self.context, apks), {
+            self.assertEqual(craft_push_apk_config(self.context, self.apks), {
                 'service_account': '{}_account'.format(channel),
                 'credentials': '/path/to/{}.p12'.format(channel),
+                'dry_run': True,
                 'track': 'alpha',
                 'package_name': package_name,
                 'apk_x86': '/path/to/x86.apk',
                 'apk_arm_v15': '/path/to/arm_v15.apk',
             })
+
+    def test_craft_push_config_allows_committing_apks(self):
+        self.context.task['scopes'] = ['project:releng:googleplay:aurora']
+        self.context.task['payload']['dry_run'] = False
+        config = craft_push_apk_config(self.context, self.apks)
+        self.assertFalse(config['dry_run'])
 
     def test_get_google_play_package_name(self):
         self.assertEqual(get_package_name('aurora'), 'org.mozilla.fennec_aurora')
