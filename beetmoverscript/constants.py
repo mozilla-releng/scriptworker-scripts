@@ -7,6 +7,7 @@ MIME_MAP = {
     '.bz2': 'application/octet-stream',
     '.checksums': 'text/plain',
     '.dmg': 'application/x-iso9660-image',
+    '.json': 'application/json',
     '.mar': 'application/octet-stream',
     '.xpi': 'application/zip',
     '.apk': 'application/vnd.android.package-archive',
