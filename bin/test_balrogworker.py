@@ -15,21 +15,21 @@ from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4
 
 nightly_manifest = [
     {
-        'mar': 'Firefox-mozilla-central-50.0a1-linux-en-US-20160721030216-20160722030235.partial.mar',
-        'ACCEPTED_MAR_CHANNEL_IDS': 'firefox-mozilla-central', 'platform': 'linux',
-        'update_number': 1, 'from_size': 60966147,
-        'revision': 'e0bc88708ffed39aaab1fbc0ac461d93561195de',
-        'hash': 'bceca092b0334a868f86c2b7c6562e20044ccef4682e04065bea09e137d7e05ec4b157268703d9db2cbddfae3112edf2f0a3b04675a0ee59f50601412e352a39',
-        'locale': 'en-US',
-        'to_mar': 'http://download.cdn.mozilla.net/pub/firefox/nightly/2016/07/2016-07-22-03-02-35-mozilla-central/firefox-50.0a1.en-US.linux-i686.complete.mar',
-        'from_buildid': '20160721030216', 'version': '50.0a1', 'to_size': 60937146,
-        'detached_signatures': {}, 'size': 9776256, 'to_buildid': '20160722030235',
-        'branch': 'mozilla-central',
-        'from_mar': 'https://mozilla-nightly-updates.s3.amazonaws.com/mozilla-central/20160721030216/Firefox-mozilla-central-50.0a1-linux-en-US.complete.mar?versionId=gTQ.wAeNVfZ1pRq3rI3WwJw6Bd4H54O1',
-        'appName': 'Firefox',
-        'to_hash': '6735553dbdbd027add6d1ba701fbcae0ef71e6510866a13db956dc2908d17d0adc4f98e1f1511ac8a93d028648d5309ae48145f81b02cfcbb68b8e330c404129',
-        'from_hash': '067f93e77a4ef9091a879a0847bae44085678b0d92c14ccceb4714a798142714dcd15ad3e9abb3a33508f9f5f04d13025a93c1cb11768cc0c14329bfaf956fa2',
-        'repo': 'https://hg.mozilla.org/mozilla-central'
+        "tc_fennec_nightly": True,
+        "completeInfo": [{
+            "url": "http://bucketlister-delivery.stage.mozaws.net/pub/mobile/nightly/latest-date-android-api-15/fennec-52.0a1.multi.android.arm.apk",
+            "size": "33256909",
+            "hash": "7934e31946358f0b541e9b877e0ab70bce58580e1bf015fc63f70e1c8b4c8c835e38a3ef92f790c78ba7d71cd4b930987f2a99e8c58cf33e7ae118d3b1c42485"
+        }],
+        "platform": "android-api-15",
+        "buildid": "20161107171219",
+        "appName": "Fennec",
+        "branch": "date",
+        "appVersion": "52.0a1",
+        "locale": "en-US",
+        "hashType": "sha512",
+        "extVersion": "52.0a1",
+        "url_replacements": "..."
     }
 ]
 release_manifest = [
@@ -226,16 +226,19 @@ class BalrogworkerTest(unittest.TestCase):
         submitter, release = bw.create_submitter(nightly_manifest[0], args)
 
         exp = {
-            'partialInfo': [{
-                'url': 'https://queue.taskcluster.net/v1/task/e2q3BKuhRxqtcB6FVCbKfg/artifacts/public/env/Firefox-mozilla-central-50.0a1-linux-en-US-20160721030216-20160722030235.partial.mar',
-                'hash': u'bceca092b0334a868f86c2b7c6562e20044ccef4682e04065bea09e137d7e05ec4b157268703d9db2cbddfae3112edf2f0a3b04675a0ee59f50601412e352a39',
-                'from_buildid': u'20160721030216', 'size': 9776256}], 'hashFunction': 'sha512',
-            'extVersion': u'50.0a1', 'buildID': u'20160722030235', 'appVersion': u'50.0a1',
-            'productName': u'Firefox', 'platform': u'linux', 'branch': u'mozilla-central', 'locale': u'en-US',
+            'platform': "android-api-15",
+            'buildID': "20161107171219",
+            'productName': "Fennec",
+            'branch': "date",
+            'appVersion': "52.0a1",
+            'locale': "en-US",
+            'hashFunction': "sha512",
+            'extVersion': "52.0a1",
             'completeInfo': [{
-                'url': u'http://download.cdn.mozilla.net/pub/firefox/nightly/2016/07/2016-07-22-03-02-35-mozilla-central/firefox-50.0a1.en-US.linux-i686.complete.mar',
-                'hash': u'6735553dbdbd027add6d1ba701fbcae0ef71e6510866a13db956dc2908d17d0adc4f98e1f1511ac8a93d028648d5309ae48145f81b02cfcbb68b8e330c404129',
-                'size': 60937146}]
+                "url": "http://bucketlister-delivery.stage.mozaws.net/pub/mobile/nightly/latest-date-android-api-15/fennec-52.0a1.multi.android.arm.apk",
+                "size": "33256909",
+                "hash": "7934e31946358f0b541e9b877e0ab70bce58580e1bf015fc63f70e1c8b4c8c835e38a3ef92f790c78ba7d71cd4b930987f2a99e8c58cf33e7ae118d3b1c42485"
+            }]
         }
         assert exp == release
 

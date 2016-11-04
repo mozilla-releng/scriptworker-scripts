@@ -146,17 +146,17 @@ def load_task(task_file):
 def create_submitter(e, args):
     auth = (args.balrog_username, args.balrog_password)
 
-    complete_info = [{
-        "hash": e["to_hash"],
-        "size": e["to_size"],
-    }]
-    partial_info = [{
-        "hash": e["hash"],
-        "size": e["size"],
-    }]
-
     if "previousVersion" in e and "previousBuildNumber" in e:
         log.info("Release style balrog submission")
+
+        complete_info = [{
+            "hash": e["to_hash"],
+            "size": e["to_size"],
+        }]
+        partial_info = [{
+            "hash": e["hash"],
+            "size": e["size"],
+        }]
         partial_info[0]["previousVersion"] = e["previousVersion"]
         partial_info[0]["previousBuildNumber"] = e["previousBuildNumber"]
         submitter = ReleaseSubmitterV4(api_root=args.api_root,
@@ -175,38 +175,22 @@ def create_submitter(e, args):
                            'partialInfo': partial_info,
                            'completeInfo': complete_info}
 
-    elif "from_buildid" in e:
-        log.info("Nightly style balrog submission")
-        partial_mar_url = "{}/{}".format(args.parent_url,
-                                         e["mar"])
-        complete_mar_url = e["to_mar"]
-        dest_prefix = "{branch}/{buildid}".format(
-            branch=e["branch"], buildid=e["to_buildid"])
-        partial_mar_dest = "{}/{}".format(dest_prefix, e["mar"])
-        complete_mar_filename = "{appName}-{branch}-{version}-" \
-                                "{platform}-{locale}.complete.mar"
-        complete_mar_filename = complete_mar_filename.format(
-            appName=e["appName"], branch=e["branch"],
-            version=e["version"], platform=e["platform"],
-            locale=e["locale"]
-        )
-        complete_mar_dest = "{}/{}".format(dest_prefix,
-                                           complete_mar_filename)
-        partial_info[0]["url"] = verify_copy_to_s3(args, partial_mar_url, partial_mar_dest)
-        complete_info[0]["url"] = verify_copy_to_s3(args, complete_mar_url, complete_mar_dest)
-        partial_info[0]["from_buildid"] = e["from_buildid"]
-        submitter = NightlySubmitterV4(api_root=args.api_root, auth=auth,
-                                       dummy=args.dummy)
+    elif "tc_fennec_nightly" in e:
+        log.info("Taskcluster Nightly Fennec style Balrog submission")
+
+        complete_info = e['completeInfo']
+        complete_info[0]["url"] = verify_copy_to_s3(args, complete_info[0]['url'], '')
+        submitter = NightlySubmitterV4(api_root=args.api_root, auth=auth, dummy=args.dummy,
+                                       url_replacements=e.get('url_replacements', []))
 
         return submitter, {'platform': e["platform"],
-                           'buildID': e["to_buildid"],
+                           'buildID': e["buildid"],
                            'productName': e["appName"],
                            'branch': e["branch"],
-                           'appVersion': e["version"],
+                           'appVersion': e["appVersion"],
                            'locale': e["locale"],
-                           'hashFunction': 'sha512',
-                           'extVersion': e["version"],
-                           'partialInfo': partial_info,
+                           'hashFunction': e['hashType'],
+                           'extVersion': e["extVersion"],
                            'completeInfo': complete_info}
     else:
         raise RuntimeError("Cannot determine Balrog submission style. Check manifest.json")
