@@ -9,6 +9,7 @@ def test_generate_manifest():
     context.task = get_fake_valid_task()
     context.config = get_fake_valid_config()
     context.properties = get_fake_balrog_props(context)["properties"]
+    context.properties['platform'] = context.properties['stage_platform']
     manifest = generate_candidates_manifest(context)
     mapping = manifest['mapping']
     artifacts = [mapping[m].get('package', {}).get('artifact') for m in mapping]
