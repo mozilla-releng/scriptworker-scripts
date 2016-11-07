@@ -72,7 +72,7 @@ See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
             locale = self.translationMgmt.locale_mapping(locale)
 
             try:
-                logger.log("Updating " + package_code + " for '" + locale +
+                logger.info("Updating " + package_code + " for '" + locale +
                            "' /  title: '" + title + "', short_desc: '" +
                            short_desc[0:20] + "'..., long_desc: '" +
                            long_desc[0:20] + "...'")
@@ -83,13 +83,13 @@ See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
                           'title': title}).execute()
                 nb_locales += 1
             except client.AccessTokenRefreshError:
-                logger.log('The credentials have been revoked or expired,'
+                logger.info('The credentials have been revoked or expired,'
                            'please re-run the application to re-authorize')
 
         # Commit our changes
         commit_request = service.edits().commit(
             editId=edit_id, packageName=package_name).execute()
-        logger.log('Edit "%s" has been committed. %d locale(s) updated.' % (commit_request['id'], nb_locales))
+        logger.info('Edit "%s" has been committed. %d locale(s) updated.' % (commit_request['id'], nb_locales))
 
     def update_apk_description(self):
         """ Update the description """
