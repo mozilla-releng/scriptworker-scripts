@@ -30,7 +30,7 @@ class Base(object):
             for key, value in dash_dash_dict.items()
         ]
 
-        flatten_args = [item for tuples in args_with_unary_arguments_alone for item in tuples]
+        flatten_args = [str(item) for tuples in args_with_unary_arguments_alone for item in tuples]
 
         logger.debug('dict_ converveted into these args: %s', flatten_args)
         return flatten_args

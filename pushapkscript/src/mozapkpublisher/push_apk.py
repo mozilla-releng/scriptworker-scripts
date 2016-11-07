@@ -4,8 +4,7 @@ import sys
 import argparse
 import logging
 
-from mozapkpublisher import googleplay, store_l10n
-from mozapkpublisher.apk import check_if_apk_is_multilocale
+from mozapkpublisher import apk, googleplay, store_l10n
 from mozapkpublisher.base import Base
 from mozapkpublisher.exceptions import WrongArgumentGiven
 
@@ -55,7 +54,7 @@ class PushAPK(Base):
         service -- The session to Google play
         apk_files -- The files
         """
-        [check_if_apk_is_multilocale(apk_file.name) for apk_file in apk_files]
+        [apk.check_if_apk_is_multilocale(apk_file.name) for apk_file in apk_files]
 
         edit_service = googleplay.EditService(
             self.config.service_account, self.config.google_play_credentials_file.name, self.config.package_name,
@@ -95,26 +94,31 @@ def _push_whats_new(edit_service, release_channel, apk_version_code):
     locales.append(u'en-US')
 
     for locale in locales:
-        translation = store_l10n.get_translation(release_channel, locale)
-        whatsnew = translation.get("whatsnew")
         if locale == "en-GB":
             logger.info("Ignoring en-GB as locale")
             continue
-        locale = store_l10n.locale_mapping(locale)
-        logger.info('Locale "%s" what\'s new has been updated to "%s"'
-                    % (locale, whatsnew))
 
-        edit_service.update_apk_listings(locale, apk_version_code, body={'recentChanges': whatsnew})
+        translation = store_l10n.get_translation(release_channel, locale)
+        whatsnew = translation.get('whatsnew')
+        play_store_locale = store_l10n.locale_mapping(locale)
+
+        edit_service.update_apk_listings(play_store_locale, apk_version_code, body={'recentChanges': whatsnew})
+        logger.info('Locale "%s" what\'s new has been updated to "%s"'.format(play_store_locale, whatsnew))
 
 
-if __name__ == '__main__':
+def main(name=None):
+    if name not in ('__main__', None):
+        return
+
     from mozapkpublisher import main_logging
     main_logging.init()
 
     try:
-        push_apk = PushAPK()
-        push_apk.run()
+        PushAPK().run()
     except WrongArgumentGiven as e:
         PushAPK.parser.print_help(sys.stderr)
         sys.stderr.write('{}: error: {}\n'.format(PushAPK.parser.prog, e))
         sys.exit(2)
+
+
+main(__name__)

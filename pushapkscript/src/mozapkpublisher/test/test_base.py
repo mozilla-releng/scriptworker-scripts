@@ -17,11 +17,12 @@ def test_convert_dict_into_args():
     assert Base._convert_dict_into_args({'unary_option': False}) == []
     assert Base._convert_dict_into_args({'string_option': 'a_string'}) == ['--string-option', 'a_string']
 
-    args = Base._convert_dict_into_args({'a_key': 'a_value', 'unary_option': True, 'k': 'v'})
+    args = Base._convert_dict_into_args({'a_key': 'a_value', 'unary_option': True, 'k': 'v', 'integers_become_strings': 99})
     assert '--a-key', 'a_value' in args
     assert '--k', 'v' in args
     assert '--unary-option' in args
     assert True not in args
+    assert '--integers-become-strings', '99' in args
 
 
 def test_parse_config():
