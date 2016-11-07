@@ -3,14 +3,12 @@ import sys
 
 from copy import copy
 from tempfile import NamedTemporaryFile
-try:
-    from unittest.mock import create_autospec
-except ImportError:
-    from mock import create_autospec
 
-from mozapkpublisher import googleplay, store_l10n, apk
+from mozapkpublisher import store_l10n, apk
 from mozapkpublisher.exceptions import WrongArgumentGiven
 from mozapkpublisher.push_apk import PushAPK, main
+
+from mozapkpublisher.test.helpers import craft_service_mock
 
 
 credentials = NamedTemporaryFile()
@@ -64,7 +62,7 @@ def test_rollout_percentage(monkeypatch):
         with pytest.raises(WrongArgumentGiven):
             PushAPK(config)
 
-    edit_service_mock = _craft_service_mock(monkeypatch)
+    edit_service_mock = craft_service_mock(monkeypatch)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
     for i in range(0, 101):
         valid_percentage = i
@@ -78,15 +76,8 @@ def test_rollout_percentage(monkeypatch):
         edit_service_mock.update_track.reset_mock()
 
 
-def _craft_service_mock(monkeypatch_):
-    edit_service_mock = create_autospec(googleplay.EditService)
-    edit_service_mock.upload_apk.side_effect = [{'versionCode': str(i)} for i in range(1000)]
-    monkeypatch_.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
-    return edit_service_mock
-
-
 def test_upload_apk(monkeypatch):
-    edit_service_mock = _craft_service_mock(monkeypatch)
+    edit_service_mock = craft_service_mock(monkeypatch)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
 
     PushAPK(VALID_CONFIG).run()
@@ -99,7 +90,7 @@ def test_upload_apk(monkeypatch):
 
 
 def test_upload_apk_with_whats_new(monkeypatch):
-    edit_service_mock = _craft_service_mock(monkeypatch)
+    edit_service_mock = craft_service_mock(monkeypatch)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
 
     monkeypatch.setattr(store_l10n, 'get_list_locales', lambda _: [u'en-GB', u'es-MX'])

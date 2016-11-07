@@ -19,10 +19,6 @@ class UpdateDescriptionAPK(Base):
             raise WrongArgumentGiven('Aurora is not yet supported by the L10n Store. \
 See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
 
-        self.all_locales_url = self.config.l10n_api_url + "api/?done&channel={channel}"
-        self.locale_url = self.config.l10n_api_url + "api/?locale={locale}&channel={channel}"
-        self.mapping_url = self.config.l10n_api_url + "api/?locale_mapping&reverse"
-
     @classmethod
     def _init_parser(cls):
         cls.parser = argparse.ArgumentParser(
@@ -35,9 +31,6 @@ See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
         )
 
         googleplay.add_general_google_play_arguments(cls.parser)
-
-        cls.parser.add_argument('--l10n-api-url', default='https://l10n.mozilla-community.org/stores_l10n/',
-                                help='The L10N URL')
         cls.parser.add_argument('--force-locale', help='Force to a specific locale (instead of all)')
 
     def update_apk_description(self, package_name):
@@ -53,9 +46,8 @@ See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
 
         for locale in locales:
             translation = store_l10n.get_translation(release_channel, locale)
-            # Google play expects some locales codes (de-DE instead of de)
-            locale = store_l10n.locale_mapping(locale)
-            edit_service.update_listings(locale, body={
+            google_play_locale = store_l10n.locale_mapping(locale)
+            edit_service.update_listings(google_play_locale, body={
                 'fullDescription': translation.get('long_desc'),
                 'shortDescription': translation.get('short_desc'),
                 'title': translation.get('title')
@@ -68,9 +60,14 @@ See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
         self.update_apk_description(self.config.package_name)
 
 
-if __name__ == '__main__':
+def main(name=None):
+    if name not in ('__main__', None):
+        return
+
     from mozapkpublisher import main_logging
     main_logging.init()
 
-    myScript = UpdateDescriptionAPK()
-    myScript.run()
+    UpdateDescriptionAPK().run()
+
+
+main(__name__)
