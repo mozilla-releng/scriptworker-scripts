@@ -18,9 +18,10 @@ from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetry
 from scriptworker.utils import (retry_async, download_file,
                                 raise_future_exceptions, retry_request)
 
-from beetmoverscript.constants import MIME_MAP, MANIFEST_URL_TMPL
+from beetmoverscript.constants import MIME_MAP, MANIFEST_URL_TMPL, PLATFORM_MAP
 from beetmoverscript.task import validate_task_schema
-from beetmoverscript.utils import load_json, generate_candidates_manifest
+from beetmoverscript.utils import (load_json, generate_candidates_manifest,
+                                   amend_props)
 
 log = logging.getLogger(__name__)
 
@@ -31,12 +32,15 @@ async def async_main(context):
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
     # 2. validate the task
     validate_task_schema(context)
-    # 3 grab manifest props with all the useful data
+    # 3 prepare manifest props file
+    #   a. grab manifest props with all the useful data
+    #   b. amend its platform field to proper one
     context.properties = await get_props(context)
+    amend_props(context, PLATFORM_MAP)
     # 4. generate manifest
     manifest = generate_candidates_manifest(context)
     # 5. for each artifact in manifest
-    #   a. download artifact
+    #   a. download artifac
     #   b. upload to candidates/dated location
     await move_beets(context, manifest)
 

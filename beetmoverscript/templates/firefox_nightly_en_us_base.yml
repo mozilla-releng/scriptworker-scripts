@@ -1,0 +1,9 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps {{ product }} Nightly artifacts to pretty names for en-US"
+    owner: "release@mozilla.com"
+
+artifact_base_url: https://queue.taskcluster.net/v1/task/{{ taskid_to_beetmove }}/artifacts/public/build/
+s3_prefix_dated: pub/firefox/nightly/{{ upload_date }}-{{ branch }}/
+s3_prefix_latest: pub/firefox/nightly/latest-{{ branch }}/

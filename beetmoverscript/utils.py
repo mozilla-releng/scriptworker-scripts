@@ -28,7 +28,7 @@ def infer_template_args(context):
         "version": props["appVersion"],
         "branch": props["branch"],
         "product": props["appName"],
-        "stage_platform": props["stage_platform"],
+        "platform": props["stage_platform"],
         "template_key": "%s_nightly_%s" % (
             props["appName"].lower(),
             tmpl_key_option
@@ -66,3 +66,13 @@ def generate_candidates_manifest(context):
     log.info(pprint.pformat(manifest))
 
     return manifest
+
+
+def amend_props(context, platform_mapping):
+    """Function to alter the `stage_platform` field from balrog_props to their
+    corresponding correct values for certain platforms"""
+
+    _platform = context.properties["stage_platform"]
+    # for some products/platforms this mapping is not needed, hence the default
+    context.properties["stage_platform"] = platform_mapping.get(_platform,
+                                                                _platform)
