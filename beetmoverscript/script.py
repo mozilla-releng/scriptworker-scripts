@@ -21,7 +21,7 @@ from scriptworker.utils import (retry_async, download_file,
 from beetmoverscript.constants import MIME_MAP, MANIFEST_URL_TMPL, PLATFORM_MAP
 from beetmoverscript.task import validate_task_schema
 from beetmoverscript.utils import (load_json, generate_candidates_manifest,
-                                   amend_props)
+                                   update_props)
 
 log = logging.getLogger(__name__)
 
@@ -34,13 +34,13 @@ async def async_main(context):
     validate_task_schema(context)
     # 3 prepare manifest props file
     #   a. grab manifest props with all the useful data
-    #   b. amend its platform field to proper one
+    #   b. amend platform field to proper one
     context.properties = await get_props(context)
-    amend_props(context, PLATFORM_MAP)
+    context.properties = update_props(context.properties, PLATFORM_MAP)
     # 4. generate manifest
     manifest = generate_candidates_manifest(context)
     # 5. for each artifact in manifest
-    #   a. download artifac
+    #   a. download artifact
     #   b. upload to candidates/dated location
     await move_beets(context, manifest)
 

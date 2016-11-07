@@ -1,3 +1,4 @@
+from copy import deepcopy
 import json
 import os
 import logging
@@ -28,7 +29,7 @@ def infer_template_args(context):
         "version": props["appVersion"],
         "branch": props["branch"],
         "product": props["appName"],
-        "platform": props["stage_platform"],
+        "platform": props["platform"],
         "template_key": "%s_nightly_%s" % (
             props["appName"].lower(),
             tmpl_key_option
@@ -68,11 +69,12 @@ def generate_candidates_manifest(context):
     return manifest
 
 
-def amend_props(context, platform_mapping):
+def update_props(context_props, platform_mapping):
     """Function to alter the `stage_platform` field from balrog_props to their
     corresponding correct values for certain platforms"""
-
-    _platform = context.properties["stage_platform"]
+    props = deepcopy(context_props)
+    stage_platform = props["stage_platform"]
     # for some products/platforms this mapping is not needed, hence the default
-    context.properties["stage_platform"] = platform_mapping.get(_platform,
-                                                                _platform)
+    props["platform"] = platform_mapping.get(stage_platform,
+                                             stage_platform)
+    return props

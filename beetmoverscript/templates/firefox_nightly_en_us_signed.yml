@@ -4,17 +4,11 @@ mapping:
   # common deliverables
 {% for locale in ['en-US'] %}
   {{ locale }}:
-  {% if platform == "linux-i686" %}
+  {% if platform in ["linux-i686", "linux-x86_64"] %}
     package:
       artifact: target.tar.bz2
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
 
   {% endif %}
 
-  {% if platform == "linux-x86_64" %}
-    package:
-      artifact: target.tar.bz2
-      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
-
-  {% endif %}
 {% endfor %}

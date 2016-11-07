@@ -63,23 +63,7 @@ mapping:
       artifact: {{ platform }}/xpi/firefox-{{ version }}.{{ locale }}.langpack.xpi
       s3_key: firefox-{{ version }}.{{ locale }}.langpack.xpi
 
-  {% if platform == "linux-i686" %}
-    sdk:
-      artifact: target.sdk.tar.bz2
-      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
-    mar_tools_mar:
-      artifact: host/bin/mar
-      s3_key: mar
-    mar_tools_mbdiff:
-      artifact: host/bin/mbsdiff
-      s3_key: mbsdiff
-    gtest:
-      artifact: target.gtest.tests.zip
-      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.gtest.tests.zip
-
-  {% endif %}
-
-  {% if platform == "linux-x86_64" %}
+  {% if platform in ["linux-i686", "linux-x86_64"] %}
     sdk:
       artifact: target.sdk.tar.bz2
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
