@@ -1,7 +1,8 @@
+import hashlib
 from copy import deepcopy
 import json
-import os
 import logging
+import os
 import pprint
 
 import arrow
@@ -11,9 +12,25 @@ import yaml
 log = logging.getLogger(__name__)
 
 
+def get_hash(filepath, hash_type="sha512"):
+    digest = hashlib.new(hash_type)
+    with open(filepath, "rb") as fobj:
+        while True:
+            chunk = fobj.read(1024*1024)
+            if not chunk:
+                break
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def load_json(path):
     with open(path, "r") as fh:
         return json.load(fh)
+
+
+def write_json(path, contents):
+    with open(path, "w") as fh:
+        json.dump(contents, fh)
 
 
 def infer_template_args(context):
@@ -29,6 +46,7 @@ def infer_template_args(context):
         "version": props["appVersion"],
         "branch": props["branch"],
         "product": props["appName"],
+        "stage_platform": props["stage_platform"],
         "platform": props["platform"],
         "template_key": "%s_nightly_%s" % (
             props["appName"].lower(),

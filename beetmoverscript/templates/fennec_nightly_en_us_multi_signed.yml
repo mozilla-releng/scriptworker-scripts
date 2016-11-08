@@ -5,7 +5,9 @@ mapping:
 {% for locale in ['multi', 'en-US'] %}
   {{ locale }}:
   {% set locale_prefix = 'en-US/' if locale == 'en-US' else '' %}
+  {% set update_balrog_manifest = True if locale == 'multi' else False %}
     apk:
       artifact: {{ locale_prefix }}target.apk
-      s3_key: {{ locale_prefix  }}fennec-{{ version }}.{{ locale }}.android.arm.apk
+      s3_key: {{ locale_prefix  }}fennec-{{ version }}.{{ locale }}.android-arm.apk
+      update_balrog_manifest: {{ update_balrog_manifest }}
 {% endfor %}
