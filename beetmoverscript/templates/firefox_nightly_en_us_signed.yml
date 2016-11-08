@@ -8,6 +8,7 @@ mapping:
     package:
       artifact: target.tar.bz2
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
+      update_balrog_manifest: true
 
   {% endif %}
 

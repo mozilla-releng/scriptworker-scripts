@@ -28,6 +28,11 @@ def load_json(path):
         return json.load(fh)
 
 
+def write_json(path, contents):
+    with open(path, "w") as fh:
+        json.dump(contents, fh)
+
+
 def infer_template_args(context):
     props = context.properties
     # Bug 1313154 - in order to make beetmoverscript accommodate the nightly

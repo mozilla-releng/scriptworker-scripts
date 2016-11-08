@@ -19,7 +19,7 @@ from scriptworker.utils import (retry_async, download_file,
                                 raise_future_exceptions, retry_request)
 
 from beetmoverscript.constants import MIME_MAP, MANIFEST_URL_TMPL, PLATFORM_MAP
-from beetmoverscript.task import validate_task_schema
+from beetmoverscript.task import validate_task_schema, add_balrog_manifest_to_artifacts
 from beetmoverscript.utils import (load_json, generate_candidates_manifest,
                                    update_props, get_hash)
 
@@ -28,6 +28,9 @@ log = logging.getLogger(__name__)
 
 # async_main {{{1
 async def async_main(context):
+    # balrog_manifest is used by a subsequent balrogworker task that points to a beetmoved artifact
+    context.balrog_manifest = list()
+
     # 1. parse the task
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
     # 2. validate the task
@@ -39,14 +42,13 @@ async def async_main(context):
     context.properties = update_props(context.properties, PLATFORM_MAP)
     # 4. generate manifest
     manifest = generate_candidates_manifest(context)
-    # prepare balrog manifest output if it's a signing task
-    if context.task['payload']['update_manifest']:
-        context.balrog_manifest = list()
     # 5. for each artifact in manifest
     #   a. download artifact
     #   b. upload to candidates/dated location
     await move_beets(context, manifest)
-    # 6.  TODO: make sure manifest.json gets in the artifacts
+    # 6. write balrog_manifest to a file and add it to list of artifacts
+    if context.task["payload"]["update_manifest"]:
+        add_balrog_manifest_to_artifacts(context)
     log.info('Success!')
 
 
@@ -74,15 +76,17 @@ async def move_beets(context, manifest):
                                       manifest['mapping'][locale][deliverable]['s3_key'])
             dest_latest = os.path.join(manifest["s3_prefix_latest"],
                                        manifest['mapping'][locale][deliverable]['s3_key'])
+            balrog_manifest = manifest['mapping'][locale][deliverable].get('update_balrog_manifest')
             beets.append(
                 asyncio.ensure_future(
-                    move_beet(context, source, locale, destinations=(dest_dated, dest_latest))
+                    move_beet(context, source, destinations=(dest_dated, dest_latest),
+                              locale=locale, update_balrog_manifest=balrog_manifest)
                 )
             )
     await raise_future_exceptions(beets)
 
 
-async def move_beet(context, source, locale, destinations):
+async def move_beet(context, source, destinations, locale, update_balrog_manifest):
     beet_config = deepcopy(context.config)
     beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
     rel_path = validate_artifact_url(beet_config, source)
@@ -91,26 +95,45 @@ async def move_beet(context, source, locale, destinations):
     await retry_download(context=context, url=source, path=abs_file_path)
     await retry_upload(context=context, destinations=destinations, path=abs_file_path)
 
-    if context.task['payload']['update_manifest']:
-        enrich_balrog_manifest(context, abs_file_path, locale)
+    if update_balrog_manifest:
+        context.balrog_manifest.append(
+            enrich_balrog_manifest(context, abs_file_path, locale, destinations)
+        )
 
 
-def enrich_balrog_manifest(context, path, locale):
+def enrich_balrog_manifest(context, path, locale, destinations):
     props = context.properties
-    # we extract the dated destination as the 'latest' is useless
-    item = {
-        "to_buildid": props["buildid"],
+
+    if props["branch"] == 'date':
+        # nightlies from dev branches don't upload to archive.m.o
+        url = "{prefix}/{s3_key}".format(prefix="http://bucketlister-delivery.stage.mozaws.net",
+                                         s3_key=destinations[0])
+        url_replacements = []
+    else:
+        # we extract the dated destination as the 'latest' is useless
+        url = "{prefix}/{s3_key}".format(prefix="https://archive.mozilla.org",
+                                         s3_key=destinations[0])
+        url_replacements = [['http://archive.mozilla.org/pub, http://download.cdn.mozilla.net/pub']]
+
+    return {
+        "tc_fennec_nightly": True,
+
+        "completeInfo": [{
+            "hash": get_hash(path, hash_type=props["hashType"]),
+            "size": os.path.getsize(path),
+            "url": url
+        }],
+
         "appName": props["appName"],
+        "appVersion": props["appVersion"],
         "branch": props["branch"],
-        "version": props["appVersion"],
-        "hash_type": props["hashType"],
+        "buildid": props["buildid"],
+        "extVersion": props["appVersion"],
+        "hashType": props["hashType"],
+        "locale": locale if not locale == 'multi' else 'en-US',
         "platform": props["stage_platform"],
-        "locale": locale,
-        "to_hash": get_hash(path, hash_type=props["hashType"]),
-        "to_size": os.path.getsize(path),
-        "url": "TODO"
+        "url_replacements": url_replacements
     }
-    context.balrog_manifest.append(item)
 
 
 async def retry_upload(context, destinations, path):
