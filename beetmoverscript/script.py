@@ -131,7 +131,7 @@ async def upload_to_s3(context, s3_key, path):
     }
     creds = context.config['s3'][app]['credentials']
     s3 = boto3.client('s3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key'],)
-    url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=30, HttpMethod='PUT')
+    url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=1800, HttpMethod='PUT')
 
     await retry_async(put, args=(context, url, headers, path),
                       kwargs={'session': context.session})
