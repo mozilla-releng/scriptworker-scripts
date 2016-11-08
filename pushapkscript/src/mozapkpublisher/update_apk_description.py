@@ -73,9 +73,9 @@ See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
 
             try:
                 logger.info("Updating " + package_code + " for '" + locale +
-                           "' /  title: '" + title + "', short_desc: '" +
-                           short_desc[0:20] + "'..., long_desc: '" +
-                           long_desc[0:20] + "...'")
+                            "' /  title: '" + title + "', short_desc: '" +
+                            short_desc[0:20] + "'..., long_desc: '" +
+                            long_desc[0:20] + "...'")
                 service.edits().listings().update(
                     editId=edit_id, packageName=package_name, language=locale,
                     body={'fullDescription': long_desc,
@@ -84,7 +84,7 @@ See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
                 nb_locales += 1
             except client.AccessTokenRefreshError:
                 logger.info('The credentials have been revoked or expired,'
-                           'please re-run the application to re-authorize')
+                            'please re-run the application to re-authorize')
 
         self._commit_if_needed(service, edit_id, nb_locales)
 
