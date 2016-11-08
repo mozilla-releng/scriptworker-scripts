@@ -1,4 +1,7 @@
+import argparse
 import logging
+
+from mozapkpublisher.exceptions import WrongArgumentGiven
 
 logger = logging.getLogger(__name__)
 
@@ -34,3 +37,8 @@ class Base(object):
 
         logger.debug('dict_ converveted into these args: %s', flatten_args)
         return flatten_args
+
+
+class ArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise WrongArgumentGiven(message)

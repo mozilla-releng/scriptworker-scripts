@@ -4,11 +4,10 @@ import sys
 import os
 import re
 import signal
-import argparse
 import shutil
 import logging
 
-from mozapkpublisher.base import Base
+from mozapkpublisher.base import Base, ArgumentParser
 from mozapkpublisher.utils import load_json_url, download_file, file_sha512sum
 from mozapkpublisher.exceptions import CheckSumMismatch
 
@@ -34,7 +33,7 @@ class GetAPK(Base):
 
     @classmethod
     def _init_parser(cls):
-        cls.parser = argparse.ArgumentParser(
+        cls.parser = ArgumentParser(
             description='Download the apk of Firefox for Android from {}'.format(cls.base_url)
         )
 
@@ -64,21 +63,13 @@ class GetAPK(Base):
         try:
             shutil.rmtree(self.download_dir)
             logger.info('Download directory cleaned')
-        except OSError:     # XXX: Used for compatibility with Python. Use FileNotFoundError otherwise
+        except OSError:     # XXX: Used for compatibility with Python 2. Use FileNotFoundError otherwise
             logger.warn('{} was not found. Skipping...'.format(self.download_dir))
 
     # Gets called once download is complete
     def download_complete(self, apk_file, checksum_file):
         logger.info(apk_file + " has been downloaded successfully")
         os.remove(checksum_file)
-
-    # Check the given values are correct
-    def check_argument(self):
-        if self.config.clean:
-            self.cleanup()
-        if self.config.version is None:
-            if self.config.clean:
-                sys.exit(0)
 
     # Checksum check the APK
     def check_apk(self, apk_file, checksum_file):
@@ -165,7 +156,6 @@ class GetAPK(Base):
 
     # Download apk initial action
     def download_apk(self):
-        self.check_argument()
         version = self.get_version_name()
         arch = self.config.arch
         build = str(self.config.build)

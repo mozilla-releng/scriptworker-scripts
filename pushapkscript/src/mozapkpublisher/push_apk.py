@@ -5,15 +5,10 @@ import argparse
 import logging
 
 from mozapkpublisher import apk, googleplay, store_l10n
-from mozapkpublisher.base import Base
+from mozapkpublisher.base import Base, ArgumentParser
 from mozapkpublisher.exceptions import WrongArgumentGiven
 
 logger = logging.getLogger(__name__)
-
-
-class ArgumentParser(argparse.ArgumentParser):
-    def error(self, message):
-        raise WrongArgumentGiven(message)
 
 
 class PushAPK(Base):
