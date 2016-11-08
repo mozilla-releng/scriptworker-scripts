@@ -4,9 +4,10 @@ mapping:
   # common deliverables
 {% for locale in ['en-US'] %}
   {{ locale }}:
-    checksums:
-      artifact: target.checksums
-      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums
+    # Bug 1316124
+    #checksums:
+      #artifact: target.checksums
+      #s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums
     common:
       artifact: target.common.tests.zip
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.common.tests.zip

@@ -5,9 +5,10 @@ mapping:
 {% for locale in ['multi', 'en-US'] %}
   {{ locale }}:
   {% set locale_prefix = 'en-US/' if locale == 'en-US' else '' %}
-    checksums:
-      artifact: {{ locale_prefix }}target.checksums
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.checksums
+    # Bug 1316124
+    #checksums:
+      #artifact: {{ locale_prefix }}target.checksums
+      #s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.checksums
     common:
       artifact: {{ locale_prefix }}target.common.tests.zip
       s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.common.tests.zip
