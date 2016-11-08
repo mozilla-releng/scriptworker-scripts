@@ -16,9 +16,9 @@ mapping:
     crashreporter:
       artifact: target.crashreporter-symbols.zip
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
-    crashreporter_full:
-      artifact: target.crashreporter-symbols-full.zip
-      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.crashreporter-symbols-full.zip
+    #crashreporter_full:
+      #artifact: target.crashreporter-symbols-full.zip
+      #s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.crashreporter-symbols-full.zip
     json:
       artifact: target.json
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.json
@@ -73,9 +73,9 @@ mapping:
     mar_tools_mbdiff:
       artifact: host/bin/mbsdiff
       s3_key: mbsdiff
-    gtest:
-      artifact: target.gtest.tests.zip
-      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.gtest.tests.zip
+    #gtest:
+      #artifact: target.gtest.tests.zip
+      #s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.gtest.tests.zip
 
   {% endif %}
 
