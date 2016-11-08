@@ -18,10 +18,10 @@ from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetry
 from scriptworker.utils import (retry_async, download_file,
                                 raise_future_exceptions, retry_request)
 
-from beetmoverscript.constants import MIME_MAP, MANIFEST_URL_TMPL
+from beetmoverscript.constants import MIME_MAP, MANIFEST_URL_TMPL, PLATFORM_MAP
 from beetmoverscript.task import validate_task_schema
 from beetmoverscript.utils import (load_json, generate_candidates_manifest,
-                                   get_hash)
+                                   update_props, get_hash)
 
 log = logging.getLogger(__name__)
 
@@ -32,8 +32,11 @@ async def async_main(context):
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
     # 2. validate the task
     validate_task_schema(context)
-    # 3 grab manifest props with all the useful data
+    # 3 prepare manifest props file
+    #   a. grab manifest props with all the useful data
+    #   b. amend platform field to proper one
     context.properties = await get_props(context)
+    context.properties = update_props(context.properties, PLATFORM_MAP)
     # 4. generate manifest
     manifest = generate_candidates_manifest(context)
     # prepare balrog manifest output if it's a signing task
@@ -43,8 +46,7 @@ async def async_main(context):
     #   a. download artifact
     #   b. upload to candidates/dated location
     await move_beets(context, manifest)
-    # 6. copy to releases/latest location
-    # 7. TODO: make sure manifest.json gets in the artifacts
+    # 6.  TODO: make sure manifest.json gets in the artifacts
     log.info('Success!')
 
 
@@ -155,7 +157,7 @@ async def upload_to_s3(context, s3_key, path):
     }
     creds = context.config['s3'][app]['credentials']
     s3 = boto3.client('s3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key'],)
-    url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=30, HttpMethod='PUT')
+    url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=1800, HttpMethod='PUT')
 
     await retry_async(put, args=(context, url, headers, path),
                       kwargs={'session': context.session})

@@ -1,4 +1,5 @@
 import hashlib
+from copy import deepcopy
 import json
 import logging
 import os
@@ -29,6 +30,11 @@ def load_json(path):
 
 def infer_template_args(context):
     props = context.properties
+    # Bug 1313154 - in order to make beetmoverscript accommodate the nightly
+    # graph, task payload was tweaked to encompass `update_manifest` boolean
+    # flag. The builds with unsigned artifacts will always have the flag set to
+    # False while the builds with signed artifacts will have the opposite,
+    # marking the need to update the manifest to be passed down to balrogworker
     tmpl_key_option = "signed" if context.task["payload"]["update_manifest"] is True else "unsigned"
 
     return {
@@ -36,6 +42,7 @@ def infer_template_args(context):
         "branch": props["branch"],
         "product": props["appName"],
         "stage_platform": props["stage_platform"],
+        "platform": props["platform"],
         "template_key": "%s_nightly_%s" % (
             props["appName"].lower(),
             tmpl_key_option
@@ -52,8 +59,6 @@ def generate_candidates_manifest(context):
 
     template_args = {
         "taskid_to_beetmove": payload["taskid_to_beetmove"],
-        "taskid_of_manifest": payload["taskid_of_manifest"],
-        "update_manifest": payload["update_manifest"],
         # payload['upload_date'] is a timestamp defined by params['pushdate']
         # in mach taskgraph0
         "upload_date": arrow.get(payload['upload_date']).format('YYYY/MM/YYYY-MM-DD-HH-mm-ss')
@@ -75,3 +80,14 @@ def generate_candidates_manifest(context):
     log.info(pprint.pformat(manifest))
 
     return manifest
+
+
+def update_props(context_props, platform_mapping):
+    """Function to alter the `stage_platform` field from balrog_props to their
+    corresponding correct values for certain platforms"""
+    props = deepcopy(context_props)
+    stage_platform = props["stage_platform"]
+    # for some products/platforms this mapping is not needed, hence the default
+    props["platform"] = platform_mapping.get(stage_platform,
+                                             stage_platform)
+    return props

@@ -99,6 +99,7 @@ def test_move_beets(event_loop):
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
     context.properties = get_fake_balrog_props(context)["properties"]
+    context.properties['platform'] = context.properties['stage_platform']
     manifest = generate_candidates_manifest(context)
 
     expected_sources = [
