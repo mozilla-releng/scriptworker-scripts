@@ -77,8 +77,9 @@ def copy_to_artifact_dir(context, source, target=None):
     try:
         parent_dir = os.path.dirname(target_path)
         mkdir(parent_dir)
-        log.info("Copying %s to %s" % (source, target_path))
-        copyfile(source, target_path)
+        if source != target_path:
+            log.info("Copying %s to %s" % (source, target_path))
+            copyfile(source, target_path)
     except IOError:
         traceback.print_exc()
         raise SigningServerError("Can't copy {} to {}!".format(source, target_path))

@@ -8,6 +8,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 ### Removed
 
+## [0.7.1] - 2016-11-09
+## Fixed
+- only copy files that aren't already in the appropriate `artifact_dir` location
+
 ## [0.7.0] - 2016-11-09
 ### Changed
 - changed the task definition to use `upstreamArtifacts`, which allows for different sets of signing formats per file
