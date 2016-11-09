@@ -39,7 +39,8 @@ def context():
 
 
 def test_missing_mandatory_urls_are_reported(context):
-    context.task = task_generator.generate_object(urls=[])  # no URLs provided
+    context.task = task_generator.generate_object()
+    del(context.task['scopes'])
 
     with pytest.raises(ScriptWorkerTaskException):
         validate_task_schema(context)

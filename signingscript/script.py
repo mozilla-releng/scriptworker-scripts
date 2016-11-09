@@ -12,8 +12,7 @@ import traceback
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-from scriptworker.task import download_artifacts
-from signingscript.task import detached_sigfiles, get_token, \
+from signingscript.task import build_filelist_dict, detached_sigfiles, get_token, \
     sign_file, task_cert_type, task_signing_formats, validate_task_schema
 from signingscript.utils import copy_to_artifact_dir, load_json, load_signing_server_config
 
@@ -40,23 +39,15 @@ async def async_main(context):
     validate_task_schema(context)
     context.signing_servers = load_signing_server_config(context)
     cert_type = task_cert_type(context.task)
-    signing_formats = task_signing_formats(context.task)
-    # TODO scriptworker needs to validate CoT artifact
-    # Use standard SSL for downloading files.
-    with aiohttp.ClientSession() as base_ssl_session:
-        orig_session = context.session
-        context.session = base_ssl_session
-        file_urls = context.task["payload"]["unsignedArtifacts"]
-        filelist = await download_artifacts(context, file_urls)
-        context.session = orig_session
+    all_signing_formats = task_signing_formats(context.task)
     log.info("getting token")
-    await get_token(context, os.path.join(work_dir, 'token'), cert_type, signing_formats)
-    for filepath in filelist:
+    await get_token(context, os.path.join(work_dir, 'token'), cert_type, all_signing_formats)
+    filelist_dict = build_filelist_dict(context, all_signing_formats)
+    for filepath, formats in filelist_dict.items():
         log.info("signing %s", filepath)
         source = os.path.join(work_dir, filepath)
-        await sign_file(context, source, cert_type, signing_formats,
-                        context.config["ssl_cert"])
-        sigfiles = detached_sigfiles(filepath, signing_formats)
+        await sign_file(context, source, cert_type, formats, context.config["ssl_cert"])
+        sigfiles = detached_sigfiles(filepath, formats)
         copy_to_artifact_dir(context, source, target=filepath)
         for sigpath in sigfiles:
             copy_to_artifact_dir(context, os.path.join(work_dir, sigpath), target=sigpath)

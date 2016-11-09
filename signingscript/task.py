@@ -105,3 +105,29 @@ def detached_sigfiles(filepath, signing_formats):
                                                      ext=sig_ext)
         detached_signatures.append(detached_filepath)
     return detached_signatures
+
+
+def build_filelist_dict(context, all_signing_formats):
+    """
+    """
+    filelist_dict = {}
+    all_signing_formats_set = set(all_signing_formats)
+    messages = []
+    for artifact_dict in context.task['payload']['upstreamArtifacts']:
+        for path in artifact_dict['paths']:
+            full_path = os.path.join(
+                context.config['artifact_dir'], 'public', 'cot', artifact_dict['taskId'],
+                path
+            )
+            if not os.path.exists(full_path):
+                messages.append("{} doesn't exist!".format(full_path))
+            formats_set = set(artifact_dict['formats'])
+            if not set(formats_set).issubset(all_signing_formats_set):
+                messages.append("{} {} illegal format(s) {}!".format(
+                    artifact_dict['taskId'], path,
+                    formats_set.difference(all_signing_formats_set)
+                ))
+            filelist_dict[full_path] = artifact_dict['formats']
+    if messages:
+        raise TaskVerificationError(messages)
+    return filelist_dict

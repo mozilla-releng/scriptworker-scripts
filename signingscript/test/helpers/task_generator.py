@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 
 def generate_file(work_dir, urls=None):
@@ -9,10 +9,7 @@ def generate_file(work_dir, urls=None):
     return task_file
 
 
-def generate_object(urls=None):
-    urls = urls if urls is not None else ['https://queue.taskcluster.net/v1/task/ZB9X1cvCRo-hTps7BDk8pw/artifacts/\
-public%2Fbuild%2Ffirefox-52.0a1.en-US.win64.installer.exe']
-
+def generate_object():
     return {
         'provisionerId': 'meh',
         'workerType': 'workertype',
@@ -26,6 +23,11 @@ public%2Fbuild%2Ffirefox-52.0a1.en-US.win64.installer.exe']
         'dependencies': ['VALID_TASK_ID'],
         'scopes': ['signing'],
         'payload': {
-          'unsignedArtifacts': urls
+          'upstreamArtifacts': [{
+            'taskType': 'build',
+            'taskId': 'VALID_TASK_ID',
+            'formats': ['gpg'],
+            'paths': ['public/build/firefox-52.0a1.en-US.win64.installer.exe'],
+          }]
         }
     }
