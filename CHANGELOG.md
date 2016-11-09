@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+### Changed
+### Fixed
+### Removed
+
+## [0.7.0] - 2016-11-09
+### Changed
+- changed the task definition to use `upstreamArtifacts`, which allows for different sets of signing formats per file
+- stopped downloading artifacts; now we use the pre-downloaded files from scriptworker's chain of trust verification
 
 ## [0.6.0] - 2016-10-10
 ### Changed
