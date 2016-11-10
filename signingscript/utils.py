@@ -70,10 +70,9 @@ async def log_output(fh):
             break
 
 
-def copy_to_artifact_dir(context, source, target=None):
-    artifact_dir = context.config['artifact_dir']
+def copy_to_dir(source, parent_dir, target=None):
     target = target or os.path.basename(source)
-    target_path = os.path.join(artifact_dir, target)
+    target_path = os.path.join(parent_dir, target)
     try:
         parent_dir = os.path.dirname(target_path)
         mkdir(parent_dir)

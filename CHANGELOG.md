@@ -8,6 +8,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 ### Removed
 
+## [0.8.0] - 2016-11-09
+## Changed
+- `copy_to_artifact_dir` is now `copy_to_dir`, and takes a `parent_dir` arg.
+
+## Fixed
+- copy `upstreamArtifacts` files from `artifact_dir` to `work_dir` before signing.  This means we no longer overwrite chain of trust artifacts with signed artifacts
+
 ## [0.7.1] - 2016-11-09
 ## Fixed
 - only copy files that aren't already in the appropriate `artifact_dir` location

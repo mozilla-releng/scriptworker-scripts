@@ -14,7 +14,7 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.task import build_filelist_dict, detached_sigfiles, get_token, \
     sign_file, task_cert_type, task_signing_formats, validate_task_schema
-from signingscript.utils import copy_to_artifact_dir, load_json, load_signing_server_config
+from signingscript.utils import copy_to_dir, load_json, load_signing_server_config
 
 
 log = logging.getLogger(__name__)
@@ -43,14 +43,15 @@ async def async_main(context):
     log.info("getting token")
     await get_token(context, os.path.join(work_dir, 'token'), cert_type, all_signing_formats)
     filelist_dict = build_filelist_dict(context, all_signing_formats)
-    for filepath, formats in filelist_dict.items():
-        log.info("signing %s", filepath)
-        source = os.path.join(work_dir, filepath)
-        await sign_file(context, source, cert_type, formats, context.config["ssl_cert"])
-        sigfiles = detached_sigfiles(filepath, formats)
-        copy_to_artifact_dir(context, source, target=filepath)
+    for path, path_dict in filelist_dict.items():
+        copy_to_dir(path_dict['full_path'], context.config['work_dir'], target=path)
+        log.info("signing %s", path)
+        source = os.path.join(work_dir, path)
+        await sign_file(context, source, cert_type, path_dict['formats'], context.config["ssl_cert"])
+        sigfiles = detached_sigfiles(path, path_dict['formats'])
+        copy_to_dir(source, context.config['artifact_dir'], target=path)
         for sigpath in sigfiles:
-            copy_to_artifact_dir(context, os.path.join(work_dir, sigpath), target=sigpath)
+            copy_to_dir(os.path.join(work_dir, sigpath), context.config['artifact_dir'], target=sigpath)
     log.info("Done!")
 
 

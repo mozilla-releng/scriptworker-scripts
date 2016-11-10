@@ -127,7 +127,10 @@ def build_filelist_dict(context, all_signing_formats):
                     artifact_dict['taskId'], path,
                     formats_set.difference(all_signing_formats_set)
                 ))
-            filelist_dict[full_path] = artifact_dict['formats']
+            filelist_dict[path] = {
+                "full_path": full_path,
+                "formats": artifact_dict['formats'],
+            }
     if messages:
         raise TaskVerificationError(messages)
     return filelist_dict
