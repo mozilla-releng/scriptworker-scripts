@@ -1,6 +1,6 @@
-# Funsize Balrogworker
+# Balrogscript
 
-A small scriptworker used for submitting [funsize](https://wiki.mozilla.org/ReleaseEngineering/Funsize) metadata to [balrog](https://wiki.mozilla.org/Balrog).
+A [scriptworker](https://github.com/mozilla-releng/scriptworker) impl for pushing artifacts to s3 and submitting metadata to [balrog](https://wiki.mozilla.org/Balrog).
 
 
 ## Installation
@@ -15,7 +15,7 @@ make start
 ```
 
 Note, currently scriptworker is installed from the head of the 
-[github repo](https://github.com/escapewindow/scriptworker). 
+[github repo](https://github.com/mozilla-releng/scriptworker). 
 
 ## Configuration
 At runtime, the following environment variables need to be set:
