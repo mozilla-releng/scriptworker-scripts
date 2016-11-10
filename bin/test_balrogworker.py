@@ -217,13 +217,15 @@ class BalrogworkerTest(unittest.TestCase):
     def test_create_submitter_nightly_style(self):
         # Execute task with S3 disabled for these tests
         args = bw.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
-        submitter, release = bw.create_submitter(nightly_manifest[0], args)
+        balrog_auth = (None, None)
+        submitter, release = bw.create_submitter(nightly_manifest[0], balrog_auth, args)
         assert isinstance(submitter, NightlySubmitterV4)
 
     def test_create_submitter_nightly_metadata(self):
         # Execute task with S3 disabled for these tests
         args = bw.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
-        submitter, release = bw.create_submitter(nightly_manifest[0], args)
+        balrog_auth = (None, None)
+        submitter, release = bw.create_submitter(nightly_manifest[0], balrog_auth, args)
 
         exp = {
             'platform': "android-api-15",
@@ -244,13 +246,15 @@ class BalrogworkerTest(unittest.TestCase):
 
     def test_create_submitter_nightly_creates_valid_submitter(self):
         args = bw.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
-        submitter, release = bw.create_submitter(nightly_manifest[0], args)
+        balrog_auth = (None, None)
+        submitter, release = bw.create_submitter(nightly_manifest[0], balrog_auth, args)
         lambda: submitter.run(**release)
 
 
     def test_create_submitter_release_submission_type(self):
         args = bw.verify_args(["--taskdef", "test_release.json", "--disable-s3"])
-        submitter, release = bw.create_submitter(release_manifest[0], args)
+        balrog_auth = (None, None)
+        submitter, release = bw.create_submitter(release_manifest[0], balrog_auth, args)
         assert isinstance(submitter,ReleaseSubmitterV4)
 
     def test_create_submitter_release_metadata(self):
@@ -266,11 +270,13 @@ class BalrogworkerTest(unittest.TestCase):
                 'size': 55889576}]}
 
         args = bw.verify_args(["--taskdef", "test_release.json", "--disable-s3"])
-        submitter, release = bw.create_submitter(release_manifest[0], args)
+        balrog_auth = (None, None)
+        submitter, release = bw.create_submitter(release_manifest[0], balrog_auth, args)
 
         assert release == exp
 
     def test_create_submitter_release_creates_valid_submitter(self):
         args = bw.verify_args(["--taskdef", "test_release.json", "--disable-s3"])
-        submitter, release = bw.create_submitter(release_manifest[0], args)
+        balrog_auth = (None, None)
+        submitter, release = bw.create_submitter(release_manifest[0], balrog_auth, args)
         lambda: submitter.run(**release)
