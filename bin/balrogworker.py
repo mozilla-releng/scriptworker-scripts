@@ -6,6 +6,7 @@ import json
 import sys
 import hashlib
 import requests
+from copy import deepcopy
 import tempfile
 from boto.s3.connection import S3Connection
 from mardor.marfile import MarFile
@@ -143,8 +144,8 @@ def load_task(task_file):
     return parent_url, signing_cert
 
 
-def create_submitter(e, args):
-    auth = (args.balrog_username, args.balrog_password)
+def create_submitter(e, balrog_auth, args):
+    auth = balrog_auth
 
     if "previousVersion" in e and "previousBuildNumber" in e:
         log.info("Release style balrog submission")
@@ -234,9 +235,21 @@ def verify_args(argv):
 
     return args
 
+def update_args_by_popping_balrog_creds(args):
+    """Pops balrog auth creds from args and retrieves them"""
+    username, password = (args.balrog_username, args.balrog_password)
+
+    new_args = deepcopy(args)
+    del(new_args.balrog_username)
+    del(new_args.balrog_password)
+
+    return ((username, password), new_args)
+
 
 def main():
     args = verify_args(sys.argv[1:])
+    balrog_auth, args = update_args_by_popping_balrog_creds(args)
+
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                         stream=sys.stdout,
                         level=args.loglevel)
@@ -248,7 +261,7 @@ def main():
 
     for e in manifest:
         # Get release metadata from manifest, and upload to S3 if necessary
-        submitter, release = create_submitter(e, args)
+        submitter, release = create_submitter(e, balrog_auth, args)
         # Connect to balrog and submit the metadata
         retry(lambda: submitter.run(**release))
 
