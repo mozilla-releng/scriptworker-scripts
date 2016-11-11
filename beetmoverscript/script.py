@@ -116,7 +116,7 @@ def enrich_balrog_manifest(context, path, locale, destinations):
         url_replacements = [['http://archive.mozilla.org/pub, http://download.cdn.mozilla.net/pub']]
 
     return {
-        "tc_fennec_nightly": True,
+        "tc_nightly": True,
 
         "completeInfo": [{
             "hash": get_hash(path, hash_type=props["hashType"]),

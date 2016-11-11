@@ -5,53 +5,52 @@ mapping:
 {% for locale in ['multi', 'en-US'] %}
   {{ locale }}:
   {% set locale_prefix = 'en-US/' if locale == 'en-US' else '' %}
-    # Bug 1316124
-    #checksums:
-      #artifact: {{ locale_prefix }}target.checksums
-      #s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.checksums
     common:
       artifact: {{ locale_prefix }}target.common.tests.zip
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.common.tests.zip
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.common.tests.zip
     cppunittest:
       artifact: {{ locale_prefix }}target.cppunittest.tests.zip
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.cppunittest.tests.zip
-    crashreporter:
-      artifact: {{ locale_prefix }}target.crashreporter-symbols.zip
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.crashreporter-symbols.zip
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.cppunittest.tests.zip
     json:
       artifact: {{ locale_prefix }}target.json
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.json
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.json
     mochitest:
       artifact: {{ locale_prefix }}target.mochitest.tests.zip
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.mochitest.tests.zip
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.mochitest.tests.zip
     mozinfo:
       artifact: {{ locale_prefix }}target.mozinfo.json
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.mozinfo.json
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.mozinfo.json
     reftest:
       artifact: {{ locale_prefix }}target.reftest.tests.zip
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.reftest.tests.zip
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.reftest.tests.zip
     talos:
       artifact: {{ locale_prefix }}target.talos.tests.zip
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.talos.tests.zip
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.talos.tests.zip
     test_packages:
       artifact: {{ locale_prefix }}target.test_packages.json
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.test_packages.json
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.test_packages.json
     txt:
       artifact: {{ locale_prefix }}target.txt
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.txt
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.txt
     webplatform:
       artifact: {{ locale_prefix }}target.web-platform.tests.zip
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.web-platform.tests.zip
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.web-platform.tests.zip
     xpcshell:
       artifact: {{ locale_prefix }}target.xpcshell.tests.zip
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.xpcshell.tests.zip
-    jsshell:
-      artifact: {{ locale_prefix }}target.jsshell.zip
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android.arm.jsshell.zip
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.xpcshell.tests.zip
     info:
       artifact: {{ locale_prefix }}target_info.txt
-      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android_info.txt
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm_info.txt
     bouncer:
       artifact: {{ locale_prefix }}bouncer.apk
       s3_key: {{ locale_prefix }}bouncer.apk
+    mozharness:
+      artifact: {{ locale_prefix }}mozharness.zip
+      s3_key: {{ locale_prefix }}mozharness.zip
+    robocop:
+      artifact: {{ locale_prefix }}robocop.apk
+      s3_key: {{ locale_prefix }}robocop.apk
+    jsshell:
+      artifact: {{ locale_prefix }}target.jsshell.zip
+      s3_key: {{ locale_prefix }}jsshell-android-arm.zip
 {% endfor %}
