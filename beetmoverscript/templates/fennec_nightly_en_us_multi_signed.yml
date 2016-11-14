@@ -10,4 +10,8 @@ mapping:
       artifact: {{ locale_prefix }}target.apk
       s3_key: {{ locale_prefix  }}fennec-{{ version }}.{{ locale }}.android-arm.apk
       update_balrog_manifest: {{ update_balrog_manifest }}
+    # Bug 1316124 - TODO
+    #checksums:
+      #artifact: {{ locale_prefix }}target.checksums
+      #s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.checksums
 {% endfor %}

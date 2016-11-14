@@ -4,10 +4,6 @@ mapping:
   # common deliverables
 {% for locale in ['en-US'] %}
   {{ locale }}:
-    # Bug 1316124
-    #checksums:
-      #artifact: target.checksums
-      #s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums
     common:
       artifact: target.common.tests.zip
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.common.tests.zip
@@ -17,9 +13,6 @@ mapping:
     crashreporter:
       artifact: target.crashreporter-symbols.zip
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
-    #crashreporter_full:
-      #artifact: target.crashreporter-symbols-full.zip
-      #s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.crashreporter-symbols-full.zip
     json:
       artifact: target.json
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.json
@@ -50,10 +43,6 @@ mapping:
     info:
       artifact: target_info.txt
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}_info.txt
-    # TODO: CMAR to be removed once we have the signed one
-    complete_mar:
-      artifact: update/target.complete.mar
-      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
     jsshell:
       artifact: target.jsshell.zip
       s3_key: jsshell-{{ platform }}.zip
@@ -63,20 +52,21 @@ mapping:
     xpi:
       artifact: {{ platform }}/xpi/firefox-{{ version }}.{{ locale }}.langpack.xpi
       s3_key: firefox-{{ version }}.{{ locale }}.langpack.xpi
+    mar_tools_mar:
+      artifact: host/bin/mar
+      s3_key: mar-tools/{{ stage_platform }}/mar
+    mar_tools_mbdiff:
+      artifact: host/bin/mbsdiff
+      s3_key: mar-tools/{{ stage_platform }}/mbsdiff
 
   {% if platform in ["linux-i686", "linux-x86_64"] %}
     sdk:
       artifact: target.sdk.tar.bz2
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
-    mar_tools_mar:
-      artifact: host/bin/mar
-      s3_key: mar
-    mar_tools_mbdiff:
-      artifact: host/bin/mbsdiff
-      s3_key: mbsdiff
-    #gtest:
-      #artifact: target.gtest.tests.zip
-      #s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.gtest.tests.zip
+    # Bug 1316125 - TODO
+    #sdk_asc:
+      #artifact: target.sdk.tar.bz2.asc
+      #s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2.asc
 
   {% endif %}
 
