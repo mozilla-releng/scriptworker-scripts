@@ -176,7 +176,7 @@ def create_submitter(e, balrog_auth, args):
                            'partialInfo': partial_info,
                            'completeInfo': complete_info}
 
-    elif "tc_fennec_nightly" in e:
+    elif "tc_nightly" in e:
         log.info("Taskcluster Nightly Fennec style Balrog submission")
 
         complete_info = e['completeInfo']
