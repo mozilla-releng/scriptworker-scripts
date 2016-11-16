@@ -105,8 +105,10 @@ def enrich_balrog_manifest(context, path, locale, destinations):
     props = context.properties
 
     if props["branch"] == 'date':
-        # nightlies from dev branches don't upload to archive.m.o
-        url = "{prefix}/{s3_key}".format(prefix="http://bucketlister-delivery.stage.mozaws.net",
+        # nightlies from dev branches don't usually upload to archive.m.o but
+        # in this particular case we're gradually rolling out in the
+        # archive.m.o under the latest-date corresponding bucket subfolder
+        url = "{prefix}/{s3_key}".format(prefix="https://archive.mozilla.org",
                                          s3_key=destinations[0])
         url_replacements = []
     else:
