@@ -115,7 +115,7 @@ def test_move_beets(event_loop):
 
     actual_sources = []
     actual_destinations = []
-    async def fake_move_beet(context, source, locale, destinations):
+    async def fake_move_beet(context, source, destinations, locale, update_balrog_manifest):
         actual_sources.append(source)
         actual_destinations.append(destinations)
 
@@ -159,7 +159,7 @@ def test_move_beet(event_loop):
     with mock.patch('beetmoverscript.script.retry_download', fake_retry_download):
         with mock.patch('beetmoverscript.script.retry_upload', fake_retry_upload):
             event_loop.run_until_complete(
-                move_beet(context, target_source, locale, target_destinations)
+                move_beet(context, target_source, target_destinations, locale, update_balrog_manifest=False)
             )
 
     assert sorted(expected_download_args) == sorted(actual_download_args)
