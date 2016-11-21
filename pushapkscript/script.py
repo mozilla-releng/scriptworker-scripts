@@ -76,6 +76,7 @@ def main(name=None, config_path=None):
 
     logging.basicConfig(**craft_logging_config(context))
     logging.getLogger('taskcluster').setLevel(logging.WARNING)
+    logging.getLogger('oauth2client').setLevel(logging.WARNING)
 
     loop = asyncio.get_event_loop()
     with aiohttp.ClientSession() as session:
