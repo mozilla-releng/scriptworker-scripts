@@ -71,7 +71,7 @@ def test_rollout_percentage(monkeypatch):
         PushAPK(config).run()
         edit_service_mock.update_track.assert_called_once_with('rollout', {
             u'versionCodes': [str(2*i), str(2*i+1)],    # Doesn't provide much value to test, only here to fill gaps
-            u'userFraction': valid_percentage / 100
+            u'userFraction': valid_percentage / 100.0   # Ensure float in Python 2
         })
         edit_service_mock.update_track.reset_mock()
 

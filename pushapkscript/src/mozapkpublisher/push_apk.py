@@ -73,7 +73,7 @@ https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
 
         upload_body = {u'versionCodes': versions}
         if self.config.rollout_percentage is not None:
-            upload_body[u'userFraction'] = self.config.rollout_percentage / 100
+            upload_body[u'userFraction'] = self.config.rollout_percentage / 100.0
 
         edit_service.update_track(self.config.track, upload_body)
         edit_service.commit_transaction()
