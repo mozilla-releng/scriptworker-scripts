@@ -4,6 +4,8 @@ import re
 from io import BytesIO
 from zipfile import ZipFile
 
+from mozapkpublisher.exceptions import NoLocaleFound, NotMultiLocaleApk
+
 logger = logging.getLogger(__name__)
 
 _LOCALE_LINE_PATTERN = re.compile(r'^locale \S+ (\S+) .+')
@@ -23,11 +25,9 @@ def check_if_apk_is_multilocale(apk_path):
     logger.debug('"{}" contains {} locales: '.format(apk_path, number_of_unique_locales, unique_locales))
 
     if number_of_unique_locales == 0:
-        raise Exception('No locale detected in {}:{}:{}'.format(
-            apk_path, _OMNI_JA_LOCATION, _CHROME_MANIFEST_LOCATION
-        ))
+        raise NoLocaleFound(apk_path, _OMNI_JA_LOCATION, _CHROME_MANIFEST_LOCATION)
     elif number_of_unique_locales == 1:
-        raise Exception('Not a multilocale APK. "{}" contains only: {}'.format(apk_path, unique_locales))
+        raise NotMultiLocaleApk(apk_path, unique_locales)
 
 
 def _get_unique_locales(manifest_raw_lines):

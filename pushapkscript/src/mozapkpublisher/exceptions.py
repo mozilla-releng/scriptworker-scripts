@@ -26,3 +26,17 @@ class NoTransactionError(Exception):
         super(NoTransactionError, self).__init__(
             'Transaction has not been started for package "{}"'.format(package_name)
         )
+
+
+class NotMultiLocaleApk(LoggedError):
+    def __init__(self, apk_path, unique_locales):
+        super(NotMultiLocaleApk, self).__init__(
+            'Not a multilocale APK. "{}" contains only: {}'.format(apk_path, unique_locales)
+        )
+
+
+class NoLocaleFound(LoggedError):
+    def __init__(self, apk_path, omni_ja_location, chrome_manifest_location):
+        super(NoLocaleFound, self).__init__(
+            'No locale detected in {}:{}:{}'.format(apk_path, omni_ja_location, chrome_manifest_location)
+        )
