@@ -9,14 +9,18 @@ import arrow
 import jinja2
 import yaml
 
+from beetmoverscript.constants import HASH_BLOCK_SIZE
+
 log = logging.getLogger(__name__)
 
 
 def get_hash(filepath, hash_type="sha512"):
+    """Function to return the digest hash of a file based on filename and
+    algorithm"""
     digest = hashlib.new(hash_type)
     with open(filepath, "rb") as fobj:
         while True:
-            chunk = fobj.read(1024*1024)
+            chunk = fobj.read(HASH_BLOCK_SIZE)
             if not chunk:
                 break
             digest.update(chunk)

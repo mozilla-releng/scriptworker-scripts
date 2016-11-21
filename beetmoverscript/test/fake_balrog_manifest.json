@@ -1,0 +1,19 @@
+[{
+   "appName": "Fennec",
+   "platform": "android",
+   "url_replacements": [],
+   "locale": "en-US",
+   "appVersion": "99.0a1",
+   "branch": "date",
+   "completeInfo":[
+      {
+         "hash": "0436bf1525563abf1d18b5393d9ca4872ee432288162d6490c8cbfe446e32849833eb240d8c5dc501d06651797acf1d54b054979a0a0ff95814f9a10b00e889f",
+         "size": 33210905,
+         "url": "fake-archive.mozilla.org"
+      }
+   ],
+   "tc_nightly": true,
+   "buildid": "20161111002421",
+   "extVersion": "99.0a1",
+   "hashType": "sha512"
+}]

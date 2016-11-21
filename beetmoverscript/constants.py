@@ -1,4 +1,3 @@
-
 MIME_MAP = {
     '': 'text/plain',
     '.asc': 'text/plain',
@@ -17,5 +16,7 @@ PLATFORM_MAP = {
     'linux': 'linux-i686',
     'linux64': 'linux-x86_64',
 }
+
+HASH_BLOCK_SIZE = 1024*1024
 
 MANIFEST_URL_TMPL = "https://queue.taskcluster.net/v1/task/%s/artifacts/public/build/balrog_props.json"
