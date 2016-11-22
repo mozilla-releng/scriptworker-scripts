@@ -18,10 +18,10 @@ from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetry
 from scriptworker.utils import (retry_async, download_file,
                                 raise_future_exceptions, retry_request)
 
-from beetmoverscript.constants import MIME_MAP, MANIFEST_URL_TMPL, PLATFORM_MAP
+from beetmoverscript.constants import MIME_MAP, PLATFORM_MAP
 from beetmoverscript.task import validate_task_schema, add_balrog_manifest_to_artifacts
 from beetmoverscript.utils import (load_json, generate_candidates_manifest,
-                                   update_props, get_hash)
+                                   update_props, get_hash, get_manifest_url)
 
 log = logging.getLogger(__name__)
 
@@ -53,8 +53,7 @@ async def async_main(context):
 
 
 async def get_props(context):
-    taskid_of_manifest = context.task['payload']['taskid_of_manifest']
-    source = MANIFEST_URL_TMPL % taskid_of_manifest
+    source = get_manifest_url(context.task['payload'])
 
     # extra validation check is useful for the url scheme, netloc and path
     # restrictions

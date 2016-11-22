@@ -24,9 +24,13 @@
                 },
                 "update_manifest": {
                     "type": "boolean"
+                },
+                "locale": {
+                    "type": "string"
                 }
             },
-            "required": ["upload_date", "taskid_to_beetmove", "taskid_of_manifest", "update_manifest"]
+            "required": ["upload_date", "taskid_to_beetmove", "taskid_of_manifest", "update_manifest"],
+            "optional": ["locale"]
         }
     },
     "required": ["payload", "dependencies"]

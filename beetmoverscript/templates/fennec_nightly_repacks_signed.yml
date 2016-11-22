@@ -1,0 +1,17 @@
+{% include "fennec_nightly_repacks_base.yml" %}
+
+mapping:
+  {{ locale }}:
+    # common deliverables
+    apk:
+      artifact: {{ locale_prefix }}target.apk
+      s3_key: {{ locale_prefix  }}fennec-{{ version }}.{{ locale }}.android-arm.apk
+      update_balrog_manifest: True
+    # TODO: to add checksums once we enable COT
+    #checksums:
+      #artifact: {{ locale_prefix }}target.checksums
+      #s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.checksums
+    # TODO: to add checksums once we enable COT
+    #checksums_asc:
+      #artifact: {{ locale_prefix }}target.checksums.asc
+      #s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.checksums.asc

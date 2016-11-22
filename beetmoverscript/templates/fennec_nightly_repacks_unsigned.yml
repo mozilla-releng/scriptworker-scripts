@@ -1,0 +1,6 @@
+{% include "fennec_nightly_repacks_base.yml" %}
+
+mapping:
+  # common deliverables
+  {{ locale }}:
+    []

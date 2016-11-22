@@ -1,0 +1,25 @@
+{% include "firefox_nightly_repacks_base.yml" %}
+
+mapping:
+  {{ locale }}:
+    # common deliverables
+    # TODO: to remove checksums once we enable COT
+    checksums:
+      artifact: target.checksums
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums
+    # TODO: to remove checksums once we enable COT
+    checksums_asc:
+      artifact: target.checksums.asc
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums.asc
+    complete_mar:
+      artifact: target.complete.mar
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
+      update_balrog_manifest: true
+  {% if platform in ["linux-i686", "linux-x86_64"] %}
+    package:
+      artifact: target.tar.bz2
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
+    package_asc:
+      artifact: target.tar.bz2.asc
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
+  {% endif %}

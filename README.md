@@ -73,6 +73,10 @@ touch work_dir/task.json  # see below for example
         "fennec_nightly_signed": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_signed.yml"
         "firefox_nightly_unsigned": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/firefox_nightly_en_us_unsigned.yml",
         "firefox_nightly_signed": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/firefox_nightly_en_us_signed.yml"
+        "firefox_nightly_repacks_unsigned": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/firefox_nightly_repacks_unsigned.yml",
+        "firefox_nightly_repacks_signed": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/firefox_nightly_repacks_signed.yml"
+        "fennec_nightly_repacks_unsigned": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/fennec_nightly_repacks_unsigned.yml",
+        "fennec_nightly_repacks_signed": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/fennec_nightly_repacks_signed.yml"
     },
     "s3": {
         "bucket": "mozilla-releng-beetmoverscript",

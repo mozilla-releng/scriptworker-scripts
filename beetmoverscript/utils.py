@@ -9,7 +9,8 @@ import arrow
 import jinja2
 import yaml
 
-from beetmoverscript.constants import HASH_BLOCK_SIZE
+from beetmoverscript.constants import (HASH_BLOCK_SIZE, MANIFEST_L10N_URL_TMPL,
+                                       MANIFEST_URL_TMPL)
 
 log = logging.getLogger(__name__)
 
@@ -37,6 +38,15 @@ def write_json(path, contents):
         json.dump(contents, fh)
 
 
+def get_manifest_url(payload):
+    """Function to toggle between en-US and l10n balrog_props manifest url"""
+    taskid_of_manifest = payload['taskid_of_manifest']
+    if 'locale' in payload:
+        return MANIFEST_L10N_URL_TMPL % (taskid_of_manifest, payload['locale'])
+
+    return MANIFEST_URL_TMPL % taskid_of_manifest
+
+
 def infer_template_args(context):
     props = context.properties
     # Bug 1313154 - in order to make beetmoverscript accommodate the nightly
@@ -45,8 +55,7 @@ def infer_template_args(context):
     # False while the builds with signed artifacts will have the opposite,
     # marking the need to update the manifest to be passed down to balrogworker
     tmpl_key_option = "signed" if context.task["payload"]["update_manifest"] is True else "unsigned"
-
-    return {
+    _args = {
         "version": props["appVersion"],
         "branch": props["branch"],
         "product": props["appName"],
@@ -57,6 +66,16 @@ def infer_template_args(context):
             tmpl_key_option
         )
     }
+
+    if 'locale' in context.task["payload"]:
+        _args["locale"] = context.task["payload"]["locale"]
+        # overwrite the `template_key` with the repacks string version
+        _args["template_key"] = "%s_nightly_repacks_%s" % (
+            props["appName"].lower(),
+            tmpl_key_option
+        )
+
+    return _args
 
 
 def generate_candidates_manifest(context):
@@ -93,9 +112,15 @@ def generate_candidates_manifest(context):
 
 def update_props(context_props, platform_mapping):
     """Function to alter the `stage_platform` field from balrog_props to their
-    corresponding correct values for certain platforms"""
+    corresponding correct values for certain platforms. Please note that for
+    l10n jobs the `stage_platform` field is in fact called `platform` hence
+    the defaulting below."""
     props = deepcopy(context_props)
-    stage_platform = props["stage_platform"]
+    # en-US jobs have the platform set in the `stage_platform` field while
+    # l10n jobs have it set under `platform`. This is merely an uniformization
+    # under the `stage_platform` field that is needed later on in the templates
+    stage_platform = props.get("stage_platform", props.get("platform"))
+    props["stage_platform"] = stage_platform
     # for some products/platforms this mapping is not needed, hence the default
     props["platform"] = platform_mapping.get(stage_platform,
                                              stage_platform)

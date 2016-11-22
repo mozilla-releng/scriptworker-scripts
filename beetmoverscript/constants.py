@@ -20,3 +20,4 @@ PLATFORM_MAP = {
 HASH_BLOCK_SIZE = 1024*1024
 
 MANIFEST_URL_TMPL = "https://queue.taskcluster.net/v1/task/%s/artifacts/public/build/balrog_props.json"
+MANIFEST_L10N_URL_TMPL = "https://queue.taskcluster.net/v1/task/%s/artifacts/public/build/%s/balrog_props.json"
