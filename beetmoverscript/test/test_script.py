@@ -9,7 +9,8 @@ from beetmoverscript.script import setup_mimetypes, setup_config, put, retry_dow
 from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props
 from beetmoverscript.utils import generate_candidates_manifest
 from scriptworker.context import Context
-from scriptworker.exceptions import ScriptWorkerRetryException
+from scriptworker.exceptions import (ScriptWorkerRetryException,
+                                     ScriptWorkerTaskException)
 from scriptworker.test import event_loop, fake_session, fake_session_500
 
 assert event_loop  # silence flake8
@@ -190,5 +191,14 @@ def test_main(event_loop, fake_session):
     async def fake_async_main(context):
         pass
 
+    async def fake_async_main_with_exception(context):
+        raise ScriptWorkerTaskException("This is wrong, the answer is 42")
+
     with mock.patch('beetmoverscript.script.async_main', new=fake_async_main):
         main(name='__main__', config_path='beetmoverscript/test/fake_config.json')
+
+    with mock.patch('beetmoverscript.script.async_main', new=fake_async_main_with_exception):
+        try:
+            main(name='__main__', config_path='beetmoverscript/test/fake_config.json')
+        except SystemExit as exc:
+            assert exc.code == 1
