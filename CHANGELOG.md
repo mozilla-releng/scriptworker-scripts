@@ -4,9 +4,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
+- added `token_duration_seconds` config item
+
 ### Changed
+
 ### Fixed
+- bumped `token_duration_seconds` from 10min to 20min
+- updated readme to describe `upstreamArtifacts` rather than `unsignedArtifacts`.
+
 ### Removed
+- `valid_artifact_*` config items, as well as references to them in the readme.
 
 ## [0.8.1] - 2016-11-28
 ### Fixed

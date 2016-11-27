@@ -67,12 +67,10 @@ def get_default_config():
         'work_dir': os.path.join(parent_dir, 'work_dir'),
         'artifact_dir': os.path.join(parent_dir, '/src/signing/artifact_dir'),
         'my_ip': "127.0.0.1",
+        'token_duration_seconds': 20 * 60,
         'ssl_cert': None,
         'signtool': "signtool",
         'schema_file': os.path.join(cwd, 'signingscript', 'data', 'signing_task_schema.json'),
-        'valid_artifact_schemes': ['https'],
-        'valid_artifact_netlocs': ['queue.taskcluster.net'],
-        'valid_artifact_path_regexes': [r'''/v1/task/(?P<taskId>[^/]+)(/runs/\d+)?/artifacts/(?P<filepath>.*)$'''],
         'verbose': True,
     }
     return default_config

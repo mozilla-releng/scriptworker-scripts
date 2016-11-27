@@ -107,43 +107,18 @@ The config json looks like this (comments are not valid json, but I'm inserting 
       // I got this value from running `docker network inspect bridge` and using the gateway.
       "my_ip": "172.17.0.1",
 
+      // how many seconds should the signing token be valid for?
+      "token_duration_seconds": 1200,
+
       // the path to the docker-signing-server fake_ca cert that you generated above.
       "ssl_cert": "/src/signing/docker-signing-server/fake_ca/ca.crt",
 
       // the path to signtool in your virtualenv that you created above
       "signtool": "/src/signing/venv3/bin/signtool",
 
-      // valid URL schemes for the artifacts to download.  A value of `None` will allow any
-      // schemes.
-      "valid_artifact_schemes": ["https"],
-
-      // valid URL netlocs for the artifacts to download.  A value of `None` will allow any
-      // netlocs.
-      "valid_artifact_netlocs": ["queue.taskcluster.net"],
-
-      // valid URL path regexes for the artifacts to download.  A value of `None will allow
-      // any paths, and the relative filepath of the files will be the entire URL path.
-      // If the regexes are defined, the regex MUST define a `filepath`; this will be used
-      // as the relative filepath of the file.  If `taskId` is specified in the regex, the
-      // taskId MUST match one of the `valid_artifact_task_ids` below.
-      "valid_artifact_path_regexes": ["/v1/task/(?P<taskId>[^/]+)(/runs/\d+)?/artifacts/(?P<filepath>.*)$"],
-
-      // Usually you don't want to specify this in your config file at all.  By default this
-      // will default to the `taskId`s of the dependent tasks in the task definition.  If you
-      // want to override that, you can override it here.
-      "valid_artifact_task_ids": ["VALID_TASK_ID"],
-
       // enable debug logging
       "verbose": true
     }
-
-So, for example, if you want to use a URL like `http://people.mozilla.org/~asasaki/signing/public/foo/test.mar` as your URL, you can allow for it by:
-
-* adjusting `valid_artifact_schemes` to include `"http"` (or set it to `None`),
-* adjusting `valid_artifact_netlocs` to include `"people.mozilla.org"` (or set it to `None`),
-* adjusting `valid_artifact_path_regexes` to include `".*/signing/(?P<filepath>.*)$"` or the like.
-
-Because the above regex doesn't include a `taskId`, you don't have to worry about `valid_artifact_task_ids`.  Because `filepath` will match `public/foo/test.mar`, and because we're going to sign with gpg, the artifacts uploaded will include `public/foo/test.mar` and `public/foo/test.mar.asc`.
 
 #### directories and file naming
 If you aren't running through scriptworker, you need to manually create the directories that `work_dir` and `artifact_dir` point to.  It's better to use new directories for these rather than cluttering and potentially overwriting an existing directory.  Once you set up scriptworker, the `work_dir` and `artifact_dir` will be regularly wiped and recreated.
@@ -175,9 +150,12 @@ It will look like this:
         "source": "https://tools.taskcluster.net/task-creator/"
       },
       "payload": {
-        "unsignedArtifacts": [
-          "https://queue.taskcluster.net/v1/task/VALID_TASK_ID/artifacts/FILE_PATH"
-        ],
+        "upstreamArtifacts": [{
+          "taskId": "upstream-task-id1",
+          "taskType": "build",
+          "paths": ["public/artifact/path1", "public/artifact/path2"],
+          "formats": []
+        }],
         "maxRunTime": 600
       },
       "priority": "normal",
@@ -195,9 +173,9 @@ It will look like this:
       "workerType": "dummy-worker-aki"
     }
 
-The important entries to edit are the `unsignedArtifacts`, the `dependencies`, and the `scopes`.
+The important entries to edit are the `upstreamArtifacts`, the `dependencies`, and the `scopes`.
 
-The `unsignedArtifacts` point to the file(s) to sign; the `dependencies` need to match the `taskId`s of the URLs unless you modify the `valid_artifact_*` config items as specified above.
+The `upstreamArtifacts` point to the file(s) to sign.  Because scriptworker downloads and verifies their shas, signingscript expects to find the files under `$artifact_dir/public/cot/$upstream_task_id/$path`
 
 The first scope, `project:releng:signing:cert:dep-signing`, matches the scope in your password json that you created.  The second scope, `project:releng:signing:format:gpg`, specifies which signing format to use.  (You can specify multiple formats by adding multiple `project:releng:signing:format:` scopes)
 
