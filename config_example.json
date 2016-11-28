@@ -5,5 +5,6 @@
     "schema_file": "signingscript/data/signing_task_schema.json",
     "signtool": "signtool",
     "ssl_cert": "host.cert",
+    "token_duration_seconds": 1200,
     "verbose": true
 }
