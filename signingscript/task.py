@@ -45,7 +45,10 @@ def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
 
 async def get_token(context, output_file, cert_type, signing_formats):
     token = None
-    data = {"slave_ip": context.config['my_ip'], "duration": 20 * 60}
+    data = {
+        "slave_ip": context.config['my_ip'],
+        "duration": context.config["token_duration_seconds"],
+    }
     signing_servers = get_suitable_signing_servers(
         context.signing_servers, cert_type,
         signing_formats
