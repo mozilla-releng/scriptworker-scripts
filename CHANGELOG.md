@@ -8,6 +8,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 ### Removed
 
+## [0.8.1] - 2016-11-28
+### Fixed
+- bumped the token timeout to 20min
+
 ## [0.8.0] - 2016-11-09
 ## Changed
 - `copy_to_artifact_dir` is now `copy_to_dir`, and takes a `parent_dir` arg.
