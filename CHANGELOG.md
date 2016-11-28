@@ -4,6 +4,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## 0.1.4
+Mute debug logs of oauth2client
+
 ## 0.1.3
 APKs are not committed onto Google Play Store, by default anymore.
 
