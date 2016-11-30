@@ -57,7 +57,7 @@ def infer_template_args(context):
     tmpl_key_option = "signed" if context.task["payload"]["update_manifest"] is True else "unsigned"
     tmpl_key_platform = "firefox"
     if props["stage_platform"] == "android-api-15":
-         tmpl_key_platform = "fennec"
+        tmpl_key_platform = "fennec"
     elif props["stage_platform"] == "android-x86":
         tmpl_key_platform = "fennecx86"
     _args = {
