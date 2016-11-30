@@ -55,6 +55,11 @@ def infer_template_args(context):
     # False while the builds with signed artifacts will have the opposite,
     # marking the need to update the manifest to be passed down to balrogworker
     tmpl_key_option = "signed" if context.task["payload"]["update_manifest"] is True else "unsigned"
+    tmpl_key_platform = "firefox"
+    if props["stage_platform"] == "android-api-15":
+        tmpl_key_platform = "fennec"
+    elif props["stage_platform"] == "android-x86":
+        tmpl_key_platform = "fennecx86"
     _args = {
         "version": props["appVersion"],
         "branch": props["branch"],
@@ -62,7 +67,7 @@ def infer_template_args(context):
         "stage_platform": props["stage_platform"],
         "platform": props["platform"],
         "template_key": "%s_nightly_%s" % (
-            props["appName"].lower(),
+            tmpl_key_platform,
             tmpl_key_option
         )
     }
