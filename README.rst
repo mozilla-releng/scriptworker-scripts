@@ -225,8 +225,7 @@ The important entries to edit are the ``upstreamArtifacts``, the
 
 The ``upstreamArtifacts`` point to the file(s) to sign. Because
 scriptworker downloads and verifies their shas, signingscript expects to
-find the files under
-``$artifact_dir/public/cot/$upstream_task_id/$path``
+find the files under ``$work_dir/cot/$upstream_task_id/$path``
 
 The first scope, ``project:releng:signing:cert:dep-signing``, matches
 the scope in your password json that you created. The second scope,
