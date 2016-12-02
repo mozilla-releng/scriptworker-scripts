@@ -1,6 +1,6 @@
 IMAGE_NAME = balrogworker
 
-build:
+build: Dockerfile
 	docker build -t $(IMAGE_NAME)  --rm .
 
 start:
@@ -8,6 +8,9 @@ start:
 
 shell:
 	docker exec -ti $(IMAGE_NAME)-container /bin/bash --login
+
+Dockerfile:
+	cp docker/Dockerfile Dockerfile
 
 
 update_pubkeys:
