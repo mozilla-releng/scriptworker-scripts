@@ -13,4 +13,3 @@ tools/*
 .tox
 *egg-info
 .cache
-test_release.json
