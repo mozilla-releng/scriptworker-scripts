@@ -15,8 +15,9 @@ sys.path.insert(0, os.path.join(
     os.path.dirname(__file__), "../tools/lib/python"
 ))
 
-from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4
-from util.retry import retry, retriable
+# Until we get rid of our build/tools dep, this import block will break flake8 E402
+from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
+from util.retry import retry, retriable  # noqa: E402
 
 log = logging.getLogger(__name__)
 
@@ -234,6 +235,7 @@ def verify_args(argv):
     args.parent_url, args.signing_cert = load_task(args.taskdef)
 
     return args
+
 
 def update_args_by_popping_balrog_creds(args):
     """Pops balrog auth creds from args and retrieves them"""

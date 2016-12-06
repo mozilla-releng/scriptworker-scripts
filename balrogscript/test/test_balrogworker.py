@@ -15,7 +15,7 @@ from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4
 
 nightly_manifest = [
     {
-        "tc_fennec_nightly": True,
+        "tc_nightly": True,
         "completeInfo": [{
             "url": "http://bucketlister-delivery.stage.mozaws.net/pub/mobile/nightly/latest-date-android-api-15/fennec-52.0a1.multi.android.arm.apk",
             "size": "33256909",
