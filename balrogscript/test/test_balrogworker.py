@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import balrogworker as bw
+import balrogscript.balrogscript as balrogscript
 import unittest
 from nose.tools import raises, with_setup
 import json
@@ -92,58 +92,58 @@ class BalrogworkerTest(unittest.TestCase):
     def test_get_hash(self):
         test_content = "wow. much text. very hash ☺️"
         test_md5 = "d0bfbdf85fac3ccd5a9d9a458bf39ab3"
-        assert bw.get_hash(test_content) == test_md5
+        assert balrogscript.get_hash(test_content) == test_md5
 
     def test_get_hash_fail(self):
         test_content = "sometimes i swordfight with pocky ⚔⚔"
         test_md5 = "thisisnot⚔arealhash"
-        assert bw.get_hash(test_content) != test_md5
+        assert balrogscript.get_hash(test_content) != test_md5
 
     def test_get_hash_sha512(self):
         test_content = "wow. much text. مرحبا"
         test_sha = "e643580dcb98a8d9a7b95890d12f793baf5ef09a79695003" \
                    "fbcaf3b54c1c96cb56aeccbd360209c5cd234117dea1cc88aa60b2a250dd4858ee1d6847cb7a8c7e"
-        assert bw.get_hash(test_content, hash_type="sha512") == test_sha
+        assert balrogscript.get_hash(test_content, hash_type="sha512") == test_sha
 
     def test_possible_names(self):
         initial = "/Users/tester/file.exe"
-        names = bw.possible_names(initial, 2)
+        names = balrogscript.possible_names(initial, 2)
         exp = ["/Users/tester/file.exe", "/Users/tester/file-1.exe", "/Users/tester/file-2.exe"]
         assert set(names) == set(exp)
 
     def test_possible_names_neg(self):
         initial = "file.exe"
-        names = bw.possible_names(initial, -1)
+        names = balrogscript.possible_names(initial, -1)
         exp = ["file.exe"]
         assert set(names) == set(exp)
 
     def test_verify_task_schema(self):
         test_taskdef = {'payload': {'parent_task_artifacts_url': 500,
                                     'signing_cert': 'nightly'}}
-        assert not bw.verify_task_schema(test_taskdef)
+        assert not balrogscript.verify_task_schema(test_taskdef)
 
     @raises(KeyError)
     def test_verify_task_schema_missing_cert(self):
         test_taskdef = {'payload': {'parent_task_artifacts_url': 500}}
-        assert bw.verify_task_schema(test_taskdef)
+        assert balrogscript.verify_task_schema(test_taskdef)
 
     @raises(KeyError)
     def test_verify_task_schema_invalid_cert(self):
         test_taskdef = {'payload': {'parent_task_artifacts_url': 500,
                                     'signing_cert': os}}
-        assert bw.verify_task_schema(test_taskdef)
+        assert balrogscript.verify_task_schema(test_taskdef)
 
     @raises(KeyError)
     def test_verify_task_schema_missing_url(self):
         test_taskdef = {'payload': {'signing_cert': 'release'}}
-        assert bw.verify_task_schema(test_taskdef)
+        assert balrogscript.verify_task_schema(test_taskdef)
 
     def test_load_task_payload(self):
-        url, cert = bw.load_task('test_nightly.json')
+        url, cert = balrogscript.load_task('test_nightly.json')
         assert url == 'https://queue.taskcluster.net/v1/task/e2q3BKuhRxqtcB6FVCbKfg/artifacts/public/env'
 
     def test_load_task_cert(self):
-        url, cert = bw.load_task('test_nightly.json')
+        url, cert = balrogscript.load_task('test_nightly.json')
         assert 'nightly' in cert
 
     def get_nightly_args(self):
@@ -184,7 +184,7 @@ class BalrogworkerTest(unittest.TestCase):
         }
 
     def test_verify_args(self):
-        args = vars(bw.verify_args(self.get_nightly_args()))
+        args = vars(balrogscript.verify_args(self.get_nightly_args()))
         exp = self.get_nightly_args_processed()
         for key in args:
             if key == 'signing_cert':
@@ -192,40 +192,40 @@ class BalrogworkerTest(unittest.TestCase):
             assert exp[key] == args[key]
 
     def test_args_provides_correct_key_path(self):
-        args = bw.verify_args(self.get_nightly_args())
+        args = balrogscript.verify_args(self.get_nightly_args())
         assert os.path.isfile(args.signing_cert)
 
 
     def test_verify_args_from_environ(self):
         os.environ.update(self.get_args_as_environ())
         expected = self.get_nightly_args_processed()
-        for key, value in vars(bw.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])).iteritems():
+        for key, value in vars(balrogscript.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])).iteritems():
             if key == 'signing_cert':
                 continue
             assert expected[key] == value
 
     def create_args_dict(self):
         os.environ.update(self.get_args_as_environ())
-        return bw.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
+        return balrogscript.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
 
     def test_verify_copy_to_s3_returns_tc_url(self):
         args = self.create_args_dict()
 
-        url = bw.verify_copy_to_s3(args, "return this url", "")
+        url = balrogscript.verify_copy_to_s3(args, "return this url", "")
         assert url == "return this url"
 
     def test_create_submitter_nightly_style(self):
         # Execute task with S3 disabled for these tests
-        args = bw.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
+        args = balrogscript.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
         balrog_auth = (None, None)
-        submitter, release = bw.create_submitter(nightly_manifest[0], balrog_auth, args)
+        submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, args)
         assert isinstance(submitter, NightlySubmitterV4)
 
     def test_create_submitter_nightly_metadata(self):
         # Execute task with S3 disabled for these tests
-        args = bw.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
+        args = balrogscript.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
         balrog_auth = (None, None)
-        submitter, release = bw.create_submitter(nightly_manifest[0], balrog_auth, args)
+        submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, args)
 
         exp = {
             'platform': "android-api-15",
@@ -245,16 +245,16 @@ class BalrogworkerTest(unittest.TestCase):
         assert exp == release
 
     def test_create_submitter_nightly_creates_valid_submitter(self):
-        args = bw.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
+        args = balrogscript.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
         balrog_auth = (None, None)
-        submitter, release = bw.create_submitter(nightly_manifest[0], balrog_auth, args)
+        submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, args)
         lambda: submitter.run(**release)
 
 
     def test_create_submitter_release_submission_type(self):
-        args = bw.verify_args(["--taskdef", "test_release.json", "--disable-s3"])
+        args = balrogscript.verify_args(["--taskdef", "test_release.json", "--disable-s3"])
         balrog_auth = (None, None)
-        submitter, release = bw.create_submitter(release_manifest[0], balrog_auth, args)
+        submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, args)
         assert isinstance(submitter,ReleaseSubmitterV4)
 
     def test_create_submitter_release_metadata(self):
@@ -269,14 +269,14 @@ class BalrogworkerTest(unittest.TestCase):
                 'hash': '139cb84767eddceb2f8bc0b98b3bc5c1e41d52c208edaa3d429281229f3ed53b241bd78b1666eadf206f2e7b4d578c89d08942ec40184870b144a7fa6b3a7fb8',
                 'size': 55889576}]}
 
-        args = bw.verify_args(["--taskdef", "test_release.json", "--disable-s3"])
+        args = balrogscript.verify_args(["--taskdef", "test_release.json", "--disable-s3"])
         balrog_auth = (None, None)
-        submitter, release = bw.create_submitter(release_manifest[0], balrog_auth, args)
+        submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, args)
 
         assert release == exp
 
     def test_create_submitter_release_creates_valid_submitter(self):
-        args = bw.verify_args(["--taskdef", "test_release.json", "--disable-s3"])
+        args = balrogscript.verify_args(["--taskdef", "test_release.json", "--disable-s3"])
         balrog_auth = (None, None)
-        submitter, release = bw.create_submitter(release_manifest[0], balrog_auth, args)
+        submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, args)
         lambda: submitter.run(**release)

@@ -1,0 +1,13 @@
+recursive-include balrogscript/test *
+recursive-include balrogscript/keys *
+recursive-include docker *
+
+include LICENSE
+include README.rst
+include config_example.json
+include version.txt
+include fbs_requirements.txt
+include sw_requirements.txt
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]

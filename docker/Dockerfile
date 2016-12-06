@@ -25,7 +25,8 @@ RUN hg clone https://hg.mozilla.org/build/tools /app/tools
 
 RUN mkdir -p /app/bin
 COPY ./ /app
-COPY docker/*.sh /app/bin/
+COPY docker/*sh /app/bin/
+COPY docker/config.json /app/config.json
 WORKDIR /app
 ENTRYPOINT ["/app/bin/app_entrypoint.sh"]
 

@@ -10,3 +10,6 @@ localtest.sh
 tools/*
 *.coverage
 *task.json
+.tox
+*egg-info
+.cache
