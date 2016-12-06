@@ -88,6 +88,7 @@ class BalrogworkerTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         os.remove('test_nightly.json')
+        os.remove('test_release.json')
 
     def test_get_hash(self):
         test_content = "wow. much text. very hash ☺️"
