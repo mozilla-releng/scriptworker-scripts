@@ -140,7 +140,7 @@ def load_task(task_file):
     parent_url = task_definition['payload']['parent_task_artifacts_url']
     signing_cert_name = task_definition['payload']['signing_cert']
     bin_directory = os.path.dirname(os.path.abspath(__file__))
-    signing_cert = os.path.join(bin_directory, "../keys/{}.pubkey".format(signing_cert_name))
+    signing_cert = os.path.join(bin_directory, "keys/{}.pubkey".format(signing_cert_name))
     return parent_url, signing_cert
 
 
