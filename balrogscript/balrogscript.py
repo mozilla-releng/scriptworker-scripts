@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import os
 import logging
-from frozendict import frozendict
 import json
 import jsonschema
 import sys
@@ -246,7 +245,7 @@ def get_config(argv):
     del(config['balrog_username'])
     del(config['balrog_password'])
 
-    return (username, password), frozendict(config)
+    return (username, password), config
 
 
 def main():
