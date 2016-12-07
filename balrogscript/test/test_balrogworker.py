@@ -122,8 +122,8 @@ def test_possible_names_neg():
 
 
 def test_load_task_payload(nightly_config):
-    url, cert = balrogscript.load_task(nightly_config)
-    assert url == 'https://queue.taskcluster.net/v1/task/e2q3BKuhRxqtcB6FVCbKfg/artifacts/public/env'
+    upstream, cert = balrogscript.load_task(nightly_config)
+    assert upstream[0]['paths'][0] == 'public/manifest.json'
 
 
 def test_load_task_cert(nightly_config):

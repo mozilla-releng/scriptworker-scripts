@@ -139,7 +139,7 @@ def verify_task_schema(config, task_definition):
 
 
 def load_task(config):
-    taskdef = os.path.join(config['work_dir'], "task.json")
+    task_file = os.path.join(config['work_dir'], "task.json")
     with open(task_file, 'r') as f:
         task_definition = json.load(f)
 

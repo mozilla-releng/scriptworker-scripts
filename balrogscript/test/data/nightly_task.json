@@ -7,7 +7,7 @@
         "upstreamArtifacts": [{
             "paths": ["public/manifest.json"],
             "taskId": "upstream-task-id",
-            "taskType": "baz",
-        }],
+            "taskType": "baz"
+        }]
     }
 }
