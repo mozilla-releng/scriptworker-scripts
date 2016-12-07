@@ -1,10 +1,15 @@
 {
-    "signing_server_config": "server_config.json",
     "work_dir": "/tmp/work_dir",
     "artifact_dir": "/tmp/artifact_dir",
-    "schema_file": "signingscript/data/signing_task_schema.json",
-    "signtool": "signtool",
-    "ssl_cert": "host.cert",
-    "token_duration_seconds": 1200,
+    "schema_file": "balrogscript/data/balrog_task_schema.json",
+    "dummy": false,
+    "api_root": "BALROG_API_ROOT",
+    "balrog_username": "BALROG_USERNAME",
+    "balrog_password": "BALROG_PASSWORD",
+    "s3_bucket": "S3_BUCKET",
+    "aws_key_id": "AWS_ACCESS_KEY_ID",
+    "aws_key_secret": "AWS_SECRET_ACCESS_KEY",
+    "disable_certs": false,
+    "disable_s3": true,
     "verbose": true
 }
