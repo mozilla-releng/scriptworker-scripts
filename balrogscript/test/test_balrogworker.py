@@ -176,7 +176,7 @@ def test_create_submitter_release_creates_valid_submitter():
     lambda: submitter.run(**release)
 
 
-def test_verify_task_schema():
+def test_verify_task_schema(config):
     test_taskdef = {
         'scopes': ['blah'],
         'dependencies': ['blah'],
@@ -190,7 +190,7 @@ def test_verify_task_schema():
             }],
         }
     }
-    balrogscript.verify_task_schema(test_taskdef)
+    balrogscript.verify_task_schema(config, test_taskdef)
 
 
 @pytest.mark.parametrize("defn", ({
@@ -223,6 +223,6 @@ def test_verify_task_schema():
         'signing_cert': 'nightly',
     }
 }))
-def test_verify_task_schema_missing_cert(defn):
+def test_verify_task_schema_missing_cert(config, defn):
     with pytest.raises(SystemExit):
-        balrogscript.verify_task_schema(defn)
+        balrogscript.verify_task_schema(config, defn)
