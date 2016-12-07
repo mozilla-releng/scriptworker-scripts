@@ -1,5 +1,5 @@
-recursive-include balrogscript/test *
 recursive-include balrogscript/keys *
+recursive-include balrogscript/data *
 recursive-include docker *
 
 include LICENSE
