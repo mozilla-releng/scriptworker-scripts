@@ -138,7 +138,8 @@ def verify_task_schema(config, task_definition):
         sys.exit(3)
 
 
-def load_task(config, task_file):
+def load_task(config):
+    taskdef = os.path.join(config['work_dir'], "task.json")
     with open(task_file, 'r') as f:
         task_definition = json.load(f)
 
@@ -237,8 +238,7 @@ def get_config(argv):
     if config['disable_s3']:
         log.info("Skipping S3 uploads, submitting taskcluster artifact urls instead.")
 
-    taskdef = os.path.join(config['work_dir'], "task.json")
-    config['upstream_artifacts'], config['signing_cert'] = load_task(config, taskdef)
+    config['upstream_artifacts'], config['signing_cert'] = load_task(config)
 
     # get the balrog creds out of config
     username, password = (config['balrog_username'], config['balrog_password'])

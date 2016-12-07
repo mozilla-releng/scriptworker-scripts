@@ -5,6 +5,7 @@ import json
 import logging
 import pytest
 import os
+import shutil
 import sys
 import tempfile
 
@@ -37,8 +38,8 @@ def release_manifest():
 
 @pytest.yield_fixture(scope='function')
 def config():
-    with tempfile.TemporaryDirectory as t:
-        tmpdir = t.name
+    tmpdir = tempfile.mkdtemp()
+    try:
         yield {
             "work_dir": os.path.join(tmpdir, "work_dir"),
             "artifact_dir": os.path.join(tmpdir, "artifact_dir"),
@@ -54,6 +55,38 @@ def config():
             "disable_s3": True,
             "verbose": True
         }
+    finally:
+        shutil.rmtree(tmpdir)
+
+
+@pytest.yield_fixture(scope='function')
+def nightly_config():
+    with config() as config_:
+        os.makedirs(os.path.join(config_['work_dir'], "upstream-task-id", "public"))
+        shutil.copyfile(
+            NIGHTLY_MANIFEST_PATH,
+            os.path.join(config_['work_dir'], "upstream-task-id", "public", "manifest.json")
+        )
+        shutil.copyfile(
+            NIGHTLY_TASK_PATH,
+            os.path.join(config_['work_dir'], "task.json")
+        )
+        yield config_
+
+
+@pytest.yield_fixture(scope='function')
+def release_config():
+    with config() as config_:
+        os.makedirs(os.path.join(config_['work_dir'], "upstream-task-id", "public"))
+        shutil.copyfile(
+            RELEASE_MANIFEST_PATH,
+            os.path.join(config_['work_dir'], "upstream-task-id", "public", "manifest.json")
+        )
+        shutil.copyfile(
+            RELEASE_TASK_PATH,
+            os.path.join(config_['work_dir'], "task.json")
+        )
+        yield config_
 
 
 # tests {{{1
@@ -90,13 +123,13 @@ def test_possible_names_neg():
     assert set(names) == set(exp)
 
 
-def test_load_task_payload():
-    url, cert = balrogscript.load_task('test_nightly.json')
+def test_load_task_payload(nightly_config):
+    url, cert = balrogscript.load_task(nightly_config)
     assert url == 'https://queue.taskcluster.net/v1/task/e2q3BKuhRxqtcB6FVCbKfg/artifacts/public/env'
 
 
-def test_load_task_cert():
-    url, cert = balrogscript.load_task('test_nightly.json')
+def test_load_task_cert(nightly_config):
+    url, cert = balrogscript.load_task(nightly_config)
     assert 'nightly' in cert
 
 
