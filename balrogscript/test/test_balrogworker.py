@@ -101,23 +101,21 @@ def test_load_task_cert():
 
 
 def test_verify_copy_to_s3_returns_tc_url(config):
-    url = balrogscript.verify_copy_to_s3(args, "return this url", "")
+    url = balrogscript.verify_copy_to_s3(config, "return this url", "")
     assert url == "return this url"
 
 
-def test_create_submitter_nightly_style():
+def test_create_submitter_nightly_style(config):
     # Execute task with S3 disabled for these tests
-    args = balrogscript.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
     balrog_auth = (None, None)
-    submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, args)
+    submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, config)
     assert isinstance(submitter, NightlySubmitterV4)
 
 
-def test_create_submitter_nightly_metadata():
+def test_create_submitter_nightly_metadata(config):
     # Execute task with S3 disabled for these tests
-    args = balrogscript.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
     balrog_auth = (None, None)
-    submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, args)
+    submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, config)
 
     exp = {
         'platform': "android-api-15",
@@ -137,21 +135,19 @@ def test_create_submitter_nightly_metadata():
     assert exp == release
 
 
-def test_create_submitter_nightly_creates_valid_submitter():
-    args = balrogscript.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
+def test_create_submitter_nightly_creates_valid_submitter(config):
     balrog_auth = (None, None)
-    submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, args)
+    submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, config)
     lambda: submitter.run(**release)
 
 
-def test_create_submitter_release_submission_type():
-    args = balrogscript.verify_args(["--taskdef", "test_release.json", "--disable-s3"])
+def test_create_submitter_release_submission_type(config):
     balrog_auth = (None, None)
-    submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, args)
+    submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, config)
     assert isinstance(submitter,ReleaseSubmitterV4)
 
 
-def test_create_submitter_release_metadata():
+def test_create_submitter_release_metadata(config):
     exp = {
         'partialInfo': [{
             'previousVersion': '48.0b10',
@@ -163,16 +159,14 @@ def test_create_submitter_release_metadata():
             'hash': '139cb84767eddceb2f8bc0b98b3bc5c1e41d52c208edaa3d429281229f3ed53b241bd78b1666eadf206f2e7b4d578c89d08942ec40184870b144a7fa6b3a7fb8',
             'size': 55889576}]}
 
-    args = balrogscript.verify_args(["--taskdef", "test_release.json", "--disable-s3"])
     balrog_auth = (None, None)
-    submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, args)
+    submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, config)
 
     assert release == exp
 
-def test_create_submitter_release_creates_valid_submitter():
-    args = balrogscript.verify_args(["--taskdef", "test_release.json", "--disable-s3"])
+def test_create_submitter_release_creates_valid_submitter(config):
     balrog_auth = (None, None)
-    submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, args)
+    submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, config)
     lambda: submitter.run(**release)
 
 
