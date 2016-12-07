@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import balrogscript.balrogscript as balrogscript
-import unittest
-from nose.tools import raises, with_setup
-import logging
 import json
+import logging
 import pytest
 import os
 import sys
+import tempfile
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(__file__), "../tools/lib/python"
@@ -17,7 +16,7 @@ from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4
 
 logging.basicConfig()
 
-# constants and fixtures {{{1
+# constants, helpers, and fixtures {{{1
 NIGHTLY_MANIFEST_PATH = os.path.join(os.path.dirname(__file__), "data", "nightly_manifest.json")
 RELEASE_MANIFEST_PATH = os.path.join(os.path.dirname(__file__), "data", "release_manifest.json")
 NIGHTLY_TASK_PATH = os.path.join(os.path.dirname(__file__), "data", "nightly_task.json")
@@ -36,48 +35,25 @@ def release_manifest():
         return json.load(fh)
 
 
-@pytest.fixture(scope='function')
-def nightly_args():
-    return ["--taskdef", "test_nightly.json",
-            "--balrog-api-root", "TEST_API_ROOT",
-            "--balrog-username", "fake balrog user",
-            "--balrog-password", "very good passwrod",
-            "--s3-bucket", "bucket walrus",
-            "--aws-access-key-id", "cocoa butter",
-            "--aws-secret-access-key", "shhhhhhhhhhh",
-            "--disable-s3"]
-
-
-@pytest.fixture(scope='function')
-def nightly_args_processed():
-    return {
-        "taskdef": "test_nightly.json",
-        "api_root": "TEST_API_ROOT",
-        "balrog_username": "fake balrog user",
-        "balrog_password": "very good passwrod",
-        "s3_bucket": "bucket walrus",
-        "aws_key_id": "cocoa butter",
-        "aws_key_secret": "shhhhhhhhhhh",
-        "disable_s3": True,
-        "disable_certs": False,
-        "dummy": False,
-        "loglevel": 20,  # corresponds to default value of logging.INFO
-        "parent_url": "https://queue.taskcluster.net/v1/task/e2q3BKuhRxqtcB6FVCbKfg/artifacts/public/env",
-        "signing_cert": "nightly"
-    }
-
-
-@pytest.fixture(scope='function')
-def args_as_environ():
-    return {
-        "BALROG_API_ROOT": "TEST_API_ROOT",
-        "BALROG_USERNAME": "fake balrog user",
-        "BALROG_PASSWORD": "very good passwrod",
-        "S3_BUCKET": "bucket walrus",
-        "AWS_ACCESS_KEY_ID": "cocoa butter",
-        "AWS_SECRET_ACCESS_KEY": "shhhhhhhhhhh",
-    }
-
+@pytest.yield_fixture(scope='function')
+def config():
+    with tempfile.TemporaryDirectory as t:
+        tmpdir = t.name
+        yield {
+            "work_dir": os.path.join(tmpdir, "work_dir"),
+            "artifact_dir": os.path.join(tmpdir, "artifact_dir"),
+            "schema_file": "balrogscript/data/balrog_task_schema.json",
+            "dummy": False,
+            "api_root": "BALROG_API_ROOT",
+            "balrog_username": "BALROG_USERNAME",
+            "balrog_password": "BALROG_PASSWORD",
+            "s3_bucket": "S3_BUCKET",
+            "aws_key_id": "AWS_ACCESS_KEY_ID",
+            "aws_key_secret": "AWS_SECRET_ACCESS_KEY",
+            "disable_certs": False,
+            "disable_s3": True,
+            "verbose": True
+        }
 
 
 # tests {{{1
@@ -124,37 +100,7 @@ def test_load_task_cert():
     assert 'nightly' in cert
 
 
-def test_verify_args(nightly_args, nightly_args_processed):
-    args = vars(balrogscript.verify_args(get_nightly_args()))
-    exp = nightly_args_processed
-    for key in args:
-        if key == 'signing_cert':
-            continue
-        assert exp[key] == args[key]
-
-
-def test_args_provides_correct_key_path():
-    args = balrogscript.verify_args(self.get_nightly_args())
-    assert os.path.isfile(args.signing_cert)
-
-
-def test_verify_args_from_environ():
-    os.environ.update(self.get_args_as_environ())
-    expected = self.get_nightly_args_processed()
-    for key, value in vars(balrogscript.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])).iteritems():
-        if key == 'signing_cert':
-            continue
-        assert expected[key] == value
-
-
-def create_args_dict():
-    os.environ.update(self.get_args_as_environ())
-    return balrogscript.verify_args(["--taskdef", "test_nightly.json", "--disable-s3"])
-
-
-def test_verify_copy_to_s3_returns_tc_url():
-    args = self.create_args_dict()
-
+def test_verify_copy_to_s3_returns_tc_url(config):
     url = balrogscript.verify_copy_to_s3(args, "return this url", "")
     assert url == "return this url"
 
