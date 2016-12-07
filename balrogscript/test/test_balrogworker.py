@@ -60,33 +60,31 @@ def config():
 
 
 @pytest.yield_fixture(scope='function')
-def nightly_config():
-    with config() as config_:
-        os.makedirs(os.path.join(config_['work_dir'], "upstream-task-id", "public"))
-        shutil.copyfile(
-            NIGHTLY_MANIFEST_PATH,
-            os.path.join(config_['work_dir'], "upstream-task-id", "public", "manifest.json")
-        )
-        shutil.copyfile(
-            NIGHTLY_TASK_PATH,
-            os.path.join(config_['work_dir'], "task.json")
-        )
-        yield config_
+def nightly_config(config):
+    os.makedirs(os.path.join(config['work_dir'], "upstream-task-id", "public"))
+    shutil.copyfile(
+        NIGHTLY_MANIFEST_PATH,
+        os.path.join(config['work_dir'], "upstream-task-id", "public", "manifest.json")
+    )
+    shutil.copyfile(
+        NIGHTLY_TASK_PATH,
+        os.path.join(config['work_dir'], "task.json")
+    )
+    yield config
 
 
 @pytest.yield_fixture(scope='function')
-def release_config():
-    with config() as config_:
-        os.makedirs(os.path.join(config_['work_dir'], "upstream-task-id", "public"))
-        shutil.copyfile(
-            RELEASE_MANIFEST_PATH,
-            os.path.join(config_['work_dir'], "upstream-task-id", "public", "manifest.json")
-        )
-        shutil.copyfile(
-            RELEASE_TASK_PATH,
-            os.path.join(config_['work_dir'], "task.json")
-        )
-        yield config_
+def release_config(config):
+    os.makedirs(os.path.join(config['work_dir'], "upstream-task-id", "public"))
+    shutil.copyfile(
+        RELEASE_MANIFEST_PATH,
+        os.path.join(config['work_dir'], "upstream-task-id", "public", "manifest.json")
+    )
+    shutil.copyfile(
+        RELEASE_TASK_PATH,
+        os.path.join(config['work_dir'], "task.json")
+    )
+    yield config
 
 
 # tests {{{1
@@ -138,15 +136,13 @@ def test_verify_copy_to_s3_returns_tc_url(config):
     assert url == "return this url"
 
 
-def test_create_submitter_nightly_style(config):
-    # Execute task with S3 disabled for these tests
+def test_create_submitter_nightly_style(config, nightly_manifest):
     balrog_auth = (None, None)
     submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, config)
     assert isinstance(submitter, NightlySubmitterV4)
 
 
-def test_create_submitter_nightly_metadata(config):
-    # Execute task with S3 disabled for these tests
+def test_create_submitter_nightly_metadata(config, nightly_manifest):
     balrog_auth = (None, None)
     submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, config)
 
@@ -168,19 +164,19 @@ def test_create_submitter_nightly_metadata(config):
     assert exp == release
 
 
-def test_create_submitter_nightly_creates_valid_submitter(config):
+def test_create_submitter_nightly_creates_valid_submitter(config, nightly_manifest):
     balrog_auth = (None, None)
     submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, config)
     lambda: submitter.run(**release)
 
 
-def test_create_submitter_release_submission_type(config):
+def test_create_submitter_release_submission_type(config, release_manifest):
     balrog_auth = (None, None)
     submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, config)
-    assert isinstance(submitter,ReleaseSubmitterV4)
+    assert isinstance(submitter, ReleaseSubmitterV4)
 
 
-def test_create_submitter_release_metadata(config):
+def test_create_submitter_release_metadata(config, release_manifest):
     exp = {
         'partialInfo': [{
             'previousVersion': '48.0b10',
@@ -197,7 +193,7 @@ def test_create_submitter_release_metadata(config):
 
     assert release == exp
 
-def test_create_submitter_release_creates_valid_submitter(config):
+def test_create_submitter_release_creates_valid_submitter(config, release_manifest):
     balrog_auth = (None, None)
     submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, config)
     lambda: submitter.run(**release)
