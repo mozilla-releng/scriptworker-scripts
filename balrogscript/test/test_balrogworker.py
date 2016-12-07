@@ -3,7 +3,9 @@
 import balrogscript.balrogscript as balrogscript
 import unittest
 from nose.tools import raises, with_setup
+import logging
 import json
+import pytest
 import os
 import sys
 
@@ -12,6 +14,8 @@ sys.path.insert(0, os.path.join(
 ))
 
 from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4
+
+logging.basicConfig()
 
 nightly_manifest = [
     {
@@ -68,16 +72,30 @@ class BalrogworkerTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nightly = {
+            'dependencies': ['blah'],
+            'scopes': ['blah'],
             'payload': {
                 'parent_task_artifacts_url': 'https://queue.taskcluster.net/v1/task/e2q3BKuhRxqtcB6FVCbKfg/artifacts/public/env',
-                'signing_cert': 'nightly'
+                'signing_cert': 'nightly',
+                'upstreamArtifacts': [{
+                    "paths": ["foo"],
+                    "taskId": "bar",
+                    "taskType": "baz",
+                }],
             }
         }
 
         release = {
+            'dependencies': ['blah'],
+            'scopes': ['blah'],
             'payload': {
                 'parent_task_artifacts_url': 'https://public-artifacts.taskcluster.net/RrV9Kn17RbCcnkl4ttDuIA/1/public/env',
-                'signing_cert': 'release'
+                'signing_cert': 'release',
+                'upstreamArtifacts': [{
+                    "paths": ["foo"],
+                    "taskId": "bar",
+                    "taskType": "baz",
+                }],
             }
         }
         with open('test_nightly.json', 'w') as f:
@@ -118,26 +136,6 @@ class BalrogworkerTest(unittest.TestCase):
         exp = ["file.exe"]
         assert set(names) == set(exp)
 
-    def test_verify_task_schema(self):
-        test_taskdef = {'payload': {'parent_task_artifacts_url': 500,
-                                    'signing_cert': 'nightly'}}
-        assert not balrogscript.verify_task_schema(test_taskdef)
-
-    @raises(KeyError)
-    def test_verify_task_schema_missing_cert(self):
-        test_taskdef = {'payload': {'parent_task_artifacts_url': 500}}
-        assert balrogscript.verify_task_schema(test_taskdef)
-
-    @raises(KeyError)
-    def test_verify_task_schema_invalid_cert(self):
-        test_taskdef = {'payload': {'parent_task_artifacts_url': 500,
-                                    'signing_cert': os}}
-        assert balrogscript.verify_task_schema(test_taskdef)
-
-    @raises(KeyError)
-    def test_verify_task_schema_missing_url(self):
-        test_taskdef = {'payload': {'signing_cert': 'release'}}
-        assert balrogscript.verify_task_schema(test_taskdef)
 
     def test_load_task_payload(self):
         url, cert = balrogscript.load_task('test_nightly.json')
@@ -281,3 +279,55 @@ class BalrogworkerTest(unittest.TestCase):
         balrog_auth = (None, None)
         submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, args)
         lambda: submitter.run(**release)
+
+
+def test_verify_task_schema():
+    test_taskdef = {
+        'scopes': ['blah'],
+        'dependencies': ['blah'],
+        'payload': {
+            'parent_task_artifacts_url': "blah",
+            'signing_cert': 'nightly',
+            'upstreamArtifacts': [{
+                "paths": ["foo"],
+                "taskId": "bar",
+                "taskType": "baz",
+            }],
+        }
+    }
+    balrogscript.verify_task_schema(test_taskdef)
+
+
+@pytest.mark.parametrize("defn", ({
+    'dependencies': ['blah'],
+    'payload': {
+        'parent_task_artifacts_url': "blah",
+        'signing_cert': 'nightly',
+        'upstreamArtifacts': [{
+            "paths": ["foo"],
+            "taskId": "bar",
+            "taskType": "baz",
+        }],
+    }
+}, {
+    'scopes': ['blah'],
+    'payload': {
+        'parent_task_artifacts_url': "blah",
+        'signing_cert': 'nightly',
+        'upstreamArtifacts': [{
+            "paths": ["foo"],
+            "taskId": "bar",
+            "taskType": "baz",
+        }],
+    }
+}, {
+    'dependencies': ['blah'],
+    'scopes': ['blah'],
+    'payload': {
+        'parent_task_artifacts_url': "blah",
+        'signing_cert': 'nightly',
+    }
+}))
+def test_verify_task_schema_missing_cert(defn):
+    with pytest.raises(SystemExit):
+        balrogscript.verify_task_schema(defn)

@@ -27,6 +27,7 @@ setup(
         "enum34",
         "idna",
         "ipaddress",
+        "jsonschema",
         "mar",
         "pyasn1",
         "requests",

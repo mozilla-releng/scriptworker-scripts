@@ -3,6 +3,7 @@ import os
 import logging
 import argparse
 import json
+import jsonschema
 import sys
 import hashlib
 import requests
@@ -122,15 +123,17 @@ def get_manifest(parent_url):
 
 
 def verify_task_schema(task_definition):
-    task_reqs = ('parent_task_artifacts_url', 'signing_cert')
-    for req in task_reqs:
-        if req not in task_definition['payload']:
-            raise KeyError('%s missing from taskdef!' % req)
+    schema_path = os.path.join(
+        os.path.dirname(__file__), "data", "balrog_task_schema.json"
+    )
+    with open(schema_path) as fh:
+        schema = json.load(fh)
 
-    signing_keys = ('nightly', 'release', 'dep')
-    if task_definition['payload']['signing_cert'] not in signing_keys:
-        raise KeyError('%s invalid certificate name. Specify nightly, release, or dep.'
-                       % task_definition['payload']['signing_cert'])
+    try:
+        jsonschema.validate(task_definition, schema)
+    except jsonschema.exceptions.ValidationError as exc:
+        log.critical("Can't validate schema!\n{}".format(exc))
+        sys.exit(3)
 
 
 def load_task(task_file):
