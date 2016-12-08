@@ -48,9 +48,9 @@ def config():
             "api_root": "BALROG_API_ROOT",
             "balrog_username": "BALROG_USERNAME",
             "balrog_password": "BALROG_PASSWORD",
-            "s3_bucket": "S3_BUCKET",
-            "aws_key_id": "AWS_ACCESS_KEY_ID",
-            "aws_key_secret": "AWS_SECRET_ACCESS_KEY",
+            "s3_bucket": "bucket walrus",
+            "aws_key_id": "cocoa butter",
+            "aws_key_secret": "shhhhhhhhhhh",
             "disable_certs": False,
             "disable_s3": True,
             "verbose": True
@@ -87,7 +87,7 @@ def release_config(config):
     yield config
 
 
-# tests {{{1
+# get_hash {{{1
 def test_get_hash():
     test_content = "wow. much text. very hash ☺️"
     test_md5 = "d0bfbdf85fac3ccd5a9d9a458bf39ab3"
@@ -107,6 +107,7 @@ def test_get_hash_sha512():
     assert balrogscript.get_hash(test_content, hash_type="sha512") == test_sha
 
 
+# possible_names {{{1
 def test_possible_names():
     initial = "/Users/tester/file.exe"
     names = balrogscript.possible_names(initial, 2)
@@ -121,6 +122,7 @@ def test_possible_names_neg():
     assert set(names) == set(exp)
 
 
+# load_task {{{1
 def test_load_task_payload(nightly_config):
     upstream, cert = balrogscript.load_task(nightly_config)
     assert upstream[0]['paths'][0] == 'public/manifest.json'
@@ -131,11 +133,7 @@ def test_load_task_cert(nightly_config):
     assert 'nightly' in cert
 
 
-def test_verify_copy_to_s3_returns_tc_url(config):
-    url = balrogscript.verify_copy_to_s3(config, "return this url", "")
-    assert url == "return this url"
-
-
+# create_submitter {{{1
 def test_create_submitter_nightly_style(config, nightly_manifest):
     balrog_auth = (None, None)
     submitter, release = balrogscript.create_submitter(nightly_manifest[0], balrog_auth, config)
@@ -199,6 +197,7 @@ def test_create_submitter_release_creates_valid_submitter(config, release_manife
     lambda: submitter.run(**release)
 
 
+# verify_task_schema {{{1
 def test_verify_task_schema(config):
     test_taskdef = {
         'scopes': ['blah'],
