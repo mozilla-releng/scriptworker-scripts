@@ -119,7 +119,7 @@ def build_filelist_dict(context, all_signing_formats):
     for artifact_dict in context.task['payload']['upstreamArtifacts']:
         for path in artifact_dict['paths']:
             full_path = os.path.join(
-                context.config['artifact_dir'], 'public', 'cot', artifact_dict['taskId'],
+                context.config['work_dir'], 'cot', artifact_dict['taskId'],
                 path
             )
             if not os.path.exists(full_path):
