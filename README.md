@@ -1,6 +1,6 @@
 # Balrogscript
 
-A [scriptworker](https://github.com/mozilla-releng/scriptworker) script for pushing artifacts to s3 and submitting metadata to [balrog](https://wiki.mozilla.org/Balrog).
+A [scriptworker](https://github.com/mozilla-releng/scriptworker) script for submitting metadata to [balrog](https://wiki.mozilla.org/Balrog).
 
 ## Configuration
 Create a `config.json`, using `config_example.json` as a guide.
@@ -16,16 +16,6 @@ Balrog Specific:
 - `BALROG_API_ROOT`
 - `BALROG_USERNAME`
 - `BALROG_PASSWORD`
-(Optional):
-- `S3_BUCKET`
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-
-If any of the S3 credentials are missing, balrogworker will skip uploads
-and pass through the taskcluster artifact url directly to balrog. This
-can also be manually forced via the `--disable-s3` flag. Note that you
-may need to whitelist taskcluster's domain name on your installation of
-balrog.
 
 ### task.json
 

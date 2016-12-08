@@ -22,7 +22,6 @@ setup(
     },
     license="MPL2",
     install_requires=[
-        "boto",
         "cryptography",
         "enum34",
         "idna",

@@ -6,6 +6,5 @@
 : "${BALROG_API_ROOT:?Need to set BALROG_API_ROOT}"
 : "${BALROG_USERNAME:?Need to set BALROG_USERNAME}"
 : "${BALROG_PASSWORD:?Need to set BALROG_PASSWORD}"
-# Do not require S3 creds as they're not mandatory
 
 /app/py3.5/bin/scriptworker /app/config.json

@@ -6,10 +6,6 @@
     "api_root": "BALROG_API_ROOT",
     "balrog_username": "BALROG_USERNAME",
     "balrog_password": "BALROG_PASSWORD",
-    "s3_bucket": "S3_BUCKET",
-    "aws_key_id": "AWS_ACCESS_KEY_ID",
-    "aws_key_secret": "AWS_SECRET_ACCESS_KEY",
     "disable_certs": false,
-    "disable_s3": true,
     "verbose": true
 }

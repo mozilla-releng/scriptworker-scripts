@@ -6,8 +6,6 @@ import jsonschema
 import sys
 import hashlib
 import requests
-import tempfile
-from boto.s3.connection import S3Connection
 from mardor.marfile import MarFile
 
 sys.path.insert(0, os.path.join(
@@ -54,53 +52,6 @@ def verify_signature(mar, signature):
     log.info("Checking %s signature", mar)
     m = MarFile(mar, signature_versions=[(1, signature)])
     m.verify_signatures()
-
-
-def verify_copy_to_s3(config, mar_url, mar_dest):
-    # For local development, send TC url directly
-    if config['disable_s3']:
-        return mar_url
-
-    conn = S3Connection(config['aws_key_id'], config['aws_key_secret'])
-    bucket = conn.get_bucket(config['s3_bucket'])
-    _, dest = tempfile.mkstemp()
-    log.info("Downloading %s to %s...", mar_url, dest)
-    download(mar_url, dest)
-    log.info("Verifying the signature...")
-    if not config['disable_certs']:
-        verify_signature(dest, config['signing_cert'])
-
-    for name in possible_names(mar_dest, 10):
-        log.info("Checking if %s already exists", name)
-        key = bucket.get_key(name)
-        if not key:
-            log.info("Uploading to %s...", name)
-            key = bucket.new_key(name)
-            # There is a chance for race condition here. To avoid it we check
-            # the return value with replace=False. It should be not None.
-            length = key.set_contents_from_filename(dest, replace=False)
-            if length is None:
-                log.warn("Name race condition using %s, trying again...", name)
-                continue
-            else:
-                # key.make_public() may lead to race conditions, because
-                # it doesn't pass version_id, so it may not set permissions
-                bucket.set_canned_acl(acl_str='public-read', key_name=name,
-                                      version_id=key.version_id)
-                # Use explicit version_id to avoid using "latest" version
-                return key.generate_url(expires_in=0, query_auth=False,
-                                        version_id=key.version_id)
-        else:
-            if get_hash(key.get_contents_as_string()) == \
-                    get_hash(open(dest).read()):
-                log.info("%s has the same MD5 checksum, not uploading...",
-                         name)
-                return key.generate_url(expires_in=0, query_auth=False,
-                                        version_id=key.version_id)
-            log.info("%s already exists with different checksum, "
-                     "trying another one...", name)
-
-    raise RuntimeError("Cannot generate a unique name for %s. Limit of 10 reached.", mar_dest)
 
 
 def possible_names(initial_name, amount):
@@ -193,7 +144,6 @@ def create_submitter(e, balrog_auth, config):
         log.info("Taskcluster Nightly Fennec style Balrog submission")
 
         complete_info = e['completeInfo']
-        complete_info[0]["url"] = verify_copy_to_s3(config, complete_info[0]['url'], '')
         submitter = NightlySubmitterV4(api_root=config['api_root'], auth=auth, dummy=config['dummy'],
                                        url_replacements=e.get('url_replacements', []))
 
@@ -224,19 +174,11 @@ def get_config(argv):
         "api_root": "BALROG_API_ROOT",
         "balrog_username": "BALROG_USERNAME",
         "balrog_password": "BALROG_PASSWORD",
-        "s3_bucket": "S3_BUCKET",
-        "aws_key_id": "AWS_ACCESS_KEY_ID",
-        "aws_key_secret": "AWS_SECRET_ACCESS_KEY",
     }:
         config.setdefault(config_key, os.environ.get(env_var))
         if config[config_key] is None:
             log.critical("{} missing from config! (You can also set the env var {})".format(config_key, env_var))
             sys.exit(5)
-
-    # Disable uploading to S3 if any of the credentials are missing, or if specified as a cli argument
-    config['disable_s3'] = config['disable_s3'] or not (config['s3_bucket'] and config['aws_key_id'] and config['aws_key_secret'])
-    if config['disable_s3']:
-        log.info("Skipping S3 uploads, submitting taskcluster artifact urls instead.")
 
     config['upstream_artifacts'], config['signing_cert'] = load_task(config)
 
@@ -264,7 +206,7 @@ def main():
     manifest = get_manifest(config)
 
     for e in manifest:
-        # Get release metadata from manifest, and upload to S3 if necessary
+        # Get release metadata from manifest
         submitter, release = create_submitter(e, balrog_auth, config)
         # Connect to balrog and submit the metadata
         retry(lambda: submitter.run(**release))

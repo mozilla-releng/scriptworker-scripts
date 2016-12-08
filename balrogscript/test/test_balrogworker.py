@@ -48,11 +48,7 @@ def config():
             "api_root": "BALROG_API_ROOT",
             "balrog_username": "BALROG_USERNAME",
             "balrog_password": "BALROG_PASSWORD",
-            "s3_bucket": "bucket walrus",
-            "aws_key_id": "cocoa butter",
-            "aws_key_secret": "shhhhhhhhhhh",
             "disable_certs": False,
-            "disable_s3": True,
             "verbose": True
         }
     finally:
