@@ -1,8 +1,8 @@
-
 import mimetypes
 import mock
 import pytest
 import sys
+from yarl import URL
 
 from beetmoverscript.script import setup_mimetypes, setup_config, put, retry_download, move_beets, \
     move_beet, async_main, main
@@ -51,7 +51,7 @@ def test_put_success(event_loop, fake_session):
     context.config = get_fake_valid_config()
     context.session = fake_session
     response = event_loop.run_until_complete(
-        put(context, url='https://foo.com/packages/fake.package', headers={},
+        put(context, url=URL('https://foo.com/packages/fake.package'), headers={},
             abs_filename='beetmoverscript/test/fake_artifact.json', session=fake_session)
     )
     assert response.status == 200
@@ -66,7 +66,7 @@ def test_put_failure(event_loop, fake_session_500):
     context.session = fake_session_500
     with pytest.raises(ScriptWorkerRetryException):
         event_loop.run_until_complete(
-            put(context, url='https://foo.com/packages/fake.package', headers={},
+            put(context, url=URL('https://foo.com/packages/fake.package'), headers={},
                 abs_filename='beetmoverscript/test/fake_artifact.json', session=fake_session_500)
         )
 
@@ -116,6 +116,7 @@ def test_move_beets(event_loop):
 
     actual_sources = []
     actual_destinations = []
+
     async def fake_move_beet(context, source, destinations, locale, update_balrog_manifest):
         actual_sources.append(source)
         actual_destinations.append(destinations)
@@ -154,6 +155,7 @@ def test_move_beet(event_loop):
 
     async def fake_retry_download(context, url, path):
         actual_download_args.extend([url, path])
+
     async def fake_retry_upload(context, destinations, path):
         actual_upload_args.extend([destinations, path])
 
