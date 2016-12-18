@@ -239,4 +239,5 @@ def main(name=None, config_path=None):
             sys.exit(exc.exit_code)
     loop.close()
 
+
 main(name=__name__)
