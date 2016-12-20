@@ -3,9 +3,9 @@ import os
 import logging
 import json
 import jsonschema
+import re
 import sys
 import hashlib
-import requests
 from mardor.marfile import MarFile
 
 sys.path.insert(0, os.path.join(
@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(
 
 # Until we get rid of our build/tools dep, this import block will break flake8 E402
 from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
-from util.retry import retry, retriable  # noqa: E402
+from util.retry import retry  # noqa: E402
 
 log = logging.getLogger(__name__)
 
@@ -23,29 +23,6 @@ def get_hash(content, hash_type="md5"):
     h = hashlib.new(hash_type)
     h.update(content)
     return h.hexdigest()
-
-
-@retriable()
-def download(url, dest, mode=None):
-    log.debug("Downloading %s to %s", url, dest)
-    r = requests.get(url)
-    r.raise_for_status()
-
-    bytes_downloaded = 0
-    with open(dest, 'wb') as fd:
-        for chunk in r.iter_content(4096):
-            fd.write(chunk)
-            bytes_downloaded += len(chunk)
-
-    log.debug('Downloaded %s bytes', bytes_downloaded)
-    if 'content-length' in r.headers:
-        log.debug('Content-Length: %s bytes', r.headers['content-length'])
-        if bytes_downloaded != int(r.headers['content-length']):
-            raise IOError('Unexpected number of bytes downloaded')
-
-    if mode:
-        log.debug("chmod %o %s", mode, dest)
-        os.chmod(dest, mode)
 
 
 def verify_signature(mar, signature):
@@ -99,7 +76,9 @@ def load_task(config):
     for scope in task_definition['scopes']:
         if scope.startswith("project:releng:balrog:"):
             signing_cert_name = scope.split(':')[-1]
-            break
+            if re.search('^[0-9A-Za-z_-]+$', signing_cert_name) is not None:
+                break
+            log.warning('scope {} is malformed, skipping!'.format(scope))
     else:
         log.critical("no balrog scopes!")
         sys.exit(3)
@@ -199,10 +178,9 @@ def main():
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                         stream=sys.stdout,
                         level=level)
-    logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("boto").setLevel(logging.WARNING)
 
-    # Download the manifest.json from the provided task
+    # Read the manifest from disk
     manifest = get_manifest(config)
 
     for e in manifest:

@@ -29,7 +29,6 @@ setup(
         "jsonschema",
         "mar",
         "pyasn1",
-        "requests",
         "six",
     ],
 )
