@@ -1,0 +1,13 @@
+{
+    "dependencies": ["blah"],
+    "scopes": ["project:releng:balrog:release"],
+    "payload": {
+        "parent_task_artifacts_url": "https://public-artifacts.taskcluster.net/RrV9Kn17RbCcnkl4ttDuIA/1/public/env",
+        "signing_cert": "release",
+        "upstreamArtifacts": [{
+            "paths": ["public/manifest.json"],
+            "taskId": "upstream-task-id",
+            "taskType": "baz"
+        }]
+    }
+}

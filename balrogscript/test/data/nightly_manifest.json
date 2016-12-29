@@ -1,0 +1,19 @@
+[
+    {
+        "tc_nightly": true,
+        "completeInfo": [{
+            "url": "http://bucketlister-delivery.stage.mozaws.net/pub/mobile/nightly/latest-date-android-api-15/fennec-52.0a1.multi.android.arm.apk",
+            "size": "33256909",
+            "hash": "7934e31946358f0b541e9b877e0ab70bce58580e1bf015fc63f70e1c8b4c8c835e38a3ef92f790c78ba7d71cd4b930987f2a99e8c58cf33e7ae118d3b1c42485"
+        }],
+        "platform": "android-api-15",
+        "buildid": "20161107171219",
+        "appName": "Fennec",
+        "branch": "date",
+        "appVersion": "52.0a1",
+        "locale": "en-US",
+        "hashType": "sha512",
+        "extVersion": "52.0a1",
+        "url_replacements": "..."
+    }
+]

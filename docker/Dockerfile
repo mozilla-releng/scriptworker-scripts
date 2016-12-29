@@ -23,7 +23,12 @@ RUN virtualenv /app/py2 --python=/usr/bin/python --system-site-packages \
 
 RUN hg clone https://hg.mozilla.org/build/tools /app/tools
 
+RUN mkdir -p /app/bin
 COPY ./ /app
+COPY docker/*sh /app/bin/
+COPY docker/config.json /app/config.json
+RUN virtualenv /app/py2 --python=/usr/bin/python --system-site-packages \
+    && ( source /app/py2/bin/activate && cd /app && python setup.py develop)
 WORKDIR /app
 ENTRYPOINT ["/app/bin/app_entrypoint.sh"]
 

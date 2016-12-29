@@ -1,0 +1,11 @@
+{
+    "work_dir": "/tmp/work_dir",
+    "artifact_dir": "/tmp/artifact_dir",
+    "schema_file": "balrogscript/data/balrog_task_schema.json",
+    "dummy": false,
+    "api_root": "BALROG_API_ROOT",
+    "balrog_username": "BALROG_USERNAME",
+    "balrog_password": "BALROG_PASSWORD",
+    "disable_certs": false,
+    "verbose": true
+}

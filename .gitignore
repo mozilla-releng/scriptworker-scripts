@@ -1,3 +1,4 @@
+Dockerfile
 my_Dockerfile
 .idea/*
 scriptworker/*
@@ -8,4 +9,7 @@ bin/__pycache__/
 localtest.sh
 tools/*
 *.coverage
-*task.json
+.tox
+*egg-info
+.cache
+dist
