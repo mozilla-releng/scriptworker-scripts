@@ -8,13 +8,6 @@ import sys
 import hashlib
 from mardor.marfile import MarFile
 
-sys.path.insert(0, os.path.join(
-    os.path.dirname(__file__), "../tools/lib/python"
-))
-
-# Until we get rid of our build/tools dep, this import block will break flake8 E402
-from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
-from util.retry import retry  # noqa: E402
 
 log = logging.getLogger(__name__)
 
@@ -153,7 +146,7 @@ def get_config(argv):
         "api_root": "BALROG_API_ROOT",
         "balrog_username": "BALROG_USERNAME",
         "balrog_password": "BALROG_PASSWORD",
-    }:
+    }.items():
         config.setdefault(config_key, os.environ.get(env_var))
         if config[config_key] is None:
             log.critical("{} missing from config! (You can also set the env var {})".format(config_key, env_var))
@@ -179,6 +172,13 @@ def main():
                         stream=sys.stdout,
                         level=level)
     logging.getLogger("boto").setLevel(logging.WARNING)
+
+    # hacking the tools repo dependency by first reading its location from
+    # the config file and only then loading the module from subdfolder
+    sys.path.insert(0, os.path.join(config['tools_location'], 'lib/python'))
+    # Until we get rid of our tools dep, this import(s) will break flake8 E402
+    from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
+    from util.retry import retry  # noqa: E402
 
     # Read the manifest from disk
     manifest = get_manifest(config)
