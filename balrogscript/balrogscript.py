@@ -82,6 +82,7 @@ def load_task(config):
 
 
 def create_submitter(e, balrog_auth, config):
+    from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
     auth = balrog_auth
 
     if "previousVersion" in e and "previousBuildNumber" in e:
@@ -196,7 +197,6 @@ def main():
     # the config file and only then loading the module from subdfolder
     sys.path.insert(0, os.path.join(config['tools_location'], 'lib/python'))
     # Until we get rid of our tools dep, this import(s) will break flake8 E402
-    from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
     from util.retry import retry  # noqa: E402
 
     # Read the manifest from disk
