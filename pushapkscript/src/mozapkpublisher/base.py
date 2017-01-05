@@ -35,7 +35,7 @@ class Base(object):
 
         flatten_args = [str(item) for tuples in args_with_unary_arguments_alone for item in tuples]
 
-        logger.debug('dict_ converveted into these args: %s', flatten_args)
+        logger.debug('dict_ converted into these args: {}'.format(flatten_args))
         return flatten_args
 
 

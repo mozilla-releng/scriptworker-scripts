@@ -85,11 +85,11 @@ class GetAPK(Base):
     def generate_url(self, version, build, locale, api_suffix, arch_file):
         if self.config.latest_nightly or self.config.latest_aurora:
             code = "central" if self.config.latest_nightly else "aurora"
-            return ("%s/nightly/latest-mozilla-%s-android-%s/fennec-%s.%s.android-%s") % (
+            return '{}/nightly/latest-mozilla-{}-android-{}/fennec-{}.{}.android-{}'.format(
                 self.base_url, code, api_suffix, version, locale, arch_file
             )
 
-        return ("%s/candidates/%s-candidates/build%s/%s%s/%s/fennec-%s.%s.%s%s") % (
+        return '{}/candidates/{}-candidates/build{}/{}{}/{}/fennec-{}.{}.{}{}'.format(
             self.base_url, version, build, self.android_prefix, api_suffix, locale, version, locale,
             self.android_prefix, arch_file
         )
