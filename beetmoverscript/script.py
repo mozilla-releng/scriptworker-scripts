@@ -59,7 +59,8 @@ async def get_props(context):
     # restrictions
     beet_config = deepcopy(context.config)
     beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
-    validate_artifact_url(beet_config, source)
+    validate_artifact_url(beet_config['valid_artifact_rules'],
+                          beet_config['valid_artifact_task_ids'], source)
 
     return (await retry_request(context, source, method='get',
                                 return_type='json'))['properties']
@@ -88,7 +89,8 @@ async def move_beets(context, manifest):
 async def move_beet(context, source, destinations, locale, update_balrog_manifest):
     beet_config = deepcopy(context.config)
     beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
-    rel_path = validate_artifact_url(beet_config, source)
+    rel_path = validate_artifact_url(beet_config['valid_artifact_rules'],
+                                     beet_config['valid_artifact_task_ids'], source)
     abs_file_path = os.path.join(context.config['work_dir'], rel_path)
 
     await retry_download(context=context, url=source, path=abs_file_path)
