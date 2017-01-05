@@ -1,20 +1,14 @@
 #!/usr/bin/env python
-import os
-import logging
+from copy import deepcopy
+import hashlib
 import json
 import jsonschema
+import logging
+import os
 import re
 import sys
-import hashlib
 from mardor.marfile import MarFile
 
-sys.path.insert(0, os.path.join(
-    os.path.dirname(__file__), "../tools/lib/python"
-))
-
-# Until we get rid of our build/tools dep, this import block will break flake8 E402
-from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
-from util.retry import retry  # noqa: E402
 
 log = logging.getLogger(__name__)
 
@@ -88,6 +82,7 @@ def load_task(config):
 
 
 def create_submitter(e, balrog_auth, config):
+    from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
     auth = balrog_auth
 
     if "previousVersion" in e and "previousBuildNumber" in e:
@@ -139,21 +134,45 @@ def create_submitter(e, balrog_auth, config):
         raise RuntimeError("Cannot determine Balrog submission style. Check manifest.json")
 
 
-def get_config(argv):
+def usage():
+    print >> sys.stderr, "Usage: {} CONFIG_FILE".format(sys.argv[0])
+    sys.exit(2)
+
+
+def load_config(argv):
+    if len(argv) != 1:
+        usage()
     try:
         with open(argv[0]) as fh:
             config = json.load(fh)
     except (ValueError, OSError) as e:
-        log.critical("Can't read config file {}!\n{}".format(argv[0], e))
+        print >> sys.stderr, "Can't read config file {}!\n{}".format(argv[0], e)
         sys.exit(5)
     except KeyError as e:
-        log.critical("Usage: balrogscript CONFIG_FILE\n{}".format(e))
+        print >> sys.stderr, "Usage: balrogscript CONFIG_FILE\n{}".format(e)
         sys.exit(5)
+    return config
+
+
+def setup_logging(verbose=False):
+    log_level = logging.INFO
+    if verbose:
+        log_level = logging.DEBUG
+
+    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
+                        stream=sys.stdout,
+                        level=log_level)
+    logging.getLogger("boto").setLevel(logging.WARNING)
+
+
+def update_config(config):
+    config = deepcopy(config)
+
     for config_key, env_var in {
         "api_root": "BALROG_API_ROOT",
         "balrog_username": "BALROG_USERNAME",
         "balrog_password": "BALROG_PASSWORD",
-    }:
+    }.items():
         config.setdefault(config_key, os.environ.get(env_var))
         if config[config_key] is None:
             log.critical("{} missing from config! (You can also set the env var {})".format(config_key, env_var))
@@ -170,15 +189,15 @@ def get_config(argv):
 
 
 def main():
-    balrog_auth, config = get_config(sys.argv[1:])
-    level = logging.INFO
-    if config['verbose']:
-        level = logging.DEBUG
+    config = load_config(sys.argv[1:])
+    setup_logging(config['verbose'])
+    balrog_auth, config = update_config(config)
 
-    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
-                        stream=sys.stdout,
-                        level=level)
-    logging.getLogger("boto").setLevel(logging.WARNING)
+    # hacking the tools repo dependency by first reading its location from
+    # the config file and only then loading the module from subdfolder
+    sys.path.insert(0, os.path.join(config['tools_location'], 'lib/python'))
+    # Until we get rid of our tools dep, this import(s) will break flake8 E402
+    from util.retry import retry  # noqa: E402
 
     # Read the manifest from disk
     manifest = get_manifest(config)
