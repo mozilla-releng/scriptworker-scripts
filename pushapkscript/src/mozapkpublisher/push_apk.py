@@ -98,7 +98,7 @@ def _push_whats_new(edit_service, release_channel, apk_version_code):
         play_store_locale = store_l10n.locale_mapping(locale)
 
         edit_service.update_apk_listings(play_store_locale, apk_version_code, body={'recentChanges': whatsnew})
-        logger.info('Locale "%s" what\'s new has been updated to "%s"'.format(play_store_locale, whatsnew))
+        logger.info(u'Locale "{}" what\'s new has been updated to "{}"'.format(play_store_locale, whatsnew))
 
 
 def main(name=None):
