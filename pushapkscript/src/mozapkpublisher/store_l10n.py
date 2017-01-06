@@ -1,9 +1,10 @@
 from mozapkpublisher import utils
 
+# API documentation: https://l10n.mozilla-community.org/stores_l10n/documentation/
 L10N_API_URL = 'https://l10n.mozilla-community.org/stores_l10n/'
-ALL_LOCALES_URL = L10N_API_URL + 'api/google/listing/{channel}/'
-LOCALE_URL = L10N_API_URL + 'api/google/translation/{channel}/{locale}/'
-MAPPING_URL = L10N_API_URL + 'api/google/localesmapping/?reverse'
+ALL_LOCALES_URL = L10N_API_URL + 'api/v1/fx_android/listing/{channel}/'
+LOCALE_URL = L10N_API_URL + 'api/v1/fx_android/translation/{channel}/{locale}/'
+MAPPING_URL = L10N_API_URL + 'api/v1/google/localesmapping/?reverse'
 
 _mappings = None
 
