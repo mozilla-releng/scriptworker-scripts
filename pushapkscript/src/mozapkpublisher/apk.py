@@ -22,7 +22,7 @@ def check_if_apk_is_multilocale(apk_path):
 
     unique_locales = _get_unique_locales(manifest_raw_lines)
     number_of_unique_locales = len(unique_locales)
-    logger.debug('"{}" contains {} locales: {}'.format(apk_path, number_of_unique_locales, unique_locales))
+    logger.info('"{}" contains {} locales: {}'.format(apk_path, number_of_unique_locales, unique_locales))
 
     if number_of_unique_locales == 0:
         raise NoLocaleFound(apk_path, _OMNI_JA_LOCATION, _CHROME_MANIFEST_LOCATION)

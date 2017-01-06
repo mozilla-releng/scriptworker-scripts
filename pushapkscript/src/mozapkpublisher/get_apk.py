@@ -66,14 +66,8 @@ class GetAPK(Base):
         except OSError:     # XXX: Used for compatibility with Python 2. Use FileNotFoundError otherwise
             logger.warn('{} was not found. Skipping...'.format(self.download_dir))
 
-    # Gets called once download is complete
-    def download_complete(self, apk_file, checksum_file):
-        logger.info(apk_file + " has been downloaded successfully")
-        os.remove(checksum_file)
-
-    # Checksum check the APK
     def check_apk(self, apk_file, checksum_file):
-        logger.info("The checksum for the APK is being checked....")
+        logger.debug('Checking checksum for "{}"...'.format(apk_file))
         with open(checksum_file, 'r') as f:
             checksum = f.read()
         checksum = re.sub("\s(.*)", "", checksum.splitlines()[0])
@@ -81,8 +75,8 @@ class GetAPK(Base):
         apk_checksum = file_sha512sum(apk_file)
 
         if checksum == apk_checksum:
-            logger.info("APK checksum check succeeded!")
-            self.download_complete(apk_file, checksum_file)
+            logger.info('Checksum for "{}" succeeded!'.format(apk_file))
+            os.remove(checksum_file)
         else:
             shutil.rmtree(self.download_dir)
             raise CheckSumMismatch(apk_file, expected=apk_checksum, actual=checksum)
@@ -101,20 +95,14 @@ class GetAPK(Base):
         )
 
     def get_api_suffix(self, arch):
-        if arch in self.multi_api_archs:
-            return self.multi_apis
-        else:
-            return [arch]
+        return self.multi_apis if arch in self.multi_api_archs else [arch]
 
     def get_arch_file(self, arch):
-        if arch == "x86":
-            # the filename contains i386 instead of x86
-            return "i386"
-        else:
-            return arch
+        # the filename contains i386 instead of x86
+        return 'i386' if arch == 'x86' else arch
 
     def get_common_file_name(self, version, locale):
-        return "fennec-" + version + "." + locale + "." + self.android_prefix
+        return 'fennec-{}.{}.{}'.format(version, locale, self.android_prefix)
 
     def download(self, version, build, arch, locale):
         try:
@@ -161,8 +149,7 @@ class GetAPK(Base):
         build = str(self.config.build)
         locale = self.config.locale
 
-        logger.info("Downloading version " + version + " build #" + build
-                    + " for arch " + arch + " (locale " + locale + ")")
+        logger.info('Downloading version "{}" build #{} for arch "{}" (locale "{}")'.format(version, build, arch, locale))
         if arch == "all":
             self.download_all(version, build, locale)
         else:
