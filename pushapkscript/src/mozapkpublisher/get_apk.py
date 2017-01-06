@@ -102,7 +102,7 @@ class GetAPK(Base):
         return 'i386' if arch == 'x86' else arch
 
     def get_common_file_name(self, version, locale):
-        return "fennec-" + version + "." + locale + "." + self.android_prefix
+        return 'fennec-{}.{}.{}'.format(version, locale, self.android_prefix)
 
     def download(self, version, build, arch, locale):
         try:
@@ -149,8 +149,7 @@ class GetAPK(Base):
         build = str(self.config.build)
         locale = self.config.locale
 
-        logger.info("Downloading version " + version + " build #" + build
-                    + " for arch " + arch + " (locale " + locale + ")")
+        logger.info('Downloading version "{}" build #{} for arch "{}" (locale "{}")'.format(version, build, arch, locale))
         if arch == "all":
             self.download_all(version, build, locale)
         else:
