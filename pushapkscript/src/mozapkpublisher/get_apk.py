@@ -66,14 +66,8 @@ class GetAPK(Base):
         except OSError:     # XXX: Used for compatibility with Python 2. Use FileNotFoundError otherwise
             logger.warn('{} was not found. Skipping...'.format(self.download_dir))
 
-    # Gets called once download is complete
-    def download_complete(self, apk_file, checksum_file):
-        logger.info(apk_file + " has been downloaded successfully")
-        os.remove(checksum_file)
-
-    # Checksum check the APK
     def check_apk(self, apk_file, checksum_file):
-        logger.info("The checksum for the APK is being checked....")
+        logger.debug('Checking checksum for "{}"...'.format(apk_file))
         with open(checksum_file, 'r') as f:
             checksum = f.read()
         checksum = re.sub("\s(.*)", "", checksum.splitlines()[0])
@@ -81,8 +75,8 @@ class GetAPK(Base):
         apk_checksum = file_sha512sum(apk_file)
 
         if checksum == apk_checksum:
-            logger.info("APK checksum check succeeded!")
-            self.download_complete(apk_file, checksum_file)
+            logger.info('Checksum for "{}" succeeded!'.format(apk_file))
+            os.remove(checksum_file)
         else:
             shutil.rmtree(self.download_dir)
             raise CheckSumMismatch(apk_file, expected=apk_checksum, actual=checksum)
