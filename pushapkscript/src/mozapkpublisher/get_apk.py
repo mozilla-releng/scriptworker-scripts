@@ -95,17 +95,11 @@ class GetAPK(Base):
         )
 
     def get_api_suffix(self, arch):
-        if arch in self.multi_api_archs:
-            return self.multi_apis
-        else:
-            return [arch]
+        return self.multi_apis if arch in self.multi_api_archs else [arch]
 
     def get_arch_file(self, arch):
-        if arch == "x86":
-            # the filename contains i386 instead of x86
-            return "i386"
-        else:
-            return arch
+        # the filename contains i386 instead of x86
+        return 'i386' if arch == 'x86' else arch
 
     def get_common_file_name(self, version, locale):
         return "fennec-" + version + "." + locale + "." + self.android_prefix
