@@ -43,22 +43,45 @@ touch work_dir/task.json  # see below for example
 ```
 
 ```
-> cat /app/beetmoverworker/worker_config.json
-{
-    "worker_type": "dummy-worker-jlund",
-    "worker_id": "dummy-worker-jlund",
-    "work_dir": "/app/beetmoverworker/work_dir",
-    "log_dir": "/app/beetmoverworker/log_dir",
-    "artifact_dir": "/app/beetmoverworker/artifact",
-    "task_log_dir": "/app/beetmoverworker/artifact/public/logs",
-    "credentials": {
-        "accessToken": "...",
-        "clientId": "..."
-    },
-    "task_script": ["/path/to/beetmoverscript_venv/bin/beetmoverscript", "/app/beetmoverworker/beetmoverscript/script_config.json"],
-    "verbose": true,
-    "task_max_timeout": 2400
-}
+> cat /app/beetmoverworker/scriptworker.yaml
+provisioner_id: test-dummy-provisioner
+worker_group: test-dummy-workers
+worker_type: dummy-worker-jlund
+worker_id: dummy-worker-jlund1
+credentials:
+   clientId: ...
+   accessToken: ...
+   certificate: ...
+
+artifact_expiration_hours: 24
+artifact_upload_timeout: 1200
+task_max_timeout: 2400
+verbose: true
+
+task_script: ["/path/to/beetmoverscript_venv/bin/beetmoverscript", "/app/beetmoverworker/beetmoverscript/script_config.json"]
+
+log_dir: "/app/beetmoverworker/log_dir"
+work_dir: "/app/beetmoverworker/work_dir"
+artifact_dir: "/app/beetmoverworker/artifact"
+task_log_dir: "/app/beetmoverworker/artifact/public/logs"
+
+# chainoftrust config
+sign_chain_of_trust: false
+verify_chain_of_trust: false
+verify_cot_signature: false
+cot_job_type: beetmover
+
+# gpg homedir config
+## only used when verify_chain_of_trust is true
+base_gpg_home_dir: "/app/beetmoverworker/gpg"
+gpg_lockfile: "/app/beetmoverworker/gpg_homedir.lock"
+git_key_repo_dir: "/app/beetmoverworker/key_repo"
+git_commit_signing_pubkey_dir: "/app/beetmoverworker/valid_git_fingerprints/"
+last_good_git_revision_file: "/app/beetmoverworker/git_revision"
+pubkey_path: "/app/beetmoverworker/my_pubkey.asc"
+privkey_path: "/app/beetmoverworker/my_privkey.asc"
+gpg_path: /usr/local/bin/gpg
+my_email: "scriptworker@example.com"
 ```
 
 ```
@@ -84,7 +107,12 @@ touch work_dir/task.json  # see below for example
             "id": "...",
             "key": "..."
         }
-    }
+    },
+    "valid_artifact_rules": [{
+        "schemes": ["https"],
+        "netlocs": ["queue.taskcluster.net"],
+        "path_regexes": ["^/v1/task/(?P<taskId>[^/]+)(/runs/\\d+)?/artifacts/(?P<filepath>.*)$"]
+	}]
 }
 ```
 
@@ -107,10 +135,10 @@ touch work_dir/task.json  # see below for example
   "expires": "2017-08-31T23:20:18.165Z",
   "scopes": [],
   "payload": {
-    "version": "52.0a1",
     "upload_date": 1472747174,
-    "taskid_to_beetmove": "YVq4WkdlTmSz4on_FwuGIw",
-    "template_key": "fennec_nightly_unsigned"
+    "update_manifest": false, # if true, create balrog prop artifact. used by signing beetmover task
+    "taskid_of_manifest": "YVq4WkdlTmSz4on_FwuGIw",  # used to determine template_key, version, etc
+    "taskid_to_beetmove": "YVq4WkdlTmSz4on_FwuGIw"
   },
   "metadata": {
     "owner": "jlund@mozilla.com",
@@ -129,7 +157,6 @@ touch work_dir/task.json  # see below for example
 
 ```
 mkvirtualenv --python=/usr/local/bin/python3 beetmoverscript
-# currently, beetmoverscript depends on scriptworker 0.7.0
 # so you can develop on scriptworker itself as you go,
 # checkout scriptworker locally and install that custom repo in your venv
 git clone https://github.com/mozilla-releng/scriptworker.git

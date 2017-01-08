@@ -57,7 +57,6 @@ def test_put_success(event_loop, fake_session):
     assert response.status == 200
     assert response.resp == [b'asdf', b'asdf']
     assert response.content.url == "https://foo.com/packages/fake.package"
-    assert response.content.method == "PUT"
 
 
 def test_put_failure(event_loop, fake_session_500):
