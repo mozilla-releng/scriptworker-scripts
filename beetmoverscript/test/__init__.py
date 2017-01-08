@@ -10,7 +10,7 @@ def get_fake_valid_task():
 
 
 def get_fake_balrog_props():
-    return load_json(path="beetmoverscript/test/fake_balrog_props.json")
+    return load_json(path="beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/balrog_props.json")
 
 
 def get_fake_balrog_manifest():

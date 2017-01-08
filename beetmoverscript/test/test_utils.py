@@ -4,10 +4,8 @@ import json
 from scriptworker.context import Context
 from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
                                   get_fake_balrog_props, get_fake_balrog_manifest)
-from beetmoverscript.utils import (generate_candidates_manifest, get_hash,
-                                   write_json, get_manifest_url)
-from beetmoverscript.constants import (HASH_BLOCK_SIZE, MANIFEST_URL_TMPL,
-                                       MANIFEST_L10N_URL_TMPL)
+from beetmoverscript.utils import generate_beetmover_manifest, get_hash, write_json
+from beetmoverscript.constants import HASH_BLOCK_SIZE
 
 
 def test_get_hash():
@@ -43,28 +41,14 @@ def test_generate_manifest():
     context.config = get_fake_valid_config()
     context.properties = get_fake_balrog_props()["properties"]
     context.properties['platform'] = context.properties['stage_platform']
-    manifest = generate_candidates_manifest(context)
+    manifest = generate_beetmover_manifest(context.config, context.task, context.properties)
     mapping = manifest['mapping']
-    artifacts = [mapping[m].get('package', {}).get('artifact') for m in mapping]
-    s3_keys = [mapping[m].get('package', {}).get('s3_key') for m in mapping]
+    s3_keys = [mapping[m].get('target_info.txt', {}).get('s3_key') for m in mapping]
     assert sorted(mapping.keys()) == ['en-US', 'multi']
-    assert sorted(artifacts) == ['en-US/target.package', 'target.package']
-    assert sorted(s3_keys) == ['en-US/fake-99.0a1.en-US.fake.package',
-                               'fake-99.0a1.multi.fake.package']
+    assert sorted(s3_keys) == ['en-US/fake-99.0a1.en-US.target_info.txt',
+                               'fake-99.0a1.multi.target_info.txt']
     assert (
         manifest.get('s3_prefix_dated') ==
         'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/' and
         manifest.get('s3_prefix_latest') == 'pub/mobile/nightly/latest-mozilla-central-fake/'
     )
-
-
-def test_get_manifest_url():
-    context = Context()
-    context.task = get_fake_valid_task()
-
-    url = get_manifest_url(context.task["payload"])
-    assert url == MANIFEST_URL_TMPL % 'VALID_TASK_ID'
-
-    context.task["payload"]["locale"] = 'ro'
-    url = get_manifest_url(context.task["payload"])
-    assert url == MANIFEST_L10N_URL_TMPL % ('VALID_TASK_ID', 'ro')

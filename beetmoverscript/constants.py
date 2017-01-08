@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 MIME_MAP = {
     '': 'text/plain',
     '.asc': 'text/plain',
@@ -11,13 +13,17 @@ MIME_MAP = {
     '.xpi': 'application/zip',
     '.apk': 'application/vnd.android.package-archive',
 }
-
-PLATFORM_MAP = {
+STAGE_PLATFORM_MAP = {
     'linux': 'linux-i686',
     'linux64': 'linux-x86_64',
 }
-
+# TODO don't rely on default dict
+# use explicit platform 'firefox' mapping when all desktop platforms are added
+TEMPLATE_KEY_PLATFORMS = defaultdict(lambda: "firefox", {
+    "android-api-15": "fennec",
+    "android-x86": "fennecx86"
+})
 HASH_BLOCK_SIZE = 1024*1024
-
-MANIFEST_URL_TMPL = "https://queue.taskcluster.net/v1/task/%s/artifacts/public/build/balrog_props.json"
-MANIFEST_L10N_URL_TMPL = "https://queue.taskcluster.net/v1/task/%s/artifacts/public/build/%s/balrog_props.json"
+INITIAL_RELEASE_PROPS_FILE = "balrog_props.json"
+# release buckets don't require a copy of the following artifacts
+IGNORED_UPSTREAM_ARTIFACTS = ["balrog_props.json"]

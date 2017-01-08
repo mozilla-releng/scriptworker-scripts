@@ -8,12 +8,23 @@
     "created": "2015-05-08T16:15:58.903Z",
     "deadline": "2015-05-08T18:15:59.010Z",
     "expires": "2016-05-08T18:15:59.010Z",
-    "dependencies": ["VALID_TASK_ID"],
+    "dependencies": ["eSzfNqMZT_mSiQQXu8hyqg"],
     "scopes": ["signing"],
     "payload": {
         "upload_date": 1472747174,
-        "taskid_to_beetmove": "VALID_TASK_ID",
-        "taskid_of_manifest": "VALID_TASK_ID",
-        "update_manifest": false
+        "update_manifest": false,
+        "upstreamArtifacts": [
+        {
+          "paths": [
+            "public/build/target.txt",
+            "public/build/target.mozinfo.json",
+            "public/build/target_info.txt",
+            "public/build/balrog_props.json"
+          ],
+          "taskId": "eSzfNqMZT_mSiQQXu8hyqg",
+          "locale": "en-US",
+          "taskType": "build"
+        }
+      ]
     }
 }

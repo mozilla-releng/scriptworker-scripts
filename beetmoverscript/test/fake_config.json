@@ -4,9 +4,9 @@
     "verbose": true,
     "schema_file": "beetmoverscript/data/beetmover_task_schema.json",
     "template_files": {
-        "fake_nightly_unsigned": "beetmoverscript/test/fake_manifest.yml",
-        "firefox_nightly_unsigned": "beetmoverscript/test/fake_manifest.yml",
-        "fennec_nightly_unsigned": "beetmoverscript/test/fake_manifest.yml"
+        "fake_nightly_unsigned": "beetmoverscript/test/fake_beetmover_manifest.yml",
+        "firefox_nightly_unsigned": "beetmoverscript/test/fake_beetmover_manifest.yml",
+        "fennec_nightly_unsigned": "beetmoverscript/test/fake_beetmover_manifest.yml"
     },
     "s3": {
         "bucket": "fake-test-bucket",

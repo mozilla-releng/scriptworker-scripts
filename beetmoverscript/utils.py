@@ -9,8 +9,7 @@ import arrow
 import jinja2
 import yaml
 
-from beetmoverscript.constants import (HASH_BLOCK_SIZE, MANIFEST_L10N_URL_TMPL,
-                                       MANIFEST_URL_TMPL)
+from beetmoverscript.constants import HASH_BLOCK_SIZE, STAGE_PLATFORM_MAP, TEMPLATE_KEY_PLATFORMS
 
 log = logging.getLogger(__name__)
 
@@ -38,67 +37,48 @@ def write_json(path, contents):
         json.dump(contents, fh)
 
 
-def get_manifest_url(payload):
-    """Function to toggle between en-US and l10n balrog_props manifest url"""
-    taskid_of_manifest = payload['taskid_of_manifest']
-    if 'locale' in payload:
-        return MANIFEST_L10N_URL_TMPL % (taskid_of_manifest, payload['locale'])
-
-    return MANIFEST_URL_TMPL % taskid_of_manifest
-
-
-def infer_template_args(context):
-    props = context.properties
+def generate_beetmover_template_args(task, release_props):
     # Bug 1313154 - in order to make beetmoverscript accommodate the nightly
     # graph, task payload was tweaked to encompass `update_manifest` boolean
     # flag. The builds with unsigned artifacts will always have the flag set to
     # False while the builds with signed artifacts will have the opposite,
     # marking the need to update the manifest to be passed down to balrogworker
-    tmpl_key_option = "signed" if context.task["payload"]["update_manifest"] is True else "unsigned"
-    tmpl_key_platform = "firefox"
-    if props["stage_platform"] == "android-api-15":
-        tmpl_key_platform = "fennec"
-    elif props["stage_platform"] == "android-x86":
-        tmpl_key_platform = "fennecx86"
-    _args = {
-        "version": props["appVersion"],
-        "branch": props["branch"],
-        "product": props["appName"],
-        "stage_platform": props["stage_platform"],
-        "platform": props["platform"],
-        "template_key": "%s_nightly_%s" % (
+    tmpl_key_option = "signed" if task["payload"]["update_manifest"] is True else "unsigned"
+    tmpl_key_platform = TEMPLATE_KEY_PLATFORMS[release_props["stage_platform"]]
+
+    template_args = {
+        # payload['upload_date'] is a timestamp defined by params['pushdate']
+        # in mach taskgraph0
+        "upload_date": arrow.get(task['payload']['upload_date']).format('YYYY/MM/YYYY-MM-DD-HH-mm-ss'),
+        "version": release_props["appVersion"],
+        "branch": release_props["branch"],
+        "product": release_props["appName"],
+        "stage_platform": release_props["stage_platform"],
+        "platform": release_props["platform"],
+    }
+
+    if 'locale' in task["payload"]:
+        template_args["locale"] = task["payload"]["locale"]
+        template_args["template_key"] = "%s_nightly_repacks_%s" % (
+            release_props["appName"].lower(),
+            tmpl_key_option
+        )
+    else:
+        template_args["template_key"] = "%s_nightly_%s" % (
             tmpl_key_platform,
             tmpl_key_option
         )
-    }
 
-    if 'locale' in context.task["payload"]:
-        _args["locale"] = context.task["payload"]["locale"]
-        # overwrite the `template_key` with the repacks string version
-        _args["template_key"] = "%s_nightly_repacks_%s" % (
-            props["appName"].lower(),
-            tmpl_key_option
-        )
-
-    return _args
+    return template_args
 
 
-def generate_candidates_manifest(context):
+def generate_beetmover_manifest(script_config, task, release_props):
     """
     generates and outputs a manifest that maps expected Taskcluster artifact names
     to release deliverable names
     """
-    payload = context.task['payload']
-
-    template_args = {
-        "taskid_to_beetmove": payload["taskid_to_beetmove"],
-        # payload['upload_date'] is a timestamp defined by params['pushdate']
-        # in mach taskgraph0
-        "upload_date": arrow.get(payload['upload_date']).format('YYYY/MM/YYYY-MM-DD-HH-mm-ss')
-    }
-
-    template_args.update(infer_template_args(context))
-    template_path = context.config['template_files'][template_args["template_key"]]
+    template_args = generate_beetmover_template_args(task, release_props)
+    template_path = script_config['template_files'][template_args["template_key"]]
 
     log.info('generating manifest from: {}'.format(template_path))
     log.info(os.path.abspath(template_path))
@@ -115,12 +95,12 @@ def generate_candidates_manifest(context):
     return manifest
 
 
-def update_props(context_props, platform_mapping):
+def update_props(props, platform_mapping):
     """Function to alter the `stage_platform` field from balrog_props to their
     corresponding correct values for certain platforms. Please note that for
     l10n jobs the `stage_platform` field is in fact called `platform` hence
     the defaulting below."""
-    props = deepcopy(context_props)
+    props = deepcopy(props)
     # en-US jobs have the platform set in the `stage_platform` field while
     # l10n jobs have it set under `platform`. This is merely an uniformization
     # under the `stage_platform` field that is needed later on in the templates
@@ -130,3 +110,10 @@ def update_props(context_props, platform_mapping):
     props["platform"] = platform_mapping.get(stage_platform,
                                              stage_platform)
     return props
+
+
+def get_release_props(initial_release_props_file, platform_mapping=STAGE_PLATFORM_MAP):
+    """determined via parsing the Nightly build job's balrog_props.json and
+    expanded the properties with props beetmover knows about."""
+    props = load_json(initial_release_props_file)['properties']
+    return update_props(props, platform_mapping)
