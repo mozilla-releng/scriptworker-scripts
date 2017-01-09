@@ -1,10 +1,8 @@
 import json
 import os
 import tempfile
-from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
-                                  get_fake_balrog_manifest)
-from beetmoverscript.task import (validate_task_schema,
-                                  add_balrog_manifest_to_artifacts)
+from beetmoverscript.test import get_fake_valid_task, get_fake_valid_config, get_fake_balrog_props
+from beetmoverscript.task import validate_task_schema, add_balrog_manifest_to_artifacts
 from scriptworker.context import Context
 
 
@@ -20,7 +18,7 @@ def test_balrog_manifest_to_artifacts():
     context.task = get_fake_valid_task()
     context.config = get_fake_valid_config()
 
-    fake_balrog_manifest = get_fake_balrog_manifest()
+    fake_balrog_manifest = get_fake_balrog_props()
     context.balrog_manifest = fake_balrog_manifest
 
     # fake the path to to able to check the contents written later on

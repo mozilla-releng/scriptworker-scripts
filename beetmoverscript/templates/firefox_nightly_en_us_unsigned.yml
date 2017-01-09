@@ -4,70 +4,49 @@ mapping:
   # common deliverables
 {% for locale in ['en-US'] %}
   {{ locale }}:
-    common:
-      artifact: target.common.tests.zip
+    target.common.tests.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.common.tests.zip
-    cppunittest:
-      artifact: target.cppunittest.tests.zip
+    target.cppunittest.tests.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.cppunittest.tests.zip
-    crashreporter:
-      artifact: target.crashreporter-symbols.zip
+    target.crashreporter-symbols.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
-    json:
-      artifact: target.json
+    target.json:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.json
-    mochitest:
-      artifact: target.mochitest.tests.zip
+    target.mochitest.tests.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.mochitest.tests.zip
-    mozinfo:
-      artifact: target.mozinfo.json
+    target.mozinfo.json:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.mozinfo.json
-    reftest:
-      artifact: target.reftest.tests.zip
+    target.reftest.tests.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.reftest.tests.zip
-    talos:
-      artifact: target.talos.tests.zip
+    target.talos.tests.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.talos.tests.zip
-    test_packages:
-      artifact: target.test_packages.json
+    target.test_packages.json:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.test_packages.json
-    txt:
-      artifact: target.txt
+    target.txt:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.txt
-    webplatform:
-      artifact: target.web-platform.tests.zip
+    target.web-platform.tests.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.web-platform.tests.zip
-    xpcshell:
-      artifact: target.xpcshell.tests.zip
+    target.xpcshell.tests.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.xpcshell.tests.zip
-    info:
-      artifact: target_info.txt
+    target_info.txt:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}_info.txt
-    jsshell:
-      artifact: target.jsshell.zip
+    target.jsshell.zip:
       s3_key: jsshell-{{ platform }}.zip
-    mozharness_package:
-      artifact: mozharness.zip
+    mozharness.zip:
       s3_key: mozharness.zip
-    xpi:
-      artifact: {{ platform }}/xpi/firefox-{{ version }}.{{ locale }}.langpack.xpi
+    target.langpack.xpi:
       s3_key: firefox-{{ version }}.{{ locale }}.langpack.xpi
-    mar_tools_mar:
-      artifact: host/bin/mar
+    mar:
       s3_key: mar-tools/{{ stage_platform }}/mar
-    mar_tools_mbdiff:
-      artifact: host/bin/mbsdiff
+    mbsdiff:
       s3_key: mar-tools/{{ stage_platform }}/mbsdiff
 
   {% if platform in ["linux-i686", "linux-x86_64"] %}
-    sdk:
-      artifact: target.sdk.tar.bz2
+    target.sdk.tar.bz2:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
     # Bug 1316125 - TODO
-    #sdk_asc:
-      #artifact: target.sdk.tar.bz2.asc
+    #target.sdk.tar.bz2.asc:
       #s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2.asc
-
   {% endif %}
 
 {% endfor %}

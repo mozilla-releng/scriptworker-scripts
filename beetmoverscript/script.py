@@ -12,71 +12,57 @@ import mimetypes
 import aiohttp
 import boto3
 
-from scriptworker.client import get_task, validate_artifact_url
+from scriptworker.client import get_task
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
-from scriptworker.utils import (retry_async, download_file,
-                                raise_future_exceptions, retry_request)
+from scriptworker.utils import retry_async, raise_future_exceptions
 
-from beetmoverscript.constants import MIME_MAP, PLATFORM_MAP
-from beetmoverscript.task import validate_task_schema, add_balrog_manifest_to_artifacts
-from beetmoverscript.utils import (load_json, generate_candidates_manifest,
-                                   update_props, get_hash, get_manifest_url)
+from beetmoverscript.constants import MIME_MAP
+from beetmoverscript.task import validate_task_schema, add_balrog_manifest_to_artifacts, \
+    get_upstream_artifacts, get_initial_release_props_file
+from beetmoverscript.utils import (load_json, get_hash, get_release_props,
+                                   generate_beetmover_manifest)
 
 log = logging.getLogger(__name__)
 
 
 # async_main {{{1
 async def async_main(context):
-    # balrog_manifest is used by a subsequent balrogworker task that points to a beetmoved artifact
+    # balrog_manifest is written and uploaded as an artifact which is used by a subsequent
+    # balrogworker task in the release graph. Balrogworker uses this manifest to submit
+    # release blob info with things like mar filename, size, etc
     context.balrog_manifest = list()
-
-    # 1. parse the task
+    # determine and validate the task
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
-    # 2. validate the task
     validate_task_schema(context)
-    # 3 prepare manifest props file
-    #   a. grab manifest props with all the useful data
-    #   b. amend platform field to proper one
-    context.properties = await get_props(context)
-    context.properties = update_props(context.properties, PLATFORM_MAP)
-    # 4. generate manifest
-    manifest = generate_candidates_manifest(context)
+    # determine artifacts to beetmove
+    context.artifacts_to_beetmove = get_upstream_artifacts(context)
+    # determine the release properties
+    context.release_props = get_release_props(get_initial_release_props_file(context))
+    # generate beetmover mapping manifest
+    mapping_manifest = generate_beetmover_manifest(context.config,
+                                                   context.task,
+                                                   context.release_props)
     # 5. for each artifact in manifest
-    #   a. download artifact
+    #   a. map each upstream artifact to pretty name release bucket format
     #   b. upload to candidates/dated location
-    await move_beets(context, manifest)
-    # 6. write balrog_manifest to a file and add it to list of artifacts
+    await move_beets(context, context.artifacts_to_beetmove, mapping_manifest)
+    # # 6. write balrog_manifest to a file and add it to list of artifacts
     if context.task["payload"]["update_manifest"]:
         add_balrog_manifest_to_artifacts(context)
     log.info('Success!')
 
 
-async def get_props(context):
-    source = get_manifest_url(context.task['payload'])
-
-    # extra validation check is useful for the url scheme, netloc and path
-    # restrictions
-    beet_config = deepcopy(context.config)
-    beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
-    validate_artifact_url(beet_config['valid_artifact_rules'],
-                          beet_config['valid_artifact_task_ids'], source)
-
-    return (await retry_request(context, source, method='get',
-                                return_type='json'))['properties']
-
-
-async def move_beets(context, manifest):
+async def move_beets(context, artifacts_to_beetmove, manifest):
     beets = []
-    for locale in manifest['mapping']:
-        for deliverable in manifest['mapping'][locale]:
-            source = os.path.join(manifest["artifact_base_url"],
-                                  manifest['mapping'][locale][deliverable]['artifact'])
+    for locale in artifacts_to_beetmove:
+        for artifact in artifacts_to_beetmove[locale]:
+            source = artifacts_to_beetmove[locale][artifact]
             dest_dated = os.path.join(manifest["s3_prefix_dated"],
-                                      manifest['mapping'][locale][deliverable]['s3_key'])
+                                      manifest['mapping'][locale][artifact]['s3_key'])
             dest_latest = os.path.join(manifest["s3_prefix_latest"],
-                                       manifest['mapping'][locale][deliverable]['s3_key'])
-            balrog_manifest = manifest['mapping'][locale][deliverable].get('update_balrog_manifest')
+                                       manifest['mapping'][locale][artifact]['s3_key'])
+            balrog_manifest = manifest['mapping'][locale][artifact].get('update_balrog_manifest')
             beets.append(
                 asyncio.ensure_future(
                     move_beet(context, source, destinations=(dest_dated, dest_latest),
@@ -89,23 +75,17 @@ async def move_beets(context, manifest):
 async def move_beet(context, source, destinations, locale, update_balrog_manifest):
     beet_config = deepcopy(context.config)
     beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
-    rel_path = validate_artifact_url(beet_config['valid_artifact_rules'],
-                                     beet_config['valid_artifact_task_ids'], source)
-    abs_file_path = os.path.join(context.config['work_dir'], rel_path)
 
-    await retry_download(context=context, url=source, path=abs_file_path)
-    await retry_upload(context=context, destinations=destinations, path=abs_file_path)
+    await retry_upload(context=context, destinations=destinations, path=source)
 
     if update_balrog_manifest:
         context.balrog_manifest.append(
-            enrich_balrog_manifest(context, abs_file_path, locale, destinations)
+            enrich_balrog_manifest(context.release_props, source, locale, destinations)
         )
 
 
-def enrich_balrog_manifest(context, path, locale, destinations):
-    props = context.properties
-
-    if props["branch"] == 'date':
+def enrich_balrog_manifest(release_props, path, locale, destinations):
+    if release_props["branch"] == 'date':
         # nightlies from dev branches don't usually upload to archive.m.o but
         # in this particular case we're gradually rolling out in the
         # archive.m.o under the latest-date corresponding bucket subfolder
@@ -122,19 +102,19 @@ def enrich_balrog_manifest(context, path, locale, destinations):
         "tc_nightly": True,
 
         "completeInfo": [{
-            "hash": get_hash(path, hash_type=props["hashType"]),
+            "hash": get_hash(path, hash_type=release_props["hashType"]),
             "size": os.path.getsize(path),
             "url": url
         }],
 
-        "appName": props["appName"],
-        "appVersion": props["appVersion"],
-        "branch": props["branch"],
-        "buildid": props["buildid"],
-        "extVersion": props["appVersion"],
-        "hashType": props["hashType"],
+        "appName": release_props["appName"],
+        "appVersion": release_props["appVersion"],
+        "branch": release_props["branch"],
+        "buildid": release_props["buildid"],
+        "extVersion": release_props["appVersion"],
+        "hashType": release_props["hashType"],
         "locale": locale if not locale == 'multi' else 'en-US',
-        "platform": props["stage_platform"],
+        "platform": release_props["stage_platform"],
         "url_replacements": url_replacements
     }
 
@@ -153,12 +133,8 @@ async def retry_upload(context, destinations, path):
     await raise_future_exceptions(uploads)
 
 
-async def retry_download(context, url, path):
-    return await retry_async(download_file, args=(context, url, path),
-                             kwargs={'session': context.session})
-
-
 async def put(context, url, headers, abs_filename, session=None):
+    session = session or context.session
     with open(abs_filename, "rb") as fh:
         async with session.put(url, data=fh, headers=headers, compress=False) as resp:
             log.info(resp.status)
@@ -172,7 +148,7 @@ async def put(context, url, headers, abs_filename, session=None):
 
 
 async def upload_to_s3(context, s3_key, path):
-    app = context.properties['appName'].lower()
+    app = context.release_props['appName'].lower()
     api_kwargs = {
         'Bucket': context.config['s3'][app]['bucket'],
         'Key': s3_key,

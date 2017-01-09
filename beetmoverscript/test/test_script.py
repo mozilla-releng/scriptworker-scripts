@@ -1,13 +1,16 @@
 import mimetypes
+import os
+
 import mock
 import pytest
 import sys
 from yarl import URL
 
-from beetmoverscript.script import setup_mimetypes, setup_config, put, retry_download, move_beets, \
+from beetmoverscript.script import setup_mimetypes, setup_config, put, move_beets, \
     move_beet, async_main, main
+from beetmoverscript.task import get_upstream_artifacts
 from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props
-from beetmoverscript.utils import generate_candidates_manifest
+from beetmoverscript.utils import generate_beetmover_manifest
 from scriptworker.context import Context
 from scriptworker.exceptions import (ScriptWorkerRetryException,
                                      ScriptWorkerTaskException)
@@ -70,25 +73,6 @@ def test_put_failure(event_loop, fake_session_500):
         )
 
 
-def test_download(event_loop):
-    context = Context()
-    context.config = get_fake_valid_config()
-    context.session = fake_session
-    url = 'https://fake.com'
-    path = '/fake/path'
-
-    async def fake_download(context, url, path, session):
-        return context, url, path, session
-
-    # just make sure retry_download ends up calling scriptworker's download_file and passes the
-    # right args, kwargs
-    with mock.patch('beetmoverscript.script.download_file', fake_download):
-        result = event_loop.run_until_complete(
-            retry_download(context, url, path)
-        )
-        assert result == (context, url, path, context.session)
-
-
 # def test_upload_to_s3():
 #     async def fake_aws_client(service, key, id):
 #         s3_client = object()
@@ -100,17 +84,27 @@ def test_move_beets(event_loop):
     context.task = get_fake_valid_task()
     context.properties = get_fake_balrog_props()["properties"]
     context.properties['platform'] = context.properties['stage_platform']
-    manifest = generate_candidates_manifest(context)
+    context.artifacts_to_beetmove = get_upstream_artifacts(context)
+    manifest = generate_beetmover_manifest(context.config, context.task, context.properties)
 
     expected_sources = [
-        'https://queue.taskcluster.net/v1/task/VALID_TASK_ID/artifacts/public/build/target.package',
-        'https://queue.taskcluster.net/v1/task/VALID_TASK_ID/artifacts/public/build/en-US/target.package'
+        os.path.abspath(
+            'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.mozinfo.json'
+        ),
+        os.path.abspath(
+            'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt',
+        ),
+        os.path.abspath(
+            'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target_info.txt'
+        ),
     ]
     expected_destinations = [
-        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/fake-99.0a1.multi.fake.package',
-         'pub/mobile/nightly/latest-mozilla-central-fake/fake-99.0a1.multi.fake.package'),
-        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.fake.package',
-         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.fake.package')
+        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt'),
+        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json'),
+        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'),
     ]
 
     actual_sources = []
@@ -122,7 +116,7 @@ def test_move_beets(event_loop):
 
     with mock.patch('beetmoverscript.script.move_beet', fake_move_beet):
         event_loop.run_until_complete(
-            move_beets(context, manifest)
+            move_beets(context, context.artifacts_to_beetmove, manifest)
         )
 
     assert sorted(expected_sources) == sorted(actual_sources)
@@ -135,36 +129,26 @@ def test_move_beet(event_loop):
     context.task = get_fake_valid_task()
     locale = "sample-locale"
 
-    target_source = 'https://queue.taskcluster.net/v1/task/VALID_TASK_ID/artifacts/public/build/target.package'
+    target_source = 'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt'
     target_destinations = (
-        'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/fake-99.0a1.multi.fake.package',
-        'pub/mobile/nightly/latest-mozilla-central-fake/fake-99.0a1.multi.fake.package'
+        'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
+        'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'
     )
-    expected_download_args = [
-        'https://queue.taskcluster.net/v1/task/VALID_TASK_ID/artifacts/public/build/target.package',
-        'beetmoverscript/test/test_work_dir/public/build/target.package'
-    ]
     expected_upload_args = [
-        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/fake-99.0a1.multi.fake.package',
-         'pub/mobile/nightly/latest-mozilla-central-fake/fake-99.0a1.multi.fake.package'),
-        'beetmoverscript/test/test_work_dir/public/build/target.package'
+        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'),
+        'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt'
     ]
-    actual_download_args = []
     actual_upload_args = []
-
-    async def fake_retry_download(context, url, path):
-        actual_download_args.extend([url, path])
 
     async def fake_retry_upload(context, destinations, path):
         actual_upload_args.extend([destinations, path])
 
-    with mock.patch('beetmoverscript.script.retry_download', fake_retry_download):
-        with mock.patch('beetmoverscript.script.retry_upload', fake_retry_upload):
-            event_loop.run_until_complete(
-                move_beet(context, target_source, target_destinations, locale, update_balrog_manifest=False)
-            )
+    with mock.patch('beetmoverscript.script.retry_upload', fake_retry_upload):
+        event_loop.run_until_complete(
+            move_beet(context, target_source, target_destinations, locale, update_balrog_manifest=False)
+        )
 
-    assert sorted(expected_download_args) == sorted(actual_download_args)
     assert expected_upload_args == actual_upload_args
 
 
@@ -172,17 +156,13 @@ def test_async_main(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
 
-    async def fake_move_beets(context, manifest):
+    async def fake_move_beets(context, artifacts_to_beetmove, manifest):
         pass
 
-    async def get_fake_props(context):
-        return get_fake_balrog_props()['properties']
-
     with mock.patch('beetmoverscript.script.move_beets', new=fake_move_beets):
-        with mock.patch('beetmoverscript.script.get_props', new=get_fake_props):
-            event_loop.run_until_complete(
-                async_main(context)
-            )
+        event_loop.run_until_complete(
+            async_main(context)
+        )
 
 
 def test_main(event_loop, fake_session):

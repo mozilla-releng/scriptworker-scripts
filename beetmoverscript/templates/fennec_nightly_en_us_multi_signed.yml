@@ -6,12 +6,10 @@ mapping:
   {{ locale }}:
   {% set locale_prefix = 'en-US/' if locale == 'en-US' else '' %}
   {% set update_balrog_manifest = True if locale == 'multi' else False %}
-    apk:
-      artifact: {{ locale_prefix }}target.apk
+    target.apk:
       s3_key: {{ locale_prefix  }}fennec-{{ version }}.{{ locale }}.android-arm.apk
       update_balrog_manifest: {{ update_balrog_manifest }}
     # Bug 1316124 - TODO
-    #checksums:
-      #artifact: {{ locale_prefix }}target.checksums
+    #target.checksums:
       #s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.checksums
 {% endfor %}

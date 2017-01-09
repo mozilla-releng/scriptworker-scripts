@@ -66,14 +66,14 @@ artifact_dir: "/app/beetmoverworker/artifact"
 task_log_dir: "/app/beetmoverworker/artifact/public/logs"
 
 # chainoftrust config
-sign_chain_of_trust: false
-verify_chain_of_trust: false
-verify_cot_signature: false
+sign_chain_of_trust: true
+verify_chain_of_trust: true
+verify_cot_signature: true
 cot_job_type: beetmover
 
 # gpg homedir config
 ## only used when verify_chain_of_trust is true
-base_gpg_home_dir: "/app/beetmoverworker/gpg"
+base_gpg_home_dir: "/app/beetmoverworker/gpg"                                                                                 [48/9992]
 gpg_lockfile: "/app/beetmoverworker/gpg_homedir.lock"
 git_key_repo_dir: "/app/beetmoverworker/key_repo"
 git_commit_signing_pubkey_dir: "/app/beetmoverworker/valid_git_fingerprints/"
@@ -107,12 +107,7 @@ my_email: "scriptworker@example.com"
             "id": "...",
             "key": "..."
         }
-    },
-    "valid_artifact_rules": [{
-        "schemes": ["https"],
-        "netlocs": ["queue.taskcluster.net"],
-        "path_regexes": ["^/v1/task/(?P<taskId>[^/]+)(/runs/\\d+)?/artifacts/(?P<filepath>.*)$"]
-	}]
+    }
 }
 ```
 
@@ -122,23 +117,42 @@ my_email: "scriptworker@example.com"
   "provisionerId": "test-dummy-provisioner",
   "workerType": "dummy-worker-jlund",
   "schedulerId": "-",
-  "taskGroupId": "S-lth0jTThKBjmpt386kUA",
+  "taskGroupId": "YkE_OQjoTj2G92P4A4Cy1A",
   "dependencies": [
-    "YVq4WkdlTmSz4on_FwuGIw"
+    "c6DPRNsTRa6uVYVp5qCD9w",
+    "M4hnMSqcS4itJWC-IwsmXg"
   ],
   "requires": "all-completed",
   "routes": [],
   "priority": "normal",
   "retries": 5,
-  "created": "2016-09-28T02:38:47.963Z",
-  "deadline": "2016-09-28T03:38:47.963Z",
+  "created": "2017-01-08T17:06:07.800Z",
+  "deadline": "2017-01-08T18:06:07.800Z",
   "expires": "2017-08-31T23:20:18.165Z",
   "scopes": [],
   "payload": {
-    "upload_date": 1472747174,
-    "update_manifest": false, # if true, create balrog prop artifact. used by signing beetmover task
-    "taskid_of_manifest": "YVq4WkdlTmSz4on_FwuGIw",  # used to determine template_key, version, etc
-    "taskid_to_beetmove": "YVq4WkdlTmSz4on_FwuGIw"
+    "maxRunTime": 600,
+    "upload_date": 1483465253,
+    "update_manifest": true,
+    "upstreamArtifacts": [
+      {
+        "paths": [
+          "public/build/balrog_props.json"
+        ],
+        "taskId": "c6DPRNsTRa6uVYVp5qCD9w",
+        "taskType": "build",
+        "locale": "en-US"
+      },
+      {
+        "paths": [
+          "public/build/target.checksums.asc",
+          "public/build/target.checksums"
+        ],
+        "taskId": "M4hnMSqcS4itJWC-IwsmXg",
+        "taskType": "build",
+        "locale": "en-US"
+      }
+    ]
   },
   "metadata": {
     "owner": "jlund@mozilla.com",
