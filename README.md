@@ -20,14 +20,27 @@ First, you need `python>=3.5.0`.
     cd pushapkscript
     pip install pushapkscript
 
+Then you need to install [jarsigner](http://docs.oracle.com/javase/8/docs/technotes/tools/windows/jarsigner.html) (usually included with JDK).
+
 ### Configure
 
+#### Jarsigner
+
+Add the nightly certificate to the java keystore:
+```sh
+keytool -import -keystore ~/.keystores/mozilla-android -file pushapkscript/data/android-nightly.cer -alias nightly
+```
+
+Note: The keystore location and the certificate alias will be used in the `config.json` section
+
+#### config.json
     cp config_example.json config.json
     # edit it with your favorite text editor
 
 There are many values to edit. Example values should give you a hint about what to provide. If not, please see [signingscript's README](https://github.com/mozilla-releng/signingscript#config-json) for more details about allowing URLs, or contact the author for other unclear areas.
 
 #### directories and file naming
+
 If you aren't running through scriptworker, you need to manually create the directories that `work_dir` and `artifact_dir` point to.  It's better to use new directories for these rather than cluttering and potentially overwriting an existing directory.  Once you set up scriptworker, the `work_dir` and `artifact_dir` will be regularly wiped and recreated.
 
 
