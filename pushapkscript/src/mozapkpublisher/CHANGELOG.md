@@ -4,6 +4,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## 0.1.4
+* Use new store_l10n APIs
+* New installation instructions for OS X
+* Better logs
+* Test coverage
+
 ## 0.1.3
 * Mute some debug logs coming from dependencies
 * Add a check to prevent single locale APKs to be pushed ([bug 1314712](https://bugzilla.mozilla.org/show_bug.cgi?id=1314712))
