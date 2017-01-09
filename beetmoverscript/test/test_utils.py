@@ -2,8 +2,7 @@ import tempfile
 import json
 
 from scriptworker.context import Context
-from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
-                                  get_fake_balrog_props, get_fake_balrog_manifest)
+from beetmoverscript.test import get_fake_valid_task, get_fake_valid_config, get_fake_balrog_props
 from beetmoverscript.utils import generate_beetmover_manifest, get_hash, write_json
 from beetmoverscript.constants import HASH_BLOCK_SIZE
 
@@ -24,7 +23,7 @@ def test_get_hash():
 
 
 def test_write_json():
-    sample_data = get_fake_balrog_manifest()
+    sample_data = get_fake_balrog_props()
 
     with tempfile.NamedTemporaryFile(delete=True) as fp:
         write_json(fp.name, sample_data)

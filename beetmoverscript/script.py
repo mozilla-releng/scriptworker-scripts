@@ -28,7 +28,9 @@ log = logging.getLogger(__name__)
 
 # async_main {{{1
 async def async_main(context):
-    # balrog_manifest is used by a subsequent balrogworker task that points to a beetmoved artifact
+    # balrog_manifest is written and uploaded as an artifact which is used by a subsequent
+    # balrogworker task in the release graph. Balrogworker uses this manifest to submit
+    # release blob info with things like mar filename, size, etc
     context.balrog_manifest = list()
     # determine and validate the task
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json

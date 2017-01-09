@@ -34,9 +34,8 @@ mapping:
       s3_key: jsshell-{{ platform }}.zip
     mozharness.zip:
       s3_key: mozharness.zip
-    # uncomment when `Bug 1329310 - Support SIMPLE NAME for langpacks too` is resolved
-    #    target.langpack.xpi:
-    #      s3_key: firefox-{{ version }}.{{ locale }}.langpack.xpi
+    target.langpack.xpi:
+      s3_key: firefox-{{ version }}.{{ locale }}.langpack.xpi
     mar:
       s3_key: mar-tools/{{ stage_platform }}/mar
     mbsdiff:
