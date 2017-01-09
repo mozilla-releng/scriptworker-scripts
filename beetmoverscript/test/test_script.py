@@ -6,7 +6,7 @@ import pytest
 import sys
 from yarl import URL
 
-from beetmoverscript.script import setup_mimetypes, setup_config, put, retry_download, move_beets, \
+from beetmoverscript.script import setup_mimetypes, setup_config, put, move_beets, \
     move_beet, async_main, main
 from beetmoverscript.task import get_upstream_artifacts
 from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props
@@ -71,25 +71,6 @@ def test_put_failure(event_loop, fake_session_500):
             put(context, url=URL('https://foo.com/packages/fake.package'), headers={},
                 abs_filename='beetmoverscript/test/fake_artifact.json', session=fake_session_500)
         )
-
-
-def test_download(event_loop):
-    context = Context()
-    context.config = get_fake_valid_config()
-    context.session = fake_session
-    url = 'https://fake.com'
-    path = '/fake/path'
-
-    async def fake_download(context, url, path, session):
-        return context, url, path, session
-
-    # just make sure retry_download ends up calling scriptworker's download_file and passes the
-    # right args, kwargs
-    with mock.patch('beetmoverscript.script.download_file', fake_download):
-        result = event_loop.run_until_complete(
-            retry_download(context, url, path)
-        )
-        assert result == (context, url, path, context.session)
 
 
 # def test_upload_to_s3():

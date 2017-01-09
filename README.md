@@ -73,15 +73,15 @@ cot_job_type: beetmover
 
 # gpg homedir config
 ## only used when verify_chain_of_trust is true
-base_gpg_home_dir: "/app/beetmoverworker-1.0.0b4/gpg"                                                                                 [48/9992]
-gpg_lockfile: "/app/beetmoverworker-1.0.0b4/gpg_homedir.lock"
-git_key_repo_dir: "/app/beetmoverworker-1.0.0b4/key_repo"
-git_commit_signing_pubkey_dir: "/app/beetmoverworker-1.0.0b4/valid_git_fingerprints/"
-last_good_git_revision_file: "/app/beetmoverworker-1.0.0b4/git_revision"
-pubkey_path: "/app/beetmoverworker-1.0.0b4/my_pubkey.asc"
-privkey_path: "/app/beetmoverworker-1.0.0b4/my_privkey.asc"
+base_gpg_home_dir: "/app/beetmoverworker/gpg"                                                                                 [48/9992]
+gpg_lockfile: "/app/beetmoverworker/gpg_homedir.lock"
+git_key_repo_dir: "/app/beetmoverworker/key_repo"
+git_commit_signing_pubkey_dir: "/app/beetmoverworker/valid_git_fingerprints/"
+last_good_git_revision_file: "/app/beetmoverworker/git_revision"
+pubkey_path: "/app/beetmoverworker/my_pubkey.asc"
+privkey_path: "/app/beetmoverworker/my_privkey.asc"
 gpg_path: /usr/local/bin/gpg
-my_email: "cottester@gmail.com"
+my_email: "scriptworker@example.com"
 ```
 
 ```
@@ -107,12 +107,7 @@ my_email: "cottester@gmail.com"
             "id": "...",
             "key": "..."
         }
-    },
-    "valid_artifact_rules": [{
-        "schemes": ["https"],
-        "netlocs": ["queue.taskcluster.net"],
-        "path_regexes": ["^/v1/task/(?P<taskId>[^/]+)(/runs/\\d+)?/artifacts/(?P<filepath>.*)$"]
-	}]
+    }
 }
 ```
 

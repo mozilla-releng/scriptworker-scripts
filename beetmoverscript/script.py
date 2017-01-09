@@ -15,7 +15,7 @@ import boto3
 from scriptworker.client import get_task
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
-from scriptworker.utils import retry_async, download_file, raise_future_exceptions
+from scriptworker.utils import retry_async, raise_future_exceptions
 
 from beetmoverscript.constants import MIME_MAP
 from beetmoverscript.task import validate_task_schema, add_balrog_manifest_to_artifacts, \
@@ -129,11 +129,6 @@ async def retry_upload(context, destinations, path):
             )
         )
     await raise_future_exceptions(uploads)
-
-
-async def retry_download(context, url, path):
-    return await retry_async(download_file, args=(context, url, path),
-                             kwargs={'session': context.session})
 
 
 async def put(context, url, headers, abs_filename, session=None):

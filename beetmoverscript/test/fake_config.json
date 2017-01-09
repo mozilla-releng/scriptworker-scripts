@@ -14,10 +14,5 @@
             "id": "...",
             "key": "..."
         }
-    },
-    "valid_artifact_rules": [{
-        "schemes": ["https"],
-        "netlocs": ["queue.taskcluster.net"],
-        "path_regexes": ["^/v1/task/(?P<taskId>[^/]+)(/runs/\\d+)?/artifacts/(?P<filepath>.*)$"]
-	}]
+    }
 }
