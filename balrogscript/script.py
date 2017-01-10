@@ -6,23 +6,9 @@ import logging
 import os
 import re
 import sys
-from mardor.marfile import MarFile
 
 
 log = logging.getLogger(__name__)
-
-
-def verify_signature(mar, signature):
-    log.info("Checking %s signature", mar)
-    m = MarFile(mar, signature_versions=[(1, signature)])
-    m.verify_signatures()
-
-
-def possible_names(initial_name, amount):
-    """Generate names appending counter before extension"""
-    prefix, ext = os.path.splitext(initial_name)
-    return [initial_name] + ["{}-{}{}".format(prefix, n, ext) for n in
-                             range(1, amount + 1)]
 
 
 def get_manifest(config):

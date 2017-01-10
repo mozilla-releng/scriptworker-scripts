@@ -83,21 +83,6 @@ def release_config(config):
     yield config
 
 
-# possible_names {{{1
-def test_possible_names():
-    initial = "/Users/tester/file.exe"
-    names = balrogscript.possible_names(initial, 2)
-    exp = ["/Users/tester/file.exe", "/Users/tester/file-1.exe", "/Users/tester/file-2.exe"]
-    assert set(names) == set(exp)
-
-
-def test_possible_names_neg():
-    initial = "file.exe"
-    names = balrogscript.possible_names(initial, -1)
-    exp = ["file.exe"]
-    assert set(names) == set(exp)
-
-
 # load_task {{{1
 def test_load_task_payload(nightly_config):
     upstream, cert = balrogscript.load_task(nightly_config)
