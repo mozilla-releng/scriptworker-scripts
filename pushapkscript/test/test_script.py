@@ -1,9 +1,9 @@
 import logging
 
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-from pushapkscript.script import craft_logging_config
+from pushapkscript.script import craft_logging_config, get_default_config
 
 
 class ScriptTest(unittest.TestCase):
@@ -20,4 +20,19 @@ class ScriptTest(unittest.TestCase):
         self.assertEqual(craft_logging_config(context), {
             'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             'level': logging.INFO
+        })
+
+    @patch('os.getcwd')
+    def test_get_default_config(self, current_working_dir_patch):
+        current_working_dir_patch.return_value = '/a/current/dir'
+
+        self.assertEqual(get_default_config(), {
+            'work_dir': '/a/current/work_dir',
+            'schema_file': '/a/current/dir/pushapkscript/data/pushapk_task_schema.json',
+            'valid_artifact_rules': [{
+              'netlocs': ['queue.taskcluster.net'],
+              'path_regexes': ['^/v1/task/(?P<taskId>[^/]+)(/runs/\\d+)?/artifacts/(?P<filepath>.*)$'],
+              'schemes': ['https']
+            }],
+            'verbose': False,
         })
