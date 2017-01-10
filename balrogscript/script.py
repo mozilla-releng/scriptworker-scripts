@@ -1,41 +1,21 @@
 #!/usr/bin/env python
 from copy import deepcopy
-import hashlib
 import json
 import jsonschema
 import logging
 import os
 import re
 import sys
-from mardor.marfile import MarFile
 
 
 log = logging.getLogger(__name__)
 
 
-def get_hash(content, hash_type="md5"):
-    h = hashlib.new(hash_type)
-    h.update(content)
-    return h.hexdigest()
-
-
-def verify_signature(mar, signature):
-    log.info("Checking %s signature", mar)
-    m = MarFile(mar, signature_versions=[(1, signature)])
-    m.verify_signatures()
-
-
-def possible_names(initial_name, amount):
-    """Generate names appending counter before extension"""
-    prefix, ext = os.path.splitext(initial_name)
-    return [initial_name] + ["{}-{}{}".format(prefix, n, ext) for n in
-                             range(1, amount + 1)]
-
-
 def get_manifest(config):
     # assumes a single upstreamArtifact and single path
     task_id = config['upstream_artifacts'][0]['taskId']
-    path = os.path.join(config['work_dir'], "cot", task_id, config['upstream_artifacts'][0]['paths'][0])
+    path = os.path.join(config['work_dir'], "cot",
+                        task_id, config['upstream_artifacts'][0]['paths'][0])
     log.info("Reading manifest file %s" % path)
     try:
         with open(path, "r") as fh:
@@ -77,7 +57,8 @@ def load_task(config):
         log.critical("no balrog scopes!")
         sys.exit(3)
     bin_directory = os.path.dirname(os.path.abspath(__file__))
-    signing_cert = os.path.join(bin_directory, "keys/{}.pubkey".format(signing_cert_name))
+    signing_cert = os.path.join(bin_directory,
+                                "keys/{}.pubkey".format(signing_cert_name))
     return upstream_artifacts, signing_cert
 
 
@@ -118,7 +99,8 @@ def create_submitter(e, balrog_auth, config):
         log.info("Taskcluster Nightly Fennec style Balrog submission")
 
         complete_info = e['completeInfo']
-        submitter = NightlySubmitterV4(api_root=config['api_root'], auth=auth, dummy=config['dummy'],
+        submitter = NightlySubmitterV4(api_root=config['api_root'], auth=auth,
+                                       dummy=config['dummy'],
                                        url_replacements=e.get('url_replacements', []))
 
         return submitter, {'platform': e["platform"],
@@ -131,7 +113,7 @@ def create_submitter(e, balrog_auth, config):
                            'extVersion': e["extVersion"],
                            'completeInfo': complete_info}
     else:
-        raise RuntimeError("Cannot determine Balrog submission style. Check manifest.json")
+        raise RuntimeError("Unknown Balrog submission style. Check manifest.json")
 
 
 def usage():

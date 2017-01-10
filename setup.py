@@ -17,7 +17,7 @@ setup(
     zip_safe=False,
     entry_points={
         "console_scripts": [
-            "balrogscript = balrogscript.balrogscript:main",
+            "balrogscript = balrogscript.script:main",
         ],
     },
     license="MPL2",

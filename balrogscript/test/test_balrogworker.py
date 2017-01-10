@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import balrogscript.balrogscript as balrogscript
+import balrogscript.script as balrogscript
 import json
 import logging
 import pytest
@@ -81,41 +81,6 @@ def release_config(config):
         os.path.join(config['work_dir'], "task.json")
     )
     yield config
-
-
-# get_hash {{{1
-def test_get_hash():
-    test_content = "wow. much text. very hash ☺️"
-    test_md5 = "d0bfbdf85fac3ccd5a9d9a458bf39ab3"
-    assert balrogscript.get_hash(test_content) == test_md5
-
-
-def test_get_hash_fail():
-    test_content = "sometimes i swordfight with pocky ⚔⚔"
-    test_md5 = "thisisnot⚔arealhash"
-    assert balrogscript.get_hash(test_content) != test_md5
-
-
-def test_get_hash_sha512():
-    test_content = "wow. much text. مرحبا"
-    test_sha = "e643580dcb98a8d9a7b95890d12f793baf5ef09a79695003" \
-               "fbcaf3b54c1c96cb56aeccbd360209c5cd234117dea1cc88aa60b2a250dd4858ee1d6847cb7a8c7e"
-    assert balrogscript.get_hash(test_content, hash_type="sha512") == test_sha
-
-
-# possible_names {{{1
-def test_possible_names():
-    initial = "/Users/tester/file.exe"
-    names = balrogscript.possible_names(initial, 2)
-    exp = ["/Users/tester/file.exe", "/Users/tester/file-1.exe", "/Users/tester/file-2.exe"]
-    assert set(names) == set(exp)
-
-
-def test_possible_names_neg():
-    initial = "file.exe"
-    names = balrogscript.possible_names(initial, -1)
-    exp = ["file.exe"]
-    assert set(names) == set(exp)
 
 
 # load_task {{{1
