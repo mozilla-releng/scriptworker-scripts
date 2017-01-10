@@ -10,7 +10,7 @@ setup(
     description="TaskCluster Beetmover Script",
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
-    url="https://github.com/lundjordan/beetmoverscript",
+    url="https://github.com/mozilla-releng/beetmoverscript/",
     packages=find_packages(),
     package_data={"beetmoverscript": ["data/*", "templates/*"]},
     include_package_data=True,
