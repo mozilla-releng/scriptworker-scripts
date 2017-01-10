@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import balrogscript.balrogscript as balrogscript
+import balrogscript.script as balrogscript
 import json
 import logging
 import pytest
