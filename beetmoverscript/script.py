@@ -18,8 +18,9 @@ from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetry
 from scriptworker.utils import retry_async, raise_future_exceptions
 
 from beetmoverscript.constants import MIME_MAP
-from beetmoverscript.task import validate_task_schema, add_balrog_manifest_to_artifacts, \
-    get_upstream_artifacts, get_initial_release_props_file
+from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
+                                  get_upstream_artifacts, get_initial_release_props_file,
+                                  validate_task_scopes)
 from beetmoverscript.utils import (load_json, get_hash, get_release_props,
                                    generate_beetmover_manifest)
 
@@ -32,9 +33,10 @@ async def async_main(context):
     # balrogworker task in the release graph. Balrogworker uses this manifest to submit
     # release blob info with things like mar filename, size, etc
     context.balrog_manifest = list()
-    # determine and validate the task
+    # determine and validate the task schema along with its scopes
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
     validate_task_schema(context)
+    validate_task_scopes(context)
     # determine artifacts to beetmove
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
     # determine the release properties

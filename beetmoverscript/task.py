@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+import re
+import sys
 import scriptworker.client
 from beetmoverscript.constants import IGNORED_UPSTREAM_ARTIFACTS, INITIAL_RELEASE_PROPS_FILE
 
@@ -15,6 +17,19 @@ def validate_task_schema(context):
         task_schema = json.load(fh)
     log.debug(task_schema)
     scriptworker.client.validate_json_schema(context.task, task_schema)
+
+
+def validate_task_scopes(context):
+    scopes = context.task['scopes']
+    for scope in scopes:
+        if scope.startswith("project:releng:beetmover:"):
+            signing_cert_name = scope.split(':')[-1]
+            if re.search('^[0-9A-Za-z_-]+$', signing_cert_name) is not None:
+                break
+            log.warning('scope {} is malformed, skipping!'.format(scope))
+    else:
+        log.critical("no beetmover scopes!")
+        sys.exit(3)
 
 
 def add_balrog_manifest_to_artifacts(context):

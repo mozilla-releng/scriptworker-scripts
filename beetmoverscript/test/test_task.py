@@ -1,9 +1,20 @@
 import json
 import os
+import pytest
 import tempfile
 from beetmoverscript.test import get_fake_valid_task, get_fake_valid_config, get_fake_balrog_props
-from beetmoverscript.task import validate_task_schema, add_balrog_manifest_to_artifacts
+from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
+                                  validate_task_scopes)
 from scriptworker.context import Context
+
+
+def test_validate_scopes():
+    context = Context()
+    context.task = get_fake_valid_task()
+    context.config = get_fake_valid_config()
+    context.task['scopes'] = []
+    with pytest.raises(SystemExit):
+        validate_task_scopes(context)
 
 
 def test_validate_task():
