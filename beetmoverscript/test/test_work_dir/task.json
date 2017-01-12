@@ -9,7 +9,7 @@
     "deadline": "2015-05-08T18:15:59.010Z",
     "expires": "2016-05-08T18:15:59.010Z",
     "dependencies": ["eSzfNqMZT_mSiQQXu8hyqg"],
-    "scopes": ["signing"],
+    "scopes": ["project:releng:beetmover:nightly"],
     "payload": {
         "upload_date": 1472747174,
         "update_manifest": false,
