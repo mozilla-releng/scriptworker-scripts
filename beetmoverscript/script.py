@@ -36,7 +36,6 @@ async def async_main(context):
     # determine and validate the task schema along with its scopes
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
     validate_task_schema(context)
-    validate_task_scopes(context)
     # determine artifacts to beetmove
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
     # determine the release properties
@@ -45,6 +44,8 @@ async def async_main(context):
     mapping_manifest = generate_beetmover_manifest(context.config,
                                                    context.task,
                                                    context.release_props)
+    # validate scopes to prevent beetmoving in the wrong place
+    validate_task_scopes(context, mapping_manifest)
     # 5. for each artifact in manifest
     #   a. map each upstream artifact to pretty name release bucket format
     #   b. upload to candidates/dated location

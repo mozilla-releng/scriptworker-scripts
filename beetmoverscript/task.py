@@ -19,7 +19,8 @@ def validate_task_schema(context):
     scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
-def validate_task_scopes(context):
+def validate_task_scopes(context, manifest):
+    # make sure scopes exist and are properly set
     scopes = context.task['scopes']
     for scope in scopes:
         if scope.startswith("project:releng:beetmover:"):
@@ -28,7 +29,14 @@ def validate_task_scopes(context):
                 break
             log.warning('scope {} is malformed, skipping!'.format(scope))
     else:
-        log.critical("no beetmover scopes!")
+        log.critical("No beetmover scopes!")
+        sys.exit(3)
+
+    # prevent uncoordination between the bucket supposed to use for beetmove
+    # and the current credentials scopes
+    if (signing_cert_name not in manifest['s3_prefix_dated'] or
+            signing_cert_name not in manifest['s3_prefix_latest']):
+        log.critical("Bucket and creds don't match!")
         sys.exit(3)
 
 
