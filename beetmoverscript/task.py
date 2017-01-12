@@ -4,7 +4,9 @@ import os
 import re
 import sys
 import scriptworker.client
-from beetmoverscript.constants import IGNORED_UPSTREAM_ARTIFACTS, INITIAL_RELEASE_PROPS_FILE
+from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
+                                       INITIAL_RELEASE_PROPS_FILE,
+                                       RESTRICTED_BUCKET_PATHS)
 
 from beetmoverscript.utils import write_json
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -32,12 +34,20 @@ def validate_task_scopes(context, manifest):
         log.critical("No beetmover scopes!")
         sys.exit(3)
 
+    # prevent scopes from low-security tree write in a release-type bucket
+    for k, v in RESTRICTED_BUCKET_PATHS.items():
+        for path in (manifest['s3_prefix_dated'], manifest['s3_prefix_latest']):
+            if path.startswith(k) and signing_cert_name != v:
+                log.critical("Munged low-security tree scopes trying to access"
+                             " nightly/release buckets for beetmover")
+                sys.exit(3)
+
     # prevent uncoordination between the bucket supposed to use for beetmove
-    # and the current credentials scopes
-    if (signing_cert_name not in manifest['s3_prefix_dated'] or
-            signing_cert_name not in manifest['s3_prefix_latest']):
-        log.critical("Bucket and creds don't match!")
-        sys.exit(3)
+    # and the credentials scopes, useful for low-security trees
+    for path in (manifest['s3_prefix_dated'], manifest['s3_prefix_latest']):
+        if signing_cert_name not in path:
+            log.critical("Bucket and creds don't match!")
+            sys.exit(3)
 
 
 def add_balrog_manifest_to_artifacts(context):
