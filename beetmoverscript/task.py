@@ -42,13 +42,6 @@ def validate_task_scopes(context, manifest):
                              " nightly/release buckets for beetmover")
                 sys.exit(3)
 
-    # prevent uncoordination between the bucket supposed to use for beetmove
-    # and the credentials scopes, useful for low-security trees
-    for path in (manifest['s3_prefix_dated'], manifest['s3_prefix_latest']):
-        if signing_cert_name not in path:
-            log.critical("Bucket and creds don't match!")
-            sys.exit(3)
-
 
 def add_balrog_manifest_to_artifacts(context):
     abs_file_path = os.path.join(context.config['artifact_dir'], 'public/manifest.json')

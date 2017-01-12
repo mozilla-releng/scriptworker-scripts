@@ -33,13 +33,6 @@ def test_validate_scopes():
     with pytest.raises(SystemExit):
         validate_task_scopes(context, manifest)
 
-    context.task['scopes'] = ["project:releng:beetmover:dep"]
-    manifest['s3_prefix_dated'] = "pub/mobile/nightly/2017/01/2017-01-try.."
-    manifest['s3_prefix_latest'] = "pub/mobile/nightly/2017/01/2017-01-try.."
-
-    with pytest.raises(SystemExit):
-        validate_task_scopes(context, manifest)
-
 
 def test_validate_task():
     context = Context()
