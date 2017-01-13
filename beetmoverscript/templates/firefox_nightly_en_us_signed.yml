@@ -7,6 +7,8 @@ mapping:
   {% if platform in ["linux-i686", "linux-x86_64"] %}
     target.tar.bz2:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
+    target.tar.bz2.asc:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
     target.complete.mar:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
       update_balrog_manifest: true
