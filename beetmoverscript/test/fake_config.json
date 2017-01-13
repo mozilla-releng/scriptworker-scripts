@@ -1,6 +1,7 @@
 {
     "work_dir": "beetmoverscript/test/test_work_dir",
     "artifact_dir": "beetmoverscript/test/test_artifact_dir",
+    "aiohttp_max_connections": 20,
     "verbose": true,
     "schema_file": "beetmoverscript/data/beetmover_task_schema.json",
     "template_files": {

@@ -210,7 +210,7 @@ def main(name=None, config_path=None):
     setup_mimetypes()
 
     loop = asyncio.get_event_loop()
-    conn = aiohttp.TCPConnector()
+    conn = aiohttp.TCPConnector(limit=context.config['aiohttp_max_connections'])
     with aiohttp.ClientSession(connector=conn) as session:
         context.session = session
         try:
