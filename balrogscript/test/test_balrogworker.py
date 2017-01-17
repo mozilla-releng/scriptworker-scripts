@@ -85,13 +85,8 @@ def release_config(config):
 
 # load_task {{{1
 def test_load_task_payload(nightly_config):
-    upstream, cert = balrogscript.load_task(nightly_config)
+    upstream = balrogscript.load_task(nightly_config)
     assert upstream[0]['paths'][0] == 'public/manifest.json'
-
-
-def test_load_task_cert(nightly_config):
-    url, cert = balrogscript.load_task(nightly_config)
-    assert 'nightly' in cert
 
 
 # create_submitter {{{1
@@ -164,8 +159,6 @@ def test_verify_task_schema(config):
         'scopes': ['blah'],
         'dependencies': ['blah'],
         'payload': {
-            'parent_task_artifacts_url': "blah",
-            'signing_cert': 'nightly',
             'upstreamArtifacts': [{
                 "paths": ["foo"],
                 "taskId": "bar",
@@ -179,8 +172,6 @@ def test_verify_task_schema(config):
 @pytest.mark.parametrize("defn", ({
     'dependencies': ['blah'],
     'payload': {
-        'parent_task_artifacts_url': "blah",
-        'signing_cert': 'nightly',
         'upstreamArtifacts': [{
             "paths": ["foo"],
             "taskId": "bar",
@@ -190,8 +181,6 @@ def test_verify_task_schema(config):
 }, {
     'scopes': ['blah'],
     'payload': {
-        'parent_task_artifacts_url': "blah",
-        'signing_cert': 'nightly',
         'upstreamArtifacts': [{
             "paths": ["foo"],
             "taskId": "bar",
@@ -202,8 +191,6 @@ def test_verify_task_schema(config):
     'dependencies': ['blah'],
     'scopes': ['blah'],
     'payload': {
-        'parent_task_artifacts_url': "blah",
-        'signing_cert': 'nightly',
     }
 }))
 def test_verify_task_schema_missing_cert(config, defn):

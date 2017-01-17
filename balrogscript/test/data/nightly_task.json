@@ -2,8 +2,6 @@
     "dependencies": ["blah"],
     "scopes": ["project:releng:balrog:nightly"],
     "payload": {
-        "parent_task_artifacts_url": "https://queue.taskcluster.net/v1/task/e2q3BKuhRxqtcB6FVCbKfg/artifacts/public/env",
-        "signing_cert": "nightly",
         "upstreamArtifacts": [{
             "paths": ["public/manifest.json"],
             "taskId": "upstream-task-id",

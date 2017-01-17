@@ -13,12 +13,6 @@
         "payload": {
             "type": "object",
             "properties": {
-                "signing_cert": {
-                    "type": "string"
-                },
-                "parent_task_artifacts_url": {
-                    "type": "string"
-                },
                 "upstreamArtifacts": {
                     "type": "array",
                     "items": {
@@ -45,8 +39,7 @@
                     "uniqueItems": true
                 }
             },
-            "required": ["upstreamArtifacts"],
-            "optional": ["signing_cert", "parent_task_artifacts_url"]
+            "required": ["upstreamArtifacts"]
         },
         "scopes": {
             "type": "array",

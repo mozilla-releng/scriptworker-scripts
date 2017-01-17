@@ -56,10 +56,8 @@ def load_task(config):
     else:
         log.critical("no balrog scopes!")
         sys.exit(3)
-    bin_directory = os.path.dirname(os.path.abspath(__file__))
-    signing_cert = os.path.join(bin_directory,
-                                "keys/{}.pubkey".format(signing_cert_name))
-    return upstream_artifacts, signing_cert
+
+    return upstream_artifacts
 
 
 def create_submitter(e, balrog_auth, config):
@@ -160,7 +158,7 @@ def update_config(config):
             log.critical("{} missing from config! (You can also set the env var {})".format(config_key, env_var))
             sys.exit(5)
 
-    config['upstream_artifacts'], config['signing_cert'] = load_task(config)
+    config['upstream_artifacts'] = load_task(config)
 
     # get the balrog creds out of config
     username, password = (config['balrog_username'], config['balrog_password'])
