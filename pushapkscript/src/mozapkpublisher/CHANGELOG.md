@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+* Upgrade pyOpenSSL, in order to keep support for OpenSSL v1.1.0
+
 ## 0.1.4
 * Use new store_l10n APIs
 * New installation instructions for OS X
