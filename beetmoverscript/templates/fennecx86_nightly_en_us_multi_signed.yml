@@ -9,7 +9,4 @@ mapping:
     target.apk:
       s3_key: {{ locale_prefix  }}fennec-{{ version }}.{{ locale }}.android-i386.apk
       update_balrog_manifest: {{ update_balrog_manifest }}
-    # Bug 1316124 - TODO figure out checksums
-    #target.checksums:
-      #s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-i386.checksums
 {% endfor %}
