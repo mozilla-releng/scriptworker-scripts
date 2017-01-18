@@ -99,7 +99,7 @@ def enrich_balrog_manifest(release_props, path, locale, destinations):
         # we extract the dated destination as the 'latest' is useless
         url = "{prefix}/{s3_key}".format(prefix="https://archive.mozilla.org",
                                          s3_key=destinations[0])
-        url_replacements = [['http://archive.mozilla.org/pub, http://download.cdn.mozilla.net/pub']]
+        url_replacements = [['http://archive.mozilla.org/pub', 'http://download.cdn.mozilla.net/pub']]
 
     return {
         "tc_nightly": True,
