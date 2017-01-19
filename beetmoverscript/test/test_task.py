@@ -5,7 +5,7 @@ import tempfile
 from beetmoverscript.test import get_fake_valid_task, get_fake_valid_config, get_fake_balrog_props
 from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
                                   validate_task_scopes, get_upstream_artifacts)
-from beetmoverscript.utils import generate_beetmover_manifest
+from beetmoverscript.utils import generate_beetmover_manifest, generate_beetmover_template_args
 from scriptworker.context import Context
 
 
@@ -16,7 +16,9 @@ def test_validate_scopes():
     context.properties = get_fake_balrog_props()["properties"]
     context.properties['platform'] = context.properties['stage_platform']
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
-    manifest = generate_beetmover_manifest(context.config, context.task, context.properties)
+    template_args = generate_beetmover_template_args(context.task,
+                                                     context.properties)
+    manifest = generate_beetmover_manifest(context.config, template_args)
 
     context.task['scopes'] = []
     with pytest.raises(SystemExit):

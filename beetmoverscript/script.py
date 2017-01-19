@@ -20,9 +20,11 @@ from scriptworker.utils import retry_async, raise_future_exceptions
 from beetmoverscript.constants import MIME_MAP
 from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
                                   get_upstream_artifacts, get_initial_release_props_file,
-                                  validate_task_scopes)
+                                  validate_task_scopes, add_checksums_manifest_to_artifacts)
 from beetmoverscript.utils import (load_json, get_hash, get_release_props,
-                                   generate_beetmover_manifest)
+                                   generate_beetmover_manifest, get_size,
+                                   generate_beetmover_template_args,
+                                   get_checksums_base_filename)
 
 log = logging.getLogger(__name__)
 
@@ -33,6 +35,10 @@ async def async_main(context):
     # balrogworker task in the release graph. Balrogworker uses this manifest to submit
     # release blob info with things like mar filename, size, etc
     context.balrog_manifest = list()
+    # checksums_manifest is written and uploaded as an artifact which is used
+    # by a subsequent signing task and again by another beetmover task to
+    # upload it along with the other artifacts
+    context.checksums_manifest = list()
     # determine and validate the task schema along with its scopes
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
     validate_task_schema(context)
@@ -40,19 +46,27 @@ async def async_main(context):
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
     # determine the release properties
     context.release_props = get_release_props(get_initial_release_props_file(context))
+    # determine the variables to feed the manifest templates
+    template_args = generate_beetmover_template_args(context.task,
+                                                     context.release_props)
     # generate beetmover mapping manifest
     mapping_manifest = generate_beetmover_manifest(context.config,
-                                                   context.task,
-                                                   context.release_props)
+                                                   template_args)
     # validate scopes to prevent beetmoving in the wrong place
     validate_task_scopes(context, mapping_manifest)
-    # 5. for each artifact in manifest
+    # for each artifact in manifest
     #   a. map each upstream artifact to pretty name release bucket format
     #   b. upload to candidates/dated location
     await move_beets(context, context.artifacts_to_beetmove, mapping_manifest)
-    # # 6. write balrog_manifest to a file and add it to list of artifacts
+    #  write balrog_manifest to a file and add it to list of artifacts
     if context.task["payload"]["update_manifest"]:
         add_balrog_manifest_to_artifacts(context)
+    # determine the correct checksum filename and generate it, adding it to
+    # the list of artifacts afterwards
+    if context.task["payload"]["generate_checksums"]:
+        checksums_filename = get_checksums_base_filename(template_args)
+        add_checksums_manifest_to_artifacts(context, checksums_filename)
+
     log.info('Success!')
 
 
@@ -61,21 +75,24 @@ async def move_beets(context, artifacts_to_beetmove, manifest):
     for locale in artifacts_to_beetmove:
         for artifact in artifacts_to_beetmove[locale]:
             source = artifacts_to_beetmove[locale][artifact]
+            pretty_name = manifest['mapping'][locale][artifact]['s3_key']
             dest_dated = os.path.join(manifest["s3_prefix_dated"],
-                                      manifest['mapping'][locale][artifact]['s3_key'])
+                                      pretty_name)
             dest_latest = os.path.join(manifest["s3_prefix_latest"],
-                                       manifest['mapping'][locale][artifact]['s3_key'])
+                                       pretty_name)
             balrog_manifest = manifest['mapping'][locale][artifact].get('update_balrog_manifest')
             beets.append(
                 asyncio.ensure_future(
                     move_beet(context, source, destinations=(dest_dated, dest_latest),
-                              locale=locale, update_balrog_manifest=balrog_manifest)
+                              locale=locale, update_balrog_manifest=balrog_manifest,
+                              pretty_name=pretty_name)
                 )
             )
     await raise_future_exceptions(beets)
 
 
-async def move_beet(context, source, destinations, locale, update_balrog_manifest):
+async def move_beet(context, source, destinations, locale,
+                    update_balrog_manifest, pretty_name):
     beet_config = deepcopy(context.config)
     beet_config.setdefault('valid_artifact_task_ids', context.task['dependencies'])
 
@@ -85,6 +102,20 @@ async def move_beet(context, source, destinations, locale, update_balrog_manifes
         context.balrog_manifest.append(
             enrich_balrog_manifest(context.release_props, source, locale, destinations)
         )
+
+    context.checksums_manifest.extend(enrich_checksums_manifest(source, pretty_name))
+
+
+def enrich_checksums_manifest(path, pretty_name):
+    digest_info = []
+
+    size = get_size(path)
+    for algo in ("sha512", "md5", "sha1"):
+        digest_info.append("{} {} {} {}".format(
+            get_hash(path, hash_type=algo),
+            algo, size, pretty_name)
+        )
+    return digest_info
 
 
 def enrich_balrog_manifest(release_props, path, locale, destinations):
@@ -106,7 +137,7 @@ def enrich_balrog_manifest(release_props, path, locale, destinations):
 
         "completeInfo": [{
             "hash": get_hash(path, hash_type=release_props["hashType"]),
-            "size": os.path.getsize(path),
+            "size": get_size(path),
             "url": url
         }],
 

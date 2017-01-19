@@ -8,7 +8,7 @@ from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
                                        INITIAL_RELEASE_PROPS_FILE,
                                        RESTRICTED_BUCKET_PATHS)
 
-from beetmoverscript.utils import write_json
+from beetmoverscript.utils import write_json, write_file
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 log = logging.getLogger(__name__)
@@ -41,6 +41,13 @@ def validate_task_scopes(context, manifest):
                 log.critical("Munged low-security tree scopes trying to access"
                              " nightly/release buckets for beetmover")
                 sys.exit(3)
+
+
+def add_checksums_manifest_to_artifacts(context, filename):
+    abs_file_path = os.path.join(context.config['artifact_dir'],
+                                 'public/{}'.format(filename))
+    _ = '\n'.join(context.checksums_manifest)
+    write_file(abs_file_path, _)
 
 
 def add_balrog_manifest_to_artifacts(context):

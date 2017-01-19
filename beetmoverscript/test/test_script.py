@@ -10,7 +10,7 @@ from beetmoverscript.script import setup_mimetypes, setup_config, put, move_beet
     move_beet, async_main, main
 from beetmoverscript.task import get_upstream_artifacts
 from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props
-from beetmoverscript.utils import generate_beetmover_manifest
+from beetmoverscript.utils import generate_beetmover_manifest, generate_beetmover_template_args
 from scriptworker.context import Context
 from scriptworker.exceptions import (ScriptWorkerRetryException,
                                      ScriptWorkerTaskException)
@@ -73,11 +73,6 @@ def test_put_failure(event_loop, fake_session_500):
         )
 
 
-# def test_upload_to_s3():
-#     async def fake_aws_client(service, key, id):
-#         s3_client = object()
-#         s
-
 def test_move_beets(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
@@ -85,7 +80,8 @@ def test_move_beets(event_loop):
     context.properties = get_fake_balrog_props()["properties"]
     context.properties['platform'] = context.properties['stage_platform']
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
-    manifest = generate_beetmover_manifest(context.config, context.task, context.properties)
+    template_args = generate_beetmover_template_args(context.task, context.properties)
+    manifest = generate_beetmover_manifest(context.config, template_args)
 
     expected_sources = [
         os.path.abspath(
@@ -110,7 +106,8 @@ def test_move_beets(event_loop):
     actual_sources = []
     actual_destinations = []
 
-    async def fake_move_beet(context, source, destinations, locale, update_balrog_manifest):
+    async def fake_move_beet(context, source, destinations, locale,
+                             update_balrog_manifest, pretty_name):
         actual_sources.append(source)
         actual_destinations.append(destinations)
 
@@ -127,9 +124,11 @@ def test_move_beet(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
+    context.checksums_manifest = list()
     locale = "sample-locale"
 
     target_source = 'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt'
+    pretty_name = 'fake-99.0a1.en-US.target.txt'
     target_destinations = (
         'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'
@@ -146,7 +145,8 @@ def test_move_beet(event_loop):
 
     with mock.patch('beetmoverscript.script.retry_upload', fake_retry_upload):
         event_loop.run_until_complete(
-            move_beet(context, target_source, target_destinations, locale, update_balrog_manifest=False)
+            move_beet(context, target_source, target_destinations, locale,
+                      update_balrog_manifest=False, pretty_name=pretty_name)
         )
 
     assert expected_upload_args == actual_upload_args

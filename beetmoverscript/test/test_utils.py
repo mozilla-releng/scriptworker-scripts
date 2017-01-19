@@ -3,7 +3,8 @@ import json
 
 from scriptworker.context import Context
 from beetmoverscript.test import get_fake_valid_task, get_fake_valid_config, get_fake_balrog_props
-from beetmoverscript.utils import generate_beetmover_manifest, get_hash, write_json
+from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
+                                   write_json, generate_beetmover_template_args)
 from beetmoverscript.constants import HASH_BLOCK_SIZE
 
 
@@ -40,7 +41,9 @@ def test_generate_manifest():
     context.config = get_fake_valid_config()
     context.properties = get_fake_balrog_props()["properties"]
     context.properties['platform'] = context.properties['stage_platform']
-    manifest = generate_beetmover_manifest(context.config, context.task, context.properties)
+    template_args = generate_beetmover_template_args(context.task,
+                                                     context.properties)
+    manifest = generate_beetmover_manifest(context.config, template_args)
     mapping = manifest['mapping']
     s3_keys = [mapping[m].get('target_info.txt', {}).get('s3_key') for m in mapping]
     assert sorted(mapping.keys()) == ['en-US', 'multi']

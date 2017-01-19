@@ -9,7 +9,8 @@ import arrow
 import jinja2
 import yaml
 
-from beetmoverscript.constants import HASH_BLOCK_SIZE, STAGE_PLATFORM_MAP, TEMPLATE_KEY_PLATFORMS
+from beetmoverscript.constants import (HASH_BLOCK_SIZE, STAGE_PLATFORM_MAP,
+                                       TEMPLATE_KEY_PLATFORMS)
 
 log = logging.getLogger(__name__)
 
@@ -27,14 +28,27 @@ def get_hash(filepath, hash_type="sha512"):
     return digest.hexdigest()
 
 
+def get_size(filepath):
+    """Function to return the size of a file based on filename"""
+    return os.path.getsize(filepath)
+
+
 def load_json(path):
+    """Function to load a json from a file"""
     with open(path, "r") as fh:
         return json.load(fh)
 
 
 def write_json(path, contents):
+    """Function to dump a json content to a file"""
     with open(path, "w") as fh:
         json.dump(contents, fh)
+
+
+def write_file(path, contents):
+    """Function to dump some string contents to a file"""
+    with open(path, "w") as fh:
+        fh.write(contents)
 
 
 def generate_beetmover_template_args(task, release_props):
@@ -72,12 +86,11 @@ def generate_beetmover_template_args(task, release_props):
     return template_args
 
 
-def generate_beetmover_manifest(script_config, task, release_props):
+def generate_beetmover_manifest(script_config, template_args):
     """
     generates and outputs a manifest that maps expected Taskcluster artifact names
     to release deliverable names
     """
-    template_args = generate_beetmover_template_args(task, release_props)
     template_path = script_config['template_files'][template_args["template_key"]]
 
     log.info('generating manifest from: {}'.format(template_path))
@@ -110,6 +123,19 @@ def update_props(props, platform_mapping):
     props["platform"] = platform_mapping.get(stage_platform,
                                              stage_platform)
     return props
+
+
+def get_checksums_base_filename(template_args):
+    """
+    Function to determine the pretty name checksum filename
+    e.g. "firefox-53.0a1.en-US.linux-i686.checksums"
+    """
+    return "{}-{}.{}.{}.checksums".format(
+        template_args['product'].lower(),
+        template_args['version'],
+        template_args.get('locale', 'en-US'),
+        template_args['platform']
+    )
 
 
 def get_release_props(initial_release_props_file, platform_mapping=STAGE_PLATFORM_MAP):
