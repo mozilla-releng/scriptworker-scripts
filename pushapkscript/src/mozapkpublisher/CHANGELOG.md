@@ -4,6 +4,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## 0.1.5
 * Upgrade pyOpenSSL, in order to keep support for OpenSSL v1.1.0
 
 ## 0.1.4
