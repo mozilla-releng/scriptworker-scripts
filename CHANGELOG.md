@@ -4,6 +4,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## 0.2.0
+Upgrade to scriptworker v1.0.0b7 (without Chain of Trust). Please update your config accordingly to the new config_example.json
+
 ## 0.1.4
 Mute debug logs of oauth2client
 
