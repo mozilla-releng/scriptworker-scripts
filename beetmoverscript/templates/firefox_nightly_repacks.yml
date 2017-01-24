@@ -1,7 +1,16 @@
-{% include "firefox_nightly_repacks_base.yml" %}
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps {{ product }} Nightly artifacts to pretty names for {{locale}} L10n repack"
+    owner: "release@mozilla.com"
+
+s3_prefix_dated: pub/firefox/nightly/{{ upload_date }}-{{ branch }}-l10n/
+s3_prefix_latest: pub/firefox/nightly/latest-{{ branch }}-l10n/
 
 mapping:
   {{ locale }}:
+    target.langpack.xpi:
+      s3_key: {{ platform }}/xpi/firefox-{{ version }}.{{ locale }}.langpack.xpi
     target.complete.mar:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
       update_balrog_manifest: true

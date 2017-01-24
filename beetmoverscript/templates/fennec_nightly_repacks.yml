@@ -6,3 +6,9 @@ metadata:
 
 s3_prefix_dated: pub/mobile/nightly/{{ upload_date }}-{{ branch }}-{{ platform }}-l10n/
 s3_prefix_latest: pub/mobile/nightly/latest-{{ branch }}-{{ platform }}-l10n/
+
+mapping:
+  {{ locale }}:
+    target.apk:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.apk
+      update_balrog_manifest: True

@@ -1,8 +1,0 @@
-{% include "fennec_nightly_repacks_base.yml" %}
-
-mapping:
-  {{ locale }}:
-    # common deliverables
-    target.apk:
-      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.apk
-      update_balrog_manifest: True

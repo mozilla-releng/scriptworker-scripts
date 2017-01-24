@@ -1,10 +1,17 @@
-{% include "fennec_nightly_en_us_multi_base.yml" %}
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps {{ product }} Nightly artifacts to pretty names for the en-US and multi locale"
+    owner: "release@mozilla.com"
+
+s3_prefix_dated: pub/mobile/nightly/{{ upload_date }}-{{ branch }}-{{ platform }}/
+s3_prefix_latest: pub/mobile/nightly/latest-{{ branch }}-{{ platform }}/
 
 mapping:
-  # common deliverables
 {% for locale in ['multi', 'en-US'] %}
   {{ locale }}:
   {% set locale_prefix = 'en-US/' if locale == 'en-US' else '' %}
+  {% set update_balrog_manifest = True if locale == 'multi' else False %}
     target.common.tests.zip:
       s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.common.tests.zip
     target.cppunittest.tests.zip:
@@ -37,4 +44,7 @@ mapping:
       s3_key: {{ locale_prefix }}robocop.apk
     target.jsshell.zip:
       s3_key: {{ locale_prefix }}jsshell-android-arm.zip
+    target.apk:
+      s3_key: {{ locale_prefix  }}fennec-{{ version }}.{{ locale }}.android-arm.apk
+      update_balrog_manifest: {{ update_balrog_manifest }}
 {% endfor %}

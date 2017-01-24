@@ -1,7 +1,13 @@
-{% include "firefox_nightly_en_us_base.yml" %}
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps {{ product }} Nightly artifacts to pretty names for en-US"
+    owner: "release@mozilla.com"
+
+s3_prefix_dated: pub/firefox/nightly/{{ upload_date }}-{{ branch }}/
+s3_prefix_latest: pub/firefox/nightly/latest-{{ branch }}/
 
 mapping:
-  # common deliverables
 {% for locale in ['en-US'] %}
   {{ locale }}:
     target.common.tests.zip:
@@ -42,6 +48,13 @@ mapping:
       s3_key: mar-tools/{{ stage_platform }}/mbsdiff
 
   {% if platform in ["linux-i686", "linux-x86_64"] %}
+    target.tar.bz2:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
+    target.tar.bz2.asc:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
+    target.complete.mar:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
+      update_balrog_manifest: true
     target.sdk.tar.bz2:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
     # Bug 1316125 - TODO
@@ -50,3 +63,4 @@ mapping:
   {% endif %}
 
 {% endfor %}
+

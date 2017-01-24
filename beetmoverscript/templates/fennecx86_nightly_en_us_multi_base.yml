@@ -1,8 +1,0 @@
----
-metadata:
-    name: "Beet Mover Manifest"
-    description: "Maps {{ product }} Nightly artifacts to pretty names for the en-US and multi locale"
-    owner: "release@mozilla.com"
-
-s3_prefix_dated: pub/mobile/nightly/{{ upload_date }}-{{ branch }}-{{ platform }}/
-s3_prefix_latest: pub/mobile/nightly/latest-{{ branch }}-{{ platform }}/

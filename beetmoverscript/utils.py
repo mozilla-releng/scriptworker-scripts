@@ -57,7 +57,6 @@ def generate_beetmover_template_args(task, release_props):
     # flag. The builds with unsigned artifacts will always have the flag set to
     # False while the builds with signed artifacts will have the opposite,
     # marking the need to update the manifest to be passed down to balrogworker
-    tmpl_key_option = "signed" if task["payload"]["update_manifest"] is True else "unsigned"
     tmpl_key_platform = TEMPLATE_KEY_PLATFORMS[release_props["stage_platform"]]
 
     template_args = {
@@ -73,15 +72,9 @@ def generate_beetmover_template_args(task, release_props):
 
     if 'locale' in task["payload"]:
         template_args["locale"] = task["payload"]["locale"]
-        template_args["template_key"] = "%s_nightly_repacks_%s" % (
-            release_props["appName"].lower(),
-            tmpl_key_option
-        )
+        template_args["template_key"] = "%s_nightly_repacks" % release_props["appName"].lower()
     else:
-        template_args["template_key"] = "%s_nightly_%s" % (
-            tmpl_key_platform,
-            tmpl_key_option
-        )
+        template_args["template_key"] = "%s_nightly" % tmpl_key_platform
 
     return template_args
 
