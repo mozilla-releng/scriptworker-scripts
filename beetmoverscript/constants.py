@@ -34,5 +34,3 @@ RESTRICTED_BUCKET_PATHS = {
     'pub/mobile/release': 'release',
     'pub/firefox/release': 'release',
 }
-
-CHECKSUMS_DIGESTS = ("sha512", "md5", "sha1")

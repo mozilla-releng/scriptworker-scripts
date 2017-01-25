@@ -15,7 +15,7 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
 from scriptworker.utils import retry_async, raise_future_exceptions
 
-from beetmoverscript.constants import MIME_MAP, CHECKSUMS_DIGESTS
+from beetmoverscript.constants import MIME_MAP
 from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
                                   get_upstream_artifacts, get_initial_release_props_file,
                                   validate_task_scopes, add_checksums_manifest_to_artifacts)
@@ -100,7 +100,7 @@ async def move_beet(context, source, destinations, locale,
     await retry_upload(context=context, destinations=destinations, path=source)
 
     context.checksums_dict.setdefault(pretty_name, {
-        algo: get_hash(source, algo) for algo in CHECKSUMS_DIGESTS
+        algo: get_hash(source, algo) for algo in context.config['checksums_digests']
     })
     context.checksums_dict[pretty_name].setdefault('size', get_size(source))
 
