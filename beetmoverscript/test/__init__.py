@@ -11,3 +11,11 @@ def get_fake_valid_task():
 
 def get_fake_balrog_props():
     return load_json(path="beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/balrog_props.json")
+
+
+def get_fake_checksums_manifest():
+    return [
+        "85a2ee3e7724eb43c90fc714f2d1cb999a8b42a3b6b671f7376c3e246daa65d108e2b8fe880f069601dc2b26afa155b52001235db059 sha512 618149 firefox-53.0a1.en-US.linux-i686.complete.mar",
+        "073398e573e709 md5 618149 firefox-53.0a1.en-US.linux-i686.complete.mar",
+        "332ab78ebd36e9217f451e1244 sha1 618149 firefox-53.0a1.en-US.linux-i686.complete.mar",
+    ]

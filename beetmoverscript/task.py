@@ -6,7 +6,8 @@ import sys
 import scriptworker.client
 from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
                                        INITIAL_RELEASE_PROPS_FILE,
-                                       RESTRICTED_BUCKET_PATHS)
+                                       RESTRICTED_BUCKET_PATHS,
+                                       CHECKSUMS_DIGESTS)
 
 from beetmoverscript.utils import write_json, write_file
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -43,10 +44,25 @@ def validate_task_scopes(context, manifest):
                 sys.exit(3)
 
 
+def dump_checksums_manifest(checksums_dict):
+    manifest = list()
+    for artifact, values in checksums_dict.items():
+        for algo in CHECKSUMS_DIGESTS:
+            manifest.append("{} {} {} {}".format(
+                values[algo],
+                algo,
+                values['size'],
+                artifact
+            ))
+
+    return manifest
+
+
 def add_checksums_manifest_to_artifacts(context, filename):
     abs_file_path = os.path.join(context.config['artifact_dir'],
                                  'public/{}'.format(filename))
-    _ = '\n'.join(context.checksums_manifest)
+    content = dump_checksums_manifest(context.checksums_dict)
+    _ = '\n'.join(content)
     write_file(abs_file_path, _)
 
 
