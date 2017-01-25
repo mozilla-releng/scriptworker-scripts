@@ -40,13 +40,4 @@ mapping:
       s3_key: mar-tools/{{ stage_platform }}/mar
     mbsdiff:
       s3_key: mar-tools/{{ stage_platform }}/mbsdiff
-
-  {% if platform in ["linux-i686", "linux-x86_64"] %}
-    target.sdk.tar.bz2:
-      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
-    # Bug 1316125 - TODO
-    #target.sdk.tar.bz2.asc:
-      #s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2.asc
-  {% endif %}
-
 {% endfor %}
