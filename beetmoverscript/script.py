@@ -21,8 +21,7 @@ from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_a
                                   validate_task_scopes, add_checksums_to_artifacts)
 from beetmoverscript.utils import (load_json, get_hash, get_release_props,
                                    generate_beetmover_manifest, get_size,
-                                   generate_beetmover_template_args,
-                                   get_checksums_filename)
+                                   generate_beetmover_template_args)
 
 log = logging.getLogger(__name__)
 
@@ -67,8 +66,7 @@ async def async_main(context):
         add_balrog_manifest_to_artifacts(context)
     # determine the correct checksum filename and generate it, adding it to
     # the list of artifacts afterwards
-    checksums_filename = get_checksums_filename(template_args)
-    add_checksums_to_artifacts(context, checksums_filename)
+    add_checksums_to_artifacts(context)
 
     log.info('Success!')
 

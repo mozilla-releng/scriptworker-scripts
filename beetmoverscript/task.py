@@ -58,15 +58,16 @@ def generate_checksums_manifest(context):
     return '\n'.join(content)
 
 
-def add_checksums_to_artifacts(context, filename):
+def add_checksums_to_artifacts(context):
     abs_file_path = os.path.join(context.config['artifact_dir'],
-                                 'public/{}'.format(filename))
+                                 'public/target.checksums')
     manifest = generate_checksums_manifest(context)
     write_file(abs_file_path, manifest)
 
 
 def add_balrog_manifest_to_artifacts(context):
-    abs_file_path = os.path.join(context.config['artifact_dir'], 'public/manifest.json')
+    abs_file_path = os.path.join(context.config['artifact_dir'],
+                                 'public/manifest.json')
     write_json(abs_file_path, context.balrog_manifest)
 
 

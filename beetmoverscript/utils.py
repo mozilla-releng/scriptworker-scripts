@@ -118,19 +118,6 @@ def update_props(props, platform_mapping):
     return props
 
 
-def get_checksums_filename(template_args):
-    """
-    Function to determine the pretty name checksum filename
-    e.g. "firefox-53.0a1.en-US.linux-i686.checksums"
-    """
-    return "{}-{}.{}.{}.checksums".format(
-        template_args['product'].lower(),
-        template_args['version'],
-        template_args.get('locale', 'en-US'),
-        template_args['platform']
-    )
-
-
 def get_release_props(initial_release_props_file, platform_mapping=STAGE_PLATFORM_MAP):
     """determined via parsing the Nightly build job's balrog_props.json and
     expanded the properties with props beetmover knows about."""

@@ -6,7 +6,7 @@ from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
                                   get_fake_balrog_props, get_fake_checksums_manifest)
 from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_json, generate_beetmover_template_args,
-                                   get_checksums_filename, write_file)
+                                   write_file)
 from beetmoverscript.constants import HASH_BLOCK_SIZE
 
 
@@ -68,18 +68,6 @@ def test_generate_manifest():
         'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/' and
         manifest.get('s3_prefix_latest') == 'pub/mobile/nightly/latest-mozilla-central-fake/'
     )
-
-
-def test_checksums_filename_generation():
-    context = Context()
-    context.task = get_fake_valid_task()
-    context.config = get_fake_valid_config()
-    context.properties = get_fake_balrog_props()["properties"]
-    context.properties['platform'] = context.properties['stage_platform']
-    template_args = generate_beetmover_template_args(context.task,
-                                                     context.properties)
-    pretty_name = get_checksums_filename(template_args)
-    assert pretty_name == 'fake-99.0a1.en-US.android-api-15.checksums'
 
 
 def test_beetmover_template_args_generation():
