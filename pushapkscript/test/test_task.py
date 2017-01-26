@@ -69,7 +69,7 @@ class TaskTestAsync(asynctest.TestCase):
         self.context.config = get_default_config()
         self.context.task = TaskGenerator().generate_json()
 
-    @asynctest.patch('scriptworker.task.download_artifacts')
+    @asynctest.patch('scriptworker.artifacts.download_artifacts')
     async def test_download_files_returns_absolute_paths(self, download_artifacts):
         def convert_url_into_paths(_, file_urls):
             url_with_all_slashes = [url.replace('%2F', '/') for url in file_urls]

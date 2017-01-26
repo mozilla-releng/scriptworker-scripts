@@ -51,7 +51,7 @@ async def download_files(context):
     file_urls = [apk_url for _, apk_url in ordered_apks]
 
     # XXX download_artifacts() is imported here, in order to patch it
-    from scriptworker.task import download_artifacts
+    from scriptworker.artifacts import download_artifacts
     ordered_files = await download_artifacts(context, file_urls)
 
     files = {}

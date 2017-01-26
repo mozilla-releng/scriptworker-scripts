@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+Upgrade to scriptworker v2.0.0 (without Chain of Trust), which reports errors back to Treeherer.
 
 ## 0.2.0
 Upgrade to scriptworker v1.0.0b7 (without Chain of Trust). Please update your config accordingly to the new config_example.json
