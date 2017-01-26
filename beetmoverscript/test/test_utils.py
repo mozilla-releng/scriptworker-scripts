@@ -6,7 +6,7 @@ from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
                                   get_fake_balrog_props, get_fake_checksums_manifest)
 from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_json, generate_beetmover_template_args,
-                                   get_checksums_base_filename, write_file)
+                                   get_checksums_filename, write_file)
 from beetmoverscript.constants import HASH_BLOCK_SIZE
 
 
@@ -78,7 +78,7 @@ def test_checksums_filename_generation():
     context.properties['platform'] = context.properties['stage_platform']
     template_args = generate_beetmover_template_args(context.task,
                                                      context.properties)
-    pretty_name = get_checksums_base_filename(template_args)
+    pretty_name = get_checksums_filename(template_args)
     assert pretty_name == 'fake-99.0a1.en-US.android-api-15.checksums'
 
 

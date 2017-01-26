@@ -124,7 +124,7 @@ def test_move_beet(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
-    context.checksums_dict = dict()
+    context.checksums = dict()
     locale = "sample-locale"
 
     target_source = 'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt'

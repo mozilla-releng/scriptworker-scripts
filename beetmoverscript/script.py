@@ -18,11 +18,11 @@ from scriptworker.utils import retry_async, raise_future_exceptions
 from beetmoverscript.constants import MIME_MAP
 from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
                                   get_upstream_artifacts, get_initial_release_props_file,
-                                  validate_task_scopes, add_checksums_manifest_to_artifacts)
+                                  validate_task_scopes, add_checksums_to_artifacts)
 from beetmoverscript.utils import (load_json, get_hash, get_release_props,
                                    generate_beetmover_manifest, get_size,
                                    generate_beetmover_template_args,
-                                   get_checksums_base_filename)
+                                   get_checksums_filename)
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def async_main(context):
     # the checksums manifest is written and uploaded as an artifact which is used
     # by a subsequent signing task and again by another beetmover task to
     # upload it along with the other artifacts
-    context.checksums_dict = dict()
+    context.checksums = dict()
 
     # determine and validate the task schema along with its scopes
     context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
@@ -67,9 +67,8 @@ async def async_main(context):
         add_balrog_manifest_to_artifacts(context)
     # determine the correct checksum filename and generate it, adding it to
     # the list of artifacts afterwards
-    if context.task["payload"]["generate_checksums"]:
-        cksums_filename = get_checksums_base_filename(template_args)
-        add_checksums_manifest_to_artifacts(context, cksums_filename)
+    checksums_filename = get_checksums_filename(template_args)
+    add_checksums_to_artifacts(context, checksums_filename)
 
     log.info('Success!')
 
@@ -99,10 +98,11 @@ async def move_beet(context, source, destinations, locale,
                     update_balrog_manifest, pretty_name):
     await retry_upload(context=context, destinations=destinations, path=source)
 
-    context.checksums_dict.setdefault(pretty_name, {
-        algo: get_hash(source, algo) for algo in context.config['checksums_digests']
-    })
-    context.checksums_dict[pretty_name].setdefault('size', get_size(source))
+    if context.checksums.get(pretty_name) is None:
+        context.checksums[pretty_name] = {
+            algo: get_hash(source, algo) for algo in context.config['checksums_digests']
+        }
+        context.checksums[pretty_name]['size'] = get_size(source)
 
     if update_balrog_manifest:
         context.balrog_manifest.append(
@@ -112,7 +112,7 @@ async def move_beet(context, source, destinations, locale,
 
 def enrich_balrog_manifest(context, pretty_name, locale, destinations):
     release_props = context.release_props
-    checksums_dict = context.checksums_dict
+    checksums = context.checksums
 
     if release_props["branch"] == 'date':
         # nightlies from dev branches don't usually upload to archive.m.o but
@@ -130,8 +130,8 @@ def enrich_balrog_manifest(context, pretty_name, locale, destinations):
     return {
         "tc_nightly": True,
         "completeInfo": [{
-            "hash": checksums_dict[pretty_name][release_props["hashType"]],
-            "size": checksums_dict[pretty_name]['size'],
+            "hash": checksums[pretty_name][release_props["hashType"]],
+            "size": checksums[pretty_name]['size'],
             "url": url
         }],
 

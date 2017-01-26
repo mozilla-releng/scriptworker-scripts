@@ -118,7 +118,7 @@ def update_props(props, platform_mapping):
     return props
 
 
-def get_checksums_base_filename(template_args):
+def get_checksums_filename(template_args):
     """
     Function to determine the pretty name checksum filename
     e.g. "firefox-53.0a1.en-US.linux-i686.checksums"

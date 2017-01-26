@@ -43,27 +43,26 @@ def validate_task_scopes(context, manifest):
                 sys.exit(3)
 
 
-def dump_checksums_manifest(context):
-    _dict = context.checksums_dict
-    manifest = list()
-    for artifact, values in _dict.items():
+def generate_checksums_manifest(context):
+    checksums_dict = context.checksums
+    content = list()
+    for artifact, values in sorted(checksums_dict.items()):
         for algo in context.config['checksums_digests']:
-            manifest.append("{} {} {} {}".format(
+            content.append("{} {} {} {}".format(
                 values[algo],
                 algo,
                 values['size'],
                 artifact
             ))
 
-    return manifest
+    return '\n'.join(content)
 
 
-def add_checksums_manifest_to_artifacts(context, filename):
+def add_checksums_to_artifacts(context, filename):
     abs_file_path = os.path.join(context.config['artifact_dir'],
                                  'public/{}'.format(filename))
-    content = dump_checksums_manifest(context)
-    _ = '\n'.join(content)
-    write_file(abs_file_path, _)
+    manifest = generate_checksums_manifest(context)
+    write_file(abs_file_path, manifest)
 
 
 def add_balrog_manifest_to_artifacts(context):

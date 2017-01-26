@@ -6,7 +6,7 @@ from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
                                   get_fake_balrog_props, get_fake_checksums_manifest)
 from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
                                   validate_task_scopes, get_upstream_artifacts,
-                                  dump_checksums_manifest)
+                                  generate_checksums_manifest)
 from beetmoverscript.utils import generate_beetmover_manifest, generate_beetmover_template_args
 from scriptworker.context import Context
 
@@ -72,8 +72,8 @@ def test_balrog_manifest_to_artifacts():
         assert fake_balrog_manifest == retrieved_data
 
 
-def test_checksums_manifest_dump():
-    checksums_dict = {
+def test_checksums_manifest_generation():
+    checksums = {
         "firefox-53.0a1.en-US.linux-i686.complete.mar": {
             "sha1": "332ab78ebd36e9217f451e1244",
             "sha512": "14f2d1cb999a8b42a3b6b671f7376c3e246daa65d108e2b8fe880f069601dc2b26afa155b52001235db059",
@@ -86,8 +86,8 @@ def test_checksums_manifest_dump():
     context = Context()
     context.task = get_fake_valid_task()
     context.config = get_fake_valid_config()
-    context.checksums_dict = checksums_dict
+    context.checksums = checksums
 
     expected_checksums_manifest_dump = get_fake_checksums_manifest()
-    checksums_manifest_dump = dump_checksums_manifest(context)
+    checksums_manifest_dump = generate_checksums_manifest(context)
     assert checksums_manifest_dump == expected_checksums_manifest_dump
