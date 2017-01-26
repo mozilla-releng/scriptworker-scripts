@@ -47,4 +47,8 @@ mapping:
     target.apk:
       s3_key: {{ locale_prefix  }}fennec-{{ version }}.{{ locale }}.android-arm.apk
       update_balrog_manifest: {{ update_balrog_manifest }}
+    target.checksums:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.checksums
+    target.checksums.asc:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.checksums.asc
 {% endfor %}

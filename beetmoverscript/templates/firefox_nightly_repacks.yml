@@ -14,6 +14,11 @@ mapping:
     target.complete.mar:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
       update_balrog_manifest: true
+    target.checksums:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums
+    target.checksums.asc:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums.asc
+
   {% if platform in ["linux-i686", "linux-x86_64"] %}
     target.tar.bz2:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2

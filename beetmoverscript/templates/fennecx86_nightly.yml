@@ -47,4 +47,8 @@ mapping:
       s3_key: {{ locale_prefix }}robocop.apk
     target.jsshell.zip:
       s3_key: {{ locale_prefix }}jsshell-android-i386.zip
+    target.checksums:
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-i386.checksums
+    target.checksums.asc:
+      s3_key: {{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-i386.checksums.asc
 {% endfor %}
