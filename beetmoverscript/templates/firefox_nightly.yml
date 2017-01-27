@@ -59,6 +59,8 @@ mapping:
     target.complete.mar:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
       update_balrog_manifest: true
+    target.sdk.tar.bz2:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
   {% endif %}
 
 {% endfor %}
