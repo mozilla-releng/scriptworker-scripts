@@ -20,8 +20,7 @@ from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_a
                                   get_upstream_artifacts, get_initial_release_props_file,
                                   validate_task_scopes, add_checksums_to_artifacts)
 from beetmoverscript.utils import (load_json, get_hash, get_release_props,
-                                   generate_beetmover_manifest, get_size,
-                                   generate_beetmover_template_args)
+                                   generate_beetmover_manifest, get_size)
 
 log = logging.getLogger(__name__)
 
@@ -46,13 +45,11 @@ async def async_main(context):
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
     # determine the release properties
     context.release_props = get_release_props(get_initial_release_props_file(context))
-    # determine the variables to feed the manifest templates
-    template_args = generate_beetmover_template_args(context.task,
-                                                     context.release_props)
 
     # generate beetmover mapping manifest
     mapping_manifest = generate_beetmover_manifest(context.config,
-                                                   template_args)
+                                                   context.task,
+                                                   context.release_props)
     # validate scopes to prevent beetmoving in the wrong place
     validate_task_scopes(context, mapping_manifest)
 

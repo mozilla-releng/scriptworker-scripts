@@ -55,9 +55,7 @@ def test_generate_manifest():
     context.config = get_fake_valid_config()
     context.properties = get_fake_balrog_props()["properties"]
     context.properties['platform'] = context.properties['stage_platform']
-    template_args = generate_beetmover_template_args(context.task,
-                                                     context.properties)
-    manifest = generate_beetmover_manifest(context.config, template_args)
+    manifest = generate_beetmover_manifest(context.config, context.task, context.properties)
     mapping = manifest['mapping']
     s3_keys = [mapping[m].get('target_info.txt', {}).get('s3_key') for m in mapping]
     assert sorted(mapping.keys()) == ['en-US', 'multi']

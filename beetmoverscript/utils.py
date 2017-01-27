@@ -79,11 +79,12 @@ def generate_beetmover_template_args(task, release_props):
     return template_args
 
 
-def generate_beetmover_manifest(script_config, template_args):
+def generate_beetmover_manifest(script_config, task, release_props):
     """
     generates and outputs a manifest that maps expected Taskcluster artifact names
     to release deliverable names
     """
+    template_args = generate_beetmover_template_args(task, release_props)
     template_path = script_config['template_files'][template_args["template_key"]]
 
     log.info('generating manifest from: {}'.format(template_path))

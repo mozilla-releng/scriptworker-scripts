@@ -10,7 +10,7 @@ from beetmoverscript.script import setup_mimetypes, setup_config, put, move_beet
     move_beet, async_main, main
 from beetmoverscript.task import get_upstream_artifacts
 from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props
-from beetmoverscript.utils import generate_beetmover_manifest, generate_beetmover_template_args
+from beetmoverscript.utils import generate_beetmover_manifest
 from scriptworker.context import Context
 from scriptworker.exceptions import (ScriptWorkerRetryException,
                                      ScriptWorkerTaskException)
@@ -80,8 +80,7 @@ def test_move_beets(event_loop):
     context.properties = get_fake_balrog_props()["properties"]
     context.properties['platform'] = context.properties['stage_platform']
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
-    template_args = generate_beetmover_template_args(context.task, context.properties)
-    manifest = generate_beetmover_manifest(context.config, template_args)
+    manifest = generate_beetmover_manifest(context.config, context.task, context.properties)
 
     expected_sources = [
         os.path.abspath(
