@@ -1,7 +1,0 @@
-{% include "firefox_nightly_repacks_base.yml" %}
-
-mapping:
-  {{ locale }}:
-    # common deliverables
-    target.langpack.xpi:
-      s3_key: {{ platform }}/xpi/firefox-{{ version }}.{{ locale }}.langpack.xpi

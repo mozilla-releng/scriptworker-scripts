@@ -9,7 +9,8 @@ import arrow
 import jinja2
 import yaml
 
-from beetmoverscript.constants import HASH_BLOCK_SIZE, STAGE_PLATFORM_MAP, TEMPLATE_KEY_PLATFORMS
+from beetmoverscript.constants import (HASH_BLOCK_SIZE, STAGE_PLATFORM_MAP,
+                                       TEMPLATE_KEY_PLATFORMS)
 
 log = logging.getLogger(__name__)
 
@@ -27,14 +28,27 @@ def get_hash(filepath, hash_type="sha512"):
     return digest.hexdigest()
 
 
+def get_size(filepath):
+    """Function to return the size of a file based on filename"""
+    return os.path.getsize(filepath)
+
+
 def load_json(path):
+    """Function to load a json from a file"""
     with open(path, "r") as fh:
         return json.load(fh)
 
 
 def write_json(path, contents):
+    """Function to dump a json content to a file"""
     with open(path, "w") as fh:
         json.dump(contents, fh)
+
+
+def write_file(path, contents):
+    """Function to dump some string contents to a file"""
+    with open(path, "w") as fh:
+        fh.write(contents)
 
 
 def generate_beetmover_template_args(task, release_props):
@@ -43,7 +57,6 @@ def generate_beetmover_template_args(task, release_props):
     # flag. The builds with unsigned artifacts will always have the flag set to
     # False while the builds with signed artifacts will have the opposite,
     # marking the need to update the manifest to be passed down to balrogworker
-    tmpl_key_option = "signed" if task["payload"]["update_manifest"] is True else "unsigned"
     tmpl_key_platform = TEMPLATE_KEY_PLATFORMS[release_props["stage_platform"]]
 
     template_args = {
@@ -59,15 +72,9 @@ def generate_beetmover_template_args(task, release_props):
 
     if 'locale' in task["payload"]:
         template_args["locale"] = task["payload"]["locale"]
-        template_args["template_key"] = "%s_nightly_repacks_%s" % (
-            release_props["appName"].lower(),
-            tmpl_key_option
-        )
+        template_args["template_key"] = "%s_nightly_repacks" % release_props["appName"].lower()
     else:
-        template_args["template_key"] = "%s_nightly_%s" % (
-            tmpl_key_platform,
-            tmpl_key_option
-        )
+        template_args["template_key"] = "%s_nightly" % tmpl_key_platform
 
     return template_args
 

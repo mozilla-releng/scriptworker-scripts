@@ -8,7 +8,7 @@ from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
                                        INITIAL_RELEASE_PROPS_FILE,
                                        RESTRICTED_BUCKET_PATHS)
 
-from beetmoverscript.utils import write_json
+from beetmoverscript.utils import write_json, write_file
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 log = logging.getLogger(__name__)
@@ -43,8 +43,31 @@ def validate_task_scopes(context, manifest):
                 sys.exit(3)
 
 
+def generate_checksums_manifest(context):
+    checksums_dict = context.checksums
+    content = list()
+    for artifact, values in sorted(checksums_dict.items()):
+        for algo in context.config['checksums_digests']:
+            content.append("{} {} {} {}".format(
+                values[algo],
+                algo,
+                values['size'],
+                artifact
+            ))
+
+    return '\n'.join(content)
+
+
+def add_checksums_to_artifacts(context):
+    abs_file_path = os.path.join(context.config['artifact_dir'],
+                                 'public/target.checksums')
+    manifest = generate_checksums_manifest(context)
+    write_file(abs_file_path, manifest)
+
+
 def add_balrog_manifest_to_artifacts(context):
-    abs_file_path = os.path.join(context.config['artifact_dir'], 'public/manifest.json')
+    abs_file_path = os.path.join(context.config['artifact_dir'],
+                                 'public/manifest.json')
     write_json(abs_file_path, context.balrog_manifest)
 
 

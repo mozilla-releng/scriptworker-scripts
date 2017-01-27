@@ -3,9 +3,14 @@
     "artifact_dir": "artifact_dir",
     "verbose": true,
     "schema_file": "/path/to/beetmoverscript/beetmoverscript/data/beetmover_task_schema.json",
+    "aiohttp_max_connections": 20,
+    "checksums_digests": ["sha512", "md5", "sha1", "sha256"],
     "template_files": {
-        "fennec_nightly_unsigned": "/path/to/beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_unsigned.yml",
-        "fennec_nightly_signed": "/path/to/beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_signed.yml"
+        "firefox_nightly": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_nightly.yml",
+        "firefox_nightly_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_nightly_repacks.yml",
+        "fennec_nightly": "/path/to/beetmoverscript/beetmoverscript/templates/fennec_nightly.yml",
+        "fennec_nightly_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/fennec_nightly_repacks.yml",
+        "fennecx86_nightly": "/path/to/beetmoverscript/beetmoverscript/templates/fennecx86_nightly.yml"
     },
     "s3": {
         "firefox": {

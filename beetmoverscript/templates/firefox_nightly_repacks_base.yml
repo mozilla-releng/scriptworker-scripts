@@ -1,8 +1,0 @@
----
-metadata:
-    name: "Beet Mover Manifest"
-    description: "Maps {{ product }} Nightly artifacts to pretty names for {{locale}} L10n repack"
-    owner: "release@mozilla.com"
-
-s3_prefix_dated: pub/firefox/nightly/{{ upload_date }}-{{ branch }}-l10n/
-s3_prefix_latest: pub/firefox/nightly/latest-{{ branch }}-l10n/
