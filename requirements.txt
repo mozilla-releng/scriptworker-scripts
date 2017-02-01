@@ -1,6 +1,9 @@
-google-api-python-client==1.5.3
-mozapkpublisher==0.1.5
-oauth2client==3.0.0
-pyOpenSSL==16.2.0
-scriptworker==2.0.0
-taskcluster==0.3.4
+# For the production/loaners environments, package versions are pinpointed in puppet
+# https://hg.mozilla.org/build/puppet/file/tip/modules/pushapk_scriptworker/manifests/init.pp .
+# Please refer to this list if you encounter version incompatiblities locally.
+google-api-python-client
+mozapkpublisher
+oauth2client
+pyOpenSSL
+scriptworker
+taskcluster
