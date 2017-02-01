@@ -160,7 +160,7 @@ async def put(context, url, headers, abs_filename, session=None):
     session = session or context.session
     with open(abs_filename, "rb") as fh:
         async with session.put(url, data=fh, headers=headers, compress=False) as resp:
-            log.info(resp.status)
+            log.info("put {}: {}".format(abs_filename, resp.status))
             response_text = await resp.text()
             log.info(response_text)
             if resp.status not in (200, 204):
