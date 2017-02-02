@@ -52,11 +52,6 @@ def write_file(path, contents):
 
 
 def generate_beetmover_template_args(task, release_props):
-    # Bug 1313154 - in order to make beetmoverscript accommodate the nightly
-    # graph, task payload was tweaked to encompass `update_manifest` boolean
-    # flag. The builds with unsigned artifacts will always have the flag set to
-    # False while the builds with signed artifacts will have the opposite,
-    # marking the need to update the manifest to be passed down to balrogworker
     tmpl_key_platform = TEMPLATE_KEY_PLATFORMS[release_props["stage_platform"]]
 
     template_args = {

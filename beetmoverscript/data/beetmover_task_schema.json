@@ -48,7 +48,8 @@
                     "uniqueItems": true
                 }
             },
-            "required": ["upload_date", "update_manifest", "upstreamArtifacts"]
+            "required": ["upload_date", "upstreamArtifacts"],
+            "optional": ["update_manifest"]
         }
     },
     "required": ["payload", "dependencies"]

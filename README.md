@@ -133,7 +133,6 @@ my_email: "scriptworker@example.com"
   "payload": {
     "maxRunTime": 600,
     "upload_date": 1483465253,
-    "update_manifest": true,
     "upstreamArtifacts": [
       {
         "paths": [

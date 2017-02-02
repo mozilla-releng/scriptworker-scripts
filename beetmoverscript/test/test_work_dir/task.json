@@ -12,7 +12,6 @@
     "scopes": ["project:releng:beetmover:nightly"],
     "payload": {
         "upload_date": 1472747174,
-        "update_manifest": false,
         "generate_checksums": false,
         "upstreamArtifacts": [
         {
