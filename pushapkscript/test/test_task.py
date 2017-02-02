@@ -77,7 +77,7 @@ class TaskTestAsync(asynctest.TestCase):
             return ['public/build/{}'.format(file_name) for file_name in file_names]
 
         download_artifacts.side_effect = convert_url_into_paths
-        path_prefix = '{}/public/build/fennec-46.0a2.en-US.android'.format(self.context.config['work_dir'])
+        path_prefix = '{}/public/build/fennec-52.0a2.multi.android'.format(self.context.config['work_dir'])
         files = await download_files(self.context)
 
         self.assertEqual(files, {
