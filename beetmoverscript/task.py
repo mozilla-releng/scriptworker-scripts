@@ -59,14 +59,6 @@ def generate_checksums_manifest(context):
     return '\n'.join(content)
 
 
-def regenerate_release_props(context):
-    release_props = context.release_props
-
-    return {
-        "properties": release_props
-    }
-
-
 def add_checksums_to_artifacts(context):
     abs_file_path = os.path.join(context.config['artifact_dir'],
                                  'public/target.checksums')
