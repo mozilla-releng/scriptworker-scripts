@@ -59,8 +59,7 @@ async def async_main(context):
     await move_beets(context, context.artifacts_to_beetmove, mapping_manifest)
 
     #  write balrog_manifest to a file and add it to list of artifacts
-    if context.task["payload"]["update_manifest"]:
-        add_balrog_manifest_to_artifacts(context)
+    add_balrog_manifest_to_artifacts(context)
     # determine the correct checksum filename and generate it, adding it to
     # the list of artifacts afterwards
     add_checksums_to_artifacts(context)
