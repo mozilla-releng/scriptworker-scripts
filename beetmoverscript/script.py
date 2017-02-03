@@ -18,7 +18,8 @@ from scriptworker.utils import retry_async, raise_future_exceptions
 from beetmoverscript.constants import MIME_MAP
 from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
                                   get_upstream_artifacts, get_initial_release_props_file,
-                                  validate_task_scopes, add_checksums_to_artifacts)
+                                  validate_task_scopes, add_checksums_to_artifacts,
+                                  add_release_props_to_artifacts)
 from beetmoverscript.utils import (load_json, get_hash, get_release_props,
                                    generate_beetmover_manifest, get_size)
 
@@ -43,8 +44,10 @@ async def async_main(context):
 
     # determine artifacts to beetmove
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
-    # determine the release properties
-    context.release_props = get_release_props(get_initial_release_props_file(context))
+    # determine the release properties and make a copy in the artifacts
+    # directory
+    release_props_file = get_initial_release_props_file(context)
+    context.release_props = get_release_props(release_props_file)
 
     # generate beetmover mapping manifest
     mapping_manifest = generate_beetmover_manifest(context.config,
@@ -63,6 +66,9 @@ async def async_main(context):
     # determine the correct checksum filename and generate it, adding it to
     # the list of artifacts afterwards
     add_checksums_to_artifacts(context)
+    # add release props file to later be used by beetmover jobs than upload
+    # the checksums file
+    add_release_props_to_artifacts(context, release_props_file)
 
     log.info('Success!')
 
