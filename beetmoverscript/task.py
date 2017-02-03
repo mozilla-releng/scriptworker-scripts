@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import sys
 import scriptworker.client
 from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
@@ -58,6 +59,14 @@ def generate_checksums_manifest(context):
     return '\n'.join(content)
 
 
+def regenerate_release_props(context):
+    release_props = context.release_props
+
+    return {
+        "properties": release_props
+    }
+
+
 def add_checksums_to_artifacts(context):
     abs_file_path = os.path.join(context.config['artifact_dir'],
                                  'public/target.checksums')
@@ -69,6 +78,12 @@ def add_balrog_manifest_to_artifacts(context):
     abs_file_path = os.path.join(context.config['artifact_dir'],
                                  'public/manifest.json')
     write_json(abs_file_path, context.balrog_manifest)
+
+
+def add_release_props_to_artifacts(context, release_props_filepath):
+    abs_file_path = os.path.join(context.config['artifact_dir'],
+                                 'public/balrog_props.json')
+    shutil.copyfile(release_props_filepath, abs_file_path)
 
 
 def filter_ignored_artifacts(artifact_paths, ignored_artifacts=IGNORED_UPSTREAM_ARTIFACTS):
