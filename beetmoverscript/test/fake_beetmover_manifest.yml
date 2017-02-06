@@ -18,4 +18,5 @@ mapping:
       s3_key: {{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.txt
     target.mozinfo.json:
       s3_key: {{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.mozinfo.json
+      update_balrog_manifest: True
 {% endfor %}
