@@ -45,7 +45,16 @@ def test_invalid_args():
 def test_setup_config():
     expected_context = Context()
     expected_context.config = get_fake_valid_config()
+
+    with pytest.raises(SystemExit):
+        setup_config(None)
+
     actual_context = setup_config("beetmoverscript/test/fake_config.json")
+    assert expected_context.config == actual_context.config
+
+    args = ['beetmoverscript', "beetmoverscript/test/fake_config.json"]
+    with mock.patch.object(sys, 'argv', args):
+        actual_context = setup_config(None)
     assert expected_context.config == actual_context.config
 
 
@@ -124,6 +133,9 @@ def test_move_beet(event_loop):
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
     context.checksums = dict()
+    context.balrog_manifest = list()
+    context.release_props = get_fake_balrog_props()["properties"]
+    context.release_props['platform'] = context.release_props['stage_platform']
     locale = "sample-locale"
 
     target_source = 'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt'
@@ -137,6 +149,11 @@ def test_move_beet(event_loop):
          'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'),
         'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt'
     ]
+    expected_balrog_manifest = {
+        'hash': '73b91c3625d70e9ba1992f119bdfd3fba85041e6f804a985a18efe06ebb1d4147fb044ac06b28773130b4887dd8b5b3bc63958e1bd74003077d8bc2a3909416b',
+        'size': 18,
+        'url': 'https://archive.mozilla.org/pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
+    }
     actual_upload_args = []
 
     async def fake_retry_upload(context, destinations, path):
@@ -145,10 +162,12 @@ def test_move_beet(event_loop):
     with mock.patch('beetmoverscript.script.retry_upload', fake_retry_upload):
         event_loop.run_until_complete(
             move_beet(context, target_source, target_destinations, locale,
-                      update_balrog_manifest=False, pretty_name=pretty_name)
+                      update_balrog_manifest=True, pretty_name=pretty_name)
         )
-
     assert expected_upload_args == actual_upload_args
+    for k in expected_balrog_manifest.keys():
+        assert (context.balrog_manifest[0]['completeInfo'][0][k] ==
+                expected_balrog_manifest[k])
 
 
 def test_async_main(event_loop):
