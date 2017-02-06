@@ -38,5 +38,6 @@ RELEASE_BRANCHES = (
     'mozilla-central',
     'mozilla-aurora',
     'mozilla-beta',
-    'mozilla-release'
+    'mozilla-release',
+    'mozilla-esr52'
 )
