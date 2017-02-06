@@ -34,3 +34,9 @@ RESTRICTED_BUCKET_PATHS = {
     'pub/mobile/release': 'release',
     'pub/firefox/release': 'release',
 }
+RELEASE_BRANCHES = (
+    'mozilla-central',
+    'mozilla-aurora',
+    'mozilla-beta',
+    'mozilla-release'
+)

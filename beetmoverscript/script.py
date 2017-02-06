@@ -15,7 +15,7 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
 from scriptworker.utils import retry_async, raise_future_exceptions
 
-from beetmoverscript.constants import MIME_MAP
+from beetmoverscript.constants import MIME_MAP, RELEASE_BRANCHES
 from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
                                   get_upstream_artifacts, get_initial_release_props_file,
                                   validate_task_scopes, add_checksums_to_artifacts,
@@ -114,18 +114,12 @@ def enrich_balrog_manifest(context, pretty_name, locale, destinations):
     release_props = context.release_props
     checksums = context.checksums
 
-    if release_props["branch"] == 'date':
-        # nightlies from dev branches don't usually upload to archive.m.o but
-        # in this particular case we're gradually rolling out in the
-        # archive.m.o under the latest-date corresponding bucket subfolder
-        url = "{prefix}/{s3_key}".format(prefix="https://archive.mozilla.org",
-                                         s3_key=destinations[0])
-        url_replacements = []
-    else:
-        # we extract the dated destination as the 'latest' is useless
-        url = "{prefix}/{s3_key}".format(prefix="https://archive.mozilla.org",
-                                         s3_key=destinations[0])
-        url_replacements = [['http://archive.mozilla.org/pub', 'http://download.cdn.mozilla.net/pub']]
+    url = "{prefix}/{s3_key}".format(prefix="https://archive.mozilla.org",
+                                     s3_key=destinations[0])
+    url_replacements = []
+    if release_props["branch"] in RELEASE_BRANCHES:
+        url_replacements.append(['http://archive.mozilla.org/pub',
+                                 'http://download.cdn.mozilla.net/pub'])
 
     return {
         "tc_nightly": True,
