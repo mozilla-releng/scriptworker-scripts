@@ -19,4 +19,6 @@ mapping:
     target.mozinfo.json:
       s3_key: {{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.mozinfo.json
       update_balrog_manifest: True
+    target.test_packages.json:
+      s3_key: {{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.test_packages.json
 {% endfor %}

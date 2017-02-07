@@ -91,6 +91,11 @@ my_email: "scriptworker@example.com"
     "artifact_dir": "artifact_dir",
     "verbose": true,
     "schema_file": "/app/beetmoverworker/beetmoverscript/beetmoverscript/data/beetmover_task_schema.json",
+    "aiohttp_max_connections": 10,
+    "checksums_digests": ["sha512", "md5", "sha1", "sha256"],
+    "blobs_needing_prettynaming_contents": [
+        "target.test_packages.json"
+    ],
     "template_files": {
         "fennec_nightly_unsigned": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_unsigned.yml",
         "fennec_nightly_signed": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_signed.yml"

@@ -42,7 +42,7 @@ def load_json(path):
 def write_json(path, contents):
     """Function to dump a json content to a file"""
     with open(path, "w") as fh:
-        json.dump(contents, fh)
+        json.dump(contents, fh, indent=4)
 
 
 def write_file(path, contents):
@@ -119,3 +119,29 @@ def get_release_props(initial_release_props_file, platform_mapping=STAGE_PLATFOR
     expanded the properties with props beetmover knows about."""
     props = load_json(initial_release_props_file)['properties']
     return update_props(props, platform_mapping)
+
+
+def alter_unpretty_contents(context, blobs, mappings):
+    """Function to alter any unpretty-name contents from a file specified in script
+    configs."""
+    for blob in blobs:
+        for locale in context.artifacts_to_beetmove:
+            source = context.artifacts_to_beetmove[locale].get(blob)
+            if not source:
+                continue
+
+            contents = load_json(source)
+            pretty_contents = deepcopy(contents)
+            for package, tests in contents.items():
+                new_tests = []
+                for artifact in tests:
+                    pretty_dict = mappings['mapping'][locale].get(artifact)
+                    if pretty_dict:
+                        new_tests.append(os.path.basename(pretty_dict['s3_key']))
+                    else:
+                        new_tests.append(artifact)
+                if new_tests != tests:
+                    pretty_contents[package] = new_tests
+
+            if pretty_contents != contents:
+                write_json(source, pretty_contents)

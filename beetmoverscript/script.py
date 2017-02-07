@@ -21,7 +21,8 @@ from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_a
                                   validate_task_scopes, add_checksums_to_artifacts,
                                   add_release_props_to_artifacts)
 from beetmoverscript.utils import (load_json, get_hash, get_release_props,
-                                   generate_beetmover_manifest, get_size)
+                                   generate_beetmover_manifest, get_size,
+                                   alter_unpretty_contents)
 
 log = logging.getLogger(__name__)
 
@@ -56,6 +57,11 @@ async def async_main(context):
     # validate scopes to prevent beetmoving in the wrong place
     validate_task_scopes(context, mapping_manifest)
 
+    # some files to-be-determined via script configs need to have their
+    # contents pretty named, so doing it here before even beetmoving begins
+    blobs = context.config.get('blobs_needing_prettynaming_contents', [])
+    alter_unpretty_contents(context, blobs, mapping_manifest)
+
     # for each artifact in manifest
     #   a. map each upstream artifact to pretty name release bucket format
     #   b. upload to candidates/dated location
@@ -78,39 +84,40 @@ async def move_beets(context, artifacts_to_beetmove, manifest):
     for locale in artifacts_to_beetmove:
         for artifact in artifacts_to_beetmove[locale]:
             source = artifacts_to_beetmove[locale][artifact]
-            pretty_name = manifest['mapping'][locale][artifact]['s3_key']
+            artifact_pretty_name = manifest['mapping'][locale][artifact]['s3_key']
             dest_dated = os.path.join(manifest["s3_prefix_dated"],
-                                      pretty_name)
+                                      artifact_pretty_name)
             dest_latest = os.path.join(manifest["s3_prefix_latest"],
-                                       pretty_name)
+                                       artifact_pretty_name)
+
             balrog_manifest = manifest['mapping'][locale][artifact].get('update_balrog_manifest')
             beets.append(
                 asyncio.ensure_future(
                     move_beet(context, source, destinations=(dest_dated, dest_latest),
                               locale=locale, update_balrog_manifest=balrog_manifest,
-                              pretty_name=pretty_name)
+                              artifact_pretty_name=artifact_pretty_name)
                 )
             )
     await raise_future_exceptions(beets)
 
 
 async def move_beet(context, source, destinations, locale,
-                    update_balrog_manifest, pretty_name):
+                    update_balrog_manifest, artifact_pretty_name):
     await retry_upload(context=context, destinations=destinations, path=source)
 
-    if context.checksums.get(pretty_name) is None:
-        context.checksums[pretty_name] = {
+    if context.checksums.get(artifact_pretty_name) is None:
+        context.checksums[artifact_pretty_name] = {
             algo: get_hash(source, algo) for algo in context.config['checksums_digests']
         }
-        context.checksums[pretty_name]['size'] = get_size(source)
+        context.checksums[artifact_pretty_name]['size'] = get_size(source)
 
     if update_balrog_manifest:
         context.balrog_manifest.append(
-            enrich_balrog_manifest(context, pretty_name, locale, destinations)
+            enrich_balrog_manifest(context, artifact_pretty_name, locale, destinations)
         )
 
 
-def enrich_balrog_manifest(context, pretty_name, locale, destinations):
+def enrich_balrog_manifest(context, artifact_pretty_name, locale, destinations):
     release_props = context.release_props
     checksums = context.checksums
 
@@ -124,8 +131,8 @@ def enrich_balrog_manifest(context, pretty_name, locale, destinations):
     return {
         "tc_nightly": True,
         "completeInfo": [{
-            "hash": checksums[pretty_name][release_props["hashType"]],
-            "size": checksums[pretty_name]['size'],
+            "hash": checksums[artifact_pretty_name][release_props["hashType"]],
+            "size": checksums[artifact_pretty_name]['size'],
             "url": url
         }],
 

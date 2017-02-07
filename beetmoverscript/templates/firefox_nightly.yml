@@ -14,8 +14,12 @@ mapping:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.common.tests.zip
     target.cppunittest.tests.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.cppunittest.tests.zip
+    target.crashreporter-symbols-full.zip:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.crashreporter-symbols-full.zip
     target.crashreporter-symbols.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
+    target.gtest.tests.zip:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.gtest.tests.zip
     target.json:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.json
     target.mochitest.tests.zip:

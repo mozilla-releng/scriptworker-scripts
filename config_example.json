@@ -5,6 +5,9 @@
     "schema_file": "/path/to/beetmoverscript/beetmoverscript/data/beetmover_task_schema.json",
     "aiohttp_max_connections": 10,
     "checksums_digests": ["sha512", "md5", "sha1", "sha256"],
+    "blobs_needing_prettynaming_contents": [
+        "target.test_packages.json"
+    ],
     "template_files": {
         "firefox_nightly": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_nightly.yml",
         "firefox_nightly_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_nightly_repacks.yml",
