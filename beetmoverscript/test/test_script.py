@@ -101,6 +101,9 @@ def test_move_beets(event_loop):
         os.path.abspath(
             'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target_info.txt'
         ),
+        os.path.abspath(
+            'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.test_packages.json'
+        ),
     ]
     expected_destinations = [
         ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt',
@@ -109,13 +112,15 @@ def test_move_beets(event_loop):
          'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json'),
         ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
          'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'),
+        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json'),
     ]
 
     actual_sources = []
     actual_destinations = []
 
     async def fake_move_beet(context, source, destinations, locale,
-                             update_balrog_manifest, pretty_name):
+                             update_balrog_manifest, artifact_pretty_name):
         actual_sources.append(source)
         actual_destinations.append(destinations)
 
@@ -162,7 +167,7 @@ def test_move_beet(event_loop):
     with mock.patch('beetmoverscript.script.retry_upload', fake_retry_upload):
         event_loop.run_until_complete(
             move_beet(context, target_source, target_destinations, locale,
-                      update_balrog_manifest=True, pretty_name=pretty_name)
+                      update_balrog_manifest=True, artifact_pretty_name=pretty_name)
         )
     assert expected_upload_args == actual_upload_args
     for k in expected_balrog_manifest.keys():
