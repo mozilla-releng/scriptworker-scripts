@@ -5,13 +5,16 @@ import json
 import logging
 import os
 import random
+import shutil
+import tempfile
 import traceback
 
 import scriptworker.client
 from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_request
-from signingscript.exceptions import SigningServerError, TaskVerificationError
-from signingscript.utils import get_hash, get_detached_signatures, log_output
+
+from signingscript import utils
+from signingscript.exceptions import SigningServerError, TaskVerificationError, FailedSubprocess
 
 log = logging.getLogger(__name__)
 
@@ -81,29 +84,69 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     signtool = context.config['signtool']
     if not isinstance(signtool, (list, tuple)):
         signtool = [signtool]
-    cmd = signtool + ["-v", "-n", nonce, "-t", token, "-c", cert]
+    signing_command = signtool + ["-v", "-n", nonce, "-t", token, "-c", cert]
     for s in get_suitable_signing_servers(context.signing_servers, cert_type, signing_formats):
-        cmd.extend(["-H", s.server])
+        signing_command.extend(["-H", s.server])
     for f in signing_formats:
-        cmd.extend(["-f", f])
-    cmd.extend(["-o", to, from_])
-    log.info("Running %s", " ".join(cmd))
-    proc = await asyncio.create_subprocess_exec(*cmd, stdout=PIPE, stderr=STDOUT)
-    log.info("COMMAND OUTPUT: ")
-    await log_output(proc.stdout)
-    exitcode = await proc.wait()
-    log.info("exitcode {}".format(exitcode))
+        signing_command.extend(["-f", f])
+    signing_command.extend(["-o", to, from_])
+    await _execute_subprocess(signing_command)
+    log.info('Finished signing. Starting post-signing steps...')
+    await _execute_post_signing_steps(work_dir, to)
+
+
+async def _execute_post_signing_steps(context, to):
+    work_dir = context.config['work_dir']
     abs_to = os.path.join(work_dir, to)
+
+    _, file_extension = os.path.splitext(abs_to)
+    if file_extension == '.apk':
+        await _zip_align_apk(context, abs_to)
+
     log.info("SHA512SUM: %s SIGNED_FILE: %s",
-             get_hash(abs_to, "sha512"), to)
+             utils.get_hash(abs_to, "sha512"), to)
     log.info("SHA1SUM: %s SIGNED_FILE: %s",
-             get_hash(abs_to, "sha1"), to)
-    log.info("Finished signing")
+             utils.get_hash(abs_to, "sha1"), to)
+    log.info('Post-signing steps finished')
+
+
+_ZIP_ALIGNMENT = '4'  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
+
+
+async def _zip_align_apk(context, abs_to):
+    """ Replaces APK by a zip aligned one. """
+    original_apk_location = abs_to
+    zipalign_executable_location = context.config['zipalign']
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_apk_location = os.path.join(temp_dir, 'aligned.apk')
+
+        zipalign_command = [zipalign_executable_location]
+        if context.config['verbose'] is True:
+            zipalign_command += ['-v']
+
+        zipalign_command += [_ZIP_ALIGNMENT, original_apk_location, temp_apk_location]
+        await _execute_subprocess(zipalign_command)
+        shutil.move(temp_apk_location, abs_to)
+
+    log.info('"{}" has been zip aligned'.format(abs_to))
+
+
+async def _execute_subprocess(command):
+    log.info('Running "{}"'.format(' '.join(command)))
+    subprocess = await asyncio.create_subprocess_exec(*command, stdout=PIPE, stderr=STDOUT)
+    log.info("COMMAND OUTPUT: ")
+    await utils.log_output(subprocess.stdout)
+    exitcode = await subprocess.wait()
+    log.info("exitcode {}".format(exitcode))
+
+    if exitcode != 0:
+        raise FailedSubprocess('Command `{}` failed'.format(' '.join(command)))
 
 
 def detached_sigfiles(filepath, signing_formats):
     detached_signatures = []
-    for sig_type, sig_ext, sig_mime in get_detached_signatures(signing_formats):
+    for sig_type, sig_ext, sig_mime in utils.get_detached_signatures(signing_formats):
         detached_filepath = "{filepath}{ext}".format(filepath=filepath,
                                                      ext=sig_ext)
         detached_signatures.append(detached_filepath)

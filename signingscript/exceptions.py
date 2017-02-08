@@ -14,3 +14,10 @@ class SigningServerError(ScriptWorkerTaskException):
         super(SigningServerError, self).__init__(
             msg, exit_code=STATUSES['internal-error']
         )
+
+
+class FailedSubprocess(ScriptWorkerTaskException):
+    def __init__(self, msg):
+        super(FailedSubprocess, self).__init__(
+            msg, exit_code=STATUSES['internal-error']
+        )

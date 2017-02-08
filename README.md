@@ -117,7 +117,10 @@ The config json looks like this (comments are not valid json, but I'm inserting 
       "signtool": "/src/signing/venv3/bin/signtool",
 
       // enable debug logging
-      "verbose": true
+      "verbose": true,
+
+      // the path to zipalign. This executable is usually present in $ANDROID_SDK_LOCATION/build-tools/$ANDROID_VERSION/zipalign
+      "zipalign": "/absolute/path/to/zipalign"
     }
 
 #### directories and file naming
