@@ -92,7 +92,7 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     signing_command.extend(["-o", to, from_])
     await _execute_subprocess(signing_command)
     log.info('Finished signing. Starting post-signing steps...')
-    await _execute_post_signing_steps(work_dir, to)
+    await _execute_post_signing_steps(context, to)
 
 
 async def _execute_post_signing_steps(context, to):
