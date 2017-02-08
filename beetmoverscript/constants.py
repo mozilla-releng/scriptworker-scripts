@@ -10,7 +10,7 @@ MIME_MAP = {
     '.dmg': 'application/x-iso9660-image',
     '.json': 'application/json',
     '.mar': 'application/octet-stream',
-    '.xpi': 'application/zip',
+    '.xpi': 'application/x-xpinstall',
     '.apk': 'application/vnd.android.package-archive',
 }
 STAGE_PLATFORM_MAP = {
