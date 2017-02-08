@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.10.0] - 2016-02-08
+- zipalign APKs in order to allow them to be published onto Google Play Store
+
 ## [0.9.0] - 2016-12-08
 ### Changed
 - look at `work_dir` for the downloaded artifacts, to match the latest scriptworker changes
