@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.10.0] - 2016-02-09
+- Fix an execution error due to the addition of zipalign
+
 ## [0.10.0] - 2016-02-08
 - zipalign APKs in order to allow them to be published onto Google Play Store
 
