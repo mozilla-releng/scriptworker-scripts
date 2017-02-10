@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.2.2
+Pin dependencies in Puppet only.
+Use new tc-migrated build locations.
+
 ## 0.2.1
 Upgrade to scriptworker v2.0.0 (without Chain of Trust), which reports errors back to Treeherer.
 
