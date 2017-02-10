@@ -92,7 +92,7 @@ my_email: "scriptworker@example.com"
     "verbose": true,
     "schema_file": "/app/beetmoverworker/beetmoverscript/beetmoverscript/data/beetmover_task_schema.json",
     "aiohttp_max_connections": 10,
-    "checksums_digests": ["sha512", "md5", "sha1", "sha256"],
+    "checksums_digests": ["sha512", "sha256"],
     "blobs_needing_prettynaming_contents": [
         "target.test_packages.json"
     ],
