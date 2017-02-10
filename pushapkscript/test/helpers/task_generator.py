@@ -5,10 +5,10 @@ import json
 class TaskGenerator(object):
     def __init__(self, apks=None):
         self.apks = apks if apks is not None else {
-            'armv7_v15': 'https://queue.taskcluster.net/v1/task/WNIh4L_BTVKZhDk0KUAptQ/artifacts/\
-public/build/fennec-52.0a2.multi.android-arm.apk',
-            'x86': 'https://queue.taskcluster.net/v1/task/WFVQok4TQOmUS8F6p2VFDw/artifacts/\
-public/build/fennec-52.0a2.multi.android-i386.apk'
+            'armv7_v15': 'https://queue.taskcluster.net/v1/task/TYPNy9Q0QvSNiijBjGVdhA/artifacts/\
+public%2Fbuild%2Ftarget.apk',
+            'x86': 'https://queue.taskcluster.net/v1/task/Klg1GnM4TAqeBqgz-FOdtw/artifacts/\
+public%2Fbuild%2Ftarget.apk'
         }
 
     def generate_file(self, work_dir):
@@ -28,7 +28,7 @@ public/build/fennec-52.0a2.multi.android-i386.apk'
           "created": "2015-05-08T16:15:58.903Z",
           "deadline": "2015-05-08T18:15:59.010Z",
           "expires": "2016-05-08T18:15:59.010Z",
-          "dependencies": ["WFVQok4TQOmUS8F6p2VFDw", "WNIh4L_BTVKZhDk0KUAptQ"],
+          "dependencies": ["TYPNy9Q0QvSNiijBjGVdhA", "Klg1GnM4TAqeBqgz-FOdtw"],
           "scopes": ["project:releng:googleplay:aurora"],
           "payload": {{
             "apks": {apks},

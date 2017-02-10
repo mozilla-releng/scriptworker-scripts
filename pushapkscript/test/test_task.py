@@ -71,16 +71,15 @@ class TaskTestAsync(asynctest.TestCase):
 
     @asynctest.patch('scriptworker.artifacts.download_artifacts')
     async def test_download_files_returns_absolute_paths(self, download_artifacts):
-        def convert_url_into_paths(_, file_urls):
+        def convert_url_into_paths(_, file_urls, parent_dir=None):
             url_with_all_slashes = [url.replace('%2F', '/') for url in file_urls]
             file_names = [url.split('/')[-1] for url in url_with_all_slashes]
-            return ['public/build/{}'.format(file_name) for file_name in file_names]
+            return ['{}/public/build/{}'.format(parent_dir, file_name) for file_name in file_names]
 
         download_artifacts.side_effect = convert_url_into_paths
-        path_prefix = '{}/public/build/fennec-52.0a2.multi.android'.format(self.context.config['work_dir'])
         files = await download_files(self.context)
 
         self.assertEqual(files, {
-            'armv7_v15': '{}-arm.apk'.format(path_prefix),
-            'x86': '{}-i386.apk'.format(path_prefix),
+            'armv7_v15': '{}/armv7_v15/public/build/target.apk'.format(self.context.config['work_dir']),
+            'x86':       '{}/x86/public/build/target.apk'.format(self.context.config['work_dir']),
         })

@@ -79,8 +79,8 @@ class MainTest(unittest.TestCase):
 
             PushAPK.assert_called_with(config={
                 'credentials': '/dummy/path/to/certificate.p12',
-                'apk_armv7_v15': '{}/work/public/build/fennec-52.0a2.multi.android-arm.apk'.format(test_data_dir),
-                'apk_x86': '{}/work/public/build/fennec-52.0a2.multi.android-i386.apk'.format(test_data_dir),
+                'apk_armv7_v15': '{}/work/armv7_v15/public/build/target.apk'.format(test_data_dir),
+                'apk_x86': '{}/work/x86/public/build/target.apk'.format(test_data_dir),
                 'package_name': 'org.mozilla.fennec_aurora',
                 'service_account': 'dummy-service-account@iam.gserviceaccount.com',
                 'track': 'alpha',
