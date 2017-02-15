@@ -90,10 +90,8 @@ def test_balrog_manifest_to_artifacts():
 def test_checksums_manifest_generation():
     checksums = {
         "firefox-53.0a1.en-US.linux-i686.complete.mar": {
-            "sha1": "332ab78ebd36e9217f451e1244",
             "sha512": "14f2d1cb999a8b42a3b6b671f7376c3e246daa65d108e2b8fe880f069601dc2b26afa155b52001235db059",
             "size": 618149,
-            "md5": "073398e573e709",
             "sha256": "293975734953874539475"
         }
     }
