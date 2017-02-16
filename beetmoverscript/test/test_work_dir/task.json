@@ -9,7 +9,10 @@
     "deadline": "2015-05-08T18:15:59.010Z",
     "expires": "2016-05-08T18:15:59.010Z",
     "dependencies": ["eSzfNqMZT_mSiQQXu8hyqg"],
-    "scopes": ["project:releng:beetmover:nightly"],
+    "scopes": [
+        "project:releng:beetmover:cert:nightly",
+        "project:releng:beetmover:action:push-to-nightly"
+    ],
     "payload": {
         "upload_date": 1472747174,
         "generate_checksums": false,

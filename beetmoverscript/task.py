@@ -3,11 +3,10 @@ import logging
 import os
 import re
 import shutil
-import sys
 import scriptworker.client
 from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
                                        INITIAL_RELEASE_PROPS_FILE,
-                                       RESTRICTED_BUCKET_PATHS)
+                                       RESTRICTED_ACTIONS)
 
 from beetmoverscript.utils import write_json, write_file
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -22,26 +21,38 @@ def validate_task_schema(context):
     scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
-def validate_task_scopes(context, manifest):
-    # make sure scopes exist and are properly set
-    scopes = context.task['scopes']
-    for scope in scopes:
-        if scope.startswith("project:releng:beetmover:"):
-            signing_cert_name = scope.split(':')[-1]
-            if re.search('^[0-9A-Za-z_-]+$', signing_cert_name) is not None:
-                break
-            log.warning('scope {} is malformed, skipping!'.format(scope))
-    else:
-        log.critical("No beetmover scopes!")
-        sys.exit(3)
+def get_task_cert_type(task):
+    """Extract task certificate type"""
+    certs = [s.split(':')[-1] for s in task["scopes"] if
+             s.startswith("project:releng:beetmover:cert:")]
+    log.info("Certificate types: %s", certs)
+    if len(certs) != 1:
+        raise ScriptWorkerTaskException("Only one certificate type can be used")
 
-    # prevent scopes from low-security tree write in a release-type bucket
-    for k, v in RESTRICTED_BUCKET_PATHS.items():
-        for path in (manifest['s3_prefix_dated'], manifest['s3_prefix_latest']):
-            if path.startswith(k) and signing_cert_name != v:
-                log.critical("Munged low-security tree scopes trying to access"
-                             " nightly/release buckets for beetmover")
-                sys.exit(3)
+    signing_cert_name = certs[0]
+    if re.search('^[0-9A-Za-z_-]+$', signing_cert_name) is None:
+        raise ScriptWorkerTaskException("Scope {} is malformed".format(certs[0]))
+
+    if signing_cert_name not in RESTRICTED_ACTIONS.keys():
+        raise ScriptWorkerTaskException("Invalid scope")
+
+    return signing_cert_name
+
+
+def get_task_beetmover_action(cert, task):
+    """Extract last part of beetmover action scope"""
+    actions = [s.split(":")[-1] for s in task["scopes"] if
+               s.startswith("project:releng:beetmover:action:")]
+
+    log.info("Action types: %s", actions)
+    if len(actions) != 1:
+        raise ScriptWorkerTaskException("Only one action type can be used")
+
+    action = actions[0]
+    if action not in RESTRICTED_ACTIONS[cert]:
+        raise ScriptWorkerTaskException("Invalid action for {} cert".format(cert))
+
+    return action
 
 
 def generate_checksums_manifest(context):

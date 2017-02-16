@@ -5,40 +5,10 @@ import tempfile
 from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
                                   get_fake_balrog_props, get_fake_checksums_manifest)
 from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
-                                  validate_task_scopes, get_upstream_artifacts,
+                                  get_upstream_artifacts,
                                   generate_checksums_manifest, get_initial_release_props_file)
-from beetmoverscript.utils import generate_beetmover_manifest
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-
-
-def test_validate_scopes():
-    context = Context()
-    context.config = get_fake_valid_config()
-    context.task = get_fake_valid_task()
-    context.properties = get_fake_balrog_props()["properties"]
-    context.properties['platform'] = context.properties['stage_platform']
-    context.artifacts_to_beetmove = get_upstream_artifacts(context)
-    manifest = generate_beetmover_manifest(context.config, context.task, context.properties)
-
-    context.task['scopes'] = []
-    with pytest.raises(SystemExit):
-        validate_task_scopes(context, manifest)
-
-    context.task['scopes'] = ["project:releng:beetmover:!@#nightly_(@#$"]
-    with pytest.raises(SystemExit):
-        validate_task_scopes(context, manifest)
-
-    context.task['scopes'] = ["project:releng:beetmover:mightly"]
-    with pytest.raises(SystemExit):
-        validate_task_scopes(context, manifest)
-
-    context.task['scopes'] = ["project:releng:beetmover:dep"]
-    manifest['s3_prefix_dated'] = "pub/mobile/nightly/2017/01/2017-01-dep.."
-    manifest['s3_prefix_latest'] = "pub/mobile/nightly/2017/01/2017-01-dep.."
-
-    with pytest.raises(SystemExit):
-        validate_task_scopes(context, manifest)
 
 
 def test_get_upstream_artifacts():

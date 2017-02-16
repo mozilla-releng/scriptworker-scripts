@@ -18,8 +18,9 @@ from scriptworker.utils import retry_async, raise_future_exceptions
 from beetmoverscript.constants import MIME_MAP, RELEASE_BRANCHES
 from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
                                   get_upstream_artifacts, get_initial_release_props_file,
-                                  validate_task_scopes, add_checksums_to_artifacts,
-                                  add_release_props_to_artifacts)
+                                  add_checksums_to_artifacts,
+                                  add_release_props_to_artifacts,
+                                  get_task_cert_type, get_task_beetmover_action)
 from beetmoverscript.utils import (load_json, get_hash, get_release_props,
                                    generate_beetmover_manifest, get_size,
                                    alter_unpretty_contents)
@@ -27,22 +28,7 @@ from beetmoverscript.utils import (load_json, get_hash, get_release_props,
 log = logging.getLogger(__name__)
 
 
-# async_main {{{1
-async def async_main(context):
-    # balrog_manifest is written and uploaded as an artifact which is used by a subsequent
-    # balrogworker task in the release graph. Balrogworker uses this manifest to submit
-    # release blob info with things like mar filename, size, etc
-    context.balrog_manifest = list()
-
-    # the checksums manifest is written and uploaded as an artifact which is used
-    # by a subsequent signing task and again by another beetmover task to
-    # upload it along with the other artifacts
-    context.checksums = dict()
-
-    # determine and validate the task schema along with its scopes
-    context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
-    validate_task_schema(context)
-
+async def push_to_nightly(context):
     # determine artifacts to beetmove
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
     # determine the release properties and make a copy in the artifacts
@@ -54,13 +40,21 @@ async def async_main(context):
     mapping_manifest = generate_beetmover_manifest(context.config,
                                                    context.task,
                                                    context.release_props)
-    # validate scopes to prevent beetmoving in the wrong place
-    validate_task_scopes(context, mapping_manifest)
 
     # some files to-be-determined via script configs need to have their
     # contents pretty named, so doing it here before even beetmoving begins
     blobs = context.config.get('blobs_needing_prettynaming_contents', [])
     alter_unpretty_contents(context, blobs, mapping_manifest)
+
+    # balrog_manifest is written and uploaded as an artifact which is used by a subsequent
+    # balrogworker task in the release graph. Balrogworker uses this manifest to submit
+    # release blob info with things like mar filename, size, etc
+    context.balrog_manifest = list()
+
+    # the checksums manifest is written and uploaded as an artifact which is used
+    # by a subsequent signing task and again by another beetmover task to
+    # upload it along with the other artifacts
+    context.checksums = dict()
 
     # for each artifact in manifest
     #   a. map each upstream artifact to pretty name release bucket format
@@ -75,6 +69,43 @@ async def async_main(context):
     # add release props file to later be used by beetmover jobs than upload
     # the checksums file
     add_release_props_to_artifacts(context, release_props_file)
+
+
+async def push_to_candidates(context):
+    pass
+
+
+async def push_to_releases(context):
+    pass
+
+
+async def push_to_staging(context):
+    pass
+
+
+action_map = {
+    'push-to-nightly': push_to_nightly,
+    'push-to-candidates': push_to_candidates,
+    'push-to-releases': push_to_releases,
+    'push-to-staging': push_to_staging
+}
+
+
+# async_main {{{1
+async def async_main(context):
+    # determine the task and make a quick validation check against its schema
+    context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
+    validate_task_schema(context)
+
+    # determine the task action to toggle the right behavior
+    context.cert_name = get_task_cert_type(context.task)
+    context.action = get_task_beetmover_action(context.cert_name, context.task)
+
+    if action_map.get(context.action):
+        await action_map[context.action](context)
+    else:
+        log.critical("Unknow action {}!".format(context.action))
+        sys.exit(3)
 
     log.info('Success!')
 
