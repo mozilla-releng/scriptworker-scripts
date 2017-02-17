@@ -113,8 +113,7 @@ def test_upload_apk_with_whats_new(monkeypatch):
 
     expected_locales = (
         ('es-US', 'Mire a esta caracteristica'),
-        # Unlike what we could infer from the data input, en-GB is NOT converted into en-US.
-        # en-GB is not meant to be updated and en-US is added to list_locales
+        ('en-GB', 'Check out this cool feature!'),
         ('en-US', 'Check out this cool feature!'),
     )
 
@@ -124,7 +123,7 @@ def test_upload_apk_with_whats_new(monkeypatch):
                 'recentChanges': whats_new
             })
 
-    assert edit_service_mock.update_apk_listings.call_count == 4
+    assert edit_service_mock.update_apk_listings.call_count == 6
     edit_service_mock.commit_transaction.assert_called_once_with()
 
 

@@ -89,10 +89,6 @@ def _push_whats_new(edit_service, release_channel, apk_version_code):
     locales.append(u'en-US')
 
     for locale in locales:
-        if locale == "en-GB":
-            logger.info("Ignoring en-GB as locale")
-            continue
-
         translation = store_l10n.get_translation(release_channel, locale)
         whatsnew = translation.get('whatsnew')
         play_store_locale = store_l10n.locale_mapping(locale)
