@@ -9,16 +9,34 @@
     ],
     "verbose": true,
     "schema_file": "beetmoverscript/data/beetmover_task_schema.json",
-    "template_files": {
-        "fake_nightly": "beetmoverscript/test/fake_beetmover_manifest.yml",
-        "firefox_nightly": "beetmoverscript/test/fake_beetmover_manifest.yml",
-        "fennec_nightly": "beetmoverscript/test/fake_beetmover_manifest.yml"
+
+    "actions": {
+        "push-to-nightly": {
+            "fake_nightly": "beetmoverscript/test/fake_beetmover_manifest.yml",
+            "firefox_nightly": "beetmoverscript/test/fake_beetmover_manifest.yml",
+            "fennec_nightly": "beetmoverscript/test/fake_beetmover_manifest.yml"
+        },
+        "push-to-candidates": {},
+        "push-to-releases": {}
     },
-    "s3": {
-        "bucket": "fake-test-bucket",
-        "credentials": {
-            "id": "...",
-            "key": "..."
+
+    "buckets": {
+        "nightly": {
+            "firefox": {
+                "bucket": "fake-mozilla-releng-firefox-nightly-bucket",
+                "credentials": {
+                    "id": "dummy",
+                    "key": "dummy"
+                }
+            },
+            "fennec": {
+                "bucket": "fake-mozilla-releng-mobile-nightly-bucket",
+                "credentials": {
+                    "id": "dummy",
+                    "key": "dummy"
+                }
+            }
+
         }
     }
 }

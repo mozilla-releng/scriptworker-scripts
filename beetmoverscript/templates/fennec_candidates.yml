@@ -1,0 +1,114 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps {{ product }} artifacts to pretty names for the en-US and multi locale"
+    owner: "release@mozilla.com"
+
+s3_prefix_candidates: pub/mobile/candidates/{{ version }}-candidates/build{{ build_number }}/
+
+mapping:
+{% for locale in ['multi', 'en-US'] %}
+  {{ locale }}:
+  {% set update_balrog_manifest = True if locale == 'multi' else False %}
+
+    bouncer.apk:
+      s3_key: bouncer.apk
+      destinations:
+        - {{ platform }}/{{ locale }}/bouncer.apk
+    target.apk:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.apk
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.apk
+      update_balrog_manifest: {{ update_balrog_manifest }}
+    target.checksums:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.checksums
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.checksums
+    target.checksums.asc:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.checksums.asc
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.checksums.asc
+    target.common.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.common.tests.zip
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.common.tests.zip
+    target.cppunittest.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.cppunittest.tests.zip
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.cppunittest.tests.zip
+    target.crashreporter-symbols-full.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.crashreporter-symbols-full.zip
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.crashreporter-symbols-full.zip
+    target.crashreporter-symbols.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.crashreporter-symbols.zip
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.crashreporter-symbols.zip
+    target.json:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.json
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.json
+    target.mochitest.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.mochitest.tests.zip
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.mochitest.tests.zip
+    target.mozinfo.json:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.mozinfo.json
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.mozinfo.json
+    target.reftest.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.reftest.tests.zip
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.reftest.tests.zip
+    target.talos.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.talos.tests.zip
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.talos.tests.zip
+    target.test_packages.json:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.test_packages.json
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.test_packages.json
+    target.txt:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.txt
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.txt
+    target.web-platform.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.web-platform.tests.zip
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.web-platform.tests.zip
+    target.xpcshell.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.xpcshell.tests.zip
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.xpcshell.tests.zip
+    target_info.txt:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm_info.txt
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm_info.txt
+        - {{ platform }}/{{ locale }}/{{ platform }}_info.txt
+        - {{ platform }}_info.txt
+    target.jsshell.zip:
+      s3_key: jsshell-android-arm.zip
+      destinations:
+        - {{ platform }}/{{ locale }}/jsshell-android-arm.zip
+    mozharness.zip:
+      s3_key:  mozharness.zip
+      destinations:
+        - {{ platform }}/{{ locale }}/mozharness.zip
+    robocop.apk:
+      s3_key: robocop.apk
+      destinations:
+        - {{ platform }}/{{ locale }}/robocop.apk
+
+    {% if locale == 'en-US' %}
+    mar:
+      s3_key: mar
+      destinations:
+        - host/bin/mar
+    mbsdiff:
+      s3_key: mbsdiff
+      destinations:
+        - host/bin/mbsdiff
+
+    {% endif %}
+
+{% endfor %}

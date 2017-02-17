@@ -6,8 +6,9 @@ import pytest
 import sys
 from yarl import URL
 
-from beetmoverscript.script import setup_mimetypes, setup_config, put, move_beets, \
-    move_beet, async_main, main
+from beetmoverscript.script import (setup_mimetypes, setup_config, put,
+                                    move_nightly_beets, move_beet, async_main,
+                                    main)
 from beetmoverscript.task import get_upstream_artifacts
 from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props
 from beetmoverscript.utils import generate_beetmover_manifest
@@ -82,14 +83,18 @@ def test_put_failure(event_loop, fake_session_500):
         )
 
 
-def test_move_beets(event_loop):
+def test_move_nightly_beets(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
     context.properties = get_fake_balrog_props()["properties"]
     context.properties['platform'] = context.properties['stage_platform']
+    context.cert_name = 'nightly'
+    context.action = 'push-to-nightly'
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
-    manifest = generate_beetmover_manifest(context.config, context.task, context.properties)
+    manifest = generate_beetmover_manifest(context.config, context.task,
+                                           context.properties, context.cert_name,
+                                           context.action)
 
     expected_sources = [
         os.path.abspath(
@@ -126,7 +131,7 @@ def test_move_beets(event_loop):
 
     with mock.patch('beetmoverscript.script.move_beet', fake_move_beet):
         event_loop.run_until_complete(
-            move_beets(context, context.artifacts_to_beetmove, manifest)
+            move_nightly_beets(context, context.artifacts_to_beetmove, manifest)
         )
 
     assert sorted(expected_sources) == sorted(actual_sources)
@@ -179,10 +184,10 @@ def test_async_main(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
 
-    async def fake_move_beets(context, artifacts_to_beetmove, manifest):
+    async def fake_move_nightly_beets(context, artifacts_to_beetmove, manifest):
         pass
 
-    with mock.patch('beetmoverscript.script.move_beets', new=fake_move_beets):
+    with mock.patch('beetmoverscript.script.move_nightly_beets', new=fake_move_nightly_beets):
         event_loop.run_until_complete(
             async_main(context)
         )

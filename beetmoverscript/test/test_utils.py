@@ -55,7 +55,12 @@ def test_generate_manifest():
     context.config = get_fake_valid_config()
     context.properties = get_fake_balrog_props()["properties"]
     context.properties['platform'] = context.properties['stage_platform']
-    manifest = generate_beetmover_manifest(context.config, context.task, context.properties)
+    context.cert_name = 'nightly'
+    context.action = 'push-to-nightly'
+
+    manifest = generate_beetmover_manifest(context.config, context.task,
+                                           context.properties, context.cert_name,
+                                           context.action)
     mapping = manifest['mapping']
     s3_keys = [mapping[m].get('target_info.txt', {}).get('s3_key') for m in mapping]
     assert sorted(mapping.keys()) == ['en-US', 'multi']
@@ -74,6 +79,8 @@ def test_beetmover_template_args_generation():
     context.config = get_fake_valid_config()
     context.properties = get_fake_balrog_props()["properties"]
     context.properties['platform'] = context.properties['stage_platform']
+    context.cert_name = 'nightly'
+    context.action = 'push-to-nightly'
 
     expected_template_args = {
         'branch': 'mozilla-central',
@@ -86,11 +93,15 @@ def test_beetmover_template_args_generation():
     }
 
     template_args = generate_beetmover_template_args(context.task,
-                                                     context.properties)
+                                                     context.properties,
+                                                     context.cert_name,
+                                                     context.action)
     assert template_args == expected_template_args
 
     context.task['payload']['locale'] = 'ro'
     template_args = generate_beetmover_template_args(context.task,
-                                                     context.properties)
+                                                     context.properties,
+                                                     context.cert_name,
+                                                     context.action)
 
     assert template_args['template_key'] == 'fake_nightly_repacks'

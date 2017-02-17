@@ -99,21 +99,71 @@ my_email: "scriptworker@example.com"
     "blobs_needing_prettynaming_contents": [
         "target.test_packages.json"
     ],
-    "template_files": {
-        "fennec_nightly_unsigned": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_unsigned.yml",
-        "fennec_nightly_signed": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/fennec_nightly_en_us_multi_signed.yml"
-        "firefox_nightly_unsigned": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/firefox_nightly_en_us_unsigned.yml",
-        "firefox_nightly_signed": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/firefox_nightly_en_us_signed.yml"
-        "firefox_nightly_repacks_unsigned": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/firefox_nightly_repacks_unsigned.yml",
-        "firefox_nightly_repacks_signed": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/firefox_nightly_repacks_signed.yml"
-        "fennec_nightly_repacks_unsigned": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/fennec_nightly_repacks_unsigned.yml",
-        "fennec_nightly_repacks_signed": "/app/beetmoverworker/beetmoverscript/beetmoverscript/templates/fennec_nightly_repacks_signed.yml"
+    "actions": {
+        "push-to-nightly": {
+            "firefox_nightly": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_nightly.yml",
+            "firefox_nightly_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_nightly_repacks.yml",
+            "fennec_nightly": "/path/to/beetmoverscript/beetmoverscript/templates/fennec_nightly.yml",
+            "fennec_nightly_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/fennec_nightly_repacks.yml",
+            "fennecx86_nightly": "/path/to/beetmoverscript/beetmoverscript/templates/fennecx86_nightly.yml"
+        },
+        "push-to-candidates": {
+            "fennec_candidates": "path/to/beetmoverscript/beetmoverscript/templates/fennec_candidates.yml",
+            "fennec_candidates_repacks": "path/to/beetmoverscript/beetmoverscript/templates/fennec_candidates_repacks.yml",
+            "fennecx86_candidates": "/path/to/beetmoverscript/beetmoverscript/templates/fennecx86_candidates.yml"
+        },
+        "push-to-releases": {}
     },
-    "s3": {
-        "bucket": "mozilla-releng-beetmoverscript",
-        "credentials": {
-            "id": "...",
-            "key": "..."
+
+    "buckets": {
+        "nightly": {
+            "firefox": {
+                "bucket": "mozilla-releng-firefox-nightly-bucket",
+                "credentials": {
+                    "id": "dummy",
+                    "key": "dummy"
+                }
+            },
+            "fennec": {
+                "bucket": "mozilla-releng-mobile-nightly-bucket",
+                "credentials": {
+                    "id": "dummy",
+                    "key": "dummy"
+                }
+            }
+
+        },
+        "release": {
+            "firefox": {
+                "bucket": "mozilla-releng-firefox-release-bucket",
+                "credentials": {
+                    "id": "dummy",
+                    "key": "dummy"
+                }
+            },
+            "fennec": {
+                "bucket": "mozilla-releng-mobile-release-bucket",
+                "credentials": {
+                    "id": "dummy",
+                    "key": "dummy"
+                }
+            }
+        },
+        "dep": {
+            "firefox": {
+                "bucket": "mozilla-releng-firefox-dep-bucket",
+                "credentials": {
+                    "id": "dummy",
+                    "key": "dummy"
+                }
+            },
+            "fennec": {
+                "bucket": "mozilla-releng-mobile-dep-bucket",
+                "credentials": {
+                    "id": "dummy",
+                    "key": "dummy"
+                }
+            }
         }
     }
 }
@@ -137,7 +187,10 @@ my_email: "scriptworker@example.com"
   "created": "2017-01-08T17:06:07.800Z",
   "deadline": "2017-01-08T18:06:07.800Z",
   "expires": "2017-08-31T23:20:18.165Z",
-  "scopes": [],
+  "scopes": [
+    "project:releng:beetmover:cert:nightly",
+    "project:releng:beetmover:action:push-to-nightly"
+  ],
   "payload": {
     "maxRunTime": 600,
     "upload_date": 1483465253,

@@ -51,12 +51,12 @@ def write_file(path, contents):
         fh.write(contents)
 
 
-def generate_beetmover_template_args(task, release_props):
+def generate_beetmover_template_args(task, release_props, cert, action):
     tmpl_key_platform = TEMPLATE_KEY_PLATFORMS[release_props["stage_platform"]]
 
     template_args = {
         # payload['upload_date'] is a timestamp defined by params['pushdate']
-        # in mach taskgraph0
+        # in mach taskgraph
         "upload_date": arrow.get(task['payload']['upload_date']).format('YYYY/MM/YYYY-MM-DD-HH-mm-ss'),
         "version": release_props["appVersion"],
         "branch": release_props["branch"],
@@ -65,22 +65,28 @@ def generate_beetmover_template_args(task, release_props):
         "platform": release_props["platform"],
     }
 
+    if cert != 'nightly':
+        template_args["build_number"] = release_props["buildnumber"]
+
+    # e.g. action = 'push-to-candidates' or 'push-to-nightly'
+    tmpl_bucket = action.split('-')[-1]
+
     if 'locale' in task["payload"]:
         template_args["locale"] = task["payload"]["locale"]
-        template_args["template_key"] = "%s_nightly_repacks" % release_props["appName"].lower()
+        template_args["template_key"] = "%s_%s_repacks" % (release_props["appName"].lower(), tmpl_bucket)
     else:
-        template_args["template_key"] = "%s_nightly" % tmpl_key_platform
+        template_args["template_key"] = "%s_%s" % (tmpl_key_platform, tmpl_bucket)
 
     return template_args
 
 
-def generate_beetmover_manifest(script_config, task, release_props):
+def generate_beetmover_manifest(script_config, task, release_props, cert, action):
     """
     generates and outputs a manifest that maps expected Taskcluster artifact names
     to release deliverable names
     """
-    template_args = generate_beetmover_template_args(task, release_props)
-    template_path = script_config['template_files'][template_args["template_key"]]
+    template_args = generate_beetmover_template_args(task, release_props, cert, action)
+    template_path = script_config['actions'][action][template_args["template_key"]]
 
     log.info('generating manifest from: {}'.format(template_path))
     log.info(os.path.abspath(template_path))

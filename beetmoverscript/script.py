@@ -31,16 +31,16 @@ log = logging.getLogger(__name__)
 async def push_to_nightly(context):
     # determine artifacts to beetmove
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
+
     # determine the release properties and make a copy in the artifacts
     # directory
     release_props_file = get_initial_release_props_file(context)
     context.release_props = get_release_props(release_props_file)
 
     # generate beetmover mapping manifest
-    mapping_manifest = generate_beetmover_manifest(context.config,
-                                                   context.task,
-                                                   context.release_props)
-
+    mapping_manifest = generate_beetmover_manifest(context.config, context.task,
+                                                   context.release_props,
+                                                   context.cert_name, context.action)
     # some files to-be-determined via script configs need to have their
     # contents pretty named, so doing it here before even beetmoving begins
     blobs = context.config.get('blobs_needing_prettynaming_contents', [])
@@ -59,7 +59,7 @@ async def push_to_nightly(context):
     # for each artifact in manifest
     #   a. map each upstream artifact to pretty name release bucket format
     #   b. upload to candidates/dated location
-    await move_beets(context, context.artifacts_to_beetmove, mapping_manifest)
+    await move_nightly_beets(context, context.artifacts_to_beetmove, mapping_manifest)
 
     #  write balrog_manifest to a file and add it to list of artifacts
     add_balrog_manifest_to_artifacts(context)
@@ -72,7 +72,46 @@ async def push_to_nightly(context):
 
 
 async def push_to_candidates(context):
-    pass
+    # determine artifacts to beetmove
+    context.artifacts_to_beetmove = get_upstream_artifacts(context)
+
+    # determine the release properties and make a copy in the artifacts
+    # directory
+    release_props_file = get_initial_release_props_file(context)
+    context.release_props = get_release_props(release_props_file)
+
+    # generate beetmover mapping manifest
+    mapping_manifest = generate_beetmover_manifest(context.config, context.task,
+                                                   context.release_props,
+                                                   context.cert_name, context.action)
+    # some files to-be-determined via script configs need to have their
+    # contents pretty named, so doing it here before even beetmoving begins
+    blobs = context.config.get('blobs_needing_prettynaming_contents', [])
+    alter_unpretty_contents(context, blobs, mapping_manifest)
+
+    # balrog_manifest is written and uploaded as an artifact which is used by a subsequent
+    # balrogworker task in the release graph. Balrogworker uses this manifest to submit
+    # release blob info with things like mar filename, size, etc
+    context.balrog_manifest = list()
+
+    # the checksums manifest is written and uploaded as an artifact which is used
+    # by a subsequent signing task and again by another beetmover task to
+    # upload it along with the other artifacts
+    context.checksums = dict()
+
+    # for each artifact in manifest
+    #   a. map each upstream artifact to pretty name release bucket format
+    #   b. upload to candidates/dated location
+    await move_candidates_beets(context, context.artifacts_to_beetmove, mapping_manifest)
+
+    #  write balrog_manifest to a file and add it to list of artifacts
+    add_balrog_manifest_to_artifacts(context)
+    # determine the correct checksum filename and generate it, adding it to
+    # the list of artifacts afterwards
+    add_checksums_to_artifacts(context)
+    # add release props file to later be used by beetmover jobs than upload
+    # the checksums file
+    add_release_props_to_artifacts(context, release_props_file)
 
 
 async def push_to_releases(context):
@@ -110,7 +149,28 @@ async def async_main(context):
     log.info('Success!')
 
 
-async def move_beets(context, artifacts_to_beetmove, manifest):
+async def move_candidates_beets(context, artifacts_to_beetmove, manifest):
+    beets = []
+    for locale in artifacts_to_beetmove:
+        for artifact in artifacts_to_beetmove[locale]:
+            source = artifacts_to_beetmove[locale][artifact]
+            artifact_pretty_name = manifest['mapping'][locale][artifact]['s3_key']
+            destinations = [os.path.join(manifest["s3_prefix_candidates"],
+                                         dest) for dest in
+                            manifest['mapping'][locale][artifact]['destinations']]
+
+            balrog_manifest = manifest['mapping'][locale][artifact].get('update_balrog_manifest')
+            beets.append(
+                asyncio.ensure_future(
+                    move_beet(context, source, destinations, locale=locale,
+                              update_balrog_manifest=balrog_manifest,
+                              artifact_pretty_name=artifact_pretty_name)
+                )
+            )
+    await raise_future_exceptions(beets)
+
+
+async def move_nightly_beets(context, artifacts_to_beetmove, manifest):
     beets = []
     for locale in artifacts_to_beetmove:
         for artifact in artifacts_to_beetmove[locale]:
@@ -210,14 +270,14 @@ async def put(context, url, headers, abs_filename, session=None):
 async def upload_to_s3(context, s3_key, path):
     app = context.release_props['appName'].lower()
     api_kwargs = {
-        'Bucket': context.config['s3'][app]['bucket'],
+        'Bucket': context.config['buckets'][context.cert_name][app]['bucket'],
         'Key': s3_key,
         'ContentType': mimetypes.guess_type(path)[0]
     }
     headers = {
         'Content-Type': mimetypes.guess_type(path)[0]
     }
-    creds = context.config['s3'][app]['credentials']
+    creds = context.config['buckets'][context.cert_name][app]['credentials']
     s3 = boto3.client('s3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key'],)
     url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=1800, HttpMethod='PUT')
 
