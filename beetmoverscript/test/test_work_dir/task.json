@@ -10,7 +10,7 @@
     "expires": "2016-05-08T18:15:59.010Z",
     "dependencies": ["eSzfNqMZT_mSiQQXu8hyqg"],
     "scopes": [
-        "project:releng:beetmover:cert:nightly",
+        "project:releng:beetmover:bucket:nightly",
         "project:releng:beetmover:action:push-to-nightly"
     ],
     "payload": {

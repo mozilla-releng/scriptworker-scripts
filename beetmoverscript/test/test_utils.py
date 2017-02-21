@@ -53,14 +53,12 @@ def test_generate_manifest():
     context = Context()
     context.task = get_fake_valid_task()
     context.config = get_fake_valid_config()
-    context.properties = get_fake_balrog_props()["properties"]
-    context.properties['platform'] = context.properties['stage_platform']
-    context.cert_name = 'nightly'
+    context.release_props = get_fake_balrog_props()["properties"]
+    context.release_props['platform'] = context.release_props['stage_platform']
+    context.bucket = 'nightly'
     context.action = 'push-to-nightly'
 
-    manifest = generate_beetmover_manifest(context.config, context.task,
-                                           context.properties, context.cert_name,
-                                           context.action)
+    manifest = generate_beetmover_manifest(context)
     mapping = manifest['mapping']
     s3_keys = [mapping[m].get('target_info.txt', {}).get('s3_key') for m in mapping]
     assert sorted(mapping.keys()) == ['en-US', 'multi']
@@ -77,9 +75,9 @@ def test_beetmover_template_args_generation():
     context = Context()
     context.task = get_fake_valid_task()
     context.config = get_fake_valid_config()
-    context.properties = get_fake_balrog_props()["properties"]
-    context.properties['platform'] = context.properties['stage_platform']
-    context.cert_name = 'nightly'
+    context.release_props = get_fake_balrog_props()["properties"]
+    context.release_props['platform'] = context.release_props['stage_platform']
+    context.bucket = 'nightly'
     context.action = 'push-to-nightly'
 
     expected_template_args = {
@@ -92,16 +90,10 @@ def test_beetmover_template_args_generation():
         'version': '99.0a1'
     }
 
-    template_args = generate_beetmover_template_args(context.task,
-                                                     context.properties,
-                                                     context.cert_name,
-                                                     context.action)
+    template_args = generate_beetmover_template_args(context)
     assert template_args == expected_template_args
 
     context.task['payload']['locale'] = 'ro'
-    template_args = generate_beetmover_template_args(context.task,
-                                                     context.properties,
-                                                     context.cert_name,
-                                                     context.action)
+    template_args = generate_beetmover_template_args(context)
 
     assert template_args['template_key'] == 'fake_nightly_repacks'

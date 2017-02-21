@@ -28,12 +28,6 @@ INITIAL_RELEASE_PROPS_FILE = "balrog_props.json"
 # release buckets don't require a copy of the following artifacts
 IGNORED_UPSTREAM_ARTIFACTS = ["balrog_props.json"]
 
-RESTRICTED_ACTIONS = {
-    'nightly': ['push-to-nightly'],
-    'release': ['push-to-candidates', 'push-to-releases'],
-    'dep': ['push-to-staging']
-}
-
 RELEASE_BRANCHES = (
     'mozilla-central',
     'mozilla-aurora',
@@ -41,3 +35,24 @@ RELEASE_BRANCHES = (
     'mozilla-release',
     'mozilla-esr52'
 )
+
+RESTRICTED_BUCKET_PATHS = {
+    'nightly': [
+        'pub/mobile/nightly',
+        'pub/firefox/nightly',
+    ],
+    'release': [
+        'pub/firefox/candidates',
+        'pub/firefox/releases',
+        'pub/mobile/candidates',
+        'pub/mobile/releases',
+    ],
+    'dep': [
+        'pub/firefox/nightly',
+        'pub/firefox/candidates',
+        'pub/firefox/releases',
+        'pub/mobile/nightly',
+        'pub/mobile/candidates',
+        'pub/mobile/releases',
+    ]
+}

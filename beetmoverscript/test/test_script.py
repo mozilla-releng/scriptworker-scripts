@@ -87,14 +87,12 @@ def test_move_nightly_beets(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
-    context.properties = get_fake_balrog_props()["properties"]
-    context.properties['platform'] = context.properties['stage_platform']
-    context.cert_name = 'nightly'
+    context.release_props = get_fake_balrog_props()["properties"]
+    context.release_props['platform'] = context.release_props['stage_platform']
+    context.bucket = 'nightly'
     context.action = 'push-to-nightly'
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
-    manifest = generate_beetmover_manifest(context.config, context.task,
-                                           context.properties, context.cert_name,
-                                           context.action)
+    manifest = generate_beetmover_manifest(context)
 
     expected_sources = [
         os.path.abspath(

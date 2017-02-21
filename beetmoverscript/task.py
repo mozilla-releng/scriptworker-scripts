@@ -6,7 +6,7 @@ import shutil
 import scriptworker.client
 from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
                                        INITIAL_RELEASE_PROPS_FILE,
-                                       RESTRICTED_ACTIONS)
+                                       RESTRICTED_BUCKET_PATHS)
 
 from beetmoverscript.utils import write_json, write_file
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -15,31 +15,32 @@ log = logging.getLogger(__name__)
 
 
 def validate_task_schema(context):
+    """Perform a schema validation check against taks definition"""
     with open(context.config['schema_file']) as fh:
         task_schema = json.load(fh)
     log.debug(task_schema)
     scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
-def get_task_cert_type(task):
-    """Extract task certificate type"""
-    certs = [s.split(':')[-1] for s in task["scopes"] if
-             s.startswith("project:releng:beetmover:cert:")]
-    log.info("Certificate types: %s", certs)
-    if len(certs) != 1:
-        raise ScriptWorkerTaskException("Only one certificate type can be used")
+def get_task_bucket(task, script_config):
+    """Extract task bucket from scopes"""
+    buckets = [s.split(':')[-1] for s in task["scopes"] if
+               s.startswith("project:releng:beetmover:bucket:")]
+    log.info("Buckets: %s", buckets)
+    if len(buckets) != 1:
+        raise ScriptWorkerTaskException("Only one bucket can be used")
 
-    signing_cert_name = certs[0]
-    if re.search('^[0-9A-Za-z_-]+$', signing_cert_name) is None:
-        raise ScriptWorkerTaskException("Scope {} is malformed".format(certs[0]))
+    bucket = buckets[0]
+    if re.search('^[0-9A-Za-z_-]+$', bucket) is None:
+        raise ScriptWorkerTaskException("Bucket {} is malformed".format(bucket))
 
-    if signing_cert_name not in RESTRICTED_ACTIONS.keys():
-        raise ScriptWorkerTaskException("Invalid scope")
+    if bucket not in script_config['buckets']:
+        raise ScriptWorkerTaskException("Invalid bucket scope")
 
-    return signing_cert_name
+    return bucket
 
 
-def get_task_beetmover_action(cert, task):
+def get_task_action(task, script_config):
     """Extract last part of beetmover action scope"""
     actions = [s.split(":")[-1] for s in task["scopes"] if
                s.startswith("project:releng:beetmover:action:")]
@@ -49,10 +50,16 @@ def get_task_beetmover_action(cert, task):
         raise ScriptWorkerTaskException("Only one action type can be used")
 
     action = actions[0]
-    if action not in RESTRICTED_ACTIONS[cert]:
-        raise ScriptWorkerTaskException("Invalid action for {} cert".format(cert))
+    if action not in script_config['actions']:
+        raise ScriptWorkerTaskException("Invalid action scope")
 
     return action
+
+
+def validate_bucket_paths(bucket, s3_bucket_path):
+    """Double check the S3 bucket path is valid for the given bucket"""
+    if not any([s3_bucket_path.startswith(p) for p in RESTRICTED_BUCKET_PATHS[bucket]]):
+        raise ScriptWorkerTaskException("Forbidden S3 {} destination".format(s3_bucket_path))
 
 
 def generate_checksums_manifest(context):

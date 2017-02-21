@@ -19,6 +19,9 @@
                 "update_manifest": {
                     "type": "boolean"
                 },
+                "build_number": {
+                    "type": "number"
+                },
                 "upstreamArtifacts": {
                     "type": "array",
                     "items": {
@@ -49,7 +52,7 @@
                 }
             },
             "required": ["upload_date", "upstreamArtifacts"],
-            "optional": ["update_manifest"]
+            "optional": ["update_manifest", "build_number"]
         }
     },
     "required": ["payload", "dependencies"]
