@@ -16,9 +16,6 @@
                 "upload_date": {
                     "type": "number"
                 },
-                "update_manifest": {
-                    "type": "boolean"
-                },
                 "upstreamArtifacts": {
                     "type": "array",
                     "items": {
@@ -48,8 +45,7 @@
                     "uniqueItems": true
                 }
             },
-            "required": ["upload_date", "upstreamArtifacts"],
-            "optional": ["update_manifest"]
+            "required": ["upload_date", "upstreamArtifacts"]
         }
     },
     "required": ["payload", "dependencies"]
