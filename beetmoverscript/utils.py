@@ -145,7 +145,7 @@ def alter_unpretty_contents(context, blobs, mappings):
                 for artifact in tests:
                     pretty_dict = mappings['mapping'][locale].get(artifact)
                     if pretty_dict:
-                        new_tests.append(os.path.basename(pretty_dict['s3_key']))
+                        new_tests.append(pretty_dict['s3_key'])
                     else:
                         new_tests.append(artifact)
                 if new_tests != tests:

@@ -7,7 +7,7 @@ import sys
 from yarl import URL
 
 from beetmoverscript.script import (setup_mimetypes, setup_config, put,
-                                    move_nightly_beets, move_beet, async_main,
+                                    move_beets, move_beet, async_main,
                                     main)
 from beetmoverscript.task import get_upstream_artifacts
 from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props
@@ -83,7 +83,7 @@ def test_put_failure(event_loop, fake_session_500):
         )
 
 
-def test_move_nightly_beets(event_loop):
+def test_move_beets(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
@@ -109,14 +109,14 @@ def test_move_nightly_beets(event_loop):
         ),
     ]
     expected_destinations = [
-        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt',
-         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt'),
-        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json',
-         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json'),
-        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
-         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'),
-        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json',
-         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json'),
+        ['pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt'],
+        ['pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json'],
+        ['pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'],
+        ['pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json'],
     ]
 
     actual_sources = []
@@ -129,7 +129,7 @@ def test_move_nightly_beets(event_loop):
 
     with mock.patch('beetmoverscript.script.move_beet', fake_move_beet):
         event_loop.run_until_complete(
-            move_nightly_beets(context, context.artifacts_to_beetmove, manifest)
+            move_beets(context, context.artifacts_to_beetmove, manifest)
         )
 
     assert sorted(expected_sources) == sorted(actual_sources)
@@ -182,10 +182,10 @@ def test_async_main(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
 
-    async def fake_move_nightly_beets(context, artifacts_to_beetmove, manifest):
+    async def fake_move_beets(context, artifacts_to_beetmove, manifest):
         pass
 
-    with mock.patch('beetmoverscript.script.move_nightly_beets', new=fake_move_nightly_beets):
+    with mock.patch('beetmoverscript.script.move_beets', new=fake_move_beets):
         event_loop.run_until_complete(
             async_main(context)
         )

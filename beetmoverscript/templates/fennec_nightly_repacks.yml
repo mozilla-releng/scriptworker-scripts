@@ -4,15 +4,23 @@ metadata:
     description: "Maps {{ product }} Nightly artifacts to pretty names for {{locale}} L10n repack"
     owner: "release@mozilla.com"
 
-s3_prefix_dated: pub/mobile/nightly/{{ upload_date }}-{{ branch }}-{{ platform }}-l10n/
-s3_prefix_latest: pub/mobile/nightly/latest-{{ branch }}-{{ platform }}-l10n/
+s3_bucket_path: pub/mobile/nightly/
 
 mapping:
   {{ locale }}:
     target.apk:
       s3_key: fennec-{{ version }}.{{ locale }}.android-arm.apk
+      destinations:
+        - {{ upload_date }}-{{ branch }}-{{ platform }}-l10n/fennec-{{ version }}.{{ locale }}.android-arm.apk
+        - latest-{{ branch }}-{{ platform }}-l10n/fennec-{{ version }}.{{ locale }}.android-arm.apk
       update_balrog_manifest: True
     target.checksums:
       s3_key: fennec-{{ version }}.{{ locale }}.android-arm.checksums
+      destinations:
+        - {{ upload_date }}-{{ branch }}-{{ platform }}-l10n/fennec-{{ version }}.{{ locale }}.android-arm.checksums
+        - latest-{{ branch }}-{{ platform }}-l10n/fennec-{{ version }}.{{ locale }}.android-arm.checksums
     target.checksums.asc:
       s3_key: fennec-{{ version }}.{{ locale }}.android-arm.checksums.asc
+      destinations:
+        - {{ upload_date }}-{{ branch }}-{{ platform }}-l10n/fennec-{{ version }}.{{ locale }}.android-arm.checksums.asc
+        - latest-{{ branch }}-{{ platform }}-l10n/fennec-{{ version }}.{{ locale }}.android-arm.checksums.asc
