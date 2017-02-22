@@ -20,7 +20,7 @@
         "push-to-releases": {}
     },
 
-    "buckets": {
+    "bucket_config": {
         "nightly": {
             "firefox": {
                 "bucket": "fake-mozilla-releng-firefox-nightly-bucket",

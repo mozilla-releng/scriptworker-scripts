@@ -116,7 +116,7 @@ my_email: "scriptworker@example.com"
         "push-to-staging": {}
     },
 
-    "buckets": {
+    "bucket_config": {
         "nightly": {
             "credentials": {
                 "id": "dummy",

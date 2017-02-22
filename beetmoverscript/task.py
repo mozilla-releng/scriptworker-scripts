@@ -34,7 +34,7 @@ def get_task_bucket(task, script_config):
     if re.search('^[0-9A-Za-z_-]+$', bucket) is None:
         raise ScriptWorkerTaskException("Bucket {} is malformed".format(bucket))
 
-    if bucket not in script_config['buckets']:
+    if bucket not in script_config['bucket_config']:
         raise ScriptWorkerTaskException("Invalid bucket scope")
 
     return bucket

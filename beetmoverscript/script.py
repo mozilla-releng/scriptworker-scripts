@@ -271,14 +271,14 @@ async def put(context, url, headers, abs_filename, session=None):
 async def upload_to_s3(context, s3_key, path):
     app = context.release_props['appName'].lower()
     api_kwargs = {
-        'Bucket': context.config['buckets'][context.bucket]['buckets'][app],
+        'Bucket': context.config['bucket_config'][context.bucket]['buckets'][app],
         'Key': s3_key,
         'ContentType': mimetypes.guess_type(path)[0]
     }
     headers = {
         'Content-Type': mimetypes.guess_type(path)[0]
     }
-    creds = context.config['buckets'][context.bucket]['credentials']
+    creds = context.config['bucket_config'][context.bucket]['credentials']
     s3 = boto3.client('s3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key'],)
     url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=1800, HttpMethod='PUT')
 
