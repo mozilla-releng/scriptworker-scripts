@@ -170,7 +170,7 @@ my_email: "scriptworker@example.com"
   "deadline": "2017-01-08T18:06:07.800Z",
   "expires": "2017-08-31T23:20:18.165Z",
   "scopes": [
-    "project:releng:beetmover:cert:nightly",
+    "project:releng:beetmover:bucket:nightly",
     "project:releng:beetmover:action:push-to-nightly"
   ],
   "payload": {
