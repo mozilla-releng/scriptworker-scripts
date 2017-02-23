@@ -2,10 +2,12 @@ recursive-include beetmoverscript/test *
 recursive-include beetmoverscript/data *
 recursive-include beetmoverscript/templates *
 
+include .coveragerc
 include LICENSE
 include README.md
 include config_example.json
-include version.txt
+include version.json
+include tox.ini
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
