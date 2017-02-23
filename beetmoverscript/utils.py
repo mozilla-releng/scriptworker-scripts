@@ -51,12 +51,14 @@ def write_file(path, contents):
         fh.write(contents)
 
 
-def generate_beetmover_template_args(task, release_props):
+def generate_beetmover_template_args(context):
+    task = context.task
+    release_props = context.release_props
     tmpl_key_platform = TEMPLATE_KEY_PLATFORMS[release_props["stage_platform"]]
 
-    template_args = {
+    tmpl_args = {
         # payload['upload_date'] is a timestamp defined by params['pushdate']
-        # in mach taskgraph0
+        # in mach taskgraph
         "upload_date": arrow.get(task['payload']['upload_date']).format('YYYY/MM/YYYY-MM-DD-HH-mm-ss'),
         "version": release_props["appVersion"],
         "branch": release_props["branch"],
@@ -65,31 +67,37 @@ def generate_beetmover_template_args(task, release_props):
         "platform": release_props["platform"],
     }
 
+    if 'release' in context.bucket:
+        tmpl_args["build_number"] = task['payload']['build_number']
+
+    # e.g. action = 'push-to-candidates' or 'push-to-nightly'
+    tmpl_bucket = context.action.split('-')[-1]
+
     if 'locale' in task["payload"]:
-        template_args["locale"] = task["payload"]["locale"]
-        template_args["template_key"] = "%s_nightly_repacks" % release_props["appName"].lower()
+        tmpl_args["locale"] = task["payload"]["locale"]
+        tmpl_args["template_key"] = "%s_%s_repacks" % (release_props["appName"].lower(), tmpl_bucket)
     else:
-        template_args["template_key"] = "%s_nightly" % tmpl_key_platform
+        tmpl_args["template_key"] = "%s_%s" % (tmpl_key_platform, tmpl_bucket)
 
-    return template_args
+    return tmpl_args
 
 
-def generate_beetmover_manifest(script_config, task, release_props):
+def generate_beetmover_manifest(context):
     """
     generates and outputs a manifest that maps expected Taskcluster artifact names
     to release deliverable names
     """
-    template_args = generate_beetmover_template_args(task, release_props)
-    template_path = script_config['template_files'][template_args["template_key"]]
+    tmpl_args = generate_beetmover_template_args(context)
+    tmpl_path = context.config['actions'][context.action][tmpl_args["template_key"]]
 
-    log.info('generating manifest from: {}'.format(template_path))
-    log.info(os.path.abspath(template_path))
+    log.info('generating manifest from: {}'.format(tmpl_path))
+    log.info(os.path.abspath(tmpl_path))
 
-    template_dir, template_name = os.path.split(os.path.abspath(template_path))
-    jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
+    tmpl_dir, tmpl_name = os.path.split(os.path.abspath(tmpl_path))
+    jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmpl_dir),
                                    undefined=jinja2.StrictUndefined)
-    template = jinja_env.get_template(template_name)
-    manifest = yaml.safe_load(template.render(**template_args))
+    tmpl = jinja_env.get_template(tmpl_name)
+    manifest = yaml.safe_load(tmpl.render(**tmpl_args))
 
     log.info("manifest generated:")
     log.info(pprint.pformat(manifest))
@@ -137,7 +145,7 @@ def alter_unpretty_contents(context, blobs, mappings):
                 for artifact in tests:
                     pretty_dict = mappings['mapping'][locale].get(artifact)
                     if pretty_dict:
-                        new_tests.append(os.path.basename(pretty_dict['s3_key']))
+                        new_tests.append(pretty_dict['s3_key'])
                     else:
                         new_tests.append(artifact)
                 if new_tests != tests:

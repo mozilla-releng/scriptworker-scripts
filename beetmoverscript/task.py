@@ -3,7 +3,6 @@ import logging
 import os
 import re
 import shutil
-import sys
 import scriptworker.client
 from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
                                        INITIAL_RELEASE_PROPS_FILE,
@@ -16,32 +15,63 @@ log = logging.getLogger(__name__)
 
 
 def validate_task_schema(context):
+    """Perform a schema validation check against taks definition"""
     with open(context.config['schema_file']) as fh:
         task_schema = json.load(fh)
     log.debug(task_schema)
     scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
-def validate_task_scopes(context, manifest):
-    # make sure scopes exist and are properly set
-    scopes = context.task['scopes']
-    for scope in scopes:
-        if scope.startswith("project:releng:beetmover:"):
-            signing_cert_name = scope.split(':')[-1]
-            if re.search('^[0-9A-Za-z_-]+$', signing_cert_name) is not None:
-                break
-            log.warning('scope {} is malformed, skipping!'.format(scope))
-    else:
-        log.critical("No beetmover scopes!")
-        sys.exit(3)
+def get_task_bucket(task, script_config):
+    """Extract task bucket from scopes"""
+    # temporary hack, to revisit once 1338186 is fixed
+    scopes = task["scopes"]
+    altered_scopes = ["project:releng:beetmover:bucket:nightly"
+                      if s == "project:releng:beetmover:nightly" else s
+                      for s in scopes]
 
-    # prevent scopes from low-security tree write in a release-type bucket
-    for k, v in RESTRICTED_BUCKET_PATHS.items():
-        for path in (manifest['s3_prefix_dated'], manifest['s3_prefix_latest']):
-            if path.startswith(k) and signing_cert_name != v:
-                log.critical("Munged low-security tree scopes trying to access"
-                             " nightly/release buckets for beetmover")
-                sys.exit(3)
+    buckets = [s.split(':')[-1] for s in altered_scopes if
+               s.startswith("project:releng:beetmover:bucket:")]
+    log.info("Buckets: %s", buckets)
+    if len(buckets) != 1:
+        raise ScriptWorkerTaskException("Only one bucket can be used")
+
+    bucket = buckets[0]
+    if re.search('^[0-9A-Za-z_-]+$', bucket) is None:
+        raise ScriptWorkerTaskException("Bucket {} is malformed".format(bucket))
+
+    if bucket not in script_config['bucket_config']:
+        raise ScriptWorkerTaskException("Invalid bucket scope")
+
+    return bucket
+
+
+def get_task_action(task, script_config):
+    """Extract last part of beetmover action scope"""
+    # temporary hack, to revisit once 1338186 is fixed
+    scopes = task["scopes"]
+    altered_scopes = list(scopes)
+    if "project:releng:beetmover:nightly" in scopes:
+        altered_scopes.append("project:releng:beetmover:action:push-to-nightly")
+
+    actions = [s.split(":")[-1] for s in altered_scopes if
+               s.startswith("project:releng:beetmover:action:")]
+
+    log.info("Action types: %s", actions)
+    if len(actions) != 1:
+        raise ScriptWorkerTaskException("Only one action type can be used")
+
+    action = actions[0]
+    if action not in script_config['actions']:
+        raise ScriptWorkerTaskException("Invalid action scope")
+
+    return action
+
+
+def validate_bucket_paths(bucket, s3_bucket_path):
+    """Double check the S3 bucket path is valid for the given bucket"""
+    if not any([s3_bucket_path.startswith(p) for p in RESTRICTED_BUCKET_PATHS[bucket]]):
+        raise ScriptWorkerTaskException("Forbidden S3 {} destination".format(s3_bucket_path))
 
 
 def generate_checksums_manifest(context):

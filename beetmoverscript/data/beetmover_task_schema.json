@@ -16,6 +16,9 @@
                 "upload_date": {
                     "type": "number"
                 },
+                "build_number": {
+                    "type": "number"
+                },
                 "upstreamArtifacts": {
                     "type": "array",
                     "items": {
@@ -45,7 +48,9 @@
                     "uniqueItems": true
                 }
             },
-            "required": ["upload_date", "upstreamArtifacts"]
+            "required": ["upload_date", "upstreamArtifacts"],
+            "optional": ["build_number"]
+
         }
     },
     "required": ["payload", "dependencies"]

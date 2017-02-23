@@ -53,27 +53,40 @@ def test_generate_manifest():
     context = Context()
     context.task = get_fake_valid_task()
     context.config = get_fake_valid_config()
-    context.properties = get_fake_balrog_props()["properties"]
-    context.properties['platform'] = context.properties['stage_platform']
-    manifest = generate_beetmover_manifest(context.config, context.task, context.properties)
+    context.release_props = get_fake_balrog_props()["properties"]
+    context.release_props['platform'] = context.release_props['stage_platform']
+    context.bucket = 'nightly'
+    context.action = 'push-to-nightly'
+
+    manifest = generate_beetmover_manifest(context)
     mapping = manifest['mapping']
     s3_keys = [mapping[m].get('target_info.txt', {}).get('s3_key') for m in mapping]
     assert sorted(mapping.keys()) == ['en-US', 'multi']
-    assert sorted(s3_keys) == ['en-US/fake-99.0a1.en-US.target_info.txt',
+    assert sorted(s3_keys) == ['fake-99.0a1.en-US.target_info.txt',
                                'fake-99.0a1.multi.target_info.txt']
-    assert (
-        manifest.get('s3_prefix_dated') ==
-        'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/' and
-        manifest.get('s3_prefix_latest') == 'pub/mobile/nightly/latest-mozilla-central-fake/'
-    )
+
+    expected_destinations = {
+        'en-US': ['2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt',
+                  'latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt'],
+        'multi': ['2016/09/2016-09-01-16-26-14-mozilla-central-fake/fake-99.0a1.multi.target_info.txt',
+                  'latest-mozilla-central-fake/fake-99.0a1.multi.target_info.txt']
+    }
+
+    actual_destinations = {
+        k: mapping[k]['target_info.txt']['destinations'] for k in sorted(mapping.keys())
+    }
+
+    assert expected_destinations == actual_destinations
 
 
 def test_beetmover_template_args_generation():
     context = Context()
     context.task = get_fake_valid_task()
     context.config = get_fake_valid_config()
-    context.properties = get_fake_balrog_props()["properties"]
-    context.properties['platform'] = context.properties['stage_platform']
+    context.release_props = get_fake_balrog_props()["properties"]
+    context.release_props['platform'] = context.release_props['stage_platform']
+    context.bucket = 'nightly'
+    context.action = 'push-to-nightly'
 
     expected_template_args = {
         'branch': 'mozilla-central',
@@ -85,12 +98,10 @@ def test_beetmover_template_args_generation():
         'version': '99.0a1'
     }
 
-    template_args = generate_beetmover_template_args(context.task,
-                                                     context.properties)
+    template_args = generate_beetmover_template_args(context)
     assert template_args == expected_template_args
 
     context.task['payload']['locale'] = 'ro'
-    template_args = generate_beetmover_template_args(context.task,
-                                                     context.properties)
+    template_args = generate_beetmover_template_args(context)
 
     assert template_args['template_key'] == 'fake_nightly_repacks'

@@ -4,21 +4,33 @@ metadata:
     description: "Maps Fake Nightly artifacts to pretty names for the en-US and multi locale"
     owner: "release@mozilla.com"
 
-s3_prefix_dated: pub/mobile/nightly/{{ upload_date }}-{{ branch }}-fake/
-s3_prefix_latest: pub/mobile/nightly/latest-{{ branch }}-fake/
+s3_bucket_path: pub/mobile/nightly/
 
 mapping:
-  # common deliverables
 {% for locale in ['multi', 'en-US'] %}
   {{ locale }}:
+
   {% set locale_prefix = 'en-US/' if locale == 'en-US' else '' %}
     target_info.txt:
-      s3_key: {{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target_info.txt
+      s3_key: fake-{{ version }}.{{ locale }}.target_info.txt
+      destinations:
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target_info.txt
+        - latest-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target_info.txt
     target.txt:
-      s3_key: {{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.txt
+      s3_key: fake-{{ version }}.{{ locale }}.target.txt
+      destinations:
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.txt
+        - latest-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.txt
     target.mozinfo.json:
-      s3_key: {{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.mozinfo.json
+      s3_key: fake-{{ version }}.{{ locale }}.target.mozinfo.json
+      destinations:
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.mozinfo.json
+        - latest-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.mozinfo.json
       update_balrog_manifest: True
     target.test_packages.json:
-      s3_key: {{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.test_packages.json
+      s3_key: fake-{{ version }}.{{ locale }}.target.test_packages.json
+      destinations:
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.test_packages.json
+        - latest-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.test_packages.json
+
 {% endfor %}

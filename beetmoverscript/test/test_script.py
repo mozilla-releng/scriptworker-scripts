@@ -6,8 +6,9 @@ import pytest
 import sys
 from yarl import URL
 
-from beetmoverscript.script import setup_mimetypes, setup_config, put, move_beets, \
-    move_beet, async_main, main
+from beetmoverscript.script import (setup_mimetypes, setup_config, put,
+                                    move_beets, move_beet, async_main,
+                                    main)
 from beetmoverscript.task import get_upstream_artifacts
 from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props
 from beetmoverscript.utils import generate_beetmover_manifest
@@ -86,10 +87,12 @@ def test_move_beets(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
-    context.properties = get_fake_balrog_props()["properties"]
-    context.properties['platform'] = context.properties['stage_platform']
+    context.release_props = get_fake_balrog_props()["properties"]
+    context.release_props['platform'] = context.release_props['stage_platform']
+    context.bucket = 'nightly'
+    context.action = 'push-to-nightly'
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
-    manifest = generate_beetmover_manifest(context.config, context.task, context.properties)
+    manifest = generate_beetmover_manifest(context)
 
     expected_sources = [
         os.path.abspath(
@@ -106,14 +109,14 @@ def test_move_beets(event_loop):
         ),
     ]
     expected_destinations = [
-        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt',
-         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt'),
-        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json',
-         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json'),
-        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
-         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'),
-        ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json',
-         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json'),
+        ['pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt'],
+        ['pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json'],
+        ['pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'],
+        ['pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json',
+         'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json'],
     ]
 
     actual_sources = []
