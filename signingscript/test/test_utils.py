@@ -7,11 +7,11 @@ import signingscript.utils as utils
 
 assert tmpdir
 
+ID_RSA_PUB_HASH = "226658906e46b26ef195c468f94e2be983b6c53f370dff0d8e725832f" + \
+    "4645933de4755690a3438760afe8790a91938100b75b5d63e76ebd00920adc8d2a8857e"
 
-def test_detached_signatures():
-    assert utils.get_detached_signatures(["mar", "gpg", "pgp"]) == [("gpg", ".asc", "text/plain")]
 
-
+# mkdir {{{1
 def test_mkdir_does_make_dirs(tmpdir):
 
     def assertDirIsUniqueAndNamed(dirs, name):
@@ -36,6 +36,13 @@ def test_mkdir_mutes_os_errors(mocker):
     m.assert_called_with('/dummy/dir')
 
 
+# get_hash {{{1
+def test_get_hash():
+    path = os.path.join(os.path.dirname(__file__), 'id_rsa.pub')
+    assert utils.get_hash(path, hash_type="sha512") == ID_RSA_PUB_HASH
+
+
+# load_json {{{1
 def test_load_json_from_file(tmpdir):
     json_object = {'a_key': 'a_value'}
 
@@ -46,6 +53,7 @@ def test_load_json_from_file(tmpdir):
     assert utils.load_json(output_file) == json_object
 
 
+# load_signing_server_config {{{1
 def test_load_signing_server_config():
     context = Context()
     context.config = {
@@ -57,3 +65,8 @@ def test_load_signing_server_config():
     assert cfg["dep"][1].user == "user2"
     assert cfg["notdep"][0].password == "pass1"
     assert cfg["notdep"][1].formats == ["f2", "f3"]
+
+
+# get _detached_signatures
+def test_detached_signatures():
+    assert utils.get_detached_signatures(["mar", "gpg", "pgp"]) == [("gpg", ".asc", "text/plain")]

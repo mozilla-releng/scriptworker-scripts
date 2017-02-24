@@ -1,4 +1,3 @@
-import asyncio
 import functools
 import hashlib
 import json
@@ -82,11 +81,3 @@ def copy_to_dir(source, parent_dir, target=None):
     except IOError:
         traceback.print_exc()
         raise SigningServerError("Can't copy {} to {}!".format(source, target_path))
-
-
-async def raise_future_exceptions(tasks):
-    await asyncio.wait(tasks)
-    for task in tasks:
-        exc = task.exception()
-        if exc is not None:
-            raise exc
