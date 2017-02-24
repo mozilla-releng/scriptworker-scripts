@@ -56,22 +56,21 @@ async def async_main(context):
 
 
 # config {{{1
-def get_default_config():
+def get_default_config(parent_dir=None):
     """ Create the default config to work from.
     """
-    cwd = os.getcwd()
-    parent_dir = os.path.dirname(cwd)
+    parent_dir = parent_dir or os.path.dirname(os.getcwd())
     default_config = {
         'signing_server_config': 'server_config.json',
-        'tools_dir': os.path.join(parent_dir, 'build-tools'),
         'work_dir': os.path.join(parent_dir, 'work_dir'),
         'artifact_dir': os.path.join(parent_dir, '/src/signing/artifact_dir'),
         'my_ip': "127.0.0.1",
         'token_duration_seconds': 20 * 60,
         'ssl_cert': None,
         'signtool': "signtool",
-        'schema_file': os.path.join(cwd, 'signingscript', 'data', 'signing_task_schema.json'),
+        'schema_file': os.path.join(os.path.dirname(__file__), 'data', 'signing_task_schema.json'),
         'verbose': True,
+        'zipalign': 'zipalign',
     }
     return default_config
 
@@ -82,9 +81,7 @@ def usage():
     sys.exit(1)
 
 
-def main(name=None, config_path=None):
-    if name not in (None, '__main__'):
-        return
+def main(config_path=None):
     context = SigningContext()
     context.config = get_default_config()
     if config_path is None:
@@ -114,7 +111,8 @@ def main(name=None, config_path=None):
         except ScriptWorkerTaskException as exc:
             traceback.print_exc()
             sys.exit(exc.exit_code)
-    loop.close()
+        finally:
+            loop.close()
 
 
-main(name=__name__)
+__name__ == '__main__' and main()
