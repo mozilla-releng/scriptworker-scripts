@@ -1,14 +1,26 @@
+import aiohttp
+from collections import namedtuple
 import os
 import pytest
 
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
+from signingscript.exceptions import SigningServerError
 from signingscript.script import get_default_config
+from signingscript.utils import load_signing_server_config
 import signingscript.task as stask
+from signingscript.test import event_loop, noop_sync, tmpdir
+
+assert event_loop or tmpdir  # silence flake8
 
 
-# helper functions, fixtures {{{1
+# helper constants, fixtures, functions {{{1
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+SERVER_CONFIG_PATH = os.path.join(BASE_DIR, 'example_server_config.json')
+TEST_CERT_TYPE = "project:releng:signing:cert:dep-signing"
+
+
 @pytest.fixture(scope='function')
 def task_defn():
     return {
@@ -34,23 +46,27 @@ def task_defn():
     }
 
 
-@pytest.fixture(scope='function')
-def context():
+@pytest.yield_fixture(scope='function')
+def context(tmpdir):
     context = Context()
     context.config = get_default_config()
-    return context
+    context.config['signing_server_config'] = SERVER_CONFIG_PATH
+    context.config['work_dir'] = os.path.join(tmpdir, 'work')
+    context.config['artifact_dir'] = os.path.join(tmpdir, 'artifact')
+    context.signing_servers = load_signing_server_config(context)
+    yield context
 
 
 # task_cert_type {{{1
 def test_task_cert_type():
-    task = {"scopes": ["project:releng:signing:cert:dep-signing",
+    task = {"scopes": [TEST_CERT_TYPE,
                        "project:releng:signing:type:mar",
                        "project:releng:signing:type:gpg"]}
-    assert "project:releng:signing:cert:dep-signing" == stask.task_cert_type(task)
+    assert TEST_CERT_TYPE == stask.task_cert_type(task)
 
 
 def test_task_cert_type_error():
-    task = {"scopes": ["project:releng:signing:cert:dep-signing",
+    task = {"scopes": [TEST_CERT_TYPE,
                        "project:releng:signing:cert:notdep",
                        "project:releng:signing:type:gpg"]}
     with pytest.raises(ScriptWorkerTaskException):
@@ -59,7 +75,7 @@ def test_task_cert_type_error():
 
 # task_signing_formats {{{1
 def test_task_signing_formats():
-    task = {"scopes": ["project:releng:signing:cert:dep-signing",
+    task = {"scopes": [TEST_CERT_TYPE,
                        "project:releng:signing:format:mar",
                        "project:releng:signing:format:gpg"]}
     assert ["mar", "gpg"] == stask.task_signing_formats(task)
@@ -77,6 +93,53 @@ def test_missing_mandatory_urls_are_reported(context, task_defn):
 def test_no_error_is_reported_when_no_missing_url(context, task_defn):
     context.task = task_defn
     stask.validate_task_schema(context)
+
+
+# get_suitable_signing_servers {{{1
+@pytest.mark.parametrize('formats,expected', ((
+    ['gpg'], [["127.0.0.1:9110", "user", "pass", ["gpg"]]]
+), (
+    ['invalid'], []
+)))
+def test_get_suitable_signing_servers(context, formats, expected):
+    expected_servers = []
+    for info in expected:
+        expected_servers.append(
+            namedtuple("SigningServer", ["server", "user", "password", "formats"])(*info)
+        )
+
+    assert stask.get_suitable_signing_servers(
+        context.signing_servers, TEST_CERT_TYPE,
+        formats
+    ) == expected_servers
+
+
+# get_token {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize('exc,contents', ((
+    ScriptWorkerTaskException, 'token'
+), (
+    None, ''
+), (
+    None, 'token'
+)))
+async def test_get_token(event_loop, mocker, tmpdir, exc, contents, context):
+
+    async def test_token(*args, **kwargs):
+        if exc:
+            raise exc("Expected exception")
+        return contents
+
+    output_file = os.path.join(tmpdir, "foo")
+    mocker.patch.object(aiohttp, "BasicAuth", new=noop_sync)
+    mocker.patch.object(stask, "retry_request", new=test_token)
+    if exc or not contents:
+        with pytest.raises(SigningServerError):
+            await stask.get_token(context, output_file, TEST_CERT_TYPE, ["gpg"])
+    else:
+        await stask.get_token(context, output_file, TEST_CERT_TYPE, ["gpg"])
+        with open(output_file, "r") as fh:
+            assert fh.read().rstrip() == contents
 
 
 # zipalign {{{1
@@ -114,7 +177,7 @@ async def test_zip_align_apk(context, monkeypatch, is_verbose):
             assert command[0:3] == ['/path/to/android/sdk/zipalign', '4', abs_to]
             assert len(command) == 4
 
-    async def shutil_mock(_, destination):
+    def shutil_mock(_, destination):
         assert destination == abs_to
 
     monkeypatch.setattr('signingscript.task._execute_subprocess', execute_subprocess_mock)

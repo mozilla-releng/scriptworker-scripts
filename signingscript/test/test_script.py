@@ -11,12 +11,12 @@ import signingscript.script as script
 
 assert event_loop or tmpdir  # silence flake8
 
-BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+# helper constants, fixtures, functions {{{1
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 EXAMPLE_CONFIG = os.path.join(BASE_DIR, 'config_example.json')
 SSL_CERT = os.path.join(BASE_DIR, "signingscript", "data", "host.cert")
 
 
-# helper functions {{{1
 def get_conf_file(tmpdir, **kwargs):
     conf = json.loads(read_file(EXAMPLE_CONFIG))
     conf.update(kwargs)

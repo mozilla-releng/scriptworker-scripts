@@ -3,6 +3,7 @@ recursive-include signingscript/data *
 
 include LICENSE
 include README.rst
+include example_server_config.json
 include config_example.json
 include version.txt
 
