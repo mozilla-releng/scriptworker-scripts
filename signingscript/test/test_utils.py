@@ -1,14 +1,20 @@
 import json
+import mock
 import os
+import pytest
 
 from scriptworker.context import Context
-from signingscript.test import tmpdir
+from signingscript.exceptions import SigningServerError
+from signingscript.test import read_file, tmpdir
 import signingscript.utils as utils
 
-assert tmpdir
+assert tmpdir  # silence flake8
 
 ID_RSA_PUB_HASH = "226658906e46b26ef195c468f94e2be983b6c53f370dff0d8e725832f" + \
     "4645933de4755690a3438760afe8790a91938100b75b5d63e76ebd00920adc8d2a8857e"
+
+SERVER_CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'example_server_config.json')
+PUBKEY_PATH = os.path.join(os.path.dirname(__file__), 'id_rsa.pub')
 
 
 # mkdir {{{1
@@ -38,8 +44,7 @@ def test_mkdir_mutes_os_errors(mocker):
 
 # get_hash {{{1
 def test_get_hash():
-    path = os.path.join(os.path.dirname(__file__), 'id_rsa.pub')
-    assert utils.get_hash(path, hash_type="sha512") == ID_RSA_PUB_HASH
+    assert utils.get_hash(PUBKEY_PATH, hash_type="sha512") == ID_RSA_PUB_HASH
 
 
 # load_json {{{1
@@ -57,8 +62,7 @@ def test_load_json_from_file(tmpdir):
 def test_load_signing_server_config():
     context = Context()
     context.config = {
-        'signing_server_config': os.path.join(os.path.dirname(__file__),
-                                              "example_server_config.json")
+        'signing_server_config': SERVER_CONFIG_PATH,
     }
     cfg = utils.load_signing_server_config(context)
     assert cfg["dep"][0].server == "server1:9000"
@@ -67,6 +71,67 @@ def test_load_signing_server_config():
     assert cfg["notdep"][1].formats == ["f2", "f3"]
 
 
-# get _detached_signatures
-def test_detached_signatures():
-    assert utils.get_detached_signatures(["mar", "gpg", "pgp"]) == [("gpg", ".asc", "text/plain")]
+# get_detached_signatures {{{1
+@pytest.mark.parametrize('formats,expected', ((
+    ['mar', 'gpg', 'pgp'], [("gpg", ".asc", "text/plain")],
+), (
+    ['gpg'], [("gpg", ".asc", "text/plain")],
+), (
+    ['mar', 'pgp'], [],
+)))
+def test_detached_signatures(formats, expected):
+    assert utils.get_detached_signatures(formats) == expected
+
+
+# log_output {{{1
+@pytest.mark.asyncio
+async def test_log_output(tmpdir, mocker):
+    logged = []
+    with open(SERVER_CONFIG_PATH, 'r') as fh:
+        contents = fh.read()
+
+    def info(msg):
+        logged.append(msg)
+
+    class AsyncIterator:
+        def __init__(self):
+            self.contents = contents.split('\n')
+
+        async def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            while self.contents:
+                return self.contents.pop(0).encode('utf-8')
+
+    mocklog = mocker.patch.object(utils, 'log')
+    mocklog.info = info
+    mockfh = mock.MagicMock()
+    aiter = AsyncIterator()
+    mockfh.readline = aiter.__anext__
+    await utils.log_output(mockfh)
+    assert contents.rstrip() == '\n'.join(logged)
+
+
+# copy_to_dir {{{1
+@pytest.mark.parametrize('source,target,expected,exc', ((
+    SERVER_CONFIG_PATH, None, os.path.basename(SERVER_CONFIG_PATH), None
+), (
+    SERVER_CONFIG_PATH, 'foo', 'foo', None
+), (
+    os.path.join(os.path.dirname(__file__), 'nonexistent_file'), None, None, SigningServerError
+)))
+def test_copy_to_dir(tmpdir, source, target, expected, exc):
+    if exc:
+        with pytest.raises(exc):
+            utils.copy_to_dir(source, tmpdir, target=target)
+    else:
+        newpath = utils.copy_to_dir(source, tmpdir, target=target)
+        assert newpath == os.path.join(tmpdir, expected)
+        contents1 = read_file(source)
+        contents2 = read_file(newpath)
+        assert contents1 == contents2
+
+
+def test_copy_to_dir_no_copy():
+    assert utils.copy_to_dir(SERVER_CONFIG_PATH, os.path.dirname(SERVER_CONFIG_PATH)) is None
