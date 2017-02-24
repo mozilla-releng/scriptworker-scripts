@@ -18,6 +18,8 @@ from signingscript.exceptions import SigningServerError, TaskVerificationError, 
 
 log = logging.getLogger(__name__)
 
+_ZIP_ALIGNMENT = '4'  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
+
 
 def task_cert_type(task):
     """Extract task certificate type"""
@@ -108,9 +110,6 @@ async def _execute_post_signing_steps(context, to):
     log.info("SHA1SUM: %s SIGNED_FILE: %s",
              utils.get_hash(abs_to, "sha1"), to)
     log.info('Post-signing steps finished')
-
-
-_ZIP_ALIGNMENT = '4'  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
 
 
 async def _zip_align_apk(context, abs_to):
