@@ -9,7 +9,7 @@ from signingscript.exceptions import SigningServerError
 from signingscript.script import get_default_config
 from signingscript.utils import load_signing_server_config, SigningServer
 import signingscript.task as stask
-from signingscript.test import event_loop, noop_sync, tmpdir
+from signingscript.test import event_loop, noop_async, noop_sync, tmpdir
 
 assert event_loop or tmpdir  # silence flake8
 
@@ -139,6 +139,34 @@ async def test_get_token(event_loop, mocker, tmpdir, exc, contents, context):
         await stask.get_token(context, output_file, TEST_CERT_TYPE, ["gpg"])
         with open(output_file, "r") as fh:
             assert fh.read().rstrip() == contents
+
+
+# sign_file {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize('signtool,format', ((
+    'signtool', 'gpg'
+), (
+    ['signtool'], 'gpg'
+)))
+async def test_sign_file(context, mocker, format, signtool, event_loop):
+    work_dir = context.config['work_dir']
+    path = os.path.join(work_dir, 'filename')
+
+    async def test_cmdln(command):
+        assert command == [
+            'signtool', "-v",
+            "-n", os.path.join(work_dir, "nonce"),
+            "-t", os.path.join(work_dir, "token"),
+            "-c", context.config['ssl_cert'],
+            "-H", "127.0.0.1:9110",
+            "-f", format,
+            "-o", path, path,
+        ]
+
+    context.config['signtool'] = signtool
+    mocker.patch.object(stask, '_execute_post_signing_steps', new=noop_async)
+    mocker.patch.object(stask, '_execute_subprocess', new=test_cmdln)
+    await stask.sign_file(context, path, TEST_CERT_TYPE, [format], context.config['ssl_cert'])
 
 
 # zipalign {{{1

@@ -78,8 +78,7 @@ async def get_token(context, output_file, cert_type, signing_formats):
 
 
 async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
-    if to is None:
-        to = from_
+    to = to or from_
     work_dir = context.config['work_dir']
     token = os.path.join(work_dir, "token")
     nonce = os.path.join(work_dir, "nonce")
