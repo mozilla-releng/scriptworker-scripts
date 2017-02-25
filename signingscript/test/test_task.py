@@ -5,9 +5,9 @@ import pytest
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-from signingscript.exceptions import FailedSubprocess, SigningServerError
+from signingscript.exceptions import FailedSubprocess, SigningServerError, TaskVerificationError
 from signingscript.script import get_default_config
-from signingscript.utils import load_signing_server_config, SigningServer
+from signingscript.utils import load_signing_server_config, mkdir, SigningServer
 import signingscript.task as stask
 from signingscript.test import event_loop, noop_async, noop_sync, tmpdir
 
@@ -239,3 +239,40 @@ async def test_execute_subprocess(exit_code):
 )))
 def test_detached_sigfiles(formats, expected):
     assert stask.detached_sigfiles("foo", formats) == expected
+
+
+# build_filelist_dict {{{1
+@pytest.mark.parametrize('formats,raises', ((
+    ['gpg'], False,
+), (
+    ['jar', 'mar', 'gpg'], False,
+), (
+    ['illegal'], True,
+)))
+def test_build_filelist_dict(context, task_defn, formats, raises):
+    full_path = os.path.join(
+        context.config['work_dir'], 'cot', 'VALID_TASK_ID',
+        'public/build/firefox-52.0a1.en-US.win64.installer.exe',
+    )
+    expected = {
+        'public/build/firefox-52.0a1.en-US.win64.installer.exe': {
+            'full_path': full_path,
+            'formats': ['gpg'],
+        }
+    }
+    context.task = task_defn
+
+    # first, the file is missing...
+    with pytest.raises(TaskVerificationError):
+        stask.build_filelist_dict(context, formats)
+
+    mkdir(os.path.dirname(full_path))
+    with open(full_path, "w") as fh:
+        fh.write("foo")
+
+    if raises:
+        # illegal format
+        with pytest.raises(TaskVerificationError):
+            stask.build_filelist_dict(context, formats)
+    else:
+        assert stask.build_filelist_dict(context, formats) == expected
