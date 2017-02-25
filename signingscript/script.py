@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""Signing script
-"""
+"""Signing script."""
 import aiohttp
 import asyncio
 import logging
@@ -22,17 +21,26 @@ log = logging.getLogger(__name__)
 
 # SigningContext {{{1
 class SigningContext(Context):
+    """Status and configuration object."""
+
     signing_servers = None
 
     def __init__(self):
+        """Initialize SigningContext."""
         super(SigningContext, self).__init__()
 
     def write_json(self, *args):
+        """Stub out the `write_json` method."""
         pass
 
 
 # async_main {{{1
 async def async_main(context):
+    """Sign all the things.
+
+    Args:
+        context (SigningContext): the signing context.
+    """
     work_dir = context.config['work_dir']
     context.task = scriptworker.client.get_task(context.config)
     log.info("validating task")
@@ -56,14 +64,21 @@ async def async_main(context):
 
 
 # config {{{1
-def get_default_config(parent_dir=None):
-    """ Create the default config to work from.
+def get_default_config(base_dir=None):
+    """Create the default config to work from.
+
+    Args:
+        base_dir (str, optional): the directory above the `work_dir` and `artifact_dir`.
+            If None, use `..`  Defaults to None.
+
+    Returns:
+        dict: the default configuration dict.
     """
-    parent_dir = parent_dir or os.path.dirname(os.getcwd())
+    base_dir = base_dir or os.path.dirname(os.getcwd())
     default_config = {
         'signing_server_config': 'server_config.json',
-        'work_dir': os.path.join(parent_dir, 'work_dir'),
-        'artifact_dir': os.path.join(parent_dir, '/src/signing/artifact_dir'),
+        'work_dir': os.path.join(base_dir, 'work_dir'),
+        'artifact_dir': os.path.join(base_dir, '/src/signing/artifact_dir'),
         'my_ip': "127.0.0.1",
         'token_duration_seconds': 20 * 60,
         'ssl_cert': None,
@@ -77,11 +92,18 @@ def get_default_config(parent_dir=None):
 
 # main {{{1
 def usage():
+    """Print usage and die."""
     print("Usage: {} CONFIG_FILE".format(sys.argv[0]), file=sys.stderr)
     sys.exit(1)
 
 
 def main(config_path=None):
+    """Create the context, logging, and pass off execution to `async_main`.
+
+    Args:
+        config_path (str, optional): the path to the config file.  If `None`, use
+            `sys.argv[1]`.  Defaults to None.
+    """
     context = SigningContext()
     context.config = get_default_config()
     if config_path is None:
