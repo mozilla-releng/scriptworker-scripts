@@ -152,7 +152,25 @@ def detached_sigfiles(filepath, signing_formats):
 
 
 def build_filelist_dict(context, all_signing_formats):
-    """
+    """Build a dictionary of cot-downloaded paths and formats.
+
+    Scriptworker will pre-download and pre-verify the `upstreamArtifacts`
+    in our `work_dir`.  Let's build a dictionary of relative `path` to
+    a dictionary of `full_path` and signing `formats`.
+
+    Args:
+        context (SigningContext): the signing context
+        all_signing_formats (list): the superset of valid signing formats,
+            based on the task scopes.  If the file signing formats are not
+            a subset, throw an exception.
+
+    Raises:
+        TaskVerificationError: if the files don't exist on disk, or the
+            file signing formats are not a subset of all_signing_formats.
+
+    Returns:
+        dict of dicts: the dictionary of relative `path` to a dictionary with
+            `full_path` and a list of signing `formats`.
     """
     filelist_dict = {}
     all_signing_formats_set = set(all_signing_formats)
