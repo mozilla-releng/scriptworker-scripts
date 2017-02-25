@@ -15,6 +15,9 @@ DETACHED_SIGNATURES = [
     ('gpg', '.asc', 'text/plain')
 ]
 
+SigningServer = namedtuple("SigningServer", ["server", "user", "password",
+                                             "formats"])
+
 
 def mkdir(path):
     try:
@@ -41,8 +44,6 @@ def load_json(path):
 def load_signing_server_config(context):
     path = context.config['signing_server_config']
     log.info("Loading signing server config from {}".format(path))
-    SigningServer = namedtuple("SigningServer", ["server", "user", "password",
-                                                 "formats"])
     with open(path) as f:
         raw_cfg = json.load(f)
 

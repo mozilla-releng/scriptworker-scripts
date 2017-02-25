@@ -1,5 +1,4 @@
 import aiohttp
-from collections import namedtuple
 import os
 import pytest
 
@@ -8,7 +7,7 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 
 from signingscript.exceptions import SigningServerError
 from signingscript.script import get_default_config
-from signingscript.utils import load_signing_server_config
+from signingscript.utils import load_signing_server_config, SigningServer
 import signingscript.task as stask
 from signingscript.test import event_loop, noop_sync, tmpdir
 
@@ -105,7 +104,7 @@ def test_get_suitable_signing_servers(context, formats, expected):
     expected_servers = []
     for info in expected:
         expected_servers.append(
-            namedtuple("SigningServer", ["server", "user", "password", "formats"])(*info)
+            SigningServer(*info)
         )
 
     assert stask.get_suitable_signing_servers(
