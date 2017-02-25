@@ -5,7 +5,7 @@ import pytest
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-from signingscript.exceptions import SigningServerError
+from signingscript.exceptions import FailedSubprocess, SigningServerError
 from signingscript.script import get_default_config
 from signingscript.utils import load_signing_server_config, SigningServer
 import signingscript.task as stask
@@ -169,13 +169,16 @@ async def test_sign_file(context, mocker, format, signtool, event_loop):
     await stask.sign_file(context, path, TEST_CERT_TYPE, [format], context.config['ssl_cert'])
 
 
-# zipalign {{{1
+# _execute_post_signing_steps {{{1
 @pytest.mark.asyncio
-async def test_execute_post_signing_steps(context, monkeypatch):
+@pytest.mark.parametrize('suffix', ('apk', 'zip'))
+async def test_execute_post_signing_steps(context, monkeypatch, suffix):
     work_dir = context.config['work_dir']
-    abs_to = os.path.join(work_dir, 'target.apk')
+    abs_to = os.path.join(work_dir, 'target.{}'.format(suffix))
 
     async def zip_align_apk_mock(_context, _abs_to):
+        if suffix != 'apk':
+            assert 1 == 0  # We shouldn't call this on non-apk
         assert context == _context
         assert abs_to == _abs_to
 
@@ -186,9 +189,10 @@ async def test_execute_post_signing_steps(context, monkeypatch):
     monkeypatch.setattr('signingscript.task._zip_align_apk', zip_align_apk_mock)
     monkeypatch.setattr('signingscript.utils.get_hash', get_hash_mock)
 
-    await stask._execute_post_signing_steps(context, 'target.apk')
+    await stask._execute_post_signing_steps(context, 'target.{}'.format(suffix))
 
 
+# _zip_align_apk {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize('is_verbose', (True, False))
 async def test_zip_align_apk(context, monkeypatch, is_verbose):
@@ -211,3 +215,27 @@ async def test_zip_align_apk(context, monkeypatch, is_verbose):
     monkeypatch.setattr('shutil.move', shutil_mock)
 
     await stask._zip_align_apk(context, abs_to)
+
+
+# _execute_subprocess {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize('exit_code', (1, 0))
+async def test_execute_subprocess(exit_code):
+    command = ['bash', '-c', 'exit  {}'.format(exit_code)]
+    if exit_code != 0:
+        with pytest.raises(FailedSubprocess):
+            await stask._execute_subprocess(command)
+    else:
+        await stask._execute_subprocess(command)
+
+
+# detached_sigfiles {{{1
+@pytest.mark.parametrize('formats,expected', ((
+    ['mar', 'jar', 'emevoucher'], []
+), (
+    ['mar', 'jar', 'gpg'], ['foo.asc']
+), (
+    ['gpg'], ['foo.asc']
+)))
+def test_detached_sigfiles(formats, expected):
+    assert stask.detached_sigfiles("foo", formats) == expected
