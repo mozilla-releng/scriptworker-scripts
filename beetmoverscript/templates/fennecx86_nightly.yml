@@ -20,8 +20,8 @@ mapping:
     target.apk:
       s3_key: fennec-{{ version }}.{{ locale }}.android-i386.apk
       destinations:
-        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-i386.apk
         - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-i386.apk
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-i386.apk
       update_balrog_manifest: {{ update_balrog_manifest }}
     target.checksums:
       s3_key: fennec-{{ version }}.{{ locale }}.android-i386.checksums
