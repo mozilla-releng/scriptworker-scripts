@@ -13,7 +13,7 @@ from balrogscript.task import (get_task, validate_task_schema, get_task_server)
 sys.path.insert(0, os.path.join(
     os.path.dirname(__file__), "../tools/lib/python"
 ))
-from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4
+from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
 
 logging.basicConfig()
 
