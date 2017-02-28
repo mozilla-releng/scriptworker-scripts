@@ -1,63 +1,18 @@
 #!/usr/bin/env python
+"""Balrog script
+"""
 from copy import deepcopy
 import json
-import jsonschema
 import logging
 import os
-import re
 import sys
+
+from balrogscript.task import (validate_task_schema, get_task,
+                               get_upstream_artifacts, get_manifest,
+                               get_task_server)
 
 
 log = logging.getLogger(__name__)
-
-
-def get_manifest(config):
-    # assumes a single upstreamArtifact and single path
-    task_id = config['upstream_artifacts'][0]['taskId']
-    path = os.path.join(config['work_dir'], "cot",
-                        task_id, config['upstream_artifacts'][0]['paths'][0])
-    log.info("Reading manifest file %s" % path)
-    try:
-        with open(path, "r") as fh:
-            manifest = json.load(fh)
-    except (ValueError, OSError) as e:
-        log.critical("Can't load manifest from {}!\n{}".format(path, e))
-        sys.exit(3)
-    return manifest
-
-
-def verify_task_schema(config, task_definition):
-    schema_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), config['schema_file']
-    )
-    with open(schema_path) as fh:
-        schema = json.load(fh)
-
-    try:
-        jsonschema.validate(task_definition, schema)
-    except jsonschema.exceptions.ValidationError as exc:
-        log.critical("Can't validate schema!\n{}".format(exc))
-        sys.exit(3)
-
-
-def load_task(config):
-    task_file = os.path.join(config['work_dir'], "task.json")
-    with open(task_file, 'r') as f:
-        task_definition = json.load(f)
-
-    verify_task_schema(config, task_definition)
-    upstream_artifacts = task_definition['payload']['upstreamArtifacts']
-    for scope in task_definition['scopes']:
-        if scope.startswith("project:releng:balrog:"):
-            signing_cert_name = scope.split(':')[-1]
-            if re.search('^[0-9A-Za-z_-]+$', signing_cert_name) is not None:
-                break
-            log.warning('scope {} is malformed, skipping!'.format(scope))
-    else:
-        log.critical("no balrog scopes!")
-        sys.exit(3)
-
-    return upstream_artifacts
 
 
 def create_submitter(e, balrog_auth, config):
@@ -65,6 +20,8 @@ def create_submitter(e, balrog_auth, config):
     auth = balrog_auth
 
     if "previousVersion" in e and "previousBuildNumber" in e:
+        # TODO: to rewrite this only for CMAR. partials are handled externally
+        # by funsize
         log.info("Release style balrog submission")
 
         complete_info = [{
@@ -119,19 +76,14 @@ def usage():
     sys.exit(2)
 
 
-def load_config(argv):
-    if len(argv) != 1:
-        usage()
-    try:
-        with open(argv[0]) as fh:
-            config = json.load(fh)
-    except (ValueError, OSError) as e:
-        print >> sys.stderr, "Can't read config file {}!\n{}".format(argv[0], e)
-        sys.exit(5)
-    except KeyError as e:
-        print >> sys.stderr, "Usage: balrogscript CONFIG_FILE\n{}".format(e)
-        sys.exit(5)
-    return config
+def update_config(config, server='default'):
+    config = deepcopy(config)
+
+    config['api_root'] = config['server_config'][server]['api_root']
+    username, password = (config['server_config'][server]['balrog_username'],
+                          config['server_config'][server]['balrog_password'])
+    del(config['server_config'])
+    return (username, password), config
 
 
 def setup_logging(verbose=False):
@@ -145,33 +97,43 @@ def setup_logging(verbose=False):
     logging.getLogger("boto").setLevel(logging.WARNING)
 
 
-def update_config(config):
-    config = deepcopy(config)
-
-    for config_key, env_var in {
-        "api_root": "BALROG_API_ROOT",
-        "balrog_username": "BALROG_USERNAME",
-        "balrog_password": "BALROG_PASSWORD",
-    }.items():
-        config.setdefault(config_key, os.environ.get(env_var))
-        if config[config_key] is None:
-            log.critical("{} missing from config! (You can also set the env var {})".format(config_key, env_var))
-            sys.exit(5)
-
-    config['upstream_artifacts'] = load_task(config)
-
-    # get the balrog creds out of config
-    username, password = (config['balrog_username'], config['balrog_password'])
-    del(config['balrog_username'])
-    del(config['balrog_password'])
-
-    return (username, password), config
+def load_config(path=None):
+    try:
+        with open(path) as fh:
+            config = json.load(fh)
+    except (ValueError, OSError) as e:
+        print >> sys.stderr, "Can't read config file {}!\n{}".format(path, e)
+        sys.exit(5)
+    except KeyError as e:
+        print >> sys.stderr, "Usage: balrogscript CONFIG_FILE\n{}".format(e)
+        sys.exit(5)
+    return config
 
 
-def main():
-    config = load_config(sys.argv[1:])
+def setup_config(config_path):
+    if config_path is None:
+        if len(sys.argv) != 2:
+            usage()
+        config_path = sys.argv[1]
+
+    config = load_config(config_path)
+    return config
+
+
+def main(name=None, config_path=None):
+    if name not in (None, '__main__'):
+        return
+
+    config = setup_config(config_path)
     setup_logging(config['verbose'])
-    balrog_auth, config = update_config(config)
+
+    task = get_task(config)
+    validate_task_schema(config, task)
+
+    server = get_task_server(task, config)
+    balrog_auth, config = update_config(config, server)
+
+    config['upstream_artifacts'] = get_upstream_artifacts(task)
 
     # hacking the tools repo dependency by first reading its location from
     # the config file and only then loading the module from subdfolder
@@ -189,5 +151,4 @@ def main():
         retry(lambda: submitter.run(**release))
 
 
-if __name__ == '__main__':
-    main()
+main(name=__name__)

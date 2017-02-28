@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import balrogscript.script as balrogscript
 import json
 import logging
 import pytest
@@ -8,11 +7,12 @@ import os
 import shutil
 import sys
 import tempfile
+import balrogscript.script as balrogscript
+from balrogscript.task import (get_task, validate_task_schema, get_task_server)
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(__file__), "../tools/lib/python"
 ))
-
 from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4
 
 logging.basicConfig()
@@ -46,8 +46,13 @@ def config():
             "schema_file": "balrogscript/data/balrog_task_schema.json",
             "dummy": False,
             "api_root": "BALROG_API_ROOT",
-            "balrog_username": "BALROG_USERNAME",
-            "balrog_password": "BALROG_PASSWORD",
+            "server_config": {
+                "nightly": {
+                    "balrog_username": "BALROG_USERNAME",
+                    "balrog_password": "BALROG_PASSWORD",
+                    "allowed_channels": ["nightly"]
+                },
+            },
             "disable_certs": False,
             "verbose": True
         }
@@ -83,9 +88,9 @@ def release_config(config):
     yield config
 
 
-# load_task {{{1
-def test_load_task_payload(nightly_config):
-    upstream = balrogscript.load_task(nightly_config)
+# get_task {{{1
+def test_get_task_payload(nightly_config):
+    upstream = get_task(nightly_config)['payload']['upstreamArtifacts']
     assert upstream[0]['paths'][0] == 'public/manifest.json'
 
 
@@ -147,14 +152,15 @@ def test_create_submitter_release_metadata(config, release_manifest):
 
     assert release == exp
 
+
 def test_create_submitter_release_creates_valid_submitter(config, release_manifest):
     balrog_auth = (None, None)
     submitter, release = balrogscript.create_submitter(release_manifest[0], balrog_auth, config)
     lambda: submitter.run(**release)
 
 
-# verify_task_schema {{{1
-def test_verify_task_schema(config):
+# validate_task_schema {{{1
+def test_validate_task_schema(config):
     test_taskdef = {
         'scopes': ['blah'],
         'dependencies': ['blah'],
@@ -166,7 +172,7 @@ def test_verify_task_schema(config):
             }],
         }
     }
-    balrogscript.verify_task_schema(config, test_taskdef)
+    validate_task_schema(config, test_taskdef)
 
 
 @pytest.mark.parametrize("defn", ({
@@ -195,4 +201,59 @@ def test_verify_task_schema(config):
 }))
 def test_verify_task_schema_missing_cert(config, defn):
     with pytest.raises(SystemExit):
-        balrogscript.verify_task_schema(config, defn)
+        validate_task_schema(config, defn)
+
+
+@pytest.mark.parametrize("defn", ({
+    'dependencies': [u'blah'],
+    'payload': {
+        'upstreamArtifacts': [{
+            'paths': ['foo'],
+            'taskId': 'bar',
+            'taskType': u'bazaa'
+        }],
+    },
+    'scopes': [
+        'project:releng:balrog:nightly',
+    ]
+}, {
+    'dependencies': [u'blah'],
+    'payload': {
+        'upstreamArtifacts': [{
+            'paths': ['foo'],
+            'taskId': 'bar',
+            'taskType': u'bazaa'
+        }],
+    },
+    'scopes': [
+        'project:releng:balrog:server:@#($*@#($&@',
+    ]
+}, {
+    'dependencies': [u'blah'],
+    'payload': {
+        'upstreamArtifacts': [{
+            'paths': ['foo'],
+            'taskId': 'bar',
+            'taskType': u'bazaa'
+        }],
+    },
+    'scopes': [
+        'project:releng:balrog:nightly',
+        'project:releng:balrog:beta',
+    ]
+}, {
+    'dependencies': [u'blah'],
+    'payload': {
+        'upstreamArtifacts': [{
+            'paths': ['foo'],
+            'taskId': 'bar',
+            'taskType': u'bazaa'
+        }],
+    },
+    'scopes': [
+        'project:releng:balrog:server:nightly-something',
+    ]
+}))
+def test_get_task_server(config, defn):
+    with pytest.raises(ValueError):
+        get_task_server(defn, config)
