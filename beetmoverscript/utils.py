@@ -69,6 +69,7 @@ def generate_beetmover_template_args(context):
 
     if 'release' in context.bucket:
         tmpl_args["build_number"] = task['payload']['build_number']
+        tmpl_args["version"] = task['payload']['version']
 
     # e.g. action = 'push-to-candidates' or 'push-to-nightly'
     tmpl_bucket = context.action.split('-')[-1]
