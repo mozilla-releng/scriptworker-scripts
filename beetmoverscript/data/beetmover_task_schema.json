@@ -19,6 +19,9 @@
                 "build_number": {
                     "type": "number"
                 },
+                "version": {
+                    "type": "string"
+                },
                 "upstreamArtifacts": {
                     "type": "array",
                     "items": {
@@ -49,7 +52,7 @@
                 }
             },
             "required": ["upload_date", "upstreamArtifacts"],
-            "optional": ["build_number"]
+            "optional": ["build_number", "version"]
 
         }
     },
