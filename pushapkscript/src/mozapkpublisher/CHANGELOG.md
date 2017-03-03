@@ -4,6 +4,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## 0.1.6
+* Check if version codes are correctly ordered
+* en-GB is now updated like any other locale
+* get_apk.py supports checksum files for Fennec >= 53.0b1
+
 ## 0.1.5
 * Upgrade pyOpenSSL, in order to keep support for OpenSSL v1.1.0
 
