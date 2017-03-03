@@ -21,7 +21,7 @@ class CheckSumMismatch(LoggedError):
         )
 
 
-class NoTransactionError(Exception):
+class NoTransactionError(LoggedError):
     def __init__(self, package_name):
         super(NoTransactionError, self).__init__(
             'Transaction has not been started for package "{}"'.format(package_name)
@@ -39,4 +39,12 @@ class NoLocaleFound(LoggedError):
     def __init__(self, apk_path, omni_ja_location, chrome_manifest_location):
         super(NoLocaleFound, self).__init__(
             'No locale detected in {}:{}:{}'.format(apk_path, omni_ja_location, chrome_manifest_location)
+        )
+
+
+class ArmVersionCodeTooHigh(LoggedError):
+    def __init__(self, arm_version_code, x86_version_code):
+        super(ArmVersionCodeTooHigh, self).__init__(
+            'ARM build has a higher version code ({}) than the x86 one ({}). For more context about this error,\
+see: https://bugzilla.mozilla.org/show_bug.cgi?id=1338477'.format(arm_version_code, x86_version_code)
         )

@@ -1,14 +1,18 @@
 import pytest
 import sys
 
+try:
+    from unittest.mock import create_autospec
+except ImportError:
+    from mock import create_autospec
+
 from copy import copy
 from tempfile import NamedTemporaryFile
 
-from mozapkpublisher import store_l10n
+from mozapkpublisher import googleplay, store_l10n
 from mozapkpublisher.exceptions import WrongArgumentGiven
 from mozapkpublisher.update_apk_description import UpdateDescriptionAPK, main
 
-from mozapkpublisher.test.helpers import craft_service_mock
 
 credentials = NamedTemporaryFile()
 
@@ -28,7 +32,10 @@ def test_aurora_not_supported():
 
 
 def test_update_apk_description_force_locale(monkeypatch):
-    edit_service_mock = craft_service_mock(monkeypatch)
+    edit_service_mock = create_autospec(googleplay.EditService)
+    edit_service_mock.upload_apk.side_effect = [{'versionCode': str(i)} for i in range(2)]
+    monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
+
     monkeypatch.setattr(store_l10n, 'get_translation', lambda _, locale: {
         'title': 'Firefox for Android',
         'long_desc': 'Long description',

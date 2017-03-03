@@ -4,9 +4,10 @@ import sys
 import argparse
 import logging
 
-from mozapkpublisher import apk, googleplay, store_l10n
+from mozapkpublisher import googleplay, store_l10n
+from mozapkpublisher import apk as apk_helper
 from mozapkpublisher.base import Base, ArgumentParser
-from mozapkpublisher.exceptions import WrongArgumentGiven
+from mozapkpublisher.exceptions import WrongArgumentGiven, ArmVersionCodeTooHigh
 
 logger = logging.getLogger(__name__)
 
@@ -43,27 +44,18 @@ class PushAPK(Base):
         cls.parser.add_argument('--apk-armv7-v15', dest='apk_file_armv7_v15', type=argparse.FileType(),
                                 help='The path to the ARM v7 API v15 APK file', required=True)
 
-    def upload_apks(self, apk_files):
-        """ Upload the APK to google play
-
-        service -- The session to Google play
-        apk_files -- The files
-        """
-        [apk.check_if_apk_is_multilocale(apk_file.name) for apk_file in apk_files]
+    def upload_apks(self, apks):
+        [apk_helper.check_if_apk_is_multilocale(apk['file']) for apk in apks.values()]
 
         edit_service = googleplay.EditService(
             self.config.service_account, self.config.google_play_credentials_file.name, self.config.package_name,
             self.config.dry_run
         )
         release_channel = googleplay.PACKAGE_NAME_VALUES[self.config.package_name]
-        # Store all the versions to set the tracks (needs to happen
-        # at the same time
-        versions = []
 
-        for apk_file in apk_files:
-            apk_file_name = apk_file.name
-            apk_response = edit_service.upload_apk(apk_file_name)
-            versions.append(apk_response['versionCode'])
+        for apk in apks.values():
+            apk_response = edit_service.upload_apk(apk['file'])
+            apk['version_code'] = apk_response['versionCode']
 
             if 'aurora' in self.config.package_name:
                 logger.warning('Aurora is not supported by the L10n Store (see \
@@ -71,7 +63,7 @@ https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
             else:
                 _push_whats_new(edit_service, release_channel, apk_response['versionCode'])
 
-        upload_body = {u'versionCodes': versions}
+        upload_body = {u'versionCodes': _check_and_get_flatten_version_codes(apks)}
         if self.config.rollout_percentage is not None:
             upload_body[u'userFraction'] = self.config.rollout_percentage / 100.0
 
@@ -79,8 +71,15 @@ https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
         edit_service.commit_transaction()
 
     def run(self):
-        """ Upload the APK files """
-        apks = (self.config.apk_file_armv7_v15, self.config.apk_file_x86)
+        # Matching version codes will be added during runtime.
+        apks = {
+            'armv7_v15': {
+                'file': self.config.apk_file_armv7_v15.name,
+            },
+            'x86': {
+                'file': self.config.apk_file_x86.name,
+            },
+        }
         self.upload_apks(apks)
 
 
@@ -95,6 +94,19 @@ def _push_whats_new(edit_service, release_channel, apk_version_code):
 
         edit_service.update_apk_listings(play_store_locale, apk_version_code, body={'recentChanges': whatsnew})
         logger.info(u'Locale "{}" what\'s new has been updated to "{}"'.format(play_store_locale, whatsnew))
+
+
+def _check_and_get_flatten_version_codes(apks):
+    _check_apks_version_codes_are_correctly_ordered(apks)
+    return sorted([apk['version_code'] for apk in apks.values()])
+
+
+def _check_apks_version_codes_are_correctly_ordered(apks):
+    # See https://bugzilla.mozilla.org/show_bug.cgi?id=1338477 for more context
+    x86_version_code = apks['x86']['version_code']
+    arm_version_code = apks['armv7_v15']['version_code']
+    if x86_version_code <= arm_version_code:
+        raise ArmVersionCodeTooHigh(arm_version_code, x86_version_code)
 
 
 def main(name=None):
