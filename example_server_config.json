@@ -1,0 +1,5 @@
+{
+    "project:releng:signing:cert:dep-signing": [
+        ["127.0.0.1:9110", "user", "pass", ["gpg"]]
+    ]
+}

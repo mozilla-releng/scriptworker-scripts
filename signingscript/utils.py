@@ -1,4 +1,4 @@
-import asyncio
+"""Signingscript general utility functions."""
 import functools
 import hashlib
 import json
@@ -16,8 +16,16 @@ DETACHED_SIGNATURES = [
     ('gpg', '.asc', 'text/plain')
 ]
 
+SigningServer = namedtuple("SigningServer", ["server", "user", "password",
+                                             "formats"])
+
 
 def mkdir(path):
+    """Equivalent to `mkdir -p`.
+
+    Args:
+        path (str): the path to mkdir
+    """
     try:
         os.makedirs(path)
         log.info("mkdir {}".format(path))
@@ -26,6 +34,15 @@ def mkdir(path):
 
 
 def get_hash(path, hash_type="sha512"):
+    """Get the hash of a given path.
+
+    Args:
+        path (str): the path to calculate the hash for
+        hash_type (str, optional): the algorithm to use.  Defaults to `sha512`
+
+    Returns:
+        str: the hexdigest of the hash
+    """
     # I'd love to make this async, but evidently file i/o is always ready
     h = hashlib.new(hash_type)
     with open(path, "rb") as f:
@@ -35,15 +52,29 @@ def get_hash(path, hash_type="sha512"):
 
 
 def load_json(path):
+    """Load json from path.
+
+    Args:
+        path (str): the path to read from
+
+    Returns:
+        dict: the loaded json object
+    """
     with open(path, "r") as fh:
         return json.load(fh)
 
 
 def load_signing_server_config(context):
+    """Build a specialized signing server config from the `signing_server_config`.
+
+    Args:
+        context (SigningContext): the signing context
+
+    Returns:
+        dict of lists: keyed by signing cert type, value is a list of SigningServer named tuples
+    """
     path = context.config['signing_server_config']
     log.info("Loading signing server config from {}".format(path))
-    SigningServer = namedtuple("SigningServer", ["server", "user", "password",
-                                                 "formats"])
     with open(path) as f:
         raw_cfg = json.load(f)
 
@@ -55,13 +86,26 @@ def load_signing_server_config(context):
 
 
 def get_detached_signatures(signing_formats):
-    """Returns a list of tuples with detached signature types and corresponding
-    file extensions"""
+    """Get a list of tuples with detached signature info given the signing formats.
+
+    This is currently only applicable for gpg signing.
+
+    Args:
+        signing_formats (list): the list of signing formats
+
+    Returns:
+        list of tuples: the tuple contains signing format, extension, and mime type.
+    """
     return [(sig_type, sig_ext, sig_mime) for sig_type, sig_ext, sig_mime in
             DETACHED_SIGNATURES if sig_type in signing_formats]
 
 
 async def log_output(fh):
+    """Log the output from an async generator.
+
+    Args:
+        fh (async generator): the async generator to log output from
+    """
     while True:
         line = await fh.readline()
         if line:
@@ -71,6 +115,17 @@ async def log_output(fh):
 
 
 def copy_to_dir(source, parent_dir, target=None):
+    """Copy `source` to `parent_dir`, optionally renaming.
+
+    Args:
+        source (str): the source path
+        parent_dir (str): the target parent dir. This doesn't have to exist
+        target (str, optional): the basename of the target file.  If None,
+            use the basename of `source`. Defaults to None.
+
+    Raises:
+        SigningServerError: on failure
+    """
     target = target or os.path.basename(source)
     target_path = os.path.join(parent_dir, target)
     try:
@@ -79,14 +134,7 @@ def copy_to_dir(source, parent_dir, target=None):
         if source != target_path:
             log.info("Copying %s to %s" % (source, target_path))
             copyfile(source, target_path)
-    except IOError:
+            return target_path
+    except (IOError, OSError):
         traceback.print_exc()
         raise SigningServerError("Can't copy {} to {}!".format(source, target_path))
-
-
-async def raise_future_exceptions(tasks):
-    await asyncio.wait(tasks)
-    for task in tasks:
-        exc = task.exception()
-        if exc is not None:
-            raise exc

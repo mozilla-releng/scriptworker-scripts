@@ -1,3 +1,4 @@
+"""Signingscript task functions."""
 import aiohttp
 import asyncio
 from asyncio.subprocess import PIPE, STDOUT
@@ -18,9 +19,21 @@ from signingscript.exceptions import SigningServerError, TaskVerificationError, 
 
 log = logging.getLogger(__name__)
 
+_ZIP_ALIGNMENT = '4'  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
+
 
 def task_cert_type(task):
-    """Extract task certificate type"""
+    """Extract task certificate type.
+
+    Args:
+        task (dict): the task definition.
+
+    Raises:
+        TaskVerificationError: if the number of cert scopes is not 1.
+
+    Returns:
+        str: the cert type.
+    """
     certs = [s for s in task["scopes"] if
              s.startswith("project:releng:signing:cert:")]
     log.info("Certificate types: %s", certs)
@@ -30,12 +43,27 @@ def task_cert_type(task):
 
 
 def task_signing_formats(task):
-    """Extract last part of signing format scope"""
+    """Get the list of signing formats from the task signing scopes.
+
+    Args:
+        task (dict): the task definition.
+
+    Returns:
+        list: the signing formats.
+    """
     return [s.split(":")[-1] for s in task["scopes"] if
             s.startswith("project:releng:signing:format:")]
 
 
 def validate_task_schema(context):
+    """Validate the task json schema.
+
+    Args:
+        context (SigningContext): the signing context.
+
+    Raises:
+        ScriptWorkerTaxkException: on failed validation.
+    """
     with open(context.config['schema_file']) as fh:
         task_schema = json.load(fh)
     log.debug(task_schema)
@@ -43,10 +71,34 @@ def validate_task_schema(context):
 
 
 def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
+    """Get the list of signing servers for given `signing_formats` and `cert_type`.
+
+    Args:
+        signing_servers (dict of lists of lists): the contents of
+            `signing_server_config`.
+        cert_type (str): the certificate type - essentially signing level,
+            separating release vs nightly vs dep.
+        signing_formats (list): the signing formats the server needs to support
+
+    Returns:
+        list of lists: the list of signing servers.
+    """
     return [s for s in signing_servers[cert_type] if set(signing_formats) & set(s.formats)]
 
 
 async def get_token(context, output_file, cert_type, signing_formats):
+    """Retrieve a token from the signingserver tied to my ip.
+
+    Args:
+        context (SigningContext): the signing context
+        output_file (str): the path to write the token to.
+        cert_type (str): the cert type used to find an appropriate signing server
+        signing_formats (list): the signing formats used to find an appropriate
+            signing server
+
+    Raises:
+        SigningServerError: on failure
+    """
     token = None
     data = {
         "slave_ip": context.config['my_ip'],
@@ -76,8 +128,23 @@ async def get_token(context, output_file, cert_type, signing_formats):
 
 
 async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
-    if to is None:
-        to = from_
+    """Send a file to the signing server to sign, then retrieve the signed file.
+
+    In post-signing steps, zipalign apks if applicable.
+
+    Args:
+        context (SigningContext): the signing context
+        from_ (str): the source file to sign
+        cert_type (str): the cert type used to find an appropriate signing server
+        signing_formats (str): the formats to sign with
+        cert (str): the path to the ssl cert, if applicable
+        to (str, optional): the path to write the signed file to.  If None,
+            overwrite `from_`.  Defaults to None.
+
+    Raises:
+        FailedSubprocess: on subprocess error while signing.
+    """
+    to = to or from_
     work_dir = context.config['work_dir']
     token = os.path.join(work_dir, "token")
     nonce = os.path.join(work_dir, "nonce")
@@ -110,11 +177,8 @@ async def _execute_post_signing_steps(context, to):
     log.info('Post-signing steps finished')
 
 
-_ZIP_ALIGNMENT = '4'  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
-
-
 async def _zip_align_apk(context, abs_to):
-    """ Replaces APK by a zip aligned one. """
+    """Replace APK with a zip aligned one."""
     original_apk_location = abs_to
     zipalign_executable_location = context.config['zipalign']
 
@@ -145,6 +209,18 @@ async def _execute_subprocess(command):
 
 
 def detached_sigfiles(filepath, signing_formats):
+    """Get a list of detached sigfile paths, if any, given a file path and signing formats.
+
+    This will generally be an empty list unless we're gpg signing, in which case
+    we'll have detached gpg signatures.
+
+    Args:
+        filepath (str): the path of the file to sign
+        signing_formats (str): the signing formats the file will be signed with
+
+    Returns:
+        list: the list of paths of any detached signatures.
+    """
     detached_signatures = []
     for sig_type, sig_ext, sig_mime in utils.get_detached_signatures(signing_formats):
         detached_filepath = "{filepath}{ext}".format(filepath=filepath,
@@ -154,7 +230,25 @@ def detached_sigfiles(filepath, signing_formats):
 
 
 def build_filelist_dict(context, all_signing_formats):
-    """
+    """Build a dictionary of cot-downloaded paths and formats.
+
+    Scriptworker will pre-download and pre-verify the `upstreamArtifacts`
+    in our `work_dir`.  Let's build a dictionary of relative `path` to
+    a dictionary of `full_path` and signing `formats`.
+
+    Args:
+        context (SigningContext): the signing context
+        all_signing_formats (list): the superset of valid signing formats,
+            based on the task scopes.  If the file signing formats are not
+            a subset, throw an exception.
+
+    Raises:
+        TaskVerificationError: if the files don't exist on disk, or the
+            file signing formats are not a subset of all_signing_formats.
+
+    Returns:
+        dict of dicts: the dictionary of relative `path` to a dictionary with
+            `full_path` and a list of signing `formats`.
     """
     filelist_dict = {}
     all_signing_formats_set = set(all_signing_formats)

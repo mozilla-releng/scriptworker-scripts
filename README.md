@@ -93,7 +93,7 @@ The config json looks like this (comments are not valid json, but I'm inserting 
 
     {
       // path to the password json you created above
-      "signing_server_config": "/src/signing/signingscript/server_config.json",
+      "signing_server_config": "/src/signing/signingscript/example_server_config.json",
 
       // the work directory path.  task.json will live here, as well as downloaded binaries
       // this should be an absolute path.
