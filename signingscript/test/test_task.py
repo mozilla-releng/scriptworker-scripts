@@ -178,7 +178,7 @@ async def test_execute_post_signing_steps(context, monkeypatch, suffix):
 
     async def zip_align_apk_mock(_context, _abs_to):
         if suffix != 'apk':
-            assert 1 == 0  # We shouldn't call this on non-apk
+            assert False  # We shouldn't call this on non-apk
         assert context == _context
         assert abs_to == _abs_to
 
