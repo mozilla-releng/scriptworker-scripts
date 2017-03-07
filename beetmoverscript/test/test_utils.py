@@ -1,12 +1,13 @@
-import tempfile
 import json
+import pytest
+import tempfile
 
 from scriptworker.context import Context
 from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
                                   get_fake_balrog_props, get_fake_checksums_manifest)
 from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_json, generate_beetmover_template_args,
-                                   write_file)
+                                   write_file, shipping_a_release)
 from beetmoverscript.constants import HASH_BLOCK_SIZE
 
 
@@ -105,3 +106,16 @@ def test_beetmover_template_args_generation():
     template_args = generate_beetmover_template_args(context)
 
     assert template_args['template_key'] == 'fake_nightly_repacks'
+
+
+@pytest.mark.parametrize("non_release", [
+    'push-to-nightly',
+    'push-to-releases',
+    'push-to-staging',
+])
+@pytest.mark.parametrize("release", [
+    'push-to-candidates',
+])
+def test_shipping_a_release(non_release, release):
+    assert shipping_a_release(non_release) is False
+    assert shipping_a_release(release) is True
