@@ -51,7 +51,7 @@ def write_file(path, contents):
         fh.write(contents)
 
 
-def shipping_a_release(action):
+def is_action_a_release_shipping(action):
     """Function to return boolean if we're shipping a release as opposed to a
     nightly release or something else. Does that by checking the action type.
     Currently the only action that supports release-releases is
@@ -77,7 +77,7 @@ def generate_beetmover_template_args(context):
         "platform": release_props["platform"],
     }
 
-    if shipping_a_release(context.action):
+    if is_action_a_release_shipping(context.action):
         tmpl_args["build_number"] = task['payload']['build_number']
         tmpl_args["version"] = task['payload']['version']
 

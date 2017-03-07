@@ -7,7 +7,7 @@ from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
                                   get_fake_balrog_props, get_fake_checksums_manifest)
 from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_json, generate_beetmover_template_args,
-                                   write_file, shipping_a_release)
+                                   write_file, is_action_a_release_shipping)
 from beetmoverscript.constants import HASH_BLOCK_SIZE
 
 
@@ -116,6 +116,6 @@ def test_beetmover_template_args_generation():
 @pytest.mark.parametrize("release", [
     'push-to-candidates',
 ])
-def test_shipping_a_release(non_release, release):
-    assert shipping_a_release(non_release) is False
-    assert shipping_a_release(release) is True
+def test_if_action_is_a_release_shipping(non_release, release):
+    assert is_action_a_release_shipping(non_release) is False
+    assert is_action_a_release_shipping(release) is True
