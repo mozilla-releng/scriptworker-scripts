@@ -10,7 +10,7 @@ import jinja2
 import yaml
 
 from beetmoverscript.constants import (HASH_BLOCK_SIZE, STAGE_PLATFORM_MAP,
-                                       TEMPLATE_KEY_PLATFORMS)
+                                       TEMPLATE_KEY_PLATFORMS, RELEASE_ACTIONS)
 
 log = logging.getLogger(__name__)
 
@@ -51,6 +51,16 @@ def write_file(path, contents):
         fh.write(contents)
 
 
+def is_action_a_release_shipping(action):
+    """Function to return boolean if we're shipping a release as opposed to a
+    nightly release or something else. Does that by checking the action type.
+    Currently the only action that supports release-releases is
+    `push-to-candidates` for which we need to enforce the `version` and
+    `build_number` grabbing.
+    """
+    return action in RELEASE_ACTIONS
+
+
 def generate_beetmover_template_args(context):
     task = context.task
     release_props = context.release_props
@@ -67,7 +77,7 @@ def generate_beetmover_template_args(context):
         "platform": release_props["platform"],
     }
 
-    if 'release' in context.bucket:
+    if is_action_a_release_shipping(context.action):
         tmpl_args["build_number"] = task['payload']['build_number']
         tmpl_args["version"] = task['payload']['version']
 
