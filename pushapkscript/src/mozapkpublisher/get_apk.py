@@ -33,8 +33,6 @@ class GetAPK(Base):
         )
 
         exclusive_group = cls.parser.add_mutually_exclusive_group(required=True)
-        exclusive_group.add_argument('--clean', action='store_true', default=False,
-                                     help='Use this option to clean the download directory')
         exclusive_group.add_argument('--version', default=None, help='Specify version number to download (e.g. 23.0b7)')
         exclusive_group.add_argument('--latest-nightly', action='store_true', default=False,
                                      help='Download the latest nightly version')
