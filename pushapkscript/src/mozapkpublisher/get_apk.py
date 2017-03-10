@@ -13,6 +13,8 @@ from mozapkpublisher.exceptions import CheckSumMismatch
 
 logger = logging.getLogger(__name__)
 
+FTP_BASE_URL = 'https://ftp.mozilla.org/pub/mobile'
+
 
 class GetAPK(Base):
     arch_values = ["arm", "x86"]
@@ -21,11 +23,6 @@ class GetAPK(Base):
 
     download_dir = "apk-download"
 
-    apk_ext = ".apk"
-    checksums_ext = ".checksums"
-    android_prefix = "android-"
-
-    base_url = "https://ftp.mozilla.org/pub/mobile"
     json_version_url = "https://product-details.mozilla.org/1.0/firefox_versions.json"
 
     def __init__(self, config=None):
@@ -34,7 +31,7 @@ class GetAPK(Base):
     @classmethod
     def _init_parser(cls):
         cls.parser = ArgumentParser(
-            description='Download the apk of Firefox for Android from {}'.format(cls.base_url)
+            description='Download APKs of Firefox for Android (aka Fennec) from {}'.format(FTP_BASE_URL)
         )
 
         exclusive_group = cls.parser.add_mutually_exclusive_group(required=True)
@@ -66,83 +63,36 @@ class GetAPK(Base):
         except OSError:     # XXX: Used for compatibility with Python 2. Use FileNotFoundError otherwise
             logger.warn('{} was not found. Skipping...'.format(self.download_dir))
 
-    def _fetch_checksum_from_file(self, checksum_file, apk_file):
-        base_apk_filename = os.path.basename(apk_file)
-        with open(checksum_file, 'r') as fh:
-            for line in fh:
-                m = re.match(r"""^(?P<hash>.*) sha512 (?P<filesize>\d+) {}""".format(base_apk_filename), line)
-                if m:
-                    gd = m.groupdict()
-                    logger.info("Found hash {}".format(gd['hash']))
-                    return gd['hash']
-        # old style pre-53 checksums files
-        with open(checksum_file, 'r') as f:
-            checksum = f.read()
-        checksum = re.sub("\s(.*)", "", checksum.splitlines()[0])
-        logger.info("Found hash {}".format(checksum))
-        return checksum
-
-    def check_apk(self, apk_file, checksum_file):
-        logger.debug('Checking checksum for "{}"...'.format(apk_file))
-
-        checksum = self._fetch_checksum_from_file(checksum_file, apk_file)
-        apk_checksum = file_sha512sum(apk_file)
-
-        if checksum == apk_checksum:
-            logger.info('Checksum for "{}" succeeded!'.format(apk_file))
-            os.remove(checksum_file)
-        else:
-            shutil.rmtree(self.download_dir)
-            raise CheckSumMismatch(apk_file, expected=apk_checksum, actual=checksum)
-
-    # Helper functions
-    def generate_url(self, version, build, locale, api_suffix, arch_file):
+    def generate_apk_base_url(self, version, build, locale, api_suffix):
         if self.config.latest_nightly or self.config.latest_aurora:
-            code = "central" if self.config.latest_nightly else "aurora"
-            return '{}/nightly/latest-mozilla-{}-android-{}/fennec-{}.{}.android-{}'.format(
-                self.base_url, code, api_suffix, version, locale, arch_file
+            repository = "central" if self.config.latest_nightly else "aurora"
+            return '{}/nightly/latest-mozilla-{}-android-{}'.format(
+                FTP_BASE_URL, repository, api_suffix,
             )
 
-        return '{}/candidates/{}-candidates/build{}/{}{}/{}/fennec-{}.{}.{}{}'.format(
-            self.base_url, version, build, self.android_prefix, api_suffix, locale, version, locale,
-            self.android_prefix, arch_file
+        return '{}/candidates/{}-candidates/build{}/android-{}/{}'.format(
+            FTP_BASE_URL, version, build, api_suffix, locale,
         )
 
     def get_api_suffix(self, arch):
         return self.multi_apis if arch in self.multi_api_archs else [arch]
 
-    def get_arch_file(self, arch):
-        # the filename contains i386 instead of x86
-        return 'i386' if arch == 'x86' else arch
-
-    def get_common_file_name(self, version, locale):
-        return 'fennec-{}.{}.{}'.format(version, locale, self.android_prefix)
-
-    def download(self, version, build, arch, locale):
+    def download(self, version, build, architecture, locale):
         try:
             os.makedirs(self.download_dir)
-        except OSError:     # XXX: Used for compatibility with Python. Use FileExistsError otherwise
+        except OSError:     # XXX: Used for compatibility with Python 2. Use FileExistsError otherwise
             pass
 
-        common_filename = self.get_common_file_name(version, locale)
-        arch_file = self.get_arch_file(arch)
+        for api_suffix in self.get_api_suffix(architecture):
+            apk_base_url = self.generate_apk_base_url(version, build, locale, api_suffix)
+            apk, checksums = craft_apk_and_checksums_url_and_download_locations(
+                apk_base_url, self.download_dir, version, locale, architecture
+            )
 
-        for api_suffix in self.get_api_suffix(arch):
-            url = self.generate_url(version, build, locale, api_suffix, arch_file)
-            apk_url = url + self.apk_ext
-            checksum_url = url + self.checksums_ext
-            if arch in self.multi_api_archs:
-                filename = common_filename + arch_file + "-" + api_suffix
-            else:
-                filename = common_filename + arch_file
+            download_file(apk['url'], apk['download_location'])
+            download_file(checksums['url'], checksums['download_location'])
 
-            filename_apk = os.path.join(self.download_dir, filename + self.apk_ext)
-            filename_checksums = os.path.join(self.download_dir, filename + self.checksums_ext)
-
-            download_file(apk_url, filename_apk)
-            download_file(checksum_url, filename_checksums)
-
-            self.check_apk(filename_apk, filename_checksums)
+            check_apk_against_checksum_file(apk['download_location'], checksums['download_location'])
 
     def get_version_name(self):
         if self.config.latest_nightly or self.config.latest_aurora:
@@ -153,24 +103,76 @@ class GetAPK(Base):
 
     # Download all the archs if none is given
     def download_all(self, version, build, locale):
-        for arch in self.arch_values:
-            self.download(version, build, arch, locale)
+        for architecture in self.arch_values:
+            self.download(version, build, architecture, locale)
 
-    # Download apk initial action
-    def download_apk(self):
+    def run(self):
         version = self.get_version_name()
-        arch = self.config.arch
+        architecture = self.config.arch
         build = str(self.config.build)
         locale = self.config.locale
 
-        logger.info('Downloading version "{}" build #{} for arch "{}" (locale "{}")'.format(version, build, arch, locale))
-        if arch == "all":
+        logger.info('Downloading version "{}" build #{} for arch "{}" (locale "{}")'.format(version, build, architecture, locale))
+        if architecture == "all":
             self.download_all(version, build, locale)
         else:
-            self.download(version, build, arch, locale)
+            self.download(version, build, architecture, locale)
 
-    def run(self):
-        self.download_apk()
+
+def craft_apk_and_checksums_url_and_download_locations(base_apk_url, download_directory, version, locale, architecture):
+    file_names = _craft_apk_and_checksums_file_names(version, locale, architecture)
+
+    return [
+        {
+            'download_location': os.path.join(download_directory, file_name),
+            'url': '/'.join([base_apk_url, file_name]),
+        } for file_name in file_names
+    ]
+
+
+def _craft_apk_and_checksums_file_names(version, locale, architecture):
+    file_name_architecture = _get_architecture_in_file_name(architecture)
+    extensions = ['apk', 'checksums']
+
+    return [
+        'fennec-{}.{}.android-{}.{}'.format(version, locale, file_name_architecture, extension)
+        for extension in extensions
+    ]
+
+
+def _get_architecture_in_file_name(architecture):
+    # the file name contains i386 instead of x86
+    return 'i386' if architecture == 'x86' else architecture
+
+
+def check_apk_against_checksum_file(apk_file, checksum_file):
+    logger.debug('Checking checksum for "{}"...'.format(apk_file))
+
+    checksum = _fetch_checksum_from_file(checksum_file, apk_file)
+    apk_checksum = file_sha512sum(apk_file)
+
+    if checksum == apk_checksum:
+        logger.info('Checksum for "{}" succeeded!'.format(apk_file))
+        os.remove(checksum_file)
+    else:
+        raise CheckSumMismatch(apk_file, expected=apk_checksum, actual=checksum)
+
+
+def _fetch_checksum_from_file(checksum_file, apk_file):
+    base_apk_filename = os.path.basename(apk_file)
+    with open(checksum_file, 'r') as fh:
+        for line in fh:
+            m = re.match(r"""^(?P<hash>.*) sha512 (?P<filesize>\d+) {}""".format(base_apk_filename), line)
+            if m:
+                gd = m.groupdict()
+                logger.info("Found hash {}".format(gd['hash']))
+                return gd['hash']
+    # old style pre-Fennec 53 checksums files
+    with open(checksum_file, 'r') as f:
+        checksum = f.read()
+    checksum = re.sub("\s(.*)", "", checksum.splitlines()[0])
+    logger.info("Found hash {}".format(checksum))
+    return checksum
 
 
 if __name__ == '__main__':
