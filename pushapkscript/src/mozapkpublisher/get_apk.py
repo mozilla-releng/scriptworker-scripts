@@ -21,8 +21,6 @@ class GetAPK(Base):
     multi_api_archs = ["arm"]
     multi_apis = ['api-15']     # v11 has been dropped in fx 46 (bug 1155801) and v9 in fx 48 (bug 1220184)
 
-    download_dir = "apk-download"
-
     json_version_url = "https://product-details.mozilla.org/1.0/firefox_versions.json"
 
     def __init__(self, config=None):
@@ -49,6 +47,10 @@ class GetAPK(Base):
             help='Specify which architecture to get the apk for. Will download every architecture if not set.'
         )
         cls.parser.add_argument('--locale', default='multi', help='Specify which locale to get the apk for')
+        cls.parser.add_argument(
+            '--output-directory', dest='download_directory', default='apk-download',
+            help='Directory in which APKs will be downloaded to. Will be created if needed.'
+        )
 
     # Cleanup half downloaded files on Ctrl+C
     def signal_handler(self, signal, frame):
@@ -58,10 +60,10 @@ class GetAPK(Base):
 
     def cleanup(self):
         try:
-            shutil.rmtree(self.download_dir)
+            shutil.rmtree(self.config.download_directory)
             logger.info('Download directory cleaned')
         except OSError:     # XXX: Used for compatibility with Python 2. Use FileNotFoundError otherwise
-            logger.warn('{} was not found. Skipping...'.format(self.download_dir))
+            logger.warn('{} was not found. Skipping...'.format(self.config.download_directory))
 
     def generate_apk_base_url(self, version, build, locale, api_suffix):
         if self.config.latest_nightly or self.config.latest_aurora:
@@ -79,14 +81,14 @@ class GetAPK(Base):
 
     def download(self, version, build, architecture, locale):
         try:
-            os.makedirs(self.download_dir)
+            os.makedirs(self.config.download_directory)
         except OSError:     # XXX: Used for compatibility with Python 2. Use FileExistsError otherwise
             pass
 
         for api_suffix in self.get_api_suffix(architecture):
             apk_base_url = self.generate_apk_base_url(version, build, locale, api_suffix)
             apk, checksums = craft_apk_and_checksums_url_and_download_locations(
-                apk_base_url, self.download_dir, version, locale, architecture
+                apk_base_url, self.config.download_directory, version, locale, architecture
             )
 
             download_file(apk['url'], apk['download_location'])
