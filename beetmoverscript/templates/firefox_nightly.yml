@@ -76,7 +76,7 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.talos.tests.zip
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.talos.tests.zip
-    target.awsy.tests.zip
+    target.awsy.tests.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.awsy.tests.zip
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.awsy.tests.zip
