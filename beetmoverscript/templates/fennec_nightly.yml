@@ -78,6 +78,11 @@ mapping:
       destinations:
         - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.talos.tests.zip
         - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.talos.tests.zip
+    target.awsy.tests.zip
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.awsy.tests.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.awsy.tests.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.awsy.tests.zip
     target.test_packages.json:
       s3_key: fennec-{{ version }}.{{ locale }}.android-arm.test_packages.json
       destinations:
