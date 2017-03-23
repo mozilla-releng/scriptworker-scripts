@@ -54,10 +54,15 @@ async def async_main(context):
     for path, path_dict in filelist_dict.items():
         copy_to_dir(path_dict['full_path'], context.config['work_dir'], target=path)
         log.info("signing %s", path)
-        source = os.path.join(work_dir, path)
-        await sign_file(context, source, cert_type, path_dict['formats'], context.config["ssl_cert"])
+        source = await sign_file(
+            context, os.path.join(work_dir, path), cert_type, path_dict['formats'],
+            context.config["ssl_cert"]
+        )
+        source = os.path.relpath(source, work_dir)
         sigfiles = detached_sigfiles(path, path_dict['formats'])
-        copy_to_dir(source, context.config['artifact_dir'], target=path)
+        copy_to_dir(
+            os.path.join(work_dir, source), context.config['artifact_dir'], target=source
+        )
         for sigpath in sigfiles:
             copy_to_dir(os.path.join(work_dir, sigpath), context.config['artifact_dir'], target=sigpath)
     log.info("Done!")
@@ -86,6 +91,8 @@ def get_default_config(base_dir=None):
         'schema_file': os.path.join(os.path.dirname(__file__), 'data', 'signing_task_schema.json'),
         'verbose': True,
         'zipalign': 'zipalign',
+        'dmg': 'dmg',
+        'hfsplus': 'hfsplus',
     }
     return default_config
 

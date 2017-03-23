@@ -1,11 +1,10 @@
 """Signingscript task functions."""
 import aiohttp
-import asyncio
-from asyncio.subprocess import PIPE, STDOUT
 import json
 import logging
 import os
 import random
+import re
 import shutil
 import tempfile
 import traceback
@@ -15,13 +14,14 @@ from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_request
 
 from signingscript import utils
-from signingscript.exceptions import SigningServerError, TaskVerificationError, FailedSubprocess
+from signingscript.exceptions import SigningServerError, TaskVerificationError
 
 log = logging.getLogger(__name__)
 
 _ZIP_ALIGNMENT = '4'  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
 
 
+# task_cert_type {{{1
 def task_cert_type(task):
     """Extract task certificate type.
 
@@ -42,6 +42,7 @@ def task_cert_type(task):
     return certs[0]
 
 
+# task_signing_formats {{{1
 def task_signing_formats(task):
     """Get the list of signing formats from the task signing scopes.
 
@@ -55,6 +56,7 @@ def task_signing_formats(task):
             s.startswith("project:releng:signing:format:")]
 
 
+# validate_task_schema {{{1
 def validate_task_schema(context):
     """Validate the task json schema.
 
@@ -70,6 +72,7 @@ def validate_task_schema(context):
     scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
+# get_suitable_signing_servers {{{1
 def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
     """Get the list of signing servers for given `signing_formats` and `cert_type`.
 
@@ -86,6 +89,7 @@ def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
     return [s for s in signing_servers[cert_type] if set(signing_formats) & set(s.formats)]
 
 
+# get_token {{{1
 async def get_token(context, output_file, cert_type, signing_formats):
     """Retrieve a token from the signingserver tied to my ip.
 
@@ -127,6 +131,7 @@ async def get_token(context, output_file, cert_type, signing_formats):
         print(token, file=fh, end="")
 
 
+# sign_file {{{1
 async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     """Send a file to the signing server to sign, then retrieve the signed file.
 
@@ -144,6 +149,7 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     Raises:
         FailedSubprocess: on subprocess error while signing.
     """
+    from_ = await _execute_pre_signing_steps(context, from_)
     to = to or from_
     work_dir = context.config['work_dir']
     token = os.path.join(work_dir, "token")
@@ -157,11 +163,23 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
     for f in signing_formats:
         signing_command.extend(["-f", f])
     signing_command.extend(["-o", to, from_])
-    await _execute_subprocess(signing_command)
+    await utils._execute_subprocess(signing_command)
     log.info('Finished signing. Starting post-signing steps...')
     await _execute_post_signing_steps(context, to)
+    return to
 
 
+# _execute_pre_signing_steps {{{1
+async def _execute_pre_signing_steps(context, from_):
+    file_base, file_extension = os.path.splitext(from_)
+    if file_extension == '.dmg':
+        await _convert_dmg_to_tar_gz(context, from_)
+        from_ = "{}.tar.gz".format(file_base)
+
+    return from_
+
+
+# _execute_post_signing_steps {{{1
 async def _execute_post_signing_steps(context, to):
     work_dir = context.config['work_dir']
     abs_to = os.path.join(work_dir, to)
@@ -177,6 +195,7 @@ async def _execute_post_signing_steps(context, to):
     log.info('Post-signing steps finished')
 
 
+# _zip_align_apk {{{1
 async def _zip_align_apk(context, abs_to):
     """Replace APK with a zip aligned one."""
     original_apk_location = abs_to
@@ -190,24 +209,38 @@ async def _zip_align_apk(context, abs_to):
             zipalign_command += ['-v']
 
         zipalign_command += [_ZIP_ALIGNMENT, original_apk_location, temp_apk_location]
-        await _execute_subprocess(zipalign_command)
+        await utils._execute_subprocess(zipalign_command)
         shutil.move(temp_apk_location, abs_to)
 
     log.info('"{}" has been zip aligned'.format(abs_to))
 
 
-async def _execute_subprocess(command):
-    log.info('Running "{}"'.format(' '.join(command)))
-    subprocess = await asyncio.create_subprocess_exec(*command, stdout=PIPE, stderr=STDOUT)
-    log.info("COMMAND OUTPUT: ")
-    await utils.log_output(subprocess.stdout)
-    exitcode = await subprocess.wait()
-    log.info("exitcode {}".format(exitcode))
+# _convert_dmg_to_tar_gz {{{1
+async def _convert_dmg_to_tar_gz(context, from_):
+    """Explode a dmg and tar up its contents. Return the relative tarball path."""
+    work_dir = context.config['work_dir']
+    abs_from = os.path.join(work_dir, from_)
+    # replace .dmg suffix with .tar.gz (case insensitive)
+    to = re.sub('\.dmg$', '.tar.gz', from_, flags=re.I)
+    abs_to = os.path.join(work_dir, to)
+    dmg_executable_location = context.config['dmg']
+    hfsplus_executable_location = context.config['hfsplus']
 
-    if exitcode != 0:
-        raise FailedSubprocess('Command `{}` failed'.format(' '.join(command)))
+    with tempfile.TemporaryDirectory() as temp_dir:
+        app_dir = os.path.join(temp_dir, "app")
+        utils.mkdir(app_dir)
+        temp_dir = os.path.join(os.getcwd(), "tmp")
+        undmg_cmd = [dmg_executable_location, "extract", abs_from, "tmp.hfs"]
+        await utils._execute_subprocess(undmg_cmd, cwd=temp_dir)
+        hfsplus_cmd = [hfsplus_executable_location, "tmp.hfs", "extractall", "/", app_dir]
+        await utils._execute_subprocess(hfsplus_cmd, cwd=temp_dir)
+        tar_cmd = ['tar', 'czvf', abs_to, '.']
+        await utils._execute_subprocess(tar_cmd, cwd=app_dir)
+
+    return to
 
 
+# detached_sigfiles {{{1
 def detached_sigfiles(filepath, signing_formats):
     """Get a list of detached sigfile paths, if any, given a file path and signing formats.
 
@@ -229,6 +262,7 @@ def detached_sigfiles(filepath, signing_formats):
     return detached_signatures
 
 
+# build_filelist_dict {{{1
 def build_filelist_dict(context, all_signing_formats):
     """Build a dictionary of cot-downloaded paths and formats.
 

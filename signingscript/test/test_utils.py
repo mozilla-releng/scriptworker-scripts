@@ -4,7 +4,7 @@ import os
 import pytest
 
 from scriptworker.context import Context
-from signingscript.exceptions import SigningServerError
+from signingscript.exceptions import FailedSubprocess, SigningServerError
 from signingscript.test import read_file, tmpdir
 import signingscript.utils as utils
 
@@ -135,3 +135,15 @@ def test_copy_to_dir(tmpdir, source, target, expected, exc):
 
 def test_copy_to_dir_no_copy():
     assert utils.copy_to_dir(SERVER_CONFIG_PATH, os.path.dirname(SERVER_CONFIG_PATH)) is None
+
+
+# _execute_subprocess {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize('exit_code', (1, 0))
+async def test_execute_subprocess(exit_code):
+    command = ['bash', '-c', 'exit  {}'.format(exit_code)]
+    if exit_code != 0:
+        with pytest.raises(FailedSubprocess):
+            await utils._execute_subprocess(command)
+    else:
+        await utils._execute_subprocess(command, cwd="/tmp")

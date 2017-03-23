@@ -1,4 +1,5 @@
 import aiohttp
+from contextlib import contextmanager
 import os
 import pytest
 
@@ -9,6 +10,7 @@ from signingscript.exceptions import FailedSubprocess, SigningServerError, TaskV
 from signingscript.script import get_default_config
 from signingscript.utils import load_signing_server_config, mkdir, SigningServer
 import signingscript.task as stask
+import signingscript.utils as utils
 from signingscript.test import event_loop, noop_async, noop_sync, tmpdir
 
 assert event_loop or tmpdir  # silence flake8
@@ -165,8 +167,20 @@ async def test_sign_file(context, mocker, format, signtool, event_loop):
 
     context.config['signtool'] = signtool
     mocker.patch.object(stask, '_execute_post_signing_steps', new=noop_async)
-    mocker.patch.object(stask, '_execute_subprocess', new=test_cmdln)
+    mocker.patch.object(utils, '_execute_subprocess', new=test_cmdln)
     await stask.sign_file(context, path, TEST_CERT_TYPE, [format], context.config['ssl_cert'])
+
+
+# _execute_pre_signing_steps {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize('filename,expected', ((
+    'foo.dmg', 'foo.tar.gz',
+), (
+    'bar.zip', 'bar.zip',
+)))
+async def test_execute_pre_signing_steps(context, mocker, filename, expected):
+    mocker.patch.object(stask, '_convert_dmg_to_tar_gz', new=noop_async)
+    assert await stask._execute_pre_signing_steps(context, filename) == expected
 
 
 # _execute_post_signing_steps {{{1
@@ -211,22 +225,35 @@ async def test_zip_align_apk(context, monkeypatch, is_verbose):
     def shutil_mock(_, destination):
         assert destination == abs_to
 
-    monkeypatch.setattr('signingscript.task._execute_subprocess', execute_subprocess_mock)
+    monkeypatch.setattr('signingscript.utils._execute_subprocess', execute_subprocess_mock)
     monkeypatch.setattr('shutil.move', shutil_mock)
 
     await stask._zip_align_apk(context, abs_to)
 
 
-# _execute_subprocess {{{1
+# _convert_dmg_to_tar_gz {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize('exit_code', (1, 0))
-async def test_execute_subprocess(exit_code):
-    command = ['bash', '-c', 'exit  {}'.format(exit_code)]
-    if exit_code != 0:
-        with pytest.raises(FailedSubprocess):
-            await stask._execute_subprocess(command)
-    else:
-        await stask._execute_subprocess(command)
+async def test_convert_dmg_to_tar_gz(context, monkeypatch):
+    dmg_path = 'path/to/foo.dmg'
+    abs_dmg_path = os.path.join(context.config['work_dir'], dmg_path)
+    tarball_path = 'path/to/foo.tar.gz'
+    abs_tarball_path = os.path.join(context.config['work_dir'], tarball_path)
+
+    async def execute_subprocess_mock(command, **kwargs):
+        assert command in (
+            ['dmg', 'extract', abs_dmg_path, 'tmp.hfs'],
+            ['hfsplus', 'tmp.hfs', 'extractall', '/', 'tmpdir/app'],
+            ['tar', 'czvf', abs_tarball_path, '.'],
+        )
+
+    @contextmanager
+    def fake_tmpdir():
+        yield "tmpdir"
+
+    monkeypatch.setattr('signingscript.utils._execute_subprocess', execute_subprocess_mock)
+    monkeypatch.setattr('tempfile.TemporaryDirectory', fake_tmpdir)
+
+    await stask._convert_dmg_to_tar_gz(context, dmg_path)
 
 
 # detached_sigfiles {{{1
