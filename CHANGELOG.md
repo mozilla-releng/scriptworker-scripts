@@ -2,10 +2,29 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.10.1] - 2016-02-09
+## [1.0.0] - 2017-03-23
+### Added
+- `example_server_config.json`
+- 100% test coverage, with full docstrings and `flake8_docstrings`
+- moved `SigningServer` named tuple out of function, for easier importing and reuse
+
+### Changed
+- no longer accept `dmgv2` format
+- explode and tar dmg files (support dmg signing in taskcluster)
+- `get_default_config` now takes a `base_dir` kwarg
+- moved `_execute_subprocess` to utils
+- `sign_file` now returns the path to the target file
+- `async_main` now copies the returned path to the `artifact_dir`
+
+### Fixed
+- close the event loop on `main()` exception
+
+## [0.10.1] - 2017-02-09
+### Fixed
 - Fix an execution error due to the addition of zipalign
 
-## [0.10.0] - 2016-02-08
+## [0.10.0] - 2017-02-08
+### Changed
 - zipalign APKs in order to allow them to be published onto Google Play Store
 
 ## [0.9.0] - 2016-12-08
