@@ -9,7 +9,7 @@ except ImportError:
     from mock import MagicMock
 
 from mozapkpublisher.googleplay import add_general_google_play_arguments, EditService
-from mozapkpublisher.exceptions import NoTransactionError
+from mozapkpublisher.exceptions import NoTransactionError, WrongArgumentGiven
 
 
 @pytest.mark.parametrize('package_name', [
@@ -112,7 +112,7 @@ def test_update_track(monkeypatch):
     edit_mock = set_up_edit_service_mock(monkeypatch)
     edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name')
 
-    edit_service.update_track('alpha', {u'versionCodes': ['2015012345', '2015012347']})
+    edit_service.update_track('alpha', ['2015012345', '2015012347'])
     edit_mock.tracks().update.assert_called_once_with(
         editId=edit_service._edit_id,
         packageName='dummy_package_name',
@@ -121,13 +121,22 @@ def test_update_track(monkeypatch):
     )
 
     edit_mock.tracks().update.reset_mock()
-    edit_service.update_track('rollout', {u'userFraction': 0.01, u'versionCodes': ['2015012345', '2015012347']})
+    edit_service.update_track('rollout', ['2015012345', '2015012347'], rollout_percentage=1)
     edit_mock.tracks().update.assert_called_once_with(
         editId=edit_service._edit_id,
         packageName='dummy_package_name',
         track='rollout',
         body={u'userFraction': 0.01, u'versionCodes': ['2015012345', '2015012347']}
     )
+
+
+@pytest.mark.parametrize('invalid_percentage', (-1, 101))
+def test_update_track_should_refuse_wrong_percentage(monkeypatch, invalid_percentage):
+    set_up_edit_service_mock(monkeypatch)
+    edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name')
+
+    with pytest.raises(WrongArgumentGiven):
+        edit_service.update_track('rollout', ['2015012345', '2015012347'], invalid_percentage)
 
 
 def test_update_listings(monkeypatch):

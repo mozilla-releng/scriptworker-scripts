@@ -63,11 +63,8 @@ https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
             else:
                 _push_whats_new(edit_service, release_channel, apk_response['versionCode'])
 
-        upload_body = {u'versionCodes': _check_and_get_flatten_version_codes(apks)}
-        if self.config.rollout_percentage is not None:
-            upload_body[u'userFraction'] = self.config.rollout_percentage / 100.0
-
-        edit_service.update_track(self.config.track, upload_body)
+        version_codes = _check_and_get_flatten_version_codes(apks)
+        edit_service.update_track(self.config.track, version_codes, self.config.rollout_percentage)
         edit_service.commit_transaction()
 
     def run(self):

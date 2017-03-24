@@ -90,10 +90,7 @@ def test_rollout_percentage(edit_service_mock, monkeypatch):
         config['rollout_percentage'] = valid_percentage
 
         PushAPK(config).run()
-        edit_service_mock.update_track.assert_called_once_with('rollout', {
-            u'versionCodes': ['0', '1'],
-            u'userFraction': valid_percentage / 100.0   # Ensure float in Python 2
-        })
+        edit_service_mock.update_track.assert_called_once_with('rollout', ['0', '1'], valid_percentage)
         edit_service_mock.update_track.reset_mock()
 
 
@@ -127,7 +124,7 @@ def test_upload_apk(edit_service_mock, monkeypatch):
     for apk_file in (apk_arm, apk_x86):
         edit_service_mock.upload_apk.assert_any_call(apk_file.name)
 
-    edit_service_mock.update_track.assert_called_once_with('alpha', {u'versionCodes': ['0', '1']})
+    edit_service_mock.update_track.assert_called_once_with('alpha', ['0', '1'], None)
     edit_service_mock.commit_transaction.assert_called_once_with()
 
 

@@ -19,7 +19,7 @@ import logging
 from oauth2client.service_account import ServiceAccountCredentials
 from apiclient.discovery import build
 
-from mozapkpublisher.exceptions import NoTransactionError
+from mozapkpublisher.exceptions import NoTransactionError, WrongArgumentGiven
 
 # Google play has currently 3 tracks. Rollout deploys
 # to a limited percentage of users
@@ -92,11 +92,18 @@ class EditService(object):
         return response
 
     @transaction_required
-    def update_track(self, track, body):
+    def update_track(self, track, version_codes, rollout_percentage=None):
+        body = {u'versionCodes': version_codes}
+        if rollout_percentage is not None:
+            if rollout_percentage < 0 or rollout_percentage > 100:
+                raise WrongArgumentGiven('rollout percentage must be between 0 and 100. Value given: {}'.format(rollout_percentage))
+
+            body[u'userFraction'] = rollout_percentage / 100.0  # Ensure float in Python 2
+
         response = self._service.tracks().update(
             editId=self._edit_id, track=track, packageName=self._package_name, body=body
         ).execute()
-        logger.info('Track "{}" updated with body {}'.format(track, body))
+        logger.info('Track "{}" updated with: {}'.format(track, body))
         logger.debug('Track update response: {}'.format(response))
 
     @transaction_required
