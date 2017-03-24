@@ -151,11 +151,11 @@ def test_update_listings(monkeypatch):
     )
 
 
-def test_update_apk_listings(monkeypatch):
+def test_update_whats_new(monkeypatch):
     edit_mock = set_up_edit_service_mock(monkeypatch)
     edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name')
 
-    edit_service.update_apk_listings('en-GB', '2015012345', {'recentChanges': 'Check out this cool feature!'})
+    edit_service.update_whats_new('en-GB', '2015012345', 'Check out this cool feature!')
     edit_mock.apklistings().update.assert_called_once_with(
         editId=edit_service._edit_id,
         packageName='dummy_package_name',

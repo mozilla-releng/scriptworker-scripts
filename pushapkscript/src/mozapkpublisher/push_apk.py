@@ -89,11 +89,9 @@ def _push_whats_new(edit_service, release_channel, apk_version_code):
 
     for locale in locales:
         translation = store_l10n.get_translation(release_channel, locale)
-        whatsnew = translation.get('whatsnew')
+        whats_new = translation.get('whatsnew')
         play_store_locale = store_l10n.locale_mapping(locale)
-
-        edit_service.update_apk_listings(play_store_locale, apk_version_code, body={'recentChanges': whatsnew})
-        logger.info(u'Locale "{}" what\'s new has been updated to "{}"'.format(play_store_locale, whatsnew))
+        edit_service.update_whats_new(play_store_locale, apk_version_code, whats_new)
 
 
 def _check_and_get_flatten_version_codes(apks):

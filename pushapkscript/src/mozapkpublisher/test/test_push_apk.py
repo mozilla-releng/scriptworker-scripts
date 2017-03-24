@@ -161,11 +161,9 @@ def test_upload_apk_with_whats_new(edit_service_mock, monkeypatch):
 
     for (locale, whats_new) in expected_locales:
         for version_code in range(2):
-            edit_service_mock.update_apk_listings.assert_any_call(locale, str(version_code), body={
-                'recentChanges': whats_new
-            })
+            edit_service_mock.update_whats_new.assert_any_call(locale, str(version_code), whats_new)
 
-    assert edit_service_mock.update_apk_listings.call_count == 6
+    assert edit_service_mock.update_whats_new.call_count == 6
     edit_service_mock.commit_transaction.assert_called_once_with()
 
 

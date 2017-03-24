@@ -108,16 +108,14 @@ class EditService(object):
         logger.debug('Listing body: {}'.format(body))
 
     @transaction_required
-    def update_apk_listings(self, language, apk_version_code, body):
+    def update_whats_new(self, language, apk_version_code, whats_new):
         response = self._service.apklistings().update(
             editId=self._edit_id, packageName=self._package_name, language=language,
-            apkVersionCode=apk_version_code,
-            body=body
+            apkVersionCode=apk_version_code, body={'recentChanges': whats_new}
         ).execute()
-        logger.info('Listing for language "{}" (and APK with version code "{}") has been updated'.format(
-            language, apk_version_code
+        logger.info('What\'s new listing for ("{}", "{}") has been updated to: "{}"'.format(
+            language, apk_version_code, whats_new
         ))
-        logger.debug('Listing body: {}', body)
         logger.debug('Listing response: {}', response)
 
 
