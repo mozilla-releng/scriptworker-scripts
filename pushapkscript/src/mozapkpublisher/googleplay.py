@@ -100,12 +100,16 @@ class EditService(object):
         logger.debug('Track update response: {}'.format(response))
 
     @transaction_required
-    def update_listings(self, language, body):
+    def update_listings(self, language, title, full_description, short_description):
+        body = {
+            'fullDescription': full_description,
+            'shortDescription': short_description,
+            'title': title,
+        }
         self._service.listings().update(
             editId=self._edit_id, packageName=self._package_name, language=language, body=body
         ).execute()
-        logger.info('Listing for language "{}" has been updated.'.format(language))
-        logger.debug('Listing body: {}'.format(body))
+        logger.info('Listing for language "{}" has been updated with: {}'.format(language, body))
 
     @transaction_required
     def update_whats_new(self, language, apk_version_code, whats_new):

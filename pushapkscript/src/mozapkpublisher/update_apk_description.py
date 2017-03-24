@@ -47,11 +47,12 @@ See bug https://github.com/mozilla-l10n/stores_l10n/issues/71')
         for locale in locales:
             translation = store_l10n.get_translation(release_channel, locale)
             google_play_locale = store_l10n.locale_mapping(locale)
-            edit_service.update_listings(google_play_locale, body={
-                'fullDescription': translation.get('long_desc'),
-                'shortDescription': translation.get('short_desc'),
-                'title': translation.get('title')
-            })
+            edit_service.update_listings(
+                google_play_locale,
+                full_description=translation.get('long_desc'),
+                short_description=translation.get('short_desc'),
+                title=translation.get('title'),
+            )
 
         edit_service.commit_transaction()
         logger.info('Done. {} locale(s) updated'.format(len(locales)))

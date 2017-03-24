@@ -48,11 +48,12 @@ def test_update_apk_description_force_locale(monkeypatch):
     config['force_locale'] = 'en-US'
     UpdateDescriptionAPK(config).run()
 
-    edit_service_mock.update_listings.assert_called_once_with('google_play_locale', body={
-        'fullDescription': 'Long description',
-        'shortDescription': 'Short',
-        'title': 'Firefox for Android',
-    })
+    edit_service_mock.update_listings.assert_called_once_with(
+        'google_play_locale',
+        full_description='Long description',
+        short_description='Short',
+        title='Firefox for Android',
+    )
 
     assert edit_service_mock.update_listings.call_count == 1
     edit_service_mock.commit_transaction.assert_called_once_with()

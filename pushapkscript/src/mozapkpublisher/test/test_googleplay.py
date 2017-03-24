@@ -134,11 +134,12 @@ def test_update_listings(monkeypatch):
     edit_mock = set_up_edit_service_mock(monkeypatch)
     edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name')
 
-    edit_service.update_listings('en-GB', {
-        'title': 'Firefox for Android Beta',
-        'fullDescription': 'Long description',
-        'shortDescription': 'Short',
-    })
+    edit_service.update_listings(
+        'en-GB',
+        title='Firefox for Android Beta',
+        full_description='Long description',
+        short_description='Short',
+    )
     edit_mock.listings().update.assert_called_once_with(
         editId=edit_service._edit_id,
         packageName='dummy_package_name',
