@@ -4,6 +4,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## 0.2.0
+* push_apk.py first publishes listing then "what's new". This fixes unsupported locales described in [bug 1349039](https://bugzilla.mozilla.org/show_bug.cgi?id=1349039)
+* get_apk.py doesn't break because files are internally renamed after being downloaded
+* get_apk.py: `--clean` has been removed
+
 ## 0.1.6
 * Check if version codes are correctly ordered
 * en-GB is now updated like any other locale
