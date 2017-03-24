@@ -61,10 +61,10 @@ class PushAPK(Base):
                 logger.warning('Aurora is not supported by the L10n Store (see \
 https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
             else:
-                _push_whats_new(edit_service, release_channel, apk_response['versionCode'])
+                _update_or_create_all_locales(edit_service, release_channel, apk['version_code'])
 
-        version_codes = _check_and_get_flatten_version_codes(apks)
-        edit_service.update_track(self.config.track, version_codes, self.config.rollout_percentage)
+        all_version_codes = _check_and_get_flatten_version_codes(apks)
+        edit_service.update_track(self.config.track, all_version_codes, self.config.rollout_percentage)
         edit_service.commit_transaction()
 
     def run(self):
@@ -80,15 +80,24 @@ https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
         self.upload_apks(apks)
 
 
-def _push_whats_new(edit_service, release_channel, apk_version_code):
+def _update_or_create_all_locales(edit_service, release_channel, apk_version_code):
     locales = store_l10n.get_list_locales(release_channel)
     locales.append(u'en-US')
 
     for locale in locales:
         translation = store_l10n.get_translation(release_channel, locale)
-        whats_new = translation.get('whatsnew')
         play_store_locale = store_l10n.locale_mapping(locale)
-        edit_service.update_whats_new(play_store_locale, apk_version_code, whats_new)
+
+        edit_service.update_listings(
+            play_store_locale,
+            full_description=translation.get('long_desc'),
+            short_description=translation.get('short_desc'),
+            title=translation.get('title'),
+        )
+
+        edit_service.update_whats_new(
+            play_store_locale, apk_version_code, whats_new=translation.get('whatsnew')
+        )
 
 
 def _check_and_get_flatten_version_codes(apks):

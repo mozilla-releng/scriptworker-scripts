@@ -128,15 +128,15 @@ def test_upload_apk(edit_service_mock, monkeypatch):
     edit_service_mock.commit_transaction.assert_called_once_with()
 
 
-def test_upload_apk_with_whats_new(edit_service_mock, monkeypatch):
+def test_upload_apk_with_locales_updated(edit_service_mock, monkeypatch):
     monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
 
     monkeypatch.setattr(store_l10n, 'get_list_locales', lambda _: [u'en-GB', u'es-MX'])
     monkeypatch.setattr(store_l10n, 'get_translation', lambda _, locale: {
         'title': 'Navegador web Firefox',
-        'long_desc': 'descripcion larga',
-        'short_desc': 'corto',
+        'long_desc': 'Descripcion larga',
+        'short_desc': 'Corto',
         'whatsnew': 'Mire a esta caracteristica',
     } if locale == 'es-MX' else {
         'title': 'Firefox for Android',
@@ -151,15 +151,20 @@ def test_upload_apk_with_whats_new(edit_service_mock, monkeypatch):
     PushAPK(config).run()
 
     expected_locales = (
-        ('es-US', 'Mire a esta caracteristica'),
-        ('en-GB', 'Check out this cool feature!'),
-        ('en-US', 'Check out this cool feature!'),
+        ('es-US', 'Navegador web Firefox', 'Corto', 'Descripcion larga', 'Mire a esta caracteristica'),
+        ('en-GB', 'Firefox for Android', 'Short', 'Long description', 'Check out this cool feature!'),
+        ('en-US', 'Firefox for Android', 'Short', 'Long description', 'Check out this cool feature!'),
     )
 
-    for (locale, whats_new) in expected_locales:
-        for version_code in range(2):
-            edit_service_mock.update_whats_new.assert_any_call(locale, str(version_code), whats_new)
+    for (locale, title, short_description, full_description, whats_new) in expected_locales:
+        edit_service_mock.update_listings.assert_any_call(
+            locale, full_description=full_description, short_description=short_description, title=title
+        )
 
+        for version_code in range(2):
+            edit_service_mock.update_whats_new.assert_any_call(locale, str(version_code), whats_new=whats_new)
+
+    assert edit_service_mock.update_listings.call_count == 6
     assert edit_service_mock.update_whats_new.call_count == 6
     edit_service_mock.commit_transaction.assert_called_once_with()
 
