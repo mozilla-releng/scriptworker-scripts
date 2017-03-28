@@ -113,10 +113,11 @@ class EditService(object):
             'shortDescription': short_description,
             'title': title,
         }
-        self._service.listings().update(
+        response = self._service.listings().update(
             editId=self._edit_id, packageName=self._package_name, language=language, body=body
         ).execute()
-        logger.info('Listing for language "{}" has been updated with: {}'.format(language, body))
+        logger.info(u'Listing for language "{}" has been updated with: {}'.format(language, body))
+        logger.debug(u'Listing response: {}'.format(response))
 
     @transaction_required
     def update_whats_new(self, language, apk_version_code, whats_new):
@@ -124,10 +125,10 @@ class EditService(object):
             editId=self._edit_id, packageName=self._package_name, language=language,
             apkVersionCode=apk_version_code, body={'recentChanges': whats_new}
         ).execute()
-        logger.info('What\'s new listing for ("{}", "{}") has been updated to: "{}"'.format(
+        logger.info(u'What\'s new listing for ("{}", "{}") has been updated to: "{}"'.format(
             language, apk_version_code, whats_new
         ))
-        logger.debug('Listing response: {}', response)
+        logger.debug(u'Apk listing response: {}'.format(response))
 
 
 def _connect(service_account, credentials_file_path):
