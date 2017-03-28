@@ -4,6 +4,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## 0.2.1
+* Python 2: Fix enconding issue when uploading locales that contain non-ASCII characters
+
 ## 0.2.0
 * push_apk.py first publishes listing then "what's new". This fixes unsupported locales described in [bug 1349039](https://bugzilla.mozilla.org/show_bug.cgi?id=1349039)
 * get_apk.py doesn't break because files are internally renamed after being downloaded
