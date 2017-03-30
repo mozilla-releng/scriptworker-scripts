@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 
 import scriptworker.client
 from pushapkscript.exceptions import TaskVerificationError
@@ -38,22 +37,3 @@ def validate_task_schema(context):
         task_schema = json.load(fh)
     log.debug(task_schema)
     scriptworker.client.validate_json_schema(context.task, task_schema)
-
-
-async def download_files(context):
-    apks_to_download = context.task['payload']['apks']
-    work_dir = context.config['work_dir']
-
-    apks_to_process = {apk_type: {'url': apk_url, 'target_dir': os.path.join(work_dir, apk_type)} for apk_type, apk_url in apks_to_download.items()}
-
-    downloaded_files = {}
-    # XXX download_artifacts() is imported here, in order to patch it
-    from scriptworker.artifacts import download_artifacts
-    for apk_type, values in apks_to_process.items():
-        # TODO: Use a dict comprehension once Python 3.6 is supported by scriptworker
-        # https://github.com/mozilla-releng/scriptworker/issues/47
-        downloaded_files[apk_type] = await download_artifacts(context, file_urls=[values['url']], parent_dir=values['target_dir'])
-
-    return {
-        apk_type: locations[0] for apk_type, locations in downloaded_files.items()
-    }

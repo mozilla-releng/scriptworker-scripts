@@ -29,10 +29,5 @@ class ScriptTest(unittest.TestCase):
         self.assertEqual(get_default_config(), {
             'work_dir': '/a/current/work_dir',
             'schema_file': '/a/current/dir/pushapkscript/data/pushapk_task_schema.json',
-            'valid_artifact_rules': [{
-              'netlocs': ['queue.taskcluster.net'],
-              'path_regexes': ['^/v1/task/(?P<taskId>[^/]+)(/runs/\\d+)?/artifacts/(?P<filepath>.*)$'],
-              'schemes': ['https']
-            }],
             'verbose': False,
         })

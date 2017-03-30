@@ -16,3 +16,7 @@ def mkdir(path):
 def load_json(path):
     with open(path, "r") as fh:
         return json.load(fh)
+
+
+def filter_out_identical_values(list_):
+    return list(set(list_))

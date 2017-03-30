@@ -9,11 +9,13 @@ import sys
 import traceback
 
 import scriptworker.client
+from scriptworker.artifacts import get_upstream_artifacts_full_paths_per_task_id
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from pushapkscript import jarsigner
-from pushapkscript.task import download_files, validate_task_schema, extract_channel
+from pushapkscript.apk import sort_and_check_apks_per_architectures
+from pushapkscript.task import validate_task_schema, extract_channel
 from pushapkscript.utils import load_json
 from pushapkscript.googleplay import publish_to_googleplay
 
@@ -21,44 +23,39 @@ from pushapkscript.googleplay import publish_to_googleplay
 log = logging.getLogger(__name__)
 
 
-# async_main {{{1
 async def async_main(context):
     context.task = scriptworker.client.get_task(context.config)
-    log.info("validating task")
+    log.info('Validating task')
     validate_task_schema(context)
 
-    log.info('Downloading APKs...')
-    downloaded_apks = await download_files(context)
+    log.info('Verifying upstream artifacts...')
+    artifacts_per_task_id = get_upstream_artifacts_full_paths_per_task_id(context)
+    all_artifacts = [
+        artifact
+        for artifacts_list in artifacts_per_task_id.values()
+        for artifact in artifacts_list
+    ]
+    apks_per_architectures = sort_and_check_apks_per_architectures(all_artifacts)
 
     log.info('Verifying APKs\' signatures...')
     channel = extract_channel(context.task)
-    for _, apk_path in downloaded_apks.items():
-        jarsigner.verify(context, apk_path, channel)
+    [jarsigner.verify(context, apk_path, channel) for apk_path in apks_per_architectures.values()]
 
     log.info('Pushing APKs to Google Play Store...')
-    publish_to_googleplay(context, downloaded_apks)
+    publish_to_googleplay(context, apks_per_architectures)
 
     log.info('Done!')
 
 
 def get_default_config():
-    """ Create the default config to work from.
-    """
     cwd = os.getcwd()
     parent_dir = os.path.dirname(cwd)
 
-    default_config = {
+    return {
         'work_dir': os.path.join(parent_dir, 'work_dir'),
         'schema_file': os.path.join(cwd, 'pushapkscript', 'data', 'pushapk_task_schema.json'),
-        # TODO Delete this key once Chain Of Trust is enabled
-        'valid_artifact_rules': [{
-          'netlocs': ['queue.taskcluster.net'],
-          'path_regexes': ['^/v1/task/(?P<taskId>[^/]+)(/runs/\\d+)?/artifacts/(?P<filepath>.*)$'],
-          'schemes': ['https']
-        }],
         'verbose': False,
     }
-    return default_config
 
 
 def usage():

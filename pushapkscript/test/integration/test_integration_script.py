@@ -2,8 +2,8 @@ import unittest
 import os
 import tempfile
 import json
+import shutil
 import subprocess
-from distutils.util import strtobool
 
 from pushapkscript.script import main
 from pushapkscript.test.helpers.task_generator import TaskGenerator
@@ -11,6 +11,7 @@ from pushapkscript.test.helpers.task_generator import TaskGenerator
 this_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.join(this_dir, '..', '..', '..')
 project_data_dir = os.path.join(project_dir, 'pushapkscript', 'data')
+test_data_dir = os.path.join(this_dir, '..', 'data')
 
 
 class KeystoreManager(object):
@@ -64,23 +65,29 @@ class ConfigFileGenerator(object):
 
 class MainTest(unittest.TestCase):
 
-    @unittest.skipIf(strtobool(os.environ.get('SKIP_NETWORK_TESTS', 'true')), 'Tests requiring network are skipped')
     @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
     def test_main_downloads_verifies_signature_and_gives_the_right_config_to_mozapkpublisher(self, PushAPK):
-        with tempfile.TemporaryDirectory() as test_data_dir:
-            keystore_manager = KeystoreManager(test_data_dir)
+        with tempfile.TemporaryDirectory() as test_temp_dir:
+            keystore_manager = KeystoreManager(test_temp_dir)
             keystore_manager.add_certificate(os.path.join(project_data_dir, 'android-nightly.cer'))
 
-            config_generator = ConfigFileGenerator(test_data_dir, keystore_manager)
+            config_generator = ConfigFileGenerator(test_temp_dir, keystore_manager)
             task_generator = TaskGenerator()
             task_generator.generate_file(config_generator.work_dir)
+
+            for task_id in (task_generator.x86_task_id, task_generator.arm_task_id):
+                original_path = os.path.join(test_data_dir, 'target-{}.apk'.format(task_id))
+                target_path = os.path.abspath(os.path.join(test_temp_dir, 'work', 'cot', task_id, 'public/build/target.apk'))
+                target_dir = os.path.dirname(target_path)
+                os.makedirs(target_dir)
+                shutil.copy(original_path, target_path)
 
             main(config_path=config_generator.generate())
 
             PushAPK.assert_called_with(config={
                 'credentials': '/dummy/path/to/certificate.p12',
-                'apk_armv7_v15': '{}/work/armv7_v15/public/build/target.apk'.format(test_data_dir),
-                'apk_x86': '{}/work/x86/public/build/target.apk'.format(test_data_dir),
+                'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(test_temp_dir, task_generator.arm_task_id),
+                'apk_x86': '{}/work/cot/{}/public/build/target.apk'.format(test_temp_dir, task_generator.x86_task_id),
                 'package_name': 'org.mozilla.fennec_aurora',
                 'service_account': 'dummy-service-account@iam.gserviceaccount.com',
                 'track': 'alpha',
