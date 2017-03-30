@@ -2,7 +2,8 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## 0.2.2
+* Upgrade requests package
 
 ## 0.2.1
 * Python 2: Fix enconding issue when uploading locales that contain non-ASCII characters
