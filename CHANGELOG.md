@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.3.0
+* Artifacts are downloaded thanks to Chain of Trust
+* APK architectures don't need to be manually input. They are now automatically detected.
+
 ## 0.2.2
 Pin dependencies in Puppet only.
 Use new tc-migrated build locations.
