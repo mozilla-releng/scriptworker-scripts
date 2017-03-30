@@ -21,7 +21,7 @@
     "jarsigner_key_store": "/absolute/path/to/keystore",
     "jarsigner_certificate_aliases": {
         "aurora": "nightly",
-        "beta": "nightly",
+        "beta": "release",
         "release": "release"
     },
 
