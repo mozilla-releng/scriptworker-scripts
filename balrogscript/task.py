@@ -34,7 +34,8 @@ def get_task(script_config):
 
 def get_task_channel(task, script_config):
     """Extract task channel from scopes"""
-    # TODO to be implemented once we're passed phase 1 in tcmigration relpro
+    # TODO to be implemented once balrogscript needs to handle rules munging
+    # too
     raise NotImplementedError("This method has yet to be implemented")
 
 

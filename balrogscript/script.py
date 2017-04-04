@@ -16,39 +16,11 @@ log = logging.getLogger(__name__)
 
 
 def create_submitter(e, balrog_auth, config):
-    from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
+    from balrog.submitter.cli import NightlySubmitterV4  # noqa: E402
     auth = balrog_auth
 
-    if "previousVersion" in e and "previousBuildNumber" in e:
-        # TODO: to rewrite this only for CMAR. partials are handled externally
-        # by funsize
-        log.info("Release style balrog submission")
-
-        complete_info = [{
-            "hash": e["to_hash"],
-            "size": e["to_size"],
-        }]
-        partial_info = [{
-            "hash": e["hash"],
-            "size": e["size"],
-        }]
-        partial_info[0]["previousVersion"] = e["previousVersion"]
-        partial_info[0]["previousBuildNumber"] = e["previousBuildNumber"]
-        submitter = ReleaseSubmitterV4(api_root=config['api_root'],
-                                       auth=auth,
-                                       dummy=config['dummy'])
-
-        return submitter, {'platform': e["platform"],
-                           'productName': e["appName"],
-                           'version': e["toVersion"],
-                           'build_number': e["toBuildNumber"],
-                           'appVersion': e["version"],
-                           'extVersion': e["version"],
-                           'buildID': e["to_buildid"],
-                           'locale': e["locale"],
-                           'hashFunction': 'sha512',
-                           'partialInfo': partial_info,
-                           'completeInfo': complete_info}
+    if "tc_release" in e:
+        raise NotImplementedError("This logic piece has yet to be implemented")
 
     elif "tc_nightly" in e:
         log.info("Taskcluster Nightly Fennec style Balrog submission")
