@@ -3,9 +3,11 @@ import json
 
 
 class TaskGenerator(object):
-    def __init__(self):
+    def __init__(self, google_play_track='alpha', rollout_percentage=None):
         self.arm_task_id = 'fwk3elTDSe6FLoqg14piWg'
         self.x86_task_id = 'PKP2v4y0RdqOuLCqhevD2A'
+        self.google_play_track = google_play_track
+        self.rollout_percentage = rollout_percentage
 
     def generate_file(self, work_dir):
         task_file = os.path.join(work_dir, 'task.json')
@@ -14,7 +16,7 @@ class TaskGenerator(object):
         return task_file
 
     def generate_json(self):
-        return json.loads('''{{
+        json_content = json.loads('''{{
           "provisionerId": "some-provisioner-id",
           "workerType": "some-worker-type",
           "schedulerId": "some-scheduler-id",
@@ -24,7 +26,7 @@ class TaskGenerator(object):
           "created": "2015-05-08T16:15:58.903Z",
           "deadline": "2015-05-08T18:15:59.010Z",
           "expires": "2016-05-08T18:15:59.010Z",
-          "dependencies": ["{}", "{}"],
+          "dependencies": ["{arm_task_id}", "{x86_task_id}"],
           "scopes": ["project:releng:googleplay:aurora"],
           "payload": {{
             "upstreamArtifacts": [{{
@@ -36,6 +38,15 @@ class TaskGenerator(object):
               "taskId": "PKP2v4y0RdqOuLCqhevD2A",
               "taskType": "signing"
             }}],
-            "google_play_track": "alpha"
+            "google_play_track": "{google_play_track}"
           }}
-        }}'''.format(self.arm_task_id, self.x86_task_id))
+        }}'''.format(
+            arm_task_id=self.arm_task_id,
+            x86_task_id=self.x86_task_id,
+            google_play_track=self.google_play_track
+        ))
+
+        if self.rollout_percentage:
+            json_content['payload']['rollout_percentage'] = self.rollout_percentage
+
+        return json_content

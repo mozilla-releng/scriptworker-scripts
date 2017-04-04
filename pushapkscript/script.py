@@ -63,7 +63,7 @@ def usage():
     sys.exit(1)
 
 
-def main(name=None, config_path=None):
+def main(name=None, config_path=None, close_loop=True):
     if name not in (None, '__main__'):
         return
     context = Context()
@@ -86,7 +86,10 @@ def main(name=None, config_path=None):
         except ScriptWorkerTaskException as exc:
             traceback.print_exc()
             sys.exit(exc.exit_code)
-    loop.close()
+
+    if close_loop:
+        # Loop cannot be reopen once closed. Not closing it allows to run several tests on main()
+        loop.close()
 
 
 def craft_logging_config(context):

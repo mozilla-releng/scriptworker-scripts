@@ -24,6 +24,7 @@ class GooglePlayTest(unittest.TestCase):
             },
         }
         self.context.task = {
+            'scopes': ['project:releng:googleplay:release'],
             'payload': {
                 'google_play_track': 'alpha'
             },
@@ -50,6 +51,20 @@ class GooglePlayTest(unittest.TestCase):
                 'apk_x86': '/path/to/x86.apk',
                 'apk_arm_v15': '/path/to/arm_v15.apk',
             })
+
+    def test_craft_push_config_allows_rollout_percentage(self):
+        self.context.task['payload']['google_play_track'] = 'rollout'
+        self.context.task['payload']['rollout_percentage'] = 10
+        self.assertEqual(craft_push_apk_config(self.context, self.apks), {
+            'service_account': 'release_account',
+            'credentials': '/path/to/release.p12',
+            'dry_run': True,
+            'track': 'rollout',
+            'rollout_percentage': 10,
+            'package_name': 'org.mozilla.firefox',
+            'apk_x86': '/path/to/x86.apk',
+            'apk_arm_v15': '/path/to/arm_v15.apk',
+        })
 
     def test_craft_push_config_allows_committing_apks(self):
         self.context.task['scopes'] = ['project:releng:googleplay:aurora']

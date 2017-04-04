@@ -47,10 +47,16 @@
                     "uniqueItems": true
                 },
                 "google_play_track": {
-                    "type": "string"
+                  "enum": ["production", "beta", "alpha", "rollout"]
+                },
+                "rollout_percentage": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
                 }
             },
-            "required": ["upstreamArtifacts", "google_play_track"]
+            "required": ["upstreamArtifacts", "google_play_track"],
+            "additionalProperties": false
         }
     },
     "required": ["dependencies", "scopes", "payload"]

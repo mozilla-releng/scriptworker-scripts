@@ -23,6 +23,8 @@ def craft_push_apk_config(context, apks):
 
     payload = context.task['payload']
     push_apk_config['track'] = payload['google_play_track']
+    if payload.get('rollout_percentage'):
+        push_apk_config['rollout_percentage'] = payload['rollout_percentage']
 
     # Don't commit anything, by default. Commited APKs can't be deleted (only unpublished).
     # This may become an issue if somebody pushes an APK with the same version code than

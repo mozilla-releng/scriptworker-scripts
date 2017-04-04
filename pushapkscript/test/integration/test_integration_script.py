@@ -65,31 +65,58 @@ class ConfigFileGenerator(object):
 
 class MainTest(unittest.TestCase):
 
+    def setUp(self):
+        self.test_temp_dir_fp = tempfile.TemporaryDirectory()
+        self.test_temp_dir = self.test_temp_dir_fp.name
+        self.keystore_manager = KeystoreManager(self.test_temp_dir)
+        self.keystore_manager.add_certificate(os.path.join(project_data_dir, 'android-nightly.cer'))
+
+        self.config_generator = ConfigFileGenerator(self.test_temp_dir, self.keystore_manager)
+
+    def tearDown(self):
+        self.test_temp_dir_fp.cleanup()
+
+    def _copy_files_to_test_temp_dir(self, task_generator):
+        for task_id in (task_generator.x86_task_id, task_generator.arm_task_id):
+            original_path = os.path.join(test_data_dir, 'target-{}.apk'.format(task_id))
+            target_path = os.path.abspath(os.path.join(self.test_temp_dir, 'work', 'cot', task_id, 'public/build/target.apk'))
+            target_dir = os.path.dirname(target_path)
+            os.makedirs(target_dir)
+            shutil.copy(original_path, target_path)
+
     @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
     def test_main_downloads_verifies_signature_and_gives_the_right_config_to_mozapkpublisher(self, PushAPK):
-        with tempfile.TemporaryDirectory() as test_temp_dir:
-            keystore_manager = KeystoreManager(test_temp_dir)
-            keystore_manager.add_certificate(os.path.join(project_data_dir, 'android-nightly.cer'))
+        task_generator = TaskGenerator()
+        task_generator.generate_file(self.config_generator.work_dir)
 
-            config_generator = ConfigFileGenerator(test_temp_dir, keystore_manager)
-            task_generator = TaskGenerator()
-            task_generator.generate_file(config_generator.work_dir)
+        self._copy_files_to_test_temp_dir(task_generator)
+        main(config_path=self.config_generator.generate(), close_loop=False)
 
-            for task_id in (task_generator.x86_task_id, task_generator.arm_task_id):
-                original_path = os.path.join(test_data_dir, 'target-{}.apk'.format(task_id))
-                target_path = os.path.abspath(os.path.join(test_temp_dir, 'work', 'cot', task_id, 'public/build/target.apk'))
-                target_dir = os.path.dirname(target_path)
-                os.makedirs(target_dir)
-                shutil.copy(original_path, target_path)
+        PushAPK.assert_called_with(config={
+            'credentials': '/dummy/path/to/certificate.p12',
+            'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
+            'apk_x86': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
+            'package_name': 'org.mozilla.fennec_aurora',
+            'service_account': 'dummy-service-account@iam.gserviceaccount.com',
+            'track': 'alpha',
+            'dry_run': True,
+        })
 
-            main(config_path=config_generator.generate())
+    @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
+    def test_main_allows_rollout_percentage(self, PushAPK):
+        task_generator = TaskGenerator(google_play_track='rollout', rollout_percentage=25)
+        task_generator.generate_file(self.config_generator.work_dir)
 
-            PushAPK.assert_called_with(config={
-                'credentials': '/dummy/path/to/certificate.p12',
-                'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(test_temp_dir, task_generator.arm_task_id),
-                'apk_x86': '{}/work/cot/{}/public/build/target.apk'.format(test_temp_dir, task_generator.x86_task_id),
-                'package_name': 'org.mozilla.fennec_aurora',
-                'service_account': 'dummy-service-account@iam.gserviceaccount.com',
-                'track': 'alpha',
-                'dry_run': True,
-            })
+        self._copy_files_to_test_temp_dir(task_generator)
+        main(config_path=self.config_generator.generate(), close_loop=False)
+
+        PushAPK.assert_called_with(config={
+            'credentials': '/dummy/path/to/certificate.p12',
+            'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
+            'apk_x86': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
+            'package_name': 'org.mozilla.fennec_aurora',
+            'service_account': 'dummy-service-account@iam.gserviceaccount.com',
+            'track': 'rollout',
+            'rollout_percentage': 25,
+            'dry_run': True,
+        })
