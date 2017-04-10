@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.3.1
+Tasks can now define a rollout percentage for the rollout track
+
 ## 0.3.0
 * Artifacts are downloaded thanks to Chain of Trust
 * APK architectures don't need to be manually input. They are now automatically detected.
