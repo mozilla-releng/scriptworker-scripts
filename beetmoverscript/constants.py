@@ -16,6 +16,7 @@ MIME_MAP = {
 STAGE_PLATFORM_MAP = {
     'linux': 'linux-i686',
     'linux64': 'linux-x86_64',
+    'macosx64': 'mac',
 }
 # TODO don't rely on default dict
 # use explicit platform 'firefox' mapping when all desktop platforms are added

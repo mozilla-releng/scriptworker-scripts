@@ -15,7 +15,12 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.langpack.xpi
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.langpack.xpi
-
+    target.complete.mar:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
+      destinations:
+        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
+        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
+      update_balrog_manifest: true
     target.checksums:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums
       destinations:
@@ -138,12 +143,17 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
-    target.complete.mar:
-      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
+  {% elif platform in ["mac"] %}
+    target.dmg:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg
       destinations:
-        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
-        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
-      update_balrog_manifest: true
+        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg
+        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg
+    target.dmg.asc:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
+      destinations:
+        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
+        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
   {% endif %}
 
 {% endfor %}
