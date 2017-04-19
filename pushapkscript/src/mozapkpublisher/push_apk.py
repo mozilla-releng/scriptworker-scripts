@@ -17,6 +17,8 @@ class PushAPK(Base):
         self.config = self._parse_config(config)
         if self.config.track == 'rollout' and self.config.rollout_percentage is None:
             raise WrongArgumentGiven("When using track='rollout', rollout percentage must be provided too")
+        if self.config.rollout_percentage is not None and self.config.track != 'rollout':
+            raise WrongArgumentGiven("When using rollout-percentage, track must be set to rollout")
 
     @classmethod
     def _init_parser(cls):
