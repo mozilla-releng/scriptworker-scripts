@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.2.3
+* Verifies if `rollout_percentage` is actually used on the rollout channel. Without it, you may go full rollout, like explained in [bug 1354038 comment 2](https://bugzilla.mozilla.org/show_bug.cgi?id=1354038#c2)
+
 ## 0.2.2
 * Upgrade requests package
 
