@@ -71,17 +71,30 @@ def test_tracks():
         PushAPK(config)
 
 
-def test_rollout_percentage(edit_service_mock, monkeypatch):
+def test_invalid_rollout_percentage(edit_service_mock, monkeypatch):
     config = copy(VALID_CONFIG)
     config['track'] = 'rollout'
 
     with pytest.raises(WrongArgumentGiven):
+        # missing percentage
         PushAPK(config)
 
     for invalid_percentage in (-1, 0.5, 101):
         config['rollout_percentage'] = invalid_percentage
         with pytest.raises(WrongArgumentGiven):
             PushAPK(config)
+
+    valid_percentage = 1
+    invalid_track = 'production'
+    config['rollout_percentage'] = valid_percentage
+    config['track'] = invalid_track
+    with pytest.raises(WrongArgumentGiven):
+        PushAPK(config)
+
+
+def test_valid_rollout_percentage(edit_service_mock, monkeypatch):
+    config = copy(VALID_CONFIG)
+    config['track'] = 'rollout'
 
     monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
