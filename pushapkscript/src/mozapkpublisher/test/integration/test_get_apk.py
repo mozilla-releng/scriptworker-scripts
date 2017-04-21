@@ -11,7 +11,6 @@ from mozapkpublisher.get_apk import GetAPK
 
 @pytest.mark.skipif(strtobool(os.environ.get('SKIP_NETWORK_TESTS', 'true')), reason='Tests requiring network are skipped')
 @pytest.mark.parametrize('get_apk_args, apks_file_regexes', (
-    ({'latest_aurora': True}, (r'fennec-\d{2}\.0a2\.multi\.android-arm\.apk', r'fennec-\d{2}\.0a2\.multi\.android-i386\.apk')),
     ({'latest_nightly': True, 'arch': 'x86'}, (r'fennec-\d{2}\.0a1\.multi\.android-i386\.apk',)),
     # Pre-Fennec 53.0b1
     ({'version': '52.0', 'build': '2', 'arch': 'arm'}, (r'fennec-52\.0\.multi\.android-arm\.apk',)),
