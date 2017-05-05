@@ -15,7 +15,7 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
 from scriptworker.utils import retry_async, raise_future_exceptions
 
-from beetmoverscript.constants import MIME_MAP, RELEASE_BRANCHES
+from beetmoverscript.constants import MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE
 from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
                                   get_upstream_artifacts, get_initial_release_props_file,
                                   add_checksums_to_artifacts,
@@ -213,7 +213,8 @@ async def upload_to_s3(context, s3_key, path):
         'ContentType': mimetypes.guess_type(path)[0]
     }
     headers = {
-        'Content-Type': mimetypes.guess_type(path)[0]
+        'Content-Type': mimetypes.guess_type(path)[0],
+        'Cache-Control': 'public, max-age=%d' % CACHE_CONTROL_MAXAGE,
     }
     creds = context.config['bucket_config'][context.bucket]['credentials']
     s3 = boto3.client('s3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key'],)

@@ -63,3 +63,5 @@ RESTRICTED_BUCKET_PATHS = {
 RELEASE_ACTIONS = (
     'push-to-candidates',
 )
+
+CACHE_CONTROL_MAXAGE = 3600 * 4
