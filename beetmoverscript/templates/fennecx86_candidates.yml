@@ -64,6 +64,10 @@ mapping:
       s3_key: fennec-{{ version }}.{{ locale }}.android-i386.talos.tests.zip
       destinations:
         - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-i386.talos.tests.zip
+    target.awsy.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-i386.awsy.tests.zip
+      destinations:
+        - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-i386.awsy.tests.zip
     target.test_packages.json:
       s3_key: fennec-{{ version }}.{{ locale }}.android-i386.test_packages.json
       destinations:
