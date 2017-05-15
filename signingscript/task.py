@@ -33,6 +33,7 @@ def task_cert_type(task):
 
     Returns:
         str: the cert type.
+
     """
     certs = [s for s in task["scopes"] if
              s.startswith("project:releng:signing:cert:")]
@@ -51,6 +52,7 @@ def task_signing_formats(task):
 
     Returns:
         list: the signing formats.
+
     """
     return [s.split(":")[-1] for s in task["scopes"] if
             s.startswith("project:releng:signing:format:")]
@@ -65,6 +67,7 @@ def validate_task_schema(context):
 
     Raises:
         ScriptWorkerTaxkException: on failed validation.
+
     """
     with open(context.config['schema_file']) as fh:
         task_schema = json.load(fh)
@@ -85,6 +88,7 @@ def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
 
     Returns:
         list of lists: the list of signing servers.
+
     """
     return [s for s in signing_servers[cert_type] if set(signing_formats) & set(s.formats)]
 
@@ -102,6 +106,7 @@ async def get_token(context, output_file, cert_type, signing_formats):
 
     Raises:
         SigningServerError: on failure
+
     """
     token = None
     data = {
@@ -148,6 +153,7 @@ async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
 
     Raises:
         FailedSubprocess: on subprocess error while signing.
+
     """
     from_ = await _execute_pre_signing_steps(context, from_)
     to = to or from_
@@ -253,6 +259,7 @@ def detached_sigfiles(filepath, signing_formats):
 
     Returns:
         list: the list of paths of any detached signatures.
+
     """
     detached_signatures = []
     for sig_type, sig_ext, sig_mime in utils.get_detached_signatures(signing_formats):
@@ -283,6 +290,7 @@ def build_filelist_dict(context, all_signing_formats):
     Returns:
         dict of dicts: the dictionary of relative `path` to a dictionary with
             `full_path` and a list of signing `formats`.
+
     """
     filelist_dict = {}
     all_signing_formats_set = set(all_signing_formats)

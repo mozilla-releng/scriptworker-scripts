@@ -40,6 +40,7 @@ async def async_main(context):
 
     Args:
         context (SigningContext): the signing context.
+
     """
     work_dir = context.config['work_dir']
     context.task = scriptworker.client.get_task(context.config)
@@ -78,6 +79,7 @@ def get_default_config(base_dir=None):
 
     Returns:
         dict: the default configuration dict.
+
     """
     base_dir = base_dir or os.path.dirname(os.getcwd())
     default_config = {
@@ -110,6 +112,7 @@ def main(config_path=None):
     Args:
         config_path (str, optional): the path to the config file.  If `None`, use
             `sys.argv[1]`.  Defaults to None.
+
     """
     context = SigningContext()
     context.config = get_default_config()

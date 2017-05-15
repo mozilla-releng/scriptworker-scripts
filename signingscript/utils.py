@@ -27,6 +27,7 @@ def mkdir(path):
 
     Args:
         path (str): the path to mkdir
+
     """
     try:
         os.makedirs(path)
@@ -44,6 +45,7 @@ def get_hash(path, hash_type="sha512"):
 
     Returns:
         str: the hexdigest of the hash
+
     """
     # I'd love to make this async, but evidently file i/o is always ready
     h = hashlib.new(hash_type)
@@ -61,6 +63,7 @@ def load_json(path):
 
     Returns:
         dict: the loaded json object
+
     """
     with open(path, "r") as fh:
         return json.load(fh)
@@ -74,6 +77,7 @@ def load_signing_server_config(context):
 
     Returns:
         dict of lists: keyed by signing cert type, value is a list of SigningServer named tuples
+
     """
     path = context.config['signing_server_config']
     log.info("Loading signing server config from {}".format(path))
@@ -97,6 +101,7 @@ def get_detached_signatures(signing_formats):
 
     Returns:
         list of tuples: the tuple contains signing format, extension, and mime type.
+
     """
     return [(sig_type, sig_ext, sig_mime) for sig_type, sig_ext, sig_mime in
             DETACHED_SIGNATURES if sig_type in signing_formats]
@@ -107,6 +112,7 @@ async def log_output(fh):
 
     Args:
         fh (async generator): the async generator to log output from
+
     """
     while True:
         line = await fh.readline()
@@ -127,6 +133,7 @@ def copy_to_dir(source, parent_dir, target=None):
 
     Raises:
         SigningServerError: on failure
+
     """
     target = target or os.path.basename(source)
     target_path = os.path.join(parent_dir, target)
