@@ -145,6 +145,6 @@ def _connect(service_account, credentials_file_path):
     http = httplib2.Http()
     http = credentials.authorize(http)
 
-    service = build('androidpublisher', 'v2', http=http)
+    service = build('androidpublisher', 'v2', http=http, cache_discovery=False)
 
     return service
