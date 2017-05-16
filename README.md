@@ -4,6 +4,20 @@ Beetmoverscript README
 [![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/beetmoverscript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/beetmoverscript?branch=master)
 
 
+## deploy a new version
+
+1. Once PR is reviewed and passes the tests, have one of the admins merge that
+2. Bump to new version in `version.json` and commit with a "%VERSION%" message
+3. `hg tag %VERSION%`
+4. `hg push`
+5. `hg push --tags`
+6. Create tarball with `python setup.py sdist` and scp that file under [puppet](http://releng-puppet2.srv.releng.scl3.mozilla.com/python/packages-3.5/)
+7. Wait for that file to be synchronized across all puppet instances (emails arrive to nofity of that)
+8. Tweak tweak the `beetmoverscript` version under [beetmoverworker module](https://hg.mozilla.org/build/puppet/file/tip/modules/beetmover_scriptworker/manifests/init.pp#l28) to reflect the new version
+9. Push puppet bump and merge it to production
+10. There are currently four beetmoverworkers. Ssh to each and single one of them and run `puppet agent --test` as `root`.
+
+
 ## install
 
 ### locally
