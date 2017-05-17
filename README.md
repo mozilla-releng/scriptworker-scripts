@@ -104,3 +104,59 @@ This is purely because
 
 1. @escapewindow prefers writing markdown, and
 1. pypi appears to deal with rst better than markdown.
+
+## Frequently asked questions
+
+### I'd like to test out changes in pushapkscript...
+
+#### Do I *need* to activate chain of trust for *local* development?
+
+No. Chain of trust is used to securely download artifacts. You can bypass that step by having artifacts already on-disk. Just put the APKs in: `$work_dir/cot/$task_id/public/build/target.apk` (each APK has a different task_id). Then, you can [run pushapkscript](#run).
+
+#### Is there a staging instance I can push my code to?
+
+There used to be one, but it's now decommissioned. You can spawn a new instance via puppet. To do so:
+
+1. Create a new VM instance. You can [ask for a loaner](https://bugzilla.mozilla.org/show_bug.cgi?id=1307110).
+1. On the [puppet master node](https://dxr.mozilla.org/build-central/rev/e2e751bce7198d358725904a9130bbb06a26c0f9/puppet/manifests/moco-config.pp#78), [set up a user environment](https://wiki.mozilla.org/ReleaseEngineering/PuppetAgain/HowTo/Set_up_a_user_environment).
+1. Add a new node to [moco-nodes.pp](https://dxr.mozilla.org/build-central/rev/e2e751bce7198d358725904a9130bbb06a26c0f9/puppet/manifests/moco-nodes.pp#1069). The config example is present in this repo at `examples/puppet-node.example.pp`.
+1. Activate chain of trust [by creating the gpg keys and whitelisting them](http://scriptworker.readthedocs.io/en/latest/chain_of_trust.html#gpg-key-management). Otherwise, artifacts won't be downloaded.
+1. Edit your tasks to point to the [dev worker group](https://dxr.mozilla.org/build-central/rev/e2e751bce7198d358725904a9130bbb06a26c0f9/puppet/modules/pushapk_scriptworker/manifests/settings.pp#9).
+1. On your VM, make the slave [take the config of your user environment](https://wiki.mozilla.org/ReleaseEngineering/PuppetAgain/HowTo/Set_up_a_user_environment#On_the_slave_node.28s.29).
+
+:warning: Like [explained below](#is-there-an-instance-which-doesnt-interact-with-production-data), this instance will interact with the production instance of Google Play. Please keep `"dry_run": true` in your task definitions (or don't define it).
+
+### I'd like to test out Taskcluster tasks...
+
+#### Is there an instance which doesn't interact with production data?
+
+Sadly, no. The Google Play documentation doesn't mention any server we can plug to. This means, you will interact with production data. There are ways to [mitigate the risk](#how-can-i-avoid-to-publish-to-actual-users), though.
+
+#### How can I avoid to publish to actual users?
+
+There are 3 incremental ways to avoid targetting real users (or the entire user base):
+
+##### 1. Use `"dry_run": true` in your task definition.
+
+This will execute every step implemented in pushapkscript, but the last one, which commits the transaction to the Play store.
+
+This allows to publish the same APK several times.
+
+However, there are a few final checks that Google Play does only when the transaction is committed. We have already experienced one: the integrity of l10n stores (descriptions and "what's new" sections) is verified only at this time. We may extrapolate the behavior to: everything that can be done in several calls to Google Play will be checked at commit time.
+
+##### 2. Push to a closed alpha track
+
+At some point, you may want to publish your APK anyway.
+
+Google Play provides the ability to have [a beta and alpha program](https://support.google.com/googleplay/android-developer/answer/3131213) within a product. Aurora already uses [the beta program](#aurora-beta-release-vs-alpha-beta-production).
+
+You can ask release management to set up a closed alpha testing on the [Google Play console](https://play.google.com/apps/publish) (Go to Release management -> App releases -> Manage Alpha) and target users by email address. Then, edit your task definition to contain `"google_play_track": "alpha"`.
+
+##### 3. For non-aurora products: Push to the rollout track
+
+If you are confident enough to publish to percentage of our user base, you can use [the rollout track](https://support.google.com/googleplay/android-developer/answer/6346149). Just edit your task definition to contain:
+```json
+"google_play_track": "rollout",
+"rollout_percentage": 10,
+```
+if you want to target 10% of the production user base.
