@@ -34,8 +34,10 @@ keytool -import -keystore ~/.keystores/mozilla-android -file pushapkscript/data/
 Note: The keystore location and the certificate alias will be used in the `config.json` section
 
 #### config.json
-    cp config_example.json config.json
-    # edit it with your favorite text editor
+```sh
+cp examples/config.example.json config.json
+# edit it with your favorite text editor
+```
 
 There are many values to edit. Example values should give you a hint about what to provide. If not, please see [signingscript's README](https://github.com/mozilla-releng/signingscript#config-json) for more details about allowing URLs, or contact the author for other unclear areas.
 
@@ -46,9 +48,10 @@ If you aren't running through scriptworker, you need to manually create the dire
 
 ### task.json
 
-    cp task_example.json /path/to/work_dir
-    # edit it with your favorite text editor
-
+```sh
+cp examples/task.example.json /path/to/work_dir
+# edit it with your favorite text editor
+```
 
 Ordinarily, scriptworker would get the task definition from TaskCluster, and write it to a `task.json` in the `work_dir`.  Since you're initially not going to run through scriptworker, you need to put this file on disk yourself.
 
