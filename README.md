@@ -1,24 +1,24 @@
-pushapkscript
-==============
+# pushapkscript
 
 [![Build Status](https://travis-ci.org/mozilla-releng/pushapkscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/pushapkscript) [![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/pushapkscript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/pushapkscript?branch=master)
 
 Main script that is aimed to be run with [scriptworker](https://github.com/mozilla-releng/scriptworker) (but runs perfectly fine as a standalone script). This project is a fork of [signingscript](https://github.com/mozilla-releng/signingscript). Most of the documentation from signing script applies to this project.
 
 
-Get the code
--------
+## Get the code
+
 
 First, you need `python>=3.5.0`.
 
-
-    # create the virtualenv in ./venv3
-    virtualenv3 venv3
-    # activate it
-    . venv3/bin/activate
-    git clone https://github.com/mozilla-releng/pushapkscript
-    cd pushapkscript
-    pip install pushapkscript
+```sh
+# create the virtualenv in ./venv3
+virtualenv3 venv3
+# activate it
+. venv3/bin/activate
+git clone https://github.com/mozilla-releng/pushapkscript
+cd pushapkscript
+pip install pushapkscript
+```
 
 Then you need to install [jarsigner](http://docs.oracle.com/javase/8/docs/technotes/tools/windows/jarsigner.html) (usually included with JDK).
 
@@ -79,7 +79,9 @@ Note: For development purpose, aurora on the `alpha` track can also be used.
 
 You're ready to run pushapkscript!
 
-    pushapkscript CONFIG_FILE
+```sh
+pushapkscript CONFIG_FILE
+```
 
 where `CONFIG_FILE` is the config json you created above.
 
@@ -92,8 +94,8 @@ Follow the [scriptworker readme](https://github.com/mozilla-releng/scriptworker/
 :warning: Make sure your `work_dir` and `artifact_dir` point to the same directories between the scriptworker config and the pushapkscript config!
 
 
-Docs
-----
+## Docs
+
 `README.md` is the master readme, and `README.rst` is generated via
 
     pandoc --from=markdown --to=rst README.md > README.rst
