@@ -7,13 +7,13 @@ from tempfile import mkdtemp
 from mozapkpublisher.exceptions import CheckSumMismatch, WrongArgumentGiven
 from mozapkpublisher.get_apk import GetAPK, \
     craft_apk_and_checksums_url_and_download_locations, _craft_apk_and_checksums_file_names, _get_architecture_in_file_name, \
-    check_apk_against_checksum_file, _fetch_checksum_from_file
+    check_apk_against_checksum_file, _fetch_checksum_from_file, _take_out_common_path
 
 VALID_CONFIG = {'version': '50.0b8'}
-CHECKSUM_APK = os.path.join(os.path.dirname(__file__), 'data', 'blob')
 get_apk = GetAPK(VALID_CONFIG)
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+CHECKSUM_APK = os.path.join(DATA_DIR, 'blob')
 
 
 def test_mutually_exclusive_group():
@@ -92,14 +92,18 @@ def test_check_apk_against_checksum_file(checksum_file, raises):
     try:
         # check_apk nukes the checksum file, so make a copy first
         temp_dir = mkdtemp()
-        cfile = os.path.join(temp_dir, os.path.basename(checksum_file))
-        shutil.copyfile(checksum_file, cfile)
+        temp_checksum_file = os.path.join(temp_dir, os.path.basename(checksum_file))
+        shutil.copyfile(checksum_file, temp_checksum_file)
+
+        # paths in checksum are relatives, so make a copy of the blob as well
+        temp_apk_file = os.path.join(temp_dir, os.path.basename(CHECKSUM_APK))
+        shutil.copyfile(CHECKSUM_APK, temp_apk_file)
         with mock.patch.object(shutil, 'rmtree'):
             if raises:
                 with pytest.raises(CheckSumMismatch):
-                    check_apk_against_checksum_file(CHECKSUM_APK, cfile)
+                    check_apk_against_checksum_file(temp_apk_file, temp_checksum_file)
             else:
-                assert check_apk_against_checksum_file(CHECKSUM_APK, cfile) is None
+                check_apk_against_checksum_file(temp_apk_file, temp_checksum_file)
     finally:
         shutil.rmtree(temp_dir)
 
@@ -111,3 +115,24 @@ def test_check_apk_against_checksum_file(checksum_file, raises):
 def test_fetch_checksum_from_file(checksum_file):
     assert _fetch_checksum_from_file(checksum_file, CHECKSUM_APK) == \
         'd5ee2608eb21d827deef87732dc4796c7209098b8db39f95c3fac87c0dc7b186f2b097f0a52e856e6ac504ff3039a3e23936615be55a172665cdd0250f3a4379'
+
+
+@pytest.mark.parametrize('checksum_file, apk_file, expected', (
+    (
+        '/a/fake/download/directory/target.checksums',
+        '/a/fake/download/directory/target.apk',
+        'target.apk'
+    ),
+    (
+        '/a/fake/download/directory/fennec-50.0b8.multi.android-arm.checksums',
+        '/a/fake/download/directory/fennec-50.0b8.multi.android-arm.apk',
+        'fennec-50.0b8.multi.android-arm.apk'
+    ),
+    (
+        '/a/fake/download/directory/target.checksums',
+        '/a/fake/download/directory/a-subdir/target.apk',
+        'a-subdir/target.apk'
+    ),
+))
+def test_take_out_common_path(checksum_file, apk_file, expected):
+    assert _take_out_common_path(checksum_file, apk_file) == expected
