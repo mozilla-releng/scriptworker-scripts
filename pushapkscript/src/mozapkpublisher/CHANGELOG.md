@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.3.1
+* get_apk.py: Fix checksum detection when file is in a subfolder
+
 ## 0.3.0
 * Upgrade upstream dependencies
 
