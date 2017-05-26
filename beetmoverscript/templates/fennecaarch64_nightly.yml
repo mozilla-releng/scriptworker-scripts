@@ -1,0 +1,128 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps {{ product }} Nightly artifacts to pretty names for the en-US and multi locale"
+    owner: "release@mozilla.com"
+
+s3_bucket_path: pub/mobile/nightly/
+
+mapping:
+{% for locale in ['multi', 'en-US'] %}
+  {{ locale }}:
+  {% set locale_prefix = 'en-US/' if locale == 'en-US' else '' %}
+  {% set update_balrog_manifest = True if locale == 'multi' else False %}
+
+    bouncer.apk:
+      s3_key: bouncer.apk
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}bouncer.apk
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}bouncer.apk
+    target.apk:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.apk
+      destinations:
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.apk
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.apk
+      update_balrog_manifest: {{ update_balrog_manifest }}
+    target.checksums:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.checksums
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.checksums
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.checksums
+    target.checksums.asc:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.checksums.asc
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.checksums.asc
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.checksums.asc
+    target.common.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.common.tests.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.common.tests.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.common.tests.zip
+    target.cppunittest.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.cppunittest.tests.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.cppunittest.tests.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.cppunittest.tests.zip
+    target.crashreporter-symbols-full.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.crashreporter-symbols-full.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.crashreporter-symbols-full.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.crashreporter-symbols-full.zip
+    target.crashreporter-symbols.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.crashreporter-symbols.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.crashreporter-symbols.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.crashreporter-symbols.zip
+    target.json:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.json
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.json
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.json
+    target.mochitest.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.mochitest.tests.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.mochitest.tests.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.mochitest.tests.zip
+    target.mozinfo.json:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.mozinfo.json
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.mozinfo.json
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.mozinfo.json
+    target.reftest.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.reftest.tests.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.reftest.tests.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.reftest.tests.zip
+    target.talos.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.talos.tests.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.talos.tests.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.talos.tests.zip
+    target.awsy.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.awsy.tests.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.awsy.tests.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.awsy.tests.zip
+
+    target.test_packages.json:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.test_packages.json
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.test_packages.json
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.test_packages.json
+    target.txt:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.txt
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.txt
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.txt
+    target.web-platform.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.web-platform.tests.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.web-platform.tests.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.web-platform.tests.zip
+    target.xpcshell.tests.zip:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.xpcshell.tests.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.xpcshell.tests.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.xpcshell.tests.zip
+    target_info.txt:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64_info.txt
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64_info.txt
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64_info.txt
+    target.jsshell.zip:
+      s3_key: jsshell-android-aarch64.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}jsshell-android-aarch64.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}jsshell-android-aarch64.zip
+    mozharness.zip:
+      s3_key: mozharness.zip
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}mozharness.zip
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}mozharness.zip
+    robocop.apk:
+      s3_key: robocop.apk
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}robocop.apk
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}robocop.apk
+
+{% endfor %}
