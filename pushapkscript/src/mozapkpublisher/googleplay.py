@@ -26,7 +26,9 @@ from mozapkpublisher.exceptions import NoTransactionError, WrongArgumentGiven
 TRACK_VALUES = ('production', 'beta', 'alpha', 'rollout')
 
 PACKAGE_NAME_VALUES = {
-    'org.mozilla.fennec_aurora': 'aurora',
+    # Due to project Dawn, Nightly is now using the Aurora package name.
+    # See https://bugzilla.mozilla.org/show_bug.cgi?id=1357351
+    'org.mozilla.fennec_aurora': 'nightly',
     'org.mozilla.firefox_beta': 'beta',
     'org.mozilla.firefox': 'release'
 }

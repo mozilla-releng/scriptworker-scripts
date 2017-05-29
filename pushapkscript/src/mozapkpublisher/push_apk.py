@@ -55,17 +55,12 @@ class PushAPK(Base):
         )
         release_channel = googleplay.PACKAGE_NAME_VALUES[self.config.package_name]
 
-        if 'aurora' in self.config.package_name:
-            logger.warning('Aurora is not supported by the L10n Store (see \
-https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
-        else:
-            _create_or_update_listings(edit_service, release_channel)
+        _create_or_update_listings(edit_service, release_channel)
 
         for apk in apks.values():
             apk_response = edit_service.upload_apk(apk['file'])
             apk['version_code'] = apk_response['versionCode']
-            if 'aurora' not in self.config.package_name:
-                _create_or_update_whats_new(edit_service, release_channel, apk['version_code'])
+            _create_or_update_whats_new(edit_service, release_channel, apk['version_code'])
 
         all_version_codes = _check_and_get_flatten_version_codes(apks)
         edit_service.update_track(self.config.track, all_version_codes, self.config.rollout_percentage)
