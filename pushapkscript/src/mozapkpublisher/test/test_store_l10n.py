@@ -5,6 +5,7 @@ except ImportError:
 
 from mozapkpublisher import utils
 
+from mozapkpublisher import store_l10n
 from mozapkpublisher.store_l10n import get_list_locales, get_translation, locale_mapping
 
 L10N_API_URL = 'https://l10n.mozilla-community.org/stores_l10n/'
@@ -50,7 +51,11 @@ def test_locale_mapping(monkeypatch):
     } if url == 'https://l10n.mozilla-community.org/stores_l10n/api/v1/google/localesmapping/?reverse' else None
 
     monkeypatch.setattr(utils, 'load_json_url', mock_json_url)
+    # Makes sure the locale mappings hasn't been loaded yet
+    monkeypatch.setattr(store_l10n, '_mappings', None)
     assert locale_mapping('en-GB') == 'en-GB'
     assert locale_mapping('es-MX') == 'es-US'
+
+    # Mappings should be loaded only once
     assert mock_json_url.call_count == 1
     assert locale_mapping('non-mapped-locale') == 'non-mapped-locale'

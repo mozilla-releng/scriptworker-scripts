@@ -8,6 +8,7 @@ from mozapkpublisher import googleplay, store_l10n
 from mozapkpublisher import apk as apk_helper
 from mozapkpublisher.base import Base, ArgumentParser
 from mozapkpublisher.exceptions import WrongArgumentGiven, ArmVersionCodeTooHigh
+from mozapkpublisher.update_apk_description import create_or_update_listings
 
 logger = logging.getLogger(__name__)
 
@@ -53,14 +54,12 @@ class PushAPK(Base):
             self.config.service_account, self.config.google_play_credentials_file.name, self.config.package_name,
             self.config.dry_run
         )
-        release_channel = googleplay.PACKAGE_NAME_VALUES[self.config.package_name]
-
-        _create_or_update_listings(edit_service, release_channel)
+        create_or_update_listings(edit_service, self.config.package_name)
 
         for apk in apks.values():
             apk_response = edit_service.upload_apk(apk['file'])
             apk['version_code'] = apk_response['versionCode']
-            _create_or_update_whats_new(edit_service, release_channel, apk['version_code'])
+            _create_or_update_whats_new(edit_service, self.config.package_name, apk['version_code'])
 
         all_version_codes = _check_and_get_flatten_version_codes(apks)
         edit_service.update_track(self.config.track, all_version_codes, self.config.rollout_percentage)
@@ -79,19 +78,8 @@ class PushAPK(Base):
         self.upload_apks(apks)
 
 
-def _create_or_update_listings(edit_service, release_channel):
-    locales = store_l10n.get_translations_per_google_play_locale_code(release_channel)
-
-    for google_play_locale_code, translation in locales.items():
-        edit_service.update_listings(
-            google_play_locale_code,
-            full_description=translation.get('long_desc'),
-            short_description=translation.get('short_desc'),
-            title=translation.get('title'),
-        )
-
-
-def _create_or_update_whats_new(edit_service, release_channel, apk_version_code):
+def _create_or_update_whats_new(edit_service, package_name, apk_version_code):
+    release_channel = googleplay.PACKAGE_NAME_VALUES[package_name]
     locales = store_l10n.get_translations_per_google_play_locale_code(release_channel)
 
     for google_play_locale_code, translation in locales.items():

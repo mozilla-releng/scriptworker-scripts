@@ -46,6 +46,29 @@ def edit_service_mock():
     return _edit_service_mock
 
 
+def set_translations_per_google_play_locale_code(_monkeypatch):
+    _monkeypatch.setattr(store_l10n, '_translations_per_google_play_locale_code', {
+        'en-GB': {
+            'title': 'Firefox for Android',
+            'long_desc': 'Long description',
+            'short_desc': 'Short',
+            'whatsnew': 'Check out this cool feature!',
+        },
+        'en-US': {
+            'title': 'Firefox for Android',
+            'long_desc': 'Long description',
+            'short_desc': 'Short',
+            'whatsnew': 'Check out this cool feature!',
+        },
+        'es-US': {
+            'title': 'Navegador web Firefox',
+            'long_desc': 'Descripcion larga',
+            'short_desc': 'Corto',
+            'whatsnew': 'Mire a esta caracteristica',
+        },
+    })
+
+
 def test_one_missing_file():
     config = copy(VALID_CONFIG)
 
@@ -98,6 +121,7 @@ def test_valid_rollout_percentage(edit_service_mock, monkeypatch):
 
     monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
+    set_translations_per_google_play_locale_code(monkeypatch)
     for i in range(0, 101):
         valid_percentage = i
         config['rollout_percentage'] = valid_percentage
@@ -131,6 +155,7 @@ def test_check_and_get_flatten_version_codes():
 def test_upload_apk(edit_service_mock, monkeypatch):
     monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
+    set_translations_per_google_play_locale_code(monkeypatch)
 
     PushAPK(VALID_CONFIG).run()
 
@@ -144,19 +169,7 @@ def test_upload_apk(edit_service_mock, monkeypatch):
 def test_upload_apk_with_locales_updated(edit_service_mock, monkeypatch):
     monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
-
-    monkeypatch.setattr(store_l10n, 'get_list_locales', lambda _: [u'en-GB', u'es-MX'])
-    monkeypatch.setattr(store_l10n, 'get_translation', lambda _, locale: {
-        'title': 'Navegador web Firefox',
-        'long_desc': 'Descripcion larga',
-        'short_desc': 'Corto',
-        'whatsnew': 'Mire a esta caracteristica',
-    } if locale == 'es-MX' else {
-        'title': 'Firefox for Android',
-        'long_desc': 'Long description',
-        'short_desc': 'Short',
-        'whatsnew': 'Check out this cool feature!',
-    })
+    set_translations_per_google_play_locale_code(monkeypatch)
     monkeypatch.setattr(store_l10n, 'locale_mapping', lambda locale: 'es-US' if locale == 'es-MX' else locale)
 
     config = copy(VALID_CONFIG)
