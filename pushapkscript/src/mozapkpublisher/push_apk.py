@@ -55,15 +55,17 @@ class PushAPK(Base):
         )
         release_channel = googleplay.PACKAGE_NAME_VALUES[self.config.package_name]
 
+        if 'aurora' in self.config.package_name:
+            logger.warning('Aurora is not supported by the L10n Store (see \
+https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
+        else:
+            _create_or_update_listings(edit_service, release_channel)
+
         for apk in apks.values():
             apk_response = edit_service.upload_apk(apk['file'])
             apk['version_code'] = apk_response['versionCode']
-
-            if 'aurora' in self.config.package_name:
-                logger.warning('Aurora is not supported by the L10n Store (see \
-https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
-            else:
-                _update_or_create_all_locales(edit_service, release_channel, apk['version_code'])
+            if 'aurora' not in self.config.package_name:
+                _create_or_update_whats_new(edit_service, release_channel, apk['version_code'])
 
         all_version_codes = _check_and_get_flatten_version_codes(apks)
         edit_service.update_track(self.config.track, all_version_codes, self.config.rollout_percentage)
@@ -82,23 +84,24 @@ https://github.com/mozilla-l10n/stores_l10n/issues/71). Skipping what\'s new.')
         self.upload_apks(apks)
 
 
-def _update_or_create_all_locales(edit_service, release_channel, apk_version_code):
-    locales = store_l10n.get_list_locales(release_channel)
-    locales.append(u'en-US')
+def _create_or_update_listings(edit_service, release_channel):
+    locales = store_l10n.get_translations_per_google_play_locale_code(release_channel)
 
-    for locale in locales:
-        translation = store_l10n.get_translation(release_channel, locale)
-        play_store_locale = store_l10n.locale_mapping(locale)
-
+    for google_play_locale_code, translation in locales.items():
         edit_service.update_listings(
-            play_store_locale,
+            google_play_locale_code,
             full_description=translation.get('long_desc'),
             short_description=translation.get('short_desc'),
             title=translation.get('title'),
         )
 
+
+def _create_or_update_whats_new(edit_service, release_channel, apk_version_code):
+    locales = store_l10n.get_translations_per_google_play_locale_code(release_channel)
+
+    for google_play_locale_code, translation in locales.items():
         edit_service.update_whats_new(
-            play_store_locale, apk_version_code, whats_new=translation.get('whatsnew')
+            google_play_locale_code, apk_version_code, whats_new=translation.get('whatsnew')
         )
 
 
