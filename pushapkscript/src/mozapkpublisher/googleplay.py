@@ -20,24 +20,18 @@ from oauth2client.service_account import ServiceAccountCredentials
 from apiclient.discovery import build
 
 from mozapkpublisher.exceptions import NoTransactionError, WrongArgumentGiven
+from mozapkpublisher.store_l10n import STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME
 
 # Google play has currently 3 tracks. Rollout deploys
 # to a limited percentage of users
 TRACK_VALUES = ('production', 'beta', 'alpha', 'rollout')
 
-PACKAGE_NAME_VALUES = {
-    # Due to project Dawn, Nightly is now using the Aurora package name.
-    # See https://bugzilla.mozilla.org/show_bug.cgi?id=1357351
-    'org.mozilla.fennec_aurora': 'nightly',
-    'org.mozilla.firefox_beta': 'beta',
-    'org.mozilla.firefox': 'release'
-}
 
 logger = logging.getLogger(__name__)
 
 
 def add_general_google_play_arguments(parser):
-    parser.add_argument('--package-name', choices=PACKAGE_NAME_VALUES.keys(),
+    parser.add_argument('--package-name', choices=STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME.keys(),
                         help='The Google play name of the app', required=True)
 
     parser.add_argument('--service-account', help='The service account email', required=True)

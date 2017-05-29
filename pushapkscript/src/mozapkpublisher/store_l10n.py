@@ -2,22 +2,50 @@ import logging
 
 from mozapkpublisher import utils
 
-# API documentation: https://l10n.mozilla-community.org/stores_l10n/documentation/
-L10N_API_URL = 'https://l10n.mozilla-community.org/stores_l10n/'
-ALL_LOCALES_URL = L10N_API_URL + 'api/v1/fx_android/listing/{channel}/'
-LOCALE_URL = L10N_API_URL + 'api/v1/fx_android/translation/{channel}/{locale}/'
-MAPPING_URL = L10N_API_URL + 'api/v1/google/localesmapping/?reverse'
-
 logger = logging.getLogger(__name__)
 
-_mappings = None
+STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME = {
+    'org.mozilla.fennec_aurora': {
+        'product': 'fx_android',
+        # Due to project Dawn, Nightly is now using the Aurora package name.
+        # See https://bugzilla.mozilla.org/show_bug.cgi?id=1357351
+        'channel': 'nightly',
+    },
+    'org.mozilla.firefox_beta': {
+        'product': 'fx_android',
+        'channel': 'beta',
+    },
+    'org.mozilla.firefox': {
+        'product': 'fx_android',
+        'channel': 'release',
+    },
+
+    'org.mozilla.focus': {
+        'product': 'focus_android',
+        'channel': 'release',
+    }
+}
+
+# API documentation: https://l10n.mozilla-community.org/stores_l10n/documentation/
+_L10N_API_URL = 'https://l10n.mozilla-community.org/stores_l10n/api/v1'
+_ALL_LOCALES_URL = _L10N_API_URL + '/{product}/listing/{channel}/'
+_LOCALE_URL = _L10N_API_URL + '/{product}/translation/{channel}/{locale}/'
+_MAPPING_URL = _L10N_API_URL + '/google/localesmapping/?reverse'
+
+# Because these scripts are meant to run and exit, we cache the stores_l10n results
+# in these globals
 _translations_per_google_play_locale_code = None
+_mappings = None
 
 
-def get_translations_per_google_play_locale_code(release_channel, moz_locales=None):
+def get_translations_per_google_play_locale_code(package_name, moz_locales=None):
+    product_details = STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME[package_name]
+    product = product_details['product']
+    channel = product_details['channel']
+
     global _translations_per_google_play_locale_code
 
-    _init_full_locales_if_needed(release_channel)
+    _init_full_locales_if_needed(product, channel)
 
     return _translations_per_google_play_locale_code if moz_locales is None else {
         _translate_moz_locate_into_google_play_one(moz_locale):
@@ -28,18 +56,19 @@ def get_translations_per_google_play_locale_code(release_channel, moz_locales=No
     }
 
 
-def _init_full_locales_if_needed(release_channel):
+def _init_full_locales_if_needed(product, channel):
     global _translations_per_google_play_locale_code
 
     if _translations_per_google_play_locale_code is None:
-        moz_locales = _get_list_of_completed_locales(release_channel)
+        moz_locales = _get_list_of_completed_locales(product, channel)
         moz_locales.append(u'en-US')
 
         logger.info('Downloading {} locales: {}...'.format(
             len(moz_locales), moz_locales
         ))
         _translations_per_google_play_locale_code = {
-            _translate_moz_locate_into_google_play_one(moz_locale): _get_translation(release_channel, moz_locale)
+            _translate_moz_locate_into_google_play_one(moz_locale):
+            _get_translation(product, channel, moz_locale)
             for moz_locale in moz_locales
         }
         logger.info('Locales downloaded and converted to: {}'.format(
@@ -47,21 +76,21 @@ def _init_full_locales_if_needed(release_channel):
         ))
 
 
-def _get_list_of_completed_locales(release_channel):
+def _get_list_of_completed_locales(product, channel):
     """ Get all the translated locales supported by Google play
     So, locale unsupported by Google play won't be downloaded
     Idem for not translated locale
     """
-    return utils.load_json_url(ALL_LOCALES_URL.format(channel=release_channel))
+    return utils.load_json_url(_ALL_LOCALES_URL.format(product=product, channel=channel))
 
 
-def _get_translation(release_channel, locale):
-    return utils.load_json_url(LOCALE_URL.format(channel=release_channel, locale=locale))
+def _get_translation(product, channel, locale):
+    return utils.load_json_url(_LOCALE_URL.format(product=product, channel=channel, locale=locale))
 
 
 def _translate_moz_locate_into_google_play_one(locale):
     global _mappings
     if _mappings is None:
-        _mappings = utils.load_json_url(MAPPING_URL)
+        _mappings = utils.load_json_url(_MAPPING_URL)
 
     return _mappings[locale] if locale in _mappings else locale

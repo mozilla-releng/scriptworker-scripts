@@ -43,8 +43,7 @@ class UpdateDescriptionAPK(Base):
 
 
 def create_or_update_listings(edit_service, package_name, moz_locales=None):
-    release_channel = googleplay.PACKAGE_NAME_VALUES[package_name]
-    locales = store_l10n.get_translations_per_google_play_locale_code(release_channel, moz_locales)
+    locales = store_l10n.get_translations_per_google_play_locale_code(package_name, moz_locales)
 
     for google_play_locale_code, translation in locales.items():
         edit_service.update_listings(

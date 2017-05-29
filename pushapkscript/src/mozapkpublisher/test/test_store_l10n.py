@@ -9,13 +9,6 @@ from mozapkpublisher import store_l10n
 from mozapkpublisher.store_l10n import get_translations_per_google_play_locale_code, \
     _get_list_of_completed_locales, _get_translation, _translate_moz_locate_into_google_play_one
 
-L10N_API_URL = 'https://l10n.mozilla-community.org/stores_l10n/'
-ALL_LOCALES_URL = L10N_API_URL + 'api/v1/fx_android/listing/{channel}/'
-LOCALE_URL = L10N_API_URL + 'api/v1/fx_android/translation/{channel}/{locale}/'
-MAPPING_URL = L10N_API_URL + 'api/v1/google/localesmapping/?reverse'
-
-_mappings = None
-
 
 def set_translations_per_google_play_locale_code(_monkeypatch):
     _monkeypatch.setattr(store_l10n, '_translations_per_google_play_locale_code', {
@@ -46,7 +39,7 @@ def test_get_translations_per_google_play_locale_code(monkeypatch):
         'es-MX': 'es-US',
     })
 
-    assert get_translations_per_google_play_locale_code('beta') == {
+    assert get_translations_per_google_play_locale_code('org.mozilla.firefox_beta') == {
         'en-GB': {
             'title': 'Firefox for Android',
             'long_desc': 'Long description',
@@ -67,7 +60,7 @@ def test_get_translations_per_google_play_locale_code(monkeypatch):
         },
     }
 
-    assert get_translations_per_google_play_locale_code('release', moz_locales=['es-MX']) == {
+    assert get_translations_per_google_play_locale_code('org.mozilla.firefox', moz_locales=['es-MX']) == {
         'es-US': {
             'title': 'Navegador web Firefox',
             'long_desc': 'Descripcion larga',
@@ -83,7 +76,7 @@ def test_get_list_of_completed_locales(monkeypatch):
         lambda url: [u'en-GB', u'es-ES']
         if url == 'https://l10n.mozilla-community.org/stores_l10n/api/v1/fx_android/listing/beta/' else None
     )
-    assert _get_list_of_completed_locales('beta') == [u'en-GB', u'es-ES']
+    assert _get_list_of_completed_locales('fx_android', 'beta') == [u'en-GB', u'es-ES']
 
 
 def test_get_translation(monkeypatch):
@@ -96,7 +89,7 @@ def test_get_translation(monkeypatch):
             'whatsnew': 'Check out this cool feature!'
         } if url == 'https://l10n.mozilla-community.org/stores_l10n/api/v1/fx_android/translation/beta/en-GB/' else None
     )
-    assert _get_translation('beta', 'en-GB') == {
+    assert _get_translation('fx_android', 'beta', 'en-GB') == {
         'title': 'Firefox for Android Beta',
         'long_desc': 'Long description',
         'short_desc': 'Short',
