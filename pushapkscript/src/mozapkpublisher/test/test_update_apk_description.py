@@ -34,7 +34,7 @@ def test_update_apk_description_force_locale(monkeypatch):
             'whatsnew': 'Check out this cool feature!',
         }
     })
-    monkeypatch.setattr(store_l10n, 'locale_mapping', lambda locale: 'google_play_locale')
+    monkeypatch.setattr(store_l10n, '_translate_moz_locate_into_google_play_one', lambda locale: 'google_play_locale')
 
     config = copy(VALID_CONFIG)
     config['force_locale'] = 'en-US'

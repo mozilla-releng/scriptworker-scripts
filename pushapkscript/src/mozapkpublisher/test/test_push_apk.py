@@ -12,6 +12,7 @@ from tempfile import NamedTemporaryFile
 from mozapkpublisher import apk, googleplay, store_l10n
 from mozapkpublisher.exceptions import WrongArgumentGiven, ArmVersionCodeTooHigh
 from mozapkpublisher.push_apk import PushAPK, main, _check_and_get_flatten_version_codes
+from mozapkpublisher.test.test_store_l10n import set_translations_per_google_play_locale_code
 
 
 credentials = NamedTemporaryFile()
@@ -44,29 +45,6 @@ def edit_service_mock():
 
     _edit_service_mock.upload_apk.side_effect = _generate_version_code
     return _edit_service_mock
-
-
-def set_translations_per_google_play_locale_code(_monkeypatch):
-    _monkeypatch.setattr(store_l10n, '_translations_per_google_play_locale_code', {
-        'en-GB': {
-            'title': 'Firefox for Android',
-            'long_desc': 'Long description',
-            'short_desc': 'Short',
-            'whatsnew': 'Check out this cool feature!',
-        },
-        'en-US': {
-            'title': 'Firefox for Android',
-            'long_desc': 'Long description',
-            'short_desc': 'Short',
-            'whatsnew': 'Check out this cool feature!',
-        },
-        'es-US': {
-            'title': 'Navegador web Firefox',
-            'long_desc': 'Descripcion larga',
-            'short_desc': 'Corto',
-            'whatsnew': 'Mire a esta caracteristica',
-        },
-    })
 
 
 def test_one_missing_file():
@@ -170,7 +148,7 @@ def test_upload_apk_with_locales_updated(edit_service_mock, monkeypatch):
     monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
     set_translations_per_google_play_locale_code(monkeypatch)
-    monkeypatch.setattr(store_l10n, 'locale_mapping', lambda locale: 'es-US' if locale == 'es-MX' else locale)
+    monkeypatch.setattr(store_l10n, '_translate_moz_locate_into_google_play_one', lambda locale: 'es-US' if locale == 'es-MX' else locale)
 
     config = copy(VALID_CONFIG)
     config['package_name'] = 'org.mozilla.firefox_beta'
