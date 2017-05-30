@@ -48,7 +48,9 @@ class PushAPK(Base):
                                 help='The path to the ARM v7 API v15 APK file', required=True)
 
     def upload_apks(self, apks):
-        [apk_helper.check_if_apk_is_multilocale(apk['file']) for apk in apks.values()]
+        for architecture, apk in apks.items():
+            apk_helper.check_if_apk_has_claimed_architecture(apk['file'], architecture)
+            apk_helper.check_if_apk_is_multilocale(apk['file'])
 
         edit_service = googleplay.EditService(
             self.config.service_account, self.config.google_play_credentials_file.name, self.config.package_name,

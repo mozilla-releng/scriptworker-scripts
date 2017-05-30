@@ -99,6 +99,7 @@ def test_valid_rollout_percentage(edit_service_mock, monkeypatch):
 
     monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
+    monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
     set_translations_per_google_play_locale_code(monkeypatch)
     for i in range(0, 101):
         valid_percentage = i
@@ -133,6 +134,7 @@ def test_check_and_get_flatten_version_codes():
 def test_upload_apk(edit_service_mock, monkeypatch):
     monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
+    monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
     set_translations_per_google_play_locale_code(monkeypatch)
 
     PushAPK(VALID_CONFIG).run()
@@ -147,6 +149,7 @@ def test_upload_apk(edit_service_mock, monkeypatch):
 def test_upload_apk_with_locales_updated(edit_service_mock, monkeypatch):
     monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
+    monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
     set_translations_per_google_play_locale_code(monkeypatch)
     monkeypatch.setattr(store_l10n, '_translate_moz_locate_into_google_play_one', lambda locale: 'es-US' if locale == 'es-MX' else locale)
 

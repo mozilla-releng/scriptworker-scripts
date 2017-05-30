@@ -42,6 +42,10 @@ class NoLocaleFound(LoggedError):
         )
 
 
+class BadApk(LoggedError):
+    pass
+
+
 class ArmVersionCodeTooHigh(LoggedError):
     def __init__(self, arm_version_code, x86_version_code):
         super(ArmVersionCodeTooHigh, self).__init__(

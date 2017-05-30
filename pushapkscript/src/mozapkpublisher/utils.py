@@ -25,3 +25,7 @@ def file_sha512sum(file_path):
             hasher.update(buf)
             buf = fh.read(bs)
     return hasher.hexdigest()
+
+
+def filter_out_identical_values(list_):
+    return list(set(list_))
