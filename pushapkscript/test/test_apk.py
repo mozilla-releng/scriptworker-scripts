@@ -27,7 +27,7 @@ def test_sort_and_check_apks_per_architectures():
         x86_apk_path = _create_apk(temp_dir, 'x86')
         arm_apk_path = _create_apk(temp_dir, 'armeabi-v7a')
 
-        assert sort_and_check_apks_per_architectures([x86_apk_path, arm_apk_path]) == {
+        assert sort_and_check_apks_per_architectures([x86_apk_path, arm_apk_path], 'release') == {
             'x86': x86_apk_path,
             'armv7_v15': arm_apk_path,
         }
@@ -63,13 +63,18 @@ def test_extract_architecture_from_paths():
 
 
 def test_check_architectures_are_valid():
-    _check_architectures_are_valid(['x86', 'armv7_v15'])  # No failure expected
+    _check_architectures_are_valid(['x86', 'armv7_v15'], 'aurora')  # No failure expected
+    _check_architectures_are_valid(['x86', 'armv7_v15'], 'beta')
+    _check_architectures_are_valid(['x86', 'armv7_v15'], 'release')
 
     with pytest.raises(TaskVerificationError):
-        _check_architectures_are_valid(['x86'])
+        _check_architectures_are_valid(['x86'], 'non-existing-channel')
 
     with pytest.raises(TaskVerificationError):
-        _check_architectures_are_valid(['x86', 'armv7_v11'])
+        _check_architectures_are_valid(['x86'], 'release')
 
     with pytest.raises(TaskVerificationError):
-        _check_architectures_are_valid(['x86', 'armv7_v11', 'armv7_v15'])
+        _check_architectures_are_valid(['x86', 'armv7_v11'], 'release')
+
+    with pytest.raises(TaskVerificationError):
+        _check_architectures_are_valid(['x86', 'armv7_v11', 'armv7_v15'], 'release')
