@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.4.0
+* Dawn project
+  * Publish Nightly on top of Aurora
+  * Fetch and upload Nightly listings/recent changes
+  * Optimize network requests on both stores_l10n and Google Play ends
+  * Remove the aibility to download Aurora APKs
+
 ## 0.3.1
 * get_apk.py: Fix checksum detection when file is in a subfolder
 
