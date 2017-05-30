@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+# 0.3.3
+Add FAQ
+Dawn project: Allow "aurora" scope to be still used in task definition
+Support different architectures depending on which channel we are
+
 ## 0.3.2
 Fix task validation which refused a payload with `dry_run` in it
 
