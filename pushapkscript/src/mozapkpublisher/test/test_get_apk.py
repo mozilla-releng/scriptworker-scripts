@@ -26,16 +26,10 @@ def test_mutually_exclusive_group():
     with pytest.raises(WrongArgumentGiven):
         GetAPK({'version': True, 'latest_nightly': True})
 
-    with pytest.raises(WrongArgumentGiven):
-        GetAPK({'latest_nightly': True, 'latest_aurora': True})
-
 
 def test_generate_apk_base_url():
     assert GetAPK({'latest_nightly': True}).generate_apk_base_url('52.0a1', None, 'multi', 'x86') == \
         'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-x86'
-
-    assert GetAPK({'latest_aurora': True}).generate_apk_base_url('51.0a2', None, 'en-US', 'api-15') == \
-        'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-aurora-android-api-15'
 
     assert GetAPK({'version': '50.0b8'}).generate_apk_base_url('50.0b8', 1, 'multi', 'api-15') == \
         'https://ftp.mozilla.org/pub/mobile/candidates/50.0b8-candidates/build1/android-api-15/multi'
@@ -58,14 +52,14 @@ def test_craft_apk_and_checksums_url_and_download_locations():
         'download_location': '/a/fake/download/directory/fennec-52.0b1.multi.android-arm.checksums',
     }]
     assert craft_apk_and_checksums_url_and_download_locations(
-        'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-aurora-android-api-15',
-        '/a/fake/download/directory', '53.0a2', 'multi', 'arm'
+        'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-api-15',
+        '/a/fake/download/directory', '53.0a1', 'multi', 'arm'
     ) == [{
-        'url': 'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-aurora-android-api-15/fennec-53.0a2.multi.android-arm.apk',
-        'download_location': '/a/fake/download/directory/fennec-53.0a2.multi.android-arm.apk',
+        'url': 'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-api-15/fennec-53.0a1.multi.android-arm.apk',
+        'download_location': '/a/fake/download/directory/fennec-53.0a1.multi.android-arm.apk',
     }, {
-        'url': 'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-aurora-android-api-15/fennec-53.0a2.multi.android-arm.checksums',
-        'download_location': '/a/fake/download/directory/fennec-53.0a2.multi.android-arm.checksums',
+        'url': 'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-api-15/fennec-53.0a1.multi.android-arm.checksums',
+        'download_location': '/a/fake/download/directory/fennec-53.0a1.multi.android-arm.checksums',
     }]
 
 

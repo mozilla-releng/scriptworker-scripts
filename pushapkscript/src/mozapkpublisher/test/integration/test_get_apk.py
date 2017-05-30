@@ -16,7 +16,7 @@ from mozapkpublisher.get_apk import GetAPK
     ({'version': '52.0', 'build': '2', 'arch': 'arm'}, (r'fennec-52\.0\.multi\.android-arm\.apk',)),
     ({'version': '53.0b1', 'build': '3', 'arch': 'arm'}, (r'fennec-53\.0b1\.multi\.android-arm\.apk',)),
 ))
-def test_aurora(get_apk_args, apks_file_regexes):
+def test_download_files(get_apk_args, apks_file_regexes):
     temp_dir = tempfile.mkdtemp()
     get_apk_args['output-directory'] = temp_dir
     GetAPK(get_apk_args).run()

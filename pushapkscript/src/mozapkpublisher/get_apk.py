@@ -36,8 +36,6 @@ class GetAPK(Base):
         exclusive_group.add_argument('--version', default=None, help='Specify version number to download (e.g. 23.0b7)')
         exclusive_group.add_argument('--latest-nightly', action='store_true', default=False,
                                      help='Download the latest nightly version')
-        exclusive_group.add_argument('--latest-aurora', action='store_true', default=False,
-                                     help='Download the latest aurora version')
 
         cls.parser.add_argument('--build', type=int, default=1, help='Specify build number (default 1)')
         cls.parser.add_argument(
@@ -64,15 +62,11 @@ class GetAPK(Base):
             logger.warn('{} was not found. Skipping...'.format(self.config.download_directory))
 
     def generate_apk_base_url(self, version, build, locale, api_suffix):
-        if self.config.latest_nightly or self.config.latest_aurora:
-            repository = "central" if self.config.latest_nightly else "aurora"
-            return '{}/nightly/latest-mozilla-{}-android-{}'.format(
-                FTP_BASE_URL, repository, api_suffix,
+        return '{}/nightly/latest-mozilla-central-android-{}'.format(FTP_BASE_URL, api_suffix) \
+            if self.config.latest_nightly else \
+            '{}/candidates/{}-candidates/build{}/android-{}/{}'.format(
+                FTP_BASE_URL, version, build, api_suffix, locale,
             )
-
-        return '{}/candidates/{}-candidates/build{}/android-{}/{}'.format(
-            FTP_BASE_URL, version, build, api_suffix, locale,
-        )
 
     def get_api_suffix(self, arch):
         return self.multi_apis if arch in self.multi_api_archs else [arch]
@@ -95,9 +89,9 @@ class GetAPK(Base):
             check_apk_against_checksum_file(apk['download_location'], checksums['download_location'])
 
     def get_version_name(self):
-        if self.config.latest_nightly or self.config.latest_aurora:
+        if self.config.latest_nightly:
             json = load_json_url(self.json_version_url)
-            version_code = json['FIREFOX_NIGHTLY'] if self.config.latest_nightly else json['FIREFOX_AURORA']
+            version_code = json['FIREFOX_NIGHTLY']
             return version_code
         return self.config.version
 
