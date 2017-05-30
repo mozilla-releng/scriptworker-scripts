@@ -143,8 +143,6 @@ def main(config_path=None):
         except ScriptWorkerTaskException as exc:
             traceback.print_exc()
             sys.exit(exc.exit_code)
-        finally:
-            loop.close()
 
 
 __name__ == '__main__' and main()

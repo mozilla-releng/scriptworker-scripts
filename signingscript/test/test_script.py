@@ -6,10 +6,10 @@ import sys
 
 import scriptworker.client
 from scriptworker.exceptions import ScriptWorkerTaskException
-from signingscript.test import event_loop, noop_async, noop_sync, read_file, tmpdir
+from signingscript.test import noop_async, noop_sync, read_file, tmpdir
 import signingscript.script as script
 
-assert event_loop or tmpdir  # silence flake8
+assert tmpdir  # silence flake8
 
 # helper constants, fixtures, functions {{{1
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -83,14 +83,14 @@ def test_main_missing_args(mocker):
         script.main()
 
 
-def test_main_argv(tmpdir, mocker, event_loop):
+def test_main_argv(tmpdir, mocker):
     conf_file = get_conf_file(tmpdir, verbose=False, ssl_cert=None)
     mocker.patch.object(sys, 'argv', new=[__file__, conf_file])
     mocker.patch.object(script, 'async_main', new=noop_async)
     script.main()
 
 
-def test_main_noargv(tmpdir, mocker, event_loop):
+def test_main_noargv(tmpdir, mocker):
     conf_file = get_conf_file(tmpdir, verbose=True, ssl_cert=SSL_CERT)
     mocker.patch.object(script, 'async_main', new=die_async)
     with pytest.raises(SystemExit):

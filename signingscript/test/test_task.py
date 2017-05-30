@@ -11,9 +11,9 @@ from signingscript.script import get_default_config
 from signingscript.utils import load_signing_server_config, mkdir, SigningServer
 import signingscript.task as stask
 import signingscript.utils as utils
-from signingscript.test import event_loop, noop_async, noop_sync, tmpdir
+from signingscript.test import noop_async, noop_sync, tmpdir
 
-assert event_loop or tmpdir  # silence flake8
+assert tmpdir  # silence flake8
 
 
 # helper constants, fixtures, functions {{{1
@@ -124,7 +124,7 @@ def test_get_suitable_signing_servers(context, formats, expected):
 ), (
     None, 'token'
 )))
-async def test_get_token(event_loop, mocker, tmpdir, exc, contents, context):
+async def test_get_token(mocker, tmpdir, exc, contents, context):
 
     async def test_token(*args, **kwargs):
         if exc:
@@ -150,7 +150,7 @@ async def test_get_token(event_loop, mocker, tmpdir, exc, contents, context):
 ), (
     ['signtool'], 'gpg'
 )))
-async def test_sign_file(context, mocker, format, signtool, event_loop):
+async def test_sign_file(context, mocker, format, signtool):
     work_dir = context.config['work_dir']
     path = os.path.join(work_dir, 'filename')
 
