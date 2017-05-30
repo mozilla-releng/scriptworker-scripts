@@ -1,9 +1,11 @@
-from mozapkpublisher.googleplay import PACKAGE_NAME_VALUES
-
 from pushapkscript.task import extract_channel
 
-
-CHANNEL_TO_PACKAGE_NAME = {value: key for key, value in PACKAGE_NAME_VALUES.items()}
+# TODO Change the "aurora" scope to "nightly" so we can use the dict defined in mozapkpublisher
+CHANNEL_TO_PACKAGE_NAME = {
+    'aurora': 'org.mozilla.fennec_aurora',
+    'beta': 'org.mozilla.firefox_beta',
+    'release': 'org.mozilla.firefox',
+}
 
 
 def publish_to_googleplay(context, apks):
