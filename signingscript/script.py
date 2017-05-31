@@ -35,37 +35,39 @@ class SigningContext(Context):
 
 
 # async_main {{{1
-async def async_main(context):
+async def async_main(context, conn=None):
     """Sign all the things.
 
     Args:
         context (SigningContext): the signing context.
 
     """
-    work_dir = context.config['work_dir']
-    context.task = scriptworker.client.get_task(context.config)
-    log.info("validating task")
-    validate_task_schema(context)
-    context.signing_servers = load_signing_server_config(context)
-    cert_type = task_cert_type(context.task)
-    all_signing_formats = task_signing_formats(context.task)
-    log.info("getting token")
-    await get_token(context, os.path.join(work_dir, 'token'), cert_type, all_signing_formats)
-    filelist_dict = build_filelist_dict(context, all_signing_formats)
-    for path, path_dict in filelist_dict.items():
-        copy_to_dir(path_dict['full_path'], context.config['work_dir'], target=path)
-        log.info("signing %s", path)
-        source = await sign_file(
-            context, os.path.join(work_dir, path), cert_type, path_dict['formats'],
-            context.config["ssl_cert"]
-        )
-        source = os.path.relpath(source, work_dir)
-        sigfiles = detached_sigfiles(path, path_dict['formats'])
-        copy_to_dir(
-            os.path.join(work_dir, source), context.config['artifact_dir'], target=source
-        )
-        for sigpath in sigfiles:
-            copy_to_dir(os.path.join(work_dir, sigpath), context.config['artifact_dir'], target=sigpath)
+    async with aiohttp.ClientSession(connector=conn) as session:
+        context.session = session
+        work_dir = context.config['work_dir']
+        context.task = scriptworker.client.get_task(context.config)
+        log.info("validating task")
+        validate_task_schema(context)
+        context.signing_servers = load_signing_server_config(context)
+        cert_type = task_cert_type(context.task)
+        all_signing_formats = task_signing_formats(context.task)
+        log.info("getting token")
+        await get_token(context, os.path.join(work_dir, 'token'), cert_type, all_signing_formats)
+        filelist_dict = build_filelist_dict(context, all_signing_formats)
+        for path, path_dict in filelist_dict.items():
+            copy_to_dir(path_dict['full_path'], context.config['work_dir'], target=path)
+            log.info("signing %s", path)
+            source = await sign_file(
+                context, os.path.join(work_dir, path), cert_type, path_dict['formats'],
+                context.config["ssl_cert"]
+            )
+            source = os.path.relpath(source, work_dir)
+            sigfiles = detached_sigfiles(path, path_dict['formats'])
+            copy_to_dir(
+                os.path.join(work_dir, source), context.config['artifact_dir'], target=source
+            )
+            for sigpath in sigfiles:
+                copy_to_dir(os.path.join(work_dir, sigpath), context.config['artifact_dir'], target=sigpath)
     log.info("Done!")
 
 
@@ -136,15 +138,11 @@ def main(config_path=None):
         sslcontext = ssl.create_default_context(cafile=context.config['ssl_cert'])
         kwargs['ssl_context'] = sslcontext
     conn = aiohttp.TCPConnector(**kwargs)
-    with aiohttp.ClientSession(connector=conn) as session:
-        context.session = session
-        try:
-            loop.run_until_complete(async_main(context))
-        except ScriptWorkerTaskException as exc:
-            traceback.print_exc()
-            sys.exit(exc.exit_code)
-        finally:
-            loop.close()
+    try:
+        loop.run_until_complete(async_main(context, conn=conn))
+    except ScriptWorkerTaskException as exc:
+        traceback.print_exc()
+        sys.exit(exc.exit_code)
 
 
 __name__ == '__main__' and main()

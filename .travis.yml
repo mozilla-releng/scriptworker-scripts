@@ -1,13 +1,18 @@
 language: python
-python:
-  - "3.5"
+
+matrix:
+  include:
+    - python: 3.5
+      env: TOXENV=py35
+    - python: 3.6
+      env: TOXENV=py36
 
 install:
     - travis_retry pip install tox
 script:
-    - tox -e py35
+    - tox
 after_success:
-    - tox -e py35-coveralls
+    - tox -e coveralls
 
 # http://docs.travis-ci.com/user/workers/container-based-infrastructure/
 sudo: false

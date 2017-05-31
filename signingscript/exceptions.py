@@ -31,6 +31,20 @@ class SigningServerError(ScriptWorkerTaskException):
         )
 
 
+class SigningScriptError(ScriptWorkerTaskException):
+    """Something went wrong with signing script."""
+
+    def __init__(self, msg):
+        """Initialize SigningScriptError.
+
+        Args:
+            msg (str): the reason for throwing an exception.
+        """
+        super(SigningScriptError, self).__init__(
+            msg, exit_code=STATUSES['internal-error']
+        )
+
+
 class FailedSubprocess(ScriptWorkerTaskException):
     """Something went wrong during a subprocess exec."""
 

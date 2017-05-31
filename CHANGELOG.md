@@ -2,6 +2,20 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.0] - 2017-05-31
+### Added
+- windows zipfile signing support.
+- `SigningScriptError`
+- py36 test support
+
+### Changed
+- Moved the `aiohttp.ClientSession` creation into `async_main`
+- No longer close the event loop at the end of `main`
+- `sign_file` no longer takes a `to` kwarg; we always overwrite the original file, due to zipfile signing logic.
+
+### Fixed
+- `pytest-asyncio` 0.6.0 compatibility
+
 ## [1.0.0] - 2017-03-23
 ### Added
 - `example_server_config.json`

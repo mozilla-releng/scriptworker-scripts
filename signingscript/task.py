@@ -1,5 +1,6 @@
 """Signingscript task functions."""
 import aiohttp
+import fnmatch
 import json
 import logging
 import os
@@ -8,17 +9,22 @@ import re
 import shutil
 import tempfile
 import traceback
+import zipfile
 
 import scriptworker.client
 from scriptworker.exceptions import ScriptWorkerException
-from scriptworker.utils import retry_request
+from scriptworker.utils import retry_request, rm
 
 from signingscript import utils
-from signingscript.exceptions import SigningServerError, TaskVerificationError
+from signingscript.exceptions import SigningScriptError, SigningServerError, TaskVerificationError
 
 log = logging.getLogger(__name__)
 
 _ZIP_ALIGNMENT = '4'  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
+
+# These are the signing formats where we might extract a zipfile's contents
+# before signing.
+_ZIPFILE_SIGNING_FORMATS = frozenset(['sha2signcode', 'signcode', 'osslsigncode'])
 
 
 # task_cert_type {{{1
@@ -137,68 +143,103 @@ async def get_token(context, output_file, cert_type, signing_formats):
 
 
 # sign_file {{{1
-async def sign_file(context, from_, cert_type, signing_formats, cert, to=None):
+async def sign_file(context, orig_file, cert_type, signing_formats, cert):
     """Send a file to the signing server to sign, then retrieve the signed file.
 
     In post-signing steps, zipalign apks if applicable.
 
     Args:
         context (SigningContext): the signing context
-        from_ (str): the source file to sign
+        orig_file (str): the source file to sign
         cert_type (str): the cert type used to find an appropriate signing server
         signing_formats (str): the formats to sign with
         cert (str): the path to the ssl cert, if applicable
-        to (str, optional): the path to write the signed file to.  If None,
-            overwrite `from_`.  Defaults to None.
 
     Raises:
         FailedSubprocess: on subprocess error while signing.
 
     """
-    from_ = await _execute_pre_signing_steps(context, from_)
-    to = to or from_
     work_dir = context.config['work_dir']
     token = os.path.join(work_dir, "token")
     nonce = os.path.join(work_dir, "nonce")
     signtool = context.config['signtool']
     if not isinstance(signtool, (list, tuple)):
         signtool = [signtool]
-    signing_command = signtool + ["-v", "-n", nonce, "-t", token, "-c", cert]
+    files, should_sign_fn = await _execute_pre_signing_steps(context, orig_file, signing_formats)
+    # build the base command
+    base_command = signtool + ["-v", "-n", nonce, "-t", token, "-c", cert]
     for s in get_suitable_signing_servers(context.signing_servers, cert_type, signing_formats):
-        signing_command.extend(["-H", s.server])
+        base_command.extend(["-H", s.server])
     for f in signing_formats:
-        signing_command.extend(["-f", f])
-    signing_command.extend(["-o", to, from_])
-    await utils._execute_subprocess(signing_command)
+        base_command.extend(["-f", f])
+    # loop through the files
+    for from_ in files:
+        log.info("Signing {}...".format(from_))
+        to = from_
+        if should_sign_fn is not None and not should_sign_fn(from_):
+            continue
+        signing_command = base_command[:]
+        signing_command.extend(["-o", to, from_])
+        await utils._execute_subprocess(signing_command)
     log.info('Finished signing. Starting post-signing steps...')
-    await _execute_post_signing_steps(context, to)
-    return to
+    signed_file = await _execute_post_signing_steps(context, files, orig_file, signing_formats)
+    return signed_file
+
+
+# _should_sign_windows {{{1
+def _should_sign_windows(filename):
+    """Return True if filename should be signed."""
+    # These should already be signed by Microsoft.
+    _dont_sign = [
+        'D3DCompiler_42.dll', 'd3dx9_42.dll',
+        'D3DCompiler_43.dll', 'd3dx9_43.dll',
+        'msvc*.dll',
+    ]
+    ext = os.path.splitext(filename)[1]
+    b = os.path.basename(filename)
+    if ext in ('.dll', '.exe') and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
+        return True
+    return False
 
 
 # _execute_pre_signing_steps {{{1
-async def _execute_pre_signing_steps(context, from_):
+async def _execute_pre_signing_steps(context, from_, formats):
+    # Returns a list of files, and a callback that specifies which files to sign
     file_base, file_extension = os.path.splitext(from_)
+    callback = None
     if file_extension == '.dmg':
         await _convert_dmg_to_tar_gz(context, from_)
         from_ = "{}.tar.gz".format(file_base)
+    elif file_extension == '.zip' and set(formats) & _ZIPFILE_SIGNING_FORMATS:
+        return (await _extract_zipfile(context, from_), _should_sign_windows)
 
-    return from_
+    return ([from_], callback)
 
 
 # _execute_post_signing_steps {{{1
-async def _execute_post_signing_steps(context, to):
+async def _execute_post_signing_steps(context, files, orig_file, signing_formats):
     work_dir = context.config['work_dir']
-    abs_to = os.path.join(work_dir, to)
 
-    _, file_extension = os.path.splitext(abs_to)
-    if file_extension == '.apk':
-        await _zip_align_apk(context, abs_to)
+    _, file_extension = os.path.splitext(orig_file)
+    # Re-zip unzipped files
+    if file_extension == '.zip' and set(signing_formats) & _ZIPFILE_SIGNING_FORMATS:
+        signed_file = await _create_zipfile(context, os.path.join(work_dir, orig_file), files)
+    else:
+        # We should never hit this, but just in case:
+        if len(files) != 1:
+            raise SigningScriptError("Unexpected number of files for non-zip: {}".format(files))
+        signed_file = os.path.join(work_dir, files[0])
+        # Zipalign apks
+        if file_extension == '.apk':
+            await _zip_align_apk(context, signed_file)
 
+    rel_signed_file = os.path.relpath(signed_file, work_dir)
     log.info("SHA512SUM: %s SIGNED_FILE: %s",
-             utils.get_hash(abs_to, "sha512"), to)
+             utils.get_hash(signed_file, "sha512"), rel_signed_file)
     log.info("SHA1SUM: %s SIGNED_FILE: %s",
-             utils.get_hash(abs_to, "sha1"), to)
+             utils.get_hash(signed_file, "sha1"), rel_signed_file)
     log.info('Post-signing steps finished')
+    return signed_file
 
 
 # _zip_align_apk {{{1
@@ -244,6 +285,37 @@ async def _convert_dmg_to_tar_gz(context, from_):
         await utils._execute_subprocess(tar_cmd, cwd=app_dir)
 
     return to
+
+
+# _extract_zipfile {{{1
+async def _extract_zipfile(context, from_, tmp_dir=None):
+    work_dir = context.config['work_dir']
+    tmp_dir = tmp_dir or os.path.join(work_dir, "unzipped")
+    try:
+        files = []
+        rm(tmp_dir)
+        utils.mkdir(tmp_dir)
+        with zipfile.ZipFile(from_, mode='r') as z:
+            for name in z.namelist():
+                files.append(os.path.join(tmp_dir, name))
+            z.extractall(path=tmp_dir)
+        return files
+    except Exception as e:
+        raise SigningScriptError(e)
+
+
+# _create_zipfile {{{1
+async def _create_zipfile(context, to, files, tmp_dir=None):
+    work_dir = context.config['work_dir']
+    tmp_dir = tmp_dir or os.path.join(work_dir, "unzipped")
+    try:
+        with zipfile.ZipFile(to, mode='w') as z:
+            for f in files:
+                relpath = os.path.relpath(f, tmp_dir)
+                z.write(f, arcname=relpath)
+        return to
+    except Exception as e:
+        raise SigningScriptError(e)
 
 
 # detached_sigfiles {{{1

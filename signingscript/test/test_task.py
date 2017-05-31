@@ -2,18 +2,20 @@ import aiohttp
 from contextlib import contextmanager
 import os
 import pytest
+import zipfile
 
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker.utils import rm
 
-from signingscript.exceptions import FailedSubprocess, SigningServerError, TaskVerificationError
+from signingscript.exceptions import FailedSubprocess, SigningScriptError, SigningServerError, TaskVerificationError
 from signingscript.script import get_default_config
-from signingscript.utils import load_signing_server_config, mkdir, SigningServer
+from signingscript.utils import get_hash, load_signing_server_config, mkdir, SigningServer
 import signingscript.task as stask
 import signingscript.utils as utils
-from signingscript.test import event_loop, noop_async, noop_sync, tmpdir
+from signingscript.test import noop_async, noop_sync, tmpdir
 
-assert event_loop or tmpdir  # silence flake8
+assert tmpdir  # silence flake8
 
 
 # helper constants, fixtures, functions {{{1
@@ -58,6 +60,10 @@ def context(tmpdir):
     yield context
 
 
+def die(*args, **kwargs):
+    raise SigningScriptError("dying!")
+
+
 # task_cert_type {{{1
 def test_task_cert_type():
     task = {"scopes": [TEST_CERT_TYPE,
@@ -98,7 +104,7 @@ def test_no_error_is_reported_when_no_missing_url(context, task_defn):
 
 # get_suitable_signing_servers {{{1
 @pytest.mark.parametrize('formats,expected', ((
-    ['gpg'], [["127.0.0.1:9110", "user", "pass", ["gpg"]]]
+    ['gpg'], [["127.0.0.1:9110", "user", "pass", ["gpg", "sha2signcode"]]]
 ), (
     ['invalid'], []
 )))
@@ -124,7 +130,7 @@ def test_get_suitable_signing_servers(context, formats, expected):
 ), (
     None, 'token'
 )))
-async def test_get_token(event_loop, mocker, tmpdir, exc, contents, context):
+async def test_get_token(mocker, tmpdir, exc, contents, context):
 
     async def test_token(*args, **kwargs):
         if exc:
@@ -145,14 +151,14 @@ async def test_get_token(event_loop, mocker, tmpdir, exc, contents, context):
 
 # sign_file {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize('signtool,format', ((
-    'signtool', 'gpg'
+@pytest.mark.parametrize('signtool,format,files,filename', ((
+    'signtool', 'gpg', ['filename'], 'filename'
 ), (
-    ['signtool'], 'gpg'
+    ['signtool'], 'sha2signcode', ['filename.dll', 'filename.foo'], 'file.zip'
 )))
-async def test_sign_file(context, mocker, format, signtool, event_loop):
+async def test_sign_file(context, mocker, format, signtool, files, filename):
     work_dir = context.config['work_dir']
-    path = os.path.join(work_dir, 'filename')
+    path = files[0]
 
     async def test_cmdln(command):
         assert command == [
@@ -165,33 +171,52 @@ async def test_sign_file(context, mocker, format, signtool, event_loop):
             "-o", path, path,
         ]
 
+    async def fake_unzip(context, *args, **kwargs):
+        return files
+
     context.config['signtool'] = signtool
     mocker.patch.object(stask, '_execute_post_signing_steps', new=noop_async)
     mocker.patch.object(utils, '_execute_subprocess', new=test_cmdln)
-    await stask.sign_file(context, path, TEST_CERT_TYPE, [format], context.config['ssl_cert'])
+    mocker.patch.object(stask, '_extract_zipfile', new=fake_unzip)
+    await stask.sign_file(context, filename, TEST_CERT_TYPE, [format], context.config['ssl_cert'])
 
 
 # _execute_pre_signing_steps {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize('filename,expected', ((
-    'foo.dmg', 'foo.tar.gz',
+@pytest.mark.parametrize('filename,expected,formats', ((
+    'foo.dmg', (['foo.tar.gz'], None), ['dmg']
 ), (
-    'bar.zip', 'bar.zip',
+    'bar.zip', (['bar', 'contents'], noop_sync), ['sha2signcode']
 )))
-async def test_execute_pre_signing_steps(context, mocker, filename, expected):
+async def test_execute_pre_signing_steps(context, mocker, filename, expected, formats):
+
+    async def fake_unzip(*args, **kwargs):
+        return ['bar', 'contents']
+
     mocker.patch.object(stask, '_convert_dmg_to_tar_gz', new=noop_async)
-    assert await stask._execute_pre_signing_steps(context, filename) == expected
+    mocker.patch.object(stask, '_extract_zipfile', new=fake_unzip)
+    mocker.patch.object(stask, '_should_sign_windows', new=noop_sync)
+
+    assert await stask._execute_pre_signing_steps(context, filename, formats) == expected
 
 
 # _execute_post_signing_steps {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize('suffix', ('apk', 'zip'))
-async def test_execute_post_signing_steps(context, monkeypatch, suffix):
+@pytest.mark.parametrize('files,orig_file,formats,raises', ((
+    ['target.apk'], 'target.apk', ['jar'], False
+), (
+    ['setup.exe'], 'setup.exe', ['sha2signcode'], False
+), (
+    ['zip', 'contents'], 'target.zip', ['sha2signcode'], False
+), (
+    ['target.apk', 'target.exe'], 'target.apk', ['jar'], True
+)))
+async def test_execute_post_signing_steps(context, monkeypatch, files, orig_file, formats, raises):
     work_dir = context.config['work_dir']
-    abs_to = os.path.join(work_dir, 'target.{}'.format(suffix))
+    abs_to = os.path.join(work_dir, orig_file)
 
     async def zip_align_apk_mock(_context, _abs_to):
-        if suffix != 'apk':
+        if not _abs_to.endswith('.apk'):
             assert False  # We shouldn't call this on non-apk
         assert context == _context
         assert abs_to == _abs_to
@@ -200,10 +225,21 @@ async def test_execute_post_signing_steps(context, monkeypatch, suffix):
         assert abs_to == _abs_to
         assert hash_type in ('sha512', 'sha1')
 
+    async def zip_mock(_context, _abs_to, *args):
+        if not _abs_to.endswith('.zip'):
+            assert False  # We shouldn't call this on non-zip
+        assert abs_to == _abs_to
+        return _abs_to
+
     monkeypatch.setattr('signingscript.task._zip_align_apk', zip_align_apk_mock)
     monkeypatch.setattr('signingscript.utils.get_hash', get_hash_mock)
+    monkeypatch.setattr('signingscript.task._create_zipfile', zip_mock)
 
-    await stask._execute_post_signing_steps(context, 'target.{}'.format(suffix))
+    if raises:
+        with pytest.raises(SigningScriptError):
+            await stask._execute_post_signing_steps(context, files, orig_file, formats)
+    else:
+        await stask._execute_post_signing_steps(context, files, orig_file, formats)
 
 
 # _zip_align_apk {{{1
@@ -233,7 +269,7 @@ async def test_zip_align_apk(context, monkeypatch, is_verbose):
 
 # _convert_dmg_to_tar_gz {{{1
 @pytest.mark.asyncio
-async def test_convert_dmg_to_tar_gz(context, monkeypatch):
+async def test_convert_dmg_to_tar_gz(context, monkeypatch, tmpdir):
     dmg_path = 'path/to/foo.dmg'
     abs_dmg_path = os.path.join(context.config['work_dir'], dmg_path)
     tarball_path = 'path/to/foo.tar.gz'
@@ -242,18 +278,55 @@ async def test_convert_dmg_to_tar_gz(context, monkeypatch):
     async def execute_subprocess_mock(command, **kwargs):
         assert command in (
             ['dmg', 'extract', abs_dmg_path, 'tmp.hfs'],
-            ['hfsplus', 'tmp.hfs', 'extractall', '/', 'tmpdir/app'],
+            ['hfsplus', 'tmp.hfs', 'extractall', '/', '{}/app'.format(tmpdir)],
             ['tar', 'czvf', abs_tarball_path, '.'],
         )
 
     @contextmanager
     def fake_tmpdir():
-        yield "tmpdir"
+        yield tmpdir
 
     monkeypatch.setattr('signingscript.utils._execute_subprocess', execute_subprocess_mock)
     monkeypatch.setattr('tempfile.TemporaryDirectory', fake_tmpdir)
 
     await stask._convert_dmg_to_tar_gz(context, dmg_path)
+
+
+# _extract_zipfile _create_zipfile{{{1
+@pytest.mark.asyncio
+async def test_working_zipfile(context):
+    tmpdir = context.config['artifact_dir']
+    zip_ = os.path.join(context.config['work_dir'], "foo.zip")
+    mkdir(context.config['work_dir'])
+    files = [__file__, SERVER_CONFIG_PATH]
+    z = await stask._create_zipfile(context, zip_, [__file__, SERVER_CONFIG_PATH], BASE_DIR)
+    await stask._extract_zipfile(context, zip_, tmp_dir=tmpdir)
+    for path in files:
+        target_path = os.path.join(tmpdir, os.path.relpath(path, BASE_DIR))
+        assert os.path.exists(target_path)
+        assert os.path.isfile(target_path)
+        hash1 = get_hash(path)
+        hash2 = get_hash(target_path)
+        assert hash1 == hash2
+
+
+@pytest.mark.asyncio
+async def test_bad_create_zipfile(context, mocker):
+
+    @contextmanager
+    def context_die(*args, **kwargs):
+        raise SigningScriptError("dying")
+
+    mocker.patch.object(zipfile, 'ZipFile', new=context_die)
+    with pytest.raises(SigningScriptError):
+        await stask._create_zipfile(context, "foo.zip", [])
+
+
+@pytest.mark.asyncio
+async def test_bad_extract_zipfile(context, mocker):
+    mocker.patch.object(stask, 'rm', new=die)
+    with pytest.raises(SigningScriptError):
+        await stask._extract_zipfile(context, "foo.zip")
 
 
 # detached_sigfiles {{{1
