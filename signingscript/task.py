@@ -165,17 +165,20 @@ async def sign_file(context, orig_file, cert_type, signing_formats, cert):
     signtool = context.config['signtool']
     if not isinstance(signtool, (list, tuple)):
         signtool = [signtool]
-    files, callback = await _execute_pre_signing_steps(context, orig_file, signing_formats)
+    files, should_sign_fn = await _execute_pre_signing_steps(context, orig_file, signing_formats)
+    # build the base command
+    base_command = signtool + ["-v", "-n", nonce, "-t", token, "-c", cert]
+    for s in get_suitable_signing_servers(context.signing_servers, cert_type, signing_formats):
+        base_command.extend(["-H", s.server])
+    for f in signing_formats:
+        base_command.extend(["-f", f])
+    # loop through the files
     for from_ in files:
         log.info("Signing {}...".format(from_))
         to = from_
-        if callback is not None and not callback(from_):
+        if should_sign_fn is not None and not should_sign_fn(from_):
             continue
-        signing_command = signtool + ["-v", "-n", nonce, "-t", token, "-c", cert]
-        for s in get_suitable_signing_servers(context.signing_servers, cert_type, signing_formats):
-            signing_command.extend(["-H", s.server])
-        for f in signing_formats:
-            signing_command.extend(["-f", f])
+        signing_command = base_command[:]
         signing_command.extend(["-o", to, from_])
         await utils._execute_subprocess(signing_command)
     log.info('Finished signing. Starting post-signing steps...')
