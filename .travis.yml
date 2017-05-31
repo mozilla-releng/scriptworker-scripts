@@ -1,3 +1,6 @@
+dist: trusty
+sudo: required
+
 language: python
 python:
   - "3.5"
@@ -5,12 +8,16 @@ python:
 env:
   - SKIP_NETWORK_TESTS=0
 
+addons:
+  apt:
+    packages:
+      - openjdk-7-jdk
+
 install:
     - travis_retry pip install tox
+    - jdk_switcher use openjdk7
 script:
+    - java -version
     - tox -e py35
 after_success:
     - tox -e py35-coveralls
-
-# http://docs.travis-ci.com/user/workers/container-based-infrastructure/
-sudo: false
