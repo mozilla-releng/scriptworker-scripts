@@ -152,6 +152,19 @@ Google Play provides the ability to have [a beta and alpha program](https://supp
 
 You can ask release management to set up a closed alpha testing on the [Google Play console](https://play.google.com/apps/publish) (Go to Release management -> App releases -> Manage Alpha) and target users by email address. Then, edit your task definition to contain `"google_play_track": "alpha"`.
 
+###### Before going further: tear down the alpha track
+
+:warning: Once you're done with the alpha track, you **must** ask Release Management to close it. Google Play doesn't accept another track to have more recent version, than the alpha one. If you start using another track (without closing alpha), you may end up with the following error:
+
+```
+HttpError 403 when requesting https://www.googleapis.com/androidpublisher/v2/applications/org.mozilla.fennec_aurora/edits/17791185193608549142:commit?alt=json returned "Version 2015491409 of this app can not be downloaded by any devices as they will all receive APKs with higher version codes.
+```
+
+In the case where Release Management isn't connect, there's a temporary workaround:
+
+1. Publish the APKs on the alpha track.
+1. On the Google Play dashboard, promote the APKs to the beta (then the rollout channel). Reuploading the same APKs to the beta track won't be accepted by Google Play, because APKs can only be pushed once.
+
 ##### 3. For non-aurora products: Push to the rollout track
 
 If you are confident enough to publish to percentage of our user base, you can use [the rollout track](https://support.google.com/googleplay/android-developer/answer/6346149). Just edit your task definition to contain:
