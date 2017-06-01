@@ -99,6 +99,11 @@ mapping:
       destinations:
         - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.web-platform.tests.zip
         - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.web-platform.tests.zip
+    target.web-platform.tests.tar.gz:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.web-platform.tests.tar.gz
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.web-platform.tests.tar.gz
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-aarch64.web-platform.tests.tar.gz
     target.xpcshell.tests.zip:
       s3_key: fennec-{{ version }}.{{ locale }}.android-aarch64.xpcshell.tests.zip
       destinations:

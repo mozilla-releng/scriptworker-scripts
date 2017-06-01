@@ -93,6 +93,11 @@ mapping:
       destinations:
         - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.txt
         - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.txt
+    target.web-platform.tests.tar.gz:
+      s3_key: fennec-{{ version }}.{{ locale }}.android-arm.web-platform.tests.tar.gz
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.web-platform.tests.tar.gz
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.android-arm.web-platform.tests.tar.gz
     target.web-platform.tests.zip:
       s3_key: fennec-{{ version }}.{{ locale }}.android-arm.web-platform.tests.zip
       destinations:
