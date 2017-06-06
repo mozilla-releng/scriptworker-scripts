@@ -81,8 +81,7 @@ class PushAPK(Base):
 
 
 def _create_or_update_whats_new(edit_service, package_name, apk_version_code):
-    release_channel = googleplay.PACKAGE_NAME_VALUES[package_name]
-    locales = store_l10n.get_translations_per_google_play_locale_code(release_channel)
+    locales = store_l10n.get_translations_per_google_play_locale_code(package_name)
 
     for google_play_locale_code, translation in locales.items():
         edit_service.update_whats_new(
