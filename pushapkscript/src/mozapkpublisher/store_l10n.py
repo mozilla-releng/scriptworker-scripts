@@ -19,8 +19,11 @@ STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME = {
         'product': 'fx_android',
         'channel': 'release',
     },
-
     'org.mozilla.focus': {
+        'product': 'focus_android',
+        'channel': 'release',
+    },
+    'org.mozilla.klar': {
         'product': 'focus_android',
         'channel': 'release',
     }
