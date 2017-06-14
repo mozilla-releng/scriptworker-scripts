@@ -221,6 +221,7 @@ async def upload_to_s3(context, s3_key, path):
     url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=1800, HttpMethod='PUT')
 
     await retry_async(put, args=(context, url, headers, path),
+                      retry_exceptions=(Exception, ),
                       kwargs={'session': context.session})
 
 
