@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+# 0.3.4
+* APK verification now includes a pass on the digest algorithm
+
 # 0.3.3
 Add FAQ
 Dawn project: Allow "aurora" scope to be still used in task definition
