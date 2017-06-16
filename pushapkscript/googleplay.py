@@ -28,9 +28,8 @@ def craft_push_apk_config(context, apks):
     if payload.get('rollout_percentage'):
         push_apk_config['rollout_percentage'] = payload['rollout_percentage']
 
-    # Don't commit anything, by default. Commited APKs can't be deleted (only unpublished).
-    # This may become an issue if somebody pushes an APK with the same version code than
-    # the one we intend to ship. See bug 1314063, as a real life example
+    # Don't commit anything, by default. Committed APKs can't be unpublished, unless
+    # you push a newer set of APKs.
     push_apk_config['dry_run'] = payload.get('dry_run', True)
 
     return push_apk_config
