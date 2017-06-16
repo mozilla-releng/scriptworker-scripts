@@ -22,20 +22,24 @@ def verify(context, apk_path, channel):
     ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
 
     command_output = completed_process.stdout
-    _check_certificate_via_return_code(completed_process.returncode, command_output, binary_path, apk_path, certificate_alias, keystore_path)
-    _check_digest_algorithm(command_output)
+    _check_certificate_via_return_code(
+        completed_process.returncode, command_output, binary_path, apk_path, certificate_alias, keystore_path
+    )
+    _check_digest_algorithm(command_output, apk_path)
 
 
 def _check_certificate_via_return_code(return_code, command_output, binary_path, apk_path, certificate_alias, keystore_path):
     if return_code != 0:
         log.critical(command_output)
         raise SignatureError(
-            '{} doesn\'t verify apk "{}". It compared certificate against "{}", located in keystore "{}"'
+            '{} doesn\'t verify APK "{}". It compared certificate against "{}", located in keystore "{}"'
             .format(binary_path, apk_path, certificate_alias, keystore_path)
         )
 
+    log.info('The signature of "{}" comes from the correct alias "{}"'.format(apk_path, certificate_alias))
 
-def _check_digest_algorithm(command_output):
+
+def _check_digest_algorithm(command_output, apk_path):
     # This prevents https://bugzilla.mozilla.org/show_bug.cgi?id=1332916
     match_result = DIGEST_ALGORITHM_REGEX.search(command_output)
     if match_result is None:
@@ -48,6 +52,8 @@ def _check_digest_algorithm(command_output):
         raise SignatureError(
             'Wrong digest algorithm: SHA1 digest is expected, but "{}" was found'.format(digest_algorithm)
         )
+
+    log.info('The signature of "{}" contains the correct digest algorithm'.format(apk_path))
 
 
 def _pluck_configuration(context):
