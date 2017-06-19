@@ -20,17 +20,20 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
       update_balrog_manifest: true
     target.checksums:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums
     target.checksums.asc:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums.asc
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums.asc
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums.asc
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.checksums.asc
     target.common.tests.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.common.tests.zip
       destinations:
@@ -143,23 +146,26 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
     target.tar.bz2.asc:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
   {% elif platform in ["mac"] %}
     target.dmg:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg
     target.dmg.asc:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
   {% endif %}
 
 {% endfor %}
-
