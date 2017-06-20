@@ -24,7 +24,7 @@ STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME = {
         'channel': 'release',
     },
     'org.mozilla.klar': {
-        'product': 'focus_android',
+        'product': 'klar_android',
         'channel': 'release',
     }
 }
