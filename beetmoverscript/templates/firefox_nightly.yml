@@ -180,7 +180,7 @@ mapping:
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
         - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
   {% elif platform in ["win32", "win64"] %}
-      target.installer-stub.exe:
+      target.stub-installer.exe:
         s3_key: installer-stub.exe
         destinations:
           - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
