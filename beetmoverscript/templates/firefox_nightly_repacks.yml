@@ -53,4 +53,15 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
         - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
+  {% elif platform in ["win32", "win64"] %}
+    target.zip:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
+      destinations:
+        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
+        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
+    target.zip.asc:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
+      destinations:
+        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
+        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
   {% endif %}
