@@ -141,16 +141,16 @@ mapping:
         - {{ upload_date }}-{{ branch }}/mar-tools/{{ stage_platform }}/mbsdiff
         - latest-{{ branch }}/mar-tools/{{ stage_platform }}/mbsdiff
   {% elif platform in ["win32", "win64"] %}
-      mar.exe:
-        s3_key: mar.exe
-        destinations:
-          - {{ upload_date }}-{{ branch }}/mar-tools/{{ stage_platform }}/mar.exe
-          - latest-{{ branch }}/mar-tools/{{ stage_platform }}/mar.exe
-      mbsdiff.exe:
-        s3_key: mbsdiff.exe
-        destinations:
-          - {{ upload_date }}-{{ branch }}/mar-tools/{{ stage_platform }}/mbsdiff.exe
-          - latest-{{ branch }}/mar-tools/{{ stage_platform }}/mbsdiff.exe
+    mar.exe:
+      s3_key: mar.exe
+      destinations:
+        - {{ upload_date }}-{{ branch }}/mar-tools/{{ stage_platform }}/mar.exe
+        - latest-{{ branch }}/mar-tools/{{ stage_platform }}/mar.exe
+    mbsdiff.exe:
+      s3_key: mbsdiff.exe
+      destinations:
+        - {{ upload_date }}-{{ branch }}/mar-tools/{{ stage_platform }}/mbsdiff.exe
+        - latest-{{ branch }}/mar-tools/{{ stage_platform }}/mbsdiff.exe
   {% endif %}
 
   {% if platform in ["linux-i686", "linux-x86_64"] %}
@@ -180,26 +180,26 @@ mapping:
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
         - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
   {% elif platform in ["win32", "win64"] %}
-      target.stub-installer.exe:
-        s3_key: installer-stub.exe
-        destinations:
-          - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
-          - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
-      target.installer.exe:
-        s3_key: installer.exe
-        destinations:
-          - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
-          - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
-      target.stylo-bindings.zip:
-        s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.stylo-bindings.zip
-        destinations:
-          - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.stylo-bindings.zip
-          - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.stylo-bindings.zip
-      target.zip:
-        s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
-        destinations:
-          - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
-          - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
+    target.stub-installer.exe:
+      s3_key: installer-stub.exe
+      destinations:
+        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
+        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
+    target.installer.exe:
+      s3_key: installer.exe
+      destinations:
+        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
+        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
+    target.stylo-bindings.zip:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.stylo-bindings.zip
+      destinations:
+        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.stylo-bindings.zip
+        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.stylo-bindings.zip
+    target.zip:
+      s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
+      destinations:
+        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
+        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
   {% endif %}
 
 {% endfor %}
