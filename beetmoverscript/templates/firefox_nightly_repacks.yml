@@ -64,4 +64,15 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
+    target.stub-installer.exe:
+      s3_key: installer-stub.exe
+      destinations:
+        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
+        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
+    target.installer.exe:
+      s3_key: installer.exe
+      destinations:
+        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
+        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
+
   {% endif %}
