@@ -57,22 +57,22 @@ mapping:
     target.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
       destinations:
-        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
-        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
+        - {{ upload_date }}-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
     target.zip.asc:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
       destinations:
-        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
-        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
+        - {{ upload_date }}-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
     target.stub-installer.exe:
       s3_key: installer-stub.exe
       destinations:
-        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
-        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
+        - {{ upload_date }}-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
     target.installer.exe:
       s3_key: installer.exe
       destinations:
-        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
-        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
+        - {{ upload_date }}-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
 
   {% endif %}
