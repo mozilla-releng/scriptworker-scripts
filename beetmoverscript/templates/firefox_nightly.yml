@@ -185,11 +185,13 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
     target.installer.exe:
       s3_key: installer.exe
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
     target.stylo-bindings.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.stylo-bindings.zip
       destinations:
