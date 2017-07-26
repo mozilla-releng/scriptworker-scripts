@@ -181,35 +181,61 @@ async def test_sign_file(context, mocker, format, signtool, files, filename):
     await stask.sign_file(context, filename, TEST_CERT_TYPE, [format], context.config['ssl_cert'])
 
 
+# _should_sign_widevine {{{1
+@pytest.mark.parametrize('filenames,expected', ((
+    ('firefox', 'XUL', 'libclearkey.dylib'), 'widevine',
+), (
+    ('plugin-container', 'plugin-container.exe'), 'widevine_blessed',
+), (
+    ('firefox.dll', 'XUL.so', 'firefox.bin'), None
+)))
+def test_should_sign_widevine(filenames, expected):
+    for f in filenames:
+        assert stask._should_sign_widevine(f, 'widevine') == expected
+
+
 # _execute_pre_signing_steps {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize('filename,expected,formats', ((
-    'foo.dmg', (['foo.tar.gz'], None), ['dmg']
+@pytest.mark.parametrize('filename,expected,formats,raises', ((
+    'foo.dmg', ('foo.tar.gz', ['foo.tar.gz'], None), 'dmg', False
 ), (
-    'bar.zip', (['bar', 'contents'], noop_sync), ['sha2signcode']
+    'bar.zip', ('bar.zip', ['bar', 'contents'], noop_sync), 'sha2signcode', False
+), (
+    'target.tar.gz', ('target.tar.gz', ['bar', 'contents'], noop_sync), 'widevine', False
+), (
+    'target.zip', ('target.zip', ['bar', 'contents'], noop_sync), 'widevine_blessed', False
+), (
+    'target.unknown', None, 'widevine_blessed', True
 )))
-async def test_execute_pre_signing_steps(context, mocker, filename, expected, formats):
+async def test_execute_pre_signing_steps(context, mocker, filename, expected,
+                                         formats, raises):
 
     async def fake_unzip(*args, **kwargs):
         return ['bar', 'contents']
 
     mocker.patch.object(stask, '_convert_dmg_to_tar_gz', new=noop_async)
     mocker.patch.object(stask, '_extract_zipfile', new=fake_unzip)
+    mocker.patch.object(stask, '_extract_tarfile', new=fake_unzip)
     mocker.patch.object(stask, '_should_sign_windows', new=noop_sync)
+    mocker.patch.object(stask, '_should_sign_widevine', new=noop_sync)
 
-    assert await stask._execute_pre_signing_steps(context, filename, formats) == expected
+    if not raises:
+        assert await stask._execute_pre_signing_steps(context, filename, formats) == expected
+    else:
+        with pytest.raises(SigningScriptError):
+            assert await stask._execute_pre_signing_steps(context, filename, formats)
 
 
 # _execute_post_signing_steps {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize('files,orig_file,formats,raises', ((
-    ['target.apk'], 'target.apk', ['jar'], False
+    ['target.apk'], 'target.apk', 'jar', False
 ), (
-    ['setup.exe'], 'setup.exe', ['sha2signcode'], False
+    ['setup.exe'], 'setup.exe', 'sha2signcode', False
 ), (
-    ['zip', 'contents'], 'target.zip', ['sha2signcode'], False
+    ['zip', 'contents'], 'target.zip', 'sha2signcode', False
 ), (
-    ['target.apk', 'target.exe'], 'target.apk', ['jar'], True
+    ['target.apk', 'target.exe'], 'target.apk', 'jar', True
 )))
 async def test_execute_post_signing_steps(context, monkeypatch, files, orig_file, formats, raises):
     work_dir = context.config['work_dir']
