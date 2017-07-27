@@ -309,7 +309,7 @@ async def _create_zipfile(context, to, files, tmp_dir=None):
     work_dir = context.config['work_dir']
     tmp_dir = tmp_dir or os.path.join(work_dir, "unzipped")
     try:
-        with zipfile.ZipFile(to, mode='w') as z:
+        with zipfile.ZipFile(to, mode='w', compression=zipfile.ZIP_DEFLATED) as z:
             for f in files:
                 relpath = os.path.relpath(f, tmp_dir)
                 z.write(f, arcname=relpath)
