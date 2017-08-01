@@ -13,10 +13,6 @@ from collections import namedtuple
 from signingscript.exceptions import FailedSubprocess, SigningServerError
 
 log = logging.getLogger(__name__)
-# Mapping between signing client formats and file extensions
-DETACHED_SIGNATURES = [
-    ('gpg', '.asc', 'text/plain'),
-]
 
 SigningServer = namedtuple("SigningServer", ["server", "user", "password",
                                              "formats"])
@@ -91,22 +87,6 @@ def load_signing_server_config(context):
     return cfg
 
 
-def get_detached_signatures(signing_formats):
-    """Get a list of tuples with detached signature info given the signing formats.
-
-    This is currently only applicable for gpg signing.
-
-    Args:
-        signing_formats (list): the list of signing formats
-
-    Returns:
-        list of tuples: the tuple contains signing format, extension, and mime type.
-
-    """
-    return [(sig_type, sig_ext, sig_mime) for sig_type, sig_ext, sig_mime in
-            DETACHED_SIGNATURES if sig_type in signing_formats]
-
-
 async def log_output(fh):
     """Log the output from an async generator.
 
@@ -151,7 +131,17 @@ def copy_to_dir(source, parent_dir, target=None):
         raise SigningServerError("Can't copy {} to {}!".format(source, target_path))
 
 
-async def _execute_subprocess(command, **kwargs):
+async def execute_subprocess(command, **kwargs):
+    """Execute a command in a subprocess.
+
+    Args:
+        command (list): the command to run
+        **kwargs: the kwargs to pass to subprocess
+
+    Raises:
+        FailedSubprocess: on failure
+
+    """
     message = 'Running "{}"'.format(' '.join(command))
     if 'cwd' in kwargs:
         message += " in {}".format(kwargs['cwd'])
