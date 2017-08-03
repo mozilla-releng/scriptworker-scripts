@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.0.0] - unreleased
+### Added
+- widevine support
+- new `signingscript.sign` module
+
+### Changed
+- refactored the whole signing workflow for more testability and less fragility
+
 ## [2.0.1] - 2017-07-27
 ### Fixed
 - compressed zipfiles
