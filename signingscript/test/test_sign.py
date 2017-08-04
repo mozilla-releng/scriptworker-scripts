@@ -274,25 +274,6 @@ def test_should_sign_widevine(filenames, expected):
         assert sign._should_sign_widevine(f) == expected
 
 
-# log_shas {{{1
-def test_log_shas(context, mocker):
-    files = [
-        os.path.join(context.config['work_dir'], "foo"),
-        os.path.join(context.config['work_dir'], "bar"),
-    ]
-
-    def fake_hash(path, alg):
-        return alg
-
-    def fake_log(msg, hash_, rel):
-        assert hash_ in ("sha512", "sha1")
-        assert rel in ("foo", "bar")
-
-    mocker.patch.object(utils, 'get_hash', new=fake_hash)
-    mocker.patch.object(sign.log, 'info', new=fake_log)
-    sign.log_shas(context, files)
-
-
 # zip_align_apk {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize('is_verbose', (True, False))

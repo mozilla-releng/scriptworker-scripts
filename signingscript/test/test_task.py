@@ -130,7 +130,6 @@ async def test_sign(context, mocker, format, filename, post_files):
         assert new_files == post_files
 
     mocker.patch.object(stask, 'FORMAT_TO_SIGNING_FUNCTION', new=fake_format_to)
-    mocker.patch.object(stask, 'log_shas', new=fake_log)
     await stask.sign(context, filename, [format])
 
 

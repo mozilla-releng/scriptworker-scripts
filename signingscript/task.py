@@ -20,7 +20,7 @@ from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_request
 
 from signingscript.sign import get_suitable_signing_servers, sign_gpg, \
-    sign_jar, sign_macapp, sign_signcode, sign_widevine, sign_file, log_shas
+    sign_jar, sign_macapp, sign_signcode, sign_widevine, sign_file
 from signingscript.exceptions import SigningServerError, TaskVerificationError
 
 log = logging.getLogger(__name__)
@@ -131,16 +131,14 @@ async def sign(context, path, signing_formats):
     output = path
     # Loop through the formats and sign one by one.
     for fmt in signing_formats:
-        func = FORMAT_TO_SIGNING_FUNCTION.get(
+        signing_func = FORMAT_TO_SIGNING_FUNCTION.get(
             fmt, FORMAT_TO_SIGNING_FUNCTION['default']
         )
         log.info("Signing {} with {}...".format(output, fmt))
-        output = await func(context, output, fmt)
+        output = await signing_func(context, output, fmt)
     # We want to return a list
     if not isinstance(output, (tuple, list)):
         output = [output]
-    # Log the shas of each output file
-    log_shas(context, output)
     return output
 
 
@@ -158,6 +156,7 @@ def _sort_formats(formats):
         list: the ordered formats.
 
     """
+    # Widevine formats must be after other formats; GPG must be last.
     for fmt in ("widevine", "widevine_blessed", "gpg"):
         if fmt in formats:
             formats.remove(fmt)

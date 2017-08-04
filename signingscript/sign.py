@@ -141,7 +141,7 @@ async def sign_file(context, from_, fmt, to=None):
 
 # sign_gpg {{{1
 async def sign_gpg(context, from_, fmt):
-    """Create a detached signature with the gpg key.
+    """Create a detached armored signature with the gpg key.
 
     Because this function returns a list, gpg must be the final signing format.
 
@@ -296,26 +296,18 @@ def _should_sign_widevine(filename):
         return "widevine"
 
 
-# log_shas {{{1
-def log_shas(context, paths):
-    """Log the shas of `paths`.
+# zip_align_apk {{{1
+async def zip_align_apk(context, abs_to):
+    """Optimize APK for better run-time performance.
+
+    This is necessary if the APK is uploaded to the Google Play Store.
+    https://developer.android.com/studio/command-line/zipalign.html
 
     Args:
         context (SigningContext): the signing context
-        paths (list): the list of paths to log shas for
+        abs_to (str): the absolute path to the apk
 
     """
-    for path in paths:
-        rel_signed_file = os.path.relpath(path, context.config['work_dir'])
-        log.info("SHA512SUM: %s SIGNED_FILE: %s",
-                 utils.get_hash(path, "sha512"), rel_signed_file)
-        log.info("SHA1SUM: %s SIGNED_FILE: %s",
-                 utils.get_hash(path, "sha1"), rel_signed_file)
-
-
-# zip_align_apk {{{1
-async def zip_align_apk(context, abs_to):
-    """Replace APK with a zip aligned one."""
     original_apk_location = abs_to
     zipalign_executable_location = context.config['zipalign']
 
