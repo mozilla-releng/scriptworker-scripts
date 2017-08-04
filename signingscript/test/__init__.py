@@ -24,3 +24,7 @@ async def noop_async(*args, **kwargs):
 def tmpdir():
     with tempfile.TemporaryDirectory() as tmp:
         yield tmp
+
+
+def die(*args, **kwargs):
+    raise SigningScriptError("dying!")
