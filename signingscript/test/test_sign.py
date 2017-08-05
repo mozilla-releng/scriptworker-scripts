@@ -196,26 +196,27 @@ async def test_sign_macapp(context, mocker, filename, expected):
 
 # sign_signcode {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize('filename,fmt,raises', ((
-    'foo.tar.gz', 'sha2signcode', True
+@pytest.mark.parametrize('filename,fmt', ((
+    'foo.tar.gz', 'sha2signcode'
 ), (
-    'foo.zip', 'signcode', False
+    'setup.exe', 'osslsigncode'
+), (
+    'foo.zip', 'signcode'
 )))
-async def test_sign_signcode(context, mocker, filename, fmt, raises):
+async def test_sign_signcode(context, mocker, filename, fmt):
     files = ["x/foo.dll", "y/msvcblah.dll", "z/setup.exe", "ignore"]
 
     async def fake_unzip(_, f):
         assert f.endswith('.zip')
         return files
 
+    async def fake_sign(_, filename, *args):
+        assert os.path.basename(filename) in ("foo.dll", "setup.exe")
+
     mocker.patch.object(sign, '_extract_zipfile', new=fake_unzip)
-    mocker.patch.object(sign, 'sign_file', new=noop_async)
+    mocker.patch.object(sign, 'sign_file', new=fake_sign)
     mocker.patch.object(sign, '_create_zipfile', new=noop_async)
-    if raises:
-        with pytest.raises(SigningScriptError):
-            await sign.sign_signcode(context, filename, fmt)
-    else:
-        await sign.sign_signcode(context, filename, fmt)
+    await sign.sign_signcode(context, filename, fmt)
 
 
 # sign_widevine {{{1

@@ -221,13 +221,14 @@ async def sign_signcode(context, orig_path, fmt):
     if file_extension == '.zip':
         files = await _extract_zipfile(context, orig_path)
     else:
-        raise SigningScriptError("Only .zip files have signcode support atm")
+        files = [orig_path]
     # Sign the appropriate inner files
     for from_ in files:
         if _should_sign_windows(from_):
             await sign_file(context, from_, fmt)
-    # Recreate the zipfile
-    await _create_zipfile(context, orig_path, files)
+    if file_extension == '.zip':
+        # Recreate the zipfile
+        await _create_zipfile(context, orig_path, files)
     return orig_path
 
 
