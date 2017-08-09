@@ -239,6 +239,14 @@ async def test_sign_widevine(context, mocker, filename, fmt, raises):
         assert f.endswith('.tar.gz')
         return files
 
+    async def fake_sign(_, f, fmt, **kwargs):
+        if f.endswith("firefox"):
+            assert fmt == "widevine"
+        elif f.endswith("container"):
+            assert fmt == "widevine_blessed"
+        else:
+            assert False, "unexpected file and format {} {}!".format(f, fmt)
+
     mocker.patch.object(sign, '_extract_tarfile', new=fake_untar)
     mocker.patch.object(sign, '_extract_zipfile', new=fake_unzip)
     mocker.patch.object(sign, 'sign_file', new=noop_async)
