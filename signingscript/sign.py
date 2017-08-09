@@ -260,7 +260,8 @@ async def sign_widevine(context, orig_path, fmt):
         raise SigningScriptError("Unknown widevine file format: {}".format(orig_path))
     # Sign the appropriate inner files
     for from_ in files:
-        if _should_sign_widevine(from_):
+        fmt = _should_sign_widevine(from_)
+        if fmt:
             await sign_file(context, from_, fmt)
             files.append("{}.sig".format(from_))
     # Recreate the archive
@@ -289,12 +290,13 @@ def _should_sign_windows(filename):
 
 # _should_sign_widevine {{{1
 def _should_sign_widevine(filename):
-    """Return (True, blessed) if filename should be signed."""
+    """Return signing format if filename should be signed."""
     base_filename = os.path.basename(filename)
     if base_filename in _WIDEVINE_BLESSED_FILENAMES:
         return "widevine_blessed"
     elif base_filename in _WIDEVINE_NONBLESSED_FILENAMES:
         return "widevine"
+    return None
 
 
 # zip_align_apk {{{1
