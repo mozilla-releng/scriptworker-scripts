@@ -2,6 +2,19 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.0.3.dev1] - 2017-08-11
+### Added
+- `sign_widevine_zip` only extracts the files we need to sign, and appends the sigfiles to the original zipfile.
+- `sign_widevine_tar` extracts the entire tarball, and recreates it with the sigfiles added. This is because compressed tarballs can't be appended to.
+- `get_zipfile_files` and `get_tarfile_files` lets us list the contents of an archive without extracting.
+- `_get_widevine_signing_files` takes a list of file paths, and returns a dictionary of `{path: signing_format, ...}`. If a file to sign exists, but its `.sig` file also exists, we no longer mark that file for re-signing.
+
+### Changed
+- `sign_signcode` now extracts to a new temp dir every time, to optimize for task runtime speed (no more nuking the same temp dir to reuse). This temp dir is under `work_dir`, so it should be cleaned up after the task is finished.
+- `sign_widevine` now calls `sign_widevine_zip` or `sign_widevine_tar` as needed.
+- `_extract_zipfile` now allows for specifying a `files` kwarg. If specified, only extract those paths. If not, extract everything.
+- `_create_zipfile` now allows for appending, via the new `mode` kwarg.
+
 ## [3.0.2] - 2017-08-09
 ### Fixed
 - fixed `widevine_blessed` signing.

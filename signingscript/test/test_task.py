@@ -9,13 +9,12 @@ from signingscript.exceptions import SigningServerError, TaskVerificationError
 from signingscript.script import get_default_config
 from signingscript.utils import load_signing_server_config, mkdir
 import signingscript.task as stask
-from signingscript.test import noop_sync, tmpdir
+from signingscript.test import noop_sync, tmpdir, BASE_DIR
 
 assert tmpdir  # silence flake8
 
 
 # helper constants, fixtures, functions {{{1
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 SERVER_CONFIG_PATH = os.path.join(BASE_DIR, 'example_server_config.json')
 TEST_CERT_TYPE = "project:releng:signing:cert:dep-signing"
 

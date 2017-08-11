@@ -9,7 +9,10 @@ def read_file(path):
         return fh.read()
 
 
-PUB_KEY = read_file(os.path.join(os.path.dirname(__file__), "id_rsa.pub"))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+PUB_KEY_PATH = os.path.join(TEST_DATA_DIR, "id_rsa.pub")
+PUB_KEY = read_file(PUB_KEY_PATH)
 
 
 def noop_sync(*args, **kwargs):
