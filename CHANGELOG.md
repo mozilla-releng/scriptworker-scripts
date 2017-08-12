@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [3.0.3.dev1] - 2017-08-11
+## [4.0.0] - 2017-08-14
 ### Added
 - `sign_widevine_zip` only extracts the files we need to sign, and appends the sigfiles to the original zipfile.
 - `sign_widevine_tar` extracts the entire tarball, and recreates it with the sigfiles added. This is because compressed tarballs can't be appended to.
