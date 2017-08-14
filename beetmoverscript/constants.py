@@ -22,9 +22,11 @@ STAGE_PLATFORM_MAP = {
 # use explicit platform 'firefox' mapping when all desktop platforms are added
 TEMPLATE_KEY_PLATFORMS = defaultdict(lambda: "firefox", {
     "android-api-15": "fennec",
+    "android-api-15-old-id": "fennec",
+    "android-api-16": "fennec",
+    "android-api-16-old-id": "fennec",
     "android-x86": "fennecx86",
     "android-aarch64": "fennecaarch64",
-    "android-api-15-old-id": "fennec",
     "android-x86-old-id": "fennecx86",
 })
 HASH_BLOCK_SIZE = 1024*1024
