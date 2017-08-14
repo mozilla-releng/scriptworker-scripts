@@ -6,13 +6,12 @@ import sys
 
 import scriptworker.client
 from scriptworker.exceptions import ScriptWorkerTaskException
-from signingscript.test import noop_async, noop_sync, read_file, tmpdir
+from signingscript.test import noop_async, noop_sync, read_file, tmpdir, BASE_DIR
 import signingscript.script as script
 
 assert tmpdir  # silence flake8
 
 # helper constants, fixtures, functions {{{1
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 EXAMPLE_CONFIG = os.path.join(BASE_DIR, 'config_example.json')
 SSL_CERT = os.path.join(BASE_DIR, "signingscript", "data", "host.cert")
 

@@ -7,6 +7,7 @@ from scriptworker.context import Context
 from signingscript.exceptions import FailedSubprocess, SigningServerError
 from signingscript.test import read_file, tmpdir
 import signingscript.utils as utils
+from . import PUB_KEY_PATH
 
 assert tmpdir  # silence flake8
 
@@ -14,7 +15,6 @@ ID_RSA_PUB_HASH = "226658906e46b26ef195c468f94e2be983b6c53f370dff0d8e725832f" + 
     "4645933de4755690a3438760afe8790a91938100b75b5d63e76ebd00920adc8d2a8857e"
 
 SERVER_CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'example_server_config.json')
-PUBKEY_PATH = os.path.join(os.path.dirname(__file__), 'id_rsa.pub')
 
 
 # mkdir {{{1
@@ -44,7 +44,7 @@ def test_mkdir_mutes_os_errors(mocker):
 
 # get_hash {{{1
 def test_get_hash():
-    assert utils.get_hash(PUBKEY_PATH, hash_type="sha512") == ID_RSA_PUB_HASH
+    assert utils.get_hash(PUB_KEY_PATH, hash_type="sha512") == ID_RSA_PUB_HASH
 
 
 # load_json {{{1

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Signingscript task functions."""
+import asyncio
 import fnmatch
 import logging
 import os
@@ -9,7 +10,7 @@ import tarfile
 import tempfile
 import zipfile
 
-from scriptworker.utils import rm
+from scriptworker.utils import raise_future_exceptions, rm
 
 from signingscript import utils
 from signingscript.exceptions import SigningScriptError, TaskVerificationError
@@ -217,9 +218,14 @@ async def sign_signcode(context, orig_path, fmt):
 
     """
     file_base, file_extension = os.path.splitext(orig_path)
+    # This will get cleaned up when we nuke `work_dir`. Clean up at that point
+    # rather than immediately after `sign_signcode`, to optimize task runtime
+    # speed over disk space.
+    tmp_dir = None
     # Extract the zipfile
     if file_extension == '.zip':
-        files = await _extract_zipfile(context, orig_path)
+        tmp_dir = tempfile.mkdtemp(prefix="zip", dir=context.config['work_dir'])
+        files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
     else:
         files = [orig_path]
     # Sign the appropriate inner files
@@ -228,18 +234,46 @@ async def sign_signcode(context, orig_path, fmt):
             await sign_file(context, from_, fmt)
     if file_extension == '.zip':
         # Recreate the zipfile
-        await _create_zipfile(context, orig_path, files)
+        await _create_zipfile(context, orig_path, files, tmp_dir=tmp_dir)
     return orig_path
 
 
 # sign_widevine {{{1
 async def sign_widevine(context, orig_path, fmt):
-    """Sign the internals of a file with the widevine key.
+    """Call the appropriate helper function to do widevine signing.
 
-    Extract the zip or tarball and only sign a handful of files (see
-    `_WIDEVINE_BLESSED_FILENAMES` and `_WIDEVINE_UNBLESSED_FILENAMES).
+    Args:
+        context (SigningContext): the signing context
+        orig_path (str): the source file to sign
+        fmt (str): the format to sign with
+
+    Raises:
+        SigningScriptError: on unknown suffix.
+
+    Returns:
+        str: the path to the signed archive
+
+    """
+    ext_to_fn = {
+        '.zip': sign_widevine_zip,
+        '.tar.bz2': sign_widevine_tar,
+        '.tar.gz': sign_widevine_tar,
+    }
+    for ext, signing_func in ext_to_fn.items():
+        if orig_path.endswith(ext):
+            return await signing_func(context, orig_path, fmt)
+    raise SigningScriptError(
+        "Unknown widevine file format for {}".format(orig_path)
+    )
+
+
+async def sign_widevine_zip(context, orig_path, fmt):
+    """Sign the internals of a zipfile with the widevine key.
+
+    Extract the files to sign (see `_WIDEVINE_BLESSED_FILENAMES` and
+    `_WIDEVINE_UNBLESSED_FILENAMES), skipping already-signed files.
     The blessed files should be signed with the `widevine_blessed` format.
-    Then recreate the zip or tarball.
+    Then append the sigfiles to the zipfile.
 
     Args:
         context (SigningContext): the signing context
@@ -250,25 +284,77 @@ async def sign_widevine(context, orig_path, fmt):
         str: the path to the signed archive
 
     """
-    file_base, file_extension = os.path.splitext(orig_path)
-    # Extract the archive
-    if file_base.endswith('.tar'):
-        files = await _extract_tarfile(context, orig_path, compression=file_extension)
-    elif file_extension == '.zip':
-        files = await _extract_zipfile(context, orig_path)
-    else:
-        raise SigningScriptError("Unknown widevine file format: {}".format(orig_path))
-    # Sign the appropriate inner files
-    for from_ in files:
-        fmt = _should_sign_widevine(from_)
-        if fmt:
-            await sign_file(context, from_, fmt)
-            files.append("{}.sig".format(from_))
-    # Recreate the archive
-    if file_extension == '.zip':
-        await _create_zipfile(context, orig_path, files)
-    if file_base.endswith('.tar'):
-        await _create_tarfile(context, orig_path, files, compression=file_extension)
+    # This will get cleaned up when we nuke `work_dir`. Clean up at that point
+    # rather than immediately after `sign_widevine`, to optimize task runtime
+    # speed over disk space.
+    tmp_dir = tempfile.mkdtemp(prefix="wvzip", dir=context.config['work_dir'])
+    # Get file list
+    all_files = await _get_zipfile_files(orig_path)
+    files_to_sign = _get_widevine_signing_files(all_files)
+    sig_files = []
+    log.debug("Widevine files to sign: {}".format(files_to_sign))
+    if files_to_sign:
+        files = files_to_sign.keys()
+        log.debug("Extracting {} from {}...".format(files, orig_path))
+        await _extract_zipfile(
+            context, orig_path, files=files, tmp_dir=tmp_dir,
+        )
+        tasks = []
+        # Sign the appropriate inner files
+        for from_, fmt in files_to_sign.items():
+            from_ = os.path.join(tmp_dir, from_)
+            tasks.append(asyncio.ensure_future(sign_file(context, from_, fmt)))
+            sig_files.append("{}.sig".format(from_))
+        await raise_future_exceptions(tasks)
+        # Append sig_files to the archive
+        await _create_zipfile(
+            context, orig_path, sig_files, mode='a', tmp_dir=tmp_dir
+        )
+    return orig_path
+
+
+async def sign_widevine_tar(context, orig_path, fmt):
+    """Sign the internals of a tarfile with the widevine key.
+
+    Extract the entire tarball, but only sign a handful of files (see
+    `_WIDEVINE_BLESSED_FILENAMES` and `_WIDEVINE_UNBLESSED_FILENAMES).
+    The blessed files should be signed with the `widevine_blessed` format.
+    Then recreate the tarball.
+
+    Ideally we would be able to append the sigfiles to the original tarball,
+    but that's not possible with compressed tarballs.
+
+    Args:
+        context (SigningContext): the signing context
+        orig_path (str): the source file to sign
+        fmt (str): the format to sign with
+
+    Returns:
+        str: the path to the signed archive
+
+    """
+    _, compression = os.path.splitext(orig_path)
+    # This will get cleaned up when we nuke `work_dir`. Clean up at that point
+    # rather than immediately after `sign_widevine`, to optimize task runtime
+    # speed over disk space.
+    tmp_dir = tempfile.mkdtemp(prefix="wvtar", dir=context.config['work_dir'])
+    # Get file list
+    all_files = await _extract_tarfile(
+        context, orig_path, compression, tmp_dir=tmp_dir
+    )
+    files_to_sign = _get_widevine_signing_files(all_files)
+    log.debug("Widevine files to sign: {}".format(files_to_sign))
+    if files_to_sign:
+        tasks = []
+        # Sign the appropriate inner files
+        for from_, fmt in files_to_sign.items():
+            tasks.append(asyncio.ensure_future(sign_file(context, from_, fmt)))
+            all_files.append("{}.sig".format(from_))
+        await raise_future_exceptions(tasks)
+        # Append sig_files to the archive
+        await _create_tarfile(
+            context, orig_path, all_files, compression, tmp_dir=tmp_dir
+        )
     return orig_path
 
 
@@ -288,15 +374,24 @@ def _should_sign_windows(filename):
     return False
 
 
-# _should_sign_widevine {{{1
-def _should_sign_widevine(filename):
-    """Return signing format if filename should be signed."""
-    base_filename = os.path.basename(filename)
-    if base_filename in _WIDEVINE_BLESSED_FILENAMES:
-        return "widevine_blessed"
-    elif base_filename in _WIDEVINE_NONBLESSED_FILENAMES:
-        return "widevine"
-    return None
+# _get_widevine_signing_files {{{1
+def _get_widevine_signing_files(file_list):
+    """Return a dict of path:signing_format for each path to be signed."""
+    files = {}
+    for filename in file_list:
+        fmt = None
+        base_filename = os.path.basename(filename)
+        if base_filename in _WIDEVINE_BLESSED_FILENAMES:
+            fmt = 'widevine_blessed'
+        elif base_filename in _WIDEVINE_NONBLESSED_FILENAMES:
+            fmt = 'widevine'
+        if fmt:
+            log.debug("Found {} to sign {}".format(filename, fmt))
+            if "{}.sig".format(filename) not in file_list:
+                files[filename] = fmt
+            else:
+                log.debug("{} is already signed! Skipping...".format(filename))
+    return files
 
 
 # zip_align_apk {{{1
@@ -352,30 +447,45 @@ async def _convert_dmg_to_tar_gz(context, from_):
     return to
 
 
+# _get_zipfile_files {{{1
+async def _get_zipfile_files(from_):
+    with zipfile.ZipFile(from_, mode='r') as z:
+        files = z.namelist()
+        return files
+
+
 # _extract_zipfile {{{1
-async def _extract_zipfile(context, from_, tmp_dir=None):
+async def _extract_zipfile(context, from_, files=None, tmp_dir=None):
     work_dir = context.config['work_dir']
     tmp_dir = tmp_dir or os.path.join(work_dir, "unzipped")
+    log.debug("Extracting {} from {} to {}...".format(
+        files or "all files", from_, tmp_dir
+    ))
     try:
-        files = []
+        extracted_files = []
         rm(tmp_dir)
         utils.mkdir(tmp_dir)
         with zipfile.ZipFile(from_, mode='r') as z:
-            for name in z.namelist():
-                files.append(os.path.join(tmp_dir, name))
-            z.extractall(path=tmp_dir)
-        return files
+            if files is not None:
+                for name in files:
+                    z.extract(name, path=tmp_dir)
+                    extracted_files.append(os.path.join(tmp_dir, name))
+            else:
+                for name in z.namelist():
+                    extracted_files.append(os.path.join(tmp_dir, name))
+                z.extractall(path=tmp_dir)
+        return extracted_files
     except Exception as e:
         raise SigningScriptError(e)
 
 
 # _create_zipfile {{{1
-async def _create_zipfile(context, to, files, tmp_dir=None):
+async def _create_zipfile(context, to, files, tmp_dir=None, mode='w'):
     work_dir = context.config['work_dir']
     tmp_dir = tmp_dir or os.path.join(work_dir, "unzipped")
     try:
         log.info("Creating zipfile {}...".format(to))
-        with zipfile.ZipFile(to, mode='w', compression=zipfile.ZIP_DEFLATED) as z:
+        with zipfile.ZipFile(to, mode=mode, compression=zipfile.ZIP_DEFLATED) as z:
             for f in files:
                 relpath = os.path.relpath(f, tmp_dir)
                 z.write(f, arcname=relpath)
@@ -392,6 +502,16 @@ def _get_tarfile_compression(compression):
             "{} not a supported tarfile compression format!".format(compression)
         )
     return compression
+
+
+# _get_tarfile_files {{{1
+async def _get_tarfile_files(from_, compression):
+    if compression is None:
+        ext = os.path.splitext(from_)[1]
+        compression = _get_tarfile_compression(ext)
+    with tarfile.open(from_, mode='r:{}'.format(compression)) as t:
+        files = t.getnames()
+        return files
 
 
 # _extract_tarfile {{{1
