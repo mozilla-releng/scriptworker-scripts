@@ -156,8 +156,9 @@ def _sort_formats(formats):
         list: the ordered formats.
 
     """
-    # Widevine formats must be after other formats; GPG must be last.
-    for fmt in ("widevine", "widevine_blessed", "gpg"):
+    # Widevine formats must be after other formats other than macapp; GPG must
+    # be last.
+    for fmt in ("widevine", "widevine_blessed", "macapp", "gpg"):
         if fmt in formats:
             formats.remove(fmt)
             formats.append(fmt)

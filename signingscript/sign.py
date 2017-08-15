@@ -254,6 +254,11 @@ async def sign_widevine(context, orig_path, fmt):
         str: the path to the signed archive
 
     """
+    file_base, file_extension = os.path.splitext(orig_path)
+    # Convert dmg to tarball
+    if file_extension == '.dmg':
+        await _convert_dmg_to_tar_gz(context, orig_path)
+        orig_path = "{}.tar.gz".format(file_base)
     ext_to_fn = {
         '.zip': sign_widevine_zip,
         '.tar.bz2': sign_widevine_tar,
