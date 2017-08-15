@@ -231,6 +231,8 @@ async def test_sign_signcode(context, mocker, filename, fmt):
 ), (
     'foo.zip', 'widevine', False, False
 ), (
+    'foo.dmg', 'widevine', False, False
+), (
     'foo.tar.bz2', 'widevine', False, False
 )))
 async def test_sign_widevine(context, mocker, filename, fmt, raises, should_sign):
@@ -250,6 +252,9 @@ async def test_sign_widevine(context, mocker, filename, fmt, raises, should_sign
         assert f.endswith('.tar.{}'.format(comp.lstrip('.')))
         return files
 
+    async def fake_undmg(_, f):
+        assert f.endswith('.dmg')
+
     async def fake_sign(_, f, fmt, **kwargs):
         if f.endswith("firefox"):
             assert fmt == "widevine"
@@ -263,6 +268,7 @@ async def test_sign_widevine(context, mocker, filename, fmt, raises, should_sign
     mocker.patch.object(sign, '_extract_tarfile', new=fake_untar)
     mocker.patch.object(sign, '_get_zipfile_files', new=fake_filelist)
     mocker.patch.object(sign, '_extract_zipfile', new=fake_unzip)
+    mocker.patch.object(sign, '_convert_dmg_to_tar_gz', new=fake_undmg)
     mocker.patch.object(sign, 'sign_file', new=noop_async)
     mocker.patch.object(sign, '_create_tarfile', new=noop_async)
     mocker.patch.object(sign, '_create_zipfile', new=noop_async)
