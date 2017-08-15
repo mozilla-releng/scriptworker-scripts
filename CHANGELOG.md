@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.0.1] - 2017-08-15
+### Changed
+- widevine signing now happens before macapp.
+
 ## [4.0.0] - 2017-08-14
 ### Added
 - `sign_widevine_zip` only extracts the files we need to sign, and appends the sigfiles to the original zipfile.
