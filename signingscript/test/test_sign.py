@@ -222,24 +222,31 @@ async def test_sign_signcode(context, mocker, filename, fmt):
 
 # sign_widevine {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize('filename,fmt,raises,should_sign', ((
-    'foo.tar.gz', 'widevine', False, True
+@pytest.mark.parametrize('filename,fmt,raises,should_sign,orig_files', ((
+    'foo.tar.gz', 'widevine', False, True, None
 ), (
-    'foo.zip', 'widevine_blessed', False, True
+    'foo.zip', 'widevine_blessed', False, True, None
 ), (
-    'foo.unknown', 'widevine', True, False
+    'foo.dmg', 'widevine', False, True, [
+        "foo.app/Contents/MacOS/firefox",
+        "foo.app/Contents/MacOS/bar.app/Contents/MacOS/plugin-container",
+        "foo.app/ignore",
+    ]
 ), (
-    'foo.zip', 'widevine', False, False
+    'foo.unknown', 'widevine', True, False, None
 ), (
-    'foo.dmg', 'widevine', False, False
+    'foo.zip', 'widevine', False, False, None
 ), (
-    'foo.tar.bz2', 'widevine', False, False
+    'foo.dmg', 'widevine', False, False, None
+), (
+    'foo.tar.bz2', 'widevine', False, False, None
 )))
-async def test_sign_widevine(context, mocker, filename, fmt, raises, should_sign):
+async def test_sign_widevine(context, mocker, filename, fmt, raises,
+                             should_sign, orig_files):
     if should_sign:
-        files = ["x/firefox", "y/plugin-container", "z/blah", "ignore"]
+        files = orig_files or ["x/firefox", "y/plugin-container", "z/blah", "ignore"]
     else:
-        files = ["z/blah", "ignore"]
+        files = orig_files or ["z/blah", "ignore"]
 
     async def fake_filelist(*args, **kwargs):
         return files
@@ -262,6 +269,8 @@ async def test_sign_widevine(context, mocker, filename, fmt, raises, should_sign
             assert fmt == "widevine_blessed"
         else:
             assert False, "unexpected file and format {} {}!".format(f, fmt)
+        if 'MacOS' in f:
+            assert f not in files, "We should have renamed this file!"
 
 
     mocker.patch.object(sign, '_get_tarfile_files', new=fake_filelist)
@@ -426,14 +435,8 @@ async def test_zipfile_append_write(context):
     os.path.join(TEST_DATA_DIR, "test.tar.bz2"),
     "bz2"
 ), (
-    os.path.join(TEST_DATA_DIR, "test.tar.bz2"),
-    None
-), (
     os.path.join(TEST_DATA_DIR, "test.tar.gz"),
     "gz"
-), (
-    os.path.join(TEST_DATA_DIR, "test.tar.gz"),
-    None
 )))
 async def test_get_tarfile_files(path, compression):
     assert sorted(
