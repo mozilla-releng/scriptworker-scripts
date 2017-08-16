@@ -310,8 +310,11 @@ async def sign_widevine_zip(context, orig_path, fmt):
         # Sign the appropriate inner files
         for from_, fmt in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
-            tasks.append(asyncio.ensure_future(sign_file(context, from_, fmt)))
-            sig_files.append("{}.sig".format(from_))
+            to = "{}.sig".format(from_)
+            tasks.append(asyncio.ensure_future(sign_file(
+                context, from_, fmt, to=to
+            )))
+            sig_files.append(to)
         await raise_future_exceptions(tasks)
         # Append sig_files to the archive
         await _create_zipfile(
