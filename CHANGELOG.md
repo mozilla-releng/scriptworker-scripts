@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.0.3] - 2017-08-15
+### Fixed
+- pass in the .sig path now that `output_file` works in signtool
+
 ## [4.0.2] - 2017-08-15
 ### Fixed
 - widevine signing for mac now places sigfiles in `Contents/Resources/` instead of `Contents/MacOS/`. Given a path with an `.app` inside a `.app`, on the rightmost `Contents/MacOS/` path is changed.
