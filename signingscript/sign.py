@@ -4,13 +4,14 @@ import asyncio
 import fnmatch
 import logging
 import os
+import pprint
 import re
 import shutil
 import tarfile
 import tempfile
 import zipfile
 
-from scriptworker.utils import raise_future_exceptions, rm
+from scriptworker.utils import makedirs, raise_future_exceptions, rm
 
 from signingscript import utils
 from signingscript.exceptions import SigningScriptError, TaskVerificationError
@@ -134,7 +135,7 @@ async def sign_file(context, from_, fmt, to=None):
         str: the path to the signed file
 
     """
-    log.info("Signing {} with {}...".format(from_, fmt))
+    log.info("sign_file(): signing {} with {}...".format(from_, fmt))
     cmd = build_signtool_cmd(context, from_, fmt, to=to)
     await utils.execute_subprocess(cmd)
     return to or from_
@@ -272,6 +273,7 @@ async def sign_widevine(context, orig_path, fmt):
     )
 
 
+# sign_widevine_zip {{{1
 async def sign_widevine_zip(context, orig_path, fmt):
     """Sign the internals of a zipfile with the widevine key.
 
@@ -318,6 +320,7 @@ async def sign_widevine_zip(context, orig_path, fmt):
     return orig_path
 
 
+# sign_widevine_tar {{{1
 async def sign_widevine_tar(context, orig_path, fmt):
     """Sign the internals of a tarfile with the widevine key.
 
@@ -353,13 +356,22 @@ async def sign_widevine_tar(context, orig_path, fmt):
         tasks = []
         # Sign the appropriate inner files
         for from_, fmt in files_to_sign.items():
-            tasks.append(asyncio.ensure_future(sign_file(context, from_, fmt)))
-            all_files.append("{}.sig".format(from_))
+            # Move the sig location on mac. This should be noop on linux.
+            to = _get_mac_sigpath(from_)
+            log.debug("Adding {}.sig to the sigfile paths...".format(to))
+            makedirs(os.path.dirname(to))
+            tasks.append(asyncio.ensure_future(sign_file(
+                context, from_, fmt, to=to
+            )))
+            all_files.append("{}.sig".format(to))
         await raise_future_exceptions(tasks)
         # Append sig_files to the archive
         await _create_tarfile(
             context, orig_path, all_files, compression, tmp_dir=tmp_dir
         )
+        log.info("filelist: {}".format(pprint.pformat(
+            await _get_tarfile_files(orig_path, compression)
+        )))
     return orig_path
 
 
@@ -377,6 +389,21 @@ def _should_sign_windows(filename):
     if ext in ('.dll', '.exe') and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
         return True
     return False
+
+
+# _get_mac_sigpath {{{1
+def _get_mac_sigpath(from_):
+    """For mac paths, replace the final Contents/MacOS/ with Contents/Resources/."""
+    to = from_
+    if 'Contents/MacOS' in from_:
+        parts = from_.split('/')
+        parts.reverse()
+        i = parts.index('MacOS')
+        parts[i] = "Resources"
+        parts.reverse()
+        to = '/'.join(parts)
+        log.debug("Sigfile for {} should be {}.sig".format(from_, to))
+    return to
 
 
 # _get_widevine_signing_files {{{1
@@ -511,9 +538,7 @@ def _get_tarfile_compression(compression):
 
 # _get_tarfile_files {{{1
 async def _get_tarfile_files(from_, compression):
-    if compression is None:
-        ext = os.path.splitext(from_)[1]
-        compression = _get_tarfile_compression(ext)
+    compression = _get_tarfile_compression(compression)
     with tarfile.open(from_, mode='r:{}'.format(compression)) as t:
         files = t.getnames()
         return files

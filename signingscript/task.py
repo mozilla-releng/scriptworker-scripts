@@ -134,7 +134,7 @@ async def sign(context, path, signing_formats):
         signing_func = FORMAT_TO_SIGNING_FUNCTION.get(
             fmt, FORMAT_TO_SIGNING_FUNCTION['default']
         )
-        log.info("Signing {} with {}...".format(output, fmt))
+        log.info("sign(): Signing {} with {}...".format(output, fmt))
         output = await signing_func(context, output, fmt)
     # We want to return a list
     if not isinstance(output, (tuple, list)):
