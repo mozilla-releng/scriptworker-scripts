@@ -358,12 +358,12 @@ async def sign_widevine_tar(context, orig_path, fmt):
         for from_, fmt in files_to_sign.items():
             # Move the sig location on mac. This should be noop on linux.
             to = _get_mac_sigpath(from_)
-            log.debug("Adding {}.sig to the sigfile paths...".format(to))
+            log.debug("Adding {} to the sigfile paths...".format(to))
             makedirs(os.path.dirname(to))
             tasks.append(asyncio.ensure_future(sign_file(
                 context, from_, fmt, to=to
             )))
-            all_files.append("{}.sig".format(to))
+            all_files.append("{}".format(to))
         await raise_future_exceptions(tasks)
         # Append sig_files to the archive
         await _create_tarfile(
@@ -403,7 +403,7 @@ def _get_mac_sigpath(from_):
         parts.reverse()
         to = '/'.join(parts)
         log.debug("Sigfile for {} should be {}.sig".format(from_, to))
-    return to
+    return "{}.sig".format(to)
 
 
 # _get_widevine_signing_files {{{1

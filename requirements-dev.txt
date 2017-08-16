@@ -1,5 +1,5 @@
 arrow
 python-jose
 scriptworker
-signtool
+signtool>=3.1.6
 taskcluster
