@@ -7,6 +7,7 @@ import zipfile
 
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker.utils import makedirs
 
 from signingscript.exceptions import SigningScriptError
 from signingscript.script import get_default_config
@@ -279,8 +280,11 @@ async def test_sign_widevine(context, mocker, filename, fmt, raises,
     mocker.patch.object(sign, '_extract_zipfile', new=fake_unzip)
     mocker.patch.object(sign, '_convert_dmg_to_tar_gz', new=fake_undmg)
     mocker.patch.object(sign, 'sign_file', new=noop_async)
+    mocker.patch.object(sign, 'makedirs', new=noop_sync)
+    mocker.patch.object(sign, 'generate_precomplete', new=noop_sync)
     mocker.patch.object(sign, '_create_tarfile', new=noop_async)
     mocker.patch.object(sign, '_create_zipfile', new=noop_async)
+    mocker.patch.object(sign, '_run_generate_precomplete', new=noop_sync)
     if raises:
         with pytest.raises(SigningScriptError):
             await sign.sign_widevine(context, filename, fmt)
@@ -320,6 +324,51 @@ def test_should_sign_windows(filenames, expected):
 )))
 def test_get_widevine_signing_files(filenames, expected):
     assert sign._get_widevine_signing_files(filenames) == expected
+
+
+# _run_generate_precomplete {{{1
+@pytest.mark.parametrize("num_precomplete,raises", ((
+    1, False,
+), (
+    0, True,
+), (
+    2, True,
+)))
+def test_run_generate_precomplete(context, num_precomplete, raises, mocker):
+    mocker.patch.object(sign, "generate_precomplete", new=noop_sync)
+    work_dir = context.config['work_dir']
+    for i in range(0, num_precomplete):
+        path = os.path.join(work_dir, "foo", str(i))
+        makedirs(path)
+        with open(os.path.join(path, "precomplete"), "w") as fh:
+            fh.write("blah")
+    if raises:
+        with pytest.raises(SigningScriptError):
+            sign._run_generate_precomplete(context, work_dir)
+    else:
+        sign._run_generate_precomplete(context, work_dir)
+
+
+# remove_extra_files {{{1
+def test_remove_extra_files(context):
+    extra = ["a", "b/c"]
+    good = ["d", "e/f"]
+    work_dir = context.config['work_dir']
+    all_files = []
+    for f in extra + good:
+        path = os.path.join(work_dir, f)
+        makedirs(os.path.dirname(path))
+        with open(path, "w") as fh:
+            fh.write("x")
+        if f in good:
+            all_files.append(path)
+    for f in good:
+        assert os.path.exists(os.path.join(work_dir, f))
+    sign.remove_extra_files(work_dir, all_files)
+    for f in extra:
+        assert not os.path.exists(os.path.join(work_dir, f))
+    for f in good:
+        assert os.path.exists(os.path.join(work_dir, f))
 
 
 # zip_align_apk {{{1

@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """Signingscript task functions."""
 import asyncio
+import difflib
 import fnmatch
+import glob
 import logging
 import os
-import pprint
 import re
 import shutil
 import tarfile
@@ -14,6 +15,7 @@ import zipfile
 from scriptworker.utils import makedirs, raise_future_exceptions, rm
 
 from signingscript import utils
+from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError, TaskVerificationError
 
 log = logging.getLogger(__name__)
@@ -298,14 +300,11 @@ async def sign_widevine_zip(context, orig_path, fmt):
     # Get file list
     all_files = await _get_zipfile_files(orig_path)
     files_to_sign = _get_widevine_signing_files(all_files)
-    sig_files = []
     log.debug("Widevine files to sign: {}".format(files_to_sign))
     if files_to_sign:
-        files = files_to_sign.keys()
-        log.debug("Extracting {} from {}...".format(files, orig_path))
-        await _extract_zipfile(
-            context, orig_path, files=files, tmp_dir=tmp_dir,
-        )
+        # Extract all files so we can create `precomplete` with the full
+        # file list
+        all_files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
         tasks = []
         # Sign the appropriate inner files
         for from_, fmt in files_to_sign.items():
@@ -314,11 +313,14 @@ async def sign_widevine_zip(context, orig_path, fmt):
             tasks.append(asyncio.ensure_future(sign_file(
                 context, from_, fmt, to=to
             )))
-            sig_files.append(to)
+            all_files.append(to)
         await raise_future_exceptions(tasks)
-        # Append sig_files to the archive
+        remove_extra_files(tmp_dir, all_files)
+        # Regenerate the `precomplete` file, which is used for cleanup before
+        # applying a complete mar.
+        _run_generate_precomplete(context, tmp_dir)
         await _create_zipfile(
-            context, orig_path, sig_files, mode='a', tmp_dir=tmp_dir
+            context, orig_path, all_files, mode='w', tmp_dir=tmp_dir
         )
     return orig_path
 
@@ -350,15 +352,19 @@ async def sign_widevine_tar(context, orig_path, fmt):
     # speed over disk space.
     tmp_dir = tempfile.mkdtemp(prefix="wvtar", dir=context.config['work_dir'])
     # Get file list
-    all_files = await _extract_tarfile(
-        context, orig_path, compression, tmp_dir=tmp_dir
-    )
+    all_files = await _get_tarfile_files(orig_path, compression)
     files_to_sign = _get_widevine_signing_files(all_files)
     log.debug("Widevine files to sign: {}".format(files_to_sign))
     if files_to_sign:
+        # Extract all files so we can create `precomplete` with the full
+        # file list
+        all_files = await _extract_tarfile(
+            context, orig_path, compression, tmp_dir=tmp_dir
+        )
         tasks = []
         # Sign the appropriate inner files
         for from_, fmt in files_to_sign.items():
+            from_ = os.path.join(tmp_dir, from_)
             # Move the sig location on mac. This should be noop on linux.
             to = _get_mac_sigpath(from_)
             log.debug("Adding {} to the sigfile paths...".format(to))
@@ -366,15 +372,15 @@ async def sign_widevine_tar(context, orig_path, fmt):
             tasks.append(asyncio.ensure_future(sign_file(
                 context, from_, fmt, to=to
             )))
-            all_files.append("{}".format(to))
+            all_files.append(to)
         await raise_future_exceptions(tasks)
-        # Append sig_files to the archive
+        remove_extra_files(tmp_dir, all_files)
+        # Regenerate the `precomplete` file, which is used for cleanup before
+        # applying a complete mar.
+        _run_generate_precomplete(context, tmp_dir)
         await _create_tarfile(
             context, orig_path, all_files, compression, tmp_dir=tmp_dir
         )
-        log.info("filelist: {}".format(pprint.pformat(
-            await _get_tarfile_files(orig_path, compression)
-        )))
     return orig_path
 
 
@@ -422,11 +428,66 @@ def _get_widevine_signing_files(file_list):
             fmt = 'widevine'
         if fmt:
             log.debug("Found {} to sign {}".format(filename, fmt))
-            if "{}.sig".format(filename) not in file_list:
+            sigpath = _get_mac_sigpath(filename)
+            if sigpath not in file_list:
                 files[filename] = fmt
             else:
                 log.debug("{} is already signed! Skipping...".format(filename))
     return files
+
+
+# _run_generate_precomplete {{{1
+def _run_generate_precomplete(context, tmp_dir):
+    """Regenerate `precomplete` file with widevine sig paths for complete mar."""
+    log.info("Generating `precomplete` file...")
+    path = _ensure_one_precomplete(tmp_dir, "before")
+    with open(path, "r") as fh:
+        before = fh.readlines()
+    generate_precomplete(os.path.dirname(path))
+    path = _ensure_one_precomplete(tmp_dir, "after")
+    with open(path, "r") as fh:
+        after = fh.readlines()
+    # Create diff file
+    diff_path = os.path.join(context.config['work_dir'], "precomplete.diff")
+    with open(diff_path, "w") as fh:
+        for line in difflib.ndiff(before, after):
+            fh.write(line)
+    utils.copy_to_dir(
+        diff_path, context.config['artifact_dir'],
+        target="public/logs/precomplete.diff"
+    )
+
+
+# _ensure_one_precomplete {{{1
+def _ensure_one_precomplete(tmp_dir, adj):
+    """Ensure we only have one `precomplete` file in `tmp_dir`."""
+    matches = [f for f in glob.glob(os.path.join(tmp_dir, '**', 'precomplete'),
+               recursive=True)]
+    if len(matches) != 1:
+        raise SigningScriptError("We should have exactly 1 `precomplete` file {} generating precomplete: {}!".format(adj, matches))
+    return matches[0]
+
+
+# remove_extra_files {{{1
+def remove_extra_files(top_dir, file_list):
+    """Find any extra files in `top_dir`, given an expected `file_list`.
+
+    Args:
+        top_dir (str): the dir to walk
+        file_list (list): the list of expected files
+
+    Returns:
+        list: the list of extra files
+
+    """
+    all_files = [os.path.realpath(f) for f in glob.glob(os.path.join(top_dir, '**', '*'), recursive=True)]
+    good_files = [os.path.realpath(f) for f in file_list]
+    extra_files = list(set(all_files) - set(good_files))
+    for f in extra_files:
+        if os.path.isfile(f):
+            log.warning("Extra file to clean up: {}".format(f))
+            rm(f)
+    return extra_files
 
 
 # zip_align_apk {{{1
