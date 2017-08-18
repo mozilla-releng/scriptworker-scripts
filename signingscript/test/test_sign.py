@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 import os
+import os.path
 import pytest
 import shutil
 import tarfile
@@ -245,7 +246,7 @@ async def test_sign_signcode(context, mocker, filename, fmt):
 async def test_sign_widevine(context, mocker, filename, fmt, raises,
                              should_sign, orig_files):
     if should_sign:
-        files = orig_files or ["x/firefox", "y/plugin-container", "z/blah", "ignore"]
+        files = orig_files or ["isdir/firefox", "firefox/firefox", "y/plugin-container", "z/blah", "ignore"]
     else:
         files = orig_files or ["z/blah", "ignore"]
 
@@ -273,6 +274,9 @@ async def test_sign_widevine(context, mocker, filename, fmt, raises,
         if 'MacOS' in f:
             assert f not in files, "We should have renamed this file!"
 
+    def fake_isfile(path):
+        return 'isdir' not in path
+
 
     mocker.patch.object(sign, '_get_tarfile_files', new=fake_filelist)
     mocker.patch.object(sign, '_extract_tarfile', new=fake_untar)
@@ -285,6 +289,7 @@ async def test_sign_widevine(context, mocker, filename, fmt, raises,
     mocker.patch.object(sign, '_create_tarfile', new=noop_async)
     mocker.patch.object(sign, '_create_zipfile', new=noop_async)
     mocker.patch.object(sign, '_run_generate_precomplete', new=noop_sync)
+    mocker.patch.object(os.path, 'isfile', new=fake_isfile)
     if raises:
         with pytest.raises(SigningScriptError):
             await sign.sign_widevine(context, filename, fmt)
@@ -364,9 +369,11 @@ def test_remove_extra_files(context):
             all_files.append(path)
     for f in good:
         assert os.path.exists(os.path.join(work_dir, f))
-    sign.remove_extra_files(work_dir, all_files)
+    output = sign.remove_extra_files(work_dir, all_files)
     for f in extra:
-        assert not os.path.exists(os.path.join(work_dir, f))
+        path = os.path.realpath(os.path.join(work_dir, f))
+        assert path in output
+        assert not os.path.exists(path)
     for f in good:
         assert os.path.exists(os.path.join(work_dir, f))
 

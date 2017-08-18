@@ -365,6 +365,9 @@ async def sign_widevine_tar(context, orig_path, fmt):
         # Sign the appropriate inner files
         for from_, fmt in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
+            # Don't try to sign directories
+            if not os.path.isfile(from_):
+                continue
             # Move the sig location on mac. This should be noop on linux.
             to = _get_mac_sigpath(from_)
             log.debug("Adding {} to the sigfile paths...".format(to))
