@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.1.0] - 2017-08-15
+### Added
+- added `signingscirpt.createprecomplete` from [mozilla-central](https://hg.mozilla.org/mozilla-central/file/d3025e55dfc3/config/createprecomplete.py), and made it py3 compatible
+- added a `remove_extra_files` to make sure we're not leaving any cruft behind in the extracted directories.
+
+### Changed
+- widevine zip signing now extracts the entire zipfile
+- regenerate the `precomplete` file after widevine signing, for complete updates. then upload a `precomplete.diff`.
+
 ## [4.0.4] - 2017-08-15
 ### Fixed
 - pass in the .sig path in `sign_widevine_zip` as well.
