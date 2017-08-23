@@ -81,12 +81,21 @@ class PushAPK(Base):
 
 
 def _create_or_update_whats_new(edit_service, package_name, apk_version_code):
+    if googleplay.is_package_name_nightly(package_name):
+        # See https://github.com/mozilla-l10n/stores_l10n/issues/142
+        logger.warn("Nightly detected, What's new section won't be updated")
+        return
+
     locales = store_l10n.get_translations_per_google_play_locale_code(package_name)
 
     for google_play_locale_code, translation in locales.items():
-        edit_service.update_whats_new(
-            google_play_locale_code, apk_version_code, whats_new=translation.get('whatsnew')
-        )
+        try:
+            whats_new = translation['whatsnew']
+            edit_service.update_whats_new(
+                google_play_locale_code, apk_version_code, whats_new=whats_new
+            )
+        except KeyError:
+            logger.warn("No What's new section defined for locale {}".format(google_play_locale_code))
 
 
 def _check_and_get_flatten_version_codes(apks):

@@ -43,6 +43,12 @@ def add_general_google_play_arguments(parser):
 stored on Google Play. Use this option if you want to test the script with the same data more than once.''')
 
 
+def is_package_name_nightly(package_name):
+    # Due to project Dawn, Nightly is now using the Aurora package name.
+    # See https://bugzilla.mozilla.org/show_bug.cgi?id=1357351
+    return package_name == 'org.mozilla.fennec_aurora'
+
+
 class EditService(object):
     def __init__(self, service_account, credentials_file_path, package_name, dry_run=True):
         general_service = _connect(service_account, credentials_file_path)

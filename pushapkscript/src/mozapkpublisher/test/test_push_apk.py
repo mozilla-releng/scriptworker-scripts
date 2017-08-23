@@ -11,7 +11,8 @@ from tempfile import NamedTemporaryFile
 
 from mozapkpublisher import apk, googleplay, store_l10n
 from mozapkpublisher.exceptions import WrongArgumentGiven, ArmVersionCodeTooHigh
-from mozapkpublisher.push_apk import PushAPK, main, _check_and_get_flatten_version_codes
+from mozapkpublisher.push_apk import PushAPK, main, _check_and_get_flatten_version_codes, \
+    _create_or_update_whats_new
 from mozapkpublisher.test.test_store_l10n import set_translations_per_google_play_locale_code
 
 
@@ -174,6 +175,18 @@ def test_upload_apk_with_locales_updated(edit_service_mock, monkeypatch):
     assert edit_service_mock.update_listings.call_count == 3
     assert edit_service_mock.update_whats_new.call_count == 6
     edit_service_mock.commit_transaction.assert_called_once_with()
+
+
+def test_create_or_update_whats_new(edit_service_mock, monkeypatch):
+    set_translations_per_google_play_locale_code(monkeypatch)
+
+    # Don't update Nightly
+    _create_or_update_whats_new(edit_service_mock, 'org.mozilla.fennec_aurora', '1')
+    assert edit_service_mock.update_whats_new.call_count == 0
+
+    # Update anything else than nightly
+    _create_or_update_whats_new(edit_service_mock, 'org.mozilla.firefox_beta', '1')
+    assert edit_service_mock.update_whats_new.call_count == 3
 
 
 def test_main(monkeypatch):

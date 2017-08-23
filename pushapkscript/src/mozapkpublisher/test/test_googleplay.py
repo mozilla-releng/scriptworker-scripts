@@ -8,13 +8,13 @@ try:
 except ImportError:
     from mock import MagicMock
 
-from mozapkpublisher.googleplay import add_general_google_play_arguments, EditService
+from mozapkpublisher.googleplay import add_general_google_play_arguments, EditService, is_package_name_nightly
 from mozapkpublisher.exceptions import NoTransactionError, WrongArgumentGiven
 
 
-@pytest.mark.parametrize('package_name', [
+@pytest.mark.parametrize('package_name', (
     'org.mozilla.fennec_aurora', 'org.mozilla.firefox_beta', 'org.mozilla.firefox'
-])
+))
 def test_add_general_google_play_arguments(package_name):
     parser = argparse.ArgumentParser()
     add_general_google_play_arguments(parser)
@@ -38,6 +38,12 @@ def test_add_general_google_play_arguments_wrong_package():
             parser.parse_args([
                 '--package-name', 'wrong.package.name', '--service-account', 'dummy@dummy', '--credentials', f.name
             ])
+
+
+def test_is_package_name_nightly():
+    assert is_package_name_nightly('org.mozilla.fennec_aurora')
+    assert not is_package_name_nightly('org.mozilla.firefox_beta')
+    assert not is_package_name_nightly('org.mozilla.firefox')
 
 
 def set_up_edit_service_mock(_monkeypatch):
