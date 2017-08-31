@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.1.2] - 2017-08-30
+### Added
+- updated `host.cert` for new ssl cert with >30day expiration :)
+
+## [4.1.1] - 2017-08-30
+### Added
+- updated `host.cert` for new ssl cert
+
 ## [4.1.0] - 2017-08-15
 ### Added
 - added `signingscirpt.createprecomplete` from [mozilla-central](https://hg.mozilla.org/mozilla-central/file/d3025e55dfc3/config/createprecomplete.py), and made it py3 compatible
