@@ -4,10 +4,12 @@ import tempfile
 
 from scriptworker.context import Context
 from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
-                                  get_fake_balrog_props, get_fake_checksums_manifest)
+                                  get_fake_balrog_props, get_fake_checksums_manifest,
+                                  get_fake_balrog_props_path)
 from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_json, generate_beetmover_template_args,
-                                   write_file, is_action_a_release_shipping)
+                                   write_file, is_action_a_release_shipping,
+                                   get_release_props, get_partials_props)
 from beetmoverscript.constants import HASH_BLOCK_SIZE
 
 
@@ -125,3 +127,26 @@ def test_beetmover_template_args_generation(taskjson, partials):
 def test_if_action_is_a_release_shipping(non_release, release):
     assert is_action_a_release_shipping(non_release) is False
     assert is_action_a_release_shipping(release) is True
+
+
+def test_get_release_props():
+    expected_release_props = {
+        'appName': 'Fake',
+        'appVersion': '99.0a1',
+        'branch': 'mozilla-central',
+        'stage_platform': 'android-api-15',
+        'buildid': '20990205110000',
+        'hashType': 'sha512',
+        'platform': 'android-api-15'
+    }
+    release_props = get_release_props(get_fake_balrog_props_path())
+    assert release_props == expected_release_props
+
+
+@pytest.mark.parametrize("taskjson,expected", [
+    ('task.json', {}),
+    ('task_partials.json', {'target.partial-1.mar': '20170831150342'})
+])
+def test_get_partials_props(taskjson, expected):
+    partials_props = get_partials_props(get_fake_valid_task(taskjson))
+    assert partials_props == expected
