@@ -80,9 +80,13 @@ def test_generate_manifest():
     assert expected_destinations == actual_destinations
 
 
-def test_beetmover_template_args_generation():
+@pytest.mark.parametrize("taskjson,partials", [
+    ('task.json', {}),
+    ('task_partials.json', {'target.partial-1.mar': '20170831150342'})
+])
+def test_beetmover_template_args_generation(taskjson, partials):
     context = Context()
-    context.task = get_fake_valid_task()
+    context.task = get_fake_valid_task(taskjson)
     context.config = get_fake_valid_config()
     context.release_props = get_fake_balrog_props()["properties"]
     context.release_props['platform'] = context.release_props['stage_platform']
@@ -96,7 +100,9 @@ def test_beetmover_template_args_generation():
         'stage_platform': 'android-api-15',
         'template_key': 'fennec_nightly',
         'upload_date': '2016/09/2016-09-01-16-26-14',
-        'version': '99.0a1'
+        'version': '99.0a1',
+        'buildid': '20990205110000',
+        'partials': partials,
     }
 
     template_args = generate_beetmover_template_args(context)
