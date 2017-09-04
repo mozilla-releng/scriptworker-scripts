@@ -206,7 +206,7 @@ mapping:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
   {% endif %}
-  {% for partial, from_buildid in partials.iteritems() %}
+  {% for partial, from_buildid in partials.items() %}
     {{ partial }}:
       s3_key: firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ from_buildid }}-{{ buildid }}.partial.mar
       destinations:
