@@ -143,8 +143,8 @@ def get_release_props(initial_release_props_file, platform_mapping=STAGE_PLATFOR
 
 
 def get_partials_props(task):
-    '''Examine contents of task.json (stored in context.task) and extract
-    partials mapping data from the 'extra' field'''
+    """Examine contents of task.json (stored in context.task) and extract
+    partials mapping data from the 'extra' field"""
     partials = task.get('extra', {}).get('partials', {})
     return {p['artifact_name']: p['buildid'] for p in partials}
 
