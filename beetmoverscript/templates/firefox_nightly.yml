@@ -206,5 +206,12 @@ mapping:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
   {% endif %}
-
+  {% for partial, from_buildid in partials.iteritems() %}
+    {{ partial }}:
+      s3_key: firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ from_buildid }}-{{ buildid }}.partial.mar
+      destinations:
+        - {{ upload_date }}-{{ branch }}/firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ from_buildid }}-{{ buildid }}.partial.mar
+        - latest-{{ branch }}/firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ from_buildid }}-{{ buildid }}.partial.mar
+        - latest-{{ branch }}-l10n/firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ from_buildid }}-{{ buildid }}.partial.mar
+  {% endfor %}
 {% endfor %}

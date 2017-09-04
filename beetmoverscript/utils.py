@@ -75,6 +75,8 @@ def generate_beetmover_template_args(context):
         "product": release_props["appName"],
         "stage_platform": release_props["stage_platform"],
         "platform": release_props["platform"],
+        "buildid": release_props["buildid"],
+        "partials": get_partials_props(task),
     }
 
     if is_action_a_release_shipping(context.action):
@@ -138,6 +140,13 @@ def get_release_props(initial_release_props_file, platform_mapping=STAGE_PLATFOR
     expanded the properties with props beetmover knows about."""
     props = load_json(initial_release_props_file)['properties']
     return update_props(props, platform_mapping)
+
+
+def get_partials_props(task):
+    """Examine contents of task.json (stored in context.task) and extract
+    partials mapping data from the 'extra' field"""
+    partials = task.get('extra', {}).get('partials', {})
+    return {p['artifact_name']: p['buildid'] for p in partials}
 
 
 def alter_unpretty_contents(context, blobs, mappings):
