@@ -26,19 +26,25 @@ def create_submitter(e, balrog_auth, config):
         log.info("Taskcluster Nightly Fennec style Balrog submission")
 
         complete_info = e['completeInfo']
+        partial_info = e.get('partialInfo')
         submitter = NightlySubmitterV4(api_root=config['api_root'], auth=auth,
                                        dummy=config['dummy'],
                                        url_replacements=e.get('url_replacements', []))
 
-        return submitter, {'platform': e["platform"],
-                           'buildID': e["buildid"],
-                           'productName': e["appName"],
-                           'branch': e["branch"],
-                           'appVersion': e["appVersion"],
-                           'locale': e["locale"],
-                           'hashFunction': e['hashType'],
-                           'extVersion': e["extVersion"],
-                           'completeInfo': complete_info}
+        data = {
+            'platform': e["platform"],
+            'buildID': e["buildid"],
+            'productName': e["appName"],
+            'branch': e["branch"],
+            'appVersion': e["appVersion"],
+            'locale': e["locale"],
+            'hashFunction': e['hashType'],
+            'extVersion': e["extVersion"],
+            'completeInfo': complete_info
+        }
+        if partial_info:
+            data['partialInfo'] = partial_info
+        return submitter, data
     else:
         raise RuntimeError("Unknown Balrog submission style. Check manifest.json")
 
