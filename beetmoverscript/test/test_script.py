@@ -8,7 +8,7 @@ from yarl import URL
 
 from beetmoverscript.script import (setup_mimetypes, setup_config, put,
                                     move_beets, move_beet, async_main,
-                                    main)
+                                    main, enrich_balrog_manifest)
 from beetmoverscript.task import get_upstream_artifacts
 from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props
 from beetmoverscript.utils import generate_beetmover_manifest
@@ -82,6 +82,29 @@ def test_put_failure(event_loop, fake_session_500):
         )
 
 
+def test_enrich_balrog_manifest():
+    context = Context()
+    context.release_props = get_fake_balrog_props()["properties"]
+    context.release_props['platform'] = context.release_props['stage_platform']
+
+    expected_data = {
+        'tc_nightly': True,
+        'appName': context.release_props['appName'],
+        'appVersion': context.release_props['appVersion'],
+        'branch': context.release_props['branch'],
+        'buildid': context.release_props['buildid'],
+        'extVersion': context.release_props['appVersion'],
+        'hashType': context.release_props['hashType'],
+        'locale': 'sample-locale',
+        'platform': context.release_props['stage_platform'],
+        'url_replacements': [['http://archive.mozilla.org/pub',
+                              'http://download.cdn.mozilla.net/pub']],
+    }
+
+    data = enrich_balrog_manifest(context, 'sample-locale')
+    assert data == expected_data
+
+
 def test_move_beets(event_loop):
     context = Context()
     context.config = get_fake_valid_config()
@@ -90,6 +113,8 @@ def test_move_beets(event_loop):
     context.release_props['platform'] = context.release_props['stage_platform']
     context.bucket = 'nightly'
     context.action = 'push-to-nightly'
+    context.raw_balrog_manifest = dict()
+    context.balrog_manifest = list()
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
     manifest = generate_beetmover_manifest(context)
 
@@ -118,13 +143,63 @@ def test_move_beets(event_loop):
          'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json'],
     ]
 
+    expected_balrog_manifest = [
+        {
+            'tc_nightly': True,
+            'appName': 'Fake',
+            'appVersion': '99.0a1',
+            'branch': 'mozilla-central',
+            'buildid': '20990205110000',
+            'extVersion': '99.0a1',
+            'hashType': 'sha512',
+            'locale': 'en-US',
+            'platform': 'android-api-15',
+            'url_replacements': [['http://archive.mozilla.org/pub', 'http://download.cdn.mozilla.net/pub']],
+            'completeInfo': [
+                {
+                    'hash': 'dummyhash',
+                    'size': 123456,
+                    'url': 'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json'
+                },
+                {
+                    'hash': 'dummyhash',
+                    'size': 123456,
+                    'url': 'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt'
+                }
+            ],
+            'partialInfo': [
+                {
+                    'from_buildid': 19991231235959,
+                    'hash': 'dummyhash',
+                    'size': 123456,
+                    'url': 'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'
+                }
+            ],
+        }
+    ]
+
     actual_sources = []
     actual_destinations = []
 
     async def fake_move_beet(context, source, destinations, locale,
-                             update_balrog_manifest, artifact_pretty_name):
+                             update_balrog_manifest, artifact_pretty_name, from_buildid):
         actual_sources.append(source)
         actual_destinations.append(destinations)
+        if update_balrog_manifest:
+
+            data = {
+                "hash": 'dummyhash',
+                "size": 123456,
+                "url": destinations[0]
+            }
+            if from_buildid:
+                data["from_buildid"] = from_buildid
+                component = 'partialInfo'
+            else:
+                component = 'completeInfo'
+            context.raw_balrog_manifest.setdefault(locale, {})
+            context.raw_balrog_manifest[locale].setdefault(component, [])
+            context.raw_balrog_manifest[locale][component].append(data)
 
     with mock.patch('beetmoverscript.script.move_beet', fake_move_beet):
         event_loop.run_until_complete(
@@ -133,6 +208,7 @@ def test_move_beets(event_loop):
 
     assert sorted(expected_sources) == sorted(actual_sources)
     assert sorted(expected_destinations) == sorted(actual_destinations)
+    assert context.balrog_manifest == expected_balrog_manifest
 
 
 def test_move_beet(event_loop):
@@ -141,6 +217,7 @@ def test_move_beet(event_loop):
     context.task = get_fake_valid_task()
     context.checksums = dict()
     context.balrog_manifest = list()
+    context.raw_balrog_manifest = dict()
     context.release_props = get_fake_balrog_props()["properties"]
     context.release_props['platform'] = context.release_props['stage_platform']
     locale = "sample-locale"
@@ -169,11 +246,23 @@ def test_move_beet(event_loop):
     with mock.patch('beetmoverscript.script.retry_upload', fake_retry_upload):
         event_loop.run_until_complete(
             move_beet(context, target_source, target_destinations, locale,
-                      update_balrog_manifest=True, artifact_pretty_name=pretty_name)
+                      update_balrog_manifest=True, artifact_pretty_name=pretty_name,
+                      from_buildid=None)
         )
     assert expected_upload_args == actual_upload_args
     for k in expected_balrog_manifest.keys():
-        assert (context.balrog_manifest[0]['completeInfo'][0][k] ==
+        assert (context.raw_balrog_manifest[locale]['completeInfo'][0][k] ==
+                expected_balrog_manifest[k])
+
+    expected_balrog_manifest['from_buildid'] = '19991231235959'
+    with mock.patch('beetmoverscript.script.retry_upload', fake_retry_upload):
+        event_loop.run_until_complete(
+            move_beet(context, target_source, target_destinations, locale,
+                      update_balrog_manifest=True, artifact_pretty_name=pretty_name,
+                      from_buildid='19991231235959')
+        )
+    for k in expected_balrog_manifest.keys():
+        assert (context.raw_balrog_manifest[locale]['partialInfo'][0][k] ==
                 expected_balrog_manifest[k])
 
 

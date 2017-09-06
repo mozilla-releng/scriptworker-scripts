@@ -83,4 +83,6 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ from_buildid }}-{{ buildid }}.partial.mar
         - latest-{{ branch }}-l10n/firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ from_buildid }}-{{ buildid }}.partial.mar
+      update_balrog_manifest: true
+      from_buildid: {{ from_buildid }}
   {% endfor %}

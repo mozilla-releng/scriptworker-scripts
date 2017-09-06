@@ -53,6 +53,10 @@ async def push_to_nightly(context):
     # this manifest to submit release blob info (e.g. mar filename, size, etc)
     context.balrog_manifest = list()
 
+    # Used as a staging area to generate balrog_manifest, so that all the
+    # completes and partials for a release end up in the same data structure
+    context.raw_balrog_manifest = dict()
+
     # the checksums manifest is written and uploaded as an artifact which is
     # used by a subsequent signing task and again by another beetmover task to
     # upload it to S3
@@ -120,18 +124,31 @@ async def move_beets(context, artifacts_to_beetmove, manifest):
                             manifest['mapping'][locale][artifact]['destinations']]
 
             balrog_manifest = manifest['mapping'][locale][artifact].get('update_balrog_manifest')
+            # For partials
+            from_buildid = manifest['mapping'][locale][artifact].get('from_buildid')
             beets.append(
                 asyncio.ensure_future(
                     move_beet(context, source, destinations, locale=locale,
                               update_balrog_manifest=balrog_manifest,
+                              from_buildid=from_buildid,
                               artifact_pretty_name=artifact_pretty_name)
                 )
             )
     await raise_future_exceptions(beets)
 
+    # Fix up balrog manifest. We need an entry with both completes and
+    # partials, which is why we store up the data from each moved beet
+    # and collate it now.
+    for locale in context.raw_balrog_manifest:
+        balrog_entry = enrich_balrog_manifest(context, locale)
+        balrog_entry['completeInfo'] = context.raw_balrog_manifest[locale]['completeInfo']
+        if 'partialInfo' in context.raw_balrog_manifest[locale]:
+            balrog_entry['partialInfo'] = context.raw_balrog_manifest[locale]['partialInfo']
+        context.balrog_manifest.append(balrog_entry)
+
 
 async def move_beet(context, source, destinations, locale,
-                    update_balrog_manifest, artifact_pretty_name):
+                    update_balrog_manifest, from_buildid, artifact_pretty_name):
     await retry_upload(context=context, destinations=destinations, path=source)
 
     if context.checksums.get(artifact_pretty_name) is None:
@@ -141,17 +158,36 @@ async def move_beet(context, source, destinations, locale,
         context.checksums[artifact_pretty_name]['size'] = get_size(source)
 
     if update_balrog_manifest:
-        context.balrog_manifest.append(
-            enrich_balrog_manifest(context, artifact_pretty_name, locale, destinations)
-        )
+        context.raw_balrog_manifest.setdefault(locale, {})
+        if from_buildid:
+            component = 'partialInfo'
+        else:
+            component = 'completeInfo'
+        context.raw_balrog_manifest[locale].setdefault(component, [])
+        context.raw_balrog_manifest[locale][component].append(generate_balrog_info(context, artifact_pretty_name,
+                                                                                   locale, destinations, from_buildid))
 
 
-def enrich_balrog_manifest(context, artifact_pretty_name, locale, destinations):
+def generate_balrog_info(context, artifact_pretty_name, locale, destinations, from_buildid=None):
     release_props = context.release_props
     checksums = context.checksums
 
     url = "{prefix}/{s3_key}".format(prefix="https://archive.mozilla.org",
                                      s3_key=destinations[0])
+
+    data = {
+        "hash": checksums[artifact_pretty_name][release_props["hashType"]],
+        "size": checksums[artifact_pretty_name]['size'],
+        "url": url
+    }
+    if from_buildid:
+        data["from_buildid"] = from_buildid
+    return data
+
+
+def enrich_balrog_manifest(context, locale):
+    release_props = context.release_props
+
     url_replacements = []
     if release_props["branch"] in RELEASE_BRANCHES:
         url_replacements.append(['http://archive.mozilla.org/pub',
@@ -159,12 +195,6 @@ def enrich_balrog_manifest(context, artifact_pretty_name, locale, destinations):
 
     return {
         "tc_nightly": True,
-        "completeInfo": [{
-            "hash": checksums[artifact_pretty_name][release_props["hashType"]],
-            "size": checksums[artifact_pretty_name]['size'],
-            "url": url
-        }],
-
         "appName": release_props["appName"],
         "appVersion": release_props["appVersion"],
         "branch": release_props["branch"],

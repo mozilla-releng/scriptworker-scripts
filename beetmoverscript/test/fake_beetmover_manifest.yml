@@ -16,11 +16,14 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target_info.txt
         - latest-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target_info.txt
+      update_balrog_manifest: true
     target.txt:
       s3_key: fake-{{ version }}.{{ locale }}.target.txt
       destinations:
         - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.txt
         - latest-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.txt
+      from_buildid: 19991231235959
+      update_balrog_manifest: true
     target.mozinfo.json:
       s3_key: fake-{{ version }}.{{ locale }}.target.mozinfo.json
       destinations:
