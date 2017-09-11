@@ -181,6 +181,10 @@ def test_move_beets(event_loop):
     actual_sources = []
     actual_destinations = []
 
+    def sort_completeInfo(manifest):
+        completeInfo = manifest[0]['completeInfo']
+        manifest[0]['completeInfo'] = sorted(completeInfo, key=lambda ci: ci['url'])
+
     async def fake_move_beet(context, source, destinations, locale,
                              update_balrog_manifest, artifact_pretty_name, from_buildid):
         actual_sources.append(source)
@@ -208,6 +212,10 @@ def test_move_beets(event_loop):
 
     assert sorted(expected_sources) == sorted(actual_sources)
     assert sorted(expected_destinations) == sorted(actual_destinations)
+
+    # Deal with different-sorted completeInfo
+    sort_completeInfo(context.balrog_manifest)
+    sort_completeInfo(expected_balrog_manifest)
     assert context.balrog_manifest == expected_balrog_manifest
 
 

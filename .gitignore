@@ -70,5 +70,7 @@ work_dir
 artifact_dir
 build-tools
 
+beetmoverscript/test/test_artifact_dir/
+
 # misc
 .DS_Store
