@@ -15,7 +15,9 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
 from scriptworker.utils import retry_async, raise_future_exceptions
 
-from beetmoverscript.constants import MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE
+from beetmoverscript.constants import (
+    MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE,
+)
 from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
                                   get_upstream_artifacts, get_initial_release_props_file,
                                   add_checksums_to_artifacts,
@@ -29,7 +31,9 @@ from beetmoverscript.utils import (load_json, get_hash, get_release_props,
 log = logging.getLogger(__name__)
 
 
+# push_to_nightly {{{1
 async def push_to_nightly(context):
+    """Push to nightly, or candidates."""
     # determine artifacts to beetmove
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
 
@@ -77,20 +81,28 @@ async def push_to_nightly(context):
     add_release_props_to_artifacts(context, release_props_file)
 
 
+# push_to_releases {{{1
 async def push_to_releases(context):
+    """Push to releases."""
+    # TODO we probably don't want this
+    context.artifacts_to_beetmove = []
+
+    # TODO schema should require these for this action
+    product = context.task['payload']['product']
+    build_number = context.task['payload']['build_number']
+    version = context.task['payload']['version']
+    bucket = context.action.split('-')[-1]
+    # exclude
+    exclude = RELEASE_EXCLUDE
+    parallelization = 20
     raise NotImplementedError("Push to releases logic has not been added yet")
-
-
-async def push_to_staging(context):
-    raise NotImplementedError("Push to staging logic has not been added yet")
 
 
 action_map = {
     'push-to-nightly': push_to_nightly,
     # push to candidates is at this point identical to push_to_nightly
     'push-to-candidates': push_to_nightly,
-    'push-to-releases': push_to_releases,
-    'push-to-staging': push_to_staging
+    'push-to-releases': push_to_releases
 }
 
 
@@ -113,6 +125,7 @@ async def async_main(context):
     log.info('Success!')
 
 
+# move_beets {{{1
 async def move_beets(context, artifacts_to_beetmove, manifest):
     beets = []
     for locale in artifacts_to_beetmove:
@@ -147,6 +160,7 @@ async def move_beets(context, artifacts_to_beetmove, manifest):
         context.balrog_manifest.append(balrog_entry)
 
 
+# move_beet {{{1
 async def move_beet(context, source, destinations, locale,
                     update_balrog_manifest, from_buildid, artifact_pretty_name):
     await retry_upload(context=context, destinations=destinations, path=source)
@@ -168,6 +182,7 @@ async def move_beet(context, source, destinations, locale,
                                                                                    locale, destinations, from_buildid))
 
 
+# generate_balrog_info {{{1
 def generate_balrog_info(context, artifact_pretty_name, locale, destinations, from_buildid=None):
     release_props = context.release_props
     checksums = context.checksums
@@ -185,6 +200,7 @@ def generate_balrog_info(context, artifact_pretty_name, locale, destinations, fr
     return data
 
 
+# enrich_balrog_manifest {{{1
 def enrich_balrog_manifest(context, locale):
     release_props = context.release_props
 
@@ -207,6 +223,7 @@ def enrich_balrog_manifest(context, locale):
     }
 
 
+# retry_upload {{{1
 async def retry_upload(context, destinations, path):
     # TODO rather than upload twice, use something like boto's bucket.copy_key
     #   probably via the awscli subproc directly.
@@ -221,6 +238,7 @@ async def retry_upload(context, destinations, path):
     await raise_future_exceptions(uploads)
 
 
+# put {{{1
 async def put(context, url, headers, abs_filename, session=None):
     session = session or context.session
     with open(abs_filename, "rb") as fh:
@@ -235,6 +253,7 @@ async def put(context, url, headers, abs_filename, session=None):
     return resp
 
 
+# upload_to_s3 {{{1
 async def upload_to_s3(context, s3_key, path):
     app = context.release_props['appName'].lower()
     api_kwargs = {

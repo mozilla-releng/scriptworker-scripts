@@ -54,9 +54,6 @@ def write_file(path, contents):
 def is_action_a_release_shipping(action):
     """Function to return boolean if we're shipping a release as opposed to a
     nightly release or something else. Does that by checking the action type.
-    Currently the only action that supports release-releases is
-    `push-to-candidates` for which we need to enforce the `version` and
-    `build_number` grabbing.
     """
     return action in RELEASE_ACTIONS
 

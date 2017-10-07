@@ -16,6 +16,8 @@ log = logging.getLogger(__name__)
 
 def validate_task_schema(context):
     """Perform a schema validation check against taks definition"""
+    # TODO
+    # TODO release schema
     with open(context.config['schema_file']) as fh:
         task_schema = json.load(fh)
     log.debug(task_schema)

@@ -36,7 +36,6 @@ IGNORED_UPSTREAM_ARTIFACTS = ["balrog_props.json"]
 
 RELEASE_BRANCHES = (
     'mozilla-central',
-    'mozilla-aurora',
     'mozilla-beta',
     'mozilla-release',
     'mozilla-esr52'
@@ -67,6 +66,25 @@ RESTRICTED_BUCKET_PATHS = {
 # `version`
 RELEASE_ACTIONS = (
     'push-to-candidates',
+    'push-to-releases',
+)
+
+RELEASE_EXCLUDE = (
+    r"^.*tests.*$",
+    r"^.*crashreporter.*$",
+    r"^.*[^k]\.zip(\.asc)?$",
+    r"^.*\.log$",
+    r"^.*\.txt$",
+    r"^.*/partner-repacks.*$",
+    r"^.*.checksums(\.asc)?$",
+    r"^.*/logs/.*$",
+    r"^.*json$",
+    r"^.*/host.*$",
+    r"^.*/mar-tools/.*$",
+    r"^.*robocop.apk$",
+    r"^.*bouncer.apk$",
+    r"^.*contrib.*",
+    r"^.*/beetmover-checksums/.*$",
 )
 
 CACHE_CONTROL_MAXAGE = 3600 * 4
