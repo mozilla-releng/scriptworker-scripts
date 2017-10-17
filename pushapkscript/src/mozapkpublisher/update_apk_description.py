@@ -35,24 +35,23 @@ class UpdateDescriptionAPK(Base):
         )
 
         moz_locales = [self.config.force_locale] if self.config.force_locale else None
-        create_or_update_listings(edit_service, self.config.package_name, moz_locales)
+        l10n_strings = store_l10n.get_translations_per_google_play_locale_code(package_name, moz_locales)
+        create_or_update_listings(edit_service, self.config.package_name, l10n_strings, moz_locales)
         edit_service.commit_transaction()
 
     def run(self):
         self.update_apk_description(self.config.package_name)
 
 
-def create_or_update_listings(edit_service, package_name, moz_locales=None):
-    locales = store_l10n.get_translations_per_google_play_locale_code(package_name, moz_locales)
-
-    for google_play_locale_code, translation in locales.items():
+def create_or_update_listings(edit_service, package_name, l10n_strings, moz_locales=None):
+    for google_play_locale_code, translation in l10n_strings.items():
         edit_service.update_listings(
             google_play_locale_code,
             full_description=translation.get('long_desc'),
             short_description=translation.get('short_desc'),
             title=translation.get('title'),
         )
-    logger.info('Listing updated for {} locale(s)'.format(len(locales)))
+    logger.info('Listing updated for {} locale(s)'.format(len(l10n_strings)))
 
 
 def main(name=None):

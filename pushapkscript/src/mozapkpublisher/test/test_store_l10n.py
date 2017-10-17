@@ -9,28 +9,30 @@ from mozapkpublisher import store_l10n
 from mozapkpublisher.store_l10n import get_translations_per_google_play_locale_code, \
     _get_list_of_completed_locales, _get_translation, _translate_moz_locate_into_google_play_one
 
+DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE = {
+    'en-GB': {
+        'title': 'Firefox for Android',
+        'long_desc': 'Long description',
+        'short_desc': 'Short',
+        'whatsnew': 'Check out this cool feature!',
+    },
+    'en-US': {
+        'title': 'Firefox for Android',
+        'long_desc': 'Long description',
+        'short_desc': 'Short',
+        'whatsnew': 'Check out this cool feature!',
+    },
+    'es-US': {
+        'title': 'Navegador web Firefox',
+        'long_desc': 'Descripcion larga',
+        'short_desc': 'Corto',
+        'whatsnew': 'Mire a esta caracteristica',
+    },
+}
+
 
 def set_translations_per_google_play_locale_code(_monkeypatch):
-    _monkeypatch.setattr(store_l10n, '_translations_per_google_play_locale_code', {
-        'en-GB': {
-            'title': 'Firefox for Android',
-            'long_desc': 'Long description',
-            'short_desc': 'Short',
-            'whatsnew': 'Check out this cool feature!',
-        },
-        'en-US': {
-            'title': 'Firefox for Android',
-            'long_desc': 'Long description',
-            'short_desc': 'Short',
-            'whatsnew': 'Check out this cool feature!',
-        },
-        'es-US': {
-            'title': 'Navegador web Firefox',
-            'long_desc': 'Descripcion larga',
-            'short_desc': 'Corto',
-            'whatsnew': 'Mire a esta caracteristica',
-        },
-    })
+    _monkeypatch.setattr(store_l10n, '_translations_per_google_play_locale_code', DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE)
 
 
 def test_get_translations_per_google_play_locale_code(monkeypatch):

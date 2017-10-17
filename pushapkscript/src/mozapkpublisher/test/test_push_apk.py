@@ -1,3 +1,4 @@
+import json
 import pytest
 import sys
 
@@ -13,7 +14,8 @@ from mozapkpublisher import apk, googleplay, store_l10n
 from mozapkpublisher.exceptions import WrongArgumentGiven, ArmVersionCodeTooHigh
 from mozapkpublisher.push_apk import PushAPK, main, _check_and_get_flatten_version_codes, \
     _create_or_update_whats_new
-from mozapkpublisher.test.test_store_l10n import set_translations_per_google_play_locale_code
+from mozapkpublisher.test.test_store_l10n import set_translations_per_google_play_locale_code, \
+    DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE
 
 
 credentials = NamedTemporaryFile()
@@ -27,6 +29,7 @@ VALID_CONFIG = {
     'credentials': credentials.name,
     'apk_x86': apk_x86.name,
     'apk_armv7_v15': apk_arm.name,
+    'update_gp_strings_from_l10n_store': True,
 }
 
 
@@ -147,7 +150,7 @@ def test_upload_apk(edit_service_mock, monkeypatch):
     edit_service_mock.commit_transaction.assert_called_once_with()
 
 
-def test_upload_apk_with_locales_updated(edit_service_mock, monkeypatch):
+def test_upload_apk_with_locales_updated_from_l10n_store(edit_service_mock, monkeypatch):
     monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
     monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
@@ -177,13 +180,14 @@ def test_upload_apk_with_locales_updated(edit_service_mock, monkeypatch):
     edit_service_mock.commit_transaction.assert_called_once_with()
 
 
-def test_apks_are_uploaded_but_strings_are_not(edit_service_mock, monkeypatch):
+def test_upload_apk_without_locales_updated(edit_service_mock, monkeypatch):
     monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
     monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
     monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
     set_translations_per_google_play_locale_code(monkeypatch)
 
     config = copy(VALID_CONFIG)
+    del config['update_gp_strings_from_l10n_store']
     config['no_gp_string_update'] = True
     PushAPK(config).run()
 
@@ -195,15 +199,40 @@ def test_apks_are_uploaded_but_strings_are_not(edit_service_mock, monkeypatch):
     assert edit_service_mock.update_whats_new.call_count == 0
 
 
-def test_create_or_update_whats_new(edit_service_mock, monkeypatch):
-    set_translations_per_google_play_locale_code(monkeypatch)
+def test_upload_apk_with_locales_updated_from_file(edit_service_mock, monkeypatch):
+    monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
+    monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
+    monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
 
+    config = copy(VALID_CONFIG)
+    del config['update_gp_strings_from_l10n_store']
+
+    with NamedTemporaryFile('w') as f:
+        json.dump(DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE, f)
+        f.seek(0)
+        config['update_gp_strings_from_file'] = f.name
+        PushAPK(config).run()
+
+    assert edit_service_mock.upload_apk.call_count == 2
+    assert edit_service_mock.update_track.call_count == 1
+    assert edit_service_mock.commit_transaction.call_count == 1
+
+    assert edit_service_mock.update_listings.call_count == 3
+
+
+def test_create_or_update_whats_new(edit_service_mock, monkeypatch):
     # Don't update Nightly
-    _create_or_update_whats_new(edit_service_mock, 'org.mozilla.fennec_aurora', '1')
+    _create_or_update_whats_new(
+        edit_service_mock, 'org.mozilla.fennec_aurora', '1',
+        DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE
+    )
     assert edit_service_mock.update_whats_new.call_count == 0
 
     # Update anything else than nightly
-    _create_or_update_whats_new(edit_service_mock, 'org.mozilla.firefox_beta', '1')
+    _create_or_update_whats_new(
+        edit_service_mock, 'org.mozilla.firefox_beta', '1',
+        DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE
+    )
     assert edit_service_mock.update_whats_new.call_count == 3
 
 

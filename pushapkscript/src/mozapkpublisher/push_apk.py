@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import sys
 import argparse
+import json
 import logging
+import sys
 
 from mozapkpublisher import googleplay, store_l10n
 from mozapkpublisher import apk as apk_helper
@@ -47,10 +48,18 @@ class PushAPK(Base):
         cls.parser.add_argument('--apk-armv7-v15', dest='apk_file_armv7_v15', type=argparse.FileType(),
                                 help='The path to the ARM v7 API v15 APK file', required=True)
 
-        cls.parser.add_argument('--no-gp-string-update', dest='update_google_play_strings', action='store_false',
-                                help="Don't update listings and what's new sections on Google Play")
+        google_play_strings_group = cls.parser.add_mutually_exclusive_group(required=True)
+        google_play_strings_group.add_argument('--no-gp-string-update', dest='update_google_play_strings', action='store_false',
+                                               help="Don't update listings and what's new sections on Google Play")
+        google_play_strings_group.add_argument('--update-gp-strings-from-l10n-store', dest='update_google_play_strings_from_store',
+                                               action='store_true',
+                                               help="Download listings and what's new sections from the l10n store and use them \
+                                               to update Google Play")
+        google_play_strings_group.add_argument('--update-gp-strings-from-file', dest='google_play_strings_file', type=argparse.FileType(),
+                                               help="Use file to update listing and what's new section on Google Play.\
+                                               Such file can be obtained by calling fetch_l10n_strings.py")
 
-    def upload_apks(self, apks):
+    def upload_apks(self, apks, l10n_strings=None):
         for architecture, apk in apks.items():
             apk_helper.check_if_apk_has_claimed_architecture(apk['file'], architecture)
             apk_helper.check_if_apk_is_multilocale(apk['file'])
@@ -60,15 +69,15 @@ class PushAPK(Base):
             self.config.dry_run
         )
 
-        if self.config.update_google_play_strings:
-            create_or_update_listings(edit_service, self.config.package_name)
+        if l10n_strings is not None:
+            create_or_update_listings(edit_service, self.config.package_name, l10n_strings)
 
         for apk in apks.values():
             apk_response = edit_service.upload_apk(apk['file'])
             apk['version_code'] = apk_response['versionCode']
 
-            if self.config.update_google_play_strings:
-                _create_or_update_whats_new(edit_service, self.config.package_name, apk['version_code'])
+            if l10n_strings is not None:
+                _create_or_update_whats_new(edit_service, self.config.package_name, apk['version_code'], l10n_strings)
 
         all_version_codes = _check_and_get_flatten_version_codes(apks)
         edit_service.update_track(self.config.track, all_version_codes, self.config.rollout_percentage)
@@ -84,18 +93,29 @@ class PushAPK(Base):
                 'file': self.config.apk_file_x86.name,
             },
         }
-        self.upload_apks(apks)
+
+        if self.config.google_play_strings_file:
+            l10n_strings = json.load(self.config.google_play_strings_file)
+            logger.info('Loaded listings and what\'s new section from "{}"'.format(self.config.google_play_strings_file.name))
+        elif self.config.update_google_play_strings_from_store:
+            logger.info("Downloading listings and what's new section from L10n Store...")
+            l10n_strings = store_l10n.get_translations_per_google_play_locale_code(self.config.package_name)
+        elif not self.config.update_google_play_strings:
+            logger.warn("Listing and what's new section won't be updated.")
+            l10n_strings = None
+        else:
+            raise WrongArgumentGiven("Option missing. You must provide what to do in regards to Google Play strings.")
+
+        self.upload_apks(apks, l10n_strings)
 
 
-def _create_or_update_whats_new(edit_service, package_name, apk_version_code):
+def _create_or_update_whats_new(edit_service, package_name, apk_version_code, l10n_strings):
     if googleplay.is_package_name_nightly(package_name):
         # See https://github.com/mozilla-l10n/stores_l10n/issues/142
         logger.warn("Nightly detected, What's new section won't be updated")
         return
 
-    locales = store_l10n.get_translations_per_google_play_locale_code(package_name)
-
-    for google_play_locale_code, translation in locales.items():
+    for google_play_locale_code, translation in l10n_strings.items():
         try:
             whats_new = translation['whatsnew']
             edit_service.update_whats_new(
