@@ -36,7 +36,7 @@ def add_general_google_play_arguments(parser):
 
     parser.add_argument('--service-account', help='The service account email', required=True)
     parser.add_argument('--credentials', dest='google_play_credentials_file', type=argparse.FileType(mode='rb'),
-                        default='key.p12', help='The p12 authentication file')
+                        default='key.p12', help='The p12 authentication file', required=True)
 
     parser.add_argument('--dry-run', action='store_true',
                         help='''Perform every operation of the transation, except committing. No data will be
