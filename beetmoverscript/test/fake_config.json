@@ -8,6 +8,7 @@
         "target.common.tests.zip"
     ],
     "verbose": true,
+    "release_schema_file": "beetmoverscript/data/release_beetmover_task_schema.json",
     "schema_file": "beetmoverscript/data/beetmover_task_schema.json",
 
     "actions": {
@@ -22,21 +23,15 @@
 
     "bucket_config": {
         "nightly": {
-            "firefox": {
-                "bucket": "fake-mozilla-releng-firefox-nightly-bucket",
-                "credentials": {
-                    "id": "dummy",
-                    "key": "dummy"
-                }
+            "credentials": {
+                "id": "dummy",
+                "key": "dummy"
             },
-            "fennec": {
-                "bucket": "fake-mozilla-releng-mobile-nightly-bucket",
-                "credentials": {
-                    "id": "dummy",
-                    "key": "dummy"
-                }
+            "buckets": {
+                "fennec": "dummy",
+                "firefox": "dummy",
+                "fake": "dummy"
             }
-
         }
     }
 }

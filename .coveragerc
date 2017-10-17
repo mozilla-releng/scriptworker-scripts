@@ -1,2 +1,3 @@
 [run]
-omit = beetmoverscript/test/*.yml
+branch = True
+omit = beetmoverscript/test/*

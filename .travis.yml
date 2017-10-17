@@ -1,12 +1,15 @@
-sudo: false
-
 language: python
-python:
-  - 3.5
+
+matrix:
+  include:
+    - python: 3.5
+      env: TOXENV=py35
+    - python: 3.6
+      env: TOXENV=py36
 
 install:
-    - python -mpip install tox
+  - python -mpip install tox
 script:
-    - tox
+  - tox
 after_success:
-    - tox -e coveralls
+  - tox -e coveralls

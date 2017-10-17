@@ -6,21 +6,27 @@ import pytest
 import sys
 from yarl import URL
 
+import beetmoverscript.script
 from beetmoverscript.script import (setup_mimetypes, setup_config, put,
                                     move_beets, move_beet, async_main,
                                     main, enrich_balrog_manifest)
 from beetmoverscript.task import get_upstream_artifacts
-from beetmoverscript.test import get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props
+from beetmoverscript.test import (
+    context, get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props,
+    noop_async
+)
 from beetmoverscript.utils import generate_beetmover_manifest
 from scriptworker.context import Context
 from scriptworker.exceptions import (ScriptWorkerRetryException,
                                      ScriptWorkerTaskException)
 from scriptworker.test import event_loop, fake_session, fake_session_500
 
-assert event_loop  # silence flake8
+assert event_loop, context  # silence flake8
 assert fake_session, fake_session_500  # silence flake8
+assert noop_async  # silence flake8
 
 
+# setup_mimetypes {{{1
 def test_setup_mimetypes():
     non_default_types = [
         'https://foo.com/fake_artifact.bundle', 'http://www.bar.com/fake_checksum.beet'
@@ -36,6 +42,7 @@ def test_setup_mimetypes():
             ['application/octet-stream', 'text/plain'])
 
 
+# setup_config {{{1
 def test_invalid_args():
     args = ['only-one-arg']
     with mock.patch.object(sys, 'argv', args):
@@ -59,6 +66,7 @@ def test_setup_config():
     assert expected_context.config == actual_context.config
 
 
+# put {{{1
 def test_put_success(event_loop, fake_session):
     context = Context()
     context.config = get_fake_valid_config()
@@ -82,10 +90,13 @@ def test_put_failure(event_loop, fake_session_500):
         )
 
 
-def test_enrich_balrog_manifest():
+# enrich_balrog_manifest {{{1
+@pytest.mark.parametrize("branch", ("mozilla-central", "try"))
+def test_enrich_balrog_manifest(branch):
     context = Context()
     context.release_props = get_fake_balrog_props()["properties"]
     context.release_props['platform'] = context.release_props['stage_platform']
+    context.release_props['branch'] = branch
 
     expected_data = {
         'tc_nightly': True,
@@ -97,15 +108,37 @@ def test_enrich_balrog_manifest():
         'hashType': context.release_props['hashType'],
         'locale': 'sample-locale',
         'platform': context.release_props['stage_platform'],
-        'url_replacements': [['http://archive.mozilla.org/pub',
-                              'http://download.cdn.mozilla.net/pub']],
+        'url_replacements': [],
     }
+    if branch == "mozilla-central":
+        expected_data['url_replacements'] = [[
+            'http://archive.mozilla.org/pub',
+            'http://download.cdn.mozilla.net/pub'
+        ]]
 
     data = enrich_balrog_manifest(context, 'sample-locale')
     assert data == expected_data
 
 
-def test_move_beets(event_loop):
+# retry_upload {{{1
+@pytest.mark.asyncio
+async def test_retry_upload(context, mocker):
+    mocker.patch.object(beetmoverscript.script, 'upload_to_s3', new=noop_async)
+    await beetmoverscript.script.retry_upload(context, ['a', 'b'], 'c')
+
+
+# upload_to_s3 {{{1
+@pytest.mark.asyncio
+async def test_upload_to_s3(context, mocker):
+    context.release_props['appName'] = 'fake'
+    mocker.patch.object(beetmoverscript.script, 'retry_async', new=noop_async)
+    mocker.patch.object(beetmoverscript.script, 'boto3')
+    await beetmoverscript.script.upload_to_s3(context, 'foo', 'bar')
+
+
+# move_beets {{{1
+@pytest.mark.parametrize("partials", (False, True))
+def test_move_beets(event_loop, partials):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
@@ -167,16 +200,17 @@ def test_move_beets(event_loop):
                     'url': 'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt'
                 }
             ],
-            'partialInfo': [
-                {
-                    'from_buildid': 19991231235959,
-                    'hash': 'dummyhash',
-                    'size': 123456,
-                    'url': 'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'
-                }
-            ],
         }
     ]
+    if partials:
+        expected_balrog_manifest[0]['partialInfo'] = [
+            {
+                'from_buildid': 19991231235959,
+                'hash': 'dummyhash',
+                'size': 123456,
+                'url': 'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'
+            }
+        ]
 
     actual_sources = []
     actual_destinations = []
@@ -197,8 +231,11 @@ def test_move_beets(event_loop):
                 "url": destinations[0]
             }
             if from_buildid:
-                data["from_buildid"] = from_buildid
-                component = 'partialInfo'
+                if partials:
+                    data["from_buildid"] = from_buildid
+                    component = 'partialInfo'
+                else:
+                    return
             else:
                 component = 'completeInfo'
             context.raw_balrog_manifest.setdefault(locale, {})
@@ -219,7 +256,9 @@ def test_move_beets(event_loop):
     assert context.balrog_manifest == expected_balrog_manifest
 
 
-def test_move_beet(event_loop):
+# async_main {{{1
+@pytest.mark.parametrize('update_manifest', (True, False))
+def test_move_beet(event_loop, update_manifest):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
@@ -254,39 +293,52 @@ def test_move_beet(event_loop):
     with mock.patch('beetmoverscript.script.retry_upload', fake_retry_upload):
         event_loop.run_until_complete(
             move_beet(context, target_source, target_destinations, locale,
-                      update_balrog_manifest=True, artifact_pretty_name=pretty_name,
-                      from_buildid=None)
+                      update_balrog_manifest=update_manifest,
+                      artifact_pretty_name=pretty_name, from_buildid=None)
         )
     assert expected_upload_args == actual_upload_args
-    for k in expected_balrog_manifest.keys():
-        assert (context.raw_balrog_manifest[locale]['completeInfo'][0][k] ==
-                expected_balrog_manifest[k])
+    if update_manifest:
+        for k in expected_balrog_manifest.keys():
+            assert (context.raw_balrog_manifest[locale]['completeInfo'][0][k] ==
+                    expected_balrog_manifest[k])
 
     expected_balrog_manifest['from_buildid'] = '19991231235959'
     with mock.patch('beetmoverscript.script.retry_upload', fake_retry_upload):
         event_loop.run_until_complete(
             move_beet(context, target_source, target_destinations, locale,
-                      update_balrog_manifest=True, artifact_pretty_name=pretty_name,
+                      update_balrog_manifest=update_manifest,
+                      artifact_pretty_name=pretty_name,
                       from_buildid='19991231235959')
         )
-    for k in expected_balrog_manifest.keys():
-        assert (context.raw_balrog_manifest[locale]['partialInfo'][0][k] ==
-                expected_balrog_manifest[k])
+    if update_manifest:
+        for k in expected_balrog_manifest.keys():
+            assert (context.raw_balrog_manifest[locale]['partialInfo'][0][k] ==
+                    expected_balrog_manifest[k])
 
 
-def test_async_main(event_loop):
-    context = Context()
-    context.config = get_fake_valid_config()
+# async_main {{{1
+@pytest.mark.parametrize('action,raises', ((
+    'push-to-nightly', False
+), (
+    'push-to-unknown', True
+)))
+@pytest.mark.asyncio
+async def test_async_main(context, mocker, action, raises):
+    context.action = action
 
-    async def fake_move_beets(context, artifacts_to_beetmove, manifest):
-        pass
+    def fake_action(*args):
+        return action
 
-    with mock.patch('beetmoverscript.script.move_beets', new=fake_move_beets):
-        event_loop.run_until_complete(
-            async_main(context)
-        )
+    mocker.patch('beetmoverscript.script.move_beets', new=noop_async)
+    mocker.patch.object(beetmoverscript.script, 'get_task_action', new=fake_action)
+    if raises:
+        with pytest.raises(SystemExit):
+            await async_main(context)
+    else:
+        await async_main(context)
 
 
+# main {{{1
 def test_main(event_loop, fake_session):
     context = Context()
     context.config = get_fake_valid_config()

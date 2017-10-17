@@ -30,15 +30,19 @@ def get_task_bucket(task, script_config):
     buckets = [s.split(':')[-1] for s in task["scopes"] if
                s.startswith("project:releng:beetmover:bucket:")]
     log.info("Buckets: %s", buckets)
+    messages = []
     if len(buckets) != 1:
-        raise ScriptWorkerTaskException("Only one bucket can be used")
+        messages.append("Only one bucket can be used")
 
     bucket = buckets[0]
     if re.search('^[0-9A-Za-z_-]+$', bucket) is None:
-        raise ScriptWorkerTaskException("Bucket {} is malformed".format(bucket))
+        messages.append("Bucket {} is malformed".format(bucket))
 
     if bucket not in script_config['bucket_config']:
-        raise ScriptWorkerTaskException("Invalid bucket scope")
+        messages.append("Invalid bucket scope")
+
+    if messages:
+        raise ScriptWorkerTaskException("\n".join(messages))
 
     return bucket
 
@@ -49,12 +53,16 @@ def get_task_action(task, script_config):
                s.startswith("project:releng:beetmover:action:")]
 
     log.info("Action types: %s", actions)
+    messages = []
     if len(actions) != 1:
-        raise ScriptWorkerTaskException("Only one action type can be used")
+        messages.append("Only one action type can be used")
 
     action = actions[0]
     if action not in script_config['actions']:
-        raise ScriptWorkerTaskException("Invalid action scope")
+        messages.append("Invalid action scope")
+
+    if messages:
+        raise ScriptWorkerTaskException('\n'.join(messages))
 
     return action
 

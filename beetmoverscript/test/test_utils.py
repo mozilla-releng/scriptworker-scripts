@@ -2,15 +2,17 @@ import json
 import pytest
 import tempfile
 
-from scriptworker.context import Context
-from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
+from beetmoverscript.test import (context, get_fake_valid_task,
                                   get_fake_balrog_props, get_fake_checksums_manifest,
                                   get_fake_balrog_props_path)
+import beetmoverscript.utils as butils
 from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_json, generate_beetmover_template_args,
                                    write_file, is_action_a_release_shipping,
                                    get_release_props, get_partials_props)
 from beetmoverscript.constants import HASH_BLOCK_SIZE
+
+assert context  # silence pyflakes
 
 
 def test_get_hash():
@@ -52,15 +54,7 @@ def test_write_file():
         assert sample_data == retrieved_data
 
 
-def test_generate_manifest():
-    context = Context()
-    context.task = get_fake_valid_task()
-    context.config = get_fake_valid_config()
-    context.release_props = get_fake_balrog_props()["properties"]
-    context.release_props['platform'] = context.release_props['stage_platform']
-    context.bucket = 'nightly'
-    context.action = 'push-to-nightly'
-
+def test_generate_manifest(context):
     manifest = generate_beetmover_manifest(context)
     mapping = manifest['mapping']
     s3_keys = [mapping[m].get('target_info.txt', {}).get('s3_key') for m in mapping]
@@ -86,15 +80,8 @@ def test_generate_manifest():
     ('task.json', {}),
     ('task_partials.json', {'target.partial-1.mar': '20170831150342'})
 ])
-def test_beetmover_template_args_generation(taskjson, partials):
-    context = Context()
+def test_beetmover_template_args_generation(context, taskjson, partials):
     context.task = get_fake_valid_task(taskjson)
-    context.config = get_fake_valid_config()
-    context.release_props = get_fake_balrog_props()["properties"]
-    context.release_props['platform'] = context.release_props['stage_platform']
-    context.bucket = 'nightly'
-    context.action = 'push-to-nightly'
-
     expected_template_args = {
         'branch': 'mozilla-central',
         'platform': 'android-api-15',
@@ -114,6 +101,29 @@ def test_beetmover_template_args_generation(taskjson, partials):
     template_args = generate_beetmover_template_args(context)
 
     assert template_args['template_key'] == 'fake_nightly_repacks'
+
+
+def test_beetmover_template_args_generation_release(context):
+    context.bucket = 'dep'
+    context.action = 'push-to-candidates'
+    context.task['payload']['build_number'] = 3
+    context.task['payload']['version'] = '4.4'
+
+    expected_template_args = {
+        'branch': 'mozilla-central',
+        'platform': 'android-api-15',
+        'product': 'Fake',
+        'stage_platform': 'android-api-15',
+        'template_key': 'fennec_candidates',
+        'upload_date': '2016/09/2016-09-01-16-26-14',
+        'version': '4.4',
+        'buildid': '20990205110000',
+        'partials': {},
+        'build_number': 3,
+    }
+
+    template_args = generate_beetmover_template_args(context)
+    assert template_args == expected_template_args
 
 
 @pytest.mark.parametrize("non_release", [
@@ -149,3 +159,28 @@ def test_get_release_props():
 def test_get_partials_props(taskjson, expected):
     partials_props = get_partials_props(get_fake_valid_task(taskjson))
     assert partials_props == expected
+
+
+def test_alter_unpretty_contents(context, mocker):
+    context.artifacts_to_beetmove = {
+        'loc1': {'target.test_packages.json': 'foo'},
+        'loc2': {'target.test_packages.json': 'foo'},
+    }
+
+    mappings = {
+        'mapping': {
+            'loc1': {
+                'bar': {
+                    's3_key': 'x'
+                },
+            },
+            'loc2': {},
+        },
+    }
+
+    def fake_json(*args, **kwargs):
+        return {'foo': ['bar']}
+
+    mocker.patch.object(butils, 'load_json', new=fake_json)
+    mocker.patch.object(butils, 'write_json', new=fake_json)
+    butils.alter_unpretty_contents(context, ['target.test_packages.json'], mappings)

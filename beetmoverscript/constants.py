@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 MIME_MAP = {
     '': 'text/plain',
     '.asc': 'text/plain',
@@ -17,10 +15,10 @@ STAGE_PLATFORM_MAP = {
     'linux': 'linux-i686',
     'linux64': 'linux-x86_64',
     'macosx64': 'mac',
+    'win32': 'win32',
+    'win64': 'win64',
 }
-# TODO don't rely on default dict
-# use explicit platform 'firefox' mapping when all desktop platforms are added
-TEMPLATE_KEY_PLATFORMS = defaultdict(lambda: "firefox", {
+TEMPLATE_KEY_PLATFORMS = {
     "android-api-15": "fennec",
     "android-api-15-old-id": "fennec",
     "android-api-16": "fennec",
@@ -28,7 +26,17 @@ TEMPLATE_KEY_PLATFORMS = defaultdict(lambda: "firefox", {
     "android-x86": "fennecx86",
     "android-aarch64": "fennecaarch64",
     "android-x86-old-id": "fennecx86",
-})
+    "linux": "firefox",
+    "linux64": "firefox",
+    "macosx64": "firefox",
+    "win32": "firefox",
+    "win64": "firefox",
+    "linux-devedition": "devedition",
+    "linux64-devedition": "devedition",
+    "macosx64-devedition": "devedition",
+    "win32-devedition": "devedition",
+    "win64-devedition": "devedition",
+}
 HASH_BLOCK_SIZE = 1024*1024
 INITIAL_RELEASE_PROPS_FILE = "balrog_props.json"
 # release buckets don't require a copy of the following artifacts
@@ -45,14 +53,20 @@ RESTRICTED_BUCKET_PATHS = {
     'nightly': [
         'pub/mobile/nightly',
         'pub/firefox/nightly',
+        'pub/devedition/nightly',
     ],
     'release': [
+        'pub/devedition/candidates',
+        'pub/devedition/releases',
         'pub/firefox/candidates',
         'pub/firefox/releases',
         'pub/mobile/candidates',
         'pub/mobile/releases',
     ],
     'dep': [
+        'pub/devedition/nightly',
+        'pub/devedition/candidates',
+        'pub/devedition/releases',
         'pub/firefox/nightly',
         'pub/firefox/candidates',
         'pub/firefox/releases',
