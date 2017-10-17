@@ -95,6 +95,7 @@ async def push_to_releases(context):
     # exclude
     exclude = RELEASE_EXCLUDE
     parallelization = 20
+    assert product and build_number and version and bucket and exclude and parallelization
     raise NotImplementedError("Push to releases logic has not been added yet")
 
 

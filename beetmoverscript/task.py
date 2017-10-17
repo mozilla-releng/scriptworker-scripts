@@ -8,7 +8,7 @@ from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
                                        INITIAL_RELEASE_PROPS_FILE,
                                        RESTRICTED_BUCKET_PATHS)
 
-from beetmoverscript.utils import write_json, write_file
+from beetmoverscript.utils import write_json, write_file, is_action_a_release_shipping
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 log = logging.getLogger(__name__)
@@ -16,11 +16,12 @@ log = logging.getLogger(__name__)
 
 def validate_task_schema(context):
     """Perform a schema validation check against taks definition"""
-    # TODO
-    # TODO release schema
-    with open(context.config['schema_file']) as fh:
+    schema_file = context.config['schema_file']
+    action = get_task_action(context.task, context.config)
+    if is_action_a_release_shipping(action):
+        schema_file = context.config['release_schema_file']
+    with open(schema_file) as fh:
         task_schema = json.load(fh)
-    log.debug(task_schema)
     scriptworker.client.validate_json_schema(context.task, task_schema)
 
 

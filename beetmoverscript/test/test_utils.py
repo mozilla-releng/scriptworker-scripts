@@ -118,11 +118,10 @@ def test_beetmover_template_args_generation(taskjson, partials):
 
 @pytest.mark.parametrize("non_release", [
     'push-to-nightly',
-    'push-to-releases',
-    'push-to-staging',
 ])
 @pytest.mark.parametrize("release", [
     'push-to-candidates',
+    'push-to-releases',
 ])
 def test_if_action_is_a_release_shipping(non_release, release):
     assert is_action_a_release_shipping(non_release) is False
