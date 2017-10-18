@@ -47,6 +47,9 @@ class PushAPK(Base):
         cls.parser.add_argument('--apk-armv7-v15', dest='apk_file_armv7_v15', type=argparse.FileType(),
                                 help='The path to the ARM v7 API v15 APK file', required=True)
 
+        cls.parser.add_argument('--no-gp-string-update', dest='update_google_play_strings', action='store_false',
+                                help="Don't update listings and what's new sections on Google Play")
+
     def upload_apks(self, apks):
         for architecture, apk in apks.items():
             apk_helper.check_if_apk_has_claimed_architecture(apk['file'], architecture)
@@ -56,12 +59,16 @@ class PushAPK(Base):
             self.config.service_account, self.config.google_play_credentials_file.name, self.config.package_name,
             self.config.dry_run
         )
-        create_or_update_listings(edit_service, self.config.package_name)
+
+        if self.config.update_google_play_strings:
+            create_or_update_listings(edit_service, self.config.package_name)
 
         for apk in apks.values():
             apk_response = edit_service.upload_apk(apk['file'])
             apk['version_code'] = apk_response['versionCode']
-            _create_or_update_whats_new(edit_service, self.config.package_name, apk['version_code'])
+
+            if self.config.update_google_play_strings:
+                _create_or_update_whats_new(edit_service, self.config.package_name, apk['version_code'])
 
         all_version_codes = _check_and_get_flatten_version_codes(apks)
         edit_service.update_track(self.config.track, all_version_codes, self.config.rollout_percentage)

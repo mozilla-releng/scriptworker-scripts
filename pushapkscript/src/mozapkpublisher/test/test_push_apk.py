@@ -177,6 +177,24 @@ def test_upload_apk_with_locales_updated(edit_service_mock, monkeypatch):
     edit_service_mock.commit_transaction.assert_called_once_with()
 
 
+def test_apks_are_uploaded_but_strings_are_not(edit_service_mock, monkeypatch):
+    monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
+    monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
+    monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
+    set_translations_per_google_play_locale_code(monkeypatch)
+
+    config = copy(VALID_CONFIG)
+    config['no_gp_string_update'] = True
+    PushAPK(config).run()
+
+    assert edit_service_mock.upload_apk.call_count == 2
+    assert edit_service_mock.update_track.call_count == 1
+    assert edit_service_mock.commit_transaction.call_count == 1
+
+    assert edit_service_mock.update_listings.call_count == 0
+    assert edit_service_mock.update_whats_new.call_count == 0
+
+
 def test_create_or_update_whats_new(edit_service_mock, monkeypatch):
     set_translations_per_google_play_locale_code(monkeypatch)
 
