@@ -1,12 +1,12 @@
-import hashlib
+import arrow
 from copy import deepcopy
+import hashlib
+import jinja2
 import json
 import logging
 import os
 import pprint
-
-import arrow
-import jinja2
+import re
 import yaml
 
 from beetmoverscript.constants import (HASH_BLOCK_SIZE, STAGE_PLATFORM_MAP,
@@ -170,3 +170,20 @@ def alter_unpretty_contents(context, blobs, mappings):
 
             if pretty_contents != contents:
                 write_json(source, pretty_contents)
+
+
+def get_candidates_prefix(product, version, build_number):
+    return "pub/{}/candidates/{}-candidates/build{}/".format(
+        product, version, str(build_number)
+    )
+
+
+def get_releases_prefix(product, version):
+    return "pub/{}/releases/{}/".format(product, version)
+
+
+def matches_exclude(keyname, excludes):
+    for exclude in excludes:
+        if re.search(exclude, keyname):
+            return True
+    return False

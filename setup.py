@@ -33,6 +33,7 @@ setup(
         "boto3",
         "PyYAML",
         "Jinja2",
+        "redo",
     ],
     classifiers=(
         'Intended Audience :: Developers',

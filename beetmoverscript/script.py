@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 """Beetmover script
 """
+import aiohttp
 import asyncio
+import boto3
+from botocore.exceptions import ClientError
 import logging
+from multiprocessing.pool import ThreadPool
 import os
+from redo import retry
 import sys
 import traceback
 import mimetypes
-import aiohttp
-import boto3
 
 from scriptworker.client import get_task
 from scriptworker.context import Context
@@ -17,6 +20,7 @@ from scriptworker.utils import retry_async, raise_future_exceptions
 
 from beetmoverscript.constants import (
     MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE,
+    RELEASE_ACTIONS
 )
 from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
                                   get_upstream_artifacts, get_initial_release_props_file,
@@ -26,7 +30,8 @@ from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_a
                                   validate_bucket_paths)
 from beetmoverscript.utils import (load_json, get_hash, get_release_props,
                                    generate_beetmover_manifest, get_size,
-                                   alter_unpretty_contents)
+                                   alter_unpretty_contents, matches_exclude,
+                                   get_candidates_prefix, get_releases_prefix)
 
 log = logging.getLogger(__name__)
 
@@ -84,21 +89,93 @@ async def push_to_nightly(context):
 # push_to_releases {{{1
 async def push_to_releases(context):
     """Push to releases."""
-    # TODO we probably don't want this
-    context.artifacts_to_beetmove = []
-
-    # TODO schema should require these for this action
+    context.artifacts_to_beetmove = {}
     product = context.task['payload']['product']
     build_number = context.task['payload']['build_number']
     version = context.task['payload']['version']
-    bucket = context.action.split('-')[-1]
-    # exclude
-    exclude = RELEASE_EXCLUDE
-    parallelization = 20
-    assert product and build_number and version and bucket and exclude and parallelization
-    raise NotImplementedError("Push to releases logic has not been added yet")
+
+    candidates_prefix = get_candidates_prefix(product, version, build_number)
+    releases_prefix = get_releases_prefix(product, version)
+
+    creds = context.config['bucket_config'][context.bucket]['credentials']
+    s3_resource = boto3.resource(
+        's3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key']
+    )
+
+    candidates_keys = list_bucket_objects(context, s3_resource, candidates_prefix)
+    releases_keys = list_bucket_objects(context, s3_resource, releases_prefix)
+
+    if releases_keys:
+        log.warning("Destination {} already exists with {} keys".format(
+                    releases_prefix, len(releases_keys)))
+
+    # Weed out RELEASE_EXCLUDE matches
+    for k in candidates_keys.keys():
+        if not matches_exclude(k, RELEASE_EXCLUDE):
+            context.artifacts_to_beetmove[k] = k.replace(candidates_prefix, releases_prefix)
+        else:
+            log.debug("Excluding {}".format(k))
+
+    copy_beets(context, candidates_keys, releases_keys)
 
 
+# copy_beets {{{1
+def copy_beets(context, from_keys, to_keys):
+    creds = context.config['bucket_config'][context.bucket]['credentials']
+    boto_client = boto3.client(
+        's3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key']
+    )
+
+    def worker(item):
+        source, destination = item
+
+        def copy_key():
+            if destination in to_keys:
+                # compare md5
+                if from_keys[source] != to_keys[destination]:
+                    raise ScriptWorkerTaskException(
+                        "{} already exists with different content "
+                        "(src etag: {}, dest etag: {}), aborting".format(
+                            destination, from_keys[source],
+                            to_keys[destination]
+                        )
+                    )
+                else:
+                    log.warning(
+                        "{} already exists with the same content ({}), "
+                        "skipping copy".format(destination, to_keys[destination])
+                    )
+            else:
+                log.info("Copying {} to {}".format(source, destination))
+                boto_client.copy_object(
+                    Bucket=context.bucket,
+                    CopySource={'Bucket': context.bucket, 'Key': source},
+                    Key=destination,
+                )
+
+        return retry(copy_key, sleeptime=5, max_sleeptime=60,
+                     retry_exceptions=(ClientError, ))
+
+    def find_release_files():
+        for source, destination in context.artifacts_to_beetmove.items():
+            yield(source, destination)
+
+    pool = ThreadPool(context.config.get("copy_parallelization", 20))
+    pool.map(worker, find_release_files())
+
+
+# list_bucket_objects {{{1
+def list_bucket_objects(context, s3_resource, prefix):
+    """Return a dict of {Key: MD5}"""
+    contents = {}
+    bucket = s3_resource.Bucket(context.bucket)
+    for obj in bucket.objects.filter(prefix):
+        contents[obj.key] = obj.e_tag.split("-")[0]
+
+    return contents
+
+
+# action_map {{{1
 action_map = {
     'push-to-nightly': push_to_nightly,
     # push to candidates is at this point identical to push_to_nightly
@@ -210,8 +287,7 @@ def enrich_balrog_manifest(context, locale):
         url_replacements.append(['http://archive.mozilla.org/pub',
                                  'http://download.cdn.mozilla.net/pub'])
 
-    return {
-        "tc_nightly": True,
+    enrich_dict = {
         "appName": release_props["appName"],
         "appVersion": release_props["appVersion"],
         "branch": release_props["branch"],
@@ -222,6 +298,13 @@ def enrich_balrog_manifest(context, locale):
         "platform": release_props["stage_platform"],
         "url_replacements": url_replacements
     }
+
+    if context.action in RELEASE_ACTIONS:
+        enrich_dict["tc_release"] = True
+    else:
+        enrich_dict["tc_nightly"] = True
+
+    return enrich_dict
 
 
 # retry_upload {{{1
@@ -292,13 +375,18 @@ def setup_config(config_path):
     return context
 
 
-def setup_logging():
-    log_level = logging.DEBUG
+def setup_logging(verbose=True):
+    if verbose:
+        level = logging.DEBUG
+    else:
+        level = logging.INFO
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        level=log_level
+        level=level
     )
     logging.getLogger("taskcluster").setLevel(logging.WARNING)
+    for module in ("botocore", "boto3", "chardet"):
+        logging.getLogger(module).setLevel(logging.INFO)
 
 
 def setup_mimetypes():
@@ -313,7 +401,7 @@ def main(name=None, config_path=None):
     if name not in (None, '__main__'):
         return
     context = setup_config(config_path)
-    setup_logging()
+    setup_logging(verbose=context.config['verbose'])
     setup_mimetypes()
 
     loop = asyncio.get_event_loop()

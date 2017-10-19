@@ -9,7 +9,9 @@ import beetmoverscript.utils as butils
 from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_json, generate_beetmover_template_args,
                                    write_file, is_action_a_release_shipping,
-                                   get_release_props, get_partials_props)
+                                   get_release_props, get_partials_props,
+                                   matches_exclude, get_candidates_prefix,
+                                   get_releases_prefix)
 from beetmoverscript.constants import HASH_BLOCK_SIZE
 
 assert context  # silence pyflakes
@@ -184,3 +186,36 @@ def test_alter_unpretty_contents(context, mocker):
     mocker.patch.object(butils, 'load_json', new=fake_json)
     mocker.patch.object(butils, 'write_json', new=fake_json)
     butils.alter_unpretty_contents(context, ['target.test_packages.json'], mappings)
+
+
+@pytest.mark.parametrize("product,version,build_number,expected", ((
+    "foo", "bar", "baz", "pub/foo/candidates/bar-candidates/buildbaz/"
+), (
+    "mobile", "99.0a3", 14, "pub/mobile/candidates/99.0a3-candidates/build14/"
+)))
+def test_get_candidates_prefix(product, version, build_number, expected):
+    assert get_candidates_prefix(product, version, build_number) == expected
+
+
+@pytest.mark.parametrize("product,version,expected", ((
+    "foo", "bar", "pub/foo/releases/bar/"
+), (
+    "mobile", "99.0a3", "pub/mobile/releases/99.0a3/"
+)))
+def test_get_releases_prefix(product, version, expected):
+    assert get_releases_prefix(product, version) == expected
+
+
+@pytest.mark.parametrize("keyname,expected", ((
+    "blah.excludeme", True
+), (
+    "foo/metoo/blah", True
+), (
+    "mobile.zip", False
+)))
+def test_matches_exclude(keyname, expected):
+    excludes = [
+        r"^.*.excludeme$",
+        r"^.*/metoo/.*$",
+    ]
+    assert matches_exclude(keyname, excludes) == expected

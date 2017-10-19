@@ -83,6 +83,11 @@ RELEASE_ACTIONS = (
     'push-to-releases',
 )
 
+# XXX this is a fairly clunky way of specifying which files to copy from
+# candidates to releases -- let's find a nicer way of doing this.
+# XXX if we keep this, let's make it configurable? overridable in config?
+# Faster to update a config file in puppet than to ship a new beetmover release
+# and update in puppet
 RELEASE_EXCLUDE = (
     r"^.*tests.*$",
     r"^.*crashreporter.*$",
