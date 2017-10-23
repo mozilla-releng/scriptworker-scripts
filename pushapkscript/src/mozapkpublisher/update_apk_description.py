@@ -11,9 +11,6 @@ logger = logging.getLogger(__name__)
 
 class UpdateDescriptionAPK(Base):
 
-    def __init__(self, config=None):
-        self.config = self._parse_config(config)
-
     @classmethod
     def _init_parser(cls):
         cls.parser = argparse.ArgumentParser(

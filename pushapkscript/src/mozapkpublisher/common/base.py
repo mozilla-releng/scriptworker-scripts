@@ -9,6 +9,9 @@ logger = logging.getLogger(__name__)
 class Base(object):
     parser = None
 
+    def __init__(self, config=None):
+        self.config = self._parse_config(config)
+
     @classmethod
     def _parse_config(cls, config=None):
         if cls.parser is None:

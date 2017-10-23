@@ -4,7 +4,7 @@ import sys
 from mozapkpublisher.common.base import Base
 
 
-class TestBase(Base):
+class _TestBase(Base):
     @classmethod
     def _init_parser(cls):
         cls.parser = argparse.ArgumentParser(description='Test parser with dummy data')
@@ -27,7 +27,7 @@ def test_convert_dict_into_args():
 
 
 def test_parse_config():
-    config = TestBase._parse_config(config={'a_key': 'a_value', 'k': 'v', 'an_int': 10})
+    config = _TestBase._parse_config(config={'a_key': 'a_value', 'k': 'v', 'an_int': 10})
     assert config.a_key == 'a_value'
     assert config.k == 'v'
     assert config.an_int == 10
@@ -35,7 +35,7 @@ def test_parse_config():
 
 def test_parse_config_from_argv(monkeypatch):
     monkeypatch.setattr(sys, 'argv', ['testcall', '--a-key', 'a_value', '--k', 'v', '--an-int', '10'])
-    config = TestBase._parse_config()
+    config = _TestBase._parse_config()
     assert config.a_key == 'a_value'
     assert config.k == 'v'
     assert config.an_int == 10

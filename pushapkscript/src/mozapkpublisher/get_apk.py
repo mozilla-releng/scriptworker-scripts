@@ -23,9 +23,6 @@ class GetAPK(Base):
 
     json_version_url = "https://product-details.mozilla.org/1.0/firefox_versions.json"
 
-    def __init__(self, config=None):
-        self.config = self._parse_config(config)
-
     @classmethod
     def _init_parser(cls):
         cls.parser = ArgumentParser(
