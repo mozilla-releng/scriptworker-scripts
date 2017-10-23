@@ -1,0 +1,7 @@
+arrow
+boto3
+Jinja2
+PyYAML
+redo
+scriptworker
+taskcluster

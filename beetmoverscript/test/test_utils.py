@@ -2,17 +2,22 @@ import json
 import pytest
 import tempfile
 
-from scriptworker.context import Context
-from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
+from beetmoverscript.test import (context, get_fake_valid_task,
                                   get_fake_balrog_props, get_fake_checksums_manifest,
                                   get_fake_balrog_props_path)
+import beetmoverscript.utils as butils
 from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_json, generate_beetmover_template_args,
                                    write_file, is_action_a_release_shipping,
-                                   get_release_props, get_partials_props)
+                                   get_release_props, get_partials_props,
+                                   matches_exclude, get_candidates_prefix,
+                                   get_releases_prefix)
 from beetmoverscript.constants import HASH_BLOCK_SIZE
 
+assert context  # silence pyflakes
 
+
+# get_hash {{{1
 def test_get_hash():
     correct_sha1 = 'cb8aa4802996ac8de0436160e7bc0c79b600c222'
     text = b'Hello world from beetmoverscript!'
@@ -28,6 +33,7 @@ def test_get_hash():
     assert correct_sha1 == sha1digest
 
 
+# write_json {{{1
 def test_write_json():
     sample_data = get_fake_balrog_props()
 
@@ -40,6 +46,7 @@ def test_write_json():
         assert sample_data == retrieved_data
 
 
+# write_file {{{1
 def test_write_file():
     sample_data = "\n".join(get_fake_checksums_manifest())
 
@@ -52,15 +59,8 @@ def test_write_file():
         assert sample_data == retrieved_data
 
 
-def test_generate_manifest():
-    context = Context()
-    context.task = get_fake_valid_task()
-    context.config = get_fake_valid_config()
-    context.release_props = get_fake_balrog_props()["properties"]
-    context.release_props['platform'] = context.release_props['stage_platform']
-    context.bucket = 'nightly'
-    context.action = 'push-to-nightly'
-
+# generate_beetmover_manifest {{{1
+def test_generate_manifest(context):
     manifest = generate_beetmover_manifest(context)
     mapping = manifest['mapping']
     s3_keys = [mapping[m].get('target_info.txt', {}).get('s3_key') for m in mapping]
@@ -82,19 +82,13 @@ def test_generate_manifest():
     assert expected_destinations == actual_destinations
 
 
+# generate_beetmover_template_args {{{1
 @pytest.mark.parametrize("taskjson,partials", [
     ('task.json', {}),
     ('task_partials.json', {'target.partial-1.mar': '20170831150342'})
 ])
-def test_beetmover_template_args_generation(taskjson, partials):
-    context = Context()
+def test_beetmover_template_args_generation(context, taskjson, partials):
     context.task = get_fake_valid_task(taskjson)
-    context.config = get_fake_valid_config()
-    context.release_props = get_fake_balrog_props()["properties"]
-    context.release_props['platform'] = context.release_props['stage_platform']
-    context.bucket = 'nightly'
-    context.action = 'push-to-nightly'
-
     expected_template_args = {
         'branch': 'mozilla-central',
         'platform': 'android-api-15',
@@ -116,19 +110,43 @@ def test_beetmover_template_args_generation(taskjson, partials):
     assert template_args['template_key'] == 'fake_nightly_repacks'
 
 
+def test_beetmover_template_args_generation_release(context):
+    context.bucket = 'dep'
+    context.action = 'push-to-candidates'
+    context.task['payload']['build_number'] = 3
+    context.task['payload']['version'] = '4.4'
+
+    expected_template_args = {
+        'branch': 'mozilla-central',
+        'platform': 'android-api-15',
+        'product': 'Fake',
+        'stage_platform': 'android-api-15',
+        'template_key': 'fennec_candidates',
+        'upload_date': '2016/09/2016-09-01-16-26-14',
+        'version': '4.4',
+        'buildid': '20990205110000',
+        'partials': {},
+        'build_number': 3,
+    }
+
+    template_args = generate_beetmover_template_args(context)
+    assert template_args == expected_template_args
+
+
+# is_action_a_release_shipping {{{1
 @pytest.mark.parametrize("non_release", [
     'push-to-nightly',
-    'push-to-releases',
-    'push-to-staging',
 ])
 @pytest.mark.parametrize("release", [
     'push-to-candidates',
+    'push-to-releases',
 ])
 def test_if_action_is_a_release_shipping(non_release, release):
     assert is_action_a_release_shipping(non_release) is False
     assert is_action_a_release_shipping(release) is True
 
 
+# get_release_props {{{1
 def test_get_release_props():
     expected_release_props = {
         'appName': 'Fake',
@@ -143,6 +161,7 @@ def test_get_release_props():
     assert release_props == expected_release_props
 
 
+# get_partials_props {{{1
 @pytest.mark.parametrize("taskjson,expected", [
     ('task.json', {}),
     ('task_partials.json', {'target.partial-1.mar': '20170831150342'})
@@ -150,3 +169,65 @@ def test_get_release_props():
 def test_get_partials_props(taskjson, expected):
     partials_props = get_partials_props(get_fake_valid_task(taskjson))
     assert partials_props == expected
+
+
+# alter_unpretty_contents {{{1
+def test_alter_unpretty_contents(context, mocker):
+    context.artifacts_to_beetmove = {
+        'loc1': {'target.test_packages.json': 'foo'},
+        'loc2': {'target.test_packages.json': 'foo'},
+    }
+
+    mappings = {
+        'mapping': {
+            'loc1': {
+                'bar': {
+                    's3_key': 'x'
+                },
+            },
+            'loc2': {},
+        },
+    }
+
+    def fake_json(*args, **kwargs):
+        return {'foo': ['bar']}
+
+    mocker.patch.object(butils, 'load_json', new=fake_json)
+    mocker.patch.object(butils, 'write_json', new=fake_json)
+    butils.alter_unpretty_contents(context, ['target.test_packages.json'], mappings)
+
+
+# get_candidates_prefix {{{1
+@pytest.mark.parametrize("product,version,build_number,expected", ((
+    "foo", "bar", "baz", "pub/foo/candidates/bar-candidates/buildbaz/"
+), (
+    "mobile", "99.0a3", 14, "pub/mobile/candidates/99.0a3-candidates/build14/"
+)))
+def test_get_candidates_prefix(product, version, build_number, expected):
+    assert get_candidates_prefix(product, version, build_number) == expected
+
+
+# get_releases_prefix {{{1
+@pytest.mark.parametrize("product,version,expected", ((
+    "foo", "bar", "pub/foo/releases/bar/"
+), (
+    "mobile", "99.0a3", "pub/mobile/releases/99.0a3/"
+)))
+def test_get_releases_prefix(product, version, expected):
+    assert get_releases_prefix(product, version) == expected
+
+
+# matches_exclude {{{1
+@pytest.mark.parametrize("keyname,expected", ((
+    "blah.excludeme", True
+), (
+    "foo/metoo/blah", True
+), (
+    "mobile.zip", False
+)))
+def test_matches_exclude(keyname, expected):
+    excludes = [
+        r"^.*.excludeme$",
+        r"^.*/metoo/.*$",
+    ]
+    assert matches_exclude(keyname, excludes) == expected

@@ -1,12 +1,12 @@
-import hashlib
+import arrow
 from copy import deepcopy
+import hashlib
+import jinja2
 import json
 import logging
 import os
 import pprint
-
-import arrow
-import jinja2
+import re
 import yaml
 
 from beetmoverscript.constants import (HASH_BLOCK_SIZE, STAGE_PLATFORM_MAP,
@@ -54,9 +54,6 @@ def write_file(path, contents):
 def is_action_a_release_shipping(action):
     """Function to return boolean if we're shipping a release as opposed to a
     nightly release or something else. Does that by checking the action type.
-    Currently the only action that supports release-releases is
-    `push-to-candidates` for which we need to enforce the `version` and
-    `build_number` grabbing.
     """
     return action in RELEASE_ACTIONS
 
@@ -173,3 +170,24 @@ def alter_unpretty_contents(context, blobs, mappings):
 
             if pretty_contents != contents:
                 write_json(source, pretty_contents)
+
+
+def get_candidates_prefix(product, version, build_number):
+    return "pub/{}/candidates/{}-candidates/build{}/".format(
+        product, version, str(build_number)
+    )
+
+
+def get_releases_prefix(product, version):
+    return "pub/{}/releases/{}/".format(product, version)
+
+
+def matches_exclude(keyname, excludes):
+    for exclude in excludes:
+        if re.search(exclude, keyname):
+            return True
+    return False
+
+
+def get_creds(context):
+    return context.config['bucket_config'][context.bucket]['credentials']

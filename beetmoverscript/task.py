@@ -8,7 +8,7 @@ from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
                                        INITIAL_RELEASE_PROPS_FILE,
                                        RESTRICTED_BUCKET_PATHS)
 
-from beetmoverscript.utils import write_json, write_file
+from beetmoverscript.utils import write_json, write_file, is_action_a_release_shipping
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 log = logging.getLogger(__name__)
@@ -16,9 +16,12 @@ log = logging.getLogger(__name__)
 
 def validate_task_schema(context):
     """Perform a schema validation check against taks definition"""
-    with open(context.config['schema_file']) as fh:
+    schema_file = context.config['schema_file']
+    action = get_task_action(context.task, context.config)
+    if is_action_a_release_shipping(action):
+        schema_file = context.config['release_schema_file']
+    with open(schema_file) as fh:
         task_schema = json.load(fh)
-    log.debug(task_schema)
     scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
@@ -27,15 +30,19 @@ def get_task_bucket(task, script_config):
     buckets = [s.split(':')[-1] for s in task["scopes"] if
                s.startswith("project:releng:beetmover:bucket:")]
     log.info("Buckets: %s", buckets)
+    messages = []
     if len(buckets) != 1:
-        raise ScriptWorkerTaskException("Only one bucket can be used")
+        messages.append("Only one bucket can be used")
 
     bucket = buckets[0]
     if re.search('^[0-9A-Za-z_-]+$', bucket) is None:
-        raise ScriptWorkerTaskException("Bucket {} is malformed".format(bucket))
+        messages.append("Bucket {} is malformed".format(bucket))
 
     if bucket not in script_config['bucket_config']:
-        raise ScriptWorkerTaskException("Invalid bucket scope")
+        messages.append("Invalid bucket scope")
+
+    if messages:
+        raise ScriptWorkerTaskException("\n".join(messages))
 
     return bucket
 
@@ -46,12 +53,16 @@ def get_task_action(task, script_config):
                s.startswith("project:releng:beetmover:action:")]
 
     log.info("Action types: %s", actions)
+    messages = []
     if len(actions) != 1:
-        raise ScriptWorkerTaskException("Only one action type can be used")
+        messages.append("Only one action type can be used")
 
     action = actions[0]
     if action not in script_config['actions']:
-        raise ScriptWorkerTaskException("Invalid action scope")
+        messages.append("Invalid action scope")
+
+    if messages:
+        raise ScriptWorkerTaskException('\n'.join(messages))
 
     return action
 

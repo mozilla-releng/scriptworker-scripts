@@ -3,6 +3,7 @@
     "artifact_dir": "artifact_dir",
     "verbose": true,
     "schema_file": "/path/to/beetmoverscript/beetmoverscript/data/beetmover_task_schema.json",
+    "release_schema_file": "/path/to/beetmoverscript/beetmoverscript/data/beetmover_task_schema.json",
     "aiohttp_max_connections": 10,
     "checksums_digests": ["sha512", "sha256"],
     "blobs_needing_prettynaming_contents": [

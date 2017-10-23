@@ -2,15 +2,23 @@ import json
 import os
 import pytest
 import tempfile
-from beetmoverscript.test import (get_fake_valid_task, get_fake_valid_config,
-                                  get_fake_balrog_props, get_fake_checksums_manifest)
-from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
-                                  get_upstream_artifacts,
-                                  generate_checksums_manifest, get_initial_release_props_file)
+from beetmoverscript.test import (
+    context, get_fake_valid_task, get_fake_valid_config, get_fake_balrog_props,
+    get_fake_checksums_manifest
+)
+from beetmoverscript.task import (
+    validate_task_schema, add_balrog_manifest_to_artifacts,
+    get_upstream_artifacts, generate_checksums_manifest,
+    get_initial_release_props_file, get_task_bucket, get_task_action,
+    validate_bucket_paths,
+)
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
+assert context  # silence pyflakes
 
+
+# get_upstream_artifacts {{{1
 def test_get_upstream_artifacts():
     context = Context()
     context.config = get_fake_valid_config()
@@ -23,13 +31,77 @@ def test_get_upstream_artifacts():
         context.artifacts_to_beetmove = get_upstream_artifacts(context)
 
 
-def test_validate_task():
-    context = Context()
-    context.task = get_fake_valid_task()
-    context.config = get_fake_valid_config()
+# validate_task {{{1
+def test_validate_task(context):
+    validate_task_schema(context)
+
+    # release validation
+    context.task['scopes'] = ["project:releng:beetmover:action:push-to-candidates"]
+    context.task['payload'] = {
+        'product': 'fennec',
+        'build_number': 1,
+        'version': '64.0b3',
+    }
     validate_task_schema(context)
 
 
+# get_task_bucket {{{1
+@pytest.mark.parametrize("scopes,expected,raises", ((
+    ["project:releng:beetmover:bucket:dep", "project:releng:beetmover:bucket:release"],
+    None, True,
+), (
+    ["project:releng:beetmover:bucket:!!"],
+    None, True
+), (
+    ["project:releng:beetmover:bucket:dep", "project:releng:beetmover:action:foo"],
+    "dep", False
+)))
+def test_get_task_bucket(scopes, expected, raises):
+    task = {'scopes': scopes}
+    config = {'bucket_config': {'dep': ''}}
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            get_task_bucket(task, config)
+    else:
+        assert expected == get_task_bucket(task, config)
+
+
+# get_task_action {{{1
+@pytest.mark.parametrize("scopes,expected,raises", ((
+    ["project:releng:beetmover:action:dep", "project:releng:beetmover:action:release"],
+    None, True
+), (
+    ["project:releng:beetmover:action:invalid"],
+    None, True
+), (
+    ["project:releng:beetmover:action:dep"],
+    "dep", False
+)))
+def test_get_task_action(scopes, expected, raises):
+    task = {'scopes': scopes}
+    config = {'actions': {'dep': ''}}
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            get_task_action(task, config)
+    else:
+        assert expected == get_task_action(task, config)
+
+
+# validate_bucket_paths {{{1
+@pytest.mark.parametrize("bucket,path,raises", ((
+    "dep", "pub/mobile/nightly", False
+), (
+    "nightly", "pub/firefox/releases", True
+)))
+def test_validate_bucket_paths(bucket, path, raises):
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            validate_bucket_paths(bucket, path)
+    else:
+        validate_bucket_paths(bucket, path)
+
+
+# balrog_manifest_to_artifacts {{{1
 def test_balrog_manifest_to_artifacts():
     context = Context()
     context.task = get_fake_valid_task()
@@ -57,6 +129,7 @@ def test_balrog_manifest_to_artifacts():
         assert fake_balrog_manifest == retrieved_data
 
 
+# checksums_manifest_generation {{{1
 def test_checksums_manifest_generation():
     checksums = {
         "firefox-53.0a1.en-US.linux-i686.complete.mar": {
@@ -76,11 +149,12 @@ def test_checksums_manifest_generation():
     assert checksums_manifest_dump == expected_checksums_manifest_dump
 
 
+# get_initial_release_props_file {{{1
 def test_get_initial_release_props_file():
     context = Context()
     context.task = get_fake_valid_task()
     context.config = get_fake_valid_config()
-    context.task['payload']['upstreamArtifacts'] = []
 
+    context.task['payload']['upstreamArtifacts'] = [{'paths': []}]
     with pytest.raises(ScriptWorkerTaskException):
         get_initial_release_props_file(context)
