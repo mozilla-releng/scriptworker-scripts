@@ -19,8 +19,8 @@ import logging
 from oauth2client.service_account import ServiceAccountCredentials
 from apiclient.discovery import build
 
-from mozapkpublisher.exceptions import NoTransactionError, WrongArgumentGiven
-from mozapkpublisher.store_l10n import STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME
+from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
+from mozapkpublisher.common.store_l10n import STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME
 
 # Google play has currently 3 tracks. Rollout deploys
 # to a limited percentage of users

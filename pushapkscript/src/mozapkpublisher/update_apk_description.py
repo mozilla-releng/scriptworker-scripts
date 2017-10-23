@@ -3,8 +3,8 @@
 import argparse
 import logging
 
-from mozapkpublisher import googleplay, store_l10n
-from mozapkpublisher.base import Base
+from mozapkpublisher.common import googleplay, store_l10n
+from mozapkpublisher.common.base import Base
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ def main(name=None):
     if name not in ('__main__', None):
         return
 
-    from mozapkpublisher import main_logging
+    from mozapkpublisher.common import main_logging
     main_logging.init()
 
     UpdateDescriptionAPK().run()

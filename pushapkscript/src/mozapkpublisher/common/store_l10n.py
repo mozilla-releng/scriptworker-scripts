@@ -1,6 +1,6 @@
 import logging
 
-from mozapkpublisher import utils
+from mozapkpublisher.common import utils
 
 logger = logging.getLogger(__name__)
 

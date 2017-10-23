@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from mozapkpublisher.exceptions import WrongArgumentGiven
+from mozapkpublisher.common.exceptions import WrongArgumentGiven
 
 logger = logging.getLogger(__name__)
 

@@ -9,7 +9,7 @@ except ImportError:
 from copy import copy
 from tempfile import NamedTemporaryFile
 
-from mozapkpublisher import googleplay, store_l10n
+from mozapkpublisher.common import googleplay, store_l10n
 from mozapkpublisher.update_apk_description import UpdateDescriptionAPK, main
 
 

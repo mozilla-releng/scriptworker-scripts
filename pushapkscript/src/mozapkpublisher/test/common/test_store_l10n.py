@@ -3,10 +3,8 @@ try:
 except ImportError:
     from mock import MagicMock
 
-from mozapkpublisher import utils
-
-from mozapkpublisher import store_l10n
-from mozapkpublisher.store_l10n import get_translations_per_google_play_locale_code, \
+from mozapkpublisher.common import store_l10n, utils
+from mozapkpublisher.common.store_l10n import get_translations_per_google_play_locale_code, \
     _get_list_of_completed_locales, _get_translation, _translate_moz_locate_into_google_play_one
 
 DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE = {

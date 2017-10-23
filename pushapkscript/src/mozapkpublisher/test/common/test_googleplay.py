@@ -8,8 +8,8 @@ try:
 except ImportError:
     from mock import MagicMock
 
-from mozapkpublisher.googleplay import add_general_google_play_arguments, EditService, is_package_name_nightly
-from mozapkpublisher.exceptions import NoTransactionError, WrongArgumentGiven
+from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
+from mozapkpublisher.common.googleplay import add_general_google_play_arguments, EditService, is_package_name_nightly
 
 
 @pytest.mark.parametrize('package_name', (
@@ -55,7 +55,7 @@ def set_up_edit_service_mock(_monkeypatch):
     edit_service_mock.insert = lambda body, packageName: new_transaction_mock
     general_service_mock.edits = lambda: edit_service_mock
 
-    _monkeypatch.setattr('mozapkpublisher.googleplay._connect', lambda _, __: general_service_mock)
+    _monkeypatch.setattr('mozapkpublisher.common.googleplay._connect', lambda _, __: general_service_mock)
     return edit_service_mock
 
 

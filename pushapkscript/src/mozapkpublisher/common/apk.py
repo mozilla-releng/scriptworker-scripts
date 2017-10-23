@@ -4,8 +4,8 @@ import re
 from io import BytesIO
 from zipfile import ZipFile
 
-from mozapkpublisher.exceptions import NoLocaleFound, NotMultiLocaleApk, BadApk
-from mozapkpublisher.utils import filter_out_identical_values
+from mozapkpublisher.common.exceptions import NoLocaleFound, NotMultiLocaleApk, BadApk
+from mozapkpublisher.common.utils import filter_out_identical_values
 
 logger = logging.getLogger(__name__)
 

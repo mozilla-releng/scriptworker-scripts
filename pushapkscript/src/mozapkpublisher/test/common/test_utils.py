@@ -9,7 +9,7 @@ try:
 except ImportError:
     from mock import MagicMock
 
-from mozapkpublisher.utils import load_json_url, file_sha512sum, download_file
+from mozapkpublisher.common.utils import load_json_url, file_sha512sum, download_file
 
 
 def test_load_json_url(monkeypatch):

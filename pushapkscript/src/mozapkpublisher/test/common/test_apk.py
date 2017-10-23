@@ -5,10 +5,10 @@ from shutil import rmtree
 from tempfile import mkdtemp, NamedTemporaryFile
 from zipfile import ZipFile
 
-from mozapkpublisher import apk
-from mozapkpublisher.apk import check_if_apk_is_multilocale, _get_unique_locales, check_if_apk_has_claimed_architecture, \
+from mozapkpublisher.common import apk
+from mozapkpublisher.common.apk import check_if_apk_is_multilocale, _get_unique_locales, check_if_apk_has_claimed_architecture, \
     get_apk_architecture, _extract_architecture_from_paths
-from mozapkpublisher.exceptions import NoLocaleFound, NotMultiLocaleApk, BadApk
+from mozapkpublisher.common.exceptions import NoLocaleFound, NotMultiLocaleApk, BadApk
 
 
 MANIFEST_PARTIAL_CONTENT = '''

@@ -7,9 +7,9 @@ import signal
 import shutil
 import logging
 
-from mozapkpublisher.base import Base, ArgumentParser
-from mozapkpublisher.utils import load_json_url, download_file, file_sha512sum
-from mozapkpublisher.exceptions import CheckSumMismatch
+from mozapkpublisher.common.base import Base, ArgumentParser
+from mozapkpublisher.common.exceptions import CheckSumMismatch
+from mozapkpublisher.common.utils import load_json_url, download_file, file_sha512sum
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +174,7 @@ def _take_out_common_path(checksum_file, apk_file):
 
 
 if __name__ == '__main__':
-    from mozapkpublisher import main_logging
+    from mozapkpublisher.common import main_logging
     main_logging.init()
 
     myScript = GetAPK()

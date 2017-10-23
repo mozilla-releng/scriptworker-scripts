@@ -5,10 +5,10 @@ import json
 import logging
 import sys
 
-from mozapkpublisher import googleplay, store_l10n
-from mozapkpublisher import apk as apk_helper
-from mozapkpublisher.base import Base, ArgumentParser
-from mozapkpublisher.exceptions import WrongArgumentGiven, ArmVersionCodeTooHigh
+from mozapkpublisher.common import googleplay, store_l10n
+from mozapkpublisher.common import apk as apk_helper
+from mozapkpublisher.common.base import Base, ArgumentParser
+from mozapkpublisher.common.exceptions import WrongArgumentGiven, ArmVersionCodeTooHigh
 from mozapkpublisher.update_apk_description import create_or_update_listings
 
 logger = logging.getLogger(__name__)
@@ -142,7 +142,7 @@ def main(name=None):
     if name not in ('__main__', None):
         return
 
-    from mozapkpublisher import main_logging
+    from mozapkpublisher.common import main_logging
     main_logging.init()
 
     try:

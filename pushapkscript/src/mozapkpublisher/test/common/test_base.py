@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from mozapkpublisher.base import Base
+from mozapkpublisher.common.base import Base
 
 
 class TestBase(Base):

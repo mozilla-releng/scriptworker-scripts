@@ -4,7 +4,7 @@ import pytest
 import shutil
 from tempfile import mkdtemp
 
-from mozapkpublisher.exceptions import CheckSumMismatch, WrongArgumentGiven
+from mozapkpublisher.common.exceptions import CheckSumMismatch, WrongArgumentGiven
 from mozapkpublisher.get_apk import GetAPK, \
     craft_apk_and_checksums_url_and_download_locations, _craft_apk_and_checksums_file_names, _get_architecture_in_file_name, \
     check_apk_against_checksum_file, _fetch_checksum_from_file, _take_out_common_path

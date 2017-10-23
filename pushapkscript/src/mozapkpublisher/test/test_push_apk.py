@@ -10,11 +10,11 @@ except ImportError:
 from copy import copy
 from tempfile import NamedTemporaryFile
 
-from mozapkpublisher import apk, googleplay, store_l10n
-from mozapkpublisher.exceptions import WrongArgumentGiven, ArmVersionCodeTooHigh
+from mozapkpublisher.common import apk, googleplay, store_l10n
+from mozapkpublisher.common.exceptions import WrongArgumentGiven, ArmVersionCodeTooHigh
 from mozapkpublisher.push_apk import PushAPK, main, _check_and_get_flatten_version_codes, \
     _create_or_update_whats_new
-from mozapkpublisher.test.test_store_l10n import set_translations_per_google_play_locale_code, \
+from mozapkpublisher.test.common.test_store_l10n import set_translations_per_google_play_locale_code, \
     DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE
 
 
