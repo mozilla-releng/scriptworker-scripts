@@ -17,6 +17,7 @@ from beetmoverscript.constants import HASH_BLOCK_SIZE
 assert context  # silence pyflakes
 
 
+# get_hash {{{1
 def test_get_hash():
     correct_sha1 = 'cb8aa4802996ac8de0436160e7bc0c79b600c222'
     text = b'Hello world from beetmoverscript!'
@@ -32,6 +33,7 @@ def test_get_hash():
     assert correct_sha1 == sha1digest
 
 
+# write_json {{{1
 def test_write_json():
     sample_data = get_fake_balrog_props()
 
@@ -44,6 +46,7 @@ def test_write_json():
         assert sample_data == retrieved_data
 
 
+# write_file {{{1
 def test_write_file():
     sample_data = "\n".join(get_fake_checksums_manifest())
 
@@ -56,6 +59,7 @@ def test_write_file():
         assert sample_data == retrieved_data
 
 
+# generate_beetmover_manifest {{{1
 def test_generate_manifest(context):
     manifest = generate_beetmover_manifest(context)
     mapping = manifest['mapping']
@@ -78,6 +82,7 @@ def test_generate_manifest(context):
     assert expected_destinations == actual_destinations
 
 
+# generate_beetmover_template_args {{{1
 @pytest.mark.parametrize("taskjson,partials", [
     ('task.json', {}),
     ('task_partials.json', {'target.partial-1.mar': '20170831150342'})
@@ -128,6 +133,7 @@ def test_beetmover_template_args_generation_release(context):
     assert template_args == expected_template_args
 
 
+# is_action_a_release_shipping {{{1
 @pytest.mark.parametrize("non_release", [
     'push-to-nightly',
 ])
@@ -140,6 +146,7 @@ def test_if_action_is_a_release_shipping(non_release, release):
     assert is_action_a_release_shipping(release) is True
 
 
+# get_release_props {{{1
 def test_get_release_props():
     expected_release_props = {
         'appName': 'Fake',
@@ -154,6 +161,7 @@ def test_get_release_props():
     assert release_props == expected_release_props
 
 
+# get_partials_props {{{1
 @pytest.mark.parametrize("taskjson,expected", [
     ('task.json', {}),
     ('task_partials.json', {'target.partial-1.mar': '20170831150342'})
@@ -163,6 +171,7 @@ def test_get_partials_props(taskjson, expected):
     assert partials_props == expected
 
 
+# alter_unpretty_contents {{{1
 def test_alter_unpretty_contents(context, mocker):
     context.artifacts_to_beetmove = {
         'loc1': {'target.test_packages.json': 'foo'},
@@ -188,6 +197,7 @@ def test_alter_unpretty_contents(context, mocker):
     butils.alter_unpretty_contents(context, ['target.test_packages.json'], mappings)
 
 
+# get_candidates_prefix {{{1
 @pytest.mark.parametrize("product,version,build_number,expected", ((
     "foo", "bar", "baz", "pub/foo/candidates/bar-candidates/buildbaz/"
 ), (
@@ -197,6 +207,7 @@ def test_get_candidates_prefix(product, version, build_number, expected):
     assert get_candidates_prefix(product, version, build_number) == expected
 
 
+# get_releases_prefix {{{1
 @pytest.mark.parametrize("product,version,expected", ((
     "foo", "bar", "pub/foo/releases/bar/"
 ), (
@@ -206,6 +217,7 @@ def test_get_releases_prefix(product, version, expected):
     assert get_releases_prefix(product, version) == expected
 
 
+# matches_exclude {{{1
 @pytest.mark.parametrize("keyname,expected", ((
     "blah.excludeme", True
 ), (

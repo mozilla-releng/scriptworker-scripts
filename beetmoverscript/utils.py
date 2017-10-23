@@ -187,3 +187,7 @@ def matches_exclude(keyname, excludes):
         if re.search(exclude, keyname):
             return True
     return False
+
+
+def get_creds(context):
+    return context.config['bucket_config'][context.bucket]['credentials']

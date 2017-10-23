@@ -22,23 +22,30 @@ from beetmoverscript.constants import (
     MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE,
     RELEASE_ACTIONS
 )
-from beetmoverscript.task import (validate_task_schema, add_balrog_manifest_to_artifacts,
-                                  get_upstream_artifacts, get_initial_release_props_file,
-                                  add_checksums_to_artifacts,
-                                  add_release_props_to_artifacts,
-                                  get_task_bucket, get_task_action,
-                                  validate_bucket_paths)
-from beetmoverscript.utils import (load_json, get_hash, get_release_props,
-                                   generate_beetmover_manifest, get_size,
-                                   alter_unpretty_contents, matches_exclude,
-                                   get_candidates_prefix, get_releases_prefix)
+from beetmoverscript.task import (
+    validate_task_schema, add_balrog_manifest_to_artifacts,
+    get_upstream_artifacts, get_initial_release_props_file,
+    add_checksums_to_artifacts, add_release_props_to_artifacts,
+    get_task_bucket, get_task_action, validate_bucket_paths,
+)
+from beetmoverscript.utils import (
+    load_json, get_hash, get_release_props, generate_beetmover_manifest,
+    get_size, alter_unpretty_contents, matches_exclude,
+    get_candidates_prefix, get_releases_prefix, get_creds
+)
 
 log = logging.getLogger(__name__)
 
 
 # push_to_nightly {{{1
 async def push_to_nightly(context):
-    """Push to nightly, or candidates."""
+    """Push artifacts to a certain location (e.g. nightly/ or candidates/).
+
+    Determine the list of artifacts to be transferred, generate the
+    mapping manifest, run some data validations, and upload the bits.
+
+    Upon successful transfer, generate checksums files and manifests to be
+    consumed downstream by balrogworkers."""
     # determine artifacts to beetmove
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
 
@@ -88,7 +95,10 @@ async def push_to_nightly(context):
 
 # push_to_releases {{{1
 async def push_to_releases(context):
-    """Push to releases."""
+    """Copy artifacts from one S3 location to another.
+
+    Determine the list of artifacts to be copied and transfer them. These
+    copies happen in S3 without downloading/reuploading."""
     context.artifacts_to_beetmove = {}
     product = context.task['payload']['product']
     build_number = context.task['payload']['build_number']
@@ -97,31 +107,31 @@ async def push_to_releases(context):
     candidates_prefix = get_candidates_prefix(product, version, build_number)
     releases_prefix = get_releases_prefix(product, version)
 
-    creds = context.config['bucket_config'][context.bucket]['credentials']
+    creds = get_creds(context)
     s3_resource = boto3.resource(
         's3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key']
     )
 
-    candidates_keys = list_bucket_objects(context, s3_resource, candidates_prefix)
-    releases_keys = list_bucket_objects(context, s3_resource, releases_prefix)
+    candidates_keys_checksums = list_bucket_objects(context, s3_resource, candidates_prefix)
+    releases_keys_checksums = list_bucket_objects(context, s3_resource, releases_prefix)
 
-    if releases_keys:
+    if releases_keys_checksums:
         log.warning("Destination {} already exists with {} keys".format(
-                    releases_prefix, len(releases_keys)))
+                    releases_prefix, len(releases_keys_checksums)))
 
     # Weed out RELEASE_EXCLUDE matches
-    for k in candidates_keys.keys():
+    for k in candidates_keys_checksums.keys():
         if not matches_exclude(k, RELEASE_EXCLUDE):
             context.artifacts_to_beetmove[k] = k.replace(candidates_prefix, releases_prefix)
         else:
             log.debug("Excluding {}".format(k))
 
-    copy_beets(context, candidates_keys, releases_keys)
+    copy_beets(context, candidates_keys_checksums, releases_keys_checksums)
 
 
 # copy_beets {{{1
-def copy_beets(context, from_keys, to_keys):
-    creds = context.config['bucket_config'][context.bucket]['credentials']
+def copy_beets(context, from_keys_checksums, to_keys_checksums):
+    creds = get_creds(context)
     boto_client = boto3.client(
         's3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key']
     )
@@ -130,20 +140,20 @@ def copy_beets(context, from_keys, to_keys):
         source, destination = item
 
         def copy_key():
-            if destination in to_keys:
+            if destination in to_keys_checksums:
                 # compare md5
-                if from_keys[source] != to_keys[destination]:
+                if from_keys_checksums[source] != to_keys_checksums[destination]:
                     raise ScriptWorkerTaskException(
                         "{} already exists with different content "
                         "(src etag: {}, dest etag: {}), aborting".format(
-                            destination, from_keys[source],
-                            to_keys[destination]
+                            destination, from_keys_checksums[source],
+                            to_keys_checksums[destination]
                         )
                     )
                 else:
                     log.warning(
                         "{} already exists with the same content ({}), "
-                        "skipping copy".format(destination, to_keys[destination])
+                        "skipping copy".format(destination, to_keys_checksums[destination])
                     )
             else:
                 log.info("Copying {} to {}".format(source, destination))

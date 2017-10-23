@@ -87,8 +87,9 @@ def test_get_task_action(scopes, expected, raises):
         assert expected == get_task_action(task, config)
 
 
+# validate_bucket_paths {{{1
 @pytest.mark.parametrize("bucket,path,raises", ((
-    "dep", "pub/devedition/nightly", False
+    "dep", "pub/mobile/nightly", False
 ), (
     "nightly", "pub/firefox/releases", True
 )))

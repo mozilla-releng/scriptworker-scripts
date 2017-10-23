@@ -53,7 +53,6 @@ RESTRICTED_BUCKET_PATHS = {
     'nightly': [
         'pub/mobile/nightly',
         'pub/firefox/nightly',
-        'pub/devedition/nightly',
     ],
     'release': [
         'pub/devedition/candidates',
@@ -64,7 +63,6 @@ RESTRICTED_BUCKET_PATHS = {
         'pub/mobile/releases',
     ],
     'dep': [
-        'pub/devedition/nightly',
         'pub/devedition/candidates',
         'pub/devedition/releases',
         'pub/firefox/nightly',
