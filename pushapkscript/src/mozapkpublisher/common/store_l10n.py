@@ -30,10 +30,10 @@ STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME = {
 }
 
 # API documentation: https://l10n.mozilla-community.org/stores_l10n/documentation/
-_L10N_API_URL = 'https://l10n.mozilla-community.org/stores_l10n/api/v1'
-_ALL_LOCALES_URL = _L10N_API_URL + '/{product}/listing/{channel}/'
-_LOCALE_URL = _L10N_API_URL + '/{product}/translation/{channel}/{locale}/'
-_MAPPING_URL = _L10N_API_URL + '/google/localesmapping/?reverse'
+L10N_API_URL = 'https://l10n.mozilla-community.org/stores_l10n/api/v1'
+_ALL_LOCALES_URL = L10N_API_URL + '/{product}/listing/{channel}/'
+_LOCALE_URL = L10N_API_URL + '/{product}/translation/{channel}/{locale}/'
+_MAPPING_URL = L10N_API_URL + '/google/localesmapping/?reverse'
 
 # Because these scripts are meant to run and exit, we cache the stores_l10n results
 # in these globals
