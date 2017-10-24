@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.0.0] - 2017-10-24
+### Added
+- added `PROMOTION_ACTIONS` and `is_promotion_action`
+
+### Changed
+- Renamed `is_action_a_release_shipping` to `is_release_action`
+- removed `push-to-candidates` from `RELEASE_ACTIONS`
+
+### Fixed
+- Only use the release task schema for `RELEASE_ACTIONS`; this was breaking fennec beetmover candidates
+
 ## [2.0.0] - 2017-10-23
 ### Added
 - 100% test coverage
