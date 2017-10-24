@@ -36,7 +36,7 @@ def test_validate_task(context):
     validate_task_schema(context)
 
     # release validation
-    context.task['scopes'] = ["project:releng:beetmover:action:push-to-candidates"]
+    context.task['scopes'] = ["project:releng:beetmover:action:push-to-releases"]
     context.task['payload'] = {
         'product': 'fennec',
         'build_number': 1,
