@@ -9,8 +9,10 @@ import pprint
 import re
 import yaml
 
-from beetmoverscript.constants import (HASH_BLOCK_SIZE, STAGE_PLATFORM_MAP,
-                                       TEMPLATE_KEY_PLATFORMS, RELEASE_ACTIONS)
+from beetmoverscript.constants import (
+    HASH_BLOCK_SIZE, STAGE_PLATFORM_MAP, TEMPLATE_KEY_PLATFORMS,
+    RELEASE_ACTIONS, PROMOTION_ACTIONS
+)
 
 log = logging.getLogger(__name__)
 
@@ -51,11 +53,18 @@ def write_file(path, contents):
         fh.write(contents)
 
 
-def is_action_a_release_shipping(action):
-    """Function to return boolean if we're shipping a release as opposed to a
+def is_release_action(action):
+    """Function to return boolean if we're publishing a release as opposed to a
     nightly release or something else. Does that by checking the action type.
     """
     return action in RELEASE_ACTIONS
+
+
+def is_promotion_action(action):
+    """Function to return boolean if we're promoting a release as opposed to a
+    nightly or something else. Does that by checking the action type.
+    """
+    return action in PROMOTION_ACTIONS
 
 
 def generate_beetmover_template_args(context):
@@ -76,7 +85,7 @@ def generate_beetmover_template_args(context):
         "partials": get_partials_props(task),
     }
 
-    if is_action_a_release_shipping(context.action):
+    if is_promotion_action(context.action):
         tmpl_args["build_number"] = task['payload']['build_number']
         tmpl_args["version"] = task['payload']['version']
 

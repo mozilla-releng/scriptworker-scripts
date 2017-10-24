@@ -76,8 +76,11 @@ RESTRICTED_BUCKET_PATHS = {
 
 # actions that imply actual releases, hence the need of `build_number` and
 # `version`
-RELEASE_ACTIONS = (
+PROMOTION_ACTIONS = (
     'push-to-candidates',
+    'push-to-releases',
+)
+RELEASE_ACTIONS = (
     'push-to-releases',
 )
 
