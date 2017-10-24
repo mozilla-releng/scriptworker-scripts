@@ -78,7 +78,6 @@ RESTRICTED_BUCKET_PATHS = {
 # `version`
 PROMOTION_ACTIONS = (
     'push-to-candidates',
-    'push-to-releases',
 )
 RELEASE_ACTIONS = (
     'push-to-releases',

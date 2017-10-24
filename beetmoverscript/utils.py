@@ -85,7 +85,7 @@ def generate_beetmover_template_args(context):
         "partials": get_partials_props(task),
     }
 
-    if is_promotion_action(context.action):
+    if is_promotion_action(context.action) or is_release_action(context.action):
         tmpl_args["build_number"] = task['payload']['build_number']
         tmpl_args["version"] = task['payload']['version']
 

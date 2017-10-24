@@ -133,13 +133,13 @@ def test_beetmover_template_args_generation_release(context):
     assert template_args == expected_template_args
 
 
-# is_release_action is_promotion_aciton {{{1
+# is_release_action is_promotion_action {{{1
 @pytest.mark.parametrize("action,release,promotion", ((
     'push-to-nightly', False, False,
 ), (
     'push-to-candidates', False, True,
 ), (
-    'push-to-releases', True, True,
+    'push-to-releases', True, False,
 )))
 def test_is_action_release_or_promotion(action, release, promotion):
     assert is_release_action(action) is release
