@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.1.0] - 2017-10-26
+### Added
+- `PRODUCT_TO_PATH` to map `fennec` to `pub/mobile/`
+- `get_bucket_name` to get the aws bucket name from the bucket nick
+
+### Fixed
+- `bucket.objects.filter` takes kwargs, not an arg.
+- used the aws bucket name instead of the bucket nick for boto3 operations
+
 ## [3.0.0] - 2017-10-24
 ### Added
 - added `PROMOTION_ACTIONS` and `is_promotion_action`
