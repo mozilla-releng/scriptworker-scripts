@@ -107,3 +107,9 @@ RELEASE_EXCLUDE = (
 )
 
 CACHE_CONTROL_MAXAGE = 3600 * 4
+
+PRODUCT_TO_PATH = {
+    'mobile': 'pub/mobile/',
+    'fennec': 'pub/mobile/',
+    'firefox': 'pub/firefox/',
+}
