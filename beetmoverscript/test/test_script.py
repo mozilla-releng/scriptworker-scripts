@@ -35,7 +35,7 @@ assert noop_async  # silence flake8
 async def test_push_to_releases(context, mocker, releases_keys):
     context.task = {
         "payload": {
-            "product": "mobile",
+            "product": "fennec",
             "build_number": 33,
             "version": "99.0b44"
         }
@@ -83,19 +83,20 @@ def test_copy_beets(context, mocker, releases_keys, raises):
         "from1": "from1_md5",
         "from2": "from2_md5",
     }
+    context.bucket_name = "this-is-a-fake-bucket"
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
             copy_beets(context, candidates_keys, releases_keys)
     else:
         copy_beets(context, candidates_keys, releases_keys)
         a = {
-            'Bucket': context.bucket,
-            'CopySource': {'Bucket': context.bucket, 'Key': 'from1'},
+            'Bucket': context.bucket_name,
+            'CopySource': {'Bucket': context.bucket_name, 'Key': 'from1'},
             'Key': 'to1',
         }
         b = {
-            'Bucket': context.bucket,
-            'CopySource': {'Bucket': context.bucket, 'Key': 'from2'},
+            'Bucket': context.bucket_name,
+            'CopySource': {'Bucket': context.bucket_name, 'Key': 'from2'},
             'Key': 'to2',
         }
         if releases_keys:
@@ -114,7 +115,7 @@ def test_list_bucket_objects():
     def fake_bucket(_):
         return bucket
 
-    def fake_filter(_):
+    def fake_filter(**kwargs):
         one = mock.MagicMock()
         two = mock.MagicMock()
         one.key = "one"

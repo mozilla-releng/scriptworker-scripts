@@ -200,3 +200,7 @@ def matches_exclude(keyname, excludes):
 
 def get_creds(context):
     return context.config['bucket_config'][context.bucket]['credentials']
+
+
+def get_bucket_name(context, product):
+    return context.config['bucket_config'][context.bucket]['buckets'][product]
