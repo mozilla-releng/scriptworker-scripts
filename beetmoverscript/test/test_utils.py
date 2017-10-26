@@ -174,8 +174,8 @@ def test_get_partials_props(taskjson, expected):
 # alter_unpretty_contents {{{1
 def test_alter_unpretty_contents(context, mocker):
     context.artifacts_to_beetmove = {
-        'loc1': {'target.test_packages.json': 'foo'},
-        'loc2': {'target.test_packages.json': 'foo'},
+        'loc1': {'target.test_packages.json': 'mobile'},
+        'loc2': {'target.test_packages.json': 'mobile'},
     }
 
     mappings = {
@@ -190,7 +190,7 @@ def test_alter_unpretty_contents(context, mocker):
     }
 
     def fake_json(*args, **kwargs):
-        return {'foo': ['bar']}
+        return {'mobile': ['bar']}
 
     mocker.patch.object(butils, 'load_json', new=fake_json)
     mocker.patch.object(butils, 'write_json', new=fake_json)
@@ -199,7 +199,7 @@ def test_alter_unpretty_contents(context, mocker):
 
 # get_candidates_prefix {{{1
 @pytest.mark.parametrize("product,version,build_number,expected", ((
-    "foo", "bar", "baz", "pub/foo/candidates/bar-candidates/buildbaz/"
+    "fennec", "bar", "baz", "pub/mobile/candidates/bar-candidates/buildbaz/"
 ), (
     "mobile", "99.0a3", 14, "pub/mobile/candidates/99.0a3-candidates/build14/"
 )))
@@ -209,9 +209,9 @@ def test_get_candidates_prefix(product, version, build_number, expected):
 
 # get_releases_prefix {{{1
 @pytest.mark.parametrize("product,version,expected", ((
-    "foo", "bar", "pub/foo/releases/bar/"
+    "firefox", "bar", "pub/firefox/releases/bar/"
 ), (
-    "mobile", "99.0a3", "pub/mobile/releases/99.0a3/"
+    "fennec", "99.0a3", "pub/mobile/releases/99.0a3/"
 )))
 def test_get_releases_prefix(product, version, expected):
     assert get_releases_prefix(product, version) == expected

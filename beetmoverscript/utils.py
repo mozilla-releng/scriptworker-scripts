@@ -11,7 +11,7 @@ import yaml
 
 from beetmoverscript.constants import (
     HASH_BLOCK_SIZE, STAGE_PLATFORM_MAP, TEMPLATE_KEY_PLATFORMS,
-    RELEASE_ACTIONS, PROMOTION_ACTIONS
+    RELEASE_ACTIONS, PROMOTION_ACTIONS, PRODUCT_TO_PATH
 )
 
 log = logging.getLogger(__name__)
@@ -182,13 +182,13 @@ def alter_unpretty_contents(context, blobs, mappings):
 
 
 def get_candidates_prefix(product, version, build_number):
-    return "pub/{}/candidates/{}-candidates/build{}/".format(
-        product, version, str(build_number)
+    return "{}candidates/{}-candidates/build{}/".format(
+        PRODUCT_TO_PATH[product], version, str(build_number)
     )
 
 
 def get_releases_prefix(product, version):
-    return "pub/{}/releases/{}/".format(product, version)
+    return "{}releases/{}/".format(PRODUCT_TO_PATH[product], version)
 
 
 def matches_exclude(keyname, excludes):
@@ -200,3 +200,7 @@ def matches_exclude(keyname, excludes):
 
 def get_creds(context):
     return context.config['bucket_config'][context.bucket]['credentials']
+
+
+def get_bucket_name(context, product):
+    return context.config['bucket_config'][context.bucket]['buckets'][product]

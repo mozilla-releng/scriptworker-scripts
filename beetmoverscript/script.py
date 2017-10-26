@@ -31,7 +31,7 @@ from beetmoverscript.task import (
 from beetmoverscript.utils import (
     load_json, get_hash, get_release_props, generate_beetmover_manifest,
     get_size, alter_unpretty_contents, matches_exclude,
-    get_candidates_prefix, get_releases_prefix, get_creds
+    get_candidates_prefix, get_releases_prefix, get_creds, get_bucket_name,
 )
 
 log = logging.getLogger(__name__)
@@ -103,6 +103,7 @@ async def push_to_releases(context):
     product = context.task['payload']['product']
     build_number = context.task['payload']['build_number']
     version = context.task['payload']['version']
+    context.bucket_name = get_bucket_name(context, product)
 
     candidates_prefix = get_candidates_prefix(product, version, build_number)
     releases_prefix = get_releases_prefix(product, version)
@@ -158,8 +159,8 @@ def copy_beets(context, from_keys_checksums, to_keys_checksums):
             else:
                 log.info("Copying {} to {}".format(source, destination))
                 boto_client.copy_object(
-                    Bucket=context.bucket,
-                    CopySource={'Bucket': context.bucket, 'Key': source},
+                    Bucket=context.bucket_name,
+                    CopySource={'Bucket': context.bucket_name, 'Key': source},
                     Key=destination,
                 )
 
@@ -178,8 +179,8 @@ def copy_beets(context, from_keys_checksums, to_keys_checksums):
 def list_bucket_objects(context, s3_resource, prefix):
     """Return a dict of {Key: MD5}"""
     contents = {}
-    bucket = s3_resource.Bucket(context.bucket)
-    for obj in bucket.objects.filter(prefix):
+    bucket = s3_resource.Bucket(context.bucket_name)
+    for obj in bucket.objects.filter(Prefix=prefix):
         contents[obj.key] = obj.e_tag.split("-")[0]
 
     return contents
@@ -351,7 +352,7 @@ async def put(context, url, headers, abs_filename, session=None):
 async def upload_to_s3(context, s3_key, path):
     app = context.release_props['appName'].lower()
     api_kwargs = {
-        'Bucket': context.config['bucket_config'][context.bucket]['buckets'][app],
+        'Bucket': get_bucket_name(context, app),
         'Key': s3_key,
         'ContentType': mimetypes.guess_type(path)[0]
     }
