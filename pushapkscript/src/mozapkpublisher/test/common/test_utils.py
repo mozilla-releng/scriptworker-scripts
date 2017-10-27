@@ -1,7 +1,5 @@
-import itertools
-import pytest
 import requests
-import sys
+import requests_mock
 import tempfile
 
 try:
@@ -20,18 +18,15 @@ def test_load_json_url(monkeypatch):
     response_mock.json.assert_called_once_with()
 
 
-@pytest.mark.skipif(sys.version_info[0] == 3, reason='This mock does not work as expected in Python 3')
 def test_download_file(monkeypatch):
-    response_mock = MagicMock()
-    origin_data = b'a' * 1025
+    with requests_mock.Mocker() as m:
+        origin_data = b'a' * 1025
+        m.get('https://dummy-url.tld/file', content=origin_data)
 
-    response_mock.iter_content = lambda chunk_size: itertools.chain(origin_data)
-    monkeypatch.setattr(requests, 'get', lambda url, stream: response_mock)
-
-    with tempfile.NamedTemporaryFile() as temp_file:
-        download_file('https://dummy-url.tld/file', temp_file.name)
-        temp_file.seek(0)
-        data = temp_file.read()
+        with tempfile.NamedTemporaryFile() as temp_file:
+            download_file('https://dummy-url.tld/file', temp_file.name)
+            temp_file.seek(0)
+            data = temp_file.read()
     assert data == origin_data
 
 
