@@ -1,7 +1,4 @@
-try:
-    from unittest.mock import MagicMock
-except ImportError:
-    from mock import MagicMock
+from unittest.mock import MagicMock
 
 from mozapkpublisher.common import store_l10n, utils
 from mozapkpublisher.common.store_l10n import get_translations_per_google_play_locale_code, \

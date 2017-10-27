@@ -2,10 +2,7 @@ import json
 import pytest
 import sys
 
-try:
-    from unittest.mock import create_autospec
-except ImportError:
-    from mock import create_autospec
+from unittest.mock import create_autospec
 
 from copy import copy
 from tempfile import NamedTemporaryFile

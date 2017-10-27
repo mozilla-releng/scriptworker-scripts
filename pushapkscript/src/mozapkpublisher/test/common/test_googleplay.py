@@ -3,10 +3,7 @@ import pytest
 import random
 import tempfile
 
-try:
-    from unittest.mock import MagicMock
-except ImportError:
-    from mock import MagicMock
+from unittest.mock import MagicMock
 
 from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
 from mozapkpublisher.common.googleplay import add_general_google_play_arguments, EditService, is_package_name_nightly

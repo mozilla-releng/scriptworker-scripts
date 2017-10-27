@@ -2,10 +2,7 @@ import requests
 import requests_mock
 import tempfile
 
-try:
-    from unittest.mock import MagicMock
-except ImportError:
-    from mock import MagicMock
+from unittest.mock import MagicMock
 
 from mozapkpublisher.common.utils import load_json_url, file_sha512sum, download_file
 
