@@ -52,3 +52,17 @@ class ArmVersionCodeTooHigh(LoggedError):
             'ARM build has a higher version code ({}) than the x86 one ({}). For more context about this error,\
 see: https://bugzilla.mozilla.org/show_bug.cgi?id=1338477'.format(arm_version_code, x86_version_code)
         )
+
+
+class NoTranslationGiven(LoggedError):
+    def __init__(self, given_translations):
+        super(NoTranslationGiven, self).__init__(
+            msg='"{}" doesn\'t contain any item to work with'.format(given_translations)
+        )
+
+
+class TranslationMissingData(LoggedError):
+    def __init__(self, locale_name, additional_message):
+        super(TranslationMissingData, self).__init__(
+            msg='Locale "{}" misses some data: {}'.format(locale_name, additional_message)
+        )

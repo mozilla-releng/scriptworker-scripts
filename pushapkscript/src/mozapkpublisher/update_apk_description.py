@@ -44,9 +44,9 @@ def create_or_update_listings(edit_service, package_name, l10n_strings, moz_loca
     for google_play_locale_code, translation in l10n_strings.items():
         edit_service.update_listings(
             google_play_locale_code,
-            full_description=translation.get('long_desc'),
-            short_description=translation.get('short_desc'),
-            title=translation.get('title'),
+            full_description=translation['long_desc'],
+            short_description=translation['short_desc'],
+            title=translation['title'],
         )
     logger.info('Listing updated for {} locale(s)'.format(len(l10n_strings)))
 

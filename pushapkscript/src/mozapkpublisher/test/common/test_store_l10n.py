@@ -1,8 +1,12 @@
+import pytest
+
 from unittest.mock import MagicMock
 
 from mozapkpublisher.common import store_l10n, utils
+from mozapkpublisher.common.exceptions import NoTranslationGiven, TranslationMissingData
 from mozapkpublisher.common.store_l10n import get_translations_per_google_play_locale_code, \
-    _get_list_of_completed_locales, _get_translation, _translate_moz_locate_into_google_play_one
+    check_translations_schema, _get_list_of_completed_locales, _get_translation, \
+    _translate_moz_locate_into_google_play_one
 
 DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE = {
     'en-GB': {
@@ -65,6 +69,26 @@ def test_get_translations_per_google_play_locale_code(monkeypatch):
             'whatsnew': 'Mire a esta caracteristica',
         },
     }
+
+
+@pytest.mark.parametrize('translations', (
+    DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE,
+    {'en-US': {'long_desc': 'missing whatsnew', 'short_desc': 'no whatsnew', 'title': 'No whastnew'}},
+))
+def test_check_translations_schema(translations):
+    check_translations_schema(translations)
+
+
+@pytest.mark.parametrize('translations, exception', (
+    ({}, NoTranslationGiven),
+    ([{'long_desc': 'not a dict', 'name': 'en-US', 'short_desc': 'not dict', 'title': 'Not Dict'}], AttributeError),
+    ({'en-US': {'short_desc': 'no long_desc', 'title': 'No Long Desc'}}, TranslationMissingData),
+    ({'en-US': {'long_desc': 'missing short_desc', 'title': 'No Short Desc'}}, TranslationMissingData),
+    ({'en-US': {'long_desc': 'missing title', 'short_desc': 'no title'}}, TranslationMissingData),
+))
+def test_bad_check_translations_schema(translations, exception):
+    with pytest.raises(exception):
+        check_translations_schema(translations)
 
 
 def test_get_list_of_completed_locales(monkeypatch):

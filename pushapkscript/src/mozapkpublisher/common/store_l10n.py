@@ -1,6 +1,9 @@
 import logging
 
+from voluptuous import Schema, Required, Optional, MultipleInvalid
+
 from mozapkpublisher.common import utils
+from mozapkpublisher.common.exceptions import NoTranslationGiven, TranslationMissingData
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +43,13 @@ _MAPPING_URL = L10N_API_URL + '/google/localesmapping/?reverse'
 _translations_per_google_play_locale_code = None
 _mappings = None
 
+TRANSLATION_SCHEMA = Schema({
+    Required('long_desc'): str,
+    Required('short_desc'): str,
+    Required('title'): str,
+    Optional('whatsnew'): str,
+})
+
 
 def get_translations_per_google_play_locale_code(package_name, moz_locales=None):
     product_details = STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME[package_name]
@@ -50,13 +60,27 @@ def get_translations_per_google_play_locale_code(package_name, moz_locales=None)
 
     _init_full_locales_if_needed(product, channel)
 
-    return _translations_per_google_play_locale_code if moz_locales is None else {
+    translations = _translations_per_google_play_locale_code if moz_locales is None else {
         _translate_moz_locate_into_google_play_one(moz_locale):
         _translations_per_google_play_locale_code[
             _translate_moz_locate_into_google_play_one(moz_locale)
         ]
         for moz_locale in moz_locales
     }
+
+    check_translations_schema(translations)
+    return translations
+
+
+def check_translations_schema(translations):
+    if not translations:
+        raise NoTranslationGiven(translations)
+
+    for locale, translation in translations.items():
+        try:
+            TRANSLATION_SCHEMA(translation)
+        except MultipleInvalid as e:
+            raise TranslationMissingData(locale, e)
 
 
 def _init_full_locales_if_needed(product, channel):

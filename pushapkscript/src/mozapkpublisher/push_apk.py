@@ -97,6 +97,7 @@ class PushAPK(Base):
 
         if self.config.google_play_strings_file:
             l10n_strings = json.load(self.config.google_play_strings_file)
+            store_l10n.check_translations_schema(l10n_strings)
             logger.info('Loaded listings and what\'s new section from "{}"'.format(self.config.google_play_strings_file.name))
         elif self.config.update_google_play_strings_from_store:
             logger.info("Downloading listings and what's new section from L10n Store...")
