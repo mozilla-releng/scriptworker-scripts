@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 
+from pushapkscript.exceptions import TaskVerificationError
 from pushapkscript.googleplay import craft_push_apk_config, get_package_name, get_service_account, get_certificate_path
 
 
@@ -71,6 +72,28 @@ class GooglePlayTest(unittest.TestCase):
         self.context.task['payload']['dry_run'] = False
         config = craft_push_apk_config(self.context, self.apks)
         self.assertFalse(config['dry_run'])
+
+    def test_craft_push_config_forces_dry_run_on_dep_signing(self):
+        self.context.config = {
+            'google_play_accounts': {
+                'dep': {
+                    'service_account': 'dep_account',
+                    'certificate': '/path/to/dep.p12'
+                },
+            }
+        }
+        self.context.task['scopes'] = ['project:releng:googleplay:dep']
+        self.context.task['payload']['dry_run'] = False
+        config = craft_push_apk_config(self.context, self.apks)
+        self.assertTrue(config['dry_run'])
+
+    def test_craft_push_config_raises_error_when_channel_is_not_part_of_config(self):
+        self.context.task['scopes'] = ['project:releng:googleplay:dep']
+        self.assertRaises(TaskVerificationError, craft_push_apk_config, self.context, self.apks)
+
+    def test_craft_push_config_raises_error_when_google_play_accounts_does_not_exist(self):
+        self.context.config = {}
+        self.assertRaises(TaskVerificationError, craft_push_apk_config, self.context, self.apks)
 
     def test_get_google_play_package_name(self):
         self.assertEqual(get_package_name('aurora'), 'org.mozilla.fennec_aurora')

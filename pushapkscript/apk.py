@@ -12,6 +12,7 @@ _EXPECTED_MOZAPKPUBLISHER_ARCHITECTURES_PER_CHANNEL = {
     'aurora': ('armv7_v15', 'x86'),
     'beta': ('armv7_v15', 'x86'),
     'release': ('armv7_v15', 'x86'),
+    'dep': ('armv7_v15', 'x86'),
 }
 
 

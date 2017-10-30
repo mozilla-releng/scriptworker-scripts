@@ -33,7 +33,8 @@ def _check_certificate_via_return_code(return_code, command_output, binary_path,
     if return_code != 0:
         log.critical(command_output)
         raise SignatureError(
-            '{} doesn\'t verify APK "{}". It compared certificate against "{}", located in keystore "{}"'
+            '{} doesn\'t verify APK "{}". It compared certificate against "{}", located in keystore "{}".\
+            Maybe you\'re now allowed to push such APKs on this instance?'
             .format(binary_path, apk_path, certificate_alias, keystore_path)
         )
 
@@ -64,7 +65,8 @@ def _pluck_configuration(context):
     certificate_aliases = context.config.get('jarsigner_certificate_aliases', {
         'aurora': 'nightly',
         'beta': 'nightly',
-        'release': 'release'
+        'release': 'release',
+        'dep': 'dep',
     })
     channel = extract_channel(context.task)
     return binary_path, keystore_path, certificate_aliases, channel

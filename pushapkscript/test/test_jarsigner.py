@@ -18,6 +18,7 @@ class JarSignerTest(unittest.TestCase):
                 'aurora': 'aurora_alias',
                 'beta': 'beta_alias',
                 'release': 'release_alias',
+                'dep': 'dep_alias',
             }
         }
         self.context.task = {
@@ -95,6 +96,7 @@ class JarSignerTest(unittest.TestCase):
                     'aurora': 'aurora_alias',
                     'beta': 'beta_alias',
                     'release': 'release_alias',
+                    'dep': 'dep_alias',
                 },
                 'aurora'
             )
@@ -110,6 +112,7 @@ class JarSignerTest(unittest.TestCase):
                     'aurora': 'nightly',
                     'beta': 'nightly',
                     'release': 'release',
+                    'dep': 'dep',
                 },
                 'aurora'
             )

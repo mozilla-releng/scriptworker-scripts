@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 
 GOOGLE_PLAY_SCOPE_PREFIX = 'project:releng:googleplay:'
-SUPPORTED_CHANNELS = ('aurora', 'beta', 'release')
+SUPPORTED_CHANNELS = ('aurora', 'beta', 'release', 'dep')
 
 
 def extract_channel(task):

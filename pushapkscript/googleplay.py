@@ -1,3 +1,4 @@
+from pushapkscript.exceptions import TaskVerificationError
 from pushapkscript.task import extract_channel
 
 # TODO Change the "aurora" scope to "nightly" so we can use the dict defined in mozapkpublisher
@@ -5,6 +6,8 @@ CHANNEL_TO_PACKAGE_NAME = {
     'aurora': 'org.mozilla.fennec_aurora',
     'beta': 'org.mozilla.firefox_beta',
     'release': 'org.mozilla.firefox',
+    # dep-signing mimics Aurora
+    'dep': 'org.mozilla.fennec_aurora',
 }
 
 
@@ -28,9 +31,9 @@ def craft_push_apk_config(context, apks):
     if payload.get('rollout_percentage'):
         push_apk_config['rollout_percentage'] = payload['rollout_percentage']
 
-    # Don't commit anything, by default. Committed APKs can't be unpublished, unless
-    # you push a newer set of APKs.
-    push_apk_config['dry_run'] = payload.get('dry_run', True)
+    # Don't commit anything by default or if dep-signing is detected. Committed
+    # APKs can't be unpublished, unless you push a newer set of APKs.
+    push_apk_config['dry_run'] = True if channel == 'dep' else payload.get('dry_run', True)
 
     return push_apk_config
 
@@ -48,4 +51,13 @@ def get_certificate_path(context, channel):
 
 
 def _get_play_config(context, channel):
-    return context.config['google_play_accounts'][channel]
+    try:
+        accounts = context.config['google_play_accounts']
+    except KeyError:
+        raise TaskVerificationError('"google_play_accounts" is not part of the configuration')
+
+    try:
+        return accounts[channel]
+    except KeyError:
+        raise TaskVerificationError('Channel "{}" does not exist in the configuration of this instance.\
+    Are you sure you allowed to push such APK?'.format(channel))
