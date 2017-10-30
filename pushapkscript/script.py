@@ -35,11 +35,12 @@ async def async_main(context):
         for artifacts_list in artifacts_per_task_id.values()
         for artifact in artifacts_list
     ]
-    channel = extract_channel(context.task)
-    apks_per_architectures = sort_and_check_apks_per_architectures(all_artifacts, channel)
+    apks_per_architectures = sort_and_check_apks_per_architectures(
+        all_artifacts, channel=extract_channel(context.task)
+    )
 
     log.info('Verifying APKs\' signatures...')
-    [jarsigner.verify(context, apk_path, channel) for apk_path in apks_per_architectures.values()]
+    [jarsigner.verify(context, apk_path) for apk_path in apks_per_architectures.values()]
 
     log.info('Pushing APKs to Google Play Store...')
     publish_to_googleplay(context, apks_per_architectures)

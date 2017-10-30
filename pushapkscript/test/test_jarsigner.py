@@ -20,14 +20,21 @@ class JarSignerTest(unittest.TestCase):
                 'release': 'release_alias',
             }
         }
+        self.context.task = {
+            'scopes': ['project:releng:googleplay:aurora'],
+        }
 
         self.minimal_context = MagicMock()
         self.minimal_context.config = {
             'jarsigner_key_store': '/path/to/keystore',
         }
+        self.minimal_context.task = {
+            'scopes': ['project:releng:googleplay:aurora'],
+        }
 
     def test_verify_should_call_executable_with_right_arguments(self):
         for channel, alias in self.context.config['jarsigner_certificate_aliases'].items():
+            self.context.task['scopes'] = ['project:releng:googleplay:{}'.format(channel)]
             with patch('subprocess.run') as run:
                 run.return_value = MagicMock()
                 run.return_value.returncode = 0
@@ -35,7 +42,7 @@ class JarSignerTest(unittest.TestCase):
                     smk      632 Mon Feb 01 12:54:21 CET 2016 application.ini
                         Digest algorithm: SHA1
                 '''
-                jarsigner.verify(self.context, '/path/to/apk', channel)
+                jarsigner.verify(self.context, '/path/to/apk')
 
                 run.assert_called_with([
                     '/path/to/jarsigner', '-verify', '-strict', '-verbose', '-keystore', '/path/to/keystore', '/path/to/apk', alias
@@ -46,7 +53,7 @@ class JarSignerTest(unittest.TestCase):
             run.return_value = MagicMock()
             run.return_value.returncode = 0
             run.return_value.stdout = 'Digest algorithm: SHA1'
-            jarsigner.verify(self.minimal_context, '/path/to/apk', channel='aurora')
+            jarsigner.verify(self.minimal_context, '/path/to/apk')
 
             run.assert_called_with([
                 'jarsigner', '-verify', '-strict', '-verbose', '-keystore', '/path/to/keystore', '/path/to/apk', 'nightly'
@@ -58,7 +65,7 @@ class JarSignerTest(unittest.TestCase):
             run.return_value.returncode = 1
 
             with self.assertRaises(SignatureError):
-                jarsigner.verify(self.context, '/path/to/apk', channel='aurora')
+                jarsigner.verify(self.context, '/path/to/apk')
 
     def test_raises_error_when_digest_is_not_sha1(self):
         with patch('subprocess.run') as run:
@@ -67,7 +74,7 @@ class JarSignerTest(unittest.TestCase):
             run.return_value.stdout = 'Digest algorithm: SHA256'
 
             with self.assertRaises(SignatureError):
-                jarsigner.verify(self.context, '/path/to/apk', channel='aurora')
+                jarsigner.verify(self.context, '/path/to/apk')
 
     def test_raises_error_when_no_digest_algo_is_returned_by_jarsigner(self):
         with patch('subprocess.run') as run:
@@ -76,7 +83,7 @@ class JarSignerTest(unittest.TestCase):
             run.return_value.stdout = 'Some random output'
 
             with self.assertRaises(SignatureError):
-                jarsigner.verify(self.context, '/path/to/apk', channel='aurora')
+                jarsigner.verify(self.context, '/path/to/apk')
 
     def test_pluck_configuration_sets_every_argument(self):
         self.assertEqual(
@@ -88,7 +95,8 @@ class JarSignerTest(unittest.TestCase):
                     'aurora': 'aurora_alias',
                     'beta': 'beta_alias',
                     'release': 'release_alias',
-                }
+                },
+                'aurora'
             )
         )
 
@@ -102,6 +110,7 @@ class JarSignerTest(unittest.TestCase):
                     'aurora': 'nightly',
                     'beta': 'nightly',
                     'release': 'release',
-                }
+                },
+                'aurora'
             )
         )
