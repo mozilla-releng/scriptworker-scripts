@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.2.0] - 2017-11-6
+### Added
+- all partial mars are moved under new `pub/firefox/nightly/partials/YYYY/MM/{...}-{branch}` and `pub/firefox/nightly/partials/YYYY/MM/{...}-{branch}-l10n` locations
+
+### Fixed
+- locales partial mar are going under their corresponding dated l10n folder, instead of the en-US
+
+### Removed
+- stop publishing partial mars under latest directories for all locales, including `en-US`
+
 ## [3.1.0] - 2017-10-26
 ### Added
 - `PRODUCT_TO_PATH` to map `fennec` to `pub/mobile/`
