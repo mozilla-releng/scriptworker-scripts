@@ -30,9 +30,16 @@ assert noop_async  # silence flake8
 
 
 # push_to_releases {{{1
-@pytest.mark.parametrize("releases_keys", ({}, {"asdf": 1}))
+@pytest.mark.parametrize("candidates_keys,releases_keys,exception_type", ((
+    {"foo.zip": "x", "foo.exe": "y"}, {}, None,
+), (
+    {"foo.zip": "x", "foo.exe": "y"}, {"asdf": 1}, None,
+), (
+    {}, {"asdf": 1}, ScriptWorkerTaskException,
+)))
 @pytest.mark.asyncio
-async def test_push_to_releases(context, mocker, releases_keys):
+async def test_push_to_releases(context, mocker, candidates_keys,
+                                releases_keys, exception_type):
     context.task = {
         "payload": {
             "product": "fennec",
@@ -41,10 +48,7 @@ async def test_push_to_releases(context, mocker, releases_keys):
         }
     }
 
-    objects = [{
-        "foo.zip": "x",
-        "foo.exe": "y",
-    }, releases_keys]
+    objects = [candidates_keys, releases_keys]
 
     def check(_, _2, r):
         assert r == releases_keys
@@ -55,7 +59,12 @@ async def test_push_to_releases(context, mocker, releases_keys):
     mocker.patch.object(boto3, "resource")
     mocker.patch.object(beetmoverscript.script, "list_bucket_objects", new=fake_list)
     mocker.patch.object(beetmoverscript.script, "copy_beets", new=check)
-    await push_to_releases(context)
+
+    if exception_type is not None:
+        with pytest.raises(exception_type):
+            await push_to_releases(context)
+    else:
+        await push_to_releases(context)
 
 
 # copy_beets {{{1

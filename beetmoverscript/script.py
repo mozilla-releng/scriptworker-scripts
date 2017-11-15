@@ -116,6 +116,12 @@ async def push_to_releases(context):
     candidates_keys_checksums = list_bucket_objects(context, s3_resource, candidates_prefix)
     releases_keys_checksums = list_bucket_objects(context, s3_resource, releases_prefix)
 
+    if not candidates_keys_checksums:
+        raise ScriptWorkerTaskException(
+            "No artifacts to copy from {} so there is no reason to continue.".format(
+                candidates_prefix)
+        )
+
     if releases_keys_checksums:
         log.warning("Destination {} already exists with {} keys".format(
                     releases_prefix, len(releases_keys_checksums)))

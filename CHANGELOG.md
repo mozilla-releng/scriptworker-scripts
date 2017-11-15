@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## TODO
+### Added
+-
+### Changed
+-
+
+### Fixed
+- push-to-releases behavior now exits if no files are to be copied
+
+### Removed
+-
+
 ## [3.2.0] - 2017-11-6
 ### Added
 - all partial mars are moved under new `pub/firefox/nightly/partials/YYYY/MM/{...}-{branch}` and `pub/firefox/nightly/partials/YYYY/MM/{...}-{branch}-l10n` locations
