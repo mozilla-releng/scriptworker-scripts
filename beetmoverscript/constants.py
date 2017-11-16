@@ -91,7 +91,7 @@ RELEASE_ACTIONS = (
 RELEASE_EXCLUDE = (
     r"^.*tests.*$",
     r"^.*crashreporter.*$",
-    r"^.*[^k]\.zip(\.asc)?$",
+    r"^(?!.*jsshell-).*\.zip(\.asc)?$",
     r"^.*\.log$",
     r"^.*\.txt$",
     r"^.*/partner-repacks.*$",
