@@ -38,9 +38,8 @@ def add_general_google_play_arguments(parser):
     parser.add_argument('--credentials', dest='google_play_credentials_file', type=argparse.FileType(mode='rb'),
                         default='key.p12', help='The p12 authentication file', required=True)
 
-    parser.add_argument('--dry-run', action='store_true',
-                        help='''Perform every operation of the transation, except committing. No data will be
-stored on Google Play. Use this option if you want to test the script with the same data more than once.''')
+    parser.add_argument('--commit', action='store_true',
+                        help='Commit changes onto Google Play. This action cannot be reverted.')
 
 
 def is_package_name_nightly(package_name):
@@ -50,11 +49,11 @@ def is_package_name_nightly(package_name):
 
 
 class EditService(object):
-    def __init__(self, service_account, credentials_file_path, package_name, dry_run=True):
+    def __init__(self, service_account, credentials_file_path, package_name, commit=False):
         general_service = _connect(service_account, credentials_file_path)
         self._service = general_service.edits()
         self._package_name = package_name
-        self._dry_run = dry_run
+        self._commit = commit
         self.start_new_transaction()
 
     def start_new_transaction(self):
@@ -72,12 +71,12 @@ class EditService(object):
 
     @transaction_required
     def commit_transaction(self):
-        if not self._dry_run:
+        if self._commit:
             self._service.commit(editId=self._edit_id, packageName=self._package_name).execute()
             logger.info('Changes committed')
             logger.debug('edit_id "{}" for package "{}" has been committed'.format(self._edit_id, self._package_name))
         else:
-            logger.warn('Dry run option was given, transaction not committed.')
+            logger.warn('`commit` option was not given. Transaction not committed.')
 
         self._edit_id = None
 

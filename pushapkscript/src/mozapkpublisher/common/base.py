@@ -23,7 +23,7 @@ class Base(object):
 
     @staticmethod
     def _convert_dict_into_args(dict_):
-        # For instance "dry_run" being True means the argument should be added to the command line.
+        # For instance "commit" being True means the argument should be added to the command line.
         dict_without_deactivated_unary_arguments = {key: value for key, value in dict_.items() if value is not False}
 
         dash_dash_dict = {

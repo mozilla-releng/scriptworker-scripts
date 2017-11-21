@@ -28,7 +28,7 @@ class UpdateDescriptionAPK(Base):
     def update_apk_description(self, package_name):
         edit_service = googleplay.EditService(
             self.config.service_account, self.config.google_play_credentials_file.name, self.config.package_name,
-            self.config.dry_run
+            self.config.commit
         )
 
         moz_locales = [self.config.force_locale] if self.config.force_locale else None

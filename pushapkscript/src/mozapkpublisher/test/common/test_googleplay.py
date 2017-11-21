@@ -80,13 +80,13 @@ def test_edit_service_starts_new_transaction_manually(monkeypatch):
     assert edit_service._edit_id != old_edit_id
 
 
-def test_edit_service_supports_dry_run(monkeypatch):
+def test_edit_service_commits_only_when_option_is_provided(monkeypatch):
     edit_service_mock = set_up_edit_service_mock(monkeypatch)
     edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name')
     edit_service.commit_transaction()
     edit_service_mock.commit.assert_not_called()
 
-    edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name', dry_run=False)
+    edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name', commit=True)
     current_edit_id = edit_service._edit_id
     edit_service.commit_transaction()
     edit_service_mock.commit.assert_called_once_with(editId=current_edit_id, packageName='dummy_package_name')

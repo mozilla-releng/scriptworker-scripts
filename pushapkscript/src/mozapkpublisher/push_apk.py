@@ -67,7 +67,7 @@ class PushAPK(Base):
 
         edit_service = googleplay.EditService(
             self.config.service_account, self.config.google_play_credentials_file.name, self.config.package_name,
-            self.config.dry_run
+            self.config.commit
         )
 
         if l10n_strings is not None:
