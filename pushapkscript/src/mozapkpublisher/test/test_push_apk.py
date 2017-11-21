@@ -27,6 +27,8 @@ VALID_CONFIG = {
     'apk_x86': apk_x86.name,
     'apk_armv7_v15': apk_arm.name,
     'update_gp_strings_from_l10n_store': True,
+    'commit': False,
+    'do_not_contact_google_play': False,
 }
 
 
@@ -46,6 +48,13 @@ def edit_service_mock():
 
     _edit_service_mock.upload_apk.side_effect = _generate_version_code
     return _edit_service_mock
+
+
+def set_up_mocks(monkeypatch_, edit_service_mock_):
+    monkeypatch_.setattr(googleplay, 'EditService', lambda _, __, ___, commit, contact_google_play: edit_service_mock_)
+    monkeypatch_.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
+    monkeypatch_.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
+    set_translations_per_google_play_locale_code(monkeypatch_)
 
 
 def test_one_missing_file():
@@ -98,10 +107,7 @@ def test_valid_rollout_percentage(edit_service_mock, monkeypatch):
     config = copy(VALID_CONFIG)
     config['track'] = 'rollout'
 
-    monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
-    monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
-    monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
-    set_translations_per_google_play_locale_code(monkeypatch)
+    set_up_mocks(monkeypatch, edit_service_mock)
     for i in range(0, 101):
         valid_percentage = i
         config['rollout_percentage'] = valid_percentage
@@ -133,10 +139,7 @@ def test_check_and_get_flatten_version_codes():
 
 
 def test_upload_apk(edit_service_mock, monkeypatch):
-    monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
-    monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
-    monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
-    set_translations_per_google_play_locale_code(monkeypatch)
+    set_up_mocks(monkeypatch, edit_service_mock)
 
     PushAPK(VALID_CONFIG).run()
 
@@ -148,10 +151,7 @@ def test_upload_apk(edit_service_mock, monkeypatch):
 
 
 def test_upload_apk_with_locales_updated_from_l10n_store(edit_service_mock, monkeypatch):
-    monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
-    monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
-    monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
-    set_translations_per_google_play_locale_code(monkeypatch)
+    set_up_mocks(monkeypatch, edit_service_mock)
     monkeypatch.setattr(store_l10n, '_translate_moz_locate_into_google_play_one', lambda locale: 'es-US' if locale == 'es-MX' else locale)
 
     config = copy(VALID_CONFIG)
@@ -178,10 +178,7 @@ def test_upload_apk_with_locales_updated_from_l10n_store(edit_service_mock, monk
 
 
 def test_upload_apk_without_locales_updated(edit_service_mock, monkeypatch):
-    monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
-    monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
-    monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
-    set_translations_per_google_play_locale_code(monkeypatch)
+    set_up_mocks(monkeypatch, edit_service_mock)
 
     config = copy(VALID_CONFIG)
     del config['update_gp_strings_from_l10n_store']
@@ -197,9 +194,7 @@ def test_upload_apk_without_locales_updated(edit_service_mock, monkeypatch):
 
 
 def test_upload_apk_with_locales_updated_from_file(edit_service_mock, monkeypatch):
-    monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____: edit_service_mock)
-    monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
-    monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
+    set_up_mocks(monkeypatch, edit_service_mock)
 
     config = copy(VALID_CONFIG)
     del config['update_gp_strings_from_l10n_store']
@@ -231,6 +226,20 @@ def test_create_or_update_whats_new(edit_service_mock, monkeypatch):
         DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE
     )
     assert edit_service_mock.update_whats_new.call_count == 3
+
+
+def test_do_not_contact_google_play_flag_does_not_request_google_play(monkeypatch):
+    monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
+    monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
+    set_translations_per_google_play_locale_code(monkeypatch)
+
+    config = copy(VALID_CONFIG)
+    config['do_not_contact_google_play'] = True
+
+    PushAPK(config).run()
+    # Checks are done by the fact that Google Play doesn't error out. In fact, we
+    # provide dummy data. If Google Play was reached, it would have failed at the
+    # authentication step
 
 
 def test_main(monkeypatch):

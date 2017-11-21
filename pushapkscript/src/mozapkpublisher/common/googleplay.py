@@ -16,8 +16,10 @@ import argparse
 import httplib2
 import logging
 
-from oauth2client.service_account import ServiceAccountCredentials
 from apiclient.discovery import build
+from oauth2client.service_account import ServiceAccountCredentials
+# HACK: importing mock in production is useful for option `--do-not-contact-google-play`
+from unittest.mock import MagicMock
 
 from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
 from mozapkpublisher.common.store_l10n import STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME
@@ -36,10 +38,14 @@ def add_general_google_play_arguments(parser):
 
     parser.add_argument('--service-account', help='The service account email', required=True)
     parser.add_argument('--credentials', dest='google_play_credentials_file', type=argparse.FileType(mode='rb'),
-                        default='key.p12', help='The p12 authentication file', required=True)
+                        help='The p12 authentication file', required=True)
 
     parser.add_argument('--commit', action='store_true',
                         help='Commit changes onto Google Play. This action cannot be reverted.')
+    parser.add_argument('--do-not-contact-google-play', action='store_false', dest='contact_google_play',
+                        help='''Prevent any request to reach Google Play. Use this option if you want to run the script
+without any valid credentials nor valid APKs. In fact, Google Play may error out at the first invalid piece of data sent.
+--service-account and --credentials must still be provided (you can just fill them with random string and file).''')
 
 
 def is_package_name_nightly(package_name):
@@ -49,9 +55,15 @@ def is_package_name_nightly(package_name):
 
 
 class EditService(object):
-    def __init__(self, service_account, credentials_file_path, package_name, commit=False):
-        general_service = _connect(service_account, credentials_file_path)
-        self._service = general_service.edits()
+    def __init__(self, service_account, credentials_file_path, package_name, commit=False, contact_google_play=True):
+        self._contact_google_play = contact_google_play
+        if self._contact_google_play:
+            general_service = _connect(service_account, credentials_file_path)
+            self._service = general_service.edits()
+        else:
+            self._service = _craft_google_play_service_mock()
+            logger.warn('`--do-not-contact-google-play` option was given. Not a single request to Google Play will be made!')
+
         self._package_name = package_name
         self._commit = commit
         self.start_new_transaction()
@@ -130,6 +142,33 @@ class EditService(object):
             language, apk_version_code, whats_new
         ))
         logger.debug(u'Apk listing response: {}'.format(response))
+
+
+def _craft_google_play_service_mock():
+    edit_service_mock = MagicMock()
+
+    edit_service_mock.insert = lambda *args, **kwargs: _ExecuteDummy({'id': 'fake-transaction-id'})
+    edit_service_mock.commit = lambda *args, **kwargs: _ExecuteDummy(None)
+
+    apks_mock = MagicMock()
+    apks_mock.upload = lambda *args, **kwargs: _ExecuteDummy({'versionCode': 'fake-version-code'})
+    edit_service_mock.apks = lambda *args, **kwargs: apks_mock
+
+    update_mock = MagicMock()
+    update_mock.update = lambda *args, **kwargs: _ExecuteDummy('fake-update-response')
+    edit_service_mock.tracks = lambda *args, **kwargs: update_mock
+    edit_service_mock.listings = lambda *args, **kwargs: update_mock
+    edit_service_mock.apklistings = lambda *args, **kwargs: update_mock
+
+    return edit_service_mock
+
+
+class _ExecuteDummy():
+    def __init__(self, return_value):
+        self._return_value = return_value
+
+    def execute(self):
+        return self._return_value
 
 
 def _connect(service_account, credentials_file_path):

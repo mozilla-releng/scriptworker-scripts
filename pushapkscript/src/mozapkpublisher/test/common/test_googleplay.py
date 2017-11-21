@@ -92,6 +92,25 @@ def test_edit_service_commits_only_when_option_is_provided(monkeypatch):
     edit_service_mock.commit.assert_called_once_with(editId=current_edit_id, packageName='dummy_package_name')
 
 
+def test_edit_service_is_allowed_to_not_make_a_single_call_to_google_play(monkeypatch):
+    edit_service_mock = set_up_edit_service_mock(monkeypatch)
+    edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name', commit=True, contact_google_play=False)
+    upload_apk_result = edit_service.upload_apk(apk_path='/path/to/dummy.apk')
+    edit_service.update_listings(
+        language='some_language', title='some_title', full_description='some_description', short_description='some_desc'
+    )
+    edit_service.update_track(track='some_track', version_codes=['1', '2'])
+    edit_service.update_whats_new(language='some_language', apk_version_code='some_version_code', whats_new='some_text')
+    edit_service.commit_transaction()
+
+    assert upload_apk_result == {'versionCode': 'fake-version-code'}    # Value set when contact_google_play is False
+    edit_service_mock.apks().upload.assert_not_called()
+    edit_service_mock.apklistings().update.assert_not_called()
+    edit_service_mock.tracks().update.assert_not_called()
+    edit_service_mock.apklistings().update.assert_not_called()
+    edit_service_mock.commit.assert_not_called()
+
+
 def test_upload_apk_returns_files_metadata(monkeypatch):
     edit_mock = set_up_edit_service_mock(monkeypatch)
     edit_mock.apks().upload().execute.return_value = {

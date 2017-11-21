@@ -67,7 +67,7 @@ class PushAPK(Base):
 
         edit_service = googleplay.EditService(
             self.config.service_account, self.config.google_play_credentials_file.name, self.config.package_name,
-            self.config.commit
+            commit=self.config.commit, contact_google_play=self.config.contact_google_play
         )
 
         if l10n_strings is not None:
@@ -136,7 +136,10 @@ def _check_apks_version_codes_are_correctly_ordered(apks):
     # See https://bugzilla.mozilla.org/show_bug.cgi?id=1338477 for more context
     x86_version_code = apks['x86']['version_code']
     arm_version_code = apks['armv7_v15']['version_code']
-    if x86_version_code <= arm_version_code:
+    # Don't raise error if version code is the one provided by --do-not-contact-google-play
+    if 'fake-version-code' in (x86_version_code, arm_version_code):
+        logger.warn('Not comparing version codes as fake ones were used')
+    elif x86_version_code <= arm_version_code:
         raise ArmVersionCodeTooHigh(arm_version_code, x86_version_code)
 
 
