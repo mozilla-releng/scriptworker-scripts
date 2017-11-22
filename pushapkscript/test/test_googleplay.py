@@ -46,7 +46,7 @@ class GooglePlayTest(unittest.TestCase):
             self.assertEqual(craft_push_apk_config(self.context, self.apks), {
                 'service_account': '{}_account'.format(channel),
                 'credentials': '/path/to/{}.p12'.format(channel),
-                'dry_run': True,
+                'commit': False,
                 'track': 'alpha',
                 'package_name': package_name,
                 'apk_x86': '/path/to/x86.apk',
@@ -59,7 +59,7 @@ class GooglePlayTest(unittest.TestCase):
         self.assertEqual(craft_push_apk_config(self.context, self.apks), {
             'service_account': 'release_account',
             'credentials': '/path/to/release.p12',
-            'dry_run': True,
+            'commit': False,
             'track': 'rollout',
             'rollout_percentage': 10,
             'package_name': 'org.mozilla.firefox',
@@ -69,23 +69,9 @@ class GooglePlayTest(unittest.TestCase):
 
     def test_craft_push_config_allows_committing_apks(self):
         self.context.task['scopes'] = ['project:releng:googleplay:aurora']
-        self.context.task['payload']['dry_run'] = False
+        self.context.task['payload']['commit'] = True
         config = craft_push_apk_config(self.context, self.apks)
-        self.assertFalse(config['dry_run'])
-
-    def test_craft_push_config_forces_dry_run_on_dep_signing(self):
-        self.context.config = {
-            'google_play_accounts': {
-                'dep': {
-                    'service_account': 'dep_account',
-                    'certificate': '/path/to/dep.p12'
-                },
-            }
-        }
-        self.context.task['scopes'] = ['project:releng:googleplay:dep']
-        self.context.task['payload']['dry_run'] = False
-        config = craft_push_apk_config(self.context, self.apks)
-        self.assertTrue(config['dry_run'])
+        self.assertTrue(config['commit'])
 
     def test_craft_push_config_raises_error_when_channel_is_not_part_of_config(self):
         self.context.task['scopes'] = ['project:releng:googleplay:dep']

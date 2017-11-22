@@ -99,7 +99,7 @@ class MainTest(unittest.TestCase):
             'package_name': 'org.mozilla.fennec_aurora',
             'service_account': 'dummy-service-account@iam.gserviceaccount.com',
             'track': 'alpha',
-            'dry_run': True,
+            'commit': False,
         })
 
     @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
@@ -118,5 +118,5 @@ class MainTest(unittest.TestCase):
             'service_account': 'dummy-service-account@iam.gserviceaccount.com',
             'track': 'rollout',
             'rollout_percentage': 25,
-            'dry_run': True,
+            'commit': False,
         })

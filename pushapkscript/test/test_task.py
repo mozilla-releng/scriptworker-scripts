@@ -59,7 +59,7 @@ class TaskTest(unittest.TestCase):
                 }
                 ],
                 "google_play_track": "production",
-                "dry_run": False
+                "commit": True
             },
             "metadata": {
                 "owner": "r@m.c",

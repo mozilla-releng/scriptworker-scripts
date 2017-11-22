@@ -31,9 +31,9 @@ def craft_push_apk_config(context, apks):
     if payload.get('rollout_percentage'):
         push_apk_config['rollout_percentage'] = payload['rollout_percentage']
 
-    # Don't commit anything by default or if dep-signing is detected. Committed
-    # APKs can't be unpublished, unless you push a newer set of APKs.
-    push_apk_config['dry_run'] = True if channel == 'dep' else payload.get('dry_run', True)
+    # Don't commit anything by default. Committed APKs can't be unpublished,
+    # unless you push a newer set of APKs.
+    push_apk_config['commit'] = payload.get('commit', False)
 
     return push_apk_config
 
