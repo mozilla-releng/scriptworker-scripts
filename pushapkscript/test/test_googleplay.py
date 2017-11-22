@@ -2,7 +2,8 @@ import unittest
 from unittest.mock import MagicMock
 
 from pushapkscript.exceptions import TaskVerificationError
-from pushapkscript.googleplay import craft_push_apk_config, get_package_name, get_service_account, get_certificate_path
+from pushapkscript.googleplay import craft_push_apk_config, get_package_name, get_service_account, get_certificate_path, \
+    _get_play_config
 
 
 class GooglePlayTest(unittest.TestCase):
@@ -108,3 +109,16 @@ class GooglePlayTest(unittest.TestCase):
         self.assertEqual(get_certificate_path(self.context, 'aurora'), '/path/to/aurora.p12')
         self.assertEqual(get_certificate_path(self.context, 'beta'), '/path/to/beta.p12')
         self.assertEqual(get_certificate_path(self.context, 'release'), '/path/to/release.p12')
+
+    def test_get_play_config(self):
+        self.assertEqual(_get_play_config(self.context, 'aurora'), {
+            'service_account': 'aurora_account', 'certificate': '/path/to/aurora.p12'
+        })
+
+        self.assertRaises(TaskVerificationError, _get_play_config, self.context, 'non-existing-channel')
+
+        class FakeContext:
+            config = {}
+
+        context_without_any_account = FakeContext()
+        self.assertRaises(TaskVerificationError, _get_play_config, context_without_any_account, 'whatever-channel')
