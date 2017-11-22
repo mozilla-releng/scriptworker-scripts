@@ -2,17 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## TODO
-### Added
--
+## [3.3.0] - 2017-11-22
 ### Changed
--
+- jsshell zip files are now to be copied too to from candidates -> releases
 
 ### Fixed
-- push-to-releases behavior now exits if no files are to be copied
-
-### Removed
--
+- push-to-releases behavior now throws an error if no files are to be copied
 
 ## [3.2.0] - 2017-11-6
 ### Added
