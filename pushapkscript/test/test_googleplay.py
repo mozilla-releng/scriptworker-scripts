@@ -12,15 +12,19 @@ class GooglePlayTest(unittest.TestCase):
             'google_play_accounts': {
                 'aurora': {
                     'service_account': 'aurora_account',
-                    'certificate': '/path/to/aurora.p12'
+                    'certificate': '/path/to/aurora.p12',
                 },
                 'beta': {
                     'service_account': 'beta_account',
-                    'certificate': '/path/to/beta.p12'
+                    'certificate': '/path/to/beta.p12',
                 },
                 'release': {
                     'service_account': 'release_account',
-                    'certificate': '/path/to/release.p12'
+                    'certificate': '/path/to/release.p12',
+                },
+                'dep': {
+                    'service_account': 'dummy_dep',
+                    'certificate': '/path/to/dummy_non_p12_file',
                 },
             },
         }
@@ -67,6 +71,15 @@ class GooglePlayTest(unittest.TestCase):
             'apk_arm_v15': '/path/to/arm_v15.apk',
         })
 
+    def test_craft_push_config_allows_to_contact_google_play_or_not(self):
+        self.context.task['scopes'] = ['project:releng:googleplay:aurora']
+        config = craft_push_apk_config(self.context, self.apks)
+        self.assertNotIn('do_not_contact_google_play', config)
+
+        self.context.task['scopes'] = ['project:releng:googleplay:dep']
+        config = craft_push_apk_config(self.context, self.apks)
+        self.assertTrue(config['do_not_contact_google_play'])
+
     def test_craft_push_config_allows_committing_apks(self):
         self.context.task['scopes'] = ['project:releng:googleplay:aurora']
         self.context.task['payload']['commit'] = True
@@ -74,7 +87,7 @@ class GooglePlayTest(unittest.TestCase):
         self.assertTrue(config['commit'])
 
     def test_craft_push_config_raises_error_when_channel_is_not_part_of_config(self):
-        self.context.task['scopes'] = ['project:releng:googleplay:dep']
+        self.context.task['scopes'] = ['project:releng:googleplay:non_exiting_channel']
         self.assertRaises(TaskVerificationError, craft_push_apk_config, self.context, self.apks)
 
     def test_craft_push_config_raises_error_when_google_play_accounts_does_not_exist(self):

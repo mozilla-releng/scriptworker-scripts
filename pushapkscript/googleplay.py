@@ -10,6 +10,8 @@ CHANNEL_TO_PACKAGE_NAME = {
     'dep': 'org.mozilla.fennec_aurora',
 }
 
+KNOWN_PRODUCTION_CHANNELS = ('aurora', 'beta', 'release')
+
 
 def publish_to_googleplay(context, apks):
     from mozapkpublisher.push_apk import PushAPK
@@ -30,6 +32,10 @@ def craft_push_apk_config(context, apks):
     push_apk_config['track'] = payload['google_play_track']
     if payload.get('rollout_percentage'):
         push_apk_config['rollout_percentage'] = payload['rollout_percentage']
+
+    # Only known production channels are allowed to connect to Google Play
+    if channel not in KNOWN_PRODUCTION_CHANNELS:
+        push_apk_config['do_not_contact_google_play'] = True
 
     # Don't commit anything by default. Committed APKs can't be unpublished,
     # unless you push a newer set of APKs.
