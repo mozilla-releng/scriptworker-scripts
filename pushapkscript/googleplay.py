@@ -37,9 +37,10 @@ def craft_push_apk_config(context, apks):
     if channel not in KNOWN_PRODUCTION_CHANNELS:
         push_apk_config['do_not_contact_google_play'] = True
 
-    # Don't commit anything by default. Committed APKs can't be unpublished,
-    # unless you push a newer set of APKs.
-    push_apk_config['commit'] = payload.get('commit', False)
+    # TODO Configure this value dynamically in Bug 1385401
+    push_apk_config['update_gp_strings_from_l10n_store'] = True
+
+    push_apk_config['commit'] = should_commit_transaction(context)
 
     return push_apk_config
 
@@ -67,3 +68,15 @@ def _get_play_config(context, channel):
     except KeyError:
         raise TaskVerificationError('Channel "{}" does not exist in the configuration of this instance.\
     Are you sure you allowed to push such APK?'.format(channel))
+
+
+def is_allowed_to_push_to_google_play(context):
+    channel = extract_channel(context.task)
+    return channel in KNOWN_PRODUCTION_CHANNELS
+
+
+def should_commit_transaction(context):
+    payload = context.task['payload']
+    # Don't commit anything by default. Committed APKs can't be unpublished,
+    # unless you push a newer set of APKs.
+    return payload.get('commit', False)

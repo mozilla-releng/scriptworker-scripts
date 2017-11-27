@@ -100,6 +100,7 @@ class MainTest(unittest.TestCase):
             'service_account': 'dummy-service-account@iam.gserviceaccount.com',
             'track': 'alpha',
             'commit': False,
+            'update_gp_strings_from_l10n_store': True,
         })
 
     @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
@@ -119,4 +120,5 @@ class MainTest(unittest.TestCase):
             'track': 'rollout',
             'rollout_percentage': 25,
             'commit': False,
+            'update_gp_strings_from_l10n_store': True,
         })

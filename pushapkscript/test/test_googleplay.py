@@ -56,6 +56,7 @@ class GooglePlayTest(unittest.TestCase):
                 'package_name': package_name,
                 'apk_x86': '/path/to/x86.apk',
                 'apk_arm_v15': '/path/to/arm_v15.apk',
+                'update_gp_strings_from_l10n_store': True,
             })
 
     def test_craft_push_config_allows_rollout_percentage(self):
@@ -70,6 +71,7 @@ class GooglePlayTest(unittest.TestCase):
             'package_name': 'org.mozilla.firefox',
             'apk_x86': '/path/to/x86.apk',
             'apk_arm_v15': '/path/to/arm_v15.apk',
+            'update_gp_strings_from_l10n_store': True,
         })
 
     def test_craft_push_config_allows_to_contact_google_play_or_not(self):
