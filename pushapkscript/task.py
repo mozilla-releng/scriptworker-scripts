@@ -19,9 +19,8 @@ def extract_channel(task):
         if s.startswith(GOOGLE_PLAY_SCOPE_PREFIX)
     ]
 
-    log.info('Channel: %s', channels)
     if len(channels) != 1:
-        raise TaskVerificationError('Only one channel can be used')
+        raise TaskVerificationError('Only one channel can be used. Channels found: {}'.format(channels))
 
     channel = channels[0]
     if channel not in SUPPORTED_CHANNELS:

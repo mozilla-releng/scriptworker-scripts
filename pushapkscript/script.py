@@ -17,7 +17,7 @@ from pushapkscript import jarsigner
 from pushapkscript.apk import sort_and_check_apks_per_architectures
 from pushapkscript.task import validate_task_schema, extract_channel
 from pushapkscript.utils import load_json
-from pushapkscript.googleplay import publish_to_googleplay
+from pushapkscript.googleplay import publish_to_googleplay, is_allowed_to_push_to_google_play, should_commit_transaction
 
 
 log = logging.getLogger(__name__)
@@ -25,7 +25,9 @@ log = logging.getLogger(__name__)
 
 async def async_main(context):
     context.task = scriptworker.client.get_task(context.config)
-    log.info('Validating task')
+    _log_warning_forewords(context)
+
+    log.info('Validating task definition...')
     validate_task_schema(context)
 
     log.info('Verifying upstream artifacts...')
@@ -42,10 +44,21 @@ async def async_main(context):
     log.info('Verifying APKs\' signatures...')
     [jarsigner.verify(context, apk_path) for apk_path in apks_per_architectures.values()]
 
-    log.info('Pushing APKs to Google Play Store...')
+    log.info('Delegating publication to mozapkpublisher...')
     publish_to_googleplay(context, apks_per_architectures)
 
     log.info('Done!')
+
+
+def _log_warning_forewords(context):
+    if is_allowed_to_push_to_google_play(context):
+        if should_commit_transaction(context):
+            log.warn('You will publish APKs to Google Play. This action is irreversible,\
+if no error is detected either by this script or by Google Play.')
+        else:
+            log.warn('APKs will be submitted to Google Play, but no change will not be committed.')
+    else:
+        log.warn('You do not have the rights to reach Google Play. *All* requests will be mocked.')
 
 
 def get_default_config():

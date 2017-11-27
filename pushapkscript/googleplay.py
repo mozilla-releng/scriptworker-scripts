@@ -10,7 +10,7 @@ CHANNEL_TO_PACKAGE_NAME = {
     'dep': 'org.mozilla.fennec_aurora',
 }
 
-KNOWN_PRODUCTION_CHANNELS = ('aurora', 'beta', 'release')
+_CHANNELS_AUTHORIZED_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release')
 
 
 def publish_to_googleplay(context, apks):
@@ -33,8 +33,8 @@ def craft_push_apk_config(context, apks):
     if payload.get('rollout_percentage'):
         push_apk_config['rollout_percentage'] = payload['rollout_percentage']
 
-    # Only known production channels are allowed to connect to Google Play
-    if channel not in KNOWN_PRODUCTION_CHANNELS:
+    # Only known channels are allowed to connect to Google Play
+    if not is_allowed_to_push_to_google_play(context):
         push_apk_config['do_not_contact_google_play'] = True
 
     # TODO Configure this value dynamically in Bug 1385401
@@ -72,7 +72,7 @@ def _get_play_config(context, channel):
 
 def is_allowed_to_push_to_google_play(context):
     channel = extract_channel(context.task)
-    return channel in KNOWN_PRODUCTION_CHANNELS
+    return channel in _CHANNELS_AUTHORIZED_TO_REACH_GOOGLE_PLAY
 
 
 def should_commit_transaction(context):
