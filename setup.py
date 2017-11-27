@@ -9,7 +9,7 @@ with open(os.path.join(project_dir, 'version.txt')) as f:
 
 # We allow commented lines in this file
 with open(os.path.join(project_dir, 'requirements.txt')) as f:
-    requirements = [line.split()[0] for line in f if not line.startswith('#')]
+    requirements = [line.rstrip('\n') for line in f if not line.startswith('#')]
 
 
 setup(
