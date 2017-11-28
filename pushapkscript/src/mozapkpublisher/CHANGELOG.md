@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.5.0
+* Python 2 support has been droppped. Handling unicode strings in both Python 2 and 3 became too risky for the [pros Python 2 gave](https://github.com/mozilla-releng/mozapkpublisher/pull/45).
+* push_apk.py
+  * You now need to provide where the Google Play linsting are taken from (`--update-gp-strings-from-l10n-store`, `--update-gp-strings-from-file`, or even `--no-gp-string-update`).
+  * Google Play strings are now verified: Data structure must comply to a given schema. Actual strings aren't checked.
+  * Option `--dry-run` becomes `--commit`. By default, no transaction is committed.
+  * Option `--do-not-contact-google-play` was added. It allows to run the script without making any call to Google.
+* get_l10n_strings.py now exists. It fetches strings from the Google Play store for later use (by push_apk.py).
+* Non-script files are moved to `mozapkpublisher/common.`
+
 ## 0.4.0
 * Dawn project
   * Publish Nightly on top of Aurora
