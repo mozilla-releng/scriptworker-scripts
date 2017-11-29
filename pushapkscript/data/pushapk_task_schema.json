@@ -54,6 +54,9 @@
                   "minimum": 0,
                   "maximum": 100
                 },
+                "dry_run": {
+                  "type": "boolean"
+                },
                 "commit": {
                   "type": "boolean"
                 }

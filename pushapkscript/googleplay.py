@@ -77,6 +77,13 @@ def is_allowed_to_push_to_google_play(context):
 
 def should_commit_transaction(context):
     payload = context.task['payload']
-    # Don't commit anything by default. Committed APKs can't be unpublished,
-    # unless you push a newer set of APKs.
-    return payload.get('commit', False)
+    # TODO: Stop supporting the dry_run when Firefox 59 reaches mozilla-release
+    if 'dry_run' in payload and 'commit' in payload:
+        raise TaskVerificationError('Payload cannot contain both "dry_run" and "commit" flags')
+
+    try:
+        return not payload['dry_run']
+    except KeyError:
+        # Don't commit anything by default. Committed APKs can't be unpublished,
+        # unless you push a newer set of APKs.
+        return payload.get('commit', False)
