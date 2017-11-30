@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.2.0] - 2017-11-30
+### Added
+- added datadog statsd
+
 ## [4.1.2] - 2017-08-30
 ### Added
 - updated `host.cert` for new ssl cert with >30day expiration :)
