@@ -1,4 +1,5 @@
 arrow
+datadog==0.17.0
 python-jose
 scriptworker
 signtool>=3.1.6

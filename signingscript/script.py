@@ -8,6 +8,8 @@ import ssl
 import sys
 import traceback
 
+from datadog import statsd
+
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -18,6 +20,9 @@ from signingscript.utils import copy_to_dir, load_json, load_signing_server_conf
 
 
 log = logging.getLogger(__name__)
+
+# Common prefix for all metric names produced from this scriptworker.
+statsd.namespace = 'releng.scriptworker.signing'
 
 
 # SigningContext {{{1

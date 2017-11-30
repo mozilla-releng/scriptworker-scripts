@@ -15,6 +15,9 @@ import os
 import random
 import traceback
 
+from datadog import statsd
+import platform
+
 import scriptworker.client
 from scriptworker.exceptions import ScriptWorkerException
 from scriptworker.utils import retry_request
@@ -135,7 +138,12 @@ async def sign(context, path, signing_formats):
             fmt, FORMAT_TO_SIGNING_FUNCTION['default']
         )
         log.info("sign(): Signing {} with {}...".format(output, fmt))
-        output = await signing_func(context, output, fmt)
+        metric_tags = [
+            'format:{}'.format(fmt),
+            'host:{}'.format(platform.node())
+        ]
+        with statsd.timed('signingfunc.time', tags=metric_tags):
+            output = await signing_func(context, output, fmt)
     # We want to return a list
     if not isinstance(output, (tuple, list)):
         output = [output]
