@@ -140,7 +140,8 @@ async def sign(context, path, signing_formats):
         log.info("sign(): Signing {} with {}...".format(output, fmt))
         metric_tags = [
             'format:{}'.format(fmt),
-            'host:{}'.format(platform.node())
+            'host:{}'.format(platform.node()),
+            'app:signingscript'
         ]
         with statsd.timed('signingfunc.time', tags=metric_tags):
             output = await signing_func(context, output, fmt)
