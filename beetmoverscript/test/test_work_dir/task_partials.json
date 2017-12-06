@@ -17,7 +17,11 @@
       "partials": [
         {
           "artifact_name": "target.partial-1.mar",
-          "buildid": "20170831150342"
+          "buildid": "20170831150342",
+          "platform": "win32",
+          "locale": "be",
+          "previousVersion": "56.0.2",
+          "previousBuildNumber": "1"
         }
       ]
     },

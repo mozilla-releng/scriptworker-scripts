@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.4.0] - 2017-12-05
+### Added
+- beetmoverscript support to handle in-tree scheduled Firefox releases
+
+### Changed
+- `tc_release` flag in balrog manifest is toggled for any PROMOTION or RELEASE types of actions
+- `partials` dict in templates is no longer a {`artifact_name`: `build_id`} type of dict, but a {`artifact_name`: `full_dict`}
+
 ## [3.3.0] - 2017-11-22
 ### Changed
 - jsshell zip files are now to be copied too to from candidates -> releases

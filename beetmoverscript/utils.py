@@ -152,7 +152,7 @@ def get_partials_props(task):
     """Examine contents of task.json (stored in context.task) and extract
     partials mapping data from the 'extra' field"""
     partials = task.get('extra', {}).get('partials', {})
-    return {p['artifact_name']: p['buildid'] for p in partials}
+    return {p['artifact_name']: p for p in partials}
 
 
 def alter_unpretty_contents(context, blobs, mappings):

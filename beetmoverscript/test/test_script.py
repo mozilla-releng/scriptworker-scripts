@@ -18,7 +18,7 @@ from beetmoverscript.test import (
     context, get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props,
     noop_async
 )
-from beetmoverscript.utils import generate_beetmover_manifest
+from beetmoverscript.utils import generate_beetmover_manifest, is_promotion_action
 from scriptworker.context import Context
 from scriptworker.exceptions import (ScriptWorkerRetryException,
                                      ScriptWorkerTaskException)
@@ -215,6 +215,8 @@ def test_enrich_balrog_manifest(context, branch, action):
     context.release_props = get_fake_balrog_props()["properties"]
     context.release_props['platform'] = context.release_props['stage_platform']
     context.release_props['branch'] = branch
+    context.task['payload']['build_number'] = 33
+    context.task['payload']['version'] = '99.0b44'
     context.action = action
 
     expected_data = {
@@ -235,6 +237,8 @@ def test_enrich_balrog_manifest(context, branch, action):
         ]]
     if action != "push-to-nightly":
         expected_data['tc_release'] = True
+        expected_data['build_number'] = 33
+        expected_data['version'] = '99.0b44'
     else:
         expected_data['tc_nightly'] = True
 
@@ -379,11 +383,36 @@ def test_move_beets(event_loop, partials):
 
 
 # move_beet {{{1
-@pytest.mark.parametrize('update_manifest', (True, False))
-def test_move_beet(event_loop, update_manifest):
+@pytest.mark.parametrize('update_manifest,action', [
+     (True, 'push-to-candidates'),
+     (True, 'push-to-nightly'),
+     (False, 'push-to-nightly'),
+     (False, 'push-to-candidates')
+])
+def test_move_beet(event_loop, update_manifest, action):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
+    context.task['extra'] = dict()
+    context.task['extra']['partials'] = [
+        {
+            "artifact_name": "target-98.0b96.partial.mar",
+            "platform": "linux",
+            "locale": "de",
+            "buildid": "19991231235959",
+            "previousVersion": "98.0b96",
+            "previousBuildNumber": "1"
+        },
+        {
+            "artifact_name": "target-97.0b96.partial.mar",
+            "platform": "linux",
+            "locale": "de",
+            "buildid": "22423423402984",
+            "previousVersion": "97.0b96",
+            "previousBuildNumber": "1"
+        }
+    ]
+    context.action = action
     context.checksums = dict()
     context.balrog_manifest = list()
     context.raw_balrog_manifest = dict()
@@ -433,6 +462,9 @@ def test_move_beet(event_loop, update_manifest):
                       from_buildid='19991231235959')
         )
     if update_manifest:
+        if is_promotion_action(context.action):
+            expected_balrog_manifest['previousBuildNumber'] = '1'
+            expected_balrog_manifest['previousVersion'] = '98.0b96'
         for k in expected_balrog_manifest.keys():
             assert (context.raw_balrog_manifest[locale]['partialInfo'][0][k] ==
                     expected_balrog_manifest[k])

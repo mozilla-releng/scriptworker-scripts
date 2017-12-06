@@ -206,12 +206,12 @@ mapping:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
   {% endif %}
-  {% for partial, from_buildid in partials.items() %}
+  {% for partial in partials %}
     {{ partial }}:
-      s3_key: firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ from_buildid }}-{{ buildid }}.partial.mar
+      s3_key: firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ partials[partial].buildid }}-{{ buildid }}.partial.mar
       destinations:
-        - partials/{{ upload_date }}-{{ branch }}/firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ from_buildid }}-{{ buildid }}.partial.mar
+        - partials/{{ upload_date }}-{{ branch }}/firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ partials[partial].buildid }}-{{ buildid }}.partial.mar
       update_balrog_manifest: true
-      from_buildid: {{ from_buildid }}
+      from_buildid: {{ partials[partial].buildid }}
   {% endfor %}
 {% endfor %}

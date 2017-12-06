@@ -85,7 +85,14 @@ def test_generate_manifest(context):
 # generate_beetmover_template_args {{{1
 @pytest.mark.parametrize("taskjson,partials", [
     ('task.json', {}),
-    ('task_partials.json', {'target.partial-1.mar': '20170831150342'})
+    ('task_partials.json', {'target.partial-1.mar': {
+        'artifact_name': 'target.partial-1.mar',
+        'buildid': '20170831150342',
+        'locale': 'be',
+        'platform': 'win32',
+        'previousBuildNumber': '1',
+        'previousVersion': '56.0.2'
+    }})
 ])
 def test_beetmover_template_args_generation(context, taskjson, partials):
     context.task = get_fake_valid_task(taskjson)
@@ -164,7 +171,14 @@ def test_get_release_props():
 # get_partials_props {{{1
 @pytest.mark.parametrize("taskjson,expected", [
     ('task.json', {}),
-    ('task_partials.json', {'target.partial-1.mar': '20170831150342'})
+    ('task_partials.json', {'target.partial-1.mar': {
+        'artifact_name': 'target.partial-1.mar',
+        'buildid': '20170831150342',
+        'locale': 'be',
+        'platform': 'win32',
+        'previousBuildNumber': '1',
+        'previousVersion': '56.0.2'
+    }})
 ])
 def test_get_partials_props(taskjson, expected):
     partials_props = get_partials_props(get_fake_valid_task(taskjson))

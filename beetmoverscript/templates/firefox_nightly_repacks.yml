@@ -77,11 +77,11 @@ mapping:
         - {{ upload_date }}-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
         - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
   {% endif %}
-  {% for partial, from_buildid in partials.items() %}
+  {% for partial in partials %}
     {{ partial }}:
-      s3_key: firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ from_buildid }}-{{ buildid }}.partial.mar
+      s3_key: firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ partials[partial].buildid }}-{{ buildid }}.partial.mar
       destinations:
-        - partials/{{ upload_date }}-{{ branch }}-l10n/firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ from_buildid }}-{{ buildid }}.partial.mar
+        - partials/{{ upload_date }}-{{ branch }}-l10n/firefox-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ partials[partial].buildid }}-{{ buildid }}.partial.mar
       update_balrog_manifest: true
-      from_buildid: {{ from_buildid }}
+      from_buildid: {{ partials[partial].buildid }}
   {% endfor %}

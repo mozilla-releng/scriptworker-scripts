@@ -20,7 +20,6 @@ from scriptworker.utils import retry_async, raise_future_exceptions
 
 from beetmoverscript.constants import (
     MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE,
-    RELEASE_ACTIONS
 )
 from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
@@ -32,6 +31,7 @@ from beetmoverscript.utils import (
     load_json, get_hash, get_release_props, generate_beetmover_manifest,
     get_size, alter_unpretty_contents, matches_exclude,
     get_candidates_prefix, get_releases_prefix, get_creds, get_bucket_name,
+    is_release_action, is_promotion_action, get_partials_props
 )
 
 log = logging.getLogger(__name__)
@@ -292,6 +292,14 @@ def generate_balrog_info(context, artifact_pretty_name, locale, destinations, fr
     }
     if from_buildid:
         data["from_buildid"] = from_buildid
+        if is_promotion_action(context.action):
+            partials = get_partials_props(context.task)
+            # TODO: improve search by a dedicated dict with buildid as key
+            for p in partials.values():
+                if p['buildid'] == str(from_buildid):
+                    data['previousVersion'] = p['previousVersion']
+                    data['previousBuildNumber'] = p['previousBuildNumber']
+
     return data
 
 
@@ -316,8 +324,10 @@ def enrich_balrog_manifest(context, locale):
         "url_replacements": url_replacements
     }
 
-    if context.action in RELEASE_ACTIONS:
+    if is_promotion_action(context.action) or is_release_action(context.action):
         enrich_dict["tc_release"] = True
+        enrich_dict["build_number"] = context.task['payload']['build_number']
+        enrich_dict["version"] = context.task['payload']['version']
     else:
         enrich_dict["tc_nightly"] = True
 
