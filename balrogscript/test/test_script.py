@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import json
 import logging
 import pytest
 import os
-import shutil
 import sys
-import tempfile
 import balrogscript.script as balrogscript
+
+from balrogscript.test import (nightly_manifest, config, nightly_config)
 from balrogscript.task import (get_task, validate_task_schema, get_task_server)
 
 sys.path.insert(0, os.path.join(
@@ -17,53 +16,9 @@ from balrog.submitter.cli import NightlySubmitterV4  # noqa: E402
 
 logging.basicConfig()
 
-# constants, helpers, and fixtures {{{1
-NIGHTLY_MANIFEST_PATH = os.path.join(os.path.dirname(__file__), "data", "nightly_manifest.json")
-NIGHTLY_TASK_PATH = os.path.join(os.path.dirname(__file__), "data", "nightly_task.json")
-
-
-@pytest.fixture(scope='function')
-def nightly_manifest():
-    with open(NIGHTLY_MANIFEST_PATH, "r") as fh:
-        return json.load(fh)
-
-
-@pytest.yield_fixture(scope='function')
-def config():
-    tmpdir = tempfile.mkdtemp()
-    try:
-        yield {
-            "work_dir": os.path.join(tmpdir, "work_dir"),
-            "artifact_dir": os.path.join(tmpdir, "artifact_dir"),
-            "schema_file": "balrogscript/data/balrog_task_schema.json",
-            "dummy": False,
-            "api_root": "BALROG_API_ROOT",
-            "server_config": {
-                "nightly": {
-                    "balrog_username": "BALROG_USERNAME",
-                    "balrog_password": "BALROG_PASSWORD",
-                    "allowed_channels": ["nightly"]
-                },
-            },
-            "disable_certs": False,
-            "verbose": True
-        }
-    finally:
-        shutil.rmtree(tmpdir)
-
-
-@pytest.yield_fixture(scope='function')
-def nightly_config(config):
-    os.makedirs(os.path.join(config['work_dir'], "upstream-task-id", "public"))
-    shutil.copyfile(
-        NIGHTLY_MANIFEST_PATH,
-        os.path.join(config['work_dir'], "upstream-task-id", "public", "manifest.json")
-    )
-    shutil.copyfile(
-        NIGHTLY_TASK_PATH,
-        os.path.join(config['work_dir'], "task.json")
-    )
-    yield config
+assert nightly_config  # silence pyflakes
+assert config  # silence pyflakes
+assert nightly_manifest  # silence pyflakes
 
 
 # get_task {{{1

@@ -16,14 +16,35 @@ log = logging.getLogger(__name__)
 
 
 def create_submitter(e, balrog_auth, config):
-    from balrog.submitter.cli import NightlySubmitterV4  # noqa: E402
+    from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
     auth = balrog_auth
 
     if "tc_release" in e:
-        raise NotImplementedError("This logic piece has yet to be implemented")
+        log.info("Taskcluster Release style Balrog submission")
+
+        complete_info = e['completeInfo']
+        partial_info = e.get('partialInfo')
+        submitter = ReleaseSubmitterV4(api_root=config['api_root'], auth=auth,
+                                       dummy=config['dummy'])
+
+        data = {
+            'platform': e['platform'],
+            'productName': e['appName'],
+            'appVersion': e['appVersion'],
+            'version': e['version'],
+            'build_number': e['build_number'],
+            'locale': e['locale'],
+            'hashFunction': e['hashType'],
+            'extVersion': e['extVersion'],
+            'buildID': e['buildid'],
+            'completeInfo': complete_info
+        }
+        if partial_info:
+            data['partialInfo'] = partial_info
+        return submitter, data
 
     elif "tc_nightly" in e:
-        log.info("Taskcluster Nightly Fennec style Balrog submission")
+        log.info("Taskcluster Nightly style Balrog submission")
 
         complete_info = e['completeInfo']
         partial_info = e.get('partialInfo')
