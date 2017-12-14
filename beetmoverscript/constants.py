@@ -11,13 +11,20 @@ MIME_MAP = {
     '.xpi': 'application/x-xpinstall',
     '.apk': 'application/vnd.android.package-archive',
 }
+
 STAGE_PLATFORM_MAP = {
     'linux': 'linux-i686',
+    'linux-devedition': 'linux-i686',
     'linux64': 'linux-x86_64',
+    'linux64-devedition': 'linux-x86_64',
     'macosx64': 'mac',
+    'macosx64-devedition': 'mac',
     'win32': 'win32',
+    'win32-devedition': 'win32',
     'win64': 'win64',
+    'win64-devedition': 'win64',
 }
+
 TEMPLATE_KEY_PLATFORMS = {
     "android-api-15": "fennec",
     "android-api-15-old-id": "fennec",
@@ -37,7 +44,17 @@ TEMPLATE_KEY_PLATFORMS = {
     "win32-devedition": "devedition",
     "win64-devedition": "devedition",
 }
+
+NORMALIZED_BALROG_PLATFORMS = {
+    "linux-devedition": "linux",
+    "linux64-devedition": "linux64",
+    "macosx64-devedition": "macosx64",
+    "win32-devedition": "win32",
+    "win64-devedition": "win64",
+}
+
 HASH_BLOCK_SIZE = 1024*1024
+
 INITIAL_RELEASE_PROPS_FILE = "balrog_props.json"
 # release buckets don't require a copy of the following artifacts
 IGNORED_UPSTREAM_ARTIFACTS = ["balrog_props.json"]
@@ -79,6 +96,7 @@ RESTRICTED_BUCKET_PATHS = {
 PROMOTION_ACTIONS = (
     'push-to-candidates',
 )
+
 RELEASE_ACTIONS = (
     'push-to-releases',
 )
@@ -111,5 +129,6 @@ CACHE_CONTROL_MAXAGE = 3600 * 4
 PRODUCT_TO_PATH = {
     'mobile': 'pub/mobile/',
     'fennec': 'pub/mobile/',
+    'devedition': 'pub/devedition/',
     'firefox': 'pub/firefox/',
 }

@@ -1,10 +1,10 @@
 ---
 metadata:
     name: "Beet Mover Manifest"
-    description: "Maps Firefox artifacts to pretty names for en-US"
+    description: "Maps DevEdition artifacts to pretty names for en-US"
     owner: "release@mozilla.com"
 
-s3_bucket_path: pub/firefox/candidates/{{ version }}-candidates/build{{ build_number }}/
+s3_bucket_path: pub/devedition/candidates/{{ version }}-candidates/build{{ build_number }}/
 
 mapping:
 {% for locale in ['en-US'] %}

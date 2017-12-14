@@ -17,7 +17,9 @@ mapping:
       s3_key: fennec-{{ version }}.{{ locale }}.android-arm.checksums
       destinations:
         - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.checksums
+        - beetmover-checksums/{{ platform }}/{{ locale }}/fennec-{{ version }}.android-arm.checksums.beet
     target.checksums.asc:
       s3_key: fennec-{{ version }}.{{ locale }}.android-arm.checksums.asc
       destinations:
         - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-arm.checksums.asc
+        - beetmover-checksums/{{ platform }}/{{ locale }}/fennec-{{ version }}.android-arm.checksums.asc

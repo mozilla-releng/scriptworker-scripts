@@ -2,6 +2,21 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.0.2] - 2017-12-14
+
+### Added
+- beetmoverscript support for Devedition releases
+- `STAGE_PLATFORM_MAP` now encompasses the devedition platforms as well
+- `NORMALIZED_BALROG_PLATFORMS` to correct platforms before writing them to balrog manifests
+- support for `.beet` files in order to enhance the BBB checksums
+- `get_product_name` function to standardize the way to refer to the product name based on platform and appName property from balrog props
+- checksums for Fennec
+- SOURCE files for Fennec
+
+### Changed
+- stop uploading checksums.asc files as `.beet`  under beetmover-checksums
+- `get_release_props` and `update_props`  functions now take context as argument
+
 ## [3.4.0] - 2017-12-05
 ### Added
 - beetmoverscript support to handle in-tree scheduled Firefox releases

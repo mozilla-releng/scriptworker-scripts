@@ -23,7 +23,9 @@
             "fennec_candidates_repacks": "path/to/beetmoverscript/beetmoverscript/templates/fennec_candidates_repacks.yml",
             "fennecx86_candidates": "/path/to/beetmoverscript/beetmoverscript/templates/fennecx86_candidates.yml",
             "firefox_candidates": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_candidates.yml",
-            "firefox_candidates_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_candidates_repacks.yml"
+            "firefox_candidates_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_candidates_repacks.yml",
+            "devedition_candidates": "/path/to/beetmoverscript/beetmoverscript/templates/devedition_candidates.yml",
+            "devedition_candidates_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/devedition_candidates_repacks.yml"
         },
         "push-to-releases": {},
         "push-to-staging": {}
@@ -47,7 +49,8 @@
             },
             "buckets": {
                 "firefox": "mozilla-releng-firefox-release-bucket",
-                "fennec": "mozilla-releng-mobile-release-bucket"
+                "fennec": "mozilla-releng-mobile-release-bucket",
+                "devedition": "mozilla-releng-mobile-release-bucket"
             }
         },
         "dep": {
@@ -57,7 +60,8 @@
             },
             "buckets": {
                 "firefox": "mozilla-releng-firefox-dep-bucket",
-                "fennec": "mozilla-releng-mobile-dep-bucket"
+                "fennec": "mozilla-releng-mobile-dep-bucket",
+                "devedition": "mozilla-releng-mobile-dep-bucket"
             }
         }
     }

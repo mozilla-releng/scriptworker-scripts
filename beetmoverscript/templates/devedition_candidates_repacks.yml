@@ -1,11 +1,10 @@
 ---
 metadata:
     name: "Beet Mover Manifest"
-    description: "Maps Firefox artifacts to pretty names for {{ locale }} L10n repack"
+    description: "Maps DevEdition artifacts to pretty names for {{ locale }} L10n repack"
     owner: "release@mozilla.com"
 
-# TODO: once firefox is done, we might want to s/firefox/{product} + some code change to get devedition for free
-s3_bucket_path: pub/firefox/candidates/{{ version }}-candidates/build{{ build_number }}/
+s3_bucket_path: pub/devedition/candidates/{{ version }}-candidates/build{{ build_number }}/
 
 mapping:
   {{ locale }}:

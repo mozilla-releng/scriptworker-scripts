@@ -24,10 +24,12 @@ mapping:
       s3_key: fennec-{{ version }}.{{ locale }}.android-i386.checksums
       destinations:
         - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-i386.checksums
+        - beetmover-checksums/{{ platform }}/{{ locale }}/fennec-{{ version }}.android-i386.checksums.beet
     target.checksums.asc:
       s3_key: fennec-{{ version }}.{{ locale }}.android-i386.checksums.asc
       destinations:
         - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.android-i386.checksums.asc
+        - beetmover-checksums/{{ platform }}/{{ locale }}/fennec-{{ version }}.android-i386.checksums.asc
     target.common.tests.zip:
       s3_key: fennec-{{ version }}.{{ locale }}.android-i386.common.tests.zip
       destinations:

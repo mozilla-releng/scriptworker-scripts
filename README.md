@@ -127,6 +127,8 @@ my_email: "scriptworker@example.com"
             "fennecx86_candidates": "/path/to/beetmoverscript/beetmoverscript/templates/fennecx86_candidates.yml",
             "firefox_candidates": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_candidates.yml",
             "firefox_candidates_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_candidates_repacks.yml"
+            "devedition_candidates": "/path/to/beetmoverscript/beetmoverscript/templates/devedition_candidates.yml",
+            "devedition_candidates_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/devedition_candidates_repacks.yml"
         },
         "push-to-releases": {},
         "push-to-staging": {}

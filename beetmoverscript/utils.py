@@ -67,6 +67,18 @@ def is_promotion_action(action):
     return action in PROMOTION_ACTIONS
 
 
+def get_product_name(appName, tmpl_key):
+    if tmpl_key == "devedition":
+        # XXX: this check is helps reuse this function in both
+        # returning the proper templates file but also for the release name in
+        # Balrog manifest that beetmover is uploading upon successful run
+        if appName[0].isupper():
+            return "Devedition"
+        else:
+            return "devedition"
+    return appName
+
+
 def generate_beetmover_template_args(context):
     task = context.task
     release_props = context.release_props
@@ -94,7 +106,8 @@ def generate_beetmover_template_args(context):
 
     if 'locale' in task["payload"]:
         tmpl_args["locale"] = task["payload"]["locale"]
-        tmpl_args["template_key"] = "%s_%s_repacks" % (release_props["appName"].lower(), tmpl_bucket)
+        product_name = get_product_name(release_props["appName"].lower(), tmpl_key_platform)
+        tmpl_args["template_key"] = "%s_%s_repacks" % (product_name, tmpl_bucket)
     else:
         tmpl_args["template_key"] = "%s_%s" % (tmpl_key_platform, tmpl_bucket)
 
@@ -124,7 +137,7 @@ def generate_beetmover_manifest(context):
     return manifest
 
 
-def update_props(props, platform_mapping):
+def update_props(context, props, platform_mapping):
     """Function to alter the `stage_platform` field from balrog_props to their
     corresponding correct values for certain platforms. Please note that for
     l10n jobs the `stage_platform` field is in fact called `platform` hence
@@ -134,6 +147,14 @@ def update_props(props, platform_mapping):
     # l10n jobs have it set under `platform`. This is merely an uniformization
     # under the `stage_platform` field that is needed later on in the templates
     stage_platform = props.get("stage_platform", props.get("platform"))
+    # XXX Bug 1424482 - until we solve this, we need this hack. Since en-US
+    # have at least `stage_platform`, there is a way to tell whether they are
+    # devedition related or not. But for l10n jobs, we only have `platform`
+    # which is identical to the ones we have for Firefox.
+
+    if ('locale' in context.task['payload'] and
+            'devedition' in context.task.get('metadata', {}).get('name', {})):
+        stage_platform += "-devedition"
     props["stage_platform"] = stage_platform
     # for some products/platforms this mapping is not needed, hence the default
     props["platform"] = platform_mapping.get(stage_platform,
@@ -141,11 +162,11 @@ def update_props(props, platform_mapping):
     return props
 
 
-def get_release_props(initial_release_props_file, platform_mapping=STAGE_PLATFORM_MAP):
+def get_release_props(context, initial_release_props_file, platform_mapping=STAGE_PLATFORM_MAP):
     """determined via parsing the Nightly build job's balrog_props.json and
     expanded the properties with props beetmover knows about."""
     props = load_json(initial_release_props_file)['properties']
-    return update_props(props, platform_mapping)
+    return update_props(context, props, platform_mapping)
 
 
 def get_partials_props(task):
