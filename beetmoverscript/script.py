@@ -341,6 +341,7 @@ def enrich_balrog_manifest(context, locale):
 
 # retry_upload {{{1
 async def retry_upload(context, destinations, path):
+    """Manage upload of `path` to `destinations`."""
     # TODO rather than upload twice, use something like boto's bucket.copy_key
     #   probably via the awscli subproc directly.
     # For now, this will be faster than using copy_key() as boto would block
@@ -361,7 +362,8 @@ async def put(context, url, headers, abs_filename, session=None):
         async with session.put(url, data=fh, headers=headers, compress=False) as resp:
             log.info("put {}: {}".format(abs_filename, resp.status))
             response_text = await resp.text()
-            log.info(response_text)
+            if response_text:
+                log.info(response_text)
             if resp.status not in (200, 204):
                 raise ScriptWorkerRetryException(
                     "Bad status {}".format(resp.status),
@@ -386,6 +388,7 @@ async def upload_to_s3(context, s3_key, path):
     s3 = boto3.client('s3', aws_access_key_id=creds['id'], aws_secret_access_key=creds['key'],)
     url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=1800, HttpMethod='PUT')
 
+    log.info("upload_to_s3: %s -> s3://%s/%s", path, api_kwargs.get('Bucket'), s3_key)
     await retry_async(put, args=(context, url, headers, path),
                       retry_exceptions=(Exception, ),
                       kwargs={'session': context.session})
