@@ -1,5 +1,9 @@
+import logging
+
 from pushapkscript.exceptions import TaskVerificationError
 from pushapkscript.task import extract_channel
+
+log = logging.getLogger(__name__)
 
 # TODO Change the "aurora" scope to "nightly" so we can use the dict defined in mozapkpublisher
 CHANNEL_TO_PACKAGE_NAME = {
@@ -95,9 +99,12 @@ def should_commit_transaction(context):
 def get_google_play_strings_path(artifacts_per_task_id, failed_artifacts_per_task_id):
     if failed_artifacts_per_task_id:
         _check_google_play_string_is_the_only_failed_task(failed_artifacts_per_task_id)
+        log.warn("Google Play strings not found. Listings and what's new section won't be updated")
         return None
 
-    return _find_unique_google_play_strings_file_in_dict(artifacts_per_task_id)
+    path = _find_unique_google_play_strings_file_in_dict(artifacts_per_task_id)
+    log.info('Using "{}" to update Google Play listings and what\'s new section.')
+    return path
 
 
 def _check_google_play_string_is_the_only_failed_task(failed_artifacts_per_task_id):
