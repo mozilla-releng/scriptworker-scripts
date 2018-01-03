@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+# 0.4.1
+* Google Play strings are now optionally fetched from an upstream task.
+
 # 0.4.0
 * Deprecated `payload.dry_run` in favor of `payload.commit` in task definition
 * Add support of dep-signing. dep-signing is used by testing APKs. pushapkscript won't make a single request to Google Play if such APK is detected.
