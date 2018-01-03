@@ -3,7 +3,8 @@ from unittest.mock import MagicMock
 
 from pushapkscript.exceptions import TaskVerificationError
 from pushapkscript.googleplay import craft_push_apk_config, get_package_name, get_service_account, get_certificate_path, \
-    _get_play_config, should_commit_transaction
+    _get_play_config, should_commit_transaction, get_google_play_strings_path, \
+    _check_google_play_string_is_the_only_failed_task, _find_unique_google_play_strings_file_in_dict
 
 
 class GooglePlayTest(unittest.TestCase):
@@ -49,29 +50,29 @@ class GooglePlayTest(unittest.TestCase):
         for channel, package_name in data.items():
             self.context.task['scopes'] = ['project:releng:googleplay:{}'.format(channel)]
             self.assertEqual(craft_push_apk_config(self.context, self.apks), {
-                'service_account': '{}_account'.format(channel),
+                'apk_arm_v15': '/path/to/arm_v15.apk',
+                'apk_x86': '/path/to/x86.apk',
                 'credentials': '/path/to/{}.p12'.format(channel),
                 'commit': False,
-                'track': 'alpha',
+                'no_gp_string_update': True,
                 'package_name': package_name,
-                'apk_x86': '/path/to/x86.apk',
-                'apk_arm_v15': '/path/to/arm_v15.apk',
-                'update_gp_strings_from_l10n_store': True,
+                'service_account': '{}_account'.format(channel),
+                'track': 'alpha',
             })
 
     def test_craft_push_config_allows_rollout_percentage(self):
         self.context.task['payload']['google_play_track'] = 'rollout'
         self.context.task['payload']['rollout_percentage'] = 10
         self.assertEqual(craft_push_apk_config(self.context, self.apks), {
-            'service_account': 'release_account',
+            'apk_arm_v15': '/path/to/arm_v15.apk',
+            'apk_x86': '/path/to/x86.apk',
             'credentials': '/path/to/release.p12',
             'commit': False,
-            'track': 'rollout',
-            'rollout_percentage': 10,
+            'no_gp_string_update': True,
             'package_name': 'org.mozilla.firefox',
-            'apk_x86': '/path/to/x86.apk',
-            'apk_arm_v15': '/path/to/arm_v15.apk',
-            'update_gp_strings_from_l10n_store': True,
+            'rollout_percentage': 10,
+            'service_account': 'release_account',
+            'track': 'rollout',
         })
 
     def test_craft_push_config_allows_to_contact_google_play_or_not(self):
@@ -102,6 +103,11 @@ class GooglePlayTest(unittest.TestCase):
     def test_craft_push_config_raises_error_when_google_play_accounts_does_not_exist(self):
         self.context.config = {}
         self.assertRaises(TaskVerificationError, craft_push_apk_config, self.context, self.apks)
+
+    def test_craft_push_config_updates_google(self):
+        config = craft_push_apk_config(self.context, self.apks, google_play_strings_path='/path/to/google_play_strings.json')
+        self.assertNotIn('no_gp_string_update', config)
+        self.assertEqual(config['update_gp_strings_from_file'], '/path/to/google_play_strings.json')
 
     def test_get_google_play_package_name(self):
         self.assertEqual(get_package_name('aurora'), 'org.mozilla.fennec_aurora')
@@ -151,3 +157,51 @@ class GooglePlayTest(unittest.TestCase):
         self.context.task['payload']['commit'] = False
         self.context.task['payload']['dry_run'] = False
         self.assertRaises(TaskVerificationError, should_commit_transaction, self.context)
+
+    def test_get_google_play_strings_path(self):
+        self.assertEqual(
+            get_google_play_strings_path({'someTaskId': ['/path/to/public/google_play_strings.json']}, {}),
+            '/path/to/public/google_play_strings.json'
+        )
+        self.assertEqual(
+            get_google_play_strings_path(
+                {'apkTaskId': ['/path/to/public/build/target.apk']},
+                {'gpStringTaskId': ['public/google_play_strings.json']}
+            ),
+            None
+        )
+        # Error cases checked in subfunctions
+
+    def test_check_google_play_string_is_the_only_failed_task(self):
+        with self.assertRaises(TaskVerificationError):
+            _check_google_play_string_is_the_only_failed_task({
+                'apkTaskId': ['/path/to/public/build/target.apk'],
+                'gpStringTaskId': ['public/chainOfTrust.json.asc', 'public/google_play_strings.json']
+            })
+
+        with self.assertRaises(TaskVerificationError):
+            _check_google_play_string_is_the_only_failed_task({
+                'missingJsonTaskId': ['public/chainOfTrust.json.asc']
+            })
+
+    def test_find_unique_google_play_strings_file_in_dict(self):
+        self.assertEqual(
+            _find_unique_google_play_strings_file_in_dict({
+                'apkTaskId': ['public/chainOfTrust.json.asc', '/path/to/public/build/target.apk'],
+                'someTaskId': ['public/chainOfTrust.json.asc', '/path/to/public/google_play_strings.json'],
+            }),
+            '/path/to/public/google_play_strings.json'
+        )
+
+        with self.assertRaises(TaskVerificationError):
+            _find_unique_google_play_strings_file_in_dict({
+                'apkTaskId': ['public/chainOfTrust.json.asc', '/path/to/public/build/target.apk'],
+                'someTaskId': ['public/chainOfTrust.json.asc'],
+            })
+
+        with self.assertRaises(TaskVerificationError):
+            _find_unique_google_play_strings_file_in_dict({
+                'apkTaskId': ['public/chainOfTrust.json.asc', '/path/to/public/build/target.apk'],
+                'someTaskId': ['public/chainOfTrust.json.asc', '/path/to/public/google_play_strings.json'],
+                'someOtherTaskId': ['public/chainOfTrust.json.asc', '/path/to/public/google_play_strings.json'],
+            })

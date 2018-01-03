@@ -39,9 +39,13 @@
                                 "items": {
                                     "type": "string"
                                 }
+                            },
+                            "optional": {
+                                "type": "boolean"
                             }
                         },
-                        "required": ["taskId", "taskType", "paths"]
+                        "required": ["taskId", "taskType", "paths"],
+                        "additionalProperties": false
                     },
                     "minItems": 1,
                     "uniqueItems": true

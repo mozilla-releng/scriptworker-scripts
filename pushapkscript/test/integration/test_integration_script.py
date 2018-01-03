@@ -76,10 +76,17 @@ class MainTest(unittest.TestCase):
     def tearDown(self):
         self.test_temp_dir_fp.cleanup()
 
-    def _copy_files_to_test_temp_dir(self, task_generator):
+    def _copy_all_apks_to_test_temp_dir(self, task_generator):
         for task_id in (task_generator.x86_task_id, task_generator.arm_task_id):
-            original_path = os.path.join(test_data_dir, 'target-{}.apk'.format(task_id))
-            target_path = os.path.abspath(os.path.join(self.test_temp_dir, 'work', 'cot', task_id, 'public/build/target.apk'))
+            self._copy_single_file_to_test_temp_dir(
+                task_id,
+                origin_file_name='target-{}.apk'.format(task_id),
+                destination_path='public/build/target.apk'
+            )
+
+    def _copy_single_file_to_test_temp_dir(self, task_id, origin_file_name, destination_path):
+            original_path = os.path.join(test_data_dir, origin_file_name)
+            target_path = os.path.abspath(os.path.join(self.test_temp_dir, 'work', 'cot', task_id, destination_path))
             target_dir = os.path.dirname(target_path)
             os.makedirs(target_dir)
             shutil.copy(original_path, target_path)
@@ -89,18 +96,19 @@ class MainTest(unittest.TestCase):
         task_generator = TaskGenerator()
         task_generator.generate_file(self.config_generator.work_dir)
 
-        self._copy_files_to_test_temp_dir(task_generator)
+        self._copy_all_apks_to_test_temp_dir(task_generator)
         main(config_path=self.config_generator.generate(), close_loop=False)
 
         PushAPK.assert_called_with(config={
             'credentials': '/dummy/path/to/certificate.p12',
             'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
             'apk_x86': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
+            'commit': False,
+            'credentials': '/dummy/path/to/certificate.p12',
+            'no_gp_string_update': True,
             'package_name': 'org.mozilla.fennec_aurora',
             'service_account': 'dummy-service-account@iam.gserviceaccount.com',
             'track': 'alpha',
-            'commit': False,
-            'update_gp_strings_from_l10n_store': True,
         })
 
     @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
@@ -108,17 +116,44 @@ class MainTest(unittest.TestCase):
         task_generator = TaskGenerator(google_play_track='rollout', rollout_percentage=25)
         task_generator.generate_file(self.config_generator.work_dir)
 
-        self._copy_files_to_test_temp_dir(task_generator)
+        self._copy_all_apks_to_test_temp_dir(task_generator)
         main(config_path=self.config_generator.generate(), close_loop=False)
 
         PushAPK.assert_called_with(config={
             'credentials': '/dummy/path/to/certificate.p12',
             'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
             'apk_x86': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
+            'credentials': '/dummy/path/to/certificate.p12',
+            'dry_run': True,
+            'no_gp_string_update': True,
             'package_name': 'org.mozilla.fennec_aurora',
+            'rollout_percentage': 25,
             'service_account': 'dummy-service-account@iam.gserviceaccount.com',
             'track': 'rollout',
-            'rollout_percentage': 25,
-            'commit': False,
-            'update_gp_strings_from_l10n_store': True,
+        })
+
+    @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
+    def test_main_allows_google_play_strings_file(self, PushAPK):
+        task_generator = TaskGenerator()
+        task_generator.generate_file(self.config_generator.work_dir)
+
+        self._copy_all_apks_to_test_temp_dir(task_generator)
+        self._copy_single_file_to_test_temp_dir(
+            task_id=task_generator.google_play_strings_task_id,
+            origin_file_name='google_play_strings.json',
+            destination_path='public/google_play_strings.json',
+        )
+        main(config_path=self.config_generator.generate(), close_loop=False)
+
+        PushAPK.assert_called_with(config={
+            'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
+            'apk_x86': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
+            'credentials': '/dummy/path/to/certificate.p12',
+            'dry_run': True,
+            'package_name': 'org.mozilla.fennec_aurora',
+            'service_account': 'dummy-service-account@iam.gserviceaccount.com',
+            'track': 'alpha',
+            'update_gp_strings_from_file': '{}/work/cot/{}/public/google_play_strings.json'.format(
+                self.test_temp_dir, task_generator.google_play_strings_task_id
+            ),
         })

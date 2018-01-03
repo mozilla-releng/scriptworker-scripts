@@ -11,15 +11,16 @@ CHANNEL_TO_PACKAGE_NAME = {
 }
 
 _CHANNELS_AUTHORIZED_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release')
+_EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
-def publish_to_googleplay(context, apks):
+def publish_to_googleplay(context, apks, google_play_strings_path=None):
     from mozapkpublisher.push_apk import PushAPK
-    push_apk = PushAPK(config=craft_push_apk_config(context, apks))
+    push_apk = PushAPK(config=craft_push_apk_config(context, apks, google_play_strings_path))
     push_apk.run()
 
 
-def craft_push_apk_config(context, apks):
+def craft_push_apk_config(context, apks, google_play_strings_path=None):
     push_apk_config = {'apk_{}'.format(apk_type): apk_path for apk_type, apk_path in apks.items()}
 
     channel = extract_channel(context.task)
@@ -37,8 +38,10 @@ def craft_push_apk_config(context, apks):
     if not is_allowed_to_push_to_google_play(context):
         push_apk_config['do_not_contact_google_play'] = True
 
-    # TODO Configure this value dynamically in Bug 1385401
-    push_apk_config['update_gp_strings_from_l10n_store'] = True
+    if google_play_strings_path is None:
+        push_apk_config['no_gp_string_update'] = True
+    else:
+        push_apk_config['update_gp_strings_from_file'] = google_play_strings_path
 
     push_apk_config['commit'] = should_commit_transaction(context)
 
@@ -87,3 +90,49 @@ def should_commit_transaction(context):
         # Don't commit anything by default. Committed APKs can't be unpublished,
         # unless you push a newer set of APKs.
         return payload.get('commit', False)
+
+
+def get_google_play_strings_path(artifacts_per_task_id, failed_artifacts_per_task_id):
+    if failed_artifacts_per_task_id:
+        _check_google_play_string_is_the_only_failed_task(failed_artifacts_per_task_id)
+        return None
+
+    return _find_unique_google_play_strings_file_in_dict(artifacts_per_task_id)
+
+
+def _check_google_play_string_is_the_only_failed_task(failed_artifacts_per_task_id):
+    if len(failed_artifacts_per_task_id) > 1:
+        raise TaskVerificationError(
+            'Only 1 task is allowed to fail. Found: {}'.format(failed_artifacts_per_task_id.keys())
+        )
+
+    task_id = list(failed_artifacts_per_task_id.keys())[0]
+    failed_artifacts = failed_artifacts_per_task_id[task_id]
+    if _EXPECTED_L10N_STRINGS_FILE_NAME not in failed_artifacts:
+        raise TaskVerificationError(
+            'Could not find "{}" in the only failed taskId "{}". Please note this is the only \
+            artifact allowed to be absent. Found: {}'
+            .format(_EXPECTED_L10N_STRINGS_FILE_NAME, task_id, failed_artifacts)
+        )
+
+
+def _find_unique_google_play_strings_file_in_dict(artifact_dict):
+    l10n_strings_paths = [
+        path
+        for task_id, paths in artifact_dict.items()
+        for path in paths
+        if _EXPECTED_L10N_STRINGS_FILE_NAME in path
+    ]
+
+    number_of_artifacts_found = len(l10n_strings_paths)
+    if number_of_artifacts_found == 0:
+        raise TaskVerificationError(
+            'Could not find "{}" in upstreamArtifacts: {}'.format(_EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict)
+        )
+    if number_of_artifacts_found > 1:
+        raise TaskVerificationError(
+            'More than one artifact "{}" found in upstreamArtifacts: {}'
+            .format(_EXPECTED_L10N_STRINGS_FILE_NAME, l10n_strings_paths)
+        )
+
+    return l10n_strings_paths[0]

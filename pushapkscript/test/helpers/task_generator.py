@@ -6,6 +6,7 @@ class TaskGenerator(object):
     def __init__(self, google_play_track='alpha', rollout_percentage=None):
         self.arm_task_id = 'fwk3elTDSe6FLoqg14piWg'
         self.x86_task_id = 'PKP2v4y0RdqOuLCqhevD2A'
+        self.google_play_strings_task_id = 'bgP9T6AnTpyTVsNA7M3OnA'
         self.google_play_track = google_play_track
         self.rollout_percentage = rollout_percentage
 
@@ -31,19 +32,25 @@ class TaskGenerator(object):
           "payload": {{
             "upstreamArtifacts": [{{
               "paths": ["public/build/target.apk"],
-              "taskId": "fwk3elTDSe6FLoqg14piWg",
+              "taskId": "{arm_task_id}",
               "taskType": "signing"
             }}, {{
               "paths": ["public/build/target.apk"],
-              "taskId": "PKP2v4y0RdqOuLCqhevD2A",
+              "taskId": "{x86_task_id}",
               "taskType": "signing"
+            }}, {{
+              "paths": ["public/google_play_strings.json"],
+              "taskId": "{google_play_strings_task_id}",
+              "taskType": "fetch",
+              "optional": true
             }}],
             "google_play_track": "{google_play_track}"
           }}
         }}'''.format(
             arm_task_id=self.arm_task_id,
             x86_task_id=self.x86_task_id,
-            google_play_track=self.google_play_track
+            google_play_strings_task_id=self.google_play_strings_task_id,
+            google_play_track=self.google_play_track,
         ))
 
         if self.rollout_percentage:
