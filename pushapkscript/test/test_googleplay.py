@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 
-from pushapkscript.exceptions import TaskVerificationError
+from pushapkscript.exceptions import TaskVerificationError, NoGooglePlayStringsFound
 from pushapkscript.googleplay import craft_push_apk_config, get_package_name, get_service_account, get_certificate_path, \
     _get_play_config, should_commit_transaction, get_google_play_strings_path, \
     _check_google_play_string_is_the_only_failed_task, _find_unique_google_play_strings_file_in_dict
@@ -193,7 +193,7 @@ class GooglePlayTest(unittest.TestCase):
             '/path/to/public/google_play_strings.json'
         )
 
-        with self.assertRaises(TaskVerificationError):
+        with self.assertRaises(NoGooglePlayStringsFound):
             _find_unique_google_play_strings_file_in_dict({
                 'apkTaskId': ['public/chainOfTrust.json.asc', '/path/to/public/build/target.apk'],
                 'someTaskId': ['public/chainOfTrust.json.asc'],
