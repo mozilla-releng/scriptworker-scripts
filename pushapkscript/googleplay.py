@@ -111,7 +111,7 @@ def get_google_play_strings_path(artifacts_per_task_id, failed_artifacts_per_tas
         return None
 
     path = _find_unique_google_play_strings_file_in_dict(artifacts_per_task_id)
-    log.info('Using "{}" to update Google Play listings and what\'s new section.')
+    log.info('Using "{}" to update Google Play listings and what\'s new section.'.format(path))
     return path
 
 
