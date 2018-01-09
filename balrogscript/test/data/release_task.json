@@ -1,6 +1,6 @@
 {
     "dependencies": ["blah"],
-    "scopes": ["project:releng:balrog:release"],
+    "scopes": ["project:releng:balrog:server:release"],
     "payload": {
         "upstreamArtifacts": [{
             "paths": ["public/manifest.json"],

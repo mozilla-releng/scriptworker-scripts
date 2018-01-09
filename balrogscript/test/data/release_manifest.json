@@ -1,30 +1,33 @@
 [
     {
-        "ACCEPTED_MAR_CHANNEL_IDS": "firefox-mozilla-release",
-        "appName": "Firefox",
         "branch": "mozilla-release",
-        "detached_signatures": {
-            "gpg": "firefox-48.0b10-48.0.en-US.linux-x86_64.partial.mar.asc"
-        },
-        "from_buildid": "20160721144529",
-        "from_hash": "cc9f91ab4e8f79a2431ead22faad28cd8bec0fda58c7578b050db6c5d7d3c37c907f4cf72ce78934bbfdf5f39373de46b622c2db571890e31bfa0cac751964d7",
-        "from_mar": "http://download.mozilla.org/?product=firefox-48.0b10-complete&os=linux64&lang=en-US",
-        "from_size": 55915191,
-        "hash": "56452b46ba9f00c9bf74f7c403ec4d96e0a996f2dedce81b8d6782f5e9133f25854c5b8d66e16afd3c19b7215c2c6bdbf21361258936a2746717c6661987ef5e",
-        "locale": "en-US",
-        "mar": "firefox-48.0b10-48.0.en-US.linux-x86_64.partial.mar",
+        "tc_release": true,
+        "appName": "Firefox",
+        "appVersion": "58.0",
+        "completeInfo": [
+            {
+                "url": "https://archive.mozilla.org/pub/firefox/candidates/58.0b23-candidates/build2/update/linux-x86_64/en-US/firefox-58.0b23.complete.mar",
+                "size": 50495358,
+                "hash": "7b55d81958e3872f6158145e65af9ccce5dc82a7ef815c43dd6f9a3f7fc50817a6979efef04600331cc72c284ce75d0b734961345d8cbd8c82755de3c9e3f253"
+            }
+        ],
+        "partialInfo": [
+            {
+                "previousBuildNumber": "1",
+                "url": "https://archive.mozilla.org/pub/firefox/candidates/58.0b23-candidates/build2/update/linux-x86_64/en-US/firefox-58.0b6-58.0b23.partial.mar",
+                "size": 36577580,
+                "hash": "b295c33cec1dd2c0ac5c0296ca1a7b20de50f94a246d8704423d5f073867fa06121e40b26ef95303d2766ceb81d9b3493ccd4065d5834fae32d1d60386a18cdc",
+                "from_buildid": 20171123161455,
+                "previousVersion": "58.0b6"
+            }
+        ],
+        "buildid": "20180107063222",
+        "url_replacements": [],
         "platform": "linux64",
-        "previousBuildNumber": 1,
-        "previousVersion": "48.0b10",
-        "repo": "https://hg.mozilla.org/releases/mozilla-release",
-        "revision": "a55778f9cd5a98d05fb50a9a295ef8da379e41d0",
-        "size": 10026844,
-        "toBuildNumber": 1,
-        "toVersion": "48.0",
-        "to_buildid": "20160725093659",
-        "to_hash": "139cb84767eddceb2f8bc0b98b3bc5c1e41d52c208edaa3d429281229f3ed53b241bd78b1666eadf206f2e7b4d578c89d08942ec40184870b144a7fa6b3a7fb8",
-        "to_mar": "https://queue.taskcluster.net/v1/task/JeR2raZMRU6aeB86I-kCYw/artifacts/public/build/firefox-48.0.en-US.linux-x86_64.complete.mar",
-        "to_size": 55889576,
-        "version": "48.0"
+        "version": "48.0",
+        "hashType": "sha512",
+        "extVersion": "58.0",
+        "locale": "en-US",
+        "build_number": 2
     }
 ]

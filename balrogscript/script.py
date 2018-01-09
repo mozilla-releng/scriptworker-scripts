@@ -93,18 +93,14 @@ def setup_logging(verbose=False):
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                         stream=sys.stdout,
                         level=log_level)
-    logging.getLogger("boto").setLevel(logging.WARNING)
 
 
 def load_config(path=None):
     try:
         with open(path) as fh:
             config = json.load(fh)
-    except (ValueError, OSError) as e:
+    except (ValueError, OSError, IOError) as e:
         print >> sys.stderr, "Can't read config file {}!\n{}".format(path, e)
-        sys.exit(5)
-    except KeyError as e:
-        print >> sys.stderr, "Usage: balrogscript CONFIG_FILE\n{}".format(e)
         sys.exit(5)
     return config
 
@@ -132,7 +128,7 @@ def main(name=None, config_path=None):
     server = get_task_server(task, config)
     balrog_auth, config = update_config(config, server)
 
-    config['upstream_artifacts'] = get_upstream_artifacts(task)
+    upstream_artifacts = get_upstream_artifacts(task)
 
     # hacking the tools repo dependency by first reading its location from
     # the config file and only then loading the module from subdfolder
@@ -141,7 +137,7 @@ def main(name=None, config_path=None):
     from util.retry import retry  # noqa: E402
 
     # Read the manifest from disk
-    manifest = get_manifest(config)
+    manifest = get_manifest(config, upstream_artifacts)
 
     for e in manifest:
         # Get release metadata from manifest
