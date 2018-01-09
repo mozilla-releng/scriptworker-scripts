@@ -1,5 +1,8 @@
 # Balrogscript
 
+[![Build Status](https://travis-ci.org/mozilla-releng/balrogscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/balrogscript)
+[![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/balrogscript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/balrogscript?branch=master)
+
 A [scriptworker](https://github.com/mozilla-releng/scriptworker) script for submitting metadata to [balrog](https://wiki.mozilla.org/Balrog).
 
 ## Configuration
