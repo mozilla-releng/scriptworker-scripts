@@ -1,0 +1,10 @@
+recursive-include shipitscript/data *
+recursive-include examples *
+
+include LICENSE
+include README.md
+include version.txt
+include requirements*.txt
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
