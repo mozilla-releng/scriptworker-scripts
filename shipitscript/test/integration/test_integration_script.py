@@ -23,7 +23,7 @@ TASK_DEFINITION_TEMPLATE = '''{{
     "deadline": "2018-01-22T18:15:59.010Z",
     "expires": "2019-01-22T18:15:59.010Z",
     "dependencies": ["aRandomTaskId1"],
-    "scopes": [],
+    "scopes": ["project:releng:scriptworker:ship-it:dev"],
     "payload": {{
         "release_name": "{release_name}"
     }}
