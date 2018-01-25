@@ -18,7 +18,7 @@ def context():
         'payload': {
             'release_name': 'Firefox-59.0b3-build1'
         },
-        'scopes': ['project:releng:scriptworker:ship-it:dev'],
+        'scopes': ['project:releng:ship-it:dev'],
     }
 
     return context
@@ -34,18 +34,18 @@ def test_validate_task(context):
 
 
 @pytest.mark.parametrize('api_root, scope, raises', (
-    ('http://localhost:5000', 'project:releng:scriptworker:ship-it:dev', False),
-    ('http://some-ship-it.url', 'project:releng:scriptworker:ship-it:dev', False),
-    ('https://ship-it-dev.allizom.org', 'project:releng:scriptworker:ship-it:staging', False),
-    ('https://ship-it-dev.allizom.org/', 'project:releng:scriptworker:ship-it:staging', False),
-    ('https://ship-it.mozilla.org', 'project:releng:scriptworker:ship-it:production', False),
-    ('https://ship-it.mozilla.org/', 'project:releng:scriptworker:ship-it:production', False),
+    ('http://localhost:5000', 'project:releng:ship-it:dev', False),
+    ('http://some-ship-it.url', 'project:releng:ship-it:dev', False),
+    ('https://ship-it-dev.allizom.org', 'project:releng:ship-it:staging', False),
+    ('https://ship-it-dev.allizom.org/', 'project:releng:ship-it:staging', False),
+    ('https://ship-it.mozilla.org', 'project:releng:ship-it:production', False),
+    ('https://ship-it.mozilla.org/', 'project:releng:ship-it:production', False),
 
-    ('https://some-ship-it.url', 'project:releng:scriptworker:ship-it:production', True),
-    ('https://some-ship-it.url', 'project:releng:scriptworker:ship-it:staging', True),
+    ('https://some-ship-it.url', 'project:releng:ship-it:production', True),
+    ('https://some-ship-it.url', 'project:releng:ship-it:staging', True),
     # Dev scopes must not reach stage or prod
-    ('https://ship-it-dev.allizom.org', 'project:releng:scriptworker:ship-it:dev', True),
-    ('https://ship-it.mozilla.org', 'project:releng:scriptworker:ship-it:dev', True),
+    ('https://ship-it-dev.allizom.org', 'project:releng:ship-it:dev', True),
+    ('https://ship-it.mozilla.org', 'project:releng:ship-it:dev', True),
 ))
 def test_validate_scope(context, api_root, scope, raises):
     context.config['ship_it_instance']['api_root'] = api_root
@@ -59,11 +59,11 @@ def test_validate_scope(context, api_root, scope, raises):
 
 
 @pytest.mark.parametrize('scopes, raises', (
-    (('project:releng:scriptworker:ship-it:dev',), False),
-    (('project:releng:scriptworker:ship-it:staging',), False),
-    (('project:releng:scriptworker:ship-it:production',), False),
-    (('project:releng:scriptworker:ship-it:dev', 'project:releng:scriptworker:ship-it:production',), True),
-    (('project:releng:scriptworker:ship-it:unkown_scope',), True),
+    (('project:releng:ship-it:dev',), False),
+    (('project:releng:ship-it:staging',), False),
+    (('project:releng:ship-it:production',), False),
+    (('project:releng:ship-it:dev', 'project:releng:ship-it:production',), True),
+    (('project:releng:ship-it:unkown_scope',), True),
     (('some:random:scope',), True),
 ))
 def test_get_scope(scopes, raises):

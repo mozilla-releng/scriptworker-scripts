@@ -8,9 +8,9 @@ from shipitscript.exceptions import TaskVerificationError
 log = logging.getLogger(__name__)
 
 ALLOWED_API_ROOT_PER_VALID_SCOPE = {
-    'project:releng:scriptworker:ship-it:production': 'https://ship-it.mozilla.org',
-    'project:releng:scriptworker:ship-it:staging': 'https://ship-it-dev.allizom.org',
-    'project:releng:scriptworker:ship-it:dev': '*',
+    'project:releng:ship-it:production': 'https://ship-it.mozilla.org',
+    'project:releng:ship-it:staging': 'https://ship-it-dev.allizom.org',
+    'project:releng:ship-it:dev': '*',
 }
 
 VALID_SCOPES = tuple(ALLOWED_API_ROOT_PER_VALID_SCOPE.keys())
