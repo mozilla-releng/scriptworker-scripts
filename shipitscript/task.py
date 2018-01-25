@@ -14,6 +14,11 @@ ALLOWED_API_ROOT_PER_VALID_SCOPE = {
 }
 
 VALID_SCOPES = tuple(ALLOWED_API_ROOT_PER_VALID_SCOPE.keys())
+PROTECTED_API_ROOTS = tuple([
+    url
+    for url in ALLOWED_API_ROOT_PER_VALID_SCOPE.values()
+    if url != '*'
+])
 
 
 def validate_task_schema(context):
@@ -27,11 +32,13 @@ def validate_task_scope(context):
     scope = _get_scope(context.task)
     allowed_api_root = ALLOWED_API_ROOT_PER_VALID_SCOPE[scope]
     api_root_of_this_instance = context.config['ship_it_instance']['api_root']
-    if allowed_api_root != '*' and api_root_of_this_instance.rstrip('/') != allowed_api_root:
-        instance_type = scope.split(':')[-1]
-        raise TaskVerificationError(
-            'This instance is now allowed to talk to the "{}" instance ({})'.format(instance_type, allowed_api_root)
-        )
+    api_root_of_this_instance = api_root_of_this_instance.rstrip('/')
+    if allowed_api_root != api_root_of_this_instance:
+        if allowed_api_root in PROTECTED_API_ROOTS or api_root_of_this_instance in PROTECTED_API_ROOTS:
+            instance_type = scope.split(':')[-1]
+            raise TaskVerificationError(
+                'This instance is now allowed to talk to the "{}" instance ({})'.format(instance_type, allowed_api_root)
+            )
 
 
 def _get_scope(task):

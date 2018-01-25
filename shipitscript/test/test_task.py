@@ -43,6 +43,9 @@ def test_validate_task(context):
 
     ('https://some-ship-it.url', 'project:releng:scriptworker:ship-it:production', True),
     ('https://some-ship-it.url', 'project:releng:scriptworker:ship-it:staging', True),
+    # Dev scopes must not reach stage or prod
+    ('https://ship-it-dev.allizom.org', 'project:releng:scriptworker:ship-it:dev', True),
+    ('https://ship-it.mozilla.org', 'project:releng:scriptworker:ship-it:dev', True),
 ))
 def test_validate_scope(context, api_root, scope, raises):
     context.config['ship_it_instance']['api_root'] = api_root
