@@ -4,7 +4,7 @@ import logging
 import scriptworker.client
 
 from shipitscript.exceptions import TaskVerificationError, BadInstanceConfigurationError
-from shipitscript.utils import get_single_item_from_list
+from shipitscript.utils import get_single_item_from_sequence
 
 log = logging.getLogger(__name__)
 
@@ -46,17 +46,18 @@ def get_ship_it_instance_config_from_scope(context):
             return instance['api_root'].rstrip('/') not in PROTECTED_API_ROOTS
         no_item_error_message = "Couldn't find an API root that is not a protected one",
 
-    return get_single_item_from_list(
+    return get_single_item_from_sequence(
         configured_instances,
         condition=condition,
         ErrorClass=BadInstanceConfigurationError,
         no_item_error_message=no_item_error_message,
         too_many_item_error_message='Too many "{}" instances configured'.format(instance_type, allowed_api_root),
+        append_sequence_to_error_message=False
     )
 
 
 def _get_scope(task):
-    return get_single_item_from_list(
+    return get_single_item_from_sequence(
         task['scopes'],
         condition=lambda scope: scope in VALID_SCOPES,
         ErrorClass=TaskVerificationError,
