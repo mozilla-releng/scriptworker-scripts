@@ -30,19 +30,23 @@ class SomeCustomError(Exception):
 
 
 @pytest.mark.parametrize(
- 'list_, condition, ErrorClass, no_item_error_message, too_many_item_error_message, has_all_params, expected_message',
- (
-    (['a', 'b', 'c'], lambda item: item == 'z', SomeCustomError, 'NO ITEM', 'TOO MANY', True, "NO ITEM. Given: ['a', 'b', 'c']"),
-    (['a', 'b', 'b'], lambda item: item == 'b', SomeCustomError, 'NO ITEM', 'TOO MANY', True, "TOO MANY. Given: ['a', 'b', 'b']"),
-    (['a', 'b', 'c'], lambda _: False, ValueError, None, None, False, "No item matched condition. Given: ['a', 'b', 'c']"),
-    (['a', 'b', 'c'], lambda _: True, ValueError, None, None, False, "Too many items matched condition. Given: ['a', 'b', 'c']"),
+ 'list_, condition, ErrorClass, no_item_error_message, too_many_item_error_message, append_list_to_error_message, \
+ has_all_params, expected_message', (
+    (['a', 'b', 'c'], lambda item: item == 'z', SomeCustomError, 'NO ITEM', 'TOO MANY', True, True, "NO ITEM. Given: ['a', 'b', 'c']"),
+    (['a', 'b', 'c'], lambda item: item == 'z', SomeCustomError, 'NO ITEM', 'TOO MANY', False, True, 'NO ITEM'),
+    (['a', 'b', 'b'], lambda item: item == 'b', SomeCustomError, 'NO ITEM', 'TOO MANY', True, True, "TOO MANY. Given: ['a', 'b', 'b']"),
+    (['a', 'b', 'c'], lambda _: False, ValueError, None, None, None, False, "No item matched condition. Given: ['a', 'b', 'c']"),
+    (['a', 'b', 'c'], lambda _: True, ValueError, None, None, None, False, "Too many items matched condition. Given: ['a', 'b', 'c']"),
  )
 )
-def test_fail_(list_, condition, ErrorClass, no_item_error_message, too_many_item_error_message, has_all_params, expected_message):
+def test_fail_get_single_item_from_list(
+    list_, condition, ErrorClass, no_item_error_message, too_many_item_error_message, append_list_to_error_message,
+    has_all_params, expected_message
+):
     with pytest.raises(ErrorClass) as exec_info:
         if has_all_params:
             get_single_item_from_list(
-                list_, condition, ErrorClass, no_item_error_message, too_many_item_error_message
+                list_, condition, ErrorClass, no_item_error_message, too_many_item_error_message, append_list_to_error_message
             )
         else:
             get_single_item_from_list(list_, condition)
