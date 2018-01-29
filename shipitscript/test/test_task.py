@@ -3,16 +3,21 @@ import pytest
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-from shipitscript.exceptions import TaskVerificationError
+from shipitscript.exceptions import TaskVerificationError, BadInstanceConfigurationError
 from shipitscript.script import get_default_config
-from shipitscript.task import validate_task_schema, validate_task_scope, _get_scope
+from shipitscript.task import validate_task_schema, get_ship_it_instance_config_from_scope, _get_scope
 
 
 @pytest.fixture
 def context():
     context = Context()
     context.config = get_default_config()
-    context.config['ship_it_instance'] = {}
+    context.config['ship_it_instances'] = [{
+        'api_root': '',
+        'timeout_in_seconds': 1,
+        'username': 'some-username',
+        'password': 'some-password'
+    }]
     context.task = {
         'dependencies': ['someTaskId'],
         'payload': {
@@ -47,15 +52,20 @@ def test_validate_task(context):
     ('https://ship-it-dev.allizom.org', 'project:releng:ship-it:dev', True),
     ('https://ship-it.mozilla.org', 'project:releng:ship-it:dev', True),
 ))
-def test_validate_scope(context, api_root, scope, raises):
-    context.config['ship_it_instance']['api_root'] = api_root
+def test_get_ship_it_instance_config_from_scope(context, api_root, scope, raises):
+    context.config['ship_it_instances'][0]['api_root'] = api_root
     context.task['scopes'] = [scope]
 
     if raises:
-        with pytest.raises(TaskVerificationError):
-            validate_task_scope(context)
+        with pytest.raises(BadInstanceConfigurationError):
+            get_ship_it_instance_config_from_scope(context)
     else:
-        validate_task_scope(context)
+        assert get_ship_it_instance_config_from_scope(context) == {
+            'api_root': api_root,
+            'timeout_in_seconds': 1,
+            'username': 'some-username',
+            'password': 'some-password'
+        }
 
 
 @pytest.mark.parametrize('scopes, raises', (

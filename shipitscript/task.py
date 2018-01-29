@@ -3,7 +3,8 @@ import logging
 
 import scriptworker.client
 
-from shipitscript.exceptions import TaskVerificationError
+from shipitscript.exceptions import TaskVerificationError, BadInstanceConfigurationError
+from shipitscript.utils import get_single_item_from_list
 
 log = logging.getLogger(__name__)
 
@@ -28,29 +29,37 @@ def validate_task_schema(context):
     scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
-def validate_task_scope(context):
+def get_ship_it_instance_config_from_scope(context):
     scope = _get_scope(context.task)
     allowed_api_root = ALLOWED_API_ROOT_PER_VALID_SCOPE[scope]
-    api_root_of_this_instance = context.config['ship_it_instance']['api_root']
-    api_root_of_this_instance = api_root_of_this_instance.rstrip('/')
-    if allowed_api_root != api_root_of_this_instance:
-        if allowed_api_root in PROTECTED_API_ROOTS or api_root_of_this_instance in PROTECTED_API_ROOTS:
-            instance_type = scope.split(':')[-1]
-            raise TaskVerificationError(
-                'This instance is now allowed to talk to the "{}" instance ({})'.format(instance_type, allowed_api_root)
-            )
+    configured_instances = context.config['ship_it_instances']
+    instance_type = scope.split(':')[-1]
+
+    if allowed_api_root in PROTECTED_API_ROOTS:
+        def condition(instance):
+            return instance['api_root'].rstrip('/') == allowed_api_root
+        no_item_error_message = 'This instance is now allowed to talk to the "{}" instance ({})'.format(
+            instance_type, allowed_api_root
+        )
+    else:
+        def condition(instance):
+            return instance['api_root'].rstrip('/') not in PROTECTED_API_ROOTS
+        no_item_error_message = "Couldn't find an API root that is not a protected one",
+
+    return get_single_item_from_list(
+        configured_instances,
+        condition=condition,
+        ErrorClass=BadInstanceConfigurationError,
+        no_item_error_message=no_item_error_message,
+        too_many_item_error_message='Too many "{}" instances configured'.format(instance_type, allowed_api_root),
+    )
 
 
 def _get_scope(task):
-    given_scopes = task['scopes']
-    scopes = [scope for scope in given_scopes if scope in VALID_SCOPES]
-
-    number_of_scopes = len(scopes)
-    if number_of_scopes == 0:
-        raise TaskVerificationError(
-            'No valid scope found. Task must have one of these: {}. Given scopes: {}'.format(VALID_SCOPES, given_scopes)
-        )
-    elif number_of_scopes > 1:
-        raise TaskVerificationError('More than one valid scope given: {}'.format(scopes))
-
-    return scopes[0]
+    return get_single_item_from_list(
+        task['scopes'],
+        condition=lambda scope: scope in VALID_SCOPES,
+        ErrorClass=TaskVerificationError,
+        no_item_error_message='No valid scope found. Task must have one of these: {}'.format(VALID_SCOPES),
+        too_many_item_error_message='More than one valid scope given',
+    )

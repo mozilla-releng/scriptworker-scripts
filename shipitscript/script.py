@@ -13,7 +13,7 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from shipitscript.ship_actions import mark_as_shipped
-from shipitscript.task import validate_task_schema, validate_task_scope
+from shipitscript.task import validate_task_schema, get_ship_it_instance_config_from_scope
 from shipitscript.utils import load_json
 
 
@@ -24,9 +24,8 @@ async def async_main(context):
     context.task = scriptworker.client.get_task(context.config)
     log.info('Validating task definition...')
     validate_task_schema(context)
-    validate_task_scope(context)
+    ship_it_instance_config = get_ship_it_instance_config_from_scope(context)
 
-    ship_it_instance_config = context.config['ship_it_instance']
     release_name = context.task['payload']['release_name']
     mark_as_shipped(ship_it_instance_config, release_name)
     log.info('Done!')

@@ -2,11 +2,11 @@
     "work_dir": "/path/to/scriptworker/tmp/work",
     "schema_file": "/path/to/shipitscript/shipitscript/data/pushapk_task_schema.json",
 
-    "ship_it_instance": {
+    "ship_it_instances": [{
         "username": "some@user.name",
         "password": "50mep@ssword",
         "api_root": "http://ship-it.tld/"
-    },
+    }],
 
     "verbose": true
 }

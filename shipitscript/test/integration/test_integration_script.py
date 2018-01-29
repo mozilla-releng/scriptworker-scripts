@@ -35,12 +35,12 @@ CONFIG_TEMPLATE = '''{{
     "schema_file": "{project_data_dir}/shipit_task_schema.json",
     "verbose": true,
 
-    "ship_it_instance": {{
+    "ship_it_instances": [{{
         "api_root": "http://some.ship-it.tld/api/root",
         "timeout_in_seconds": 1,
         "username": "some-username",
         "password": "some-password"
-    }}
+    }}]
 }}'''
 
 
