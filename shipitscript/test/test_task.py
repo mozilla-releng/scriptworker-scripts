@@ -1,9 +1,10 @@
 import pytest
+import copy
 
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-from shipitscript.exceptions import TaskVerificationError, BadInstanceConfigurationError
+from shipitscript.exceptions import TaskVerificationError
 from shipitscript.script import get_default_config
 from shipitscript.task import validate_task_schema, get_ship_it_instance_config_from_scope, _get_scope
 
@@ -12,12 +13,14 @@ from shipitscript.task import validate_task_schema, get_ship_it_instance_config_
 def context():
     context = Context()
     context.config = get_default_config()
-    context.config['ship_it_instances'] = [{
-        'api_root': '',
-        'timeout_in_seconds': 1,
-        'username': 'some-username',
-        'password': 'some-password'
-    }]
+    context.config['ship_it_instances'] = {
+        'project:releng:ship-it:dev': {
+            'api_root': 'http://some-ship-it.url',
+            'timeout_in_seconds': 1,
+            'username': 'some-username',
+            'password': 'some-password'
+        }
+    }
     context.task = {
         'dependencies': ['someTaskId'],
         'payload': {
@@ -45,19 +48,14 @@ def test_validate_task(context):
     ('https://ship-it-dev.allizom.org/', 'project:releng:ship-it:staging', False),
     ('https://ship-it.mozilla.org', 'project:releng:ship-it:production', False),
     ('https://ship-it.mozilla.org/', 'project:releng:ship-it:production', False),
-
-    ('https://some-ship-it.url', 'project:releng:ship-it:production', True),
-    ('https://some-ship-it.url', 'project:releng:ship-it:staging', True),
-    # Dev scopes must not reach stage or prod
-    ('https://ship-it-dev.allizom.org', 'project:releng:ship-it:dev', True),
-    ('https://ship-it.mozilla.org', 'project:releng:ship-it:dev', True),
 ))
 def test_get_ship_it_instance_config_from_scope(context, api_root, scope, raises):
-    context.config['ship_it_instances'][0]['api_root'] = api_root
+    context.config['ship_it_instances'][scope] = copy.deepcopy(context.config['ship_it_instances']['project:releng:ship-it:dev'])
+    context.config['ship_it_instances'][scope]['api_root'] = api_root
     context.task['scopes'] = [scope]
 
     if raises:
-        with pytest.raises(BadInstanceConfigurationError):
+        with pytest.raises(TaskVerificationError):
             get_ship_it_instance_config_from_scope(context)
     else:
         assert get_ship_it_instance_config_from_scope(context) == {
@@ -68,12 +66,20 @@ def test_get_ship_it_instance_config_from_scope(context, api_root, scope, raises
         }
 
 
+@pytest.mark.parametrize('scope', (
+    'some:random:scope', 'project:releng:ship-it:staging', 'project:releng:ship-it:production',
+))
+def test_fail_get_ship_it_instance_config_from_scope(context, scope):
+    context.task['scopes'] = [scope]
+    with pytest.raises(TaskVerificationError):
+        get_ship_it_instance_config_from_scope(context)
+
+
 @pytest.mark.parametrize('scopes, raises', (
     (('project:releng:ship-it:dev',), False),
     (('project:releng:ship-it:staging',), False),
     (('project:releng:ship-it:production',), False),
     (('project:releng:ship-it:dev', 'project:releng:ship-it:production',), True),
-    (('project:releng:ship-it:unkown_scope',), True),
     (('some:random:scope',), True),
 ))
 def test_get_scope(scopes, raises):

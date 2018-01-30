@@ -2,11 +2,13 @@
     "work_dir": "/path/to/scriptworker/tmp/work",
     "schema_file": "/path/to/shipitscript/shipitscript/data/pushapk_task_schema.json",
 
-    "ship_it_instances": [{
-        "username": "some@user.name",
-        "password": "50mep@ssword",
-        "api_root": "http://ship-it.tld/"
-    }],
+    "ship_it_instances": {
+        "project:releng:ship-it:dev": {
+            "username": "some@user.name",
+            "password": "50mep@ssword",
+            "api_root": "http://ship-it.tld/"
+        }
+    },
 
     "verbose": true
 }
