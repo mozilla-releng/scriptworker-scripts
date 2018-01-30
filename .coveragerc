@@ -1,0 +1,3 @@
+[run]
+branch = True
+omit = signingscript/test/*,signingscript/createprecomplete.py

@@ -1,0 +1,12 @@
+# Specifically for testing
+-r requirements-dev.txt
+coverage>=4.2
+flake8
+flake8_docstrings
+mock
+pytest
+pytest-asyncio
+pytest-cov
+pytest-mock
+tox
+virtualenv
