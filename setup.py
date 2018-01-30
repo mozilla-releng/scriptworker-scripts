@@ -1,3 +1,4 @@
+# noqa: D100
 import os
 from setuptools import setup, find_packages
 
