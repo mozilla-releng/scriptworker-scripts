@@ -12,9 +12,9 @@ def mark_as_shipped(ship_it_instance_config, release_name):
     """
     auth = (ship_it_instance_config['username'], ship_it_instance_config['password'])
     api_root = ship_it_instance_config['api_root']
-    timeout_in_seconds = ship_it_instance_config['timeout_in_seconds']
+    timeout_in_seconds = int(ship_it_instance_config['timeout_in_seconds'])
     release_api = shipitapi.Release(auth, api_root=api_root, timeout=timeout_in_seconds)
 
     shipped_at = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-    log.info('Mark the release as shipped with {} timestamp'.format(shipped_at))
+    log.info('Marking the release as shipped with {} timestamp...'.format(shipped_at))
     release_api.update(release_name, status='shipped', shippedAt=shipped_at)
