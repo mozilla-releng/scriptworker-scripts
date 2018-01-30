@@ -18,7 +18,7 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 #     sign, task_signing_formats, validate_task_schema
 from treescript.task import validate_task_schema
 # from signingscript.utils import copy_to_dir, load_json, load_signing_server_config
-from treescript.utils import load_json
+from treescript.utils import load_json, task_action_types
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +53,10 @@ async def async_main(context, conn=None):
         context.task = scriptworker.client.get_task(context.config)
         log.info("validating task")
         validate_task_schema(context)
+        actions_to_perform = task_action_types(context.task)
+        # flake8
         assert work_dir
+        assert actions_to_perform is not "invalid"
     log.info("Done!")
 
 
