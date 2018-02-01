@@ -1,6 +1,6 @@
 """Treescript general utility functions."""
-# import asyncio
-# from asyncio.subprocess import PIPE, STDOUT
+import asyncio
+from asyncio.subprocess import PIPE, STDOUT
 # import functools
 # import hashlib
 import json
@@ -10,7 +10,7 @@ import logging
 # import traceback
 # from collections import namedtuple
 
-from treescript.exceptions import TaskVerificationError
+from treescript.exceptions import TaskVerificationError, FailedSubprocess
 
 log = logging.getLogger(__name__)
 
@@ -57,3 +57,45 @@ def task_action_types(task):
     if len(invalid_actions) > 0:
         raise TaskVerificationError("Task specified invalid actions: {}".format(invalid_actions))
     return actions
+
+
+async def log_output(fh):
+    """Log the output from an async generator.
+
+    Args:
+        fh (async generator): the async generator to log output from
+
+    """
+    while True:
+        line = await fh.readline()
+        if line:
+            log.info(line.decode("utf-8").rstrip())
+        else:
+            break
+
+
+async def execute_subprocess(command, **kwargs):
+    """Execute a command in a subprocess.
+
+    Args:
+        command (list): the command to run
+        **kwargs: the kwargs to pass to subprocess
+
+    Raises:
+        FailedSubprocess: on failure
+
+    """
+    message = 'Running "{}"'.format(' '.join(command))
+    if 'cwd' in kwargs:
+        message += " in {}".format(kwargs['cwd'])
+    log.info(message)
+    subprocess = await asyncio.create_subprocess_exec(
+        *command, stdout=PIPE, stderr=STDOUT, **kwargs
+    )
+    log.info("COMMAND OUTPUT: ")
+    await log_output(subprocess.stdout)
+    exitcode = await subprocess.wait()
+    log.info("exitcode {}".format(exitcode))
+
+    if exitcode != 0:
+        raise FailedSubprocess('Command `{}` failed'.format(' '.join(command)))

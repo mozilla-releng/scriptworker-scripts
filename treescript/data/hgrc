@@ -1,0 +1,5 @@
+[ui]
+username = "Mozilla Releng Treescript <release+treescript@mozilla.org>"
+
+[extensions]
+#robustcheckout = 
