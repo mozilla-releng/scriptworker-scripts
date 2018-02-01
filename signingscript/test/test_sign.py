@@ -22,7 +22,8 @@ assert tmpdir  # silence flake8
 
 # helper constants, fixtures, functions {{{1
 SERVER_CONFIG_PATH = os.path.join(BASE_DIR, 'example_server_config.json')
-TEST_CERT_TYPE = "project:releng:signing:cert:dep-signing"
+DEFAULT_SCOPE_PREFIX = 'project:releng:signing:'
+TEST_CERT_TYPE = '{}cert:dep-signing'.format(DEFAULT_SCOPE_PREFIX)
 
 
 @pytest.fixture(scope='function')
@@ -57,6 +58,7 @@ def context(tmpdir):
     context.config['signing_server_config'] = SERVER_CONFIG_PATH
     context.config['work_dir'] = os.path.join(tmpdir, 'work')
     context.config['artifact_dir'] = os.path.join(tmpdir, 'artifact')
+    context.config['taskcluster_scope_prefix'] = DEFAULT_SCOPE_PREFIX
     context.signing_servers = load_signing_server_config(context)
     mkdir(context.config['work_dir'])
     mkdir(context.config['artifact_dir'])
@@ -85,22 +87,6 @@ async def helper_archive(context, filename, create_fn, extract_fn, *kwargs):
         hash1 = get_hash(path)
         hash2 = get_hash(target_path)
         assert hash1 == hash2
-
-
-# task_cert_type {{{1
-def test_task_cert_type():
-    task = {"scopes": [TEST_CERT_TYPE,
-                       "project:releng:signing:type:mar",
-                       "project:releng:signing:type:gpg"]}
-    assert TEST_CERT_TYPE == sign.task_cert_type(task)
-
-
-def test_task_cert_type_error():
-    task = {"scopes": [TEST_CERT_TYPE,
-                       "project:releng:signing:cert:notdep",
-                       "project:releng:signing:type:gpg"]}
-    with pytest.raises(ScriptWorkerTaskException):
-        sign.task_cert_type(task)
 
 
 # get_suitable_signing_servers {{{1

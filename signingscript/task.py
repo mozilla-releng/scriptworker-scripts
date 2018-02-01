@@ -42,19 +42,55 @@ FORMAT_TO_SIGNING_FUNCTION = frozendict({
 })
 
 
+# task_cert_type {{{1
+def task_cert_type(context):
+    """Extract task certificate type.
+
+    Args:
+        context (SigningContext): the signing context.
+
+    Raises:
+        TaskVerificationError: if the number of cert scopes is not 1.
+
+    Returns:
+        str: the cert type.
+
+    """
+    prefix = _get_cert_prefix(context)
+    certs = [scope for scope in context.task['scopes'] if scope.startswith(prefix)]
+    log.info("Certificate types: %s", certs)
+    if len(certs) != 1:
+        raise TaskVerificationError("Only one certificate type can be used")
+    return certs[0]
+
+
 # task_signing_formats {{{1
-def task_signing_formats(task):
+def task_signing_formats(context):
     """Get the list of signing formats from the task signing scopes.
 
     Args:
-        task (dict): the task definition.
+        context (SigningContext): the signing context.
 
     Returns:
         list: the signing formats.
 
     """
-    return [s.split(":")[-1] for s in task["scopes"] if
-            s.startswith("project:releng:signing:format:")]
+    prefix = _get_format_prefix(context)
+    return [scope.split(':')[-1] for scope in context.task['scopes'] if scope.startswith(prefix)]
+
+
+def _get_cert_prefix(context):
+    return _get_scope_prefix(context, 'cert')
+
+
+def _get_format_prefix(context):
+    return _get_scope_prefix(context, 'format')
+
+
+def _get_scope_prefix(context, sub_namespace):
+    prefix = context.config['taskcluster_scope_prefix']
+    prefix = prefix if prefix.endswith(':') else '{}:'.format(prefix)
+    return '{}{}:'.format(prefix, sub_namespace)
 
 
 # validate_task_schema {{{1

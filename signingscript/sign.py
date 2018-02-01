@@ -16,7 +16,7 @@ from scriptworker.utils import makedirs, raise_future_exceptions, rm
 
 from signingscript import utils
 from signingscript.createprecomplete import generate_precomplete
-from signingscript.exceptions import SigningScriptError, TaskVerificationError
+from signingscript.exceptions import SigningScriptError
 
 log = logging.getLogger(__name__)
 
@@ -43,28 +43,6 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
     "libclearkey.dylib",
     "libclearkey.so",
 )
-
-
-# task_cert_type {{{1
-def task_cert_type(task):
-    """Extract task certificate type.
-
-    Args:
-        task (dict): the task definition.
-
-    Raises:
-        TaskVerificationError: if the number of cert scopes is not 1.
-
-    Returns:
-        str: the cert type.
-
-    """
-    certs = [s for s in task["scopes"] if
-             s.startswith("project:releng:signing:cert:")]
-    log.info("Certificate types: %s", certs)
-    if len(certs) != 1:
-        raise TaskVerificationError("Only one certificate type can be used")
-    return certs[0]
 
 
 # get_suitable_signing_servers {{{1
@@ -104,7 +82,8 @@ def build_signtool_cmd(context, from_, fmt, to=None):
     work_dir = context.config['work_dir']
     token = os.path.join(work_dir, "token")
     nonce = os.path.join(work_dir, "nonce")
-    cert_type = task_cert_type(context.task)
+    from signingscript.task import task_cert_type
+    cert_type = task_cert_type(context)
     ssl_cert = context.config['ssl_cert']
     signtool = context.config['signtool']
     if not isinstance(signtool, (list, tuple)):

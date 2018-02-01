@@ -13,9 +13,8 @@ from datadog import statsd
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-from signingscript.sign import task_cert_type
 from signingscript.task import build_filelist_dict, get_token, \
-    sign, task_signing_formats, validate_task_schema
+    sign, task_cert_type, task_signing_formats, validate_task_schema
 from signingscript.utils import copy_to_dir, load_json, load_signing_server_config
 
 
@@ -55,8 +54,8 @@ async def async_main(context, conn=None):
         log.info("validating task")
         validate_task_schema(context)
         context.signing_servers = load_signing_server_config(context)
-        cert_type = task_cert_type(context.task)
-        all_signing_formats = task_signing_formats(context.task)
+        cert_type = task_cert_type(context)
+        all_signing_formats = task_signing_formats(context)
         log.info("getting token")
         await get_token(context, os.path.join(work_dir, 'token'), cert_type, all_signing_formats)
         filelist_dict = build_filelist_dict(context, all_signing_formats)

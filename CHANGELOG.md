@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [5.0.0] - TBD
+### Added
+- Support for different scope prefix (was hardcoded to `project:releng:signing:`). Prefixes are now defined in the configuration under `taskcluster_scope_prefix`.
+
+### Changed
+- `task_cert_type()` now lives under the `task` module.
+
 ## [4.2.1] - 2017-12-05
 ### Added
 - added additional dependency for datadog statsd
