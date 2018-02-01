@@ -16,8 +16,10 @@ from treescript.utils import execute_subprocess
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
 # For environment vars.
 
-HGRCPATH = os.path.join(os.dirname(__file__), 'data', 'hgrc')
-ROBUSTCHECKOUT_PATH = os.path.join(os.dirname(__file__), 'py2', 'robustcheckout.py')
+HGRCPATH = os.path.join(os.path.dirname(__file__), 'data', 'hgrc')
+ROBUSTCHECKOUT_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), 'py2', 'robustcheckout.py')
+)
 
 
 def build_hg_command(context, *args):
@@ -34,10 +36,12 @@ def build_hg_command(context, *args):
 
     """
     hg = context.config['hg']
+    if not isinstance(hg, (list, tuple)):
+        hg = [hg]
     robustcheckout_args = [
         '--config', 'extensions.robustcheckout={}'.format(ROBUSTCHECKOUT_PATH)
     ]
-    return [hg, *robustcheckout_args, *args]
+    return hg + [*robustcheckout_args, *args]
 
 
 def build_hg_environment():

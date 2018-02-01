@@ -15,6 +15,31 @@ TEST_ACTION_BUMP = 'project:releng:treescript:action:versionbump'
 TEST_ACTION_INVALID = 'project:releng:treescript:action:invalid'
 
 
+# mkdir {{{1
+def test_mkdir_does_make_dirs(tmpdir):
+
+    def assertDirIsUniqueAndNamed(dirs, name):
+        assert len(dirs) == 1
+        assert dirs[0].is_dir()
+        assert dirs[0].name == name
+
+    end_dir = os.path.join(tmpdir, 'dir_in_the_middle', 'leaf_dir')
+    utils.mkdir(end_dir)
+
+    middle_dirs = list(os.scandir(tmpdir))
+    assertDirIsUniqueAndNamed(middle_dirs, 'dir_in_the_middle')
+
+    leaf_dirs = list(os.scandir(middle_dirs[0].path))
+    assertDirIsUniqueAndNamed(leaf_dirs, 'leaf_dir')
+
+
+def test_mkdir_mutes_os_errors(mocker):
+    m = mocker.patch.object(os, 'makedirs')
+    m.side_effect = OSError
+    utils.mkdir('/dummy/dir')
+    m.assert_called_with('/dummy/dir')
+
+
 # load_json {{{1
 def test_load_json_from_file(tmpdir):
     json_object = {'a_key': 'a_value'}

@@ -5,7 +5,7 @@ from asyncio.subprocess import PIPE, STDOUT
 # import hashlib
 import json
 import logging
-# import os
+import os
 # from shutil import copyfile
 # import traceback
 # from collections import namedtuple
@@ -15,6 +15,20 @@ from treescript.exceptions import TaskVerificationError, FailedSubprocess
 log = logging.getLogger(__name__)
 
 VALID_ACTIONS = ("tagging", "versionbump")
+
+
+def mkdir(path):
+    """Equivalent to `mkdir -p`.
+
+    Args:
+        path (str): the path to mkdir
+
+    """
+    try:
+        os.makedirs(path)
+        log.info("mkdir {}".format(path))
+    except OSError:
+        pass
 
 
 def load_json(path):

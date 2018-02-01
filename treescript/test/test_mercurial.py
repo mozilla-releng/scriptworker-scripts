@@ -4,22 +4,64 @@ We use a vendored copy, tests here are merely about integration with our tooling
 
 """
 
-import hashlib
 import os
 
-ROBUSTCHKOUT_SHA_512 = (
-    '0b3b2d30a85fd9df8ce61db4d87ea710967f8e63a7ea1c3c4e023614467d646f'
-    '09975b6dc069720d2f3cafb79d94c9f3e2d7d7048f22d063a7db06f94bc5ceb0'
-)
+import pytest
+from scriptworker.context import Context
+from treescript import mercurial
+from treescript.script import get_default_config
+from treescript.utils import mkdir
+from treescript.test import tmpdir
 
-ROBUSTCHECKOUT_FILE = os.path.join(
+assert tmpdir  # silence flake8
+
+
+ROBUSTCHECKOUT_FILE = os.path.abspath(os.path.join(
     os.path.dirname(__file__), '..', 'py2', 'robustcheckout.py'
-)
+))
+UNEXPECTED_ENV_KEYS = ('HG HGPROF CDPATH GREP_OPTIONS http_proxy no_proxy '
+                       'HGPLAINEXCEPT EDITOR VISUAL PAGER NO_PROXY CHGDEBUG'.split())
 
 
-def test_robustcheckout_sha():
-    hasher = hashlib.sha512()
-    with open(ROBUSTCHECKOUT_FILE) as f:
-        contents = f.read()
-    hasher.update(contents.encode('utf-8'))
-    assert hasher.hexdigest() == ROBUSTCHKOUT_SHA_512
+@pytest.yield_fixture(scope='function')
+def context(tmpdir):
+    context = Context()
+    context.config = get_default_config()
+    context.config['work_dir'] = os.path.join(tmpdir, 'work')
+    context.config['artifact_dir'] = os.path.join(tmpdir, 'artifact')
+    mkdir(context.config['work_dir'])
+    mkdir(context.config['artifact_dir'])
+    yield context
+
+
+@pytest.mark.parametrize('hg,args', ((
+    "hg", ["blah", "blah", "--baz"]
+), (
+    ["hg"], ["blah", "blah", "--baz"]
+)))
+def test_build_hg_cmd(context, hg, args):
+    context.config['hg'] = hg
+    assert mercurial.build_hg_command(context, *args) == [
+        "hg",
+        "--config", "extensions.robustcheckout={}".format(ROBUSTCHECKOUT_FILE),
+        "blah", "blah", "--baz"
+    ]
+
+
+@pytest.mark.parametrize('my_env', ({
+    # Blank
+}, {  # defaults wrong
+    "HGPLAIN": "0",
+    "LANG": "en_US.utf8"
+}, {  # Values to strip from env
+    k: "whatever" for k in UNEXPECTED_ENV_KEYS
+}
+))
+def test_build_hg_env(mocker, my_env):
+    mocker.patch.dict(mercurial.os.environ, my_env)
+    returned_env = mercurial.build_hg_environment()
+    assert (set(UNEXPECTED_ENV_KEYS) & set(returned_env.keys())) == set()
+    assert returned_env['HGPLAIN'] == "1"
+    assert returned_env['LANG'] == "C"
+    for key in returned_env.keys():
+        assert type(returned_env[key]) == str
