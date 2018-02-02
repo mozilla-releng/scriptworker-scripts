@@ -2,9 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [5.0.0] - TBD
+## [5.0.0] - 2018-02-01
 ### Added
-- Support for different scope prefix (was hardcoded to `project:releng:signing:`). Prefixes are now defined in the configuration under `taskcluster_scope_prefix`.
+- support for different scope prefix (was hardcoded to `project:releng:signing:`). Prefixes are now defined in the configuration under `taskcluster_scope_prefix`.
+- certificates of MDC1 datacenter.
 
 ### Changed
 - `task_cert_type()` now lives under the `task` module.
