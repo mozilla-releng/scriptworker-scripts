@@ -19,6 +19,7 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 from treescript.task import validate_task_schema
 # from signingscript.utils import copy_to_dir, load_json, load_signing_server_config
 from treescript.utils import load_json, task_action_types
+from treescript.mercurial import validate_robustcheckout_works
 
 log = logging.getLogger(__name__)
 
@@ -54,6 +55,9 @@ async def async_main(context, conn=None):
         log.info("validating task")
         validate_task_schema(context)
         actions_to_perform = task_action_types(context.task)
+        if not await validate_robustcheckout_works(context):
+            log.error("Robustcheckout can't run on our version of hg, aborting")
+            return 1
         # flake8
         assert work_dir
         assert actions_to_perform is not "invalid"
@@ -76,6 +80,7 @@ def get_default_config(base_dir=None):
     default_config = {
         # 'signing_server_config': 'server_config.json',
         'work_dir': os.path.join(base_dir, 'work_dir'),
+        'hg': 'hg',
         # 'artifact_dir': os.path.join(base_dir, '/src/signing/artifact_dir'),
         # 'my_ip': "127.0.0.1",
         # 'token_duration_seconds': 20 * 60,

@@ -12,6 +12,7 @@ from treescript import mercurial
 from treescript.script import get_default_config
 from treescript.utils import mkdir
 from treescript.test import tmpdir
+from treescript import utils
 
 assert tmpdir  # silence flake8
 
@@ -65,3 +66,40 @@ def test_build_hg_env(mocker, my_env):
     assert returned_env['LANG'] == "C"
     for key in returned_env.keys():
         assert type(returned_env[key]) == str
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('args', (['foobar', '--bar'], ['--test', 'args', 'banana']))
+async def test_run_hg_command(mocker, context, args):
+    called_args = []
+
+    async def run_command(*arguments, **kwargs):
+        called_args.append([*arguments, kwargs])
+
+    mocker.patch.object(mercurial, 'execute_subprocess', new=run_command)
+    env_call = mocker.patch.object(mercurial, 'build_hg_environment')
+    cmd_call = mocker.patch.object(mercurial, 'build_hg_command')
+    env = {'HGPLAIN': 1, 'LANG': 'C'}
+    env_call.return_value = env
+    cmd_call.return_value = ['hg', *args]
+
+    await mercurial.run_hg_command(context, *args)
+
+    env_call.assert_called_with()
+    cmd_call.assert_called_with(context, *args)
+    assert called_args[0] == [['hg'] + args, {'env': env}]
+    assert len(called_args) == 1
+
+
+@pytest.mark.asyncio
+async def test_hg_version(context, mocker):
+    logged = []
+
+    def info(msg):
+        logged.append(msg)
+
+    mocklog = mocker.patch.object(utils, 'log')
+    mocklog.info = info
+    await mercurial.log_mercurial_version(context)
+
+    assert 'Mercurial Distributed SCM (version' in logged[2]

@@ -12,6 +12,7 @@ import sys
 # from collections import namedtuple
 
 from treescript.utils import execute_subprocess
+from treescript.exceptions import FailedSubprocess
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
 # For environment vars.
@@ -89,3 +90,33 @@ async def run_hg_command(context, *args):
     command = build_hg_command(context, *args)
     env = build_hg_environment()
     await execute_subprocess(command, env=env)
+
+
+async def log_mercurial_version(context):
+    """Run mercurial `-v version` to get used version into logs.
+
+    Args:
+        context (TreeScriptContext): the treescript context
+
+    """
+    await run_hg_command(context, '-v', 'version')
+
+
+async def validate_robustcheckout_works(context):
+    """Validate that the robustcheckout extension works.
+
+    This works by trying to run `hg robustcheckout -q --help` on
+    hg as defined by our context object.
+
+    Args:
+        context (TreeScriptContext): the treescript context
+
+    Returns:
+        bool: True if robustcheckout seems to work, False otherwise.
+
+    """
+    try:
+        await run_hg_command(context, 'robustcheckout', '-q', '--help')
+        return True
+    except FailedSubprocess:
+        return False
