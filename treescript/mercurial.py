@@ -124,6 +124,23 @@ async def validate_robustcheckout_works(context):
 
 
 async def checkout_repo(context, directory):
+    """Perform a clone via robustcheckout, at ${directory}/src.
+
+    This function will perform a clone via robustcheckout, using hg's share extension
+    for a cache at `context.config['hg_share_base_dir']` that robustcheckout will
+    populate if necessary.
+
+    Robustcheckout will retry network operations at most 3 times (robustcheckout's default)
+    before giving up and causing FailedSubprocess to be raised.
+
+    Args:
+        context (TreeScriptContext): the treescript context
+        directory (str): The directory to place the resulting clone.
+
+    Raises:
+        FailedSubprocess: if the clone attempt doesn't succeed.
+
+    """
     share_base = context.config['hg_share_base_dir']
     upstream_repo = context.config['upstream_repo']
     dest_repo = get_source_repo(context.task)
@@ -133,4 +150,3 @@ async def checkout_repo(context, directory):
                          '--sharebase', share_base,
                          '--upstream', upstream_repo,
                          '--branch', 'default')
-    

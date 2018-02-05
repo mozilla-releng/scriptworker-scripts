@@ -9,9 +9,10 @@ import os
 import pytest
 from scriptworker.context import Context
 from treescript import mercurial
+from treescript.exceptions import FailedSubprocess
 from treescript.script import get_default_config
 from treescript.utils import mkdir
-from treescript.test import tmpdir
+from treescript.test import tmpdir, noop_async
 from treescript import utils
 
 assert tmpdir  # silence flake8
@@ -103,3 +104,41 @@ async def test_hg_version(context, mocker):
     await mercurial.log_mercurial_version(context)
 
     assert 'Mercurial Distributed SCM (version' in logged[2]
+
+
+@pytest.mark.asyncio
+async def test_validate_robustcheckout_works(context, mocker):
+    mocker.patch.object(mercurial, 'run_hg_command', new=noop_async)
+    ret = await mercurial.validate_robustcheckout_works(context)
+    assert ret is True
+
+
+@pytest.mark.asyncio
+async def test_validate_robustcheckout_works_doesnt(context, mocker):
+    mocked = mocker.patch.object(mercurial, 'run_hg_command')
+    mocked.side_effect = FailedSubprocess('Mocked failure in test harness')
+    ret = await mercurial.validate_robustcheckout_works(context)
+    assert ret is False
+
+
+@pytest.mark.asyncio
+async def test_checkout_repo(context, mocker):
+    def _is_slice_in_list(s, l):
+        # Credit to https://stackoverflow.com/a/20789412/#answer-20789669
+        # With edits by Callek to be py3 and pep8 compat
+        len_s = len(s)  # so we don't recompute length of s on every iteration
+        return any(s == l[i:len_s + i] for i in range(len(l) - len_s + 1))
+
+    async def check_params(*args, **kwargs):
+        assert _is_slice_in_list(('--sharebase', '/builds/hg-shared-test'), args)
+        assert _is_slice_in_list(('robustcheckout', 'https://hg.mozilla.org/test-repo',
+                                  os.path.join(context.config['work_dir'], 'src')),
+                                 args)
+
+    mocker.patch.object(mercurial, 'run_hg_command', new=check_params)
+    mocker.patch.object(mercurial, 'get_source_repo').return_value = "https://hg.mozilla.org/test-repo"
+
+    context.config['hg_share_base_dir'] = '/builds/hg-shared-test'
+    context.config['upstream_repo'] = 'https://hg.mozilla.org/mozilla-test-unified'
+
+    await mercurial.checkout_repo(context, context.config['work_dir'])

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-"""Treescript task functions.
-
-"""
+"""Treescript task functions."""
 import json
 import logging
 
@@ -30,6 +28,21 @@ def validate_task_schema(context):
 
 
 def get_source_repo(task):
+    """Get the source repo from the task metadata.
+
+    Assumes task['metadata']['source'] exists and is a link to a mercurial file on
+    hg.mozilla.org (over https)
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        str: url, including https scheme, to mercurial repository of the source repo.
+
+    Raises:
+        TaskVerificationError: on unexpected input.
+
+    """
     source = task.get("metadata", {}).get("source", None)
     if not source:
         raise TaskVerificationError("No source, how did that happen")
