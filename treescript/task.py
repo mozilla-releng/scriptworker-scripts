@@ -1,16 +1,13 @@
 #!/usr/bin/env python
-"""Signingscript task functions.
-
-Attributes:
-    FORMAT_TO_SIGNING_FUNCTION (frozendict): a mapping between signing format
-        and signing function. If not specified, use the `default` signing
-        function.
+"""Treescript task functions.
 
 """
 import json
 import logging
 
 import scriptworker.client
+
+from treescript.exceptions import TaskVerificationError
 
 log = logging.getLogger(__name__)
 
@@ -30,3 +27,15 @@ def validate_task_schema(context):
         task_schema = json.load(fh)
     log.debug(task_schema)
     scriptworker.client.validate_json_schema(context.task, task_schema)
+
+
+def get_source_repo(task):
+    source = task.get("metadata", {}).get("source", None)
+    if not source:
+        raise TaskVerificationError("No source, how did that happen")
+    if not source.startswith("https://hg.mozilla.org/"):
+        raise TaskVerificationError("Unable to operate on sources not in hg.mozilla.org")
+    parts = source.split('/file/')
+    if len(parts) < 2:
+        raise TaskVerificationError("Soure url is in unexpected format")
+    return parts[0]

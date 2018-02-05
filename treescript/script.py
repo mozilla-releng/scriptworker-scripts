@@ -12,14 +12,15 @@ import traceback
 
 import scriptworker.client
 from scriptworker.context import Context
-from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerException
 # from signingscript.sign import task_cert_type
 # from signingscript.task import build_filelist_dict, get_token, \
 #     sign, task_signing_formats, validate_task_schema
 from treescript.task import validate_task_schema
 # from signingscript.utils import copy_to_dir, load_json, load_signing_server_config
 from treescript.utils import load_json, task_action_types
-from treescript.mercurial import validate_robustcheckout_works
+from treescript.mercurial import log_mercurial_version, validate_robustcheckout_works, \
+    checkout_repo
 
 log = logging.getLogger(__name__)
 
@@ -55,9 +56,10 @@ async def async_main(context, conn=None):
         log.info("validating task")
         validate_task_schema(context)
         actions_to_perform = task_action_types(context.task)
+        await log_mercurial_version(context)
         if not await validate_robustcheckout_works(context):
-            log.error("Robustcheckout can't run on our version of hg, aborting")
-            return 1
+            raise ScriptWorkerException("Robustcheckout can't run on our version of hg, aborting")
+        await checkout_repo(context, work_dir)
         # flake8
         assert work_dir
         assert actions_to_perform is not "invalid"

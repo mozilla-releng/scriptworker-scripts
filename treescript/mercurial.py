@@ -13,6 +13,7 @@ import sys
 
 from treescript.utils import execute_subprocess
 from treescript.exceptions import FailedSubprocess
+from treescript.task import get_source_repo
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
 # For environment vars.
@@ -120,3 +121,16 @@ async def validate_robustcheckout_works(context):
         return True
     except FailedSubprocess:
         return False
+
+
+async def checkout_repo(context, directory):
+    share_base = context.config['hg_share_base_dir']
+    upstream_repo = context.config['upstream_repo']
+    dest_repo = get_source_repo(context.task)
+    dest_folder = os.path.join(directory, 'src')
+    # branch default is used to pull tip of the repo at checkout time
+    await run_hg_command(context, 'robustcheckout', dest_repo, dest_folder,
+                         '--sharebase', share_base,
+                         '--upstream', upstream_repo,
+                         '--branch', 'default')
+    

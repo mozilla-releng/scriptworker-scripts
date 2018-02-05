@@ -5,7 +5,7 @@ import pytest
 import sys
 
 import scriptworker.client
-from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerException
 from treescript.test import noop_async, noop_sync, read_file, tmpdir, BASE_DIR
 import treescript.script as script
 
@@ -39,20 +39,25 @@ def test_tree_context():
 
 # async_main {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize('formats', (['gpg'], ['mar', 'jar']))
-async def test_async_main(tmpdir, mocker, formats):
+@pytest.mark.parametrize(
+    'robustcheckout_works,raises',
+    ((
+        False, ScriptWorkerException
+    ), (
+        True, None
+    ))
+)
+async def test_async_main(tmpdir, mocker, robustcheckout_works, raises):
 
-    def fake_filelist_dict(*args, **kwargs):
-        return {'path1': {'full_path': 'full_path1', 'formats': formats}}
-
-    async def fake_sign(_, val, *args):
-        return [val]
+    async def fake_validate_robustcheckout(_):
+        return robustcheckout_works
 
     mocker.patch.object(scriptworker.client, 'get_task', new=noop_sync)
     mocker.patch.object(script, 'validate_task_schema', new=noop_sync)
     mocker.patch.object(script, 'task_action_types', new=noop_sync)
-    mocker.patch.object(script, 'validate_robustcheckout_works', new=noop_async)
-    # mocker.patch.object(script, 'load_signing_server_config', new=noop_sync)
+    mocker.patch.object(script, 'validate_robustcheckout_works', new=fake_validate_robustcheckout)
+    mocker.patch.object(script, 'log_mercurial_version', new=noop_async)
+    mocker.patch.object(script, 'checkout_repo', new=noop_async)
     # mocker.patch.object(script, 'task_cert_type', new=noop_sync)
     # mocker.patch.object(script, 'task_signing_formats', new=noop_sync)
     # mocker.patch.object(script, 'get_token', new=noop_async)
@@ -61,7 +66,11 @@ async def test_async_main(tmpdir, mocker, formats):
     # mocker.patch.object(script, 'sign', new=fake_sign)
     context = mock.MagicMock()
     # context.config = {'work_dir': tmpdir, 'ssl_cert': None, 'artifact_dir': tmpdir}
-    await script.async_main(context)
+    if raises:
+        with pytest.raises(raises):
+            await script.async_main(context)
+    else:
+        await script.async_main(context)
 
 
 # get_default_config {{{1

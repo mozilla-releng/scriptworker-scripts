@@ -4,6 +4,7 @@ import pytest
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
+from treescript.exceptions import TaskVerificationError
 from treescript.script import get_default_config
 import treescript.task as stask
 from treescript.test import tmpdir
@@ -32,6 +33,10 @@ def task_defn():
             'formats': ['gpg'],
             'paths': ['public/build/firefox-52.0a1.en-US.win64.installer.exe'],
           }]
+        },
+        "metadata": {
+            "source": "https://hg.mozilla.org/releases/mozilla-test-source"
+                      "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar",
         }
     }
 
@@ -56,3 +61,38 @@ def test_missing_mandatory_urls_are_reported(context, task_defn):
 def test_no_error_is_reported_when_no_missing_url(context, task_defn):
     context.task = task_defn
     stask.validate_task_schema(context)
+
+
+@pytest.mark.parametrize('source_url,raises', ((
+        "https://bitbucket.org/mozilla/mozilla-central/file/foobar", TaskVerificationError
+    ), (
+        "http://hg.mozilla.org/releases/mozilla-test-source/file/default/taskcluster/ci/foobar",
+        TaskVerificationError
+    ), (
+        "https://hg.mozilla.org/releases/mozilla-test-source/raw-file/default/taskcluster/ci/foobar",
+        TaskVerificationError
+)))
+def test_get_source_repo_raises(task_defn, source_url, raises):
+    task_defn['metadata']['source'] = source_url
+    with pytest.raises(raises):
+        stask.get_source_repo(task_defn)
+
+
+@pytest.mark.parametrize('source_repo', (
+    "https://hg.mozilla.org/mozilla-central",
+    "https://hg.mozilla.org/releases/mozilla-release",
+    "https://hg.mozilla.org/releases/mozilla-esr120",
+    "https://hg.mozilla.org/projects/mozilla-test-bed"
+))
+def test_get_source_repo(task_defn, source_repo):
+    task_defn['metadata']['source'] = "{}/file/default/taskcluster/ci/foobar".format(source_repo)
+    assert source_repo == stask.get_source_repo(task_defn)
+
+
+def test_get_source_repo_no_source(task_defn):
+    del task_defn['metadata']['source']
+    with pytest.raises(TaskVerificationError):
+        stask.get_source_repo(task_defn)
+    del task_defn['metadata']
+    with pytest.raises(TaskVerificationError):
+        stask.get_source_repo(task_defn)
