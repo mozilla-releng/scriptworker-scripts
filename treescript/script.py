@@ -4,28 +4,18 @@ import aiohttp
 import asyncio
 import logging
 import os
-# import ssl
 import sys
 import traceback
-
-# from datadog import statsd
 
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerException
-# from signingscript.sign import task_cert_type
-# from signingscript.task import build_filelist_dict, get_token, \
-#     sign, task_signing_formats, validate_task_schema
 from treescript.task import validate_task_schema
-# from signingscript.utils import copy_to_dir, load_json, load_signing_server_config
 from treescript.utils import load_json, task_action_types
 from treescript.mercurial import log_mercurial_version, validate_robustcheckout_works, \
-    checkout_repo
+    checkout_repo, do_tagging
 
 log = logging.getLogger(__name__)
-
-# # Common prefix for all metric names produced from this scriptworker.
-# statsd.namespace = 'releng.scriptworker.signing'
 
 
 # SigningContext {{{1
@@ -41,12 +31,30 @@ class TreeContext(Context):
         pass
 
 
+async def do_actions(context, actions, directory):
+    """Perform the set of actions that treescript can perform.
+
+    The actions happen in order, tagging, ver bump, then push
+    """
+    short_actions = [a.rsplit(':', 1)[1] for a in actions]
+    short_actions.sort()  # Order we want to run in, just happens to be alphabetical sort.
+    for action in short_actions:
+        if 'tagging' == action:
+            await do_tagging(context, directory)
+        elif 'version_bump' == action:
+            pass
+        else:
+            raise NotImplementedError("Unexpected action")
+    # log `hg out -vp`
+    # push if scope + !dry_run
+
+
 # async_main {{{1
 async def async_main(context, conn=None):
     """Sign all the things.
 
     Args:
-        context (SigningContext): the signing context.
+        context (TreeContext): the treescript context.
 
     """
     async with aiohttp.ClientSession(connector=conn) as session:
@@ -60,9 +68,8 @@ async def async_main(context, conn=None):
         if not await validate_robustcheckout_works(context):
             raise ScriptWorkerException("Robustcheckout can't run on our version of hg, aborting")
         await checkout_repo(context, work_dir)
-        # flake8
-        assert work_dir
-        assert actions_to_perform is not "invalid"
+        if actions_to_perform:
+            await do_actions(context, actions_to_perform, work_dir)
     log.info("Done!")
 
 
@@ -80,19 +87,9 @@ def get_default_config(base_dir=None):
     """
     base_dir = base_dir or os.path.dirname(os.getcwd())
     default_config = {
-        # 'signing_server_config': 'server_config.json',
         'work_dir': os.path.join(base_dir, 'work_dir'),
         'hg': 'hg',
-        # 'artifact_dir': os.path.join(base_dir, '/src/signing/artifact_dir'),
-        # 'my_ip': "127.0.0.1",
-        # 'token_duration_seconds': 20 * 60,
-        # 'ssl_cert': None,
-        # 'signtool': "signtool",
         'schema_file': os.path.join(os.path.dirname(__file__), 'data', 'treescript_task_schema.json'),
-        # 'verbose': True,
-        # 'zipalign': 'zipalign',
-        # 'dmg': 'dmg',
-        # 'hfsplus': 'hfsplus',
     }
     return default_config
 

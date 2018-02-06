@@ -19,10 +19,26 @@
             }
         },
         "payload": {
-          "type": "object",
-          "properties": {
-            
-          }
+            "type": "object",
+            "properties": {
+                "tag_info": {
+                    "type": "object",
+                    "properties": {
+                        "tags": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "revision": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["tags", "revision"]
+                }
+            }
         }
     },
     "required": ["scopes", "payload"]

@@ -52,3 +52,24 @@ def get_source_repo(task):
     if len(parts) < 2:
         raise TaskVerificationError("Soure url is in unexpected format")
     return parts[0]
+
+
+def get_tag_info(task):
+    """Get the tag information from the task metadata.
+
+    Assumes task['payload']['tag_info'] exists and is in the proper format.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        object: the tag info structure as passed to the task payload.
+
+    Raises:
+        TaskVerificationError: If run without tag_info in task definition.
+
+    """
+    tag_info = task.get("payload", {}).get("tag_info")
+    if not tag_info:
+        raise TaskVerificationError("Requested tagging but no tag_info in payload")
+    return tag_info

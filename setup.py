@@ -13,20 +13,17 @@ setup(
     author_email="release+python@mozilla.com",
     url="https://github.com/mozilla-releng/treescript",
     packages=find_packages(),
-    # package_data={"signingscript": ["data/*"]}, # XXX: Todo
+    package_data={"signingscript": ["data/*"]},
     include_package_data=True,
     zip_safe=False,
-    # entry_points={ # XXX: Todo
-    #    "console_scripts": [
-    #        "signingscript = signingscript.script:main",
-    #    ],
-    # },
+    entry_points={
+        "console_scripts": [
+            "treescript = treescript.script:main",
+        ],
+    },
     license="MPL2",
-    install_requires=[  # XXX: Todo
-        # "arrow",
-        # "datadog",
-        # "python-jose",
+    install_requires=[
         "scriptworker",
-        # "taskcluster",
+        "taskcluster"
     ],
 )

@@ -12,7 +12,7 @@ from treescript import mercurial
 from treescript.exceptions import FailedSubprocess
 from treescript.script import get_default_config
 from treescript.utils import mkdir
-from treescript.test import tmpdir, noop_async
+from treescript.test import tmpdir, noop_async, is_slice_in_list
 from treescript import utils
 
 assert tmpdir  # silence flake8
@@ -93,6 +93,29 @@ async def test_run_hg_command(mocker, context, args):
 
 
 @pytest.mark.asyncio
+async def test_run_hg_command_localrepo(mocker, context):
+    args = ['foobar', '--bar']
+    called_args = []
+
+    async def run_command(*arguments, **kwargs):
+        called_args.append([*arguments, kwargs])
+
+    mocker.patch.object(mercurial, 'execute_subprocess', new=run_command)
+    env_call = mocker.patch.object(mercurial, 'build_hg_environment')
+    cmd_call = mocker.patch.object(mercurial, 'build_hg_command')
+    env = {'HGPLAIN': 1, 'LANG': 'C'}
+    env_call.return_value = env
+    cmd_call.return_value = ['hg', *args]
+
+    await mercurial.run_hg_command(context, *args, local_repo='/tmp/localrepo')
+
+    env_call.assert_called_with()
+    cmd_call.assert_called_with(context, *args)
+    assert len(called_args) == 1
+    is_slice_in_list(['-R', '/tmp/localrepo'], called_args[0][0])
+
+
+@pytest.mark.asyncio
 async def test_hg_version(context, mocker):
     logged = []
 
@@ -123,17 +146,12 @@ async def test_validate_robustcheckout_works_doesnt(context, mocker):
 
 @pytest.mark.asyncio
 async def test_checkout_repo(context, mocker):
-    def _is_slice_in_list(s, l):
-        # Credit to https://stackoverflow.com/a/20789412/#answer-20789669
-        # With edits by Callek to be py3 and pep8 compat
-        len_s = len(s)  # so we don't recompute length of s on every iteration
-        return any(s == l[i:len_s + i] for i in range(len(l) - len_s + 1))
 
     async def check_params(*args, **kwargs):
-        assert _is_slice_in_list(('--sharebase', '/builds/hg-shared-test'), args)
-        assert _is_slice_in_list(('robustcheckout', 'https://hg.mozilla.org/test-repo',
-                                  os.path.join(context.config['work_dir'], 'src')),
-                                 args)
+        assert is_slice_in_list(('--sharebase', '/builds/hg-shared-test'), args)
+        assert is_slice_in_list(('robustcheckout', 'https://hg.mozilla.org/test-repo',
+                                 os.path.join(context.config['work_dir'], 'src')),
+                                args)
 
     mocker.patch.object(mercurial, 'run_hg_command', new=check_params)
     mocker.patch.object(mercurial, 'get_source_repo').return_value = "https://hg.mozilla.org/test-repo"
@@ -142,3 +160,25 @@ async def test_checkout_repo(context, mocker):
     context.config['upstream_repo'] = 'https://hg.mozilla.org/mozilla-test-unified'
 
     await mercurial.checkout_repo(context, context.config['work_dir'])
+
+
+@pytest.mark.asyncio
+async def test_do_tagging(context, mocker):
+    called_args = []
+
+    async def run_command(*arguments, **kwargs):
+        called_args.append([arguments, kwargs])
+
+    mocker.patch.object(mercurial, 'run_hg_command', new=run_command)
+    mocked_tag_info = mocker.patch.object(mercurial, 'get_tag_info')
+    mocked_tag_info.return_value = {'revision': 'deadbeef', 'tags': ['TAG1', 'TAG2']}
+    mocked_source_repo = mocker.patch.object(mercurial, 'get_source_repo')
+    mocked_source_repo.return_value = 'https://hg.mozilla.org/treescript-test'
+    await mercurial.do_tagging(context, context.config['work_dir'])
+
+    assert len(called_args) == 2
+    assert 'repo_folder' in called_args[0][1]
+    assert 'repo_folder' in called_args[1][1]
+    assert is_slice_in_list(('pull', '--revision', 'deadbeef'), called_args[0][0])
+    assert is_slice_in_list(('-r', 'deadbeef'), called_args[1][0])
+    assert is_slice_in_list(('TAG1', 'TAG2'), called_args[1][0])

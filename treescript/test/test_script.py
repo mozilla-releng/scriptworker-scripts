@@ -13,7 +13,6 @@ assert tmpdir  # silence flake8
 
 # helper constants, fixtures, functions {{{1
 EXAMPLE_CONFIG = os.path.join(BASE_DIR, 'config_example.json')
-SSL_CERT = os.path.join(BASE_DIR, "signingscript", "data", "host.cert")
 
 
 def get_conf_file(tmpdir, **kwargs):
@@ -58,14 +57,8 @@ async def test_async_main(tmpdir, mocker, robustcheckout_works, raises):
     mocker.patch.object(script, 'validate_robustcheckout_works', new=fake_validate_robustcheckout)
     mocker.patch.object(script, 'log_mercurial_version', new=noop_async)
     mocker.patch.object(script, 'checkout_repo', new=noop_async)
-    # mocker.patch.object(script, 'task_cert_type', new=noop_sync)
-    # mocker.patch.object(script, 'task_signing_formats', new=noop_sync)
-    # mocker.patch.object(script, 'get_token', new=noop_async)
-    # mocker.patch.object(script, 'build_filelist_dict', new=fake_filelist_dict)
-    # mocker.patch.object(script, 'copy_to_dir', new=noop_sync)
-    # mocker.patch.object(script, 'sign', new=fake_sign)
+    mocker.patch.object(script, 'do_actions', new=noop_async)
     context = mock.MagicMock()
-    # context.config = {'work_dir': tmpdir, 'ssl_cert': None, 'artifact_dir': tmpdir}
     if raises:
         with pytest.raises(raises):
             await script.async_main(context)
@@ -101,7 +94,17 @@ def test_main_argv(tmpdir, mocker):
 
 
 def test_main_noargv(tmpdir, mocker):
-    conf_file = get_conf_file(tmpdir, verbose=True, ssl_cert=SSL_CERT)
+    conf_file = get_conf_file(tmpdir, verbose=True)
     mocker.patch.object(script, 'async_main', new=die_async)
     with pytest.raises(SystemExit):
         script.main(config_path=conf_file)
+
+@pytest.mark.asyncio
+async def test_do_actions(mocker):
+    actions = ["foo:bar:tagging", "foo:bar:version_bump"]
+    called_tag = [False]
+    async def mocked_tag(*args, **kwargs):
+        called_tag[0] = True
+    mocker.patch.object(script, 'do_tagging', new=mocked_tag)
+    await script.do_actions(script.Context(), actions, directory='/some/folder/here')
+    assert called_tag[0]

@@ -25,7 +25,7 @@ def task_defn():
         'deadline': '2015-05-08T18:15:59.010Z',
         'expires': '2016-05-08T18:15:59.010Z',
         'dependencies': ['VALID_TASK_ID'],
-        'scopes': ['signing'],
+        'scopes': ['tagging'],
         'payload': {
           'upstreamArtifacts': [{
             'taskType': 'build',
@@ -54,6 +54,23 @@ def test_missing_mandatory_urls_are_reported(context, task_defn):
     context.task = task_defn
     del(context.task['scopes'])
 
+    with pytest.raises(ScriptWorkerTaskException):
+        stask.validate_task_schema(context)
+
+
+@pytest.mark.parametrize('tag_info', (
+    {'revision', 'foobar'},
+    {'tags': 'some_string'},
+    {'tags': ['some_string']},
+    {'tags': 'somestring', 'revision': 'foobar'},
+    {'tags': [], 'revision': 'foobar'},
+    {'tags': [1], 'revision': 'foobar'},
+    {'tags': ['tag', -1], 'revision': 'foobar'},
+    {'tags': ['mercury'], 'revision': 6}
+))
+def test_tag_info_invalid(context, task_defn, tag_info):
+    context.task = task_defn
+    context.task['payload']['tag_info'] = tag_info
     with pytest.raises(ScriptWorkerTaskException):
         stask.validate_task_schema(context)
 
@@ -96,3 +113,18 @@ def test_get_source_repo_no_source(task_defn):
     del task_defn['metadata']
     with pytest.raises(TaskVerificationError):
         stask.get_source_repo(task_defn)
+
+
+@pytest.mark.parametrize('tag_info', (
+    {'revision': 'deadbeef', 'tags': ['FIREFOX_54.0b3_RELEASE', 'BOB']},
+    {'revision': 'beef0001', 'tags': ['FIREFOX_59.0b3_RELEASE', 'FRED']}
+))
+def test_tag_info(task_defn, tag_info):
+    task_defn['payload']['tag_info'] = tag_info
+    tested_info = stask.get_tag_info(task_defn)
+    assert tested_info == tag_info
+
+
+def test_tag_missing_tag_info(task_defn):
+    with pytest.raises(TaskVerificationError):
+        stask.get_tag_info(task_defn)

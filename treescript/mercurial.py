@@ -4,7 +4,7 @@
 # import functools
 # import hashlib
 # import json
-# import logging
+import logging
 import os
 import sys
 # from shutil import copyfile
@@ -13,7 +13,7 @@ import sys
 
 from treescript.utils import execute_subprocess
 from treescript.exceptions import FailedSubprocess
-from treescript.task import get_source_repo
+from treescript.task import get_source_repo, get_tag_info
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
 # For environment vars.
@@ -22,6 +22,9 @@ HGRCPATH = os.path.join(os.path.dirname(__file__), 'data', 'hgrc')
 ROBUSTCHECKOUT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'py2', 'robustcheckout.py')
 )
+TAG_MSG = "No bug - Tagging {revision} with {tags} a=release CLOSED TREE"
+
+log = logging.getLogger(__name__)
 
 
 def build_hg_command(context, *args):
@@ -75,7 +78,7 @@ def build_hg_environment():
     return env
 
 
-async def run_hg_command(context, *args):
+async def run_hg_command(context, *args, local_repo=None):
     """Run a mercurial command.
 
     See-Also `build_hg_environment`, `build_hg_command`
@@ -90,6 +93,8 @@ async def run_hg_command(context, *args):
     """
     command = build_hg_command(context, *args)
     env = build_hg_environment()
+    if local_repo:
+        command.extend(['-R', local_repo])
     await execute_subprocess(command, env=env)
 
 
@@ -150,3 +155,42 @@ async def checkout_repo(context, directory):
                          '--sharebase', share_base,
                          '--upstream', upstream_repo,
                          '--branch', 'default')
+
+
+async def do_tagging(context, directory):
+    """Perform tagging, at ${directory}/src.
+
+    This function will perform a mercurial tag, on 'default' head of target repository.
+    It will tag the revision specified in the tag_info portion of the task payload, using
+    the specified tags in that payload.
+
+    Tags are forced to be created at the specified revision if they already existed.
+
+    This function has the side affect of pulling the specified revision from the
+    destination repository. This feature exists because mozilla-unified does not
+    contain relbranches, though some releases are created on relbranches, so we must ensure
+    the desired revision to tag is known to the local repository.
+
+    Args:
+        context (TreeScriptContext): the treescript context
+        directory (str): The directory to place the resulting clone.
+
+    Raises:
+        FailedSubprocess: if the tag attempt doesn't succeed.
+
+    """
+    local_repo = os.path.join(directory, 'src')
+    tag_info = get_tag_info(context.task)
+    desired_tags = tag_info['tags']
+    desired_rev = tag_info['revision']
+    dest_repo = get_source_repo(context.task)
+    commit_msg = TAG_MSG.format(revision=desired_rev, tags=', '.join(desired_tags))
+    log.info("Pulling {revision} from {repo} explicitly.".format(
+        revision=desired_rev, repo=dest_repo))
+    await run_hg_command(context, 'pull', '--revision', desired_rev, dest_repo,
+                         repo_folder=local_repo)
+    log.info(commit_msg)
+    await run_hg_command(context, 'tag', '-m', commit_msg, '-r', desired_rev,
+                         '-f',  # Todo only force if needed
+                         *desired_tags,
+                         repo_folder=local_repo)

@@ -1,4 +1,4 @@
-Signingscript
+Treescript
 ==============
 
 [![Build Status](https://travis-ci.org/mozilla-releng/treescript.svg?branch=master)](https://travis-ci.org/mozilla-releng/treescript) [![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/treescript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/treescript?branch=master)
