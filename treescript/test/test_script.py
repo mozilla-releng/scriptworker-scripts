@@ -99,12 +99,15 @@ def test_main_noargv(tmpdir, mocker):
     with pytest.raises(SystemExit):
         script.main(config_path=conf_file)
 
+
 @pytest.mark.asyncio
 async def test_do_actions(mocker):
     actions = ["foo:bar:tagging", "foo:bar:version_bump"]
     called_tag = [False]
+
     async def mocked_tag(*args, **kwargs):
         called_tag[0] = True
+
     mocker.patch.object(script, 'do_tagging', new=mocked_tag)
     await script.do_actions(script.Context(), actions, directory='/some/folder/here')
     assert called_tag[0]
