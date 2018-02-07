@@ -30,7 +30,7 @@ async def die_async(*args, **kwargs):
     raise ScriptWorkerTaskException("Expected exception.")
 
 
-# SigningContext {{{1
+# TreeContext {{{1
 def test_tree_context():
     c = script.TreeContext()
     c.write_json()
@@ -100,6 +100,7 @@ def test_main_noargv(tmpdir, mocker):
         script.main(config_path=conf_file)
 
 
+# do_actions {{{1
 @pytest.mark.asyncio
 async def test_do_actions(mocker):
     actions = ["foo:bar:tagging", "foo:bar:version_bump"]

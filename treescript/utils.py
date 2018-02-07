@@ -1,14 +1,9 @@
 """Treescript general utility functions."""
 import asyncio
 from asyncio.subprocess import PIPE, STDOUT
-# import functools
-# import hashlib
 import json
 import logging
 import os
-# from shutil import copyfile
-# import traceback
-# from collections import namedtuple
 
 from treescript.exceptions import TaskVerificationError, FailedSubprocess
 
@@ -17,6 +12,7 @@ log = logging.getLogger(__name__)
 VALID_ACTIONS = ("tagging", "versionbump")
 
 
+# mkdir {{{1
 def mkdir(path):
     """Equivalent to `mkdir -p`.
 
@@ -31,6 +27,7 @@ def mkdir(path):
         pass
 
 
+# load_json {{{1
 def load_json(path):
     """Load json from path.
 
@@ -73,6 +70,7 @@ def task_action_types(task):
     return actions
 
 
+# log_output {{{1
 async def log_output(fh):
     """Log the output from an async generator.
 
@@ -88,6 +86,7 @@ async def log_output(fh):
             break
 
 
+# execute_subprocess {{{1
 async def execute_subprocess(command, **kwargs):
     """Execute a command in a subprocess.
 

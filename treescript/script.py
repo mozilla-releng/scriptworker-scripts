@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Signing script."""
+"""Tree manipulation script."""
 import aiohttp
 import asyncio
 import logging
@@ -18,12 +18,12 @@ from treescript.mercurial import log_mercurial_version, validate_robustcheckout_
 log = logging.getLogger(__name__)
 
 
-# SigningContext {{{1
+# TreeContext {{{1
 class TreeContext(Context):
     """Status and configuration object."""
 
     def __init__(self):
-        """Initialize SigningContext."""
+        """Initialize TreeContext."""
         super(TreeContext, self).__init__()
 
     def write_json(self, *args):
@@ -31,6 +31,7 @@ class TreeContext(Context):
         pass
 
 
+# do_actions {{{1
 async def do_actions(context, actions, directory):
     """Perform the set of actions that treescript can perform.
 
@@ -51,7 +52,7 @@ async def do_actions(context, actions, directory):
 
 # async_main {{{1
 async def async_main(context, conn=None):
-    """Sign all the things.
+    """Run all the vcs things.
 
     Args:
         context (TreeContext): the treescript context.

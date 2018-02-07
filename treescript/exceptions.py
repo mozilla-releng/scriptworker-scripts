@@ -1,4 +1,4 @@
-"""Signingscript exceptions."""
+"""Treescript exceptions."""
 from scriptworker.exceptions import ScriptWorkerTaskException
 from scriptworker.constants import STATUSES
 

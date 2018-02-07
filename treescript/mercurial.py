@@ -1,15 +1,7 @@
 """Treescript mercurial functions."""
-# import asyncio
-# from asyncio.subprocess import PIPE, STDOUT
-# import functools
-# import hashlib
-# import json
 import logging
 import os
 import sys
-# from shutil import copyfile
-# import traceback
-# from collections import namedtuple
 
 from treescript.utils import execute_subprocess
 from treescript.exceptions import FailedSubprocess
@@ -27,6 +19,7 @@ TAG_MSG = "No bug - Tagging {revision} with {tags} a=release CLOSED TREE"
 log = logging.getLogger(__name__)
 
 
+# build_hg_command {{{1
 def build_hg_command(context, *args):
     """Generate a mercurial command to run.
 
@@ -49,6 +42,7 @@ def build_hg_command(context, *args):
     return hg + [*robustcheckout_args, *args]
 
 
+# build_hg_environment {{{1
 def build_hg_environment():
     """Generate an environment suitable for running mercurial programtically.
 
@@ -78,6 +72,7 @@ def build_hg_environment():
     return env
 
 
+# run_hg_command {{{1
 async def run_hg_command(context, *args, local_repo=None):
     """Run a mercurial command.
 
@@ -98,6 +93,7 @@ async def run_hg_command(context, *args, local_repo=None):
     await execute_subprocess(command, env=env)
 
 
+# log_mercurial_version {{{1
 async def log_mercurial_version(context):
     """Run mercurial `-v version` to get used version into logs.
 
@@ -108,6 +104,7 @@ async def log_mercurial_version(context):
     await run_hg_command(context, '-v', 'version')
 
 
+# validate_robustcheckout_works {{{1
 async def validate_robustcheckout_works(context):
     """Validate that the robustcheckout extension works.
 
@@ -128,6 +125,7 @@ async def validate_robustcheckout_works(context):
         return False
 
 
+# checkout_repo {{{1
 async def checkout_repo(context, directory):
     """Perform a clone via robustcheckout, at ${directory}/src.
 
@@ -157,6 +155,7 @@ async def checkout_repo(context, directory):
                          '--branch', 'default')
 
 
+# do_tagging {{{1
 async def do_tagging(context, directory):
     """Perform tagging, at ${directory}/src.
 

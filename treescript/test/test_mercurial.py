@@ -1,6 +1,8 @@
-"""Robustcheckout itself is tested via version control tools,
+"""Tests for mercurial functionality.
 
-We use a vendored copy, tests here are merely about integration with our tooling.
+We don't test the robustcheckout extension here, nor is this file about integration
+testing with mercurial commands, we are testing that we can call mercurial and that
+it's expected output is something our script can cope with.
 
 """
 

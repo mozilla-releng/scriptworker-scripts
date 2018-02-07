@@ -13,7 +13,7 @@ setup(
     author_email="release+python@mozilla.com",
     url="https://github.com/mozilla-releng/treescript",
     packages=find_packages(),
-    package_data={"signingscript": ["data/*"]},
+    package_data={"treescript": ["data/*", "py2/*"]},
     include_package_data=True,
     zip_safe=False,
     entry_points={

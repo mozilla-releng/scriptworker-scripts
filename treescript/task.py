@@ -27,6 +27,7 @@ def validate_task_schema(context):
     scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
+# get_source_repo {{{1
 def get_source_repo(task):
     """Get the source repo from the task metadata.
 
@@ -54,6 +55,7 @@ def get_source_repo(task):
     return parts[0]
 
 
+# get_tag_info {{{1
 def get_tag_info(task):
     """Get the tag information from the task metadata.
 

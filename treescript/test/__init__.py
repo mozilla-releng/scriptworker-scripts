@@ -1,5 +1,4 @@
 """Common utilities for the test harness."""
-# import asyncio
 import os
 import pytest
 import tempfile
