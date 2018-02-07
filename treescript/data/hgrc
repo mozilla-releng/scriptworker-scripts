@@ -1,0 +1,6 @@
+[ui]
+username = "Mozilla Releng Treescript <release+treescript@mozilla.org>"
+merge = internal:merge
+
+[hostsecurity]
+hg.mozilla.org:fingerprints = sha256:8e:ad:f7:6a:eb:44:06:15:ed:f3:e4:69:a6:64:60:37:2d:ff:98:88:37:bf:d7:b8:40:84:01:48:9c:26:ce:d9 

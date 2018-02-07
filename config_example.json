@@ -1,0 +1,5 @@
+{
+    "work_dir": "/tmp/work_dir",
+    "hg": "hg",
+    "schema_file": "treescript/data/treescript_task_schema.json"
+}
