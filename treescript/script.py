@@ -27,7 +27,7 @@ class TreeContext(Context):
         super(TreeContext, self).__init__()
 
     def write_json(self, *args):
-        """Stub out the `write_json` method."""
+        """Stub out the ``write_json`` method."""
         pass
 
 
@@ -103,7 +103,7 @@ def usage():
 
 
 def main(config_path=None):
-    """Create the context, logging, and pass off execution to `async_main`.
+    """Create the context, logging, and pass off execution to ``async_main``.
 
     Args:
         config_path (str, optional): the path to the config file.  If `None`, use

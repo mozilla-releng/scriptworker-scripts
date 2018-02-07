@@ -23,11 +23,11 @@ log = logging.getLogger(__name__)
 def build_hg_command(context, *args):
     """Generate a mercurial command to run.
 
-    See-Also `build_hg_environment`
+    See-Also ``build_hg_environment``
 
     Args:
         context (TreeScriptContext): the treescript context
-        *str: the remaining args to pass to the hg command
+        *args: the remaining args to pass to the hg command
 
     Returns:
         list: the hg command to run.
@@ -44,12 +44,12 @@ def build_hg_command(context, *args):
 
 # build_hg_environment {{{1
 def build_hg_environment():
-    """Generate an environment suitable for running mercurial programtically.
+    """Generate an environment suitable for running mercurial programatically.
 
     This function sets the hgrc to one provided in the package and ensures
     environment variables which affect HG are defined in a stable way.
 
-    See-Also `build_hg_command`, `run_hg_command`
+    See-Also ``build_hg_command``, ``run_hg_command``
 
     Returns:
         list: the environment to use.
@@ -76,7 +76,7 @@ def build_hg_environment():
 async def run_hg_command(context, *args, local_repo=None):
     """Run a mercurial command.
 
-    See-Also `build_hg_environment`, `build_hg_command`
+    See-Also ``build_hg_environment``, ``build_hg_command``
 
     Args:
         context (TreeScriptContext): the treescript context
@@ -95,7 +95,7 @@ async def run_hg_command(context, *args, local_repo=None):
 
 # log_mercurial_version {{{1
 async def log_mercurial_version(context):
-    """Run mercurial `-v version` to get used version into logs.
+    """Run mercurial '-v version' to get used version into logs.
 
     Args:
         context (TreeScriptContext): the treescript context
@@ -108,7 +108,7 @@ async def log_mercurial_version(context):
 async def validate_robustcheckout_works(context):
     """Validate that the robustcheckout extension works.
 
-    This works by trying to run `hg robustcheckout -q --help` on
+    This works by trying to run 'hg robustcheckout -q --help' on
     hg as defined by our context object.
 
     Args:
@@ -130,7 +130,7 @@ async def checkout_repo(context, directory):
     """Perform a clone via robustcheckout, at ${directory}/src.
 
     This function will perform a clone via robustcheckout, using hg's share extension
-    for a cache at `context.config['hg_share_base_dir']` that robustcheckout will
+    for a cache at 'context.config['hg_share_base_dir']' that robustcheckout will
     populate if necessary.
 
     Robustcheckout will retry network operations at most 3 times (robustcheckout's default)
