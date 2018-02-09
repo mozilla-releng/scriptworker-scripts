@@ -186,10 +186,10 @@ async def do_tagging(context, directory):
     commit_msg = TAG_MSG.format(revision=desired_rev, tags=', '.join(desired_tags))
     log.info("Pulling {revision} from {repo} explicitly.".format(
         revision=desired_rev, repo=dest_repo))
-    await run_hg_command(context, 'pull', '--revision', desired_rev, dest_repo,
-                         repo_folder=local_repo)
+    await run_hg_command(context, 'pull', '-r', desired_rev, dest_repo,
+                         local_repo=local_repo)
     log.info(commit_msg)
     await run_hg_command(context, 'tag', '-m', commit_msg, '-r', desired_rev,
                          '-f',  # Todo only force if needed
                          *desired_tags,
-                         repo_folder=local_repo)
+                         local_repo=local_repo)
