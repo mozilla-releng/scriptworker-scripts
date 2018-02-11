@@ -148,6 +148,7 @@ async def checkout_repo(context, directory):
     upstream_repo = context.config['upstream_repo']
     dest_repo = get_source_repo(context.task)
     dest_folder = os.path.join(directory, 'src')
+    context.repo = dest_folder
     # branch default is used to pull tip of the repo at checkout time
     await run_hg_command(context, 'robustcheckout', dest_repo, dest_folder,
                          '--sharebase', share_base,
@@ -193,3 +194,10 @@ async def do_tagging(context, directory):
                          '-f',  # Todo only force if needed
                          *desired_tags,
                          local_repo=local_repo)
+
+
+async def log_outgoing(context, directory):
+    local_repo = os.path.join(directory, 'src')
+    dest_repo = get_source_repo(context.task)
+    log.info("outgoing changesets..")
+    await run_hg_command(context, 'out', '-r', '.', dest_repo, local_repo=local_repo)
