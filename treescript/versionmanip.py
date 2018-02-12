@@ -36,7 +36,7 @@ async def bump_version(context):
     """Perform a version bump.
 
     This function takes its inputs from context.task by using the ``get_version_bump_info``
-    function from treescript.task. Using next_version and bump_files.
+    function from treescript.task. Using `next_version` and `files`.
 
     This function does nothing (but logs) if the current version and next version
     match, and nothing if the next_version is actually less than current_version.
@@ -48,7 +48,7 @@ async def bump_version(context):
     """
     bump_info = get_version_bump_info(context.task)
     next_version = bump_info['next_version']
-    files = bump_info['bump_files']
+    files = bump_info['files']
     for file in files:
         abs_file = os.path.join(context.repo, file)
         if file not in ALLOWED_BUMP_FILES:
