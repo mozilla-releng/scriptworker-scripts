@@ -53,7 +53,7 @@ async def bump_version(context):
         abs_file = os.path.join(context.repo, file)
         if file not in ALLOWED_BUMP_FILES:
             raise TaskVerificationError("Specified file to version bump is not in whitelist")
-        if not os.path.exists(file):
+        if not os.path.exists(abs_file):
             raise TaskVerificationError("Specified file is not in repo")
         curr_version = _get_version(abs_file)
 
@@ -68,10 +68,9 @@ async def bump_version(context):
             continue
         else:
             replace_ver_in_file(file=abs_file,
-                                old_ver=curr_version, new_ver=next_version)
+                                curr_version=curr_version, new_version=next_version)
             commit_msg = 'Automatic version bump CLOSED TREE NO BUG a=release'
             await run_hg_command(context, 'commit', '-m', commit_msg,
-                                 '-f',  # Todo only force if needed
                                  local_repo=context.repo)
 
 
