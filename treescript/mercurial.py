@@ -204,4 +204,4 @@ async def log_outgoing(context, directory):
     local_repo = os.path.join(directory, 'src')
     dest_repo = get_source_repo(context.task)
     log.info("outgoing changesets..")
-    await run_hg_command(context, 'out', '-r', '.', dest_repo, local_repo=local_repo)
+    await run_hg_command(context, 'out', '-vp', '-r', '.', dest_repo, local_repo=local_repo)

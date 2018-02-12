@@ -9,7 +9,7 @@ from treescript.exceptions import TaskVerificationError, FailedSubprocess
 
 log = logging.getLogger(__name__)
 
-VALID_ACTIONS = ("tagging", "versionbump")
+VALID_ACTIONS = ("tagging", "version_bump")
 
 
 # mkdir {{{1
