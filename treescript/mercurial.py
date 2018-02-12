@@ -197,6 +197,10 @@ async def do_tagging(context, directory):
 
 
 async def log_outgoing(context, directory):
+    """Run `hg out` against the current revision in the repository.
+
+    This logs current changes that will be pushed (or would have been, if dry-run)
+    """
     local_repo = os.path.join(directory, 'src')
     dest_repo = get_source_repo(context.task)
     log.info("outgoing changesets..")

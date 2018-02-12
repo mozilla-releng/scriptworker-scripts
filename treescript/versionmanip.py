@@ -20,6 +20,7 @@ ALLOWED_BUMP_FILES = (
 
 
 def _get_version(file):
+    """Parse the version from file."""
     log.info("Reading {} for version information.".format(file))
     with open(file, 'r') as f:
         contents = f.read()
@@ -32,6 +33,19 @@ def _get_version(file):
 
 
 async def bump_version(context):
+    """Perform a version bump.
+
+    This function takes its inputs from context.task by using the ``get_version_bump_info``
+    function from treescript.task. Using next_version and bump_files.
+
+    This function does nothing (but logs) if the current version and next version
+    match, and nothing if the next_version is actually less than current_version.
+
+    raises:
+        TaskverificationError: if a file specified is not allowed, or
+                               if the file is not in the target repository.
+
+    """
     bump_info = get_version_bump_info(context.task)
     next_version = bump_info['next_version']
     files = bump_info['bump_files']
@@ -39,6 +53,8 @@ async def bump_version(context):
         abs_file = os.path.join(context.repo, file)
         if file not in ALLOWED_BUMP_FILES:
             raise TaskVerificationError("Specified file to version bump is not in whitelist")
+        if not os.path.exists(file):
+            raise TaskVerificationError("Specified file is not in repo")
         curr_version = _get_version(abs_file)
 
         if StrictVersion(next_version) < StrictVersion(curr_version):
@@ -60,6 +76,15 @@ async def bump_version(context):
 
 
 def replace_ver_in_file(file, curr_version, new_version):
+    """Read in contents of `file` and then update version.
+
+    Implementation detail: replaces instances of `curr_version` with `new_version`
+    using python3 str.replace().
+
+    raises:
+        Exception: if contents before and after match.
+
+    """
     with open(file, 'r') as f:
         contents = f.read()
     new_contents = contents.replace(curr_version, new_version)

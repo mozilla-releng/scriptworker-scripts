@@ -80,6 +80,7 @@ def get_tag_info(task):
 # get_version_bump_info {{1
 def get_version_bump_info(task):
     """Get the version bump information from the task metadata.
+
     Args:
         task: the task definition.
 
