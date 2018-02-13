@@ -49,6 +49,7 @@ async def bump_version(context):
     bump_info = get_version_bump_info(context.task)
     next_version = bump_info['next_version']
     files = bump_info['files']
+    changed = False
     for file in files:
         abs_file = os.path.join(context.repo, file)
         if file not in ALLOWED_BUMP_FILES:
@@ -67,11 +68,13 @@ async def bump_version(context):
             log.info("Version bumping skipped due to unchanged values")
             continue
         else:
+            changed = True
             replace_ver_in_file(file=abs_file,
                                 curr_version=curr_version, new_version=next_version)
-            commit_msg = 'Automatic version bump CLOSED TREE NO BUG a=release'
-            await run_hg_command(context, 'commit', '-m', commit_msg,
-                                 local_repo=context.repo)
+    if changed:
+        commit_msg = 'Automatic version bump CLOSED TREE NO BUG a=release'
+        await run_hg_command(context, 'commit', '-m', commit_msg,
+                             local_repo=context.repo)
 
 
 def replace_ver_in_file(file, curr_version, new_version):

@@ -184,3 +184,22 @@ async def test_do_tagging(context, mocker):
     assert is_slice_in_list(('pull', '-r', 'deadbeef'), called_args[0][0])
     assert is_slice_in_list(('-r', 'deadbeef'), called_args[1][0])
     assert is_slice_in_list(('TAG1', 'TAG2'), called_args[1][0])
+
+
+@pytest.mark.asyncio
+async def test_l(context, mocker):
+    called_args = []
+
+    async def run_command(context, *arguments, local_repo=None):
+        called_args.append([tuple([context]) + arguments, {'local_repo': local_repo}])
+
+    mocker.patch.object(mercurial, 'run_hg_command', new=run_command)
+    mocked_source_repo = mocker.patch.object(mercurial, 'get_source_repo')
+    mocked_source_repo.return_value = 'https://hg.mozilla.org/treescript-test'
+    await mercurial.log_outgoing(context, context.config['work_dir'])
+
+    assert len(called_args) == 1
+    assert 'local_repo' in called_args[0][1]
+    assert is_slice_in_list(('out', '-vp'), called_args[0][0])
+    assert is_slice_in_list(('-r', '.'), called_args[0][0])
+    assert is_slice_in_list(('https://hg.mozilla.org/treescript-test', ), called_args[0][0])

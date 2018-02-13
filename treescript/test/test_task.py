@@ -128,3 +128,18 @@ def test_tag_info(task_defn, tag_info):
 def test_tag_missing_tag_info(task_defn):
     with pytest.raises(TaskVerificationError):
         stask.get_tag_info(task_defn)
+
+
+@pytest.mark.parametrize('bump_info', (
+    {'next_version': '1.2.4', 'files': ['browser/config/version.txt']},
+    {'next_version': '98.0.1b3', 'files': ['config/milestone.txt', 'browser/config/version_display.txt']}
+))
+def test_bump_info(task_defn, bump_info):
+    task_defn['payload']['version_bump_info'] = bump_info
+    tested_info = stask.get_version_bump_info(task_defn)
+    assert tested_info == bump_info
+
+
+def test_bump_missing_bump_info(task_defn):
+    with pytest.raises(TaskVerificationError):
+        stask.get_version_bump_info(task_defn)
