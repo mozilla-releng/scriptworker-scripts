@@ -154,10 +154,9 @@ def get_release_props(context, platform_mapping=STAGE_PLATFORM_MAP):
             'Deprecated behavior! This will be gone after Firefox 59 reaches release. Loading release_props from "{}": {}'
             .format(initial_release_props_file, props)
         )
-        log.warn('props {}'.format(props))
 
     final_props = update_props(context, props, platform_mapping)
-    return final_props, initial_release_props_file
+    return (final_props, initial_release_props_file)
 
 
 def get_initial_release_props_file(context):
@@ -191,5 +190,4 @@ def update_props(context, props, platform_mapping):
     props["stage_platform"] = stage_platform
     # for some products/platforms this mapping is not needed, hence the default
     props["platform"] = platform_mapping.get(stage_platform, stage_platform)
-    log.warn('props {}'.format(props))
     return props

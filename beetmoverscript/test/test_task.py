@@ -12,9 +12,9 @@ from beetmoverscript.task import (
     get_initial_release_props_file, get_task_bucket, get_task_action,
     validate_bucket_paths, get_release_props
 )
-import beetmoverscript.utils as butils
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker.utils import makedirs
 
 assert context  # silence pyflakes
 
@@ -196,19 +196,29 @@ def test_get_release_props(context, mocker, taskjson, locale, relprops, expected
         context.task['payload']['locale'] = 'lang'
 
     context.task['payload']['release_properties'] = relprops
-    assert get_release_props(context)[0] == expected
+    assert get_release_props(context) == (expected, None)
 
     # also check balrog_props method works with same data
     # TODO remove the end of this function when method is not supported anymore
     del context.task['payload']['release_properties']
 
-    def fake_json(*args, **kwargs):
-        return {
-            'properties': relprops
-        }
+    context.task['payload']['upstreamArtifacts'] = [{
+      "locale": "lang",
+      "paths": [
+        "public/build/lang/balrog_props.json"
+      ],
+      "taskId": "buildTaskId",
+      "taskType": "build"
+    }]
 
-    mocker.patch.object(butils, 'load_json', new=fake_json)
-    assert get_release_props(context)[0] == expected
+    balrog_props_path = os.path.abspath(os.path.join(context.config['work_dir'], 'cot', 'buildTaskId', 'public/build/lang/balrog_props.json'))
+    makedirs(os.path.dirname(balrog_props_path))
+    with open(balrog_props_path, 'w') as f:
+        json.dump({
+            'properties': relprops
+        }, f)
+
+    assert get_release_props(context) == (expected, balrog_props_path)
 
 
 # get_initial_release_props_file {{{1
