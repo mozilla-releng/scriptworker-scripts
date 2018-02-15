@@ -141,7 +141,7 @@ def get_upstream_artifacts(context):
 def get_release_props(context, platform_mapping=STAGE_PLATFORM_MAP):
     """determined via parsing the Nightly build job's balrog_props.json and
     expanded the properties with props beetmover knows about."""
-    payload_properties = context.task.get('payload', {}).get('release_properties', None)
+    payload_properties = context.task.get('payload', {}).get('releaseProperties', None)
     initial_release_props_file = None
 
     if payload_properties:

@@ -195,12 +195,12 @@ def test_get_release_props(context, mocker, taskjson, locale, relprops, expected
     if locale:
         context.task['payload']['locale'] = 'lang'
 
-    context.task['payload']['release_properties'] = relprops
+    context.task['payload']['releaseProperties'] = relprops
     assert get_release_props(context) == (expected, None)
 
     # also check balrog_props method works with same data
     # TODO remove the end of this function when method is not supported anymore
-    del context.task['payload']['release_properties']
+    del context.task['payload']['releaseProperties']
 
     context.task['payload']['upstreamArtifacts'] = [{
       "locale": "lang",
