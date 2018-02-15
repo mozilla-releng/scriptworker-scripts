@@ -141,13 +141,20 @@ def get_upstream_artifacts(context):
 def get_release_props(context, platform_mapping=STAGE_PLATFORM_MAP):
     """determined via parsing the Nightly build job's balrog_props.json and
     expanded the properties with props beetmover knows about."""
-    initial_release_props_file = get_initial_release_props_file(context)
-    props = utils.load_json(initial_release_props_file)['properties']
-    log.warn(
-        'Deprecated behavior! This will be gone after Firefox 59 reaches release. Loading release_props from "{}": {}'
-        .format(initial_release_props_file, props)
-    )
-    log.warn('props {}'.format(props))
+    payload_properties = context.task.get('payload', {}).get('release_properties', None)
+    initial_release_props_file = None
+
+    if payload_properties:
+        props = payload_properties
+        log.debug("Loading release_props from task's payload: {}".format(props))
+    else:
+        initial_release_props_file = get_initial_release_props_file(context)
+        props = utils.load_json(initial_release_props_file)['properties']
+        log.warn(
+            'Deprecated behavior! This will be gone after Firefox 59 reaches release. Loading release_props from "{}": {}'
+            .format(initial_release_props_file, props)
+        )
+        log.warn('props {}'.format(props))
 
     final_props = update_props(context, props, platform_mapping)
     return final_props, initial_release_props_file

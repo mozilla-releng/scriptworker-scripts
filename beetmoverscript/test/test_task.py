@@ -195,6 +195,13 @@ def test_get_release_props(context, mocker, taskjson, locale, relprops, expected
     if locale:
         context.task['payload']['locale'] = 'lang'
 
+    context.task['payload']['release_properties'] = relprops
+    assert get_release_props(context)[0] == expected
+
+    # also check balrog_props method works with same data
+    # TODO remove the end of this function when method is not supported anymore
+    del context.task['payload']['release_properties']
+
     def fake_json(*args, **kwargs):
         return {
             'properties': relprops
