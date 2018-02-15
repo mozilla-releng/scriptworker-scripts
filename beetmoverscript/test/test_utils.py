@@ -8,8 +8,7 @@ import beetmoverscript.utils as butils
 from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_json, generate_beetmover_template_args,
                                    write_file, is_release_action, is_promotion_action,
-                                   get_release_props, get_partials_props,
-                                   matches_exclude, get_candidates_prefix,
+                                   get_partials_props, matches_exclude, get_candidates_prefix,
                                    get_releases_prefix, get_product_name)
 from beetmoverscript.constants import HASH_BLOCK_SIZE
 
@@ -150,61 +149,6 @@ def test_beetmover_template_args_generation_release(context):
 def test_is_action_release_or_promotion(action, release, promotion):
     assert is_release_action(action) is release
     assert is_promotion_action(action) is promotion
-
-
-# get_release_props {{{1
-@pytest.mark.parametrize("taskjson,locale, relprops, expected", ((
-    'task.json', False, {
-        "platform": "android",
-        "stage_platform": "android-api-16"
-    }, {
-        "platform": "android-api-16",
-        "stage_platform": "android-api-16"
-    }
-), (
-    'task.json', True, {
-        "platform": "macosx64",
-    }, {
-        "platform": "mac",
-        "stage_platform": "macosx64"
-    }
-), (
-    'task.json', False, {
-        "platform": "linux64",
-        "stage_platform": "linux64"
-    }, {
-        "platform": "linux-x86_64",
-        "stage_platform": "linux64"
-    }
-), (
-    'task_devedition.json', False, {
-        "platform": "macosx64",
-        "stage_platform": "macosx64-devedition"
-    }, {
-        "platform": "mac",
-        "stage_platform": "macosx64-devedition"
-    }
-), (
-    'task_devedition.json', True, {
-        "platform": "win64",
-    }, {
-        "platform": "win64",
-        "stage_platform": "win64-devedition"
-    }
-)))
-def test_get_release_props(context, mocker, taskjson, locale, relprops, expected):
-    context.task = get_fake_valid_task(taskjson)
-    if locale:
-        context.task['payload']['locale'] = 'lang'
-
-    def fake_json(*args, **kwargs):
-        return {
-            'properties': relprops
-        }
-
-    dummy_file = None
-    mocker.patch.object(butils, 'load_json', new=fake_json)
-    assert get_release_props(context, dummy_file) == expected
 
 
 # get_partials_props {{{1

@@ -4,11 +4,15 @@ import os
 import re
 import shutil
 import scriptworker.client
+
+from copy import deepcopy
+
+from beetmoverscript import utils
 from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
                                        INITIAL_RELEASE_PROPS_FILE,
+                                       STAGE_PLATFORM_MAP,
                                        RESTRICTED_BUCKET_PATHS)
 
-from beetmoverscript.utils import write_json, write_file, is_release_action
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 log = logging.getLogger(__name__)
@@ -18,7 +22,7 @@ def validate_task_schema(context):
     """Perform a schema validation check against taks definition"""
     schema_file = context.config['schema_file']
     action = get_task_action(context.task, context.config)
-    if is_release_action(action):
+    if utils.is_release_action(action):
         schema_file = context.config['release_schema_file']
     with open(schema_file) as fh:
         task_schema = json.load(fh)
@@ -92,13 +96,13 @@ def add_checksums_to_artifacts(context):
     abs_file_path = os.path.join(context.config['artifact_dir'],
                                  'public/target.checksums')
     manifest = generate_checksums_manifest(context)
-    write_file(abs_file_path, manifest)
+    utils.write_file(abs_file_path, manifest)
 
 
 def add_balrog_manifest_to_artifacts(context):
     abs_file_path = os.path.join(context.config['artifact_dir'],
                                  'public/manifest.json')
-    write_json(abs_file_path, context.balrog_manifest)
+    utils.write_json(abs_file_path, context.balrog_manifest)
 
 
 def add_release_props_to_artifacts(context, release_props_filepath):
@@ -134,6 +138,21 @@ def get_upstream_artifacts(context):
     return artifacts
 
 
+def get_release_props(context, platform_mapping=STAGE_PLATFORM_MAP):
+    """determined via parsing the Nightly build job's balrog_props.json and
+    expanded the properties with props beetmover knows about."""
+    initial_release_props_file = get_initial_release_props_file(context)
+    props = utils.load_json(initial_release_props_file)['properties']
+    log.warn(
+        'Deprecated behavior! This will be gone after Firefox 59 reaches release. Loading release_props from "{}": {}'
+        .format(initial_release_props_file, props)
+    )
+    log.warn('props {}'.format(props))
+
+    final_props = update_props(context, props, platform_mapping)
+    return final_props, initial_release_props_file
+
+
 def get_initial_release_props_file(context):
     for artifact_dict in context.task['payload']['upstreamArtifacts']:
         for path in artifact_dict['paths']:
@@ -142,3 +161,28 @@ def get_initial_release_props_file(context):
     raise ScriptWorkerTaskException(
         "could not determine initial release props file from upstreamArtifacts"
     )
+
+
+def update_props(context, props, platform_mapping):
+    """Function to alter the `stage_platform` field from balrog_props to their
+    corresponding correct values for certain platforms. Please note that for
+    l10n jobs the `stage_platform` field is in fact called `platform` hence
+    the defaulting below."""
+    props = deepcopy(props)
+    # en-US jobs have the platform set in the `stage_platform` field while
+    # l10n jobs have it set under `platform`. This is merely an uniformization
+    # under the `stage_platform` field that is needed later on in the templates
+    stage_platform = props.get("stage_platform", props.get("platform"))
+    # XXX Bug 1424482 - until we solve this, we need this hack. Since en-US
+    # have at least `stage_platform`, there is a way to tell whether they are
+    # devedition related or not. But for l10n jobs, we only have `platform`
+    # which is identical to the ones we have for Firefox.
+
+    if ('locale' in context.task['payload'] and
+            'devedition' in context.task.get('metadata', {}).get('name', {})):
+        stage_platform += "-devedition"
+    props["stage_platform"] = stage_platform
+    # for some products/platforms this mapping is not needed, hence the default
+    props["platform"] = platform_mapping.get(stage_platform, stage_platform)
+    log.warn('props {}'.format(props))
+    return props

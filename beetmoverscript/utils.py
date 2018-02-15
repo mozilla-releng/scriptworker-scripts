@@ -10,7 +10,7 @@ import re
 import yaml
 
 from beetmoverscript.constants import (
-    HASH_BLOCK_SIZE, STAGE_PLATFORM_MAP, TEMPLATE_KEY_PLATFORMS,
+    HASH_BLOCK_SIZE, TEMPLATE_KEY_PLATFORMS,
     RELEASE_ACTIONS, PROMOTION_ACTIONS, PRODUCT_TO_PATH
 )
 
@@ -135,38 +135,6 @@ def generate_beetmover_manifest(context):
     log.info(pprint.pformat(manifest))
 
     return manifest
-
-
-def update_props(context, props, platform_mapping):
-    """Function to alter the `stage_platform` field from balrog_props to their
-    corresponding correct values for certain platforms. Please note that for
-    l10n jobs the `stage_platform` field is in fact called `platform` hence
-    the defaulting below."""
-    props = deepcopy(props)
-    # en-US jobs have the platform set in the `stage_platform` field while
-    # l10n jobs have it set under `platform`. This is merely an uniformization
-    # under the `stage_platform` field that is needed later on in the templates
-    stage_platform = props.get("stage_platform", props.get("platform"))
-    # XXX Bug 1424482 - until we solve this, we need this hack. Since en-US
-    # have at least `stage_platform`, there is a way to tell whether they are
-    # devedition related or not. But for l10n jobs, we only have `platform`
-    # which is identical to the ones we have for Firefox.
-
-    if ('locale' in context.task['payload'] and
-            'devedition' in context.task.get('metadata', {}).get('name', {})):
-        stage_platform += "-devedition"
-    props["stage_platform"] = stage_platform
-    # for some products/platforms this mapping is not needed, hence the default
-    props["platform"] = platform_mapping.get(stage_platform,
-                                             stage_platform)
-    return props
-
-
-def get_release_props(context, initial_release_props_file, platform_mapping=STAGE_PLATFORM_MAP):
-    """determined via parsing the Nightly build job's balrog_props.json and
-    expanded the properties with props beetmover knows about."""
-    props = load_json(initial_release_props_file)['properties']
-    return update_props(context, props, platform_mapping)
 
 
 def get_partials_props(task):

@@ -24,12 +24,12 @@ from beetmoverscript.constants import (
 )
 from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
-    get_upstream_artifacts, get_initial_release_props_file,
+    get_upstream_artifacts, get_release_props,
     add_checksums_to_artifacts, add_release_props_to_artifacts,
     get_task_bucket, get_task_action, validate_bucket_paths,
 )
 from beetmoverscript.utils import (
-    load_json, get_hash, get_release_props, generate_beetmover_manifest,
+    load_json, get_hash, generate_beetmover_manifest,
     get_size, alter_unpretty_contents, matches_exclude,
     get_candidates_prefix, get_releases_prefix, get_creds, get_bucket_name,
     is_release_action, is_promotion_action, get_partials_props,
@@ -51,9 +51,7 @@ async def push_to_nightly(context):
     # determine artifacts to beetmove
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
 
-    # find release properties and make a copy in the artifacts directory
-    release_props_file = get_initial_release_props_file(context)
-    context.release_props = get_release_props(context, release_props_file)
+    context.release_props, release_props_file = get_release_props(context)
 
     # generate beetmover mapping manifest
     mapping_manifest = generate_beetmover_manifest(context)
@@ -92,7 +90,8 @@ async def push_to_nightly(context):
     add_checksums_to_artifacts(context)
     # add release props file to later be used by beetmover jobs than upload
     # the checksums file
-    add_release_props_to_artifacts(context, release_props_file)
+    if release_props_file:
+        add_release_props_to_artifacts(context, release_props_file)
 
 
 # push_to_releases {{{1

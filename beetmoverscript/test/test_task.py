@@ -10,8 +10,9 @@ from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
     get_upstream_artifacts, generate_checksums_manifest,
     get_initial_release_props_file, get_task_bucket, get_task_action,
-    validate_bucket_paths,
+    validate_bucket_paths, get_release_props
 )
+import beetmoverscript.utils as butils
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
@@ -147,6 +148,60 @@ def test_checksums_manifest_generation():
     expected_checksums_manifest_dump = get_fake_checksums_manifest()
     checksums_manifest_dump = generate_checksums_manifest(context)
     assert checksums_manifest_dump == expected_checksums_manifest_dump
+
+
+# get_release_props {{{1
+@pytest.mark.parametrize("taskjson,locale, relprops, expected", ((
+    'task.json', False, {
+        "platform": "android",
+        "stage_platform": "android-api-16"
+    }, {
+        "platform": "android-api-16",
+        "stage_platform": "android-api-16"
+    }
+), (
+    'task.json', True, {
+        "platform": "macosx64",
+    }, {
+        "platform": "mac",
+        "stage_platform": "macosx64"
+    }
+), (
+    'task.json', False, {
+        "platform": "linux64",
+        "stage_platform": "linux64"
+    }, {
+        "platform": "linux-x86_64",
+        "stage_platform": "linux64"
+    }
+), (
+    'task_devedition.json', False, {
+        "platform": "macosx64",
+        "stage_platform": "macosx64-devedition"
+    }, {
+        "platform": "mac",
+        "stage_platform": "macosx64-devedition"
+    }
+), (
+    'task_devedition.json', True, {
+        "platform": "win64",
+    }, {
+        "platform": "win64",
+        "stage_platform": "win64-devedition"
+    }
+)))
+def test_get_release_props(context, mocker, taskjson, locale, relprops, expected):
+    context.task = get_fake_valid_task(taskjson)
+    if locale:
+        context.task['payload']['locale'] = 'lang'
+
+    def fake_json(*args, **kwargs):
+        return {
+            'properties': relprops
+        }
+
+    mocker.patch.object(butils, 'load_json', new=fake_json)
+    assert get_release_props(context)[0] == expected
 
 
 # get_initial_release_props_file {{{1
