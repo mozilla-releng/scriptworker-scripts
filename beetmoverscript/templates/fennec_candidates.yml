@@ -126,6 +126,30 @@ mapping:
       s3_key: SOURCE.asc
       destinations:
         - SOURCE.asc
+    SHA256SUMS:
+      s3_key: SHA256SUMS
+      destinations:
+        - SHA256SUMS
+    SHA256SUMS.asc:
+      s3_key: SHA256SUMS.asc
+      destinations:
+        - SHA256SUMS.asc
+    SHA512SUMS:
+      s3_key: SHA512SUMS
+      destinations:
+        - SHA512SUMS
+    SHA512SUMS.asc:
+      s3_key: SHA512SUMS.asc
+      destinations:
+        - SHA512SUMS.asc
+    SHA256SUMMARY:
+      s3_key: SHA256SUMMARY
+      destinations:
+        - SHA256SUMMARY
+    SHA512SUMMARY:
+      s3_key: SHA512SUMMARY
+      destinations:
+        - SHA512SUMMARY
     {% endif %}
 
 {% endfor %}
