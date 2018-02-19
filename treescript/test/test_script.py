@@ -39,21 +39,26 @@ def test_tree_context():
 # async_main {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    'robustcheckout_works,raises',
+    'robustcheckout_works,raises,actions',
     ((
-        False, ScriptWorkerException
+        False, ScriptWorkerException, ["foo:bar:some_action"]
     ), (
-        True, None
+        True, None, ["foo:bar:some_action"]
+    ), (
+        True, None, None
     ))
 )
-async def test_async_main(tmpdir, mocker, robustcheckout_works, raises):
+async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions):
 
     async def fake_validate_robustcheckout(_):
         return robustcheckout_works
 
+    def action_fun(*args, **kwargs):
+        return actions
+
     mocker.patch.object(scriptworker.client, 'get_task', new=noop_sync)
     mocker.patch.object(script, 'validate_task_schema', new=noop_sync)
-    mocker.patch.object(script, 'task_action_types', new=noop_sync)
+    mocker.patch.object(script, 'task_action_types', new=action_fun)
     mocker.patch.object(script, 'validate_robustcheckout_works', new=fake_validate_robustcheckout)
     mocker.patch.object(script, 'log_mercurial_version', new=noop_async)
     mocker.patch.object(script, 'checkout_repo', new=noop_async)
@@ -119,3 +124,24 @@ async def test_do_actions(mocker):
     await script.do_actions(script.Context(), actions, directory='/some/folder/here')
     assert called_tag[0]
     assert called_bump[0]
+
+
+@pytest.mark.asyncio
+async def test_do_actions_unknown(mocker):
+    actions = ["foo:bar:unknown"]
+    called_tag = [False]
+    called_bump = [False]
+
+    async def mocked_tag(*args, **kwargs):
+        called_tag[0] = True
+
+    async def mocked_bump(*args, **kwargs):
+        called_bump[0] = True
+
+    mocker.patch.object(script, 'do_tagging', new=mocked_tag)
+    mocker.patch.object(script, 'bump_version', new=mocked_bump)
+    mocker.patch.object(script, 'log_outgoing', new=noop_async)
+    with pytest.raises(NotImplementedError):
+        await script.do_actions(script.Context(), actions, directory='/some/folder/here')
+    assert called_tag[0] is False
+    assert called_bump[0] is False
