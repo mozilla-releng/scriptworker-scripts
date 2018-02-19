@@ -26,6 +26,8 @@ STAGE_PLATFORM_MAP = {
 }
 
 TEMPLATE_KEY_PLATFORMS = {
+    # XXX: temp hack to cope with in-tree `android-nightly` from build_platform
+    "android": "fennec",
     "android-api-15": "fennec",
     "android-api-15-old-id": "fennec",
     "android-api-16": "fennec",
