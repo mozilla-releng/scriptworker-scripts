@@ -11,9 +11,9 @@ import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerException
 from treescript.task import validate_task_schema
-from treescript.utils import load_json, task_action_types
+from treescript.utils import load_json, task_action_types, is_dry_run
 from treescript.mercurial import log_mercurial_version, validate_robustcheckout_works, \
-    checkout_repo, do_tagging, log_outgoing
+    checkout_repo, do_tagging, log_outgoing, push
 from treescript.versionmanip import bump_version
 
 log = logging.getLogger(__name__)
@@ -45,10 +45,17 @@ async def do_actions(context, actions, directory):
             await do_tagging(context, directory)
         elif 'version_bump' == action:
             await bump_version(context)
+        elif 'push' == action:
+            pass  # handled after log_outgoing
         else:
             raise NotImplementedError("Unexpected action")
     await log_outgoing(context, directory)
-    # push if scope + !dry_run
+    if is_dry_run(context.task):
+        log.info("Not pushing changes, dry_run was forced")
+    elif 'push' in short_actions:
+        await push(context)
+    else:
+        log.info("Not pushing changes, lacking scopes")
 
 
 # async_main {{{1

@@ -38,6 +38,12 @@ def context(tmpdir):
     yield context
 
 
+@pytest.fixture(scope='function')
+def repo_context(tmpdir, context):
+    context.repo = os.path.join(tmpdir, 'repo')
+    yield context
+
+
 @pytest.mark.parametrize('hg,args', ((
     "hg", ["blah", "blah", "--baz"]
 ), (
@@ -187,7 +193,25 @@ async def test_do_tagging(context, mocker):
 
 
 @pytest.mark.asyncio
-async def test_l(context, mocker):
+async def test_push(repo_context, mocker):
+    called_args = []
+
+    async def run_command(context, *arguments, local_repo=None):
+        called_args.append([tuple([context]) + arguments, {'local_repo': local_repo}])
+
+    mocker.patch.object(mercurial, 'run_hg_command', new=run_command)
+    mocked_source_repo = mocker.patch.object(mercurial, 'get_source_repo')
+    mocked_source_repo.return_value = 'https://hg.mozilla.org/treescript-test'
+    await mercurial.push(repo_context)
+
+    assert len(called_args) == 1
+    assert 'local_repo' in called_args[0][1]
+    assert is_slice_in_list(('push', '-r', '.'), called_args[0][0])
+    assert 'ssh://hg.mozilla.org/treescript-test' in called_args[0][0]
+
+
+@pytest.mark.asyncio
+async def test_log_outgoing(context, mocker):
     called_args = []
 
     async def run_command(context, *arguments, local_repo=None):

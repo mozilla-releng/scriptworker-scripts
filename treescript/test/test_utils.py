@@ -78,6 +78,19 @@ def test_task_action_types_missing_action(scopes):
         utils.task_action_types(task)
 
 
+@pytest.mark.parametrize(
+    'task',
+    ({'payload': {}}, {'payload': {'dry_run': False}}, {'scopes': ['foo']})
+)
+def test_is_dry_run(task):
+    assert False is utils.is_dry_run(task)
+
+
+def test_is_dry_run_true():
+    task = {'payload': {'dry_run': True}}
+    assert True is utils.is_dry_run(task)
+
+
 # log_output {{{1
 @pytest.mark.asyncio
 async def test_log_output(tmpdir, mocker):
