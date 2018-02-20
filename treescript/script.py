@@ -13,7 +13,8 @@ from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerExcep
 from treescript.task import validate_task_schema
 from treescript.utils import load_json, task_action_types
 from treescript.mercurial import log_mercurial_version, validate_robustcheckout_works, \
-    checkout_repo, do_tagging
+    checkout_repo, do_tagging, log_outgoing
+from treescript.versionmanip import bump_version
 
 log = logging.getLogger(__name__)
 
@@ -43,10 +44,10 @@ async def do_actions(context, actions, directory):
         if 'tagging' == action:
             await do_tagging(context, directory)
         elif 'version_bump' == action:
-            pass
+            await bump_version(context)
         else:
             raise NotImplementedError("Unexpected action")
-    # log `hg out -vp`
+    await log_outgoing(context, directory)
     # push if scope + !dry_run
 
 

@@ -11,7 +11,7 @@ from treescript.exceptions import TaskVerificationError, FailedSubprocess
 assert tmpdir  # silence flake8
 
 TEST_ACTION_TAG = 'project:releng:treescript:action:tagging'
-TEST_ACTION_BUMP = 'project:releng:treescript:action:versionbump'
+TEST_ACTION_BUMP = 'project:releng:treescript:action:version_bump'
 TEST_ACTION_INVALID = 'project:releng:treescript:action:invalid'
 
 

@@ -37,6 +37,26 @@
                         }
                     },
                     "required": ["tags", "revision"]
+                },
+                "version_bump_info": {
+                    "type": "object",
+                    "properties": {
+                        "next_version": {
+                            "type": "string"
+                        },
+                        "files": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniequeItems": true,
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": ["next_version", "files"]
+                },
+                "dry_run": {
+                    "type": "boolean"
                 }
             }
         }

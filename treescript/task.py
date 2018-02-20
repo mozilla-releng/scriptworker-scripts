@@ -75,3 +75,23 @@ def get_tag_info(task):
     if not tag_info:
         raise TaskVerificationError("Requested tagging but no tag_info in payload")
     return tag_info
+
+
+# get_version_bump_info {{1
+def get_version_bump_info(task):
+    """Get the version bump information from the task metadata.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        object: the tag info structure as passed to the task payload.
+
+    Raises:
+        TaskVerificationError: If run without tag_info in task definition.
+
+    """
+    version_info = task.get("payload", {}).get("version_bump_info")
+    if not version_info:
+        raise TaskVerificationError("Requested version bump but no version_bump_info in payload")
+    return version_info
