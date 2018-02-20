@@ -205,3 +205,12 @@ async def log_outgoing(context, directory):
     dest_repo = get_source_repo(context.task)
     log.info("outgoing changesets..")
     await run_hg_command(context, 'out', '-vp', '-r', '.', dest_repo, local_repo=local_repo)
+
+
+async def push(context):
+    """Run `hg push` against the current source repo."""
+    local_repo = context.repo
+    dest_repo = get_source_repo(context.task)
+    dest_repo_ssh = dest_repo.replace('https://', 'ssh://')
+    log.info("Pushing local changes to {}".format(dest_repo_ssh))
+    await run_hg_command(context, 'push', '-r', '.', '-v', dest_repo_ssh, local_repo=local_repo)

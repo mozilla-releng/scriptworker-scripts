@@ -9,7 +9,7 @@ from treescript.exceptions import TaskVerificationError, FailedSubprocess
 
 log = logging.getLogger(__name__)
 
-VALID_ACTIONS = ("tagging", "version_bump")
+VALID_ACTIONS = ("tagging", "version_bump", "push")
 
 
 # mkdir {{{1
@@ -68,6 +68,26 @@ def task_action_types(task):
     if len(invalid_actions) > 0:
         raise TaskVerificationError("Task specified invalid actions: {}".format(invalid_actions))
     return actions
+
+
+# task_actions {{{1
+def is_dry_run(task):
+    """Extract task force_dry_run feature.
+
+    This is meant as a means to do a dry-run even if the task has the push action scope.
+
+    Args:
+        task (dict): the task definition.
+
+    Raises:
+        TaskVerificationError: if the number of cert scopes is not 1.
+
+    Returns:
+        str: the cert type.
+
+    """
+    dry_run = task.get("payload", {}).get("dry_run", False)
+    return dry_run
 
 
 # log_output {{{1

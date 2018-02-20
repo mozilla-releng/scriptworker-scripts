@@ -107,10 +107,21 @@ def test_main_noargv(tmpdir, mocker):
 
 # do_actions {{{1
 @pytest.mark.asyncio
-async def test_do_actions(mocker):
+@pytest.mark.parametrize(
+    'push_scope,dry_run,push_expect_called',
+    (
+        (['foo:bar:push'], True, False),
+        (['foo:bar:push'], False, True),
+        ([], False, False),
+        ([], True, False),
+    )
+)
+async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
     actions = ["foo:bar:tagging", "foo:bar:version_bump"]
+    actions += push_scope
     called_tag = [False]
     called_bump = [False]
+    called_push = [False]
 
     async def mocked_tag(*args, **kwargs):
         called_tag[0] = True
@@ -118,12 +129,18 @@ async def test_do_actions(mocker):
     async def mocked_bump(*args, **kwargs):
         called_bump[0] = True
 
+    async def mocked_push(*args, **kwargs):
+        called_push[0] = True
+
     mocker.patch.object(script, 'do_tagging', new=mocked_tag)
     mocker.patch.object(script, 'bump_version', new=mocked_bump)
+    mocker.patch.object(script, 'push', new=mocked_push)
     mocker.patch.object(script, 'log_outgoing', new=noop_async)
+    mocker.patch.object(script, 'is_dry_run').return_value = dry_run
     await script.do_actions(script.Context(), actions, directory='/some/folder/here')
     assert called_tag[0]
     assert called_bump[0]
+    assert called_push[0] is push_expect_called
 
 
 @pytest.mark.asyncio
