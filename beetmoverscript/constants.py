@@ -45,6 +45,8 @@ TEMPLATE_KEY_PLATFORMS = {
     "macosx64-devedition": "devedition",
     "win32-devedition": "devedition",
     "win64-devedition": "devedition",
+    # XXX: temp hack until we solve 1424482
+    "linux-devedition-devedition": "devedition",
 }
 
 NORMALIZED_BALROG_PLATFORMS = {
