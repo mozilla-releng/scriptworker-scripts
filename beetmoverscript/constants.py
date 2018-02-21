@@ -51,12 +51,20 @@ TEMPLATE_KEY_PLATFORMS = {
     "win32": "firefox",
     "win64": "firefox",
     "linux-devedition": "devedition",
-    "linux64-devedition": "devedition",
-    "macosx64-devedition": "devedition",
-    "win32-devedition": "devedition",
-    "win64-devedition": "devedition",
     # XXX: temp hack until we solve 1424482
     "linux-devedition-devedition": "devedition",
+    "linux64-devedition": "devedition",
+    # XXX: temp hack until we solve 1424482
+    "linux64-devedition-devedition": "devedition",
+    "macosx64-devedition": "devedition",
+    # XXX: temp hack until we solve 1424482
+    "macosx64-devedition-devedition": "devedition",
+    "win32-devedition": "devedition",
+    # XXX: temp hack until we solve 1424482
+    "win32-devedition-devedition": "devedition",
+    "win64-devedition": "devedition",
+    # XXX: temp hack until we solve 1424482
+    "win64-devedition-devedition": "devedition",
 }
 
 NORMALIZED_BALROG_PLATFORMS = {
