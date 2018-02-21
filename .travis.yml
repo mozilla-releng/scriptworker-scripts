@@ -1,0 +1,16 @@
+dist: trusty
+sudo: false
+
+language: python
+python:
+  - "3.5"
+
+env:
+  - SKIP_NETWORK_TESTS=0
+
+install:
+    - travis_retry pip install tox
+script:
+    - tox -e py35
+after_success:
+    - tox -e py35-coveralls
