@@ -10,7 +10,7 @@
         "target.test_packages.json"
     ],
 
-    "taskcluster_scope_prefix": "project:releng:signing:beetmover",
+    "taskcluster_scope_prefix": "project:releng:beetmover:",
     "actions": {
         "push-to-nightly": {
             "firefox_nightly": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_nightly.yml",
