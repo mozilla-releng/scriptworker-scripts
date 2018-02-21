@@ -1,1 +1,19 @@
-{}
+{
+        "work_dir": "some/work/dir/",
+        "schema_file": "path/to/schema/file",
+        "verbose": true,
+        "bouncer_instances": {
+            "project:releng:bouncer:dev": {
+                "api_root": "some-root",
+                "timeout_in_seconds": 60,
+                "username": "some-username",
+                "password": "some-password"
+            },
+            "project:releng:bouncer:production": {
+                "api_root": "some-production-root",
+                "timeout_in_seconds": 60,
+                "username": "some-production-username",
+                "password": "some-production-password"
+            }
+      }
+}
