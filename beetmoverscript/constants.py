@@ -69,10 +69,15 @@ TEMPLATE_KEY_PLATFORMS = {
 
 NORMALIZED_BALROG_PLATFORMS = {
     "linux-devedition": "linux",
+    "linux-devedition-devedition": "linux",
     "linux64-devedition": "linux64",
+    "linux64-devedition-devedition": "linux64",
     "macosx64-devedition": "macosx64",
+    "macosx64-devedition-devedition": "macosx64",
     "win32-devedition": "win32",
+    "win32-devedition-devedition": "win32",
     "win64-devedition": "win64",
+    "win64-devedition-devedition": "win64",
 }
 
 HASH_BLOCK_SIZE = 1024*1024
