@@ -30,11 +30,11 @@
                     }
                 },
                 "submission_entries": {
-                    "type": "array",
+                    "type": "object",
                     "minItems": 1,
                     "uniqueItems": true,
                     "items": {
-                        "type": "dict"
+                        "type": "object"
                     }
                 }
             },

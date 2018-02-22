@@ -22,7 +22,7 @@ def get_task_server(task, script_config):
     if re.search('^[0-9A-Za-z_-]+$', server) is None:
         messages.append("Server {} is malformed".format(server))
 
-    if server_scope not in script_config['bouncer_instances']:
+    if server_scope not in script_config['bouncer_config']:
         messages.append("Invalid server scope")
 
     if messages:

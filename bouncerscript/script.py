@@ -11,10 +11,25 @@ from scriptworker.client import get_task
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-from bouncerscript.utils import load_json
+from bouncerscript.utils import (
+    load_json,
+)
+from bouncerscript.task import (
+    validate_task_schema,
+    get_task_action,
+    get_task_server
+)
 
 
 log = logging.getLogger(__name__)
+
+
+def bouncer_submission(context):
+    pass
+
+
+def bouncer_aliases(context):
+    pass
 
 
 # action_map {{{1
@@ -28,14 +43,6 @@ action_map = {
         'function': bouncer_aliases
     }
 }
-
-
-def bouncer_submission(context):
-    pass
-
-
-def bouncer_aliases(context):
-    pass
 
 
 async def async_main(context):
@@ -56,6 +63,12 @@ def usage():
     print("Usage: {} CONFIG_FILE".format(sys.argv[0]), file=sys.stderr)
     sys.exit(1)
 
+
+def craft_logging_config(context):
+    return {
+        'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        'level': logging.DEBUG if context.config.get('verbose') else logging.INFO
+    }
 
 def main(name=None, config_path=None, close_loop=True):
     if name not in (None, '__main__'):
@@ -83,13 +96,6 @@ def main(name=None, config_path=None, close_loop=True):
     if close_loop:
         # Loop cannot be reopen once closed. Not closing it allows to run several tests on main()
         loop.close()
-
-
-def craft_logging_config(context):
-    return {
-        'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        'level': logging.DEBUG if context.config.get('verbose') else logging.INFO
-    }
 
 
 main(name=__name__)
