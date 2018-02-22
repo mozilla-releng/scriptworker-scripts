@@ -27,7 +27,7 @@ def validate_task_schema(context):
 def get_task_bucket(task, script_config):
     """Extract task bucket from scopes"""
     buckets = [s.split(':')[-1] for s in task["scopes"] if
-               s.startswith("project:releng:beetmover:bucket:")]
+               s.startswith(script_config["taskcluster_scope_prefix"] + "bucket:")]
     log.info("Buckets: %s", buckets)
     messages = []
     if len(buckets) != 1:
@@ -49,7 +49,7 @@ def get_task_bucket(task, script_config):
 def get_task_action(task, script_config):
     """Extract last part of beetmover action scope"""
     actions = [s.split(":")[-1] for s in task["scopes"] if
-               s.startswith("project:releng:beetmover:action:")]
+               s.startswith(script_config["taskcluster_scope_prefix"] + "action:")]
 
     log.info("Action types: %s", actions)
     messages = []
