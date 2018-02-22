@@ -18,6 +18,7 @@ STAGE_PLATFORM_MAP = {
     # XXX: temp hack until we solve 1424482
     'linux-devedition-devedition': 'linux-i686',
     'linux64': 'linux-x86_64',
+    'linux64-asan': 'linux-x86_64',
     'linux64-devedition': 'linux-x86_64',
     # XXX: temp hack until we solve 1424482
     'linux64-devedition-devedition': 'linux-x86_64',
@@ -47,6 +48,7 @@ TEMPLATE_KEY_PLATFORMS = {
     "android-x86-old-id": "fennecx86",
     "linux": "firefox",
     "linux64": "firefox",
+    "linux64-asan": "firefox",
     "macosx64": "firefox",
     "win32": "firefox",
     "win64": "firefox",
