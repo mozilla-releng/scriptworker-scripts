@@ -5,7 +5,8 @@ import sys
 import traceback
 from xml.dom.minidom import parseString
 from urllib.parse import quote
-from scriptworker.util import retry_async
+
+from scriptworker.utils import retry_async
 
 
 log = logging.getLogger(__name__)
@@ -16,20 +17,17 @@ def load_json(path):
         return json.load(fh)
 
 
-async def api_call(context, route, data, error_level='fatal', retry_config=None):
+async def api_call(context, route, data, retry_config=None):
     """TODO"""
     retry_async_kwargs = dict(
-        failure_status=None,
         retry_exceptions=(aiohttp.ClientError,
                           aiohttp.ServerTimeoutError),
-        error_message="call to %s failed" % (route),
-        error_level=error_level,
     )
 
     if retry_config:
         retry_async_kwargs.update(retry_config)
 
-    await retry_async(_do_api_call, args=(route, data),
+    await retry_async(_do_api_call, args=(context, route, data),
                       **retry_async_kwargs)
 
 
