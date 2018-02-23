@@ -29,11 +29,11 @@ async def api_call(context, route, data, error_level='fatal', retry_config=None)
     if retry_config:
         retry_async_kwargs.update(retry_config)
 
-    await retry_async(_api_call, args=(route, data),
+    await retry_async(_do_api_call, args=(route, data),
                       **retry_async_kwargs)
 
 
-async def _api_call(context, route, data):
+async def _do_api_call(context, route, data):
     """TODO"""
     bouncer_config = context.config["bouncer_config"][context.server]
     credentials = (bouncer_config["username"],
