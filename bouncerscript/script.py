@@ -12,7 +12,7 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from bouncerscript.utils import (
-    load_json, BouncerSubmitter, api_add_product, api_add_location,
+    load_json, api_add_product, api_add_location,
     product_exists,
 )
 from bouncerscript.task import (

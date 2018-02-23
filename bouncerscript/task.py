@@ -42,13 +42,17 @@ def get_task_action(task, script_config):
         messages.append("One and only one action type can be used")
 
     action = actions[0]
-    if action not in script_config['actions']:
+    if action not in get_supported_actions(script_config):
         messages.append("Invalid action scope")
 
     if messages:
         raise ScriptWorkerTaskException('\n'.join(messages))
 
     return action
+
+
+def get_supported_actions(script_config):
+    return tuple(script_config['schema_files'].keys())
 
 
 def validate_task_schema(context, schema):
