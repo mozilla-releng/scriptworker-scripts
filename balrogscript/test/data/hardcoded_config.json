@@ -2,7 +2,11 @@
 "artifact_dir": "balrogscript/data/balrog_task_schema.json",
  "disable_certs": false,
  "dummy": false,
- "schema_file": "balrogscript/data/balrog_task_schema.json",
+ "schema_files": {
+  "submit-locale": "balrogscript/data/balrog_submit-locale_schema.json",
+  "submit-toplevel": "balrogscript/data/balrog_submit-toplevel_schema.json",
+  "schedule": "balrogscript/data/balrog_schedule_schema.json"
+ },
  "server_config": {"dep": {"allowed_channels": ["nightly",
                                                 "release",
                                                 "beta",
@@ -24,4 +28,3 @@
  "work_dir": "balrogscript/test/test_work_dir",
  "tools_location": "..."
 }
-

@@ -22,7 +22,7 @@ Balrog Specific:
 
 ### task.json
 
-The task schema that the program expects is defined in `balrogscript/data/balrog_task_schema.json`
+The task schema that the program expects is defined in `balrogscript/data/balrog_ACTION_schema.json`
 
 balrogscript will look in `$work_dir/task.json` for the task definition to use.
 

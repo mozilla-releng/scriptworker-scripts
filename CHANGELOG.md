@@ -2,6 +2,20 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.0] - unreleased
+### Added
+- added `balrogscript.constants` module
+- added support for `submit-toplevel` and `schedule` actions, for releases.
+
+### Changed
+- the `schema_file` string is now a `schema_files` dict in config.
+- the `submit` action is now `submit-locale`.
+- `create_submitter` is now `create_locale_submitter`
+- revamped the requirements files.
+
+### Removed
+- removed channel scope support; these weren't fully fleshed out.
+
 ## [1.1.0] - 2018-01-09
 ### Added
 - `IOError` as part of caught exceptions in `load_config` for file not found issues

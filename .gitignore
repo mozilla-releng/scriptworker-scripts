@@ -13,3 +13,6 @@ tools/*
 *egg-info
 .cache
 dist
+tools
+.python-version
+.pytest_cache

@@ -1,21 +1,26 @@
 #!/usr/bin/env python
-"""Balrog script
-"""
+"""Balrog script"""
 from copy import deepcopy
 import json
 import logging
 import os
 import sys
 
-from balrogscript.task import (validate_task_schema, get_task,
-                               get_upstream_artifacts, get_manifest,
-                               get_task_server)
+from balrogscript.task import (
+    get_manifest,
+    get_task,
+    get_task_action,
+    get_task_server,
+    get_upstream_artifacts,
+    validate_task_schema,
+)
 
 
 log = logging.getLogger(__name__)
 
 
-def create_submitter(e, balrog_auth, config):
+# create_locale_submitter {{{1
+def create_locale_submitter(e, balrog_auth, config):
     from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
     auth = balrog_auth
 
@@ -70,21 +75,116 @@ def create_submitter(e, balrog_auth, config):
         raise RuntimeError("Unknown Balrog submission style. Check manifest.json")
 
 
+# submit_locale {{{1
+def submit_locale(task, config, balrog_auth):
+    """Submit a release blob to balrog."""
+    from util.retry import retry  # noqa: E402
+    upstream_artifacts = get_upstream_artifacts(task)
+
+    # Read the manifest from disk
+    manifest = get_manifest(config, upstream_artifacts)
+
+    for e in manifest:
+        # Get release metadata from manifest
+        submitter, release = create_locale_submitter(e, balrog_auth, config)
+        # Connect to balrog and submit the metadata
+        retry(lambda: submitter.run(**release))
+
+
+# schedule {{{1
+def create_scheduler(**kwargs):
+    from balrog.submitter.cli import ReleaseScheduler
+    return ReleaseScheduler(**kwargs)
+
+
+def schedule(task, config, balrog_auth):
+    """Schedule a release to ship on balrog channel(s)"""
+    from util.retry import retry  # noqa: E402
+    auth = balrog_auth
+    scheduler = create_scheduler(api_root=config['api_root'], auth=auth,
+                                 dummy=config['dummy'])
+    args = [
+        task['payload']['product'].capitalize(),
+        task['payload']['version'],
+        task['payload']['build_number'],
+        task['payload']['publish_rules'],
+        task['payload']['release_eta'] or None,  # Send None if release_eta is ''
+    ]
+    # XXX optionally append background_rate if/when we want to support it
+
+    # XXX should we catch requests.HTTPError and raise a scriptworker
+    # error? maybe not since balrogscript isn't py3
+    retry(lambda: scheduler.run(*args))
+
+
+# submit_toplevel {{{1
+def create_creator(**kwargs):
+    from balrog.submitter.cli import ReleaseCreatorV4
+    return ReleaseCreatorV4(**kwargs)
+
+
+def create_pusher(**kwargs):
+    from balrog.submitter.cli import ReleasePusher
+    return ReleasePusher(**kwargs)
+
+
+def submit_toplevel(task, config, balrog_auth):
+    """Push a top-level release blob to balrog."""
+    from util.retry import retry  # noqa: E402
+    auth = balrog_auth
+    partials = {}
+    if task['payload'].get('partial_versions'):
+        for v in task['payload']['partial_versions'].split(','):
+            v = v.strip()  # we have whitespace after the comma
+            version, build_number = v.split("build")
+            partials[version] = {"buildNumber": build_number}
+
+    # XXX WNP - support someday?
+    # currently we create and set these manually.
+    open_url = None
+
+    creator = create_creator(
+        api_root=config['api_root'], auth=auth,
+        dummy=config['dummy'],
+        # these are set for bz2, which we don't support.
+        complete_mar_filename_pattern=None,
+        complete_mar_bouncer_product_pattern=None,
+    )
+    pusher = create_pusher(
+        api_root=config['api_root'], auth=auth,
+        dummy=config['dummy'],
+    )
+
+    retry(lambda: creator.run(
+        appVersion=task['payload']['app_version'],
+        productName=task['payload']['product'].capitalize(),
+        version=task['payload']['version'],
+        buildNumber=task['payload']['build_number'],
+        updateChannels=task['payload']['channel_names'],
+        ftpServer=task['payload']['archive_domain'],
+        bouncerServer=task['payload']['download_domain'],
+        enUSPlatforms=task['payload']['platforms'],
+        hashFunction='sha512',
+        openURL=open_url,
+        partialUpdates=partials,
+        requiresMirrors=task['payload']['require_mirrors'],
+    ))
+
+    retry(lambda: pusher.run(
+        productName=task['payload']['product'].capitalize(),
+        version=task['payload']['version'],
+        build_number=task['payload']['build_number'],
+        rule_ids=task['payload']['rules_to_update'],
+    ))
+
+
+# usage {{{1
 def usage():
     print >> sys.stderr, "Usage: {} CONFIG_FILE".format(sys.argv[0])
     sys.exit(2)
 
 
-def update_config(config, server='default'):
-    config = deepcopy(config)
-
-    config['api_root'] = config['server_config'][server]['api_root']
-    username, password = (config['server_config'][server]['balrog_username'],
-                          config['server_config'][server]['balrog_password'])
-    del(config['server_config'])
-    return (username, password), config
-
-
+# setup_logging {{{1
 def setup_logging(verbose=False):
     log_level = logging.INFO
     if verbose:
@@ -95,6 +195,20 @@ def setup_logging(verbose=False):
                         level=log_level)
 
 
+# update_config {{{1
+def update_config(config, server='default'):
+    config = deepcopy(config)
+
+    config['api_root'] = config['server_config'][server]['api_root']
+    username, password = (
+        config['server_config'][server]['balrog_username'],
+        config['server_config'][server]['balrog_password']
+    )
+    del(config['server_config'])
+    return (username, password), config
+
+
+# load_config {{{1
 def load_config(path=None):
     try:
         with open(path) as fh:
@@ -105,6 +219,7 @@ def load_config(path=None):
     return config
 
 
+# setup_config {{{1
 def setup_config(config_path):
     if config_path is None:
         if len(sys.argv) != 2:
@@ -115,35 +230,29 @@ def setup_config(config_path):
     return config
 
 
-def main(name=None, config_path=None):
-    if name not in (None, '__main__'):
-        return
-
+# main {{{1
+def main(config_path=None):
     config = setup_config(config_path)
     setup_logging(config['verbose'])
 
     task = get_task(config)
-    validate_task_schema(config, task)
+    action = get_task_action(task, config)
+    validate_task_schema(config, task, action)
 
     server = get_task_server(task, config)
     balrog_auth, config = update_config(config, server)
-
-    upstream_artifacts = get_upstream_artifacts(task)
 
     # hacking the tools repo dependency by first reading its location from
     # the config file and only then loading the module from subdfolder
     sys.path.insert(0, os.path.join(config['tools_location'], 'lib/python'))
     # Until we get rid of our tools dep, this import(s) will break flake8 E402
-    from util.retry import retry  # noqa: E402
 
-    # Read the manifest from disk
-    manifest = get_manifest(config, upstream_artifacts)
-
-    for e in manifest:
-        # Get release metadata from manifest
-        submitter, release = create_submitter(e, balrog_auth, config)
-        # Connect to balrog and submit the metadata
-        retry(lambda: submitter.run(**release))
+    if action == 'submit-toplevel':
+        submit_toplevel(task, config, balrog_auth)
+    elif action == 'schedule':
+        schedule(task, config, balrog_auth)
+    else:
+        submit_locale(task, config, balrog_auth)
 
 
-main(name=__name__)
+__name__ == '__main__' and main()

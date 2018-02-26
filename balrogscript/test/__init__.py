@@ -32,7 +32,11 @@ def config():
             "work_dir": os.path.join(tmpdir, "work_dir"),
             "artifact_dir": os.path.join(tmpdir, "artifact_dir"),
 
-            "schema_file": "balrogscript/data/balrog_task_schema.json",
+            "schema_files": {
+                "submit-locale": "balrogscript/data/balrog_submit-locale_schema.json",
+                "submit-toplevel": "balrogscript/data/balrog_submit-toplevel_schema.json",
+                "schedule": "balrogscript/data/balrog_schedule_schema.json",
+            },
             "dummy": False,
             "api_root": "BALROG_API_ROOT",
             "server_config": {
