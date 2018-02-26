@@ -212,5 +212,15 @@ async def push(context):
     local_repo = context.repo
     dest_repo = get_source_repo(context.task)
     dest_repo_ssh = dest_repo.replace('https://', 'ssh://')
+    ssh_username = context.config.get("hg_ssh_user")
+    ssh_key = context.config.get("hg_ssh_keyfile")
+    ssh_opt = []
+    if ssh_username or ssh_key:
+        ssh_opt = ['-e', 'ssh']
+        if ssh_username:
+            ssh_opt[1] += ' -l %s' % ssh_username
+        if ssh_key:
+            ssh_opt[1] += ' -i %s' % ssh_key
     log.info("Pushing local changes to {}".format(dest_repo_ssh))
-    await run_hg_command(context, 'push', '-r', '.', '-v', dest_repo_ssh, local_repo=local_repo)
+    await run_hg_command(context, *ssh_opt, 'push', '-r', '.', '-v',
+                         dest_repo_ssh, local_repo=local_repo)
