@@ -1,5 +1,12 @@
 {
     "work_dir": "/tmp/work_dir",
+    "artifact_dir": "/tmp/artifact_dir",
+
     "hg": "hg",
-    "schema_file": "treescript/data/treescript_task_schema.json"
+    "hg_share_base_dir": "/tmp/hg_share_base",
+    "upstream_repo": "https://hg.mozilla.org/mozilla-unified",
+    "schema_file": "treescript/data/treescript_task_schema.json",
+
+    "hg_ssh_user": "some_user",
+    "hg_ssh_keyfile": "some_file.rsa"
 }

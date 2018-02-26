@@ -208,6 +208,34 @@ async def test_push(repo_context, mocker):
     assert 'local_repo' in called_args[0][1]
     assert is_slice_in_list(('push', '-r', '.'), called_args[0][0])
     assert 'ssh://hg.mozilla.org/treescript-test' in called_args[0][0]
+    assert '-e' not in called_args[0][0]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('options,expect', (
+    ({'hg_ssh_keyfile': '/tmp/ffxbld.rsa'}, 'ssh -i /tmp/ffxbld.rsa'),
+    ({'hg_ssh_user': 'ffxbld'}, 'ssh -l ffxbld'),
+    ({'hg_ssh_keyfile': '/tmp/stage.pub', 'hg_ssh_user': 'stage_ffxbld'},
+        'ssh -l stage_ffxbld -i /tmp/stage.pub')
+))
+async def test_push_ssh(repo_context, mocker, options, expect):
+    called_args = []
+
+    async def run_command(context, *arguments, local_repo=None):
+        called_args.append([tuple([context]) + arguments, {'local_repo': local_repo}])
+
+    print()
+    repo_context.config.update(options)
+    mocker.patch.object(mercurial, 'run_hg_command', new=run_command)
+    mocked_source_repo = mocker.patch.object(mercurial, 'get_source_repo')
+    mocked_source_repo.return_value = 'https://hg.mozilla.org/treescript-test'
+    await mercurial.push(repo_context)
+
+    assert len(called_args) == 1
+    assert 'local_repo' in called_args[0][1]
+    assert is_slice_in_list(('push', '-r', '.'), called_args[0][0])
+    assert 'ssh://hg.mozilla.org/treescript-test' in called_args[0][0]
+    assert is_slice_in_list(('-e', expect), called_args[0][0])
 
 
 @pytest.mark.asyncio
