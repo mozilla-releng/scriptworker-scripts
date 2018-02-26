@@ -55,9 +55,9 @@ def get_supported_actions(script_config):
     return tuple(script_config['schema_files'].keys())
 
 
-def validate_task_schema(context, schema):
+def validate_task_schema(context, action):
     """Perform a schema validation check against taks definition"""
-    schema_file = context.config['schema_files'][schema]
+    schema_file = context.config['schema_files'][action]
     with open(schema_file) as fh:
         task_schema = json.load(fh)
     scriptworker.client.validate_json_schema(context.task, task_schema)
