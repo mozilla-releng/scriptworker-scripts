@@ -43,8 +43,7 @@ async def _do_api_call(context, route, data):
     if data:
         kwargs['json'] = data
     if credentials:
-        # XXX This may need to be latin1
-        auth = aiohttp.BasicAuth(*credentials, encoding='utf-8')
+        auth = aiohttp.BasicAuth(*credentials)
     async with aiohttp.ClientSession(auth=auth) as session:
         log.info("Submitting to %s" % api_url)
         try:
