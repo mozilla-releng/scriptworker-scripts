@@ -50,7 +50,7 @@ async def _do_api_call(context, route, data):
         try:
             async with session.post(api_url, **kwargs) as resp:
                 log.info("Server response")
-                result = await resp.txt()
+                result = await resp.text()
                 log.info(result)
                 return result
         except aiohttp.ClientError as e:
