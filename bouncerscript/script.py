@@ -28,7 +28,7 @@ async def bouncer_submission(context):
 
     submissions = context.task["payload"]["submission_entries"]
     for product_name, pr_config in submissions.items():
-        if product_exists(product_name):
+        if await product_exists(context, product_name):
             log.warning("Product {} already exists. Skipping ...".format(product_name))
             continue
 
