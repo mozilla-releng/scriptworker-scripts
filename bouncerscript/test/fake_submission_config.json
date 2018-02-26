@@ -9,13 +9,9 @@
                 "password": "some-password"
             }
       },
-      "actions": [
-            "submission",
-            "aliases"
-      ],
 
       "schema_files": {
-            "bouncer_submission_schema": "bouncerscript/data/bouncer_submission_task_schema.json",
-            "bouncer_aliases_schema": "bouncerscript/data/bouncer_aliases_task_schema.json"
+            "submission": "bouncerscript/data/bouncer_submission_task_schema.json",
+            "aliases": "bouncerscript/data/bouncer_aliases_task_schema.json"
       }
 }

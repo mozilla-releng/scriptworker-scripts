@@ -3,9 +3,10 @@ import pytest
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from bouncerscript.task import (
+    get_supported_actions,
     get_task_server,
     get_task_action,
-    validate_task_schema
+    validate_task_schema,
 )
 from bouncerscript.test import (
     submission_context
@@ -55,7 +56,12 @@ def test_get_task_server(scopes, expected, raises):
 )))
 def test_get_task_action(scopes, expected, raises):
     task = {'scopes': scopes}
-    config = {'actions': ['submission', 'aliases']}
+    config = {
+        'schema_files': {
+            'submission': '/some/path.json',
+            'aliases': '/some/other_path.json',
+        },
+    }
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
             get_task_action(task, config)
@@ -63,5 +69,15 @@ def test_get_task_action(scopes, expected, raises):
         assert expected == get_task_action(task, config)
 
 
-def test_validate_task_schema(submission_context, schema="bouncer_submission_schema"):
+def test_get_supported_actions():
+    config = {
+        'schema_files': {
+            'submission': '/some/path.json',
+            'aliases': '/some/other_path.json',
+        },
+    }
+    assert get_supported_actions(config) == ('submission', 'aliases')
+
+
+def test_validate_task_schema(submission_context, schema="submission"):
     validate_task_schema(submission_context, schema)

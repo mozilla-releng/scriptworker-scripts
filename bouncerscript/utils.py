@@ -5,7 +5,6 @@ import sys
 import traceback
 from xml.dom.minidom import parseString
 from urllib.parse import quote
-
 from scriptworker.utils import retry_async
 
 

@@ -50,14 +50,8 @@ async def bouncer_aliases(context):
 
 # action_map {{{1
 action_map = {
-    'submission': {
-        'schema': 'bouncer_submission_schema',
-        'function': bouncer_submission,
-    },
-    'aliases': {
-        'schema': 'bouncer_aliases_schema',
-        'function': bouncer_aliases
-    }
+    'submission': bouncer_submission,
+    'aliases': bouncer_aliases,
 }
 
 
@@ -69,10 +63,10 @@ async def async_main(context):
     context.action = get_task_action(context.task, context.config)
 
     # perform schema validation for the corresponding type of task
-    validate_task_schema(context, action_map[context.action]['schema'])
+    validate_task_schema(context, context.action)
 
     # perform the appropriate behavior
-    await action_map[context.action]['function'](context)
+    await action_map[context.action](context)
 
 
 def usage():
