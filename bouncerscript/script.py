@@ -12,11 +12,10 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from bouncerscript.utils import (
-    load_json, BouncerSubmitter, api_add_product, api_add_location,
-    product_exists,
+    load_json, api_add_product, api_add_location, product_exists,
 )
 from bouncerscript.task import (
-    validate_task_schema, get_task_action, get_task_server
+    validate_task_schema, get_task_action, get_task_server,
 )
 
 
@@ -28,12 +27,13 @@ async def bouncer_submission(context):
 
     submissions = context.task["payload"]["submission_entries"]
     for product_name, pr_config in submissions.items():
-        if product_exists(product_name):
+        if await product_exists(context, product_name):
             log.warning("Product {} already exists. Skipping ...".format(product_name))
             continue
 
         log.info("Adding {} ...".format(product_name))
-        api_add_product(
+        await api_add_product(
+            context,
             product_name=product_name,
             add_locales=pr_config["options"]["add_locales"],
             ssl_only=pr_config["options"]["ssl_only"]
@@ -41,7 +41,7 @@ async def bouncer_submission(context):
 
         log.info("Adding corresponding paths ...")
         for platform, path in pr_config["paths_per_bouncer_platform"].items():
-            api_add_location(product_name, platform, path)
+            await api_add_location(context, product_name, platform, path)
 
 
 async def bouncer_aliases(context):
@@ -85,6 +85,7 @@ def craft_logging_config(context):
         'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         'level': logging.DEBUG if context.config.get('verbose') else logging.INFO
     }
+
 
 def main(name=None, config_path=None, close_loop=True):
     if name not in (None, '__main__'):
