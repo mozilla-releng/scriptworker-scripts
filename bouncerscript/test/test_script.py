@@ -1,6 +1,5 @@
 import logging
 import mock
-import pytest
 
 from unittest.mock import MagicMock
 from bouncerscript.script import (
@@ -15,6 +14,10 @@ from scriptworker.test import (
 from scriptworker.exceptions import (
     ScriptWorkerTaskException,
 )
+
+
+assert event_loop, fake_session  # silence flake8
+assert submission_context  # silence flake8
 
 
 def test_craft_logging_config():
