@@ -26,11 +26,12 @@ async def api_call(context, route, data, retry_config=None):
     if retry_config:
         retry_async_kwargs.update(retry_config)
 
-    await retry_async(_do_api_call, args=(context, route, data),
-                      **retry_async_kwargs)
+    log.info("Calling {} with data: {}".format(route, data))
+    return await retry_async(_do_api_call, args=(context, route, data),
+                             **retry_async_kwargs)
 
 
-async def _do_api_call(context, route, data):
+async def _do_api_call(context, route, data, method='GET'):
     """TODO"""
     bouncer_config = context.config["bouncer_config"][context.server]
     credentials = (bouncer_config["username"],
@@ -41,16 +42,19 @@ async def _do_api_call(context, route, data):
     kwargs = {'timeout': 60}
     auth = None
     if data:
-        kwargs['json'] = data
+        kwargs['data'] = data
+        method = 'POST'
     if credentials:
-        # XXX This may need to be latin1
-        auth = aiohttp.BasicAuth(*credentials, encoding='utf-8')
+        auth = aiohttp.BasicAuth(*credentials)
     async with aiohttp.ClientSession(auth=auth) as session:
         log.info("Submitting to %s" % api_url)
         try:
-            async with session.post(api_url, **kwargs) as resp:
+            log.info("Performing a {} request to {} with kwargs {}".format(method,
+                                                                           api_url,
+                                                                           kwargs))
+            async with session.request(method, api_url, **kwargs) as resp:
                 log.info("Server response")
-                result = await resp.txt()
+                result = await resp.text()
                 log.info(result)
                 return result
         except aiohttp.ClientError as e:
@@ -69,7 +73,6 @@ async def product_exists(context, product_name):
     log.info("Checking if {} already exists".format(product_name))
     res = await api_call(context, "product_show?product=%s" %
                          quote(product_name), data=None)
-
     try:
         xml = parseString(res)
         # bouncer API returns <products/> if the product doesn't exist
