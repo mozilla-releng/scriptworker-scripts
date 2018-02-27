@@ -48,6 +48,9 @@ async def _do_api_call(context, route, data, method='GET'):
     async with aiohttp.ClientSession(auth=auth) as session:
         log.info("Submitting to %s" % api_url)
         try:
+            log.info("Performing a {} request to {} with kwargs {}".format(method,
+                                                                           api_url,
+                                                                           kwargs))
             async with session.request(method, api_url, **kwargs) as resp:
                 log.info("Server response")
                 result = await resp.text()
@@ -69,7 +72,6 @@ async def product_exists(context, product_name):
     log.info("Checking if {} already exists".format(product_name))
     res = await api_call(context, "product_show?product=%s" %
                          quote(product_name), data=None)
-    log.info("Server response was: {}".format(res))
     try:
         xml = parseString(res)
         # bouncer API returns <products/> if the product doesn't exist
@@ -94,6 +96,7 @@ async def api_add_product(context, product_name, add_locales, ssl_only=False):
         # Send "true" as a string
         data["ssl_only"] = "true"
 
+    log.info("Calling api_add_product with data: {}".format(data))
     await api_call(context, "product_add/", data)
 
 
@@ -105,4 +108,5 @@ async def api_add_location(context, product_name, bouncer_platform, path):
         "path": path,
     }
 
+    log.info("Calling api_add_location with data: {}".format(data))
     await api_call(context, "location_add/", data)
