@@ -26,6 +26,7 @@ async def api_call(context, route, data, retry_config=None):
     if retry_config:
         retry_async_kwargs.update(retry_config)
 
+    log.info("Calling {} with data: {}".format(route, data))
     return await retry_async(_do_api_call, args=(context, route, data),
                              **retry_async_kwargs)
 
@@ -41,7 +42,7 @@ async def _do_api_call(context, route, data, method='GET'):
     kwargs = {'timeout': 60}
     auth = None
     if data:
-        kwargs['json'] = data
+        kwargs['data'] = data
         method = 'POST'
     if credentials:
         auth = aiohttp.BasicAuth(*credentials)
@@ -96,7 +97,6 @@ async def api_add_product(context, product_name, add_locales, ssl_only=False):
         # Send "true" as a string
         data["ssl_only"] = "true"
 
-    log.info("Calling api_add_product with data: {}".format(data))
     await api_call(context, "product_add/", data)
 
 
@@ -108,5 +108,4 @@ async def api_add_location(context, product_name, bouncer_platform, path):
         "path": path,
     }
 
-    log.info("Calling api_add_location with data: {}".format(data))
     await api_call(context, "location_add/", data)
