@@ -30,7 +30,7 @@ async def api_call(context, route, data, retry_config=None):
                       **retry_async_kwargs)
 
 
-async def _do_api_call(context, route, data):
+async def _do_api_call(context, route, data, method='GET'):
     """TODO"""
     bouncer_config = context.config["bouncer_config"][context.server]
     credentials = (bouncer_config["username"],
@@ -42,12 +42,13 @@ async def _do_api_call(context, route, data):
     auth = None
     if data:
         kwargs['json'] = data
+        method = 'POST'
     if credentials:
         auth = aiohttp.BasicAuth(*credentials)
     async with aiohttp.ClientSession(auth=auth) as session:
         log.info("Submitting to %s" % api_url)
         try:
-            async with session.post(api_url, **kwargs) as resp:
+            async with session.request(method, api_url, **kwargs) as resp:
                 log.info("Server response")
                 result = await resp.text()
                 log.info(result)
@@ -68,7 +69,7 @@ async def product_exists(context, product_name):
     log.info("Checking if {} already exists".format(product_name))
     res = await api_call(context, "product_show?product=%s" %
                          quote(product_name), data=None)
-
+    log.info("Server response was: {}".format(res))
     try:
         xml = parseString(res)
         # bouncer API returns <products/> if the product doesn't exist
