@@ -26,8 +26,8 @@ async def api_call(context, route, data, retry_config=None):
     if retry_config:
         retry_async_kwargs.update(retry_config)
 
-    await retry_async(_do_api_call, args=(context, route, data),
-                      **retry_async_kwargs)
+    return await retry_async(_do_api_call, args=(context, route, data),
+                             **retry_async_kwargs)
 
 
 async def _do_api_call(context, route, data, method='GET'):
