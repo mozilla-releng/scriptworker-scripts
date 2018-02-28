@@ -233,9 +233,9 @@ async def test_push_ssh(repo_context, mocker, options, expect):
 
     assert len(called_args) == 1
     assert 'local_repo' in called_args[0][1]
-    assert is_slice_in_list(('push', '-r', '.'), called_args[0][0])
+    assert is_slice_in_list(('-r', '.'), called_args[0][0])
     assert 'ssh://hg.mozilla.org/treescript-test' in called_args[0][0]
-    assert is_slice_in_list(('-e', expect), called_args[0][0])
+    assert is_slice_in_list(('push', '-e', expect), called_args[0][0])
 
 
 @pytest.mark.asyncio

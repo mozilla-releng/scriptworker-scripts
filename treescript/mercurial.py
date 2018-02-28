@@ -222,5 +222,5 @@ async def push(context):
         if ssh_key:
             ssh_opt[1] += ' -i %s' % ssh_key
     log.info("Pushing local changes to {}".format(dest_repo_ssh))
-    await run_hg_command(context, *ssh_opt, 'push', '-r', '.', '-v',
+    await run_hg_command(context, 'push', *ssh_opt, '-r', '.', '-v',
                          dest_repo_ssh, local_repo=local_repo)
