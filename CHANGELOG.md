@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.1.0] - 2018-02-28
+
+### Added
+- S3 destinations are now logged out.
+- Balrog Props file is not needed anymore if the data is passed in `task.payload.releaseProperties`
+- SUMS and SUMMARY files are now supported
+- Added new linux64-asan platform
+- Defined temporary devedition platforms. They will be removed in future versions.
+
+### Changed
+- Balrog Props file is now a deprecated behavior and will print out a warning if used.
+
 ## [4.0.2] - 2017-12-14
 
 ### Added
