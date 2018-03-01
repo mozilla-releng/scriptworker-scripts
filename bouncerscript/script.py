@@ -13,6 +13,7 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 
 from bouncerscript.utils import (
     load_json, api_add_product, api_add_location, product_exists,
+    api_update_alias
 )
 from bouncerscript.task import (
     validate_task_schema, get_task_action, get_task_server,
@@ -23,6 +24,7 @@ log = logging.getLogger(__name__)
 
 
 async def bouncer_submission(context):
+    """TODO"""
     log.info("Preparing to submit information to bouncer")
 
     submissions = context.task["payload"]["submission_entries"]
@@ -45,7 +47,13 @@ async def bouncer_submission(context):
 
 
 async def bouncer_aliases(context):
-    pass
+    """TODO"""
+    log.info("Preparing to update aliases within bouncer")
+
+    aliases = context.task["payload"]["aliases_entries"]
+    for alias, product_name in aliases.items():
+        log.info("Updating {} with {} product".format(alias, product_name))
+        await api_update_alias(context, alias, product_name)
 
 
 # action_map {{{1
