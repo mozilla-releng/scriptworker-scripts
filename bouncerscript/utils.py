@@ -109,3 +109,13 @@ async def api_add_location(context, product_name, bouncer_platform, path):
     }
 
     await api_call(context, "location_add/", data)
+
+
+async def api_update_alias(context, alias, product_name):
+    """TODO"""
+    data = {
+        "alias": alias,
+        "related_product": product_name,
+    }
+
+    await api_call(context, "create_update_alias", data)
