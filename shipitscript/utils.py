@@ -1,9 +1,3 @@
-import json
-
-
-def load_json(path):
-    with open(path, "r") as fh:
-        return json.load(fh)
 
 
 def get_single_item_from_sequence(

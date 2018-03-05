@@ -11,10 +11,10 @@ import traceback
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker.utils import load_json_or_yaml
 
 from shipitscript.ship_actions import mark_as_shipped
 from shipitscript.task import validate_task_schema, get_ship_it_instance_config_from_scope
-from shipitscript.utils import load_json
 
 
 log = logging.getLogger(__name__)
@@ -56,7 +56,10 @@ def main(name=None, config_path=None, close_loop=True):
         if len(sys.argv) != 2:
             usage()
         config_path = sys.argv[1]
-    context.config.update(load_json(path=config_path))
+    with open(config_path) as f:
+        print(f.read())
+
+    context.config.update(load_json_or_yaml(config_path, is_path=True))
 
     logging.basicConfig(**craft_logging_config(context))
     logging.getLogger('taskcluster').setLevel(logging.WARNING)
