@@ -43,6 +43,9 @@ async def bouncer_submission(context):
 
         log.info("Adding corresponding paths ...")
         for platform, path in pr_config["paths_per_bouncer_platform"].items():
+            # bug 1443104: temp hack that goes away when bug is solved
+            if "updates" in path:
+                path = path.replace("updates", "update")
             await api_add_location(context, product_name, platform, path)
 
 
