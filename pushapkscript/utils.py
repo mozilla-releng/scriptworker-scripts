@@ -1,15 +1,3 @@
-import logging
-import os
-
-log = logging.getLogger(__name__)
-
-
-def mkdir(path):
-    try:
-        os.makedirs(path)
-        log.info("mkdir {}".format(path))
-    except OSError:
-        pass
 
 
 def filter_out_identical_values(list_):
