@@ -34,6 +34,11 @@ async def bouncer_submission(context):
             continue
 
         log.info("Adding {} ...".format(product_name))
+        # bug 1443104: temp hack that goes away when bug is solved
+        log.info("Bug 1443104 - adding en-US manually here to unblock 60.0b1")
+        if "en-US" not in context.task["payload"]["locales"]:
+            context.task["payload"]["locales"].append("en-US")
+
         await api_add_product(
             context,
             product_name=product_name,
