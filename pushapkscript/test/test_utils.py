@@ -1,11 +1,10 @@
 import os
 import tempfile
-import json
 
 import unittest
 from unittest.mock import patch
 
-from pushapkscript.utils import mkdir, load_json
+from pushapkscript.utils import mkdir
 
 
 class UtilsTest(unittest.TestCase):
@@ -30,13 +29,3 @@ class UtilsTest(unittest.TestCase):
         makedirs.side_effect = OSError
         mkdir('/dummy/dir')
         makedirs.assert_called_with('/dummy/dir')
-
-    def test_load_json_from_file(self):
-        json_object = {'a_key': 'a_value'}
-
-        with tempfile.TemporaryDirectory() as output_dir:
-            output_file = os.path.join(output_dir, 'file.json')
-            with open(output_file, 'w') as f:
-                json.dump(json_object, f)
-
-            self.assertEqual(load_json(output_file), json_object)

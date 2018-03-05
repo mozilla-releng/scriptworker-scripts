@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 
@@ -11,11 +10,6 @@ def mkdir(path):
         log.info("mkdir {}".format(path))
     except OSError:
         pass
-
-
-def load_json(path):
-    with open(path, "r") as fh:
-        return json.load(fh)
 
 
 def filter_out_identical_values(list_):

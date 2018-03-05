@@ -12,6 +12,7 @@ import scriptworker.client
 from scriptworker.artifacts import get_upstream_artifacts_full_paths_per_task_id
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker.utils import load_json_or_yaml
 
 from pushapkscript import jarsigner
 from pushapkscript.apk import sort_and_check_apks_per_architectures
@@ -19,7 +20,6 @@ from pushapkscript.exceptions import NoGooglePlayStringsFound
 from pushapkscript.googleplay import publish_to_googleplay, should_commit_transaction, \
     is_allowed_to_push_to_google_play, get_google_play_strings_path
 from pushapkscript.task import validate_task_schema, extract_channel
-from pushapkscript.utils import load_json
 
 
 log = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ def main(name=None, config_path=None, close_loop=True):
         if len(sys.argv) != 2:
             usage()
         config_path = sys.argv[1]
-    context.config.update(load_json(path=config_path))
+    context.config.update(load_json_or_yaml(config_path, is_path=True))
 
     logging.basicConfig(**craft_logging_config(context))
     logging.getLogger('taskcluster').setLevel(logging.WARNING)
