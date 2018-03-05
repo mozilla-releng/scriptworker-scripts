@@ -2,9 +2,9 @@ import json
 import logging
 
 import scriptworker.client
+from scriptworker.utils import get_single_item_from_sequence
 
 from shipitscript.exceptions import TaskVerificationError
-from shipitscript.utils import get_single_item_from_sequence
 
 log = logging.getLogger(__name__)
 
