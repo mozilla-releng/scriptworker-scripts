@@ -1,6 +1,7 @@
 import logging
 
 from scriptworker.exceptions import TaskVerificationError
+from scriptworker.utils import get_single_item_from_sequence
 
 from pushapkscript.exceptions import NoGooglePlayStringsFound
 from pushapkscript.task import extract_channel
@@ -134,20 +135,24 @@ def _check_google_play_string_is_the_only_failed_task(failed_artifacts_per_task_
 
 
 def _find_unique_google_play_strings_file_in_dict(artifact_dict):
-    l10n_strings_paths = [
-        path
-        for task_id, paths in artifact_dict.items()
-        for path in paths
-        if _EXPECTED_L10N_STRINGS_FILE_NAME in path
+    all_paths = [
+        path for paths in artifact_dict.values() for path in paths
     ]
 
-    number_of_artifacts_found = len(l10n_strings_paths)
-    if number_of_artifacts_found == 0:
-        raise NoGooglePlayStringsFound(_EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict)
-    if number_of_artifacts_found > 1:
-        raise TaskVerificationError(
-            'More than one artifact "{}" found in upstreamArtifacts: {}'
-            .format(_EXPECTED_L10N_STRINGS_FILE_NAME, l10n_strings_paths)
+    # TODO: Modify get_single_item_from_sequence to support 2 ErrorClasses
+    try:
+        return get_single_item_from_sequence(
+            all_paths,
+            condition=lambda path: path.endswith(_EXPECTED_L10N_STRINGS_FILE_NAME),
+            ErrorClass=TaskVerificationError,
+            no_item_error_message='Could not find "{}" in upstreamArtifacts: {}'.format(
+                _EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict
+            ),
+            too_many_item_error_message='"{}" is defined too many times among these upstreamArtifacts {}'.format(
+                _EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict
+            ),
         )
-
-    return l10n_strings_paths[0]
+    except TaskVerificationError as e:
+        if 'Could not find "' in str(e):
+            raise NoGooglePlayStringsFound(_EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict)
+        raise

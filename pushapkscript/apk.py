@@ -1,4 +1,5 @@
 from scriptworker.exceptions import TaskVerificationError
+from scriptworker.utils import get_single_item_from_sequence
 from zipfile import ZipFile
 
 from pushapkscript.utils import filter_out_identical_values
@@ -50,17 +51,14 @@ def _extract_architecture_from_paths(apk_path, paths):
         path.split('/')[_ARCHITECTURE_SUBDIRECTORY_INDEX] for path in paths
     ]
     unique_architectures = filter_out_identical_values(detected_architectures)
-    non_empty_unique_architectures = [
-        architecture for architecture in unique_architectures if architecture
-    ]
-    number_of_unique_architectures = len(non_empty_unique_architectures)
 
-    if number_of_unique_architectures == 0:
-        raise TaskVerificationError('"{}" does not contain any architecture data under these paths: {}'.format(apk_path, paths))
-    elif number_of_unique_architectures > 1:
-        raise TaskVerificationError('"{}" contains too many architures: {}'.format(apk_path, unique_architectures))
-
-    return unique_architectures[0]
+    return get_single_item_from_sequence(
+        unique_architectures,
+        condition=lambda architecture: architecture,    # removes empty (falsey architectures)
+        ErrorClass=TaskVerificationError,
+        no_item_error_message='"{}" does not contain any architecture data under these paths: {}'.format(apk_path, paths),
+        too_many_item_error_message='"{}" contains too many architures: {}'.format(apk_path, unique_architectures),
+    )
 
 
 def _check_architectures_are_valid(mozapkpublisher_architectures, channel):
