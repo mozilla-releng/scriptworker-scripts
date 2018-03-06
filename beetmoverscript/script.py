@@ -18,7 +18,7 @@ from scriptworker.utils import retry_async, raise_future_exceptions
 
 from beetmoverscript.constants import (
     MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE,
-    TEMPLATE_KEY_PLATFORMS, NORMALIZED_BALROG_PLATFORMS,
+    NORMALIZED_BALROG_PLATFORMS,
 )
 from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
@@ -31,7 +31,7 @@ from beetmoverscript.utils import (
     get_size, alter_unpretty_contents, matches_exclude,
     get_candidates_prefix, get_releases_prefix, get_creds, get_bucket_name,
     is_release_action, is_promotion_action, get_partials_props,
-    get_product_name
+    get_product_name,
 )
 
 log = logging.getLogger(__name__)
@@ -319,8 +319,7 @@ def enrich_balrog_manifest(context, locale):
                                  'http://download.cdn.mozilla.net/pub'])
 
     enrich_dict = {
-        "appName": get_product_name(release_props['appName'],
-                                    TEMPLATE_KEY_PLATFORMS[release_props['stage_platform']]),
+        "appName": get_product_name(release_props['appName'], release_props['stage_platform']),
         "appVersion": release_props["appVersion"],
         "branch": release_props["branch"],
         "buildid": release_props["buildid"],
@@ -378,7 +377,7 @@ async def put(context, url, headers, abs_filename, session=None):
 # upload_to_s3 {{{1
 async def upload_to_s3(context, s3_key, path):
     product = get_product_name(context.release_props['appName'].lower(),
-                               TEMPLATE_KEY_PLATFORMS[context.release_props['stage_platform']])
+                               context.release_props['stage_platform'])
     api_kwargs = {
         'Bucket': get_bucket_name(context, product),
         'Key': s3_key,

@@ -2,6 +2,8 @@ from beetmoverscript.utils import load_json
 import pytest
 from scriptworker.context import Context
 
+import jinja2
+
 
 def noop_sync(*args, **kwargs):
     pass
@@ -44,3 +46,8 @@ def context():
     context.bucket = 'nightly'
     context.action = 'push-to-nightly'
     yield context
+
+
+def get_test_jinja_env():
+    return jinja2.Environment(loader=jinja2.PackageLoader("beetmoverscript.test"),
+                              undefined=jinja2.StrictUndefined)

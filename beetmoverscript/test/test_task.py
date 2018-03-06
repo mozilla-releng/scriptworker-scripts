@@ -69,14 +69,14 @@ def test_get_task_bucket(scopes, expected, raises):
 
 # get_task_action {{{1
 @pytest.mark.parametrize("scopes,expected,raises", ((
-    ["project:releng:beetmover:action:dep", "project:releng:beetmover:action:release"],
+    ["project:releng:beetmover:action:push-to-nightly", "project:releng:beetmover:action:invalid"],
     None, True
 ), (
     ["project:releng:beetmover:action:invalid"],
     None, True
 ), (
-    ["project:releng:beetmover:action:dep"],
-    "dep", False
+    ["project:releng:beetmover:action:push-to-nightly"],
+    "push-to-nightly", False
 )))
 def test_get_task_action(scopes, expected, raises):
     task = {'scopes': scopes}

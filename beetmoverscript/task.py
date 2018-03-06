@@ -6,7 +6,7 @@ import shutil
 from copy import deepcopy
 from scriptworker import client
 
-from beetmoverscript import utils
+from beetmoverscript import utils, script
 from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
                                        INITIAL_RELEASE_PROPS_FILE,
                                        STAGE_PLATFORM_MAP,
@@ -57,7 +57,7 @@ def get_task_action(task, script_config):
         messages.append("Only one action type can be used")
 
     action = actions[0]
-    if action not in script_config['actions']:
+    if action not in script.action_map:
         messages.append("Invalid action scope")
 
     if messages:

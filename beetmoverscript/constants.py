@@ -36,39 +36,6 @@ STAGE_PLATFORM_MAP = {
     'win64-devedition-devedition': 'win64',
 }
 
-TEMPLATE_KEY_PLATFORMS = {
-    # XXX: temp hack to cope with in-tree `android-nightly` from build_platform
-    "android": "fennec",
-    "android-api-15": "fennec",
-    "android-api-15-old-id": "fennec",
-    "android-api-16": "fennec",
-    "android-api-16-old-id": "fennec",
-    "android-x86": "fennec",
-    "android-aarch64": "fennec",
-    "android-x86-old-id": "fennec",
-    "linux": "firefox",
-    "linux64": "firefox",
-    "linux64-asan-reporter": "firefox",
-    "macosx64": "firefox",
-    "win32": "firefox",
-    "win64": "firefox",
-    "linux-devedition": "devedition",
-    # XXX: temp hack until we solve 1424482
-    "linux-devedition-devedition": "devedition",
-    "linux64-devedition": "devedition",
-    # XXX: temp hack until we solve 1424482
-    "linux64-devedition-devedition": "devedition",
-    "macosx64-devedition": "devedition",
-    # XXX: temp hack until we solve 1424482
-    "macosx64-devedition-devedition": "devedition",
-    "win32-devedition": "devedition",
-    # XXX: temp hack until we solve 1424482
-    "win32-devedition-devedition": "devedition",
-    "win64-devedition": "devedition",
-    # XXX: temp hack until we solve 1424482
-    "win64-devedition-devedition": "devedition",
-}
-
 NORMALIZED_BALROG_PLATFORMS = {
     "linux-devedition": "linux",
     "linux-devedition-devedition": "linux",

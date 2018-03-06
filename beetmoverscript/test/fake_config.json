@@ -12,16 +12,6 @@
     "release_schema_file": "beetmoverscript/data/release_beetmover_task_schema.json",
     "schema_file": "beetmoverscript/data/beetmover_task_schema.json",
 
-    "actions": {
-        "push-to-nightly": {
-            "fake_nightly": "beetmoverscript/test/fake_beetmover_manifest.yml",
-            "firefox_nightly": "beetmoverscript/test/fake_beetmover_manifest.yml",
-            "fennec_nightly": "beetmoverscript/test/fake_beetmover_manifest.yml"
-        },
-        "push-to-candidates": {},
-        "push-to-releases": {}
-    },
-
     "bucket_config": {
         "nightly": {
             "credentials": {

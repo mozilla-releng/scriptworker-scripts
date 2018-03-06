@@ -3,7 +3,8 @@ import pytest
 import tempfile
 
 from beetmoverscript.test import (context, get_fake_valid_task,
-                                  get_fake_balrog_props, get_fake_checksums_manifest)
+                                  get_fake_balrog_props, get_fake_checksums_manifest,
+                                  get_test_jinja_env)
 import beetmoverscript.utils as butils
 from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_json, generate_beetmover_template_args,
@@ -58,7 +59,8 @@ def test_write_file():
 
 
 # generate_beetmover_manifest {{{1
-def test_generate_manifest(context):
+def test_generate_manifest(context, mocker):
+    mocker.patch('beetmoverscript.utils.get_jinja_env', get_test_jinja_env)
     manifest = generate_beetmover_manifest(context)
     mapping = manifest['mapping']
     s3_keys = [mapping[m].get('target_info.txt', {}).get('s3_key') for m in mapping]
@@ -100,7 +102,7 @@ def test_beetmover_template_args_generation(context, taskjson, partials):
         'filename_platform': 'android-arm',
         'product': 'Fake',
         'stage_platform': 'android-api-15',
-        'template_key': 'fennec_nightly',
+        'template_key': 'fake_nightly',
         'upload_date': '2016/09/2016-09-01-16-26-14',
         'version': '99.0a1',
         'buildid': '20990205110000',
@@ -128,7 +130,7 @@ def test_beetmover_template_args_generation_release(context):
         'filename_platform': 'android-arm',
         'product': 'Fake',
         'stage_platform': 'android-api-15',
-        'template_key': 'fennec_candidates',
+        'template_key': 'fake_candidates',
         'upload_date': '2016/09/2016-09-01-16-26-14',
         'version': '4.4',
         'buildid': '20990205110000',

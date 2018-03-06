@@ -10,7 +10,7 @@ import re
 import yaml
 
 from beetmoverscript.constants import (
-    HASH_BLOCK_SIZE, TEMPLATE_KEY_PLATFORMS,
+    HASH_BLOCK_SIZE,
     RELEASE_ACTIONS, PROMOTION_ACTIONS, PRODUCT_TO_PATH,
     NORMALIZED_FILENAME_PLATFORMS,
 )
@@ -68,8 +68,8 @@ def is_promotion_action(action):
     return action in PROMOTION_ACTIONS
 
 
-def get_product_name(appName, tmpl_key):
-    if tmpl_key == "devedition":
+def get_product_name(appName, platform):
+    if "devedition" in platform:
         # XXX: this check is helps reuse this function in both
         # returning the proper templates file but also for the release name in
         # Balrog manifest that beetmover is uploading upon successful run
@@ -83,7 +83,6 @@ def get_product_name(appName, tmpl_key):
 def generate_beetmover_template_args(context):
     task = context.task
     release_props = context.release_props
-    tmpl_key_platform = TEMPLATE_KEY_PLATFORMS[release_props["stage_platform"]]
 
     tmpl_args = {
         # payload['upload_date'] is a timestamp defined by params['pushdate']
@@ -107,14 +106,22 @@ def generate_beetmover_template_args(context):
     # e.g. action = 'push-to-candidates' or 'push-to-nightly'
     tmpl_bucket = context.action.split('-')[-1]
 
+    product_name = get_product_name(release_props["appName"].lower(), release_props["stage_platform"])
     if 'locale' in task["payload"]:
         tmpl_args["locale"] = task["payload"]["locale"]
-        product_name = get_product_name(release_props["appName"].lower(), tmpl_key_platform)
         tmpl_args["template_key"] = "%s_%s_repacks" % (product_name, tmpl_bucket)
     else:
-        tmpl_args["template_key"] = "%s_%s" % (tmpl_key_platform, tmpl_bucket)
+        tmpl_args["template_key"] = "%s_%s" % (product_name, tmpl_bucket)
 
     return tmpl_args
+
+
+def get_jinja_env():
+    """
+    Get a jinja2 environment for loaind beetmover manifest templates.
+    """
+    return jinja2.Environment(loader=jinja2.PackageLoader("beetmoverscript"),
+                              undefined=jinja2.StrictUndefined)
 
 
 def generate_beetmover_manifest(context):
@@ -123,15 +130,13 @@ def generate_beetmover_manifest(context):
     to release deliverable names
     """
     tmpl_args = generate_beetmover_template_args(context)
-    tmpl_path = context.config['actions'][context.action][tmpl_args["template_key"]]
 
-    log.info('generating manifest from: {}'.format(tmpl_path))
-    log.info(os.path.abspath(tmpl_path))
-
-    tmpl_dir, tmpl_name = os.path.split(os.path.abspath(tmpl_path))
-    jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmpl_dir),
-                                   undefined=jinja2.StrictUndefined)
+    tmpl_name = '{}.yml'.format(tmpl_args["template_key"])
+    jinja_env = get_jinja_env()
     tmpl = jinja_env.get_template(tmpl_name)
+
+    log.info('generating manifest from: {}'.format(tmpl.filename))
+
     manifest = yaml.safe_load(tmpl.render(**tmpl_args))
 
     log.info("manifest generated:")
