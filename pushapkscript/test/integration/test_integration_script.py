@@ -165,22 +165,3 @@ class MainTest(unittest.TestCase):
                 self.test_temp_dir, task_generator.google_play_strings_task_id
             ),
         })
-
-    @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
-    def test_main_still_supports_old_task_def(self, PushAPK):
-        task_generator = TaskGenerator(task_def_before_firefox_59=True, should_commit_transaction=True)
-        task_generator.generate_file(self.config_generator.work_dir)
-
-        self._copy_all_apks_to_test_temp_dir(task_generator)
-        sync_main(async_main, config_path=self.config_generator.generate())
-
-        PushAPK.assert_called_with(config={
-            'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
-            'apk_x86': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
-            'credentials': '/dummy/path/to/certificate.p12',
-            'commit': True,
-            'package_name': 'org.mozilla.fennec_aurora',
-            'service_account': 'dummy-service-account@iam.gserviceaccount.com',
-            'track': 'alpha',
-            'update_gp_strings_from_l10n_store': True,
-        })

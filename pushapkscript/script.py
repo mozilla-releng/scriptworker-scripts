@@ -8,7 +8,6 @@ from scriptworker.client import get_task, sync_main, validate_task_schema
 
 from pushapkscript import jarsigner
 from pushapkscript.apk import sort_and_check_apks_per_architectures
-from pushapkscript.exceptions import NoGooglePlayStringsFound
 from pushapkscript.googleplay import publish_to_googleplay, should_commit_transaction, \
     is_allowed_to_push_to_google_play, get_google_play_strings_path
 from pushapkscript.task import extract_channel
@@ -43,22 +42,11 @@ async def async_main(context):
     [jarsigner.verify(context, apk_path) for apk_path in apks_per_architectures.values()]
 
     log.info('Finding whether Google Play strings can be updated...')
-    try:
-        google_play_strings_path = get_google_play_strings_path(artifacts_per_task_id, failed_artifacts_per_task_id)
-        let_mozapkpublisher_download_google_play_strings = False
-    except NoGooglePlayStringsFound:
-        # TODO: Remove this special catch once Firefox 59 reaches mozilla-release.
-        # It allows older trees (that don't have a task to fetch GP strings) to fetch
-        # strings in the push-apk job
-        log.warn('No Google Play string task defined in upstreamArtifacts. This is considered as a legacy task definition.\
-This behavior is deprecated and will be removed after Firefox 59 reaches mozilla-release.')
-        google_play_strings_path = None
-        let_mozapkpublisher_download_google_play_strings = True
+    google_play_strings_path = get_google_play_strings_path(artifacts_per_task_id, failed_artifacts_per_task_id)
 
     log.info('Delegating publication to mozapkpublisher...')
     publish_to_googleplay(
         context, apks_per_architectures, google_play_strings_path,
-        let_mozapkpublisher_download_google_play_strings
     )
 
     log.info('Done!')

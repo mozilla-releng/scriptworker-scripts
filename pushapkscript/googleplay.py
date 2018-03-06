@@ -3,7 +3,6 @@ import logging
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
-from pushapkscript.exceptions import NoGooglePlayStringsFound
 from pushapkscript.task import extract_channel
 
 log = logging.getLogger(__name__)
@@ -21,15 +20,15 @@ _CHANNELS_AUTHORIZED_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release')
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
-def publish_to_googleplay(context, apks, google_play_strings_path=None, let_mozapkpublisher_download_google_play_strings=False):
+def publish_to_googleplay(context, apks, google_play_strings_path=None):
     from mozapkpublisher.push_apk import PushAPK
     push_apk = PushAPK(config=craft_push_apk_config(
-        context, apks, google_play_strings_path, let_mozapkpublisher_download_google_play_strings
+        context, apks, google_play_strings_path,
     ))
     push_apk.run()
 
 
-def craft_push_apk_config(context, apks, google_play_strings_path=None, let_mozapkpublisher_download_google_play_strings=False):
+def craft_push_apk_config(context, apks, google_play_strings_path=None):
     push_apk_config = {'apk_{}'.format(apk_type): apk_path for apk_type, apk_path in apks.items()}
 
     channel = extract_channel(context.task)
@@ -48,13 +47,7 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None, let_moza
         push_apk_config['do_not_contact_google_play'] = True
 
     if google_play_strings_path is None:
-        if let_mozapkpublisher_download_google_play_strings:
-            # TODO: Remove this special case once Firefox 59 reaches mozilla-release.
-            # It allows older trees (that don't have a task to fetch GP strings) to fetch
-            # strings in the push-apk job
-            push_apk_config['update_gp_strings_from_l10n_store'] = True
-        else:
-            push_apk_config['no_gp_string_update'] = True
+        push_apk_config['no_gp_string_update'] = True
     else:
         push_apk_config['update_gp_strings_from_file'] = google_play_strings_path
 
@@ -139,20 +132,10 @@ def _find_unique_google_play_strings_file_in_dict(artifact_dict):
         path for paths in artifact_dict.values() for path in paths
     ]
 
-    # TODO: Modify get_single_item_from_sequence to support 2 ErrorClasses
-    try:
-        return get_single_item_from_sequence(
-            all_paths,
-            condition=lambda path: path.endswith(_EXPECTED_L10N_STRINGS_FILE_NAME),
-            ErrorClass=TaskVerificationError,
-            no_item_error_message='Could not find "{}" in upstreamArtifacts: {}'.format(
-                _EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict
-            ),
-            too_many_item_error_message='"{}" is defined too many times among these upstreamArtifacts {}'.format(
-                _EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict
-            ),
-        )
-    except TaskVerificationError as e:
-        if 'Could not find "' in str(e):
-            raise NoGooglePlayStringsFound(_EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict)
-        raise
+    return get_single_item_from_sequence(
+        all_paths,
+        condition=lambda path: path.endswith(_EXPECTED_L10N_STRINGS_FILE_NAME),
+        ErrorClass=TaskVerificationError,
+        no_item_error_message='Could not find "{}" in upstreamArtifacts: {}'.format(_EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict),
+        too_many_item_error_message='"{}" is defined too many times among these upstreamArtifacts {}'.format(_EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict),
+    )

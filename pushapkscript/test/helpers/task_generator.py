@@ -7,8 +7,7 @@ class TaskGenerator(object):
         self.arm_task_id = 'fwk3elTDSe6FLoqg14piWg'
         self.x86_task_id = 'PKP2v4y0RdqOuLCqhevD2A'
         self.task_def_before_firefox_59 = task_def_before_firefox_59
-        if self.task_def_before_firefox_59 is False:
-            self.google_play_strings_task_id = 'bgP9T6AnTpyTVsNA7M3OnA'
+        self.google_play_strings_task_id = 'bgP9T6AnTpyTVsNA7M3OnA'
         self.should_commit_transaction = should_commit_transaction
         self.google_play_track = google_play_track
         self.rollout_percentage = rollout_percentage
@@ -41,25 +40,23 @@ class TaskGenerator(object):
               "paths": ["public/build/target.apk"],
               "taskId": "{x86_task_id}",
               "taskType": "signing"
+            }}, {{
+              "paths": ["public/google_play_strings.json"],
+              "taskId": "{strings_task_id}",
+              "taskType": "build",
+              "optional": true
             }}],
             "google_play_track": "{google_play_track}"
           }}
         }}'''.format(
             arm_task_id=self.arm_task_id,
             x86_task_id=self.x86_task_id,
+            strings_task_id=self.google_play_strings_task_id,
             google_play_track=self.google_play_track,
         ))
 
         if self.rollout_percentage:
             json_content['payload']['rollout_percentage'] = self.rollout_percentage
-
-        if self.task_def_before_firefox_59 is False:
-            json_content['payload']['upstreamArtifacts'].append({
-               'paths': ['public/google_play_strings.json'],
-               'taskId': self.google_play_strings_task_id,
-               'taskType': 'fetch',
-               'optional': True,
-             })
 
         if self.should_commit_transaction:
             if self.task_def_before_firefox_59:
