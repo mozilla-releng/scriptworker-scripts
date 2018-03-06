@@ -3,9 +3,9 @@ import pytest
 import os
 
 from scriptworker.context import Context
-from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
+from scriptworker.exceptions import TaskVerificationError
 
-from shipitscript.task import validate_task_schema, get_ship_it_instance_config_from_scope, _get_scope
+from shipitscript.task import get_ship_it_instance_config_from_scope, _get_scope
 
 
 @pytest.fixture
@@ -31,15 +31,6 @@ def context():
     }
 
     return context
-
-
-def test_validate_task(context):
-    validate_task_schema(context)
-
-    context_with_no_scope = context
-    context_with_no_scope.task['scopes'] = []
-    with pytest.raises(ScriptWorkerTaskException):
-        validate_task_schema(context_with_no_scope)
 
 
 @pytest.mark.parametrize('api_root, scope, raises', (

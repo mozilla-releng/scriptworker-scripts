@@ -3,10 +3,10 @@
 """
 import logging
 
-from scriptworker.client import get_task, sync_main
+from scriptworker.client import get_task, sync_main, validate_task_schema
 
 from shipitscript.ship_actions import mark_as_shipped
-from shipitscript.task import validate_task_schema, get_ship_it_instance_config_from_scope
+from shipitscript.task import get_ship_it_instance_config_from_scope
 
 
 log = logging.getLogger(__name__)

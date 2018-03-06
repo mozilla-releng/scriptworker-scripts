@@ -1,7 +1,5 @@
-import json
 import logging
 
-import scriptworker.client
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
@@ -11,13 +9,6 @@ log = logging.getLogger(__name__)
 
 # TODO: Make this prefix a param of the instance config, when Thunderbird migrates this task
 _VALID_SCOPES_PREFIX = 'project:releng:ship-it:'
-
-
-def validate_task_schema(context):
-    with open(context.config['schema_file']) as fh:
-        task_schema = json.load(fh)
-    log.debug(task_schema)
-    scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
 def get_ship_it_instance_config_from_scope(context):
