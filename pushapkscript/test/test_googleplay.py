@@ -91,12 +91,6 @@ class GooglePlayTest(unittest.TestCase):
         config = craft_push_apk_config(self.context, self.apks)
         self.assertTrue(config['commit'])
 
-    def test_craft_push_config_allows_deprecated_dry_run(self):
-        self.context.task['scopes'] = ['project:releng:googleplay:aurora']
-        self.context.task['payload']['dry_run'] = False
-        config = craft_push_apk_config(self.context, self.apks)
-        self.assertTrue(config['commit'])
-
     def test_craft_push_config_raises_error_when_channel_is_not_part_of_config(self):
         self.context.task['scopes'] = ['project:releng:googleplay:non_exiting_channel']
         self.assertRaises(TaskVerificationError, craft_push_apk_config, self.context, self.apks)
@@ -139,13 +133,6 @@ class GooglePlayTest(unittest.TestCase):
         self.assertRaises(TaskVerificationError, _get_play_config, context_without_any_account, 'whatever-channel')
 
     def test_should_commit_transaction(self):
-        self.context.task['payload']['dry_run'] = True
-        self.assertFalse(should_commit_transaction(self.context))
-
-        self.context.task['payload']['dry_run'] = False
-        self.assertTrue(should_commit_transaction(self.context))
-
-        del self.context.task['payload']['dry_run']
         self.context.task['payload']['commit'] = True
         self.assertTrue(should_commit_transaction(self.context))
 
@@ -154,10 +141,6 @@ class GooglePlayTest(unittest.TestCase):
 
         del self.context.task['payload']['commit']
         self.assertFalse(should_commit_transaction(self.context))
-
-        self.context.task['payload']['commit'] = False
-        self.context.task['payload']['dry_run'] = False
-        self.assertRaises(TaskVerificationError, should_commit_transaction, self.context)
 
     def test_get_google_play_strings_path(self):
         self.assertEqual(

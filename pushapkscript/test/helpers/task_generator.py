@@ -3,10 +3,9 @@ import json
 
 
 class TaskGenerator(object):
-    def __init__(self, google_play_track='alpha', rollout_percentage=None, task_def_before_firefox_59=False, should_commit_transaction=False):
+    def __init__(self, google_play_track='alpha', rollout_percentage=None, should_commit_transaction=False):
         self.arm_task_id = 'fwk3elTDSe6FLoqg14piWg'
         self.x86_task_id = 'PKP2v4y0RdqOuLCqhevD2A'
-        self.task_def_before_firefox_59 = task_def_before_firefox_59
         self.google_play_strings_task_id = 'bgP9T6AnTpyTVsNA7M3OnA'
         self.should_commit_transaction = should_commit_transaction
         self.google_play_track = google_play_track
@@ -59,9 +58,6 @@ class TaskGenerator(object):
             json_content['payload']['rollout_percentage'] = self.rollout_percentage
 
         if self.should_commit_transaction:
-            if self.task_def_before_firefox_59:
-                json_content['payload']['dry_run'] = False
-            else:
-                json_content['payload']['commit'] = True
+            json_content['payload']['commit'] = True
 
         return json_content

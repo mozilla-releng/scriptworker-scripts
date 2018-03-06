@@ -98,12 +98,6 @@ class TaskTest(unittest.TestCase):
         self.context.task = beta_task
         validate_task_schema(self.context)
 
-        beta_task_with_deprecated_dry_run = beta_task
-        del beta_task_with_deprecated_dry_run['payload']['commit']
-        beta_task_with_deprecated_dry_run['payload']['dry_run'] = True
-        self.context.task = beta_task_with_deprecated_dry_run
-        validate_task_schema(self.context)
-
     def test_extract_supported_channels(self):
         data = ({
             'task': {'scopes': ['project:releng:googleplay:aurora']},
