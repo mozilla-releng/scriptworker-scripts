@@ -18,7 +18,7 @@ from scriptworker.utils import retry_async, raise_future_exceptions
 
 from beetmoverscript.constants import (
     MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE,
-    TEMPLATE_KEY_PLATFORMS, NORMALIZED_BALROG_PLATFORMS
+    TEMPLATE_KEY_PLATFORMS, NORMALIZED_BALROG_PLATFORMS,
 )
 from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,

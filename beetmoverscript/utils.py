@@ -11,7 +11,8 @@ import yaml
 
 from beetmoverscript.constants import (
     HASH_BLOCK_SIZE, TEMPLATE_KEY_PLATFORMS,
-    RELEASE_ACTIONS, PROMOTION_ACTIONS, PRODUCT_TO_PATH
+    RELEASE_ACTIONS, PROMOTION_ACTIONS, PRODUCT_TO_PATH,
+    NORMALIZED_FILENAME_PLATFORMS,
 )
 
 log = logging.getLogger(__name__)
@@ -95,6 +96,8 @@ def generate_beetmover_template_args(context):
         "platform": release_props["platform"],
         "buildid": release_props["buildid"],
         "partials": get_partials_props(task),
+        "filename_platform": NORMALIZED_FILENAME_PLATFORMS.get(release_props["stage_platform"],
+                                                               release_props["stage_platform"]),
     }
 
     if is_promotion_action(context.action) or is_release_action(context.action):

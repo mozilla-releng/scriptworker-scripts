@@ -97,6 +97,7 @@ def test_beetmover_template_args_generation(context, taskjson, partials):
     expected_template_args = {
         'branch': 'mozilla-central',
         'platform': 'android-api-15',
+        'filename_platform': 'android-arm',
         'product': 'Fake',
         'stage_platform': 'android-api-15',
         'template_key': 'fennec_nightly',
@@ -124,6 +125,7 @@ def test_beetmover_template_args_generation_release(context):
     expected_template_args = {
         'branch': 'mozilla-central',
         'platform': 'android-api-15',
+        'filename_platform': 'android-arm',
         'product': 'Fake',
         'stage_platform': 'android-api-15',
         'template_key': 'fennec_candidates',

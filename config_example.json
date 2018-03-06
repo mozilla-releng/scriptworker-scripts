@@ -17,12 +17,10 @@
             "firefox_nightly_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_nightly_repacks.yml",
             "fennec_nightly": "/path/to/beetmoverscript/beetmoverscript/templates/fennec_nightly.yml",
             "fennec_nightly_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/fennec_nightly_repacks.yml",
-            "fennecx86_nightly": "/path/to/beetmoverscript/beetmoverscript/templates/fennecx86_nightly.yml"
         },
         "push-to-candidates": {
             "fennec_candidates": "path/to/beetmoverscript/beetmoverscript/templates/fennec_candidates.yml",
             "fennec_candidates_repacks": "path/to/beetmoverscript/beetmoverscript/templates/fennec_candidates_repacks.yml",
-            "fennecx86_candidates": "/path/to/beetmoverscript/beetmoverscript/templates/fennecx86_candidates.yml",
             "firefox_candidates": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_candidates.yml",
             "firefox_candidates_repacks": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_candidates_repacks.yml",
             "devedition_candidates": "/path/to/beetmoverscript/beetmoverscript/templates/devedition_candidates.yml",

@@ -43,9 +43,9 @@ TEMPLATE_KEY_PLATFORMS = {
     "android-api-15-old-id": "fennec",
     "android-api-16": "fennec",
     "android-api-16-old-id": "fennec",
-    "android-x86": "fennecx86",
-    "android-aarch64": "fennecaarch64",
-    "android-x86-old-id": "fennecx86",
+    "android-x86": "fennec",
+    "android-aarch64": "fennec",
+    "android-x86-old-id": "fennec",
     "linux": "firefox",
     "linux64": "firefox",
     "linux64-asan-reporter": "firefox",
@@ -81,6 +81,18 @@ NORMALIZED_BALROG_PLATFORMS = {
     "win64-devedition": "win64",
     "win64-devedition-devedition": "win64",
 }
+
+NORMALIZED_FILENAME_PLATFORMS = NORMALIZED_BALROG_PLATFORMS.copy()
+NORMALIZED_FILENAME_PLATFORMS.update({
+    "android": "android-arm",
+    "android-api-15": "android-arm",
+    "android-api-15-old-id": "android-arm",
+    "android-api-16": "android-arm",
+    "android-api-16-old-id": "android-arm",
+    "android-x86": "android-i386",
+    "android-x86-old-id": "android-i386",
+    "android-aarch64": "android-aarch64",
+})
 
 HASH_BLOCK_SIZE = 1024*1024
 
