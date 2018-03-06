@@ -1,6 +1,8 @@
 import logging
 
-from pushapkscript.exceptions import TaskVerificationError, NoGooglePlayStringsFound
+from scriptworker.exceptions import TaskVerificationError
+
+from pushapkscript.exceptions import NoGooglePlayStringsFound
 from pushapkscript.task import extract_channel
 
 log = logging.getLogger(__name__)

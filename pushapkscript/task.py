@@ -2,7 +2,7 @@ import json
 import logging
 
 import scriptworker.client
-from pushapkscript.exceptions import TaskVerificationError
+from scriptworker.exceptions import TaskVerificationError
 
 
 log = logging.getLogger(__name__)

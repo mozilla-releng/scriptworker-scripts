@@ -1,6 +1,6 @@
+from scriptworker.exceptions import TaskVerificationError
 from zipfile import ZipFile
 
-from pushapkscript.exceptions import TaskVerificationError
 from pushapkscript.utils import filter_out_identical_values
 
 

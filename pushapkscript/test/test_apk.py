@@ -2,9 +2,9 @@ import os
 import pytest
 
 from tempfile import TemporaryDirectory
+from scriptworker.exceptions import TaskVerificationError
 from zipfile import ZipFile
 
-from pushapkscript.exceptions import TaskVerificationError
 from pushapkscript.apk import sort_and_check_apks_per_architectures, _convert_architecture_to_mozapkpublisher, \
     _extract_architecture_from_paths, _get_apk_architecture, _check_architectures_are_valid
 

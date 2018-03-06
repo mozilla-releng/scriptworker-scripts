@@ -1,10 +1,10 @@
 import os
 import unittest
 
-from pushapkscript.task import validate_task_schema, extract_channel
-from pushapkscript.exceptions import TaskVerificationError
-
 from scriptworker.context import Context
+from scriptworker.exceptions import TaskVerificationError
+
+from pushapkscript.task import validate_task_schema, extract_channel
 
 from pushapkscript.test.helpers.task_generator import TaskGenerator
 
