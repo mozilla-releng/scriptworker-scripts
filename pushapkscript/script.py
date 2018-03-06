@@ -4,14 +4,14 @@
 import logging
 
 from scriptworker.artifacts import get_upstream_artifacts_full_paths_per_task_id
-from scriptworker.client import get_task, sync_main
+from scriptworker.client import get_task, sync_main, validate_task_schema
 
 from pushapkscript import jarsigner
 from pushapkscript.apk import sort_and_check_apks_per_architectures
 from pushapkscript.exceptions import NoGooglePlayStringsFound
 from pushapkscript.googleplay import publish_to_googleplay, should_commit_transaction, \
     is_allowed_to_push_to_google_play, get_google_play_strings_path
-from pushapkscript.task import validate_task_schema, extract_channel
+from pushapkscript.task import extract_channel
 
 
 log = logging.getLogger(__name__)
