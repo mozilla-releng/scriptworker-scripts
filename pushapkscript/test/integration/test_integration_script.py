@@ -1,11 +1,12 @@
-import unittest
-import os
-import tempfile
+import asyncio
 import json
+import os
 import shutil
 import subprocess
+import tempfile
+import unittest
 
-from pushapkscript.script import main
+from pushapkscript.script import sync_main, async_main
 from pushapkscript.test.helpers.task_generator import TaskGenerator
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
@@ -73,6 +74,13 @@ class MainTest(unittest.TestCase):
 
         self.config_generator = ConfigFileGenerator(self.test_temp_dir, self.keystore_manager)
 
+        # Workaround event loop being closed
+        policy = asyncio.get_event_loop_policy()
+        self.event_loop = policy.new_event_loop()
+        asyncio.set_event_loop(self.event_loop)
+        self.event_loop._close = self.event_loop.close
+        self.event_loop.close = lambda: None
+
     def tearDown(self):
         self.test_temp_dir_fp.cleanup()
 
@@ -97,7 +105,7 @@ class MainTest(unittest.TestCase):
         task_generator.generate_file(self.config_generator.work_dir)
 
         self._copy_all_apks_to_test_temp_dir(task_generator)
-        main(config_path=self.config_generator.generate(), close_loop=False)
+        sync_main(async_main, config_path=self.config_generator.generate())
 
         PushAPK.assert_called_with(config={
             'credentials': '/dummy/path/to/certificate.p12',
@@ -117,7 +125,7 @@ class MainTest(unittest.TestCase):
         task_generator.generate_file(self.config_generator.work_dir)
 
         self._copy_all_apks_to_test_temp_dir(task_generator)
-        main(config_path=self.config_generator.generate(), close_loop=False)
+        sync_main(async_main, config_path=self.config_generator.generate())
 
         PushAPK.assert_called_with(config={
             'credentials': '/dummy/path/to/certificate.p12',
@@ -143,7 +151,7 @@ class MainTest(unittest.TestCase):
             origin_file_name='google_play_strings.json',
             destination_path='public/google_play_strings.json',
         )
-        main(config_path=self.config_generator.generate(), close_loop=False)
+        sync_main(async_main, config_path=self.config_generator.generate())
 
         PushAPK.assert_called_with(config={
             'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
@@ -164,7 +172,7 @@ class MainTest(unittest.TestCase):
         task_generator.generate_file(self.config_generator.work_dir)
 
         self._copy_all_apks_to_test_temp_dir(task_generator)
-        main(config_path=self.config_generator.generate(), close_loop=False)
+        sync_main(async_main, config_path=self.config_generator.generate())
 
         PushAPK.assert_called_with(config={
             'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),

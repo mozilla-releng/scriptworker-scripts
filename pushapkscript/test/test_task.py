@@ -1,6 +1,6 @@
+import os
 import unittest
 
-from pushapkscript.script import get_default_config
 from pushapkscript.task import validate_task_schema, extract_channel
 from pushapkscript.exceptions import TaskVerificationError
 
@@ -12,7 +12,9 @@ from pushapkscript.test.helpers.task_generator import TaskGenerator
 class TaskTest(unittest.TestCase):
     def setUp(self):
         self.context = Context()
-        self.context.config = get_default_config()
+        self.context.config = {
+            'schema_file': os.path.join(os.getcwd(), 'pushapkscript', 'data', 'pushapk_task_schema.json'),
+        }
 
     def test_validate_task(self):
         self.context.task = TaskGenerator().generate_json()
