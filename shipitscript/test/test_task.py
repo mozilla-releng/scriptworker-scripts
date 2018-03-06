@@ -1,18 +1,20 @@
-import pytest
 import copy
+import pytest
+import os
 
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from shipitscript.exceptions import TaskVerificationError
-from shipitscript.script import get_default_config
 from shipitscript.task import validate_task_schema, get_ship_it_instance_config_from_scope, _get_scope
 
 
 @pytest.fixture
 def context():
     context = Context()
-    context.config = get_default_config()
+    context.config = {
+        'schema_file': os.path.join(os.getcwd(), 'shipitscript', 'data', 'shipit_task_schema.json')
+    }
     context.config['ship_it_instances'] = {
         'project:releng:ship-it:dev': {
             'api_root': 'http://some-ship-it.url',

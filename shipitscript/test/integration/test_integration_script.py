@@ -5,7 +5,7 @@ import shipitapi
 from freezegun import freeze_time
 from unittest.mock import MagicMock
 
-from shipitscript.script import main
+from shipitscript.script import sync_main, async_main
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.join(this_dir, '..', '..', '..')
@@ -67,7 +67,7 @@ def test_main_mark_release_as_shipped(monkeypatch):
                 TASK_DEFINITION_TEMPLATE.format(release_name='Firefox-59.0b1-build1')
             )
 
-        main(config_path=config_path, close_loop=False)
+        sync_main(async_main, config_path=config_path)
 
     ReleaseClassMock.assert_called_with(
         ('some-username', 'some-password'),
