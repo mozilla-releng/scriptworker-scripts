@@ -3,9 +3,8 @@ import pytest
 import os
 
 from scriptworker.context import Context
-from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
 
-from shipitscript.exceptions import TaskVerificationError
 from shipitscript.task import validate_task_schema, get_ship_it_instance_config_from_scope, _get_scope
 
 
