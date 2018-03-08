@@ -12,7 +12,7 @@ import tarfile
 import tempfile
 import zipfile
 
-from scriptworker.utils import makedirs, raise_future_exceptions, rm
+from scriptworker.utils import makedirs, raise_future_exceptions, rm, get_single_item_from_sequence
 
 from signingscript import utils
 from signingscript.createprecomplete import generate_precomplete
@@ -443,11 +443,13 @@ def _run_generate_precomplete(context, tmp_dir):
 # _ensure_one_precomplete {{{1
 def _ensure_one_precomplete(tmp_dir, adj):
     """Ensure we only have one `precomplete` file in `tmp_dir`."""
-    matches = [f for f in glob.glob(os.path.join(tmp_dir, '**', 'precomplete'),
-               recursive=True)]
-    if len(matches) != 1:
-        raise SigningScriptError("We should have exactly 1 `precomplete` file {} generating precomplete: {}!".format(adj, matches))
-    return matches[0]
+    return get_single_item_from_sequence(
+        glob.glob(os.path.join(tmp_dir, '**', 'precomplete'), recursive=True),
+        condition=lambda _: True,
+        ErrorClass=SigningScriptError,
+        no_item_error_message='No `precomplete` file found in "{}"'.format(tmp_dir),
+        too_many_item_error_message='More than one `precomplete` file {} in "{}"'.format(adj, tmp_dir),
+    )
 
 
 # remove_extra_files {{{1

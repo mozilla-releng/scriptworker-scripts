@@ -18,7 +18,7 @@ from datadog import statsd
 import platform
 
 from scriptworker.exceptions import ScriptWorkerException, TaskVerificationError
-from scriptworker.utils import retry_request
+from scriptworker.utils import retry_request, get_single_item_from_sequence
 
 from signingscript.sign import get_suitable_signing_servers, sign_gpg, \
     sign_jar, sign_macapp, sign_signcode, sign_widevine, sign_file
@@ -55,11 +55,14 @@ def task_cert_type(context):
 
     """
     prefix = _get_cert_prefix(context)
-    certs = [scope for scope in context.task['scopes'] if scope.startswith(prefix)]
-    log.info("Certificate types: %s", certs)
-    if len(certs) != 1:
-        raise TaskVerificationError("Only one certificate type can be used")
-    return certs[0]
+    scopes = context.task['scopes']
+    return get_single_item_from_sequence(
+        scopes,
+        condition=lambda scope: scope.startswith(prefix),
+        ErrorClass=TaskVerificationError,
+        no_item_error_message='No scope starting with "{}" found. Scopes: {}'.format(prefix, scopes),
+        too_many_item_error_message='More than one scope starting with "{}" found: {}!'.format(prefix, scopes),
+    )
 
 
 # task_signing_formats {{{1
