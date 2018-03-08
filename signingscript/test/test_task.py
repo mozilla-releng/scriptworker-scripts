@@ -3,9 +3,9 @@ import os
 import pytest
 
 from scriptworker.context import Context
-from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
 
-from signingscript.exceptions import SigningServerError, TaskVerificationError
+from signingscript.exceptions import SigningServerError
 from signingscript.script import get_default_config
 from signingscript.utils import load_signing_server_config, mkdir
 import signingscript.task as stask

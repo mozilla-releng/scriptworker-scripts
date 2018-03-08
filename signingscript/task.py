@@ -19,12 +19,12 @@ from datadog import statsd
 import platform
 
 import scriptworker.client
-from scriptworker.exceptions import ScriptWorkerException
+from scriptworker.exceptions import ScriptWorkerException, TaskVerificationError
 from scriptworker.utils import retry_request
 
 from signingscript.sign import get_suitable_signing_servers, sign_gpg, \
     sign_jar, sign_macapp, sign_signcode, sign_widevine, sign_file
-from signingscript.exceptions import SigningServerError, TaskVerificationError
+from signingscript.exceptions import SigningServerError
 
 log = logging.getLogger(__name__)
 
