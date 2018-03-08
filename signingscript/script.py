@@ -14,7 +14,7 @@ import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.task import build_filelist_dict, get_token, \
-    sign, task_cert_type, task_signing_formats, validate_task_schema
+    sign, task_cert_type, task_signing_formats
 from signingscript.utils import copy_to_dir, load_json, load_signing_server_config
 
 
@@ -52,7 +52,7 @@ async def async_main(context, conn=None):
         work_dir = context.config['work_dir']
         context.task = scriptworker.client.get_task(context.config)
         log.info("validating task")
-        validate_task_schema(context)
+        scriptworker.client.validate_task_schema(context)
         context.signing_servers = load_signing_server_config(context)
         cert_type = task_cert_type(context)
         all_signing_formats = task_signing_formats(context)

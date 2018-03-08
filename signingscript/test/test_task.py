@@ -2,6 +2,7 @@ import aiohttp
 import os
 import pytest
 
+from scriptworker.client import validate_task_schema
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
 
@@ -87,12 +88,12 @@ def test_missing_mandatory_urls_are_reported(context, task_defn):
     del(context.task['scopes'])
 
     with pytest.raises(ScriptWorkerTaskException):
-        stask.validate_task_schema(context)
+        validate_task_schema(context)
 
 
 def test_no_error_is_reported_when_no_missing_url(context, task_defn):
     context.task = task_defn
-    stask.validate_task_schema(context)
+    validate_task_schema(context)
 
 
 # get_token {{{1

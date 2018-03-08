@@ -9,7 +9,6 @@ Attributes:
 """
 import aiohttp
 from frozendict import frozendict
-import json
 import logging
 import os
 import random
@@ -18,7 +17,6 @@ import traceback
 from datadog import statsd
 import platform
 
-import scriptworker.client
 from scriptworker.exceptions import ScriptWorkerException, TaskVerificationError
 from scriptworker.utils import retry_request
 
@@ -91,23 +89,6 @@ def _get_scope_prefix(context, sub_namespace):
     prefix = context.config['taskcluster_scope_prefix']
     prefix = prefix if prefix.endswith(':') else '{}:'.format(prefix)
     return '{}{}:'.format(prefix, sub_namespace)
-
-
-# validate_task_schema {{{1
-def validate_task_schema(context):
-    """Validate the task json schema.
-
-    Args:
-        context (SigningContext): the signing context.
-
-    Raises:
-        ScriptWorkerTaxkException: on failed validation.
-
-    """
-    with open(context.config['schema_file']) as fh:
-        task_schema = json.load(fh)
-    log.debug(task_schema)
-    scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
 # get_token {{{1
