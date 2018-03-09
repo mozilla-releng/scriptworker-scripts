@@ -5,6 +5,7 @@ import pytest
 import sys
 
 import scriptworker.client
+from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.test import noop_async, noop_sync, read_file, tmpdir, BASE_DIR
 import signingscript.script as script
@@ -29,12 +30,6 @@ def get_conf_file(tmpdir, **kwargs):
 
 async def die_async(*args, **kwargs):
     raise ScriptWorkerTaskException("Expected exception.")
-
-
-# SigningContext {{{1
-def test_signing_context():
-    c = script.SigningContext()
-    c.write_json()
 
 
 # async_main {{{1
@@ -62,35 +57,20 @@ async def test_async_main(tmpdir, mocker, formats):
     await script.async_main(context)
 
 
-# get_default_config {{{1
-def test_get_default_config():
-    parent_dir = os.path.dirname(os.getcwd())
-    c = script.get_default_config()
-    assert c['work_dir'] == os.path.join(parent_dir, 'work_dir')
+def test_set_signing_context():
+    context = Context()
+    context = script._set_signing_context(context)
+    assert context.signing_servers is None
+    context.write_json() # Does nothing
+    assert isinstance(context, Context)
 
 
-# usage {{{1
-def test_usage():
-    with pytest.raises(SystemExit):
-        script.usage()
+def test_craft_aiohttp_connector():
+    context = Context()
+    context.config = {}
+    connector = script._craft_aiohttp_connector(context)
+    assert connector._ssl_context is None
 
-
-# main {{{1
-def test_main_missing_args(mocker):
-    mocker.patch.object(sys, 'argv', new=[__file__])
-    with pytest.raises(SystemExit):
-        script.main()
-
-
-def test_main_argv(tmpdir, mocker):
-    conf_file = get_conf_file(tmpdir, verbose=False, ssl_cert=None)
-    mocker.patch.object(sys, 'argv', new=[__file__, conf_file])
-    mocker.patch.object(script, 'async_main', new=noop_async)
-    script.main()
-
-
-def test_main_noargv(tmpdir, mocker):
-    conf_file = get_conf_file(tmpdir, verbose=True, ssl_cert=SSL_CERT)
-    mocker.patch.object(script, 'async_main', new=die_async)
-    with pytest.raises(SystemExit):
-        script.main(config_path=conf_file)
+    context.config['ssl_cert'] = SSL_CERT
+    connector = script._craft_aiohttp_connector(context)
+    assert connector._ssl_context

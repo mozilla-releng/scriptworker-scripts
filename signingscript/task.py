@@ -45,7 +45,7 @@ def task_cert_type(context):
     """Extract task certificate type.
 
     Args:
-        context (SigningContext): the signing context.
+        context (Context): the signing context.
 
     Raises:
         TaskVerificationError: if the number of cert scopes is not 1.
@@ -70,7 +70,7 @@ def task_signing_formats(context):
     """Get the list of signing formats from the task signing scopes.
 
     Args:
-        context (SigningContext): the signing context.
+        context (Context): the signing context.
 
     Returns:
         list: the signing formats.
@@ -99,7 +99,7 @@ async def get_token(context, output_file, cert_type, signing_formats):
     """Retrieve a token from the signingserver tied to my ip.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         output_file (str): the path to write the token to.
         cert_type (str): the cert type used to find an appropriate signing server
         signing_formats (list): the signing formats used to find an appropriate
@@ -142,7 +142,7 @@ async def sign(context, path, signing_formats):
     """Call the appropriate signing function per format, for a single file.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         path (str): the source file to sign
         signing_formats (list): the formats to sign with
 
@@ -203,7 +203,7 @@ def build_filelist_dict(context, all_signing_formats):
     a dictionary of `full_path` and signing `formats`.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         all_signing_formats (list): the superset of valid signing formats,
             based on the task scopes.  If the file signing formats are not
             a subset, throw an exception.

@@ -68,7 +68,7 @@ def build_signtool_cmd(context, from_, fmt, to=None):
     """Generate a signtool command to run.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         from_ (str): the source file to sign
         fmt (str): the format to sign with
         to (str, optional): the target path to sign to. If None, overwrite
@@ -103,7 +103,7 @@ async def sign_file(context, from_, fmt, to=None):
     """Send the file to signtool to be signed.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         from_ (str): the source file to sign
         fmt (str): the format to sign with
         to (str, optional): the target path to sign to. If None, overwrite
@@ -129,7 +129,7 @@ async def sign_gpg(context, from_, fmt):
     Because this function returns a list, gpg must be the final signing format.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         from_ (str): the source file to sign
         fmt (str): the format to sign with
 
@@ -147,7 +147,7 @@ async def sign_jar(context, from_, fmt):
     """Sign an apk, and zipalign.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         from_ (str): the source file to sign
         fmt (str): the format to sign with
 
@@ -167,7 +167,7 @@ async def sign_macapp(context, from_, fmt):
     If given a dmg, convert to a tar.gz file first, then sign the internals.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         from_ (str): the source file to sign
         fmt (str): the format to sign with
 
@@ -191,7 +191,7 @@ async def sign_signcode(context, orig_path, fmt):
     patterns (see `_should_sign_windows`). Then recreate the zip.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         orig_path (str): the source file to sign
         fmt (str): the format to sign with
 
@@ -225,7 +225,7 @@ async def sign_widevine(context, orig_path, fmt):
     """Call the appropriate helper function to do widevine signing.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         orig_path (str): the source file to sign
         fmt (str): the format to sign with
 
@@ -264,7 +264,7 @@ async def sign_widevine_zip(context, orig_path, fmt):
     Then append the sigfiles to the zipfile.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         orig_path (str): the source file to sign
         fmt (str): the format to sign with
 
@@ -317,7 +317,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
     but that's not possible with compressed tarballs.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         orig_path (str): the source file to sign
         fmt (str): the format to sign with
 
@@ -482,7 +482,7 @@ async def zip_align_apk(context, abs_to):
     https://developer.android.com/studio/command-line/zipalign.html
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
         abs_to (str): the absolute path to the apk
 
     """

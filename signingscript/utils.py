@@ -69,7 +69,7 @@ def load_signing_server_config(context):
     """Build a specialized signing server config from the `signing_server_config`.
 
     Args:
-        context (SigningContext): the signing context
+        context (Context): the signing context
 
     Returns:
         dict of lists: keyed by signing cert type, value is a list of SigningServer named tuples
