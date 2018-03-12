@@ -1,31 +1,18 @@
-import logging
-import os
+import pytest
 
+from scriptworker import client
 from unittest.mock import MagicMock
-from pushsnapscript.script import craft_logging_config, get_default_config
+
+from pushsnapscript.script import async_main
 
 
-def test_craft_logging_config():
+@pytest.mark.asyncio
+async def test_hello_world(capsys, monkeypatch):
+    monkeypatch.setattr(client, 'get_task', lambda _: {})
     context = MagicMock()
-    context.config = {'verbose': True}
 
-    assert craft_logging_config(context) == {
-        'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        'level': logging.DEBUG
-    }
+    await async_main(context)
 
-    context.config = {'verbose': False}
-    assert craft_logging_config(context) == {
-        'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        'level': logging.INFO
-    }
-
-
-def test_get_default_config(monkeypatch):
-    monkeypatch.setattr(os, 'getcwd', lambda: '/a/current/dir')
-
-    assert get_default_config() == {
-        'work_dir': '/a/current/work_dir',
-        'schema_file': '/a/current/dir/pushsnapscript/data/push_snap_task_schema.json',
-        'verbose': False,
-    }
+    captured = capsys.readouterr()
+    assert captured.out == 'Hello World!\n'
+    assert captured.err == ''
