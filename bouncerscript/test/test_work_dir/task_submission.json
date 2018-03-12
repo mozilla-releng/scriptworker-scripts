@@ -10,8 +10,8 @@
     "expires": "2016-05-08T18:15:59.010Z",
     "dependencies": ["eSzfNqMZT_mSiQQXu8hyqg"],
     "scopes": [
-        "project:releng:beetmover:server:staging",
-        "project:releng:beetmover:action:submission"
+        "project:releng:bouncer:server:staging",
+        "project:releng:bouncer:action:submission"
     ],
     "payload": {
         "locales": ["en-US", "ro"],
