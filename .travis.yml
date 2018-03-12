@@ -10,6 +10,8 @@ env:
 
 install:
     - travis_retry pip install tox
+    # XXX Avoid snapcraft from loading useless libs when running on Ubuntu
+    - sudo truncate -s 0 /etc/os-release
 script:
     - tox -e py35
 after_success:

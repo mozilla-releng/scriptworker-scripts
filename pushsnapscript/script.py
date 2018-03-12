@@ -3,7 +3,7 @@
 """
 from scriptworker import client
 
-from pushsnapscript import artifacts, task
+from pushsnapscript import artifacts, snap_store, task
 
 
 async def async_main(context):
@@ -12,7 +12,7 @@ async def async_main(context):
     # TODO Sanity checks on the file
     snap_file_path = artifacts.get_snap_file_path(context)
     channel = task.pluck_channel(context.task)
-    print(snap_file_path, channel)
+    snap_store.push(context, snap_file_path, channel)
 
 
 __name__ == '__main__' and client.sync_main(async_main)
