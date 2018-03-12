@@ -1,0 +1,23 @@
+{
+    "provisionerId": "meh",
+    "workerType": "workertype",
+    "schedulerId": "task-graph-scheduler",
+    "taskGroupId": "some",
+    "routes": [],
+    "retries": 5,
+    "created": "2015-05-08T16:15:58.903Z",
+    "deadline": "2015-05-08T18:15:59.010Z",
+    "expires": "2016-05-08T18:15:59.010Z",
+    "dependencies": ["eSzfNqMZT_mSiQQXu8hyqg"],
+    "scopes": [
+        "project:releng:bouncer:server:staging",
+        "project:releng:bouncer:action:aliases"
+    ],
+    "payload": {
+	"aliases_entries": {
+	  "firefox-devedition-latest": "Devedition-60.0b2",
+	  "firefox-devedition-latest-ssl": "Devedition-60.0b2-SSL",
+	  "firefox-devedition-stub": "Devedition-60.0b2-stub"
+	}
+    }
+}

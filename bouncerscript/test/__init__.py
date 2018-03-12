@@ -18,6 +18,10 @@ async def noop_async(*args, **kwargs):
     pass
 
 
+async def return_true_async(context, product):
+    return True
+
+
 def get_fake_valid_config(jobtype):
     return load_json(path="bouncerscript/test/fake_{}_config.json".format(jobtype))
 
@@ -31,6 +35,15 @@ def submission_context():
     context = Context()
     context.task = get_fake_valid_task("submission")
     context.config = get_fake_valid_config("submission")
+
+    yield context
+
+
+@pytest.yield_fixture(scope='function')
+def aliases_context():
+    context = Context()
+    context.task = get_fake_valid_task("aliases")
+    context.config = get_fake_valid_config("aliases")
 
     yield context
 

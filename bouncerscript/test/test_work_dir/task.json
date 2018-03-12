@@ -1,0 +1,35 @@
+{
+    "provisionerId": "meh",
+    "workerType": "workertype",
+    "schedulerId": "task-graph-scheduler",
+    "taskGroupId": "some",
+    "routes": [],
+    "retries": 5,
+    "created": "2015-05-08T16:15:58.903Z",
+    "deadline": "2015-05-08T18:15:59.010Z",
+    "expires": "2016-05-08T18:15:59.010Z",
+    "dependencies": ["eSzfNqMZT_mSiQQXu8hyqg"],
+    "scopes": [
+        "project:releng:bouncer:server:staging",
+        "project:releng:bouncer:action:submission"
+    ],
+    "payload": {
+        "locales": ["en-US", "ro"],
+        "submission_entries": {
+            "Firefox-99999": {
+                "options": {
+                    "add_locales": true,
+                    "check_uptake": true,
+                    "ssl_only": false
+                },
+                "paths_per_bouncer_platform": {
+                    "linux": "/firefox/releases/99999.0b1/linux-i686/:lang/firefox-99999.0b1.tar.bz2",
+                    "linux64": "/firefox/releases/99999.0b1/linux-x86_64/:lang/firefox-99999.0b1.tar.bz2",
+                    "osx": "/firefox/releases/99999.0b1/mac/:lang/Firefox%2099999.0b1.dmg",
+                    "win": "/firefox/releases/99999.0b1/win32/:lang/Firefox%20Setup%2099999.0b1.exe",
+                    "win64": "/firefox/releases/99999.0b1/win64/:lang/Firefox%20Setup%2099999.0b1.exe"
+                }
+            }
+        }
+    }
+}

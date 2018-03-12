@@ -3,9 +3,9 @@ import json
 import logging
 import sys
 import traceback
-from xml.dom.minidom import parseString
-from urllib.parse import quote
 from scriptworker.utils import retry_async
+from urllib.parse import quote
+from xml.dom.minidom import parseString
 
 
 log = logging.getLogger(__name__)
@@ -17,7 +17,8 @@ def load_json(path):
 
 
 async def api_call(context, route, data, retry_config=None):
-    """TODO"""
+    """Generic api_call method that's to be used as underlying method by
+    all the functions working with the bouncer api"""
     retry_async_kwargs = dict(
         retry_exceptions=(aiohttp.ClientError,
                           aiohttp.ServerTimeoutError),
@@ -32,7 +33,7 @@ async def api_call(context, route, data, retry_config=None):
 
 
 async def _do_api_call(context, route, data, method='GET', session=None):
-    """TODO"""
+    """Effective function doing the API call to the bouncer API endpoint"""
     session = session or context.session
     bouncer_config = context.config["bouncer_config"][context.server]
     credentials = (bouncer_config["username"],
@@ -66,7 +67,8 @@ async def _do_api_call(context, route, data, method='GET', session=None):
 
 
 async def product_exists(context, product_name):
-    """TODO"""
+    """Function to check if a specific product exists in bouncer already by
+    parsing the XML returned by the API endpoint."""
     log.info("Checking if {} already exists".format(product_name))
     res = await api_call(context, "product_show?product=%s" %
                          quote(product_name), data=None)
@@ -84,7 +86,8 @@ async def product_exists(context, product_name):
 
 
 async def api_add_product(context, product_name, add_locales, ssl_only=False):
-    """TODO"""
+    """Function to add a specific product to Bouncer, along with its corresponding
+    list of locales"""
     data = {
         "product": product_name,
     }
@@ -98,7 +101,7 @@ async def api_add_product(context, product_name, add_locales, ssl_only=False):
 
 
 async def api_add_location(context, product_name, bouncer_platform, path):
-    """TODO"""
+    """Function to add locations per platform for a specific product"""
     data = {
         "product": product_name,
         "os": bouncer_platform,
@@ -109,7 +112,7 @@ async def api_add_location(context, product_name, bouncer_platform, path):
 
 
 async def api_update_alias(context, alias, product_name):
-    """TODO"""
+    """Function to update an aliases to a specific product"""
     data = {
         "alias": alias,
         "related_product": product_name,
