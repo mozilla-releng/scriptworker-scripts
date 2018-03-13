@@ -27,7 +27,6 @@ async def async_main(context):
         context (Context): the signing context.
 
     """
-    context = _set_signing_context(context)
     connector = _craft_aiohttp_connector(context)
 
     async with aiohttp.ClientSession(connector=connector) as session:
@@ -54,18 +53,6 @@ async def async_main(context):
                     os.path.join(work_dir, source), context.config['artifact_dir'], target=source
                 )
     log.info("Done!")
-
-
-def _set_signing_context(context):
-    def _stubbed_out_method(*args):
-        pass
-
-    context.write_json = _stubbed_out_method
-
-    if not hasattr(context, 'signing_servers'):
-        context.signing_servers = None
-
-    return context
 
 
 def _craft_aiohttp_connector(context):

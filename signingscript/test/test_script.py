@@ -57,14 +57,6 @@ async def test_async_main(tmpdir, mocker, formats):
     await script.async_main(context)
 
 
-def test_set_signing_context():
-    context = Context()
-    context = script._set_signing_context(context)
-    assert context.signing_servers is None
-    context.write_json() # Does nothing
-    assert isinstance(context, Context)
-
-
 def test_craft_aiohttp_connector():
     context = Context()
     context.config = {}
