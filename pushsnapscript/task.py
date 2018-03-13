@@ -2,7 +2,9 @@ from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
 SNAP_SCOPES_PREFIX = 'project:releng:snapcraft:firefox:'
-ALLOWED_CHANNELS = ('edge', 'candidate')
+
+_CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE = ('edge', 'candidate')
+ALLOWED_CHANNELS = ('mock', *_CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE)
 
 
 def pluck_channel(task):
@@ -22,3 +24,8 @@ def pluck_channel(task):
         )
 
     return channel
+
+
+def is_allowed_to_push_to_snap_store(context=None, channel=None):
+    channel = pluck_channel(context.task) if channel is None else channel
+    return channel in _CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE

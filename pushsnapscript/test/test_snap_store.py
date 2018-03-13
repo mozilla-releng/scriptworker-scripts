@@ -18,7 +18,7 @@ SNAPCRAFT_SAMPLE_CONFIG_BASE64 = 'W2xvZ2luLnVidW50dS5jb21dCm1hY2Fyb29uID0gU29tZU
 
 @pytest.mark.parametrize('channel', ('edge', 'candidate'))
 def test_push(monkeypatch, channel):
-    generator = (n for n in range(0, 2))
+    call_count = (n for n in range(0, 2))
 
     context = MagicMock()
     context.config = {'base64_macaroons_configs': {channel: SNAPCRAFT_SAMPLE_CONFIG_BASE64}}
@@ -30,7 +30,7 @@ def test_push(monkeypatch, channel):
 
             assert snap_file_path == '/some/file.snap'
             assert channel == channel
-            next(generator)
+            next(call_count)
 
         context.config['work_dir'] = d
         monkeypatch.setattr(snapcraft_store_client, 'push', snapcraft_store_client_push_fake)
@@ -38,7 +38,21 @@ def test_push(monkeypatch, channel):
 
         assert os.getcwd() != d
 
-    assert next(generator) == 1     # Check fake function was called once
+    assert next(call_count) == 1
+
+
+def test_push_early_return_if_not_allowed(monkeypatch):
+    call_count = (n for n in range(0, 2))
+
+    context = MagicMock()
+
+    def increase_call_count(_, __):
+        next(call_count)
+
+    monkeypatch.setattr(snapcraft_store_client, 'push', increase_call_count)
+    push(context, '/some/file.snap', channel='mock')
+
+    assert next(call_count) == 0
 
 
 @pytest.mark.parametrize('channel', ('edge', 'candidate'))
