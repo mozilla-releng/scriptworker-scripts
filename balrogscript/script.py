@@ -119,8 +119,8 @@ def schedule(task, config, balrog_auth):
 
 # submit_toplevel {{{1
 def create_creator(**kwargs):
-    from balrog.submitter.cli import ReleaseCreatorV4
-    return ReleaseCreatorV4(**kwargs)
+    from balrog.submitter.cli import ReleaseCreatorV9
+    return ReleaseCreatorV9(**kwargs)
 
 
 def create_pusher(**kwargs):

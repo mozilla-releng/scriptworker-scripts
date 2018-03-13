@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.join(
 ))
 from balrog.submitter.cli import (
     NightlySubmitterV4,
-    ReleaseCreatorV4,
+    ReleaseCreatorV9,
     ReleasePusher,
     ReleaseScheduler,
     ReleaseSubmitterV4,
@@ -161,7 +161,7 @@ def test_create_creator(config):
     balrog_auth = (None, None)
     assert isinstance(
         bscript.create_creator(api_root=config['api_root'], auth=balrog_auth),
-        ReleaseCreatorV4
+        ReleaseCreatorV9
     )
 
 
