@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 # create_locale_submitter {{{1
 def create_locale_submitter(e, balrog_auth, config):
-    from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4  # noqa: E402
+    from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV9  # noqa: E402
     auth = balrog_auth
 
     if "tc_release" in e:
@@ -29,7 +29,7 @@ def create_locale_submitter(e, balrog_auth, config):
 
         complete_info = e['completeInfo']
         partial_info = e.get('partialInfo')
-        submitter = ReleaseSubmitterV4(api_root=config['api_root'], auth=auth,
+        submitter = ReleaseSubmitterV9(api_root=config['api_root'], auth=auth,
                                        dummy=config['dummy'])
 
         data = {

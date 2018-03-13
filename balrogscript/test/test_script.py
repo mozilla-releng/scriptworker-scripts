@@ -20,7 +20,7 @@ from balrog.submitter.cli import (
     ReleaseCreatorV9,
     ReleasePusher,
     ReleaseScheduler,
-    ReleaseSubmitterV4,
+    ReleaseSubmitterV9,
 )  # noqa: E402
 
 logging.basicConfig()
@@ -55,11 +55,11 @@ def test_create_locale_submitter_release_style(config, release_manifest):
     balrog_auth = (None, None)
 
     submitter, release = bscript.create_locale_submitter(release_manifest[0], balrog_auth, config)
-    assert isinstance(submitter, ReleaseSubmitterV4)
+    assert isinstance(submitter, ReleaseSubmitterV9)
 
     release_manifest[0].pop("partialInfo", None)
     submitter, release = bscript.create_locale_submitter(release_manifest[0], balrog_auth, config)
-    assert isinstance(submitter, ReleaseSubmitterV4)
+    assert isinstance(submitter, ReleaseSubmitterV9)
 
     release_manifest[0].pop("tc_release", None)
     with pytest.raises(RuntimeError):
