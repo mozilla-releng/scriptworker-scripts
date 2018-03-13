@@ -11,6 +11,7 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 from scriptworker.utils import makedirs
 
 from signingscript.exceptions import SigningScriptError
+from signingscript.script import get_default_config
 from signingscript.utils import get_hash, load_signing_server_config, mkdir, SigningServer
 import signingscript.sign as sign
 import signingscript.utils as utils
@@ -53,14 +54,11 @@ def task_defn():
 @pytest.yield_fixture(scope='function')
 def context(tmpdir):
     context = Context()
-    context.config = {
-        'dmg': 'dmg',
-        'hfsplus': 'hfsplus',
-        'signing_server_config': SERVER_CONFIG_PATH,
-        'work_dir': os.path.join(tmpdir, 'work'),
-        'artifact_dir': os.path.join(tmpdir, 'artifact'),
-        'taskcluster_scope_prefix': DEFAULT_SCOPE_PREFIX,
-    }
+    context.config = get_default_config()
+    context.config['signing_server_config'] = SERVER_CONFIG_PATH
+    context.config['work_dir'] = os.path.join(tmpdir, 'work')
+    context.config['artifact_dir'] = os.path.join(tmpdir, 'artifact')
+    context.config['taskcluster_scope_prefix'] = DEFAULT_SCOPE_PREFIX
     context.signing_servers = load_signing_server_config(context)
     mkdir(context.config['work_dir'])
     mkdir(context.config['artifact_dir'])

@@ -74,3 +74,9 @@ def test_craft_aiohttp_connector():
     context.config['ssl_cert'] = SSL_CERT
     connector = script._craft_aiohttp_connector(context)
     assert connector._ssl_context
+
+
+def test_get_default_config():
+    parent_dir = os.path.dirname(os.getcwd())
+    c = script.get_default_config()
+    assert c['work_dir'] == os.path.join(parent_dir, 'work_dir')

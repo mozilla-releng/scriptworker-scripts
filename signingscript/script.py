@@ -76,4 +76,33 @@ def _craft_aiohttp_connector(context):
     return aiohttp.TCPConnector(**kwargs)
 
 
-__name__ == '__main__' and scriptworker.client.sync_main(async_main)
+def get_default_config(base_dir=None):
+    """Create the default config to work from.
+
+    Args:
+        base_dir (str, optional): the directory above the `work_dir` and `artifact_dir`.
+            If None, use `..`  Defaults to None.
+
+    Returns:
+        dict: the default configuration dict.
+
+    """
+    base_dir = base_dir or os.path.dirname(os.getcwd())
+    default_config = {
+        'signing_server_config': 'server_config.json',
+        'work_dir': os.path.join(base_dir, 'work_dir'),
+        'artifact_dir': os.path.join(base_dir, '/src/signing/artifact_dir'),
+        'my_ip': "127.0.0.1",
+        'token_duration_seconds': 20 * 60,
+        'ssl_cert': None,
+        'signtool': "signtool",
+        'schema_file': os.path.join(os.path.dirname(__file__), 'data', 'signing_task_schema.json'),
+        'verbose': True,
+        'zipalign': 'zipalign',
+        'dmg': 'dmg',
+        'hfsplus': 'hfsplus',
+    }
+    return default_config
+
+
+__name__ == '__main__' and scriptworker.client.sync_main(async_main, default_config=get_default_config())

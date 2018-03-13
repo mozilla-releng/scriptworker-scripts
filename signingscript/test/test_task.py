@@ -7,6 +7,7 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
 
 from signingscript.exceptions import SigningServerError
+from signingscript.script import get_default_config
 from signingscript.utils import load_signing_server_config, mkdir
 import signingscript.task as stask
 from signingscript.test import noop_sync, tmpdir, BASE_DIR
@@ -48,15 +49,11 @@ def task_defn():
 @pytest.yield_fixture(scope='function')
 def context(tmpdir):
     context = Context()
-    context.config = {
-        'artifact_dir': os.path.join(tmpdir, 'artifact'),
-        'my_ip': '127.0.0.1',
-        'schema_file': os.path.join(os.path.dirname(__file__), '..', 'data', 'signing_task_schema.json'),
-        'signing_server_config': SERVER_CONFIG_PATH,
-        'taskcluster_scope_prefix': DEFAULT_SCOPE_PREFIX,
-        'token_duration_seconds': 20 * 60,
-        'work_dir': os.path.join(tmpdir, 'work'),
-    }
+    context.config = get_default_config()
+    context.config['signing_server_config'] = SERVER_CONFIG_PATH
+    context.config['work_dir'] = os.path.join(tmpdir, 'work')
+    context.config['artifact_dir'] = os.path.join(tmpdir, 'artifact')
+    context.config['taskcluster_scope_prefix'] = DEFAULT_SCOPE_PREFIX
     context.signing_servers = load_signing_server_config(context)
     yield context
 
