@@ -32,9 +32,6 @@ async def async_main(context):
     async with aiohttp.ClientSession(connector=connector) as session:
         context.session = session
         work_dir = context.config['work_dir']
-        context.task = scriptworker.client.get_task(context.config)
-        log.info("validating task")
-        scriptworker.client.validate_task_schema(context)
         context.signing_servers = load_signing_server_config(context)
         cert_type = task_cert_type(context)
         all_signing_formats = task_signing_formats(context)

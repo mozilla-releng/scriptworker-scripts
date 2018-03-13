@@ -43,8 +43,6 @@ async def test_async_main(tmpdir, mocker, formats):
     async def fake_sign(_, val, *args):
         return [val]
 
-    mocker.patch.object(scriptworker.client, 'get_task', new=noop_sync)
-    mocker.patch.object(scriptworker.client, 'validate_task_schema', new=noop_sync)
     mocker.patch.object(script, 'load_signing_server_config', new=noop_sync)
     mocker.patch.object(script, 'task_cert_type', new=noop_sync)
     mocker.patch.object(script, 'task_signing_formats', new=noop_sync)
