@@ -2,6 +2,7 @@ import os
 import pytest
 
 from scriptworker.context import Context
+from scriptworker.client import validate_task_schema
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from treescript.exceptions import TaskVerificationError
@@ -55,7 +56,7 @@ def test_missing_mandatory_urls_are_reported(context, task_defn):
     del(context.task['scopes'])
 
     with pytest.raises(ScriptWorkerTaskException):
-        stask.validate_task_schema(context)
+        validate_task_schema(context)
 
 
 @pytest.mark.parametrize('tag_info', (
@@ -72,12 +73,12 @@ def test_tag_info_invalid(context, task_defn, tag_info):
     context.task = task_defn
     context.task['payload']['tag_info'] = tag_info
     with pytest.raises(ScriptWorkerTaskException):
-        stask.validate_task_schema(context)
+        validate_task_schema(context)
 
 
 def test_no_error_is_reported_when_no_missing_url(context, task_defn):
     context.task = task_defn
-    stask.validate_task_schema(context)
+    validate_task_schema(context)
 
 
 @pytest.mark.parametrize('source_url,raises', ((

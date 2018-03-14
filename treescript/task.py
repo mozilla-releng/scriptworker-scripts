@@ -1,30 +1,10 @@
 #!/usr/bin/env python
 """Treescript task functions."""
-import json
 import logging
-
-import scriptworker.client
 
 from treescript.exceptions import TaskVerificationError
 
 log = logging.getLogger(__name__)
-
-
-# validate_task_schema {{{1
-def validate_task_schema(context):
-    """Validate the task json schema.
-
-    Args:
-        context (TreeContext): the tree context.
-
-    Raises:
-        ScriptWorkerTaskException: on failed validation.
-
-    """
-    with open(context.config['schema_file']) as fh:
-        task_schema = json.load(fh)
-    log.debug(task_schema)
-    scriptworker.client.validate_json_schema(context.task, task_schema)
 
 
 # get_source_repo {{{1

@@ -2,10 +2,12 @@ import json
 import mock
 import os
 import pytest
-import sys
 
 import scriptworker.client
+from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerException
+from unittest.mock import MagicMock
+
 from treescript.test import noop_async, noop_sync, read_file, tmpdir, BASE_DIR
 import treescript.script as script
 
@@ -13,6 +15,11 @@ assert tmpdir  # silence flake8
 
 # helper constants, fixtures, functions {{{1
 EXAMPLE_CONFIG = os.path.join(BASE_DIR, 'config_example.json')
+
+
+@pytest.fixture(scope='function')
+def context():
+    return Context()
 
 
 def get_conf_file(tmpdir, **kwargs):
@@ -28,12 +35,6 @@ def get_conf_file(tmpdir, **kwargs):
 
 async def die_async(*args, **kwargs):
     raise ScriptWorkerTaskException("Expected exception.")
-
-
-# TreeContext {{{1
-def test_tree_context():
-    c = script.TreeContext()
-    c.write_json()
 
 
 # async_main {{{1
@@ -57,7 +58,6 @@ async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions)
         return actions
 
     mocker.patch.object(scriptworker.client, 'get_task', new=noop_sync)
-    mocker.patch.object(script, 'validate_task_schema', new=noop_sync)
     mocker.patch.object(script, 'task_action_types', new=action_fun)
     mocker.patch.object(script, 'validate_robustcheckout_works', new=fake_validate_robustcheckout)
     mocker.patch.object(script, 'log_mercurial_version', new=noop_async)
@@ -78,33 +78,6 @@ def test_get_default_config():
     assert c['work_dir'] == os.path.join(parent_dir, 'work_dir')
 
 
-# usage {{{1
-def test_usage():
-    with pytest.raises(SystemExit):
-        script.usage()
-
-
-# main {{{1
-def test_main_missing_args(mocker):
-    mocker.patch.object(sys, 'argv', new=[__file__])
-    with pytest.raises(SystemExit):
-        script.main()
-
-
-def test_main_argv(tmpdir, mocker):
-    conf_file = get_conf_file(tmpdir, verbose=False, ssl_cert=None)
-    mocker.patch.object(sys, 'argv', new=[__file__, conf_file])
-    mocker.patch.object(script, 'async_main', new=noop_async)
-    script.main()
-
-
-def test_main_noargv(tmpdir, mocker):
-    conf_file = get_conf_file(tmpdir, verbose=True)
-    mocker.patch.object(script, 'async_main', new=die_async)
-    with pytest.raises(SystemExit):
-        script.main(config_path=conf_file)
-
-
 # do_actions {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -116,7 +89,7 @@ def test_main_noargv(tmpdir, mocker):
         ([], True, False),
     )
 )
-async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
+async def test_do_actions(mocker, context, push_scope, dry_run, push_expect_called):
     actions = ["foo:bar:tagging", "foo:bar:version_bump"]
     actions += push_scope
     called_tag = [False]
@@ -137,14 +110,14 @@ async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
     mocker.patch.object(script, 'push', new=mocked_push)
     mocker.patch.object(script, 'log_outgoing', new=noop_async)
     mocker.patch.object(script, 'is_dry_run').return_value = dry_run
-    await script.do_actions(script.Context(), actions, directory='/some/folder/here')
+    await script.do_actions(context, actions, directory='/some/folder/here')
     assert called_tag[0]
     assert called_bump[0]
     assert called_push[0] is push_expect_called
 
 
 @pytest.mark.asyncio
-async def test_do_actions_unknown(mocker):
+async def test_do_actions_unknown(mocker, context):
     actions = ["foo:bar:unknown"]
     called_tag = [False]
     called_bump = [False]
@@ -159,6 +132,13 @@ async def test_do_actions_unknown(mocker):
     mocker.patch.object(script, 'bump_version', new=mocked_bump)
     mocker.patch.object(script, 'log_outgoing', new=noop_async)
     with pytest.raises(NotImplementedError):
-        await script.do_actions(script.Context(), actions, directory='/some/folder/here')
+        await script.do_actions(context, actions, directory='/some/folder/here')
     assert called_tag[0] is False
     assert called_bump[0] is False
+
+
+def test_main(monkeypatch):
+    sync_main_mock = MagicMock()
+    monkeypatch.setattr(scriptworker.client, 'sync_main', sync_main_mock)
+    script.main()
+    sync_main_mock.asset_called_once_with(script.async_main, default_config=script.get_default_config())

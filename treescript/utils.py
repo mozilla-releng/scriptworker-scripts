@@ -1,7 +1,6 @@
 """Treescript general utility functions."""
 import asyncio
 from asyncio.subprocess import PIPE, STDOUT
-import json
 import logging
 import os
 
@@ -25,21 +24,6 @@ def mkdir(path):
         log.info("mkdir {}".format(path))
     except OSError:
         pass
-
-
-# load_json {{{1
-def load_json(path):
-    """Load json from path.
-
-    Args:
-        path (str): the path to read from
-
-    Returns:
-        dict: the loaded json object
-
-    """
-    with open(path, "r") as fh:
-        return json.load(fh)
 
 
 # task_actions {{{1
