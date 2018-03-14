@@ -1,4 +1,3 @@
-import json
 import mock
 import os
 import pytest
@@ -38,17 +37,6 @@ def test_mkdir_mutes_os_errors(mocker):
     m.side_effect = OSError
     utils.mkdir('/dummy/dir')
     m.assert_called_with('/dummy/dir')
-
-
-# load_json {{{1
-def test_load_json_from_file(tmpdir):
-    json_object = {'a_key': 'a_value'}
-
-    output_file = os.path.join(tmpdir, 'file.json')
-    with open(output_file, 'w') as f:
-        json.dump(json_object, f)
-
-    assert utils.load_json(output_file) == json_object
 
 
 # task_task_action_types {{{1
