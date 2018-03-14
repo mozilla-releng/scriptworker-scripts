@@ -60,8 +60,8 @@ def task_cert_type(context):
         scopes,
         condition=lambda scope: scope.startswith(prefix),
         ErrorClass=TaskVerificationError,
-        no_item_error_message='No scope starting with "{}" found. Scopes: {}'.format(prefix, scopes),
-        too_many_item_error_message='More than one scope starting with "{}" found: {}!'.format(prefix, scopes),
+        no_item_error_message='No scope starting with "{}" found'.format(prefix),
+        too_many_item_error_message='More than one scope starting with "{}"'.format(prefix),
     )
 
 
