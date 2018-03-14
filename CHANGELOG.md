@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [6.0.0] - 2018-03-14
+### Changed
+- `script.async_main()` relies on scriptworker (>= 10.2.0) to:
+  - initialize context, config, and task
+  - validate the task schema
+
+### Removed
+- `exceptions.TaskVerificationError` in favor of the one in scriptworker
+- `script.SigningContext`, `script.usage()`, `script.main()` now handled by scriptworker
+- `task.validate_task_schema()` now handled by scriptworker
+
+
 ## [5.0.0] - 2018-02-01
 ### Added
 - support for different scope prefix (was hardcoded to `project:releng:signing:`). Prefixes are now defined in the configuration under `taskcluster_scope_prefix`.
