@@ -89,4 +89,9 @@ def get_default_config(base_dir=None):
     return default_config
 
 
-__name__ == '__main__' and scriptworker.client.sync_main(async_main, default_config=get_default_config())
+def main():
+    """Start signing script."""
+    return scriptworker.client.sync_main(async_main, default_config=get_default_config())
+
+
+__name__ == '__main__' and main()

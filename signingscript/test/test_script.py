@@ -9,6 +9,7 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 from signingscript.test import noop_async, noop_sync, read_file, tmpdir, BASE_DIR
 import signingscript.script as script
+from unittest.mock import MagicMock
 
 assert tmpdir  # silence flake8
 
@@ -70,3 +71,10 @@ def test_get_default_config():
     parent_dir = os.path.dirname(os.getcwd())
     c = script.get_default_config()
     assert c['work_dir'] == os.path.join(parent_dir, 'work_dir')
+
+
+def test_main(monkeypatch):
+    sync_main_mock = MagicMock()
+    monkeypatch.setattr(scriptworker.client, 'sync_main', sync_main_mock)
+    script.main()
+    sync_main_mock.asset_called_once_with(script.async_main, default_config=script.get_default_config())
