@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 import unittest
 
-from pushapkscript.script import sync_main, async_main
+from pushapkscript.script import main
 from pushapkscript.test.helpers.task_generator import TaskGenerator
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
@@ -105,7 +105,7 @@ class MainTest(unittest.TestCase):
         task_generator.generate_file(self.config_generator.work_dir)
 
         self._copy_all_apks_to_test_temp_dir(task_generator)
-        sync_main(async_main, config_path=self.config_generator.generate())
+        main(config_path=self.config_generator.generate())
 
         PushAPK.assert_called_with(config={
             'credentials': '/dummy/path/to/certificate.p12',
@@ -125,7 +125,7 @@ class MainTest(unittest.TestCase):
         task_generator.generate_file(self.config_generator.work_dir)
 
         self._copy_all_apks_to_test_temp_dir(task_generator)
-        sync_main(async_main, config_path=self.config_generator.generate())
+        main(config_path=self.config_generator.generate())
 
         PushAPK.assert_called_with(config={
             'credentials': '/dummy/path/to/certificate.p12',
@@ -151,7 +151,7 @@ class MainTest(unittest.TestCase):
             origin_file_name='google_play_strings.json',
             destination_path='public/google_play_strings.json',
         )
-        sync_main(async_main, config_path=self.config_generator.generate())
+        main(config_path=self.config_generator.generate())
 
         PushAPK.assert_called_with(config={
             'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),

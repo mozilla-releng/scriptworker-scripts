@@ -2,9 +2,10 @@
 """ PushAPK main script
 """
 import logging
+import os
 
+from scriptworker import client
 from scriptworker.artifacts import get_upstream_artifacts_full_paths_per_task_id
-from scriptworker.client import get_task, sync_main, validate_task_schema
 
 from pushapkscript import jarsigner
 from pushapkscript.apk import sort_and_check_apks_per_architectures
@@ -18,12 +19,7 @@ log = logging.getLogger(__name__)
 
 async def async_main(context):
     logging.getLogger('oauth2client').setLevel(logging.WARNING)
-
-    context.task = get_task(context.config)
     _log_warning_forewords(context)
-
-    log.info('Validating task definition...')
-    validate_task_schema(context)
 
     log.info('Verifying upstream artifacts...')
     artifacts_per_task_id, failed_artifacts_per_task_id = get_upstream_artifacts_full_paths_per_task_id(context)
@@ -63,4 +59,19 @@ if no error is detected either by this script or by Google Play.')
         log.warn('You do not have the rights to reach Google Play. *All* requests will be mocked.')
 
 
-__name__ == '__main__' and sync_main(async_main)
+def get_default_config():
+    cwd = os.getcwd()
+    parent_dir = os.path.dirname(cwd)
+
+    return {
+        'work_dir': os.path.join(parent_dir, 'work_dir'),
+        'schema_file': os.path.join(cwd, 'pushapkscript', 'data', 'pushapk_task_schema.json'),
+        'verbose': False,
+    }
+
+
+def main(config_path=None):
+    client.sync_main(async_main, config_path=config_path, default_config=get_default_config())
+
+
+__name__ == '__main__' and main()
