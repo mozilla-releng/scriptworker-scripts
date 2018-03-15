@@ -2,25 +2,36 @@
 """ ShipIt main script
 """
 import logging
+import os
 
-from scriptworker.client import get_task, sync_main, validate_task_schema
+from scriptworker import client
 
-from shipitscript.ship_actions import mark_as_shipped
-from shipitscript.task import get_ship_it_instance_config_from_scope
+from shipitscript import ship_actions, task
 
 
 log = logging.getLogger(__name__)
 
 
 async def async_main(context):
-    context.task = get_task(context.config)
-    log.info('Validating task definition...')
-    validate_task_schema(context)
-    ship_it_instance_config = get_ship_it_instance_config_from_scope(context)
-
+    ship_it_instance_config = task.get_ship_it_instance_config_from_scope(context)
     release_name = context.task['payload']['release_name']
-    mark_as_shipped(ship_it_instance_config, release_name)
+    ship_actions.mark_as_shipped(ship_it_instance_config, release_name)
     log.info('Done!')
 
 
-__name__ == '__main__' and sync_main(async_main)
+def get_default_config():
+    cwd = os.getcwd()
+    parent_dir = os.path.dirname(cwd)
+
+    return {
+        'work_dir': os.path.join(parent_dir, 'work_dir'),
+        'schema_file': os.path.join(cwd, 'shipitscript', 'data', 'shipit_task_schema.json'),
+        'verbose': False,
+    }
+
+
+def main(config_path=None):
+    client.sync_main(async_main, config_path=config_path, default_config=get_default_config())
+
+
+__name__ == '__main__' and main()
