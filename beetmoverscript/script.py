@@ -10,11 +10,9 @@ from multiprocessing.pool import ThreadPool
 import os
 from redo import retry
 import sys
-import traceback
 import mimetypes
 
-from scriptworker.client import get_task
-from scriptworker.context import Context
+from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
 from scriptworker.utils import retry_async, raise_future_exceptions
 
@@ -29,7 +27,7 @@ from beetmoverscript.task import (
     get_task_bucket, get_task_action, validate_bucket_paths,
 )
 from beetmoverscript.utils import (
-    load_json, get_hash, generate_beetmover_manifest,
+    get_hash, generate_beetmover_manifest,
     get_size, alter_unpretty_contents, matches_exclude,
     get_candidates_prefix, get_releases_prefix, get_creds, get_bucket_name,
     is_release_action, is_promotion_action, get_partials_props,
@@ -204,19 +202,26 @@ action_map = {
 
 # async_main {{{1
 async def async_main(context):
-    # determine the task and make a quick validation check against its schema
-    context.task = get_task(context.config)  # e.g. $cfg['work_dir']/task.json
+    for module in ("botocore", "boto3", "chardet"):
+        logging.getLogger(module).setLevel(logging.INFO)
+
+    setup_mimetypes()
+
     validate_task_schema(context)
 
-    # determine the task bucket and action
-    context.bucket = get_task_bucket(context.task, context.config)
-    context.action = get_task_action(context.task, context.config)
+    connector = aiohttp.TCPConnector(limit=context.config['aiohttp_max_connections'])
+    async with aiohttp.ClientSession(connector=connector) as session:
+        context.session = session
 
-    if action_map.get(context.action):
-        await action_map[context.action](context)
-    else:
-        log.critical("Unknown action {}!".format(context.action))
-        sys.exit(3)
+        # determine the task bucket and action
+        context.bucket = get_task_bucket(context.task, context.config)
+        context.action = get_task_action(context.task, context.config)
+
+        if action_map.get(context.action):
+            await action_map[context.action](context)
+        else:
+            log.critical("Unknown action {}!".format(context.action))
+            sys.exit(3)
 
     log.info('Success!')
 
@@ -393,37 +398,6 @@ async def upload_to_s3(context, s3_key, path):
                       kwargs={'session': context.session})
 
 
-# main {{{1
-def usage():
-    print("Usage: {} CONFIG_FILE".format(sys.argv[0]), file=sys.stderr)
-    sys.exit(1)
-
-
-def setup_config(config_path):
-    if config_path is None:
-        if len(sys.argv) != 2:
-            usage()
-        config_path = sys.argv[1]
-    context = Context()
-    context.config = {}
-    context.config.update(load_json(path=config_path))
-    return context
-
-
-def setup_logging(verbose=True):
-    if verbose:
-        level = logging.DEBUG
-    else:
-        level = logging.INFO
-    logging.basicConfig(
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        level=level
-    )
-    logging.getLogger("taskcluster").setLevel(logging.WARNING)
-    for module in ("botocore", "boto3", "chardet"):
-        logging.getLogger(module).setLevel(logging.INFO)
-
-
 def setup_mimetypes():
     mimetypes.init()
     # in py3 we must exhaust the map so that add_type is actually invoked
@@ -432,23 +406,9 @@ def setup_mimetypes():
     ))
 
 
-def main(name=None, config_path=None):
-    if name not in (None, '__main__'):
-        return
-    context = setup_config(config_path)
-    setup_logging(verbose=context.config['verbose'])
-    setup_mimetypes()
-
-    loop = asyncio.get_event_loop()
-    conn = aiohttp.TCPConnector(limit=context.config['aiohttp_max_connections'])
-    with aiohttp.ClientSession(connector=conn) as session:
-        context.session = session
-        try:
-            loop.run_until_complete(async_main(context))
-        except ScriptWorkerTaskException as exc:
-            traceback.print_exc()
-            sys.exit(exc.exit_code)
-    loop.close()
+def main(config_path=None):
+    # There are several task schema. Validation occurs in async_main
+    client.sync_main(async_main, config_path=config_path, should_validate_task=False)
 
 
-main(name=__name__)
+__name__ == '__main__' and main()

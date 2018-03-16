@@ -1,11 +1,10 @@
-import json
 import logging
 import os
 import re
 import shutil
-import scriptworker.client
 
 from copy import deepcopy
+from scriptworker import client
 
 from beetmoverscript import utils
 from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
@@ -20,13 +19,9 @@ log = logging.getLogger(__name__)
 
 def validate_task_schema(context):
     """Perform a schema validation check against taks definition"""
-    schema_file = context.config['schema_file']
     action = get_task_action(context.task, context.config)
-    if utils.is_release_action(action):
-        schema_file = context.config['release_schema_file']
-    with open(schema_file) as fh:
-        task_schema = json.load(fh)
-    scriptworker.client.validate_json_schema(context.task, task_schema)
+    schema_key = 'release_schema_file' if utils.is_release_action(action) else 'schema_file'
+    client.validate_task_schema(context, schema_key=schema_key)
 
 
 def get_task_bucket(task, script_config):

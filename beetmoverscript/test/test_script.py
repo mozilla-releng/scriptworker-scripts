@@ -4,14 +4,13 @@ import mimetypes
 import mock
 import os
 import pytest
-import sys
 from yarl import URL
 
 import beetmoverscript.script
-from beetmoverscript.script import (setup_mimetypes, setup_config, put,
+from beetmoverscript.script import (setup_mimetypes, put,
                                     move_beets, move_beet, async_main,
                                     main, enrich_balrog_manifest,
-                                    list_bucket_objects, setup_logging,
+                                    list_bucket_objects,
                                     push_to_releases, copy_beets)
 from beetmoverscript.task import get_upstream_artifacts
 from beetmoverscript.test import (
@@ -153,30 +152,6 @@ def test_setup_mimetypes():
     # after we add custom mimetypes
     assert (sorted([mimetypes.guess_type(url)[0] for url in non_default_types]) ==
             ['application/octet-stream', 'text/plain'])
-
-
-# setup_config {{{1
-def test_invalid_args():
-    args = ['only-one-arg']
-    with mock.patch.object(sys, 'argv', args):
-        with pytest.raises(SystemExit):
-            setup_config(None)
-
-
-def test_setup_config():
-    expected_context = Context()
-    expected_context.config = get_fake_valid_config()
-
-    with pytest.raises(SystemExit):
-        setup_config(None)
-
-    actual_context = setup_config("beetmoverscript/test/fake_config.json")
-    assert expected_context.config == actual_context.config
-
-    args = ['beetmoverscript', "beetmoverscript/test/fake_config.json"]
-    with mock.patch.object(sys, 'argv', args):
-        actual_context = setup_config(None)
-    assert expected_context.config == actual_context.config
 
 
 # put {{{1
@@ -491,14 +466,8 @@ async def test_async_main(context, mocker, action, raises):
     else:
         await async_main(context)
 
-
-# setup_logging {{{1
-@pytest.mark.parametrize("verbose", (True, False))
-def test_setup_logging(verbose):
-    setup_logging(verbose=verbose)
     for module in ("botocore", "boto3", "chardet"):
         assert logging.getLogger(module).level == logging.INFO
-    assert logging.getLogger("taskcluster").level == logging.WARNING
 
 
 # main {{{1
@@ -513,10 +482,10 @@ def test_main(event_loop, fake_session):
         raise ScriptWorkerTaskException("This is wrong, the answer is 42")
 
     with mock.patch('beetmoverscript.script.async_main', new=fake_async_main):
-        main(name='__main__', config_path='beetmoverscript/test/fake_config.json')
+        main(config_path='beetmoverscript/test/fake_config.json')
 
     with mock.patch('beetmoverscript.script.async_main', new=fake_async_main_with_exception):
         try:
-            main(name='__main__', config_path='beetmoverscript/test/fake_config.json')
+            main(config_path='beetmoverscript/test/fake_config.json')
         except SystemExit as exc:
             assert exc.code == 1
