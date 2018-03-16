@@ -47,22 +47,19 @@ async def _do_api_call(context, route, data, method='GET', session=None):
         kwargs['data'] = data
         method = 'POST'
 
-    log.info("Submitting to %s" % api_url)
     try:
         log.info("Performing a {} request to {} with kwargs {}".format(method,
                                                                        api_url,
                                                                        kwargs))
         async with session.request(method, api_url, auth=auth, **kwargs) as resp:
-            log.info("Server response")
             result = await resp.text()
-            log.info(result)
+            log.info("Server response: {}".format(result))
             return result
     except aiohttp.ServerTimeoutError as e:
         log.warning("Timed out accessing %s: %s" % (api_url, e))
         raise
     except aiohttp.ClientError as e:
-        log.warning("Cannot access %s" % api_url)
-        traceback.print_exc(file=sys.stdout)
+        log.warning("Cannot access %s: %s" % (api_url, e))
         raise
 
 

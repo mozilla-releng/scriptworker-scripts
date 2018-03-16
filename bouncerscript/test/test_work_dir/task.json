@@ -42,8 +42,7 @@
                     "win": "/firefox/releases/99999.0b1/win32/:lang/Firefox%20Setup%2099999.0b1.exe",
                     "win64": "/firefox/releases/99999.0b1/win64/:lang/Firefox%20Setup%2099999.0b1.exe"
                 }
-            },
-
+            }
         }
     }
 }
