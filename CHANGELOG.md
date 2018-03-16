@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [5.0.0] = 2018-03-16
+### Changed
+- `script.async_main()` relies on scriptworker (>= 10.2.0) to initialize context, config, and task
+- `task.validate_task_schema()` now relies on scriptworker
+
+### Removed
+- `script.usage()`, now handled by scriptworker
+
 ## [4.2.0] = 2018-03-15
 ### Added
 - added `source.tar.xz{,.asc}` to candidates manifests.
