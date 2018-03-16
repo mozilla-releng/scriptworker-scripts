@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+# 0.5.0
+* `script.async_main()` relies on scriptworker (>= 10.2.0) to:
+ * initialize context, config, and task
+ * validate the task schema
+ * `exceptions.TaskVerificationError` in favor of the one in scriptworker
+ * `script.usage()` now handled by scriptworker
+ * `task.validate_task_schema()` now handled by scriptworker
+
+* Now that Firefox 59 is on release:
+ * `dry_run` is not accepted anymore in task payload
+ * strings aren't fetched anymore by this worker type
+
 # 0.4.1
 * Google Play strings are now optionally fetched from an upstream task.
 
