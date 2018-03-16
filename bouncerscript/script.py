@@ -87,7 +87,7 @@ def craft_logging_config(context):
     }
 
 
-def main(name=None, config_path=None, close_loop=True):
+def main(name=None, config_path=None):
     if name not in (None, '__main__'):
         return
     context = Context()
