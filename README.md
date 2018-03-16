@@ -7,7 +7,7 @@ Bouncerscript README
 ## deploy a new version
 
 1. Once your PR is reviewed and passes the tests, have one of the admins review & merge it
-2. Bump to new version in `version.json` and commit with a "%VERSION%" message
+2. Bump to new version in `version.txt` and commit with a "%VERSION%" message
 3. `git tag -s %VERSION%`
 4. `git push`
 5. `git push --tags`
