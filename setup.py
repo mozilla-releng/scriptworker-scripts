@@ -15,11 +15,14 @@ with open(os.path.join(project_dir, 'requirements.txt')) as f:
 setup(
     name='bouncerscript',
     version=version,
-    description='TaskCluster Bouncer Worker',
+    description='TaskCluster Bouncer Script',
     author='Mozilla Release Engineering',
     author_email='release+python@mozilla.com',
     url='https://github.com/mozilla-releng/bouncerscript',
     packages=find_packages(),
+    package_data={
+        "bouncerscript": ["data/*"],
+    },
     include_package_data=True,
     zip_safe=False,
     entry_points={
