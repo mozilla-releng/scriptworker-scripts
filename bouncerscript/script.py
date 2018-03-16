@@ -7,38 +7,32 @@ import logging
 import sys
 import traceback
 
+from bouncerscript.task import (
+    get_task_action, get_task_server, validate_task_schema
+)
+from bouncerscript.utils import (
+    api_add_location, api_add_product, api_update_alias, load_json,
+    does_product_exists,
+)
 from scriptworker.client import get_task
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-
-from bouncerscript.utils import (
-    load_json, api_add_product, api_add_location, product_exists,
-    api_update_alias
-)
-from bouncerscript.task import (
-    validate_task_schema, get_task_action, get_task_server,
-)
 
 
 log = logging.getLogger(__name__)
 
 
 async def bouncer_submission(context):
-    """TODO"""
+    """Implement the bouncer submission behavior"""
     log.info("Preparing to submit information to bouncer")
 
     submissions = context.task["payload"]["submission_entries"]
     for product_name, pr_config in submissions.items():
-        if await product_exists(context, product_name):
+        if await does_product_exists(context, product_name):
             log.warning("Product {} already exists. Skipping ...".format(product_name))
             continue
 
         log.info("Adding {} ...".format(product_name))
-        # bug 1443104: temp hack that goes away when bug is solved
-        log.info("Bug 1443104 - adding en-US manually here to unblock 60.0b1")
-        if "en-US" not in context.task["payload"]["locales"]:
-            context.task["payload"]["locales"].append("en-US")
-
         await api_add_product(
             context,
             product_name=product_name,
@@ -48,15 +42,11 @@ async def bouncer_submission(context):
 
         log.info("Adding corresponding paths ...")
         for platform, path in pr_config["paths_per_bouncer_platform"].items():
-            # bug 1443104: temp hack that goes away when bug is solved
-            log.info("Bug 1443104 - doing s/updates/update manually here to unblock 60.0b1")
-            if "updates" in path:
-                path = path.replace("updates", "update")
             await api_add_location(context, product_name, platform, path)
 
 
 async def bouncer_aliases(context):
-    """TODO"""
+    """Implement the bouncer aliases behavior"""
     log.info("Preparing to update aliases within bouncer")
 
     aliases = context.task["payload"]["aliases_entries"]
@@ -65,7 +55,6 @@ async def bouncer_aliases(context):
         await api_update_alias(context, alias, product_name)
 
 
-# action_map {{{1
 action_map = {
     'submission': bouncer_submission,
     'aliases': bouncer_aliases,
@@ -98,7 +87,7 @@ def craft_logging_config(context):
     }
 
 
-def main(name=None, config_path=None, close_loop=True):
+def main(name=None, config_path=None):
     if name not in (None, '__main__'):
         return
     context = Context()
@@ -121,9 +110,7 @@ def main(name=None, config_path=None, close_loop=True):
             traceback.print_exc()
             sys.exit(exc.exit_code)
 
-    if close_loop:
-        # Loop cannot be reopen once closed. Not closing it allows to run several tests on main()
-        loop.close()
+    loop.close()
 
 
 main(name=__name__)

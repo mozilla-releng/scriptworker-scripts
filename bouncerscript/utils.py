@@ -1,11 +1,9 @@
 import aiohttp
 import json
 import logging
-import sys
-import traceback
-from xml.dom.minidom import parseString
-from urllib.parse import quote
 from scriptworker.utils import retry_async
+from urllib.parse import quote
+from xml.dom.minidom import parseString
 
 
 log = logging.getLogger(__name__)
@@ -17,7 +15,8 @@ def load_json(path):
 
 
 async def api_call(context, route, data, retry_config=None):
-    """TODO"""
+    """Generic api_call method that's to be used as underlying method by
+    all the functions working with the bouncer api"""
     retry_async_kwargs = dict(
         retry_exceptions=(aiohttp.ClientError,
                           aiohttp.ServerTimeoutError),
@@ -31,45 +30,40 @@ async def api_call(context, route, data, retry_config=None):
                              **retry_async_kwargs)
 
 
-async def _do_api_call(context, route, data, method='GET'):
-    """TODO"""
+async def _do_api_call(context, route, data, method='GET', session=None):
+    """Effective function doing the API call to the bouncer API endpoint"""
+    session = session or context.session
     bouncer_config = context.config["bouncer_config"][context.server]
     credentials = (bouncer_config["username"],
                    bouncer_config["password"])
     api_root = bouncer_config["api_root"]
     api_url = "%s/%s" % (api_root, route)
+    auth = aiohttp.BasicAuth(*credentials)
 
     kwargs = {'timeout': 60}
-    auth = None
     if data:
         kwargs['data'] = data
         method = 'POST'
-    if credentials:
-        auth = aiohttp.BasicAuth(*credentials)
-    async with aiohttp.ClientSession(auth=auth) as session:
-        log.info("Submitting to %s" % api_url)
-        try:
-            log.info("Performing a {} request to {} with kwargs {}".format(method,
-                                                                           api_url,
-                                                                           kwargs))
-            async with session.request(method, api_url, **kwargs) as resp:
-                log.info("Server response")
-                result = await resp.text()
-                log.info(result)
-                return result
-        except aiohttp.ClientError as e:
-            log.warning("Cannot access %s" % api_url)
-            traceback.print_exc(file=sys.stdout)
-            log.warning("Returned page source:")
-            log.warning(e.read())
-            raise
-        except aiohttp.ServerTimeoutError as e:
-            log.warning("Timed out accessing %s: %s" % (api_url, e))
-            raise
+
+    try:
+        log.info("Performing a {} request to {} with kwargs {}".format(method,
+                                                                       api_url,
+                                                                       kwargs))
+        async with session.request(method, api_url, auth=auth, **kwargs) as resp:
+            result = await resp.text()
+            log.info("Server response: {}".format(result))
+            return result
+    except aiohttp.ServerTimeoutError as e:
+        log.warning("Timed out accessing %s: %s" % (api_url, e))
+        raise
+    except aiohttp.ClientError as e:
+        log.warning("Cannot access %s: %s" % (api_url, e))
+        raise
 
 
-async def product_exists(context, product_name):
-    """TODO"""
+async def does_product_exists(context, product_name):
+    """Function to check if a specific product exists in bouncer already by
+    parsing the XML returned by the API endpoint."""
     log.info("Checking if {} already exists".format(product_name))
     res = await api_call(context, "product_show?product=%s" %
                          quote(product_name), data=None)
@@ -87,7 +81,8 @@ async def product_exists(context, product_name):
 
 
 async def api_add_product(context, product_name, add_locales, ssl_only=False):
-    """TODO"""
+    """Function to add a specific product to Bouncer, along with its corresponding
+    list of locales"""
     data = {
         "product": product_name,
     }
@@ -97,25 +92,25 @@ async def api_add_product(context, product_name, add_locales, ssl_only=False):
         # Send "true" as a string
         data["ssl_only"] = "true"
 
-    await api_call(context, "product_add/", data)
+    return await api_call(context, "product_add/", data)
 
 
 async def api_add_location(context, product_name, bouncer_platform, path):
-    """TODO"""
+    """Function to add locations per platform for a specific product"""
     data = {
         "product": product_name,
         "os": bouncer_platform,
         "path": path,
     }
 
-    await api_call(context, "location_add/", data)
+    return await api_call(context, "location_add/", data)
 
 
 async def api_update_alias(context, alias, product_name):
-    """TODO"""
+    """Function to update an aliases to a specific product"""
     data = {
         "alias": alias,
         "related_product": product_name,
     }
 
-    await api_call(context, "create_update_alias", data)
+    return await api_call(context, "create_update_alias", data)

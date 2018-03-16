@@ -76,7 +76,7 @@ def test_get_supported_actions():
             'aliases': '/some/other_path.json',
         },
     }
-    assert get_supported_actions(config) == ('submission', 'aliases')
+    assert sorted(get_supported_actions(config)) == sorted(('submission', 'aliases'))
 
 
 def test_validate_task_schema(submission_context, schema="submission"):
