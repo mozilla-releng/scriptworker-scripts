@@ -1,8 +1,6 @@
 import aiohttp
 import json
 import logging
-import sys
-import traceback
 from scriptworker.utils import retry_async
 from urllib.parse import quote
 from xml.dom.minidom import parseString
@@ -63,7 +61,7 @@ async def _do_api_call(context, route, data, method='GET', session=None):
         raise
 
 
-async def product_exists(context, product_name):
+async def does_product_exists(context, product_name):
     """Function to check if a specific product exists in bouncer already by
     parsing the XML returned by the API endpoint."""
     log.info("Checking if {} already exists".format(product_name))

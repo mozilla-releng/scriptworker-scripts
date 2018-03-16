@@ -7,7 +7,7 @@ import tempfile
 import bouncerscript.utils as butils
 from bouncerscript.utils import (
     load_json, api_update_alias, api_add_location, api_add_product,
-    product_exists, api_call, _do_api_call
+    does_product_exists, api_call, _do_api_call
 )
 from bouncerscript.task import get_task_action, get_task_server
 from bouncerscript.test import submission_context as context
@@ -123,7 +123,7 @@ def test_do_failed_with_TimeoutError_api_call(context, mocker, event_loop, fake_
     context.session.close()
 
 
-# product_exists {{{1
+# does_product_exists {{{1
 @pytest.mark.parametrize("product,response,expected", ((
     "fake-product",
     "<products/>",
@@ -138,12 +138,12 @@ def test_do_failed_with_TimeoutError_api_call(context, mocker, event_loop, fake_
     True,
 )))
 @pytest.mark.asyncio
-async def test_product_exists(context, mocker, product, response, expected):
+async def test_does_product_exists(context, mocker, product, response, expected):
     async def fake_api_call(context, route, data):
         return response
 
     mocker.patch.object(butils, 'api_call', new=fake_api_call)
-    assert await product_exists(context, product) == expected
+    assert await does_product_exists(context, product) == expected
 
 
 # api_add_product {{{1

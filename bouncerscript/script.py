@@ -12,7 +12,7 @@ from bouncerscript.task import (
 )
 from bouncerscript.utils import (
     api_add_location, api_add_product, api_update_alias, load_json,
-    product_exists,
+    does_product_exists,
 )
 from scriptworker.client import get_task
 from scriptworker.context import Context
@@ -28,7 +28,7 @@ async def bouncer_submission(context):
 
     submissions = context.task["payload"]["submission_entries"]
     for product_name, pr_config in submissions.items():
-        if await product_exists(context, product_name):
+        if await does_product_exists(context, product_name):
             log.warning("Product {} already exists. Skipping ...".format(product_name))
             continue
 
