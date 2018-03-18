@@ -1,8 +1,7 @@
-import json
 import logging
 import re
 
-import scriptworker.client
+from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 log = logging.getLogger(__name__)
@@ -55,9 +54,8 @@ def get_supported_actions(script_config):
     return tuple(script_config['schema_files'].keys())
 
 
-def validate_task_schema(context, action):
+def validate_task_schema(context):
     """Perform a schema validation check against taks definition"""
-    schema_file = context.config['schema_files'][action]
-    with open(schema_file) as fh:
-        task_schema = json.load(fh)
-    scriptworker.client.validate_json_schema(context.task, task_schema)
+    action = get_task_action(context.task, context.config)
+    schema_key = "schema_files.{}".format(action)
+    client.validate_task_schema(context, schema_key=schema_key)
