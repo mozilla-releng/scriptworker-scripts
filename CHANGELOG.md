@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Removed
 - `script.usage()`, now handled by scriptworker
 - `task.validate_task_schema()` now handled by scriptworker
+- `load_json` now handled by scriptworker (moved it temporarily under tests until integration tests are added)
 
 
 ## [1.0.0] - 2018-03-12

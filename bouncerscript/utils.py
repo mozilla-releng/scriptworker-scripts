@@ -1,5 +1,4 @@
 import aiohttp
-import json
 import logging
 from scriptworker.utils import retry_async
 from urllib.parse import quote
@@ -7,11 +6,6 @@ from xml.dom.minidom import parseString
 
 
 log = logging.getLogger(__name__)
-
-
-def load_json(path):
-    with open(path, "r") as fh:
-        return json.load(fh)
 
 
 async def api_call(context, route, data, retry_config=None):
