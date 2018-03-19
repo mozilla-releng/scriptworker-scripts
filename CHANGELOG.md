@@ -2,11 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [2.0.0] - unreleased
+## [3.0.0]
+### Changed
+- switched to V9 Creator and Submitter for releases
+
+## [2.0.0]
 ### Added
 - added `balrogscript.constants` module
 - added support for `submit-toplevel` and `schedule` actions, for releases.
-- switched to V9 Creator and Submitter for releases
 
 ### Changed
 - the `schema_file` string is now a `schema_files` dict in config.
