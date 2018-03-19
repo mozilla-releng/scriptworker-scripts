@@ -1,9 +1,9 @@
 import aiohttp
 import asyncio
+import json
 import pytest
 
 from scriptworker.context import Context
-from bouncerscript.utils import load_json
 from scriptworker.test import event_loop
 
 
@@ -68,3 +68,8 @@ def fake_TimeoutError_throwing_session(event_loop):
     session = aiohttp.ClientSession()
     session._request = _fake_request
     return session
+
+
+def load_json(path):
+    with open(path, "r") as fh:
+        return json.load(fh)

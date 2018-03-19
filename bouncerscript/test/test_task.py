@@ -3,10 +3,7 @@ import pytest
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from bouncerscript.task import (
-    get_supported_actions,
-    get_task_server,
-    get_task_action,
-    validate_task_schema,
+    get_supported_actions, get_task_server, get_task_action, validate_task_schema,
 )
 from bouncerscript.test import (
     submission_context
@@ -69,6 +66,7 @@ def test_get_task_action(scopes, expected, raises):
         assert expected == get_task_action(task, config)
 
 
+# get_supported_actions {{{1
 def test_get_supported_actions():
     config = {
         'schema_files': {
@@ -79,5 +77,6 @@ def test_get_supported_actions():
     assert sorted(get_supported_actions(config)) == sorted(('submission', 'aliases'))
 
 
+# validate_task_schema{{{1
 def test_validate_task_schema(submission_context, schema="submission"):
-    validate_task_schema(submission_context, schema)
+    validate_task_schema(submission_context)

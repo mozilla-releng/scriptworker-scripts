@@ -6,14 +6,14 @@ import tempfile
 
 import bouncerscript.utils as butils
 from bouncerscript.utils import (
-    load_json, api_update_alias, api_add_location, api_add_product,
+    api_update_alias, api_add_location, api_add_product,
     does_product_exists, api_call, _do_api_call
 )
 from bouncerscript.task import get_task_action, get_task_server
 from bouncerscript.test import submission_context as context
 from bouncerscript.test import (
     noop_async, fake_ClientError_throwing_session,
-    fake_TimeoutError_throwing_session
+    fake_TimeoutError_throwing_session, load_json
 )
 from scriptworker.test import event_loop, fake_session, fake_session_500
 import scriptworker.utils as sutils
