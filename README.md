@@ -15,7 +15,7 @@ Beetmoverscript README
 7. Wait for that file to be synchronized across all puppet instances (emails arrive to confirm that)
 8. Tweak the `beetmoverscript` version under [beetmoverworker module](https://hg.mozilla.org/build/puppet/file/default/modules/beetmover_scriptworker/manifests/init.pp#l28) to reflect the new value
 9. Push puppet bump to `default` branch, wait for tests to run and confirmation to arrive in `#releng`. Merge it to `production` after that.
-10. There are currently *four* beetmoverworkers. Ssh to each and single one of them and run `puppet agent --test` as `root` to enforce the deployment of the newest catalog. Can also wait for the cron job to run puppet to deploy new changes every 30 mins or so.
+10. There are currently fifteen prod and ten dev beetmoverworkers. Ssh to each and single one of them (csshX?) and run `puppet agent --test` as `root` to enforce the deployment of the newest catalog. Can also wait for the cron job to run puppet to deploy new changes every 30 mins or so.
 
 
 ## install

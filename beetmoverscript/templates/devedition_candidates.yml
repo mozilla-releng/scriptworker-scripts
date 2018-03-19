@@ -124,13 +124,13 @@ mapping:
       destinations:
         - SOURCE.asc
     source.tar.xz:
-      s3_key: source.tar.xz
+      s3_key: source/firefox-{{ version}}.source.tar.xz
       destinations:
-        - source.tar.xz
+        - source/firefox-{{ version}}.source.tar.xz
     source.tar.xz.asc:
-      s3_key: source.tar.xz.asc
+      s3_key: source/firefox-{{ version}}.source.tar.xz.asc
       destinations:
-        - source.tar.xz.asc
+        - source/firefox-{{ version}}.source.tar.xz.asc
     SHA256SUMS:
       s3_key: SHA256SUMS
       destinations:
