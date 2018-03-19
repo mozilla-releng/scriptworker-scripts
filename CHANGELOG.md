@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - added `balrogscript.constants` module
 - added support for `submit-toplevel` and `schedule` actions, for releases.
+- switched to V9 Creator and Submitter for releases
 
 ### Changed
 - the `schema_file` string is now a `schema_files` dict in config.
