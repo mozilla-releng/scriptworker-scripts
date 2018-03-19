@@ -198,7 +198,6 @@ def test_create_pusher(config):
         'bouncerServer': 'download',
         'enUSPlatforms': ['foo', 'bar'],
         'hashFunction': 'sha512',
-        'openURL': None,
         'partialUpdates': {},
         'requiresMirrors': False
     },
@@ -234,7 +233,6 @@ def test_create_pusher(config):
         'bouncerServer': 'download',
         'enUSPlatforms': ['foo', 'bar'],
         'hashFunction': 'sha512',
-        'openURL': None,
         'partialUpdates': {
             '40': {'buildNumber': '2'},
             '50': {'buildNumber': '4'},
