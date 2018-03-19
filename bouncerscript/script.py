@@ -2,7 +2,6 @@
 """ Bouncer main script
 """
 import logging
-import sys
 
 from bouncerscript.task import (
     get_task_action, get_task_server, validate_task_schema
@@ -11,6 +10,7 @@ from bouncerscript.utils import (
     api_add_location, api_add_product, api_update_alias, does_product_exists,
 )
 from scriptworker import client
+from scriptworker.exceptions import TaskVerificationError
 
 
 log = logging.getLogger(__name__)
@@ -67,8 +67,7 @@ async def async_main(context):
     if action_map.get(context.action):
         await action_map[context.action](context)
     else:
-        log.critical("Unknown action: {}!".format(context.action))
-        sys.exit(3)
+        raise TaskVerificationError("Unknown action: {}!".format(context.action))
 
 
 def main(config_path=None):

@@ -12,7 +12,7 @@ from scriptworker.test import (
     event_loop, fake_session,
 )
 from scriptworker.exceptions import (
-    ScriptWorkerTaskException,
+    ScriptWorkerTaskException, TaskVerificationError
 )
 
 
@@ -66,7 +66,5 @@ async def test_async_main(submission_context, mocker, event_loop):
     await async_main(submission_context)
 
     mocker.patch.object(bscript, 'action_map', new={})
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
+    with pytest.raises(TaskVerificationError):
         await async_main(submission_context)
-        assert pytest_wrapped_e.type == SystemExit
-        assert pytest_wrapped_e.value.code == 3
