@@ -139,10 +139,6 @@ def submit_toplevel(task, config, balrog_auth):
             version, build_number = v.split("build")
             partials[version] = {"buildNumber": build_number}
 
-    # XXX WNP - support someday?
-    # currently we create and set these manually.
-    open_url = None
-
     creator = create_creator(
         api_root=config['api_root'], auth=auth,
         dummy=config['dummy'],
@@ -165,7 +161,6 @@ def submit_toplevel(task, config, balrog_auth):
         bouncerServer=task['payload']['download_domain'],
         enUSPlatforms=task['payload']['platforms'],
         hashFunction='sha512',
-        openURL=open_url,
         partialUpdates=partials,
         requiresMirrors=task['payload']['require_mirrors'],
     ))
