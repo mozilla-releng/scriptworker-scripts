@@ -2,7 +2,9 @@ import logging
 import re
 
 from scriptworker import client
-from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker.exceptions import (
+    ScriptWorkerTaskException, TaskVerificationError
+)
 
 log = logging.getLogger(__name__)
 
@@ -70,5 +72,11 @@ def preflight_check(context):
     aliases = context.task["payload"]["aliases_entries"]
     allowed_regexes = context.config['aliases_regexes']
 
-    return all([matches(product_name, allowed_regexes[alias])
-                for alias, product_name in aliases.items()])
+    validations = []
+    for alias, product_name in aliases.items():
+        if alias not in allowed_regexes.keys():
+            raise TaskVerificationError("Unrecognized alias")
+
+        validations.append(matches(product_name, allowed_regexes[alias]))
+
+    return all(validations)

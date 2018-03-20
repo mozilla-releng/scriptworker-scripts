@@ -1,6 +1,8 @@
 import pytest
 
-from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker.exceptions import (
+    ScriptWorkerTaskException, TaskVerificationError
+)
 
 from bouncerscript.task import (
     get_supported_actions, get_task_server, get_task_action,
@@ -262,3 +264,13 @@ def test_preflight_check(aliases_context, entries, expected):
     context = aliases_context
     context.task["payload"]["aliases_entries"] = entries
     assert preflight_check(context) == expected
+
+
+def test_error_preflight_check(aliases_context):
+    context = aliases_context
+    context.task["payload"]["aliases_entries"] = {
+        'corrupt-alias': 'corrupt-entry'
+    }
+
+    with pytest.raises(TaskVerificationError):
+        preflight_check(context)
