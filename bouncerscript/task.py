@@ -50,6 +50,10 @@ def get_task_action(task, script_config):
     return action
 
 
+def matches(name, pattern):
+    return re.match(pattern, name)
+
+
 def get_supported_actions(script_config):
     return tuple(script_config['schema_files'].keys())
 
@@ -59,3 +63,12 @@ def validate_task_schema(context):
     action = get_task_action(context.task, context.config)
     schema_key = "schema_files.{}".format(action)
     client.validate_task_schema(context, schema_key=schema_key)
+
+
+def preflight_check(context):
+    """Make sure we don't do any cross-product/channel alias update"""
+    aliases = context.task["payload"]["aliases_entries"]
+    allowed_regexes = context.config['aliases_regexes']
+
+    return all([matches(product_name, allowed_regexes[alias])
+                for alias, product_name in aliases.items()])

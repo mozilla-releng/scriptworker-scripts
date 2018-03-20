@@ -1,6 +1,5 @@
 {
-        "work_dir": "some/work/dir/",
-        "schema_file": "path/to/schema/file",
+        "work_dir": "bouncerscript/test/test_work_dir",
         "verbose": true,
         "bouncer_config": {
             "project:releng:bouncer:server:staging": {
@@ -8,12 +7,6 @@
                 "timeout_in_seconds": 60,
                 "username": "some-username",
                 "password": "some-password"
-            },
-            "project:releng:bouncer:server:production": {
-                "api_root": "some-production-root",
-                "timeout_in_seconds": 60,
-                "username": "some-production-username",
-                "password": "some-production-password"
             }
       },
 
@@ -41,5 +34,4 @@
              "firefox-sha1": "^Firefox-\\d+\\.\\d+(\\.\\d+)?esr-sha1$",
              "firefox-sha1-ssl": "^Firefox-\\d+\\.\\d+(\\.\\d+)?esr-sha1$"
       }
-
 }
