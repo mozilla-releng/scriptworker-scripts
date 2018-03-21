@@ -15,9 +15,9 @@
     ],
     "payload": {
 	"aliases_entries": {
-	  "firefox-devedition-latest": "Devedition-60.0b2",
-	  "firefox-devedition-latest-ssl": "Devedition-60.0b2-SSL",
-	  "firefox-devedition-stub": "Devedition-60.0b2-stub"
+	  "firefox-devedition-latest": "Devedition-99.0b2",
+	  "firefox-devedition-latest-ssl": "Devedition-99.0b2-SSL",
+	  "firefox-devedition-stub": "Devedition-99.0b2-stub"
 	}
     }
 }

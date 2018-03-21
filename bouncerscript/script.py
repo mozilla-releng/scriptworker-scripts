@@ -4,7 +4,7 @@
 import logging
 
 from bouncerscript.task import (
-    get_task_action, get_task_server, validate_task_schema
+    get_task_action, get_task_server, validate_task_schema, check_product_names_match_aliases
 )
 from bouncerscript.utils import (
     api_add_location, api_add_product, api_update_alias, does_product_exists,
@@ -41,9 +41,12 @@ async def bouncer_submission(context):
 
 async def bouncer_aliases(context):
     """Implement the bouncer aliases behavior"""
-    log.info("Preparing to update aliases within bouncer")
-
     aliases = context.task["payload"]["aliases_entries"]
+
+    log.info("Sanity check versions and aliases before updating ...")
+    check_product_names_match_aliases(context)
+
+    log.info("Preparing to update aliases within bouncer")
     for alias, product_name in aliases.items():
         log.info("Updating {} with {} product".format(alias, product_name))
         await api_update_alias(context, alias, product_name)

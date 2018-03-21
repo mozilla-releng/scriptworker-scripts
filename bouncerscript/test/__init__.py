@@ -18,12 +18,12 @@ async def noop_async(*args, **kwargs):
     pass
 
 
-async def return_true_async(context, product):
+async def return_true(*args):
     return True
 
 
-def get_fake_valid_config(jobtype):
-    return load_json(path="bouncerscript/test/fake_{}_config.json".format(jobtype))
+def get_fake_valid_config():
+    return load_json(path="bouncerscript/test/fake_config.json")
 
 
 def get_fake_valid_task(jobtype):
@@ -34,7 +34,7 @@ def get_fake_valid_task(jobtype):
 def submission_context():
     context = Context()
     context.task = get_fake_valid_task("submission")
-    context.config = get_fake_valid_config("submission")
+    context.config = get_fake_valid_config()
 
     yield context
 
@@ -43,7 +43,7 @@ def submission_context():
 def aliases_context():
     context = Context()
     context.task = get_fake_valid_task("aliases")
-    context.config = get_fake_valid_config("aliases")
+    context.config = get_fake_valid_config()
 
     yield context
 

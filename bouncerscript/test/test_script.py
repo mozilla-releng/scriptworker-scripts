@@ -6,7 +6,7 @@ from bouncerscript.script import (
     main, bouncer_submission, bouncer_aliases, async_main
 )
 from bouncerscript.test import (
-    submission_context, noop_async, aliases_context, return_true_async
+    submission_context, noop_async, aliases_context, return_true
 )
 from scriptworker.test import (
     event_loop, fake_session,
@@ -27,11 +27,11 @@ def test_main(submission_context, event_loop, fake_session):
         raise ScriptWorkerTaskException("This is wrong, the answer is 42")
 
     with mock.patch('bouncerscript.script.async_main', new=noop_async):
-        main(config_path='bouncerscript/test/fake_submission_config.json')
+        main(config_path='bouncerscript/test/fake_config.json')
 
     with mock.patch('bouncerscript.script.async_main', new=fake_async_main_with_exception):
         try:
-            main(config_path='bouncerscript/test/fake_submission_config.json')
+            main(config_path='bouncerscript/test/fake_config.json')
         except SystemExit as exc:
             assert exc.code == 1
 
@@ -44,7 +44,7 @@ async def test_bouncer_submission(submission_context, mocker):
     mocker.patch.object(bscript, 'api_add_location', new=noop_async)
     await bouncer_submission(submission_context)
 
-    mocker.patch.object(bscript, 'does_product_exists', new=return_true_async)
+    mocker.patch.object(bscript, 'does_product_exists', new=return_true)
     await bouncer_submission(submission_context)
 
 
