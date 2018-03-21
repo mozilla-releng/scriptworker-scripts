@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.2.0] - 2018-03-20
+## [1.2.1] - 2018-03-21
 ### Added
 - bouncer aliases preflight checks - making sure the aliases match certain regexes
 
