@@ -72,12 +72,16 @@ RELEASE_BRANCHES = (
     'mozilla-beta',
     'mozilla-release',
     'mozilla-esr52'
+    'comm-central',
+    'comm-beta',
+    'comm-esr60',
 )
 
 RESTRICTED_BUCKET_PATHS = {
     'nightly': [
         'pub/mobile/nightly',
         'pub/firefox/nightly',
+        'pub/thunderbird/nightly',
     ],
     'release': [
         'pub/devedition/candidates',
@@ -86,6 +90,8 @@ RESTRICTED_BUCKET_PATHS = {
         'pub/firefox/releases',
         'pub/mobile/candidates',
         'pub/mobile/releases',
+        'pub/thunderbird/candidates',
+        'pub/thunderbird/releases',
     ],
     'dep': [
         'pub/devedition/candidates',
@@ -96,6 +102,9 @@ RESTRICTED_BUCKET_PATHS = {
         'pub/mobile/nightly',
         'pub/mobile/candidates',
         'pub/mobile/releases',
+        'pub/thunderbird/candidates',
+        'pub/thunderbird/releases',
+        'pub/thunderbird/nightly',
     ]
 }
 
@@ -139,4 +148,5 @@ PRODUCT_TO_PATH = {
     'fennec': 'pub/mobile/',
     'devedition': 'pub/devedition/',
     'firefox': 'pub/firefox/',
+    'thunderbird': 'pub/thunderbird/',
 }
