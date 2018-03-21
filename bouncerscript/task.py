@@ -5,6 +5,7 @@ from scriptworker import client
 from scriptworker.exceptions import (
     ScriptWorkerTaskException, TaskVerificationError
 )
+from bouncerscript.constants import ALIASES_REGEXES
 
 log = logging.getLogger(__name__)
 
@@ -70,14 +71,13 @@ def validate_task_schema(context):
 def check_product_names_match_aliases(context):
     """Make sure we don't do any cross-product/channel alias update"""
     aliases = context.task["payload"]["aliases_entries"]
-    allowed_regexes = context.config['aliases_regexes']
 
     validations = []
     for alias, product_name in aliases.items():
-        if alias not in allowed_regexes.keys():
+        if alias not in ALIASES_REGEXES.keys():
             raise TaskVerificationError("Unrecognized alias:{}".format(alias))
 
-        validations.append(matches(product_name, allowed_regexes[alias]))
+        validations.append(matches(product_name, ALIASES_REGEXES[alias]))
 
     if not all(validations):
         raise TaskVerificationError("The product/alias pairs are corrupt: {}".format(aliases))
