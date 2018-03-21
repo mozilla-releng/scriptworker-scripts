@@ -6,8 +6,7 @@ from bouncerscript.script import (
     main, bouncer_submission, bouncer_aliases, async_main
 )
 from bouncerscript.test import (
-    submission_context, noop_async, aliases_context,
-    return_true, noop_sync
+    submission_context, noop_async, aliases_context, return_true
 )
 from scriptworker.test import (
     event_loop, fake_session,
@@ -54,11 +53,6 @@ async def test_bouncer_submission(submission_context, mocker):
 async def test_bouncer_aliases(aliases_context, mocker):
     mocker.patch.object(bscript, 'api_update_alias', new=noop_async)
     await bouncer_aliases(aliases_context)
-
-    mocker.patch.object(bscript, 'check_product_names_match_aliases', new=noop_sync)
-    mocker.patch.object(bscript, 'api_update_alias', new=noop_async)
-    with pytest.raises(TaskVerificationError):
-        await bouncer_aliases(aliases_context)
 
 
 # async_main {{{1

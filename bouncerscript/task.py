@@ -79,4 +79,5 @@ def check_product_names_match_aliases(context):
 
         validations.append(matches(product_name, allowed_regexes[alias]))
 
-    return all(validations)
+    if not all(validations):
+        raise TaskVerificationError("The product/alias pairs are corrupt: {}".format(aliases))

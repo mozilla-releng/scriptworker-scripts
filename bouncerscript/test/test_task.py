@@ -86,191 +86,188 @@ def test_validate_task_schema(context, schema="submission"):
 
 
 # check_product_names_match_aliases {{{1
-@pytest.mark.parametrize("entries,expected", (({
+@pytest.mark.parametrize("entries,raises", (({
     "firefox-devedition-latest": "Devedition-70.0b2",
-}, True
+}, False
 ), ({
     "firefox-devedition-latest-ssl": "Devedition-70.0b2-SSL",
-}, True
+}, False
 ), ({
     "firefox-devedition-stub": "Devedition-70.0b2-stub"
-}, True
+}, False
 ), ({
     "firefox-devedition-latest": "Devedition-70.0",
-}, False
+}, True
 ), ({
     "firefox-devedition-latest-ssl": "Devedition-70.0.1-SSL",
-}, False
+}, True
 ), ({
     "firefox-devedition-stub": "Devedition-70.0-stub"
-}, False
-), ({
-    "firefox-devedition-latest": "Devedition-70.0b2",
-    "firefox-devedition-latest-ssl": "Devedition-70.0b2-SSL",
-    "firefox-devedition-stub": "Devedition-70.0b2-stub"
 }, True
 ), ({
     "firefox-devedition-latest": "Devedition-70.0b2",
     "firefox-devedition-latest-ssl": "Devedition-70.0b2-SSL",
-    "firefox-devedition-stub": "Devedition-70.0-stub"
+    "firefox-devedition-stub": "Devedition-70.0b2-stub"
 }, False
+), ({
+    "firefox-devedition-latest": "Devedition-70.0b2",
+    "firefox-devedition-latest-ssl": "Devedition-70.0b2-SSL",
+    "firefox-devedition-stub": "Devedition-70.0-stub"
+}, True
 ), ({
     "firefox-devedition-latest": "Devedition-70.02",
     "firefox-devedition-latest-ssl": "Devedition-70.0b2-SSL",
     "firefox-devedition-stub": "Devedition-70.0.1-stub"
-}, False
+}, True
 ), ({
     "firefox-beta-latest": "Firefox-70.0b2",
-}, True
+}, False
 ), ({
     "firefox-beta-latest-ssl": "Firefox-70.0b2-SSL",
-}, True
+}, False
 ), ({
     "firefox-beta-stub": "Firefox-70.0b2-stub"
-}, True
+}, False
 ), ({
     "firefox-beta-latest": "Firefox-70.0",
-}, False
+}, True
 ), ({
     "firefox-beta-latest-ssl": "Firefox-70.0.1-SSL",
-}, False
+}, True
 ), ({
     "firefox-beta-stub": "Firefox-70.0-stub"
-}, False
-), ({
-    "firefox-beta-latest": "Firefox-70.0b2",
-    "firefox-beta-latest-ssl": "Firefox-70.0b2-SSL",
-    "firefox-beta-stub": "Firefox-70.0b2-stub"
 }, True
 ), ({
     "firefox-beta-latest": "Firefox-70.0b2",
     "firefox-beta-latest-ssl": "Firefox-70.0b2-SSL",
-    "firefox-beta-stub": "Firefox-70.0-stub"
+    "firefox-beta-stub": "Firefox-70.0b2-stub"
 }, False
+), ({
+    "firefox-beta-latest": "Firefox-70.0b2",
+    "firefox-beta-latest-ssl": "Firefox-70.0b2-SSL",
+    "firefox-beta-stub": "Firefox-70.0-stub"
+}, True
 ), ({
     "firefox-beta-latest": "Firefox-70.02",
     "firefox-beta-latest-ssl": "Firefox-70.0b2-SSL",
     "firefox-beta-stub": "Firefox-70.0.1-stub"
-}, False
+}, True
 ), ({
     "firefox-latest": "Firefox-70.0",
-}, True
+}, False
 ), ({
     "firefox-latest-ssl": "Firefox-70.0.1-SSL",
-}, True
+}, False
 ), ({
     "firefox-stub": "Firefox-70.0.2-stub"
-}, True
+}, False
 ), ({
     "firefox-latest": "Firefox-70.0b1",
-}, False
+}, True
 ), ({
     "firefox-latest-ssl": "Firefox-70.0b1-SSL",
-}, False
+}, True
 ), ({
     "firefox-stub": "Firefox-70-stub"
-}, False
+}, True
 ), ({
     "firefox-latest": "Firefox-70.0",
     "firefox-latest-ssl": "Firefox-70.0-SSL",
     "firefox-stub": "Firefox-70.0-stub"
-}, True
+}, False
 ), ({
     "firefox-latest": "Firefox-70.0",
     "firefox-latest-ssl": "Firefox-70.0-SSL",
     "firefox-stub": "Firefox-70-stub"
-}, False
+}, True
 ), ({
     "firefox-latest": "Firefox-70.02",
     "firefox-latest-ssl": "Firefox-70.0b2-SSL",
     "firefox-stub": "Firefox-70-stub"
-}, False
+}, True
 ), ({
     "firefox-latest-ssl": "Firefox-59.0b14-SSL",
     "firefox-latest": "Firefox-59.0b14",
     "firefox-stub": "Firefox-59.0b14-stub"
-}, False
+}, True
 ), ({
     "firefox-esr-latest": "Firefox-70.1.0esr",
-}, True
+}, False
 ), ({
     "firefox-esr-latest-ssl": "Firefox-70.1.2esr-SSL",
-}, True
+}, False
 ), ({
     "firefox-esr-latest": "Firefox-70.2.1",
-}, False
+}, True
 ), ({
     "firefox-esr-latest-ssl": "Firefox-70.0b1-SSL",
-}, False
+}, True
 ), ({
     "firefox-esr-latest": "Firefox-70.1.0esr",
     "firefox-esr-latest-ssl": "Firefox-70.1.2esr-SSL",
-}, True
+}, False
 ), ({
     "firefox-esr-latest": "Firefox-70.1.0esr",
     "firefox-esr-latest-ssl": "Firefox-70.1.2-SSL",
-}, False
+}, True
 ), ({
     "firefox-esr-latest": "Firefox-70.1.0esr",
     "firefox-esr-latest-ssl": "Firefox-70.0b1-SSL",
-}, False
+}, True
 ), ({
     "firefox-sha1": "Firefox-52.7.2esr-sha1",
-}, True
+}, False
 ), ({
     "firefox-sha1-ssl": "Firefox-52.7.2esr-sha1",
-}, True
+}, False
 ), ({
     "firefox-sha1": "Firefox-70.1.0esr",
-}, False
+}, True
 ), ({
     "firefox-sha1-ssl": "Firefox-70.1.2esr",
-}, False
+}, True
 ), ({
     "firefox-sha1": "Firefox-52.7.2esr-sha1",
     "firefox-sha1-ssl": "Firefox-70.1.2esr-sha1",
-}, True
+}, False
 ), ({
     "firefox-sha1": "Firefox-70.1.0esr",
     "firefox-sha1-ssl": "Firefox-70.1.2-sha1",
-}, False
+}, True
 ), ({
     "firefox-sha1": "Firefox-70.1.0esr",
     "firefox-sha1-ssl": "Firefox-70.1.2esr-sha1",
-}, False
+}, True
 ), ({
     "fennec-beta-latest": "Fennec-70.0b2",
-}, True
+}, False
 ), ({
     "fennec-latest": "Fennec-70.0",
-}, True
+}, False
 ), ({
     "fennec-beta-latest": "Fennec-70.0",
-}, False
+}, True
 ), ({
     "fennec-latest": "Fennec-70.0.1-SSL",
-}, False
+}, True
 ), ({
     "fennec-beta-latest": "Fennec-70.0.1",
-}, False
+}, True
 ), ({
     "fennec-latest": "Fennec-70.0b1",
-}, False
+}, True
 ), ({
     "fennec-latest": "Fennec-70.0.1",
+}, False
+), ({
+    "corrupt-alias": "corrupt-entry",
 }, True
 )))
-def test_check_product_names_match_aliases(aliases_context, entries, expected):
+def test_check_product_names_match_aliases(aliases_context, entries, raises):
     context = aliases_context
     context.task["payload"]["aliases_entries"] = entries
-    assert check_product_names_match_aliases(context) == expected
-
-
-def test_error_check_product_names_match_aliases(aliases_context):
-    context = aliases_context
-    context.task["payload"]["aliases_entries"] = {
-        'corrupt-alias': 'corrupt-entry'
-    }
-
-    with pytest.raises(TaskVerificationError):
+    if raises:
+        with pytest.raises(TaskVerificationError):
+            check_product_names_match_aliases(context)
+    else:
         check_product_names_match_aliases(context)
