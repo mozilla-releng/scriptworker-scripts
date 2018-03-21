@@ -67,7 +67,7 @@ def validate_task_schema(context):
     client.validate_task_schema(context, schema_key=schema_key)
 
 
-def preflight_check(context):
+def check_product_names_match_aliases(context):
     """Make sure we don't do any cross-product/channel alias update"""
     aliases = context.task["payload"]["aliases_entries"]
     allowed_regexes = context.config['aliases_regexes']
@@ -75,7 +75,7 @@ def preflight_check(context):
     validations = []
     for alias, product_name in aliases.items():
         if alias not in allowed_regexes.keys():
-            raise TaskVerificationError("Unrecognized alias")
+            raise TaskVerificationError("Unrecognized alias:{}".format(alias))
 
         validations.append(matches(product_name, allowed_regexes[alias]))
 

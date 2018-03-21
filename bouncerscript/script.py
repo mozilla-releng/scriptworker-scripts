@@ -4,7 +4,7 @@
 import logging
 
 from bouncerscript.task import (
-    get_task_action, get_task_server, validate_task_schema, preflight_check
+    get_task_action, get_task_server, validate_task_schema, check_product_names_match_aliases
 )
 from bouncerscript.utils import (
     api_add_location, api_add_product, api_update_alias, does_product_exists,
@@ -43,7 +43,7 @@ async def bouncer_aliases(context):
     """Implement the bouncer aliases behavior"""
     aliases = context.task["payload"]["aliases_entries"]
     log.info("Sanity check versions and aliases before updating ...")
-    if not preflight_check(context):
+    if not check_product_names_match_aliases(context):
         raise TaskVerificationError("The product/alias pairs are corrupt")
 
     log.info("Preparing to update aliases within bouncer")

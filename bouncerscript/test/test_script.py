@@ -55,7 +55,7 @@ async def test_bouncer_aliases(aliases_context, mocker):
     mocker.patch.object(bscript, 'api_update_alias', new=noop_async)
     await bouncer_aliases(aliases_context)
 
-    mocker.patch.object(bscript, 'preflight_check', new=noop_sync)
+    mocker.patch.object(bscript, 'check_product_names_match_aliases', new=noop_sync)
     mocker.patch.object(bscript, 'api_update_alias', new=noop_async)
     with pytest.raises(TaskVerificationError):
         await bouncer_aliases(aliases_context)

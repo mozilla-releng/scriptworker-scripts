@@ -6,7 +6,7 @@ from scriptworker.exceptions import (
 
 from bouncerscript.task import (
     get_supported_actions, get_task_server, get_task_action,
-    validate_task_schema, preflight_check
+    validate_task_schema, check_product_names_match_aliases
 )
 from bouncerscript.test import submission_context as context
 from bouncerscript.test import aliases_context
@@ -85,7 +85,7 @@ def test_validate_task_schema(context, schema="submission"):
     validate_task_schema(context)
 
 
-# preflight_check {{{1
+# check_product_names_match_aliases {{{1
 @pytest.mark.parametrize("entries,expected", (({
     "firefox-devedition-latest": "Devedition-70.0b2",
 }, True
@@ -260,17 +260,17 @@ def test_validate_task_schema(context, schema="submission"):
     "fennec-latest": "Fennec-70.0.1",
 }, True
 )))
-def test_preflight_check(aliases_context, entries, expected):
+def test_check_product_names_match_aliases(aliases_context, entries, expected):
     context = aliases_context
     context.task["payload"]["aliases_entries"] = entries
-    assert preflight_check(context) == expected
+    assert check_product_names_match_aliases(context) == expected
 
 
-def test_error_preflight_check(aliases_context):
+def test_error_check_product_names_match_aliases(aliases_context):
     context = aliases_context
     context.task["payload"]["aliases_entries"] = {
         'corrupt-alias': 'corrupt-entry'
     }
 
     with pytest.raises(TaskVerificationError):
-        preflight_check(context)
+        check_product_names_match_aliases(context)
