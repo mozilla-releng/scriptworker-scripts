@@ -118,6 +118,10 @@ RELEASE_ACTIONS = (
     'push-to-releases',
 )
 
+PARTNER_REPACK_ACTIONS = (
+    'push-to-partner',
+)
+
 # XXX this is a fairly clunky way of specifying which files to copy from
 # candidates to releases -- let's find a nicer way of doing this.
 # XXX if we keep this, let's make it configurable? overridable in config?

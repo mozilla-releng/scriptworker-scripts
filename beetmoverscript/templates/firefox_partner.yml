@@ -1,0 +1,42 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps Firefox artifacts to pretty names for en-US"
+    owner: "release@mozilla.com"
+
+s3_bucket_path: pub/firefox/candidates/{{ version }}-candidates/build{{ build_number }}/
+
+mapping:
+{% for locale in ['en-US'] %}
+  {{ locale }}:
+  {% if platform in ["linux-i686", "linux-x86_64"] %}
+    target.tar.bz2:
+      s3_key: {{ platform }}-EME-free/{{ locale }}/firefox-{{ version }}.tar.bz2
+      destinations:
+        - {{ platform }}-EME-free/{{ locale }}/firefox-{{ version }}.tar.bz2
+    target.tar.bz2.asc:
+      s3_key: {{ platform }}-EME-free/{{ locale }}/firefox-{{ version }}.tar.bz2.asc
+      destinations:
+        - {{ platform }}-EME-free/{{ locale }}/firefox-{{ version }}.tar.bz2.asc
+  {% endif %}
+  {% if platform in ["win32", "win64"] %}
+    target.installer.exe:
+      s3_key: {{ platform }}-EME-free/{{ locale }}/Firefox Setup {{ version }}.exe
+      destinations:
+        - {{ platform }}-EME-free/{{ locale }}/Firefox Setup {{ version }}.exe
+    target.installer.exe.asc:
+      s3_key: {{ platform }}-EME-free/{{ locale }}/Firefox Setup {{ version }}.exe.asc
+      destinations:
+        - {{ platform }}-EME-free/{{ locale }}/Firefox Setup {{ version }}.exe.asc
+  {% endif %}
+  {% if platform in ["mac"] %}
+    target.dmg:
+      s3_key: {{ platform }}-EME-free/{{ locale }}/Firefox {{ version }}.dmg
+      destinations:
+        - {{ platform }}-EME-free/{{ locale }}/Firefox {{ version }}.dmg
+    target.dmg.asc:
+      s3_key: {{ platform }}-EME-free/{{ locale }}/Firefox {{ version }}.dmg.asc
+      destinations:
+        - {{ platform }}-EME-free/{{ locale }}/Firefox {{ version }}.dmg.asc
+  {% endif %}
+{% endfor %}

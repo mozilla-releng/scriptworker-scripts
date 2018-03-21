@@ -193,10 +193,12 @@ def list_bucket_objects(context, s3_resource, prefix):
 
 # action_map {{{1
 action_map = {
+    # push to partner repacks is at this point identical to push_to_nightly
+    'push-to-partner': push_to_nightly,
     'push-to-nightly': push_to_nightly,
     # push to candidates is at this point identical to push_to_nightly
     'push-to-candidates': push_to_nightly,
-    'push-to-releases': push_to_releases
+    'push-to-releases': push_to_releases,
 }
 
 

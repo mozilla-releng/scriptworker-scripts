@@ -12,7 +12,7 @@ import yaml
 from beetmoverscript.constants import (
     HASH_BLOCK_SIZE,
     RELEASE_ACTIONS, PROMOTION_ACTIONS, PRODUCT_TO_PATH,
-    NORMALIZED_FILENAME_PLATFORMS,
+    NORMALIZED_FILENAME_PLATFORMS, PARTNER_REPACK_ACTIONS
 )
 
 log = logging.getLogger(__name__)
@@ -72,6 +72,13 @@ def is_promotion_action(action):
     return action in PROMOTION_ACTIONS
 
 
+def is_partner_action(action):
+    """Function to return boolean if we're promoting a release as opposed to a
+    nightly or something else. Does that by checking the action type.
+    """
+    return action in PARTNER_REPACK_ACTIONS
+
+
 def get_product_name(appName, platform):
     if "devedition" in platform:
         # XXX: this check is helps reuse this function in both
@@ -103,7 +110,9 @@ def generate_beetmover_template_args(context):
                                                                release_props["stage_platform"]),
     }
 
-    if is_promotion_action(context.action) or is_release_action(context.action):
+    if (is_promotion_action(context.action) or
+        is_release_action(context.action) or
+            is_partner_action(context.action)):
         tmpl_args["build_number"] = task['payload']['build_number']
         tmpl_args["version"] = task['payload']['version']
 
