@@ -4,10 +4,9 @@ import os
 import pytest
 import tempfile
 
-from scriptworker.client import sync_main
 from scriptworker.utils import makedirs
 
-from pushsnapscript.script import async_main
+from pushsnapscript.script import main
 from pushsnapscript.snap_store import snapcraft_store_client
 
 from scriptworker.test import event_loop
@@ -28,6 +27,7 @@ def test_script_can_push_snaps_with_credentials(event_loop, monkeypatch, channel
     }
 
     task = {
+        'dependencies': ['some_snap_build_taskId'],
         'scopes': ['project:releng:snapcraft:firefox:{}'.format(channel)],
         'payload': {
             'upstreamArtifacts': [{
@@ -76,7 +76,7 @@ def test_script_can_push_snaps_with_credentials(event_loop, monkeypatch, channel
 
                 monkeypatch.setattr(tempfile, 'TemporaryDirectory', TemporaryDirectory)
                 monkeypatch.setattr(snapcraft_store_client, 'push', snapcraft_store_client_push_fake)
-                sync_main(async_main, config_path=config_file.name)
+                main(config_path=config_file.name)
 
                 snapcraft_cred_file = os.path.join(temp_dir, '.snapcraft', 'snapcraft.cfg')
 
