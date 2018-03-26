@@ -13,7 +13,7 @@ from pushsnapscript.utils import cwd
 # snapcraft on that platform either.
 import sys
 dir_path = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(dir_path, '..', 'snapcraft'))
+sys.path.append(os.path.join(dir_path, 'snapcraft'))
 from snapcraft import _store as snapcraft_store_client  # noqa
 
 log = logging.getLogger(__name__)
