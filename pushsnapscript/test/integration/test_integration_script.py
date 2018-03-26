@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 import pytest
@@ -57,18 +58,30 @@ def test_script_can_push_snaps_with_credentials(event_loop, monkeypatch, channel
             json.dump(config, config_file)
             config_file.seek(0)
 
-            def snapcraft_store_client_push_fake(snap_file_path, channel):
-                # This function can't be a regular mock because of the following check:
-                assert os.getcwd() == work_dir     # Push must be done from the work_dir
+            with tempfile.TemporaryDirectory() as temp_dir:
+                def snapcraft_store_client_push_fake(snap_file_path, channel):
+                    # This function can't be a regular mock because of the following check:
+                    assert os.getcwd() == temp_dir     # Push must be done from a disposable dir
 
-                assert snap_file_path == snap_artifact_path
-                assert channel == channel
-                next(function_call_counter)
+                    assert snap_file_path == snap_artifact_path
+                    assert channel == channel
+                    next(function_call_counter)
 
-            monkeypatch.setattr(snapcraft_store_client, 'push', snapcraft_store_client_push_fake)
-            sync_main(async_main, config_path=config_file.name)
+                @contextlib.contextmanager
+                def TemporaryDirectory():
+                    try:
+                        yield temp_dir
+                    finally:
+                        pass
 
-        with open(os.path.join(work_dir, '.snapcraft', 'snapcraft.cfg')) as snapcraft_login_config:
-            assert snapcraft_login_config.read() == SNAPCRAFT_SAMPLE_CONFIG
+                monkeypatch.setattr(tempfile, 'TemporaryDirectory', TemporaryDirectory)
+                monkeypatch.setattr(snapcraft_store_client, 'push', snapcraft_store_client_push_fake)
+                sync_main(async_main, config_path=config_file.name)
 
+                snapcraft_cred_file = os.path.join(temp_dir, '.snapcraft', 'snapcraft.cfg')
+
+                with open(os.path.join(snapcraft_cred_file)) as snapcraft_login_config:
+                    assert snapcraft_login_config.read() == SNAPCRAFT_SAMPLE_CONFIG
+
+    assert not os.path.exists(snapcraft_cred_file)
     assert next(function_call_counter) == 1     # Check fake function was called once

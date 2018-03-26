@@ -1,3 +1,4 @@
+import contextlib
 import pytest
 import os
 import tempfile
@@ -23,21 +24,30 @@ def test_push(monkeypatch, channel):
     context = MagicMock()
     context.config = {'base64_macaroons_configs': {channel: SNAPCRAFT_SAMPLE_CONFIG_BASE64}}
 
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory() as temp_dir:
         def snapcraft_store_client_push_fake(snap_file_path, channel):
             # This function can't be a regular mock because of the following check:
-            assert os.getcwd() == d     # Push must be done from the work_dir
+            assert os.getcwd() == temp_dir     # Push must be done from a disposable dir
 
             assert snap_file_path == '/some/file.snap'
             assert channel == channel
             next(call_count)
 
-        context.config['work_dir'] = d
+        @contextlib.contextmanager
+        def TemporaryDirectory():
+            try:
+                yield temp_dir
+            finally:
+                pass
+
+        monkeypatch.setattr(tempfile, 'TemporaryDirectory', TemporaryDirectory)
         monkeypatch.setattr(snapcraft_store_client, 'push', snapcraft_store_client_push_fake)
         push(context, '/some/file.snap', channel)
 
-        assert os.getcwd() != d
+        assert os.getcwd() != temp_dir
+        snapcraft_cred_file = os.path.join(temp_dir, '.snapcraft', 'snapcraft.cfg')
 
+    assert not os.path.exists(snapcraft_cred_file)
     assert next(call_count) == 1
 
 
@@ -60,8 +70,7 @@ def test_craft_credentials_file(channel):
     context = MagicMock()
     context.config = {'base64_macaroons_configs': {channel: SNAPCRAFT_SAMPLE_CONFIG_BASE64}}
 
-    with tempfile.TemporaryDirectory() as d:
-        context.config['work_dir'] = d
-        _craft_credentials_file(context, channel)
-        with open(os.path.join(d, '.snapcraft', 'snapcraft.cfg')) as f:
+    with tempfile.TemporaryDirectory() as temp_dir:
+        _craft_credentials_file(context, channel, temp_dir)
+        with open(os.path.join(temp_dir, '.snapcraft', 'snapcraft.cfg')) as f:
             assert f.read() == SNAPCRAFT_SAMPLE_CONFIG

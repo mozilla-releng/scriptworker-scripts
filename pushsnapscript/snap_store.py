@@ -1,6 +1,7 @@
 import base64
 import logging
 import os
+import tempfile
 
 from scriptworker.utils import makedirs
 
@@ -26,19 +27,20 @@ def push(context, snap_file_path, channel):
 
     # Snapcraft requires credentials to be stored at $CWD/.snapcraft/snapcraft.cfg. Let's store them
     # in a folder that gets purged at the end of the run.
-    _craft_credentials_file(context, channel)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        _craft_credentials_file(context, channel, temp_dir)
 
-    log.debug('Calling snapcraft push with these args: {}, {}'.format(snap_file_path, channel))
-    with cwd(context.config['work_dir']):
-        snapcraft_store_client.push(snap_file_path, channel)
+        log.debug('Calling snapcraft push with these args: {}, {}'.format(snap_file_path, channel))
+        with cwd(temp_dir):
+            snapcraft_store_client.push(snap_file_path, channel)
 
 
-def _craft_credentials_file(context, channel):
+def _craft_credentials_file(context, channel, temp_dir):
     base64_creds = context.config['base64_macaroons_configs'][channel]
     decoded_creds_bytes = base64.b64decode(base64_creds)
     decoded_creds = decoded_creds_bytes.decode()
 
-    snapcraft_dir = os.path.join(context.config['work_dir'], '.snapcraft')
+    snapcraft_dir = os.path.join(temp_dir, '.snapcraft')
     makedirs(snapcraft_dir)
     snapcraft_config_file = os.path.join(snapcraft_dir, 'snapcraft.cfg')
     with open(snapcraft_config_file, 'w') as f:
