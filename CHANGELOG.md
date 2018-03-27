@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [5.1.0] = 2018-03-27
+### Added
+- support linux64-asan-reporter platform
+
 ## [5.0.1] = 2018-03-19
 ### Added
 - pretty-named the `source.tar.xz{,.asc}` artifacts on s3 to match the old tarballs.
