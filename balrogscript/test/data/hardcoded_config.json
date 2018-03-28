@@ -7,6 +7,7 @@
   "submit-toplevel": "balrogscript/data/balrog_submit-toplevel_schema.json",
   "schedule": "balrogscript/data/balrog_schedule_schema.json"
  },
+ "taskcluster_scope_prefix": "project:releng:balrog:",
  "server_config": {"dep": {"allowed_channels": ["nightly",
                                                 "release",
                                                 "beta",

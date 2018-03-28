@@ -126,6 +126,6 @@ def test_release_get_manifest(release_config):
 def test_get_task_action(task, expected, raises):
     if raises:
         with pytest.raises(ValueError):
-            get_task_action(task, {})
+            get_task_action(task, {"taskcluster_scope_prefix": "project:releng:balrog:"})
     else:
-        assert get_task_action(task, {}) == expected
+        assert get_task_action(task, {"taskcluster_scope_prefix": "project:releng:balrog:"}) == expected

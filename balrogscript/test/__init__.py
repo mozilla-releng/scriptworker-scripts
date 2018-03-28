@@ -39,6 +39,7 @@ def config():
             },
             "dummy": False,
             "api_root": "BALROG_API_ROOT",
+            "taskcluster_scope_prefix": "project:releng:balrog:",
             "server_config": {
                 "nightly": {
                     "api_root": "BALROG_API_ROOT",
