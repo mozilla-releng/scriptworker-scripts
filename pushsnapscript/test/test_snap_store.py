@@ -17,7 +17,7 @@ SNAPCRAFT_SAMPLE_CONFIG_BASE64 = 'W2xvZ2luLnVidW50dS5jb21dCm1hY2Fyb29uID0gU29tZU
 2Rpc2NoYXJnZSA9IFNvbWVPdGhlckJhc2U2NAplbWFpbCA9IHJlbGVhc2VAbS5jCg=='
 
 
-@pytest.mark.parametrize('channel', ('edge', 'candidate'))
+@pytest.mark.parametrize('channel', ('beta', 'candidate'))
 def test_push(monkeypatch, channel):
     call_count = (n for n in range(0, 2))
 
@@ -65,7 +65,7 @@ def test_push_early_return_if_not_allowed(monkeypatch):
     assert next(call_count) == 0
 
 
-@pytest.mark.parametrize('channel', ('edge', 'candidate'))
+@pytest.mark.parametrize('channel', ('beta', 'candidate'))
 def test_craft_credentials_file(channel):
     context = MagicMock()
     context.config = {'base64_macaroons_configs': {channel: SNAPCRAFT_SAMPLE_CONFIG_BASE64}}

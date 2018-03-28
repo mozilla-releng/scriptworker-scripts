@@ -15,14 +15,14 @@ from pushsnapscript.test.test_snap_store import SNAPCRAFT_SAMPLE_CONFIG_BASE64, 
 assert event_loop   # silence flake8
 
 
-@pytest.mark.parametrize('channel', ('candidate', 'edge'))
+@pytest.mark.parametrize('channel', ('beta', 'candidate'))
 def test_script_can_push_snaps_with_credentials(event_loop, monkeypatch, channel):
     function_call_counter = (n for n in range(0, 2))
 
     config = {
         'base64_macaroons_configs': {
             'candidate': SNAPCRAFT_SAMPLE_CONFIG_BASE64,
-            'edge': SNAPCRAFT_SAMPLE_CONFIG_BASE64,
+            'beta': SNAPCRAFT_SAMPLE_CONFIG_BASE64,
         },
     }
 
