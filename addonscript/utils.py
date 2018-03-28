@@ -7,7 +7,7 @@ from jose import jws
 from async_timeout import timeout
 
 
-def generate_JWT(context, _iat=None):
+def generate_JWT(context):
     """Create and Sign a JWT valid for AMO HTTP requests.
 
     Uses context.config 'jwt_user' and 'jwt_secret' and sets an expiration of
@@ -16,7 +16,7 @@ def generate_JWT(context, _iat=None):
     user = context.config['jwt_user']
     secret = context.config['jwt_secret']
     jti = str(uuid4())
-    iat = _iat or int(time.time())  # _iat for testing sanity
+    iat = int(time.time())
     exp = iat + 60*4  # AMO has a 5 minute max, so set this to 4 minutes after issued
     payload = {
         'iss': user,

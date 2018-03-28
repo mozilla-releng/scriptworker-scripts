@@ -41,7 +41,9 @@ async def sign_addon(context, locale):
             raise Exception("expected signed xpi")
     # Retry me
     if 1:
-        destination = 'foo'  # XXX: Fixme
+        destination = os.path.join(context.config['artifact_dir'],
+                                   'public/build/', locale, 'target.langpack.xpi')
+        os.makedirs(os.path.dirname(destination))
         await get_signed_xpi(context, upload_status['files'][0]['download_url'],
                              destination)
 
@@ -70,5 +72,9 @@ async def async_main(context):
         await asyncio.gather(tasks)
 
 
-__name__ == '__main__' and \
-          scriptworker.client.sync_main(async_main, default_config=get_default_config())
+def main(config_path=None):
+    return scriptworker.client.sync_main(async_main, config_path=config_path,
+                                         default_config=get_default_config())
+
+
+__name__ == '__main__' and main()
