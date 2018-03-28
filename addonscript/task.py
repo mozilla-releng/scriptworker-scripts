@@ -1,3 +1,5 @@
+"""Methods that deal with the task metadata to supply addonscript."""
+
 import os
 from scriptworker.exceptions import TaskVerificationError
 

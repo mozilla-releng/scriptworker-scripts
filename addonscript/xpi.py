@@ -1,9 +1,11 @@
+"""Resources that operate on an XPI file."""
+
 import json
 from zipfile import ZipFile
 
 
 def get_langpack_info(context, path):
-    """Extract locale and version from a langpack .xpi"""
+    """Extract locale and version from a langpack .xpi."""
     with ZipFile(path, 'r') as langpack_xpi:
         manifest = langpack_xpi.getinfo('manifest.json')
         with langpack_xpi.open(manifest) as f:
