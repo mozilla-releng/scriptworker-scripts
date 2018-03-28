@@ -62,8 +62,11 @@ async def async_main(context):
     connector = _craft_aiohttp_connector(context)
     async with aiohttp.ClientSession(connector=connector) as session:
         context.session = session
-        work_dir = context.config['work_dir']
-        assert work_dir
+        build_locales_context(context)
+        tasks = []
+        for locale in context.locales:
+            tasks.append(asyncio.ensure_future(sign_addon(context, locale)))
+        await asyncio.gather(tasks)
 
 
 __name__ == '__main__' and \

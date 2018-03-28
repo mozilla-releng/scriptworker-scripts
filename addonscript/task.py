@@ -4,10 +4,6 @@ import os
 from scriptworker.exceptions import TaskVerificationError
 
 
-def get_version():  # noqa
-    raise Exception()
-
-
 def get_channel():  # noqa
     raise Exception()
 

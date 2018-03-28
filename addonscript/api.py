@@ -1,7 +1,7 @@
 """API helpers for addonscript."""
 
 from addonscript.utils import get_api_url, amo_put, amo_get, amo_download
-from addonscript.task import get_version, get_channel
+from addonscript.task import get_channel
 
 # https://addons-server.readthedocs.io/en/latest/topics/api/signing.html#uploading-a-version
 UPLOAD_VERSION = "api/v3/addons/{id}/versions/{version}/"
@@ -15,9 +15,9 @@ async def do_upload(context, locale):
 
     Returns the JSON response from AMO
     """
-    # XXX langpack_id may change for devedition
-    langpack_id = 'langpack-{}@firefox.mozilla.org'.format(locale)
-    version = get_version(context)
+    locale_info = context.locales[locale]
+    langpack_id = locale_info['id']
+    version = locale_info['version']
     url = get_api_url(context, UPLOAD_VERSION, id=langpack_id, version=version)
     with open(context.locales[locale]['unsigned'], 'rb') as file:
         data = {
@@ -32,9 +32,9 @@ async def get_upload_status(context, locale, upload_pk):
 
     Returns the JSON response from AMO
     """
-    # XXX langpack_id may change for devedition
-    langpack_id = 'langpack-{}@firefox.mozilla.org'.format(locale)
-    version = get_version(context)
+    locale_info = context.locales[locale]
+    langpack_id = locale_info['id']
+    version = locale_info['version']
     url = get_api_url(context, UPLOAD_STATUS, id=langpack_id, version=version,
                       upload_pk=upload_pk)
     return await amo_get(context, url)
