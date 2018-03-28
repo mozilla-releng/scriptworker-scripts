@@ -1,6 +1,6 @@
-import base64
 import logging
 import os
+import shutil
 import tempfile
 
 from scriptworker.utils import makedirs
@@ -36,12 +36,9 @@ def push(context, snap_file_path, channel):
 
 
 def _craft_credentials_file(context, channel, temp_dir):
-    base64_creds = context.config['base64_macaroons_configs'][channel]
-    decoded_creds_bytes = base64.b64decode(base64_creds)
-    decoded_creds = decoded_creds_bytes.decode()
+    macaroon_original_location = context.config['macaroons_locations'][channel]
 
     snapcraft_dir = os.path.join(temp_dir, '.snapcraft')
     makedirs(snapcraft_dir)
-    snapcraft_config_file = os.path.join(snapcraft_dir, 'snapcraft.cfg')
-    with open(snapcraft_config_file, 'w') as f:
-        f.write(decoded_creds)
+    macaroon_target_location = os.path.join(snapcraft_dir, 'snapcraft.cfg')
+    shutil.copyfile(macaroon_original_location, macaroon_target_location)

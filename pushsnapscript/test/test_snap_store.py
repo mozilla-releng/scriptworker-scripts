@@ -13,39 +13,41 @@ unbound_discharge = SomeOtherBase64
 email = release@m.c
 '''
 
-SNAPCRAFT_SAMPLE_CONFIG_BASE64 = 'W2xvZ2luLnVidW50dS5jb21dCm1hY2Fyb29uID0gU29tZUJhc2U2NAp1bmJvdW5kX\
-2Rpc2NoYXJnZSA9IFNvbWVPdGhlckJhc2U2NAplbWFpbCA9IHJlbGVhc2VAbS5jCg=='
-
 
 @pytest.mark.parametrize('channel', ('beta', 'candidate'))
 def test_push(monkeypatch, channel):
     call_count = (n for n in range(0, 2))
 
     context = MagicMock()
-    context.config = {'base64_macaroons_configs': {channel: SNAPCRAFT_SAMPLE_CONFIG_BASE64}}
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        def snapcraft_store_client_push_fake(snap_file_path, channel):
-            # This function can't be a regular mock because of the following check:
-            assert os.getcwd() == temp_dir     # Push must be done from a disposable dir
+    with tempfile.NamedTemporaryFile('w+') as macaroon:
+        context.config = {
+            'macaroons_locations': {channel: macaroon.name}
+        }
+        macaroon.write(SNAPCRAFT_SAMPLE_CONFIG)
 
-            assert snap_file_path == '/some/file.snap'
-            assert channel == channel
-            next(call_count)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            def snapcraft_store_client_push_fake(snap_file_path, channel):
+                # This function can't be a regular mock because of the following check:
+                assert os.getcwd() == temp_dir     # Push must be done from a disposable dir
 
-        @contextlib.contextmanager
-        def TemporaryDirectory():
-            try:
-                yield temp_dir
-            finally:
-                pass
+                assert snap_file_path == '/some/file.snap'
+                assert channel == channel
+                next(call_count)
 
-        monkeypatch.setattr(tempfile, 'TemporaryDirectory', TemporaryDirectory)
-        monkeypatch.setattr(snapcraft_store_client, 'push', snapcraft_store_client_push_fake)
-        push(context, '/some/file.snap', channel)
+            @contextlib.contextmanager
+            def TemporaryDirectory():
+                try:
+                    yield temp_dir
+                finally:
+                    pass
 
-        assert os.getcwd() != temp_dir
-        snapcraft_cred_file = os.path.join(temp_dir, '.snapcraft', 'snapcraft.cfg')
+            monkeypatch.setattr(tempfile, 'TemporaryDirectory', TemporaryDirectory)
+            monkeypatch.setattr(snapcraft_store_client, 'push', snapcraft_store_client_push_fake)
+            push(context, '/some/file.snap', channel)
+
+            assert os.getcwd() != temp_dir
+            snapcraft_cred_file = os.path.join(temp_dir, '.snapcraft', 'snapcraft.cfg')
 
     assert not os.path.exists(snapcraft_cred_file)
     assert next(call_count) == 1
@@ -68,9 +70,15 @@ def test_push_early_return_if_not_allowed(monkeypatch):
 @pytest.mark.parametrize('channel', ('beta', 'candidate'))
 def test_craft_credentials_file(channel):
     context = MagicMock()
-    context.config = {'base64_macaroons_configs': {channel: SNAPCRAFT_SAMPLE_CONFIG_BASE64}}
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        _craft_credentials_file(context, channel, temp_dir)
-        with open(os.path.join(temp_dir, '.snapcraft', 'snapcraft.cfg')) as f:
-            assert f.read() == SNAPCRAFT_SAMPLE_CONFIG
+    with tempfile.NamedTemporaryFile('w+') as macaroon:
+        context.config = {
+            'macaroons_locations': {channel: macaroon.name}
+        }
+        macaroon.write(SNAPCRAFT_SAMPLE_CONFIG)
+        macaroon.seek(0)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _craft_credentials_file(context, channel, temp_dir)
+            with open(os.path.join(temp_dir, '.snapcraft', 'snapcraft.cfg')) as f:
+                assert f.read() == SNAPCRAFT_SAMPLE_CONFIG
