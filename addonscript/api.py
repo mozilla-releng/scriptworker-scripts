@@ -21,7 +21,7 @@ async def do_upload(context, locale):
     url = get_api_url(context, UPLOAD_VERSION, id=langpack_id, version=version)
     with open(context.locales[locale]['unsigned'], 'rb') as file:
         data = {
-            'channel': get_channel(context),
+            'channel': get_channel(context.task),
             'upload': file,
         }
         return await amo_put(context, url, data)

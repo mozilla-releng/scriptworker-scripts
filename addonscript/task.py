@@ -4,8 +4,27 @@ import os
 from scriptworker.exceptions import TaskVerificationError
 
 
-def get_channel():  # noqa
-    raise Exception()
+def get_channel(task):
+    """Get the addon channel information from the task metadata.
+
+    Assumes task['payload']['channel'] exists and is in the proper format.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        object: the tag info structure as passed to the task payload.
+
+    Raises:
+        TaskVerificationError: If run without tag_info in task definition.
+
+    """
+    # XXX Per @escapewindow best to throw this piece onto a scope
+    # ..:channel:{un,}listed and validate what uses it in scriptworker.
+    channel = task.get("payload", {}).get("channel")
+    if not channel:
+        raise TaskVerificationError("Expected channel in payload")
+    return channel
 
 
 def build_filelist(context):

@@ -10,9 +10,6 @@ import addonscript.task as task
 
 assert tmpdir  # silence flake8
 
-# helper constants, fixtures, functions {{{1
-# EXAMPLE_CONFIG = os.path.join(BASE_DIR, 'config_example.json')
-
 
 @pytest.fixture(scope='function')
 async def context(tmpdir):
