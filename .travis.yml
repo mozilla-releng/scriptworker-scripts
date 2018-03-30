@@ -4,6 +4,7 @@ sudo: required
 language: python
 python:
   - "3.5"
+  - "3.6"
 
 env:
   - SKIP_NETWORK_TESTS=0
@@ -13,6 +14,7 @@ install:
     # XXX Avoid snapcraft from loading useless libs when running on Ubuntu
     - sudo truncate -s 0 /etc/os-release
 script:
-    - tox -e py35
+    - TOX_ENVIRONMENT="py${TRAVIS_PYTHON_VERSION//./}"
+    - tox -e "$TOX_ENVIRONMENT"
 after_success:
-    - tox -e py35-coveralls
+- if [[ $TOX_ENVIRONMENT == 'py36' ]] ; then tox -e py36-coveralls; else echo "No coverage to do"; fi
