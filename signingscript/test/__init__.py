@@ -29,5 +29,13 @@ def tmpdir():
         yield tmp
 
 
+@pytest.yield_fixture(scope='function')
+def tmpfile():
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        tmp.write(bytes("fake", "utf-8"))
+        tmp.flush()
+        return tmp.name
+
+
 def die(*args, **kwargs):
     raise SigningScriptError("dying!")

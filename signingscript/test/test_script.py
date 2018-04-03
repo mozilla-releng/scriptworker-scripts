@@ -7,7 +7,7 @@ import sys
 import scriptworker.client
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-from signingscript.test import noop_async, noop_sync, read_file, tmpdir, BASE_DIR
+from signingscript.test import noop_async, noop_sync, read_file, tmpdir, tmpfile, BASE_DIR
 import signingscript.script as script
 from unittest.mock import MagicMock
 
@@ -44,16 +44,22 @@ async def test_async_main(tmpdir, mocker, formats):
     async def fake_sign(_, val, *args):
         return [val]
 
+    fake_gpg_pubkey = tmpfile()
+
     mocker.patch.object(script, 'load_signing_server_config', new=noop_sync)
     mocker.patch.object(script, 'task_cert_type', new=noop_sync)
-    mocker.patch.object(script, 'task_signing_formats', new=noop_sync)
+    mocker.patch.object(script, 'task_signing_formats', return_value=formats)
     mocker.patch.object(script, 'get_token', new=noop_async)
     mocker.patch.object(script, 'build_filelist_dict', new=fake_filelist_dict)
     mocker.patch.object(script, 'copy_to_dir', new=noop_sync)
     mocker.patch.object(script, 'sign', new=fake_sign)
     context = mock.MagicMock()
-    context.config = {'work_dir': tmpdir, 'ssl_cert': None, 'artifact_dir': tmpdir}
+    context.config = {
+        'work_dir': tmpdir, 'ssl_cert': None, 'artifact_dir': tmpdir,
+        'gpg_pubkey': fake_gpg_pubkey,
+    }
     await script.async_main(context)
+    os.remove(fake_gpg_pubkey)
 
 
 def test_craft_aiohttp_connector():
