@@ -36,7 +36,6 @@ async def async_main(context):
         cert_type = task_cert_type(context)
         all_signing_formats = task_signing_formats(context)
         if 'gpg' in all_signing_formats:
-            print(context.config)
             if not context.config.get('gpg_pubkey'):
                 raise Exception("GPG format is enabled but gpg_pubkey is not defined")
             if not os.path.exists(context.config['gpg_pubkey']):
@@ -56,7 +55,9 @@ async def async_main(context):
                     os.path.join(work_dir, source), context.config['artifact_dir'], target=source
                 )
             if "gpg" in path_dict['formats']:
-                copy_to_dir(context['gpg_pubkey'], context.config['artifact_dir'], target="KEY")
+                copy_to_dir(
+                    context.config['gpg_pubkey'], context.config['artifact_dir'], target="KEY"
+                )
     log.info("Done!")
 
 

@@ -18,17 +18,6 @@ EXAMPLE_CONFIG = os.path.join(BASE_DIR, 'config_example.json')
 SSL_CERT = os.path.join(BASE_DIR, "signingscript", "data", "host.cert")
 
 
-def get_conf_file(tmpdir, **kwargs):
-    conf = json.loads(read_file(EXAMPLE_CONFIG))
-    conf.update(kwargs)
-    conf['work_dir'] = os.path.join(tmpdir, 'work')
-    conf['artifact_dir'] = os.path.join(tmpdir, 'artifact')
-    path = os.path.join(tmpdir, "new_config.json")
-    with open(path, "w") as fh:
-        json.dump(conf, fh)
-    return path
-
-
 async def die_async(*args, **kwargs):
     raise ScriptWorkerTaskException("Expected exception.")
 
@@ -45,13 +34,14 @@ async def test_async_main(tmpdir, mocker, formats):
         return [val]
 
     fake_gpg_pubkey = tmpfile()
+    mocked_copy_to_dir = mocker.Mock()
 
     mocker.patch.object(script, 'load_signing_server_config', new=noop_sync)
     mocker.patch.object(script, 'task_cert_type', new=noop_sync)
     mocker.patch.object(script, 'task_signing_formats', return_value=formats)
     mocker.patch.object(script, 'get_token', new=noop_async)
     mocker.patch.object(script, 'build_filelist_dict', new=fake_filelist_dict)
-    mocker.patch.object(script, 'copy_to_dir', new=noop_sync)
+    mocker.patch.object(script, 'copy_to_dir', new=mocked_copy_to_dir)
     mocker.patch.object(script, 'sign', new=fake_sign)
     context = mock.MagicMock()
     context.config = {
@@ -59,6 +49,12 @@ async def test_async_main(tmpdir, mocker, formats):
         'gpg_pubkey': fake_gpg_pubkey,
     }
     await script.async_main(context)
+    if "gpg" in formats:
+        for call in mocked_copy_to_dir.call_args_list:
+            if call[1].get("target") == "KEY":
+                break
+        else:
+            assert False, "couldn't find copy_to_dir call that created KEY"
     os.remove(fake_gpg_pubkey)
 
 
