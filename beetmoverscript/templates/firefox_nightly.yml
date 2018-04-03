@@ -129,7 +129,7 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/mozharness.zip
         - latest-{{ branch }}/mozharness.zip
- {% if platform in ["linux-i686", "linux-x86_64", "mac"] %}
+ {% if platform in ["linux-i686", "linux-x86_64", "linux-x86_64-asan-reporter", "mac"] %}
     mar:
       s3_key: mar
       destinations:
@@ -153,7 +153,7 @@ mapping:
         - latest-{{ branch }}/mar-tools/{{ stage_platform }}/mbsdiff.exe
   {% endif %}
 
-  {% if platform in ["linux-i686", "linux-x86_64"] %}
+  {% if platform in ["linux-i686", "linux-x86_64", "linux-x86_64-asan-reporter"] %}
     target.tar.bz2:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
       destinations:
