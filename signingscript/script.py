@@ -54,7 +54,7 @@ async def async_main(context):
                 copy_to_dir(
                     os.path.join(work_dir, source), context.config['artifact_dir'], target=source
                 )
-            if "gpg" in path_dict['formats']:
+            if 'gpg' in path_dict['formats']:
                 copy_to_dir(
                     context.config['gpg_pubkey'], context.config['artifact_dir'], target="KEY"
                 )
