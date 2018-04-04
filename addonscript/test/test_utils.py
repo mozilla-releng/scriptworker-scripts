@@ -26,8 +26,16 @@ assert tmpdir  # silence flake8
 async def context():
     context = Context()
     context.config = {
-        'jwt_user': 'test-user',
-        'jwt_secret': 'secret',
+        'amo_instances': {
+            'project:releng:addons.mozilla.org:server:dev': {
+                'amo_server': 'http://some-amo-it.url',
+                'jwt_user': 'test-user',
+                'jwt_secret': 'secret'
+            },
+        },
+    }
+    context.task = {
+        'scopes': ['project:releng:addons.mozilla.org:server:dev']
     }
     return context
 
@@ -183,7 +191,7 @@ async def test_amo_put_header(fake_session, mocker, context):
     )
 )
 def test_get_api_url(host, path, context):
-    context.config['amo_server'] = host
+    context.config['amo_instances']['project:releng:addons.mozilla.org:server:dev']['amo_server'] = host
     url = utils.get_api_url(context, path)
     assert url.startswith(host)
     assert url.endswith(path)
@@ -191,7 +199,7 @@ def test_get_api_url(host, path, context):
 
 def test_get_api_formatted(context):
     host = 'https://addons.example.com'
-    context.config['amo_server'] = host
+    context.config['amo_instances']['project:releng:addons.mozilla.org:server:dev']['amo_server'] = host
     url = utils.get_api_url(context, 'some/formatted/{api}/path', api='magic_api')
     assert url.startswith(host)
     assert url.endswith('some/formatted/magic_api/path')

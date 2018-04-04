@@ -1,5 +1,5 @@
+import copy
 import os
-
 import pytest
 
 from addonscript.test import tmpdir
@@ -12,13 +12,26 @@ assert tmpdir  # silence flake8
 
 
 @pytest.fixture(scope='function')
-async def context(tmpdir):
+def context(tmpdir):
     context = Context()
     context.config = {
-        'jwt_user': 'test-user',
-        'jwt_secret': 'secret',
+        'amo_instances': {
+            'project:releng:addons.mozilla.org:server:dev': {
+                'amo_server': 'http://some-amo-it.url',
+                'jwt_user': 'some-username',
+                'jwt_secret': 'some-secret'
+            },
+        },
         'work_dir': tmpdir,
     }
+    context.task = {
+        'dependencies': ['someTaskId'],
+        'payload': {
+            'release_name': 'Firefox-59.0b3-build1'
+        },
+        'scopes': ['project:releng:addons.mozilla.org:server:dev'],
+    }
+
     return context
 
 
@@ -104,3 +117,57 @@ def test_build_filelist_missing_file(context, task_dfn):
     context.task = task_dfn
     with pytest.raises(TaskVerificationError):
         task.build_filelist(context)
+
+
+@pytest.mark.parametrize('api_root, scope, raises', (
+    ('http://localhost:5000', 'project:releng:addons.mozilla.org:server:dev', False),
+    ('http://some-amo.url', 'project:releng:addons.mozilla.org:server:dev', False),
+    ('https://addons.allizom.org', 'project:releng:addons.mozilla.org:server:staging', False),
+    ('https://addons.allizom.org/', 'project:releng:addons.mozilla.org:server:staging', False),
+    ('https://addons.mozilla.org', 'project:releng:addons.mozilla.org:server:production', False),
+    ('https://addons.mozilla.org/', 'project:releng:addons.mozilla.org:server:production', False),
+))
+def test_get_amo_instance_config_from_scope(context, api_root, scope, raises):
+    context.config['amo_instances'][scope] = copy.deepcopy(context.config['amo_instances']['project:releng:addons.mozilla.org:server:dev'])
+    context.config['amo_instances'][scope]['amo_server'] = api_root
+    context.task['scopes'] = [scope]
+
+    if raises:
+        with pytest.raises(TaskVerificationError):
+            task.get_amo_instance_config_from_scope(context)
+    else:
+        assert task.get_amo_instance_config_from_scope(context) == {
+            'amo_server': api_root,
+            'jwt_user': 'some-username',
+            'jwt_secret': 'some-secret'
+        }
+
+
+@pytest.mark.parametrize('scope', (
+    'some:random:scope',
+    'project:releng:addons.mozilla.org:server:staging',
+    'project:releng:addons.mozilla.org:server:production',
+))
+def test_fail_get_amo_instance_config_from_scope(context, scope):
+    context.task['scopes'] = [scope]
+    with pytest.raises(TaskVerificationError):
+        task.get_amo_instance_config_from_scope(context)
+
+
+@pytest.mark.parametrize('scopes, raises', (
+    (('project:releng:addons.mozilla.org:server:dev',), False),
+    (('project:releng:addons.mozilla.org:server:staging',), False),
+    (('project:releng:addons.mozilla.org:server:production',), False),
+    (('project:releng:addons.mozilla.org:server:dev', 'project:releng:addons.mozilla.org:server:production',), True),
+    (('some:random:scope',), True),
+))
+def test_get_scope(scopes, raises):
+    task_ = {
+        'scopes': scopes
+    }
+
+    if raises:
+        with pytest.raises(TaskVerificationError):
+            task._get_scope(task_)
+    else:
+        assert task._get_scope(task_) == scopes[0]

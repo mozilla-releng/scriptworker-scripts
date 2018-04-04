@@ -6,6 +6,8 @@ from uuid import uuid4
 from jose import jws
 from async_timeout import timeout
 
+from addonscript.task import get_amo_instance_config_from_scope
+
 
 def generate_JWT(context):
     """Create and Sign a JWT valid for AMO HTTP requests.
@@ -13,8 +15,9 @@ def generate_JWT(context):
     Uses context.config 'jwt_user' and 'jwt_secret' and sets an expiration of
     4 minutes (AMO supports a max of 5)
     """
-    user = context.config['jwt_user']
-    secret = context.config['jwt_secret']
+    amo_instance = get_amo_instance_config_from_scope(context)
+    user = amo_instance['jwt_user']
+    secret = amo_instance['jwt_secret']
     jti = str(uuid4())
     iat = int(time.time())
     exp = iat + 60*4  # AMO has a 5 minute max, so set this to 4 minutes after issued
@@ -87,7 +90,8 @@ def get_api_url(context, path, **kwargs):
     Uses `context.config['amo_server'] to populate the hostname, followed by `path`
     Calls str.format() on the path with arguments in kwargs.
     """
-    server = context.config['amo_server']
+    amo_instance = get_amo_instance_config_from_scope(context)
+    server = amo_instance['amo_server']
     if '{' in path:
         path = path.format(**kwargs)
     return "{}/{}".format(server, path)
