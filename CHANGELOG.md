@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [5.1.2] = 2018-04-04
+### Fixed
+- Add KEY file to candidates directory templates
+
 ## [5.1.1] = 2018-04-03
 ### Fixed
 - Fix missing "linux-x86_64-asan-reporter" in Nightly template
