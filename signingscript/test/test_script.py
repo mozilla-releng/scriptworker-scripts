@@ -50,7 +50,7 @@ async def test_async_main_gpg(tmpdir, mocker):
 
     await async_main_helper(tmpdir, mocker, formats, {'gpg_pubkey': fake_gpg_pubkey})
     for call in mocked_copy_to_dir.call_args_list:
-        if call[1].get('target') == 'KEY':
+        if call[1].get('target') == 'public/build/KEY':
             break
     else:
         assert False, "couldn't find copy_to_dir call that created KEY"

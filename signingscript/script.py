@@ -56,7 +56,7 @@ async def async_main(context):
                 )
             if 'gpg' in path_dict['formats']:
                 copy_to_dir(
-                    context.config['gpg_pubkey'], context.config['artifact_dir'], target="KEY"
+                    context.config['gpg_pubkey'], context.config['artifact_dir'], target="public/build/KEY"
                 )
     log.info("Done!")
 
