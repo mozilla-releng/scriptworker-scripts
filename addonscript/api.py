@@ -7,7 +7,7 @@ from addonscript.task import get_channel
 UPLOAD_VERSION = "api/v3/addons/{id}/versions/{version}/"
 
 # https://addons-server.readthedocs.io/en/latest/topics/api/signing.html#checking-the-status-of-your-upload
-UPLOAD_STATUS = "api/v3/addons/{id}/versions/{version}/upload/{upload_pk}/"
+UPLOAD_STATUS = "api/v3/addons/{id}/versions/{version}/uploads/{upload_pk}/"
 
 
 async def do_upload(context, locale):
