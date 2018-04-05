@@ -67,7 +67,7 @@ async def async_main(context):
         tasks = []
         for locale in context.locales:
             tasks.append(asyncio.ensure_future(sign_addon(context, locale)))
-        await asyncio.gather(tasks)
+        await asyncio.gather(*tasks)
 
 
 def main(config_path=None):
