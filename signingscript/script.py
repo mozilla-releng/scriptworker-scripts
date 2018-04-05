@@ -35,6 +35,11 @@ async def async_main(context):
         context.signing_servers = load_signing_server_config(context)
         cert_type = task_cert_type(context)
         all_signing_formats = task_signing_formats(context)
+        if 'gpg' in all_signing_formats:
+            if not context.config.get('gpg_pubkey'):
+                raise Exception("GPG format is enabled but gpg_pubkey is not defined")
+            if not os.path.exists(context.config['gpg_pubkey']):
+                raise Exception("gpg_pubkey ({}) doesn't exist!".format(context.config['gpg_pubkey']))
         log.info("getting token")
         await get_token(context, os.path.join(work_dir, 'token'), cert_type, all_signing_formats)
         filelist_dict = build_filelist_dict(context, all_signing_formats)
@@ -48,6 +53,10 @@ async def async_main(context):
                 source = os.path.relpath(source, work_dir)
                 copy_to_dir(
                     os.path.join(work_dir, source), context.config['artifact_dir'], target=source
+                )
+            if 'gpg' in path_dict['formats']:
+                copy_to_dir(
+                    context.config['gpg_pubkey'], context.config['artifact_dir'], target="public/build/KEY"
                 )
     log.info("Done!")
 
@@ -85,6 +94,7 @@ def get_default_config(base_dir=None):
         'zipalign': 'zipalign',
         'dmg': 'dmg',
         'hfsplus': 'hfsplus',
+        'gpg_pubkey': None,
     }
     return default_config
 
