@@ -1,5 +1,6 @@
 """Common utilities for addonscript."""
 
+import logging
 import time
 from uuid import uuid4
 
@@ -7,6 +8,8 @@ from jose import jws
 from async_timeout import timeout
 
 from addonscript.task import get_amo_instance_config_from_scope
+
+log = logging.getLogger(__name__)
 
 
 def generate_JWT(context):
@@ -37,6 +40,7 @@ async def amo_get(context, url):
     Automatically fills in the HTTP header with the Authorization token.
     Assumes request will return a valid json object, on success.
     """
+    log.debug('Calling amo_get() with URL "{}"'.format(url))
     async with timeout(30):
         resp = context.session.get(
             url, headers={
@@ -44,8 +48,11 @@ async def amo_get(context, url):
                 },
             )
         async with resp as r:
+            log.debug('amo_get() for URL "{}" returned HTTP status code: {}'.format(url, r.status))
             r.raise_for_status()
-            return await r.json()
+            returned_value = await r.json()
+            log.debug('amo_get() for URL "{}" returned: {}'.format(url, returned_value))
+            return returned_value
 
 
 async def amo_download(context, url, file):
@@ -54,6 +61,7 @@ async def amo_download(context, url, file):
     Automatically fills in the HTTP header with the Authorization token.
     Saves the file at `url` to `file`
     """
+    log.debug('Calling amo_download() with URL "{}"'.format(url))
     async with timeout(60):
         resp = context.session.get(
             url, headers={
@@ -61,7 +69,9 @@ async def amo_download(context, url, file):
                 },
             )
         async with resp as r:
+            log.debug('amo_download() for URL "{}" returned HTTP status code: {}'.format(url, r.status))
             r.raise_for_status()
+            log.debug('Writting content at URL "{}" to file "{}"'.format(url, file.name))
             file.write(await r.read())
 
 
@@ -72,6 +82,7 @@ async def amo_put(context, url, data):
     Passes values in the `data` dictionary as FORM data.
     Assumes request will return a valid json object, on success.
     """
+    log.debug('Calling amo_put() with URL "{}"'.format(url))
     async with timeout(270):  # 4 minutes, 30 sec.
         resp = context.session.put(
             url, headers={
@@ -80,8 +91,11 @@ async def amo_put(context, url, data):
             data=data,
             )
         async with resp as r:
+            log.debug('amo_put() for URL "{}" returned HTTP status code: {}'.format(url, r.status))
             r.raise_for_status()
-            return await r.json()
+            returned_value = await r.json()
+            log.debug('amo_put() for URL "{}" returned: {}'.format(url, returned_value))
+            return returned_value
 
 
 def get_api_url(context, path, **kwargs):
