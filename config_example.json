@@ -43,6 +43,15 @@
                 "fennec": "mozilla-releng-mobile-dep-bucket",
                 "devedition": "mozilla-releng-mobile-dep-bucket"
             }
+        },
+        "partner": {
+            "credentials": {
+                "id": "dummy",
+                "key": "dummy"
+            },
+            "buckets": {
+                "firefox": "mozilla-releng-private-firefox-bucket"
+            }
         }
     }
 }

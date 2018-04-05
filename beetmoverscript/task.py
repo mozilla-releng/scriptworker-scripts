@@ -122,14 +122,17 @@ def get_upstream_artifact(context, taskid, path):
     return abs_path
 
 
-def get_upstream_artifacts(context):
+def get_upstream_artifacts(context, preserve_full_paths=False):
     artifacts = {}
     for artifact_dict in context.task['payload']['upstreamArtifacts']:
         locale = artifact_dict['locale']
         artifacts[locale] = artifacts.get(locale, {})
         for path in filter_ignored_artifacts(artifact_dict['paths']):
             abs_path = get_upstream_artifact(context, artifact_dict['taskId'], path)
-            artifacts[locale][os.path.basename(abs_path)] = abs_path
+            if preserve_full_paths:
+                artifacts[locale][path] = abs_path
+            else:
+                artifacts[locale][os.path.basename(abs_path)] = abs_path
     return artifacts
 
 
