@@ -9,6 +9,7 @@ import pytest
 from aioresponses import aioresponses
 from jose import jws
 from jose.constants import ALGORITHMS
+from freezegun import freeze_time
 
 from addonscript.test import tmpdir
 from scriptworker.context import Context
@@ -32,6 +33,7 @@ async def context():
 
 
 @pytest.fixture(scope='function')
+@freeze_time('2018-01-19 12:59:59')
 def payload():
     _iat = int(time.time())
     payload = {
@@ -49,10 +51,10 @@ async def fake_session(event_loop):
         return session
 
 
+@freeze_time('2018-01-19 12:59:59')
 def test_generate_JWT(mocker, context, payload):
-    _iat = payload['iat']
     mocker.patch.object(utils, 'uuid4', side_effect=lambda: payload['jti'])
-    token = utils.generate_JWT(context, _iat=_iat)
+    token = utils.generate_JWT(context)
     verify_bytes = jws.verify(token, 'secret', ALGORITHMS.HS256)
     assert json.loads(verify_bytes.decode('UTF-8')) == payload
 
