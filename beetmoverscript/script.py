@@ -361,8 +361,6 @@ def get_destination_for_private_repack_path(context, manifest, full_path, locale
     elif is_partner_public_task(context):
         prefix = PARTNER_REPACK_PUBLIC_PREFIX_TMPL.format(version=version, build_number=build_number)
         return os.path.join(prefix, pretty_full_path)
-    else:
-        raise ScriptWorkerRetryException("Outside of private-partner context!")
 
 
 # generate_balrog_info {{{1
