@@ -10,15 +10,16 @@ from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_json, generate_beetmover_template_args,
                                    write_file, is_release_action, is_promotion_action,
                                    get_partials_props, matches_exclude, get_candidates_prefix,
-                                   get_releases_prefix, get_product_name)
-from beetmoverscript.constants import HASH_BLOCK_SIZE
+                                   get_releases_prefix, get_product_name,
+                                   is_partner_private_task, is_partner_public_task)
+from beetmoverscript.constants import HASH_BLOCK_SIZE, PARTNER_REPACK_PUBLIC_PAYLOAD_ID
 
 assert context  # silence pyflakes
 
 
 # get_hash {{{1
 def test_get_hash():
-    correct_sha1 = 'cb8aa4802996ac8de0436160e7bc0c79b600c222'
+    correct_sha1 = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
     text = b'Hello world from beetmoverscript!'
 
     with tempfile.NamedTemporaryFile(delete=True) as fp:
@@ -250,3 +251,39 @@ def test_matches_exclude(keyname, expected):
 )))
 def test_get_product_name(appName, tmpl_key, expected):
     assert get_product_name(appName, tmpl_key) == expected
+
+
+# is_partner_private_task {{{1
+@pytest.mark.parametrize("action,payload_id,expected", ((
+    "push-to-dummy", None, False
+), (
+    "push-to-dummy", [1], False
+), (
+    "push-to-partner", None, True
+), (
+    "push-to-partner", [1], False
+)))
+def test_is_partner_private_task(context, action, payload_id, expected):
+    context.action = action
+    if payload_id:
+        context.task['payload'][PARTNER_REPACK_PUBLIC_PAYLOAD_ID] = True
+
+    assert is_partner_private_task(context) == expected
+
+
+# is_partner_public_task {{{1
+@pytest.mark.parametrize("action,payload_id,expected", ((
+    "push-to-dummy", None, False
+), (
+    "push-to-dummy", [1], False
+), (
+    "push-to-partner", None, False
+), (
+    "push-to-partner", [1], True
+)))
+def test_is_partner_public_task(context, action, payload_id, expected):
+    context.action = action
+    if payload_id:
+        context.task['payload'][PARTNER_REPACK_PUBLIC_PAYLOAD_ID] = True
+
+    assert is_partner_public_task(context) == expected

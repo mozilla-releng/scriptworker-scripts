@@ -20,7 +20,7 @@ assert context  # silence pyflakes
 
 
 # get_upstream_artifacts {{{1
-def test_get_upstream_artifacts():
+def test_exception_get_upstream_artifacts():
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
@@ -30,6 +30,29 @@ def test_get_upstream_artifacts():
     context.task['payload']['upstreamArtifacts'][0]['paths'].append('fake_file')
     with pytest.raises(ScriptWorkerTaskException):
         context.artifacts_to_beetmove = get_upstream_artifacts(context)
+
+
+# get_upstream_artifacts {{{1
+@pytest.mark.parametrize("expected, preserve", ((
+    ['target.txt',
+     'target.mozinfo.json',
+     'target_info.txt',
+     'target.test_packages.json'], False
+), (
+    ['public/build/target.txt',
+     'public/build/target.mozinfo.json',
+     'public/build/target_info.txt',
+     'public/build/target.test_packages.json'], True
+)))
+def test_get_upstream_artifacts(expected, preserve):
+    context = Context()
+    context.config = get_fake_valid_config()
+    context.task = get_fake_valid_task()
+    context.properties = get_fake_balrog_props()["properties"]
+    context.properties['platform'] = context.properties['stage_platform']
+
+    artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=preserve)
+    assert list(artifacts_to_beetmove['en-US']) == expected
 
 
 # validate_task {{{1
