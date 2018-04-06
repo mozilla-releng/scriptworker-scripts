@@ -52,7 +52,7 @@ def test_get_upstream_artifacts(expected, preserve):
     context.properties['platform'] = context.properties['stage_platform']
 
     artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=preserve)
-    assert list(artifacts_to_beetmove['en-US']) == expected
+    assert sorted(list(artifacts_to_beetmove['en-US'])) == sorted(expected)
 
 
 # validate_task {{{1
