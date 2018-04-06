@@ -1,5 +1,6 @@
 """API helpers for addonscript."""
 
+from addonscript.exceptions import SignatureError
 from addonscript.utils import get_api_url, amo_put, amo_get, amo_download
 from addonscript.task import get_channel
 
@@ -25,6 +26,40 @@ async def do_upload(context, locale):
             'upload': file,
         }
         return await amo_put(context, url, data)
+
+
+async def get_signed_addon_url(context, locale, pk):
+    """Query AMO to get the location of the signed XPI.
+
+    This function should called within `scriptworker.utils.retry_async()`.
+
+    Raises:
+        SignatureError: If the metadata lacks something or if the server-side Automated validation
+        reported something.
+
+    Returns the signed XPI URL
+
+    """
+    # XXX Retry is done at top-level. Avoiding a retry here avoids never-ending retries cascade
+    upload_status = await get_upload_status(context, locale, pk)
+
+    if len(upload_status['files']) != 1:
+        raise SignatureError('Expected 1 file. Got: {}'.format(upload_status))
+
+    if upload_status.get('validation_results'):
+        validation_errors = upload_status['validation_results'].get('errors')
+        if validation_errors:
+            raise SignatureError('Automated validation produced errors: {}'.format(validation_errors))
+
+    signed_data = upload_status['files'][0]
+
+    if not signed_data.get('signed'):
+        raise SignatureError('Expected XPI "signed" parameter. Got: {}'.format(signed_data))
+
+    if not signed_data.get('download_url'):
+        raise SignatureError('Expected XPI "download_url" parameter. Got: {}'.format(signed_data))
+
+    return signed_data['download_url']
 
 
 async def get_upload_status(context, locale, upload_pk):

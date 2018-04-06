@@ -5,7 +5,7 @@ import os
 import scriptworker.client
 from scriptworker.utils import retry_async
 
-from addonscript.api import do_upload, get_upload_status, get_signed_xpi
+from addonscript.api import do_upload, get_signed_addon_url, get_signed_xpi
 from addonscript.task import build_filelist
 from addonscript.xpi import get_langpack_info
 
@@ -26,24 +26,14 @@ def get_default_config(base_dir=None):
 
 async def sign_addon(context, locale):
     upload_data = await retry_async(do_upload, args=(context, locale))
-    pk = upload_data['pk']
-
-    upload_status = await retry_async(get_upload_status, args=(context, locale, pk))
-    # XXX Encapsulate these sanity check errors in a seperate retried function,
-    # because signing may not be instant.
-    if len(upload_status['files']) != 1:
-        raise Exception("Expected 1 file")
-    if (upload_status.get('validation_results') and
-            upload_status['validation_results']['errors']):
-        raise Exception("Automated Validation produced errors")
-    if not upload_status['files'][0]['signed']:
-        raise Exception("expected signed xpi")
-    destination = os.path.join(context.config['artifact_dir'],
-                               'public/build/', locale, 'target.langpack.xpi')
+    signed_addon_url = await retry_async(
+        get_signed_addon_url, args=(context, locale, upload_data['pk']),
+    )
+    destination = os.path.join(
+        context.config['artifact_dir'], 'public/build/', locale, 'target.langpack.xpi'
+    )
     os.makedirs(os.path.dirname(destination))
-    await retry_async(get_signed_xpi,
-                      args=(context, upload_status['files'][0]['download_url'],
-                            destination))
+    await retry_async(get_signed_xpi, args=(context, signed_addon_url, destination))
 
 
 def build_locales_context(context):
