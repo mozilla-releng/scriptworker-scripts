@@ -18,6 +18,10 @@ from beetmoverscript.constants import (
 log = logging.getLogger(__name__)
 
 
+JINJA_ENV = jinja2.Environment(loader=jinja2.PackageLoader("beetmoverscript"),
+                               undefined=jinja2.StrictUndefined)
+
+
 def get_hash(filepath, hash_type="sha512"):
     """Function to return the digest hash of a file based on filename and
     algorithm"""
@@ -116,14 +120,6 @@ def generate_beetmover_template_args(context):
     return tmpl_args
 
 
-def get_jinja_env():
-    """
-    Get a jinja2 environment for loaind beetmover manifest templates.
-    """
-    return jinja2.Environment(loader=jinja2.PackageLoader("beetmoverscript"),
-                              undefined=jinja2.StrictUndefined)
-
-
 def generate_beetmover_manifest(context):
     """
     generates and outputs a manifest that maps expected Taskcluster artifact names
@@ -132,7 +128,7 @@ def generate_beetmover_manifest(context):
     tmpl_args = generate_beetmover_template_args(context)
 
     tmpl_name = '{}.yml'.format(tmpl_args["template_key"])
-    jinja_env = get_jinja_env()
+    jinja_env = JINJA_ENV
     tmpl = jinja_env.get_template(tmpl_name)
 
     log.info('generating manifest from: {}'.format(tmpl.filename))

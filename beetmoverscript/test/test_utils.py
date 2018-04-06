@@ -60,7 +60,7 @@ def test_write_file():
 
 # generate_beetmover_manifest {{{1
 def test_generate_manifest(context, mocker):
-    mocker.patch('beetmoverscript.utils.get_jinja_env', get_test_jinja_env)
+    mocker.patch('beetmoverscript.utils.JINJA_ENV', get_test_jinja_env())
     manifest = generate_beetmover_manifest(context)
     mapping = manifest['mapping']
     s3_keys = [mapping[m].get('target_info.txt', {}).get('s3_key') for m in mapping]

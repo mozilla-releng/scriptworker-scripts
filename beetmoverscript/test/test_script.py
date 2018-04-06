@@ -241,7 +241,7 @@ async def test_upload_to_s3(context, mocker):
 # move_beets {{{1
 @pytest.mark.parametrize("partials", (False, True))
 def test_move_beets(event_loop, partials, mocker):
-    mocker.patch('beetmoverscript.utils.get_jinja_env', get_test_jinja_env)
+    mocker.patch('beetmoverscript.utils.JINJA_ENV', get_test_jinja_env())
 
     context = Context()
     context.config = get_fake_valid_config()
@@ -461,7 +461,7 @@ async def test_async_main(context, mocker, action, raises):
     def fake_action(*args):
         return action
 
-    mocker.patch('beetmoverscript.utils.get_jinja_env', get_test_jinja_env)
+    mocker.patch('beetmoverscript.utils.JINJA_ENV', get_test_jinja_env())
     mocker.patch('beetmoverscript.script.move_beets', new=noop_async)
     mocker.patch.object(beetmoverscript.script, 'get_task_action', new=fake_action)
     if raises:
