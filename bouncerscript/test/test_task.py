@@ -31,7 +31,10 @@ assert aliases_context  # silence pyflakes
 )))
 def test_get_task_server(scopes, expected, raises):
     task = {'scopes': scopes}
-    config = {'bouncer_config': {'project:releng:bouncer:server:staging': ''}}
+    config = {
+        'taskcluster_scope_prefix': 'project:releng:bouncer:',
+        'bouncer_config': {'project:releng:bouncer:server:staging': ''},
+    }
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
             get_task_server(task, config)
@@ -57,6 +60,7 @@ def test_get_task_server(scopes, expected, raises):
 def test_get_task_action(scopes, expected, raises):
     task = {'scopes': scopes}
     config = {
+        'taskcluster_scope_prefix': 'project:releng:bouncer:',
         'schema_files': {
             'submission': '/some/path.json',
             'aliases': '/some/other_path.json',

@@ -2,6 +2,7 @@
         "work_dir": "some/work/dir/",
         "schema_file": "path/to/schema/file",
         "verbose": true,
+        "taskcluster_scope_prefix": "project:releng:bouncer:",
         "bouncer_config": {
             "project:releng:bouncer:server:staging": {
                 "api_root": "some-root",

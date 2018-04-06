@@ -1,6 +1,7 @@
 {
         "work_dir": "bouncerscript/test/test_work_dir",
         "verbose": true,
+        "taskcluster_scope_prefix": "project:releng:bouncer:",
         "bouncer_config": {
             "project:releng:bouncer:server:staging": {
                 "api_root": "some-root",

@@ -12,8 +12,10 @@ log = logging.getLogger(__name__)
 
 def get_task_server(task, script_config):
     """Extract task server scope from scopes"""
-    server_scopes = [s for s in task["scopes"] if
-                     s.startswith("project:releng:bouncer:server:")]
+    server_scopes = [
+        s for s in task["scopes"] if
+        s.startswith(script_config["taskcluster_scope_prefix"] + "server:")
+    ]
     log.info("Servers scopes: %s", server_scopes)
     messages = []
 
@@ -35,8 +37,10 @@ def get_task_server(task, script_config):
 
 def get_task_action(task, script_config):
     """Extract last part of bouncer action scope"""
-    actions = [s.split(":")[-1] for s in task["scopes"] if
-               s.startswith("project:releng:bouncer:action:")]
+    actions = [
+        s.split(":")[-1] for s in task["scopes"] if
+        s.startswith(script_config["taskcluster_scope_prefix"] + "action:")
+    ]
 
     log.info("Action types: %s", actions)
     messages = []
