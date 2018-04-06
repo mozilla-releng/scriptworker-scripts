@@ -1,4 +1,3 @@
-import contextlib
 import json
 import os
 import pytest
@@ -10,14 +9,13 @@ from pushsnapscript.script import main
 from pushsnapscript.snap_store import snapcraft_store_client
 
 from scriptworker.test import event_loop
-from pushsnapscript.test.test_snap_store import SNAPCRAFT_SAMPLE_CONFIG
 
 assert event_loop   # silence flake8
 
 
 @pytest.mark.parametrize('channel', ('beta', 'candidate'))
 def test_script_can_push_snaps_with_credentials(event_loop, monkeypatch, channel):
-    function_call_counter = (n for n in range(0, 2))
+    push_call_counter = (n for n in range(0, 2))
 
     task = {
         'dependencies': ['some_snap_build_taskId'],
@@ -35,11 +33,6 @@ def test_script_can_push_snaps_with_credentials(event_loop, monkeypatch, channel
 
     with tempfile.NamedTemporaryFile('w+') as macaroon_beta, \
             tempfile.NamedTemporaryFile('w+') as macaroon_candidate:
-        macaroon_beta.write(SNAPCRAFT_SAMPLE_CONFIG)
-        macaroon_candidate.write(SNAPCRAFT_SAMPLE_CONFIG)
-        macaroon_beta.seek(0)
-        macaroon_candidate.seek(0)
-
         config = {
             'macaroons_locations': {
                 'candidate': macaroon_candidate.name,
@@ -65,30 +58,12 @@ def test_script_can_push_snaps_with_credentials(event_loop, monkeypatch, channel
                 json.dump(config, config_file)
                 config_file.seek(0)
 
-                with tempfile.TemporaryDirectory() as temp_dir:
-                    def snapcraft_store_client_push_fake(snap_file_path, channel):
-                        # This function can't be a regular mock because of the following check:
-                        assert os.getcwd() == temp_dir     # Push must be done from a disposable dir
+                def snapcraft_store_client_push_fake(snap_file_path, channel):
+                    assert snap_file_path == snap_artifact_path
+                    assert channel == channel
+                    next(push_call_counter)
 
-                        assert snap_file_path == snap_artifact_path
-                        assert channel == channel
-                        next(function_call_counter)
+                monkeypatch.setattr(snapcraft_store_client, 'push', snapcraft_store_client_push_fake)
+                main(config_path=config_file.name)
 
-                    @contextlib.contextmanager
-                    def TemporaryDirectory():
-                        try:
-                            yield temp_dir
-                        finally:
-                            pass
-
-                    monkeypatch.setattr(tempfile, 'TemporaryDirectory', TemporaryDirectory)
-                    monkeypatch.setattr(snapcraft_store_client, 'push', snapcraft_store_client_push_fake)
-                    main(config_path=config_file.name)
-
-                    snapcraft_cred_file = os.path.join(temp_dir, '.snapcraft', 'snapcraft.cfg')
-
-                    with open(os.path.join(snapcraft_cred_file)) as snapcraft_login_config:
-                        assert snapcraft_login_config.read() == SNAPCRAFT_SAMPLE_CONFIG
-
-    assert not os.path.exists(snapcraft_cred_file)
-    assert next(function_call_counter) == 1     # Check fake function was called once
+    assert next(push_call_counter) == 1

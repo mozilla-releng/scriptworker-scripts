@@ -1,56 +1,42 @@
-import contextlib
 import pytest
-import os
 import tempfile
 
 from unittest.mock import MagicMock
 
-from pushsnapscript.snap_store import snapcraft_store_client, push, _craft_credentials_file
-
-SNAPCRAFT_SAMPLE_CONFIG = '''[login.ubuntu.com]
-macaroon = SomeBase64
-unbound_discharge = SomeOtherBase64
-email = release@m.c
-'''
+from pushsnapscript.snap_store import snapcraft_store_client, push, _session
 
 
 @pytest.mark.parametrize('channel', ('beta', 'candidate'))
 def test_push(monkeypatch, channel):
-    call_count = (n for n in range(0, 2))
+    push_call_count = (n for n in range(0, 2))
+    login_call_count = (n for n in range(0, 3))
 
     context = MagicMock()
+    store_client_mock = MagicMock()
+    monkeypatch.setattr('snapcraft.storeapi.StoreClient', lambda: store_client_mock)
 
-    with tempfile.NamedTemporaryFile('w+') as macaroon:
+    with tempfile.NamedTemporaryFile('w+') as fake_macaroon:
         context.config = {
-            'macaroons_locations': {channel: macaroon.name}
+            'macaroons_locations': {channel: fake_macaroon.name}
         }
-        macaroon.write(SNAPCRAFT_SAMPLE_CONFIG)
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            def snapcraft_store_client_push_fake(snap_file_path, channel):
-                # This function can't be a regular mock because of the following check:
-                assert os.getcwd() == temp_dir     # Push must be done from a disposable dir
+        def snapcraft_store_client_login_fake(store, config_fd):
+            assert store == store_client_mock
+            assert config_fd.name == fake_macaroon.name
+            next(login_call_count)
 
-                assert snap_file_path == '/some/file.snap'
-                assert channel == channel
-                next(call_count)
+        def snapcraft_store_client_push_fake(snap_file_path, channel):
+            assert snap_file_path == '/some/file.snap'
+            assert channel == channel
+            next(push_call_count)
 
-            @contextlib.contextmanager
-            def TemporaryDirectory():
-                try:
-                    yield temp_dir
-                finally:
-                    pass
+        monkeypatch.setattr(snapcraft_store_client, 'login', snapcraft_store_client_login_fake)
+        monkeypatch.setattr(snapcraft_store_client, 'push', snapcraft_store_client_push_fake)
+        push(context, '/some/file.snap', channel)
 
-            monkeypatch.setattr(tempfile, 'TemporaryDirectory', TemporaryDirectory)
-            monkeypatch.setattr(snapcraft_store_client, 'push', snapcraft_store_client_push_fake)
-            push(context, '/some/file.snap', channel)
-
-            assert os.getcwd() != temp_dir
-            snapcraft_cred_file = os.path.join(temp_dir, '.snapcraft', 'snapcraft.cfg')
-
-    assert not os.path.exists(snapcraft_cred_file)
-    assert next(call_count) == 1
+    assert next(push_call_count) == 1
+    assert next(login_call_count) == 1
+    store_client_mock.logout.assert_called_once_with()
 
 
 def test_push_early_return_if_not_allowed(monkeypatch):
@@ -67,18 +53,34 @@ def test_push_early_return_if_not_allowed(monkeypatch):
     assert next(call_count) == 0
 
 
-@pytest.mark.parametrize('channel', ('beta', 'candidate'))
-def test_craft_credentials_file(channel):
-    context = MagicMock()
+class SomeSpecificException(Exception):
+    pass
 
-    with tempfile.NamedTemporaryFile('w+') as macaroon:
-        context.config = {
-            'macaroons_locations': {channel: macaroon.name}
-        }
-        macaroon.write(SNAPCRAFT_SAMPLE_CONFIG)
-        macaroon.seek(0)
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            _craft_credentials_file(context, channel, temp_dir)
-            with open(os.path.join(temp_dir, '.snapcraft', 'snapcraft.cfg')) as f:
-                assert f.read() == SNAPCRAFT_SAMPLE_CONFIG
+@pytest.mark.parametrize('raises', (True, False))
+def test_session(monkeypatch, raises):
+    login_call_count = (n for n in range(0, 3))
+    store_client_mock = MagicMock()
+    monkeypatch.setattr('snapcraft.storeapi.StoreClient', lambda: store_client_mock)
+
+    with tempfile.NamedTemporaryFile('w+') as fake_macaroon:
+        def snapcraft_store_client_login_fake(store, config_fd):
+            assert store == store_client_mock
+            assert config_fd.name == fake_macaroon.name
+            next(login_call_count)
+
+        monkeypatch.setattr(snapcraft_store_client, 'login', snapcraft_store_client_login_fake)
+
+        if raises:
+            with pytest.raises(SomeSpecificException):
+                with _session(fake_macaroon.name):
+                    assert next(login_call_count) == 1
+                    store_client_mock.logout.assert_not_called()
+                    raise SomeSpecificException('Oh noes!')
+        else:
+            with _session(fake_macaroon.name):
+                assert next(login_call_count) == 1
+                store_client_mock.logout.assert_not_called()
+
+        assert next(login_call_count) == 2  # login wasn't called again
+        store_client_mock.logout.assert_called_once_with()

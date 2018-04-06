@@ -1,12 +1,8 @@
+import contextlib
 import logging
 import os
-import shutil
-import tempfile
-
-from scriptworker.utils import makedirs
 
 from pushsnapscript import task
-from pushsnapscript.utils import cwd
 
 # XXX Hack to only import a subset of snapcraft. Otherwise snapcraft can't be built on any other
 # distribution than Ubuntu. The prod instance runs CentOS 6. There isn't a package version of
@@ -15,6 +11,7 @@ import sys
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(dir_path, 'snapcraft'))
 from snapcraft import _store as snapcraft_store_client  # noqa
+from snapcraft import storeapi                          # noqa
 
 log = logging.getLogger(__name__)
 
@@ -25,20 +22,24 @@ def push(context, snap_file_path, channel):
         # We don't raise an error because we still want green tasks on dev instances
         return
 
-    # Snapcraft requires credentials to be stored at $CWD/.snapcraft/snapcraft.cfg. Let's store them
-    # in a folder that gets purged at the end of the run.
-    with tempfile.TemporaryDirectory() as temp_dir:
-        _craft_credentials_file(context, channel, temp_dir)
-
+    macaroon_location = context.config['macaroons_locations'][channel]
+    with _session(macaroon_location):
         log.debug('Calling snapcraft push with these args: {}, {}'.format(snap_file_path, channel))
-        with cwd(temp_dir):
-            snapcraft_store_client.push(snap_file_path, channel)
+        snapcraft_store_client.push(snap_file_path, channel)
 
 
-def _craft_credentials_file(context, channel, temp_dir):
-    macaroon_original_location = context.config['macaroons_locations'][channel]
+@contextlib.contextmanager
+def _session(macaroon_location):
+    store = storeapi.StoreClient()
 
-    snapcraft_dir = os.path.join(temp_dir, '.snapcraft')
-    makedirs(snapcraft_dir)
-    macaroon_target_location = os.path.join(snapcraft_dir, 'snapcraft.cfg')
-    shutil.copyfile(macaroon_original_location, macaroon_target_location)
+    with open(macaroon_location) as macaroon:
+        log.debug('Logging onto Snap store with macaroon file "{}"...'.format(macaroon.name))
+        snapcraft_store_client.login(store=store, config_fd=macaroon)
+
+    log.info('Logged on Snap store')
+    try:
+        yield
+    finally:
+        log.debug('Logging off Snap store...')
+        store.logout()
+        log.info('Logged off Snap store')
