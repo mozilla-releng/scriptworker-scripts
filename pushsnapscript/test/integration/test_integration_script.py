@@ -58,9 +58,9 @@ def test_script_can_push_snaps_with_credentials(event_loop, monkeypatch, channel
                 json.dump(config, config_file)
                 config_file.seek(0)
 
-                def snapcraft_store_client_push_fake(snap_file_path, channel):
-                    assert snap_file_path == snap_artifact_path
-                    assert channel == channel
+                def snapcraft_store_client_push_fake(snap_filename, release_channels):
+                    assert snap_filename == snap_artifact_path
+                    assert release_channels == [channel]
                     next(push_call_counter)
 
                 monkeypatch.setattr(snapcraft_store_client, 'push', snapcraft_store_client_push_fake)

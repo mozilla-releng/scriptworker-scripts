@@ -24,8 +24,12 @@ def push(context, snap_file_path, channel):
 
     macaroon_location = context.config['macaroons_locations'][channel]
     with _session(macaroon_location):
-        log.debug('Calling snapcraft push with these args: {}, {}'.format(snap_file_path, channel))
-        snapcraft_store_client.push(snap_file_path, channel)
+        push_kwargs = {
+            'snap_filename': snap_file_path,
+            'release_channels': [channel],
+        }
+        log.debug('Calling snapcraft push with these kwargs: {}'.format(push_kwargs))
+        snapcraft_store_client.push(**push_kwargs)
 
 
 @contextlib.contextmanager

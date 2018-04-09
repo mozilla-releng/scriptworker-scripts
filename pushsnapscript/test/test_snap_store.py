@@ -25,9 +25,9 @@ def test_push(monkeypatch, channel):
             assert config_fd.name == fake_macaroon.name
             next(login_call_count)
 
-        def snapcraft_store_client_push_fake(snap_file_path, channel):
-            assert snap_file_path == '/some/file.snap'
-            assert channel == channel
+        def snapcraft_store_client_push_fake(snap_filename, release_channels):
+            assert snap_filename == '/some/file.snap'
+            assert release_channels == [channel]
             next(push_call_count)
 
         monkeypatch.setattr(snapcraft_store_client, 'login', snapcraft_store_client_login_fake)
