@@ -5,6 +5,7 @@ metadata:
     owner: "release@mozilla.com"
 
 mapping:
+{% for locale in locales %}
   {{ locale }}:
     target.tar.bz2: firefox-{{ version }}.tar.bz2
     target.tar.bz2.asc: firefox-{{ version }}.tar.bz2.asc
@@ -12,3 +13,4 @@ mapping:
     target.installer.exe.asc: Firefox Setup {{ version }}.exe.asc
     target.dmg: Firefox {{ version }}.dmg
     target.dmg.asc: Firefox {{ version }}.dmg.asc
+{% endfor %} # end for locales

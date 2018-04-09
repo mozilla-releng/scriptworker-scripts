@@ -1,7 +1,7 @@
 ---
 metadata:
     name: "Beet Mover Manifest"
-    description: "Maps {{ product }} artifacts to pretty names for {{locale}} L10n repack"
+    description: "Maps {{ product }} artifacts to pretty names for {{ locales }} L10n repack"
     owner: "release@mozilla.com"
 
 s3_bucket_path: pub/mobile/candidates/{{ version }}-candidates/build{{ build_number }}/
