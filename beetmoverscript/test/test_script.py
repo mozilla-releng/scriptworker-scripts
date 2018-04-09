@@ -35,6 +35,7 @@ assert noop_async  # silence flake8
 @pytest.mark.asyncio
 async def test_push_to_partner(context, mocker):
     mocker.patch('beetmoverscript.script.move_partner_beets', new=noop_async)
+    mocker.patch('beetmoverscript.utils.JINJA_ENV', get_test_jinja_env())
     await push_to_partner(context)
 
 
