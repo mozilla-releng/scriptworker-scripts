@@ -1,6 +1,8 @@
 """API helpers for addonscript."""
 
-from addonscript.exceptions import SignatureError
+from aiohttp.client_exceptions import ClientResponseError
+
+from addonscript.exceptions import SignatureError, AMOConflictError
 from addonscript.utils import get_api_url, amo_put, amo_get, amo_download
 from addonscript.task import get_channel
 
@@ -8,7 +10,8 @@ from addonscript.task import get_channel
 UPLOAD_VERSION = "api/v3/addons/{id}/versions/{version}/"
 
 # https://addons-server.readthedocs.io/en/latest/topics/api/signing.html#checking-the-status-of-your-upload
-UPLOAD_STATUS = "api/v3/addons/{id}/versions/{version}/uploads/{upload_pk}/"
+UPLOAD_STATUS = "api/v3/addons/{id}/versions/{version}/"
+UPLOAD_STATUS_PK = "api/v3/addons/{id}/versions/{version}/uploads/{upload_pk}/"
 
 
 async def do_upload(context, locale):
@@ -25,7 +28,18 @@ async def do_upload(context, locale):
             'channel': get_channel(context.task),
             'upload': file,
         }
-        return await amo_put(context, url, data)
+        try:
+            result = await amo_put(context, url, data)
+        except ClientResponseError as exc:
+            # XXX: .code is deprecated in aiohttp 3.1 in favor of .status
+            if exc.code == 409:
+                raise AMOConflictError(
+                    "Addon <{}> already present on AMO with version <{}>".format(
+                        langpack_id, version
+                    ))
+            # If response code is not 409 - CONFLICT, bubble the exception
+            raise exc
+        return result
 
 
 async def get_signed_addon_url(context, locale, pk):
@@ -70,7 +84,13 @@ async def get_upload_status(context, locale, upload_pk):
     locale_info = context.locales[locale]
     langpack_id = locale_info['id']
     version = locale_info['version']
-    url = get_api_url(context, UPLOAD_STATUS, id=langpack_id, version=version,
+    if upload_pk:
+        format_string = UPLOAD_STATUS_PK
+    else:
+        # When the addon was already uploaded with this version we don't have
+        # an upload_pk
+        format_string = UPLOAD_STATUS
+    url = get_api_url(context, format_string, id=langpack_id, version=version,
                       upload_pk=upload_pk)
     return await amo_get(context, url)
 

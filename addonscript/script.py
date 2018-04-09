@@ -1,13 +1,19 @@
 import aiohttp
 import asyncio
+import logging
 import os
 
+from aiohttp.client_exceptions import ClientError
 import scriptworker.client
 from scriptworker.utils import retry_async
 
 from addonscript.api import do_upload, get_signed_addon_url, get_signed_xpi
+from addonscript.exceptions import AMOConflictError
 from addonscript.task import build_filelist
 from addonscript.xpi import get_langpack_info
+
+
+log = logging.getLogger(__name__)
 
 
 def _craft_aiohttp_connector(context):
@@ -25,7 +31,13 @@ def get_default_config(base_dir=None):
 
 
 async def sign_addon(context, locale):
-    upload_data = await retry_async(do_upload, args=(context, locale))
+    try:
+        upload_data = await retry_async(do_upload, args=(context, locale),
+                                        retry_exceptions=tuple(ClientError))
+    except AMOConflictError as exc:
+        log.info(exc.message)
+        upload_data = {'pk': None}
+
     signed_addon_url = await retry_async(
         get_signed_addon_url, args=(context, locale, upload_data['pk']),
     )
