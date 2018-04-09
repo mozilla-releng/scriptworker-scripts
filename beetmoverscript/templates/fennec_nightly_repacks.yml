@@ -7,6 +7,7 @@ metadata:
 s3_bucket_path: pub/mobile/nightly/
 
 mapping:
+{% for locale in locales %}
   {{ locale }}:
     target.apk:
       s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.apk
@@ -24,3 +25,4 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}-{{ platform }}-l10n/fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.checksums.asc
         - latest-{{ branch }}-{{ platform }}-l10n/fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.checksums.asc
+{% endfor %} # end for locales

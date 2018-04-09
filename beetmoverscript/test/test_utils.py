@@ -2,6 +2,8 @@ import json
 import pytest
 import tempfile
 
+from scriptworker.exceptions import TaskVerificationError
+
 from beetmoverscript.test import (context, get_fake_valid_task,
                                   get_fake_balrog_props, get_fake_checksums_manifest,
                                   get_test_jinja_env)
@@ -11,7 +13,8 @@ from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_file, is_release_action, is_promotion_action,
                                    get_partials_props, matches_exclude, get_candidates_prefix,
                                    get_releases_prefix, get_product_name,
-                                   is_partner_private_task, is_partner_public_task)
+                                   is_partner_private_task, is_partner_public_task,
+                                   _check_locale_consistency)
 from beetmoverscript.constants import HASH_BLOCK_SIZE, PARTNER_REPACK_PUBLIC_PAYLOAD_ID
 
 assert context  # silence pyflakes
@@ -108,15 +111,75 @@ def test_beetmover_template_args_generation(context, taskjson, partials):
         'version': '99.0a1',
         'buildid': '20990205110000',
         'partials': partials,
+        'locales': ['en-US'],
     }
 
     template_args = generate_beetmover_template_args(context)
     assert template_args == expected_template_args
 
     context.task['payload']['locale'] = 'ro'
+    context.task['payload']['upstreamArtifacts'][0]['locale'] = 'ro'
+    expected_template_args['template_key'] = 'fake_nightly_repacks'
+    expected_template_args['locales'] = ['ro']
     template_args = generate_beetmover_template_args(context)
+    assert template_args == expected_template_args
 
-    assert template_args['template_key'] == 'fake_nightly_repacks'
+
+@pytest.mark.parametrize('payload, expected_locales', ((
+    {'upstreamArtifacts': [{'path': 'some/path', 'taskId': 'someTaskId', 'type': 'build'}]},
+    None
+), (
+    {
+        'upstreamArtifacts': [
+            {'path': 'some/path', 'taskId': 'someTaskId', 'type': 'build', 'locale': 'en-US'},
+        ],
+    },
+    ['en-US']
+), (
+    {
+        'locale': 'en-US',
+        'upstreamArtifacts': [
+            {'path': 'some/path', 'taskId': 'someTaskId', 'type': 'build', 'locale': 'en-US'},
+        ],
+    },
+    ['en-US']
+), (
+    {
+        'locale': 'ro',
+        'upstreamArtifacts': [
+            {'path': 'some/path', 'taskId': 'someTaskId', 'type': 'build', 'locale': 'ro'},
+        ],
+    },
+    ['ro']
+), (
+    {
+        'upstreamArtifacts': [
+            {'path': 'some/path', 'taskId': 'someTaskId', 'type': 'build', 'locale': 'ro'},
+            {'path': 'some/path', 'taskId': 'someTaskId', 'type': 'build', 'locale': 'sk'},
+        ],
+    },
+    ['ro', 'sk']
+), (
+    {
+        'locale': 'ro',
+        'upstreamArtifacts': [
+            {'path': 'some/path', 'taskId': 'someTaskId', 'type': 'build'},
+        ],
+    },
+    ['ro']
+)))
+def test_beetmover_template_args_locales(context, payload, expected_locales):
+    context.task = get_fake_valid_task('task_partials.json')
+    context.task['payload'] = payload
+    context.task['payload']['upload_date'] = '2018/04/2018-04-09-15-30-00'
+
+    template_args = generate_beetmover_template_args(context)
+    if expected_locales:
+        assert 'locale' not in template_args    # locale used to be the old way of filling locale
+        assert template_args['locales'] == expected_locales
+    else:
+        assert 'locale' not in template_args
+        assert 'locales' not in template_args
 
 
 def test_beetmover_template_args_generation_release(context):
@@ -128,8 +191,8 @@ def test_beetmover_template_args_generation_release(context):
     expected_template_args = {
         'branch': 'mozilla-central',
         'platform': 'android-api-15',
-        'filename_platform': 'android-arm',
         'product': 'Fake',
+        'filename_platform': 'android-arm',
         'stage_platform': 'android-api-15',
         'template_key': 'fake_candidates',
         'upload_date': '2016/09/2016-09-01-16-26-14',
@@ -137,10 +200,30 @@ def test_beetmover_template_args_generation_release(context):
         'buildid': '20990205110000',
         'partials': {},
         'build_number': 3,
+        'locales': ['en-US'],
     }
 
     template_args = generate_beetmover_template_args(context)
     assert template_args == expected_template_args
+
+
+@pytest.mark.parametrize('locale_in_payload, locales_in_upstream_artifacts, raises', ((
+    'en-US', [], False,
+), (
+    'en-US', ['en-US'], False,
+), (
+    'ro', ['ro'], False,
+), (
+    'en-US', ['ro'], True,
+), (
+    'en-US', ['en-US', 'ro'], True,
+)))
+def test_check_locale_consistency(locale_in_payload, locales_in_upstream_artifacts, raises):
+    if raises:
+        with pytest.raises(TaskVerificationError):
+            _check_locale_consistency(locale_in_payload, locales_in_upstream_artifacts)
+    else:
+        _check_locale_consistency(locale_in_payload, locales_in_upstream_artifacts)
 
 
 # is_release_action is_promotion_action {{{1
@@ -251,39 +334,3 @@ def test_matches_exclude(keyname, expected):
 )))
 def test_get_product_name(appName, tmpl_key, expected):
     assert get_product_name(appName, tmpl_key) == expected
-
-
-# is_partner_private_task {{{1
-@pytest.mark.parametrize("action,payload_id,expected", ((
-    "push-to-dummy", None, False
-), (
-    "push-to-dummy", [1], False
-), (
-    "push-to-partner", None, True
-), (
-    "push-to-partner", [1], False
-)))
-def test_is_partner_private_task(context, action, payload_id, expected):
-    context.action = action
-    if payload_id:
-        context.task['payload'][PARTNER_REPACK_PUBLIC_PAYLOAD_ID] = True
-
-    assert is_partner_private_task(context) == expected
-
-
-# is_partner_public_task {{{1
-@pytest.mark.parametrize("action,payload_id,expected", ((
-    "push-to-dummy", None, False
-), (
-    "push-to-dummy", [1], False
-), (
-    "push-to-partner", None, False
-), (
-    "push-to-partner", [1], True
-)))
-def test_is_partner_public_task(context, action, payload_id, expected):
-    context.action = action
-    if payload_id:
-        context.task['payload'][PARTNER_REPACK_PUBLIC_PAYLOAD_ID] = True
-
-    assert is_partner_public_task(context) == expected

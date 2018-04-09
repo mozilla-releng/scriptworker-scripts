@@ -9,6 +9,8 @@ import pprint
 import re
 import yaml
 
+from scriptworker.exceptions import TaskVerificationError
+
 from beetmoverscript.constants import (
     HASH_BLOCK_SIZE,
     RELEASE_ACTIONS, PROMOTION_ACTIONS, PRODUCT_TO_PATH,
@@ -138,14 +140,42 @@ def generate_beetmover_template_args(context):
     # e.g. action = 'push-to-candidates' or 'push-to-nightly'
     tmpl_bucket = context.action.split('-')[-1]
 
+    locales_in_upstream_artifacts = [
+        upstream_artifact['locale']
+        for upstream_artifact in task['payload']['upstreamArtifacts']
+        if 'locale' in upstream_artifact
+    ]
+
+    if 'locale' in task['payload'] and locales_in_upstream_artifacts:
+        _check_locale_consistency(task['payload']['locale'], locales_in_upstream_artifacts)
+        tmpl_args['locales'] = locales_in_upstream_artifacts
+    elif locales_in_upstream_artifacts:
+        tmpl_args['locales'] = locales_in_upstream_artifacts
+    elif 'locale' in task['payload']:
+        tmpl_args['locales'] = [task['payload']['locale']]
+
     product_name = get_product_name(release_props["appName"].lower(), release_props["stage_platform"])
-    if 'locale' in task["payload"]:
-        tmpl_args["locale"] = task["payload"]["locale"]
+    if tmpl_args.get('locales') and tmpl_args.get('locales') != ['en-US']:
         tmpl_args["template_key"] = "%s_%s_repacks" % (product_name, tmpl_bucket)
     else:
         tmpl_args["template_key"] = "%s_%s" % (product_name, tmpl_bucket)
 
     return tmpl_args
+
+
+def _check_locale_consistency(locale_in_payload, locales_in_upstream_artifacts):
+    if len(locales_in_upstream_artifacts) > 1:
+        raise TaskVerificationError(
+            '`task.payload.locale` is defined ("{}") but too many locales set in \
+`task.payload.upstreamArtifacts` ({})'.format(locale_in_payload, locales_in_upstream_artifacts)
+        )
+    elif len(locales_in_upstream_artifacts) == 1:
+        locale_in_upstream_artifacts = locales_in_upstream_artifacts[0]
+        if locale_in_payload != locale_in_upstream_artifacts:
+            raise TaskVerificationError(
+                '`task.payload.locale` ("{}") does not match the one set in \
+`task.payload.upstreamArtifacts` ("{}")'.format(locale_in_payload, locale_in_upstream_artifacts)
+            )
 
 
 def generate_beetmover_manifest(context):

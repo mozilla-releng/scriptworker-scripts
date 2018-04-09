@@ -8,8 +8,8 @@ metadata:
 s3_bucket_path: pub/firefox/candidates/{{ version }}-candidates/build{{ build_number }}/
 
 mapping:
+{% for locale in locales %}
   {{ locale }}:
-
     target.complete.mar:
       s3_key: update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
       destinations:
@@ -80,3 +80,4 @@ mapping:
       update_balrog_manifest: true
       from_buildid: {{ partials[partial].buildid }}
   {% endfor %}
+{% endfor %} # end for locales

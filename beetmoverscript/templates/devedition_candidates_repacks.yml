@@ -7,6 +7,7 @@ metadata:
 s3_bucket_path: pub/devedition/candidates/{{ version }}-candidates/build{{ build_number }}/
 
 mapping:
+{% for locale in locales %}
   {{ locale }}:
 
     target.complete.mar:
@@ -79,3 +80,4 @@ mapping:
       update_balrog_manifest: true
       from_buildid: {{ partials[partial].buildid }}
   {% endfor %}
+{% endfor %} # end for locales
