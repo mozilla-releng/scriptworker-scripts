@@ -1,4 +1,3 @@
-import copy
 import os
 import pytest
 
@@ -119,28 +118,24 @@ def test_build_filelist_missing_file(context, task_dfn):
         task.build_filelist(context)
 
 
-@pytest.mark.parametrize('api_root, scope, raises', (
-    ('http://localhost:5000', 'project:releng:addons.mozilla.org:server:dev', False),
-    ('http://some-amo.url', 'project:releng:addons.mozilla.org:server:dev', False),
-    ('https://addons.allizom.org', 'project:releng:addons.mozilla.org:server:staging', False),
-    ('https://addons.allizom.org/', 'project:releng:addons.mozilla.org:server:staging', False),
-    ('https://addons.mozilla.org', 'project:releng:addons.mozilla.org:server:production', False),
-    ('https://addons.mozilla.org/', 'project:releng:addons.mozilla.org:server:production', False),
+@pytest.mark.parametrize('api_root, scope', (
+    ('http://localhost:5000', 'project:releng:addons.mozilla.org:server:dev'),
+    ('http://some-amo.url', 'project:releng:addons.mozilla.org:server:dev'),
+    ('https://addons.allizom.org', 'project:releng:addons.mozilla.org:server:staging'),
+    ('https://addons.allizom.org/', 'project:releng:addons.mozilla.org:server:staging'),
+    ('https://addons.mozilla.org', 'project:releng:addons.mozilla.org:server:production'),
+    ('https://addons.mozilla.org/', 'project:releng:addons.mozilla.org:server:production'),
 ))
-def test_get_amo_instance_config_from_scope(context, api_root, scope, raises):
-    context.config['amo_instances'][scope] = copy.deepcopy(context.config['amo_instances']['project:releng:addons.mozilla.org:server:dev'])
+def test_get_amo_instance_config_from_scope(context, api_root, scope):
+    context.config['amo_instances'][scope] = context.config['amo_instances']['project:releng:addons.mozilla.org:server:dev']
     context.config['amo_instances'][scope]['amo_server'] = api_root
     context.task['scopes'] = [scope]
 
-    if raises:
-        with pytest.raises(TaskVerificationError):
-            task.get_amo_instance_config_from_scope(context)
-    else:
-        assert task.get_amo_instance_config_from_scope(context) == {
-            'amo_server': api_root,
-            'jwt_user': 'some-username',
-            'jwt_secret': 'some-secret'
-        }
+    assert task.get_amo_instance_config_from_scope(context) == {
+        'amo_server': api_root,
+        'jwt_user': 'some-username',
+        'jwt_secret': 'some-secret'
+    }
 
 
 @pytest.mark.parametrize('scope', (
