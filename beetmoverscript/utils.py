@@ -145,12 +145,13 @@ def generate_beetmover_template_args(context):
         for upstream_artifact in task['payload']['upstreamArtifacts']
         if 'locale' in upstream_artifact
     ]
+    uniques_locales_in_upstream_artifacts = sorted(list(set(locales_in_upstream_artifacts)))
 
-    if 'locale' in task['payload'] and locales_in_upstream_artifacts:
-        _check_locale_consistency(task['payload']['locale'], locales_in_upstream_artifacts)
-        tmpl_args['locales'] = locales_in_upstream_artifacts
-    elif locales_in_upstream_artifacts:
-        tmpl_args['locales'] = locales_in_upstream_artifacts
+    if 'locale' in task['payload'] and uniques_locales_in_upstream_artifacts:
+        _check_locale_consistency(task['payload']['locale'], uniques_locales_in_upstream_artifacts)
+        tmpl_args['locales'] = uniques_locales_in_upstream_artifacts
+    elif uniques_locales_in_upstream_artifacts:
+        tmpl_args['locales'] = uniques_locales_in_upstream_artifacts
     elif 'locale' in task['payload']:
         tmpl_args['locales'] = [task['payload']['locale']]
 
@@ -163,14 +164,14 @@ def generate_beetmover_template_args(context):
     return tmpl_args
 
 
-def _check_locale_consistency(locale_in_payload, locales_in_upstream_artifacts):
-    if len(locales_in_upstream_artifacts) > 1:
+def _check_locale_consistency(locale_in_payload, uniques_locales_in_upstream_artifacts):
+    if len(uniques_locales_in_upstream_artifacts) > 1:
         raise TaskVerificationError(
             '`task.payload.locale` is defined ("{}") but too many locales set in \
-`task.payload.upstreamArtifacts` ({})'.format(locale_in_payload, locales_in_upstream_artifacts)
+`task.payload.upstreamArtifacts` ({})'.format(locale_in_payload, uniques_locales_in_upstream_artifacts)
         )
-    elif len(locales_in_upstream_artifacts) == 1:
-        locale_in_upstream_artifacts = locales_in_upstream_artifacts[0]
+    elif len(uniques_locales_in_upstream_artifacts) == 1:
+        locale_in_upstream_artifacts = uniques_locales_in_upstream_artifacts[0]
         if locale_in_payload != locale_in_upstream_artifacts:
             raise TaskVerificationError(
                 '`task.payload.locale` ("{}") does not match the one set in \

@@ -155,6 +155,7 @@ def test_beetmover_template_args_generation(context, taskjson, partials):
     {
         'upstreamArtifacts': [
             {'path': 'some/path', 'taskId': 'someTaskId', 'type': 'build', 'locale': 'ro'},
+            {'path': 'some/other/path', 'taskId': 'someOtherTaskId', 'type': 'signing', 'locale': 'ro'},
             {'path': 'some/path', 'taskId': 'someTaskId', 'type': 'build', 'locale': 'sk'},
         ],
     },
