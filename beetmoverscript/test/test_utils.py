@@ -335,3 +335,39 @@ def test_matches_exclude(keyname, expected):
 )))
 def test_get_product_name(appName, tmpl_key, expected):
     assert get_product_name(appName, tmpl_key) == expected
+
+
+# is_partner_private_task {{{1
+@pytest.mark.parametrize("action,payload_id,expected", ((
+    "push-to-dummy", None, False
+), (
+    "push-to-dummy", [1], False
+), (
+    "push-to-partner", None, True
+), (
+    "push-to-partner", [1], False
+)))
+def test_is_partner_private_task(context, action, payload_id, expected):
+    context.action = action
+    if payload_id:
+        context.task['payload'][PARTNER_REPACK_PUBLIC_PAYLOAD_ID] = True
+
+    assert is_partner_private_task(context) == expected
+
+
+# is_partner_public_task {{{1
+@pytest.mark.parametrize("action,payload_id,expected", ((
+    "push-to-dummy", None, False
+), (
+    "push-to-dummy", [1], False
+), (
+    "push-to-partner", None, False
+), (
+    "push-to-partner", [1], True
+)))
+def test_is_partner_public_task(context, action, payload_id, expected):
+    context.action = action
+    if payload_id:
+        context.task['payload'][PARTNER_REPACK_PUBLIC_PAYLOAD_ID] = True
+
+    assert is_partner_public_task(context) == expected
