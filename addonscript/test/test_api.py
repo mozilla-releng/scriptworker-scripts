@@ -1,15 +1,9 @@
 import contextlib
-# import json
 import os
-# import time
-# import uuid
 
 import aiohttp
 import pytest
 from aioresponses import aioresponses
-# from jose import jws
-# from jose.constants import ALGORITHMS
-# from freezegun import freeze_time
 
 from addonscript.test import tmpdir
 from scriptworker.context import Context
@@ -18,9 +12,6 @@ import addonscript.api as api
 from addonscript.exceptions import SignatureError, AMOConflictError
 
 assert tmpdir  # silence flake8
-
-# helper constants, fixtures, functions {{{1
-# EXAMPLE_CONFIG = os.path.join(BASE_DIR, 'config_example.json')
 
 
 @pytest.fixture(scope='function')
