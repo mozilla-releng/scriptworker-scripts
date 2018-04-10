@@ -33,7 +33,7 @@ def get_default_config(base_dir=None):
 async def sign_addon(context, locale):
     try:
         upload_data = await retry_async(do_upload, args=(context, locale),
-                                        retry_exceptions=tuple(ClientError))
+                                        retry_exceptions=tuple([ClientError]))
     except AMOConflictError as exc:
         log.info(exc.message)
         upload_data = {'pk': None}
