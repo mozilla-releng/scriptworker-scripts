@@ -15,7 +15,7 @@ from addonscript.test import tmpdir
 from scriptworker.context import Context
 
 import addonscript.api as api
-from addonscript.exceptions import AMOConflictError
+from addonscript.exceptions import SignatureError, AMOConflictError
 
 assert tmpdir  # silence flake8
 
@@ -87,16 +87,50 @@ async def test_do_upload(fake_session, context, tmpdir, mocker, statuscode, rais
 
 
 @pytest.mark.asyncio
-async def get_signed_addon_url_success(context, mocker):
+async def test_get_signed_addon_url_success(context, mocker):
     status_json = {
         'files': [{
             'signed': True,
             'download_url': "https://some-download-url/foo",
         }]
     }
-    mocker.patch.object(api, 'get_upload_status', return_value=status_json)
+
+    async def new_upload_status(*args, **kwargs):
+        return status_json
+
+    mocker.patch.object(api, 'get_upload_status', new=new_upload_status)
     resp = await api.get_signed_addon_url(context, 'en-GB', 'deadbeef')
     assert resp == "https://some-download-url/foo"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'num_files,raises',
+    ((0, True),
+     (1, False),
+     (2, True),
+     (10, True))
+)
+async def test_get_signed_addon_url_files(context, mocker, num_files, raises):
+    status_json = {'files': []}
+    for unused in range(num_files):
+        del unused  # Not used
+        status_json['files'].append({
+            'signed': True,
+            'download_url': "https://some-download-url/foo",
+        })
+
+    async def new_upload_status(*args, **kwargs):
+        return status_json
+
+    mocker.patch.object(api, 'get_upload_status', new=new_upload_status)
+
+    raisectx = contextlib.suppress()
+    if raises:
+        raisectx = pytest.raises(SignatureError)
+    with raisectx:
+        resp = await api.get_signed_addon_url(context, 'en-GB', 'deadbeef')
+        assert resp == "https://some-download-url/foo"
 
 
 @pytest.mark.asyncio
