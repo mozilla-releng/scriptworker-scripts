@@ -23,7 +23,7 @@ assert tmpdir  # silence flake8
 
 
 @pytest.fixture(scope='function')
-async def context():
+def context():
     context = Context()
     context.config = {
         'amo_instances': {
