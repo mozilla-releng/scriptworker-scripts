@@ -104,8 +104,7 @@ async def test_get_signed_addon_url_success(context, mocker):
 )
 async def test_get_signed_addon_url_files(context, mocker, num_files, raises):
     status_json = {'files': []}
-    for unused in range(num_files):
-        del unused  # Not used
+    for _ in range(num_files):
         status_json['files'].append({
             'signed': True,
             'download_url': "https://some-download-url/foo",
