@@ -1,4 +1,4 @@
-# import contextlib
+import contextlib
 # import json
 import os
 # import time
@@ -15,6 +15,7 @@ from addonscript.test import tmpdir
 from scriptworker.context import Context
 
 import addonscript.api as api
+from addonscript.exceptions import AMOConflictError
 
 assert tmpdir  # silence flake8
 
@@ -44,6 +45,45 @@ def context():
 async def fake_session(event_loop):
     async with aiohttp.ClientSession() as session:
         return session
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'statuscode,raises',
+    ((200, None),
+     (203, None),
+     (302, None),
+     (401, aiohttp.client_exceptions.ClientResponseError),
+     (503, aiohttp.client_exceptions.ClientResponseError),
+     (409, AMOConflictError))
+)
+async def test_do_upload(fake_session, context, tmpdir, mocker, statuscode, raises):
+    upload_file = '{}/test.xpi'.format(tmpdir)
+    context.locales = {}
+    context.locales['en-GB'] = {
+        'id': 'langpack-en-GB@firefox.mozilla.org',
+        'version': '59.0buildid20180406102847',
+        'unsigned': upload_file,
+    }
+    with open(upload_file, 'wb') as f:
+        f.write(b'foobar')
+    expected_url = "api/v3/addons/{id}/versions/{version}/".format(
+        id='langpack-en-GB@firefox.mozilla.org',
+        version='59.0buildid20180406102847')
+    mocked_url = "{}/{}".format('http://some-amo-it.url', expected_url)
+
+    mocker.patch.object(api, 'get_channel', return_value='unlisted')
+
+    with aioresponses() as m:
+        context.session = fake_session
+        m.put(mocked_url, status=statuscode, body='{"foo": "bar"}')
+
+        raisectx = contextlib.suppress()
+        if raises:
+            raisectx = pytest.raises(raises)
+        with raisectx:
+            resp = await api.do_upload(context, 'en-GB')
+            assert resp == {"foo": "bar"}
 
 
 @pytest.mark.asyncio
