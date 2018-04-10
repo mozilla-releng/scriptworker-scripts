@@ -87,6 +87,19 @@ async def test_do_upload(fake_session, context, tmpdir, mocker, statuscode, rais
 
 
 @pytest.mark.asyncio
+async def get_signed_addon_url_success(context, mocker):
+    status_json = {
+        'files': [{
+            'signed': True,
+            'download_url': "https://some-download-url/foo",
+        }]
+    }
+    mocker.patch.object(api, 'get_upload_status', return_value=status_json)
+    resp = await api.get_signed_addon_url(context, 'en-GB', 'deadbeef')
+    assert resp == "https://some-download-url/foo"
+
+
+@pytest.mark.asyncio
 async def test_get_signed_xpi(fake_session, context, tmpdir):
     destination = os.path.join(tmpdir, 'langpack.xpi')
     download_path = 'https://addons.example.com/some/file+path'
