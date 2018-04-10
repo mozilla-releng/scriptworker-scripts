@@ -463,6 +463,7 @@ def test_move_beet(event_loop, update_manifest, action):
 async def test_move_partner_beets(context, mocker):
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
     context.release_props, release_props_file = get_release_props(context)
+    mocker.patch('beetmoverscript.utils.JINJA_ENV', get_test_jinja_env())
     mapping_manifest = generate_beetmover_manifest(context)
 
     mocker.patch.object(beetmoverscript.script, 'get_destination_for_private_repack_path', new=noop_sync)
