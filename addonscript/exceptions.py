@@ -10,4 +10,7 @@ class SignatureError(Exception):
 class AMOConflictError(Exception):
     """Error when AMO returns 409-Conflict usually from a duplicate version."""
 
-    pass
+    def __init__(self, message):
+        """Init and store the message to this exception."""
+        self.message = message
+        Exception.__init__(self, message)
