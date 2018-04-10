@@ -128,9 +128,72 @@ async def test_get_signed_addon_url_files(context, mocker, num_files, raises):
     raisectx = contextlib.suppress()
     if raises:
         raisectx = pytest.raises(SignatureError)
-    with raisectx:
+    with raisectx as excinfo:
         resp = await api.get_signed_addon_url(context, 'en-GB', 'deadbeef')
         assert resp == "https://some-download-url/foo"
+    if raises:
+        assert "Expected 1 file" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'errors,raises',
+    (([], False),
+     (["deadbeef", "whimsycorn"], True),
+     (["deadbeef"], True))
+)
+async def test_get_signed_addon_url_validation_errors(context, mocker, errors, raises):
+    status_json = {
+        'files': [{
+            'signed': True,
+            'download_url': "https://some-download-url/foo",
+        }],
+        'validation_results': {'errors': errors},
+    }
+
+    async def new_upload_status(*args, **kwargs):
+        return status_json
+
+    mocker.patch.object(api, 'get_upload_status', new=new_upload_status)
+
+    raisectx = contextlib.suppress()
+    if raises:
+        raisectx = pytest.raises(SignatureError)
+    with raisectx as excinfo:
+        resp = await api.get_signed_addon_url(context, 'en-GB', 'deadbeef')
+        assert resp == "https://some-download-url/foo"
+    if raises:
+        assert "Automated validation produced" in str(excinfo.value)
+        for val in errors:
+            assert val in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'variant',
+    ('signed', 'download')
+)
+async def test_get_signed_addon_url_other_errors(context, mocker, variant):
+    status_json = {
+        'files': [{
+            'signed': True if variant != 'signed' else False,
+        }],
+    }
+    if variant != "download":
+        status_json['files'][0]['download_url'] = "https://some-download-url/foo"
+
+    async def new_upload_status(*args, **kwargs):
+        return status_json
+
+    mocker.patch.object(api, 'get_upload_status', new=new_upload_status)
+
+    raisectx = pytest.raises(SignatureError)
+    with raisectx as excinfo:
+        await api.get_signed_addon_url(context, 'en-GB', 'deadbeef')
+    if variant == "signed":
+        assert 'Expected XPI "signed" parameter' in str(excinfo.value)
+    if variant == "download":
+        assert 'Expected XPI "download_url" parameter' in str(excinfo.value)
 
 
 @pytest.mark.asyncio
