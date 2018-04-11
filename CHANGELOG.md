@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [6.0.0] = 2018-04-11
+### Added
+- Thunderbird support (branches, S3 buckets, scopes prefix). You must now define `taskcluster_scope_prefix` in configuration.
+- Partner repacks support (actions, paths). Configuration may now contain partner-related data. See `config_example.json`.
+  - Support for public/private repacks
+- Support for several different locales in `task.payload.upstreamArtifacts`. Bails out if it contradicts `task.payload.locale`
+
+
+### Removed
+- `actions` in configuration. You don't need to define them anymore in configuration
+- `constants.TEMPLATE_KEY_PLATFORMS` in favor of `constants.NORMALIZED_FILENAME_PLATFORMS`
+
 ## [5.1.2] = 2018-04-04
 ### Fixed
 - Add KEY file to candidates directory templates
