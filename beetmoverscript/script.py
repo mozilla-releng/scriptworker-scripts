@@ -342,11 +342,7 @@ def get_destination_for_private_repack_path(context, manifest, full_path, locale
     version = context.task['payload']['version']
 
     if is_partner_private_task(context):
-        # XXX: temp hack until bug 1447673 is solved
-        if context.bucket == "dep":
-            prefix = PARTNER_REPACK_PUBLIC_PREFIX_TMPL.format(version=version, build_number=build_number)
-            path = os.path.join(prefix, 'partner-repacks', pretty_full_path)
-        return path
+        return pretty_full_path
     elif is_partner_public_task(context):
         prefix = PARTNER_REPACK_PUBLIC_PREFIX_TMPL.format(version=version, build_number=build_number)
         return os.path.join(prefix, pretty_full_path)

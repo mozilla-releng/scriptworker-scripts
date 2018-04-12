@@ -15,7 +15,7 @@ from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    get_releases_prefix, get_product_name,
                                    is_partner_private_task, is_partner_public_task,
                                    _check_locale_consistency)
-from beetmoverscript.constants import HASH_BLOCK_SIZE, PARTNER_REPACK_PUBLIC_PAYLOAD_ID
+from beetmoverscript.constants import HASH_BLOCK_SIZE
 
 assert context  # silence pyflakes
 
@@ -346,37 +346,19 @@ def test_get_product_name(appName, tmpl_key, expected):
     assert get_product_name(appName, tmpl_key) == expected
 
 
-# is_partner_private_task {{{1
-@pytest.mark.parametrize("action,payload_id,expected", ((
-    "push-to-dummy", None, False
+# is_partner_private_public_task {{{1
+@pytest.mark.parametrize("action,bucket,expected_private,expected_public", ((
+    "push-to-dummy", "dep", False, False
 ), (
-    "push-to-dummy", [1], False
+    "push-to-dummy", "prod", False, False
 ), (
-    "push-to-partner", None, True
+    "push-to-partner", "dep-partner", True, False
 ), (
-    "push-to-partner", [1], False
+    "push-to-partner", "dep", False, True
 )))
-def test_is_partner_private_task(context, action, payload_id, expected):
+def test_is_partner_private_public_task(context, action, bucket, expected_private, expected_public):
     context.action = action
-    if payload_id:
-        context.task['payload'][PARTNER_REPACK_PUBLIC_PAYLOAD_ID] = True
+    context.bucket = bucket
 
-    assert is_partner_private_task(context) == expected
-
-
-# is_partner_public_task {{{1
-@pytest.mark.parametrize("action,payload_id,expected", ((
-    "push-to-dummy", None, False
-), (
-    "push-to-dummy", [1], False
-), (
-    "push-to-partner", None, False
-), (
-    "push-to-partner", [1], True
-)))
-def test_is_partner_public_task(context, action, payload_id, expected):
-    context.action = action
-    if payload_id:
-        context.task['payload'][PARTNER_REPACK_PUBLIC_PAYLOAD_ID] = True
-
-    assert is_partner_public_task(context) == expected
+    assert is_partner_private_task(context) == expected_private
+    assert is_partner_public_task(context) == expected_public

@@ -7,14 +7,13 @@ import pytest
 from yarl import URL
 
 import beetmoverscript.script
-from beetmoverscript.constants import PARTNER_REPACK_PUBLIC_PAYLOAD_ID
 from beetmoverscript.script import (setup_mimetypes, put,
                                     move_beets, move_beet, async_main,
                                     main, enrich_balrog_manifest,
                                     list_bucket_objects,
                                     push_to_releases, copy_beets,
                                     push_to_partner, move_partner_beets,
-                                    get_destination_for_private_repack_path)
+                                    )
 from beetmoverscript.task import get_upstream_artifacts, get_release_props
 from beetmoverscript.test import (
     context, get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props,
@@ -469,49 +468,6 @@ async def test_move_partner_beets(context, mocker):
     mocker.patch.object(beetmoverscript.script, 'get_destination_for_private_repack_path', new=noop_sync)
     mocker.patch.object(beetmoverscript.script, 'upload_to_s3', new=noop_async)
     await move_partner_beets(context, mapping_manifest)
-
-
-# get_destination_for_private_repack_path {{{1
-@pytest.mark.parametrize('full_path,payload_id,expected,bucket,raises,locale', ((
-    'releng/partner/foobar/target.tar.bz2', None,
-    'pub/firefox/candidates/9999.0-candidates/build99/partner-repacks/ghost/9999.0-99/ghost-variant/v1/linux-i686/en-US/firefox-9999.0.tar.bz2',
-    'dep', False, 'ghost/9999.0-99/ghost-variant/v1/linux-i686/en-US',
-), (
-    'releng/partner/ghost/ghost-variant/v1/linux-i686/en-US/target.tar.bz2', None,
-    'pub/firefox/candidates/9999.0-candidates/build99/partner-repacks/ghost/9999.0-99/ghost-variant/v1/linux-i686/en-US/firefox-9999.0.tar.bz2',
-    'dep', True, 'ghost/9999.0-99/ghost-variant/v1/linux-i686/en-US',
-)))
-def test_get_destination_for_private_repack_path(context, full_path, payload_id,
-                                                 expected, bucket, raises, locale):
-    context.bucket = bucket
-    context.action = 'push-to-partner'
-    context.task['payload']['build_number'] = 99
-    context.task['payload']['version'] = '9999.0'
-    if payload_id:
-        context.task['payload'][PARTNER_REPACK_PUBLIC_PAYLOAD_ID] = True
-    context.task['payload']['releaseProperties'] = {
-      "appName": "Firefox",
-      "buildid": "20180328233904",
-      "appVersion": "9999.0",
-      "hashType": "sha512",
-      "platform": "linux",
-      "branch": "maple"
-    }
-    # hack in locale
-    for artifact_dict in context.task['payload']['upstreamArtifacts']:
-        artifact_dict['locale'] = locale
-    context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
-    context.release_props, release_props_file = get_release_props(context)
-    mapping_manifest = generate_beetmover_manifest(context)
-
-    if raises:
-        context.action = 'push-to-dummy'
-        with pytest.raises(ScriptWorkerRetryException):
-            get_destination_for_private_repack_path(context, mapping_manifest,
-                                                    full_path, locale)
-    else:
-        assert expected == get_destination_for_private_repack_path(context, mapping_manifest,
-                                                                   full_path, locale)
 
 
 # async_main {{{1
