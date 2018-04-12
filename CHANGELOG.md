@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [6.0.1] = 2018-04-12
+### Fixed
+- Fennec nightly using repack template instead of expected en-US template due to 'multi' locale. See PR#120
+
 ## [6.0.0] = 2018-04-11
 ### Added
 - Thunderbird support (branches, S3 buckets, scopes prefix). You must now define `taskcluster_scope_prefix` in configuration.

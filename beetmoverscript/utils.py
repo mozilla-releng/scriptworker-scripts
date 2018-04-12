@@ -156,7 +156,9 @@ def generate_beetmover_template_args(context):
         tmpl_args['locales'] = [task['payload']['locale']]
 
     product_name = get_product_name(release_props["appName"].lower(), release_props["stage_platform"])
-    if tmpl_args.get('locales') and tmpl_args.get('locales') != ['en-US']:
+    if tmpl_args.get('locales') and (
+            # we only apply the repacks template if not english or android "multi" locale
+            set(tmpl_args.get('locales')).isdisjoint({'en-US', 'multi'})):
         tmpl_args["template_key"] = "%s_%s_repacks" % (product_name, tmpl_bucket)
     else:
         tmpl_args["template_key"] = "%s_%s" % (product_name, tmpl_bucket)
