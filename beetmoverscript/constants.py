@@ -105,7 +105,10 @@ RESTRICTED_BUCKET_PATHS = {
         'pub/thunderbird/candidates',
         'pub/thunderbird/releases',
         'pub/thunderbird/nightly',
-    ]
+    ],
+    'partner': [
+        '',  # all legal
+    ],
 }
 
 # actions that imply actual releases, hence the need of `build_number` and
@@ -155,6 +158,5 @@ PRODUCT_TO_PATH = {
     'thunderbird': 'pub/thunderbird/',
 }
 
-PARTNER_LEADING_STRING = 'releng/partner/'
-PARTNER_REPACK_PUBLIC_PREFIX_TMPL = 'pub/firefox/candidates/{version}-candidates/build{build_number}/partner-repacks/'
+PARTNER_REPACK_PUBLIC_PREFIX_TMPL = 'pub/firefox/candidates/{version}-candidates/build{build_number}/'
 PARTNER_REPACK_PUBLIC_PAYLOAD_ID = 'is_partner_repack_public'

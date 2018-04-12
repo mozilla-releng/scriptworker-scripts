@@ -472,29 +472,17 @@ async def test_move_partner_beets(context, mocker):
 
 
 # get_destination_for_private_repack_path {{{1
-@pytest.mark.parametrize('full_path,payload_id,expected,bucket,raises', ((
-    'releng/partner/ghost/ghost-variant/v1/linux-i686/en-US/target.tar.bz2', None,
-    'ghost/9999.0-99/ghost-variant/v1/linux-i686/en-US/firefox-9999.0.tar.bz2',
-    'release', False
-), (
-    'ghost/ghost-variant/v1/linux-i686/en-US/target.tar.bz2', None,
-    'ghost/9999.0-99/ghost-variant/v1/linux-i686/en-US/firefox-9999.0.tar.bz2',
-    'release', False
-), (
-    'ghost/ghost-variant/v1/linux-i686/en-US/target.tar.bz2', [1],
-    'pub/firefox/candidates/9999.0-candidates/build99/partner-repacks/ghost/ghost-variant/v1/linux-i686/en-US/firefox-9999.0.tar.bz2',
-    'release', False
+@pytest.mark.parametrize('full_path,payload_id,expected,bucket,raises,locale', ((
+    'releng/partner/foobar/target.tar.bz2', None,
+    'pub/firefox/candidates/9999.0-candidates/build99/partner-repacks/ghost/9999.0-99/ghost-variant/v1/linux-i686/en-US/firefox-9999.0.tar.bz2',
+    'dep', False, 'ghost/9999.0-99/ghost-variant/v1/linux-i686/en-US',
 ), (
     'releng/partner/ghost/ghost-variant/v1/linux-i686/en-US/target.tar.bz2', None,
     'pub/firefox/candidates/9999.0-candidates/build99/partner-repacks/ghost/9999.0-99/ghost-variant/v1/linux-i686/en-US/firefox-9999.0.tar.bz2',
-    'dep', False
-), (
-    'releng/partner/ghost/ghost-variant/v1/linux-i686/en-US/target.tar.bz2', None,
-    'pub/firefox/candidates/9999.0-candidates/build99/partner-repacks/ghost/9999.0-99/ghost-variant/v1/linux-i686/en-US/firefox-9999.0.tar.bz2',
-    'dep', True
+    'dep', True, 'ghost/9999.0-99/ghost-variant/v1/linux-i686/en-US',
 )))
 def test_get_destination_for_private_repack_path(context, full_path, payload_id,
-                                                 expected, bucket, raises):
+                                                 expected, bucket, raises, locale):
     context.bucket = bucket
     context.action = 'push-to-partner'
     context.task['payload']['build_number'] = 99
@@ -509,11 +497,12 @@ def test_get_destination_for_private_repack_path(context, full_path, payload_id,
       "platform": "linux",
       "branch": "maple"
     }
+    # hack in locale
+    for artifact_dict in context.task['payload']['upstreamArtifacts']:
+        artifact_dict['locale'] = locale
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
     context.release_props, release_props_file = get_release_props(context)
     mapping_manifest = generate_beetmover_manifest(context)
-
-    locale = 'en-US'
 
     if raises:
         context.action = 'push-to-dummy'
