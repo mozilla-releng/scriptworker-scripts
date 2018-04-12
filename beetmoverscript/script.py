@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 import logging
 from multiprocessing.pool import ThreadPool
 import os
+import re
 from redo import retry
 import sys
 import mimetypes
@@ -18,7 +19,8 @@ from scriptworker.utils import retry_async, raise_future_exceptions
 
 from beetmoverscript.constants import (
     MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE,
-    NORMALIZED_BALROG_PLATFORMS, PARTNER_REPACK_PUBLIC_PREFIX_TMPL
+    NORMALIZED_BALROG_PLATFORMS, PARTNER_REPACK_PUBLIC_PREFIX_TMPL,
+    PARTNER_REPACK_PRIVATE_REGEXES
 )
 from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
@@ -318,6 +320,15 @@ async def move_partner_beets(context, manifest):
     await raise_future_exceptions(beets)
 
 
+def _sanity_check_private_partner_path(path, repl_dict):
+    for regex in PARTNER_REPACK_PRIVATE_REGEXES:
+        regex = regex.format(**repl_dict)
+        if re.match(regex, path):
+            break
+    else:
+        raise ScriptWorkerTaskException("Illegal partner path {}!".format(path))
+
+
 def get_destination_for_private_repack_path(context, manifest, full_path, locale):
     """Function to process the final destination path, relative to the root of
     the S3 bucket. Depending on whether it's a private or public destination, it
@@ -342,6 +353,9 @@ def get_destination_for_private_repack_path(context, manifest, full_path, locale
     version = context.task['payload']['version']
 
     if is_partner_private_task(context):
+        _sanity_check_private_partner_path(
+            locale, {'version': version, 'build_number': build_number}
+        )
         return pretty_full_path
     elif is_partner_public_task(context):
         prefix = PARTNER_REPACK_PUBLIC_PREFIX_TMPL.format(version=version, build_number=build_number)
