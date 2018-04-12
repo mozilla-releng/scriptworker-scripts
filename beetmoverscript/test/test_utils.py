@@ -183,6 +183,15 @@ def test_beetmover_template_args_locales(context, payload, expected_locales):
         assert 'locales' not in template_args
 
 
+def test_beetmover_template_args_fennec_nightly(context):
+    """Ensure that fennec which is en-US and multi don't get the repack template"""
+    context.task = get_fake_valid_task('task_fennec.json')
+    template_args = generate_beetmover_template_args(context)
+    assert 'locale' not in template_args
+    assert template_args['locales'] == ['en-US', 'multi']
+    assert template_args['template_key'] == 'fake_nightly'
+
+
 def test_beetmover_template_args_generation_release(context):
     context.bucket = 'dep'
     context.action = 'push-to-candidates'
