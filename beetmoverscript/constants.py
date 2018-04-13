@@ -160,5 +160,9 @@ PRODUCT_TO_PATH = {
 
 PARTNER_REPACK_PUBLIC_PREFIX_TMPL = 'pub/firefox/candidates/{version}-candidates/build{build_number}/'
 PARTNER_REPACK_PRIVATE_REGEXES = (
-    r'^[^\/.]+/{version}-{build_number}/[^\/.]\/(mac|win32|win64)/[^\/.]+$',
+    r'^[^\/.]+/{version}-{build_number}/[^\/.]+\/(mac|win32|win64|linux-i686|linux-x86_64)/[^\/.]+$',
+)
+PARTNER_REPACK_PUBLIC_REGEXES = (
+    r'^(mac|win32|win64)-EME-free\/[^\/.]+$',
+    r'^partner-repacks\/[^\/.]+\/[^\/.]+\/v\d+\/(mac|win32|win64|linux-i686|linux-x86_64)\/[^\/.]+$',
 )
