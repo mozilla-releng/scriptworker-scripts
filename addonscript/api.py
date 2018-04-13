@@ -2,7 +2,7 @@
 
 from aiohttp.client_exceptions import ClientResponseError
 
-from addonscript.exceptions import SignatureError, AMOConflictError
+from addonscript.exceptions import SignatureError, FatalSignatureError, AMOConflictError
 from addonscript.utils import get_api_url, amo_put, amo_get, amo_download
 from addonscript.task import get_channel
 
@@ -49,7 +49,10 @@ async def get_signed_addon_url(context, locale, pk):
 
     Raises:
         SignatureError: If the metadata lacks something or if the server-side Automated validation
-        reported something.
+        reported something. This is a retryable exception.
+        FatalSignatureError: if there is a nonrecoverable error from this submission, e.g. validation errors.
+        aiohttp.ClientError: If there is some sort of networking issue.
+        asyncio.TimeoutError: If the network request times out.
 
     Returns the signed XPI URL
 
@@ -58,12 +61,18 @@ async def get_signed_addon_url(context, locale, pk):
     upload_status = await get_upload_status(context, locale, pk)
 
     if len(upload_status['files']) != 1:
-        raise SignatureError('Expected 1 file. Got: {}'.format(upload_status))
+        raise SignatureError(
+            'Expected 1 file. Got ({}) full response: {}'.format(
+                len(upload_status['files']), upload_status
+                )
+            )
 
     if upload_status.get('validation_results'):
         validation_errors = upload_status['validation_results'].get('errors')
         if validation_errors:
-            raise SignatureError('Automated validation produced errors: {}'.format(validation_errors))
+            raise FatalSignatureError(
+                'Automated validation produced errors: {}'.format(validation_errors)
+                )
 
     signed_data = upload_status['files'][0]
 

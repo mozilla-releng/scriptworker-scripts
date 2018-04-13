@@ -9,7 +9,7 @@ from addonscript.test import tmpdir
 from scriptworker.context import Context
 
 import addonscript.api as api
-from addonscript.exceptions import SignatureError, AMOConflictError
+from addonscript.exceptions import FatalSignatureError, SignatureError, AMOConflictError
 
 assert tmpdir  # silence flake8
 
@@ -148,7 +148,7 @@ async def test_get_signed_addon_url_validation_errors(context, mocker, errors, r
 
     raisectx = contextlib.suppress()
     if raises:
-        raisectx = pytest.raises(SignatureError)
+        raisectx = pytest.raises(FatalSignatureError)
     with raisectx as excinfo:
         resp = await api.get_signed_addon_url(context, 'en-GB', 'deadbeef')
         assert resp == "https://some-download-url/foo"
