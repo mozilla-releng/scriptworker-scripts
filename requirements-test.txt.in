@@ -12,5 +12,6 @@ pytest-asyncio
 pytest
 pytest-cov
 pytest-mock
+python-coveralls
 # pytest-random-order?
 tox
