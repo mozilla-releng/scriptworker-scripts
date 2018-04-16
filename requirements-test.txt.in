@@ -1,3 +1,4 @@
+# pyup: ignore file
 # Specifically for testing
 -r requirements.txt.in
 aioresponses
