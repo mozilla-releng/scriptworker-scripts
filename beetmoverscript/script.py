@@ -323,7 +323,6 @@ async def move_partner_beets(context, manifest):
 def sanity_check_partner_path(path, repl_dict, regexes):
     for regex in regexes:
         regex = regex.format(**repl_dict)
-        log.critical(regex)
         m = re.match(regex, path)
         if m:
             path_info = m.groupdict()
