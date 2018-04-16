@@ -324,10 +324,16 @@ def sanity_check_partner_path(path, repl_dict, regexes):
     for regex in regexes:
         regex = regex.format(**repl_dict)
         log.critical(regex)
-        if re.match(regex, path):
+        m = re.match(regex, path)
+        if m:
+            path_info = m.groupdict()
+            for substr in ("partner", "subpartner", "locale"):
+                if substr in regex and path_info[substr] in ('..', '.'):
+                    raise ScriptWorkerTaskException("Illegal partner path {} !".format(path))
+            # We're good.
             break
     else:
-        raise ScriptWorkerTaskException("Illegal partner path {}!".format(path))
+        raise ScriptWorkerTaskException("Illegal partner path {} !".format(path))
 
 
 def get_destination_for_partner_repack_path(context, manifest, full_path, locale):

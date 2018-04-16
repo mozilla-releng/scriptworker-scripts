@@ -534,9 +534,9 @@ def test_get_destination_for_partner_repack_path(context, full_path,
 ), (
     "foo/9999-1/bar/mac/baz", False, PARTNER_REPACK_PRIVATE_REGEXES
 ), (
-    ".foo/9999-1/bar/mac/baz", True, PARTNER_REPACK_PRIVATE_REGEXES
+    "../9999-1/bar/mac/baz", True, PARTNER_REPACK_PRIVATE_REGEXES
 ), (
-    "foo/9999-1/bar./mac/baz", True, PARTNER_REPACK_PRIVATE_REGEXES
+    "foo/9999-1/../mac/baz", True, PARTNER_REPACK_PRIVATE_REGEXES
 ), (
     "foo/9999-1/bar/badplatform/baz", True, PARTNER_REPACK_PRIVATE_REGEXES
 ), (
@@ -548,7 +548,7 @@ def test_get_destination_for_partner_repack_path(context, full_path,
 ), (
     "partner-repacks/foo/foo-bar/v1/badplatform/en-US", True, PARTNER_REPACK_PUBLIC_REGEXES
 ), (
-    "partner-repacks/.foo/foo-bar/v1/win32/en-US", True, PARTNER_REPACK_PUBLIC_REGEXES
+    "partner-repacks/foo/foo-bar/v1/win32/en-US/extra", True, PARTNER_REPACK_PUBLIC_REGEXES
 )))
 def test_sanity_check_partner_path(path, raises, regexes):
     repl_dict = {'version': '9999', 'build_number': 1}
