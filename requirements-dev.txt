@@ -1,3 +1,0 @@
-scriptworker
-python-jose
-async-timeout
