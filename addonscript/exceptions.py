@@ -1,8 +1,16 @@
 """addonscript specific exceptions."""
 
+from scriptworker.exceptions import ScriptWorkerRetryException
 
-class SignatureError(Exception):
+
+class SignatureError(ScriptWorkerRetryException):
     """Error when signed XPI is still missing or reported invalid by AMO."""
+
+    pass
+
+
+class FatalSignatureError(Exception):
+    """Fatal error when signed XPI is still missing or reported invalid by AMO."""
 
     pass
 

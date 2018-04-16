@@ -8,7 +8,7 @@ import scriptworker.client
 from scriptworker.utils import retry_async
 
 from addonscript.api import do_upload, get_signed_addon_url, get_signed_xpi
-from addonscript.exceptions import AMOConflictError
+from addonscript.exceptions import AMOConflictError, SignatureError
 from addonscript.task import build_filelist
 from addonscript.xpi import get_langpack_info
 
@@ -41,6 +41,9 @@ async def sign_addon(context, locale):
 
     signed_addon_url = await retry_async(
         get_signed_addon_url, args=(context, locale, upload_data['pk']),
+        attempts=10,  # 10 attempts with default backoff yield around 10 minutes of time
+                      # Most addons will be signed in less than that.
+        retry_exceptions=tuple([ClientError, asyncio.TimeoutError, SignatureError])
     )
     destination = os.path.join(
         context.config['artifact_dir'], 'public/build/', locale, 'target.langpack.xpi'
