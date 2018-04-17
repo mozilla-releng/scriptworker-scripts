@@ -9,6 +9,7 @@ from pushsnapscript.task import pluck_channel, is_allowed_to_push_to_snap_store
 @pytest.mark.parametrize('raises, scopes, expected', (
     (False, ['project:releng:snapcraft:firefox:candidate'], 'candidate'),
     (False, ['project:releng:snapcraft:firefox:beta'], 'beta'),
+    (False, ['project:releng:snapcraft:firefox:esr'], 'esr'),
     (False, ['project:releng:snapcraft:firefox:mock'], 'mock'),
     (False, ['project:releng:snapcraft:firefox:beta', 'some:other:scope'], 'beta'),
 
@@ -29,6 +30,7 @@ def test_pluck_channel(raises, scopes, expected):
 @pytest.mark.parametrize('channel, expected', (
     ('beta', True),
     ('candidate', True),
+    ('esr', True),
 
     ('mock', False),
 ))

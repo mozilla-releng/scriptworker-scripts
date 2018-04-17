@@ -3,7 +3,7 @@ from scriptworker.utils import get_single_item_from_sequence
 
 SNAP_SCOPES_PREFIX = 'project:releng:snapcraft:firefox:'
 
-_CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE = ('beta', 'candidate')
+_CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE = ('beta', 'candidate', 'esr')
 ALLOWED_CHANNELS = ('mock', *_CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE)
 
 
