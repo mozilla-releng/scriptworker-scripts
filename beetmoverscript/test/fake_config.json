@@ -22,7 +22,8 @@
                 "fennec": "dummy",
                 "firefox": "dummy",
                 "fake": "dummy"
-            }
+            },
+            "url_prefix": "https://archive.test"
         }
     }
 }

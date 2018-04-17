@@ -31,7 +31,8 @@ from beetmoverscript.task import (
 from beetmoverscript.utils import (
     get_hash, generate_beetmover_manifest,
     get_size, alter_unpretty_contents, matches_exclude,
-    get_candidates_prefix, get_releases_prefix, get_creds, get_bucket_name,
+    get_candidates_prefix, get_releases_prefix, get_creds,
+    get_bucket_name, get_bucket_url_prefix,
     is_release_action, is_promotion_action, get_partials_props,
     get_product_name, is_partner_action, is_partner_private_task,
     is_partner_public_task
@@ -378,7 +379,7 @@ def generate_balrog_info(context, artifact_pretty_name, locale, destinations, fr
     release_props = context.release_props
     checksums = context.checksums
 
-    url = "{prefix}/{s3_key}".format(prefix="https://archive.mozilla.org",
+    url = "{prefix}/{s3_key}".format(prefix=get_bucket_url_prefix(context),
                                      s3_key=destinations[0])
 
     data = {
