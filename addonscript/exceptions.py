@@ -1,12 +1,18 @@
 """addonscript specific exceptions."""
 
+from scriptworker.constants import STATUSES
 from scriptworker.exceptions import ScriptWorkerRetryException
 
 
 class SignatureError(ScriptWorkerRetryException):
-    """Error when signed XPI is still missing or reported invalid by AMO."""
+    """Error when signed XPI is still missing or reported invalid by AMO.
 
-    pass
+    Attributes:
+        exit_code (int): this is set to 7 (intermittent-task).
+
+    """
+
+    exit_code = STATUSES['intermittent-task']
 
 
 class FatalSignatureError(Exception):
