@@ -24,7 +24,12 @@ class Base(object):
     @staticmethod
     def _convert_dict_into_args(dict_):
         # For instance "commit" being True means the argument should be added to the command line.
-        dict_without_deactivated_unary_arguments = {key: value for key, value in dict_.items() if value is not False}
+        dict_without_positional_arguments = {
+            key: value for key, value in dict_.items() if key != '*args'
+        }
+        dict_without_deactivated_unary_arguments = {
+            key: value for key, value in dict_without_positional_arguments.items() if value is not False
+        }
 
         dash_dash_dict = {
             '--{}'.format(key.replace('_', '-')): value
@@ -36,10 +41,11 @@ class Base(object):
             for key, value in dash_dash_dict.items()
         ]
 
-        flatten_args = [str(item) for tuples in args_with_unary_arguments_alone for item in tuples]
+        flattened_args = [str(item) for tuples in args_with_unary_arguments_alone for item in tuples]
+        flattened_args += dict_.get('*args', [])
 
-        logger.debug('dict_ converted into these args: {}'.format(flatten_args))
-        return flatten_args
+        logger.debug('dict_ converted into these args: {}'.format(flattened_args))
+        return flattened_args
 
 
 class ArgumentParser(argparse.ArgumentParser):

@@ -22,7 +22,6 @@ from oauth2client.service_account import ServiceAccountCredentials
 from unittest.mock import MagicMock
 
 from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
-from mozapkpublisher.common.store_l10n import STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME
 
 # Google play has currently 3 tracks. Rollout deploys
 # to a limited percentage of users
@@ -33,9 +32,6 @@ logger = logging.getLogger(__name__)
 
 
 def add_general_google_play_arguments(parser):
-    parser.add_argument('--package-name', choices=STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME.keys(),
-                        help='The Google play name of the app', required=True)
-
     parser.add_argument('--service-account', help='The service account email', required=True)
     parser.add_argument('--credentials', dest='google_play_credentials_file', type=argparse.FileType(mode='rb'),
                         help='The p12 authentication file', required=True)

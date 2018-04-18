@@ -46,12 +46,8 @@ class BadApk(LoggedError):
     pass
 
 
-class ArmVersionCodeTooHigh(LoggedError):
-    def __init__(self, arm_version_code, x86_version_code):
-        super(ArmVersionCodeTooHigh, self).__init__(
-            'ARM build has a higher version code ({}) than the x86 one ({}). For more context about this error,\
-see: https://bugzilla.mozilla.org/show_bug.cgi?id=1338477'.format(arm_version_code, x86_version_code)
-        )
+class BadSetOfApks(LoggedError):
+    pass
 
 
 class NoTranslationGiven(LoggedError):

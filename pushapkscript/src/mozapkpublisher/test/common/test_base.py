@@ -17,6 +17,10 @@ def test_convert_dict_into_args():
     assert Base._convert_dict_into_args({'unary_option': True}) == ['--unary-option']
     assert Base._convert_dict_into_args({'unary_option': False}) == []
     assert Base._convert_dict_into_args({'string_option': 'a_string'}) == ['--string-option', 'a_string']
+    assert Base._convert_dict_into_args({
+        '*args': ('positional_arg_1', 'positional_arg_2', 'positional_arg_3'),
+        'string_option': 'a_string'
+    }) == ['--string-option', 'a_string', 'positional_arg_1', 'positional_arg_2', 'positional_arg_3']
 
     args = Base._convert_dict_into_args({'a_key': 'a_value', 'unary_option': True, 'k': 'v', 'integers_become_strings': 99})
     assert '--a-key', 'a_value' in args

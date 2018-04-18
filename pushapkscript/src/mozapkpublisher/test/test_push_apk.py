@@ -7,10 +7,10 @@ from unittest.mock import create_autospec
 from copy import copy
 from tempfile import NamedTemporaryFile
 
-from mozapkpublisher.common import apk, googleplay, store_l10n
-from mozapkpublisher.common.exceptions import WrongArgumentGiven, ArmVersionCodeTooHigh
-from mozapkpublisher.push_apk import PushAPK, main, _check_and_get_flatten_version_codes, \
-    _create_or_update_whats_new
+from mozapkpublisher.common import googleplay, store_l10n
+from mozapkpublisher.common.apk import checker, extractor
+from mozapkpublisher.common.exceptions import WrongArgumentGiven
+from mozapkpublisher.push_apk import PushAPK, main, _create_or_update_whats_new, _get_ordered_version_codes
 from mozapkpublisher.test.common.test_store_l10n import set_translations_per_google_play_locale_code, \
     DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE
 
@@ -20,15 +20,13 @@ apk_x86 = NamedTemporaryFile()
 apk_arm = NamedTemporaryFile()
 
 VALID_CONFIG = {
-    'package_name': 'org.mozilla.fennec_aurora',
-    'track': 'alpha',
-    'service-account': 'foo@developer.gserviceaccount.com',
-    'credentials': credentials.name,
-    'apk_x86': apk_x86.name,
-    'apk_armv7_v15': apk_arm.name,
-    'update_gp_strings_from_l10n_store': True,
+    '*args': [apk_x86.name, apk_arm.name],
     'commit': False,
+    'credentials': credentials.name,
     'do_not_contact_google_play': False,
+    'service-account': 'foo@developer.gserviceaccount.com',
+    'track': 'alpha',
+    'update_gp_strings_from_l10n_store': True,
 }
 
 
@@ -51,23 +49,44 @@ def edit_service_mock():
 
 
 def set_up_mocks(monkeypatch_, edit_service_mock_):
+    def _metadata(apk_file_name):
+        if apk_file_name == apk_arm.name:
+            version_code = '0'
+            architecture = 'armeabi-v7a'
+        elif apk_file_name == apk_x86.name:
+            version_code = '1'
+            architecture = 'x86'
+
+        return {
+            'architecture': architecture,
+            'firefox_build_id': '20171112125738',
+            'version_code': version_code,
+            'package_name': 'org.mozilla.firefox',
+            'locales': (
+                'an', 'ar', 'as', 'ast', 'az', 'be', 'bg', 'bn-IN', 'br', 'ca', 'cak', 'cs', 'cy',
+                'da', 'de', 'dsb', 'el', 'en-GB', 'en-US', 'en-ZA', 'eo', 'es-AR', 'es-CL', 'es-ES',
+                'es-MX', 'et', 'eu', 'fa', 'ff', 'fi', 'fr', 'fy-NL', 'ga-IE', 'gd', 'gl', 'gn',
+                'gu-IN', 'he', 'hi-IN', 'hr', 'hsb', 'hu', 'hy-AM', 'id', 'is', 'it', 'ja', 'ka',
+                'kab', 'kk', 'kn', 'ko', 'lo', 'lt', 'lv', 'mai', 'ml', 'mr', 'ms', 'my', 'nb-NO',
+                'nl', 'nn-NO', 'or', 'pa-IN', 'pl', 'pt-BR', 'pt-PT', 'rm', 'ro', 'ru', 'sk', 'sl',
+                'son', 'sq', 'sr', 'sv-SE', 'ta', 'te', 'th', 'tr', 'uk', 'ur', 'uz', 'wo', 'xh',
+                'zam', 'zh-CN', 'zh-TW',
+            ),
+            'api_level': 16,
+            'firefox_version': '57.0'
+        }
+
     monkeypatch_.setattr(googleplay, 'EditService', lambda _, __, ___, commit, contact_google_play: edit_service_mock_)
-    monkeypatch_.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
-    monkeypatch_.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
+    monkeypatch_.setattr(extractor, 'extract_metadata', _metadata)
+    monkeypatch_.setattr(checker, 'cross_check_apks', lambda _: None)
     set_translations_per_google_play_locale_code(monkeypatch_)
 
 
-def test_one_missing_file():
+def test_credentials_are_missing():
     config = copy(VALID_CONFIG)
-
-    for field in ('credentials', 'apk_x86', 'apk_armv7_v15'):
-        old_value = config[field]
-
-        del config[field]
-        with pytest.raises(WrongArgumentGiven):
-            PushAPK(config)
-
-        config[field] = old_value
+    del config['credentials']
+    with pytest.raises(WrongArgumentGiven):
+        PushAPK(config)
 
 
 def test_tracks():
@@ -117,8 +136,8 @@ def test_valid_rollout_percentage(edit_service_mock, monkeypatch):
         edit_service_mock.update_track.reset_mock()
 
 
-def test_check_and_get_flatten_version_codes():
-    assert _check_and_get_flatten_version_codes({
+def test_get_ordered_version_codes():
+    assert _get_ordered_version_codes({
         'x86': {
             'version_code': '1'
         },
@@ -126,16 +145,6 @@ def test_check_and_get_flatten_version_codes():
             'version_code': '0'
         }
     }) == ['0', '1']    # should be sorted
-
-    with pytest.raises(ArmVersionCodeTooHigh):
-        _check_and_get_flatten_version_codes({
-            'x86': {
-                'version_code': '0'
-            },
-            'armv7_v15': {
-                'version_code': '1'
-            }
-        })
 
 
 def test_upload_apk(edit_service_mock, monkeypatch):
@@ -155,7 +164,6 @@ def test_upload_apk_with_locales_updated_from_l10n_store(edit_service_mock, monk
     monkeypatch.setattr(store_l10n, '_translate_moz_locate_into_google_play_one', lambda locale: 'es-US' if locale == 'es-MX' else locale)
 
     config = copy(VALID_CONFIG)
-    config['package_name'] = 'org.mozilla.firefox_beta'
     PushAPK(config).run()
 
     expected_locales = (
@@ -229,8 +237,11 @@ def test_create_or_update_whats_new(edit_service_mock, monkeypatch):
 
 
 def test_do_not_contact_google_play_flag_does_not_request_google_play(monkeypatch):
-    monkeypatch.setattr(apk, 'check_if_apk_is_multilocale', lambda _: None)
-    monkeypatch.setattr(apk, 'check_if_apk_has_claimed_architecture', lambda _, __: None)
+    monkeypatch.setattr(extractor, 'extract_metadata', lambda _: {
+        'package_name': 'org.mozilla.firefox',
+        'version_code': '1',
+    })
+    monkeypatch.setattr(checker, 'cross_check_apks', lambda _: None)
     set_translations_per_google_play_locale_code(monkeypatch)
 
     config = copy(VALID_CONFIG)

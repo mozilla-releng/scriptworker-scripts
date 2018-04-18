@@ -23,6 +23,8 @@ class UpdateDescriptionAPK(Base):
         )
 
         googleplay.add_general_google_play_arguments(cls.parser)
+        cls.parser.add_argument('--package-name', choices=store_l10n.STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME.keys(),
+                                help='The Google play name of the app', required=True)
         cls.parser.add_argument('--force-locale', help='Force to a specific locale (instead of all)')
 
     def update_apk_description(self, package_name):
