@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 import logging
 from multiprocessing.pool import ThreadPool
 import os
+import re
 from redo import retry
 import sys
 import mimetypes
@@ -18,8 +19,8 @@ from scriptworker.utils import retry_async, raise_future_exceptions
 
 from beetmoverscript.constants import (
     MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE,
-    NORMALIZED_BALROG_PLATFORMS, PARTNER_LEADING_STRING,
-    PARTNER_REPACK_PUBLIC_PREFIX_TMPL
+    NORMALIZED_BALROG_PLATFORMS, PARTNER_REPACK_PUBLIC_PREFIX_TMPL,
+    PARTNER_REPACK_PRIVATE_REGEXES, PARTNER_REPACK_PUBLIC_REGEXES
 )
 from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
@@ -309,7 +310,7 @@ async def move_partner_beets(context, manifest):
     for locale in artifacts_to_beetmove:
         for full_path_artifact in artifacts_to_beetmove[locale]:
             source = artifacts_to_beetmove[locale][full_path_artifact]
-            destination = get_destination_for_private_repack_path(context, manifest,
+            destination = get_destination_for_partner_repack_path(context, manifest,
                                                                   full_path_artifact, locale)
             beets.append(
                 asyncio.ensure_future(
@@ -319,7 +320,22 @@ async def move_partner_beets(context, manifest):
     await raise_future_exceptions(beets)
 
 
-def get_destination_for_private_repack_path(context, manifest, full_path, locale):
+def sanity_check_partner_path(path, repl_dict, regexes):
+    for regex in regexes:
+        regex = regex.format(**repl_dict)
+        m = re.match(regex, path)
+        if m:
+            path_info = m.groupdict()
+            for substr in ("partner", "subpartner", "locale"):
+                if substr in regex and path_info[substr] in ('..', '.'):
+                    raise ScriptWorkerTaskException("Illegal partner path {} !".format(path))
+            # We're good.
+            break
+    else:
+        raise ScriptWorkerTaskException("Illegal partner path {} !".format(path))
+
+
+def get_destination_for_partner_repack_path(context, manifest, full_path, locale):
     """Function to process the final destination path, relative to the root of
     the S3 bucket. Depending on whether it's a private or public destination, it
     performs several string manipulations.
@@ -335,30 +351,24 @@ def get_destination_for_private_repack_path(context, manifest, full_path, locale
 
     # pretty name the `target` part to the actual filename
     pretty_full_path = os.path.join(
-        os.path.dirname(full_path),
+        locale,
         manifest['mapping'][locale][os.path.basename(full_path)]
     )
-    # get rid of leading "releng/partner"
-    if pretty_full_path.startswith(PARTNER_LEADING_STRING):
-        pretty_full_path = pretty_full_path[len(PARTNER_LEADING_STRING):]
 
     build_number = context.task['payload']['build_number']
     version = context.task['payload']['version']
 
     if is_partner_private_task(context):
-        elements = pretty_full_path.split('/')
-        identifier = '{version}-{build_number}'.format(version=version, build_number=build_number)
-        # we need need to manually insert the "version-buildno" identifier in
-        # between `partner` # and `partner-variant` to be consistent
-        elements.insert(1, identifier)
-        # TODO: potentially need to remove the `v1` from the path?
-        path = '/'.join(elements)
-        # XXX: temp hack until bug 1447673 is solved
-        if context.bucket == "dep":
-            prefix = PARTNER_REPACK_PUBLIC_PREFIX_TMPL.format(version=version, build_number=build_number)
-            path = os.path.join(prefix, path)
-        return path
+        sanity_check_partner_path(
+            locale, {'version': version, 'build_number': build_number},
+            PARTNER_REPACK_PRIVATE_REGEXES
+        )
+        return pretty_full_path
     elif is_partner_public_task(context):
+        sanity_check_partner_path(
+            locale, {'version': version, 'build_number': build_number},
+            PARTNER_REPACK_PUBLIC_REGEXES
+        )
         prefix = PARTNER_REPACK_PUBLIC_PREFIX_TMPL.format(version=version, build_number=build_number)
         return os.path.join(prefix, pretty_full_path)
 

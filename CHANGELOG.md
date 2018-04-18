@@ -2,6 +2,23 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [7.0.0] = 2018-04-18
+### Added
+- `PARTNER_REPACK_PRIVATE_REGEXES`, `PARTNER_REPACK_PUBLIC_REGEXES`
+- `sanity_check_partner_path` to make sure the paths are sane
+- Thunderbird nightly templates
+
+### Changed
+- Partner repacks now pass their paths as `locale`.
+- Renamed `get_destination_for_private_repack_path` to `get_destination_for_partner_repack_path`
+- Partner buckets are now considered "private" if they contain the substring `partner` in them.
+
+### Fixed
+- Fixed `get_hash` test on macosx
+
+### Removed
+- `PARTNER_LEADING_STRING` and `PARTNER_REPACK_PUBLIC_PAYLOAD_ID`
+
 ## [6.0.1] = 2018-04-12
 ### Fixed
 - Fennec nightly using repack template instead of expected en-US template due to 'multi' locale. See PR#120

@@ -15,7 +15,6 @@ from beetmoverscript.constants import (
     HASH_BLOCK_SIZE,
     RELEASE_ACTIONS, PROMOTION_ACTIONS, PRODUCT_TO_PATH,
     NORMALIZED_FILENAME_PLATFORMS, PARTNER_REPACK_ACTIONS,
-    PARTNER_REPACK_PUBLIC_PAYLOAD_ID,
 )
 
 log = logging.getLogger(__name__)
@@ -86,18 +85,14 @@ def is_partner_private_task(context):
     """Function to return boolean if we're considering a public partner task.
     Does that by checking the action type and presence of a flag in payload
     """
-    task = context.task
-    return (is_partner_action(context.action) and
-            PARTNER_REPACK_PUBLIC_PAYLOAD_ID not in task['payload'])
+    return (is_partner_action(context.action) and 'partner' in context.bucket)
 
 
 def is_partner_public_task(context):
     """Function to return boolean if we're considering a private partner task.
     Does that by checking the action type and absence of a flag in payload
     """
-    task = context.task
-    return (is_partner_action(context.action) and
-            PARTNER_REPACK_PUBLIC_PAYLOAD_ID in task['payload'])
+    return (is_partner_action(context.action) and 'partner' not in context.bucket)
 
 
 def get_product_name(appName, platform):
