@@ -1,0 +1,87 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps {{ product }} Nightly artifacts to pretty names for {{locale}} L10n repack"
+    owner: "release@mozilla.com"
+
+s3_bucket_path: pub/thunderbird/nightly/
+
+mapping:
+  {{ locale }}:
+
+    target.langpack.xpi:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.langpack.xpi
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/{{ platform }}/xpi/thunderbird-{{ version }}.{{ locale }}.langpack.xpi
+        - latest-{{ branch }}-l10n/{{ platform }}/xpi/thunderbird-{{ version }}.{{ locale }}.langpack.xpi
+    target.complete.mar:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.complete.mar
+      update_balrog_manifest: true
+    target.checksums:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.checksums
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.checksums
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.checksums
+    target.checksums.asc:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.checksums.asc
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.checksums.asc
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.checksums.asc
+
+  {% if platform in ["linux-i686", "linux-x86_64"] %}
+    target.tar.bz2:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2
+    target.tar.bz2.asc:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
+  {% elif platform in ["mac"] %}
+    target.dmg:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.dmg
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.dmg
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.dmg
+    target.dmg.asc:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
+  {% elif platform in ["win32", "win64"] %}
+    target.zip:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.zip
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.zip
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.zip
+    target.zip.asc:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
+    target.stub-installer.exe:
+      s3_key: installer-stub.exe
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird Installer.{{ locale }}.exe
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
+        - latest-{{ branch }}-l10n/thunderbird Installer.{{ locale }}.exe
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
+    target.installer.exe:
+      s3_key: installer.exe
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
+  {% endif %}
+  {% for partial in partials %}
+    {{ partial }}:
+      s3_key: thunderbird-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ partials[partial].buildid }}-{{ buildid }}.partial.mar
+      destinations:
+        - partials/{{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ branch }}-{{ version }}-{{ platform }}-{{ locale }}-{{ partials[partial].buildid }}-{{ buildid }}.partial.mar
+      update_balrog_manifest: true
+      from_buildid: {{ partials[partial].buildid }}
+  {% endfor %}
