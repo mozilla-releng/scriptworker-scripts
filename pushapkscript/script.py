@@ -8,8 +8,6 @@ from scriptworker import client
 from scriptworker.artifacts import get_upstream_artifacts_full_paths_per_task_id
 
 from pushapkscript import googleplay, jarsigner
-from pushapkscript.apk import sort_and_check_apks_per_architectures
-from pushapkscript.task import extract_channel
 
 
 log = logging.getLogger(__name__)
@@ -22,18 +20,15 @@ async def async_main(context):
     log.info('Verifying upstream artifacts...')
     artifacts_per_task_id, failed_artifacts_per_task_id = get_upstream_artifacts_full_paths_per_task_id(context)
 
-    all_apks = [
+    all_apks_paths = [
         artifact
         for artifacts_list in artifacts_per_task_id.values()
         for artifact in artifacts_list
         if artifact.endswith('.apk')
     ]
-    apks_per_architectures = sort_and_check_apks_per_architectures(
-        all_apks, channel=extract_channel(context.task)
-    )
 
     log.info('Verifying APKs\' signatures...')
-    [jarsigner.verify(context, apk_path) for apk_path in apks_per_architectures.values()]
+    [jarsigner.verify(context, apk_path) for apk_path in all_apks_paths]
 
     log.info('Finding whether Google Play strings can be updated...')
     google_play_strings_path = googleplay.get_google_play_strings_path(
@@ -42,7 +37,7 @@ async def async_main(context):
 
     log.info('Delegating publication to mozapkpublisher...')
     googleplay.publish_to_googleplay(
-        context, apks_per_architectures, google_play_strings_path,
+        context, all_apks_paths, google_play_strings_path,
     )
 
     log.info('Done!')

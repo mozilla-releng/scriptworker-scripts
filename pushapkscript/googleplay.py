@@ -7,15 +7,6 @@ from pushapkscript.task import extract_channel
 
 log = logging.getLogger(__name__)
 
-# TODO Change the "aurora" scope to "nightly" so we can use the dict defined in mozapkpublisher
-CHANNEL_TO_PACKAGE_NAME = {
-    'aurora': 'org.mozilla.fennec_aurora',
-    'beta': 'org.mozilla.firefox_beta',
-    'release': 'org.mozilla.firefox',
-    # dep-signing mimics Aurora
-    'dep': 'org.mozilla.fennec_aurora',
-}
-
 _CHANNELS_AUTHORIZED_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release')
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
@@ -29,16 +20,17 @@ def publish_to_googleplay(context, apks, google_play_strings_path=None):
 
 
 def craft_push_apk_config(context, apks, google_play_strings_path=None):
-    push_apk_config = {'apk_{}'.format(apk_type): apk_path for apk_type, apk_path in apks.items()}
-
     channel = extract_channel(context.task)
-    push_apk_config['package_name'] = get_package_name(channel)
-
-    push_apk_config['service_account'] = get_service_account(context, channel)
-    push_apk_config['credentials'] = get_certificate_path(context, channel)
-
     payload = context.task['payload']
-    push_apk_config['track'] = payload['google_play_track']
+
+    push_apk_config = {
+        '*args': sorted(apks),   # APKs have been positional arguments since mozapkpublisher 0.6.0
+        'commit': should_commit_transaction(context),
+        'credentials': get_certificate_path(context, channel),
+        'service_account': get_service_account(context, channel),
+        'track': payload['google_play_track'],
+    }
+
     if payload.get('rollout_percentage'):
         push_apk_config['rollout_percentage'] = payload['rollout_percentage']
 
@@ -51,13 +43,7 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
     else:
         push_apk_config['update_gp_strings_from_file'] = google_play_strings_path
 
-    push_apk_config['commit'] = should_commit_transaction(context)
-
     return push_apk_config
-
-
-def get_package_name(channel):
-    return CHANNEL_TO_PACKAGE_NAME[channel]
 
 
 def get_service_account(context, channel):

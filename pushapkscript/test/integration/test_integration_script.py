@@ -109,12 +109,13 @@ class MainTest(unittest.TestCase):
 
         PushAPK.assert_called_with(config={
             'credentials': '/dummy/path/to/certificate.p12',
-            'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
-            'apk_x86': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
+            '*args': sorted([
+                '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
+                '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
+            ]),
             'commit': False,
             'credentials': '/dummy/path/to/certificate.p12',
             'no_gp_string_update': True,
-            'package_name': 'org.mozilla.fennec_aurora',
             'service_account': 'dummy-service-account@iam.gserviceaccount.com',
             'track': 'alpha',
         })
@@ -129,12 +130,13 @@ class MainTest(unittest.TestCase):
 
         PushAPK.assert_called_with(config={
             'credentials': '/dummy/path/to/certificate.p12',
-            'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
-            'apk_x86': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
+            '*args': sorted([
+                '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
+                '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
+            ]),
             'credentials': '/dummy/path/to/certificate.p12',
             'commit': False,
             'no_gp_string_update': True,
-            'package_name': 'org.mozilla.fennec_aurora',
             'rollout_percentage': 25,
             'service_account': 'dummy-service-account@iam.gserviceaccount.com',
             'track': 'rollout',
@@ -154,11 +156,12 @@ class MainTest(unittest.TestCase):
         main(config_path=self.config_generator.generate())
 
         PushAPK.assert_called_with(config={
-            'apk_armv7_v15': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
-            'apk_x86': '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
+            '*args': sorted([
+                '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
+                '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
+            ]),
             'credentials': '/dummy/path/to/certificate.p12',
             'commit': True,
-            'package_name': 'org.mozilla.fennec_aurora',
             'service_account': 'dummy-service-account@iam.gserviceaccount.com',
             'track': 'alpha',
             'update_gp_strings_from_file': '{}/work/cot/{}/public/google_play_strings.json'.format(

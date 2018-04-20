@@ -3,7 +3,7 @@ import unittest
 from scriptworker.exceptions import TaskVerificationError
 from unittest.mock import MagicMock
 
-from pushapkscript.googleplay import craft_push_apk_config, get_package_name, get_service_account, get_certificate_path, \
+from pushapkscript.googleplay import craft_push_apk_config, get_service_account, get_certificate_path, \
     _get_play_config, should_commit_transaction, get_google_play_strings_path, \
     _check_google_play_string_is_the_only_failed_task, _find_unique_google_play_strings_file_in_dict
 
@@ -37,26 +37,17 @@ class GooglePlayTest(unittest.TestCase):
                 'google_play_track': 'alpha'
             },
         }
-        self.apks = {
-            'x86': '/path/to/x86.apk',
-            'arm_v15': '/path/to/arm_v15.apk',
-        }
+        self.apks = ['/path/to/x86.apk', '/path/to/arm_v15.apk']
 
     def test_craft_push_config(self):
-        data = {
-            'aurora': 'org.mozilla.fennec_aurora',
-            'beta': 'org.mozilla.firefox_beta',
-            'release': 'org.mozilla.firefox'
-        }
-        for channel, package_name in data.items():
+        channels = ('aurora', 'beta', 'release')
+        for channel in channels:
             self.context.task['scopes'] = ['project:releng:googleplay:{}'.format(channel)]
             self.assertEqual(craft_push_apk_config(self.context, self.apks), {
-                'apk_arm_v15': '/path/to/arm_v15.apk',
-                'apk_x86': '/path/to/x86.apk',
+                '*args': ['/path/to/arm_v15.apk', '/path/to/x86.apk'],
                 'credentials': '/path/to/{}.p12'.format(channel),
                 'commit': False,
                 'no_gp_string_update': True,
-                'package_name': package_name,
                 'service_account': '{}_account'.format(channel),
                 'track': 'alpha',
             })
@@ -65,12 +56,10 @@ class GooglePlayTest(unittest.TestCase):
         self.context.task['payload']['google_play_track'] = 'rollout'
         self.context.task['payload']['rollout_percentage'] = 10
         self.assertEqual(craft_push_apk_config(self.context, self.apks), {
-            'apk_arm_v15': '/path/to/arm_v15.apk',
-            'apk_x86': '/path/to/x86.apk',
+            '*args': ['/path/to/arm_v15.apk', '/path/to/x86.apk'],
             'credentials': '/path/to/release.p12',
             'commit': False,
             'no_gp_string_update': True,
-            'package_name': 'org.mozilla.firefox',
             'rollout_percentage': 10,
             'service_account': 'release_account',
             'track': 'rollout',
@@ -103,11 +92,6 @@ class GooglePlayTest(unittest.TestCase):
         config = craft_push_apk_config(self.context, self.apks, google_play_strings_path='/path/to/google_play_strings.json')
         self.assertNotIn('no_gp_string_update', config)
         self.assertEqual(config['update_gp_strings_from_file'], '/path/to/google_play_strings.json')
-
-    def test_get_google_play_package_name(self):
-        self.assertEqual(get_package_name('aurora'), 'org.mozilla.fennec_aurora')
-        self.assertEqual(get_package_name('beta'), 'org.mozilla.firefox_beta')
-        self.assertEqual(get_package_name('release'), 'org.mozilla.firefox')
 
     def test_get_service_account(self):
         self.assertEqual(get_service_account(self.context, 'aurora'), 'aurora_account')
