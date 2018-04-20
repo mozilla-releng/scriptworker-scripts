@@ -2,6 +2,19 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.6.0
+* `push_apk()` has its command line arguments changed.
+  * There is no need to precise the package name and the architecture anymore. These values are automatically extracted and checked from the passed APKs. As a consequence, APKs are now (unordered) positional arguments.
+  * `--track` is now required and doesn't default to `alpha` anymore.
+* More data is extracted from APKs and checked.
+  * Namely: processor architecture, Firefox version, Firefox buildId, locales, Android package name, Android API level, Android version code.
+  * `mozapkpublisher.apk` was split in favor of `mozapkpublisher.apk.{extractor,checker}`
+  * `mozapkpublisher.apk.extractor` relies on androguard to extract Android specific data
+  * It works with a copy of the APKs, in the (very unlikely) case the APK gets modified by the extracting function
+  * `mozapkpublisher.apk.checker` verifies the common values are all identical and the different ones are correctly order and none is missing.
+* `Base` parser now accepts positional arguments in parameters dictionary. They must be filled as `{'*args': [positional_arg_1, positional_arg_2, positional_arg_3]}`
+
+
 ## 0.5.0
 * Python 2 support has been droppped. Handling unicode strings in both Python 2 and 3 became too risky for the [pros Python 2 gave](https://github.com/mozilla-releng/mozapkpublisher/pull/45).
 * push_apk.py
