@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+# 0.6.0
+* Removed architecture detection. It's now delegated in mozapkpublisher.
+* Updated mozapkpublisher call to match new function signature
+
 # 0.5.0
 * `script.async_main()` relies on scriptworker (>= 10.2.0) to:
  * initialize context, config, and task
