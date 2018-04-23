@@ -115,6 +115,7 @@ mapping:
       s3_key: {{ platform }}/{{ locale }}/firefox-{{ version }}.tar.bz2.asc
       destinations:
         - {{ platform }}/{{ locale }}/firefox-{{ version }}.tar.bz2.asc
+  {# SOURCE was only used in the 59 and early 60 cycle #}
     SOURCE:
       s3_key: SOURCE
       destinations:
@@ -123,6 +124,9 @@ mapping:
       s3_key: SOURCE.asc
       destinations:
         - SOURCE.asc
+  {% endif %}
+  {# The platform used for checksums switched from `linux-x86_64` during the 61 cycle #}
+  {% if platform in ["firefox-release", "linux-x86_64"] %}
     source.tar.xz:
       s3_key: source/firefox-{{ version}}.source.tar.xz
       destinations:
