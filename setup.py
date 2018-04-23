@@ -1,14 +1,18 @@
-import json
 import os
 from setuptools import setup, find_packages
 
-PATH = os.path.join(os.path.dirname(__file__), "version.json")
-with open(PATH) as filehandle:
-    VERSION = json.load(filehandle)['version_string']
+
+def get_version():
+    PATH = os.path.join(os.path.dirname(__file__), "beetmoverscript/_version.py")
+    d = {}
+    with open(PATH) as filehandle:
+        exec(filehandle.read(), d)
+    return d['__version__']
+
 
 setup(
     name="beetmoverscript",
-    version=VERSION,
+    version=get_version(),
     description="TaskCluster Beetmover Script",
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
@@ -16,7 +20,6 @@ setup(
     packages=find_packages(),
     package_data={
         "beetmoverscript": ["data/*", "templates/*"],
-        "": ["version.json"],
     },
     include_package_data=True,
     zip_safe=False,
