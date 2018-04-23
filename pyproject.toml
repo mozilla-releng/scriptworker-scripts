@@ -20,3 +20,8 @@ showcontent = true
 directory = "changed"
 name = "Changed"
 showcontent = true
+
+[[tool.towncrier.type]]
+directory = "fixed"
+name = "Fixed"
+showcontent = true
