@@ -6,6 +6,34 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.1.0] = (2018-04-24)
+----------------------
+
+Added
+~~~~~
+
+- Added `url_prefix` key to bucket configuration to use for generating balrog
+  manifests. (`#122
+  <https://github.com/mozilla-releng/beetmoverscript/issues/122>`_)
+- Added Thunderbird candidate manifests. (`#123
+  <https://github.com/mozilla-releng/beetmoverscript/issues/123>`_)
+- Add automatic changelog generation using
+  `towncrier <https://github.com/hawkowl/towncrier/>`_. (`#124
+  <https://github.com/mozilla-releng/beetmoverscript/issues/124>`_, `#126
+  <https://github.com/mozilla-releng/beetmoverscript/issues/126>`_)
+
+
+Changed
+~~~~~~~
+
+- Add multi-locale support to Thunderbird nightly manifests. (`#123
+  <https://github.com/mozilla-releng/beetmoverscript/issues/123>`_)
+- Update the release instructions to generate wheels. (`#125
+  <https://github.com/mozilla-releng/beetmoverscript/issues/125>`_)
+- Add support for checksums and sources to be on `*-release` platforms. (`#127
+  <https://github.com/mozilla-releng/beetmoverscript/issues/127>`_)
+
+
 [7.0.0] = (2018-04-18)
 ----------------------
 
