@@ -155,7 +155,7 @@ async def test_sign(context, mocker, format, filename, post_files):
 @pytest.mark.parametrize('formats,raises', ((
     ['gpg'], False,
 ), (
-    ['jar', 'mar', 'gpg'], False,
+    ['jar', 'focus-jar', 'mar', 'gpg'], False,
 ), (
     ['illegal'], True,
 )))

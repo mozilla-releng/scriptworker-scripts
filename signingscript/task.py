@@ -29,6 +29,7 @@ log = logging.getLogger(__name__)
 FORMAT_TO_SIGNING_FUNCTION = frozendict({
     "gpg": sign_gpg,
     "jar": sign_jar,
+    "focus-jar": sign_jar,
     "macapp": sign_macapp,
     "osslsigncode": sign_signcode,
     "sha2signcode": sign_signcode,
