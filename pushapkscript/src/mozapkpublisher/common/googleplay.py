@@ -23,9 +23,9 @@ from unittest.mock import MagicMock
 
 from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
 
-# Google play has currently 3 tracks. Rollout deploys
+# Google play has currently 4 tracks. Rollout deploys
 # to a limited percentage of users
-TRACK_VALUES = ('production', 'beta', 'alpha', 'rollout')
+TRACK_VALUES = ('production', 'beta', 'alpha', 'rollout', 'internal')
 
 
 logger = logging.getLogger(__name__)
