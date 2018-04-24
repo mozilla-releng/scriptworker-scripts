@@ -253,3 +253,7 @@ def get_creds(context):
 
 def get_bucket_name(context, product):
     return context.config['bucket_config'][context.bucket]['buckets'][product]
+
+
+def get_bucket_url_prefix(context):
+    return context.config['bucket_config'][context.bucket]['url_prefix']

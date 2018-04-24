@@ -413,6 +413,7 @@ def test_move_beet(event_loop, update_manifest, action):
         }
     ]
     context.action = action
+    context.bucket = 'nightly'
     context.checksums = dict()
     context.balrog_manifest = list()
     context.raw_balrog_manifest = dict()
@@ -434,7 +435,7 @@ def test_move_beet(event_loop, update_manifest, action):
     expected_balrog_manifest = {
         'hash': '73b91c3625d70e9ba1992f119bdfd3fba85041e6f804a985a18efe06ebb1d4147fb044ac06b28773130b4887dd8b5b3bc63958e1bd74003077d8bc2a3909416b',
         'size': 18,
-        'url': 'https://archive.mozilla.org/pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
+        'url': 'https://archive.test/pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
     }
     actual_upload_args = []
 

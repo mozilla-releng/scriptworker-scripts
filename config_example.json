@@ -20,7 +20,8 @@
             "buckets": {
                 "firefox": "mozilla-releng-firefox-nightly-bucket",
                 "fennec": "mozilla-releng-mobile-nightly-bucket"
-            }
+            },
+            "url_prefix": "https://archive.mozilla.org"
         },
         "release": {
             "credentials": {
@@ -31,7 +32,8 @@
                 "firefox": "mozilla-releng-firefox-release-bucket",
                 "fennec": "mozilla-releng-mobile-release-bucket",
                 "devedition": "mozilla-releng-mobile-release-bucket"
-            }
+            },
+            "url_prefix": "https://archive.mozilla.org"
         },
         "dep": {
             "credentials": {
@@ -42,7 +44,8 @@
                 "firefox": "mozilla-releng-firefox-dep-bucket",
                 "fennec": "mozilla-releng-mobile-dep-bucket",
                 "devedition": "mozilla-releng-mobile-dep-bucket"
-            }
+            },
+            "url_prefix": "http://ftp.stage.mozaws.net"
         },
         "partner": {
             "credentials": {
@@ -51,7 +54,7 @@
             },
             "buckets": {
                 "firefox": "mozilla-releng-private-firefox-bucket"
-            }
+            },
         }
     }
 }

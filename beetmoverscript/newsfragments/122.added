@@ -1,0 +1,1 @@
+Added `url_prefix` key to bucket configuration to use for generating balrog manifests.
