@@ -51,7 +51,7 @@
                     "uniqueItems": true
                 },
                 "google_play_track": {
-                  "enum": ["production", "beta", "alpha", "rollout"]
+                  "enum": ["production", "beta", "alpha", "rollout", "internal"]
                 },
                 "rollout_percentage": {
                   "type": "integer",
