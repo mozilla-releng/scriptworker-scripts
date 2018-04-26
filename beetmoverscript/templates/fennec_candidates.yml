@@ -119,15 +119,18 @@ mapping:
       destinations:
         - host/bin/mbsdiff
     {% if filename_platform == "android-arm" %}
+    {# SOURCE was only used in the 59 and early 60 cycle #}
     SOURCE:
       s3_key: SOURCE
       destinations:
         - SOURCE
-    {# SOURCE was only used in the 59 and early 60 cycle #}
     SOURCE.asc:
       s3_key: SOURCE.asc
       destinations:
         - SOURCE.asc
+    {% endif %}
+    {# The platform used for sources and checksums switched from `android-arm` during the 61 cycle #}
+    {% if platform in ["fennec-release", "android-arm"] %}
     source.tar.xz:
       s3_key: source/fennec-{{ version}}.source.tar.xz
       destinations:
@@ -136,9 +139,6 @@ mapping:
       s3_key: source/fennec-{{ version}}.source.tar.xz.asc
       destinations:
         - source/fennec-{{ version}}.source.tar.xz.asc
-    {% endif %}
-    {# The platform used for checksums switched from `android-arm` during the 61 cycle #}
-    {% if platform in ["fennec-release", "android-arm"] %}
     KEY:
       s3_key: KEY
       destinations:

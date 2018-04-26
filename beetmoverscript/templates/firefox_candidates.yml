@@ -125,7 +125,7 @@ mapping:
       destinations:
         - SOURCE.asc
   {% endif %}
-  {# The platform used for checksums switched from `linux-x86_64` during the 61 cycle #}
+  {# The platform used for sources and checksums switched from `linux-x86_64` during the 61 cycle #}
   {% if platform in ["firefox-release", "linux-x86_64"] %}
     source.tar.xz:
       s3_key: source/firefox-{{ version}}.source.tar.xz
