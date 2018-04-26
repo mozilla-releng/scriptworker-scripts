@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.1.1] = (2018-04-26)
+----------------------
+
+Fixed
+~~~~~
+
+- Fixed fennec support for sources to be on `*-release` platforms. (`#129
+  <https://github.com/mozilla-releng/beetmoverscript/issues/129>`_)
+
+
 [7.1.0] = (2018-04-24)
 ----------------------
 
