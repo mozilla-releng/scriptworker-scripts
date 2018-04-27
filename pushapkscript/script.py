@@ -4,10 +4,9 @@
 import logging
 import os
 
-from scriptworker import client
-from scriptworker.artifacts import get_upstream_artifacts_full_paths_per_task_id
+from scriptworker import client, artifacts
 
-from pushapkscript import googleplay, jarsigner
+from pushapkscript import googleplay, jarsigner, task
 
 
 log = logging.getLogger(__name__)
@@ -18,7 +17,7 @@ async def async_main(context):
     _log_warning_forewords(context)
 
     log.info('Verifying upstream artifacts...')
-    artifacts_per_task_id, failed_artifacts_per_task_id = get_upstream_artifacts_full_paths_per_task_id(context)
+    artifacts_per_task_id, failed_artifacts_per_task_id = artifacts.get_upstream_artifacts_full_paths_per_task_id(context)
 
     all_apks_paths = [
         artifact
@@ -30,10 +29,14 @@ async def async_main(context):
     log.info('Verifying APKs\' signatures...')
     [jarsigner.verify(context, apk_path) for apk_path in all_apks_paths]
 
-    log.info('Finding whether Google Play strings can be updated...')
-    google_play_strings_path = googleplay.get_google_play_strings_path(
-        artifacts_per_task_id, failed_artifacts_per_task_id
-    )
+    if task.extract_android_product_from_scopes(context) == 'focus':
+        log.warn('Focus does not upload strings automatically. Skipping Google Play strings search.')
+        google_play_strings_path = None
+    else:
+        log.info('Finding whether Google Play strings can be updated...')
+        google_play_strings_path = googleplay.get_google_play_strings_path(
+            artifacts_per_task_id, failed_artifacts_per_task_id
+        )
 
     log.info('Delegating publication to mozapkpublisher...')
     googleplay.publish_to_googleplay(

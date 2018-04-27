@@ -3,11 +3,11 @@ import logging
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
-from pushapkscript.task import extract_channel
+from pushapkscript.task import extract_android_product_from_scopes
 
 log = logging.getLogger(__name__)
 
-_CHANNELS_AUTHORIZED_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release')
+_AUTHORIZED_PRODUCTS_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release', 'focus')
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
@@ -20,21 +20,21 @@ def publish_to_googleplay(context, apks, google_play_strings_path=None):
 
 
 def craft_push_apk_config(context, apks, google_play_strings_path=None):
-    channel = extract_channel(context.task)
+    android_product = extract_android_product_from_scopes(context)
     payload = context.task['payload']
 
     push_apk_config = {
         '*args': sorted(apks),   # APKs have been positional arguments since mozapkpublisher 0.6.0
         'commit': should_commit_transaction(context),
-        'credentials': get_certificate_path(context, channel),
-        'service_account': get_service_account(context, channel),
+        'credentials': get_certificate_path(context, android_product),
+        'service_account': get_service_account(context, android_product),
         'track': payload['google_play_track'],
     }
 
     if payload.get('rollout_percentage'):
         push_apk_config['rollout_percentage'] = payload['rollout_percentage']
 
-    # Only known channels are allowed to connect to Google Play
+    # Only known android_products are allowed to connect to Google Play
     if not is_allowed_to_push_to_google_play(context):
         push_apk_config['do_not_contact_google_play'] = True
 
@@ -46,30 +46,30 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
     return push_apk_config
 
 
-def get_service_account(context, channel):
-    return _get_play_config(context, channel)['service_account']
+def get_service_account(context, android_product):
+    return _get_play_config(context, android_product)['service_account']
 
 
-def get_certificate_path(context, channel):
-    return _get_play_config(context, channel)['certificate']
+def get_certificate_path(context, android_product):
+    return _get_play_config(context, android_product)['certificate']
 
 
-def _get_play_config(context, channel):
+def _get_play_config(context, android_product):
     try:
         accounts = context.config['google_play_accounts']
     except KeyError:
         raise TaskVerificationError('"google_play_accounts" is not part of the configuration')
 
     try:
-        return accounts[channel]
+        return accounts[android_product]
     except KeyError:
-        raise TaskVerificationError('Channel "{}" does not exist in the configuration of this instance.\
-    Are you sure you allowed to push such APK?'.format(channel))
+        raise TaskVerificationError('Android "{}" does not exist in the configuration of this instance.\
+    Are you sure you allowed to push such APK?'.format(android_product))
 
 
 def is_allowed_to_push_to_google_play(context):
-    channel = extract_channel(context.task)
-    return channel in _CHANNELS_AUTHORIZED_TO_REACH_GOOGLE_PLAY
+    android_product = extract_android_product_from_scopes(context)
+    return android_product in _AUTHORIZED_PRODUCTS_TO_REACH_GOOGLE_PLAY
 
 
 def should_commit_transaction(context):

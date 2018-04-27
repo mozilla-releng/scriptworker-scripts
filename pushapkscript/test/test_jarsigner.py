@@ -19,7 +19,8 @@ class JarSignerTest(unittest.TestCase):
                 'beta': 'beta_alias',
                 'release': 'release_alias',
                 'dep': 'dep_alias',
-            }
+            },
+            'taskcluster_scope_prefix': 'project:releng:googleplay:',
         }
         self.context.task = {
             'scopes': ['project:releng:googleplay:aurora'],
@@ -28,14 +29,15 @@ class JarSignerTest(unittest.TestCase):
         self.minimal_context = MagicMock()
         self.minimal_context.config = {
             'jarsigner_key_store': '/path/to/keystore',
+            'taskcluster_scope_prefix': 'project:releng:googleplay:',
         }
         self.minimal_context.task = {
             'scopes': ['project:releng:googleplay:aurora'],
         }
 
     def test_verify_should_call_executable_with_right_arguments(self):
-        for channel, alias in self.context.config['jarsigner_certificate_aliases'].items():
-            self.context.task['scopes'] = ['project:releng:googleplay:{}'.format(channel)]
+        for android_product, alias in self.context.config['jarsigner_certificate_aliases'].items():
+            self.context.task['scopes'] = ['project:releng:googleplay:{}'.format(android_product)]
             with patch('subprocess.run') as run:
                 run.return_value = MagicMock()
                 run.return_value.returncode = 0
@@ -68,14 +70,25 @@ class JarSignerTest(unittest.TestCase):
             with self.assertRaises(SignatureError):
                 jarsigner.verify(self.context, '/path/to/apk')
 
-    def test_raises_error_when_digest_is_not_sha1(self):
+    def test_raises_error_when_digest_is_not_sha1_for_fennec(self):
         with patch('subprocess.run') as run:
             run.return_value = MagicMock()
             run.return_value.returncode = 0
-            run.return_value.stdout = 'Digest algorithm: SHA256'
+            run.return_value.stdout = 'Digest algorithm: SHA-256'
 
             with self.assertRaises(SignatureError):
                 jarsigner.verify(self.context, '/path/to/apk')
+
+    def test_expects_sha256_for_focus_or_klar(self):
+        self.context.task['scopes'] = ['project:mobile:focus:releng:product:focus']
+        self.context.config['taskcluster_scope_prefix'] = 'project:mobile:focus:releng:product:'
+        self.context.config['jarsigner_certificate_aliases']['focus'] = 'focus'
+        with patch('subprocess.run') as run:
+            run.return_value = MagicMock()
+            run.return_value.returncode = 0
+            run.return_value.stdout = 'Digest algorithm: SHA-256'
+
+            jarsigner.verify(self.context, '/path/to/apk')
 
     def test_raises_error_when_no_digest_algo_is_returned_by_jarsigner(self):
         with patch('subprocess.run') as run:

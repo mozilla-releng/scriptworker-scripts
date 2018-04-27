@@ -30,6 +30,7 @@ class GooglePlayTest(unittest.TestCase):
                     'certificate': '/path/to/dummy_non_p12_file',
                 },
             },
+            'taskcluster_scope_prefix': 'project:releng:googleplay:',
         }
         self.context.task = {
             'scopes': ['project:releng:googleplay:release'],
@@ -40,15 +41,15 @@ class GooglePlayTest(unittest.TestCase):
         self.apks = ['/path/to/x86.apk', '/path/to/arm_v15.apk']
 
     def test_craft_push_config(self):
-        channels = ('aurora', 'beta', 'release')
-        for channel in channels:
-            self.context.task['scopes'] = ['project:releng:googleplay:{}'.format(channel)]
+        android_products = ('aurora', 'beta', 'release')
+        for android_product in android_products:
+            self.context.task['scopes'] = ['project:releng:googleplay:{}'.format(android_product)]
             self.assertEqual(craft_push_apk_config(self.context, self.apks), {
                 '*args': ['/path/to/arm_v15.apk', '/path/to/x86.apk'],
-                'credentials': '/path/to/{}.p12'.format(channel),
+                'credentials': '/path/to/{}.p12'.format(android_product),
                 'commit': False,
                 'no_gp_string_update': True,
-                'service_account': '{}_account'.format(channel),
+                'service_account': '{}_account'.format(android_product),
                 'track': 'alpha',
             })
 
@@ -80,12 +81,12 @@ class GooglePlayTest(unittest.TestCase):
         config = craft_push_apk_config(self.context, self.apks)
         self.assertTrue(config['commit'])
 
-    def test_craft_push_config_raises_error_when_channel_is_not_part_of_config(self):
-        self.context.task['scopes'] = ['project:releng:googleplay:non_exiting_channel']
+    def test_craft_push_config_raises_error_when_android_product_is_not_part_of_config(self):
+        self.context.task['scopes'] = ['project:releng:googleplay:non_exiting_android_product']
         self.assertRaises(TaskVerificationError, craft_push_apk_config, self.context, self.apks)
 
     def test_craft_push_config_raises_error_when_google_play_accounts_does_not_exist(self):
-        self.context.config = {}
+        del self.context.config['google_play_accounts']
         self.assertRaises(TaskVerificationError, craft_push_apk_config, self.context, self.apks)
 
     def test_craft_push_config_updates_google(self):
@@ -108,13 +109,13 @@ class GooglePlayTest(unittest.TestCase):
             'service_account': 'aurora_account', 'certificate': '/path/to/aurora.p12'
         })
 
-        self.assertRaises(TaskVerificationError, _get_play_config, self.context, 'non-existing-channel')
+        self.assertRaises(TaskVerificationError, _get_play_config, self.context, 'non-existing-android-product')
 
         class FakeContext:
             config = {}
 
         context_without_any_account = FakeContext()
-        self.assertRaises(TaskVerificationError, _get_play_config, context_without_any_account, 'whatever-channel')
+        self.assertRaises(TaskVerificationError, _get_play_config, context_without_any_account, 'whatever-android-product')
 
     def test_should_commit_transaction(self):
         self.context.task['payload']['commit'] = True

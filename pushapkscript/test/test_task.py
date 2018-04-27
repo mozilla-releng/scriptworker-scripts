@@ -5,7 +5,7 @@ from scriptworker.client import validate_task_schema
 from scriptworker.context import Context
 from scriptworker.exceptions import TaskVerificationError
 
-from pushapkscript.task import extract_channel
+from pushapkscript.task import extract_android_product_from_scopes
 
 from pushapkscript.test.helpers.task_generator import TaskGenerator
 
@@ -98,29 +98,38 @@ class TaskTest(unittest.TestCase):
         self.context.task = beta_task
         validate_task_schema(self.context)
 
-    def test_extract_supported_channels(self):
+    def test_extract_supported_android_products(self):
         data = ({
+            'prefix': 'project:releng:googleplay:',
             'task': {'scopes': ['project:releng:googleplay:aurora']},
-            'expected': 'aurora'
+            'expected': 'aurora',
         }, {
+            'prefix': 'project:releng:googleplay:',
             'task': {'scopes': ['project:releng:googleplay:beta']},
-            'expected': 'beta'
+            'expected': 'beta',
         }, {
+            'prefix': 'project:releng:googleplay:',
             'task': {'scopes': ['project:releng:googleplay:release']},
-            'expected': 'release'
+            'expected': 'release',
+        }, {
+            'prefix': 'project:mobile:focus:googleplay:product:',
+            'task': {'scopes': ['project:mobile:focus:googleplay:product:focus']},
+            'expected': 'focus',
         })
 
         for item in data:
-            self.assertEqual(extract_channel(item['task']), item['expected'])
+            self.context.task = item['task']
+            self.context.config = {
+                'taskcluster_scope_prefix': item['prefix'],
+            }
+            self.assertEqual(extract_android_product_from_scopes(self.context), item['expected'])
 
-    def test_extract_channel_fails_when_too_many_channels_are_given(self):
+    def test_extract_android_product_from_scopes_fails_when_too_many_products_are_given(self):
+        self.context.task = {
+            'scopes': ['project:releng:googleplay:beta', 'project:releng:googleplay:release']
+        }
+        self.context.config = {
+            'taskcluster_scope_prefix': 'project:releng:googleplay:',
+        }
         with self.assertRaises(TaskVerificationError):
-            extract_channel({
-                'scopes': ['project:releng:googleplay:beta', 'project:releng:googleplay:release']
-            })
-
-    def test_extract_channel_fails_when_given_unsupported_channel(self):
-        with self.assertRaises(TaskVerificationError):
-            extract_channel({
-                'scopes': ['project:releng:googleplay:unexistingchannel']
-            })
+            extract_android_product_from_scopes(self.context)
