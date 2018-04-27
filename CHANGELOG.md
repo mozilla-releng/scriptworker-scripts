@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 
+## [0.7.0] - 2018-04-27
+
+### Added
+* Support for Firefox Focus
+* Support for Google Play's new internal track.
+
 ## [0.6.0] - 2018-04-20
 
 ### Removed
