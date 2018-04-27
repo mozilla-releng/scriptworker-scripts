@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Treescript version manipulation."""
 
-from distutils.version import StrictVersion
+from distutils.version import StrictVersion, LooseVersion
 import logging
 import os
 
@@ -48,9 +48,12 @@ async def bump_version(context):
     """
     bump_info = get_version_bump_info(context.task)
     next_version = bump_info['next_version']
+    old_next_version = None
     files = bump_info['files']
     changed = False
     for file in files:
+        if old_next_version:
+            next_version = old_next_version
         abs_file = os.path.join(context.repo, file)
         if file not in ALLOWED_BUMP_FILES:
             raise TaskVerificationError("Specified file to version bump is not in whitelist")
@@ -58,17 +61,27 @@ async def bump_version(context):
             raise TaskVerificationError("Specified file is not in repo")
         curr_version = _get_version(abs_file)
 
-        if StrictVersion(next_version) < StrictVersion(curr_version):
+        Comparator = StrictVersion
+        if curr_version.endswith('esr') or next_version.endswith('esr'):
+            #  We use LooseVersion for ESR because StrictVersion can't parse the trailing
+            # 'esr', but StrictVersion otherwise because it can sort X.0bN lower than X.0
+            Comparator = LooseVersion
+        if Comparator(next_version) < Comparator(curr_version):
             log.warning("Version bumping skipped due to conflicting values: "
                         "(next version {} is < current version {})"
                         .format(next_version, curr_version)
                         )
             continue
-        elif StrictVersion(next_version) == StrictVersion(curr_version):
+        elif Comparator(next_version) == Comparator(curr_version):
             log.info("Version bumping skipped due to unchanged values")
             continue
         else:
             changed = True
+            if curr_version.endswith('esr'):
+                # Only support esr addition if already an esr string.
+                if not next_version.endswith('esr'):
+                    old_next_version = next_version
+                    next_version = next_version + 'esr'
             replace_ver_in_file(file=abs_file,
                                 curr_version=curr_version, new_version=next_version)
     if changed:
