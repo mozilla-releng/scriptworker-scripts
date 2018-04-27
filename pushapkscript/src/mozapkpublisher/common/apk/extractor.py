@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 
 from mozapkpublisher.common.exceptions import BadApk, NoLocaleFound
-from mozapkpublisher.common.utils import filter_out_identical_values
+from mozapkpublisher.common.utils import filter_out_identical_values, PRODUCT
 
 from configparser import ConfigParser
 
@@ -34,16 +34,20 @@ def extract_metadata(original_apk_path):
         shutil.copy(original_apk_path, apk_copy.name)
         apk_copy.seek(0)
 
+        androguard_apk = androguard.APK(apk_copy.name)
+        package_name = androguard_apk.get_package()
+        metadata['package_name'] = package_name
+        metadata['api_level'] = int(androguard_apk.get_min_sdk_version())
+        metadata['version_code'] = androguard_apk.get_androidversion_code()
+
+        if PRODUCT.is_focus_flavor(package_name):
+            return metadata
+
         with ZipFile(apk_copy.name) as apk_zip:
             metadata['architecture'] = _extract_architecture(apk_zip, original_apk_path)
             metadata['firefox_version'] = _extract_firefox_version(apk_zip)
             metadata['firefox_build_id'] = _extract_firefox_build_id(apk_zip)
             metadata['locales'] = _extract_locales(apk_zip)
-
-        androguard_apk = androguard.APK(apk_copy.name)
-        metadata['package_name'] = androguard_apk.get_package()
-        metadata['api_level'] = int(androguard_apk.get_min_sdk_version())
-        metadata['version_code'] = androguard_apk.get_androidversion_code()
 
     return metadata
 

@@ -1,5 +1,6 @@
 import requests
 import hashlib
+from enum import Enum
 
 
 def load_json_url(url):
@@ -29,3 +30,20 @@ def file_sha512sum(file_path):
 
 def filter_out_identical_values(list_):
     return list(set(list_))
+
+
+class PRODUCT(Enum):
+    KLAR = "org.mozilla.klar"
+    FOCUS = "org.mozilla.focus"
+
+    @staticmethod
+    def get_value_or_none(value):
+        return PRODUCT(value) if PRODUCT.contains_value(value) else None
+
+    @staticmethod
+    def contains_value(value):
+        return any([value == item.value for item in PRODUCT])
+
+    @staticmethod
+    def is_focus_flavor(value):
+        return PRODUCT.contains_value(value) and (PRODUCT(value) == PRODUCT.FOCUS or PRODUCT(value) == PRODUCT.KLAR)
