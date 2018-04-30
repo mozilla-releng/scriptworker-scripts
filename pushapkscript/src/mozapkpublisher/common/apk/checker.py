@@ -75,7 +75,6 @@ def cross_check_fennec_apks(apks_metadata_per_paths):
 
 
 def cross_check_focus_apks(apks_metadata_per_paths):
-    _check_piece_of_metadata_is_distinct('package_name', 'Package name', apks_metadata_per_paths)
     _check_number_of_distinct_packages(apks_metadata_per_paths, 2)
     _check_correct_apk_product_types(apks_metadata_per_paths, [PRODUCT.FOCUS, PRODUCT.KLAR])
     logger.info('APKs are sane!')
@@ -94,18 +93,6 @@ def _check_correct_apk_product_types(apks_metadata_per_paths, product_types):
     if not types.issubset(product_types):
         raise BadSetOfApks('Expected product types {}, found {}'.format(product_types, types))
     logger.info('Expected product types {} found'.format(product_types))
-
-
-def _check_piece_of_metadata_is_distinct(key, pretty_key, apks_metadata_per_paths):
-    all_items = [metadata[key] for metadata in apks_metadata_per_paths.values()]
-    unique_items = filter_out_identical_values(all_items)
-
-    if not unique_items:
-        raise BadSetOfApks('No {} found'.format(key))
-    if len(unique_items) != len(all_items):
-        raise BadSetOfApks("APKs share {}. Only found: {}".format(pretty_key, unique_items))
-
-    logger.info('All APKs have distinct {}: {}'.format(pretty_key, unique_items))
 
 
 def _check_piece_of_metadata_is_unique(key, pretty_key, apks_metadata_per_paths):

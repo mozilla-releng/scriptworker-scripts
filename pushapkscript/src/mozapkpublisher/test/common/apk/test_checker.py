@@ -2,7 +2,7 @@ import pytest
 
 from mozapkpublisher.common.apk.checker import cross_check_apks, \
     _check_number_of_distinct_packages, _check_correct_apk_product_types, \
-    _check_piece_of_metadata_is_distinct, _check_all_apks_have_the_same_package_name, \
+    _check_all_apks_have_the_same_package_name, \
     _check_all_apks_have_the_same_version, _check_version_matches_package_name, \
     _check_all_apks_have_the_same_build_id, _check_all_apks_have_the_same_locales, \
     _check_piece_of_metadata_is_unique, _check_apks_version_codes_are_correctly_ordered, \
@@ -233,27 +233,6 @@ def test_check_piece_of_metadata_is_unique():
             'some_key': 'some unique value',
         },
     })
-
-
-def test_check_piece_of_metadata_is_distinct():
-    _check_piece_of_metadata_is_distinct('some_key', 'Some Key', {
-        'irrelevant_key': {
-            'some_key': 'some value 1',
-        },
-        'another_irrelevant_key': {
-            'some_key': 'some value 2',
-        },
-    })
-
-    with pytest.raises(BadSetOfApks):
-        _check_piece_of_metadata_is_distinct('some_key', 'Some Key', {
-                'irrelevant_key': {
-                    'some_key': 'some value 1',
-                },
-                'another_irrelevant_key': {
-                    'some_key': 'some value 1',
-                },
-            })
 
 
 @pytest.mark.parametrize('apks_metadata_per_paths', ({
