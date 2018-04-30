@@ -2,7 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.7.1] - 2018-04-30
+
+### Fixed
+* Remove unneeded check for distinct package names which broke Klar+GeckoView upload
+
 ## [0.7.0] - 2018-04-27
+
+### Added
 * Support Google Play's new `internal` track
 * Support Firefox Focus/Klar APKs. Specific tests for these APKs were added.
 
