@@ -11,6 +11,7 @@
     "dummy": false,
     "verbose": true,
     "disable_certs": false,
+    "taskcluster_scope_prefix": "project:releng:balrog:",
 
     "server_config": {
         "nightly": {

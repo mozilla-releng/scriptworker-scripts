@@ -39,7 +39,7 @@ def get_task_action(task, script_config):
     """Extract task server from scopes"""
     actions = [
         s.split(':')[-1] for s in task["scopes"] if
-        s.startswith("project:releng:balrog:action:")
+        s.startswith(script_config["taskcluster_scope_prefix"] + "action:")
     ]
     if actions:
         log.info("actions: %s", actions)
@@ -58,7 +58,7 @@ def get_task_action(task, script_config):
 def get_task_server(task, script_config):
     """Extract task server from scopes"""
     servers = [s.split(':')[-1] for s in task["scopes"] if
-               s.startswith("project:releng:balrog:server:")]
+               s.startswith(script_config["taskcluster_scope_prefix"] + "server:")]
     log.info("Servers: %s", servers)
     if len(servers) != 1:
         raise ValueError("Only one server can be used")
