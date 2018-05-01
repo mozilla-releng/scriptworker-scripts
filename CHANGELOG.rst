@@ -6,6 +6,19 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[3.1.0] = (2018-05-01)
+----------------------
+
+Added
+~~~~~
+
+- Add support for the thunderbird scope prefixes. (`#32
+  <https://github.com/mozilla-releng/balrogscript/issues/32>`_)
+- Add automatic changelog generation using
+  `towncrier <https://github.com/hawkowl/towncrier/>`_. (`#34
+  <https://github.com/mozilla-releng/balrogscript/issues/34>`_)
+
+
 [3.0.1]
 -------
 
