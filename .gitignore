@@ -16,3 +16,4 @@ dist
 tools
 .python-version
 .pytest_cache
+build/
