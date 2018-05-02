@@ -30,6 +30,14 @@ mapping:
       destinations:
         - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.checksums.asc
         - beetmover-checksums/{{ platform }}/{{ locale }}/fennec-{{ version }}.{{ filename_platform }}.checksums.asc
+    target-source.checksums:
+      s3_key: beetmover-checksums/source/fennec-{{ version }}.checksums.beet
+      destinations:
+        - beetmover-checksums/source/fennec-{{ version }}.checksums.beet
+    target-source.checksums.asc:
+      s3_key: beetmover-checksums/source/fennec-{{ version }}.checksums.asc
+      destinations:
+        - beetmover-checksums/source/fennec-{{ version }}.checksums.asc
     target.common.tests.zip:
       s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.common.tests.zip
       destinations:

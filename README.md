@@ -4,7 +4,50 @@ Beetmoverscript README
 [![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/beetmoverscript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/beetmoverscript?branch=master)
 
 
-## deploy a new version
+## deploy a new version to staging
+
+In order to rollout a new version of beetmoverscript for testing, one must roll-out a new version, deploy it within
+puppet internal pypi mirrors and pin the beetmoverworkers to one's environment.
+
+1. Once your PR is ready for testing, make sure to create a new version like `<next-version>.dev0+pr<pr number>` under `beetmoverscript/_version.py`.
+1. Create wheel with `python3 setup.py bdist_wheel` and scp that file under [puppet](http://releng-puppet2.srv.releng.scl3.mozilla.com/python/packages-3.5/)
+1. Login in [puppet](http://releng-puppet2.srv.releng.scl3.mozilla.com/) and change directory in your environment (e.g. `/etc/puppet/environments/$whoami`)
+1. Make sure to have the puppet repo up-to-date there
+1. Tweak the `beetmoverscript` version under [beetmoverworker module](https://hg.mozilla.org/build/puppet/file/default/modules/beetmover_scriptworker/manifests/init.pp#l28) to reflect the new value
+but also to force all the dev beetmoverworkers to be chained to your environment, something like this:
+```diff
+diff --git a/manifests/moco-nodes.pp b/manifests/moco-nodes.pp
+index a8357fb..1982cec 100644
+--- a/manifests/moco-nodes.pp
++++ b/manifests/moco-nodes.pp
+@@ -977,7 +977,7 @@ node /^beetmover-dev.*\.srv\.releng\..*\.mozilla\.com$/ {
+     $only_user_ssh       = true
++    $pin_puppet_server = 'releng-puppet2.srv.releng.scl3.mozilla.com'
++    $pin_puppet_env    = 'mtabara'
+     include toplevel::server::beetmoverscriptworker
+ }
+
+diff --git a/modules/beetmover_scriptworker/manifests/init.pp b/modules/beetmover_scriptworker/manifests/init.pp
+index 92f6fa0..939e4ad 100644
+--- a/modules/beetmover_scriptworker/manifests/init.pp
++++ b/modules/beetmover_scriptworker/manifests/init.pp
+@@ -40,7 +40,7 @@ class beetmover_scriptworker {
+                 'aiohttp==2.3.1',
+                 ...
+-                'beetmoverscript==7.0.0',
++                'beetmoverscript==XXX', # dev version to be tested
+```
+1. Login to all machines to chain them to your environment and also deploy the newer testing version
+```
+# vpn
+for i in {1..10}; do
+nslookup beetmover-dev$i | grep Name: | sed -e 's/Name:\t//'
+done > /src/ops/hosts/beet-dev
+csshX --hosts /src/ops/hosts/beet-dev
+sudo puppet agent --test  # or unpin or w/e
+```
+
+## deploy a new version to production
 
 1. Once your PR is reviewed and passes the tests, have one of the admins review & merge it
 1. Bump to new version in `beetmoverscript/_version.py`.
@@ -17,12 +60,16 @@ Beetmoverscript README
 1. Wait for that file to be synchronized across all puppet instances (emails arrive to confirm that)
 1. Tweak the `beetmoverscript` version under [beetmoverworker module](https://hg.mozilla.org/build/puppet/file/default/modules/beetmover_scriptworker/manifests/init.pp#l28) to reflect the new value
 1. Push puppet bump to `default` branch, wait for tests to run and confirmation to arrive in `#releng`. Merge it to `production` after that.
-1. There are currently fifteen prod and ten dev beetmoverworkers. Ssh to each and single one of them (csshX?) and run `puppet agent --test` as `root` to enforce the deployment of the newest catalog. Can also wait for the cron job to run puppet to deploy new changes every 30 mins or so.
-1. Create a tarball with `python3 setup.py sdist` and upload the tarball and wheel to pypi with
+1. There are currently fifteen prod and ten dev beetmoverworkers. you can wait for the cron job to run puppet to deploy new changes every 30 mins or so. Alternatively, can force the puppet run by logging-in to each of the machines:
+```
+# vpn
+for i in {1..10}; do
+nslookup beetmoverworker-$i | grep Name: | sed -e 's/Name:\t//'
+done > /src/ops/hosts/beet-prod
+csshX --hosts /src/ops/hosts/beet-prod
+sudo puppet agent --test
+```
 
-```
-twine upload dist/beetmoverscript-${VERSION}.tar.gz dist/beetmoverscript-${VERSION}-py3-none-any.whl
-```
 
 
 ## install

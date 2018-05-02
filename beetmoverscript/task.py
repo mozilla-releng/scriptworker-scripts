@@ -10,7 +10,8 @@ from beetmoverscript import utils, script
 from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
                                        INITIAL_RELEASE_PROPS_FILE,
                                        STAGE_PLATFORM_MAP,
-                                       RESTRICTED_BUCKET_PATHS)
+                                       RESTRICTED_BUCKET_PATHS,
+                                       CHECKSUMS_CUSTOM_FILE_NAMING)
 
 from scriptworker.exceptions import ScriptWorkerTaskException
 
@@ -87,9 +88,16 @@ def generate_checksums_manifest(context):
     return '\n'.join(content)
 
 
+def is_custom_beetmover_checksums_task(context):
+    return CHECKSUMS_CUSTOM_FILE_NAMING.get(context.task['tags']['kind'], '')
+
+
 def add_checksums_to_artifacts(context):
+    name = is_custom_beetmover_checksums_task(context)
+    filename = 'public/target{}.checksums'.format(name)
+
     abs_file_path = os.path.join(context.config['artifact_dir'],
-                                 'public/target.checksums')
+                                 filename)
     manifest = generate_checksums_manifest(context)
     utils.write_file(abs_file_path, manifest)
 

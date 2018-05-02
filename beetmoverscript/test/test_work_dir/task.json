@@ -30,5 +30,10 @@
           "taskType": "build"
         }
       ]
-    }
+    },
+  "tags": {
+    "createdForUser": "jcristau@mozilla.com",
+    "kind": "beetmover-repackage",
+    "label": "beetmover-repackage-ach-linux-nightly/opt"
+  }
 }

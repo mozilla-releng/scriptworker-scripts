@@ -6,6 +6,22 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.2.0] = (2018-05-01)
+----------------------
+
+Added
+~~~~~
+
+- Added documentation in README for deploying staging `beetmoverscript` packages
+- ``CHECKSUMS_CUSTOM_FILE_NAMING`` to hold custom checksums files
+- Added template support for source-related checksums file
+
+Removed
+~~~~~~~
+
+- Added docs in README for pushing to public pypi
+
+
 [7.1.1] = (2018-04-26)
 ----------------------
 

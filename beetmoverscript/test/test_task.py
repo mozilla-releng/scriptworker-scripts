@@ -10,7 +10,7 @@ from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
     get_upstream_artifacts, generate_checksums_manifest,
     get_initial_release_props_file, get_task_bucket, get_task_action,
-    validate_bucket_paths, get_release_props
+    validate_bucket_paths, get_release_props, is_custom_beetmover_checksums_task
 )
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -253,3 +253,14 @@ def test_get_initial_release_props_file():
     context.task['payload']['upstreamArtifacts'] = [{'paths': []}]
     with pytest.raises(ScriptWorkerTaskException):
         get_initial_release_props_file(context)
+
+
+# is_custom_beetmover_checksums_task {{{1
+@pytest.mark.parametrize("kind,expected", ((
+    "beetmover-source", "-source"
+), (
+    "beetmover-repackage", ""
+),))
+def test_is_custom_beetmover_task(context, kind, expected):
+    context.task['tags']['kind'] = kind
+    assert is_custom_beetmover_checksums_task(context) == expected

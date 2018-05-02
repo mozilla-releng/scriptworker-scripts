@@ -96,6 +96,14 @@ mapping:
       s3_key: beetmover-checksums/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums.asc
       destinations:
         - beetmover-checksums/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums.asc
+    target-source.checksums:
+      s3_key: beetmover-checksums/source/firefox-{{ version }}.checksums.beet
+      destinations:
+        - beetmover-checksums/source/firefox-{{ version }}.checksums.beet
+    target-source.checksums.asc:
+      s3_key: beetmover-checksums/source/firefox-{{ version }}.checksums.asc
+      destinations:
+        - beetmover-checksums/source/firefox-{{ version }}.checksums.asc
   {% if platform in ["linux-i686", "linux-x86_64", "mac"] %}
     mar:
       s3_key: mar-tools/{{ stage_platform }}/mar

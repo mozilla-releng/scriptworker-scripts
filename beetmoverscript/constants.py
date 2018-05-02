@@ -166,3 +166,7 @@ PARTNER_REPACK_PUBLIC_REGEXES = (
     r'^(mac|win32|win64)-EME-free\/[^\/.]+$',
     r'^partner-repacks\/(?P<partner>[^\/%]+)\/(?P<subpartner>[^\/%]+)\/v\d+\/(mac|win32|win64|linux-i686|linux-x86_64)\/(?P<locale>[^\/%]+)$',
 )
+
+CHECKSUMS_CUSTOM_FILE_NAMING = {
+    'beetmover-source': '-source'
+}
