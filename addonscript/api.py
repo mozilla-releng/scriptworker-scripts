@@ -32,7 +32,7 @@ async def do_upload(context, locale):
             result = await amo_put(context, url, data)
         except ClientResponseError as exc:
             # XXX: .code is deprecated in aiohttp 3.1 in favor of .status
-            if exc.code == 409:
+            if exc.status == 409:
                 raise AMOConflictError(
                     "Addon <{}> already present on AMO with version <{}>".format(
                         langpack_id, version,
