@@ -54,7 +54,7 @@ def fake_ClientError_throwing_session(event_loop):
     def _fake_request(method, url, *args, **kwargs):
         raise aiohttp.ClientError
 
-    session = aiohttp.ClientSession()
+    session = aiohttp.ClientSession(loop=event_loop)
     session._request = _fake_request
     return session
 
@@ -65,7 +65,7 @@ def fake_TimeoutError_throwing_session(event_loop):
     def _fake_request(method, url, *args, **kwargs):
         raise aiohttp.ServerTimeoutError
 
-    session = aiohttp.ClientSession()
+    session = aiohttp.ClientSession(loop=event_loop)
     session._request = _fake_request
     return session
 

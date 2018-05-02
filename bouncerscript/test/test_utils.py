@@ -78,7 +78,6 @@ def test_do_successful_api_call(context, mocker, event_loop, fake_session, data,
     )
 
     assert response == '{}'
-    context.session.close()
 
 
 # _do_api_call {{{1
@@ -92,7 +91,6 @@ def test_do_failed_api_call(context, mocker, event_loop, fake_session_500):
     )
 
     assert response == '{}'
-    context.session.close()
 
 
 # _do_api_call {{{1
@@ -106,8 +104,6 @@ def test_do_failed_with_ClientError_api_call(context, mocker, event_loop, fake_C
             _do_api_call(context, 'dummy', {})
         )
 
-    context.session.close()
-
 
 # _do_api_call {{{1
 def test_do_failed_with_TimeoutError_api_call(context, mocker, event_loop, fake_TimeoutError_throwing_session):
@@ -119,8 +115,6 @@ def test_do_failed_with_TimeoutError_api_call(context, mocker, event_loop, fake_
         event_loop.run_until_complete(
             _do_api_call(context, 'dummy', {})
         )
-
-    context.session.close()
 
 
 # does_product_exists {{{1
