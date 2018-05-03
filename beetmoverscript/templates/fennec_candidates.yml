@@ -138,7 +138,7 @@ mapping:
         - SOURCE.asc
     {% endif %}
     {# The platform used for sources and checksums switched from `android-arm` during the 61 cycle #}
-    {% if platform in ["fennec-release", "android-arm"] %}
+    {% if platform in ["fennec-release", "android-arm", "android-api-16"] %}
     source.tar.xz:
       s3_key: source/fennec-{{ version}}.source.tar.xz
       destinations:

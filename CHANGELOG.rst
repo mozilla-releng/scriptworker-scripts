@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.2.1] = (2018-05-03)
+----------------------
+
+Fixed
+~~~~~
+
+- Added `android-api-16` to the list platforms to find fennec source packages
+  on. (`#137 <https://github.com/mozilla-releng/beetmoverscript/issues/137>`_)
+
+
 [7.2.0] = (2018-05-01)
 ----------------------
 
