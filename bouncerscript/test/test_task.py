@@ -207,6 +207,10 @@ def test_validate_task_schema(context, schema="submission"):
     "firefox-esr-latest-ssl": "Firefox-70.1.2esr-SSL",
 }, False
 ), ({
+    "firefox-esr-next-latest": "Firefox-70.1.0esr",
+    "firefox-esr-next-latest-ssl": "Firefox-70.1.2esr-SSL",
+}, False
+), ({
     "firefox-esr-latest": "Firefox-70.1.0esr",
     "firefox-esr-latest-ssl": "Firefox-70.1.2-SSL",
 }, True

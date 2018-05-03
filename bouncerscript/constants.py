@@ -14,6 +14,8 @@ ALIASES_REGEXES = {
     "firefox-latest-ssl": "^Firefox-\d+\.\d+(\.\d+)?-SSL$",
     "firefox-esr-latest": "^Firefox-\d+\.\d+(\.\d+)?esr$",
     "firefox-esr-latest-ssl": "^Firefox-\d+\.\d+(\.\d+)?esr-SSL$",
+    "firefox-esr-next-latest": "^Firefox-\d+\.\d+(\.\d+)?esr$",
+    "firefox-esr-next-latest-ssl": "^Firefox-\d+\.\d+(\.\d+)?esr-SSL$",
     "firefox-sha1": "^Firefox-\d+\.\d+(\.\d+)?esr-sha1$",
     "firefox-sha1-ssl": "^Firefox-\d+\.\d+(\.\d+)?esr-sha1$"
 }
