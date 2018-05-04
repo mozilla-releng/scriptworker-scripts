@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+
+## [0.7.2] - 2018-05-04
+
+### Added
+* get_l10n_strings: `--major-version-number` option to fetch `whatsnew` section from a specific version instead of a channel. This is particularly useful in the context of Release Candidates, when you want to update listings as they used to be, but get the latest `whatsnew`.
+
+
 ## [0.7.1] - 2018-04-30
 
 ### Fixed
