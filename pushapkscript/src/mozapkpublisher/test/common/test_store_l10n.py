@@ -101,20 +101,33 @@ def test_get_list_of_completed_locales(monkeypatch):
 
 
 def test_get_translation(monkeypatch):
-    monkeypatch.setattr(
-        utils, 'load_json_url',
-        lambda url: {
-            'title': 'Firefox for Android Beta',
-            'long_desc': 'Long description',
-            'short_desc': 'Short',
-            'whatsnew': 'Check out this cool feature!'
-        } if url == 'https://l10n.mozilla-community.org/stores_l10n/api/v1/fx_android/translation/beta/en-GB/' else None
-    )
+    def fake_load_json_url(url):
+        if url == 'https://l10n.mozilla-community.org/stores_l10n/api/v1/fx_android/translation/beta/en-GB/':
+            return {
+                'title': 'Firefox for Android Beta',
+                'long_desc': 'Long description',
+                'short_desc': 'Short',
+                'whatsnew': 'Whatsnew tied to beta channel',
+            }
+        elif url == 'https://l10n.mozilla-community.org/stores_l10n/api/v1/fx_android/translation/60/en-GB/':
+            return {
+                'whatsnew': 'Whatsnew tied to version 60',
+            }
+
+    monkeypatch.setattr(utils, 'load_json_url', fake_load_json_url)
+
     assert _get_translation('fx_android', 'beta', 'en-GB') == {
         'title': 'Firefox for Android Beta',
         'long_desc': 'Long description',
         'short_desc': 'Short',
-        'whatsnew': 'Check out this cool feature!',
+        'whatsnew': 'Whatsnew tied to beta channel',
+    }
+
+    assert _get_translation('fx_android', 'beta', 'en-GB', '60') == {
+        'title': 'Firefox for Android Beta',
+        'long_desc': 'Long description',
+        'short_desc': 'Short',
+        'whatsnew': 'Whatsnew tied to version 60',
     }
 
 
