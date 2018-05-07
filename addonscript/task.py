@@ -54,7 +54,7 @@ def build_filelist(context):
         for path in artifact_dict['paths']:
             full_path = os.path.join(
                 context.config['work_dir'], 'cot', artifact_dict['taskId'],
-                path
+                path,
             )
             if not os.path.exists(full_path):
                 messages.append("{} doesn't exist!".format(full_path))

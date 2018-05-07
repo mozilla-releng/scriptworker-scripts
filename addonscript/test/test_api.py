@@ -22,12 +22,12 @@ def context():
             'project:releng:addons.mozilla.org:server:dev': {
                 'amo_server': 'http://some-amo-it.url',
                 'jwt_user': 'test-user',
-                'jwt_secret': 'secret'
+                'jwt_secret': 'secret',
             },
         },
     }
     context.task = {
-        'scopes': ['project:releng:addons.mozilla.org:server:dev']
+        'scopes': ['project:releng:addons.mozilla.org:server:dev'],
     }
     return context
 
@@ -46,7 +46,7 @@ async def fake_session(event_loop):
      (302, None),
      (401, aiohttp.client_exceptions.ClientResponseError),
      (503, aiohttp.client_exceptions.ClientResponseError),
-     (409, AMOConflictError))
+     (409, AMOConflictError)),
 )
 async def test_do_upload(fake_session, context, tmpdir, mocker, statuscode, raises):
     upload_file = '{}/test.xpi'.format(tmpdir)
@@ -83,7 +83,7 @@ async def test_get_signed_addon_url_success(context, mocker):
         'files': [{
             'signed': True,
             'download_url': "https://some-download-url/foo",
-        }]
+        }],
     }
 
     async def new_upload_status(*args, **kwargs):
@@ -100,7 +100,7 @@ async def test_get_signed_addon_url_success(context, mocker):
     ((0, True),
      (1, False),
      (2, True),
-     (10, True))
+     (10, True)),
 )
 async def test_get_signed_addon_url_files(context, mocker, num_files, raises):
     status_json = {'files': []}
@@ -130,7 +130,7 @@ async def test_get_signed_addon_url_files(context, mocker, num_files, raises):
     'errors,raises',
     (([], False),
      (["deadbeef", "whimsycorn"], True),
-     (["deadbeef"], True))
+     (["deadbeef"], True)),
 )
 async def test_get_signed_addon_url_validation_errors(context, mocker, errors, raises):
     status_json = {
@@ -161,7 +161,7 @@ async def test_get_signed_addon_url_validation_errors(context, mocker, errors, r
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     'variant',
-    ('signed', 'download')
+    ('signed', 'download'),
 )
 async def test_get_signed_addon_url_other_errors(context, mocker, variant):
     status_json = {

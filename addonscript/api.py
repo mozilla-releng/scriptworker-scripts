@@ -35,7 +35,7 @@ async def do_upload(context, locale):
             if exc.code == 409:
                 raise AMOConflictError(
                     "Addon <{}> already present on AMO with version <{}>".format(
-                        langpack_id, version
+                        langpack_id, version,
                     ))
             # If response code is not 409 - CONFLICT, bubble the exception
             raise exc
@@ -63,15 +63,15 @@ async def get_signed_addon_url(context, locale, pk):
     if len(upload_status['files']) != 1:
         raise SignatureError(
             'Expected 1 file. Got ({}) full response: {}'.format(
-                len(upload_status['files']), upload_status
-                )
+                len(upload_status['files']), upload_status,
+                ),
             )
 
     if upload_status.get('validation_results'):
         validation_errors = upload_status['validation_results'].get('errors')
         if validation_errors:
             raise FatalSignatureError(
-                'Automated validation produced errors: {}'.format(validation_errors)
+                'Automated validation produced errors: {}'.format(validation_errors),
                 )
 
     signed_data = upload_status['files'][0]

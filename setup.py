@@ -24,6 +24,6 @@ setup(
     license="MPL2",
     install_requires=[
         "scriptworker",
-        "python-jose"
+        "python-jose",
     ],
 )
