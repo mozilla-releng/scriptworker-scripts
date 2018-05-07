@@ -43,10 +43,10 @@ async def sign_addon(context, locale):
         get_signed_addon_url, args=(context, locale, upload_data['pk']),
         attempts=10,  # 10 attempts with default backoff yield around 10 minutes of time
                       # Most addons will be signed in less than that.
-        retry_exceptions=tuple([ClientError, asyncio.TimeoutError, SignatureError])
+        retry_exceptions=tuple([ClientError, asyncio.TimeoutError, SignatureError]),
     )
     destination = os.path.join(
-        context.config['artifact_dir'], 'public/build/', locale, 'target.langpack.xpi'
+        context.config['artifact_dir'], 'public/build/', locale, 'target.langpack.xpi',
     )
     os.makedirs(os.path.dirname(destination))
     await retry_async(get_signed_xpi, args=(context, signed_addon_url, destination))

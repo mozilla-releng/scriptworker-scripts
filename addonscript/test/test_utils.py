@@ -30,12 +30,12 @@ def context():
             'project:releng:addons.mozilla.org:server:dev': {
                 'amo_server': 'http://some-amo-it.url',
                 'jwt_user': 'test-user',
-                'jwt_secret': 'secret'
+                'jwt_secret': 'secret',
             },
         },
     }
     context.task = {
-        'scopes': ['project:releng:addons.mozilla.org:server:dev']
+        'scopes': ['project:releng:addons.mozilla.org:server:dev'],
     }
     return context
 
@@ -188,7 +188,7 @@ async def test_amo_put_header(fake_session, mocker, context):
     'host,path', (
         ('https://addons.example.com', 'some/api'),
         ('https://addons.mozilla.org', 'what/api/is/this/'),
-    )
+    ),
 )
 def test_get_api_url(host, path, context):
     context.config['amo_instances']['project:releng:addons.mozilla.org:server:dev']['amo_server'] = host

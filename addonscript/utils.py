@@ -44,7 +44,7 @@ async def amo_get(context, url):
     async with timeout(30):
         resp = context.session.get(
             url, headers={
-                'Authorization': 'JWT {}'.format(generate_JWT(context))
+                'Authorization': 'JWT {}'.format(generate_JWT(context)),
                 },
             )
         async with resp as r:
@@ -65,7 +65,7 @@ async def amo_download(context, url, file):
     async with timeout(60):
         resp = context.session.get(
             url, headers={
-                'Authorization': 'JWT {}'.format(generate_JWT(context))
+                'Authorization': 'JWT {}'.format(generate_JWT(context)),
                 },
             )
         async with resp as r:
@@ -86,7 +86,7 @@ async def amo_put(context, url, data):
     async with timeout(270):  # 4 minutes, 30 sec.
         resp = context.session.put(
             url, headers={
-                'Authorization': 'JWT {}'.format(generate_JWT(context))
+                'Authorization': 'JWT {}'.format(generate_JWT(context)),
                 },
             data=data,
             )

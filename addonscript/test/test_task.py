@@ -18,7 +18,7 @@ def context(tmpdir):
             'project:releng:addons.mozilla.org:server:dev': {
                 'amo_server': 'http://some-amo-it.url',
                 'jwt_user': 'some-username',
-                'jwt_secret': 'some-secret'
+                'jwt_secret': 'some-secret',
             },
         },
         'work_dir': tmpdir,
@@ -26,7 +26,7 @@ def context(tmpdir):
     context.task = {
         'dependencies': ['someTaskId'],
         'payload': {
-            'release_name': 'Firefox-59.0b3-build1'
+            'release_name': 'Firefox-59.0b3-build1',
         },
         'scopes': ['project:releng:addons.mozilla.org:server:dev'],
     }
@@ -37,24 +37,24 @@ def context(tmpdir):
 @pytest.fixture(scope='function',
                 params=(
                     ('unlisted', ('en-US', 'en-GB')),
-                    ('listed', ('de', 'ja', 'ja-JP-mac'))
+                    ('listed', ('de', 'ja', 'ja-JP-mac')),
                 ),
                 ids=('unlisted', 'listed'))
 async def task_dfn(request):
     channel, locales = request.param
     payload = {
         'channel': channel,
-        'upstreamArtifacts': []
+        'upstreamArtifacts': [],
     }
     i = 0
     for locale in locales:
         i += 1
         payload['upstreamArtifacts'].append({
             "paths": [
-              "public/build/{}/target.langpack.xpi".format(locale)
+              "public/build/{}/target.langpack.xpi".format(locale),
             ],
             "taskId": "UPSTREAM{}".format(i),
-            "taskType": "build"
+            "taskType": "build",
         })
     return {
         'provisionerId': 'meh',
@@ -72,7 +72,7 @@ async def task_dfn(request):
         "metadata": {
             "source": "https://hg.mozilla.org/releases/mozilla-test-source"
                       "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar",
-        }
+        },
     }
 
 
@@ -134,7 +134,7 @@ def test_get_amo_instance_config_from_scope(context, api_root, scope):
     assert task.get_amo_instance_config_from_scope(context) == {
         'amo_server': api_root,
         'jwt_user': 'some-username',
-        'jwt_secret': 'some-secret'
+        'jwt_secret': 'some-secret',
     }
 
 
@@ -153,12 +153,12 @@ def test_fail_get_amo_instance_config_from_scope(context, scope):
     (('project:releng:addons.mozilla.org:server:dev',), False),
     (('project:releng:addons.mozilla.org:server:staging',), False),
     (('project:releng:addons.mozilla.org:server:production',), False),
-    (('project:releng:addons.mozilla.org:server:dev', 'project:releng:addons.mozilla.org:server:production',), True),
+    (('project:releng:addons.mozilla.org:server:dev', 'project:releng:addons.mozilla.org:server:production'), True),
     (('some:random:scope',), True),
 ))
 def test_get_scope(scopes, raises):
     task_ = {
-        'scopes': scopes
+        'scopes': scopes,
     }
 
     if raises:
