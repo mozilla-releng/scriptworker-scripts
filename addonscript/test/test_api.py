@@ -4,12 +4,11 @@ import os
 import aiohttp
 import pytest
 from aioresponses import aioresponses
-
-from addonscript.test import tmpdir
 from scriptworker.context import Context
 
 import addonscript.api as api
-from addonscript.exceptions import FatalSignatureError, SignatureError, AMOConflictError
+from addonscript.exceptions import AMOConflictError, FatalSignatureError, SignatureError
+from addonscript.test import tmpdir
 
 assert tmpdir  # silence flake8
 
