@@ -6,18 +6,6 @@ Signingscript
 This is designed to be run from scriptworker, but runs perfectly fine as a standalone script.
 
 
-Docs
-----
-`README.md` is the master readme, and `README.rst` is generated via
-
-    pandoc --from=markdown --to=rst README.md > README.rst
-
-This is purely because
-
-1. @escapewindow prefers writing markdown, and
-1. pypi appears to deal with rst better than markdown.
-
-
 Testing
 -------
 
@@ -37,7 +25,7 @@ Remember the path to `./fake_ca/ca.crt` ; this will be the file that signingscri
 
 ### virtualenv
 
-First, you need `python>=3.5.0`.
+First, you need `python>=3.6.0`.
 
 Next, create a python35 virtualenv, and install signingscript:
 
