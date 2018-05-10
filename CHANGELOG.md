@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [7.0.0] - 2018-05-10
+### Added
+- Added aiohttp3 support
+
+### Changed
+- Dropped py35 support; added py37 tests
+- Packaged README.md
+
+### Removed
+- Removed README.rst
+
 ## [6.1.0] - 2018-04-24
 ### Added
 - Added focus-jar support
