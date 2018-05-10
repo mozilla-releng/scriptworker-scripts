@@ -1,17 +1,16 @@
-import aiohttp
 import asyncio
 import logging
 import os
 
-from aiohttp.client_exceptions import ClientError
+import aiohttp
 import scriptworker.client
+from aiohttp.client_exceptions import ClientError
 from scriptworker.utils import retry_async
 
 from addonscript.api import do_upload, get_signed_addon_url, get_signed_xpi
 from addonscript.exceptions import AMOConflictError, SignatureError
 from addonscript.task import build_filelist
 from addonscript.xpi import get_langpack_info
-
 
 log = logging.getLogger(__name__)
 

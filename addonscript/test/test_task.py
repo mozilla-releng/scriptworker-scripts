@@ -1,11 +1,11 @@
 import os
-import pytest
 
-from addonscript.test import tmpdir
+import pytest
 from scriptworker.context import Context
 from scriptworker.exceptions import TaskVerificationError
 
 import addonscript.task as task
+from addonscript.test import tmpdir
 
 assert tmpdir  # silence flake8
 

@@ -1,9 +1,9 @@
 """Methods that deal with the task metadata to supply addonscript."""
 
 import os
+
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
-
 
 # TODO: Make this prefix a param of the instance config, when Thunderbird migrates this task
 _VALID_SCOPES_PREFIX = 'project:releng:addons.mozilla.org:server:'

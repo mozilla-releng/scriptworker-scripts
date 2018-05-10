@@ -1,13 +1,13 @@
 # noqa
 import json
-import mock
 import os
-import pytest
+from unittest.mock import MagicMock
 
+import mock
+import pytest
 import scriptworker.client
 from scriptworker.context import Context
-from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerException
-from unittest.mock import MagicMock
+from scriptworker.exceptions import ScriptWorkerException, ScriptWorkerTaskException
 
 # from treescript.test import noop_async, noop_sync, read_file, tmpdir, BASE_DIR
 import addonscript.script as script

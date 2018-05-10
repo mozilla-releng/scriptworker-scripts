@@ -2,9 +2,9 @@
 
 from aiohttp.client_exceptions import ClientResponseError
 
-from addonscript.exceptions import SignatureError, FatalSignatureError, AMOConflictError
-from addonscript.utils import get_api_url, amo_put, amo_get, amo_download
+from addonscript.exceptions import AMOConflictError, FatalSignatureError, SignatureError
 from addonscript.task import get_channel
+from addonscript.utils import amo_download, amo_get, amo_put, get_api_url
 
 # https://addons-server.readthedocs.io/en/latest/topics/api/signing.html#uploading-a-version
 UPLOAD_VERSION = "api/v3/addons/{id}/versions/{version}/"

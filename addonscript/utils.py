@@ -4,8 +4,8 @@ import logging
 import time
 from uuid import uuid4
 
-from jose import jws
 from async_timeout import timeout
+from jose import jws
 
 from addonscript.task import get_amo_instance_config_from_scope
 

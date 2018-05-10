@@ -7,14 +7,13 @@ import uuid
 import aiohttp
 import pytest
 from aioresponses import aioresponses
+from freezegun import freeze_time
 from jose import jws
 from jose.constants import ALGORITHMS
-from freezegun import freeze_time
-
-from addonscript.test import tmpdir
 from scriptworker.context import Context
 
 import addonscript.utils as utils
+from addonscript.test import tmpdir
 
 assert tmpdir  # silence flake8
 
