@@ -88,11 +88,11 @@ def test_craft_aiohttp_connector():
     context = Context()
     context.config = {}
     connector = script._craft_aiohttp_connector(context)
-    assert connector._ssl_context is None
+    assert connector._ssl is None
 
     context.config['ssl_cert'] = SSL_CERT
     connector = script._craft_aiohttp_connector(context)
-    assert connector._ssl_context
+    assert connector._ssl
 
 
 def test_get_default_config():
