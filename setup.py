@@ -22,6 +22,7 @@ setup(
             "addonscript = addonscript.script:main",
         ],
     },
+    python_requires=">=3.6",
     license="MPL2",
     install_requires=[
         "scriptworker",
