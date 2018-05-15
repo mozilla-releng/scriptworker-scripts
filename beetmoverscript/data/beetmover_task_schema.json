@@ -57,8 +57,8 @@
                     "uniqueItems": true
                 }
             },
-            "required": ["upload_date", "upstreamArtifacts", "maxRunTime"],
-            "optional": ["build_number", "version", "locale"]
+            "required": ["upload_date", "upstreamArtifacts"],
+            "optional": ["build_number", "version", "locale", "maxRunTime"]
 
         }
     },
