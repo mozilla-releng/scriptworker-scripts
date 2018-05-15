@@ -28,6 +28,12 @@
                 "version": {
                     "type": "string"
                 },
+                "next_version" : {
+                     "type" : "string"
+                },
+                "appVersion": {
+                    "type": "string"
+                },
                 "upstreamArtifacts": {
                     "type": "array",
                     "items": {
@@ -57,8 +63,8 @@
                     "uniqueItems": true
                 }
             },
-            "required": ["upload_date", "upstreamArtifacts"],
-            "optional": ["build_number", "version", "locale", "maxRunTime"]
+            "required": ["upload_date", "upstreamArtifacts", "next_version"],
+            "optional": ["build_number", "version", "locale", "maxRunTime", "appVersion"]
 
         }
     },
