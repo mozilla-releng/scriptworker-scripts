@@ -19,41 +19,8 @@
                 "build_number": {
                     "type": "number"
                 },
-                "locale" : {
-                    "type" : "string"
-                },
-                "maxRunTime" : {
-                    "type" : "number"
-                },
-                "next_version" : {
-                     "type" : "string"
-                },
-                "appVersion": {
+                "version": {
                     "type": "string"
-                },
-                "releaseProperties" : {
-                    "type" : "object",
-                    "properties" : {
-                        "appName": {
-                            "type" : "string"
-                        },
-                        "buildid": {
-                            "type" : "string"
-                        },
-                        "appVersion": {
-                            "type" : "string"
-                        },
-                        "hashType":  {
-                            "type" : "string"
-                        },
-                        "platform":  {
-                            "type" : "string"
-                        },
-                        "branch":  {
-                            "type" : "string"
-                        }
-                    },
-                    "required" : ["appName", "buildid", "appVersion", "hashType", "platform", "branch"]
                 },
                 "upstreamArtifacts": {
                     "type": "array",
@@ -84,11 +51,10 @@
                     "uniqueItems": true
                 }
             },
-            "required": ["upload_date", "upstreamArtifacts", "next_version", "maxRunTime"],
-            "optional": ["build_number", "version", "locale"]
+            "required": ["upload_date", "upstreamArtifacts"],
+            "optional": ["build_number", "version"]
 
         }
     },
     "required": ["payload", "dependencies"]
 }
-
