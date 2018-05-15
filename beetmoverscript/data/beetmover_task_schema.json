@@ -87,7 +87,7 @@
                     "uniqueItems": true
                 }
             },
-            "required": ["upload_date", "upstreamArtifacts"],
+            "required": ["upload_date", "upstreamArtifacts", "releaseProperties"],
             "optional": ["build_number", "version", "locale", "maxRunTime", "appVersion", "next_version"]
 
         }
