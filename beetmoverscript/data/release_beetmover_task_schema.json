@@ -22,6 +22,9 @@
                 "version": {
                     "type": "string"
                 },
+                "maxRunTime" : {
+                    "type" : "number"
+                },
                 "upstreamArtifacts": {
                     "type": "array",
                     "items": {
@@ -52,7 +55,7 @@
                 }
             },
             "required": ["product", "build_number", "version"],
-            "optional": ["upstreamArtifacts"]
+            "optional": ["upstreamArtifacts", "maxRunTime"]
 
         }
     },
