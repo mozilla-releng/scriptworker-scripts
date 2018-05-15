@@ -19,6 +19,9 @@
                 "build_number": {
                     "type": "number"
                 },
+                "locale" : {
+                    "type" : "string"
+                },
                 "version": {
                     "type": "string"
                 },
@@ -52,7 +55,7 @@
                 }
             },
             "required": ["upload_date", "upstreamArtifacts"],
-            "optional": ["build_number", "version"]
+            "optional": ["build_number", "version", "locale"]
 
         }
     },
