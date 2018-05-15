@@ -22,6 +22,9 @@
                 "locale" : {
                     "type" : "string"
                 },
+                "maxRunTime" : {
+                    "type" : "number"
+                },
                 "version": {
                     "type": "string"
                 },
@@ -54,7 +57,7 @@
                     "uniqueItems": true
                 }
             },
-            "required": ["upload_date", "upstreamArtifacts"],
+            "required": ["upload_date", "upstreamArtifacts", "maxRunTime"],
             "optional": ["build_number", "version", "locale"]
 
         }
