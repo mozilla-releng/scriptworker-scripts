@@ -182,7 +182,7 @@ mapping:
   {% elif platform in ["win32", "win64"] %}
     target.stub-installer.exe:
       s3_key: installer-stub.exe
-      destinations:
+       destinations:
         - {{ upload_date }}-{{ branch }}/Firefox Installer.{{ locale }}.exe
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
         - latest-{{ branch }}/Firefox Installer.{{ locale }}.exe
