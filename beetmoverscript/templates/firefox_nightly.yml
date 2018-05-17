@@ -184,11 +184,8 @@ mapping:
       s3_key: installer-stub.exe
       destinations:
         - {{ upload_date }}-{{ branch }}/Firefox Installer.{{ locale }}.exe
-        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
         - latest-{{ branch }}/Firefox Installer.{{ locale }}.exe
-        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
         - latest-{{ branch }}-l10n/Firefox Installer.{{ locale }}.exe
-        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
     target.installer.exe:
       s3_key: installer.exe
       destinations:
