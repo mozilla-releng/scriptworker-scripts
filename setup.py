@@ -27,5 +27,7 @@ setup(
     install_requires=[
         "scriptworker",
         "python-jose",
+        "aiohttp>3",
+        "async_timeout",
     ],
 )
