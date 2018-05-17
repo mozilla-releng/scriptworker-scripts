@@ -3,7 +3,7 @@ sudo: false
 
 language: python
 python:
-  - "3.5"
+  - "3.6"
 
 env:
   - SKIP_NETWORK_TESTS=0
@@ -11,6 +11,6 @@ env:
 install:
     - travis_retry pip install tox
 script:
-    - tox -e py35
+    - tox -e py36
 after_success:
-    - tox -e py35-coveralls
+    - tox -e py36-coveralls
