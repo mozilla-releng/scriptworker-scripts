@@ -42,9 +42,9 @@ async def die_async(*args, **kwargs):
 @pytest.mark.parametrize(
     'robustcheckout_works,raises,actions',
     ((
-        False, ScriptWorkerException, ["foo:bar:some_action"]
+        False, ScriptWorkerException, ["some_action"]
     ), (
-        True, None, ["foo:bar:some_action"]
+        True, None, ["some_action"]
     ), (
         True, None, None
     ))
@@ -83,14 +83,14 @@ def test_get_default_config():
 @pytest.mark.parametrize(
     'push_scope,dry_run,push_expect_called',
     (
-        (['foo:bar:push'], True, False),
-        (['foo:bar:push'], False, True),
+        (['push'], True, False),
+        (['push'], False, True),
         ([], False, False),
         ([], True, False),
     )
 )
 async def test_do_actions(mocker, context, push_scope, dry_run, push_expect_called):
-    actions = ["foo:bar:tagging", "foo:bar:version_bump"]
+    actions = ["tagging", "version_bump"]
     actions += push_scope
     called_tag = [False]
     called_bump = [False]
@@ -118,7 +118,7 @@ async def test_do_actions(mocker, context, push_scope, dry_run, push_expect_call
 
 @pytest.mark.asyncio
 async def test_do_actions_unknown(mocker, context):
-    actions = ["foo:bar:unknown"]
+    actions = ["unknown"]
     called_tag = [False]
     called_bump = [False]
 

@@ -13,6 +13,8 @@ TEST_ACTION_TAG = 'project:releng:treescript:action:tagging'
 TEST_ACTION_BUMP = 'project:releng:treescript:action:version_bump'
 TEST_ACTION_INVALID = 'project:releng:treescript:action:invalid'
 
+SCRIPT_CONFIG = {"taskcluster_scope_prefix": "project:releng:treescript:"}
+
 
 # mkdir {{{1
 def test_mkdir_does_make_dirs(tmpdir):
@@ -41,11 +43,15 @@ def test_mkdir_mutes_os_errors(mocker):
 
 # task_task_action_types {{{1
 @pytest.mark.parametrize(
-    'scopes', ([TEST_ACTION_TAG], [TEST_ACTION_BUMP], [TEST_ACTION_TAG, TEST_ACTION_BUMP])
+    'actions,scopes', (
+        (['tagging'], [TEST_ACTION_TAG]),
+        (['version_bump'], [TEST_ACTION_BUMP]),
+        (['tagging', 'version_bump'], [TEST_ACTION_BUMP, TEST_ACTION_TAG]),
+    )
 )
-def test_task_action_types_valid_scopes(scopes):
+def test_task_action_types_valid_scopes(actions, scopes):
     task = {"scopes": scopes}
-    assert tuple(scopes) == utils.task_action_types(task)
+    assert actions == utils.task_action_types(task, SCRIPT_CONFIG)
 
 
 @pytest.mark.parametrize(
@@ -54,7 +60,7 @@ def test_task_action_types_valid_scopes(scopes):
 def test_task_action_types_invalid_action(scopes):
     task = {"scopes": scopes}
     with pytest.raises(TaskVerificationError):
-        utils.task_action_types(task)
+        utils.task_action_types(task, SCRIPT_CONFIG)
 
 
 @pytest.mark.parametrize(
@@ -63,7 +69,7 @@ def test_task_action_types_invalid_action(scopes):
 def test_task_action_types_missing_action(scopes):
     task = {"scopes": scopes}
     with pytest.raises(TaskVerificationError):
-        utils.task_action_types(task)
+        utils.task_action_types(task, SCRIPT_CONFIG)
 
 
 @pytest.mark.parametrize(
