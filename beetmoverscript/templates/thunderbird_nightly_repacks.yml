@@ -65,13 +65,6 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
         - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.zip.asc
-    target.stub-installer.exe:
-      s3_key: installer-stub.exe
-      destinations:
-        - {{ upload_date }}-{{ branch }}-l10n/thunderbird Installer.{{ locale }}.exe
-        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
-        - latest-{{ branch }}-l10n/thunderbird Installer.{{ locale }}.exe
-        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.installer-stub.exe
     target.installer.exe:
       s3_key: installer.exe
       destinations:
