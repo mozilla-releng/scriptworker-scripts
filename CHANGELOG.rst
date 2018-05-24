@@ -6,6 +6,29 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.2.3] = (2018-05-24)
+----------------------
+
+Changed
+~~~~~~~
+
+- Updated schema to reflect the code. (`#137
+  <https://github.com/mozilla-releng/beetmoverscript/issues/137>`_)
+- Retire nightly stub installer old format from automation (`Bug 1387021
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1387021>`_) (`#139
+  <https://github.com/mozilla-releng/beetmoverscript/issues/139>`_)
+- Updated supported python versions to 3.6 and 3.7. (`#140
+  <https://github.com/mozilla-releng/beetmoverscript/issues/140>`_, `#141
+  <https://github.com/mozilla-releng/beetmoverscript/issues/141>`_)
+
+
+Fixed
+~~~~~
+
+- Fixed capitalization of `Thunderbird` in windows installer and dmg files.
+  (`#143 <https://github.com/mozilla-releng/beetmoverscript/issues/143>`_)
+
+
 [7.2.2] = (2018-05-03)
 ----------------------
 
