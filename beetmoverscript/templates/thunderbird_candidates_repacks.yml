@@ -25,16 +25,16 @@ mapping:
       destinations:
         - {{ platform }}/{{ locale }}/thunderbird-{{ version }}.zip
     target.installer.exe:
-      s3_key: {{ platform }}/{{ locale }}/thunderbird Setup {{ version }}.exe
+      s3_key: {{ platform }}/{{ locale }}/Thunderbird Setup {{ version }}.exe
       destinations:
-        - {{ platform }}/{{ locale }}/thunderbird Setup {{ version }}.exe
+        - {{ platform }}/{{ locale }}/Thunderbird Setup {{ version }}.exe
   {% endif %}
   {% if platform in ["win32"] %}
     {% if "esr" not in version %}
     target.stub-installer.exe:
-      s3_key: {{ platform }}/{{ locale }}/thunderbird Installer.exe
+      s3_key: {{ platform }}/{{ locale }}/Thunderbird Installer.exe
       destinations:
-        - {{ platform }}/{{ locale }}/thunderbird Installer.exe
+        - {{ platform }}/{{ locale }}/Thunderbird Installer.exe
     {% endif %}
   {% endif %}
   {% if platform in ["linux-i686", "linux-x86_64"] %}
@@ -49,9 +49,9 @@ mapping:
   {% endif %}
   {% if platform in ["mac"] %}
     target.dmg:
-      s3_key: {{ platform }}/{{ locale }}/thunderbird {{ version }}.dmg
+      s3_key: {{ platform }}/{{ locale }}/Thunderbird {{ version }}.dmg
       destinations:
-        - {{ platform }}/{{ locale }}/thunderbird {{ version }}.dmg
+        - {{ platform }}/{{ locale }}/Thunderbird {{ version }}.dmg
   {% endif %}
     # FIXME: potentially other names here
     target.bz2.complete.mar:

@@ -176,9 +176,9 @@ mapping:
       destinations:
         - {{ platform }}/{{ locale }}/thunderbird-{{ version }}.zip
     target.installer.exe:
-      s3_key: {{ platform }}/{{ locale }}/thunderbird Setup {{ version }}.exe
+      s3_key: {{ platform }}/{{ locale }}/Thunderbird Setup {{ version }}.exe
       destinations:
-        - {{ platform }}/{{ locale }}/thunderbird Setup {{ version }}.exe
+        - {{ platform }}/{{ locale }}/Thunderbird Setup {{ version }}.exe
   {% endif %}
   {% if platform in ["linux-i686"] %}
     target_info.txt:
@@ -210,9 +210,9 @@ mapping:
       destinations:
         - macosx64_info.txt
     target.dmg:
-      s3_key: {{ platform }}/{{ locale }}/thunderbird {{ version }}.dmg
+      s3_key: {{ platform }}/{{ locale }}/Thunderbird {{ version }}.dmg
       destinations:
-        - {{ platform }}/{{ locale }}/thunderbird {{ version }}.dmg
+        - {{ platform }}/{{ locale }}/Thunderbird {{ version }}.dmg
   {% endif %}
   {% for partial in partials %}
     {{ partial }}:
