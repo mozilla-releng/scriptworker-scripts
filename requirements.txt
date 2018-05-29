@@ -118,8 +118,9 @@ requests==2.18.4 \
 rsa==3.4.2 \
     --hash=sha256:25df4e10c263fb88b5ace923dd84bf9aa7f5019687b5e55382ffcdb8bede9db5 \
     --hash=sha256:43f682fea81c452c98d09fc316aae12de6d30c4b5c84226642cf8f8fd1c93abd
-scriptworker==11.1.0 \
-    --hash=sha256:05eddc027fd4d844058073c5ee46bd3f689c572008f96c7a8c43289d1455a659
+scriptworker==12.0.0 \
+    --hash=sha256:fc4fbd9ef56b0001f7998591dabe28f756e02da3d497e31c813a8fd15f14494a \
+    --hash=sha256:a6e08f4352def3805c602ebf58c76ff0249db443d9f289f8270111dfb58c344e
 six==1.11.0 \
     --hash=sha256:70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9 \
     --hash=sha256:832dc0e10feb1aa2c68dcc57dbb658f1c7e65b9b61af69048abc87a2db00a0eb
