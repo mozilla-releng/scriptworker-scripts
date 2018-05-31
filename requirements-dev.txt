@@ -2,7 +2,7 @@ arrow
 cryptography
 enum34
 # Pinning functools b/c pip returns a bogus 3.2.3.post2
-functools==3.2.3-2
+functools32==3.2.3-2
 idna
 ipaddress
 jsonschema
