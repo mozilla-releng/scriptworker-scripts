@@ -13,8 +13,8 @@ puppet internal pypi mirrors and pin the beetmoverworkers to one's environment.
 1. Create wheel with `python3 setup.py bdist_wheel` and scp that file under [puppet](http://releng-puppet2.srv.releng.scl3.mozilla.com/python/packages-3.5/)
 1. Login in [puppet](http://releng-puppet2.srv.releng.scl3.mozilla.com/) and change directory in your environment (e.g. `/etc/puppet/environments/$whoami`)
 1. Make sure to have the puppet repo up-to-date there
-1. Tweak the `beetmoverscript` version under [beetmoverworker module](https://hg.mozilla.org/build/puppet/file/default/modules/beetmover_scriptworker/manifests/init.pp#l28) to reflect the new value
-but also to force all the dev beetmoverworkers to be chained to your environment, something like this:
+1. Tweak the `beetmoverscript` version in the module's [requirements.txt](https://hg.mozilla.org/build/puppet/file/default/modules/beetmover_scriptworker/files/requirements.txt#l8) to reflect the new value,
+and also to force all the dev beetmoverworkers to be chained to your environment. Something like this:
 ```diff
 diff --git a/manifests/moco-nodes.pp b/manifests/moco-nodes.pp
 index a8357fb..1982cec 100644
@@ -27,15 +27,18 @@ index a8357fb..1982cec 100644
      include toplevel::server::beetmoverscriptworker
  }
 
-diff --git a/modules/beetmover_scriptworker/manifests/init.pp b/modules/beetmover_scriptworker/manifests/init.pp
-index 92f6fa0..939e4ad 100644
---- a/modules/beetmover_scriptworker/manifests/init.pp
-+++ b/modules/beetmover_scriptworker/manifests/init.pp
-@@ -40,7 +40,7 @@ class beetmover_scriptworker {
-                 'aiohttp==2.3.1',
-                 ...
--                'beetmoverscript==7.0.0',
-+                'beetmoverscript==XXX', # dev version to be tested
+diff --git a/modules/beetmover_scriptworker/files/requirements.txt b/modules/beetmover_scriptworker/files/requirements.txt
+--- a/modules/beetmover_scriptworker/files/requirements.txt
++++ b/modules/beetmover_scriptworker/files/requirements.txt
+@@ -5,7 +5,7 @@ aiohttp==3.2.1
+ arrow==0.12.1
+ async_timeout==3.0.0
+ attrs==18.1.0
+-beetmoverscript==7.2.3
++beetmoverscript==XXX    # dev version to be tested
+ boto3==1.7.22
+ botocore==1.10.22
+ certifi==2018.4.16
 ```
 1. Login to all machines to chain them to your environment and also deploy the newer testing version
 ```
