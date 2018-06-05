@@ -7,9 +7,7 @@ from mozapkpublisher.common.apk.checker import cross_check_apks, \
     _check_all_apks_have_the_same_build_id, _check_all_apks_have_the_same_locales, \
     _check_piece_of_metadata_is_unique, _check_apks_version_codes_are_correctly_ordered, \
     _check_all_apks_are_multi_locales, _check_all_architectures_and_api_levels_are_present, \
-    _get_expected_api_levels_for_version, _get_expected_architectures_for_version, \
-    _get_expected_things_for_version, _craft_expected_combos, _is_firefox_version_in_range, \
-    _get_firefox_major_version_number, _craft_combos_pretty_names
+    _craft_expected_combos, _craft_combos_pretty_names
 from mozapkpublisher.common.utils import PRODUCT
 from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetOfApks
 
@@ -393,77 +391,12 @@ def test_bad_check_all_architectures_and_api_levels_are_present(apks_metadata_pe
         _check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths)
 
 
-@pytest.mark.parametrize('firefox_version, expected', (
-    ('46.0', (15,)),
-    ('55.0.2', (15,)),
-    ('57.0', (16,)),
-))
-def test_get_expected_api_levels_for_version(firefox_version, expected):
-    assert _get_expected_api_levels_for_version(firefox_version) == expected
-
-
-@pytest.mark.parametrize('firefox_version, expected', (
-    ('4.0', ('armeabi-v7a',)),
-    ('14.0', ('armeabi-v7a', 'x86')),
-))
-def test_get_expected_architectures_for_version(firefox_version, expected):
-    assert _get_expected_architectures_for_version(firefox_version) == expected
-
-
-def test_get_expected_things_for_version():
-    dict_of_things = {
-        'an_old_thing': {
-            'first_firefox_version': 1,
-            'last_firefox_version': 2,
-        },
-        'a_current_thing': {
-            'first_firefox_version': 3,
-        },
-        'zzz-another_current_thing': {
-            'first_firefox_version': 4,
-            'last_firefox_version': 999,
-        },
-        'a_future_thing': {
-            'first_firefox_version': 1000,
-        },
-    }
-    assert _get_expected_things_for_version('57.0', dict_of_things, 'name') == (
-        'a_current_thing', 'zzz-another_current_thing'
-    )
-
-
 @pytest.mark.parametrize('firefox_version, expected_api_levels, expected_architectures, expected', (
     ('55.0', (15,), ('armeabi-v7a', 'x86'), set((('armeabi-v7a', 15), ('x86', 15)))),
     ('57.0', (16,), ('armeabi-v7a', 'x86'), set((('armeabi-v7a', 16), ('x86', 16)))),
 ))
 def test_craft_expected_combos(firefox_version, expected_api_levels, expected_architectures, expected):
     assert _craft_expected_combos(firefox_version, expected_api_levels, expected_architectures) == expected
-
-
-@pytest.mark.parametrize('firefox_version, range_dict, expected', (
-    ('55.0', {'first_firefox_version': 56}, False),
-    ('56.0', {'first_firefox_version': 56}, True),
-    ('57.0.1', {'first_firefox_version': 56}, True),
-
-    ('45.0.2', {'first_firefox_version': 46, 'last_firefox_version': 55}, False),
-    ('46.0', {'first_firefox_version': 46, 'last_firefox_version': 55}, True),
-    ('46.0.1', {'first_firefox_version': 46, 'last_firefox_version': 55}, True),
-    ('55.0', {'first_firefox_version': 46, 'last_firefox_version': 55}, True),
-    ('55.0.2', {'first_firefox_version': 46, 'last_firefox_version': 55}, True),
-    ('56.0.2', {'first_firefox_version': 46, 'last_firefox_version': 55}, False),
-))
-def test_is_firefox_version_in_range(firefox_version, range_dict, expected):
-    assert _is_firefox_version_in_range(firefox_version, range_dict) == expected
-
-
-@pytest.mark.parametrize('firefox_version, expected', (
-    ('59.0a1', 59),
-    ('58.0b1', 58),
-    ('57.0', 57),
-    ('57.0.1', 57),
-))
-def test_get_firefox_major_version_number(firefox_version, expected):
-    assert _get_firefox_major_version_number(firefox_version) == expected
 
 
 def test_craft_combos_pretty_names():
