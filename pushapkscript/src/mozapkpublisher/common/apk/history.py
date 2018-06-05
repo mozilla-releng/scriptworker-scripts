@@ -58,7 +58,7 @@ def _get_expected_things_for_version(firefox_version, dict_of_things, thing_name
 
 def _is_firefox_version_in_range(firefox_version, range_dict):
     first_firefox_version = range_dict['first_firefox_version']
-    current_major_version = _get_firefox_major_version_number(firefox_version)
+    current_major_version = get_firefox_major_version_number(firefox_version)
     if current_major_version < first_firefox_version:
         return False
 
@@ -69,5 +69,5 @@ def _is_firefox_version_in_range(firefox_version, range_dict):
     return True
 
 
-def _get_firefox_major_version_number(version):
+def get_firefox_major_version_number(version):
     return int(version.split('.')[0])

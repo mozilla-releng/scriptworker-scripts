@@ -2,7 +2,7 @@ import pytest
 
 from mozapkpublisher.common.apk.history import get_expected_api_levels_for_version, \
     get_expected_architectures_for_version, _get_expected_things_for_version, \
-    _is_firefox_version_in_range, _get_firefox_major_version_number
+    _is_firefox_version_in_range, get_firefox_major_version_number
 
 
 @pytest.mark.parametrize('firefox_version, expected', (
@@ -71,4 +71,4 @@ def test_is_firefox_version_in_range(firefox_version, range_dict, expected):
     ('57.0.1', 57),
 ))
 def test_get_firefox_major_version_number(firefox_version, expected):
-    assert _get_firefox_major_version_number(firefox_version) == expected
+    assert get_firefox_major_version_number(firefox_version) == expected

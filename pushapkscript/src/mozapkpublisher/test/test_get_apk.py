@@ -35,39 +35,59 @@ def test_generate_apk_base_url():
         'https://ftp.mozilla.org/pub/mobile/candidates/50.0b8-candidates/build1/android-api-15/multi'
 
 
-def test_get_api_suffix():
-    assert get_apk.get_api_suffix('arm') == ['api-15']
-    assert get_apk.get_api_suffix('x86') == ['x86']
+@pytest.mark.parametrize('version, architure, expected', ((
+    '45.0', 'arm', ['api-9', 'api-11'],
+), (
+    '47.0', 'arm', ['api-9', 'api-15'],
+), (
+    '55.0', 'arm', ['api-15'],
+), (
+    '55.0', 'x86', ['x86'],
+), (
+    '56.0', 'arm', ['api-16'],
+)))
+def test_get_api_suffix(version, architure, expected):
+    assert get_apk.get_api_suffix(version, architure) == expected
 
 
 def test_craft_apk_and_checksums_url_and_download_locations():
     assert craft_apk_and_checksums_url_and_download_locations(
         'https://ftp.mozilla.org/pub/mobile/candidates/52.0b1-candidates/build1/android-api-15/multi',
-        '/a/fake/download/directory', '52.0b1', 'multi', 'arm'
-    ) == [{
-        'url': 'https://ftp.mozilla.org/pub/mobile/candidates/52.0b1-candidates/build1/android-api-15/multi/fennec-52.0b1.multi.android-arm.apk',
-        'download_location': '/a/fake/download/directory/fennec-52.0b1.multi.android-arm.apk',
-    }, {
-        'url': 'https://ftp.mozilla.org/pub/mobile/candidates/52.0b1-candidates/build1/android-api-15/multi/fennec-52.0b1.multi.android-arm.checksums',
-        'download_location': '/a/fake/download/directory/fennec-52.0b1.multi.android-arm.checksums',
-    }]
+        '/a/fake/download/directory', '52.0b1', 1, 'multi', 'arm'
+    ) == {
+        'apk': {
+            'url': 'https://ftp.mozilla.org/pub/mobile/candidates/52.0b1-candidates/build1/android-api-15/multi/fennec-52.0b1.multi.android-arm.apk',
+            'download_location': '/a/fake/download/directory/fennec-52.0b1.multi.android-arm.apk',
+        },
+        'checksums': {
+            'url': 'https://ftp.mozilla.org/pub/mobile/candidates/52.0b1-candidates/build1/android-api-15/multi/fennec-52.0b1.multi.android-arm.checksums',
+            'download_location': '/a/fake/download/directory/fennec-52.0b1.multi.android-arm.checksums',
+        },
+    }
     assert craft_apk_and_checksums_url_and_download_locations(
         'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-api-15',
-        '/a/fake/download/directory', '53.0a1', 'multi', 'arm'
-    ) == [{
-        'url': 'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-api-15/fennec-53.0a1.multi.android-arm.apk',
-        'download_location': '/a/fake/download/directory/fennec-53.0a1.multi.android-arm.apk',
-    }, {
-        'url': 'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-api-15/fennec-53.0a1.multi.android-arm.checksums',
-        'download_location': '/a/fake/download/directory/fennec-53.0a1.multi.android-arm.checksums',
-    }]
+        '/a/fake/download/directory', '53.0a1', 1, 'multi', 'arm'
+    ) == {
+        'apk': {
+            'url': 'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-api-15/fennec-53.0a1.multi.android-arm.apk',
+            'download_location': '/a/fake/download/directory/fennec-53.0a1.multi.android-arm.apk',
+        },
+        'checksums': {
+            'url': 'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-api-15/fennec-53.0a1.multi.android-arm.checksums',
+            'download_location': '/a/fake/download/directory/fennec-53.0a1.multi.android-arm.checksums',
+        },
+    }
 
 
 def test_craft_apk_and_checksums_file_names():
-    assert _craft_apk_and_checksums_file_names('50.0b8', 'multi', 'arm') == \
-        ['fennec-50.0b8.multi.android-arm.apk', 'fennec-50.0b8.multi.android-arm.checksums']
-    assert _craft_apk_and_checksums_file_names('51.0a2', 'en-US', 'x86') == \
-        ['fennec-51.0a2.en-US.android-i386.apk', 'fennec-51.0a2.en-US.android-i386.checksums']
+    assert _craft_apk_and_checksums_file_names('50.0b8', 'multi', 'arm') == {
+        'apk': 'fennec-50.0b8.multi.android-arm.apk',
+        'checksums': 'fennec-50.0b8.multi.android-arm.checksums',
+    }
+    assert _craft_apk_and_checksums_file_names('51.0a2', 'en-US', 'x86') == {
+        'apk': 'fennec-51.0a2.en-US.android-i386.apk',
+        'checksums': 'fennec-51.0a2.en-US.android-i386.checksums',
+    }
 
 
 def test_get_architecture_in_file_name():
@@ -105,6 +125,7 @@ def test_check_apk_against_checksum_file(checksum_file, raises):
 @pytest.mark.parametrize('checksum_file', (
     os.path.join(DATA_DIR, 'checksums.old'),
     os.path.join(DATA_DIR, 'checksums.tc'),
+    os.path.join(DATA_DIR, 'SHA512SUMS'),
 ))
 def test_fetch_checksum_from_file(checksum_file):
     assert _fetch_checksum_from_file(checksum_file, CHECKSUM_APK) == \

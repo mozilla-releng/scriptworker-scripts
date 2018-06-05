@@ -7,7 +7,7 @@ import signal
 import shutil
 import logging
 
-from mozapkpublisher.common.apk.history import get_expected_api_levels_for_version
+from mozapkpublisher.common.apk.history import get_expected_api_levels_for_version, get_firefox_major_version_number
 from mozapkpublisher.common.base import Base, ArgumentParser
 from mozapkpublisher.common.exceptions import CheckSumMismatch
 from mozapkpublisher.common.utils import load_json_url, download_file, file_sha512sum
@@ -60,8 +60,10 @@ class GetAPK(Base):
     def generate_apk_base_url(self, version, build, locale, api_suffix):
         return '{}/nightly/latest-mozilla-central-android-{}'.format(FTP_BASE_URL, api_suffix) \
             if self.config.latest_nightly else \
-            '{}/candidates/{}-candidates/build{}/android-{}/{}'.format(
-                FTP_BASE_URL, version, build, api_suffix, locale,
+            '{}/android-{}/{}'.format(
+                generate_base_directory(version, build),
+                api_suffix,
+                locale,
             )
 
     def get_api_suffix(self, version, arch):
@@ -69,6 +71,7 @@ class GetAPK(Base):
             return [arch]
         else:
             api_levels = get_expected_api_levels_for_version(version)
+            # TODO support old schemes when no API level was in the path
             return [
                 'api-{}'.format(api_level) for api_level in api_levels
             ]
@@ -81,9 +84,11 @@ class GetAPK(Base):
 
         for api_suffix in self.get_api_suffix(version, architecture):
             apk_base_url = self.generate_apk_base_url(version, build, locale, api_suffix)
-            apk, checksums = craft_apk_and_checksums_url_and_download_locations(
-                apk_base_url, self.config.download_directory, version, locale, architecture
+            urls_and_locations = craft_apk_and_checksums_url_and_download_locations(
+                apk_base_url, self.config.download_directory, version, build, locale, architecture
             )
+            apk = urls_and_locations['apk']
+            checksums = urls_and_locations['checksums']
 
             download_file(apk['url'], apk['download_location'])
             download_file(checksums['url'], checksums['download_location'])
@@ -115,25 +120,36 @@ class GetAPK(Base):
             self.download(version, build, architecture, locale)
 
 
-def craft_apk_and_checksums_url_and_download_locations(base_apk_url, download_directory, version, locale, architecture):
+def craft_apk_and_checksums_url_and_download_locations(base_apk_url, download_directory, version, build, locale, architecture):
     file_names = _craft_apk_and_checksums_file_names(version, locale, architecture)
 
-    return [
-        {
+    urls_and_locations = {
+        extension: {
             'download_location': os.path.join(download_directory, file_name),
             'url': '/'.join([base_apk_url, file_name]),
-        } for file_name in file_names
-    ]
+        } for extension, file_name in file_names.items()
+    }
+
+    if get_firefox_major_version_number(version) >= 59:
+        urls_and_locations['checksums']['url'] = '{}/{}'.format(
+            generate_base_directory(version, build), 'SHA512SUMS'
+        )
+
+    return urls_and_locations
+
+
+def generate_base_directory(version, build):
+    return '{}/candidates/{}-candidates/build{}'.format(FTP_BASE_URL, version, build)
 
 
 def _craft_apk_and_checksums_file_names(version, locale, architecture):
     file_name_architecture = _get_architecture_in_file_name(architecture)
     extensions = ['apk', 'checksums']
 
-    return [
-        'fennec-{}.{}.android-{}.{}'.format(version, locale, file_name_architecture, extension)
+    return {
+        extension: 'fennec-{}.{}.android-{}.{}'.format(version, locale, file_name_architecture, extension)
         for extension in extensions
-    ]
+    }
 
 
 def _get_architecture_in_file_name(architecture):
@@ -156,19 +172,36 @@ def check_apk_against_checksum_file(apk_file, checksum_file):
 
 def _fetch_checksum_from_file(checksum_file, apk_file):
     base_apk_filepath = _take_out_common_path(checksum_file, apk_file)
-    with open(checksum_file, 'r') as fh:
-        for line in fh:
-            m = re.match(r"""^(?P<hash>.*) sha512 (?P<filesize>\d+) {}""".format(base_apk_filepath), line)
-            if m:
-                gd = m.groupdict()
-                logger.info("Found hash {}".format(gd['hash']))
-                return gd['hash']
-    # old style pre-Fennec 53 checksums files
-    with open(checksum_file, 'r') as f:
-        checksum = f.read()
-    checksum = re.sub("\s(.*)", "", checksum.splitlines()[0])
+
+    # pre-Fennec 58 style
+    checksum = _match_checksum_regex(
+        checksum_file,  r"""^(?P<hash>.*) sha512 (?P<filesize>\d+) {}""".format(base_apk_filepath)
+    )
+
+    if not checksum:
+        # post-Fennec 58. More greedy
+        checksum = _match_checksum_regex(
+            checksum_file,  r"""^(?P<hash>.*)  {}""".format(base_apk_filepath)
+        )
+
+        if not checksum:
+            # old style pre-Fennec 53 checksums files. Super greedy
+            with open(checksum_file, 'r') as f:
+                checksum = f.read()
+            checksum = re.sub("\s(.*)", "", checksum.splitlines()[0])
+
     logger.info("Found hash {}".format(checksum))
     return checksum
+
+
+def _match_checksum_regex(checksum_file, regex):
+    with open(checksum_file, 'r') as fh:
+        for line in fh:
+            m = re.match(regex, line)
+            if m:
+                gd = m.groupdict()
+                return gd['hash']
+    return None
 
 
 def _take_out_common_path(checksum_file, apk_file):
