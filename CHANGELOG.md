@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.0] - 2018-06-05
+### Added
+- Support for thunderbird scope prefixes.
+- Support for `*-ssl` prefixes for thunderbird.
+- Support for `thunderbird-next-*` prefixes for initial esr60 release.
+
 ## [1.3.0] - 2018-05-03
 ### Added
 - Support of `firefox-esr-next-latest` and `firefox-esr-next-latest-ssl` aliases
