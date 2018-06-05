@@ -7,6 +7,7 @@ import signal
 import shutil
 import logging
 
+from mozapkpublisher.common.apk.history import get_expected_api_levels_for_version
 from mozapkpublisher.common.base import Base, ArgumentParser
 from mozapkpublisher.common.exceptions import CheckSumMismatch
 from mozapkpublisher.common.utils import load_json_url, download_file, file_sha512sum
@@ -18,8 +19,6 @@ FTP_BASE_URL = 'https://ftp.mozilla.org/pub/mobile'
 
 class GetAPK(Base):
     arch_values = ["arm", "x86"]
-    multi_api_archs = ["arm"]
-    multi_apis = ['api-15']     # v11 has been dropped in fx 46 (bug 1155801) and v9 in fx 48 (bug 1220184)
 
     json_version_url = "https://product-details.mozilla.org/1.0/firefox_versions.json"
 
@@ -55,7 +54,7 @@ class GetAPK(Base):
         try:
             shutil.rmtree(self.config.download_directory)
             logger.info('Download directory cleaned')
-        except OSError:     # XXX: Used for compatibility with Python 2. Use FileNotFoundError otherwise
+        except FileNotFoundError:
             logger.warn('{} was not found. Skipping...'.format(self.config.download_directory))
 
     def generate_apk_base_url(self, version, build, locale, api_suffix):
@@ -65,16 +64,22 @@ class GetAPK(Base):
                 FTP_BASE_URL, version, build, api_suffix, locale,
             )
 
-    def get_api_suffix(self, arch):
-        return self.multi_apis if arch in self.multi_api_archs else [arch]
+    def get_api_suffix(self, version, arch):
+        if arch != 'arm':
+            return [arch]
+        else:
+            api_levels = get_expected_api_levels_for_version(version)
+            return [
+                'api-{}'.format(api_level) for api_level in api_levels
+            ]
 
     def download(self, version, build, architecture, locale):
         try:
             os.makedirs(self.config.download_directory)
-        except OSError:     # XXX: Used for compatibility with Python 2. Use FileExistsError otherwise
+        except FileExistsError:
             pass
 
-        for api_suffix in self.get_api_suffix(architecture):
+        for api_suffix in self.get_api_suffix(version, architecture):
             apk_base_url = self.generate_apk_base_url(version, build, locale, api_suffix)
             apk, checksums = craft_apk_and_checksums_url_and_download_locations(
                 apk_base_url, self.config.download_directory, version, locale, architecture
