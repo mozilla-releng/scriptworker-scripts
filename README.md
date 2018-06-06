@@ -254,14 +254,6 @@ my_email: "scriptworker@example.com"
     "upstreamArtifacts": [
       {
         "paths": [
-          "public/build/balrog_props.json"
-        ],
-        "taskId": "c6DPRNsTRa6uVYVp5qCD9w",
-        "taskType": "build",
-        "locale": "en-US"
-      },
-      {
-        "paths": [
           "public/build/target.checksums.asc",
           "public/build/target.checksums"
         ],

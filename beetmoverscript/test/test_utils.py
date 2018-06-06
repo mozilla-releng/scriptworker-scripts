@@ -5,7 +5,7 @@ import tempfile
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.test import (context, get_fake_valid_task,
-                                  get_fake_balrog_props, get_fake_checksums_manifest,
+                                  get_fake_checksums_manifest,
                                   get_test_jinja_env)
 import beetmoverscript.utils as butils
 from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
@@ -38,7 +38,7 @@ def test_get_hash():
 
 # write_json {{{1
 def test_write_json():
-    sample_data = get_fake_balrog_props()
+    sample_data = get_fake_valid_task()['payload']['releaseProperties']
 
     with tempfile.NamedTemporaryFile(delete=True) as fp:
         write_json(fp.name, sample_data)
@@ -102,10 +102,10 @@ def test_beetmover_template_args_generation(context, taskjson, partials):
     context.task = get_fake_valid_task(taskjson)
     expected_template_args = {
         'branch': 'mozilla-central',
-        'platform': 'android-api-15',
         'filename_platform': 'android-arm',
         'product': 'Fake',
         'stage_platform': 'android-api-15',
+        'platform': 'android-api-15',
         'template_key': 'fake_nightly',
         'upload_date': '2016/09/2016-09-01-16-26-14',
         'version': '99.0a1',
@@ -200,10 +200,10 @@ def test_beetmover_template_args_generation_release(context):
 
     expected_template_args = {
         'branch': 'mozilla-central',
-        'platform': 'android-api-15',
         'product': 'Fake',
         'filename_platform': 'android-arm',
         'stage_platform': 'android-api-15',
+        'platform': 'android-api-15',
         'template_key': 'fake_candidates',
         'upload_date': '2016/09/2016-09-01-16-26-14',
         'version': '4.4',

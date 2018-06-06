@@ -15,38 +15,23 @@ MIME_MAP = {
 STAGE_PLATFORM_MAP = {
     'linux': 'linux-i686',
     'linux-devedition': 'linux-i686',
-    # XXX: temp hack until we solve 1424482
-    'linux-devedition-devedition': 'linux-i686',
     'linux64': 'linux-x86_64',
     'linux64-asan-reporter': 'linux-x86_64-asan-reporter',
     'linux64-devedition': 'linux-x86_64',
-    # XXX: temp hack until we solve 1424482
-    'linux64-devedition-devedition': 'linux-x86_64',
     'macosx64': 'mac',
     'macosx64-devedition': 'mac',
-    # XXX: temp hack until we solve 1424482
-    'macosx64-devedition-devedition': 'mac',
     'win32': 'win32',
     'win32-devedition': 'win32',
-    # XXX: temp hack until we solve 1424482
-    'win32-devedition-devedition': 'win32',
     'win64': 'win64',
     'win64-devedition': 'win64',
-    # XXX: temp hack until we solve 1424482
-    'win64-devedition-devedition': 'win64',
 }
 
 NORMALIZED_BALROG_PLATFORMS = {
     "linux-devedition": "linux",
-    "linux-devedition-devedition": "linux",
     "linux64-devedition": "linux64",
-    "linux64-devedition-devedition": "linux64",
     "macosx64-devedition": "macosx64",
-    "macosx64-devedition-devedition": "macosx64",
     "win32-devedition": "win32",
-    "win32-devedition-devedition": "win32",
     "win64-devedition": "win64",
-    "win64-devedition-devedition": "win64",
 }
 
 NORMALIZED_FILENAME_PLATFORMS = NORMALIZED_BALROG_PLATFORMS.copy()
@@ -62,10 +47,6 @@ NORMALIZED_FILENAME_PLATFORMS.update({
 })
 
 HASH_BLOCK_SIZE = 1024*1024
-
-INITIAL_RELEASE_PROPS_FILE = "balrog_props.json"
-# release buckets don't require a copy of the following artifacts
-IGNORED_UPSTREAM_ARTIFACTS = ["balrog_props.json"]
 
 RELEASE_BRANCHES = (
     'mozilla-central',

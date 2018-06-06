@@ -15,7 +15,6 @@
     ],
     "payload": {
         "upload_date": 1472747174,
-        "generate_checksums": false,
         "upstreamArtifacts": [
         {
             "locale": "en-US",

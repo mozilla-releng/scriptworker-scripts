@@ -27,15 +27,13 @@
     },
     "payload": {
         "upload_date": 1472747174,
-        "generate_checksums": false,
         "upstreamArtifacts": [
         {
           "paths": [
             "public/build/target.txt",
             "public/build/target.mozinfo.json",
             "public/build/target_info.txt",
-            "public/build/target.test_packages.json",
-            "public/build/balrog_props.json"
+            "public/build/target.test_packages.json"
           ],
           "taskId": "eSzfNqMZT_mSiQQXu8hyqg",
           "locale": "en-US",
