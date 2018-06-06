@@ -13,7 +13,7 @@ puppet internal pypi mirrors and pin the beetmoverworkers to one's environment.
 1. Create wheel with `python3 setup.py bdist_wheel` and scp that file under [puppet](http://releng-puppet2.srv.releng.scl3.mozilla.com/python/packages-3.5/)
 1. Login in [puppet](http://releng-puppet2.srv.releng.scl3.mozilla.com/) and change directory in your environment (e.g. `/etc/puppet/environments/$whoami`)
 1. Make sure to have the puppet repo up-to-date there
-1. Tweak the `beetmoverscript` version in the module's [requirements.txt](https://hg.mozilla.org/build/puppet/file/default/modules/beetmover_scriptworker/files/requirements.txt#l8) to reflect the new value,
+1. Tweak the `beetmoverscript` version in the module's [requirements.txt](https://github.com/mozilla/build-puppet/blob/master/modules/beetmover_scriptworker/files/requirements.txt#L9) to reflect the new value,
 and also to force all the dev beetmoverworkers to be chained to your environment. Something like this:
 ```diff
 diff --git a/manifests/moco-nodes.pp b/manifests/moco-nodes.pp
@@ -61,7 +61,7 @@ sudo puppet agent --test  # or unpin or w/e
 1. `git push --tags`
 1. Create wheel with `python3 setup.py bdist_wheel` and scp that file under [puppet](http://releng-puppet2.srv.releng.scl3.mozilla.com/python/packages-3.5/)
 1. Wait for that file to be synchronized across all puppet instances (emails arrive to confirm that)
-1. Tweak the `beetmoverscript` version under [beetmoverworker module](https://hg.mozilla.org/build/puppet/file/default/modules/beetmover_scriptworker/manifests/init.pp#l28) to reflect the new value
+1. Tweak the `beetmoverscript` version in the module's [requirements.txt](https://github.com/mozilla/build-puppet/blob/master/modules/beetmover_scriptworker/files/requirements.txt#L9) to reflect the new value,
 1. Push puppet bump to `default` branch, wait for tests to run and confirmation to arrive in `#releng`. Merge it to `production` after that.
 1. There are currently fifteen prod and ten dev beetmoverworkers. you can wait for the cron job to run puppet to deploy new changes every 30 mins or so. Alternatively, can force the puppet run by logging-in to each of the machines:
 ```
