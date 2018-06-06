@@ -30,9 +30,9 @@ aiohttp==3.2.1 \
     --hash=sha256:bd2092d2c2cfdd3363e3815d473464b45c79e0794d60e7c4c89c2adc12ef64b4 \
     --hash=sha256:d51800bdc01d9c1c70fa3ed394a1755f93464354b04039b41d48ce1308517e81 \
     --hash=sha256:defc2afb61b9fd08b2d07e536a1497a50925f1078e598ebc7eba080d33cdd5f6
-aioresponses==0.4.1 \
-    --hash=sha256:2de01d289bacb3da18440754ebb50690b96c77f15cb546d7f78dafae9af30b50 \
-    --hash=sha256:6c468badfdf71bd9bb9a49c724a176c95cc7bff38d6b0d4fc11abae1af0b8055
+aioresponses==0.4.2 \
+    --hash=sha256:c3b3c4679579f021356431998a44f0eeaf889a21db1087e290f8d8f44bdef0d2 \
+    --hash=sha256:41d0452fd24256742dc45564a37001c74ec63fe4d4c7a55f365f7fc825c8c56e
 arrow==0.12.1 \
     --hash=sha256:a558d3b7b6ce7ffc74206a86c147052de23d3d4ef0e17c210dd478c53575c4cd
 async_timeout==3.0.0 \
