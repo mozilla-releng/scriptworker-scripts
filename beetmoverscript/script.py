@@ -412,7 +412,6 @@ def enrich_balrog_manifest(context, locale):
         "extVersion": release_props["appVersion"],
         "hashType": release_props["hashType"],
         "locale": locale if not locale == 'multi' else 'en-US',
-        # XXX: temporary fix for devedition until we solve 1424482
         "platform": NORMALIZED_BALROG_PLATFORMS.get(release_props["stage_platform"],
                                                     release_props["stage_platform"]),
         "url_replacements": url_replacements
@@ -431,9 +430,6 @@ def enrich_balrog_manifest(context, locale):
 # retry_upload {{{1
 async def retry_upload(context, destinations, path):
     """Manage upload of `path` to `destinations`."""
-    # TODO rather than upload twice, use something like boto's bucket.copy_key
-    #   probably via the awscli subproc directly.
-    # For now, this will be faster than using copy_key() as boto would block
     uploads = []
     for dest in destinations:
         uploads.append(
