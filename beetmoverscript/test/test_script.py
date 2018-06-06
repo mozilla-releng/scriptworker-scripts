@@ -210,7 +210,6 @@ def test_put_failure(event_loop, fake_session_500):
     "mozilla-beta", "push-to-releases",
 )))
 def test_enrich_balrog_manifest(context, branch, action):
-    context.release_props = context.task['payload']['releaseProperties']
     context.task['payload']['build_number'] = 33
     context.task['payload']['version'] = '99.0b44'
     context.action = action
