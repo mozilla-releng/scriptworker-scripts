@@ -268,6 +268,7 @@ def test_move_beets(event_loop, partials, mocker):
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
     context.release_props = context.task['payload']['releaseProperties']
+    context.release_props['stage_platform'] = context.release_props['platform']
     context.bucket = 'nightly'
     context.action = 'push-to-nightly'
     context.raw_balrog_manifest = dict()

@@ -24,7 +24,6 @@ def test_exception_get_upstream_artifacts():
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
     context.properties = context.task['payload']['releaseProperties']
-    context.properties['platform'] = context.properties['stage_platform']
 
     context.task['payload']['upstreamArtifacts'][0]['paths'].append('fake_file')
     with pytest.raises(ScriptWorkerTaskException):
@@ -174,8 +173,7 @@ def test_checksums_manifest_generation():
 # get_release_props {{{1
 @pytest.mark.parametrize("taskjson,locale, relprops, expected", ((
     'task.json', False, {
-        "platform": "android",
-        "stage_platform": "android-api-16"
+        "platform": "android-api-16",
     }, {
         "platform": "android-api-16",
         "stage_platform": "android-api-16"
@@ -190,22 +188,20 @@ def test_checksums_manifest_generation():
 ), (
     'task.json', False, {
         "platform": "linux64",
-        "stage_platform": "linux64"
     }, {
         "platform": "linux-x86_64",
         "stage_platform": "linux64"
     }
 ), (
     'task_devedition.json', False, {
-        "platform": "macosx64",
-        "stage_platform": "macosx64-devedition"
+        "platform": "macosx64-devedition",
     }, {
         "platform": "mac",
         "stage_platform": "macosx64-devedition"
     }
 ), (
     'task_devedition.json', True, {
-        "platform": "win64",
+        "platform": "win64-devedition",
     }, {
         "platform": "win64",
         "stage_platform": "win64-devedition"

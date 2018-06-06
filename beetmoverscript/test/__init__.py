@@ -1,8 +1,8 @@
-from beetmoverscript.utils import load_json
 import pytest
-from scriptworker.context import Context
-
 import jinja2
+
+from scriptworker.context import Context
+from beetmoverscript.utils import load_json
 
 
 def noop_sync(*args, **kwargs):
@@ -34,6 +34,8 @@ def context():
     context.task = get_fake_valid_task()
     context.config = get_fake_valid_config()
     context.release_props = context.task['payload']['releaseProperties']
+    context.release_props['stage_platform'] = context.release_props['platform']
+
     context.bucket = 'nightly'
     context.action = 'push-to-nightly'
     yield context

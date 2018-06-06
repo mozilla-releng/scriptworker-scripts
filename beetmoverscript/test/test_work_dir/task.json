@@ -15,13 +15,11 @@
     ],
     "payload": {
         "upload_date": 1472747174,
-        "generate_checksums": false,
         "releaseProperties": {
             "appName": "Fake",
             "appVersion": "99.0a1",
             "branch": "mozilla-central",
             "platform": "android-api-15",
-            "stage_platform": "android-api-15",
             "buildid": "20990205110000",
             "hashType": "sha512"
         },
