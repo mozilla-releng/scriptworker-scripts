@@ -1,15 +1,12 @@
 import logging
 import os
 import re
-import shutil
 
 from copy import deepcopy
 from scriptworker import client
 
 from beetmoverscript import utils, script
-from beetmoverscript.constants import (IGNORED_UPSTREAM_ARTIFACTS,
-                                       INITIAL_RELEASE_PROPS_FILE,
-                                       STAGE_PLATFORM_MAP,
+from beetmoverscript.constants import (STAGE_PLATFORM_MAP,
                                        RESTRICTED_BUCKET_PATHS,
                                        CHECKSUMS_CUSTOM_FILE_NAMING)
 
@@ -108,19 +105,6 @@ def add_balrog_manifest_to_artifacts(context):
     utils.write_json(abs_file_path, context.balrog_manifest)
 
 
-def add_release_props_to_artifacts(context, release_props_filepath):
-    abs_file_path = os.path.join(context.config['artifact_dir'],
-                                 'public/balrog_props.json')
-    shutil.copyfile(release_props_filepath, abs_file_path)
-
-
-def filter_ignored_artifacts(artifact_paths, ignored_artifacts=IGNORED_UPSTREAM_ARTIFACTS):
-    """removes artifacts from ignored list if present in artifact_paths.
-    returns remaining items
-    """
-    return [p for p in artifact_paths if os.path.basename(p) not in ignored_artifacts]
-
-
 def get_upstream_artifact(context, taskid, path):
     abs_path = os.path.abspath(os.path.join(context.config['work_dir'], 'cot', taskid, path))
     if not os.path.exists(abs_path):
@@ -135,7 +119,7 @@ def get_upstream_artifacts(context, preserve_full_paths=False):
     for artifact_dict in context.task['payload']['upstreamArtifacts']:
         locale = artifact_dict['locale']
         artifacts[locale] = artifacts.get(locale, {})
-        for path in filter_ignored_artifacts(artifact_dict['paths']):
+        for path in artifact_dict['paths']:
             abs_path = get_upstream_artifact(context, artifact_dict['taskId'], path)
             if preserve_full_paths:
                 artifacts[locale][path] = abs_path
@@ -145,38 +129,22 @@ def get_upstream_artifacts(context, preserve_full_paths=False):
 
 
 def get_release_props(context, platform_mapping=STAGE_PLATFORM_MAP):
-    """determined via parsing the Nightly build job's balrog_props.json and
+    """determined via parsing the Nightly build job's payload and
     expanded the properties with props beetmover knows about."""
     payload_properties = context.task.get('payload', {}).get('releaseProperties', None)
-    initial_release_props_file = None
 
-    if payload_properties:
-        props = payload_properties
-        log.debug("Loading release_props from task's payload: {}".format(props))
-    else:
-        initial_release_props_file = get_initial_release_props_file(context)
-        props = utils.load_json(initial_release_props_file)['properties']
-        log.warn(
-            'Deprecated behavior! This will be gone after Firefox 59 reaches release. Loading release_props from "{}": {}'
-            .format(initial_release_props_file, props)
+    if not payload_properties:
+        raise ScriptWorkerTaskException(
+            "could not determine release props file from task payload"
         )
 
-    final_props = update_props(context, props, platform_mapping)
-    return (final_props, initial_release_props_file)
+    log.debug("Loading release_props from task's payload: {}".format(payload_properties))
 
-
-def get_initial_release_props_file(context):
-    for artifact_dict in context.task['payload']['upstreamArtifacts']:
-        for path in artifact_dict['paths']:
-            if os.path.basename(path) == INITIAL_RELEASE_PROPS_FILE:
-                return get_upstream_artifact(context, artifact_dict['taskId'], path)
-    raise ScriptWorkerTaskException(
-        "could not determine initial release props file from upstreamArtifacts"
-    )
+    return update_props(context, payload_properties, platform_mapping)
 
 
 def update_props(context, props, platform_mapping):
-    """Function to alter the `stage_platform` field from balrog_props to their
+    """Function to alter the `stage_platform` field from releaseProperties to their
     corresponding correct values for certain platforms. Please note that for
     l10n jobs the `stage_platform` field is in fact called `platform` hence
     the defaulting below."""

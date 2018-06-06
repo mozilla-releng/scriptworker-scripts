@@ -49,6 +49,9 @@
                         "hashType":  {
                             "type" : "string"
                         },
+                        "stage_platform":  {
+                            "type" : "string"
+                        },
                         "platform":  {
                             "type" : "string"
                         },
@@ -56,7 +59,8 @@
                             "type" : "string"
                         }
                     },
-                    "required" : ["appName", "buildid", "appVersion", "hashType", "platform", "branch"]
+                    "required" : ["appName", "buildid", "appVersion", "hashType", "platform", "branch"],
+                    "optional" : ["stage_platform"]
                 },
                 "upstreamArtifacts": {
                     "type": "array",

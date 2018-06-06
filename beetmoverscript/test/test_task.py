@@ -3,13 +3,12 @@ import os
 import pytest
 import tempfile
 from beetmoverscript.test import (
-    context, get_fake_valid_task, get_fake_valid_config, get_fake_balrog_props,
-    get_fake_checksums_manifest
+    context, get_fake_valid_task, get_fake_valid_config, get_fake_checksums_manifest
 )
 from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
     get_upstream_artifacts, generate_checksums_manifest,
-    get_initial_release_props_file, get_task_bucket, get_task_action,
+    get_task_bucket, get_task_action,
     validate_bucket_paths, get_release_props, is_custom_beetmover_checksums_task
 )
 from scriptworker.context import Context
@@ -24,7 +23,7 @@ def test_exception_get_upstream_artifacts():
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
-    context.properties = get_fake_balrog_props()["properties"]
+    context.properties = context.task['payload']['releaseProperties']
     context.properties['platform'] = context.properties['stage_platform']
 
     context.task['payload']['upstreamArtifacts'][0]['paths'].append('fake_file')
@@ -48,8 +47,7 @@ def test_get_upstream_artifacts(expected, preserve):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
-    context.properties = get_fake_balrog_props()["properties"]
-    context.properties['platform'] = context.properties['stage_platform']
+    context.properties = context.task['payload']['releaseProperties']
 
     artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=preserve)
     assert sorted(list(artifacts_to_beetmove['en-US'])) == sorted(expected)
@@ -131,7 +129,7 @@ def test_balrog_manifest_to_artifacts():
     context.task = get_fake_valid_task()
     context.config = get_fake_valid_config()
 
-    fake_balrog_manifest = get_fake_balrog_props()
+    fake_balrog_manifest = context.task['payload']['releaseProperties']
     context.balrog_manifest = fake_balrog_manifest
 
     # fake the path to to able to check the contents written later on
@@ -219,40 +217,7 @@ def test_get_release_props(context, mocker, taskjson, locale, relprops, expected
         context.task['payload']['locale'] = 'lang'
 
     context.task['payload']['releaseProperties'] = relprops
-    assert get_release_props(context) == (expected, None)
-
-    # also check balrog_props method works with same data
-    # TODO remove the end of this function when method is not supported anymore
-    del context.task['payload']['releaseProperties']
-
-    context.task['payload']['upstreamArtifacts'] = [{
-      "locale": "lang",
-      "paths": [
-        "public/build/lang/balrog_props.json"
-      ],
-      "taskId": "buildTaskId",
-      "taskType": "build"
-    }]
-
-    balrog_props_path = os.path.abspath(os.path.join(context.config['work_dir'], 'cot', 'buildTaskId', 'public/build/lang/balrog_props.json'))
-    makedirs(os.path.dirname(balrog_props_path))
-    with open(balrog_props_path, 'w') as f:
-        json.dump({
-            'properties': relprops
-        }, f)
-
-    assert get_release_props(context) == (expected, balrog_props_path)
-
-
-# get_initial_release_props_file {{{1
-def test_get_initial_release_props_file():
-    context = Context()
-    context.task = get_fake_valid_task()
-    context.config = get_fake_valid_config()
-
-    context.task['payload']['upstreamArtifacts'] = [{'paths': []}]
-    with pytest.raises(ScriptWorkerTaskException):
-        get_initial_release_props_file(context)
+    assert get_release_props(context) == expected
 
 
 # is_custom_beetmover_checksums_task {{{1

@@ -63,10 +63,6 @@ NORMALIZED_FILENAME_PLATFORMS.update({
 
 HASH_BLOCK_SIZE = 1024*1024
 
-INITIAL_RELEASE_PROPS_FILE = "balrog_props.json"
-# release buckets don't require a copy of the following artifacts
-IGNORED_UPSTREAM_ARTIFACTS = ["balrog_props.json"]
-
 RELEASE_BRANCHES = (
     'mozilla-central',
     'mozilla-beta',

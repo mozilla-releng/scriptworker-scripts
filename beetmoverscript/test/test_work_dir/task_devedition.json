@@ -23,7 +23,6 @@
             "public/build/target.mozinfo.json",
             "public/build/target_info.txt",
             "public/build/target.test_packages.json",
-            "public/build/balrog_props.json"
           ],
           "taskId": "eSzfNqMZT_mSiQQXu8hyqg",
           "locale": "en-US",

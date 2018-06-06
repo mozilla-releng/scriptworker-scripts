@@ -29,7 +29,7 @@ from beetmoverscript.constants import (
 )
 from beetmoverscript.task import get_upstream_artifacts, get_release_props
 from beetmoverscript.test import (
-    context, get_fake_valid_config, get_fake_valid_task, get_fake_balrog_props,
+    context, get_fake_valid_config, get_fake_valid_task,
     noop_async, noop_sync, get_test_jinja_env,
 )
 from beetmoverscript.utils import generate_beetmover_manifest, is_promotion_action
@@ -210,12 +210,11 @@ def test_put_failure(event_loop, fake_session_500):
     "mozilla-beta", "push-to-releases",
 )))
 def test_enrich_balrog_manifest(context, branch, action):
-    context.release_props = get_fake_balrog_props()["properties"]
-    context.release_props['platform'] = context.release_props['stage_platform']
-    context.release_props['branch'] = branch
+    context.release_props = context.task['payload']['releaseProperties']
     context.task['payload']['build_number'] = 33
     context.task['payload']['version'] = '99.0b44'
     context.action = action
+    context.release_props['branch'] = branch
 
     expected_data = {
         'appName': context.release_props['appName'],
@@ -268,8 +267,7 @@ def test_move_beets(event_loop, partials, mocker):
     context = Context()
     context.config = get_fake_valid_config()
     context.task = get_fake_valid_task()
-    context.release_props = get_fake_balrog_props()["properties"]
-    context.release_props['platform'] = context.release_props['stage_platform']
+    context.release_props = context.task['payload']['releaseProperties']
     context.bucket = 'nightly'
     context.action = 'push-to-nightly'
     context.raw_balrog_manifest = dict()
@@ -417,8 +415,7 @@ def test_move_beet(event_loop, update_manifest, action):
     context.checksums = dict()
     context.balrog_manifest = list()
     context.raw_balrog_manifest = dict()
-    context.release_props = get_fake_balrog_props()["properties"]
-    context.release_props['platform'] = context.release_props['stage_platform']
+    context.release_props = context.task['payload']['releaseProperties']
     locale = "sample-locale"
 
     target_source = 'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt'
@@ -475,7 +472,7 @@ def test_move_beet(event_loop, update_manifest, action):
 @pytest.mark.asyncio
 async def test_move_partner_beets(context, mocker):
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
-    context.release_props, release_props_file = get_release_props(context)
+    context.release_props = get_release_props(context)
     mocker.patch('beetmoverscript.utils.JINJA_ENV', get_test_jinja_env())
     mapping_manifest = generate_beetmover_manifest(context)
 
@@ -516,7 +513,7 @@ def test_get_destination_for_partner_repack_path(context, full_path,
     for artifact_dict in context.task['payload']['upstreamArtifacts']:
         artifact_dict['locale'] = locale
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
-    context.release_props, release_props_file = get_release_props(context)
+    context.release_props = get_release_props(context)
     mapping_manifest = generate_beetmover_manifest(context)
 
     if raises:

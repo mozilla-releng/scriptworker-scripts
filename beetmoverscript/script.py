@@ -25,8 +25,7 @@ from beetmoverscript.constants import (
 from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
     get_upstream_artifacts, get_release_props,
-    add_checksums_to_artifacts, add_release_props_to_artifacts,
-    get_task_bucket, get_task_action, validate_bucket_paths,
+    add_checksums_to_artifacts, get_task_bucket, get_task_action, validate_bucket_paths,
 )
 from beetmoverscript.utils import (
     get_hash, generate_beetmover_manifest,
@@ -53,7 +52,7 @@ async def push_to_nightly(context):
     # determine artifacts to beetmove
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
 
-    context.release_props, release_props_file = get_release_props(context)
+    context.release_props = get_release_props(context)
 
     # generate beetmover mapping manifest
     mapping_manifest = generate_beetmover_manifest(context)
@@ -90,10 +89,6 @@ async def push_to_nightly(context):
     # determine the correct checksum filename and generate it, adding it to
     # the list of artifacts afterwards
     add_checksums_to_artifacts(context)
-    # add release props file to later be used by beetmover jobs than upload
-    # the checksums file
-    if release_props_file:
-        add_release_props_to_artifacts(context, release_props_file)
 
 
 # push_to_partner {{{1
@@ -105,7 +100,7 @@ async def push_to_partner(context):
     Determine the list of artifacts to be transferred, generate the
     mapping manifest and upload the bits."""
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
-    context.release_props, release_props_file = get_release_props(context)
+    context.release_props = get_release_props(context)
 
     mapping_manifest = generate_beetmover_manifest(context)
     await move_partner_beets(context, mapping_manifest)

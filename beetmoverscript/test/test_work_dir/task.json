@@ -16,14 +16,22 @@
     "payload": {
         "upload_date": 1472747174,
         "generate_checksums": false,
+        "releaseProperties": {
+            "appName": "Fake",
+            "appVersion": "99.0a1",
+            "branch": "mozilla-central",
+            "platform": "android-api-15",
+            "stage_platform": "android-api-15",
+            "buildid": "20990205110000",
+            "hashType": "sha512"
+        },
         "upstreamArtifacts": [
         {
           "paths": [
             "public/build/target.txt",
             "public/build/target.mozinfo.json",
             "public/build/target_info.txt",
-            "public/build/target.test_packages.json",
-            "public/build/balrog_props.json"
+            "public/build/target.test_packages.json"
           ],
           "taskId": "eSzfNqMZT_mSiQQXu8hyqg",
           "locale": "en-US",
