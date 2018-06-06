@@ -13,7 +13,6 @@ from beetmoverscript.task import (
 )
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
-from scriptworker.utils import makedirs
 
 assert context  # silence pyflakes
 
