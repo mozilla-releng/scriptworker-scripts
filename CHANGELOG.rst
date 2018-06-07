@@ -6,6 +6,42 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.3.0] = (2018-06-07)
+----------------------
+
+Added
+~~~~~
+
+- Added SCOPES.md to exhaustively define all scopes (`#1463456
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1463456>`_)
+
+
+Removed
+~~~~~~~
+
+- - Removed all references and code logic to `balrog_props.json` - Removed all
+  `<-->-devedition-devedition` hacks in platforms everywhere - Retired
+  `INITIAL_RELEASE_PROPS_FILE` and `IGNORED_UPSTREAM_ARTIFACTS` from
+  constants.py - `releaseProperties` is now mandatory for all tasks handled by
+  beetmover within the `promote` phase - `balrog_props.json` is no longer
+  generated upon completion (`#1449150
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1449150>`_)
+
+
+Changed
+~~~~~~~
+
+- Simplified the relationship behind `stage_platform` and `platform` (`#1449150
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1449150>`_)
+
+
+Fixed
+~~~~~
+
+- Improve requirements.txt docs following python deps everywhere (`#1458329
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1458329>`_)
+
+
 [7.2.3] = (2018-05-24)
 ----------------------
 

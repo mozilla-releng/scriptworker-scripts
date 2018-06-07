@@ -2,7 +2,7 @@
 package = "beetmoverscript"
 package_dir = "."
 filename = "CHANGELOG.rst"
-issue_format = "`#{issue} <https://github.com/mozilla-releng/beetmoverscript/issues/{issue}>`_"
+issue_format = "`#{issue} <https://bugzilla.mozilla.org/show_bug.cgi?id={issue}>`_"
 title_format = "[{version}] = ({project_date})"
 underlines = "-~\""
 
