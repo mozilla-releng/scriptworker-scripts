@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.4.0] = (2018-06-12)
+----------------------
+
+Changed
+~~~~~~~
+
+- Added support to beetmove checksums files for EME-free builds. (`#1422471
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1422471>`_)
+
+
 [7.3.0] = (2018-06-07)
 ----------------------
 
