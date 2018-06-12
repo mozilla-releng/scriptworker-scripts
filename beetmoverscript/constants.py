@@ -144,7 +144,7 @@ PARTNER_REPACK_PRIVATE_REGEXES = (
     r'^(?P<partner>[^\/%]+)\/{version}-{build_number}\/(?P<subpartner>[^\/%]+)\/(mac|win32|win64|linux-i686|linux-x86_64)\/(?P<locale>[^\/%]+)$',
 )
 PARTNER_REPACK_PUBLIC_REGEXES = (
-    r'^(mac|win32|win64)-EME-free\/[^\/.]+$',
+    r'^(beetmover-checksums\/)?(mac|win32|win64)-EME-free\/[^\/.]+$',
     r'^partner-repacks\/(?P<partner>[^\/%]+)\/(?P<subpartner>[^\/%]+)\/v\d+\/(mac|win32|win64|linux-i686|linux-x86_64)\/(?P<locale>[^\/%]+)$',
 )
 

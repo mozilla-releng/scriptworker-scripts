@@ -101,9 +101,12 @@ async def push_to_partner(context):
     mapping manifest and upload the bits."""
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
     context.release_props = get_release_props(context)
+    context.checksums = dict()
 
     mapping_manifest = generate_beetmover_manifest(context)
     await move_partner_beets(context, mapping_manifest)
+
+    add_checksums_to_artifacts(context)
 
 
 # push_to_releases {{{1
@@ -313,6 +316,17 @@ async def move_partner_beets(context, manifest):
                     upload_to_s3(context=context, s3_key=destination, path=source)
                 )
             )
+
+            if is_partner_public_task(context):
+                # we trim the full destination to the part after
+                # candidates/{version}-candidates/build{build_number}/
+                artifact_pretty_name = destination[destination.find(locale):]
+                if context.checksums.get(artifact_pretty_name) is None:
+                    context.checksums[artifact_pretty_name] = {
+                        algo: get_hash(source, algo) for algo in context.config['checksums_digests']
+                    }
+                    context.checksums[artifact_pretty_name]['size'] = get_size(source)
+
     await raise_future_exceptions(beets)
 
 
