@@ -129,7 +129,7 @@ It will look like this:
     {
       "created": "2016-05-04T23:15:17.908Z",
       "deadline": "2016-05-05T00:15:17.908Z",
-      "dependencies: [
+      "dependencies": [
         "VALID_TASK_ID"
       ],
       "expires": "2017-05-05T00:15:17.908Z",
