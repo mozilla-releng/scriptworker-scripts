@@ -1,3 +1,5 @@
 [run]
 branch = True
-omit = beetmoverscript/test/*
+omit =
+    beetmoverscript/test/*
+    beetmoverscript/templates/*
