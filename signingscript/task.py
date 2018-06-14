@@ -66,6 +66,53 @@ def task_cert_type(context):
     )
 
 
+# _task_server_and_signer_type {{{1
+def _task_server_and_signer_type(context):
+    """Get the task server type and signer type from the signing scopes.
+
+    Args:
+        context (Context): the signing context.
+
+    Raises:
+        TaskVerificationError: if the number of cert or autograph scopes is not 1.
+
+    Returns:
+        str: scope of server type (`cert` or `autograph`) and
+            the signing server cert type or autograph signer name
+            e.g. `project:releng:signing:cert:nightly-signing` or
+            `project:releng:signing:autograph:dep-signing-keyid`
+
+    """
+    prefixes = [_get_scope_prefix(context, prefix) for prefix in ['autograph', 'cert']]
+    scopes = context.task['scopes']
+    return get_single_item_from_sequence(
+        scopes,
+        condition=lambda scope: any(scope.startswith(prefix) for prefix in prefixes),
+        ErrorClass=TaskVerificationError,
+        no_item_error_message='No scope starting with "{}" or "{}" found'.format(*prefixes),
+        too_many_item_error_message='More than one scope starting with "{}" or "{}"'.format(*prefixes),
+    )
+
+
+# task_server_type {{{1
+def task_server_type(context):
+    """Get the signing server type name from the task signing scopes i.e. 'autograph' or 'cert'."""
+    scope = _task_server_and_signer_type(context)
+    return scope.rsplit(':', 2)[1]
+
+
+# task_signer_type {{{1
+def task_signer_type(context):
+    """Get the signer type name from the task signing scopes.
+
+    For cert/signing servers this is dep-signing, nightly-signing, or release-signing.
+    For autograph this is the optional signer keyid parameter.
+
+    """
+    scope = _task_server_and_signer_type(context)
+    return scope.rsplit(':', 1)[-1]
+
+
 # task_signing_formats {{{1
 def task_signing_formats(context):
     """Get the list of signing formats from the task signing scopes.
@@ -81,6 +128,21 @@ def task_signing_formats(context):
     return [scope.split(':')[-1] for scope in context.task['scopes'] if scope.startswith(prefix)]
 
 
+# get_autograph_signer_scope {{{1
+def get_autograph_signer_scope(context, signer_type=None):
+    """Build an autograph signing scope to lookup an autograph server.
+
+    Args:
+        context (Context): the signing context.
+        signer_type (string): an optional autograph keyid
+
+    Returns:
+        str: the scope for the autograph signer. e.g. project:releng:signing:autograph:dep-signing-keyid
+
+    """
+    return "{}{}".format(_get_scope_prefix(context, 'autograph'), signer_type)
+
+
 def _get_cert_prefix(context):
     return _get_scope_prefix(context, 'cert')
 
@@ -93,6 +155,27 @@ def _get_scope_prefix(context, sub_namespace):
     prefix = context.config['taskcluster_scope_prefix']
     prefix = prefix if prefix.endswith(':') else '{}:'.format(prefix)
     return '{}{}:'.format(prefix, sub_namespace)
+
+
+# get_autograph_retry_config {{{1
+def get_autograph_retry_config(context):
+    """Retrieve the autograph retry config from config.json or the default config.
+
+    Args:
+        context (Context): the signing context
+
+    Returns:
+        dict: with args to http://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html#module-urllib3.util.retry
+
+    """
+    retry_config = dict(
+        total=5,
+        backoff_factor=0.1,
+        method_whitelist=['POST'],
+        status_forcelist=[500, 502, 503, 504]
+    )
+    retry_config.update(context.config.get('autograph_retries', {}))
+    return retry_config
 
 
 # get_token {{{1

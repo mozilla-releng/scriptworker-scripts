@@ -19,7 +19,7 @@ SSL_CERT = os.path.join(BASE_DIR, "signingscript", "data", "host.cert")
 
 
 # async_main {{{1
-async def async_main_helper(tmpdir, mocker, formats, extra_config={}):
+async def async_main_helper(tmpdir, mocker, formats, extra_config={}, server_type=script.SigningServerType.cert):
 
     def fake_filelist_dict(*args, **kwargs):
         return {'path1': {'full_path': 'full_path1', 'formats': formats}}
@@ -28,7 +28,8 @@ async def async_main_helper(tmpdir, mocker, formats, extra_config={}):
         return [val]
 
     mocker.patch.object(script, 'load_signing_server_config', new=noop_sync)
-    mocker.patch.object(script, 'task_cert_type', new=noop_sync)
+    mocker.patch.object(script, 'task_server_type', return_value=server_type.name)
+    mocker.patch.object(script, 'task_signer_type', new=noop_sync)
     mocker.patch.object(script, 'task_signing_formats', return_value=formats)
     mocker.patch.object(script, 'get_token', new=noop_async)
     mocker.patch.object(script, 'build_filelist_dict', new=fake_filelist_dict)
@@ -82,6 +83,14 @@ async def test_async_main_multiple_formats(tmpdir, mocker):
     formats = ['mar', 'jar']
     mocker.patch.object(script, 'copy_to_dir', new=noop_sync)
     await async_main_helper(tmpdir, mocker, formats)
+
+
+@pytest.mark.asyncio
+async def test_async_main_autograph(tmpdir, mocker):
+    formats = ['mar']
+    mocker.patch.object(script, 'task_signer_type', new=noop_sync)
+    mocker.patch.object(script, 'copy_to_dir', new=noop_sync)
+    await async_main_helper(tmpdir, mocker, formats, {}, script.SigningServerType.autograph)
 
 
 def test_craft_aiohttp_connector():

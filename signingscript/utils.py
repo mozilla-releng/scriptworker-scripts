@@ -1,6 +1,7 @@
 """Signingscript general utility functions."""
 import asyncio
 from asyncio.subprocess import PIPE, STDOUT
+import enum
 import functools
 import hashlib
 import json
@@ -13,6 +14,14 @@ from collections import namedtuple
 from signingscript.exceptions import FailedSubprocess, SigningServerError
 
 log = logging.getLogger(__name__)
+
+
+class SigningServerType(enum.Enum):
+    """The Type of Signing Server to use."""
+
+    autograph = enum.auto()
+    cert = enum.auto()  # signingserver
+
 
 SigningServer = namedtuple("SigningServer", ["server", "user", "password",
                                              "formats"])

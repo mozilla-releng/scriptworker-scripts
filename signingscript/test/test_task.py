@@ -19,6 +19,8 @@ assert tmpdir  # silence flake8
 SERVER_CONFIG_PATH = os.path.join(BASE_DIR, 'example_server_config.json')
 DEFAULT_SCOPE_PREFIX = "project:releng:signing:"
 TEST_CERT_TYPE = "{}cert:dep-signing".format(DEFAULT_SCOPE_PREFIX)
+TEST_AUTOGRAPH_TYPE = "{}autograph:dep-signing".format(DEFAULT_SCOPE_PREFIX)
+
 
 
 @pytest.fixture(scope='function')
@@ -72,6 +74,44 @@ def test_task_cert_type_error(context):
     }
     with pytest.raises(ScriptWorkerTaskException):
         stask.task_cert_type(context)
+
+
+def test_task_server_type(context):
+    context.task = {
+        'scopes': [TEST_AUTOGRAPH_TYPE, 'project:releng:signing:type:mar', 'project:releng:signing:type:gpg']
+    }
+    assert 'autograph' == stask.task_server_type(context)
+
+
+def test_task_server_type_error_duplicate(context):
+    context.task = {
+        'scopes': [TEST_AUTOGRAPH_TYPE, TEST_AUTOGRAPH_TYPE, 'project:releng:signing:type:gpg']
+    }
+    with pytest.raises(ScriptWorkerTaskException):
+        stask.task_server_type(context)
+
+
+def test_task_server_type_error_two_types(context):
+    context.task = {
+        'scopes': [TEST_AUTOGRAPH_TYPE, TEST_CERT_TYPE, 'project:releng:signing:type:gpg']
+    }
+    with pytest.raises(ScriptWorkerTaskException):
+        stask.task_server_type(context)
+
+
+def test_task_server_type_error_none(context):
+    context.task = {
+        'scopes': ['project:releng:signing:type:gpg']
+    }
+    with pytest.raises(ScriptWorkerTaskException):
+        stask.task_server_type(context)
+
+
+def test_task_signer_type(context):
+    context.task = {
+        'scopes': [TEST_AUTOGRAPH_TYPE, 'project:releng:signing:type:mar', 'project:releng:signing:type:gpg']
+    }
+    assert 'dep-signing' == stask.task_signer_type(context)
 
 
 # task_signing_formats {{{1

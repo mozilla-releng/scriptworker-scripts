@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 """Signingscript task functions."""
 import asyncio
+import base64
 import difflib
 import fnmatch
 import glob
 import logging
 import os
 import re
+import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+from requests_hawk import HawkAuth
 import shutil
 import tarfile
 import tempfile
@@ -14,6 +19,7 @@ import zipfile
 
 from scriptworker.utils import makedirs, raise_future_exceptions, rm, get_single_item_from_sequence
 
+from signingscript import task
 from signingscript import utils
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
@@ -60,6 +66,9 @@ def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
         list of lists: the list of signing servers.
 
     """
+    if cert_type not in signing_servers:
+        return []
+
     return [s for s in signing_servers[cert_type] if set(signing_formats) & set(s.formats)]
 
 
@@ -82,8 +91,7 @@ def build_signtool_cmd(context, from_, fmt, to=None):
     work_dir = context.config['work_dir']
     token = os.path.join(work_dir, "token")
     nonce = os.path.join(work_dir, "nonce")
-    from signingscript.task import task_cert_type
-    cert_type = task_cert_type(context)
+    cert_type = task.task_cert_type(context)
     ssl_cert = context.config['ssl_cert']
     signtool = context.config['signtool']
     if not isinstance(signtool, (list, tuple)):
@@ -100,7 +108,7 @@ def build_signtool_cmd(context, from_, fmt, to=None):
 
 # sign_file {{{1
 async def sign_file(context, from_, fmt, to=None):
-    """Send the file to signtool to be signed.
+    """Send the file to signtool or autograph to be signed.
 
     Args:
         context (Context): the signing context
@@ -116,9 +124,13 @@ async def sign_file(context, from_, fmt, to=None):
         str: the path to the signed file
 
     """
-    log.info("sign_file(): signing {} with {}...".format(from_, fmt))
-    cmd = build_signtool_cmd(context, from_, fmt, to=to)
-    await utils.execute_subprocess(cmd)
+    server_type = task.task_server_type(context)
+    log.info("sign_file(): signing {} with {}... using {}".format(from_, fmt, server_type))
+    if server_type == utils.SigningServerType.autograph.name:
+        await sign_file_with_autograph(context, from_, fmt, to=to)
+    else:
+        cmd = build_signtool_cmd(context, from_, fmt, to=to)
+        await utils.execute_subprocess(cmd)
     return to or from_
 
 
@@ -635,3 +647,67 @@ async def _create_tarfile(context, to, files, compression, tmp_dir=None):
         return to
     except Exception as e:
         raise SigningScriptError(e)
+
+
+async def sign_file_with_autograph(context, from_, fmt, to=None):
+    """Signs a file with autograph and writes the result to arg `to` or `from_` if `to` is None.
+
+    Args:
+        context (Context): the signing context
+        from_ (str): the source file to sign
+        fmt (str): the format to sign with
+        to (str, optional): the target path to sign to. If None, overwrite
+            `from_`. Defaults to None.
+
+    Raises:
+        Requests.RequestException: on failure
+
+    Returns:
+        str: the path to the signed file
+
+    """
+    signer_type = task.task_signer_type(context)
+    scope = task.get_autograph_signer_scope(context, signer_type)
+
+    servers = get_suitable_signing_servers(context.signing_servers, scope, [fmt])
+    if not servers:
+        raise SigningScriptError(
+            "No signing servers found with scope {}".format(scope)
+        )
+    s = servers[0]
+    to = to or from_
+
+    with open(from_, 'rb') as fin:
+        input_bytes = fin.read()
+
+    # build and run the signature request
+    sign_req = [{"input": base64.b64encode(input_bytes)}]
+    if signer_type:
+        sign_req[0]["keyid"] = signer_type
+        log.debug("using the autograph keyid %s for %s", signer_type, s.user)
+    else:
+        log.debug("using the default autograph keyid for %s", s.user)
+
+    log.debug("autograph signature request: %s" % sign_req)
+
+    url = "%s/sign/file" % s.server
+    auth = HawkAuth(id=s.user, key=s.password)
+    retries = Retry(**task.get_autograph_retry_config(context))
+
+    def make_sign_req():
+        with requests.Session() as session:
+            session.mount('http://', HTTPAdapter(max_retries=retries))
+            session.mount('https://', HTTPAdapter(max_retries=retries))
+            return session.post(url, json=sign_req, auth=auth)
+
+    loop = asyncio.get_event_loop()
+    response = await loop.run_in_executor(None, make_sign_req)
+    response.raise_for_status()
+    log.debug("autograph signature response: %s" % response.text)
+    sign_resp = response.json()
+
+    with open(to, 'wb') as fout:
+        fout.write(base64.b64decode(sign_resp[0]['signed_file']))
+
+    log.info("autograph wrote signed_file %s to %s", from_, to)
+    return to

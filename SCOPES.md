@@ -10,6 +10,11 @@ Supported scope prefixes:
   * Used for android Firefox Focus style signing tasks
 
 # Scopes
+* `{scope_prefix}:autograph:{autograph_keyid}`
+  * Tells signingscript to use the autograph backend with the optional keyid (to specify a certificate) for a given format. At the moment only the MAR format is supported.
+  * **Conflicts**: with any other `{scope_prefix}:autograph:*`
+  * **Branch Restrictions**: None
+
 * `{scope_prefix}:cert:dep-signing`
   * Tells signingscript to use the *Depend* certificate for a given format.
   * **Conflicts**: with any other `{scope_prefix}:cert:*`
