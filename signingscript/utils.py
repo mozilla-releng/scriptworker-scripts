@@ -1,7 +1,6 @@
 """Signingscript general utility functions."""
 import asyncio
 from asyncio.subprocess import PIPE, STDOUT
-import enum
 import functools
 import hashlib
 import json
@@ -16,15 +15,8 @@ from signingscript.exceptions import FailedSubprocess, SigningServerError
 log = logging.getLogger(__name__)
 
 
-class SigningServerType(enum.Enum):
-    """The Type of Signing Server to use."""
-
-    autograph = enum.auto()
-    cert = enum.auto()  # signingserver
-
-
 SigningServer = namedtuple("SigningServer", ["server", "user", "password",
-                                             "formats"])
+                                             "formats", "server_type"])
 
 
 def mkdir(path):
@@ -165,3 +157,13 @@ async def execute_subprocess(command, **kwargs):
 
     if exitcode != 0:
         raise FailedSubprocess('Command `{}` failed'.format(' '.join(command)))
+
+
+def is_autograph_signing_format(format_):
+    """Return bool of whether a signing format is for autograph.
+
+    Args:
+        format_ (str): the format to check
+
+    """
+    return format_ and format_.startswith('autograph_')

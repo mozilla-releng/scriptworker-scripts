@@ -67,6 +67,8 @@ def test_load_signing_server_config():
     cfg = utils.load_signing_server_config(context)
     assert cfg["dep"][0].server == "server1:9000"
     assert cfg["dep"][1].user == "user2"
+    assert cfg["dep"][1].server_type == "signing_server"
+    assert cfg["dep"][2].server_type == "autograph"
     assert cfg["notdep"][0].password == "pass1"
     assert cfg["notdep"][1].formats == ["f2", "f3"]
 

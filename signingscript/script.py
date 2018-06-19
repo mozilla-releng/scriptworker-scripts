@@ -9,9 +9,9 @@ from datadog import statsd
 
 import scriptworker.client
 from signingscript.task import build_filelist_dict, get_token, \
-    sign, task_server_type, task_signer_type, task_signing_formats
-from signingscript.utils import copy_to_dir, load_signing_server_config, \
-     SigningServerType
+    sign, task_cert_type, task_signing_formats
+from signingscript.utils import copy_to_dir, is_autograph_signing_format, \
+     load_signing_server_config
 
 
 log = logging.getLogger(__name__)
@@ -42,9 +42,9 @@ async def async_main(context):
             if not os.path.exists(context.config['gpg_pubkey']):
                 raise Exception("gpg_pubkey ({}) doesn't exist!".format(context.config['gpg_pubkey']))
 
-        if task_server_type(context) == SigningServerType.cert.name:
+        if not all(is_autograph_signing_format(format_) for format_ in all_signing_formats):
             log.info("getting signingserver token")
-            await get_token(context, os.path.join(work_dir, 'token'), task_signer_type(context), all_signing_formats)
+            await get_token(context, os.path.join(work_dir, 'token'), task_cert_type(context), all_signing_formats)
 
         filelist_dict = build_filelist_dict(context, all_signing_formats)
         for path, path_dict in filelist_dict.items():

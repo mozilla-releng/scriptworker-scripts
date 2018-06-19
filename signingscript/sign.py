@@ -73,7 +73,7 @@ def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
 
 
 # build_signtool_cmd {{{1
-def build_signtool_cmd(context, from_, fmt, to=None):
+def build_signtool_cmd(context, from_, fmt, to=None, servers=None):
     """Generate a signtool command to run.
 
     Args:
@@ -124,11 +124,11 @@ async def sign_file(context, from_, fmt, to=None):
         str: the path to the signed file
 
     """
-    server_type = task.task_server_type(context)
-    log.info("sign_file(): signing {} with {}... using {}".format(from_, fmt, server_type))
-    if server_type == utils.SigningServerType.autograph.name:
+    if utils.is_autograph_signing_format(fmt):
+        log.info("sign_file(): signing {} with {}... using autograph".format(from_, fmt))
         await sign_file_with_autograph(context, from_, fmt, to=to)
     else:
+        log.info("sign_file(): signing {} with {}... using signing server".format(from_, fmt))
         cmd = build_signtool_cmd(context, from_, fmt, to=to)
         await utils.execute_subprocess(cmd)
     return to or from_
@@ -666,13 +666,15 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
         str: the path to the signed file
 
     """
-    signer_type = task.task_signer_type(context)
-    scope = task.get_autograph_signer_scope(context, signer_type)
-
-    servers = get_suitable_signing_servers(context.signing_servers, scope, [fmt])
+    if not utils.is_autograph_signing_format(fmt):
+        raise SigningScriptError(
+            "No signing servers found supporting signing format {}".format(fmt)
+        )
+    cert_type = task.task_cert_type(context)
+    servers = get_suitable_signing_servers(context.signing_servers, cert_type, [fmt])
     if not servers:
         raise SigningScriptError(
-            "No signing servers found with scope {}".format(scope)
+            "No signing servers found with cert type {}".format(cert_type)
         )
     s = servers[0]
     to = to or from_
@@ -682,12 +684,7 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
 
     # build and run the signature request
     sign_req = [{"input": base64.b64encode(input_bytes)}]
-    if signer_type:
-        sign_req[0]["keyid"] = signer_type
-        log.debug("using the autograph keyid %s for %s", signer_type, s.user)
-    else:
-        log.debug("using the default autograph keyid for %s", s.user)
-
+    log.debug("using the default autograph keyid for %s", s.user)
     log.debug("autograph signature request: %s" % sign_req)
 
     url = "%s/sign/file" % s.server

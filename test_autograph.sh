@@ -20,10 +20,7 @@ test -f firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-2017100
 cat <<EOF > autograph_test_server_config.json
 {
     "project:releng:signing:cert:dep-signing": [
-        ["127.0.0.1:9110", "user", "pass", ["gpg", "sha2signcode"]]
-    ],
-    "project:releng:signing:autograph:": [
-        ["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["mar"]]
+        ["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_mar384"], "autograph"]
     ]
 }
 EOF
@@ -68,7 +65,7 @@ cat <<EOF > work_dir/task.json
         "firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002100134.partial.mar",
         "firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002220204.partial.mar"
       ],
-      "formats": ["mar"]
+      "formats": ["autograph_mar384"]
     }],
     "maxRunTime": 600
   },
@@ -79,8 +76,9 @@ cat <<EOF > work_dir/task.json
   "routes": [],
   "schedulerId": "-",
   "scopes": [
-    "project:releng:signing:autograph:",
-    "project:releng:signing:format:mar"
+    "project:releng:signing:cert:dep-signing",
+    "project:releng:signing:autograph:dep-signing",
+    "project:releng:signing:format:autograph_mar384"
   ],
   "tags": {},
   "taskGroupId": "CRzxWtujTYa2hOs20evVCA",

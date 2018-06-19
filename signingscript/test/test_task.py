@@ -63,55 +63,17 @@ def context(tmpdir):
 # task_cert_type {{{1
 def test_task_cert_type(context):
     context.task = {
-        'scopes': [TEST_CERT_TYPE, "project:releng:signing:type:mar", "project:releng:signing:type:gpg"]
+        'scopes': [TEST_CERT_TYPE, "project:releng:signing:format:mar", "project:releng:signing:format:gpg"]
     }
     assert TEST_CERT_TYPE == stask.task_cert_type(context)
 
 
 def test_task_cert_type_error(context):
     context.task = {
-        'scopes': [TEST_CERT_TYPE, 'project:releng:signing:cert:notdep', 'project:releng:signing:type:gpg']
+        'scopes': [TEST_CERT_TYPE, 'project:releng:signing:cert:notdep', 'project:releng:signing:format:gpg']
     }
     with pytest.raises(ScriptWorkerTaskException):
         stask.task_cert_type(context)
-
-
-def test_task_server_type(context):
-    context.task = {
-        'scopes': [TEST_AUTOGRAPH_TYPE, 'project:releng:signing:type:mar', 'project:releng:signing:type:gpg']
-    }
-    assert 'autograph' == stask.task_server_type(context)
-
-
-def test_task_server_type_error_duplicate(context):
-    context.task = {
-        'scopes': [TEST_AUTOGRAPH_TYPE, TEST_AUTOGRAPH_TYPE, 'project:releng:signing:type:gpg']
-    }
-    with pytest.raises(ScriptWorkerTaskException):
-        stask.task_server_type(context)
-
-
-def test_task_server_type_error_two_types(context):
-    context.task = {
-        'scopes': [TEST_AUTOGRAPH_TYPE, TEST_CERT_TYPE, 'project:releng:signing:type:gpg']
-    }
-    with pytest.raises(ScriptWorkerTaskException):
-        stask.task_server_type(context)
-
-
-def test_task_server_type_error_none(context):
-    context.task = {
-        'scopes': ['project:releng:signing:type:gpg']
-    }
-    with pytest.raises(ScriptWorkerTaskException):
-        stask.task_server_type(context)
-
-
-def test_task_signer_type(context):
-    context.task = {
-        'scopes': [TEST_AUTOGRAPH_TYPE, 'project:releng:signing:type:mar', 'project:releng:signing:type:gpg']
-    }
-    assert 'dep-signing' == stask.task_signer_type(context)
 
 
 # task_signing_formats {{{1

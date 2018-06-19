@@ -1,10 +1,11 @@
 {
   "dep": [
-    ["server1:9000", "user1", "pass1", ["f1", "f2"]],
-    ["server2:8000", "user2", "pass2", ["f2", "f3"]]
+    ["server1:9000", "user1", "pass1", ["f1", "f2"], "signing_server"],
+    ["server2:8000", "user2", "pass2", ["f2", "f3"], "signing_server"],
+    ["https://127.0.0.1:9110", "hawk_user", "hawk_secret", ["autograph_marsha384"], "autograph"]
   ],
   "notdep": [
-    ["server1:9100", "user1", "pass1", ["f1", "f2"]],
-    ["server2:8100", "user2", "pass2", ["f2", "f3"]]
+    ["server1:9100", "user1", "pass1", ["f1", "f2"], "signing_server"],
+    ["server2:8100", "user2", "pass2", ["f2", "f3"], "signing_server"]
   ]
 }
