@@ -14,6 +14,7 @@ install:
     - travis_retry pip install tox
 script:
     - tox
+    - python setup.py install && bash test_autograph.sh
 after_success:
     - tox -e coveralls
 
