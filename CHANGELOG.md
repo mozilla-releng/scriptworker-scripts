@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [next] - YYYY-MM-DD
+### Documentation
+- Added a SCOPES.md file in repo root to document the relevant scopes used in bouncerscript
+
 ## [2.0.0] - 2018-06-05
 ### Added
 - Support for thunderbird scope prefixes.
