@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.8.0] - 2018-06-22
+
+### Fixed
+* `get_apk.py` can download Firefox releases and bets >= 59. Nightly is known to be broken because of https://bugzilla.mozilla.org/show_bug.cgi?id=1469303.
+
+### Changed
+* `push_apk.py` now supports custom Google Play tracks. Allowed tracks are defined per product and must be whitelisted in `googleplay.py`.
+
 
 ## [0.7.2] - 2018-05-04
 
