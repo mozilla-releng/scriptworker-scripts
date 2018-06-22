@@ -90,16 +90,18 @@ def test_credentials_are_missing():
         PushAPK(config)
 
 
-def test_tracks():
+def test_tracks(edit_service_mock, monkeypatch):
+    set_up_mocks(monkeypatch, edit_service_mock)
+
     config = copy(VALID_CONFIG)
     config['track'] = 'fake'
 
     with pytest.raises(WrongArgumentGiven):
-        PushAPK(config)
+        PushAPK(config).run()
 
     for track in ('alpha', 'beta', 'production'):
         config['track'] = track
-        PushAPK(config)
+        PushAPK(config).run()
 
 
 def test_invalid_rollout_percentage(edit_service_mock, monkeypatch):
@@ -290,6 +292,30 @@ def test_do_not_contact_google_play_flag_does_not_request_google_play(monkeypatc
     # Checks are done by the fact that Google Play doesn't error out. In fact, we
     # provide dummy data. If Google Play was reached, it would have failed at the
     # authentication step
+
+
+def test_custom_google_play_track(edit_service_mock, monkeypatch):
+    set_up_mocks(monkeypatch, edit_service_mock)
+
+    monkeypatch.setattr(extractor, 'extract_metadata', lambda _: {
+        'package_name': 'org.mozilla.firefox',
+        'version_code': '1',
+    })
+
+    config = copy(VALID_CONFIG)
+    config['track'] = 'nightly'
+
+    # No "nightly" google play track for Firefox
+    with pytest.raises(WrongArgumentGiven):
+        PushAPK(config).run()
+
+    # "nightly" track is an allowed value for Focus
+    monkeypatch.setattr(extractor, 'extract_metadata', lambda _: {
+        'package_name': 'org.mozilla.focus',
+        'version_code': '1',
+    })
+
+    PushAPK(config).run()
 
 
 def test_main(monkeypatch):

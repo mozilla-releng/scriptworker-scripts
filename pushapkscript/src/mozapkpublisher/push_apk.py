@@ -29,7 +29,7 @@ class PushAPK(Base):
 
         googleplay.add_general_google_play_arguments(cls.parser)
 
-        cls.parser.add_argument('--track', choices=googleplay.TRACK_VALUES, required=True,
+        cls.parser.add_argument('--track', action='store', required=True,
                                 help='Track on which to upload')
         cls.parser.add_argument('--rollout-percentage', type=int, choices=range(0, 101), metavar='[0-100]',
                                 default=None,
@@ -75,6 +75,11 @@ class PushAPK(Base):
             apk_path: extractor.extract_metadata(apk_path)
             for apk_path in apks_paths
         }
+
+        for package_name in [metadata['package_name'] for metadata in apks_metadata_per_paths.values()]:
+            if not googleplay.is_valid_track_value_for_package(self.config.track, package_name):
+                raise WrongArgumentGiven("Track name '{}' not valid for package: {}. allowed values: {}".format(
+                    self.config.track, package_name, googleplay.get_valid_track_values_for_package(package_name)))
 
         checker.cross_check_apks(apks_metadata_per_paths)
 

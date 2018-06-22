@@ -23,12 +23,25 @@ from unittest.mock import MagicMock
 
 from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
 
-# Google play has currently 4 tracks. Rollout deploys
+# Google play has currently 4 tracks by default. Rollout deploys
 # to a limited percentage of users
-TRACK_VALUES = ('production', 'beta', 'alpha', 'rollout', 'internal')
+_DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
 
+# Google play allows the creation of custom release tracks for apps.
+_ADDITIONAL_TRACK_VALUES = {
+    'org.mozilla.focus': ['nightly'],
+    'org.mozilla.klar': ['nightly']
+}
 
 logger = logging.getLogger(__name__)
+
+
+def get_valid_track_values_for_package(package_name):
+    return _DEFAULT_TRACK_VALUES + _ADDITIONAL_TRACK_VALUES.get(package_name, [])
+
+
+def is_valid_track_value_for_package(track, package_name):
+    return track in get_valid_track_values_for_package(package_name)
 
 
 def add_general_google_play_arguments(parser):
