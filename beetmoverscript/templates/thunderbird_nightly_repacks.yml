@@ -31,6 +31,11 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.checksums.asc
         - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.checksums.asc
+    buildhub.json:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.buildhub.json
+      destinations:
+        - {{ upload_date }}-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.buildhub.json
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.buildhub.json
 
   {% if platform in ["linux-i686", "linux-x86_64"] %}
     target.tar.bz2:

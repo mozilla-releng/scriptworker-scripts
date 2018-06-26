@@ -117,10 +117,11 @@ def test_beetmover_template_args_generation(context, taskjson, partials):
     template_args = generate_beetmover_template_args(context)
     assert template_args == expected_template_args
 
-    context.task['payload']['locale'] = 'ro'
-    context.task['payload']['upstreamArtifacts'][0]['locale'] = 'ro'
-    expected_template_args['template_key'] = 'fake_nightly_repacks'
-    expected_template_args['locales'] = ['ro']
+    context.task['payload']['locale'] = 'en-US'
+    context.task['payload']['upstreamArtifacts'][0]['locale'] = 'en-US'
+    expected_template_args['template_key'] = 'fake_nightly'
+    expected_template_args['locales'] = ['en-US']
+    # import pdb; pdb.set_trace()
     template_args = generate_beetmover_template_args(context)
     assert template_args == expected_template_args
 

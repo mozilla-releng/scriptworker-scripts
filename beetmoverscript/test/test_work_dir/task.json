@@ -34,6 +34,22 @@
           "taskId": "eSzfNqMZT_mSiQQXu8hyqg",
           "locale": "en-US",
           "taskType": "build"
+        },
+        {
+          "locale": "en-US",
+          "paths": [
+            "public/build/buildhub.json"
+          ],
+          "taskId": "eSzfNqMZT_mSiQQXu8hyqg",
+          "taskType": "build"
+        },
+        {
+          "locale": "en-US",
+          "paths": [
+            "public/build/target.apk"
+          ],
+          "taskId": "eSzfNqMZT_mSiQQXu8hyqg",
+          "taskType": "build"
         }
       ]
     },

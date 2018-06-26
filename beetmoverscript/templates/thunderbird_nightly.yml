@@ -119,6 +119,11 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/mozharness.zip
         - latest-{{ branch }}/mozharness.zip
+    buildhub.json:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.buildhub.json
+      destinations:
+        - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.buildhub.json
+        - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.buildhub.json
  {% if platform in ["linux-i686", "linux-x86_64", "mac"] %}
     mar:
       s3_key: mar

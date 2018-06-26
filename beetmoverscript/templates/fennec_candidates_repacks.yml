@@ -24,4 +24,8 @@ mapping:
       destinations:
         - {{ platform }}/{{ locale }}/fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.checksums.asc
         - beetmover-checksums/{{ platform }}/{{ locale }}/fennec-{{ version }}.{{ filename_platform }}.checksums.asc
+    buildhub.json:
+      s3_key: {{ platform }}/{{ locale }}/buildhub.json
+      destinations:
+        - {{ platform }}/{{ locale }}/buildhub.json
 {% endfor %} # end for locales

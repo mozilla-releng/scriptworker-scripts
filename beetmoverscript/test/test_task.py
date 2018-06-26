@@ -34,12 +34,16 @@ def test_exception_get_upstream_artifacts():
     ['target.txt',
      'target.mozinfo.json',
      'target_info.txt',
-     'target.test_packages.json'], False
+     'target.test_packages.json',
+     'buildhub.json',
+     'target.apk'], False
 ), (
     ['public/build/target.txt',
      'public/build/target.mozinfo.json',
      'public/build/target_info.txt',
-     'public/build/target.test_packages.json'], True
+     'public/build/target.test_packages.json',
+     'public/build/buildhub.json',
+     'public/build/target.apk'], True
 )))
 def test_get_upstream_artifacts(expected, preserve):
     context = Context()

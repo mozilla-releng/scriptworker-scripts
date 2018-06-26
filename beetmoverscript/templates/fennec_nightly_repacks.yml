@@ -25,4 +25,9 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}-{{ platform }}-l10n/fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.checksums.asc
         - latest-{{ branch }}-{{ platform }}-l10n/fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.checksums.asc
+    buildhub.json:
+      s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.buildhub.json
+      destinations:
+        - {{ upload_date }}-{{ branch }}-{{ platform }}-l10n/fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.buildhub.json
+        - latest-{{ branch }}-{{ platform }}-l10n/fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.buildhub.json
 {% endfor %} # end for locales

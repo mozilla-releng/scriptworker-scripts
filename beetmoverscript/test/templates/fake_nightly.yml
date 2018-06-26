@@ -35,5 +35,15 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.test_packages.json
         - latest-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.test_packages.json
+    buildhub.json:
+      s3_key: fake-{{ version }}.{{ locale }}.buildhub.json
+      destinations:
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.buildhub.json
+        - latest-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.buildhub.json
+    target.apk:
+      s3_key: fake-{{ version }}.{{ locale }}.target.apk
+      destinations:
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix }}fake {{ version }}.{{ locale }}.target.apk
+        - latest-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.apk
 
 {% endfor %}

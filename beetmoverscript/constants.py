@@ -151,3 +151,13 @@ PARTNER_REPACK_PUBLIC_REGEXES = (
 CHECKSUMS_CUSTOM_FILE_NAMING = {
     'beetmover-source': '-source'
 }
+
+BUILDHUB_ARTIFACT = "buildhub.json"
+
+# the installer artifact for each platform
+INSTALLER_ARTIFACTS = (
+    'target.tar.bz2',
+    'target.installer.exe',
+    'target.dmg',
+    'target.apk',
+)

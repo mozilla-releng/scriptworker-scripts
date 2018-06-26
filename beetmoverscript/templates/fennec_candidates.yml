@@ -116,7 +116,10 @@ mapping:
       s3_key: robocop.apk
       destinations:
         - {{ platform }}/{{ locale }}/robocop.apk
-
+    buildhub.json:
+      s3_key: {{ platform }}/{{ locale }}/buildhub.json
+      destinations:
+        - {{ platform }}/{{ locale }}/buildhub.json
     {% if locale == 'en-US' %}
     mar:
       s3_key: mar

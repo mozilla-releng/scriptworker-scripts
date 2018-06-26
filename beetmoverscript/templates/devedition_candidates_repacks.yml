@@ -19,6 +19,10 @@ mapping:
       s3_key: {{ platform }}/xpi/{{ locale }}.xpi
       destinations:
         - {{ platform }}/xpi/{{ locale }}.xpi
+    buildhub.json:
+      s3_key: {{ platform }}/{{ locale }}/buildhub.json
+      destinations:
+        - {{ platform }}/{{ locale }}/buildhub.json
 
   {% if platform in ["win32", "win64"] %}
     target.zip:

@@ -1,15 +1,19 @@
+import arrow
 import logging
 import os
 import re
+import urllib.parse
 
 from copy import deepcopy
 from scriptworker import client
 
 from beetmoverscript import utils, script
-from beetmoverscript.constants import (STAGE_PLATFORM_MAP,
-                                       RESTRICTED_BUCKET_PATHS,
-                                       CHECKSUMS_CUSTOM_FILE_NAMING)
 
+from beetmoverscript.constants import (
+    STAGE_PLATFORM_MAP,
+    RESTRICTED_BUCKET_PATHS,
+    CHECKSUMS_CUSTOM_FILE_NAMING
+)
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 log = logging.getLogger(__name__)
@@ -152,3 +156,23 @@ def update_props(context, props, platform_mapping):
     props["platform"] = platform_mapping.get(stage_platform, stage_platform)
     props["stage_platform"] = stage_platform
     return props
+
+
+def get_updated_buildhub_artifact(path, installer_path, context, manifest, locale):
+    """
+    Read the file into a dict, alter the fields below, and return the updated dict
+    buildhub.json fields that should be changed: download.size, download.date, download.url
+    """
+    contents = utils.load_json(path)
+    installer_name = os.path.basename(installer_path)
+    dest = manifest['mapping'][locale][installer_name]['destinations']
+    url_prefix = context.config["bucket_config"][context.bucket]["url_prefix"]
+    # assume url_prefix is ASCII safe
+    url = urllib.parse.quote(urllib.parse.urljoin(manifest["s3_bucket_path"], dest[0]))
+
+    # Update fields
+    contents['download']['size'] = utils.get_size(installer_path)
+    contents['download']['date'] = str(arrow.utcnow())
+    contents['download']['url'] = urllib.parse.urljoin(url_prefix, url)
+
+    return contents

@@ -20,12 +20,14 @@ from scriptworker.utils import retry_async, raise_future_exceptions
 from beetmoverscript.constants import (
     MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE,
     NORMALIZED_BALROG_PLATFORMS, PARTNER_REPACK_PUBLIC_PREFIX_TMPL,
-    PARTNER_REPACK_PRIVATE_REGEXES, PARTNER_REPACK_PUBLIC_REGEXES
+    PARTNER_REPACK_PRIVATE_REGEXES, PARTNER_REPACK_PUBLIC_REGEXES, BUILDHUB_ARTIFACT,
+    INSTALLER_ARTIFACTS
 )
 from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
     get_upstream_artifacts, get_release_props,
     add_checksums_to_artifacts, get_task_bucket, get_task_action, validate_bucket_paths,
+    get_updated_buildhub_artifact
 )
 from beetmoverscript.utils import (
     get_hash, generate_beetmover_manifest,
@@ -34,7 +36,7 @@ from beetmoverscript.utils import (
     get_bucket_name, get_bucket_url_prefix,
     is_release_action, is_promotion_action, get_partials_props,
     get_product_name, is_partner_action, is_partner_private_task,
-    is_partner_public_task
+    is_partner_public_task, write_json
 )
 
 log = logging.getLogger(__name__)
@@ -247,10 +249,36 @@ async def async_main(context):
 # move_beets {{{1
 async def move_beets(context, artifacts_to_beetmove, manifest):
     beets = []
+
     for locale in artifacts_to_beetmove:
+
+        installer_path = ''
+        buildhub_artifact_exists = False
+        # get path of installer beet
+        for artifact in artifacts_to_beetmove[locale]:
+            if artifact in INSTALLER_ARTIFACTS:
+                installer_path = artifacts_to_beetmove[locale][artifact]
+            if artifact == BUILDHUB_ARTIFACT:
+                buildhub_artifact_exists = True
+
+        # throws error if buildhub.json is present and installer isn't
+        if not installer_path and buildhub_artifact_exists:
+            raise ScriptWorkerTaskException(
+                "could not determine installer path from task payload"
+            )
+
+        # move beets
         for artifact in artifacts_to_beetmove[locale]:
             source = artifacts_to_beetmove[locale][artifact]
             artifact_pretty_name = manifest['mapping'][locale][artifact]['s3_key']
+
+            # update buildhub.json file
+            # if there is no installer then there will be no buildhub.json artifact
+            # in logical coding terms, this means that if installer_path is an empty
+            # string, then this if-block is never reached
+            if artifact == BUILDHUB_ARTIFACT:
+                write_json(source, get_updated_buildhub_artifact(source, installer_path, context, manifest, locale))
+
             destinations = [os.path.join(manifest["s3_bucket_path"],
                                          dest) for dest in
                             manifest['mapping'][locale][artifact]['destinations']]

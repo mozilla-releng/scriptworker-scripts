@@ -104,6 +104,10 @@ mapping:
       s3_key: beetmover-checksums/source/firefox-{{ version }}.checksums.asc
       destinations:
         - beetmover-checksums/source/firefox-{{ version }}.checksums.asc
+    buildhub.json:
+      s3_key: {{ platform }}/{{ locale }}/buildhub.json
+      destinations:
+        - {{ platform }}/{{ locale }}/buildhub.json
   {% if platform in ["linux-i686", "linux-x86_64", "mac"] %}
     mar:
       s3_key: mar-tools/{{ stage_platform }}/mar

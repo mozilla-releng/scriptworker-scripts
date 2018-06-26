@@ -128,5 +128,9 @@ mapping:
       destinations:
         - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}robocop.apk
         - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}robocop.apk
-
+    buildhub.json:
+      s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.buildhub.json
+      destinations:
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.buildhub.json
+        - latest-{{ branch }}-{{ platform }}/fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.buildhub.json
 {% endfor %}
