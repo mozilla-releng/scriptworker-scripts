@@ -10,8 +10,8 @@ In order to rollout a new version of beetmoverscript for testing, one must roll-
 puppet internal pypi mirrors and pin the beetmoverworkers to one's environment.
 
 1. Once your PR is ready for testing, make sure to create a new version like `<next-version>.dev0+pr<pr number>` under `beetmoverscript/_version.py`.
-1. Create wheel with `python3 setup.py bdist_wheel` and scp that file under [puppet](http://releng-puppet2.srv.releng.scl3.mozilla.com/python/packages-3.5/)
-1. Login in [puppet](http://releng-puppet2.srv.releng.scl3.mozilla.com/) and change directory in your environment (e.g. `/etc/puppet/environments/$whoami`)
+1. Create wheel with `python3 setup.py bdist_wheel` and scp that file under [puppet](http://releng-puppet2.srv.releng.mdc1.mozilla.com/python/packages-3.5/)
+1. Login in [puppet](http://releng-puppet2.srv.releng.mdc1.mozilla.com/) and change directory in your environment (e.g. `/etc/puppet/environments/$whoami`)
 1. Make sure to have the puppet repo up-to-date there
 1. Tweak the `beetmoverscript` version in the module's [requirements.txt](https://github.com/mozilla-releng/build-puppet/blob/master/modules/beetmover_scriptworker/files/requirements.txt#L9) to reflect the new value,
 and also to force all the dev beetmoverworkers to be chained to your environment. Something like this:
@@ -22,7 +22,7 @@ index a8357fb..1982cec 100644
 +++ b/manifests/moco-nodes.pp
 @@ -977,7 +977,7 @@ node /^beetmover-dev.*\.srv\.releng\..*\.mozilla\.com$/ {
      $only_user_ssh       = true
-+    $pin_puppet_server = 'releng-puppet2.srv.releng.scl3.mozilla.com'
++    $pin_puppet_server = 'releng-puppet2.srv.releng.mdc1.mozilla.com'
 +    $pin_puppet_env    = 'mtabara'
      include toplevel::server::beetmoverscriptworker
  }
@@ -59,7 +59,7 @@ sudo puppet agent --test  # or unpin or w/e
 1. `git tag -s %VERSION%`
 1. `git push`
 1. `git push --tags`
-1. Create wheel with `python3 setup.py bdist_wheel` and scp that file under [puppet](http://releng-puppet2.srv.releng.scl3.mozilla.com/python/packages-3.5/)
+1. Create wheel with `python3 setup.py bdist_wheel` and scp that file under [puppet](http://releng-puppet2.srv.releng.mdc1.mozilla.com/python/packages-3.5/)
 1. Wait for that file to be synchronized across all puppet instances (emails arrive to confirm that)
 1. Tweak the `beetmoverscript` version in the module's [requirements.txt](https://github.com/mozilla-releng/build-puppet/blob/master/modules/beetmover_scriptworker/files/requirements.txt#L9) to reflect the new value,
 1. Create a PR for your change and get review.
