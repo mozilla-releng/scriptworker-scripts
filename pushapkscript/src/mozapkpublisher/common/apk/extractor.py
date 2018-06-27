@@ -1,3 +1,4 @@
+import codecs
 import logging
 import re
 import shutil
@@ -94,15 +95,7 @@ def _extract_firefox_build_id(apk_zip):
 def _extract_value_from_application_ini(apk_zip, full_key):
     config = ConfigParser()
 
-    # Temp file used to work around the Python 2 API
-    with tempfile.NamedTemporaryFile() as application_ini_copy:
-        with apk_zip.open('application.ini') as real_application_ini:
-            data = real_application_ini.read()
-            application_ini_copy.write(data)
-
-        application_ini_copy.seek(0)
-        config.read(application_ini_copy.name)
-
+    config.read_file(codecs.getreader('utf-8')(apk_zip.open('application.ini')))
     section, key = full_key.split('.')
     return config.get(section, key)
 
