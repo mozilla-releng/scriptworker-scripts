@@ -19,9 +19,7 @@ async def do_actions(context, actions, directory):
 
     The actions happen in order, tagging, ver bump, then push
     """
-    short_actions = [a.rsplit(':', 1)[1] for a in actions]
-    short_actions.sort()  # Order we want to run in, just happens to be alphabetical sort.
-    for action in short_actions:
+    for action in actions:
         if 'tagging' == action:
             await do_tagging(context, directory)
         elif 'version_bump' == action:
@@ -33,7 +31,7 @@ async def do_actions(context, actions, directory):
     await log_outgoing(context, directory)
     if is_dry_run(context.task):
         log.info("Not pushing changes, dry_run was forced")
-    elif 'push' in short_actions:
+    elif 'push' in actions:
         await push(context)
     else:
         log.info("Not pushing changes, lacking scopes")
@@ -51,7 +49,7 @@ async def async_main(context):
     async with aiohttp.ClientSession(connector=connector) as session:
         context.session = session
         work_dir = context.config['work_dir']
-        actions_to_perform = task_action_types(context.task)
+        actions_to_perform = task_action_types(context.task, context.config)
         await log_mercurial_version(context)
         if not await validate_robustcheckout_works(context):
             raise ScriptWorkerException("Robustcheckout can't run on our version of hg, aborting")
