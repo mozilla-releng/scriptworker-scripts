@@ -1,48 +1,153 @@
 import os
 import pytest
-
-from scriptworker import client
 from unittest.mock import MagicMock
 
-from shipitscript import ship_actions, task
-from shipitscript.script import async_main, get_default_config, main
+from scriptworker import client
+from scriptworker.exceptions import TaskVerificationError, ScriptWorkerTaskException
+
+from shipitscript import ship_actions, script
+from shipitscript.test import context
 
 
+assert context  # silence pyflakes
+
+
+@pytest.mark.parametrize('scopes', (
+    [
+        'project:releng:ship-it:action:mark-as-shipped',
+        'project:releng:ship-it:server:dev'
+    ],
+),)
 @pytest.mark.asyncio
-async def test_async_main(monkeypatch):
-    context = MagicMock()
-    context.task = {
-        'payload': {
-            'release_name': 'Firefox-60.0-build1'
-        }
-    }
-    monkeypatch.setattr(task, 'get_ship_it_instance_config_from_scope', lambda context: {
-        'project:releng:ship-it:dev': {
-            'api_root': 'http://some-ship-it.url',
-            'timeout_in_seconds': 1,
-            'username': 'some-username',
-            'password': 'some-password'
-        }
-    })
+async def test_mark_as_shipped(context, monkeypatch, scopes):
+    context.task['scopes'] = scopes
 
     mark_as_shipped_mock = MagicMock()
     monkeypatch.setattr(ship_actions, 'mark_as_shipped', mark_as_shipped_mock)
-    await async_main(context)
+
+    await script.async_main(context)
     mark_as_shipped_mock.assert_called_with({
-        'project:releng:ship-it:dev': {
+        'api_root': 'http://some-ship-it.url',
+        'timeout_in_seconds': 1,
+        'username': 'some-username',
+        'password': 'some-password'
+    }, 'Firefox-59.0b3-build1')
+
+
+@pytest.mark.parametrize('scopes,payload,raises', (
+    ([
+        'project:releng:ship-it:action:mark-as-started',
+        'project:releng:ship-it:server:dev'
+    ], {
+        'release_name': 'Firefox-61.0b9-build1',
+    }, True),
+    ([
+        'project:releng:ship-it:action:mark-as-started',
+        'project:releng:ship-it:server:dev'
+    ], {
+        'release_name': 'Firefox-61.0b9-build1',
+        'product': 'firefox',
+        'version': '66.0b1',
+        'build_number': 3,
+        'branch': 'projects/maple',
+        'l10n_changesets': 'ro default',
+        'partials': '59.0b1build1,59.0b2build1',
+        'revision': 'default',
+    }, False),
+))
+@pytest.mark.asyncio
+async def test_mark_as_started(context, monkeypatch, scopes, payload, raises):
+    context.task['scopes'] = scopes
+    context.task['payload'] = payload
+
+    mark_as_started_mock = MagicMock()
+    monkeypatch.setattr(ship_actions, 'mark_as_started', mark_as_started_mock)
+
+    if raises:
+        with pytest.raises(TaskVerificationError):
+            await script.async_main(context)
+    else:
+        await script.async_main(context)
+        mark_as_started_mock.assert_called_with({
             'api_root': 'http://some-ship-it.url',
             'timeout_in_seconds': 1,
             'username': 'some-username',
             'password': 'some-password'
-        }
-    }, 'Firefox-60.0-build1')
+        }, 'Firefox-61.0b9-build1', {
+            'product': 'firefox',
+            'version': '66.0b1',
+            'buildNumber': 3,
+            'branch': 'projects/maple',
+            'l10nChangesets': 'ro default',
+            'partials': '59.0b1build1,59.0b2build1',
+            'mozillaRevision': 'default',
+        })
+
+
+@pytest.mark.parametrize('task,raises', (
+    ({
+        'dependencies': ['someTaskId'],
+        'payload': {
+            'release_name': 'Firefox-59.0b3-build1'
+        },
+        'scopes': [
+            'project:releng:ship-it:server:dev',
+            'project:releng:ship-it:action:mark-as-shipped',
+        ],
+    }, False),
+    ({
+        'dependencies': ['someTaskId'],
+        'payload': {
+            'release_name': 'Firefox-59.0b3-build1',
+            'product': 'Firefox',
+            'version': '61.0b8',
+            'revision': 'aadufhgdgf54g89dfngjerhtirughdfg',
+            'branch': 'maple',
+            'build_number': 1,
+            'l10n_changesets': 'ro default',
+            'partials': '59.0b1build1,59.0b2build1',
+        },
+        'scopes': [
+            'project:releng:ship-it:server:dev',
+            'project:releng:ship-it:action:mark-as-started',
+        ],
+    }, False),
+    ({
+        'dependencies': ['someTaskId'],
+        'payload': {
+            'release_name': 'Firefox-59.0b3-build1',
+            'product': 'Firefox',
+            'version': '61.0b8',
+            'revision': 'aadufhgdgf54g89dfngjerhtirughdfg',
+            'branch': 'maple',
+            'build_number': 1
+        },
+        'scopes': [
+            'project:releng:ship-it:server:dev',
+            'project:releng:ship-it:action:)hacK_mark-as-started38*&#F#BV&*',
+        ],
+    }, True)
+))
+@pytest.mark.asyncio
+async def test_async_main(context, monkeypatch, task, raises):
+    context.task = task
+
+    mark_as_shipped_mock = MagicMock()
+    monkeypatch.setattr(ship_actions, 'mark_as_shipped', mark_as_shipped_mock)
+    mark_as_started_mock = MagicMock()
+    monkeypatch.setattr(ship_actions, 'mark_as_started', mark_as_started_mock)
+
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            await script.async_main(context)
+    else:
+        await script.async_main(context)
 
 
 def test_get_default_config():
     parent_dir = os.path.dirname(os.getcwd())
-    assert get_default_config() == {
+    assert script.get_default_config() == {
         'work_dir': os.path.join(parent_dir, 'work_dir'),
-        'schema_file': os.path.join(os.getcwd(), 'shipitscript/data/shipit_task_schema.json'),
         'verbose': False,
     }
 
@@ -50,5 +155,6 @@ def test_get_default_config():
 def test_main(monkeypatch):
     sync_main_mock = MagicMock()
     monkeypatch.setattr(client, 'sync_main', sync_main_mock)
-    main()
-    sync_main_mock.asset_called_once_with(async_main, default_config=get_default_config())
+    script.main()
+    sync_main_mock.asset_called_once_with(script.async_main,
+                                          default_config=script.get_default_config())

@@ -1,15 +1,16 @@
 {
     "work_dir": "/path/to/scriptworker/tmp/work",
-    "schema_file": "/path/to/shipitscript/shipitscript/data/pushapk_task_schema.json",
+    "mark_as_shipped_schema_file": "/path/to//shipitscript/data/mark_as_shipped_task_schema.json",
+    "mark_as_started_schema_file": "/path/to//shipitscript/data/mark_as_started_task_schema.json",
 
     "ship_it_instances": {
-        "project:releng:ship-it:dev": {
+        "project:releng:ship-it:server:dev": {
             "api_root": "http://ship-it.tld/",
             "timeout_in_seconds": 60,
             "username": "some@user.name",
             "password": "50mep@ssword"
         }
     },
-
+    "taskcluster_scope_prefix": "project:releng:ship-it:",
     "verbose": true
 }

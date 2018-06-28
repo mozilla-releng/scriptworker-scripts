@@ -1,48 +1,48 @@
 import copy
 import pytest
-import os
 
-from scriptworker.context import Context
-from scriptworker.exceptions import TaskVerificationError
+from scriptworker.exceptions import TaskVerificationError, ScriptWorkerTaskException
 
-from shipitscript.task import get_ship_it_instance_config_from_scope, _get_scope
+from shipitscript.test import context
+from shipitscript.task import (
+    get_ship_it_instance_config_from_scope, _get_scope, get_task_action,
+    validate_task_schema
+)
+
+assert context  # silence pyflakes
 
 
-@pytest.fixture
-def context():
-    context = Context()
-    context.config = {
-        'schema_file': os.path.join(os.getcwd(), 'shipitscript', 'data', 'shipit_task_schema.json')
-    }
-    context.config['ship_it_instances'] = {
-        'project:releng:ship-it:dev': {
-            'api_root': 'http://some-ship-it.url',
-            'timeout_in_seconds': 1,
-            'username': 'some-username',
-            'password': 'some-password'
-        }
-    }
-    context.task = {
-        'dependencies': ['someTaskId'],
-        'payload': {
-            'release_name': 'Firefox-59.0b3-build1'
-        },
-        'scopes': ['project:releng:ship-it:dev'],
-    }
+@pytest.mark.parametrize('scopes,sufix,raises', (
+    (('project:releng:ship-it:server:dev',), 'server', False),
+    (('project:releng:ship-it:server:staging',), 'server', False),
+    (('project:releng:ship-it:server:production',), 'server', False),
+    (('project:releng:ship-it:server:dev', 'project:releng:ship-it:server:production',), 'server', True),
+    (('some:random:scope',), 'server', True),
+    (('project:releng:ship-it:action:mark-as-shipped',), 'action', False),
+    (('project:releng:ship-it:action:mark-as-started',), 'action', False),
+    (('project:releng:ship-it:action:mark-as-shipped', 'project:releng:ship-it:action:mark-as-started'), 'action', True),
+    (('some:random:scope',), 'action', True),
+))
+def test_get_scope(context, scopes, sufix, raises):
+    context.task['scopes'] = scopes
 
-    return context
+    if raises:
+        with pytest.raises(TaskVerificationError):
+            _get_scope(context, sufix)
+    else:
+        assert _get_scope(context, sufix) == scopes[0]
 
 
 @pytest.mark.parametrize('api_root, scope, raises', (
-    ('http://localhost:5000', 'project:releng:ship-it:dev', False),
-    ('http://some-ship-it.url', 'project:releng:ship-it:dev', False),
-    ('https://ship-it-dev.allizom.org', 'project:releng:ship-it:staging', False),
-    ('https://ship-it-dev.allizom.org/', 'project:releng:ship-it:staging', False),
-    ('https://ship-it.mozilla.org', 'project:releng:ship-it:production', False),
-    ('https://ship-it.mozilla.org/', 'project:releng:ship-it:production', False),
+    ('http://localhost:5000', 'project:releng:ship-it:server:dev', False),
+    ('http://some-ship-it.url', 'project:releng:ship-it:server:dev', False),
+    ('https://ship-it-dev.allizom.org', 'project:releng:ship-it:server:staging', False),
+    ('https://ship-it-dev.allizom.org/', 'project:releng:ship-it:server:staging', False),
+    ('https://ship-it.mozilla.org', 'project:releng:ship-it:server:production', False),
+    ('https://ship-it.mozilla.org/', 'project:releng:ship-it:server:production', False),
 ))
 def test_get_ship_it_instance_config_from_scope(context, api_root, scope, raises):
-    context.config['ship_it_instances'][scope] = copy.deepcopy(context.config['ship_it_instances']['project:releng:ship-it:dev'])
+    context.config['ship_it_instances'][scope] = copy.deepcopy(context.config['ship_it_instances']['project:releng:ship-it:server:dev'])
     context.config['ship_it_instances'][scope]['api_root'] = api_root
     context.task['scopes'] = [scope]
 
@@ -59,7 +59,7 @@ def test_get_ship_it_instance_config_from_scope(context, api_root, scope, raises
 
 
 @pytest.mark.parametrize('scope', (
-    'some:random:scope', 'project:releng:ship-it:staging', 'project:releng:ship-it:production',
+    'some:random:scope', 'project:releng:ship-it:server:staging', 'project:releng:ship-it:server:production',
 ))
 def test_fail_get_ship_it_instance_config_from_scope(context, scope):
     context.task['scopes'] = [scope]
@@ -67,20 +67,77 @@ def test_fail_get_ship_it_instance_config_from_scope(context, scope):
         get_ship_it_instance_config_from_scope(context)
 
 
-@pytest.mark.parametrize('scopes, raises', (
-    (('project:releng:ship-it:dev',), False),
-    (('project:releng:ship-it:staging',), False),
-    (('project:releng:ship-it:production',), False),
-    (('project:releng:ship-it:dev', 'project:releng:ship-it:production',), True),
-    (('some:random:scope',), True),
+# validate_task {{{1
+@pytest.mark.parametrize('task,raises', (
+    ({
+        'dependencies': ['someTaskId'],
+        'payload': {
+            'release_name': 'Firefox-59.0b3-build1'
+        },
+        'scopes': [
+            'project:releng:ship-it:server:dev',
+            'project:releng:ship-it:action:mark-as-shipped',
+        ],
+    }, False),
+    ({
+        'payload': {
+            'release_name': 'Firefox-59.0b3-build1'
+        },
+        'scopes': [
+            'project:releng:ship-it:server:dev',
+            'project:releng:ship-it:action:mark-as-shipped',
+        ],
+    }, True),
+    ({
+        'dependencies': ['someTaskId'],
+        'payload': {
+            'release_name': 'Firefox-59.0b3-build1',
+            'product': 'Firefox',
+            'version': '61.0b8',
+            'build_number': 1,
+            'branch': 'maple',
+            'revision': 'aadufhgdgf54g89dfngjerhtirughdfg',
+            'l10n_changesets': """
+                               de default
+                               ro default
+                                """,
+            'partials': '59.0b1build1,59.0b2build1',
+        },
+        'scopes': [
+            'project:releng:ship-it:server:dev',
+            'project:releng:ship-it:action:mark-as-started',
+        ],
+    }, False),
+    ({
+        'payload': {
+            'release_name': 'Firefox-59.0b3-build1'
+        },
+        'scopes': [
+            'project:releng:ship-it:server:dev',
+            'project:releng:ship-it:action:mark-as-started',
+        ],
+    }, True),
 ))
-def test_get_scope(scopes, raises):
-    task = {
-        'scopes': scopes
-    }
+def test_validate_task(context, task, raises):
+    context.task = task
 
     if raises:
         with pytest.raises(TaskVerificationError):
-            _get_scope(task)
+            validate_task_schema(context)
     else:
-        assert _get_scope(task) == scopes[0]
+            validate_task_schema(context)
+
+
+# get_task_action {{{1
+@pytest.mark.parametrize('scopes,expected,raises', (
+    (('project:releng:ship-it:action:mark-as-random'), None, True),
+    (('project:releng:ship-it:action:mark-as-shipped'), 'mark-as-shipped', False),
+    (('project:releng:ship-it:action:mark-as-started'), 'mark-as-started', False)
+))
+def test_get_task_action(context, scopes, expected, raises):
+    context.task['scopes'] = [scopes]
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            get_task_action(context)
+    else:
+        assert expected == get_task_action(context)
