@@ -43,6 +43,16 @@ mapping:
       destinations:
         - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.cppunittest.tests.zip
         - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.cppunittest.tests.zip
+    target.common.tests.tar.gz:
+      s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.common.tests.tar.gz
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.common.tests.tar.gz
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.common.tests.tar.gz
+    target.cppunittest.tests.tar.gz:
+      s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.cppunittest.tests.tar.gz
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.cppunittest.tests.tar.gz
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.cppunittest.tests.tar.gz
     target.crashreporter-symbols-full.zip:
       s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.crashreporter-symbols-full.zip
       destinations:
@@ -63,6 +73,11 @@ mapping:
       destinations:
         - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.mochitest.tests.zip
         - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.mochitest.tests.zip
+    target.mochitest.tests.tar.gz:
+      s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.mochitest.tests.tar.gz
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.mochitest.tests.tar.gz
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.mochitest.tests.tar.gz
     target.mozinfo.json:
       s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.mozinfo.json
       destinations:
@@ -83,6 +98,21 @@ mapping:
       destinations:
         - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.awsy.tests.zip
         - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.awsy.tests.zip
+    target.reftest.tests.tar.gz:
+      s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.reftest.tests.tar.gz
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.reftest.tests.tar.gz
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.reftest.tests.tar.gz
+    target.talos.tests.tar.gz:
+      s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.talos.tests.tar.gz
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.talos.tests.tar.gz
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.talos.tests.tar.gz
+    target.awsy.tests.tar.gz:
+      s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.awsy.tests.tar.gz
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.awsy.tests.tar.gz
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.awsy.tests.tar.gz
     target.test_packages.json:
       s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.test_packages.json
       destinations:
@@ -108,6 +138,11 @@ mapping:
       destinations:
         - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.xpcshell.tests.zip
         - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.xpcshell.tests.zip
+    target.xpcshell.tests.tar.gz:
+      s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.xpcshell.tests.tar.gz
+      destinations:
+        - latest-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.xpcshell.tests.tar.gz
+        - {{ upload_date }}-{{ branch }}-{{ platform }}/{{ locale_prefix }}fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.xpcshell.tests.tar.gz
     target_info.txt:
       s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}_info.txt
       destinations:

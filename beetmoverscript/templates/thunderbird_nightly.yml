@@ -44,6 +44,16 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.cppunittest.tests.zip
         - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.cppunittest.tests.zip
+    target.common.tests.tar.gz:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.common.tests.tar.gz
+      destinations:
+        - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.common.tests.tar.gz
+        - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.common.tests.tar.gz
+    target.cppunittest.tests.tar.gz:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.cppunittest.tests.tar.gz
+      destinations:
+        - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.cppunittest.tests.tar.gz
+        - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.cppunittest.tests.tar.gz
     target.crashreporter-symbols-full.zip:
       s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.crashreporter-symbols-full.zip
       destinations:
@@ -64,6 +74,11 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.mochitest.tests.zip
         - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.mochitest.tests.zip
+    target.mochitest.tests.tar.gz:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.mochitest.tests.tar.gz
+      destinations:
+        - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.mochitest.tests.tar.gz
+        - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.mochitest.tests.tar.gz
     target.mozinfo.json:
       s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.mozinfo.json
       destinations:
@@ -84,6 +99,21 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.awsy.tests.zip
         - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.awsy.tests.zip
+    target.reftest.tests.tar.gz:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.reftest.tests.tar.gz
+      destinations:
+        - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.reftest.tests.tar.gz
+        - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.reftest.tests.tar.gz
+    target.talos.tests.tar.gz:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.talos.tests.tar.gz
+      destinations:
+        - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.talos.tests.tar.gz
+        - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.talos.tests.tar.gz
+    target.awsy.tests.tar.gz:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.awsy.tests.tar.gz
+      destinations:
+        - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.awsy.tests.tar.gz
+        - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.awsy.tests.tar.gz
     target.test_packages.json:
       s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.test_packages.json
       destinations:
@@ -104,6 +134,11 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.xpcshell.tests.zip
         - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.xpcshell.tests.zip
+    target.xpcshell.tests.tar.gz:
+      s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}.xpcshell.tests.tar.gz
+      destinations:
+        - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.xpcshell.tests.tar.gz
+        - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.xpcshell.tests.tar.gz
     target_info.txt:
       s3_key: thunderbird-{{ version }}.{{ locale }}.{{ platform }}_info.txt
       destinations:

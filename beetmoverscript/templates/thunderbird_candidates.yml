@@ -33,6 +33,30 @@ mapping:
       s3_key: {{ platform }}/{{ locale }}/thunderbird-{{ version }}.awsy.tests.zip
       destinations:
         - {{ platform }}/{{ locale }}/thunderbird-{{ version }}.awsy.tests.zip
+    target.common.tests.tar.gz:
+      s3_key: {{ platform }}/{{ locale }}/thunderbird-{{ version }}.common.tests.tar.gz
+      destinations:
+        - {{ platform }}/{{ locale }}/thunderbird-{{ version }}.common.tests.tar.gz
+    target.cppunittest.tests.tar.gz:
+      s3_key: {{ platform }}/{{ locale }}/thunderbird-{{ version }}.cppunittest.tests.tar.gz
+      destinations:
+        - {{ platform }}/{{ locale }}/thunderbird-{{ version }}.cppunittest.tests.tar.gz
+    target.mochitest.tests.tar.gz:
+      s3_key: {{ platform }}/{{ locale }}/thunderbird-{{ version }}.mochitest.tests.tar.gz
+      destinations:
+        - {{ platform }}/{{ locale }}/thunderbird-{{ version }}.mochitest.tests.tar.gz
+    target.reftest.tests.tar.gz:
+      s3_key: {{ platform }}/{{ locale }}/thunderbird-{{ version }}.reftest.tests.tar.gz
+      destinations:
+        - {{ platform }}/{{ locale }}/thunderbird-{{ version }}.reftest.tests.tar.gz
+    target.talos.tests.tar.gz:
+      s3_key: {{ platform }}/{{ locale }}/thunderbird-{{ version }}.talos.tests.tar.gz
+      destinations:
+        - {{ platform }}/{{ locale }}/thunderbird-{{ version }}.talos.tests.tar.gz
+    target.awsy.tests.tar.gz:
+      s3_key: {{ platform }}/{{ locale }}/thunderbird-{{ version }}.awsy.tests.tar.gz
+      destinations:
+        - {{ platform }}/{{ locale }}/thunderbird-{{ version }}.awsy.tests.tar.gz
     target.test_packages.json:
       s3_key: {{ platform }}/{{ locale }}/thunderbird-{{ version }}.test_packages.json
       destinations:
@@ -45,6 +69,10 @@ mapping:
       s3_key: {{ platform }}/{{ locale }}/thunderbird-{{ version }}.xpcshell.tests.zip
       destinations:
         - {{ platform }}/{{ locale }}/thunderbird-{{ version }}.xpcshell.tests.zip
+    target.xpcshell.tests.tar.gz:
+      s3_key: {{ platform }}/{{ locale }}/thunderbird-{{ version }}.xpcshell.tests.tar.gz
+      destinations:
+        - {{ platform }}/{{ locale }}/thunderbird-{{ version }}.xpcshell.tests.tar.gz
     target.json:
       s3_key: {{ platform }}/{{ locale }}/thunderbird-{{ version }}.json
       destinations:
