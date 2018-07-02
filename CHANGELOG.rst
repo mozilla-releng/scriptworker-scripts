@@ -6,6 +6,25 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.5.0] = (2018-07-02)
+----------------------
+
+Added
+~~~~~
+
+- Adding support for tests.tar.gz archives for all products (`#733530
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=733530>`_)
+- adding support for buildhub.json (`#1443873
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1443873>`_)
+
+
+Fixed
+~~~~~
+
+- Fixed coveralls reports (`#1468562
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1468562>`_)
+
+
 [7.4.0] = (2018-06-12)
 ----------------------
 
