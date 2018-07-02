@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+# [2.1.0] - 2018-07-02
+### Added
+- additional validation checks are now being performed to make sure Ship-it side reflects the corresponding values after updating them
+
 # [2.0.0] - 2018-06-28
 ### Removed
 - support for py35 in testing
