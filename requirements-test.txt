@@ -238,10 +238,10 @@ slugid==1.0.7 \
 snowballstemmer==1.2.1 \
     --hash=sha256:919f26a68b2c17a7634da993d91339e288964f93c274f1343e3bbbe2096e1128 \
     --hash=sha256:9f3bcd3c401c3e862ec0ebe6d2c069ebc012ce142cce209c098ccb5b09136e89
-taskcluster==3.0.1 \
-    --hash=sha256:aa332a80b3b6db8de057f29e670e9cb4f0b2a971616b4bfd4135fce3fe2387fc \
-    --hash=sha256:ec7d5f9afb6462cc22b694d354fa8172142343c88e06212daaeeb06890ba17fb \
-    --hash=sha256:f57d3c57b79c81a2c4aa403e9477ddd2d06456483be21676ce7ecfcfa35d350c
+taskcluster==3.0.2 \
+    --hash=sha256:9b5269735a747fecf0530b5caf3dd4905a86c73534338e48ba268bf55f0938ff \
+    --hash=sha256:0794163ac0089317bd398cea00ed01e173edacaa17c4ce517c7fdde639ae145e \
+    --hash=sha256:e3a344da01f2fe2c8c09fc893c12109bda81b0f6c6d22ccedc0814506620e89d
 testfixtures==6.0.2 \
     --hash=sha256:04f31490bbebd7b87eae3bc63d1f1056cdcab62c76301b92bf34fc1267ffc367 \
     --hash=sha256:f8827cfc91e5cc9ac669727fdd48a85880f391b935a0a212b5cedb807879feec
