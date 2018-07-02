@@ -81,6 +81,14 @@ CONFIG_TEMPLATE = '''{{
 def test_main_mark_release_as_shipped(monkeypatch):
     ReleaseClassMock = MagicMock()
     release_instance_mock = MagicMock()
+    release_info = {
+        'status': 'shipped',
+        'shippedAt': '2018-01-22 17:59:59'
+    }
+    attrs = {
+        'getRelease.return_value': release_info
+    }
+    release_instance_mock.configure_mock(**attrs)
     ReleaseClassMock.side_effect = lambda *args, **kwargs: release_instance_mock
     monkeypatch.setattr(shipitapi, 'Release', ReleaseClassMock)
 
@@ -114,6 +122,15 @@ def test_main_mark_release_as_started(monkeypatch):
     ReleaseClassMock = MagicMock()
     NewReleaseClassMock = MagicMock()
     release_instance_mock = MagicMock()
+    release_info = {
+        'status': 'Started',
+        'ready': True,
+        'complete': True,
+    }
+    attrs = {
+        'getRelease.return_value': release_info
+    }
+    release_instance_mock.configure_mock(**attrs)
     new_release_instance_mock = MagicMock()
     ReleaseClassMock.side_effect = lambda *args, **kwargs: release_instance_mock
     NewReleaseClassMock.side_effect = lambda *args, **kwargs: new_release_instance_mock

@@ -3,7 +3,9 @@ from datetime import datetime
 
 import shipitapi
 
-from shipitscript.utils import get_auth_primitives
+from shipitscript.utils import (
+    get_auth_primitives, check_release_has_values
+)
 
 
 log = logging.getLogger(__name__)
@@ -19,12 +21,15 @@ def mark_as_shipped(ship_it_instance_config, release_name):
 
     log.info('Marking the release as shipped with {} timestamp...'.format(shipped_at))
     release_api.update(release_name, status='shipped', shippedAt=shipped_at)
+    check_release_has_values(release_api, release_name,
+                             status='shipped', shippedAt=shipped_at)
 
 
 def mark_as_started(ship_it_instance_config, release_name, data):
-    """Function to make two consecutive calls to Ship-it v1; first simulates the
-    RelMan `Do eeet` behavior by submitting the HTML response whilst the second one marks
-    the release as started - similar to what Release Runner would do"""
+    """Function to make two consecutive calls to Ship-it v1; simulates the
+    RelMan `Do eeet` behavior by submitting the HTML response whilst the
+    second one marks the release as started - similar to what Release
+    Runner would do"""
     auth, api_root, timeout_in_seconds = get_auth_primitives(ship_it_instance_config)
 
     product = data['product']
@@ -37,4 +42,6 @@ def mark_as_started(ship_it_instance_config, release_name, data):
     log.info('Marking the release as started ...')
     release_api = shipitapi.Release(auth, api_root=api_root,
                                     timeout=timeout_in_seconds)
-    release_api.update(release_name, ready=1, complete=1, status="Started")
+    release_api.update(release_name, ready=True, complete=True, status="Started")
+    check_release_has_values(release_api, release_name,
+                             ready=True, complete=True, status="Started")
