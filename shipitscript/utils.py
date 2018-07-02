@@ -1,3 +1,4 @@
+import arrow
 import logging
 
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -25,8 +26,19 @@ def check_release_has_values(release_api, release_name, **kwargs):
     log.info("Full release details: {}".format(release_info))
 
     for key, value in kwargs.items():
-        if not release_info.get(key) or release_info[key] != value:
+        # special case for comparing times
+        if key == 'shippedAt':
+            if not release_info.get(key) or not same_timing(release_info[key], value):
+                err_msg = "`{}`->`{}` don't exist or correspond.".format(key, value)
+                raise ScriptWorkerTaskException(err_msg)
+        elif not release_info.get(key) or release_info[key] != value:
             err_msg = "`{}`->`{}` don't exist or correspond.".format(key, value)
             raise ScriptWorkerTaskException(err_msg)
 
     log.info("All release fields have been correctly updated in Ship-it!")
+
+
+def same_timing(time1, time2):
+    """Function to decompress time from strings into datetime objects and
+    compare them"""
+    return arrow.get(time1) == arrow.get(time2)
