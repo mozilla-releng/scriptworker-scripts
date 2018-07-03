@@ -4,13 +4,15 @@
 import logging
 
 from bouncerscript.task import (
-    get_task_action, get_task_server, validate_task_schema, check_product_names_match_aliases
+    get_task_action, get_task_server, validate_task_schema,
+    check_product_names_match_aliases
 )
 from bouncerscript.utils import (
     api_add_location, api_add_product, api_update_alias, does_product_exists,
+    api_show_location
 )
 from scriptworker import client
-from scriptworker.exceptions import TaskVerificationError
+from scriptworker.exceptions import TaskVerificationError, ScriptWorkerTaskException
 
 
 log = logging.getLogger(__name__)
@@ -33,10 +35,19 @@ async def bouncer_submission(context):
             add_locales=pr_config["options"]["add_locales"],
             ssl_only=pr_config["options"]["ssl_only"]
         )
+        # safety check - ensure bouncer has been successfully updated
+        if not await does_product_exists(context, product_name):
+            raise ScriptWorkerTaskException("Bouncer entries are corrupt")
 
         log.info("Adding corresponding paths ...")
         for platform, path in pr_config["paths_per_bouncer_platform"].items():
             await api_add_location(context, product_name, platform, path)
+
+        # safety check again - ensure bouncer has been successfully updated
+        if await api_show_location(context, product_name) != len(pr_config):
+            raise ScriptWorkerTaskException("Bouncer entries are corrupt")
+            # TODO: we can even check them to ensure they are the same if we
+            # really wanted to
 
 
 async def bouncer_aliases(context):

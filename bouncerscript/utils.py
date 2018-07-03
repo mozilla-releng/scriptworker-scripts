@@ -100,6 +100,20 @@ async def api_add_location(context, product_name, bouncer_platform, path):
     return await api_call(context, "location_add/", data)
 
 
+async def api_show_location(context, product_name):
+    """Function to return all locations per a specific product"""
+    res = await api_call(context, "location_show?product=%s" %
+                         quote(product_name), data=None)
+    try:
+        xml = parseString(res)
+        # bouncer API returns <products/> if the product doesn't exist
+        locations_found = len(xml.getElementsByTagName("location"))
+        log.info("Locations found: {}".format(locations_found))
+        return locations_found
+    except Exception as e:
+        log.warning("Error parsing XML: {}".format(e))
+
+
 async def api_update_alias(context, alias, product_name):
     """Function to update an aliases to a specific product"""
     data = {
