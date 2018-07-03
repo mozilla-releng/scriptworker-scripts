@@ -7,7 +7,7 @@ from bouncerscript.script import (
 )
 from bouncerscript.test import (
     submission_context, noop_async, aliases_context, return_true_async,
-    noop_sync, return_true_sync
+    return_true_sync
 )
 from scriptworker.test import (
     event_loop, fake_session,
