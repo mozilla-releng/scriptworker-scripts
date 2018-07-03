@@ -85,3 +85,7 @@ def check_product_names_match_aliases(context):
 
     if not all(validations):
         raise TaskVerificationError("The product/alias pairs are corrupt: {}".format(aliases))
+
+
+def check_locations_match(locations, product_config):
+    return len(locations) == len(product_config)

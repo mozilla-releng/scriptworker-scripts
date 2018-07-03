@@ -107,7 +107,7 @@ async def api_show_location(context, product_name):
     try:
         xml = parseString(res)
         # bouncer API returns <products/> if the product doesn't exist
-        locations_found = len(xml.getElementsByTagName("location"))
+        locations_found = xml.getElementsByTagName("location")
         log.info("Locations found: {}".format(locations_found))
         return locations_found
     except Exception as e:

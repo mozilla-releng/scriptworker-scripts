@@ -18,7 +18,10 @@ async def noop_async(*args, **kwargs):
     pass
 
 
-async def return_true(*args):
+async def return_true_async(*args):
+    return True
+
+def return_true_sync(*args):
     return True
 
 
