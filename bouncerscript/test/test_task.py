@@ -6,7 +6,8 @@ from scriptworker.exceptions import (
 
 from bouncerscript.task import (
     get_supported_actions, get_task_server, get_task_action,
-    validate_task_schema, check_product_names_match_aliases
+    validate_task_schema, check_product_names_match_aliases,
+    check_locations_match
 )
 from bouncerscript.test import submission_context as context
 from bouncerscript.test import aliases_context
@@ -279,3 +280,21 @@ def test_check_product_names_match_aliases(aliases_context, entries, raises):
             check_product_names_match_aliases(context)
     else:
         check_product_names_match_aliases(context)
+
+
+# check_locations_match {{{1
+@pytest.mark.parametrize("locations,product_config,expected", ((
+    ['a'], {'a': 'b'},
+    True,
+), (
+    [], {},
+    True,
+), (
+    ['a'], {},
+    False,
+), (
+    [], {'a': 'b'},
+    False,
+)))
+def test_check_locations_match(locations, product_config, expected):
+    assert check_locations_match(locations, product_config) == expected

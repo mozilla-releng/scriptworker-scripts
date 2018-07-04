@@ -6,8 +6,8 @@ from bouncerscript.script import (
     main, bouncer_submission, bouncer_aliases, async_main
 )
 from bouncerscript.test import (
-    submission_context, noop_async, aliases_context, return_true_async,
-    return_true_sync
+    submission_context, noop_async, aliases_context, return_true_sync,
+    toggled_boolean_async, return_false_sync
 )
 from scriptworker.test import (
     event_loop, fake_session,
@@ -44,12 +44,16 @@ async def test_bouncer_submission(submission_context, mocker):
     mocker.patch.object(bscript, 'api_add_product', new=noop_async)
     mocker.patch.object(bscript, 'api_add_location', new=noop_async)
     mocker.patch.object(bscript, 'api_show_location', new=noop_async)
-    mocker.patch.object(bscript, 'check_locations_match', new=return_true_sync)
-
     with pytest.raises(ScriptWorkerTaskException):
         await bouncer_submission(submission_context)
 
-    mocker.patch.object(bscript, 'does_product_exist', new=return_true_async)
+    mocker.patch.object(bscript, 'does_product_exist', new=toggled_boolean_async)
+    mocker.patch.object(bscript, 'check_locations_match', new=return_false_sync)
+    with pytest.raises(ScriptWorkerTaskException):
+        await bouncer_submission(submission_context)
+
+    mocker.patch.object(bscript, 'does_product_exist', new=toggled_boolean_async)
+    mocker.patch.object(bscript, 'check_locations_match', new=return_true_sync)
     await bouncer_submission(submission_context)
 
 
