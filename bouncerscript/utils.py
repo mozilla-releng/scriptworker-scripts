@@ -111,7 +111,7 @@ async def api_show_location(context, product_name):
         # bouncer API returns <locations/> if the product doesn't exist
         locations_found = xml.getElementsByTagName("location")
         log.info("Locations found: {}".format(locations_found))
-        return locations_found
+        return [l.childNodes[0].data for l in locations_found]
     except Exception as e:
         log.warning("Error parsing XML: {}".format(e))
         raise ScriptWorkerTaskException("Not suitable XML received")

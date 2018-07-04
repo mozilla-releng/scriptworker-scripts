@@ -284,13 +284,16 @@ def test_check_product_names_match_aliases(aliases_context, entries, raises):
 
 # check_locations_match {{{1
 @pytest.mark.parametrize("locations,product_config,expected", ((
-    ['a'], {'a': 'b'},
+    ['a', 'b'], {'aaaa': 'a', 'bbbb': 'b'},
+    True,
+), (
+    ['a', 'b'], {'aaaa': 'b', 'bbbb': 'a'},
     True,
 ), (
     [], {},
     True,
 ), (
-    ['a'], {},
+    ['a'], {'a': 'b'},
     False,
 ), (
     [], {'a': 'b'},

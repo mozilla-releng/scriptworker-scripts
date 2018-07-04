@@ -233,7 +233,7 @@ async def test_api_update_alias(context, mocker, alias, product, expected):
 @pytest.mark.parametrize("product,response,expected,raises", ((
     "fake-product",
     "<locations/>",
-    0,
+    [],
     False
 ), (
     "fake-product",
@@ -242,8 +242,15 @@ async def test_api_update_alias(context, mocker, alias, product, expected):
     True
 ), (
     "fake-product",
-    "<location>fake-location</location>",
-    1,
+    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="8692" '
+     'name="Fennec-62.0b9"><location id="43593" os="android">/mobile/releases/'
+     '62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk</location>'
+     '<location id="43594" os="android-x86">/mobile/releases/62.0b9/android-x86/:'
+     'lang/fennec-62.0b9.:lang.android-i386.apk</location></product></locations>'),
+    [
+        '/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk',
+        '/mobile/releases/62.0b9/android-x86/:lang/fennec-62.0b9.:lang.android-i386.apk'
+    ],
     False
 )))
 @pytest.mark.asyncio
@@ -257,4 +264,4 @@ async def test_api_show_location(context, mocker, product, response, expected,
         with pytest.raises(ScriptWorkerTaskException):
             assert await api_show_location(context, product)
     else:
-        assert len(await api_show_location(context, product)) == expected
+        assert await api_show_location(context, product) == expected

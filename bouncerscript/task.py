@@ -92,10 +92,7 @@ def check_product_names_match_aliases(context):
 
 
 def check_locations_match(locations, product_config):
-    # TO IMPROVE: in the future, if we wanted to improve this even more, we could
-    # start processing the XML and compare bitwise the locations returned from
-    # bouncer
-    return len(locations) == len(product_config)
+    return sorted(locations) == sorted(product_config.values())
 
 
 def check_path_matches_destination(product_name, path):
