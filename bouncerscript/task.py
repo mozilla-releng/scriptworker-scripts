@@ -5,7 +5,9 @@ from scriptworker import client
 from scriptworker.exceptions import (
     ScriptWorkerTaskException, TaskVerificationError
 )
-from bouncerscript.constants import ALIASES_REGEXES
+from bouncerscript.constants import (
+    ALIASES_REGEXES, PRODUCT_TO_DESTINATIONS_REGEXES, PRODUCT_TO_PRODUCT_ENTRY
+)
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +59,9 @@ def get_task_action(task, script_config):
     return action
 
 
-def matches(name, pattern):
+def matches(name, pattern, fullmatch=False):
+    if fullmatch:
+        return re.fullmatch(pattern, name)
     return re.match(pattern, name)
 
 
@@ -88,4 +92,16 @@ def check_product_names_match_aliases(context):
 
 
 def check_locations_match(locations, product_config):
+    # TO IMPROVE: in the future, if we wanted to improve this even more, we could
+    # start processing the XML and compare bitwise the locations returned from
+    # bouncer
     return len(locations) == len(product_config)
+
+
+def check_path_matches_destination(product_name, path):
+    possible_products = [p for p, pattern in PRODUCT_TO_PRODUCT_ENTRY.items() if
+                         matches(product_name, pattern)]
+    product = possible_products[0]
+    return matches(path,
+                   PRODUCT_TO_DESTINATIONS_REGEXES[product],
+                   fullmatch=True) is not None

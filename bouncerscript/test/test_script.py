@@ -49,12 +49,19 @@ async def test_bouncer_submission(submission_context, mocker):
 
     mocker.patch.object(bscript, 'does_product_exist', new=toggled_boolean_async)
     mocker.patch.object(bscript, 'check_locations_match', new=return_false_sync)
+    mocker.patch.object(bscript, 'check_path_matches_destination', new=return_true_sync)
     with pytest.raises(ScriptWorkerTaskException):
         await bouncer_submission(submission_context)
 
     mocker.patch.object(bscript, 'does_product_exist', new=toggled_boolean_async)
     mocker.patch.object(bscript, 'check_locations_match', new=return_true_sync)
     await bouncer_submission(submission_context)
+
+    mocker.patch.object(bscript, 'does_product_exist', new=toggled_boolean_async)
+    mocker.patch.object(bscript, 'check_locations_match', new=return_false_sync)
+    mocker.patch.object(bscript, 'check_path_matches_destination', new=return_false_sync)
+    with pytest.raises(ScriptWorkerTaskException):
+        await bouncer_submission(submission_context)
 
 
 # bouncer_aliases {{{1
