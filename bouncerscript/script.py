@@ -8,7 +8,7 @@ from bouncerscript.task import (
     check_product_names_match_aliases, check_locations_match
 )
 from bouncerscript.utils import (
-    api_add_location, api_add_product, api_update_alias, does_product_exists,
+    api_add_location, api_add_product, api_update_alias, does_product_exist,
     api_show_location
 )
 from scriptworker import client
@@ -26,7 +26,7 @@ async def bouncer_submission(context):
 
     submissions = context.task["payload"]["submission_entries"]
     for product_name, pr_config in submissions.items():
-        if await does_product_exists(context, product_name):
+        if await does_product_exist(context, product_name):
             log.warning("Product {} already exists. Skipping ...".format(product_name))
             continue
 
@@ -38,7 +38,7 @@ async def bouncer_submission(context):
             ssl_only=pr_config["options"]["ssl_only"]
         )
         # safety check - ensure bouncer has been successfully updated
-        if not await does_product_exists(context, product_name):
+        if not await does_product_exist(context, product_name):
             raise ScriptWorkerTaskException("Bouncer entries are corrupt")
 
         log.info("Adding corresponding paths ...")

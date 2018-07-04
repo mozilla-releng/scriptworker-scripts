@@ -4,6 +4,8 @@ from scriptworker.utils import retry_async
 from urllib.parse import quote
 from xml.dom.minidom import parseString
 
+from scriptworker.exceptions import ScriptWorkerTaskException
+
 
 log = logging.getLogger(__name__)
 
@@ -55,7 +57,7 @@ async def _do_api_call(context, route, data, method='GET', session=None):
         raise
 
 
-async def does_product_exists(context, product_name):
+async def does_product_exist(context, product_name):
     """Function to check if a specific product exists in bouncer already by
     parsing the XML returned by the API endpoint."""
     log.info("Checking if {} already exists".format(product_name))
@@ -112,6 +114,7 @@ async def api_show_location(context, product_name):
         return locations_found
     except Exception as e:
         log.warning("Error parsing XML: {}".format(e))
+        raise ScriptWorkerTaskException("Not suitable XML received")
 
 
 async def api_update_alias(context, alias, product_name):

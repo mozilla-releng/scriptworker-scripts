@@ -4,10 +4,14 @@ import os
 import pytest
 import tempfile
 
+from scriptworker.test import event_loop, fake_session, fake_session_500
+from scriptworker.exceptions import ScriptWorkerTaskException
+import scriptworker.utils as sutils
+
 import bouncerscript.utils as butils
 from bouncerscript.utils import (
     api_update_alias, api_add_location, api_add_product,
-    does_product_exists, api_call, _do_api_call
+    does_product_exist, api_call, _do_api_call, api_show_location
 )
 from bouncerscript.task import get_task_action, get_task_server
 from bouncerscript.test import submission_context as context
@@ -15,8 +19,6 @@ from bouncerscript.test import (
     noop_async, fake_ClientError_throwing_session,
     fake_TimeoutError_throwing_session, load_json
 )
-from scriptworker.test import event_loop, fake_session, fake_session_500
-import scriptworker.utils as sutils
 
 
 assert context  # silence pyflakes
@@ -117,7 +119,7 @@ def test_do_failed_with_TimeoutError_api_call(context, mocker, event_loop, fake_
         )
 
 
-# does_product_exists {{{1
+# does_product_exist {{{1
 @pytest.mark.parametrize("product,response,expected", ((
     "fake-product",
     "<products/>",
@@ -137,7 +139,7 @@ async def test_does_product_exists(context, mocker, product, response, expected)
         return response
 
     mocker.patch.object(butils, 'api_call', new=fake_api_call)
-    assert await does_product_exists(context, product) == expected
+    assert await does_product_exist(context, product) == expected
 
 
 # api_add_product {{{1
@@ -225,3 +227,34 @@ async def test_api_update_alias(context, mocker, alias, product, expected):
 
     mocker.patch.object(butils, 'api_call', new=fake_api_call)
     assert await api_update_alias(context, alias, product) == expected
+
+
+# api_show_location {{{1
+@pytest.mark.parametrize("product,response,expected,raises", ((
+    "fake-product",
+    "<locations/>",
+    0,
+    False
+), (
+    "fake-product",
+    "sd9fh398ghJKDFH@(*YFG@I#KJHWEF@(*G@",
+    None,
+    True
+), (
+    "fake-product",
+    "<location>fake-location</location>",
+    1,
+    False
+)))
+@pytest.mark.asyncio
+async def test_api_show_location(context, mocker, product, response, expected,
+                                 raises):
+    async def fake_api_call(context, route, data):
+        return response
+
+    mocker.patch.object(butils, 'api_call', new=fake_api_call)
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            assert await api_show_location(context, product)
+    else:
+        assert len(await api_show_location(context, product)) == expected
