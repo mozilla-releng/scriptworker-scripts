@@ -72,7 +72,7 @@ async def bouncer_aliases(context):
         log.info("Updating {} with {} product".format(alias, product_name))
         await api_update_alias(context, alias, product_name)
 
-    log.info("Sanity check to ensure aliases have been successfull updated...")
+    log.info("Sanity check to ensure aliases have been successfully updated...")
     # TODO: to implement this in bug 1470226
 
 
