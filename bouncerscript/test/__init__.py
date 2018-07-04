@@ -4,10 +4,6 @@ import json
 import pytest
 
 from scriptworker.context import Context
-from scriptworker.test import event_loop
-
-
-assert event_loop  # silence flake8
 
 
 def noop_sync(*args, **kwargs):
@@ -49,23 +45,25 @@ def aliases_context():
 
 
 @pytest.fixture(scope='function')
-def fake_ClientError_throwing_session(event_loop):
+def fake_ClientError_throwing_session():
     @asyncio.coroutine
     def _fake_request(method, url, *args, **kwargs):
         raise aiohttp.ClientError
 
-    session = aiohttp.ClientSession(loop=event_loop)
+    loop = asyncio.get_event_loop()
+    session = aiohttp.ClientSession(loop=loop)
     session._request = _fake_request
     return session
 
 
 @pytest.fixture(scope='function')
-def fake_TimeoutError_throwing_session(event_loop):
+def fake_TimeoutError_throwing_session():
     @asyncio.coroutine
     def _fake_request(method, url, *args, **kwargs):
         raise aiohttp.ServerTimeoutError
 
-    session = aiohttp.ClientSession(loop=event_loop)
+    loop = asyncio.get_event_loop()
+    session = aiohttp.ClientSession(loop=loop)
     session._request = _fake_request
     return session
 
