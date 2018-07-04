@@ -105,6 +105,8 @@ def get_default_config(base_dir=None):
 
 def main():
     """Start signing script."""
+    mohawk_log = logging.getLogger('mohawk')
+    mohawk_log.setLevel(logging.INFO)
     return scriptworker.client.sync_main(async_main, default_config=get_default_config())
 
 

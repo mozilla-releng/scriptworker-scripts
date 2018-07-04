@@ -685,7 +685,6 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
     # build and run the signature request
     sign_req = [{"input": base64.b64encode(input_bytes)}]
     log.debug("using the default autograph keyid for %s", s.user)
-    log.debug("autograph signature request: %s" % sign_req)
 
     url = "%s/sign/file" % s.server
     auth = HawkAuth(id=s.user, key=s.password)
@@ -700,7 +699,6 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
     loop = asyncio.get_event_loop()
     response = await loop.run_in_executor(None, make_sign_req)
     response.raise_for_status()
-    log.debug("autograph signature response: %s" % response.text)
     sign_resp = response.json()
 
     with open(to, 'wb') as fout:
