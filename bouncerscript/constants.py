@@ -24,7 +24,6 @@ ALIASES_REGEXES = {
     'firefox-sha1-ssl': '^Firefox-\d+\.\d+(\.\d+)?esr-sha1$',
 }
 
-
 PRODUCT_TO_DESTINATIONS_REGEXES = {
     'fennec': '^(/mobile/releases/.*?/(?:android-api-16|android-x86)/\:lang/fennec-.*\:lang\.(?:android-arm|android-i386)\.apk)$',
     'firefox': '^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$',
