@@ -37,7 +37,6 @@ diff --git a/modules/bouncer_scriptworker/files/requirements.txt b/modules/bounc
  async_timeout==3.0.0
 -bouncerscript==2.0.0  # puppet: nodownload
 +bouncerscript==X.X.X # dev version to be tested
-+bouncerscript==XXX
  attrs==18.1.0
  certifi==2018.4.16
 ...
