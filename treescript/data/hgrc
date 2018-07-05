@@ -1,5 +1,5 @@
 [ui]
-username = "Mozilla Releng Treescript <release+treescript@mozilla.org>"
+username = Mozilla Releng Treescript <release+treescript@mozilla.org>
 merge = internal:merge
 
 [hostsecurity]
