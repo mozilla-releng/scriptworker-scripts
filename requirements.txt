@@ -1,2 +1,1 @@
 scriptworker
-aiohttp==3.2.1
