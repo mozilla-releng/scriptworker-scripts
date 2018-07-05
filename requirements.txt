@@ -60,8 +60,8 @@ future==0.16.0 \
 idna==2.6 \
     --hash=sha256:2c6a5de3089009e3da7c5dde64a141dbc8551d5b7f6cf4ed7c2568d0cc520a8f \
     --hash=sha256:8c7309c718f94b3a625cb648ace320157ad16ff131ae0af362c9f21b80ef6ec4
-idna_ssl==1.0.1 \
-    --hash=sha256:1293f030bc608e9aa9cdee72aa93c1521bbb9c7698068c61c9ada6772162b979
+idna_ssl==1.1.0 \
+    --hash=sha256:a933e3bb13da54383f9e8f35dc4f9cb9eb9b3b78c6b36f311254d6d0d92c6c7c
 json-e==2.5.0 \
     --hash=sha256:f9114a25ed4b575395fbb2daa1183c5b781a647b387fdf28596220bb114673e8
 jsonschema==2.6.0 \
