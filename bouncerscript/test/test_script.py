@@ -10,20 +10,20 @@ from bouncerscript.test import (
     toggled_boolean_async, return_false_sync
 )
 from scriptworker.test import (
-    event_loop, fake_session,
+    fake_session,
 )
 from scriptworker.exceptions import (
     ScriptWorkerTaskException, TaskVerificationError
 )
 
 
-assert event_loop, fake_session  # silence flake8
+assert fake_session  # silence flake8
 assert submission_context  # silence flake8
 assert aliases_context  # silence flake8
 
 
 # main {{{1
-def test_main(submission_context, event_loop, fake_session):
+def test_main(submission_context, fake_session):
     async def fake_async_main_with_exception(context):
         raise ScriptWorkerTaskException("This is wrong, the answer is 42")
 
@@ -71,7 +71,7 @@ async def test_bouncer_aliases(aliases_context, mocker):
 
 # async_main {{{1
 @pytest.mark.asyncio
-async def test_async_main(submission_context, mocker, event_loop):
+async def test_async_main(submission_context, mocker):
     mocker.patch.object(bscript, 'bouncer_submission', new=noop_async)
     mocker.patch.object(bscript, 'does_product_exist', new=noop_async)
     mocker.patch.object(bscript, 'api_add_product', new=noop_async)
