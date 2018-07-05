@@ -11,7 +11,7 @@ import os
 import pytest
 from scriptworker.context import Context
 from treescript import mercurial
-from treescript.exceptions import FailedSubprocess
+from treescript.exceptions import FailedSubprocess, ChangesetMismatchError
 from treescript.script import get_default_config
 from treescript.utils import mkdir
 from treescript.test import tmpdir, noop_async, is_slice_in_list
@@ -162,7 +162,8 @@ async def test_checkout_repo(context, mocker):
                                 args)
 
     mocker.patch.object(mercurial, 'run_hg_command', new=check_params)
-    mocker.patch.object(mercurial, 'get_source_repo').return_value = "https://hg.mozilla.org/test-repo"
+    mocker.patch.object(
+        mercurial, 'get_source_repo').return_value = "https://hg.mozilla.org/test-repo"
 
     context.config['hg_share_base_dir'] = '/builds/hg-shared-test'
     context.config['upstream_repo'] = 'https://hg.mozilla.org/mozilla-test-unified'
@@ -255,3 +256,30 @@ async def test_log_outgoing(context, mocker):
     assert is_slice_in_list(('out', '-vp'), called_args[0][0])
     assert is_slice_in_list(('-r', '.'), called_args[0][0])
     assert is_slice_in_list(('https://hg.mozilla.org/treescript-test', ), called_args[0][0])
+
+
+@pytest.mark.asyncio
+async def test_assert_outgoing(context, mocker):
+    fake_csets = ['cset1', 'cset2']
+
+    async def dummy_run_hg_command(*args, **kwargs):
+        return fake_csets
+    mocker.patch.object(mercurial, 'run_hg_command', new=dummy_run_hg_command)
+
+    mocked_source_repo = mocker.patch.object(mercurial, 'get_source_repo')
+    mocked_source_repo.return_value = 'https://hg.mozilla.org/treescript-test'
+    await mercurial.assert_outgoing(context, context.config['work_dir'], len(fake_csets))
+
+
+@pytest.mark.asyncio
+async def test_assert_outgoing_failure(context, mocker):
+    fake_csets = ['cset1', 'cset2']
+
+    async def dummy_run_hg_command(*args, **kwargs):
+        return fake_csets + ['cset3']
+    mocker.patch.object(mercurial, 'run_hg_command', new=dummy_run_hg_command)
+
+    mocked_source_repo = mocker.patch.object(mercurial, 'get_source_repo')
+    mocked_source_repo.return_value = 'https://hg.mozilla.org/treescript-test'
+    with pytest.raises(ChangesetMismatchError):
+        await mercurial.assert_outgoing(context, context.config['work_dir'], len(fake_csets))

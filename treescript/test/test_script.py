@@ -109,6 +109,7 @@ async def test_do_actions(mocker, context, push_scope, dry_run, push_expect_call
     mocker.patch.object(script, 'bump_version', new=mocked_bump)
     mocker.patch.object(script, 'push', new=mocked_push)
     mocker.patch.object(script, 'log_outgoing', new=noop_async)
+    mocker.patch.object(script, 'assert_outgoing', new=noop_async)
     mocker.patch.object(script, 'is_dry_run').return_value = dry_run
     await script.do_actions(context, actions, directory='/some/folder/here')
     assert called_tag[0]
