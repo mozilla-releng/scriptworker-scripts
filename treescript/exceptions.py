@@ -29,3 +29,17 @@ class FailedSubprocess(ScriptWorkerTaskException):
         super(FailedSubprocess, self).__init__(
             msg, exit_code=STATUSES['internal-error']
         )
+
+
+class ChangesetMismatchError(ScriptWorkerTaskException):
+    """An incorrect number of changesets would be pushed."""
+
+    def __init__(self, msg):
+        """Initialize ChangesetMismatchError.
+
+        Args:
+            msg (str): the reason for throwing an exception.
+        """
+        super(ChangesetMismatchError, self).__init__(
+            msg, exit_code=STATUSES['internal-error']
+        )
