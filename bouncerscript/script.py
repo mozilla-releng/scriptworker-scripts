@@ -58,6 +58,7 @@ async def bouncer_submission(context):
         locations = await api_show_location(context, product_name)
         if not check_locations_match(locations, pr_config["paths_per_bouncer_platform"]):
             raise ScriptWorkerTaskException("Bouncer entries are corrupt")
+        log.info("All entries look good, bouncer has been correctly updated!")
 
 
 async def bouncer_aliases(context):
