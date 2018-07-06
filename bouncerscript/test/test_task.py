@@ -293,6 +293,16 @@ def test_check_product_names_match_aliases(aliases_context, entries, raises):
     [], {},
     True,
 ), (
+    [
+        '/mobile/releases/62.0b10/android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk',
+        '/mobile/releases/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk',
+    ],
+    {
+        "android": "/mobile/releases/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk",
+        "android-x86": "/mobile/releases/62.0b10/android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk"
+    },
+    True,
+), (
     ['a'], {'a': 'b'},
     False,
 ), (

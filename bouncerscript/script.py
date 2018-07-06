@@ -48,6 +48,7 @@ async def bouncer_submission(context):
                 err_msg = ("Corrupt submission entry for product {} platform "
                            "{} path {}".format(product_name, platform, path))
                 raise ScriptWorkerTaskException(err_msg)
+        log.info("All submission entries look good before updating them!")
 
         log.info("Adding corresponding paths ...")
         for platform, path in pr_config["paths_per_bouncer_platform"].items():
@@ -55,7 +56,7 @@ async def bouncer_submission(context):
 
         log.info("Sanity check to ensure locations have been successfully added...")
         locations = await api_show_location(context, product_name)
-        if not check_locations_match(locations, pr_config):
+        if not check_locations_match(locations, pr_config["paths_per_bouncer_platform"]):
             raise ScriptWorkerTaskException("Bouncer entries are corrupt")
 
 

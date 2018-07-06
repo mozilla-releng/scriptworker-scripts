@@ -252,6 +252,19 @@ async def test_api_update_alias(context, mocker, alias, product, expected):
         '/mobile/releases/62.0b9/android-x86/:lang/fennec-62.0b9.:lang.android-i386.apk'
     ],
     False
+), (
+    "fake-product",
+    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="8696" '
+     'name="Fennec-62.0b10"><location id="43610" os="android">/mobile/releases'
+     '/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk</'
+     'location><location id="43611" os="android-x86">/mobile/releases/62.0b10/'
+     'android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk</location></'
+     'product></locations>'),
+    [
+        '/mobile/releases/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk',
+        '/mobile/releases/62.0b10/android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk'
+    ],
+    False,
 )))
 @pytest.mark.asyncio
 async def test_api_show_location(context, mocker, product, response, expected,
