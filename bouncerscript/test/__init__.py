@@ -14,8 +14,32 @@ async def noop_async(*args, **kwargs):
     pass
 
 
-async def return_true(*args):
+async def return_true_async(*args):
     return True
+
+
+def counted(f):
+    def wrapped(*args, **kwargs):
+        wrapped.calls += 1
+        return f(*args, **kwargs)
+    wrapped.calls = 0
+    return wrapped
+
+
+@counted
+async def toggled_boolean_async(*args, **kwargs):
+    if toggled_boolean_async.calls & 1:
+        return True
+    else:
+        return False
+
+
+def return_true_sync(*args):
+    return True
+
+
+def return_false_sync(*args):
+    return False
 
 
 def get_fake_valid_config():

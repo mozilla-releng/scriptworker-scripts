@@ -4,6 +4,8 @@ from scriptworker.utils import retry_async
 from urllib.parse import quote
 from xml.dom.minidom import parseString
 
+from scriptworker.exceptions import ScriptWorkerTaskException
+
 
 log = logging.getLogger(__name__)
 
@@ -55,7 +57,7 @@ async def _do_api_call(context, route, data, method='GET', session=None):
         raise
 
 
-async def does_product_exists(context, product_name):
+async def does_product_exist(context, product_name):
     """Function to check if a specific product exists in bouncer already by
     parsing the XML returned by the API endpoint."""
     log.info("Checking if {} already exists".format(product_name))
@@ -98,6 +100,22 @@ async def api_add_location(context, product_name, bouncer_platform, path):
     }
 
     return await api_call(context, "location_add/", data)
+
+
+async def api_show_location(context, product_name):
+    """Function to return all locations per a specific product"""
+    res = await api_call(context, "location_show?product=%s" %
+                         quote(product_name), data=None)
+    try:
+        xml = parseString(res)
+        # bouncer API returns <locations/> if the product doesn't exist
+        locations_found = xml.getElementsByTagName("location")
+        location_paths = [l.childNodes[0].data for l in locations_found]
+        log.info("Locations paths found: {}".format(location_paths))
+        return location_paths
+    except Exception as e:
+        log.warning("Error parsing XML: {}".format(e))
+        raise ScriptWorkerTaskException("Not suitable XML received")
 
 
 async def api_update_alias(context, alias, product_name):
