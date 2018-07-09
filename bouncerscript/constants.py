@@ -37,3 +37,5 @@ PRODUCT_TO_PRODUCT_ENTRY = {
     'devedition': r'^Devedition-.*$',
     'thunderbird': r'^Thunderbird-.*$',
 }
+
+GO_BOUNCER_URL_TMPL = 'https://download.mozilla.org/?product={}&print=yes'

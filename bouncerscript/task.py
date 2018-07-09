@@ -6,7 +6,8 @@ from scriptworker.exceptions import (
     ScriptWorkerTaskException, TaskVerificationError
 )
 from bouncerscript.constants import (
-    ALIASES_REGEXES, PRODUCT_TO_DESTINATIONS_REGEXES, PRODUCT_TO_PRODUCT_ENTRY
+    ALIASES_REGEXES, PRODUCT_TO_DESTINATIONS_REGEXES, PRODUCT_TO_PRODUCT_ENTRY,
+    GO_BOUNCER_URL_TMPL
 )
 
 log = logging.getLogger(__name__)
@@ -102,3 +103,16 @@ def check_path_matches_destination(product_name, path):
     return matches(path,
                    PRODUCT_TO_DESTINATIONS_REGEXES[product],
                    fullmatch=True) is not None
+
+
+def check_aliases_match(context):
+    aliases = context.task["payload"]["aliases_entries"]
+
+    for alias, product_name in aliases.items():
+        alias_url = GO_BOUNCER_URL_TMPL.format(alias)
+        product_url = GO_BOUNCER_URL_TMPL.format(product_name)
+
+        # alias_resp = await retry_request(context, alias_url)
+        # product_resp = await retry_request(context, product_url)
+        # return alias_resp == product_resp
+        return True

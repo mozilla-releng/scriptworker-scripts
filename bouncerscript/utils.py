@@ -1,6 +1,6 @@
 import aiohttp
 import logging
-from scriptworker.utils import retry_async
+from scriptworker.utils import retry_async, retry_request
 from urllib.parse import quote
 from xml.dom.minidom import parseString
 
@@ -57,23 +57,11 @@ async def _do_api_call(context, route, data, method='GET', session=None):
         raise
 
 
-async def does_product_exist(context, product_name):
-    """Function to check if a specific product exists in bouncer already by
-    parsing the XML returned by the API endpoint."""
-    log.info("Checking if {} already exists".format(product_name))
-    res = await api_call(context, "product_show?product=%s" %
-                         quote(product_name), data=None)
-    try:
-        xml = parseString(res)
-        # bouncer API returns <products/> if the product doesn't exist
-        products_found = len(xml.getElementsByTagName("product"))
-        log.info("Products found: {}".format(products_found))
-        return bool(products_found)
-    except Exception as e:
-        log.warning("Error parsing XML: {}".format(e))
-        log.warning("Assuming {} does not exist".format(product_name))
-        # ignore XML parsing errors
-        return False
+async def api_show_product(context, product_name):
+    """Function to query the API for a specific product information"""
+    data = {}
+    return await api_call(context, "product_show?product=%s" %
+                          quote(product_name), data=data)
 
 
 async def api_add_product(context, product_name, add_locales, ssl_only=False):
@@ -103,19 +91,10 @@ async def api_add_location(context, product_name, bouncer_platform, path):
 
 
 async def api_show_location(context, product_name):
-    """Function to return all locations per a specific product"""
-    res = await api_call(context, "location_show?product=%s" %
-                         quote(product_name), data=None)
-    try:
-        xml = parseString(res)
-        # bouncer API returns <locations/> if the product doesn't exist
-        locations_found = xml.getElementsByTagName("location")
-        location_paths = [l.childNodes[0].data for l in locations_found]
-        log.info("Locations paths found: {}".format(location_paths))
-        return location_paths
-    except Exception as e:
-        log.warning("Error parsing XML: {}".format(e))
-        raise ScriptWorkerTaskException("Not suitable XML received")
+    """Function to query the API for specific locations of a product"""
+    data = {}
+    return await api_call(context, "location_show?product=%s" %
+                          quote(product_name), data=data)
 
 
 async def api_update_alias(context, alias, product_name):
@@ -126,3 +105,36 @@ async def api_update_alias(context, alias, product_name):
     }
 
     return await api_call(context, "create_update_alias", data)
+
+
+async def does_product_exist(context, product_name):
+    """Function to check if a specific product exists in bouncer already by
+    parsing the XML returned by the API endpoint."""
+    res = await api_show_product(context, product_name)
+
+    try:
+        xml = parseString(res)
+        # bouncer API returns <products/> if the product doesn't exist
+        products_found = len(xml.getElementsByTagName("product"))
+        log.info("Products found: {}".format(products_found))
+        return bool(products_found)
+    except Exception as e:
+        log.warning("Error parsing XML: {}".format(e))
+        log.warning("Assuming {} does not exist".format(product_name))
+        # ignore XML parsing errors
+        return False
+
+
+async def get_locations_paths(context, product_name):
+    """Function to return all locations per a specific product"""
+    res = await api_show_location(context, product_name)
+    try:
+        xml = parseString(res)
+        # bouncer API returns <locations/> if the product doesn't exist
+        locations_found = xml.getElementsByTagName("location")
+        location_paths = [l.childNodes[0].data for l in locations_found]
+        log.info("Locations paths found: {}".format(location_paths))
+        return location_paths
+    except Exception as e:
+        log.warning("Error parsing XML: {}".format(e))
+        raise ScriptWorkerTaskException("Not suitable XML received")
