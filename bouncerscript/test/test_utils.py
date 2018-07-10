@@ -231,18 +231,13 @@ async def test_api_show_product(context, mocker, product, provided, expected):
 
 
 # api_show_location {{{1
-@pytest.mark.parametrize("product,provided,expected", ((
+@pytest.mark.parametrize("product,expected", ((
     "fake-Fennec-product",
     ('<?xml version="1.0" encoding="utf-8"?><locations><product id="8692" '
      'name="Fennec-62.0b9"><location id="43593" os="android">/mobile/releases/'
      '62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk</location>'
      '<location id="43594" os="android-x86">/mobile/releases/62.0b9/android-x86/:'
      'lang/fennec-62.0b9.:lang.android-i386.apk</location></product></locations>'),
-    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="8692" '
-     'name="Fennec-62.0b9"><location id="43593" os="android">/mobile/releases/'
-     '62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk</location>'
-     '<location id="43594" os="android-x86">/mobile/releases/62.0b9/android-x86/:'
-     'lang/fennec-62.0b9.:lang.android-i386.apk</location></product></locations>')
 ), (
     "fake-Firefox-product",
     ('<?xml version="1.0" encoding="utf-8"?><locations><product id="8692" '
@@ -250,16 +245,11 @@ async def test_api_show_product(context, mocker, product, provided, expected):
      '62.0b9/mac-api-16/:lang/firefox-62.0b9.:lang.mac-arm.dmg</location>'
      '<location id="43594" os="mac-x86">/firefox/releases/62.0b9/mac-x86/:'
      'lang/firefox-62.0b9.:lang.mac-i386.dmg</location></product></locations>'),
-    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="8692" '
-     'name="Firefox-62.0b9"><location id="43593" os="mac">/firefox/releases/'
-     '62.0b9/mac-api-16/:lang/firefox-62.0b9.:lang.mac-arm.dmg</location>'
-     '<location id="43594" os="mac-x86">/firefox/releases/62.0b9/mac-x86/:'
-     'lang/firefox-62.0b9.:lang.mac-i386.dmg</location></product></locations>')
 )))
 @pytest.mark.asyncio
-async def test_api_show_location(context, mocker, product, provided, expected):
+async def test_api_show_location(context, mocker, product, expected):
     async def fake_api_call(context, location, data):
-        return provided
+        return expected
 
     mocker.patch.object(butils, 'api_call', new=fake_api_call)
     assert await api_show_location(context, product) == expected
