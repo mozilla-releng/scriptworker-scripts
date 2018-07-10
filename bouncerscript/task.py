@@ -94,10 +94,14 @@ def check_product_names_match_aliases(context):
 
 
 def check_locations_match(locations, product_config):
+    """Function to validate if the payload locations match the ones returned
+    from bouncer"""
     return sorted(locations) == sorted(product_config.values())
 
 
 def check_path_matches_destination(product_name, path):
+    """Function to ensure that the paths to-be-submitted in bouncer are valid
+    and according to the in-tree product"""
     possible_products = [p for p, pattern in PRODUCT_TO_PRODUCT_ENTRY.items() if
                          matches(product_name, pattern)]
     product = possible_products[0]
@@ -107,6 +111,8 @@ def check_path_matches_destination(product_name, path):
 
 
 async def check_aliases_match(context):
+    """Function to ensure the values returned by bouncer are the same as the
+    ones pushed in the `bouncer aliases` job"""
     aliases = context.task["payload"]["aliases_entries"]
 
     for alias, product_name in aliases.items():
