@@ -282,7 +282,20 @@ async def test_api_update_alias(context, mocker, alias, product, expected):
     False
 ), (
     "fake-product",
+    # raises xml.parsers.expat.ExpatError
     "sd9fh398ghJKDFH@(*YFG@I#KJHWEF@(*G@",
+    None,
+    True
+), (
+    "fake-product",
+    # raises UnicodeDecodeError
+    b'<fran\xe7ais>Comment \xe7a va ? Tr\xe8s bien ?</fran\xe7ais>',
+    None,
+    True
+), (
+    "fake-product",
+    # raises ValueError
+    '<element xmlns:abc="http:abc.com/de f g/hi/j k"><abc:foo /></element>',
     None,
     True
 ), (

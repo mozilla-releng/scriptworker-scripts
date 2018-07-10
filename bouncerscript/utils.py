@@ -2,6 +2,7 @@ import aiohttp
 import logging
 from urllib.parse import quote
 from xml.dom.minidom import parseString
+import xml
 
 from scriptworker.exceptions import ScriptWorkerTaskException
 from scriptworker.utils import retry_async
@@ -118,7 +119,7 @@ async def does_product_exist(context, product_name):
         products_found = len(xml_doc.getElementsByTagName("product"))
         log.info("Products found: {}".format(products_found))
         return bool(products_found)
-    except Exception as e:
+    except (xml.parsers.expat.ExpatError, UnicodeDecodeError, ValueError) as e:
         log.warning("Error parsing XML: {}".format(e))
         log.warning("Assuming {} does not exist".format(product_name))
         # ignore XML parsing errors
@@ -135,6 +136,6 @@ async def get_locations_paths(context, product_name):
         location_paths = [l.childNodes[0].data for l in locations_found]
         log.info("Locations paths found: {}".format(location_paths))
         return location_paths
-    except Exception as e:
+    except (xml.parsers.expat.ExpatError, UnicodeDecodeError, ValueError) as e:
         log.warning("Error parsing XML: {}".format(e))
         raise ScriptWorkerTaskException("Not suitable XML received")
