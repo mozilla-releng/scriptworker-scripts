@@ -113,9 +113,9 @@ async def does_product_exist(context, product_name):
     res = await api_show_product(context, product_name)
 
     try:
-        xml = parseString(res)
+        xml_doc = parseString(res)
         # bouncer API returns <products/> if the product doesn't exist
-        products_found = len(xml.getElementsByTagName("product"))
+        products_found = len(xml_doc.getElementsByTagName("product"))
         log.info("Products found: {}".format(products_found))
         return bool(products_found)
     except Exception as e:
@@ -129,9 +129,9 @@ async def get_locations_paths(context, product_name):
     """Function to return all locations per a specific product"""
     res = await api_show_location(context, product_name)
     try:
-        xml = parseString(res)
+        xml_doc = parseString(res)
         # bouncer API returns <locations/> if the product doesn't exist
-        locations_found = xml.getElementsByTagName("location")
+        locations_found = xml_doc.getElementsByTagName("location")
         location_paths = [l.childNodes[0].data for l in locations_found]
         log.info("Locations paths found: {}".format(location_paths))
         return location_paths
