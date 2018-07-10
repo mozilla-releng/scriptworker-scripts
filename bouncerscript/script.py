@@ -76,7 +76,7 @@ async def bouncer_aliases(context):
         await api_update_alias(context, alias, product_name)
 
     log.info("Sanity check to ensure aliases have been successfully updated...")
-    check_aliases_match(context)
+    await check_aliases_match(context)
     log.info("All entries look good, bouncer has been correctly updated!")
 
 

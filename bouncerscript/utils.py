@@ -1,10 +1,10 @@
 import aiohttp
 import logging
-from scriptworker.utils import retry_async, retry_request
 from urllib.parse import quote
 from xml.dom.minidom import parseString
 
 from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker.utils import retry_async
 
 
 log = logging.getLogger(__name__)

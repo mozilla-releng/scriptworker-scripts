@@ -66,6 +66,7 @@ async def test_bouncer_submission(submission_context, mocker):
 @pytest.mark.asyncio
 async def test_bouncer_aliases(aliases_context, mocker):
     mocker.patch.object(bscript, 'api_update_alias', new=noop_async)
+    mocker.patch.object(bscript, 'check_aliases_match', new=noop_async)
     await bouncer_aliases(aliases_context)
 
 
