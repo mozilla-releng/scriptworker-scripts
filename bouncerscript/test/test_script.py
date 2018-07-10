@@ -43,7 +43,7 @@ async def test_bouncer_submission(submission_context, mocker):
     mocker.patch.object(bscript, 'does_product_exist', new=noop_async)
     mocker.patch.object(bscript, 'api_add_product', new=noop_async)
     mocker.patch.object(bscript, 'api_add_location', new=noop_async)
-    mocker.patch.object(bscript, 'api_show_location', new=noop_async)
+    mocker.patch.object(bscript, 'get_locations_paths', new=noop_async)
     with pytest.raises(ScriptWorkerTaskException):
         await bouncer_submission(submission_context)
 
@@ -66,6 +66,7 @@ async def test_bouncer_submission(submission_context, mocker):
 @pytest.mark.asyncio
 async def test_bouncer_aliases(aliases_context, mocker):
     mocker.patch.object(bscript, 'api_update_alias', new=noop_async)
+    mocker.patch.object(bscript, 'check_aliases_match', new=noop_async)
     await bouncer_aliases(aliases_context)
 
 
@@ -76,7 +77,7 @@ async def test_async_main(submission_context, mocker):
     mocker.patch.object(bscript, 'does_product_exist', new=noop_async)
     mocker.patch.object(bscript, 'api_add_product', new=noop_async)
     mocker.patch.object(bscript, 'api_add_location', new=noop_async)
-    mocker.patch.object(bscript, 'api_show_location', new=noop_async)
+    mocker.patch.object(bscript, 'get_locations_paths', new=noop_async)
     mocker.patch.object(bscript, 'check_locations_match', new=return_true_sync)
 
     with pytest.raises(ScriptWorkerTaskException):

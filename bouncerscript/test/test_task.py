@@ -4,10 +4,12 @@ from scriptworker.exceptions import (
     ScriptWorkerTaskException, TaskVerificationError
 )
 
+import bouncerscript.task as btask
 from bouncerscript.task import (
     get_supported_actions, get_task_server, get_task_action,
     validate_task_schema, check_product_names_match_aliases,
-    check_locations_match, check_path_matches_destination
+    check_locations_match, check_path_matches_destination,
+    check_aliases_match
 )
 from bouncerscript.test import submission_context as context
 from bouncerscript.test import aliases_context
@@ -485,3 +487,105 @@ def test_check_locations_match(locations, product_config, expected):
 ))))
 def test_check_path_matches_destination(product_name, path, expected):
     assert check_path_matches_destination(product_name, path) == expected
+
+
+# check_aliases_match {{{1
+@pytest.mark.parametrize("entries,provided,raises", (((
+    {
+        "fennec-beta-latest": "Fennec-62.0b5",
+        "fennec-latest": "Fennec-61.0",
+    },
+    {
+        ("https://download.mozilla.org/?product="
+         "fennec-beta-latest&print=yes"): "404 page not found\n",
+        ("https://download.mozilla.org/?product="
+         "fennec-latest&print=yes"): "404 page not found\n",
+        ("https://download.mozilla.org/?product="
+         "thunderbird-next-latest-ssl&print=yes"): "404 page not found\n",
+        ("https://download.mozilla.org/?product="
+         "thunderbird-next-latest&print=yes"): "404 page not found\n",
+        ("https://download.mozilla.org/?product="
+         "thunderbird-latest-ssl&print=yes"): "404 page not found\n",
+    },
+    False,
+), (
+    {
+        "firefox-latest": "Firefox-61.0.1",
+        "firefox-latest-ssl": "Firefox-61.0.1-SSL",
+        "firefox-stub": "Firefox-61.0.1-stub"
+    },
+    {
+        ("https://download.mozilla.org/?product="
+         "firefox-latest&print=yes"): ("https://download-installer.cdn."
+                                       "mozilla.net/pub/firefox/releases/"
+                                       "61.0.1/win32/en-US/Firefox%20Setup"
+                                       "%2061.0.1.exe"),
+        ("https://download.mozilla.org/?product="
+         "firefox-latest-ssl&print=yes"): ("https://download-installer.cdn."
+                                           "mozilla.net/pub/firefox/releases/"
+                                           "61.0.1/win32/en-US/Firefox%20Setup"
+                                           "%2061.0.1.exe"),
+        ("https://download.mozilla.org/?product="
+         "firefox-stub&print=yes"): ("https://download-installer.cdn.mozilla."
+                                     "net/pub/firefox/releases/61.0.1/win32/"
+                                     "en-US/Firefox%20Installer.exe"),
+        ("https://download.mozilla.org/?product="
+         "Firefox-61.0.1&print=yes"): ("https://download-installer.cdn.mozilla."
+                                       "net/pub/firefox/releases/61.0.1/win32/"
+                                       "en-US/Firefox%20Setup%2061.0.1.exe"),
+        ("https://download.mozilla.org/?product="
+         "Firefox-61.0.1-SSL&print=yes"): ("https://download-installer.cdn."
+                                           "mozilla.net/pub/firefox/releases/"
+                                           "61.0.1/win32/en-US/Firefox%20Setup"
+                                           "%2061.0.1.exe"),
+        ("https://download.mozilla.org/?product="
+         "Firefox-61.0.1-stub&print=yes"): ("https://download-installer.cdn."
+                                            "mozilla.net/pub/firefox/releases/"
+                                            "61.0.1/win32/en-US/Firefox%20Installer.exe"),
+    },
+    False,
+), (
+    {
+        "thunderbird-next-latest": "Thunderbird-62.0",
+        "thunderbird-next-latest-ssl": "Thunderbird-62.0",
+        "thunderbird-latest-ssl": "Thunderbird-62.0",
+    },
+    {
+        ("https://download.mozilla.org/?product="
+         "thunderbird-next-latest-ssl&print=yes"): "404 page not found\n",
+        ("https://download.mozilla.org/?product="
+         "thunderbird-next-latest&print=yes"): "404 page not found\n",
+        ("https://download.mozilla.org/?product="
+         "thunderbird-latest-ssl&print=yes"): "404 page not found\n",
+    },
+    False,
+), (
+    {
+        "firefox-latest": "Firefox-61.0.1",
+    },
+    {
+        ("https://download.mozilla.org/?product="
+         "firefox-latest&print=yes"): ("https://download-installer.cdn."
+                                       "mozilla.net/pub/firefox/releases/"
+                                       "61.0/win32/en-US/Firefox%20Setup"
+                                       "%2061.0.1.exe"),
+        ("https://download.mozilla.org/?product="
+         "Firefox-61.0.1&print=yes"): ("https://download-installer.cdn.mozilla."
+                                       "net/pub/firefox/releases/61.0.1/win32/"
+                                       "en-US/Firefox%20Setup%2061.0.1.exe"),
+    },
+    True,
+))))
+@pytest.mark.asyncio
+async def test_check_aliases_match(aliases_context, mocker, entries, provided, raises):
+    async def fake_retry_request(context, url, good=(200,)):
+        return provided[url]
+
+    aliases_context.task["payload"]["aliases_entries"] = entries
+    mocker.patch.object(btask, 'retry_request', new=fake_retry_request)
+
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            await check_aliases_match(aliases_context)
+    else:
+        await check_aliases_match(aliases_context)

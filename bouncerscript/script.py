@@ -6,11 +6,11 @@ import logging
 from bouncerscript.task import (
     get_task_action, get_task_server, validate_task_schema,
     check_product_names_match_aliases, check_locations_match,
-    check_path_matches_destination
+    check_path_matches_destination, check_aliases_match
 )
 from bouncerscript.utils import (
     api_add_location, api_add_product, api_update_alias, does_product_exist,
-    api_show_location
+    get_locations_paths
 )
 from scriptworker import client
 from scriptworker.exceptions import (
@@ -55,8 +55,8 @@ async def bouncer_submission(context):
             await api_add_location(context, product_name, platform, path)
 
         log.info("Sanity check to ensure locations have been successfully added...")
-        locations = await api_show_location(context, product_name)
-        if not check_locations_match(locations, pr_config["paths_per_bouncer_platform"]):
+        locations_paths = await get_locations_paths(context, product_name)
+        if not check_locations_match(locations_paths, pr_config["paths_per_bouncer_platform"]):
             raise ScriptWorkerTaskException("Bouncer entries are corrupt")
         log.info("All entries look good, bouncer has been correctly updated!")
 
@@ -68,6 +68,7 @@ async def bouncer_aliases(context):
 
     log.info("Sanity check versions and aliases before updating ...")
     check_product_names_match_aliases(context)
+    log.info("All bouncer aliases look good before updating them!")
 
     log.info("Updating aliases within bouncer...")
     for alias, product_name in aliases.items():
@@ -75,7 +76,8 @@ async def bouncer_aliases(context):
         await api_update_alias(context, alias, product_name)
 
     log.info("Sanity check to ensure aliases have been successfully updated...")
-    # TODO: to implement this in bug 1470226
+    await check_aliases_match(context)
+    log.info("All entries look good, bouncer has been correctly updated!")
 
 
 action_map = {
