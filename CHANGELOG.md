@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.0.0] - 2018-07-11
+### Added
+- Add support for `bouncer-submission` data validations *before* and *after* bouncer API calls
+- Add support for `bouncer-aliases` data validations *before* and *after* bouncer API calls
+- more verbose logging
+
+### Fixed
+- fixed coveralls and coverage back to 100%
+
+## Removed
+- stopped using scriptworker event_loop fixture
+
 ## [2.0.0] - 2018-06-05
 ### Added
 - Support for thunderbird scope prefixes.
