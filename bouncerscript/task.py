@@ -5,7 +5,11 @@ from scriptworker import client
 from scriptworker.exceptions import (
     ScriptWorkerTaskException, TaskVerificationError
 )
-from bouncerscript.constants import ALIASES_REGEXES
+from scriptworker.utils import retry_request
+from bouncerscript.constants import (
+    ALIASES_REGEXES, PRODUCT_TO_DESTINATIONS_REGEXES, PRODUCT_TO_PRODUCT_ENTRY,
+    GO_BOUNCER_URL_TMPL
+)
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +61,9 @@ def get_task_action(task, script_config):
     return action
 
 
-def matches(name, pattern):
+def matches(name, pattern, fullmatch=False):
+    if fullmatch:
+        return re.fullmatch(pattern, name)
     return re.match(pattern, name)
 
 
@@ -85,3 +91,44 @@ def check_product_names_match_aliases(context):
 
     if not all(validations):
         raise TaskVerificationError("The product/alias pairs are corrupt: {}".format(aliases))
+
+
+def check_locations_match(locations, product_config):
+    """Function to validate if the payload locations match the ones returned
+    from bouncer"""
+    return sorted(locations) == sorted(product_config.values())
+
+
+def check_path_matches_destination(product_name, path):
+    """Function to ensure that the paths to-be-submitted in bouncer are valid
+    and according to the in-tree product"""
+    possible_products = [p for p, pattern in PRODUCT_TO_PRODUCT_ENTRY.items() if
+                         matches(product_name, pattern)]
+    product = possible_products[0]
+    return matches(path,
+                   PRODUCT_TO_DESTINATIONS_REGEXES[product],
+                   fullmatch=True) is not None
+
+
+async def check_aliases_match(context):
+    """Function to ensure the values returned by bouncer are the same as the
+    ones pushed in the `bouncer aliases` job"""
+    aliases = context.task["payload"]["aliases_entries"]
+
+    for alias, product_name in aliases.items():
+        log.info("Checking alias {} ...".format(alias))
+        alias_url = GO_BOUNCER_URL_TMPL.format(alias)
+        alias_resp = await retry_request(context, alias_url, good=(200, 404))
+        if alias_resp == "404 page not found\n":
+            # some of the aliases are expected to be 404 (e.g. `fennec-latest`
+            # `fennec-beta-latest`, `thunderbird-next-latest, etc
+            continue
+        log.info("Alias {} returned url: {}".format(alias, alias_resp))
+
+        log.info("Checking product {} ...".format(product_name))
+        product_url = GO_BOUNCER_URL_TMPL.format(product_name)
+        product_resp = await retry_request(context, product_url)
+        log.info("Product {} returned url: {}".format(product_name, product_resp))
+
+        if alias_resp != product_resp:
+            raise ScriptWorkerTaskException("Alias {} and product {} differ!".format(alias, product_name))

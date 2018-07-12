@@ -4,10 +4,15 @@ import os
 import pytest
 import tempfile
 
+from scriptworker.test import event_loop, fake_session, fake_session_500
+from scriptworker.exceptions import ScriptWorkerTaskException
+import scriptworker.utils as sutils
+
 import bouncerscript.utils as butils
 from bouncerscript.utils import (
     api_update_alias, api_add_location, api_add_product,
-    does_product_exists, api_call, _do_api_call
+    does_product_exist, api_call, _do_api_call, get_locations_paths,
+    api_show_location, api_show_product
 )
 from bouncerscript.task import get_task_action, get_task_server
 from bouncerscript.test import submission_context as context
@@ -15,8 +20,6 @@ from bouncerscript.test import (
     noop_async, fake_ClientError_throwing_session,
     fake_TimeoutError_throwing_session, load_json
 )
-from scriptworker.test import event_loop, fake_session, fake_session_500
-import scriptworker.utils as sutils
 
 
 assert context  # silence pyflakes
@@ -117,7 +120,7 @@ def test_do_failed_with_TimeoutError_api_call(context, mocker, event_loop, fake_
         )
 
 
-# does_product_exists {{{1
+# does_product_exist {{{1
 @pytest.mark.parametrize("product,response,expected", ((
     "fake-product",
     "<products/>",
@@ -132,12 +135,12 @@ def test_do_failed_with_TimeoutError_api_call(context, mocker, event_loop, fake_
     True,
 )))
 @pytest.mark.asyncio
-async def test_does_product_exists(context, mocker, product, response, expected):
-    async def fake_api_call(context, route, data):
+async def test_does_product_exist(context, mocker, product, response, expected):
+    async def fake_api_call(context, product_name):
         return response
 
-    mocker.patch.object(butils, 'api_call', new=fake_api_call)
-    assert await does_product_exists(context, product) == expected
+    mocker.patch.object(butils, 'api_show_product', new=fake_api_call)
+    assert await does_product_exist(context, product) == expected
 
 
 # api_add_product {{{1
@@ -208,6 +211,50 @@ async def test_api_add_location(context, mocker, product, os, path, expected):
     assert await api_add_location(context, product, os, path) == expected
 
 
+# api_show_product {{{1
+@pytest.mark.parametrize("product,provided,expected", ((
+    "fake-Fennec-product",
+    "<product>fake-product</product>",
+    "<product>fake-product</product>",
+), (
+    "fake-Firefox-product",
+    "<products/>",
+    "<products/>",
+)))
+@pytest.mark.asyncio
+async def test_api_show_product(context, mocker, product, provided, expected):
+    async def fake_api_call(context, location, data):
+        return provided
+
+    mocker.patch.object(butils, 'api_call', new=fake_api_call)
+    assert await api_show_product(context, product) == expected
+
+
+# api_show_location {{{1
+@pytest.mark.parametrize("product,expected", ((
+    "fake-Fennec-product",
+    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="8692" '
+     'name="Fennec-62.0b9"><location id="43593" os="android">/mobile/releases/'
+     '62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk</location>'
+     '<location id="43594" os="android-x86">/mobile/releases/62.0b9/android-x86/:'
+     'lang/fennec-62.0b9.:lang.android-i386.apk</location></product></locations>'),
+), (
+    "fake-Firefox-product",
+    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="8692" '
+     'name="Firefox-62.0b9"><location id="43593" os="mac">/firefox/releases/'
+     '62.0b9/mac-api-16/:lang/firefox-62.0b9.:lang.mac-arm.dmg</location>'
+     '<location id="43594" os="mac-x86">/firefox/releases/62.0b9/mac-x86/:'
+     'lang/firefox-62.0b9.:lang.mac-i386.dmg</location></product></locations>'),
+)))
+@pytest.mark.asyncio
+async def test_api_show_location(context, mocker, product, expected):
+    async def fake_api_call(context, location, data):
+        return expected
+
+    mocker.patch.object(butils, 'api_call', new=fake_api_call)
+    assert await api_show_location(context, product) == expected
+
+
 # api_update_alias {{{1
 @pytest.mark.parametrize("alias,product,expected", ((
     "fake-alias",
@@ -225,3 +272,67 @@ async def test_api_update_alias(context, mocker, alias, product, expected):
 
     mocker.patch.object(butils, 'api_call', new=fake_api_call)
     assert await api_update_alias(context, alias, product) == expected
+
+
+# get_locations_paths {{{1
+@pytest.mark.parametrize("product,response,expected,raises", ((
+    "fake-product",
+    "<locations/>",
+    [],
+    False
+), (
+    "fake-product",
+    # raises xml.parsers.expat.ExpatError
+    "sd9fh398ghJKDFH@(*YFG@I#KJHWEF@(*G@",
+    None,
+    True
+), (
+    "fake-product",
+    # raises UnicodeDecodeError
+    b'<fran\xe7ais>Comment \xe7a va ? Tr\xe8s bien ?</fran\xe7ais>',
+    None,
+    True
+), (
+    "fake-product",
+    # raises ValueError
+    '<element xmlns:abc="http:abc.com/de f g/hi/j k"><abc:foo /></element>',
+    None,
+    True
+), (
+    "fake-product",
+    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="8692" '
+     'name="Fennec-62.0b9"><location id="43593" os="android">/mobile/releases/'
+     '62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk</location>'
+     '<location id="43594" os="android-x86">/mobile/releases/62.0b9/android-x86/:'
+     'lang/fennec-62.0b9.:lang.android-i386.apk</location></product></locations>'),
+    [
+        '/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk',
+        '/mobile/releases/62.0b9/android-x86/:lang/fennec-62.0b9.:lang.android-i386.apk'
+    ],
+    False
+), (
+    "fake-product",
+    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="8696" '
+     'name="Fennec-62.0b10"><location id="43610" os="android">/mobile/releases'
+     '/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk</'
+     'location><location id="43611" os="android-x86">/mobile/releases/62.0b10/'
+     'android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk</location></'
+     'product></locations>'),
+    [
+        '/mobile/releases/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk',
+        '/mobile/releases/62.0b10/android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk'
+    ],
+    False,
+)))
+@pytest.mark.asyncio
+async def test_get_locations_paths(context, mocker, product, response, expected,
+                                   raises):
+    async def fake_api_call(context, product):
+        return response
+
+    mocker.patch.object(butils, 'api_show_location', new=fake_api_call)
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            assert await get_locations_paths(context, product)
+    else:
+        assert await get_locations_paths(context, product) == expected

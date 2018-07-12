@@ -4,10 +4,6 @@ import json
 import pytest
 
 from scriptworker.context import Context
-from scriptworker.test import event_loop
-
-
-assert event_loop  # silence flake8
 
 
 def noop_sync(*args, **kwargs):
@@ -18,8 +14,32 @@ async def noop_async(*args, **kwargs):
     pass
 
 
-async def return_true(*args):
+async def return_true_async(*args):
     return True
+
+
+def counted(f):
+    def wrapped(*args, **kwargs):
+        wrapped.calls += 1
+        return f(*args, **kwargs)
+    wrapped.calls = 0
+    return wrapped
+
+
+@counted
+async def toggled_boolean_async(*args, **kwargs):
+    if toggled_boolean_async.calls & 1:
+        return True
+    else:
+        return False
+
+
+def return_true_sync(*args):
+    return True
+
+
+def return_false_sync(*args):
+    return False
 
 
 def get_fake_valid_config():
@@ -49,23 +69,25 @@ def aliases_context():
 
 
 @pytest.fixture(scope='function')
-def fake_ClientError_throwing_session(event_loop):
+def fake_ClientError_throwing_session():
     @asyncio.coroutine
     def _fake_request(method, url, *args, **kwargs):
         raise aiohttp.ClientError
 
-    session = aiohttp.ClientSession(loop=event_loop)
+    loop = asyncio.get_event_loop()
+    session = aiohttp.ClientSession(loop=loop)
     session._request = _fake_request
     return session
 
 
 @pytest.fixture(scope='function')
-def fake_TimeoutError_throwing_session(event_loop):
+def fake_TimeoutError_throwing_session():
     @asyncio.coroutine
     def _fake_request(method, url, *args, **kwargs):
         raise aiohttp.ServerTimeoutError
 
-    session = aiohttp.ClientSession(loop=event_loop)
+    loop = asyncio.get_event_loop()
+    session = aiohttp.ClientSession(loop=loop)
     session._request = _fake_request
     return session
 
