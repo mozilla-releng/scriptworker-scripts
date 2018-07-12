@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+
+## [next] - YYYY-MM-DD
+### Added
+- Added a SCOPES.md file in repo root to document the relevant scopes used in bouncerscript
+
+
 ## [3.0.0] - 2018-07-11
 ### Added
 - Add support for `bouncer-submission` data validations *before* and *after* bouncer API calls
@@ -14,11 +20,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Removed
 - stopped using scriptworker event_loop fixture
 
+
 ## [2.0.0] - 2018-06-05
 ### Added
 - Support for thunderbird scope prefixes.
 - Support for `*-ssl` prefixes for thunderbird.
 - Support for `thunderbird-next-*` prefixes for initial esr60 release.
+
 
 ## [1.3.0] - 2018-05-03
 ### Added
@@ -28,6 +36,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [1.2.1] - 2018-03-21
 ### Added
 - bouncer aliases preflight checks - making sure the aliases match certain regexes
+
 
 ## [1.1.0] - 2018-03-19
 ### Changed
