@@ -1,5 +1,5 @@
 # Specifically for testing
--r requirements-dev.txt
+-r requirements.txt.in
 coverage>=4.2
 flake8
 flake8_docstrings
