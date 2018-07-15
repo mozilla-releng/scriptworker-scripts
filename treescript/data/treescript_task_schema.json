@@ -59,7 +59,10 @@
                     "type": "boolean"
                 }
             }
-        }
+        },
+       "dontbuild": {
+            "type": "boolean"
+        } 
     },
     "required": ["scopes", "payload"]
 }

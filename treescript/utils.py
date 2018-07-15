@@ -125,3 +125,17 @@ async def execute_subprocess(command, **kwargs):
     if exitcode != 0:
         raise FailedSubprocess('Command `{}` failed'.format(' '.join(command)))
     return output
+
+
+# dont_build_check
+def dont_build_check(dontbuild):
+    """Return string to be attached to commit_msg based on input.
+
+    Args:
+        dontbuild parameter.
+
+    """
+    if dontbuild:
+        return " DONTBUILD"
+    else:
+        return ""
