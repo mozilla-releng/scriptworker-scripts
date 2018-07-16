@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 
-from treescript.utils import execute_subprocess, dont_build_check
+from treescript.utils import execute_subprocess, DONTBUILD_MSG
 from treescript.exceptions import FailedSubprocess, ChangesetMismatchError
 from treescript.task import get_source_repo, get_tag_info, get_dontbuild
 
@@ -184,10 +184,10 @@ async def do_tagging(context, directory):
     desired_tags = tag_info['tags']
     desired_rev = tag_info['revision']
     dontbuild = get_dontbuild(context.task)
-    dontbuild = dont_build_check(dontbuild)
     dest_repo = get_source_repo(context.task)
     commit_msg = TAG_MSG.format(revision=desired_rev, tags=', '.join(desired_tags))
-    commit_msg = commit_msg + dontbuild
+    if dontbuild:
+        commit_msg += DONTBUILD_MSG
     log.info("Pulling {revision} from {repo} explicitly.".format(
         revision=desired_rev, repo=dest_repo))
     await run_hg_command(context, 'pull', '-r', desired_rev, dest_repo,

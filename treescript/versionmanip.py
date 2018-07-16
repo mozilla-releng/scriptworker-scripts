@@ -5,7 +5,7 @@ from distutils.version import StrictVersion, LooseVersion
 import logging
 import os
 
-from treescript.utils import dont_build_check
+from treescript.utils import DONTBUILD_MSG
 from treescript.exceptions import TaskVerificationError
 from treescript.mercurial import run_hg_command
 from treescript.task import get_version_bump_info, get_dontbuild
@@ -89,9 +89,9 @@ async def bump_version(context):
                                 curr_version=curr_version, new_version=next_version)
     if changed:
         dontbuild = get_dontbuild(context.task)
-        dontbuild = dont_build_check(dontbuild)
         commit_msg = 'Automatic version bump CLOSED TREE NO BUG a=release'
-        commit_msg = commit_msg + dontbuild
+        if dontbuild:
+            commit_msg += DONTBUILD_MSG
         await run_hg_command(context, 'commit', '-m', commit_msg,
                              local_repo=context.repo)
 

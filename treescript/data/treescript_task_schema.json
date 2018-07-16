@@ -57,12 +57,12 @@
                 },
                 "dry_run": {
                     "type": "boolean"
+                },
+                "dontbuild": {
+                    "type": "boolean"
                 }
             }
-        },
-       "dontbuild": {
-            "type": "boolean"
-        } 
+        }
     },
     "required": ["scopes", "payload"]
 }

@@ -77,7 +77,7 @@ def get_version_bump_info(task):
     return version_info
 
 
-# get dontbuild {1
+# get dontbuild {{{1
 def get_dontbuild(task):
     """Get information on whether DONTBUILD needs to be attached at the end of commit message.
 
@@ -88,10 +88,4 @@ def get_dontbuild(task):
         boolean: the dontbuild info as passed to the task payload (defaulted to false).
 
     """
-    if task is None:
-        return
-    dontbuild = task.get("dontbuild", {})
-    if not dontbuild:
-        return False
-    else:
-        return dontbuild
+    return task.get("payload", {}).get("dontbuild")

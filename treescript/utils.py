@@ -11,6 +11,8 @@ log = logging.getLogger(__name__)
 # This list should be sorted in the order the actions should be taken
 VALID_ACTIONS = ("tagging", "version_bump", "push")
 
+DONTBUILD_MSG = "DONTBUILD"
+
 
 # mkdir {{{1
 def mkdir(path):
@@ -125,17 +127,3 @@ async def execute_subprocess(command, **kwargs):
     if exitcode != 0:
         raise FailedSubprocess('Command `{}` failed'.format(' '.join(command)))
     return output
-
-
-# dont_build_check
-def dont_build_check(dontbuild):
-    """Return string to be attached to commit_msg based on input.
-
-    Args:
-        dontbuild parameter.
-
-    """
-    if dontbuild:
-        return " DONTBUILD"
-    else:
-        return ""

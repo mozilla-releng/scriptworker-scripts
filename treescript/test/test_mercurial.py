@@ -183,6 +183,8 @@ async def test_do_tagging(context, mocker):
     mocked_tag_info.return_value = {'revision': 'deadbeef', 'tags': ['TAG1', 'TAG2']}
     mocked_source_repo = mocker.patch.object(mercurial, 'get_source_repo')
     mocked_source_repo.return_value = 'https://hg.mozilla.org/treescript-test'
+    mocked_dontbuild = mocker.patch.object(mercurial, 'get_dontbuild')
+    mocked_dontbuild.return_value = True
     await mercurial.do_tagging(context, context.config['work_dir'])
 
     assert len(called_args) == 2

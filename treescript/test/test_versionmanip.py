@@ -77,6 +77,8 @@ async def test_bump_version(mocker, repo_context, new_version):
     bump_info = {'files': relative_files, 'next_version': new_version}
     mocked_bump_info = mocker.patch.object(vmanip, 'get_version_bump_info')
     mocked_bump_info.return_value = bump_info
+    mocked_dontbuild = mocker.patch.object(vmanip, 'get_dontbuild')
+    mocked_dontbuild.return_value = True
     mocker.patch.object(vmanip, 'run_hg_command', new=run_command)
     await vmanip.bump_version(repo_context)
     assert test_version == vmanip._get_version(
