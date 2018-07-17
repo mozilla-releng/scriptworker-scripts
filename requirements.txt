@@ -91,9 +91,9 @@ python-gnupg==0.4.3 \
 requests==2.19.1 \
     --hash=sha256:63b52e3c866428a224f97cab011de738c36aec0185aa91cfacd418b5d58911d1 \
     --hash=sha256:ec22d826a36ed72a7358ff3fe56cbd4ba69dd7a6718ffd450ff0e9df7a47ce6a
-scriptworker==12.1.0 \
-    --hash=sha256:98bc2f21d08ef5d83cda6855aa877638d1d9cf6dced5757ed60d8e47da23ec23 \
-    --hash=sha256:de8ae9f271c7d04131d7ee5fc620c03164453f3f631994fb66ae831ab987a3e5
+scriptworker==14.0.0 \
+    --hash=sha256:237e32f4f5696373478b5f930fa3875c6b064c787b822668ca94b2e0d37ebf15 \
+    --hash=sha256:c8433078bbe01929ced108a2a4091881b89a5b3b040770e5400bba2b0cba0f76
 six==1.11.0 \
     --hash=sha256:70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9 \
     --hash=sha256:832dc0e10feb1aa2c68dcc57dbb658f1c7e65b9b61af69048abc87a2db00a0eb
