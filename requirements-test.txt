@@ -252,9 +252,9 @@ taskcluster==3.0.2 \
 testfixtures==6.2.0 \
     --hash=sha256:bcadbad77526cc5fc38bfb2ab80da810d7bde56ffe4c7fdb8e2bba122ded9620 \
     --hash=sha256:7e4df89a8bf8b8905464160f08aff131a36f0b33654fe4f9e4387afe546eae25
-tox==3.1.1 \
-    --hash=sha256:9f09ec569b5019ed030d3ed3d486a9263e8964a9752253a98f5d67b46e954055 \
-    --hash=sha256:8df73fb0eae939692d67a095c49081b1afb948eca51879e5dc1868d9b0ad11de
+tox==3.1.2 \
+    --hash=sha256:4df108a1fcc93a7ee4ac97e1a3a1fc3d41ddd22445d518976604e2ef05025280 \
+    --hash=sha256:9f0cbcc36e08c2c4ae90d02d3d1f9a62231f974bcbc1df85e8045946d8261059
 typing==3.6.4 \
     --hash=sha256:3a887b021a77b292e151afb75323dea88a7bc1b3dfa92176cff8e44c8b68bddf \
     --hash=sha256:b2c689d54e1144bbcfd191b0832980a21c2dbcf7b5ff7a66248a60c90e951eb8 \
