@@ -8,8 +8,8 @@ import hashlib
 import os
 
 ROBUSTCHKOUT_SHA_512 = (
-    '0b3b2d30a85fd9df8ce61db4d87ea710967f8e63a7ea1c3c4e023614467d646f'
-    '09975b6dc069720d2f3cafb79d94c9f3e2d7d7048f22d063a7db06f94bc5ceb0'
+    '4c4f866cdc026fbca1256d5674b0143c77c18da92b495f0215ca38d2f601c23e'
+    'cd93cf904a44185e2b9774eacfb72721d7807de621f44ce8206fbe21e8526a97'
 )
 
 ROBUSTCHECKOUT_FILE = os.path.join(
