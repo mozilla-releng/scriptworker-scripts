@@ -6,6 +6,9 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[next] = (YYYY-MM-DD)
+---------------------
+
 [7.5.0] = (2018-07-02)
 ----------------------
 

@@ -175,7 +175,7 @@ mapping:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.buildhub.json
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.buildhub.json
         - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.buildhub.json
- {% if platform in ["linux-i686", "linux-x86_64", "linux-x86_64-asan-reporter", "mac"] %}
+ {% if platform in ["linux-i686", "linux-x86_64", "linux-x86_64-asan-reporter", "mac", "mac-asan-reporter"] %}
     mar:
       s3_key: mar
       destinations:
@@ -186,7 +186,7 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/mar-tools/{{ stage_platform }}/mbsdiff
         - latest-{{ branch }}/mar-tools/{{ stage_platform }}/mbsdiff
-  {% elif platform in ["win32", "win64"] %}
+  {% elif platform in ["win32", "win64", "win64-asan-reporter"] %}
     mar.exe:
       s3_key: mar.exe
       destinations:
@@ -212,7 +212,7 @@ mapping:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
         - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.tar.bz2.asc
-  {% elif platform in ["mac"] %}
+  {% elif platform in ["mac", "mac-asan-reporter"] %}
     target.dmg:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg
       destinations:
@@ -225,7 +225,7 @@ mapping:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
         - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
-  {% elif platform in ["win32", "win64"] %}
+  {% elif platform in ["win32", "win64", "win64-asan-reporter"] %}
     target.stub-installer.exe:
       s3_key: installer-stub.exe
       destinations:

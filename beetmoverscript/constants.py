@@ -19,10 +19,12 @@ STAGE_PLATFORM_MAP = {
     'linux64-asan-reporter': 'linux-x86_64-asan-reporter',
     'linux64-devedition': 'linux-x86_64',
     'macosx64': 'mac',
+    'macosx64-asan-reporter': 'mac-asan-reporter',
     'macosx64-devedition': 'mac',
     'win32': 'win32',
     'win32-devedition': 'win32',
     'win64': 'win64',
+    'win64-asan-reporter': 'win64-asan-reporter',
     'win64-devedition': 'win64',
 }
 
