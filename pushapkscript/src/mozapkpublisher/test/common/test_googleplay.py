@@ -37,7 +37,7 @@ def set_up_edit_service_mock(_monkeypatch):
     edit_service_mock.insert = lambda body, packageName: new_transaction_mock
     general_service_mock.edits = lambda: edit_service_mock
 
-    _monkeypatch.setattr('mozapkpublisher.common.googleplay._connect', lambda _, __: general_service_mock)
+    _monkeypatch.setattr('mozapkpublisher.common.googleplay.connect', lambda _, __: general_service_mock)
     return edit_service_mock
 
 

@@ -67,7 +67,7 @@ class EditService(object):
     def __init__(self, service_account, credentials_file_path, package_name, commit=False, contact_google_play=True):
         self._contact_google_play = contact_google_play
         if self._contact_google_play:
-            general_service = _connect(service_account, credentials_file_path)
+            general_service = connect(service_account, credentials_file_path)
             self._service = general_service.edits()
         else:
             self._service = _craft_google_play_service_mock()
@@ -180,7 +180,7 @@ class _ExecuteDummy():
         return self._return_value
 
 
-def _connect(service_account, credentials_file_path):
+def connect(service_account, credentials_file_path, api_version='v2'):
     """ Connect to the google play interface
     """
 
@@ -194,6 +194,6 @@ def _connect(service_account, credentials_file_path):
     http = httplib2.Http()
     http = credentials.authorize(http)
 
-    service = build('androidpublisher', 'v2', http=http, cache_discovery=False)
+    service = build('androidpublisher', api_version, http=http, cache_discovery=False)
 
     return service
