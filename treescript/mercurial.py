@@ -3,9 +3,9 @@ import logging
 import os
 import sys
 
-from treescript.utils import execute_subprocess
+from treescript.utils import execute_subprocess, DONTBUILD_MSG
 from treescript.exceptions import FailedSubprocess, ChangesetMismatchError
-from treescript.task import get_source_repo, get_tag_info
+from treescript.task import get_source_repo, get_tag_info, get_dontbuild
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
 # For environment vars.
@@ -183,8 +183,11 @@ async def do_tagging(context, directory):
     tag_info = get_tag_info(context.task)
     desired_tags = tag_info['tags']
     desired_rev = tag_info['revision']
+    dontbuild = get_dontbuild(context.task)
     dest_repo = get_source_repo(context.task)
     commit_msg = TAG_MSG.format(revision=desired_rev, tags=', '.join(desired_tags))
+    if dontbuild:
+        commit_msg += DONTBUILD_MSG
     log.info("Pulling {revision} from {repo} explicitly.".format(
         revision=desired_rev, repo=dest_repo))
     await run_hg_command(context, 'pull', '-r', desired_rev, dest_repo,

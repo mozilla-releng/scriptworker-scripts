@@ -57,6 +57,9 @@
                 },
                 "dry_run": {
                     "type": "boolean"
+                },
+                "dontbuild": {
+                    "type": "boolean"
                 }
             }
         }
