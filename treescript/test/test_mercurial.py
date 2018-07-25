@@ -13,7 +13,7 @@ from scriptworker.context import Context
 from treescript import mercurial
 from treescript.exceptions import FailedSubprocess, ChangesetMismatchError
 from treescript.script import get_default_config
-from treescript.utils import mkdir
+from treescript.utils import mkdir, DONTBUILD_MSG
 from treescript.test import tmpdir, noop_async, is_slice_in_list
 from treescript import utils
 
@@ -172,7 +172,7 @@ async def test_checkout_repo(context, mocker):
 
 
 @pytest.mark.asyncio
-async def test_do_tagging(context, mocker):
+async def test_do_tagging_DONTBUILD_true(context, mocker):
     called_args = []
 
     async def run_command(context, *arguments, local_repo=None):
@@ -190,6 +190,36 @@ async def test_do_tagging(context, mocker):
     assert len(called_args) == 2
     assert 'local_repo' in called_args[0][1]
     assert 'local_repo' in called_args[1][1]
+    command = called_args[1][0]
+    commit_msg = command[command.index('-m') + 1]
+    assert DONTBUILD_MSG in commit_msg
+    assert is_slice_in_list(('pull', '-r', 'deadbeef'), called_args[0][0])
+    assert is_slice_in_list(('-r', 'deadbeef'), called_args[1][0])
+    assert is_slice_in_list(('TAG1', 'TAG2'), called_args[1][0])
+
+
+@pytest.mark.asyncio
+async def test_do_tagging_DONTBUILD_false(context, mocker):
+    called_args = []
+
+    async def run_command(context, *arguments, local_repo=None):
+        called_args.append([tuple([context]) + arguments, {'local_repo': local_repo}])
+
+    mocker.patch.object(mercurial, 'run_hg_command', new=run_command)
+    mocked_tag_info = mocker.patch.object(mercurial, 'get_tag_info')
+    mocked_tag_info.return_value = {'revision': 'deadbeef', 'tags': ['TAG1', 'TAG2']}
+    mocked_source_repo = mocker.patch.object(mercurial, 'get_source_repo')
+    mocked_source_repo.return_value = 'https://hg.mozilla.org/treescript-test'
+    mocked_dontbuild = mocker.patch.object(mercurial, 'get_dontbuild')
+    mocked_dontbuild.return_value = False
+    await mercurial.do_tagging(context, context.config['work_dir'])
+
+    assert len(called_args) == 2
+    assert 'local_repo' in called_args[0][1]
+    assert 'local_repo' in called_args[1][1]
+    command = called_args[1][0]
+    commit_msg = command[command.index('-m') + 1]
+    assert DONTBUILD_MSG not in commit_msg
     assert is_slice_in_list(('pull', '-r', 'deadbeef'), called_args[0][0])
     assert is_slice_in_list(('-r', 'deadbeef'), called_args[1][0])
     assert is_slice_in_list(('TAG1', 'TAG2'), called_args[1][0])

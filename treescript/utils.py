@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 # This list should be sorted in the order the actions should be taken
 VALID_ACTIONS = ("tagging", "version_bump", "push")
 
-DONTBUILD_MSG = "DONTBUILD"
+DONTBUILD_MSG = " DONTBUILD"
 
 
 # mkdir {{{1
