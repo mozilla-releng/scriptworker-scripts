@@ -611,6 +611,16 @@ async def _extract_tarfile(context, from_, compression, tmp_dir=None):
         raise SigningScriptError(e)
 
 
+# _owner_filter {{{1
+def _owner_filter(tarinfo_obj):
+    """Force file ownership to be root, Bug 1473850."""
+    tarinfo_obj.uid = 0
+    tarinfo_obj.gid = 0
+    tarinfo_obj.uname = ''
+    tarinfo_obj.gname = ''
+    return tarinfo_obj
+
+
 # _create_tarfile {{{1
 async def _create_tarfile(context, to, files, compression, tmp_dir=None):
     work_dir = context.config['work_dir']
@@ -621,7 +631,7 @@ async def _create_tarfile(context, to, files, compression, tmp_dir=None):
         with tarfile.open(to, mode='w:{}'.format(compression)) as t:
             for f in files:
                 relpath = os.path.relpath(f, tmp_dir)
-                t.add(f, arcname=relpath)
+                t.add(f, arcname=relpath, filter=_owner_filter)
         return to
     except Exception as e:
         raise SigningScriptError(e)
