@@ -5,10 +5,10 @@ matrix:
   include:
     - python: 3.6
       env: TOXENV=py36
-    - python: 3.7-dev
+    - python: 3.7
+      dist: xenial
       env: TOXENV=py37
-  allow_failures:
-    - python: 3.7-dev
+      sudo: true
 
 install:
     - travis_retry pip install tox
