@@ -27,6 +27,6 @@ setup(
         "python-jose",
         "scriptworker",
         "signtool",
-        "taskcluster<4.0.0",
+        "taskcluster",
     ],
 )

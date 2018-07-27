@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [7.0.3] - 2018-07-27
+### Changed
+- remove the taskcluster pinning
+- require py37 tests to be green
+
+### Fixed
+- create tarballs with root-owned files
+
 ## [7.0.2] - 2018-07-23
 ### Fixed
 - Removed the old ssl cert, as this caused bustage.
