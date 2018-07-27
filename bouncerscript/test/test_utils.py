@@ -4,7 +4,7 @@ import os
 import pytest
 import tempfile
 
-from scriptworker.test import event_loop, fake_session, fake_session_500
+from scriptworker.test import fake_session, fake_session_500
 from scriptworker.exceptions import ScriptWorkerTaskException
 import scriptworker.utils as sutils
 
@@ -24,7 +24,6 @@ from bouncerscript.test import (
 
 assert context  # silence pyflakes
 assert fake_session, fake_session_500  # silence flake8
-assert event_loop  # silence flake8
 assert noop_async  # silence flake8
 assert fake_ClientError_throwing_session  # silence flake8
 assert fake_TimeoutError_throwing_session  # silence flake8
