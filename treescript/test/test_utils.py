@@ -85,9 +85,9 @@ def test_is_dry_run_true():
     assert True is utils.is_dry_run(task)
 
 
-# process_output {{{1
+# log_output {{{1
 @pytest.mark.asyncio
-async def test_process_output(tmpdir, mocker):
+async def test_log_output(tmpdir, mocker):
     logged = []
     with open(__file__, 'r') as fh:
         contents = fh.read()
@@ -113,7 +113,7 @@ async def test_process_output(tmpdir, mocker):
     mockfh = mock.MagicMock()
     aiter = AsyncIterator()
     mockfh.readline = aiter.__anext__
-    await utils.process_output(mockfh)
+    await utils.log_output(mockfh)
     assert contents.rstrip() == '\n'.join(logged)
 
 

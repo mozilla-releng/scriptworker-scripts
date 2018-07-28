@@ -80,24 +80,20 @@ def is_dry_run(task):
     return dry_run
 
 
-# process_output {{{1
-async def process_output(fh):
+# log_output {{{1
+async def log_output(fh):
     """Log the output from an async generator.
 
     Args:
         fh (async generator): the async generator to log output from
 
     """
-    output = []
     while True:
         line = await fh.readline()
         if line:
-            line = line.decode("utf-8").rstrip()
-            log.info(line)
-            output.append(line)
+            log.info(line.decode("utf-8").rstrip())
         else:
             break
-    return output
 
 
 # execute_subprocess {{{1
@@ -120,10 +116,9 @@ async def execute_subprocess(command, **kwargs):
         *command, stdout=PIPE, stderr=STDOUT, **kwargs
     )
     log.info("COMMAND OUTPUT: ")
-    output = await process_output(subprocess.stdout)
+    await log_output(subprocess.stdout)
     exitcode = await subprocess.wait()
     log.info("exitcode {}".format(exitcode))
 
     if exitcode != 0:
         raise FailedSubprocess('Command `{}` failed'.format(' '.join(command)))
-    return output
