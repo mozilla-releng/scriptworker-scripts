@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.1] - 2018-07-27
+
+### Fixed
+- Backed out PR #54 for bustage when the version bump has already happened (PR #69)
+
 ## [1.1.0] - 2018-07-25
 
 ### Added
