@@ -4,7 +4,7 @@ import os
 import sys
 
 from treescript.utils import execute_subprocess, DONTBUILD_MSG
-from treescript.exceptions import FailedSubprocess, ChangesetMismatchError
+from treescript.exceptions import FailedSubprocess
 from treescript.task import get_source_repo, get_tag_info, get_dontbuild
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
@@ -90,7 +90,7 @@ async def run_hg_command(context, *args, local_repo=None):
     env = build_hg_environment()
     if local_repo:
         command.extend(['-R', local_repo])
-    return await execute_subprocess(command, env=env)
+    await execute_subprocess(command, env=env)
 
 
 # log_mercurial_version {{{1
@@ -208,23 +208,6 @@ async def log_outgoing(context, directory):
     dest_repo = get_source_repo(context.task)
     log.info("outgoing changesets..")
     await run_hg_command(context, 'out', '-vp', '-r', '.', dest_repo, local_repo=local_repo)
-
-
-async def assert_outgoing(context, directory, expected_cset_count):
-    """Run `hg out` to ensure the expected number of changes exist.
-
-    Assuming that each action produces one changeset, we can
-    check to see if we'd push to the right location by comparing
-    the results of 'hg out' - if it's not equal to the number
-    of actions, we have unexpected changes to push.
-    """
-    local_repo = os.path.join(directory, 'src')
-    dest_repo = get_source_repo(context.task)
-    log.info("outgoing changesets..")
-    changesets = await run_hg_command(context, 'out', '-q', '-r', '.', dest_repo, local_repo=local_repo)
-    if len(changesets) != expected_cset_count:
-        raise ChangesetMismatchError(
-            'Expected {} changesets to push, found {}'.format(expected_cset_count, changesets))
 
 
 async def push(context):

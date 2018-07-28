@@ -8,7 +8,7 @@ import scriptworker.client
 from scriptworker.exceptions import ScriptWorkerException
 from treescript.utils import task_action_types, is_dry_run
 from treescript.mercurial import log_mercurial_version, validate_robustcheckout_works, \
-    checkout_repo, do_tagging, log_outgoing, assert_outgoing, push
+    checkout_repo, do_tagging, log_outgoing, push
 from treescript.versionmanip import bump_version
 
 log = logging.getLogger(__name__)
@@ -29,8 +29,6 @@ async def do_actions(context, actions, directory):
         else:
             raise NotImplementedError("Unexpected action")
     await log_outgoing(context, directory)
-    # 'push' doesn't generate a changeset, the other actions do.
-    await assert_outgoing(context, directory, len(actions)-actions.count('push'))
     if is_dry_run(context.task):
         log.info("Not pushing changes, dry_run was forced")
     elif 'push' in actions:
