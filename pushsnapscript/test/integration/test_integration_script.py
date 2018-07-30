@@ -8,13 +8,9 @@ from scriptworker.utils import makedirs
 from pushsnapscript.script import main
 from pushsnapscript.snap_store import snapcraft_store_client
 
-from scriptworker.test import event_loop
-
-assert event_loop   # silence flake8
-
 
 @pytest.mark.parametrize('channel', ('beta', 'candidate'))
-def test_script_can_push_snaps_with_credentials(event_loop, monkeypatch, channel):
+def test_script_can_push_snaps_with_credentials(monkeypatch, channel):
     push_call_counter = (n for n in range(0, 2))
 
     task = {
