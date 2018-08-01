@@ -150,7 +150,7 @@ async def get_token(context, output_file, cert_type, signing_formats):
                                         auth=auth, return_type='text')
             if token:
                 break
-        except ScriptWorkerException:
+        except (ScriptWorkerException, aiohttp.ClientError):
             traceback.print_exc()
             continue
     else:
