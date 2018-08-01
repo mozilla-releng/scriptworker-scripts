@@ -1,5 +1,4 @@
-dist: trusty
-sudo: required
+sudo: required  # Needed to install a recent version of OpenJDK as well as Python 3.7
 
 language: python
 
@@ -17,15 +16,10 @@ matrix:
         TOXENV=py37
         JDK_SWITCH=openjdk8
 
-env:
-  - SKIP_NETWORK_TESTS=0
-
 install:
     - travis_retry pip install tox
     - jdk_switcher use "${JDK_SWITCH}"
 script:
     - java -version
-    - TOX_ENVIRONMENT="py${TRAVIS_PYTHON_VERSION//./}"
-    - tox -e "$TOX_ENVIRONMENT"
-after_success:
-    - if [[ $TOX_ENVIRONMENT == 'py36' ]] ; then tox -e py36-coveralls; else echo "No coverage to do"; fi
+    - tox -e "$TOXENV"
+    - if [[ $TOXENV == 'py36' ]] ; then tox -e py36-coveralls; else echo "No coverage to do"; fi
