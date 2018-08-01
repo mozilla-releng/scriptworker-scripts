@@ -7,23 +7,22 @@ matrix:
   fast_finish: true
   include:
     - python: 3.6
-      env: TOXENV=py36
-    - python: 3.7-dev
-      env: TOXENV=py37
-  allow_failures:
-    - python: 3.7-dev
+      env:
+        TOXENV=py36
+        JDK_SWITCH=openjdk7
+    - python: 3.7
+      # from https://github.com/travis-ci/travis-ci/issues/9815#issuecomment-401756442
+      dist: xenial
+      env:
+        TOXENV=py37
+        JDK_SWITCH=openjdk8
 
 env:
   - SKIP_NETWORK_TESTS=0
 
-addons:
-  apt:
-    packages:
-      - openjdk-7-jdk
-
 install:
     - travis_retry pip install tox
-    - jdk_switcher use openjdk7
+    - jdk_switcher use "${JDK_SWITCH}"
 script:
     - java -version
     - TOX_ENVIRONMENT="py${TRAVIS_PYTHON_VERSION//./}"
