@@ -10,14 +10,19 @@ import os
 import re
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
 from requests_hawk import HawkAuth
 import shutil
 import tarfile
 import tempfile
 import zipfile
 
-from scriptworker.utils import makedirs, raise_future_exceptions, rm, get_single_item_from_sequence
+from scriptworker.utils import (
+    get_single_item_from_sequence,
+    makedirs,
+    raise_future_exceptions,
+    retry_async,
+    rm,
+)
 
 from signingscript import task
 from signingscript import utils
@@ -687,19 +692,16 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
     log.debug("using the default autograph keyid for %s", s.user)
 
     url = "%s/sign/file" % s.server
-    auth = HawkAuth(id=s.user, key=s.password)
-    retries = Retry(**task.get_autograph_retry_config(context))
 
-    def make_sign_req():
+    async def make_sign_req():
+        auth = HawkAuth(id=s.user, key=s.password)
         with requests.Session() as session:
-            session.mount('http://', HTTPAdapter(max_retries=retries))
-            session.mount('https://', HTTPAdapter(max_retries=retries))
-            return session.post(url, json=sign_req, auth=auth)
+            r = session.post(url, json=sign_req, auth=auth)
+            log.info("Autograph response: {}".format(r.text))
+            r.raise_for_status()
+            return r.json()
 
-    loop = asyncio.get_event_loop()
-    response = await loop.run_in_executor(None, make_sign_req)
-    response.raise_for_status()
-    sign_resp = response.json()
+    sign_resp = await retry_async(make_sign_req)
 
     with open(to, 'wb') as fout:
         fout.write(base64.b64decode(sign_resp[0]['signed_file']))
