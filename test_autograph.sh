@@ -88,5 +88,5 @@ cat <<EOF > work_dir/task.json
 }
 EOF
 
-signingscript autograph_test_config.json
+time signingscript autograph_test_config.json
 # TODO: check mar is valid and signed using https://github.com/mozilla/build-mar
