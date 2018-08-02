@@ -2,27 +2,63 @@
 
 set -e
 
-## for testing autograph mar signing from signingscript
-
 mkdir -p artifact_dir/
 mkdir -p work_dir/cot/upstream-task-id1/
 
-test -f firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002220204.partial.mar || (
-    wget http://ftp.mozilla.org/pub/firefox/nightly/latest-mozilla-central/firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002220204.partial.mar \
-	&& \
-	cp firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002220204.partial.mar work_dir/cot/upstream-task-id1/
-)
-test -f firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002100134.partial.mar || (
-    wget http://ftp.mozilla.org/pub/firefox/nightly/latest-mozilla-central/firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002100134.partial.mar \
-	&& \
-	cp firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002100134.partial.mar work_dir/cot/upstream-task-id1/
-)
+function usage() {
+    cat <<EOF
+test_autograph.sh tests signing mar files with autograph from signingscript
+
+Takes a list of mar files urls as args:
+
+test_autograph.sh http://ftp.mozilla.org/pub/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.linux-x86_64.complete.mar http://ftp.mozilla.org/pub/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win64-asan-reporter.complete.mar
+
+For each URL:
+
+1. treats everything following the last trailing slash in the url as
+the filename (e.g. firefox-63.0a1.en-US.linux-x86_64.complete.mar and
+firefox-63.0a1.en-US.win64-asan-reporter.complete.mar)
+
+2. checks if file is in the $CWD; if not, tries to fetch it as a URL
+
+3. writes relevant config files for signingscript
+
+4. submits the files to autograph with the dev/example autograph credentials
+
+Requires python 3.
+EOF
+    exit 0
+}
+
+if [ $# -eq 0 ]
+then
+    usage
+fi
+
+
+# paths is a JSON list to inject as payload in dummy work_dir/task.json
+# e.g. "firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002100134.partial.mar", "firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002220204.partial.mar"
+paths=""
+for url in $@
+do
+    file=$(echo -n "$url" | python -c 'print(input().split("/")[-1])')
+    test -f $file || (
+	wget $url && \
+	cp $file work_dir/cot/upstream-task-id1/
+    )
+    paths="${paths}\"${file}\", "
+done
+paths=$(echo $paths | sed 's/,$//')
+
+AUTOGRAPH_URL=https://autograph-hsm.dev.mozaws.net
+AUTOGRAPH_HAWK_ID=alice
+AUTOGRAPH_HAWK_SECRET=fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
 
 # not using the signingserver so any example_server_config.json will do
 cat <<EOF > autograph_test_server_config.json
 {
     "project:releng:signing:cert:dep-signing": [
-        ["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_mar384"], "autograph"]
+        ["${AUTOGRAPH_URL}", "${AUTOGRAPH_HAWK_ID}", "${AUTOGRAPH_HAWK_SECRET}", ["autograph_mar384"], "autograph"]
     ]
 }
 EOF
@@ -64,8 +100,7 @@ cat <<EOF > work_dir/task.json
       "taskId": "upstream-task-id1",
       "taskType": "build",
       "paths": [
-        "firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002100134.partial.mar",
-        "firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002220204.partial.mar"
+         ${paths}
       ],
       "formats": ["autograph_mar384"]
     }],
