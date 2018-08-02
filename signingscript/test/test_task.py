@@ -10,9 +10,10 @@ from signingscript.exceptions import SigningServerError
 from signingscript.script import get_default_config
 from signingscript.utils import load_signing_server_config, mkdir
 import signingscript.task as stask
-from signingscript.test import noop_sync, tmpdir, BASE_DIR
+from signingscript.test import noop_sync, tmpdir, BASE_DIR, context
 
 assert tmpdir  # silence flake8
+assert context  # silence flake8
 
 
 # helper constants, fixtures, functions {{{1
@@ -46,18 +47,6 @@ def task_defn():
           }]
         }
     }
-
-
-@pytest.yield_fixture(scope='function')
-def context(tmpdir):
-    context = Context()
-    context.config = get_default_config()
-    context.config['signing_server_config'] = SERVER_CONFIG_PATH
-    context.config['work_dir'] = os.path.join(tmpdir, 'work')
-    context.config['artifact_dir'] = os.path.join(tmpdir, 'artifact')
-    context.config['taskcluster_scope_prefix'] = DEFAULT_SCOPE_PREFIX
-    context.signing_servers = load_signing_server_config(context)
-    yield context
 
 
 # task_cert_type {{{1
