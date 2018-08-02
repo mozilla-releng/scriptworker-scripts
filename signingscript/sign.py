@@ -697,7 +697,7 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
         auth = HawkAuth(id=s.user, key=s.password)
         with requests.Session() as session:
             r = session.post(url, json=sign_req, auth=auth)
-            log.info("Autograph response: {}".format(r.text))
+            log.debug("Autograph response: {}".format(r.text[:120] if len(r.text) >= 120 else r.text))
             r.raise_for_status()
             return r.json()
 
