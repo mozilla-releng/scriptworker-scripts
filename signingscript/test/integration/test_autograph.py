@@ -109,7 +109,7 @@ async def _download_file(url, abs_filename, chunk_size=128):
     ),
     'autograph_fenix',
 )))
-async def test_autograph_signs_mar(context, tmpdir, urls_to_download, format):
+async def test_integration_autograph(context, tmpdir, urls_to_download, format):
     artifact_dir = os.path.join(tmpdir, 'artifact_dir')
     urls_per_on_disk_path = {
         os.path.join(context.config['work_dir'], 'cot/upstream-task-id1/', os.path.basename(url)): url
@@ -133,3 +133,4 @@ async def test_autograph_signs_mar(context, tmpdir, urls_to_download, format):
     await async_main(context)
 
     # TODO: check mar is valid and signed with the hsm-dev
+    # TODO same for APK
