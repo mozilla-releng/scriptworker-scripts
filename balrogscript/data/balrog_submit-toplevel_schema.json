@@ -33,12 +33,19 @@
                     },
                     "uniqueItems": true
                 },
-                "version": {"type": "string"}
+                "version": {"type": "string"},
+                "complete_mar_filename_pattern": {"type": "string"},
+                "complete_mar_bouncer_product_pattern": {"type": "string"}
             },
             "required": ["app_version", "archive_domain", "build_number",
                          "channel_names", "download_domain", "partial_versions",
                          "platforms", "product", "require_mirrors", "rules_to_update",
-                         "version"]
+                         "version"],
+            "dependencies": {
+                "complete_mar_filename_pattern": ["complete_mar_bouncer_product_pattern"],
+                "complete_mar_bouncer_product_pattern": ["complete_mar_filename_pattern"]
+            },
+            "additionalPropeties": false
         },
         "scopes": {
             "type": "array",

@@ -142,9 +142,8 @@ def submit_toplevel(task, config, balrog_auth):
     creator = create_creator(
         api_root=config['api_root'], auth=auth,
         dummy=config['dummy'],
-        # these are set for bz2, which we don't support.
-        complete_mar_filename_pattern=None,
-        complete_mar_bouncer_product_pattern=None,
+        complete_mar_filename_pattern=task['payload'].get('complete_mar_filename_pattern'),
+        complete_mar_bouncer_product_pattern=task['payload'].get('complete_mar_bouncer_product_pattern'),
     )
     pusher = create_pusher(
         api_root=config['api_root'], auth=auth,
