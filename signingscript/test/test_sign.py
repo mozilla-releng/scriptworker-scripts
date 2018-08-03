@@ -278,6 +278,11 @@ async def test_sign_file_with_autograph_raises_http_error(context, mocker, to, e
 
     mocker.patch('signingscript.sign.requests.Session', session_context)
 
+    async def fake_retry_async(func):
+        await func()
+
+    mocker.patch.object(sign, 'retry_async', new=fake_retry_async)
+
     context.task = {
         'scopes': ['project:releng:signing:cert:dep-signing', 'project:releng:signing:format:autograph_mar']
     }
