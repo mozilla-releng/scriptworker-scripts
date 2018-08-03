@@ -7,5 +7,8 @@
   "notdep": [
     ["server1:9100", "user1", "pass1", ["f1", "f2"], "signing_server"],
     ["server2:8100", "user2", "pass2", ["f2", "f3"], "signing_server"]
+  ],
+  "project:releng:signing:cert:dep-signing": [
+    ["127.0.0.1:9110", "user", "pass", ["gpg", "sha2signcode"], "signing_server"]
   ]
 }

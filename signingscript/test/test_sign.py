@@ -15,7 +15,10 @@ from signingscript.script import get_default_config
 from signingscript.utils import get_hash, load_signing_server_config, mkdir, SigningServer
 import signingscript.sign as sign
 import signingscript.utils as utils
-from signingscript.test import noop_sync, noop_async, tmpdir, die, BASE_DIR, TEST_DATA_DIR, context
+from signingscript.test import (
+    noop_sync, noop_async, tmpdir, die, BASE_DIR, TEST_DATA_DIR, context,
+    DEFAULT_SCOPE_PREFIX, SERVER_CONFIG_PATH
+)
 
 assert tmpdir  # silence flake8
 assert context  # silence flake8
