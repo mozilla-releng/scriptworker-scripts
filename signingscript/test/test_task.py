@@ -87,6 +87,15 @@ def test_no_error_is_reported_when_no_missing_url(context, task_defn):
     validate_task_schema(context)
 
 
+def test_get_autograph_retry_config(context):
+    assert stask.get_autograph_retry_config(context) == {
+        'total': 5,
+        'backoff_factor': 0.1,
+        'method_whitelist': ['POST'],
+        'status_forcelist': [500, 502, 503, 504],
+    }
+
+
 # get_token {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize('exc,contents', ((
