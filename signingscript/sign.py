@@ -9,7 +9,6 @@ import logging
 import os
 import re
 import requests
-from requests.adapters import HTTPAdapter
 from requests_hawk import HawkAuth
 import shutil
 import tarfile
