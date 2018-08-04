@@ -8,6 +8,7 @@ Attributes:
 
 """
 import aiohttp
+import asyncio
 from frozendict import frozendict
 import logging
 import os
@@ -128,7 +129,7 @@ async def get_token(context, output_file, cert_type, signing_formats):
                                         auth=auth, return_type='text')
             if token:
                 break
-        except (ScriptWorkerException, aiohttp.ClientError) as exc:
+        except (ScriptWorkerException, aiohttp.ClientError, asyncio.TimeoutError) as exc:
             log.warning("Error retrieving token: {}\nTrying the next server.".format(str(exc)))
             continue
     else:
