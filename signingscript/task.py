@@ -8,11 +8,11 @@ Attributes:
 
 """
 import aiohttp
+import asyncio
 from frozendict import frozendict
 import logging
 import os
 import random
-import traceback
 
 from datadog import statsd
 import platform
@@ -129,11 +129,11 @@ async def get_token(context, output_file, cert_type, signing_formats):
                                         auth=auth, return_type='text')
             if token:
                 break
-        except ScriptWorkerException:
-            traceback.print_exc()
+        except (ScriptWorkerException, aiohttp.ClientError, asyncio.TimeoutError) as exc:
+            log.warning("Error retrieving token: {}\nTrying the next server.".format(str(exc)))
             continue
     else:
-        raise SigningServerError("Cannot retrieve signing token")
+        raise SigningServerError("Cannot retrieve signing token from any signing server.")
     with open(output_file, "w") as fh:
         print(token, file=fh, end="")
 
