@@ -1,20 +1,27 @@
 import aiohttp
 import asyncio
+import copy
 import json
 import os
 import pytest
+import subprocess
+import shutil
 import tempfile
+import zipfile
 
 from mardor.cli import do_verify
 from scriptworker.utils import makedirs, download_file
 
 from signingscript.script import async_main
 from signingscript.test import context
+from signingscript.test.integration import skip_when_no_network
+
 
 assert context  # silence flake8
 
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data')
+TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')
 
 
 DEFAULT_SERVER_CONFIG = {
@@ -90,23 +97,6 @@ DEFAULT_TASK = {
 }
 
 
-MAR_DEV_PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
-MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAt/a7CnyvRF9XIc4FzoI1
-W0g8B2XBs2DDPNj+P6GL7TIxjLY57hsfLKcfCZ4DDSdflgr1yDnhTgGYrUJTw6wL
-zXUtnZyoYSqTjtTJqTRM3aKgFLnFYkXtBBVfOk/guOiefUbaPJNF8Fxz/qL8Eunp
-ae8MtyQpolk/s1f0xic30KXLk0muWaC9lsO+YcQW67q31pfgKMhdKZT0T12252r/
-NaauZtcIHFTUN0NT7seAGhu6pwvFHV+u2BBEauvU8u/7FqRiqdH+dXCLX6FFYmJz
-CxCcDjQHL+XYUqWdS/xci8sbZaADAht499HNG6cRjn/6mbZPWDpuLh/boU5MpEcM
-e9Ji1P3P+1Vdcezppc8Jc1IfnA1Wyz2u9qNqF30/f7emTAGHmw+79ri3WzX26zzt
-gQyA11aREjdctGvht2u6mN44dNFnFF8JCz3AD9VItLcMe6OGfVv5uiSC5AbRJzGr
-MORa6g6Rfz193ueqmFgNC8mnsa3e+I1UwaCfvzdJnxmrGTabaHMqF30ra3YmmqYZ
-NshnjR8y4NtjFEiTGDNTy7le5sxltbqQwnehGTHQ5h98dwEBuuWfz6ZiB+WQob1t
-UFmedTKy6crONPQyc+mlv5EoC5C9AhiZN0KwauOG5LDaGGmHBC7dqYYsAAKcVnk4
-Quo7lAFcSz0Cx1MEcNTpWhUCAwEAAQ==
------END PUBLIC KEY-----
-"""
-
-
 async def _download_file(url, abs_filename, chunk_size=128):
     parent_dir = os.path.dirname(abs_filename)
     async with aiohttp.ClientSession() as session:
@@ -120,46 +110,115 @@ async def _download_file(url, abs_filename, chunk_size=128):
                     fd.write(chunk)
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize('urls_to_download, format', ((
-    (
-        'https://archive.mozilla.org/pub/firefox/nightly/2017/10/2017-10-02-22-02-04-mozilla-central/firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002220204.partial.mar',
-        'https://archive.mozilla.org/pub/firefox/nightly/2017/10/2017-10-02-10-01-34-mozilla-central/firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002100134.partial.mar',
-    ),
-    'autograph_mar384',
-# ), (
-    # (
-    #     'https://queue.taskcluster.net/v1/task/UlL8a2zUTdqWjVFeBLIR0g/runs/0/artifacts/public/app-nightly-x86-release-signed-aligned.apk',
-    #     'https://queue.taskcluster.net/v1/task/UlL8a2zUTdqWjVFeBLIR0g/runs/0/artifacts/public/app-nightly-arm-release-signed-aligned.apk',
-    # ),
-    # 'autograph_apk',
-),))
-async def test_integration_autograph(context, tmpdir, urls_to_download, format):
-    file_names = [os.path.basename(url) for url in urls_to_download]
+async def _download_files(urls, work_dir):
     urls_per_on_disk_path = {
-        os.path.join(context.config['work_dir'], 'cot/upstream-task-id1/', os.path.basename(url)): url
-        for url in urls_to_download
+        os.path.join(work_dir, 'cot/upstream-task-id1/', os.path.basename(url)): url
+        for url in urls
     }
     download_tasks = [_download_file(url, on_disk_path) for on_disk_path, url in urls_per_on_disk_path.items()]
+    print('Downloading original files...')
     await asyncio.gather(*download_tasks)
+    print('Downloaded original files: {}'.format(urls))
+    return urls_per_on_disk_path.keys()
 
+
+def _write_server_config(tmpdir):
     server_config_path = os.path.join(tmpdir, 'server_config.json')
     with open(server_config_path, mode='w') as f:
         json.dump(DEFAULT_SERVER_CONFIG, f)
 
-    context.config['signing_server_config'] = server_config_path
-    context.task = DEFAULT_TASK
-    context.task['payload']['upstreamArtifacts'][0]['paths'] = file_names
-    context.task['payload']['upstreamArtifacts'][0]['formats'] = [format]
-    context.task['scopes'].append('project:releng:signing:format:{}'.format(format))
+    return server_config_path
 
+
+def _craft_task(file_names, signing_format):
+    task = copy.deepcopy(DEFAULT_TASK)
+    task['payload']['upstreamArtifacts'][0]['paths'] = file_names
+    task['payload']['upstreamArtifacts'][0]['formats'] = [signing_format]
+    task['scopes'].append('project:releng:signing:format:{}'.format(signing_format))
+
+    return task
+
+
+@pytest.mark.asyncio
+@skip_when_no_network
+async def test_integration_autograph_mar(context, tmpdir):
+    urls_to_download = (
+        'https://archive.mozilla.org/pub/firefox/nightly/2017/10/2017-10-02-22-02-04-mozilla-central/firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002220204.partial.mar',
+        'https://archive.mozilla.org/pub/firefox/nightly/2017/10/2017-10-02-10-01-34-mozilla-central/firefox-mozilla-central-58.0a1-linux-x86_64-en-US-20171001220301-20171002100134.partial.mar',
+    )
+    file_names = [os.path.basename(url) for url in urls_to_download]
+
+    await _download_files(urls_to_download, context.config['work_dir'])
+
+    context.config['signing_server_config'] = _write_server_config(tmpdir)
+    context.task = _craft_task(file_names, signing_format='autograph_mar384')
+
+    print('Running async_main...')
     await async_main(context)
+    print('async_main completed')
 
-    mar_pub_key_path = os.path.join(tmpdir, 'mar_pub_key')
-    with open(mar_pub_key_path, mode='w') as f:
-        f.write(MAR_DEV_PUBLIC_KEY)
-
-    # TODO same for APK
-    signed_paths = [os.path.join(tmpdir, 'artifact', file_name) for file_name in file_names]
+    mar_pub_key_path = os.path.join(TEST_DATA_DIR, 'autograph_mar_dev_key.pub')
+    signed_paths = [os.path.join(context.config['artifact_dir'], file_name) for file_name in file_names]
     for signed_path in signed_paths:
         assert do_verify(signed_path, keyfiles=[mar_pub_key_path]), "Signature doesn't match MAR_DEV_PUBLIC_KEY's"
+
+
+def _strip_apk_signature(files):
+    for file_ in files:
+        temp_zip_file_path = '{}.tmp'.format(file_)
+        with zipfile.ZipFile(file_, 'r') as original_zip:
+            with zipfile.ZipFile(temp_zip_file_path, 'w') as temp_zip_file:
+                for item in original_zip.infolist():
+                    buffer = original_zip.read(item.filename)
+                    if not item.filename.startswith('META-INF/'):
+                        temp_zip_file.writestr(item, buffer)
+
+            shutil.move(temp_zip_file_path, file_)
+
+
+def _instanciate_keystore(keystore_path, certificate_path, certificate_alias):
+    keystore_password = '12345678'
+    subprocess.run([
+        'keytool', '-import', '-noprompt',
+        '-keystore', keystore_path, '-storepass', keystore_password,
+        '-file', certificate_path, '-alias', certificate_alias
+    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+
+
+def _verify_apk_signature(keystore_path, apk_path, certificate_alias):
+    command = subprocess.run([
+        'jarsigner', '-verify', '-strict', '-verbose',
+        '-keystore', keystore_path,
+        apk_path,
+        certificate_alias
+    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    return command.returncode == 0
+
+
+@pytest.mark.asyncio
+@skip_when_no_network
+async def test_integration_autograph_apk(context, tmpdir):
+    urls_to_download = (
+        'https://queue.taskcluster.net/v1/task/UlL8a2zUTdqWjVFeBLIR0g/runs/0/artifacts/public/app-nightly-x86-release-signed-aligned.apk',
+        'https://queue.taskcluster.net/v1/task/UlL8a2zUTdqWjVFeBLIR0g/runs/0/artifacts/public/app-nightly-arm-release-signed-aligned.apk',
+    )
+    file_names = [os.path.basename(url) for url in urls_to_download]
+
+    downloaded_files = await _download_files(urls_to_download, context.config['work_dir'])
+    _strip_apk_signature(downloaded_files)
+
+    context.config['signing_server_config'] = _write_server_config(tmpdir)
+    context.task = _craft_task(file_names, signing_format='autograph_apk')
+
+    keystore_path = os.path.join(tmpdir, 'keystore')
+    certificate_path = os.path.join(TEST_DATA_DIR, 'autograph_apk_dev_key.pub')
+    certificate_alias = 'autograph_apk_dev_key'
+    _instanciate_keystore(keystore_path, certificate_path, certificate_alias)
+
+    print('Running async_main...')
+    await async_main(context)
+    print('async_main completed')
+
+    signed_paths = [os.path.join(tmpdir, 'artifact', file_name) for file_name in file_names]
+    for signed_path in signed_paths:
+        assert _verify_apk_signature(keystore_path, signed_path, certificate_alias)
