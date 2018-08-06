@@ -95,27 +95,6 @@ def _get_scope_prefix(context, sub_namespace):
     return '{}{}:'.format(prefix, sub_namespace)
 
 
-# get_autograph_retry_config {{{1
-def get_autograph_retry_config(context):
-    """Retrieve the autograph retry config from config.json or the default config.
-
-    Args:
-        context (Context): the signing context
-
-    Returns:
-        dict: with args to http://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html#module-urllib3.util.retry
-
-    """
-    retry_config = dict(
-        total=5,
-        backoff_factor=0.1,
-        method_whitelist=['POST'],
-        status_forcelist=[500, 502, 503, 504]
-    )
-    retry_config.update(context.config.get('autograph_retries', {}))
-    return retry_config
-
-
 # get_token {{{1
 async def get_token(context, output_file, cert_type, signing_formats):
     """Retrieve a token from the signingserver tied to my ip.
