@@ -9,7 +9,7 @@ from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
     get_upstream_artifacts, generate_checksums_manifest,
     get_task_bucket, get_task_action,
-    validate_bucket_paths, get_release_props, is_custom_beetmover_checksums_task
+    validate_bucket_paths, get_release_props, is_custom_checksums_task
 )
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -224,7 +224,9 @@ def test_get_release_props(context, mocker, taskjson, locale, relprops, expected
     "beetmover-source", "-source"
 ), (
     "beetmover-repackage", ""
+), (
+    "release-beetmover-signed-langpacks", "-langpack"
 ),))
 def test_is_custom_beetmover_task(context, kind, expected):
     context.task['tags']['kind'] = kind
-    assert is_custom_beetmover_checksums_task(context) == expected
+    assert is_custom_checksums_task(context) == expected

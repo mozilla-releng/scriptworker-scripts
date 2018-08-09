@@ -89,12 +89,12 @@ def generate_checksums_manifest(context):
     return '\n'.join(content)
 
 
-def is_custom_beetmover_checksums_task(context):
+def is_custom_checksums_task(context):
     return CHECKSUMS_CUSTOM_FILE_NAMING.get(context.task['tags']['kind'], '')
 
 
 def add_checksums_to_artifacts(context):
-    name = is_custom_beetmover_checksums_task(context)
+    name = is_custom_checksums_task(context)
     filename = 'public/target{}.checksums'.format(name)
 
     abs_file_path = os.path.join(context.config['artifact_dir'],

@@ -76,6 +76,10 @@ mapping:
       s3_key: beetmover-checksums/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums.asc
       destinations:
         - beetmover-checksums/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums.asc
+    target-langpack.checksums:
+      s3_key: beetmover-checksums/{{ platform }}/xpi/{{ locale }}.checksums.beet
+      destinations:
+        - beetmover-checksums/{{ platform }}/xpi/{{ locale }}.checksums.beet
   {% for partial in partials %}
     {{ partial }}:
       s3_key: update/{{ platform }}/{{ locale }}/firefox-{{ partials[partial].previousVersion }}-{{ version }}.partial.mar
