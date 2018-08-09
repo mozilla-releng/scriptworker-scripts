@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.7.0] = (2018-08-09)
+----------------------
+
+Added
+~~~~~
+
+- Add support for language pack checksums. (`#1463749
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1463749>`_)
+
+
 [7.6.0] = (2018-07-20)
 ----------------------
 
