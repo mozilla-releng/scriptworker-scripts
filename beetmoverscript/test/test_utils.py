@@ -86,6 +86,275 @@ def test_generate_manifest(context, mocker):
     assert expected_destinations == actual_destinations
 
 
+@pytest.mark.parametrize('version, build_id, artifact_id, expected', ((
+    '62.0',
+    '20181231120000',
+    'geckoview-x86',
+    {
+        'mapping': {
+            'en-US': {
+                'geckoview-x86-62.0-javadoc.jar': {
+                    'destinations': ['geckoview-x86-62.0-javadoc.jar'],
+                    's3_key': 'geckoview-x86-62.0-javadoc.jar',
+                },
+                'geckoview-x86-62.0-javadoc.jar.md5': {
+                    'destinations': ['geckoview-x86-62.0-javadoc.jar.md5'],
+                    's3_key': 'geckoview-x86-62.0-javadoc.jar.md5',
+                },
+                'geckoview-x86-62.0-javadoc.jar.sha1': {
+                    'destinations': ['geckoview-x86-62.0-javadoc.jar.sha1'],
+                    's3_key': 'geckoview-x86-62.0-javadoc.jar.sha1',
+                },
+                'geckoview-x86-62.0-sources.jar': {
+                    'destinations': ['geckoview-x86-62.0-sources.jar'],
+                    's3_key': 'geckoview-x86-62.0-sources.jar',
+                },
+                'geckoview-x86-62.0-sources.jar.md5': {
+                    'destinations': ['geckoview-x86-62.0-sources.jar.md5'],
+                    's3_key': 'geckoview-x86-62.0-sources.jar.md5',
+                },
+                'geckoview-x86-62.0-sources.jar.sha1': {
+                    'destinations': ['geckoview-x86-62.0-sources.jar.sha1'],
+                    's3_key': 'geckoview-x86-62.0-sources.jar.sha1',
+                },
+                'geckoview-x86-62.0.aar': {
+                    'destinations': ['geckoview-x86-62.0.aar'],
+                    's3_key': 'geckoview-x86-62.0.aar',
+                },
+                'geckoview-x86-62.0.aar.md5': {
+                    'destinations': ['geckoview-x86-62.0.aar.md5'],
+                    's3_key': 'geckoview-x86-62.0.aar.md5',
+                },
+                'geckoview-x86-62.0.aar.sha1': {
+                    'destinations': ['geckoview-x86-62.0.aar.sha1'],
+                    's3_key': 'geckoview-x86-62.0.aar.sha1',
+                },
+                'geckoview-x86-62.0.pom': {
+                    'destinations': ['geckoview-x86-62.0.pom'],
+                    's3_key': 'geckoview-x86-62.0.pom',
+                },
+                'geckoview-x86-62.0.pom.md5': {
+                    'destinations': ['geckoview-x86-62.0.pom.md5'],
+                    's3_key': 'geckoview-x86-62.0.pom.md5',
+                },
+                'geckoview-x86-62.0.pom.sha1': {
+                    'destinations': ['geckoview-x86-62.0.pom.sha1'],
+                    's3_key': 'geckoview-x86-62.0.pom.sha1'
+                },
+            },
+        },
+        'metadata': {
+            'description': "Maps artifacts to spec'd maven location",
+            'name': 'Maven repository',
+            'owner': 'release@mozilla.com',
+        },
+        's3_bucket_path': 'maven2/org/mozilla/geckoview-x86/62.0/',
+    }
+), (
+    '63.0b11',
+    '20181231120000',
+    'geckoview-beta-arm64-v8a',
+    {
+        'mapping': {
+            'en-US': {
+                'geckoview-beta-arm64-v8a-63.0b11-javadoc.jar': {
+                    'destinations': ['geckoview-beta-arm64-v8a-63.0b11-javadoc.jar'],
+                    's3_key': 'geckoview-beta-arm64-v8a-63.0b11-javadoc.jar',
+                },
+                'geckoview-beta-arm64-v8a-63.0b11-javadoc.jar.md5': {
+                    'destinations': ['geckoview-beta-arm64-v8a-63.0b11-javadoc.jar.md5'],
+                    's3_key': 'geckoview-beta-arm64-v8a-63.0b11-javadoc.jar.md5',
+                },
+                'geckoview-beta-arm64-v8a-63.0b11-javadoc.jar.sha1': {
+                    'destinations': ['geckoview-beta-arm64-v8a-63.0b11-javadoc.jar.sha1'],
+                    's3_key': 'geckoview-beta-arm64-v8a-63.0b11-javadoc.jar.sha1',
+                },
+                'geckoview-beta-arm64-v8a-63.0b11-sources.jar': {
+                    'destinations': ['geckoview-beta-arm64-v8a-63.0b11-sources.jar'],
+                    's3_key': 'geckoview-beta-arm64-v8a-63.0b11-sources.jar',
+                },
+                'geckoview-beta-arm64-v8a-63.0b11-sources.jar.md5': {
+                    'destinations': ['geckoview-beta-arm64-v8a-63.0b11-sources.jar.md5'],
+                    's3_key': 'geckoview-beta-arm64-v8a-63.0b11-sources.jar.md5',
+                },
+                'geckoview-beta-arm64-v8a-63.0b11-sources.jar.sha1': {
+                    'destinations': ['geckoview-beta-arm64-v8a-63.0b11-sources.jar.sha1'],
+                    's3_key': 'geckoview-beta-arm64-v8a-63.0b11-sources.jar.sha1',
+                },
+                'geckoview-beta-arm64-v8a-63.0b11.aar': {
+                    'destinations': ['geckoview-beta-arm64-v8a-63.0b11.aar'],
+                    's3_key': 'geckoview-beta-arm64-v8a-63.0b11.aar',
+                },
+                'geckoview-beta-arm64-v8a-63.0b11.aar.md5': {
+                    'destinations': ['geckoview-beta-arm64-v8a-63.0b11.aar.md5'],
+                    's3_key': 'geckoview-beta-arm64-v8a-63.0b11.aar.md5',
+                },
+                'geckoview-beta-arm64-v8a-63.0b11.aar.sha1': {
+                    'destinations': ['geckoview-beta-arm64-v8a-63.0b11.aar.sha1'],
+                    's3_key': 'geckoview-beta-arm64-v8a-63.0b11.aar.sha1',
+                },
+                'geckoview-beta-arm64-v8a-63.0b11.pom': {
+                    'destinations': ['geckoview-beta-arm64-v8a-63.0b11.pom'],
+                    's3_key': 'geckoview-beta-arm64-v8a-63.0b11.pom',
+                },
+                'geckoview-beta-arm64-v8a-63.0b11.pom.md5': {
+                    'destinations': ['geckoview-beta-arm64-v8a-63.0b11.pom.md5'],
+                    's3_key': 'geckoview-beta-arm64-v8a-63.0b11.pom.md5',
+                },
+                'geckoview-beta-arm64-v8a-63.0b11.pom.sha1': {
+                    'destinations': ['geckoview-beta-arm64-v8a-63.0b11.pom.sha1'],
+                    's3_key': 'geckoview-beta-arm64-v8a-63.0b11.pom.sha1'
+                },
+            },
+        },
+        'metadata': {
+            'description': "Maps artifacts to spec'd maven location",
+            'name': 'Maven repository',
+            'owner': 'release@mozilla.com',
+        },
+        's3_bucket_path': 'maven2/org/mozilla/geckoview-beta-arm64-v8a/63.0b11/',
+    }
+), (
+    '63.0a1',
+    '20181231120000',
+    'geckoview-nightly-x86',
+    {
+        'mapping': {
+            'en-US': {
+                'geckoview-nightly-x86-63.0.20181231120000-javadoc.jar': {
+                    'destinations': ['geckoview-nightly-x86-63.0.20181231120000-javadoc.jar'],
+                    's3_key': 'geckoview-nightly-x86-63.0.20181231120000-javadoc.jar',
+                },
+                'geckoview-nightly-x86-63.0.20181231120000-javadoc.jar.md5': {
+                    'destinations': ['geckoview-nightly-x86-63.0.20181231120000-javadoc.jar.md5'],
+                    's3_key': 'geckoview-nightly-x86-63.0.20181231120000-javadoc.jar.md5',
+                },
+                'geckoview-nightly-x86-63.0.20181231120000-javadoc.jar.sha1': {
+                    'destinations': ['geckoview-nightly-x86-63.0.20181231120000-javadoc.jar.sha1'],
+                    's3_key': 'geckoview-nightly-x86-63.0.20181231120000-javadoc.jar.sha1',
+                },
+                'geckoview-nightly-x86-63.0.20181231120000-sources.jar': {
+                    'destinations': ['geckoview-nightly-x86-63.0.20181231120000-sources.jar'],
+                    's3_key': 'geckoview-nightly-x86-63.0.20181231120000-sources.jar',
+                },
+                'geckoview-nightly-x86-63.0.20181231120000-sources.jar.md5': {
+                    'destinations': ['geckoview-nightly-x86-63.0.20181231120000-sources.jar.md5'],
+                    's3_key': 'geckoview-nightly-x86-63.0.20181231120000-sources.jar.md5',
+                },
+                'geckoview-nightly-x86-63.0.20181231120000-sources.jar.sha1': {
+                    'destinations': ['geckoview-nightly-x86-63.0.20181231120000-sources.jar.sha1'],
+                    's3_key': 'geckoview-nightly-x86-63.0.20181231120000-sources.jar.sha1',
+                },
+                'geckoview-nightly-x86-63.0.20181231120000.aar': {
+                    'destinations': ['geckoview-nightly-x86-63.0.20181231120000.aar'],
+                    's3_key': 'geckoview-nightly-x86-63.0.20181231120000.aar',
+                },
+                'geckoview-nightly-x86-63.0.20181231120000.aar.md5': {
+                    'destinations': ['geckoview-nightly-x86-63.0.20181231120000.aar.md5'],
+                    's3_key': 'geckoview-nightly-x86-63.0.20181231120000.aar.md5',
+                },
+                'geckoview-nightly-x86-63.0.20181231120000.aar.sha1': {
+                    'destinations': ['geckoview-nightly-x86-63.0.20181231120000.aar.sha1'],
+                    's3_key': 'geckoview-nightly-x86-63.0.20181231120000.aar.sha1',
+                },
+                'geckoview-nightly-x86-63.0.20181231120000.pom': {
+                    'destinations': ['geckoview-nightly-x86-63.0.20181231120000.pom'],
+                    's3_key': 'geckoview-nightly-x86-63.0.20181231120000.pom',
+                },
+                'geckoview-nightly-x86-63.0.20181231120000.pom.md5': {
+                    'destinations': ['geckoview-nightly-x86-63.0.20181231120000.pom.md5'],
+                    's3_key': 'geckoview-nightly-x86-63.0.20181231120000.pom.md5',
+                },
+                'geckoview-nightly-x86-63.0.20181231120000.pom.sha1': {
+                    'destinations': ['geckoview-nightly-x86-63.0.20181231120000.pom.sha1'],
+                    's3_key': 'geckoview-nightly-x86-63.0.20181231120000.pom.sha1'
+                },
+            },
+        },
+        'metadata': {
+            'description': "Maps artifacts to spec'd maven location",
+            'name': 'Maven repository',
+            'owner': 'release@mozilla.com',
+        },
+        's3_bucket_path': 'maven2/org/mozilla/geckoview-nightly-x86/63.0.20181231120000/',
+    }
+), (
+    '63.0b11',
+    '20181231120000',
+    'geckoview-nightly-maple-armeabi-v7a',
+    {
+        'mapping': {
+            'en-US': {
+                'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-javadoc.jar': {
+                    'destinations': ['geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-javadoc.jar'],
+                    's3_key': 'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-javadoc.jar',
+                },
+                'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-javadoc.jar.md5': {
+                    'destinations': ['geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-javadoc.jar.md5'],
+                    's3_key': 'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-javadoc.jar.md5',
+                },
+                'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-javadoc.jar.sha1': {
+                    'destinations': ['geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-javadoc.jar.sha1'],
+                    's3_key': 'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-javadoc.jar.sha1',
+                },
+                'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-sources.jar': {
+                    'destinations': ['geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-sources.jar'],
+                    's3_key': 'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-sources.jar',
+                },
+                'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-sources.jar.md5': {
+                    'destinations': ['geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-sources.jar.md5'],
+                    's3_key': 'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-sources.jar.md5',
+                },
+                'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-sources.jar.sha1': {
+                    'destinations': ['geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-sources.jar.sha1'],
+                    's3_key': 'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000-sources.jar.sha1',
+                },
+                'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.aar': {
+                    'destinations': ['geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.aar'],
+                    's3_key': 'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.aar',
+                },
+                'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.aar.md5': {
+                    'destinations': ['geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.aar.md5'],
+                    's3_key': 'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.aar.md5',
+                },
+                'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.aar.sha1': {
+                    'destinations': ['geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.aar.sha1'],
+                    's3_key': 'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.aar.sha1',
+                },
+                'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.pom': {
+                    'destinations': ['geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.pom'],
+                    's3_key': 'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.pom',
+                },
+                'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.pom.md5': {
+                    'destinations': ['geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.pom.md5'],
+                    's3_key': 'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.pom.md5',
+                },
+                'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.pom.sha1': {
+                    'destinations': ['geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.pom.sha1'],
+                    's3_key': 'geckoview-nightly-maple-armeabi-v7a-63.0.20181231120000.pom.sha1'
+                },
+            },
+        },
+        'metadata': {
+            'description': "Maps artifacts to spec'd maven location",
+            'name': 'Maven repository',
+            'owner': 'release@mozilla.com',
+        },
+        's3_bucket_path': 'maven2/org/mozilla/geckoview-nightly-maple-armeabi-v7a/63.0.20181231120000/',
+    }
+)))
+def test_generate_manifest_maven(context, mocker, version, build_id, artifact_id, expected):
+    context.bucket = 'maven'
+    context.action = 'push-to-maven'
+    context.task['payload']['version'] = version
+    context.task['payload']['artifact_id'] = artifact_id
+    context.release_props['branch'] = 'mozilla-central'
+    context.release_props['buildid'] = build_id
+    context.release_props['appName'] = 'geckoview'
+
+    assert generate_beetmover_manifest(context) == expected
+
+
 # generate_beetmover_template_args {{{1
 @pytest.mark.parametrize("taskjson,partials", [
     ('task.json', {}),
@@ -216,6 +485,32 @@ def test_beetmover_template_args_generation_release(context):
 
     template_args = generate_beetmover_template_args(context)
     assert template_args == expected_template_args
+
+
+@pytest.mark.parametrize('branch, version, artifact_id, build_id, expected_version', ((
+    'mozilla-central', '63.0a1', 'geckoview-nightly-x86', '20181231120000', '63.0.20181231120000',
+), (
+    'mozilla-beta', '63.0b2', 'geckoview-beta-armeabi-v7a', '20181231120000', '63.0b2',
+), (
+    'mozilla-release', '63.0', 'geckoview-arm64-v8a', '20181231120000', '63.0',
+)))
+def test_beetmover_template_args_maven(context, branch, version, artifact_id, build_id, expected_version):
+    context.bucket = 'maven'
+    context.action = 'push-to-maven'
+    context.task['payload']['version'] = version
+    context.task['payload']['artifact_id'] = artifact_id
+    context.release_props['branch'] = branch
+    context.release_props['buildid'] = build_id
+    context.release_props['appName'] = 'geckoview'
+
+    assert generate_beetmover_template_args(context) == {
+        'artifact_id': artifact_id,
+        'branch': branch,
+        'product': 'geckoview',
+        'template_key': 'maven_geckoview',
+        'version': expected_version,
+        'buildid': build_id,
+    }
 
 
 @pytest.mark.parametrize('locale_in_payload, locales_in_upstream_artifacts, raises', ((

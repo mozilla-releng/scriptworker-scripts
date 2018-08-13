@@ -17,11 +17,13 @@ from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
 from scriptworker.utils import retry_async, raise_future_exceptions
 
+from beetmoverscript import task, zip, maven_utils
+
 from beetmoverscript.constants import (
     MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE,
     NORMALIZED_BALROG_PLATFORMS, PARTNER_REPACK_PUBLIC_PREFIX_TMPL,
     PARTNER_REPACK_PRIVATE_REGEXES, PARTNER_REPACK_PUBLIC_REGEXES, BUILDHUB_ARTIFACT,
-    INSTALLER_ARTIFACTS
+    INSTALLER_ARTIFACTS, DEFAULT_ZIP_MAX_FILE_SIZE_IN_MB
 )
 from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
@@ -154,6 +156,49 @@ async def push_to_releases(context):
     copy_beets(context, candidates_keys_checksums, releases_keys_checksums)
 
 
+async def push_to_maven(context):
+    """Push artifacts to locations expected by maven clients (like mvn or gradle)"""
+    artifacts_to_beetmove = task.get_upstream_artifacts_with_zip_extract_param(context)
+    context.release_props = get_release_props(context)
+    context.checksums = dict()  # Needed by downstream calls
+    context.raw_balrog_manifest = dict()    # Needed by downstream calls
+
+    mapping_manifest = generate_beetmover_manifest(context)
+    validate_bucket_paths(context.bucket, mapping_manifest['s3_bucket_path'])
+
+    context.artifacts_to_beetmove = _extract_and_check_maven_artifacts_to_beetmove(
+        artifacts_to_beetmove,
+        mapping_manifest,
+        context.config.get('zip_max_file_size_in_mb', DEFAULT_ZIP_MAX_FILE_SIZE_IN_MB)
+    )
+
+    await move_beets(context, context.artifacts_to_beetmove, mapping_manifest)
+
+
+def _extract_and_check_maven_artifacts_to_beetmove(artifacts, mapping_manifest, zip_max_file_size_in_mb):
+    expected_files = maven_utils.get_maven_expected_files_per_archive_per_task_id(
+        artifacts, mapping_manifest
+    )
+
+    extracted_paths_per_archive = zip.check_and_extract_zip_archives(
+        artifacts, expected_files, zip_max_file_size_in_mb
+    )
+
+    number_of_extracted_archives = len(extracted_paths_per_archive)
+    if number_of_extracted_archives == 0:
+        raise ScriptWorkerTaskException('No archive extracted')
+    elif number_of_extracted_archives > 1:
+        raise NotImplementedError('More than 1 archive extracted. Only 1 is supported at once')
+    extracted_paths_per_relative_path = list(extracted_paths_per_archive.values())[0]
+
+    return {
+        'en-US': {
+            os.path.basename(path_in_archive): full_path
+            for path_in_archive, full_path in extracted_paths_per_relative_path.items()
+        }
+    }
+
+
 # copy_beets {{{1
 def copy_beets(context, from_keys_checksums, to_keys_checksums):
     creds = get_creds(context)
@@ -217,6 +262,7 @@ action_map = {
     # push to candidates is at this point identical to push_to_nightly
     'push-to-candidates': push_to_nightly,
     'push-to-releases': push_to_releases,
+    'push-to-maven': push_to_maven,
 }
 
 

@@ -14,6 +14,7 @@ from beetmoverscript.constants import (
     RESTRICTED_BUCKET_PATHS,
     CHECKSUMS_CUSTOM_FILE_NAMING
 )
+from scriptworker import artifacts as scriptworker_artifacts
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 log = logging.getLogger(__name__)
@@ -109,27 +110,43 @@ def add_balrog_manifest_to_artifacts(context):
     utils.write_json(abs_file_path, context.balrog_manifest)
 
 
-def get_upstream_artifact(context, taskid, path):
-    abs_path = os.path.abspath(os.path.join(context.config['work_dir'], 'cot', taskid, path))
-    if not os.path.exists(abs_path):
-        raise ScriptWorkerTaskException(
-            "upstream artifact with path: {}, does not exist".format(abs_path)
-        )
-    return abs_path
-
-
 def get_upstream_artifacts(context, preserve_full_paths=False):
     artifacts = {}
     for artifact_dict in context.task['payload']['upstreamArtifacts']:
         locale = artifact_dict['locale']
         artifacts[locale] = artifacts.get(locale, {})
         for path in artifact_dict['paths']:
-            abs_path = get_upstream_artifact(context, artifact_dict['taskId'], path)
+            abs_path = scriptworker_artifacts.get_and_check_single_upstream_artifact_full_path(
+                context, artifact_dict['taskId'], path
+            )
             if preserve_full_paths:
                 artifacts[locale][path] = abs_path
             else:
                 artifacts[locale][os.path.basename(abs_path)] = abs_path
     return artifacts
+
+
+def get_upstream_artifacts_with_zip_extract_param(context):
+    # XXX A dict comprehension isn't used because upstream_definition would be erased if the same
+    # taskId is present twice in upstreamArtifacts
+    upstream_artifacts_per_task_id = {}
+
+    for artifact_definition in context.task['payload']['upstreamArtifacts']:
+        task_id = artifact_definition['taskId']
+        upstream_definitions = upstream_artifacts_per_task_id.get(task_id, [])
+
+        new_upstream_definition = {
+            'paths': [
+                scriptworker_artifacts.get_and_check_single_upstream_artifact_full_path(context, task_id, path)
+                for path in artifact_definition['paths']
+            ],
+            'zip_extract': artifact_definition.get('zipExtract', False),
+        }
+
+        upstream_definitions.append(new_upstream_definition)
+        upstream_artifacts_per_task_id[task_id] = upstream_definitions
+
+    return upstream_artifacts_per_task_id
 
 
 def get_release_props(context, platform_mapping=STAGE_PLATFORM_MAP):
@@ -151,7 +168,7 @@ def update_props(context, props, platform_mapping):
     `stage_platform` as we need both in the beetmover template manifests."""
     props = deepcopy(props)
 
-    stage_platform = props["platform"]
+    stage_platform = props.get('platform', '')
     # for some products/platforms this mapping is not needed, hence the default
     props["platform"] = platform_mapping.get(stage_platform, stage_platform)
     props["stage_platform"] = stage_platform

@@ -92,6 +92,12 @@ RESTRICTED_BUCKET_PATHS = {
     'partner': [
         '',  # all legal
     ],
+    'maven': [
+        'maven2/',
+    ],
+    'maven-staging': [
+        'maven2/',
+    ],
 }
 
 # actions that imply actual releases, hence the need of `build_number` and
@@ -106,6 +112,10 @@ RELEASE_ACTIONS = (
 
 PARTNER_REPACK_ACTIONS = (
     'push-to-partner',
+)
+
+MAVEN_ACTIONS = (
+    'push-to-maven',
 )
 
 # XXX this is a fairly clunky way of specifying which files to copy from
@@ -164,3 +174,9 @@ INSTALLER_ARTIFACTS = (
     'target.dmg',
     'target.apk',
 )
+
+# Zip archive can theoretically have a better compression ratio, like when there's a big amount
+# of redundancy (e.g.: files full of zeros). Let beetmover only deal with regular cases. Edge cases
+# are considered too suspicious, so we bail out on them.
+DEFAULT_ZIP_MAX_FILE_SIZE_IN_MB = 100
+ZIP_MAX_COMPRESSION_RATIO = 10

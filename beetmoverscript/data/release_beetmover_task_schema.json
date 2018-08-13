@@ -46,9 +46,12 @@
                                 "items": {
                                     "type": "string"
                                 }
+                            },
+                            "zipExtract": {
+                                "type": "boolean"
                             }
                         },
-                        "required": ["taskId", "taskType", "paths", "locale"]
+                        "required": ["taskId", "taskType", "paths"]
                     },
                     "minItems": 0,
                     "uniqueItems": true

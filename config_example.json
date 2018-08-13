@@ -56,5 +56,7 @@
                 "firefox": "mozilla-releng-private-firefox-bucket"
             },
         }
-    }
+    },
+
+    "zip_max_file_size_in_mb": 100,
 }
