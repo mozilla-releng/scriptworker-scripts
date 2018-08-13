@@ -6,6 +6,21 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.8.0] = (2018-08-13)
+----------------------
+
+No significant changes.
+
+
+[7.8.0] = (2018-08-13)
+----------------------
+
+Added
+~~~~~
+- Support maven on S3. (`#1470942
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1470942>`_)
+
+
 [7.7.0] = (2018-08-09)
 ----------------------
 
