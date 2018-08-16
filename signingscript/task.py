@@ -23,6 +23,7 @@ from scriptworker.utils import retry_request, get_single_item_from_sequence
 from signingscript.sign import get_suitable_signing_servers, sign_gpg, \
     sign_jar, sign_macapp, sign_signcode, sign_widevine, sign_file
 from signingscript.exceptions import SigningServerError
+from signingscript.utils import is_autograph_signing_format
 
 log = logging.getLogger(__name__)
 
@@ -117,7 +118,7 @@ async def get_token(context, output_file, cert_type, signing_formats):
     }
     signing_servers = get_suitable_signing_servers(
         context.signing_servers, cert_type,
-        signing_formats
+        [fmt for fmt in signing_formats if not is_autograph_signing_format(fmt)]
     )
     random.shuffle(signing_servers)
     for s in signing_servers:

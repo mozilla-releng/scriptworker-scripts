@@ -19,6 +19,8 @@ assert tmpdir  # silence flake8
 SERVER_CONFIG_PATH = os.path.join(BASE_DIR, 'example_server_config.json')
 DEFAULT_SCOPE_PREFIX = "project:releng:signing:"
 TEST_CERT_TYPE = "{}cert:dep-signing".format(DEFAULT_SCOPE_PREFIX)
+TEST_AUTOGRAPH_TYPE = "{}autograph:dep-signing".format(DEFAULT_SCOPE_PREFIX)
+
 
 
 @pytest.fixture(scope='function')
@@ -61,14 +63,14 @@ def context(tmpdir):
 # task_cert_type {{{1
 def test_task_cert_type(context):
     context.task = {
-        'scopes': [TEST_CERT_TYPE, "project:releng:signing:type:mar", "project:releng:signing:type:gpg"]
+        'scopes': [TEST_CERT_TYPE, "project:releng:signing:format:mar", "project:releng:signing:format:gpg"]
     }
     assert TEST_CERT_TYPE == stask.task_cert_type(context)
 
 
 def test_task_cert_type_error(context):
     context.task = {
-        'scopes': [TEST_CERT_TYPE, 'project:releng:signing:cert:notdep', 'project:releng:signing:type:gpg']
+        'scopes': [TEST_CERT_TYPE, 'project:releng:signing:cert:notdep', 'project:releng:signing:format:gpg']
     }
     with pytest.raises(ScriptWorkerTaskException):
         stask.task_cert_type(context)

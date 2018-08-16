@@ -10,6 +10,7 @@ Supported scope prefixes:
   * Used for android Firefox Focus style signing tasks
 
 # Scopes
+
 * `{scope_prefix}:cert:dep-signing`
   * Tells signingscript to use the *Depend* certificate for a given format.
   * **Conflicts**: with any other `{scope_prefix}:cert:*`

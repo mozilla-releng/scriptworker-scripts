@@ -10,7 +10,8 @@ from datadog import statsd
 import scriptworker.client
 from signingscript.task import build_filelist_dict, get_token, \
     sign, task_cert_type, task_signing_formats
-from signingscript.utils import copy_to_dir, load_signing_server_config
+from signingscript.utils import copy_to_dir, is_autograph_signing_format, \
+     load_signing_server_config
 
 
 log = logging.getLogger(__name__)
@@ -33,15 +34,18 @@ async def async_main(context):
         context.session = session
         work_dir = context.config['work_dir']
         context.signing_servers = load_signing_server_config(context)
-        cert_type = task_cert_type(context)
+
         all_signing_formats = task_signing_formats(context)
         if 'gpg' in all_signing_formats:
             if not context.config.get('gpg_pubkey'):
                 raise Exception("GPG format is enabled but gpg_pubkey is not defined")
             if not os.path.exists(context.config['gpg_pubkey']):
                 raise Exception("gpg_pubkey ({}) doesn't exist!".format(context.config['gpg_pubkey']))
-        log.info("getting token")
-        await get_token(context, os.path.join(work_dir, 'token'), cert_type, all_signing_formats)
+
+        if not all(is_autograph_signing_format(format_) for format_ in all_signing_formats):
+            log.info("getting signingserver token")
+            await get_token(context, os.path.join(work_dir, 'token'), task_cert_type(context), all_signing_formats)
+
         filelist_dict = build_filelist_dict(context, all_signing_formats)
         for path, path_dict in filelist_dict.items():
             copy_to_dir(path_dict['full_path'], context.config['work_dir'], target=path)
@@ -101,6 +105,8 @@ def get_default_config(base_dir=None):
 
 def main():
     """Start signing script."""
+    mohawk_log = logging.getLogger('mohawk')
+    mohawk_log.setLevel(logging.INFO)
     return scriptworker.client.sync_main(async_main, default_config=get_default_config())
 
 
