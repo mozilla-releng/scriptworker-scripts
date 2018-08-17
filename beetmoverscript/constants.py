@@ -92,7 +92,7 @@ RESTRICTED_BUCKET_PATHS = {
     'partner': [
         '',  # all legal
     ],
-    'maven': [
+    'maven-production': [
         'maven2/',
     ],
     'maven-staging': [
