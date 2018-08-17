@@ -71,7 +71,11 @@ def get_task_action(task, script_config):
 
 def validate_bucket_paths(bucket, s3_bucket_path):
     """Double check the S3 bucket path is valid for the given bucket"""
-    if not any([s3_bucket_path.startswith(p) for p in RESTRICTED_BUCKET_PATHS[bucket]]):
+    try:
+        paths = RESTRICTED_BUCKET_PATHS[bucket]
+    except KeyError:
+        raise ScriptWorkerTaskException('Unknown bucket "{}"'.format(s3_bucket_path))
+    if not any([s3_bucket_path.startswith(p) for p in paths]):
         raise ScriptWorkerTaskException("Forbidden S3 {} destination".format(s3_bucket_path))
 
 
