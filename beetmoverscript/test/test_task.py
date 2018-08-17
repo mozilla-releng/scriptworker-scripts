@@ -183,7 +183,9 @@ def test_get_task_action(scopes, expected, raises):
 ), (
     "nightly", "pub/firefox/releases", True
 ), (
-    "maven", "maven2/org/mozilla", False
+    "maven", "maven2/org/mozilla", True     # maven alone doesn't exist
+), (
+    "maven-production", "maven2/org/mozilla", False
 ), (
     "maven-staging", "maven2/org/mozilla", False
 )))
