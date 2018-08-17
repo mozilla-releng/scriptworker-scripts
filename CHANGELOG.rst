@@ -6,10 +6,13 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
-[7.8.0] = (2018-08-13)
+[7.8.1] = (2018-08-17)
 ----------------------
 
-No significant changes.
+Fixed
+~~~~~
+- Renamed maven bucket to maven-production (`#1470942
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1470942>`_)
 
 
 [7.8.0] = (2018-08-13)
