@@ -6,10 +6,12 @@ matrix:
     - python: 3.6
       env:
         - TOXENV=py36
+        - AUTOGRAPH_INTEGRATION=1
     - python: 3.7
       dist: xenial
       env:
         - TOXENV=py37
+        - AUTOGRAPH_INTEGRATION=1
       sudo: true
 
 install:

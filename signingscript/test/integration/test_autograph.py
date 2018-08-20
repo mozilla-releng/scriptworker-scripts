@@ -14,6 +14,7 @@ from scriptworker.utils import makedirs
 
 from signingscript.script import async_main
 from signingscript.test import context
+from signingscript.test.integration import skip_when_no_autograph_server
 
 
 assert context  # silence flake8
@@ -121,6 +122,7 @@ def _craft_task(file_names, signing_format):
 
 
 @pytest.mark.asyncio
+@skip_when_no_autograph_server
 async def test_integration_autograph_mar(context, tmpdir):
     file_names = ['partial1.mar', 'partial2.mar']
     for file_name in file_names:
@@ -157,6 +159,7 @@ def _verify_apk_signature(keystore_path, apk_path, certificate_alias):
 
 
 @pytest.mark.asyncio
+@skip_when_no_autograph_server
 async def test_integration_autograph_apk(context, tmpdir):
     file_name = 'app.apk'
     original_file_path = os.path.join(TEST_DATA_DIR, file_name)
