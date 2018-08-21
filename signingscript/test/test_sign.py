@@ -15,14 +15,16 @@ from signingscript.script import get_default_config
 from signingscript.utils import get_hash, load_signing_server_config, mkdir, SigningServer
 import signingscript.sign as sign
 import signingscript.utils as utils
-from signingscript.test import noop_sync, noop_async, tmpdir, die, BASE_DIR, TEST_DATA_DIR
+from signingscript.test import (
+    noop_sync, noop_async, tmpdir, die, BASE_DIR, TEST_DATA_DIR, context,
+    DEFAULT_SCOPE_PREFIX, SERVER_CONFIG_PATH
+)
 
 assert tmpdir  # silence flake8
+assert context  # silence flake8
 
 
 # helper constants, fixtures, functions {{{1
-SERVER_CONFIG_PATH = os.path.join(BASE_DIR, 'example_server_config.json')
-DEFAULT_SCOPE_PREFIX = 'project:releng:signing:'
 TEST_CERT_TYPE = '{}cert:dep-signing'.format(DEFAULT_SCOPE_PREFIX)
 
 
@@ -49,20 +51,6 @@ def task_defn():
           }]
         }
     }
-
-
-@pytest.yield_fixture(scope='function')
-def context(tmpdir):
-    context = Context()
-    context.config = get_default_config()
-    context.config['signing_server_config'] = SERVER_CONFIG_PATH
-    context.config['work_dir'] = os.path.join(tmpdir, 'work')
-    context.config['artifact_dir'] = os.path.join(tmpdir, 'artifact')
-    context.config['taskcluster_scope_prefix'] = DEFAULT_SCOPE_PREFIX
-    context.signing_servers = load_signing_server_config(context)
-    mkdir(context.config['work_dir'])
-    mkdir(context.config['artifact_dir'])
-    yield context
 
 
 @contextmanager

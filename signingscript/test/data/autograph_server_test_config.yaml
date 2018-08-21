@@ -1,0 +1,128 @@
+server:
+    listen: "0.0.0.0:5500"
+    # cache 500k nonces to protect from authorization replay attacks
+    noncecachesize: 10
+
+# The keys below are testing keys that do not grant any power
+signers:
+    - id: test-mar
+      type: mar
+      privatekey: |
+          -----BEGIN PRIVATE KEY-----
+          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
+          ri478GQLu517aE802wuEZDRPazlsjfk=
+          -----END PRIVATE KEY-----
+
+    - id: test-apk
+      type: apk
+      certificate: |
+          -----BEGIN CERTIFICATE-----
+          MIIDlTCCAn2gAwIBAgIETkY3pDANBgkqhkiG9w0BAQsFADB7MRAwDgYDVQQGEwdV
+          bmtub3duMRAwDgYDVQQIEwdVbmtub3duMRAwDgYDVQQHEwdVbmtub3duMRAwDgYD
+          VQQKEwdVbmtub3duMRAwDgYDVQQLEwdVbmtub3duMR8wHQYDVQQDExZTaWduaW5n
+          c2NyaXB0IFRlc3QgS2V5MB4XDTE4MDgyMDE1MTg0OFoXDTQ2MDEwNTE1MTg0OFow
+          ezEQMA4GA1UEBhMHVW5rbm93bjEQMA4GA1UECBMHVW5rbm93bjEQMA4GA1UEBxMH
+          VW5rbm93bjEQMA4GA1UEChMHVW5rbm93bjEQMA4GA1UECxMHVW5rbm93bjEfMB0G
+          A1UEAxMWU2lnbmluZ3NjcmlwdCBUZXN0IEtleTCCASIwDQYJKoZIhvcNAQEBBQAD
+          ggEPADCCAQoCggEBAKh/iB40XKGKkBrxcgiXzarOX8oF1uvNPgYRbPmn/dCOyeal
+          vjm4iIL3EA4X0t4haYe0x0BYISTLdzakUwTU8jm6vFCXgNLgPifGkYw2UWuusztP
+          PBrpMQUGxiHAblH6OwdrgIGp2ibOvWpPe04NrIWchoCnmLGbi4LwzjqXPIE9gr5a
+          mLk8fauZXr7duDMRnVI5Mwj961EJzQ1sIZ+0JoXO4Bneh9JcBT7nT2RTFYGmMhHb
+          MoGAK5sXHv2VhP9ulE+IUfNNxMyT0cgtw88ztUcEA3cjXylpUovGJDtFF8Cy9fFJ
+          1nzCjVCuyxjXQUikuLSdPwMr9/yscfQlVGcKUCECAwEAAaMhMB8wHQYDVR0OBBYE
+          FEcuEuNOfzMolcA2gprnq60c+Lk7MA0GCSqGSIb3DQEBCwUAA4IBAQCew5NGHGqc
+          /Ai0ygPPfonODCaSyOL5C4CIPtvjUkipyU0BfCMr6wdAtiwibTRdMyAqbQfOX6Z1
+          FmQMwKwlmgIBjijCMvK46n3cO7FOHxwYGXd6IC7H6uTb4vNYNpitMnaJOaS60ewZ
+          gQg/84FUmQ4wdBrsjGXD2ZbVDgcMwnPXnK9n7rPi6B9/6ya6Mfwd1g4J/zfRqOs/
+          MRvWzrwlKLGod+cZSUCaIMus0L+YZBe3bdfpUOST7ObpU5FXSwaFy4ea69FXRdbk
+          a6w40jp100bWnpmOWP9T0YY4zVLPFIrMcEuGeBknScjSmKLTPnAUBVtPyNOdz1h8
+          DnU8knmxQiw8
+          -----END CERTIFICATE-----
+      privatekey: |
+          -----BEGIN PRIVATE KEY-----
+          MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCof4geNFyhipAa
+          8XIIl82qzl/KBdbrzT4GEWz5p/3Qjsnmpb45uIiC9xAOF9LeIWmHtMdAWCEky3c2
+          pFME1PI5urxQl4DS4D4nxpGMNlFrrrM7Tzwa6TEFBsYhwG5R+jsHa4CBqdomzr1q
+          T3tODayFnIaAp5ixm4uC8M46lzyBPYK+Wpi5PH2rmV6+3bgzEZ1SOTMI/etRCc0N
+          bCGftCaFzuAZ3ofSXAU+509kUxWBpjIR2zKBgCubFx79lYT/bpRPiFHzTcTMk9HI
+          LcPPM7VHBAN3I18paVKLxiQ7RRfAsvXxSdZ8wo1QrssY10FIpLi0nT8DK/f8rHH0
+          JVRnClAhAgMBAAECggEAGpGxhwG+sYJF4tm7n3tAZPSRyitNjnUYmKBazKserKo3
+          T/VGn5dnfy8yCubay0f9efaZjJ3Y7BJhQ+55YMOrRksZsqORHq9ZXbBD9xYBlLdB
+          b9K4qY2nuyEsUNolCywn7q2W39tGmOP0njTWPqKNV6ws0VCcFTVvtEAAZODAG6iz
+          2EVPp7YkUgL10tfpYxzjMQBrhqmZXIyut1BZeBaHxOYgpdYG2cY5scCPytdJkJmK
+          mqo2rfFSehN3NN7uvwjeMJNo5DVMqy5gXQ7BLpjdF8sULHsf/KowmUX8AEe7PdeP
+          aKcigUZiCyPGrPKP0v8rvGwgPPJlcHjTw8cQD9UOeQKBgQDTpGMLITXCTU834Fio
+          ORyVKyY4ocG8tsw9dEymB8IRIc0qI+3b4C08YaUZ6vuA0oYhD64jTUNzBNf1m+HT
+          czFd96xtKNJhv2AgvmC/vfGpU38sTjL49qCvIgn+9V2Z97cVCBjCIxktPLHVI91z
+          qsKna1dNpKbII2iF7u0MQf6q5wKBgQDL0EPBZI3KkywU/P8i0+ZPNAPakYTQj+Jq
+          fScxQ9FjJCU+9D0nBW3easDbkHP1y6LJT75XlfC1VPKVIlSG1zXmGAFQQ5DRedQh
+          UltacNRcftXyXwKeyMCuB2w/RxmX5+4GQ0BcOuvubuh0IW/M+8vNt3cTR/Yj77Pj
+          YnGCr1kTtwKBgQCdGgGLWXOWb9zGFXq6JOrar9UHZMtzUh354EKlXEzqerTY+yKt
+          fJMXp0PvIUbgMWXvVLxm6AuRbZ8Bal0PoQqcPiV4Qj0o4e5xX+BhdJXWo2xbbxDX
+          TfupBRN2dpyslf0JV6FJOtSNh+hZ1u2j1rX3oO6FbBuBpQcJpHnCB5sLMQKBgFOM
+          Jwoy3xDobYyY/TlYpbNX/jBtsIUSRl0iupsuUroSShZZZmwFhLlFB5O5zl82v59I
+          Sh17QHYEwYAy13WC6PxOYNN3Lvk/uJ6ENSCI2fSkpa06F0fhwWJVdqEl0y77Cw6U
+          KODl4msWGcHpJvxfR3cnuu8zc4ndq98NLrzEhn5XAoGBAMuN8duksOybpmsF0kFE
+          aKD7KHhN8kwtnMHAXXERYTidGmHM4l5exD3ky2S+3XZrxpJ5aAqUKdD9Guserfcp
+          WkjTOFZOErBxW0NKw/vkia4MFUoopYiCj6XRnymWwHPkT9GcOjt7viXuf8uUhcgb
+          k34jiR7j5xM0DDAcAxbQ/LRA
+          -----END PRIVATE KEY-----
+
+authorizations:
+    - id: alice
+      key: abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn
+      signers:
+          - test-mar
+
+    - id: bob
+      key: 1234567890abcdefghijklmnopqrstuvwxyz1234567890abcd
+      signers:
+          - test-apk

@@ -4,17 +4,23 @@ matrix:
   fast_finish: true
   include:
     - python: 3.6
-      env: TOXENV=py36
+      env:
+        - TOXENV=py36
+        - AUTOGRAPH_INTEGRATION=1
     - python: 3.7
       dist: xenial
-      env: TOXENV=py37
+      env:
+        - TOXENV=py37
+        - AUTOGRAPH_INTEGRATION=1
       sudo: true
 
 install:
     - travis_retry pip install tox
 script:
+    - docker run --name autograph -d -p 5500:5500 -v $(pwd)/signingscript/test/data/:/data/ mozilla/autograph:2.2.0 /go/bin/autograph -c /data/autograph_server_test_config.yaml
     - tox
-after_success:
+after_script:
+    - docker stop autograph
     - tox -e coveralls
 
 # http://docs.travis-ci.com/user/workers/container-based-infrastructure/
