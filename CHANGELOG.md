@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [8.0.0] - 2018-08-22
+### Added
+- support for signing MARs and APKs with Autograph
+
 ## [7.0.4] - 2018-08-06
 ### Fixed
 - catch `aiohttp.ClientError` and `asyncio.TimeoutError` during `get_token` requests
