@@ -25,7 +25,7 @@ setup(
         "arrow",
         "datadog",
         "python-jose",
-        "request",
+        "requests",
         "requests_hawk",
         "scriptworker",
         "signtool",

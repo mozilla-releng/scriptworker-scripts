@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [8.0.1] - 2018-08-23
+### Fixed
+- fix typo in setup.py that caused the wrong package to be required
+
 ## [8.0.0] - 2018-08-22
 ### Added
 - support for signing MARs and APKs with Autograph
