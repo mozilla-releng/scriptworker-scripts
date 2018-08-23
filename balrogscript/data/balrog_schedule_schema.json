@@ -14,7 +14,8 @@
                     },
                     "uniqueItems": true
                 },
-                "release_eta": {"type": "string"}
+                "release_eta": {"type": "string"},
+                "blob_suffix": {"type": "string"}
             },
             "required": ["build_number", "product", "publish_rules", "version"]
         },

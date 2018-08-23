@@ -34,6 +34,7 @@
                     "uniqueItems": true
                 },
                 "version": {"type": "string"},
+                "blob_suffix": {"type": "string"},
                 "complete_mar_filename_pattern": {"type": "string"},
                 "complete_mar_bouncer_product_pattern": {"type": "string"}
             },
