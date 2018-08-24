@@ -29,7 +29,7 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.mozinfo.json
         - latest-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.mozinfo.json
-      update_balrog_manifest: True
+      update_balrog_manifest: {format: mozinfo}
     target.test_packages.json:
       s3_key: fake-{{ version }}.{{ locale }}.target.test_packages.json
       destinations:

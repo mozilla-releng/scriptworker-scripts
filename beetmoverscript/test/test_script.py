@@ -362,8 +362,29 @@ async def test_move_beets(partials, mocker):
          'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.apk']
     ]
 
-    expected_balrog_manifest = [
+    expected_balrog_manifest = []
+    for complete_info in [
         {
+            'completeInfo': [
+                {
+                    'hash': 'dummyhash',
+                    'size': 123456,
+                    'url': 'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt'
+                }
+            ],
+        },
+        {
+            'blob_suffix': '-mozinfo',
+            'completeInfo': [
+                {
+                    'hash': 'dummyhash',
+                    'size': 123456,
+                    'url': 'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json'
+                },
+            ],
+        },
+    ]:
+        entry = {
             'tc_nightly': True,
             'appName': 'Fake',
             'appVersion': '99.0a1',
@@ -374,36 +395,24 @@ async def test_move_beets(partials, mocker):
             'locale': 'en-US',
             'platform': 'android-api-15',
             'url_replacements': [['http://archive.mozilla.org/pub', 'http://download.cdn.mozilla.net/pub']],
-            'completeInfo': [
-                {
-                    'hash': 'dummyhash',
-                    'size': 123456,
-                    'url': 'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json'
-                },
-                {
-                    'hash': 'dummyhash',
-                    'size': 123456,
-                    'url': 'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_info.txt'
-                }
-            ],
         }
-    ]
-    if partials:
-        expected_balrog_manifest[0]['partialInfo'] = [
-            {
-                'from_buildid': 19991231235959,
-                'hash': 'dummyhash',
-                'size': 123456,
-                'url': 'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'
-            }
-        ]
+        entry.update(complete_info)
+        if partials:
+                entry['partialInfo'] = [
+                    {
+                        'from_buildid': 19991231235959,
+                        'hash': 'dummyhash',
+                        'size': 123456,
+                        'url': 'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'
+                    }
+                ]
+        expected_balrog_manifest.append(entry)
 
     actual_sources = []
     actual_destinations = []
 
-    def sort_completeInfo(manifest):
-        completeInfo = manifest[0]['completeInfo']
-        manifest[0]['completeInfo'] = sorted(completeInfo, key=lambda ci: ci['url'])
+    def sort_manifest(manifest):
+        manifest.sort(key=lambda entry: entry.get('blob_suffix', ''))
 
     async def fake_move_beet(context, source, destinations, locale,
                              update_balrog_manifest, artifact_pretty_name, from_buildid):
@@ -416,17 +425,18 @@ async def test_move_beets(partials, mocker):
                 "size": 123456,
                 "url": destinations[0]
             }
+            context.raw_balrog_manifest.setdefault(locale, {})
             if from_buildid:
                 if partials:
                     data["from_buildid"] = from_buildid
-                    component = 'partialInfo'
+                    context.raw_balrog_manifest[locale].setdefault('partialInfo', []).append(data)
                 else:
                     return
             else:
-                component = 'completeInfo'
-            context.raw_balrog_manifest.setdefault(locale, {})
-            context.raw_balrog_manifest[locale].setdefault(component, [])
-            context.raw_balrog_manifest[locale][component].append(data)
+                if update_balrog_manifest is True:
+                    update_balrog_manifest = {'format': ''}
+                context.raw_balrog_manifest[locale].setdefault('completeInfo', {})[
+                    update_balrog_manifest['format']] = data
 
     with mock.patch('beetmoverscript.script.move_beet', fake_move_beet):
         await move_beets(context, context.artifacts_to_beetmove, manifest)
@@ -435,8 +445,8 @@ async def test_move_beets(partials, mocker):
     assert sorted(expected_destinations) == sorted(actual_destinations)
 
     # Deal with different-sorted completeInfo
-    sort_completeInfo(context.balrog_manifest)
-    sort_completeInfo(expected_balrog_manifest)
+    sort_manifest(context.balrog_manifest)
+    sort_manifest(expected_balrog_manifest)
     assert context.balrog_manifest == expected_balrog_manifest
 
 
@@ -507,7 +517,7 @@ async def test_move_beet(update_manifest, action):
     assert expected_upload_args == actual_upload_args
     if update_manifest:
         for k in expected_balrog_manifest.keys():
-            assert (context.raw_balrog_manifest[locale]['completeInfo'][0][k] ==
+            assert (context.raw_balrog_manifest[locale]['completeInfo'][''][k] ==
                     expected_balrog_manifest[k])
 
     expected_balrog_manifest['from_buildid'] = '19991231235959'
