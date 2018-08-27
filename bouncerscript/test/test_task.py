@@ -397,6 +397,14 @@ def test_check_locations_match(locations, product_config, expected):
     "/mobile/releases/61.0b15/win32/:lang/Firefox%20Installer.exe",
     False,
 ), (
+    "Firefox-62.0build1-Partial-60.0.2build1",
+    "/firefox/candidates/62.0-candidates/build1/update/linux-i686/:lang/firefox-60.0.2-62.0.partial.mar",
+    True,
+), (
+    "Firefox-62.0build1-Partial-60.0.2build1",
+    "/firefox/releases/62.0/update/linux-i686/:lang/firefox-60.0.2-62.0.partial.mar",
+    False,
+), (
     "Devedition-61.0b15",
     "/devedition/releases/61.0b15/linux-i686/:lang/firefox-61.0b15.tar.bz2",
     True,

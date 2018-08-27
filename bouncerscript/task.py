@@ -102,7 +102,7 @@ def check_locations_match(locations, product_config):
 def check_path_matches_destination(product_name, path):
     """Function to ensure that the paths to-be-submitted in bouncer are valid
     and according to the in-tree product"""
-    possible_products = [p for p, pattern in PRODUCT_TO_PRODUCT_ENTRY.items() if
+    possible_products = [p for p, pattern in PRODUCT_TO_PRODUCT_ENTRY if
                          matches(product_name, pattern)]
     product = possible_products[0]
     return matches(path,

@@ -26,16 +26,18 @@ ALIASES_REGEXES = {
 
 PRODUCT_TO_DESTINATIONS_REGEXES = {
     'fennec': '^(/mobile/releases/.*?/(?:android-api-16|android-x86)/\:lang/fennec-.*\:lang\.(?:android-arm|android-i386)\.apk)$',
+    'firefox-rc': '^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$',
     'firefox': '^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$',
     'devedition': '^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$',
     'thunderbird': '^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar))$',
 }
 
-PRODUCT_TO_PRODUCT_ENTRY = {
-    'fennec': r'^Fennec-.*$',
-    'firefox': r'^Firefox-.*$',
-    'devedition': r'^Devedition-.*$',
-    'thunderbird': r'^Thunderbird-.*$',
-}
+PRODUCT_TO_PRODUCT_ENTRY = [
+    ('fennec', r'^Fennec-.*$'),
+    ('firefox-rc', r'^Firefox-.*build[0-9]+-.*$'),
+    ('firefox', r'^Firefox-.*$'),
+    ('devedition', r'^Devedition-.*$'),
+    ('thunderbird', r'^Thunderbird-.*$'),
+]
 
 GO_BOUNCER_URL_TMPL = 'https://download.mozilla.org/?product={}&print=yes'
