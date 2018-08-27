@@ -3,10 +3,12 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 
-## [next] - YYYY-MM-DD
+## [3.1.0] - 2018-08-28
 ### Added
 - Added a SCOPES.md file in repo root to document the relevant scopes used in bouncerscript
 
+### Fixed
+- Fixed `bouncer-submission` support for Firefox RC paths.
 
 ## [3.0.0] - 2018-07-11
 ### Added
