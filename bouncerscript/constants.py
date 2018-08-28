@@ -32,6 +32,8 @@ PRODUCT_TO_DESTINATIONS_REGEXES = {
     'thunderbird': '^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar))$',
 }
 
+# XXX A list of tuple is used because we care about the order:
+# the firefox regex also matches the firefox-rc regex.
 PRODUCT_TO_PRODUCT_ENTRY = [
     ('fennec', r'^Fennec-.*$'),
     ('firefox-rc', r'^Firefox-.*build[0-9]+-.*$'),
