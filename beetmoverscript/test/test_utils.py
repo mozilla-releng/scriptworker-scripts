@@ -148,7 +148,7 @@ def test_generate_manifest(context, mocker):
             'name': 'Maven repository',
             'owner': 'release@mozilla.com',
         },
-        's3_bucket_path': 'maven2/org/mozilla/geckoview-x86/62.0/',
+        's3_bucket_path': 'maven2/org/mozilla/geckoview/geckoview-x86/62.0/',
     }
 ), (
     '63.0b11',
@@ -212,7 +212,7 @@ def test_generate_manifest(context, mocker):
             'name': 'Maven repository',
             'owner': 'release@mozilla.com',
         },
-        's3_bucket_path': 'maven2/org/mozilla/geckoview-beta-arm64-v8a/63.0b11/',
+        's3_bucket_path': 'maven2/org/mozilla/geckoview/geckoview-beta-arm64-v8a/63.0b11/',
     }
 ), (
     '63.0a1',
@@ -276,7 +276,7 @@ def test_generate_manifest(context, mocker):
             'name': 'Maven repository',
             'owner': 'release@mozilla.com',
         },
-        's3_bucket_path': 'maven2/org/mozilla/geckoview-nightly-x86/63.0.20181231120000/',
+        's3_bucket_path': 'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20181231120000/',
     }
 ), (
     '63.0b11',
@@ -340,7 +340,7 @@ def test_generate_manifest(context, mocker):
             'name': 'Maven repository',
             'owner': 'release@mozilla.com',
         },
-        's3_bucket_path': 'maven2/org/mozilla/geckoview-nightly-maple-armeabi-v7a/63.0.20181231120000/',
+        's3_bucket_path': 'maven2/org/mozilla/geckoview/geckoview-nightly-maple-armeabi-v7a/63.0.20181231120000/',
     }
 )))
 def test_generate_manifest_maven(context, mocker, version, build_id, artifact_id, expected):
