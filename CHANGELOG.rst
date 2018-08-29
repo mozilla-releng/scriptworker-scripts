@@ -6,6 +6,14 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.8.2] = (2018-08-29)
+----------------------
+
+Fixed
+~~~~~
+- Changed geckoview folder to maven2/org/mozilla/geckoview/geckoview-* (`#1484932
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1484932>`_)
+
 [7.8.1] = (2018-08-17)
 ----------------------
 
