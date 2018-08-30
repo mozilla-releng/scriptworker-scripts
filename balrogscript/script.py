@@ -29,8 +29,11 @@ def create_locale_submitter(e, balrog_auth, config):
 
         complete_info = e['completeInfo']
         partial_info = e.get('partialInfo')
-        submitter = ReleaseSubmitterV9(api_root=config['api_root'], auth=auth,
-                                       dummy=config['dummy'])
+        submitter = ReleaseSubmitterV9(
+            api_root=config['api_root'], auth=auth,
+            dummy=config['dummy'],
+            suffix=e.get('blob_suffix', ''),
+        )
 
         data = {
             'platform': e['platform'],
@@ -101,8 +104,11 @@ def schedule(task, config, balrog_auth):
     """Schedule a release to ship on balrog channel(s)"""
     from util.retry import retry  # noqa: E402
     auth = balrog_auth
-    scheduler = create_scheduler(api_root=config['api_root'], auth=auth,
-                                 dummy=config['dummy'])
+    scheduler = create_scheduler(
+        api_root=config['api_root'], auth=auth,
+        dummy=config['dummy'],
+        suffix=task['payload'].get('blob_suffix', ''),
+    )
     args = [
         task['payload']['product'].capitalize(),
         task['payload']['version'],
@@ -142,13 +148,14 @@ def submit_toplevel(task, config, balrog_auth):
     creator = create_creator(
         api_root=config['api_root'], auth=auth,
         dummy=config['dummy'],
-        # these are set for bz2, which we don't support.
-        complete_mar_filename_pattern=None,
-        complete_mar_bouncer_product_pattern=None,
+        suffix=task['payload'].get('blob_suffix', ''),
+        complete_mar_filename_pattern=task['payload'].get('complete_mar_filename_pattern'),
+        complete_mar_bouncer_product_pattern=task['payload'].get('complete_mar_bouncer_product_pattern'),
     )
     pusher = create_pusher(
         api_root=config['api_root'], auth=auth,
         dummy=config['dummy'],
+        suffix=task['payload'].get('blob_suffix', ''),
     )
 
     retry(lambda: creator.run(
