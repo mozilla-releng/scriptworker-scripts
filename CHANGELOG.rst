@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[3.2.0] = (2018-08-30)
+----------------------
+
+Added
+~~~~~
+
+- - Added support for generating blobs for bz2 updates. (`#39
+  <https://github.com/mozilla-releng/balrogscript/issues/39>`_)
+
+
 [3.1.0] = (2018-05-01)
 ----------------------
 
