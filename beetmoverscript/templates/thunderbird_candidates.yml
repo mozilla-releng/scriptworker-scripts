@@ -111,11 +111,7 @@ mapping:
       s3_key: update/{{ platform }}/{{ locale }}/thunderbird-{{ version }}.bz2.complete.mar
       destinations:
         - update/{{ platform }}/{{ locale }}/thunderbird-{{ version }}.bz2.complete.mar
-    # FIXME: potentially other names here
-    target.bz2.complete.mar.asc:
-      s3_key: update/{{ platform }}/{{ locale }}/thunderbird-{{ version }}.bz2.complete.mar.asc
-      destinations:
-        - update/{{ platform }}/{{ locale }}/thunderbird-{{ version }}.bz2.complete.mar.asc
+      update_balrog_manifest: {format: bz2}
     target.checksums:
       s3_key: beetmover-checksums/{{ platform }}/{{ locale }}/thunderbird-{{ version }}.checksums.beet
       destinations:

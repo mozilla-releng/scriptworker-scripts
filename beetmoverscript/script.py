@@ -345,12 +345,15 @@ async def move_beets(context, artifacts_to_beetmove, manifest):
     # Fix up balrog manifest. We need an entry with both completes and
     # partials, which is why we store up the data from each moved beet
     # and collate it now.
-    for locale in context.raw_balrog_manifest:
-        balrog_entry = enrich_balrog_manifest(context, locale)
-        balrog_entry['completeInfo'] = context.raw_balrog_manifest[locale]['completeInfo']
-        if 'partialInfo' in context.raw_balrog_manifest[locale]:
-            balrog_entry['partialInfo'] = context.raw_balrog_manifest[locale]['partialInfo']
-        context.balrog_manifest.append(balrog_entry)
+    for locale, info in context.raw_balrog_manifest.items():
+        for format in info['completeInfo']:
+            balrog_entry = enrich_balrog_manifest(context, locale)
+            balrog_entry['completeInfo'] = [info['completeInfo'][format]]
+            if 'partialInfo' in info:
+                balrog_entry['partialInfo'] = info['partialInfo']
+            if format:
+                balrog_entry['blob_suffix'] = '-{}'.format(format)
+            context.balrog_manifest.append(balrog_entry)
 
 
 # move_beet {{{1
@@ -366,13 +369,17 @@ async def move_beet(context, source, destinations, locale,
 
     if update_balrog_manifest:
         context.raw_balrog_manifest.setdefault(locale, {})
+        balrog_info = generate_balrog_info(
+            context, artifact_pretty_name,
+            locale, destinations, from_buildid,
+        )
         if from_buildid:
-            component = 'partialInfo'
+            context.raw_balrog_manifest[locale].setdefault('partialInfo', []).append(balrog_info)
         else:
-            component = 'completeInfo'
-        context.raw_balrog_manifest[locale].setdefault(component, [])
-        context.raw_balrog_manifest[locale][component].append(generate_balrog_info(context, artifact_pretty_name,
-                                                                                   locale, destinations, from_buildid))
+            if update_balrog_manifest is True:
+                update_balrog_manifest = {'format': ''}
+            context.raw_balrog_manifest[locale].setdefault('completeInfo', {})[
+                update_balrog_manifest['format']] = balrog_info
 
 
 # move_partner_beets {{{1
