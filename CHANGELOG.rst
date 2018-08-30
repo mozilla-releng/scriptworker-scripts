@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.9.0] = (2018-08-30)
+----------------------
+
+Added
+~~~~~
+
+- Added support for multiple update formats. (`#1481121
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1481121>`_)
+
+
 [7.8.2] = (2018-08-29)
 ----------------------
 
