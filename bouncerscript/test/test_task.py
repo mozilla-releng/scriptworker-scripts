@@ -285,15 +285,15 @@ def test_check_product_names_match_aliases(aliases_context, entries, raises):
 
 
 # check_locations_match {{{1
-@pytest.mark.parametrize("locations,product_config,expected", ((
+@pytest.mark.parametrize("locations, product_config, raises", ((
     ['a', 'b'], {'aaaa': 'a', 'bbbb': 'b'},
-    True,
+    False,
 ), (
     ['a', 'b'], {'aaaa': 'b', 'bbbb': 'a'},
-    True,
+    False,
 ), (
     [], {},
-    True,
+    False,
 ), (
     [
         '/mobile/releases/62.0b10/android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk',
@@ -303,198 +303,206 @@ def test_check_product_names_match_aliases(aliases_context, entries, raises):
         "android": "/mobile/releases/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk",
         "android-x86": "/mobile/releases/62.0b10/android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk"
     },
-    True,
+    False,
 ), (
     ['a'], {'a': 'b'},
-    False,
+    True,
 ), (
     [], {'a': 'b'},
-    False,
+    True,
 )))
-def test_check_locations_match(locations, product_config, expected):
-    assert check_locations_match(locations, product_config) == expected
+def test_check_locations_match(locations, product_config, raises):
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            check_locations_match(locations, product_config)
+    else:
+        check_locations_match(locations, product_config)
 
 
 # check_path_matches_destination {{{1
-@pytest.mark.parametrize("product_name,path,expected", (((
+@pytest.mark.parametrize("product_name, path, raises", (((
     "Firefox-61.0b15-SSL",
     "/firefox/releases/61.0b15/mac/:lang/Firefox%2061.0b15.dmg",
-    True,
+    False,
 ), (
     "Fennec-61.0b15",
     "/mobile/releases/61.0b15/android-x86/:lang/fennec-61.0b15.:lang.android-i386.apk",
-    True,
+    False,
 ), (
     "Fennec-61.0b15",
     "/mobile/releases/61.0b15/android-x86/:lang/fennec-61.0b15.:lang.android-i386.apk",
-    True,
+    False,
 ), (
     "Fennec-61.0b15",
     "/firefox/releases/61.0b15/update/mac/:lang/firefox-61.0b15-61.0b15.partial.mar",
-    False,
+    True,
 ), (
     "Firefox-61.0b15",
     "/firefox/releases/61.0b15/linux-x86_64/:lang/firefox-61.0b15.tar.bz2",
-    True,
+    False,
 ), (
     "Firefox-61.0b15",
     "/firefox/releases/61.0b15/win64/:lang/Firefox%20Setup%2061.0b15.exe",
-    True,
+    False,
 ), (
     "Firefox-61.0b15",
     "/firefox/releases/61.0b15/mac/:lang/Firefox%2061.0b15.dmg",
-    True,
+    False,
 ), (
     "Firefox-61.0b15",
     "/devedition/releases/61.0b15/win64/:lang/Firefox%20Setup%2061.0b15.exe",
-    False,
+    True,
 ), (
     "Firefox-61.0b15-Complete",
     "/firefox/releases/61.0b15/update/win64/:lang/firefox-61.0b15.complete.mar",
-    True,
+    False,
 ), (
     "Firefox-61.0b15-Complete",
     "/firefox/releases/61.0b15/update/linux-i686/:lang/firefox-61.0b15.complete.mar",
-    True,
+    False,
 ), (
     "Firefox-61.0b15-Complete",
     "/firefox/releases/61.0b15/update/mac/:lang/firefox-61.0b15.complete.marx",
-    False,
+    True,
 ), (
     "Firefox-61.0b15-Partial-61.0b15",
     "/firefox/releases/61.0b15/update/linux-x86_64/:lang/firefox-61.0b15-61.0b15.partial.mar",
-    True,
+    False,
 ), (
     "Firefox-61.0b15-Partial-61.0b15",
     "/firefox/releases/61.0b15/update/win32/:lang/fennec-61.0b15-61.0b15.partial.mar",
-    False,
+    True,
 ), (
     "Firefox-61.0b15-Partial-61.0b15",
     "/firefox/releases/61.0b15/update/win64/:lang/firefox-61.0b15-61.0b15.partial.mar",
-    True,
+    False,
 ), (
     "Firefox-61.0b15-SSL",
     "/firefox/releases/61.0b15/linux-i686/:lang/firefox-61.0b15.tar.bz2",
-    True,
+    False,
 ), (
     "Firefox-61.0b15-SSL",
     "/firefox/releases/61.0b15/win64/Firefox%20Setup%2061.0b15.exe",
-    False,
+    True,
 ), (
     "Firefox-61.0b15-SSL",
     "/firefox/releases/61.0b15/win64/:lang/Firefox%20Setup%2061.0b15.exe",
-    True,
+    False,
 ), (
     "Firefox-61.0b15-stub",
     "/firefox/releases/61.0b15/win32/:lang/Firefox%20Installer.exe",
-    True,
+    False,
 ), (
     "Firefox-61.0b15-stub",
     "/firefox/releases/61.0b15/win32/:lang/Firefox%20Installer.exe",
-    True,
+    False,
 ), (
     "Firefox-61.0b15-stub",
     "/mobile/releases/61.0b15/win32/:lang/Firefox%20Installer.exe",
-    False,
+    True,
 ), (
     "Firefox-62.0build1-Partial-60.0.2build1",
     "/firefox/candidates/62.0-candidates/build1/update/linux-i686/:lang/firefox-60.0.2-62.0.partial.mar",
-    True,
+    False,
 ), (
     "Firefox-62.0build1-Partial-60.0.2build1",
     "/firefox/releases/62.0/update/linux-i686/:lang/firefox-60.0.2-62.0.partial.mar",
-    False,
+    True,
 ), (
     "Devedition-61.0b15",
     "/devedition/releases/61.0b15/linux-i686/:lang/firefox-61.0b15.tar.bz2",
-    True,
+    False,
 ), (
     "Devedition-61.0b15",
     "/firefox/releases/61.0b15/linux-x86_64/:lang/firefox-61.0b15.tar.bz2",
-    False,
+    True,
 ), (
     "Devedition-61.0b15-Complete",
     "/devedition/releases/61.0b15/update/mac/:lang/firefox-61.0b15.complete.mar",
-    True,
+    False,
 ), (
     "Devedition-61.0b15-Complete",
     "/devedition/releases/61.0b15/:lang/firefox-61.0b15.complete.mar",
-    False,
+    True,
 ), (
     "Devedition-61.0b15-Partial-61.0b15",
     "/devedition/releases/update/win32/:lang/firefox-61.0b15-61.0b15.partial.mar",
-    True,
+    False,
 ), (
     "Devedition-61.0b15-Partial-61.0b15",
     "/devedition/releases/update/lang/firefox-61.0b15-61.0b15.partial.mar",
-    False,
+    True,
 ), (
     "Devedition-61.0b15-SSL",
     "/devedition/releases/61.0b15/linux-i686/:lang/firefox-61.0b15.tar.bz2",
-    True,
+    False,
 ), (
     "Devedition-61.0b15-SSL",
     "/devedition/releases/61.0b15/win64/:lang/Devedition%20Setup%2061.0b15.exe",
-    False,
+    True,
 ), (
     "Devedition-61.0b15-SSL",
     "/devedition/releases/61.0b15/win64/:lang/Firefox%20Setup%2061.0b15.exe",
-    True,
+    False,
 ), (
     "Devedition-61.0b15-stub",
     "/devedition/releases/61.0b15/win32/:lang/Firefox%20Installer.exe",
-    True,
+    False,
 ), (
     "Devedition-61.0b15-stub",
     "/devedition/releases/61.0b15/win32/:lang/Firefox%20Installer.exe",
-    True,
+    False,
 ), (
     "Devedition-61.0b15-stub",
     "/devedition/candidates/61.0b15/win32/:lang/Firefox%20Installer.exe",
-    False,
+    True,
 ), (
     "Thunderbird-62.0b7",
     "/thunderbird/releases/62.0b7/mac/:lang/Thunderbird%2062.0b7.dmg",
-    True,
+    False,
 ), (
     "Thunderbird-62.0b7",
     "/firefox/releases/62.0b7/win32/:lang/Thunderbird%20Setup%2062.0b7.exe",
-    False,
+    True,
 ), (
     "Thunderbird-62.0b7-Complete",
     "/thunderbird/releases/62.0b7/update/mac/:lang/thunderbird-62.0b7.complete.mar",
-    True,
+    False,
 ), (
     "Thunderbird-62.0b7-Complete",
     "/thunderbird/releases/62.0b7/update/linux-x86_64/:lang/thunderbird-62.0b7.complete.mar",
-    True,
+    False,
 ), (
     "Thunderbird-62.0b7-Complete",
     "/thunderbird/releases/62.0b7/update/win64/:lang/thunderbird-62.0b7.complete.mar",
-    True,
+    False,
 ), (
     "Thunderbird-62.0b7-Complete",
     "/thunderbird/releases/62.0b7/update/win64/:lang/thunderbird-62.0b7.complete.partial",
-    False,
+    True,
 ), (
     "Thunderbird-62.0b7-SSL",
     "/thunderbird/releases/62.0b7/win64/:lang/Thunderbird%20Setup%2062.0b7.exe",
-    True,
+    False,
 ), (
     "Thunderbird-62.0b7-SSL",
     "/thunderbird/releases/62.0b7/mac/:lang/Thunderbird%2062.0b7.dmg",
-    True,
+    False,
 ), (
     "Thunderbird-62.0b7-SSL",
     "/thunderbird/releases/62.0b7/linux-i686/:lang/thunderbird-62.0b7.tar.bz2",
-    True,
+    False,
 ), (
     "Thunderbird-62.0b7-SSL",
     "/thunderbird/candidates/62.0b7/linux-x86_64/:lang/thunderbird-62.0b7.tar.bz2",
-    False,
+    True,
 ))))
-def test_check_path_matches_destination(product_name, path, expected):
-    assert check_path_matches_destination(product_name, path) == expected
+def test_check_path_matches_destination(product_name, path, raises):
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            check_path_matches_destination(product_name, path)
+    else:
+        check_path_matches_destination(product_name, path)
 
 
 # check_aliases_match {{{1

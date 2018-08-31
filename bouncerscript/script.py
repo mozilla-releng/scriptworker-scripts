@@ -10,7 +10,7 @@ from bouncerscript.task import (
 )
 from bouncerscript.utils import (
     api_add_location, api_add_product, api_update_alias, does_product_exist,
-    get_locations_paths
+    does_location_path_exist, get_locations_paths
 )
 from scriptworker import client
 from scriptworker.exceptions import (
@@ -28,36 +28,34 @@ async def bouncer_submission(context):
 
     for product_name, pr_config in submissions.items():
         if await does_product_exist(context, product_name):
-            log.warning("Product {} already exists. Skipping ...".format(product_name))
-            continue
-
-        log.info("Adding {} ...".format(product_name))
-        await api_add_product(
-            context,
-            product_name=product_name,
-            add_locales=pr_config["options"]["add_locales"],
-            ssl_only=pr_config["options"]["ssl_only"]
-        )
-        log.info("Sanity check to ensure product has been successfully added...")
-        if not await does_product_exist(context, product_name):
-            raise ScriptWorkerTaskException("Bouncer entries are corrupt")
+            log.warning('Product "{}" already exists. Skipping...'.format(product_name))
+        else:
+            log.info('Adding product "{}"...'.format(product_name))
+            await api_add_product(
+                context,
+                product_name=product_name,
+                add_locales=pr_config["options"]["add_locales"],
+                ssl_only=pr_config["options"]["ssl_only"]
+            )
+            log.info("Sanity check to ensure product has been successfully added...")
+            if not await does_product_exist(context, product_name):
+                raise ScriptWorkerTaskException("Bouncer entries are corrupt")
 
         log.info("Sanity check submission entries before updating ...")
         for platform, path in pr_config["paths_per_bouncer_platform"].items():
-            if not check_path_matches_destination(product_name, path):
-                err_msg = ("Corrupt submission entry for product {} platform "
-                           "{} path {}".format(product_name, platform, path))
-                raise ScriptWorkerTaskException(err_msg)
+            check_path_matches_destination(product_name, path)
         log.info("All submission entries look good before updating them!")
 
         log.info("Adding corresponding paths ...")
         for platform, path in pr_config["paths_per_bouncer_platform"].items():
-            await api_add_location(context, product_name, platform, path)
+            if await does_location_path_exist(context, product_name, path):
+                log.warning('Path "{}" for product "{}" already exists. Skipping...'.format(path, product_name))
+            else:
+                await api_add_location(context, product_name, platform, path)
 
         log.info("Sanity check to ensure locations have been successfully added...")
         locations_paths = await get_locations_paths(context, product_name)
-        if not check_locations_match(locations_paths, pr_config["paths_per_bouncer_platform"]):
-            raise ScriptWorkerTaskException("Bouncer entries are corrupt")
+        check_locations_match(locations_paths, pr_config["paths_per_bouncer_platform"])
         log.info("All entries look good, bouncer has been correctly updated!")
 
 

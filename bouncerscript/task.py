@@ -96,7 +96,8 @@ def check_product_names_match_aliases(context):
 def check_locations_match(locations, product_config):
     """Function to validate if the payload locations match the ones returned
     from bouncer"""
-    return sorted(locations) == sorted(product_config.values())
+    if not sorted(locations) == sorted(product_config.values()):
+        raise ScriptWorkerTaskException("Bouncer entries are corrupt")
 
 
 def check_path_matches_destination(product_name, path):
@@ -105,9 +106,13 @@ def check_path_matches_destination(product_name, path):
     possible_products = [p for p, pattern in PRODUCT_TO_PRODUCT_ENTRY if
                          matches(product_name, pattern)]
     product = possible_products[0]
-    return matches(path,
-                   PRODUCT_TO_DESTINATIONS_REGEXES[product],
-                   fullmatch=True) is not None
+    regex_for_product = PRODUCT_TO_DESTINATIONS_REGEXES[product]
+    if matches(path, regex_for_product, fullmatch=True) is None:
+        raise ScriptWorkerTaskException(
+            'Path "{}" for product "{}" does not match regex: {}'.format(
+                product_name, path, regex_for_product
+            )
+        )
 
 
 async def check_aliases_match(context):

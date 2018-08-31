@@ -126,6 +126,11 @@ async def does_product_exist(context, product_name):
         return False
 
 
+async def does_location_path_exist(context, product_name, path):
+    existing_paths = await get_locations_paths(context, product_name)
+    return path in existing_paths
+
+
 async def get_locations_paths(context, product_name):
     """Function to return all locations per a specific product"""
     res = await api_show_location(context, product_name)

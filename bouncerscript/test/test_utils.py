@@ -273,6 +273,33 @@ async def test_api_update_alias(context, mocker, alias, product, expected):
     assert await api_update_alias(context, alias, product) == expected
 
 
+@pytest.mark.parametrize('path, returned_locations, expected', ((
+    '/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk',
+    [
+        '/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk',
+        '/mobile/releases/62.0b9/android-x86/:lang/fennec-62.0b9.:lang.android-i386.apk',
+    ],
+    True,
+), (
+    '/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk',
+    [
+        '/mobile/releases/62.0b9/android-x86/:lang/fennec-62.0b9.:lang.android-i386.apk',
+    ],
+    False,
+), (
+    '/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk',
+    [],
+    False,
+)))
+@pytest.mark.asyncio
+async def test_does_location_path_exist(context, mocker, path, returned_locations, expected):
+    async def patch_get_locations_paths(*args, **kwargs):
+        return returned_locations
+
+    mocker.patch.object(butils, 'get_locations_paths', new=patch_get_locations_paths)
+    assert await butils.does_location_path_exist(context, 'fake-product', path) == expected
+
+
 # get_locations_paths {{{1
 @pytest.mark.parametrize("product,response,expected,raises", ((
     "fake-product",

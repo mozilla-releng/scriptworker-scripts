@@ -1,3 +1,4 @@
+import itertools
 import mock
 import pytest
 
@@ -6,8 +7,10 @@ from bouncerscript.script import (
     main, bouncer_submission, bouncer_aliases, async_main
 )
 from bouncerscript.test import (
-    submission_context, noop_async, aliases_context, return_true_sync,
-    toggled_boolean_async, return_false_sync
+    submission_context, aliases_context,
+    noop_sync, noop_async,
+    return_true_sync, return_true_async,
+    return_false_async, toggled_boolean_async, raise_sync,
 )
 from scriptworker.test import (
     fake_session,
@@ -40,26 +43,66 @@ def test_main(submission_context, fake_session):
 # bouncer_submission {{{1
 @pytest.mark.asyncio
 async def test_bouncer_submission(submission_context, mocker):
-    mocker.patch.object(bscript, 'does_product_exist', new=noop_async)
+    mocker.patch.object(bscript, 'does_product_exist', new=toggled_boolean_async)
     mocker.patch.object(bscript, 'api_add_product', new=noop_async)
     mocker.patch.object(bscript, 'api_add_location', new=noop_async)
     mocker.patch.object(bscript, 'get_locations_paths', new=noop_async)
+    mocker.patch.object(bscript, 'does_location_path_exist', new=toggled_boolean_async)
+    mocker.patch.object(bscript, 'check_locations_match', new=raise_sync)
+    mocker.patch.object(bscript, 'check_path_matches_destination', new=noop_sync)
     with pytest.raises(ScriptWorkerTaskException):
         await bouncer_submission(submission_context)
 
-    mocker.patch.object(bscript, 'does_product_exist', new=toggled_boolean_async)
-    mocker.patch.object(bscript, 'check_locations_match', new=return_false_sync)
-    mocker.patch.object(bscript, 'check_path_matches_destination', new=return_true_sync)
-    with pytest.raises(ScriptWorkerTaskException):
-        await bouncer_submission(submission_context)
-
-    mocker.patch.object(bscript, 'check_locations_match', new=return_true_sync)
+    mocker.patch.object(bscript, 'check_locations_match', new=noop_sync)
     await bouncer_submission(submission_context)
 
-    mocker.patch.object(bscript, 'check_locations_match', new=return_false_sync)
-    mocker.patch.object(bscript, 'check_path_matches_destination', new=return_false_sync)
+    mocker.patch.object(bscript, 'check_path_matches_destination', new=raise_sync)
     with pytest.raises(ScriptWorkerTaskException):
         await bouncer_submission(submission_context)
+
+    mocker.patch.object(bscript, 'does_product_exist', new=return_false_async)
+    with pytest.raises(ScriptWorkerTaskException):
+        await bouncer_submission(submission_context)
+
+
+@pytest.mark.asyncio
+async def test_bouncer_submission_creates_locations_even_when_product_already_exists(
+    submission_context, mocker
+):
+    api_add_location_call_counter = itertools.count()
+
+    async def mock_api_add_location(*args, **kwargs):
+        next(api_add_location_call_counter)
+
+    mocker.patch.object(bscript, 'api_add_location', new=mock_api_add_location)
+    mocker.patch.object(bscript, 'does_product_exist', new=return_true_async)
+    mocker.patch.object(bscript, 'api_add_product', new=noop_async)
+    mocker.patch.object(bscript, 'get_locations_paths', new=noop_async)
+    mocker.patch.object(bscript, 'does_location_path_exist', new=return_false_async)
+    mocker.patch.object(bscript, 'check_locations_match', new=noop_sync)
+    mocker.patch.object(bscript, 'check_path_matches_destination', new=noop_sync)
+    await bouncer_submission(submission_context)
+    assert next(api_add_location_call_counter) == 10
+
+
+@pytest.mark.asyncio
+async def test_bouncer_submission_creates_locations_even_some_exists(
+    submission_context, mocker
+):
+    api_add_location_call_counter = itertools.count()
+
+    async def mock_api_add_location(*args, **kwargs):
+        next(api_add_location_call_counter)
+
+    mocker.patch.object(bscript, 'api_add_location', new=mock_api_add_location)
+    mocker.patch.object(bscript, 'does_product_exist', new=return_true_async)
+    mocker.patch.object(bscript, 'api_add_product', new=noop_async)
+    mocker.patch.object(bscript, 'get_locations_paths', new=noop_async)
+    mocker.patch.object(bscript, 'does_location_path_exist', new=toggled_boolean_async)
+    mocker.patch.object(bscript, 'check_locations_match', new=noop_sync)
+    mocker.patch.object(bscript, 'check_path_matches_destination', new=noop_sync)
+    await bouncer_submission(submission_context)
+    assert next(api_add_location_call_counter) == 5
 
 
 # bouncer_aliases {{{1

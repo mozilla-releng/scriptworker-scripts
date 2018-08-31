@@ -4,6 +4,7 @@ import json
 import pytest
 
 from scriptworker.context import Context
+from scriptworker.exceptions import ScriptWorkerTaskException
 
 
 def noop_sync(*args, **kwargs):
@@ -16,6 +17,14 @@ async def noop_async(*args, **kwargs):
 
 async def return_true_async(*args):
     return True
+
+
+async def return_false_async(*args):
+    return False
+
+
+def raise_sync(*args, **kwargs):
+    raise ScriptWorkerTaskException()
 
 
 def counted(f):
