@@ -4,7 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [3.2.0] - 2018-09-04
 ### Added
-- Added new behavior `bouncer_locations` for `bouncerscript` to handle
+- Added new behavior `bouncer-locations` for `bouncerscript` to handle
+- Add checks for locations during `bouncer-submission` phase
 
 
 ## [3.1.0] - 2018-08-28
