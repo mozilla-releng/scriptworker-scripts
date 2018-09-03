@@ -6,9 +6,10 @@ from scriptworker.exceptions import (
     ScriptWorkerTaskException, TaskVerificationError
 )
 from scriptworker.utils import retry_request
+from mozilla_version.gecko import GeckoVersion
 from bouncerscript.constants import (
     ALIASES_REGEXES, PRODUCT_TO_DESTINATIONS_REGEXES, PRODUCT_TO_PRODUCT_ENTRY,
-    GO_BOUNCER_URL_TMPL
+    GO_BOUNCER_URL_TMPL, BOUNCER_PATH_REGEXES_PER_PRODUCT,
 )
 
 log = logging.getLogger(__name__)
@@ -93,11 +94,47 @@ def check_product_names_match_aliases(context):
         raise TaskVerificationError("The product/alias pairs are corrupt: {}".format(aliases))
 
 
+def check_product_names_match_nightly_locations(context):
+    """Double check that nightly products are as expected"""
+    products = context.task["payload"]["bouncer_products"]
+    if sorted(products) != sorted(BOUNCER_PATH_REGEXES_PER_PRODUCT.keys()):
+        raise TaskVerificationError("Products {} don't correspond to nightly ones".format(products))
+
+
 def check_locations_match(locations, product_config):
     """Function to validate if the payload locations match the ones returned
     from bouncer"""
     if not sorted(locations) == sorted(product_config.values()):
         raise ScriptWorkerTaskException("Bouncer entries are corrupt")
+
+
+def check_location_path_matches_destination(product_name, path):
+    if matches(path,
+               BOUNCER_PATH_REGEXES_PER_PRODUCT[product_name],
+               fullmatch=True) is None:
+        err_msg = ("Corrupt location for product {} "
+                   "path {}".format(product_name, path))
+        raise ScriptWorkerTaskException(err_msg)
+
+
+def check_versions_are_successive(current_version, payload_version):
+    current_bouncer_version = GeckoVersion.parse(current_version)
+    candidate_version = GeckoVersion.parse(payload_version)
+
+    if current_bouncer_version.major_number == candidate_version.major_number:
+        err_msg = ("At this point, in-tree version can't be equal to bouncer "
+                   "counterpart".format(payload_version, current_version))
+        raise ScriptWorkerTaskException(err_msg)
+    elif current_bouncer_version.major_number > candidate_version.major_number:
+        err_msg = ("In-tree version {} can't be less than current bouncer "
+                   "counterpart".format(payload_version, current_version))
+        raise ScriptWorkerTaskException(err_msg)
+    elif (candidate_version.major_number - current_bouncer_version.major_number) > 1:
+        err_msg = ("In-tree version {} can't be greater than current bouncer "
+                   "by more than 1 digit".format(payload_version, current_version))
+        raise ScriptWorkerTaskException(err_msg)
+
+    log.info("Versions are successive. All good")
 
 
 def check_path_matches_destination(product_name, path):
@@ -137,3 +174,9 @@ async def check_aliases_match(context):
 
         if alias_resp != product_resp:
             raise ScriptWorkerTaskException("Alias {} and product {} differ!".format(alias, product_name))
+
+
+def check_version_matches_nightly_regex(version):
+    version = GeckoVersion.parse(version)
+    if not version.is_nightly:
+        raise ScriptWorkerTaskException("Version {} is valid but does not match a nightly one")

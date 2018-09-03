@@ -13,6 +13,7 @@
 
       "schema_files": {
             "submission": "bouncerscript/data/bouncer_submission_task_schema.json",
-            "aliases": "bouncerscript/data/bouncer_aliases_task_schema.json"
+            "aliases": "bouncerscript/data/bouncer_aliases_task_schema.json",
+            "locations": "bouncerscript/data/bouncer_locations_task_schema.json"
       }
 }

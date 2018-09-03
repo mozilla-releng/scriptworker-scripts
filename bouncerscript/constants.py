@@ -32,6 +32,17 @@ PRODUCT_TO_DESTINATIONS_REGEXES = {
     'thunderbird': '^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar))$',
 }
 
+BOUNCER_PATH_REGEXES_PER_PRODUCT = {
+    'firefox-nightly-latest': ('^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\.'
+                               '(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe))$'),
+    'firefox-nightly-latest-ssl': ('^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.en-US\.'
+                                   '(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe))$'),
+    'firefox-nightly-latest-l10n': ('^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\.'
+                                    '(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe))$'),
+    'firefox-nightly-latest-l10n-ssl': ('^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\.'
+                                        '(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe))$'),
+}
+
 # XXX A list of tuple is used because we care about the order:
 # the firefox regex also matches the firefox-rc regex.
 PRODUCT_TO_PRODUCT_ENTRY = [
@@ -42,4 +53,16 @@ PRODUCT_TO_PRODUCT_ENTRY = [
     ('thunderbird', r'^Thunderbird-.*$'),
 ]
 
+BOUNCER_LOCATION_PLATFORMS = [
+    'linux',
+    'linux64',
+    'osx',
+    'win',
+    'win64',
+    'android-x86',
+    'android'
+]
+
 GO_BOUNCER_URL_TMPL = 'https://download.mozilla.org/?product={}&print=yes'
+
+NIGHTLY_VERSION_REGEX = '\d+\.0a1'

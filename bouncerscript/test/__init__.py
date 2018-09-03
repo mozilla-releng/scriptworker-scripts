@@ -15,6 +15,10 @@ async def noop_async(*args, **kwargs):
     pass
 
 
+async def return_empty_list_async(*args, **kwargs):
+    return []
+
+
 async def return_true_async(*args):
     return True
 
@@ -38,9 +42,9 @@ def counted(f):
 @counted
 async def toggled_boolean_async(*args, **kwargs):
     if toggled_boolean_async.calls & 1:
-        return True
-    else:
         return False
+    else:
+        return True
 
 
 def return_true_sync(*args):
@@ -72,6 +76,15 @@ def submission_context():
 def aliases_context():
     context = Context()
     context.task = get_fake_valid_task("aliases")
+    context.config = get_fake_valid_config()
+
+    yield context
+
+
+@pytest.yield_fixture(scope='function')
+def locations_context():
+    context = Context()
+    context.task = get_fake_valid_task("locations")
     context.config = get_fake_valid_config()
 
     yield context

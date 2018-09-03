@@ -1,0 +1,25 @@
+{
+    "provisionerId": "meh",
+    "workerType": "workertype",
+    "schedulerId": "task-graph-scheduler",
+    "taskGroupId": "some",
+    "routes": [],
+    "retries": 5,
+    "created": "2015-05-08T16:15:58.903Z",
+    "deadline": "2015-05-08T18:15:59.010Z",
+    "expires": "2016-05-08T18:15:59.010Z",
+    "dependencies": ["eSzfNqMZT_mSiQQXu8hyqg"],
+    "scopes": [
+        "project:releng:bouncer:server:staging",
+        "project:releng:bouncer:action:locations"
+    ],
+    "payload": {
+	"bouncer_products": [
+	    "firefox-nightly-latest",
+	    "firefox-nightly-latest-ssl",
+	    "firefox-nightly-latest-l10n",
+	    "firefox-nightly-latest-l10n-ssl"
+      ],
+      "version": "63.0a1"
+    }
+}

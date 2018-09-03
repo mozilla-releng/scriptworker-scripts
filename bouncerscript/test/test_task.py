@@ -3,20 +3,24 @@ import pytest
 from scriptworker.exceptions import (
     ScriptWorkerTaskException, TaskVerificationError
 )
+from mozilla_version.errors import PatternNotMatchedError
 
 import bouncerscript.task as btask
 from bouncerscript.task import (
     get_supported_actions, get_task_server, get_task_action,
     validate_task_schema, check_product_names_match_aliases,
     check_locations_match, check_path_matches_destination,
-    check_aliases_match
+    check_aliases_match, check_product_names_match_nightly_locations,
+    check_location_path_matches_destination, check_versions_are_successive,
+    check_version_matches_nightly_regex
 )
 from bouncerscript.test import submission_context as context
-from bouncerscript.test import aliases_context
+from bouncerscript.test import aliases_context, locations_context
 
 
 assert context  # silence pyflakes
 assert aliases_context  # silence pyflakes
+assert locations_context  # silence pyflakes
 
 
 # get_task_server {{{1
@@ -605,3 +609,287 @@ async def test_check_aliases_match(aliases_context, mocker, entries, provided, r
             await check_aliases_match(aliases_context)
     else:
         await check_aliases_match(aliases_context)
+
+
+# check_product_names_match_nightly_locations {{{1
+@pytest.mark.parametrize("products,raises", (((
+    [
+        "firefox-nightly-latest",
+        "firefox-nightly-latest-ssl",
+        "firefox-nightly-latest-l10n",
+        "firefox-nightly-latest-l10n-ssl"
+    ], False
+), (
+    [
+        "firefox-nightly-latest-l10n",
+        "firefox-nightly-latest-l10n-ssl",
+        "Firefox-64",
+    ], True
+), (
+    [
+        "firefox-nightly-latest",
+        "firefox-nightly-latest-ssl",
+    ], True
+), (
+    [
+        "firefox-nightly-latest-l10n",
+        "firefox-nightly-latest-l10n-ssl"
+    ], True
+), (
+    [
+        "firefox-latest",
+    ], True
+))))
+def test_check_product_names_match_nightly_locations(locations_context, products, raises):
+    locations_context.task["payload"]["bouncer_products"] = products
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            check_product_names_match_nightly_locations(locations_context)
+    else:
+        check_product_names_match_nightly_locations(locations_context)
+
+
+# check_version_matches_nightly_regex {{{1
+@pytest.mark.parametrize("version,raises", (((
+    "63.0a1",
+    (False, None)
+), (
+    "63.0b1",
+    (True, ScriptWorkerTaskException)
+), (
+    "63.0.1a1",
+    (True, PatternNotMatchedError)
+), (
+    "63.0.1esr",
+    (True, ScriptWorkerTaskException)
+), (
+    "63.0.1",
+    (True, ScriptWorkerTaskException)
+), (
+    "63.0",
+    (True, ScriptWorkerTaskException)
+), (
+    "ZFJSh389fjSMN<@<Ngv",
+    (True, PatternNotMatchedError)
+), (
+    "63",
+    (True, PatternNotMatchedError)
+))))
+def test_check_version_matches_nightly_regex(version, raises):
+    if raises[0]:
+        with pytest.raises(raises[1]):
+            check_version_matches_nightly_regex(version)
+    else:
+        check_version_matches_nightly_regex(version)
+
+
+# check_location_path_matches_destination {{{1
+@pytest.mark.parametrize("product_name,path,raises", (((
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-i686.tar.bz2',
+    False
+), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-x86_64.tar.bz2',
+    False
+), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.mac.dmg',
+    False
+), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win64.installer.exe',
+    False
+), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win32.installer.exe',
+    False
+), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win32.installer.exeexe',
+    True
+), (
+    'firefox-nightly-latest',
+    '/firefox/candidates/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win32.installer.exeexe',
+    True
+), (
+    'firefox-nightly-latest',
+    '/mobile/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win32.installer.exeexe',
+    True
+), (
+    'firefox-nightly-latest',
+    '/mobile/nightly/latest-mozilla-central/firefox-63.0a1.:lang.win32.installer.exeexe',
+    True
+), (
+    'firefox-nightly-latest',
+    '/mobile/nightly/latest-mozilla-central/firefox-63.0b1.:lang.win32.installer.exeexe',
+    True
+), (
+    'firefox-nightly-latest',
+    '/devedition/releases/latest-mozilla-central-l10n/firefox-63.0a1.:lang.mac.dmg',
+    True
+), (
+    'firefox-nightly-latest',
+    '/devedition/releases/latest-mozilla-central/firefox-63.0a1.:lang.mac.dmg',
+    True
+), (
+    'firefox-nightly-latest',
+    '/devedition/releases/latest-mozilla-central/firefox-63.0b1.:lang.mac.dmg',
+    True
+), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-i686.tar.gz',
+    True
+), (
+    'firefox-nightly-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win64.installer.exe',
+    False
+), (
+    'firefox-nightly-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.mac.dmg',
+    False
+), (
+    'firefox-nightly-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-x86_64.tar.bz2',
+    False
+), (
+    'firefox-nightly-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-i686.tar.bz2',
+    False
+), (
+    'firefox-nightly-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win32.installer.exe',
+    False
+), (
+    'firefox-nightly-latest-l10n-ssl',
+    '/firefox/candidates/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win32.installer.exe',
+    True
+), (
+    'firefox-nightly-latest-l10n-ssl',
+    '/mobile/releases/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win32.installer.exe',
+    True
+), (
+    'firefox-nightly-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0b1.:lang.win32.installer.exe',
+    True
+), (
+    'firefox-nightly-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0.1.:lang.win64.installer.exe',
+    True
+), (
+    'firefox-nightly-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0.:lang.mac.dmg',
+    True
+), (
+    'firefox-nightly-latest-ssl',
+    '/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win32.installer.exe',
+    False
+), (
+    'firefox-nightly-latest-ssl',
+    '/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win64.installer.exe',
+    False
+), (
+    'firefox-nightly-latest-ssl',
+    '/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.mac.dmg',
+    False
+), (
+    'firefox-nightly-latest-ssl',
+    '/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.linux-x86_64.tar.bz2',
+    False
+), (
+    'firefox-nightly-latest-ssl',
+    '/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.linux-i686.tar.bz2',
+    False
+), (
+    'firefox-nightly-latest-ssl',
+    '/mobile/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win32.installer.exe',
+    True
+), (
+    'firefox-nightly-latest-ssl',
+    '/firefox/candidates/latest-mozilla-central/firefox-63.0a1.en-US.win64.installer.exe',
+    True
+), (
+    'firefox-nightly-latest-ssl',
+    '/firefox/nightly/latest-mozilla-central/firefox-63.0b1.en-US.mac.dmg',
+    True
+), (
+    'firefox-nightly-latest-ssl',
+    '/firefox/nightly/latest-mozilla-central/firefox-63.0.1.en-US.linux-x86_64.tar.bz2',
+    True
+), (
+    'firefox-nightly-latest-ssl',
+    '/firefox/nightly/latest-mozilla-central/firefox-63.0.en-US.linux-i686.tar.bz2',
+    True
+), (
+    'firefox-nightly-latest-l10n',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win32.installer.exe',
+    False
+), (
+    'firefox-nightly-latest-l10n',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-i686.tar.bz2',
+    False
+), (
+    'firefox-nightly-latest-l10n',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-x86_64.tar.bz2',
+    False
+), (
+    'firefox-nightly-latest-l10n',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.mac.dmg',
+    False
+), (
+    'firefox-nightly-latest-l10n',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win64.installer.exe',
+    False
+), (
+    'firefox-nightly-latest-l10n',
+    '/mobile/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win32.installer.exe',
+    True
+), (
+    'firefox-nightly-latest-l10n',
+    '/firefox/candidates/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-i686.tar.bz2',
+    True
+), (
+    'firefox-nightly-latest-l10n',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0b1.:lang.linux-x86_64.tar.bz2',
+    True
+), (
+    'firefox-nightly-latest-l10n',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0b1.:lang.mac.dmg',
+    True
+), (
+    'firefox-nightly-latest-l10n',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0.1.:lang.win64.installer.exe',
+    True
+))))
+def test_check_location_path_matches_destination(product_name, path, raises):
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            check_location_path_matches_destination(product_name, path)
+    else:
+        check_location_path_matches_destination(product_name, path)
+
+
+# check_versions_are_successive {{{1
+@pytest.mark.parametrize("current_version,payload_version,raises", (((
+    '63.0a1',
+    '64.0a1',
+    False
+), (
+    '63.0a1',
+    '63.0a1',
+    True
+), (
+    '63.0a1',
+    '65.0a1',
+    True
+), (
+    '64.0a1',
+    '63.0a1',
+    True
+))))
+def test_check_versions_are_successive(current_version, payload_version, raises):
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            check_versions_are_successive(current_version, payload_version)
+    else:
+        check_versions_are_successive(current_version, payload_version)

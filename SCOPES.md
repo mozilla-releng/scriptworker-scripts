@@ -18,6 +18,10 @@ Supported scope prefixes:
   * **Conflicts**: with any other `{scope_prefix}:action:*`
   * **Branch Restrictions**: `None`
 
+* `{scope_prefix}:action:locations`
+  * Tells bouncerscript to check and potentially bump nightly locations
+  * **Conflicts**: with any other `{scope_prefix}:action:*`
+  * **Branch Restrictions**: For `mozilla-central` only
 
 * `{scope_prefix}:server:staging`
   * Tells bouncerscript to perform its actions against the stage server

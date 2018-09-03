@@ -4,13 +4,13 @@ import pytest
 
 import bouncerscript.script as bscript
 from bouncerscript.script import (
-    main, bouncer_submission, bouncer_aliases, async_main
+    main, bouncer_submission, bouncer_aliases, async_main, bouncer_locations
 )
 from bouncerscript.test import (
-    submission_context, aliases_context,
-    noop_sync, noop_async,
-    return_true_sync, return_true_async,
-    return_false_async, toggled_boolean_async, raise_sync,
+    submission_context, noop_async, aliases_context, return_true_sync,
+    toggled_boolean_async, return_empty_list_async,
+    locations_context, return_true_async, return_false_async, counted,
+    noop_sync, raise_sync
 )
 from scriptworker.test import (
     fake_session,
@@ -23,6 +23,7 @@ from scriptworker.exceptions import (
 assert fake_session  # silence flake8
 assert submission_context  # silence flake8
 assert aliases_context  # silence flake8
+assert locations_context  # silence flake8
 
 
 # main {{{1
@@ -46,10 +47,11 @@ async def test_bouncer_submission(submission_context, mocker):
     mocker.patch.object(bscript, 'does_product_exist', new=toggled_boolean_async)
     mocker.patch.object(bscript, 'api_add_product', new=noop_async)
     mocker.patch.object(bscript, 'api_add_location', new=noop_async)
-    mocker.patch.object(bscript, 'get_locations_paths', new=noop_async)
+    mocker.patch.object(bscript, 'get_locations_info', new=return_empty_list_async)
     mocker.patch.object(bscript, 'does_location_path_exist', new=toggled_boolean_async)
     mocker.patch.object(bscript, 'check_locations_match', new=raise_sync)
     mocker.patch.object(bscript, 'check_path_matches_destination', new=noop_sync)
+
     with pytest.raises(ScriptWorkerTaskException):
         await bouncer_submission(submission_context)
 
@@ -77,7 +79,7 @@ async def test_bouncer_submission_creates_locations_even_when_product_already_ex
     mocker.patch.object(bscript, 'api_add_location', new=mock_api_add_location)
     mocker.patch.object(bscript, 'does_product_exist', new=return_true_async)
     mocker.patch.object(bscript, 'api_add_product', new=noop_async)
-    mocker.patch.object(bscript, 'get_locations_paths', new=noop_async)
+    mocker.patch.object(bscript, 'get_locations_info', new=return_empty_list_async)
     mocker.patch.object(bscript, 'does_location_path_exist', new=return_false_async)
     mocker.patch.object(bscript, 'check_locations_match', new=noop_sync)
     mocker.patch.object(bscript, 'check_path_matches_destination', new=noop_sync)
@@ -97,7 +99,7 @@ async def test_bouncer_submission_creates_locations_even_some_exists(
     mocker.patch.object(bscript, 'api_add_location', new=mock_api_add_location)
     mocker.patch.object(bscript, 'does_product_exist', new=return_true_async)
     mocker.patch.object(bscript, 'api_add_product', new=noop_async)
-    mocker.patch.object(bscript, 'get_locations_paths', new=noop_async)
+    mocker.patch.object(bscript, 'get_locations_info', new=return_empty_list_async)
     mocker.patch.object(bscript, 'does_location_path_exist', new=toggled_boolean_async)
     mocker.patch.object(bscript, 'check_locations_match', new=noop_sync)
     mocker.patch.object(bscript, 'check_path_matches_destination', new=noop_sync)
@@ -113,6 +115,138 @@ async def test_bouncer_aliases(aliases_context, mocker):
     await bouncer_aliases(aliases_context)
 
 
+@pytest.mark.parametrize("info,updated_info,raises", ((
+    [
+        {
+            "os": "win",
+            "id": "47767",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win32.installer.exe"
+        }, {
+            "os": "linux",
+            "id": "47764",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win64.installer.exe"
+        }, {
+            "os": "osx",
+            "id": "47766",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.mac.dmg"
+        }, {
+            "os": "linux64",
+            "id": "47765",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.linux-x86_64.tar.bz2"
+        }, {
+            "os": "win64",
+            "id": "47768",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.linux-i686.tar.bz2"
+        }
+    ],
+    [],
+    False
+), (
+    [
+        {
+            "os": "win",
+            "id": "47767",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-65.0a1.en-US.win32.installer.exe"
+        }, {
+            "os": "linux",
+            "id": "47764",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-65.0a1.en-US.win64.installer.exe"
+        }
+    ],
+    [],
+    True
+), (
+    [
+        {
+            "os": "win",
+            "id": "47767",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-62.0a1.en-US.win32.installer.exe"
+        }, {
+            "os": "linux",
+            "id": "47764",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win64.installer.exe"
+        }
+    ],
+    [],
+    True
+), (
+    [
+        {
+            "os": "win",
+            "id": "47767",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-64.0a1.en-US.win32.installer.exe"
+        }, {
+            "os": "linux",
+            "id": "47764",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-64.0a1.en-US.win64.installer.exe"
+        }
+    ],
+    [],
+    True
+), (
+    [
+        {
+            "os": "win",
+            "id": "47767",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-62.0a1.en-US.win32.installer.exe"
+        }, {
+            "os": "linux",
+            "id": "47764",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-62.0a1.en-US.win64.installer.exe"
+        }
+    ],
+    [
+        {
+            "os": "win",
+            "id": "47767",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win32.installer.exe"
+        }, {
+            "os": "linux",
+            "id": "47764",
+            "path": "/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win64.installer.exe"
+        }
+    ],
+    False
+)))
+# bouncer_locations {{{1
+@pytest.mark.asyncio
+async def test_bouncer_locations(locations_context, mocker, info, updated_info,
+                                 raises):
+    async def fake_get_locations_info(*args, **kwargs):
+        return info
+
+    @counted
+    async def toggled_get_locations_info(*args, **kwargs):
+        if toggled_get_locations_info.calls & 1:
+            return info
+        else:
+            return updated_info
+
+    locations_context.task["payload"]["bouncer_products"] = ["firefox-nightly-latest"]
+    mocker.patch.object(bscript, 'check_product_names_match_nightly_locations', new=noop_sync)
+    mocker.patch.object(bscript, 'check_version_matches_nightly_regex', new=noop_sync)
+    mocker.patch.object(bscript, 'does_product_exist', new=return_false_async)
+
+    with pytest.raises(ScriptWorkerTaskException):
+        await bouncer_locations(locations_context)
+
+    mocker.patch.object(bscript, 'does_product_exist', new=return_true_async)
+    mocker.patch.object(bscript, 'get_locations_info', new=fake_get_locations_info)
+    mocker.patch.object(bscript, 'check_location_path_matches_destination', new=noop_sync)
+    mocker.patch.object(bscript, 'api_modify_location', new=noop_async)
+
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            await bouncer_locations(locations_context)
+    else:
+        if updated_info != []:
+            mock = mocker.MagicMock()
+            mock.side_effect = toggled_get_locations_info
+            mocker.patch.object(bscript, 'get_locations_info',
+                                new=mock)
+        await bouncer_locations(locations_context)
+
+
 # async_main {{{1
 @pytest.mark.asyncio
 async def test_async_main(submission_context, mocker):
@@ -120,7 +254,7 @@ async def test_async_main(submission_context, mocker):
     mocker.patch.object(bscript, 'does_product_exist', new=noop_async)
     mocker.patch.object(bscript, 'api_add_product', new=noop_async)
     mocker.patch.object(bscript, 'api_add_location', new=noop_async)
-    mocker.patch.object(bscript, 'get_locations_paths', new=noop_async)
+    mocker.patch.object(bscript, 'get_locations_info', new=noop_async)
     mocker.patch.object(bscript, 'check_locations_match', new=return_true_sync)
 
     with pytest.raises(ScriptWorkerTaskException):

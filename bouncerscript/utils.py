@@ -1,11 +1,16 @@
 import aiohttp
 import logging
+import re
 from urllib.parse import quote
 from xml.dom.minidom import parseString
 import xml
 
 from scriptworker.exceptions import ScriptWorkerTaskException
 from scriptworker.utils import retry_async
+
+from bouncerscript.constants import (
+    BOUNCER_LOCATION_PLATFORMS, NIGHTLY_VERSION_REGEX,
+)
 
 
 log = logging.getLogger(__name__)
@@ -91,6 +96,17 @@ async def api_add_location(context, product_name, bouncer_platform, path):
     return await api_call(context, "location_add/", data)
 
 
+async def api_modify_location(context, product_name, bouncer_platform, path):
+    """Function to modify locations per platform for a specific product"""
+    data = {
+        "product": product_name,
+        "os": bouncer_platform,
+        "path": path,
+    }
+
+    return await api_call(context, "location_modify/", data)
+
+
 async def api_show_location(context, product_name):
     """Function to query the API for specific locations of a product"""
     data = {}
@@ -127,20 +143,69 @@ async def does_product_exist(context, product_name):
 
 
 async def does_location_path_exist(context, product_name, path):
-    existing_paths = await get_locations_paths(context, product_name)
-    return path in existing_paths
+    existing_info = await get_locations_info(context, product_name)
+    for info in existing_info:
+        if path in info["path"]:
+            return True
+    return False
 
 
-async def get_locations_paths(context, product_name):
-    """Function to return all locations per a specific product"""
+async def get_locations_info(context, product_name):
+    """Function to query for location information within bouncer by parsing the
+    XML returned by the API endpoint"""
     res = await api_show_location(context, product_name)
+
     try:
         xml_doc = parseString(res)
         # bouncer API returns <locations/> if the product doesn't exist
-        locations_found = xml_doc.getElementsByTagName("location")
-        location_paths = [l.childNodes[0].data for l in locations_found]
-        log.info("Locations paths found: {}".format(location_paths))
-        return location_paths
+        locations_info = process_locations_from_xml(xml_doc.getElementsByTagName("location"))
+        log.debug("Locations info: {}".format(locations_info))
+        return locations_info
     except (xml.parsers.expat.ExpatError, UnicodeDecodeError, ValueError) as e:
         log.warning("Error parsing XML: {}".format(e))
         raise ScriptWorkerTaskException("Not suitable XML received")
+
+
+def process_locations_from_xml(locations_found):
+    """Function to process the XML returned by bouncer for the location tags"""
+    info = []
+    for location in locations_found:
+        os = location.getAttribute('os')
+        if os not in BOUNCER_LOCATION_PLATFORMS:
+            err_msg = ("Unexpected os found in bouncer. Found {} while "
+                       "expected {}.".format(os, BOUNCER_LOCATION_PLATFORMS))
+            raise ScriptWorkerTaskException(err_msg)
+        id_ = location.getAttribute('id')
+        path = location.firstChild.data
+        info.append({
+            'os': os,
+            'id': id_,
+            'path': path
+        })
+
+    return info
+
+
+def get_nightly_version(product_name, path):
+    """Function to return the version string of the given nightly location
+
+    Input:
+        * "firefox-nightly-latest"
+        * "/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-i686.tar.bz"
+    Output: "63.0a1"
+    """
+    match = re.search(NIGHTLY_VERSION_REGEX, path)
+    if not match:
+        err_msg = "Couldn't find valid nightly version within path {}".format(path)
+        raise ScriptWorkerTaskException(err_msg)
+
+    return match.group(0)
+
+
+def get_version_bumped_path(path, current_version, bumped_version):
+    """Function to return the version after bumping it up by one
+
+    Input: "/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-i686.tar.bz"
+    Output: "/firefox/nightly/latest-mozilla-central-l10n/firefox-64.0a1.:lang.linux-i686.tar.bz"
+    """
+    return path.replace(current_version, bumped_version)

@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.2.0] - 2018-09-04
+### Added
+- Added new behavior `bouncer_locations` for `bouncerscript` to handle
+
 
 ## [3.1.0] - 2018-08-28
 ### Added
@@ -9,6 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Fixed `bouncer-submission` support for Firefox RC paths.
+
 
 ## [3.0.0] - 2018-07-11
 ### Added
@@ -44,6 +49,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - `script.async_main()` relies on scriptworker (>= 10.2.0) to initialize context, config, and task
 - `task.validate_task_schema()` now relies on scriptworker
+
 
 ## Removed
 - `script.usage()`, now handled by scriptworker

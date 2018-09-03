@@ -11,8 +11,9 @@ import scriptworker.utils as sutils
 import bouncerscript.utils as butils
 from bouncerscript.utils import (
     api_update_alias, api_add_location, api_add_product,
-    does_product_exist, api_call, _do_api_call, get_locations_paths,
-    api_show_location, api_show_product
+    does_product_exist, api_call, _do_api_call, get_locations_info,
+    api_show_location, api_show_product, api_modify_location,
+    get_nightly_version, get_version_bumped_path
 )
 from bouncerscript.task import get_task_action, get_task_server
 from bouncerscript.test import submission_context as context
@@ -210,6 +211,27 @@ async def test_api_add_location(context, mocker, product, os, path, expected):
     assert await api_add_location(context, product, os, path) == expected
 
 
+# api_modify_location {{{1
+@pytest.mark.parametrize("product,os,path,expected", ((
+    "fake-product",
+    "fake-os",
+    "fake-path", (
+         "location_modify/", {
+             "product": "fake-product",
+             "os": "fake-os",
+             "path": "fake-path",
+         },
+    )
+),))
+@pytest.mark.asyncio
+async def test_api_modify_location(context, mocker, product, os, path, expected):
+    async def fake_api_call(context, route, data):
+        return route, data
+
+    mocker.patch.object(butils, 'api_call', new=fake_api_call)
+    assert await api_modify_location(context, product, os, path) == expected
+
+
 # api_show_product {{{1
 @pytest.mark.parametrize("product,provided,expected", ((
     "fake-Fennec-product",
@@ -272,18 +294,42 @@ async def test_api_update_alias(context, mocker, alias, product, expected):
     mocker.patch.object(butils, 'api_call', new=fake_api_call)
     assert await api_update_alias(context, alias, product) == expected
 
+    [
+        {
+            "os": "",
+            "id": "",
+            "path": "/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk"
+        }, {
+            "os": "",
+            "id": "",
+            "path": "/mobile/releases/62.0b9/android-x86/:lang/fennec-62.0b9.:lang.android-i386.apk"
+        }
+    ]
 
+
+# does_location_path_exist {{{1
 @pytest.mark.parametrize('path, returned_locations, expected', ((
     '/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk',
     [
-        '/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk',
-        '/mobile/releases/62.0b9/android-x86/:lang/fennec-62.0b9.:lang.android-i386.apk',
+        {
+            "os": "android",
+            "id": "1234",
+            "path": "/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk"
+        }, {
+            "os": "android-x86",
+            "id": "5678",
+            "path": "/mobile/releases/62.0b9/android-x86/:lang/fennec-62.0b9.:lang.android-i386.apk"
+        }
     ],
     True,
 ), (
     '/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk',
     [
-        '/mobile/releases/62.0b9/android-x86/:lang/fennec-62.0b9.:lang.android-i386.apk',
+        {
+            "os": "android",
+            "id": "1234",
+            "path": "/mobile/releases/62.0b9/android-x86/:lang/fennec-62.0b9.:lang.android-i386.apk"
+        }
     ],
     False,
 ), (
@@ -296,11 +342,11 @@ async def test_does_location_path_exist(context, mocker, path, returned_location
     async def patch_get_locations_paths(*args, **kwargs):
         return returned_locations
 
-    mocker.patch.object(butils, 'get_locations_paths', new=patch_get_locations_paths)
+    mocker.patch.object(butils, 'get_locations_info', new=patch_get_locations_paths)
     assert await butils.does_location_path_exist(context, 'fake-product', path) == expected
 
 
-# get_locations_paths {{{1
+# get_locations_info {{{1
 @pytest.mark.parametrize("product,response,expected,raises", ((
     "fake-product",
     "<locations/>",
@@ -332,8 +378,15 @@ async def test_does_location_path_exist(context, mocker, path, returned_location
      '<location id="43594" os="android-x86">/mobile/releases/62.0b9/android-x86/:'
      'lang/fennec-62.0b9.:lang.android-i386.apk</location></product></locations>'),
     [
-        '/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk',
-        '/mobile/releases/62.0b9/android-x86/:lang/fennec-62.0b9.:lang.android-i386.apk'
+        {
+            "os": "android",
+            "id": "43593",
+            "path": "/mobile/releases/62.0b9/android-api-16/:lang/fennec-62.0b9.:lang.android-arm.apk"
+        }, {
+            "os": "android-x86",
+            "id": "43594",
+            "path": "/mobile/releases/62.0b9/android-x86/:lang/fennec-62.0b9.:lang.android-i386.apk"
+        }
     ],
     False
 ), (
@@ -345,20 +398,200 @@ async def test_does_location_path_exist(context, mocker, path, returned_location
      'android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk</location></'
      'product></locations>'),
     [
-        '/mobile/releases/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk',
-        '/mobile/releases/62.0b10/android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk'
+        {
+            "os": "android",
+            "id": "43610",
+            "path": "/mobile/releases/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk"
+        }, {
+            "os": "android-x86",
+            "id": "43611",
+            "path": "/mobile/releases/62.0b10/android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk"
+        }
     ],
     False,
+), (
+    "fake-product",
+    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="9551" '
+     'name="Firefox-62.0b16-stub"><location id="47774" os="win">/firefox/'
+     'releases/62.0b16/win32/:lang/Firefox%20Installer.exe</location><location '
+     'id="47775" os="win64">/firefox/releases/62.0b16/win32/:lang/Firefox%20'
+     'Installer.exe</location></product></locations>'),
+    [
+        {
+            "os": "win",
+            "id": "47774",
+            "path": "/firefox/releases/62.0b16/win32/:lang/Firefox%20Installer.exe"
+        }, {
+            "os": "win64",
+            "id": "47775",
+            "path": "/firefox/releases/62.0b16/win32/:lang/Firefox%20Installer.exe"
+        }
+    ],
+    False,
+), (
+    "fake-product",
+    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="9549" '
+     'name="Firefox-62.0b16-Partial-62.0b15"><location id="47767" os="win">'
+     '/firefox/releases/62.0b16/update/win32/:lang/firefox-62.0b15-62.0b16.'
+     'partial.mar</location><location id="47764" os="linux">/firefox/releases/'
+     '62.0b16/update/linux-i686/:lang/firefox-62.0b15-62.0b16.partial.mar</'
+     'location><location id="47766" os="osx">/firefox/releases/62.0b16/update'
+     '/mac/:lang/firefox-62.0b15-62.0b16.partial.mar</location><location '
+     'id="47765" os="linux64">/firefox/releases/62.0b16/update/linux-x86_64/:'
+     'lang/firefox-62.0b15-62.0b16.partial.mar</location><location id="47768" '
+     'os="win64">/firefox/releases/62.0b16/update/win64/:lang/firefox-62.0b15-'
+     '62.0b16.partial.mar</location></product></locations>'),
+    [
+        {
+            "os": "win",
+            "id": "47767",
+            "path": "/firefox/releases/62.0b16/update/win32/:lang/firefox-62.0b15-62.0b16.partial.mar"
+        }, {
+            "os": "linux",
+            "id": "47764",
+            "path": "/firefox/releases/62.0b16/update/linux-i686/:lang/firefox-62.0b15-62.0b16.partial.mar"
+        }, {
+            "os": "osx",
+            "id": "47766",
+            "path": "/firefox/releases/62.0b16/update/mac/:lang/firefox-62.0b15-62.0b16.partial.mar"
+        }, {
+            "os": "linux64",
+            "id": "47765",
+            "path": "/firefox/releases/62.0b16/update/linux-x86_64/:lang/firefox-62.0b15-62.0b16.partial.mar"
+        }, {
+            "os": "win64",
+            "id": "47768",
+            "path": "/firefox/releases/62.0b16/update/win64/:lang/firefox-62.0b15-62.0b16.partial.mar"
+        }
+    ],
+    False,
+), (
+    "fake-product",
+    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="9538" '
+     'name="Devedition-62.0b16"><location id="47715" os="win">/devedition/'
+     'releases/62.0b16/win32/:lang/Firefox%20Setup%2062.0b16.exe</location>'
+     '<location id="47712" os="linux">/devedition/releases/62.0b16/linux-'
+     'i686/:lang/firefox-62.0b16.tar.bz2</location><location id="47714" '
+     'os="osx">/devedition/releases/62.0b16/mac/:lang/Firefox%2062.0b16.dmg'
+     '</location><location id="47713" os="linux64">/devedition/releases/62.'
+     '0b16/linux-x86_64/:lang/firefox-62.0b16.tar.bz2</location><location '
+     'id="47716" os="win64">/devedition/releases/62.0b16/win64/:lang/'
+     'Firefox%20Setup%2062.0b16.exe</location></product></locations>'),
+    [
+        {
+            "os": "win",
+            "id": "47715",
+            "path": "/devedition/releases/62.0b16/win32/:lang/Firefox%20Setup%2062.0b16.exe"
+        }, {
+            "os": "linux",
+            "id": "47712",
+            "path": "/devedition/releases/62.0b16/linux-i686/:lang/firefox-62.0b16.tar.bz2"
+        }, {
+            "os": "osx",
+            "id": "47714",
+            "path": "/devedition/releases/62.0b16/mac/:lang/Firefox%2062.0b16.dmg"
+        }, {
+            "os": "linux64",
+            "id": "47713",
+            "path": "/devedition/releases/62.0b16/linux-x86_64/:lang/firefox-62.0b16.tar.bz2"
+        }, {
+            "os": "win64",
+            "id": "47716",
+            "path": "/devedition/releases/62.0b16/win64/:lang/Firefox%20Setup%2062.0b16.exe"
+        }
+    ],
+    False,
+), (
+    "fake-product",
+    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="8696" '
+     'name="Fennec-62.0b10"><location id="43610" os="android-corrupt-platform">/mobile/releases'
+     '/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk</'
+     'location><location id="43611" os="android-x86">/mobile/releases/62.0b10/'
+     'android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk</location></'
+     'product></locations>'),
+    [],
+    True,
 )))
 @pytest.mark.asyncio
-async def test_get_locations_paths(context, mocker, product, response, expected,
-                                   raises):
+async def test_get_locations_info(context, mocker, product, response, expected,
+                                  raises):
     async def fake_api_call(context, product):
         return response
 
     mocker.patch.object(butils, 'api_show_location', new=fake_api_call)
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
-            assert await get_locations_paths(context, product)
+            await get_locations_info(context, product)
     else:
-        assert await get_locations_paths(context, product) == expected
+        assert await get_locations_info(context, product) == expected
+
+
+# get_nightly_version {{{1
+@pytest.mark.parametrize("product,path,expected,raises", ((
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-i686.tar.bz2',
+    '63.0a1',
+    False
+), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win32.installer.exe',
+    '63.0a1',
+    False
+), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-x86_64.tar.bz2',
+    '63.0a1',
+    False
+), (
+    'firefox-nightly-latest-ssl',
+    '  /firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.linux-x86_64.tar.bz2',
+    '63.0a1',
+    False
+), (
+    'firefox-nightly-latest-ssl',
+    '/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win32.installer.exe',
+    '63.0a1',
+    False
+), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win64.installer.exe',
+    '63.0a1',
+    False
+), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0.1.:lang.win64.installer.exe',
+    '',
+    True
+), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0.:lang.win64.installer.exe',
+    '',
+    True
+), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0b1.:lang.win64.installer.exe',
+    '',
+    True
+)))
+def test_get_nightly_version(product, path, expected, raises):
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            get_nightly_version(product, path)
+    else:
+        get_nightly_version(product, path) == expected
+
+
+# get_version_bumped_path {{{1
+@pytest.mark.parametrize("path,current_version,next_version,expected", ((
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-i686.tar.bz2',
+    '63.0a1',
+    '64.0a1',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-64.0a1.:lang.linux-i686.tar.bz2',
+), (
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-i686.tar.bz2',
+    '63.0a1',
+    '64.0b1',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-64.0b1.:lang.linux-i686.tar.bz2',
+)))
+def test_get_version_bumped_path(path, current_version, next_version, expected):
+    assert get_version_bumped_path(path, current_version, next_version) == expected
