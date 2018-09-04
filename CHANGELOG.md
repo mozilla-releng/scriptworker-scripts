@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.2.1] - 2018-09-04
+### Fixed
+- Bouncer products with multiple platforms that share paths (i.e. stubs) now
+  have both platforms properly populated.
+
 ## [3.2.0] - 2018-09-04
 ### Added
 - Added new behavior `bouncer-locations` for `bouncerscript` to handle

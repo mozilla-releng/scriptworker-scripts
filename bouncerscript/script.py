@@ -52,7 +52,7 @@ async def bouncer_submission(context):
 
         log.info("Adding corresponding paths ...")
         for platform, path in pr_config["paths_per_bouncer_platform"].items():
-            if await does_location_path_exist(context, product_name, path):
+            if await does_location_path_exist(context, product_name, platform, path):
                 log.warning('Path "{}" for product "{}" already exists. Skipping...'.format(path, product_name))
             else:
                 await api_add_location(context, product_name, platform, path)
