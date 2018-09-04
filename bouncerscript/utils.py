@@ -142,10 +142,10 @@ async def does_product_exist(context, product_name):
         return False
 
 
-async def does_location_path_exist(context, product_name, path):
+async def does_location_path_exist(context, product_name, platform, path):
     existing_info = await get_locations_info(context, product_name)
     for info in existing_info:
-        if path in info["path"]:
+        if path == info["path"] and platform == info["os"]:
             return True
     return False
 
