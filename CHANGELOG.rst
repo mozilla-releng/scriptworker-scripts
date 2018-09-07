@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.9.1] = (2018-09-07)
+----------------------
+
+Fixed
+~~~~~
+
+- Changed geckoview version number format to MAJOR.MINOR.BUILDID. (`#1489132
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1489132>`_)
+
+
 [7.9.0] = (2018-08-30)
 ----------------------
 
