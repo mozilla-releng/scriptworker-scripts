@@ -9,6 +9,7 @@ import pprint
 import re
 import yaml
 
+from mozilla_version.gecko import FirefoxVersion
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.constants import (
@@ -178,15 +179,13 @@ def _generate_beetmover_template_args_maven(task, release_props):
         'buildid': release_props['buildid'],
         'product': release_props['appName'],
         'template_key': 'maven_{}'.format(release_props['appName']),
-        'version': task['payload']['version'],
     }
 
-    if 'nightly' in tmpl_args['artifact_id']:
-        # Change version number to major.minor.buildId
-        # TODO Use mozilla-version to get major and minor number
-        version = tmpl_args['version'].split('b')[0]
-        version = version.split('a')[0]
-        tmpl_args['version'] = '{}.{}'.format(version, tmpl_args['buildid'])
+    # Change version number to major.minor.buildId because that's what the build task produces
+    version = FirefoxVersion.parse(task['payload']['version'])
+    tmpl_args['version'] = '{}.{}.{}'.format(
+        version.major_number, version.minor_number, tmpl_args['buildid']
+    )
 
     return tmpl_args
 

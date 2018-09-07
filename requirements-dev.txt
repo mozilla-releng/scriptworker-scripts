@@ -1,6 +1,7 @@
 arrow
 boto3
 Jinja2
+mozilla-version
 PyYAML
 redo
 scriptworker
