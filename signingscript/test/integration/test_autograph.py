@@ -40,6 +40,13 @@ DEFAULT_SERVER_CONFIG = {
             ['autograph_apk'],
             'autograph'
         ],
+        [
+            'http://localhost:5500',
+            'alice',
+            'abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn',
+            ['autograph_hash_only_mar384'],
+            'autograph'
+        ],
     ]
 }
 
@@ -123,13 +130,32 @@ def _craft_task(file_names, signing_format):
 
 @pytest.mark.asyncio
 @skip_when_no_autograph_server
-async def test_integration_autograph_mar(context, tmpdir):
+async def test_integration_autograph_mar_sign_file(context, tmpdir):
     file_names = ['partial1.mar', 'partial2.mar']
     for file_name in file_names:
         _copy_files_to_work_dir(file_name, context)
 
     context.config['signing_server_config'] = _write_server_config(tmpdir)
     context.task = _craft_task(file_names, signing_format='autograph_mar384')
+
+    await async_main(context)
+
+    mar_pub_key_path = os.path.join(TEST_DATA_DIR, 'autograph_mar.pub')
+    signed_paths = [os.path.join(context.config['artifact_dir'], file_name) for file_name in file_names]
+    for signed_path in signed_paths:
+        assert do_verify(signed_path, keyfiles=[mar_pub_key_path]), "Mar signature doesn't match expected key"
+
+
+@pytest.mark.asyncio
+@skip_when_no_autograph_server
+async def test_integration_autograph_mar_sign_hash(context, tmpdir):
+    file_names = ['partial1.mar', 'partial2.mar']
+    for file_name in file_names:
+        _copy_files_to_work_dir(file_name, context)
+
+
+    context.config['signing_server_config'] = _write_server_config(tmpdir)
+    context.task = _craft_task(file_names, signing_format='autograph_hash_only_mar384')
 
     await async_main(context)
 

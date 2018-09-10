@@ -6,6 +6,8 @@ import difflib
 import fnmatch
 import glob
 import logging
+from mardor.reader import MarReader
+from mardor.writer import add_signature_block
 import os
 import re
 import requests
@@ -56,7 +58,7 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
 
 
 # get_suitable_signing_servers {{{1
-def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
+def get_suitable_signing_servers(signing_servers, cert_type, signing_formats, raise_on_empty_list=False):
     """Get the list of signing servers for given `signing_formats` and `cert_type`.
 
     Args:
@@ -65,15 +67,27 @@ def get_suitable_signing_servers(signing_servers, cert_type, signing_formats):
         cert_type (str): the certificate type - essentially signing level,
             separating release vs nightly vs dep.
         signing_formats (list): the signing formats the server needs to support
+        raise_on_empty_list (bool): flag to raise errors. Optional. Defaults to False.
+
+    Raises:
+        FailedSubprocess: on subprocess error while signing.
+        SigningScriptError: when no suitable signing server is found
 
     Returns:
         list of lists: the list of signing servers.
 
     """
     if cert_type not in signing_servers:
-        return []
+        suitable_signing_servers = []
+    else:
+        suitable_signing_servers = [s for s in signing_servers[cert_type] if set(signing_formats) & set(s.formats)]
 
-    return [s for s in signing_servers[cert_type] if set(signing_formats) & set(s.formats)]
+    if raise_on_empty_list and not suitable_signing_servers:
+        raise SigningScriptError(
+            "No signing servers found with cert type {}".format(cert_type)
+        )
+    else:
+        return suitable_signing_servers
 
 
 # build_signtool_cmd {{{1
@@ -129,7 +143,7 @@ async def sign_file(context, from_, fmt, to=None):
 
     """
     if utils.is_autograph_signing_format(fmt):
-        log.info("sign_file(): signing {} with {}... using autograph".format(from_, fmt))
+        log.info("sign_file(): signing {} with {}... using autograph /sign/file".format(from_, fmt))
         await sign_file_with_autograph(context, from_, fmt, to=to)
     else:
         log.info("sign_file(): signing {} with {}... using signing server".format(from_, fmt))
@@ -665,6 +679,7 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
 
     Raises:
         Requests.RequestException: on failure
+        SigningScriptError: when no suitable signing server is found for fmt
 
     Returns:
         str: the path to the signed file
@@ -675,11 +690,7 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
             "No signing servers found supporting signing format {}".format(fmt)
         )
     cert_type = task.task_cert_type(context)
-    servers = get_suitable_signing_servers(context.signing_servers, cert_type, [fmt])
-    if not servers:
-        raise SigningScriptError(
-            "No signing servers found with cert type {}".format(cert_type)
-        )
+    servers = get_suitable_signing_servers(context.signing_servers, cert_type, [fmt], raise_on_empty_list=True)
     s = servers[0]
     to = to or from_
 
@@ -706,4 +717,83 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
         fout.write(base64.b64decode(sign_resp[0]['signed_file']))
 
     log.info("autograph wrote signed_file %s to %s", from_, to)
+    return to
+
+
+async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
+    """Signs a hash with autograph, injects it into the file, and writes the result to arg `to` or `from_` if `to` is None.
+
+    Args:
+        context (Context): the signing context
+        from_ (str): the source file to sign
+        fmt (str): the format to sign with
+        to (str, optional): the target path to sign to. If None, overwrite
+            `from_`. Defaults to None.
+
+    Raises:
+        Requests.RequestException: on failure
+        SigningScriptError: when no suitable signing server is found for fmt
+
+    Returns:
+        str: the path to the signed file
+
+    """
+    log.info("sign_mar384_with_autograph_hash(): signing {} with {}... using autograph /sign/hash".format(from_, fmt))
+    if not utils.is_autograph_signing_format(fmt):
+        raise SigningScriptError(
+            "No signing servers found supporting signing format {}".format(fmt)
+        )
+    cert_type = task.task_cert_type(context)
+    servers = get_suitable_signing_servers(context.signing_servers, cert_type, [fmt], raise_on_empty_list=True)
+    s = servers[0]
+    to = to or from_
+
+    hash_algo, expected_signature_length = 'sha384', 512
+
+    # Add a dummy signature into a temporary file (TODO: dedup with mardor.cli do_hash)
+    tmp = tempfile.TemporaryFile()
+    with open(from_, 'rb') as f:
+        add_signature_block(f, tmp, hash_algo)
+
+    tmp.seek(0)
+
+    with MarReader(tmp) as m:
+        hashes = m.calculate_hashes()
+    h = hashes[0][1]
+
+    tmp.close()
+
+    # build and run the hash signature request
+    sign_req = [{"input": base64.b64encode(h).decode('ascii')}]
+    log.debug("signing mar with hash alg %s using the default autograph keyid for %s", hash_algo, s.user)
+
+    url = "%s/sign/hash" % s.server
+
+    async def make_sign_req():
+        auth = HawkAuth(id=s.user, key=s.password)
+        with requests.Session() as session:
+            r = session.post(url, json=sign_req, auth=auth)
+            log.debug("Autograph response: {}".format(r.text[:120] if len(r.text) >= 120 else r.text))
+            r.raise_for_status()
+            return r.json()
+
+    sign_resp = await retry_async(make_sign_req)
+    signature = base64.b64decode(sign_resp[0]['signature'])
+
+    # Add a signature to the MAR file (TODO: dedup with mardor.cli do_add_signature)
+    if len(signature) != expected_signature_length:
+        raise SigningScriptError(
+            "signed mar hash signature has invalid length for hash algo {}. Got {} expected {}.".format(hash_algo, len(signature), expected_signature_length)
+        )
+
+    # use the tmp file in case param `to` is `from_` which causes stream errors
+    tmp_dst = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
+    with open(tmp_dst.name, 'w+b') as dst:
+        with open(from_, 'rb') as src:
+            add_signature_block(src, dst, hash_algo, signature)
+
+    shutil.copyfile(tmp_dst.name, to)
+    os.unlink(tmp_dst.name)
+
+    log.info("wrote mar with autograph signed hash %s to %s", from_, to)
     return to
