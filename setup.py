@@ -24,6 +24,7 @@ setup(
     install_requires=[
         "arrow",
         "datadog",
+        "mar",
         "python-jose",
         "requests",
         "requests_hawk",
