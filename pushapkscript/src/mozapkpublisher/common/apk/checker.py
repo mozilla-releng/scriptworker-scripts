@@ -2,7 +2,7 @@ import logging
 
 from functools import partial
 
-from mozilla_version.firefox import FirefoxVersion
+from mozilla_version.gecko import FennecVersion
 
 from mozapkpublisher.common.apk.history import get_expected_api_levels_for_version, get_expected_architectures_for_version
 from mozapkpublisher.common.exceptions import BadApk, BadSetOfApks, NotMultiLocaleApk
@@ -84,7 +84,7 @@ _check_all_apks_have_the_same_locales = partial(_check_piece_of_metadata_is_uniq
 
 
 def _check_version_matches_package_name(version, package_name):
-    sanitized_version = FirefoxVersion(version)
+    sanitized_version = FennecVersion.parse(version)
 
     if (
         (package_name == 'org.mozilla.firefox' and sanitized_version.is_release) or
