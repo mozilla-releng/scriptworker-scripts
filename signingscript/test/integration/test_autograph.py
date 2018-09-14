@@ -50,7 +50,7 @@ DEFAULT_CONFIG = {
     "schema_file": os.path.join(DATA_DIR, 'signing_task_schema.json'),
     "signtool": "signtool",
     "ssl_cert": os.path.join(DATA_DIR, 'host.cert'),
-    "taskcluster_scope_prefix": "project:releng:signing:",
+    "taskcluster_scope_prefixes": ["project:releng:signing:"],
     "token_duration_seconds": 1200,
     "verbose": True,
     "dmg": "dmg",

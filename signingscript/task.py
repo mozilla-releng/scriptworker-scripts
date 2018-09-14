@@ -56,14 +56,17 @@ def task_cert_type(context):
         str: the cert type.
 
     """
-    prefix = _get_cert_prefix(context)
-    scopes = context.task['scopes']
+    prefixes = _get_cert_prefixes(context)
+    scopes = _extract_scopes_from_unique_prefix(
+        scopes=context.task['scopes'],
+        prefixes=prefixes
+    )
     return get_single_item_from_sequence(
         scopes,
-        condition=lambda scope: scope.startswith(prefix),
+        condition=lambda _: True,     # scopes must just contain 1 single item
         ErrorClass=TaskVerificationError,
-        no_item_error_message='No scope starting with "{}" found'.format(prefix),
-        too_many_item_error_message='More than one scope starting with "{}"'.format(prefix),
+        no_item_error_message='No scope starting with any of these prefixes {} found'.format(prefixes),
+        too_many_item_error_message='More than one scope found',
     )
 
 
@@ -78,22 +81,50 @@ def task_signing_formats(context):
         list: the signing formats.
 
     """
-    prefix = _get_format_prefix(context)
-    return [scope.split(':')[-1] for scope in context.task['scopes'] if scope.startswith(prefix)]
+    scopes = _extract_scopes_from_unique_prefix(
+        scopes=context.task['scopes'],
+        prefixes=_get_format_prefixes(context)
+    )
+    return [scope.split(':')[-1] for scope in scopes]
 
 
-def _get_cert_prefix(context):
-    return _get_scope_prefix(context, 'cert')
+def _extract_scopes_from_unique_prefix(scopes, prefixes):
+    scopes = [
+         scope
+         for scope in scopes
+         for prefix in prefixes
+         if scope.startswith(prefix)
+    ]
+    _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes)
+    return scopes
 
 
-def _get_format_prefix(context):
-    return _get_scope_prefix(context, 'format')
+def _get_cert_prefixes(context):
+    return _get_scope_prefixes(context, 'cert')
 
 
-def _get_scope_prefix(context, sub_namespace):
-    prefix = context.config['taskcluster_scope_prefix']
-    prefix = prefix if prefix.endswith(':') else '{}:'.format(prefix)
-    return '{}{}:'.format(prefix, sub_namespace)
+def _get_format_prefixes(context):
+    return _get_scope_prefixes(context, 'format')
+
+
+def _get_scope_prefixes(context, sub_namespace):
+    prefixes = context.config['taskcluster_scope_prefixes']
+    prefixes = [
+        prefix if prefix.endswith(':') else '{}:'.format(prefix)
+        for prefix in prefixes
+    ]
+    return ['{}{}:'.format(prefix, sub_namespace) for prefix in prefixes]
+
+
+def _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes):
+    for prefix in prefixes:
+        if all(scope.startswith(prefix) for scope in scopes):
+            break
+    else:
+        raise TaskVerificationError(
+            'Scopes must exist and all have the same prefix. '
+            'Given scopes: {}. Allowed prefixes: {}'.format(scopes, prefixes)
+        )
 
 
 # get_token {{{1

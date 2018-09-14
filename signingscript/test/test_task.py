@@ -65,12 +65,72 @@ def test_task_cert_type_error(context):
         stask.task_cert_type(context)
 
 
+def test_task_cert_type_no_double_cert_scopes(context):
+    context.task = {
+        'scopes': [
+            'project:mobile:focus:releng:signing:cert:release-signing',
+            'project:mobile:fenix:releng:signing:cert:release-signing',
+        ]
+    }
+    with pytest.raises(TaskVerificationError):
+        stask.task_cert_type(context)
+
+
 # task_signing_formats {{{1
 def test_task_signing_formats(context):
     context.task = {"scopes": [TEST_CERT_TYPE,
                        "project:releng:signing:format:mar",
                        "project:releng:signing:format:gpg"]}
     assert ["mar", "gpg"] == stask.task_signing_formats(context)
+
+
+def test_task_signing_formats_support_several_projects(context):
+    context.config['taskcluster_scope_prefixes'] = [
+        'project:mobile:focus:releng:signing:',
+        'project:mobile:fenix:releng:signing:',
+    ]
+
+    context.task = {
+        'scopes': [
+            'project:mobile:focus:releng:signing:cert:dep-signing',
+            'project:mobile:focus:releng:signing:format:focus-jar',
+        ]
+    }
+    assert ['focus-jar'] == stask.task_signing_formats(context)
+
+    context.task = {
+        'scopes': [
+            'project:mobile:fenix:releng:signing:cert:dep-signing',
+            'project:mobile:fenix:releng:signing:format:autograph_fenix',
+        ]
+    }
+    assert ['autograph_fenix'] == stask.task_signing_formats(context)
+
+
+def test_task_signing_formats_errors_when_2_different_projects_are_signed_in_the_same_task(context):
+    context.config['taskcluster_scope_prefixes'] = [
+        'project:mobile:focus:releng:signing:',
+        'project:mobile:fenix:releng:signing:',
+    ]
+    context.task = {
+        'scopes': [
+            'project:mobile:focus:releng:signing:cert:dep-signing',
+            'project:mobile:focus:releng:signing:format:focus-jar',
+            'project:mobile:fenix:releng:signing:format:autograph_fenix',
+        ]
+    }
+    with pytest.raises(TaskVerificationError):
+        stask.task_signing_formats(context)
+
+    context.task = {
+        'scopes': [
+            'project:mobile:focus:releng:signing:cert:dep-signing',
+            'project:mobile:focus:releng:signing:format:same-format',
+            'project:mobile:fenix:releng:signing:format:same-format',
+        ]
+    }
+    with pytest.raises(TaskVerificationError):
+        stask.task_signing_formats(context)
 
 
 # validate_task_schema {{{1
