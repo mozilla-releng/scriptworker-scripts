@@ -1,4 +1,5 @@
 scriptworker
+mozilla-version
 
 # XXX Dependencies required by snapcraft._store.push
 # See https://github.com/snapcore/snapcraft/blob/master/requirements.txt
