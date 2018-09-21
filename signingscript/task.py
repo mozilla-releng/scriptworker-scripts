@@ -14,7 +14,7 @@ import logging
 import os
 import random
 
-from datadog import statsd
+from datadog import statsd, initialize
 import platform
 
 from scriptworker.exceptions import ScriptWorkerException, TaskVerificationError
@@ -184,6 +184,9 @@ async def sign(context, path, signing_formats):
             there are detached sigfiles.
 
     """
+    # Datadog initialize. Must match the port set in puppet
+    initialize(statsd_host='localhost', statsd_port=8135)
+
     output = path
     # Loop through the formats and sign one by one.
     for fmt in signing_formats:
