@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [9.0.1] - 2018-09-17
+### Fixed
+- Initialize a hardcoded datadog statsd port of 8135 to avoid conflicting with collectd.
+
 ## [9.0.0] - 2018-09-17
 ### Changed
 - Configuration: `taskcluster_scope_prefix` now becomes `taskcluster_scope_prefixes` and takes a JSON array.
