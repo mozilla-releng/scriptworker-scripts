@@ -175,17 +175,17 @@ def generate_beetmover_template_args(context):
 def _generate_beetmover_template_args_maven(task, release_props):
     tmpl_args = {
         'artifact_id': task['payload']['artifact_id'],
-        'branch': release_props['branch'],
-        'buildid': release_props['buildid'],
-        'product': release_props['appName'],
         'template_key': 'maven_{}'.format(release_props['appName']),
     }
 
     # Change version number to major.minor.buildId because that's what the build task produces
-    version = FirefoxVersion.parse(task['payload']['version'])
-    tmpl_args['version'] = '{}.{}.{}'.format(
-        version.major_number, version.minor_number, tmpl_args['buildid']
-    )
+    payload_version = FirefoxVersion.parse(task['payload']['version'])
+    version = [payload_version.major_number,
+               payload_version.minor_number,
+               release_props.get('buildid', payload_version.patch_number)]
+    if any(number is None for number in version):
+        raise TaskVerificationError('At least one digit is undefined. Got: {}'.format(version))
+    tmpl_args['version'] = '.'.join(str(n) for n in version)
 
     return tmpl_args
 

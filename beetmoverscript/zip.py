@@ -129,7 +129,9 @@ def _fetch_zip_metadata(zip_file):
             'compress_size': info.compress_size,
             'file_size': info.file_size,
         }
-        for info in zip_file.infolist()
+        # TODO: we should add a check following up this filtering to ensure no
+        # empty dirs were created
+        for info in zip_file.infolist() if not info.is_dir()
     }
 
 

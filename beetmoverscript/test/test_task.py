@@ -9,12 +9,49 @@ from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
     get_upstream_artifacts, get_upstream_artifacts_with_zip_extract_param,
     generate_checksums_manifest, get_task_bucket, get_task_action,
-    validate_bucket_paths, get_release_props, is_custom_checksums_task
+    validate_bucket_paths, get_release_props, is_custom_checksums_task,
+    get_schema_key_by_action
 )
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 assert context  # silence pyflakes
+
+
+# get_schema_key_by_action {{{1
+@pytest.mark.parametrize("scopes, expected", ((
+    [
+        "project:releng:beetmover:bucket:maven-staging",
+        "project:releng:beetmover:action:push-to-maven"
+    ], "maven_schema_file",
+), (
+    [
+        "project:releng:beetmover:bucket:dep",
+        "project:releng:beetmover:action:push-to-releases"
+    ], "release_schema_file",
+), (
+    [
+        "project:releng:beetmover:bucket:dep",
+        "project:releng:beetmover:action:push-to-candidates"
+    ], "schema_file",
+), (
+    [
+        "project:releng:beetmover:bucket:dep",
+        "project:releng:beetmover:action:push-to-partner"
+    ], "schema_file",
+), (
+    [
+        "project:releng:beetmover:bucket:dep",
+        "project:releng:beetmover:action:push-to-nightly"
+    ], "schema_file",
+)))
+def test_get_schema_key_by_action(scopes, expected):
+    context = Context()
+    context.config = get_fake_valid_config()
+    context.task = get_fake_valid_task()
+    context.task["scopes"] = scopes
+
+    assert expected == get_schema_key_by_action(context)
 
 
 # get_upstream_artifacts {{{1
@@ -289,6 +326,10 @@ def test_get_release_props(context, mocker, taskjson, locale, relprops, expected
 
     context.task['payload']['releaseProperties'] = relprops
     assert get_release_props(context) == expected
+
+    context.task['payload']['releaseProperties'] = None
+    with pytest.raises(ScriptWorkerTaskException):
+        get_release_props(context)
 
 
 # is_custom_beetmover_checksums_task {{{1

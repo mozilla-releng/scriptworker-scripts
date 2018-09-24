@@ -423,14 +423,19 @@ def test_beetmover_template_args_generation_release(context):
     assert template_args == expected_template_args
 
 
-@pytest.mark.parametrize('branch, version, artifact_id, build_id, expected_version', ((
-    'mozilla-central', '63.0a1', 'geckoview-nightly-x86', '20181231120000', '63.0.20181231120000',
+@pytest.mark.parametrize('branch, version, artifact_id, build_id, expected_version, raises', ((
+    'mozilla-central', '63.0a1', 'geckoview-nightly-x86', '20181231120000', '63.0.20181231120000', False,
 ), (
-    'mozilla-beta', '63.0b2', 'geckoview-beta-armeabi-v7a', '20181231120000', '63.0.20181231120000',
+    'mozilla-beta', '63.0b2', 'geckoview-beta-armeabi-v7a', '20181231120000', '63.0.20181231120000', False,
 ), (
-    'mozilla-release', '63.0', 'geckoview-arm64-v8a', '20181231120000', '63.0.20181231120000',
+    'mozilla-release', '63.0', 'geckoview-arm64-v8a', '20181231120000', '63.0.20181231120000', False,
+), (
+    '', '0.25.1', 'browser-session', None, None, True,
+), (
+    '', '1.0', 'browser-session', None, None, True,
 )))
-def test_beetmover_template_args_maven(context, branch, version, artifact_id, build_id, expected_version):
+def test_beetmover_template_args_maven(context, branch, version, artifact_id,
+                                       build_id, expected_version, raises):
     context.bucket = 'maven'
     context.action = 'push-to-maven'
     context.task['payload']['version'] = version
@@ -439,14 +444,15 @@ def test_beetmover_template_args_maven(context, branch, version, artifact_id, bu
     context.release_props['buildid'] = build_id
     context.release_props['appName'] = 'geckoview'
 
-    assert generate_beetmover_template_args(context) == {
-        'artifact_id': artifact_id,
-        'branch': branch,
-        'product': 'geckoview',
-        'template_key': 'maven_geckoview',
-        'version': expected_version,
-        'buildid': build_id,
-    }
+    if not raises:
+        assert generate_beetmover_template_args(context) == {
+            'artifact_id': artifact_id,
+            'template_key': 'maven_geckoview',
+            'version': expected_version,
+        }
+    else:
+        with pytest.raises(TaskVerificationError):
+            generate_beetmover_template_args(context)
 
 
 @pytest.mark.parametrize('locale_in_payload, locales_in_upstream_artifacts, raises', ((

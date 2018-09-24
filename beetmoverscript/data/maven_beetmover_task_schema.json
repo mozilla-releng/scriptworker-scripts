@@ -1,5 +1,5 @@
 {
-    "title": "Taskcluster beetmover task minimal schema",
+    "title": "Taskcluster beetmover task maven schema",
     "type": "object",
     "properties": {
         "dependencies": {
@@ -56,7 +56,7 @@
                             "type" : "string"
                         }
                     },
-                    "required" : ["appName", "buildid", "appVersion", "hashType", "platform", "branch"]
+                    "required" : ["appName"]
                 },
                 "upstreamArtifacts": {
                     "type": "array",
@@ -64,9 +64,6 @@
                         "type": "object",
                         "properties": {
                             "taskType": {
-                                "type": "string"
-                            },
-                            "locale": {
                                 "type": "string"
                             },
                             "taskId": {
@@ -84,15 +81,13 @@
                                 "type": "boolean"
                             }
                         },
-                        "required": ["taskId", "taskType", "paths", "locale"]
+                        "required": ["taskId", "taskType", "paths"]
                     },
                     "minItems": 1,
                     "uniqueItems": true
                 }
             },
-            "required": ["upload_date", "upstreamArtifacts", "releaseProperties"],
-            "optional": ["build_number", "version", "locale", "maxRunTime", "appVersion", "next_version"]
-
+            "required": ["upstreamArtifacts", "releaseProperties", "version", "artifact_id"]
         }
     },
     "required": ["payload", "dependencies"]

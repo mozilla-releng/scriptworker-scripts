@@ -20,10 +20,19 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 log = logging.getLogger(__name__)
 
 
+def get_schema_key_by_action(context):
+    action = get_task_action(context.task, context.config)
+    if utils.is_release_action(action):
+        return 'release_schema_file'
+    elif utils.is_maven_action(action):
+        return 'maven_schema_file'
+
+    return 'schema_file'
+
+
 def validate_task_schema(context):
     """Perform a schema validation check against taks definition"""
-    action = get_task_action(context.task, context.config)
-    schema_key = 'release_schema_file' if utils.is_release_action(action) else 'schema_file'
+    schema_key = get_schema_key_by_action(context)
     client.validate_task_schema(context, schema_key=schema_key)
 
 

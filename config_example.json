@@ -3,7 +3,8 @@
     "artifact_dir": "artifact_dir",
     "verbose": true,
     "schema_file": "/path/to/beetmoverscript/beetmoverscript/data/beetmover_task_schema.json",
-    "release_schema_file": "/path/to/beetmoverscript/beetmoverscript/data/beetmover_task_schema.json",
+    "release_schema_file": "/path/to/beetmoverscript/beetmoverscript/data/release_beetmover_task_schema.json",
+    "maven_schema_file": "/path/to/beetmoverscript/beetmoverscript/data/maven_beetmover_task_schema.json",
     "aiohttp_max_connections": 10,
     "checksums_digests": ["sha512", "sha256"],
     "blobs_needing_prettynaming_contents": [
@@ -54,9 +55,9 @@
             },
             "buckets": {
                 "firefox": "mozilla-releng-private-firefox-bucket"
-            },
+            }
         }
     },
 
-    "zip_max_file_size_in_mb": 100,
+    "zip_max_file_size_in_mb": 100
 }
