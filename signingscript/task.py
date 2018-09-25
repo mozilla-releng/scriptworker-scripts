@@ -184,8 +184,11 @@ async def sign(context, path, signing_formats):
             there are detached sigfiles.
 
     """
-    # Datadog initialize. Must match the port set in puppet
-    initialize(statsd_host='localhost', statsd_port=8135)
+
+    # We use 8135 by default, as datadog's default of 8125 conflicts
+    # with collectd. Bug 1493265
+    initialize(statsd_host=context.config.get('datadog_host', 'localhost'),
+               statsd_port=context.config.get('datadog_port', 8135))
 
     output = path
     # Loop through the formats and sign one by one.
