@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [9.0.2] - 2018-09-25
+### Changed
+- Updated signing server host cert to one with the new mac signing server alt names
+
 ## [9.0.1] - 2018-09-17
 ### Fixed
 - Initialize a hardcoded datadog statsd port of 8135 to avoid conflicting with collectd.
