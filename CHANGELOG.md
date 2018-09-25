@@ -2,10 +2,15 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.2.2] - 2018-09-18
+## [0.2.3] - 2018-10-03
+### Changed
+* Task doesn't fail anymore if the snap was either already pushed or already released. It keeps failing if a more recent snap was already released on the given channel.
 
+
+## [0.2.2] - 2018-09-18
 ### Changed
 * Bumped snapcraft to 2.43.1.
+
 
 ## [0.2.1] - 2018-04-17
 ### Added
@@ -13,6 +18,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 * Bumped snapcraft to 2.42.
+
 
 ## [0.2.0] - 2018-04-09
 ### Changed
@@ -23,6 +29,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 * `pushsnapscript.snap_store.push()` passes a channel list instead of a single channel
+
 
 ## [0.1.0] - 2018-04-04
 Initial release
