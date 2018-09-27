@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [9.1.0] - 2018-09-27
+### Added
+- Added optional `datadog_port` and `datadog_host` to the config file
+
+### Changed
+- Read the datadog config from the config file
+
 ## [9.0.3] - 2018-09-26
 ### Changed
 - Updated signing server host cert to one with the new mac signing server alt names AND has a new subject (so it doesn't get ignored)
