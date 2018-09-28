@@ -65,6 +65,10 @@ mapping:
       s3_key: {{ platform }}/{{ locale }}/firefox-{{ version }}.web-platform.tests.tar.gz
       destinations:
         - {{ platform }}/{{ locale }}/firefox-{{ version }}.web-platform.tests.tar.gz
+    target.updater-dep.tests.tar.gz:
+      s3_key: {{ platform }}/{{ locale }}/firefox-{{ version }}.updater-dep.tests.tar.gz
+      destinations:
+        - {{ platform }}/{{ locale }}/firefox-{{ version }}.updater-dep.tests.tar.gz
     target.xpcshell.tests.zip:
       s3_key: {{ platform }}/{{ locale }}/firefox-{{ version }}.xpcshell.tests.zip
       destinations:
