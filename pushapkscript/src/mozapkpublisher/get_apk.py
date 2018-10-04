@@ -55,7 +55,7 @@ class GetAPK(Base):
             shutil.rmtree(self.config.download_directory)
             logger.info('Download directory cleaned')
         except FileNotFoundError:
-            logger.warn('{} was not found. Skipping...'.format(self.config.download_directory))
+            logger.warning('{} was not found. Skipping...'.format(self.config.download_directory))
 
     def generate_apk_base_url(self, version, build, locale, api_suffix):
         return '{}/nightly/latest-mozilla-central-android-{}'.format(FTP_BASE_URL, api_suffix) \
@@ -188,7 +188,7 @@ def _fetch_checksum_from_file(checksum_file, apk_file):
             # old style pre-Fennec 53 checksums files. Super greedy
             with open(checksum_file, 'r') as f:
                 checksum = f.read()
-            checksum = re.sub("\s(.*)", "", checksum.splitlines()[0])
+            checksum = re.sub(r'\s(.*)', '', checksum.splitlines()[0])
 
     logger.info("Found hash {}".format(checksum))
     return checksum

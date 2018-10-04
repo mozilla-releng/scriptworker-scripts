@@ -95,7 +95,7 @@ class PushAPK(Base):
                 logger.info("Downloading listings and what's new section from L10n Store...")
                 l10n_strings = store_l10n.get_translations_per_google_play_locale_code(package_name)
             elif not self.config.update_google_play_strings:
-                logger.warn("Listing and what's new section won't be updated.")
+                logger.warning("Listing and what's new section won't be updated.")
                 l10n_strings = None
             else:
                 raise WrongArgumentGiven("Option missing. You must provide what to do in regards to Google Play strings.")
@@ -117,7 +117,7 @@ def _split_apk_metadata_per_package_name(apks_metadata_per_paths):
 def _create_or_update_whats_new(edit_service, package_name, apk_version_code, l10n_strings):
     if googleplay.is_package_name_nightly(package_name):
         # See https://github.com/mozilla-l10n/stores_l10n/issues/142
-        logger.warn("Nightly detected, What's new section won't be updated")
+        logger.warning("Nightly detected, What's new section won't be updated")
         return
 
     for google_play_locale_code, translation in l10n_strings.items():
@@ -127,7 +127,7 @@ def _create_or_update_whats_new(edit_service, package_name, apk_version_code, l1
                 google_play_locale_code, apk_version_code, whats_new=whats_new
             )
         except KeyError:
-            logger.warn("No What's new section defined for locale {}".format(google_play_locale_code))
+            logger.warning("No What's new section defined for locale {}".format(google_play_locale_code))
 
 
 def _get_ordered_version_codes(apks):

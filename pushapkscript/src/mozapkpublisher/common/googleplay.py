@@ -71,7 +71,7 @@ class EditService(object):
             self._service = general_service.edits()
         else:
             self._service = _craft_google_play_service_mock()
-            logger.warn('`--do-not-contact-google-play` option was given. Not a single request to Google Play will be made!')
+            logger.warning('`--do-not-contact-google-play` option was given. Not a single request to Google Play will be made!')
 
         self._package_name = package_name
         self._commit = commit
@@ -97,7 +97,7 @@ class EditService(object):
             logger.info('Changes committed')
             logger.debug('edit_id "{}" for package "{}" has been committed'.format(self._edit_id, self._package_name))
         else:
-            logger.warn('`commit` option was not given. Transaction not committed.')
+            logger.warning('`commit` option was not given. Transaction not committed.')
 
         self._edit_id = None
 
