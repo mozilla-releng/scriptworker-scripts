@@ -35,7 +35,7 @@ STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME = {
 # API documentation: https://l10n.mozilla-community.org/stores_l10n/documentation/
 L10N_API_URL = 'https://l10n.mozilla-community.org/stores_l10n/api/v1'
 _ALL_LOCALES_URL = L10N_API_URL + '/{product}/listing/{channel}/'
-_LOCALE_URL = L10N_API_URL + '/{product}/translation/{channel_or_major_version}/{locale}/'
+_LOCALE_URL = L10N_API_URL + '/{product}/translation/{channel}/{locale}/'
 _MAPPING_URL = L10N_API_URL + '/google/localesmapping/?reverse'
 
 # Because these scripts are meant to run and exit, we cache the stores_l10n results
@@ -51,14 +51,14 @@ TRANSLATION_SCHEMA = Schema({
 })
 
 
-def get_translations_per_google_play_locale_code(package_name, major_version_number=None, moz_locales=None):
+def get_translations_per_google_play_locale_code(package_name, moz_locales=None):
     product_details = STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME[package_name]
     product = product_details['product']
     channel = product_details['channel']
 
     global _translations_per_google_play_locale_code
 
-    _init_full_locales_if_needed(product, channel, major_version_number)
+    _init_full_locales_if_needed(product, channel)
 
     translations = _translations_per_google_play_locale_code if moz_locales is None else {
         _translate_moz_locate_into_google_play_one(moz_locale):
@@ -83,7 +83,7 @@ def check_translations_schema(translations):
             raise TranslationMissingData(locale, e)
 
 
-def _init_full_locales_if_needed(product, channel, major_version_number=None):
+def _init_full_locales_if_needed(product, channel):
     global _translations_per_google_play_locale_code
 
     if _translations_per_google_play_locale_code is None:
@@ -95,7 +95,7 @@ def _init_full_locales_if_needed(product, channel, major_version_number=None):
         ))
         _translations_per_google_play_locale_code = {
             _translate_moz_locate_into_google_play_one(moz_locale):
-            _get_translation(product, channel, moz_locale, major_version_number)
+            _get_translation(product, channel, moz_locale)
             for moz_locale in moz_locales
         }
         logger.info('Locales downloaded and converted to: {}'.format(
@@ -111,21 +111,8 @@ def _get_list_of_completed_locales(product, channel):
     return utils.load_json_url(_ALL_LOCALES_URL.format(product=product, channel=channel))
 
 
-def _get_translation(product, channel, locale, major_version_number=None):
-    translation = utils.load_json_url(_LOCALE_URL.format(
-        product=product, channel_or_major_version=channel, locale=locale
-    ))
-
-    # In the case of Release Candidates, we want to upload the name/descriptions of channels
-    # (e.g.: "Firefox", but not "Firefox Beta"), but we want the "whatsnew" section of the expected
-    # version (like "60")
-    if major_version_number:
-        version_specific_translation = utils.load_json_url(_LOCALE_URL.format(
-            product=product, channel_or_major_version=major_version_number, locale=locale
-        ))
-        translation['whatsnew'] = version_specific_translation['whatsnew']
-
-    return translation
+def _get_translation(product, channel, locale):
+    return utils.load_json_url(_LOCALE_URL.format(product=product, channel=channel, locale=locale))
 
 
 def _translate_moz_locate_into_google_play_one(locale):

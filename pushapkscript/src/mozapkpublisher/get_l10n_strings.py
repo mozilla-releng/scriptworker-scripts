@@ -19,15 +19,11 @@ class GetL10nStrings(Base):
 
         cls.parser.add_argument('--package-name', choices=store_l10n.STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME.keys(),
                                 help='The APK package name', required=True)
-        cls.parser.add_argument('--major-version-number',
-                                help='The APK major version (e.g.: 60 for Firefox 60.0.1)', default=None)
-        cls.parser.add_argument('--output-file', type=argparse.FileType('w'),
-                                help='The file where strings will be saved to', default='l10n_strings.json')
+        cls.parser.add_argument('--output-file', type=argparse.FileType('w'), help='The file where strings will be saved to',
+                                default='l10n_strings.json')
 
     def run(self):
-        l10n_strings = store_l10n.get_translations_per_google_play_locale_code(
-            self.config.package_name, self.config.major_version_number
-        )
+        l10n_strings = store_l10n.get_translations_per_google_play_locale_code(self.config.package_name)
         json.dump(l10n_strings, self.config.output_file)
 
 
