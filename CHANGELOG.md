@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.4] - 2018-10-08
+### Fixed
+* Looking up for an ESR previous snap doesn't raise anymore
+
+
 ## [0.2.3] - 2018-10-03
 ### Changed
 * Task doesn't fail anymore if the snap was either already pushed or already released. It keeps failing if a more recent snap was already released on the given channel.
