@@ -504,6 +504,106 @@ def test_check_current_snap_is_not_released(current_revision, current_version, l
     },
     True,
     ValueError,
+), (
+    'esr',
+    {
+        3: {
+            'version': '63.0b6-2',
+            'current_channels': [],
+        },
+        4: {
+            'version': '63.0b7-1',
+            'current_channels': ['beta', 'edge'],
+        },
+        5: {
+            'version': '60.2.0esr',
+            'current_channels': [],
+        },
+        6: {
+            'version': '60.2.1esr',
+            'current_channels': ['esr/stable', 'esr/candidate', 'esr/beta', 'esr/nightly'],
+        },
+    },
+    False,
+    (6, '60.2.1esr'),
+), (
+    'esr',
+    {
+        3: {
+            'version': '63.0b6-2',
+            'current_channels': [],
+        },
+        4: {
+            'version': '63.0b7-1',
+            'current_channels': ['beta', 'edge'],
+        },
+        5: {
+            'version': '60.2.0esr',
+            'current_channels': [],
+        },
+        6: {
+            'version': '60.2.1esr',
+            'current_channels': ['esr/stable'],
+        },
+        7: {
+            'version': '67.0esr',
+            'current_channels': ['esr/candidate', 'esr/beta', 'esr/nightly'],
+        },
+    },
+    False,
+    (6, '60.2.1esr'),
+), (
+    'esr/stable',
+    {
+        3: {
+            'version': '63.0b6-2',
+            'current_channels': [],
+        },
+        4: {
+            'version': '63.0b7-1',
+            'current_channels': ['beta', 'edge'],
+        },
+        5: {
+            'version': '60.2.0esr',
+            'current_channels': [],
+        },
+        6: {
+            'version': '60.2.1esr',
+            'current_channels': ['esr/stable'],
+        },
+        7: {
+            'version': '67.0esr',
+            'current_channels': ['esr/candidate', 'esr/beta', 'esr/nightly'],
+        },
+    },
+    False,
+    (6, '60.2.1esr'),
+), (
+    'esr/candidate',
+    {
+        3: {
+            'version': '63.0b6-2',
+            'current_channels': [],
+        },
+        4: {
+            'version': '63.0b7-1',
+            'current_channels': ['beta', 'edge'],
+        },
+        5: {
+            'version': '60.2.0esr',
+            'current_channels': [],
+        },
+        6: {
+            'version': '60.2.1esr',
+            'current_channels': ['esr/stable'],
+        },
+        7: {
+            'version': '67.0esr',
+            'current_channels': ['esr/candidate', 'esr/beta', 'esr/nightly'],
+        },
+    },
+    False,
+    (7, '67.0esr'),
 )))
 def test_pick_revision_and_version_of_latest_released_snap(channel, metadata_per_revision, raises, expected):
     if raises:
