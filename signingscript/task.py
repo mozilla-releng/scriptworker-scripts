@@ -21,13 +21,15 @@ from scriptworker.exceptions import ScriptWorkerException, TaskVerificationError
 from scriptworker.utils import retry_request, get_single_item_from_sequence
 
 from signingscript.sign import get_suitable_signing_servers, sign_gpg, \
-    sign_jar, sign_macapp, sign_signcode, sign_widevine, sign_file
+    sign_jar, sign_macapp, sign_signcode, sign_widevine, sign_file, \
+    sign_mar384_with_autograph_hash
 from signingscript.exceptions import SigningServerError
 from signingscript.utils import is_autograph_signing_format
 
 log = logging.getLogger(__name__)
 
 FORMAT_TO_SIGNING_FUNCTION = frozendict({
+    "autograph_hash_only_mar384": sign_mar384_with_autograph_hash,
     "gpg": sign_gpg,
     "jar": sign_jar,
     "focus-jar": sign_jar,

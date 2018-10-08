@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [9.2.0] - 2018-10-08
+### Added
+- Added new dep, `mar`. Python now requires lzma support; CentOS signing scriptworkers will need the xz-devel package.
+- Added a new kwarg `raise_on_empty_list` to `get_suitable_signing_servers`. When True, and if the list of suitable signing servers is empty, the function raises a `SigningScriptError`.
+- Added `sign_mar384_with_autograph_hash`. This is new functionality to only send the hash of the mar to autograph, to reduce autograph and network load.
+- Added the `autograph_hash_only_mar384` signing format
+
+### Changed
+- Updated travis docker image to `mozilla/autograph:2.3.2`
+
 ## [9.1.0] - 2018-09-27
 ### Added
 - Added optional `datadog_port` and `datadog_host` to the config file

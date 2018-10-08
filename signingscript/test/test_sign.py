@@ -1,3 +1,4 @@
+import base64
 from contextlib import contextmanager
 import os
 import os.path
@@ -114,6 +115,11 @@ def test_get_suitable_signing_servers(context, formats, expected):
         context.signing_servers, TEST_CERT_TYPE,
         formats
     ) == expected_servers
+
+
+def test_get_suitable_signing_servers_raises_signingscript_error(context):
+    with pytest.raises(SigningScriptError):
+        sign.get_suitable_signing_servers(context.signing_servers, TEST_CERT_TYPE, signing_formats=['invalid'], raise_on_empty_list=True)
 
 
 # build_signtool_cmd {{{1
@@ -282,6 +288,132 @@ async def test_sign_file_with_autograph_raises_http_error(context, mocker, to, e
     with pytest.raises(sign.requests.exceptions.RequestException):
         await sign.sign_file_with_autograph(context, 'from', 'autograph_mar', to=to)
     open_mock.assert_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('to,expected', ((
+    None, 'from',
+), (
+    'to', 'to'
+)))
+async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
+    open_mock = mocker.mock_open(read_data=b'0xdeadbeef')
+    mocker.patch('builtins.open', open_mock, create=True)
+
+    session_mock = mocker.MagicMock()
+    session_mock.post.return_value.json.return_value = [{'signature': base64.b64encode(b'0' * 512)}]
+
+    Session_mock = mocker.Mock()
+    Session_mock.return_value.__enter__ = mocker.Mock(return_value=session_mock)
+    Session_mock.return_value.__exit__ = mocker.Mock()
+    mocker.patch('signingscript.sign.requests.Session', Session_mock, create=True)
+
+    add_signature_mock = mocker.Mock()
+    mocker.patch('signingscript.sign.add_signature_block', add_signature_mock, create=True)
+
+    m_mock = mocker.MagicMock()
+    m_mock.calculate_hashes.return_value = [[None, b'b64marhash']]
+    MarReader_mock = mocker.Mock()
+    MarReader_mock.return_value.__enter__ = mocker.Mock(return_value=m_mock)
+    MarReader_mock.return_value.__exit__ = mocker.Mock()
+    mocker.patch('signingscript.sign.MarReader', MarReader_mock, create=True)
+
+    context.task = {
+        'scopes': ['project:releng:signing:cert:dep-signing', 'project:releng:signing:format:autograph_hash_only_mar384']
+    }
+    context.signing_servers = {
+        "project:releng:signing:cert:dep-signing": [
+            utils.SigningServer(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_hash_only_mar384"], "autograph"])
+        ]
+    }
+    assert await sign.sign_mar384_with_autograph_hash(context, 'from', 'autograph_hash_only_mar384', to=to) == expected
+    open_mock.assert_called()
+    add_signature_mock.assert_called()
+    MarReader_mock.assert_called()
+    m_mock.calculate_hashes.assert_called()
+    session_mock.post.assert_called_with(
+        'https://autograph-hsm.dev.mozaws.net/sign/hash',
+        auth=mocker.ANY,
+        json=[{'input': 'YjY0bWFyaGFzaA=='}])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('to,expected', ((
+    None, 'from',
+), (
+    'to', 'to'
+)))
+async def test_sign_mar384_with_autograph_hash_invalid_format_errors(context, mocker, to, expected):
+    context.task = {
+        'scopes': ['project:releng:signing:cert:dep-signing', 'project:releng:signing:format:mar']
+    }
+    context.signing_servers = {}
+    with pytest.raises(SigningScriptError):
+        await sign.sign_mar384_with_autograph_hash(context, 'from', 'mar', to=to)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('to,expected', ((
+    None, 'from',
+), (
+    'to', 'to'
+)))
+async def test_sign_mar384_with_autograph_hash_no_suitable_servers_errors(context, mocker, to, expected):
+    context.task = {
+        'scopes': ['project:releng:signing:cert:dep-signing', 'project:releng:signing:format:autograph_mar']
+    }
+    context.signing_servers = {}
+    with pytest.raises(SigningScriptError):
+        await sign.sign_mar384_with_autograph_hash(context, 'from', 'autograph_hash_only_mar384', to=to)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('to,expected', ((
+    None, 'from',
+), (
+    'to', 'to'
+)))
+async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(context, mocker, to, expected):
+    open_mock = mocker.mock_open(read_data=b'0xdeadbeef')
+    mocker.patch('builtins.open', open_mock, create=True)
+
+    session_mock = mocker.MagicMock()
+    session_mock.post.return_value.json.return_value = [{'signature': base64.b64encode(b'0')}]
+
+    Session_mock = mocker.Mock()
+    Session_mock.return_value.__enter__ = mocker.Mock(return_value=session_mock)
+    Session_mock.return_value.__exit__ = mocker.Mock()
+    mocker.patch('signingscript.sign.requests.Session', Session_mock, create=True)
+
+    add_signature_mock = mocker.Mock()
+    mocker.patch('signingscript.sign.add_signature_block', add_signature_mock, create=True)
+
+    m_mock = mocker.MagicMock()
+    m_mock.calculate_hashes.return_value = [[None, b'b64marhash']]
+    MarReader_mock = mocker.Mock()
+    MarReader_mock.return_value.__enter__ = mocker.Mock(return_value=m_mock)
+    MarReader_mock.return_value.__exit__ = mocker.Mock()
+    mocker.patch('signingscript.sign.MarReader', MarReader_mock, create=True)
+
+    context.task = {
+        'scopes': ['project:releng:signing:cert:dep-signing', 'project:releng:signing:format:autograph_hash_only_mar384']
+    }
+    context.signing_servers = {
+        "project:releng:signing:cert:dep-signing": [
+            utils.SigningServer(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_hash_only_mar384"], "autograph"])
+        ]
+    }
+    with pytest.raises(SigningScriptError):
+        assert await sign.sign_mar384_with_autograph_hash(context, 'from', 'autograph_hash_only_mar384', to=to) == expected
+
+    open_mock.assert_called()
+    add_signature_mock.assert_called()
+    MarReader_mock.assert_called()
+    m_mock.calculate_hashes.assert_called()
+    session_mock.post.assert_called_with(
+        'https://autograph-hsm.dev.mozaws.net/sign/hash',
+        auth=mocker.ANY,
+        json=[{'input': 'YjY0bWFyaGFzaA=='}])
 
 
 # sign_gpg {{{1
