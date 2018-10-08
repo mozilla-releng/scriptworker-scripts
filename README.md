@@ -108,7 +108,13 @@ The config json looks like this (comments are not valid json, but I'm inserting 
       "verbose": true,
 
       // the path to zipalign. This executable is usually present in $ANDROID_SDK_LOCATION/build-tools/$ANDROID_VERSION/zipalign
-      "zipalign": "/absolute/path/to/zipalign"
+      "zipalign": "/absolute/path/to/zipalign",
+
+      // The host and port to use when sending metrics to datadog statsd
+      // Datadog's default is 8125, ours is 8135 due to a conflict with collectd
+      "datadog_port": 8135,
+      "datadog_host": "localhost"
+
     }
 
 #### directories and file naming
