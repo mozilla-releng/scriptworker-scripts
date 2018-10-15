@@ -107,9 +107,9 @@ flake8-per-file-ignores==0.6 \
 flake8-polyfill==1.0.2 \
     --hash=sha256:12be6a34ee3ab795b19ca73505e7b55826d5f6ad7230d31b18e106400169b9e9 \
     --hash=sha256:e44b087597f6da52ec6393a709e7108b2905317d0c0b744cdca6208e670d8eda
-freezegun==0.3.10 \
-    --hash=sha256:703caac155dcaad61f78de4cb0666dca778d854dfb90b3699930adee0559a622 \
-    --hash=sha256:94c59d69bb99c9ec3ca5a3adb41930d3ea09d2a9756c23a02d89fa75646e78dd
+freezegun==0.3.11 \
+    --hash=sha256:6cb82b276f83f2acce67f121dc2656f4df26c71e32238334eb071170b892a278 \
+    --hash=sha256:e839b43bfbe8158b4d62bb97e6313d39f3586daf48e1314fb1083d2ef17700da
 frozendict==1.2 \
     --hash=sha256:774179f22db2ef8a106e9c38d4d1f8503864603db08de2e33be5b778230f6e45
 future==0.16.0 \
