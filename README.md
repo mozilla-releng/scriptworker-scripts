@@ -94,17 +94,6 @@ Follow the [scriptworker readme](https://github.com/mozilla-releng/scriptworker/
 :warning: Make sure your `work_dir` and `artifact_dir` point to the same directories between the scriptworker config and the pushapkscript config!
 
 
-## Docs
-
-`README.md` is the master readme, and `README.rst` is generated via
-
-    pandoc --from=markdown --to=rst README.md > README.rst
-
-This is purely because
-
-1. @escapewindow prefers writing markdown, and
-1. pypi appears to deal with rst better than markdown.
-
 ## Frequently asked questions
 
 ### I'd like to test out changes in pushapkscript...
@@ -121,10 +110,10 @@ There used to be one, but it's now decommissioned. You can spawn a new instance 
 1. On the [puppet master node](https://dxr.mozilla.org/build-central/rev/e2e751bce7198d358725904a9130bbb06a26c0f9/puppet/manifests/moco-config.pp#78), [set up a user environment](https://wiki.mozilla.org/ReleaseEngineering/PuppetAgain/HowTo/Set_up_a_user_environment).
 1. Add a new node to [moco-nodes.pp](https://dxr.mozilla.org/build-central/rev/e2e751bce7198d358725904a9130bbb06a26c0f9/puppet/manifests/moco-nodes.pp#1069). The config example is present in this repo at `examples/puppet-node.example.pp`.
 1. Activate chain of trust [by creating the gpg keys and whitelisting them](http://scriptworker.readthedocs.io/en/latest/chain_of_trust.html#gpg-key-management). Otherwise, artifacts won't be downloaded.
-1. Edit your tasks to point to the [dev worker group](https://dxr.mozilla.org/build-central/rev/e2e751bce7198d358725904a9130bbb06a26c0f9/puppet/modules/pushapk_scriptworker/manifests/settings.pp#9).
+1. Edit your tasks to point to a different worker-type. Define it at your will. Please do not use the `dep` pool because it's used outside of releng, in `try` for example.
 1. On your VM, make the slave [take the config of your user environment](https://wiki.mozilla.org/ReleaseEngineering/PuppetAgain/HowTo/Set_up_a_user_environment#On_the_slave_node.28s.29).
 
-:warning: Like [explained below](#is-there-an-instance-which-doesnt-interact-with-production-data), this instance will interact with the production instance of Google Play. Please keep `"dry_run": true` in your task definitions (or don't define it).
+:warning: Like [explained below](#is-there-an-instance-which-doesnt-interact-with-production-data), this instance will interact with the production instance of Google Play. Please make sure `"commit": false` is in your task definitions (or don't define it).
 
 ### I'd like to test out Taskcluster tasks...
 
@@ -136,13 +125,15 @@ Sadly, no. The Google Play documentation doesn't mention any server we can plug 
 
 There are 3 incremental ways to avoid targetting real users (or the entire user base):
 
-##### 1. Use `"dry_run": true` in your task definition.
+##### 1. Use `"commit": false` in your task definition.
 
 This will execute every step implemented in pushapkscript, but the last one, which commits the transaction to the Play store.
 
 This allows to publish the same APK several times.
 
 However, there are a few final checks that Google Play does only when the transaction is committed. We have already experienced one: the integrity of l10n stores (descriptions and "what's new" sections) is verified only at this time. We may extrapolate the behavior to: everything that can be done in several calls to Google Play will be checked at commit time.
+
+If not defined in the task payload, `commit` defaults to `false`.
 
 ##### 2. Push to a closed alpha track
 

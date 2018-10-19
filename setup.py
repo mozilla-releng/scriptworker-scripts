@@ -11,11 +11,16 @@ with open(os.path.join(project_dir, 'version.txt')) as f:
 with open(os.path.join(project_dir, 'requirements.txt')) as f:
     requirements = [line.rstrip('\n') for line in f if not line.startswith('#')]
 
+with open(os.path.join(project_dir, 'README.md')) as f:
+    long_description = f.read()
+
 
 setup(
     name='pushapkscript',
     version=version,
     description='TaskCluster Push APK Worker',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Mozilla Release Engineering',
     author_email='release+python@mozilla.com',
     url='https://github.com/mozilla-releng/pushapkscript',

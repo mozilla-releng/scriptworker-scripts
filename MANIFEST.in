@@ -1,8 +1,8 @@
 recursive-include pushapkscript/data *
+recursive-include examples/ *
 
 include LICENSE
-include README.rst
-include config_example.json
+include README.md
 include version.txt
 include requirements*.txt
 
