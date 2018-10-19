@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.0] - 2018-10-19
+
+### Changed
+* requirements are now split in several files depending on whether they're for testings, coveralls or production
+
+### Added
+* Python 3.7 support
+
+### Removed
+* `get_l10n_strings`: `--major-version-number`
+
 ## [0.8.0] - 2018-06-22
 
 ### Fixed
