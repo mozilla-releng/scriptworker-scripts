@@ -2,6 +2,7 @@ import aiohttp
 import asyncio
 import copy
 import json
+import logging
 import os
 import pytest
 import subprocess
@@ -20,6 +21,7 @@ from signingscript.test.integration import skip_when_no_autograph_server
 assert context  # silence flake8
 
 
+log = logging.getLogger(__name__)
 DATA_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data')
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')
 
@@ -165,22 +167,36 @@ async def test_integration_autograph_mar_sign_hash(context, tmpdir):
         assert do_verify(signed_path, keyfiles=[mar_pub_key_path]), "Mar signature doesn't match expected key"
 
 
+def _get_java_path(tool_name):
+    if os.environ.get('JAVA_HOME'):
+        return os.path.join(os.environ['JAVA_HOME'], 'bin', tool_name)
+    return tool_name
+
+
 def _instanciate_keystore(keystore_path, certificate_path, certificate_alias):
     keystore_password = '12345678'
-    subprocess.run([
-        'keytool', '-import', '-noprompt',
+    cmd = [
+        _get_java_path('keytool'), '-import', '-noprompt',
         '-keystore', keystore_path, '-storepass', keystore_password,
         '-file', certificate_path, '-alias', certificate_alias
-    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    ]
+    log.info("running {}".format(cmd))
+    subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
+    )
 
 
 def _verify_apk_signature(keystore_path, apk_path, certificate_alias):
-    command = subprocess.run([
-        'jarsigner', '-verify', '-strict', '-verbose',
+    cmd = [
+        _get_java_path('jarsigner'), '-verify', '-strict', '-verbose',
         '-keystore', keystore_path,
         apk_path,
         certificate_alias
-    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    ]
+    log.info("running {}".format(cmd))
+    command = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
+    )
     return command.returncode == 0
 
 
