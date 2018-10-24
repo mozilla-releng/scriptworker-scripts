@@ -240,10 +240,12 @@ async def sign_signcode(context, orig_path, fmt):
         files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
     else:
         files = [orig_path]
+    files_to_sign = [file for file in files if _should_sign_windows(file)]
+    if not files_to_sign:
+        raise SigningScriptError("Did not find any files to sign, all files: {}".format(files))
     # Sign the appropriate inner files
-    for from_ in files:
-        if _should_sign_windows(from_):
-            await sign_file(context, from_, fmt)
+    for from_ in files_to_sign:
+        await sign_file(context, from_, fmt)
     if file_extension == '.zip':
         # Recreate the zipfile
         await _create_zipfile(context, orig_path, files, tmp_dir=tmp_dir)
@@ -407,7 +409,7 @@ def _should_sign_windows(filename):
     ]
     ext = os.path.splitext(filename)[1]
     b = os.path.basename(filename)
-    if ext in ('.dll', '.exe') and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
+    if ext in ('.dll', '.exe', '.msi') and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
         return True
     return False
 

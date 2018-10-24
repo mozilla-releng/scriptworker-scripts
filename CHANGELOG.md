@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [9.3.0] - 2018-10-23
+### Added
+- added msi signing support
+
 ## [9.2.0] - 2018-10-08
 ### Added
 - Added new dep, `mar`. Python now requires lzma support; CentOS signing scriptworkers will need the xz-devel package.
