@@ -541,7 +541,7 @@ async def _convert_dmg_to_tar_gz(context, from_):
     work_dir = context.config['work_dir']
     abs_from = os.path.join(work_dir, from_)
     # replace .dmg suffix with .tar.gz (case insensitive)
-    to = re.sub('\.dmg$', '.tar.gz', from_, flags=re.I)
+    to = re.sub(r'\.dmg$', '.tar.gz', from_, flags=re.I)
     abs_to = os.path.join(work_dir, to)
     dmg_executable_location = context.config['dmg']
     hfsplus_executable_location = context.config['hfsplus']
