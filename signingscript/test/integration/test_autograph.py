@@ -39,7 +39,7 @@ DEFAULT_SERVER_CONFIG = {
             'http://localhost:5500',
             'bob',
             '1234567890abcdefghijklmnopqrstuvwxyz1234567890abcd',
-            ['autograph_apk'],
+            ['autograph_focus'],
             'autograph'
         ],
         [
@@ -50,21 +50,6 @@ DEFAULT_SERVER_CONFIG = {
             'autograph'
         ],
     ]
-}
-
-
-DEFAULT_CONFIG = {
-    "work_dir": "work_dir",
-    "artifact_dir": "artifact_dir",
-    "schema_file": os.path.join(DATA_DIR, 'signing_task_schema.json'),
-    "signtool": "signtool",
-    "ssl_cert": os.path.join(DATA_DIR, 'host.cert'),
-    "taskcluster_scope_prefixes": ["project:releng:signing:"],
-    "token_duration_seconds": 1200,
-    "verbose": True,
-    "dmg": "dmg",
-    "hfsplus": "hfsplus",
-    "zipalign": "zipalign"
 }
 
 
@@ -186,7 +171,7 @@ def _instanciate_keystore(keystore_path, certificate_path, certificate_alias):
     )
 
 
-def _verify_apk_signature(keystore_path, apk_path, certificate_alias):
+def _assert_apk_signature(keystore_path, apk_path, certificate_alias):
     cmd = [
         _get_java_path('jarsigner'), '-verify', '-strict', '-verbose',
         '-keystore', keystore_path,
@@ -197,20 +182,30 @@ def _verify_apk_signature(keystore_path, apk_path, certificate_alias):
     command = subprocess.run(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
     )
-    return command.returncode == 0
+    assert command.returncode == 0
+
+    files_in_meta_inf = [
+        line for line in command.stdout.split('\n')
+        if 'META-INF/' in line
+    ]
+    assert len(files_in_meta_inf) == 3
+    assert any('META-INF/MANIFEST.MF' in line for line in files_in_meta_inf)
+    assert any('META-INF/SIGNATURE.SF' in line for line in files_in_meta_inf)
+    assert any('META-INF/SIGNATURE.RSA' in line for line in files_in_meta_inf)
 
 
 @pytest.mark.asyncio
 @skip_when_no_autograph_server
-async def test_integration_autograph_apk(context, tmpdir):
-    file_name = 'app.apk'
+@pytest.mark.parametrize('file_name', ('app.apk', 'app_preexisting_signature.apk',)
+)
+async def test_integration_autograph_apk(context, tmpdir, file_name):
     original_file_path = os.path.join(TEST_DATA_DIR, file_name)
     copied_file_folder = os.path.join(context.config['work_dir'], 'cot', 'upstream-task-id1')
     makedirs(copied_file_folder)
     shutil.copy(original_file_path, copied_file_folder)
 
     context.config['signing_server_config'] = _write_server_config(tmpdir)
-    context.task = _craft_task([file_name], signing_format='autograph_apk')
+    context.task = _craft_task([file_name], signing_format='autograph_focus')
 
     keystore_path = os.path.join(tmpdir, 'keystore')
     certificate_path = os.path.join(TEST_DATA_DIR, 'autograph_apk.pub')
@@ -220,4 +215,4 @@ async def test_integration_autograph_apk(context, tmpdir):
     await async_main(context)
 
     signed_path = os.path.join(tmpdir, 'artifact', file_name)
-    assert _verify_apk_signature(keystore_path, signed_path, certificate_alias)
+    _assert_apk_signature(keystore_path, signed_path, certificate_alias)
