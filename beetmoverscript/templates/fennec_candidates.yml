@@ -10,11 +10,6 @@ mapping:
 {% for locale in ['multi', 'en-US'] %}
   {{ locale }}:
   {% set update_balrog_manifest = True if locale == 'multi' else False %}
-
-    bouncer.apk:
-      s3_key: bouncer.apk
-      destinations:
-        - {{ platform }}/{{ locale }}/bouncer.apk
     target.apk:
       s3_key: fennec-{{ version }}.{{ locale }}.{{ filename_platform }}.apk
       destinations:
