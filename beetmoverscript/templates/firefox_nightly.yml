@@ -238,6 +238,12 @@ mapping:
         - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
         - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
         - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.exe
+    target.installer.msi:
+      s3_key: installer.msi
+      destinations:
+        - {{ upload_date }}-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.msi
+        - latest-{{ branch }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.msi
+        - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.installer.msi
     target.stylo-bindings.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.stylo-bindings.zip
       destinations:
