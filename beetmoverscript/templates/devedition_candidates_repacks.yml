@@ -33,6 +33,10 @@ mapping:
       s3_key: {{ platform }}/{{ locale }}/Firefox Setup {{ version }}.exe
       destinations:
         - {{ platform }}/{{ locale }}/Firefox Setup {{ version }}.exe
+    target.installer.msi:
+      s3_key: {{ platform }}/{{ locale }}/Firefox Setup {{ version }}.msi
+      destinations:
+        - {{ platform }}/{{ locale }}/Firefox Setup {{ version }}.msi
   {% endif %}
   {% if platform in ["win32"] %}
     {% if "esr" not in version %}

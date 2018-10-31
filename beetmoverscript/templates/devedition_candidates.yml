@@ -225,6 +225,10 @@ mapping:
       s3_key: {{ platform }}/{{ locale }}/Firefox Setup {{ version }}.exe
       destinations:
         - {{ platform }}/{{ locale }}/Firefox Setup {{ version }}.exe
+    target.installer.msi:
+      s3_key: {{ platform }}/{{ locale }}/Firefox Setup {{ version }}.msi
+      destinations:
+        - {{ platform }}/{{ locale }}/Firefox Setup {{ version }}.msi
   {% endif %}
   {% if platform in ["linux-i686"] %}
     target_info.txt:
