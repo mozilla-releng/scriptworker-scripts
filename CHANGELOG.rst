@@ -6,6 +6,25 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.10.1] = (2018-11-01)
+-----------------------
+
+Added
+~~~~~
+
+- Added suppport in Firefox Desktop templates for windows msi installers
+  (`#1475512 <https://bugzilla.mozilla.org/show_bug.cgi?id=1475512>`_)
+
+
+Removed
+~~~~~~~
+
+- - drop support for beta/releases of single locale repacks for Fennec
+  (`#1408083 <https://bugzilla.mozilla.org/show_bug.cgi?id=1408083>`_)
+- Remove `bouncer.apk` from fennec templates as it seems unused. (`#1442684
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1442684>`_)
+
+
 [7.10.1] = (2018-09-28)
 ----------------------
 
