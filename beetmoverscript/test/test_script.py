@@ -309,6 +309,15 @@ async def test_upload_to_s3(context, mocker):
     await beetmoverscript.script.upload_to_s3(context, 'foo', 'bar')
 
 
+@pytest.mark.asyncio
+async def test_upload_to_s3_raises(context, mocker):
+    context.release_props['appName'] = 'fake'
+    mocker.patch.object(beetmoverscript.script, 'retry_async', new=noop_async)
+    mocker.patch.object(beetmoverscript.script, 'boto3')
+    with pytest.raises(ScriptWorkerTaskException):
+        await beetmoverscript.script.upload_to_s3(context, 'foo', 'mime.invalid')
+
+
 # move_beets {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize("partials", (False, True))
