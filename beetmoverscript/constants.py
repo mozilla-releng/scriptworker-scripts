@@ -1,5 +1,6 @@
 MIME_MAP = {
     '': 'text/plain',
+    '.apk': 'application/vnd.android.package-archive',
     '.asc': 'text/plain',
     '.beet': 'text/plain',
     '.bundle': 'application/octet-stream',
@@ -8,8 +9,8 @@ MIME_MAP = {
     '.dmg': 'application/x-iso9660-image',
     '.json': 'application/json',
     '.mar': 'application/octet-stream',
+    '.msi': 'application/x-msi',
     '.xpi': 'application/x-xpinstall',
-    '.apk': 'application/vnd.android.package-archive',
 }
 
 STAGE_PLATFORM_MAP = {

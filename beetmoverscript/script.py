@@ -555,13 +555,19 @@ async def put(context, url, headers, abs_filename, session=None):
 async def upload_to_s3(context, s3_key, path):
     product = get_product_name(context.release_props['appName'].lower(),
                                context.release_props['stage_platform'])
+    mime_type = mimetypes.guess_type(path)[0]
+    if not mime_type:
+        raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), "
+                                        "mimetypes.guess_type() returned {}".format(
+                                            path, mime_type
+                                        ))
     api_kwargs = {
         'Bucket': get_bucket_name(context, product),
         'Key': s3_key,
-        'ContentType': mimetypes.guess_type(path)[0]
+        'ContentType': mime_type,
     }
     headers = {
-        'Content-Type': mimetypes.guess_type(path)[0],
+        'Content-Type': mime_type,
         'Cache-Control': 'public, max-age=%d' % CACHE_CONTROL_MAXAGE,
     }
     creds = context.config['bucket_config'][context.bucket]['credentials']
