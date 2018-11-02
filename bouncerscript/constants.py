@@ -32,7 +32,7 @@ PRODUCT_TO_DESTINATIONS_REGEXES = {
     'thunderbird': r'^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar))$',
 }
 
-BOUNCER_PATH_REGEXES_PER_PRODUCT = {
+_BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT = {
     'firefox-nightly-latest': (r'^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\.'
                                r'(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe))$'),
     'firefox-nightly-latest-ssl': (r'^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.en-US\.'
@@ -42,6 +42,16 @@ BOUNCER_PATH_REGEXES_PER_PRODUCT = {
     'firefox-nightly-latest-l10n-ssl': (r'^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\.'
                                         r'(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe))$'),
 }
+
+_BOUNCER_PATH_REGEXES_PER_PRODUCT_MSI = {
+    **_BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT,
+    'firefox-nightly-msi-latest-ssl': (r'^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.en-US\.'
+                                       r'(?:win32\.installer\.msi|win64\.installer\.msi))$'),
+    'firefox-nightly-msi-latest-l10n-ssl': (r'^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\.'
+                                            r'(?:win32\.installer\.msi|win64\.installer\.msi))$'),
+}
+
+BOUNCER_PATH_REGEXES_PER_PRODUCT = [_BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT, _BOUNCER_PATH_REGEXES_PER_PRODUCT_MSI]
 
 # XXX A list of tuple is used because we care about the order:
 # the firefox regex also matches the firefox-rc regex.

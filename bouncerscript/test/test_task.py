@@ -621,6 +621,31 @@ async def test_check_aliases_match(aliases_context, mocker, entries, provided, r
     ], False
 ), (
     [
+        "firefox-nightly-msi-latest-ssl",
+        "firefox-nightly-msi-latest-l10n-ssl",
+    ], True
+), (
+    [
+        "firefox-nightly-msi-latest-ssl",
+        "firefox-nightly-msi-latest-l10n-ssl",
+        "firefox-nightly-latest",
+    ], True
+), (
+    [
+        "firefox-nightly-msi-latest-l10n-ssl",
+        "firefox-nightly-latest",
+    ], True
+), (
+    [
+        "firefox-nightly-msi-latest-ssl",
+        "firefox-nightly-msi-latest-l10n-ssl",
+        "firefox-nightly-latest",
+        "firefox-nightly-latest-ssl",
+        "firefox-nightly-latest-l10n",
+        "firefox-nightly-latest-l10n-ssl"
+    ], False
+), (
+    [
         "firefox-nightly-latest-l10n",
         "firefox-nightly-latest-l10n-ssl",
         "Firefox-64",
@@ -692,6 +717,26 @@ def test_check_version_matches_nightly_regex(version, raises):
     'firefox-nightly-latest',
     '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-x86_64.tar.bz2',
     False
+), (
+    'firefox-nightly-msi-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win64.installer.msi',
+    False
+), (
+    'firefox-nightly-msi-latest-ssl',
+    '/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win64.installer.msi',
+    False
+), (
+    'firefox-nightly-msi-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win32.installer.msi',
+    False
+), (
+    'firefox-nightly-msi-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win64.installer.exe',
+    True
+), (
+    'firefox-nightly-msi-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.nac.installer.msi',
+    True
 ), (
     'firefox-nightly-latest',
     '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.mac.dmg',
