@@ -701,6 +701,11 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
 
     # build and run the signature request
     sign_req = [{"input": base64.b64encode(input_bytes)}]
+
+    if utils.is_apk_autograph_signing_format(fmt):
+        # We don't want APKs to have their compression changed
+        sign_req[0]['options'] = {'zip': 'passthrough'}
+
     log.debug("using the default autograph keyid for %s", s.user)
 
     url = "%s/sign/file" % s.server

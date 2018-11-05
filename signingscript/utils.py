@@ -167,3 +167,13 @@ def is_autograph_signing_format(format_):
 
     """
     return format_ and format_.startswith('autograph_')
+
+
+def is_apk_autograph_signing_format(format_):
+    """Return bool of whether a signing format is an APK.
+
+    Args:
+        format_ (str): the format to check
+
+    """
+    return format_ and format_ in ('autograph_fennec', 'autograph_focus')
