@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [9.4.0] - 2018-11-05
+### Removed
+- Strip existing APK signatures.
+
+### Fixed
+- Autograph doesn't recompress APKs anymore. This avoids start up crashes like https://github.com/mozilla-services/autograph/issues/164.
+
 ## [9.3.1] - 2018-10-29
 ### Fixed
 - Strip existing APK signature before sending the APK to autograph. This maintains the behavior of the signing servers.
