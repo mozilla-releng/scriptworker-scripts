@@ -29,6 +29,8 @@ from signingscript.utils import is_autograph_signing_format
 log = logging.getLogger(__name__)
 
 FORMAT_TO_SIGNING_FUNCTION = frozendict({
+    "autograph_fennec": sign_jar,
+    "autograph_focus": sign_jar,
     "autograph_hash_only_mar384": sign_mar384_with_autograph_hash,
     "gpg": sign_gpg,
     "jar": sign_jar,

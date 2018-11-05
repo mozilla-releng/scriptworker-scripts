@@ -39,7 +39,7 @@ DEFAULT_SERVER_CONFIG = {
             'http://localhost:5500',
             'bob',
             '1234567890abcdefghijklmnopqrstuvwxyz1234567890abcd',
-            ['autograph_apk'],
+            ['autograph_focus'],
             'autograph'
         ],
         [
@@ -202,7 +202,7 @@ def _verify_apk_signature(keystore_path, apk_path, certificate_alias):
 
 @pytest.mark.asyncio
 @skip_when_no_autograph_server
-async def test_integration_autograph_apk(context, tmpdir):
+async def test_integration_autograph_focus(context, tmpdir):
     file_name = 'app.apk'
     original_file_path = os.path.join(TEST_DATA_DIR, file_name)
     copied_file_folder = os.path.join(context.config['work_dir'], 'cot', 'upstream-task-id1')
@@ -210,11 +210,11 @@ async def test_integration_autograph_apk(context, tmpdir):
     shutil.copy(original_file_path, copied_file_folder)
 
     context.config['signing_server_config'] = _write_server_config(tmpdir)
-    context.task = _craft_task([file_name], signing_format='autograph_apk')
+    context.task = _craft_task([file_name], signing_format='autograph_focus')
 
     keystore_path = os.path.join(tmpdir, 'keystore')
     certificate_path = os.path.join(TEST_DATA_DIR, 'autograph_apk.pub')
-    certificate_alias = 'autograph_apk'
+    certificate_alias = 'autograph_focus'
     _instanciate_keystore(keystore_path, certificate_path, certificate_alias)
 
     await async_main(context)
