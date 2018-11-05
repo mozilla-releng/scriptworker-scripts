@@ -185,7 +185,6 @@ async def sign_jar(context, from_, fmt):
         str: the path to the signed file
 
     """
-    strip_existing_jar_signature(from_)
     await sign_file(context, from_, fmt)
     await zip_align_apk(context, from_)
     return from_
@@ -507,32 +506,6 @@ def remove_extra_files(top_dir, file_list):
     return extra_files
 
 
-def strip_existing_jar_signature(jar_file):
-    """Replace JAR/APK with another that doesn't contain any signature-related file.
-
-    File remains untouched if it there is no signature
-
-    Args:
-        jar_file (str): the absolute path to the JAR/APK
-    """
-    with zipfile.ZipFile(jar_file) as zip_in:
-        if all(not path.startswith('META-INF') for path in zip_in.namelist()):
-            # No existing signature to deal with
-            return
-
-    log.info('Existing signature found. Stripping it out...')
-    with tempfile.NamedTemporaryFile() as temp_file:
-        with zipfile.ZipFile(jar_file) as zip_in, zipfile.ZipFile(temp_file, mode='w') as zip_out:
-            [
-                zip_out.writestr(zip_info, data=zip_in.read(zip_info))
-                for zip_info in zip_in.infolist()
-                if not zip_info.filename.startswith('META-INF')
-            ]
-
-        shutil.copy(temp_file.name, jar_file)
-    log.info('Existing signature stripped out')
-
-
 # zip_align_apk {{{1
 async def zip_align_apk(context, abs_to):
     """Optimize APK for better run-time performance.
@@ -542,7 +515,7 @@ async def zip_align_apk(context, abs_to):
 
     Args:
         context (Context): the signing context
-        abs_to (str): the absolute path to the APK
+        abs_to (str): the absolute path to the apk
 
     """
     original_apk_location = abs_to

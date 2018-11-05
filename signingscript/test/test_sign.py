@@ -1,12 +1,10 @@
 import base64
 from contextlib import contextmanager
-import logging
 import os
 import os.path
 import pytest
 import shutil
 import tarfile
-import tempfile
 import zipfile
 
 from scriptworker.context import Context
@@ -433,7 +431,6 @@ async def test_sign_jar(context, mocker):
     async def fake_zipalign(*args):
         counter.append('1')
 
-    mocker.patch.object(sign, 'strip_existing_jar_signature', new=noop_sync)
     mocker.patch.object(sign, 'sign_file', new=noop_async)
     mocker.patch.object(sign, 'zip_align_apk', new=fake_zipalign)
     await sign.sign_jar(context, 'from', 'blah')
@@ -638,35 +635,6 @@ def test_remove_extra_files(context):
         assert not os.path.exists(path)
     for f in good:
         assert os.path.exists(os.path.join(work_dir, f))
-
-
-def test_strip_existing_jar_signature():
-    with tempfile.NamedTemporaryFile() as f:
-        with zipfile.ZipFile(f.name, mode='w', compression=zipfile.ZIP_DEFLATED) as zip:
-            zip.writestr('META-INF/SOME-KEY.RSA', 'dummy-data')
-            zip.writestr('META-INF/SOME-KEY.SF', 'dummy-data')
-            zip.writestr('META-INF/MANIFEST.SF', 'dummy-data')
-            zip.writestr('AndroidManifest.xml', 'dummy-data')
-
-        sign.strip_existing_jar_signature(f.name)
-
-        with zipfile.ZipFile(f.name) as zip:
-            zip_info_list = zip.infolist()
-            assert len(zip_info_list) == 1
-            assert zip_info_list[0].filename == 'AndroidManifest.xml'
-            assert zip_info_list[0].compress_type == zipfile.ZIP_DEFLATED
-
-
-def test_no_strip_existing_jar_signature():
-    with tempfile.NamedTemporaryFile() as f:
-        with zipfile.ZipFile(f.name, mode='w', compression=zipfile.ZIP_DEFLATED) as zip:
-            zip.writestr('AndroidManifest.xml', 'dummy-data')
-
-        hash_before = utils.get_hash(f.name)
-        sign.strip_existing_jar_signature(f.name)
-        hash_after = utils.get_hash(f.name)
-
-        assert hash_before == hash_after
 
 
 # zip_align_apk {{{1
