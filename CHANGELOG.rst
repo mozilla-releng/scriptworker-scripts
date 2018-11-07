@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[7.10.2] = (2018-11-07)
+-----------------------
+
+Fixed
+~~~~~
+
+- Added support for .msi mime types and error out if autodetection of mime types doesn't work. (`#190 <https://bugzilla.mozilla.org/show_bug.cgi?id=190>`_)
+
+
 [7.10.1] = (2018-11-01)
 -----------------------
 
