@@ -10,16 +10,21 @@ ALIASES_REGEXES = {
     'firefox-devedition-stub': r'^Devedition-\d+\.0b\d+-stub$',
     'firefox-devedition-latest': r'^Devedition-\d+\.0b\d+$',
     'firefox-devedition-latest-ssl': r'^Devedition-\d+\.0b\d+-SSL$',
+    'firefox-devedition-msi-latest-ssl': r'^Devedition-\d+\.0b\d+-msi-SSL$',
     'firefox-beta-stub': r'^Firefox-\d+\.0b\d+-stub$',
     'firefox-beta-latest': r'^Firefox-\d+\.0b\d+$',
     'firefox-beta-latest-ssl': r'^Firefox-\d+\.0b\d+-SSL$',
+    'firefox-beta-msi-latest-ssl': r'^Firefox-\d+\.0b\d+-msi-SSL$',
     'firefox-stub': r'^Firefox-\d+\.\d+(\.\d+)?-stub$',
     'firefox-latest': r'^Firefox-\d+\.\d+(\.\d+)?$',
     'firefox-latest-ssl': r'^Firefox-\d+\.\d+(\.\d+)?-SSL$',
+    'firefox-msi-latest-ssl': r'^Firefox-\d+\.\d+(\.\d+)?-msi-SSL$',
     'firefox-esr-latest': r'^Firefox-\d+\.\d+(\.\d+)?esr$',
     'firefox-esr-latest-ssl': r'^Firefox-\d+\.\d+(\.\d+)?esr-SSL$',
+    'firefox-esr-msi-latest-ssl': r'^Firefox-\d+\.\d+(\.\d+)?esr-msi-SSL$',
     'firefox-esr-next-latest': r'^Firefox-\d+\.\d+(\.\d+)?esr$',
     'firefox-esr-next-latest-ssl': r'^Firefox-\d+\.\d+(\.\d+)?esr-SSL$',
+    'firefox-esr-next-msi-latest-ssl': r'^Firefox-\d+\.\d+(\.\d+)?esr-msi-SSL$',
     'firefox-sha1': r'^Firefox-\d+\.\d+(\.\d+)?esr-sha1$',
     'firefox-sha1-ssl': r'^Firefox-\d+\.\d+(\.\d+)?esr-sha1$',
 }
@@ -27,8 +32,8 @@ ALIASES_REGEXES = {
 PRODUCT_TO_DESTINATIONS_REGEXES = {
     'fennec': r'^(/mobile/releases/.*?/(?:android-api-16|android-x86)/\:lang/fennec-.*\:lang\.(?:android-arm|android-i386)\.apk)$',
     'firefox-rc': r'^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$',
-    'firefox': r'^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$',
-    'devedition': r'^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$',
+    'firefox': r'^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi))$',
+    'devedition': r'^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi))$',
     'thunderbird': r'^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64)/\:lang/(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar))$',
 }
 
