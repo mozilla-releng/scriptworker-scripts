@@ -27,6 +27,9 @@ from scriptworker.utils import (
 
 from signingscript import task
 from signingscript import utils
+from signingscript.constants import (
+    AUTOGRAPH_APK_FORMATS, AUTOGRAPH_CUSTOM_APK_FORMATS
+)
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
 
@@ -705,6 +708,11 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
     if utils.is_apk_autograph_signing_format(fmt):
         # We don't want APKs to have their compression changed
         sign_req[0]['options'] = {'zip': 'passthrough'}
+
+        if utils.is_custom_apk_autograph_signing_format(fmt):
+            # We ask for a custom digest from Autograph
+            # https://github.com/mozilla-services/autograph/pull/166/files
+            sign_req[0]['options']['pkcs7_digest'] = AUTOGRAPH_CUSTOM_APK_FORMATS[fmt]
 
     log.debug("using the default autograph keyid for %s", s.user)
 

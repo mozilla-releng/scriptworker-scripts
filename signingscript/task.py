@@ -29,6 +29,8 @@ from signingscript.utils import is_autograph_signing_format
 log = logging.getLogger(__name__)
 
 FORMAT_TO_SIGNING_FUNCTION = frozendict({
+    # TODO: do we want formats such as `autograph_fennec_sha1`
+    # default to `sign_file` or go to `sign_jar` instead?
     "autograph_fennec": sign_jar,
     "autograph_focus": sign_jar,
     "autograph_hash_only_mar384": sign_mar384_with_autograph_hash,

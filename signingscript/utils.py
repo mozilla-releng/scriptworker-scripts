@@ -10,6 +10,9 @@ from shutil import copyfile
 import traceback
 from collections import namedtuple
 
+from signingscript.constants import (
+    AUTOGRAPH_APK_FORMATS, AUTOGRAPH_CUSTOM_APK_FORMATS
+)
 from signingscript.exceptions import FailedSubprocess, SigningServerError
 
 log = logging.getLogger(__name__)
@@ -176,4 +179,16 @@ def is_apk_autograph_signing_format(format_):
         format_ (str): the format to check
 
     """
-    return format_ and format_ in ('autograph_fennec', 'autograph_focus')
+    return format_ and format_ in AUTOGRAPH_APK_FORMATS
+
+
+def is_custom_apk_autograph_signing_format(format_):
+    """Return bool of whether a signing format is an APK with a custom signing
+    format.
+
+    Args:
+        format_ (str): the format to check
+
+    """
+    # this list could grow if we wanted to filter out other custom signatures
+    return format_ and format_ in AUTOGRAPH_CUSTOM_APK_FORMATS
