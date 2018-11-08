@@ -17,6 +17,9 @@ backports.functools-lru-cache==1.5 \
 backports.lzma==0.0.10 \
     --hash=sha256:783029053a3b5eb8490fabff29773840dbf378e23a21fde3b720a90eaebeb9b8 \
     # via mar
+balrogclient==0.0.4 \
+    --hash=sha256:0e7333e8f477570029740de1f30cb24504a87b24e803649682138438d8fb9e46 \
+    --hash=sha256:b9aab5472274c10aa412b06e4f5fbd0c1fb87a2ee70806f46449bb39a7cb167f
 certifi==2018.1.18 \
     --hash=sha256:14131608ad2fd56836d33a71ee60fa1c82bc9d2c8d98b7bdbc631fe1b3cd1296 \
     --hash=sha256:edbc3f203427eef571f79a7692bb160a2b0f7ccaa31953e99bd17e307cf63f7d \
