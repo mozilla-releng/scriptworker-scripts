@@ -1,7 +1,3 @@
-import site
-import os
-
-site.addsitedir(os.path.join(os.path.dirname(__file__), "..", ".."))
 import jsonmerge
 
 

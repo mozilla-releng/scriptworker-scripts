@@ -3,8 +3,9 @@
 from copy import deepcopy
 import json
 import logging
-import os
 import sys
+
+from redo import retry  # noqa: E402
 
 from balrogscript.task import (
     get_manifest,
@@ -14,6 +15,12 @@ from balrogscript.task import (
     get_upstream_artifacts,
     validate_task_schema,
 )
+from .submitter.cli import (
+    NightlySubmitterV4, ReleaseSubmitterV9,
+    ReleaseScheduler,
+    ReleaseCreatorV9,
+    ReleasePusher,
+)
 
 
 log = logging.getLogger(__name__)
@@ -21,7 +28,6 @@ log = logging.getLogger(__name__)
 
 # create_locale_submitter {{{1
 def create_locale_submitter(e, balrog_auth, config):
-    from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV9  # noqa: E402
     auth = balrog_auth
 
     if "tc_release" in e:
@@ -81,7 +87,6 @@ def create_locale_submitter(e, balrog_auth, config):
 # submit_locale {{{1
 def submit_locale(task, config, balrog_auth):
     """Submit a release blob to balrog."""
-    from util.retry import retry  # noqa: E402
     upstream_artifacts = get_upstream_artifacts(task)
 
     # Read the manifest from disk
@@ -96,13 +101,11 @@ def submit_locale(task, config, balrog_auth):
 
 # schedule {{{1
 def create_scheduler(**kwargs):
-    from balrog.submitter.cli import ReleaseScheduler
     return ReleaseScheduler(**kwargs)
 
 
 def schedule(task, config, balrog_auth):
     """Schedule a release to ship on balrog channel(s)"""
-    from util.retry import retry  # noqa: E402
     auth = balrog_auth
     scheduler = create_scheduler(
         api_root=config['api_root'], auth=auth,
@@ -125,18 +128,15 @@ def schedule(task, config, balrog_auth):
 
 # submit_toplevel {{{1
 def create_creator(**kwargs):
-    from balrog.submitter.cli import ReleaseCreatorV9
     return ReleaseCreatorV9(**kwargs)
 
 
 def create_pusher(**kwargs):
-    from balrog.submitter.cli import ReleasePusher
     return ReleasePusher(**kwargs)
 
 
 def submit_toplevel(task, config, balrog_auth):
     """Push a top-level release blob to balrog."""
-    from util.retry import retry  # noqa: E402
     auth = balrog_auth
     partials = {}
     if task['payload'].get('partial_versions'):
@@ -243,11 +243,6 @@ def main(config_path=None):
 
     server = get_task_server(task, config)
     balrog_auth, config = update_config(config, server)
-
-    # hacking the tools repo dependency by first reading its location from
-    # the config file and only then loading the module from subdfolder
-    sys.path.insert(0, os.path.join(config['tools_location'], 'lib/python'))
-    # Until we get rid of our tools dep, this import(s) will break flake8 E402
 
     if action == 'submit-toplevel':
         submit_toplevel(task, config, balrog_auth)

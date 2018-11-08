@@ -32,13 +32,16 @@ setup(
     license="MPL2",
     install_requires=[
         "arrow",
+        "balrogclient",
         "cryptography",
         "enum34",
         "idna",
         "ipaddress",
+        "jsonmerge",
         "jsonschema",
         "mar",
         "pyasn1",
+        "redo",
         "six",
     ],
     classifiers=(

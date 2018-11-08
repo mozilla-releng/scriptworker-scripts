@@ -1,18 +1,16 @@
 import arrow
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
-from release.info import getProductDetails
-from release.paths import makeCandidatesDir
-from release.platforms import buildbot2updatePlatforms, buildbot2bouncer, \
-  buildbot2ftp
-from release.versions import getPrettyVersion
-from balrog.submitter.api import Release, SingleLocale, Rule, ScheduledRuleChange
-from balrog.submitter.updates import merge_partial_updates
-from util.algorithms import recursive_update
-from util.retry import retry
+from .release import (
+    getProductDetails,
+    makeCandidatesDir,
+    buildbot2updatePlatforms, buildbot2bouncer, buildbot2ftp,
+    getPrettyVersion,
+)
+from balrogclient import Release, SingleLocale, Rule, ScheduledRuleChange
+from .updates import merge_partial_updates
+from .util import recursive_update
+from redo import retry
 import logging
 from requests.exceptions import HTTPError
 
@@ -109,7 +107,7 @@ class ReleaseCreatorBase(object):
         api = Release(name=name, auth=self.auth, api_root=self.api_root)
         try:
             current_data, data_version = api.get_data()
-        except HTTPError, e:
+        except HTTPError as e:
             if e.response.status_code == 404:
                 log.warning("Release blob doesn't exist, using empty data...")
                 current_data, data_version = {}, None
@@ -235,14 +233,15 @@ class ReleaseCreatorFileUrlsMixin(object):
                                               self.from_suffix)
                 if "localtest" in channel:
                     dir_ = makeCandidatesDir(productName.lower(), version,
-                                            buildNumber, server=ftpServer,
-                                            protocol='http')
+                                             buildNumber, server=ftpServer,
+                                             protocol='http')
                     filename = "%s-%s-%s.partial.mar" % (file_prefix, previousVersion, version)
                     data["fileUrls"][channel]["partials"][from_] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)
                 else:
                     # See comment above about these channels for explanation.
                     if not requiresMirrors and channel in ("beta", "beta-cdntest"):
-                        bouncerProduct = "%s-%sbuild%s-partial-%sbuild%s" % (productName.lower(), version, buildNumber, previousVersion, previousInfo["buildNumber"])
+                        bouncerProduct = "%s-%sbuild%s-partial-%sbuild%s" % (
+                            productName.lower(), version, buildNumber, previousVersion, previousInfo["buildNumber"])
                     else:
                         bouncerProduct = "%s-%s-partial-%s" % (productName.lower(), version, previousVersion)
                     url = 'http://%s/?product=%s&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % (bouncerServer, bouncerProduct)
@@ -261,7 +260,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase, ReleaseCreatorFileUrlsMixin):
 
 
 class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
-    schemaVersion=9
+    schemaVersion = 9
 
     def __init__(self, api_root, auth, dummy=False, suffix="",
                  from_suffix="",
@@ -299,8 +298,6 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
             ]
         }
 
-        actions = []
-
         fileUrls = self._getFileUrls(productName, version, buildNumber,
                                      updateChannels, ftpServer,
                                      bouncerServer, **updateKwargs)
@@ -334,7 +331,7 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
         api = Release(name=name, auth=self.auth, api_root=self.api_root)
         try:
             current_data, data_version = api.get_data()
-        except HTTPError, e:
+        except HTTPError as e:
             if e.response.status_code == 404:
                 log.warning("Release blob doesn't exist, using empty data...")
                 current_data, data_version = {}, None
@@ -370,7 +367,7 @@ class NightlySubmitterBase(object):
 
     def run(self, platform, buildID, productName, branch, appVersion, locale,
             hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs):
-        assert schemaVersion in (3,4), 'Unhandled schema version %s' % schemaVersion
+        assert schemaVersion in (3, 4), 'Unhandled schema version %s' % schemaVersion
         targets = buildbot2updatePlatforms(platform)
         build_target = targets[0]
         alias = None
@@ -677,7 +674,7 @@ class ReleaseScheduler(object):
                 data["backgroundRate"] = backgroundRate
 
             ScheduledRuleChange(api_root=self.api_root, auth=self.auth, rule_id=rule_id
-                               ).add_scheduled_rule_change(**data)
+                                ).add_scheduled_rule_change(**data)
 
 
 class BlobTweaker(object):
