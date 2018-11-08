@@ -183,8 +183,7 @@ def is_apk_autograph_signing_format(format_):
 
 
 def is_custom_apk_autograph_signing_format(format_):
-    """Return bool of whether a signing format is an APK with a custom signing
-    format.
+    """Return bool of whether format of an APK needs custom signing.
 
     Args:
         format_ (str): the format to check

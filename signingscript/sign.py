@@ -28,7 +28,7 @@ from scriptworker.utils import (
 from signingscript import task
 from signingscript import utils
 from signingscript.constants import (
-    AUTOGRAPH_APK_FORMATS, AUTOGRAPH_CUSTOM_APK_FORMATS
+    AUTOGRAPH_CUSTOM_APK_FORMATS
 )
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
