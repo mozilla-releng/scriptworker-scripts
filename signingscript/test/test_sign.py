@@ -11,6 +11,7 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 from scriptworker.utils import makedirs
 
+from signingscript.constants import AUTOGRAPH_CUSTOM_APK_FORMATS
 from signingscript.exceptions import SigningScriptError
 from signingscript.script import get_default_config
 from signingscript.utils import get_hash, load_signing_server_config, mkdir, SigningServer
@@ -219,6 +220,55 @@ async def test_sign_file_with_autograph(context, mocker, to, expected):
         'https://autograph-hsm.dev.mozaws.net/sign/file',
         auth=mocker.ANY,
         json=[{'input': b'MHhkZWFkYmVlZg=='}])
+
+
+# FIXME: to remove this and redo with integration tests once the Autograph is
+# updated to handle this extra arguments. See https://github.com/mozilla-services/autograph/pull/166/files
+# Will need to bump Autograph version in .travis.yml file
+@pytest.mark.asyncio
+@pytest.mark.parametrize('to,expected,scope', ((
+    None, 'from', 'autograph_fennec',
+), (
+    'to', 'to', 'autograph_fennec',
+), (
+    'to', 'to', 'autograph_fennec_sha1',
+), (
+    'to', 'to', 'autograph_fennec_sha256',
+), (
+    'to', 'to', 'autograph_fennec_sha384',
+), (
+    'to', 'to', 'autograph_fennec_sha512',
+)))
+async def test_sign_custom_apk_with_autograph(context, mocker, to, expected, scope):
+    open_mock = mocker.mock_open(read_data=b'0xdeadbeef')
+    mocker.patch('builtins.open', open_mock, create=True)
+
+    session_mock = mocker.MagicMock()
+    session_mock.post.return_value.json.return_value = [{'signed_file': 'bW96aWxsYQ=='}]
+
+    Session_mock = mocker.Mock()
+    Session_mock.return_value.__enter__ = mocker.Mock(return_value=session_mock)
+    Session_mock.return_value.__exit__ = mocker.Mock()
+    mocker.patch('signingscript.sign.requests.Session', Session_mock, create=True)
+
+    context.task = {
+        'scopes': ['project:releng:signing:cert:dep-signing', 'project:releng:signing:format:{}'.format(scope)]
+    }
+    context.signing_servers = {
+        "project:releng:signing:cert:dep-signing": [
+            utils.SigningServer(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", [scope], "autograph"])
+        ]
+    }
+    assert await sign.sign_file_with_autograph(context, 'from', scope, to=to) == expected
+    open_mock.assert_called()
+    session_mock.post.assert_called_with(
+        'https://autograph-hsm.dev.mozaws.net/sign/file',
+        auth=mocker.ANY,
+        json=[{'input': b'MHhkZWFkYmVlZg==',
+               'options': {
+                   'pkcs7_digest': AUTOGRAPH_CUSTOM_APK_FORMATS.get(scope, ''),
+                   'zip': 'passthrough'
+               }}])
 
 
 @pytest.mark.asyncio
