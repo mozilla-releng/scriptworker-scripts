@@ -37,7 +37,6 @@ setup(
         "enum34",
         "idna",
         "ipaddress",
-        "jsonmerge",
         "jsonschema",
         "mar",
         "pyasn1",

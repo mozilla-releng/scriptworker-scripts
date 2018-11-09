@@ -8,7 +8,6 @@ from .release import (
     getPrettyVersion,
 )
 from balrogclient import Release, SingleLocale, Rule, ScheduledRuleChange
-from .updates import merge_partial_updates
 from .util import recursive_update
 from redo import retry
 import logging
@@ -260,8 +259,7 @@ class NightlySubmitterBase(object):
             api.update_build(
                 product=productName,
                 hashFunction=hashFunction,
-                buildData=json.dumps(merge_partial_updates(current_data,
-                                                           data)),
+                buildData=json.dumps(data),
                 alias=json.dumps(alias),
                 schemaVersion=schemaVersion, data_version=data_version)
 
@@ -401,7 +399,7 @@ class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
         api.update_build(
             data_version=data_version,
             product=productName, hashFunction=hashFunction,
-            buildData=json.dumps(merge_partial_updates(current_data, data)),
+            buildData=json.dumps(data),
             schemaVersion=9)
 
 
