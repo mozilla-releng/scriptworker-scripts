@@ -179,4 +179,4 @@ async def check_aliases_match(context):
 def check_version_matches_nightly_regex(version):
     version = GeckoVersion.parse(version)
     if not version.is_nightly:
-        raise ScriptWorkerTaskException("Version {} is valid but does not match a nightly one")
+        raise ScriptWorkerTaskException("Version {} is valid but does not match a nightly one".format(version))
