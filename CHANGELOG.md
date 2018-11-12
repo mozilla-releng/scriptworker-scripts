@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.3.0] - 2018-11-12
+### Added
+- Added support for new locations for MSI installers
+
 ## [3.2.1] - 2018-09-04
 ### Fixed
 - Bouncer products with multiple platforms that share paths (i.e. stubs) now
