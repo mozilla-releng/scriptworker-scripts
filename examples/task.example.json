@@ -39,7 +39,7 @@
       }
     ],
     "google_play_track": "beta",
-    "commit": false,
+    "commit": false
   },
   "metadata": {
     "owner": "nobody@mozilla.org",
