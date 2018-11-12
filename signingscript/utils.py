@@ -187,4 +187,4 @@ def is_sha1_apk_autograph_signing_format(format_):
 
     """
     # this list could grow if we wanted to filter out other custom signatures
-    return format_ and format_ in ('autograph_fennec_sha1')
+    return is_apk_autograph_signing_format(format_) and format_.endswith('_sha1')
