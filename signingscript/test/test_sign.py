@@ -11,7 +11,6 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
 from scriptworker.utils import makedirs
 
-from signingscript.constants import AUTOGRAPH_CUSTOM_APK_FORMATS
 from signingscript.exceptions import SigningScriptError
 from signingscript.script import get_default_config
 from signingscript.utils import get_hash, load_signing_server_config, mkdir, SigningServer
@@ -229,11 +228,7 @@ async def test_sign_file_with_autograph(context, mocker, to, expected):
 @pytest.mark.parametrize('to,expected,scope', ((
     'to', 'to', 'autograph_fennec_sha1',
 ), (
-    'to', 'to', 'autograph_fennec_sha256',
-), (
-    'to', 'to', 'autograph_fennec_sha384',
-), (
-    'to', 'to', 'autograph_fennec_sha512',
+    None, 'from', 'autograph_fennec_sha1',
 )))
 async def test_sign_custom_apk_with_autograph(context, mocker, to, expected, scope):
     open_mock = mocker.mock_open(read_data=b'0xdeadbeef')
@@ -262,7 +257,7 @@ async def test_sign_custom_apk_with_autograph(context, mocker, to, expected, sco
         auth=mocker.ANY,
         json=[{'input': b'MHhkZWFkYmVlZg==',
                'options': {
-                   'pkcs7_digest': AUTOGRAPH_CUSTOM_APK_FORMATS[scope],
+                   'pkcs7_digest': "SHA1",
                    'zip': 'passthrough'
                }}])
 
