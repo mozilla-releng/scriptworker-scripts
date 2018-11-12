@@ -97,7 +97,10 @@ def check_product_names_match_aliases(context):
 def check_product_names_match_nightly_locations(context):
     """Double check that nightly products are as expected"""
     products = context.task["payload"]["bouncer_products"]
-    if sorted(products) != sorted(BOUNCER_PATH_REGEXES_PER_PRODUCT.keys()):
+    valid_sets = []
+    for product_set in BOUNCER_PATH_REGEXES_PER_PRODUCT:
+        valid_sets.append(sorted(product_set.keys()))
+    if sorted(products) not in valid_sets:
         raise TaskVerificationError("Products {} don't correspond to nightly ones".format(products))
 
 
@@ -109,9 +112,16 @@ def check_locations_match(locations, product_config):
 
 
 def check_location_path_matches_destination(product_name, path):
-    if matches(path,
-               BOUNCER_PATH_REGEXES_PER_PRODUCT[product_name],
-               fullmatch=True) is None:
+    match = None
+    for product_regex in BOUNCER_PATH_REGEXES_PER_PRODUCT:
+        if product_name not in product_regex:
+            continue
+        match = matches(path,
+                        product_regex[product_name],
+                        fullmatch=True)
+        if match:
+            break  # Nothing more to check
+    if match is None:
         err_msg = ("Corrupt location for product {} "
                    "path {}".format(product_name, path))
         raise ScriptWorkerTaskException(err_msg)
