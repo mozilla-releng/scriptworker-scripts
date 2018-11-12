@@ -706,6 +706,11 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
         # We don't want APKs to have their compression changed
         sign_req[0]['options'] = {'zip': 'passthrough'}
 
+        if utils.is_sha1_apk_autograph_signing_format(fmt):
+            # We ask for a SHA1 digest from Autograph
+            # https://github.com/mozilla-services/autograph/pull/166/files
+            sign_req[0]['options']['pkcs7_digest'] = "SHA1"
+
     log.debug("using the default autograph keyid for %s", s.user)
 
     url = "%s/sign/file" % s.server

@@ -176,4 +176,15 @@ def is_apk_autograph_signing_format(format_):
         format_ (str): the format to check
 
     """
-    return format_ and format_ in ('autograph_fennec', 'autograph_focus')
+    return format_ and format_ in ('autograph_focus', 'autograph_fennec_sha1')
+
+
+def is_sha1_apk_autograph_signing_format(format_):
+    """Return bool of whether format of an APK needs custom signing.
+
+    Args:
+        format_ (str): the format to check
+
+    """
+    # this list could grow if we wanted to filter out other custom signatures
+    return is_apk_autograph_signing_format(format_) and format_.endswith('_sha1')
