@@ -1,8 +1,8 @@
 """Common utilities for the test harness."""
-# import os
-import pytest
 import tempfile
 
+# import os
+import pytest
 
 # def read_file(path):
 #     with open(path, 'r') as fh:

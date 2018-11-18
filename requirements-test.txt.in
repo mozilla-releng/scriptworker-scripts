@@ -4,7 +4,9 @@
 aioresponses
 coverage>=4.2
 flake8
+flake8-commas
 flake8_docstrings
+flake8-isort
 flake8-per-file-ignores
 freezegun
 mock
@@ -13,6 +15,5 @@ pytest-asyncio
 pytest
 pytest-cov
 pytest-mock
-python-coveralls
 # pytest-random-order?
 tox

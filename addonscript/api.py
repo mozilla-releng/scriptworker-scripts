@@ -2,9 +2,9 @@
 
 from aiohttp.client_exceptions import ClientResponseError
 
-from addonscript.exceptions import SignatureError, FatalSignatureError, AMOConflictError
-from addonscript.utils import get_api_url, amo_put, amo_get, amo_download
+from addonscript.exceptions import AMOConflictError, FatalSignatureError, SignatureError
 from addonscript.task import get_channel
+from addonscript.utils import amo_download, amo_get, amo_put, get_api_url
 
 # https://addons-server.readthedocs.io/en/latest/topics/api/signing.html#uploading-a-version
 UPLOAD_VERSION = "api/v3/addons/{id}/versions/{version}/"
@@ -32,10 +32,10 @@ async def do_upload(context, locale):
             result = await amo_put(context, url, data)
         except ClientResponseError as exc:
             # XXX: .code is deprecated in aiohttp 3.1 in favor of .status
-            if exc.code == 409:
+            if exc.status == 409:
                 raise AMOConflictError(
                     "Addon <{}> already present on AMO with version <{}>".format(
-                        langpack_id, version
+                        langpack_id, version,
                     ))
             # If response code is not 409 - CONFLICT, bubble the exception
             raise exc
@@ -63,15 +63,15 @@ async def get_signed_addon_url(context, locale, pk):
     if len(upload_status['files']) != 1:
         raise SignatureError(
             'Expected 1 file. Got ({}) full response: {}'.format(
-                len(upload_status['files']), upload_status
-                )
+                len(upload_status['files']), upload_status,
+                ),
             )
 
     if upload_status.get('validation_results'):
         validation_errors = upload_status['validation_results'].get('errors')
         if validation_errors:
             raise FatalSignatureError(
-                'Automated validation produced errors: {}'.format(validation_errors)
+                'Automated validation produced errors: {}'.format(validation_errors),
                 )
 
     signed_data = upload_status['files'][0]

@@ -7,14 +7,13 @@ import uuid
 import aiohttp
 import pytest
 from aioresponses import aioresponses
+from freezegun import freeze_time
 from jose import jws
 from jose.constants import ALGORITHMS
-from freezegun import freeze_time
-
-from addonscript.test import tmpdir
 from scriptworker.context import Context
 
 import addonscript.utils as utils
+from addonscript.test import tmpdir
 
 assert tmpdir  # silence flake8
 
@@ -30,26 +29,27 @@ def context():
             'project:releng:addons.mozilla.org:server:dev': {
                 'amo_server': 'http://some-amo-it.url',
                 'jwt_user': 'test-user',
-                'jwt_secret': 'secret'
+                'jwt_secret': 'secret',
             },
         },
     }
     context.task = {
-        'scopes': ['project:releng:addons.mozilla.org:server:dev']
+        'scopes': ['project:releng:addons.mozilla.org:server:dev'],
     }
     return context
 
 
 @pytest.fixture(scope='function')
-@freeze_time('2018-01-19 12:59:59')
 def payload():
-    _iat = int(time.time())
-    payload = {
-        'iss': 'test-user',
-        'jti': str(uuid.uuid4()),
-        'iat': _iat,
-        'exp': _iat + 60*4,
-    }
+    # use context manager, c.f. https://github.com/spulec/freezegun/issues/255
+    with freeze_time('2018-01-19 12:59:59'):
+        _iat = int(time.time())
+        payload = {
+            'iss': 'test-user',
+            'jti': str(uuid.uuid4()),
+            'iat': _iat,
+            'exp': _iat + 60*4,
+        }
     return payload
 
 
@@ -188,7 +188,7 @@ async def test_amo_put_header(fake_session, mocker, context):
     'host,path', (
         ('https://addons.example.com', 'some/api'),
         ('https://addons.mozilla.org', 'what/api/is/this/'),
-    )
+    ),
 )
 def test_get_api_url(host, path, context):
     context.config['amo_instances']['project:releng:addons.mozilla.org:server:dev']['amo_server'] = host

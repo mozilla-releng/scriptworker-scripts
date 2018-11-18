@@ -2,8 +2,6 @@ language: python
 
 matrix:
   include:
-    - python: 3.5
-      env: TOXENV=py35
     - python: 3.6
       env: TOXENV=py36
 
@@ -12,7 +10,7 @@ install:
 script:
     - tox
 after_success:
-    - tox -e coveralls
+    - COVERAGE_ENV=$TOXENV tox -e codecov
 
 # https://docs.travis-ci.com/user/reference/overview/#Container-based
 sudo: false
