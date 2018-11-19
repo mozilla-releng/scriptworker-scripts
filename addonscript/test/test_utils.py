@@ -40,15 +40,16 @@ def context():
 
 
 @pytest.fixture(scope='function')
-@freeze_time('2018-01-19 12:59:59')
 def payload():
-    _iat = int(time.time())
-    payload = {
-        'iss': 'test-user',
-        'jti': str(uuid.uuid4()),
-        'iat': _iat,
-        'exp': _iat + 60*4,
-    }
+    # use context manager, c.f. https://github.com/spulec/freezegun/issues/255
+    with freeze_time('2018-01-19 12:59:59'):
+        _iat = int(time.time())
+        payload = {
+            'iss': 'test-user',
+            'jti': str(uuid.uuid4()),
+            'iat': _iat,
+            'exp': _iat + 60*4,
+        }
     return payload
 
 
