@@ -1,6 +1,6 @@
 # pyup: ignore file
 # Specifically for testing
--r requirements.txt.in
+-r base.in
 aioresponses
 coverage>=4.2
 flake8
