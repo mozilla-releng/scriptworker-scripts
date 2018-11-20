@@ -61,6 +61,9 @@ ecdsa==0.13 \
 frozendict==1.2 \
     --hash=sha256:774179f22db2ef8a106e9c38d4d1f8503864603db08de2e33be5b778230f6e45 \
     # via scriptworker
+future==0.17.1 \
+    --hash=sha256:67045236dcfd6816dc439556d009594abf643e5eb48992e36beac09c2ca659b8 \
+    # via python-jose
 idna-ssl==1.1.0 \
     --hash=sha256:a933e3bb13da54383f9e8f35dc4f9cb9eb9b3b78c6b36f311254d6d0d92c6c7c \
     # via aiohttp
