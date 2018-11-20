@@ -1,6 +1,7 @@
 import os
 import pytest
 
+from treescript.utils import DONTBUILD_MSG
 from scriptworker.context import Context
 from treescript.exceptions import TaskVerificationError
 from treescript.test import tmpdir, is_slice_in_list
@@ -84,6 +85,54 @@ async def test_bump_version(mocker, repo_context, new_version):
     assert len(called_args) == 1
     assert 'local_repo' in called_args[0][1]
     assert is_slice_in_list(('commit', '-m'), called_args[0][0])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('new_version', (
+    '87.0',
+    '87.1b3',
+))
+async def test_bump_version_DONTBUILD_true(mocker, repo_context, new_version):
+    called_args = []
+
+    async def run_command(context, *arguments, local_repo=None):
+        called_args.append([tuple([context]) + arguments, {'local_repo': local_repo}])
+
+    relative_files = [os.path.join('config', 'milestone.txt')]
+    bump_info = {'files': relative_files, 'next_version': new_version}
+    mocked_bump_info = mocker.patch.object(vmanip, 'get_version_bump_info')
+    mocked_bump_info.return_value = bump_info
+    mocked_dontbuild = mocker.patch.object(vmanip, 'get_dontbuild')
+    mocked_dontbuild.return_value = True
+    mocker.patch.object(vmanip, 'run_hg_command', new=run_command)
+    await vmanip.bump_version(repo_context)
+    command = called_args[0][0]
+    commit_msg = command[command.index('-m') + 1]
+    assert DONTBUILD_MSG in commit_msg
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('new_version', (
+    '87.0',
+    '87.1b3',
+))
+async def test_bump_version_DONTBUILD_false(mocker, repo_context, new_version):
+    called_args = []
+
+    async def run_command(context, *arguments, local_repo=None):
+        called_args.append([tuple([context]) + arguments, {'local_repo': local_repo}])
+
+    relative_files = [os.path.join('config', 'milestone.txt')]
+    bump_info = {'files': relative_files, 'next_version': new_version}
+    mocked_bump_info = mocker.patch.object(vmanip, 'get_version_bump_info')
+    mocked_bump_info.return_value = bump_info
+    mocked_dontbuild = mocker.patch.object(vmanip, 'get_dontbuild')
+    mocked_dontbuild.return_value = False
+    mocker.patch.object(vmanip, 'run_hg_command', new=run_command)
+    await vmanip.bump_version(repo_context)
+    command = called_args[0][0]
+    commit_msg = command[command.index('-m') + 1]
+    assert DONTBUILD_MSG not in commit_msg
 
 
 @pytest.mark.asyncio
