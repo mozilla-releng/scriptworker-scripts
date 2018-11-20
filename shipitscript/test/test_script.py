@@ -28,7 +28,35 @@ async def test_mark_as_shipped(context, monkeypatch, scopes):
     await script.async_main(context)
     mark_as_shipped_mock.assert_called_with({
         'api_root': 'http://some-ship-it.url',
+        'api_root_v2': 'http://some-ship-it.url/v2',
         'timeout_in_seconds': 1,
+        'taskcluster_client_id': 'some-id',
+        'taskcluster_access_token': 'some-token',
+        'username': 'some-username',
+        'password': 'some-password'
+    }, 'Firefox-59.0b3-build1')
+
+
+@pytest.mark.parametrize('scopes', (
+    [
+        'project:releng:ship-it:action:mark-as-shipped-v2',
+        'project:releng:ship-it:server:dev'
+    ],
+),)
+@pytest.mark.asyncio
+async def test_mark_as_shipped_v2(context, monkeypatch, scopes):
+    context.task['scopes'] = scopes
+
+    mark_as_shipped_v2_mock = MagicMock()
+    monkeypatch.setattr(ship_actions, 'mark_as_shipped_v2', mark_as_shipped_v2_mock)
+
+    await script.async_main(context)
+    mark_as_shipped_v2_mock.assert_called_with({
+        'api_root': 'http://some-ship-it.url',
+        'api_root_v2': 'http://some-ship-it.url/v2',
+        'timeout_in_seconds': 1,
+        'taskcluster_client_id': 'some-id',
+        'taskcluster_access_token': 'some-token',
         'username': 'some-username',
         'password': 'some-password'
     }, 'Firefox-59.0b3-build1')
@@ -70,7 +98,10 @@ async def test_mark_as_started(context, monkeypatch, scopes, payload, raises):
         await script.async_main(context)
         mark_as_started_mock.assert_called_with({
             'api_root': 'http://some-ship-it.url',
+            'api_root_v2': 'http://some-ship-it.url/v2',
             'timeout_in_seconds': 1,
+            'taskcluster_client_id': 'some-id',
+            'taskcluster_access_token': 'some-token',
             'username': 'some-username',
             'password': 'some-password'
         }, 'Firefox-61.0b9-build1', {
@@ -93,6 +124,16 @@ async def test_mark_as_started(context, monkeypatch, scopes, payload, raises):
         'scopes': [
             'project:releng:ship-it:server:dev',
             'project:releng:ship-it:action:mark-as-shipped',
+        ],
+    }, False),
+    ({
+        'dependencies': ['someTaskId'],
+        'payload': {
+            'release_name': 'Firefox-59.0b3-build1'
+        },
+        'scopes': [
+            'project:releng:ship-it:server:dev',
+            'project:releng:ship-it:action:mark-as-shipped-v2',
         ],
     }, False),
     ({
@@ -134,6 +175,8 @@ async def test_async_main(context, monkeypatch, task, raises):
 
     mark_as_shipped_mock = MagicMock()
     monkeypatch.setattr(ship_actions, 'mark_as_shipped', mark_as_shipped_mock)
+    mark_as_shipped_v2_mock = MagicMock()
+    monkeypatch.setattr(ship_actions, 'mark_as_shipped_v2', mark_as_shipped_v2_mock)
     mark_as_started_mock = MagicMock()
     monkeypatch.setattr(ship_actions, 'mark_as_started', mark_as_started_mock)
 

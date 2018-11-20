@@ -3,7 +3,8 @@ from unittest.mock import MagicMock
 
 from scriptworker.exceptions import ScriptWorkerTaskException
 from shipitscript.utils import (
-    get_auth_primitives, check_release_has_values, same_timing
+    get_auth_primitives, get_auth_primitives_v2, check_release_has_values,
+    check_release_has_values_v2, same_timing
 )
 
 
@@ -22,6 +23,23 @@ from shipitscript.utils import (
 ))
 def test_get_auth_primitives(ship_it_instance_config, expected):
     assert get_auth_primitives(ship_it_instance_config) == expected
+
+
+@pytest.mark.parametrize('ship_it_instance_config,expected', (
+    ({
+        'taskcluster_client_id': 'some-id',
+        'taskcluster_access_token': 'some-token',
+        'api_root_v2': 'http://some-ship-it.url',
+        'timeout_in_seconds': 1,
+    }, ('some-id', 'some-token', 'http://some-ship-it.url', 1)),
+    ({
+        'taskcluster_client_id': 'some-id',
+        'taskcluster_access_token': 'some-token',
+        'api_root_v2': 'http://some-ship-it.url',
+    }, ('some-id', 'some-token', 'http://some-ship-it.url', 60)),
+))
+def test_get_auth_primitives_v2(ship_it_instance_config, expected):
+    assert get_auth_primitives_v2(ship_it_instance_config) == expected
 
 
 @pytest.mark.parametrize('release_info,  values, raises', (
@@ -235,6 +253,69 @@ def test_generic_validation(monkeypatch, release_info,  values, raises):
             check_release_has_values(ReleaseClassMock, release_name, **values)
     else:
         check_release_has_values(ReleaseClassMock, release_name, **values)
+
+
+@pytest.mark.parametrize('release_info,  values, raises', (
+    ({
+        'name': 'Fennec-X.0bX-build42',
+        'shippedAt': '2018-07-03T09:19:00+00:00',
+        'mh_changeset': '',
+        'mozillaRelbranch': None,
+        'version': 'X.0bX',
+        'branch': 'projects/maple',
+        'submitter': 'shipit-scriptworker-stage',
+        'ready': True,
+        'mozillaRevision': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        'release_eta': None,
+        'starter': None,
+        'complete': True,
+        'submittedAt': '2018-07-02T09:18:39+00:00',
+        'status': 'shipped',
+        'comment': None,
+        'product': 'fennec',
+        'description': None,
+        'buildNumber': 42,
+        'l10nChangesets': {},
+    }, {
+        'status': 'shipped',
+    }, False),
+    ({
+        'name': 'Fennec-X.0bX-build42',
+        'shippedAt': '2018-07-03T09:19:00+00:00',
+        'mh_changeset': '',
+        'mozillaRelbranch': None,
+        'version': 'X.0bX',
+        'branch': 'projects/maple',
+        'submitter': 'shipit-scriptworker-stage',
+        'ready': True,
+        'mozillaRevision': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        'release_eta': None,
+        'starter': None,
+        'complete': True,
+        'submittedAt': '2018-07-02T09:18:39+00:00',
+        'status': 'Started',
+        'comment': None,
+        'product': 'fennec',
+        'description': None,
+        'buildNumber': 42,
+        'l10nChangesets': {},
+    }, {
+        'status': 'shipped',
+    }, True),
+))
+def test_generic_validation_v2(monkeypatch, release_info,  values, raises):
+    release_name = "Fennec-X.0bX-build42"
+    ReleaseClassMock = MagicMock()
+    attrs = {
+        'getRelease.return_value': release_info
+    }
+    ReleaseClassMock.configure_mock(**attrs)
+
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            check_release_has_values_v2(ReleaseClassMock, release_name, **values)
+    else:
+        check_release_has_values_v2(ReleaseClassMock, release_name, **values)
 
 
 @pytest.mark.parametrize('time1,time2, expected', (

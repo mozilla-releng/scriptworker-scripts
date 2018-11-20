@@ -14,7 +14,10 @@ def context():
     context.config['ship_it_instances'] = {
         'project:releng:ship-it:server:dev': {
             'api_root': 'http://some-ship-it.url',
+            'api_root_v2': 'http://some-ship-it.url/v2',
             'timeout_in_seconds': 1,
+            'taskcluster_client_id': 'some-id',
+            'taskcluster_access_token': 'some-token',
             'username': 'some-username',
             'password': 'some-password'
         }
