@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.3] - 2018-10-31
+
+### Fixed
+- Update hg.mozilla.org fingerprint ([Bug 1495464](https://bugzilla.mozilla.org/show_bug.cgi?id=1495464))
+
 ## [1.1.2] - 2018-10-02
 
 ### Fixed
