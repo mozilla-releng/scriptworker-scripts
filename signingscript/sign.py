@@ -699,8 +699,12 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
     with open(from_, 'rb') as fin:
         input_bytes = fin.read()
 
+    # We need to base64 data for autograph. b64encode() returns bytes, though. We need utf8 strings
+    # to make Python's JSON decoder happy
+    base64_input = base64.b64encode(input_bytes).decode('utf-8')
+
     # build and run the signature request
-    sign_req = [{"input": base64.b64encode(input_bytes)}]
+    sign_req = [{"input": base64_input}]
 
     if utils.is_apk_autograph_signing_format(fmt):
         # We don't want APKs to have their compression changed

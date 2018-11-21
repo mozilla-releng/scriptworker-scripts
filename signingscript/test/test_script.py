@@ -42,9 +42,9 @@ async def async_main_helper(tmpdir, mocker, formats, extra_config={}, server_typ
 
 
 @pytest.mark.asyncio
-async def test_async_main_gpg(tmpdir, mocker):
+async def test_async_main_gpg(tmpdir, tmpfile, mocker):
     formats = ['gpg']
-    fake_gpg_pubkey = tmpfile()
+    fake_gpg_pubkey = tmpfile
     mocked_copy_to_dir = mocker.Mock()
     mocker.patch.object(script, 'copy_to_dir', new=mocked_copy_to_dir)
 

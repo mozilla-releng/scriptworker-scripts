@@ -218,7 +218,7 @@ async def test_sign_file_with_autograph(context, mocker, to, expected):
     session_mock.post.assert_called_with(
         'https://autograph-hsm.dev.mozaws.net/sign/file',
         auth=mocker.ANY,
-        json=[{'input': b'MHhkZWFkYmVlZg=='}])
+        json=[{'input': 'MHhkZWFkYmVlZg=='}])
 
 
 # FIXME: to remove this and redo with integration tests once the Autograph is
@@ -255,7 +255,7 @@ async def test_sign_custom_apk_with_autograph(context, mocker, to, expected, sco
     session_mock.post.assert_called_with(
         'https://autograph-hsm.dev.mozaws.net/sign/file',
         auth=mocker.ANY,
-        json=[{'input': b'MHhkZWFkYmVlZg==',
+        json=[{'input': 'MHhkZWFkYmVlZg==',
                'options': {
                    'pkcs7_digest': "SHA1",
                    'zip': 'passthrough'
