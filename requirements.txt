@@ -1,2 +1,2 @@
 scriptworker
-shipitapi>=0.1.0
+shipitapi>=2.0.0
