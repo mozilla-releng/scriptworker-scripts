@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 # [3.0.0] - 2018-11-19
-### Fixed
+### Added
 - Added support for marking releases as shipped in Ship-it v2
 
 # [2.1.1] - 2018-07-02
