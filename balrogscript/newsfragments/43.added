@@ -1,0 +1,2 @@
+Added `suffixes` to `submit-locale` action to update multiple blobs.
+Added `update_line` to `submit-toplevel` to create multiple blobs with different update metadata.
