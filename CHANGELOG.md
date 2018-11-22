@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [9.5.0] - 2018-11-22
+### Changed
+- Renamed `autograph_fennec_sha1` into `autograph_apk_fennec_sha1`. It was unused.
+
+### Added
+- Any product matching `autograph_apk_*` will be signed as an APK.
+
+
 ## [9.4.1] - 2018-11-12
 ### Added
 - Enable `autograph_fennec_sha1` as single signing format for Fennec APKs
