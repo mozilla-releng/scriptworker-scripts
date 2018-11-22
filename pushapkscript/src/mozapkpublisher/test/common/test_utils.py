@@ -1,7 +1,9 @@
 import requests
-import requests_mock
+import aiohttp
+import asyncio
 import tempfile
 
+from aioresponses import aioresponses
 from unittest.mock import MagicMock
 
 from mozapkpublisher.common.utils import load_json_url, file_sha512sum, download_file
@@ -15,16 +17,23 @@ def test_load_json_url(monkeypatch):
     response_mock.json.assert_called_once_with()
 
 
-def test_download_file(monkeypatch):
-    with requests_mock.Mocker() as m:
-        origin_data = b'a' * 1025
-        m.get('https://dummy-url.tld/file', content=origin_data)
+def test_download_file():
+    # This is defined as a separate function so we don't get a warning about a "session being created outside of
+    # a co-routine
+    async def download(temp_file):
+        async with aiohttp.ClientSession() as session:
+            await download_file(session, 'https://dummy-url.tld/file', temp_file.name)
 
+    with aioresponses() as mocked:
+        loop = asyncio.get_event_loop()
+        origin_data = b'a' * 1025
+        mocked.get('https://dummy-url.tld/file', status=200, body=origin_data)
         with tempfile.NamedTemporaryFile() as temp_file:
-            download_file('https://dummy-url.tld/file', temp_file.name)
+            loop.run_until_complete(download(temp_file))
             temp_file.seek(0)
             data = temp_file.read()
-    assert data == origin_data
+
+        assert data == origin_data
 
 
 def test_file_sha512sum():
