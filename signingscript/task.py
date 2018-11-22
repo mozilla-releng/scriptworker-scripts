@@ -13,6 +13,7 @@ from frozendict import frozendict
 import logging
 import os
 import random
+import re
 
 from datadog import statsd, initialize
 import platform
@@ -29,8 +30,9 @@ from signingscript.utils import is_autograph_signing_format
 log = logging.getLogger(__name__)
 
 FORMAT_TO_SIGNING_FUNCTION = frozendict({
-    "autograph_fennec_sha1": sign_jar,
+    # TODO: Remove the next item (in favor of the regex one), once Focus is migrated
     "autograph_focus": sign_jar,
+    r"autograph_apk_.+": sign_jar,
     "autograph_hash_only_mar384": sign_mar384_with_autograph_hash,
     "gpg": sign_gpg,
     "jar": sign_jar,
@@ -196,9 +198,7 @@ async def sign(context, path, signing_formats):
     output = path
     # Loop through the formats and sign one by one.
     for fmt in signing_formats:
-        signing_func = FORMAT_TO_SIGNING_FUNCTION.get(
-            fmt, FORMAT_TO_SIGNING_FUNCTION['default']
-        )
+        signing_func = _get_signing_function_from_format(fmt)
         log.info("sign(): Signing {} with {}...".format(output, fmt))
         metric_tags = [
             'format:{}'.format(fmt),
@@ -211,6 +211,19 @@ async def sign(context, path, signing_formats):
     if not isinstance(output, (tuple, list)):
         output = [output]
     return output
+
+
+def _get_signing_function_from_format(format):
+    try:
+        _, signing_function = get_single_item_from_sequence(
+            FORMAT_TO_SIGNING_FUNCTION.items(),
+            condition=lambda item: re.match(item[0], format) is not None,
+        )
+        return signing_function
+    except ValueError:
+        # Regex may catch several candidate. If so, we fall back to the exact match.
+        # If nothing matches, then we fall back to default
+        return FORMAT_TO_SIGNING_FUNCTION.get(format, FORMAT_TO_SIGNING_FUNCTION['default'])
 
 
 # _sort_formats {{{1

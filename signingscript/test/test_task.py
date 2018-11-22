@@ -202,6 +202,35 @@ async def test_sign(context, mocker, format, filename, post_files):
     await stask.sign(context, filename, [format])
 
 
+@pytest.mark.parametrize('format, expected', (
+    # Hardcoded cases
+    ("autograph_focus", stask.sign_jar),
+    ("autograph_hash_only_mar384", stask.sign_mar384_with_autograph_hash),
+    ("gpg", stask.sign_gpg),
+    ("jar", stask.sign_jar),
+    ("focus-jar", stask.sign_jar),
+    ("macapp", stask.sign_macapp),
+    ("osslsigncode", stask.sign_signcode),
+    ("sha2signcode", stask.sign_signcode),
+    ("signcode", stask.sign_signcode),
+    ("widevine", stask.sign_widevine),
+    ("widevine_blessed", stask.sign_widevine),
+    ("default", stask.sign_file),
+
+    # Regex cases
+    ("autograph_apk_fenix", stask.sign_jar),
+    ("autograph_apk_fennec_sha1", stask.sign_jar),
+    ("autograph_apk_focus", stask.sign_jar),
+    ("autograph_apk_reference_browser", stask.sign_jar),
+
+    # Default
+    ("autograph_apk_", stask.sign_file),
+    ("non-existing-format", stask.sign_file)
+))
+def test_get_signing_function_from_format(format, expected):
+    assert stask._get_signing_function_from_format(format) == expected
+
+
 # build_filelist_dict {{{1
 @pytest.mark.parametrize('formats,raises', ((
     ['gpg'], False,
