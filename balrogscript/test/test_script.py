@@ -196,7 +196,8 @@ def test_create_pusher(config):
         'enUSPlatforms': ['foo', 'bar'],
         'hashFunction': 'sha512',
         'partialUpdates': {},
-        'requiresMirrors': False
+        'requiresMirrors': False,
+        'updateLine': None,
     },
     {
         'productName': 'Widget',
@@ -234,7 +235,54 @@ def test_create_pusher(config):
             '40': {'buildNumber': '2'},
             '50': {'buildNumber': '4'},
         },
-        'requiresMirrors': True
+        'requiresMirrors': True,
+        'updateLine': None,
+    },
+    {
+        'productName': 'Widget',
+        'version': '60',
+        'build_number': 8,
+        'rule_ids': [1],
+    },
+), (
+    {
+        'payload': {
+            'app_version': '60.0',
+            'product': 'widget',
+            'version': '60',
+            'build_number': 8,
+            'channel_names': ['x', 'y'],
+            'archive_domain': 'archive',
+            'download_domain': 'download',
+            'partial_versions': '40build2, 50build4',
+            'platforms': ['foo', 'bar'],
+            'require_mirrors': True,
+            'rules_to_update': [1],
+            'update_line': {'': {
+                'for': {},
+                'fields': {'detailsURL': 'https://some.text/details', 'type': 'minor'},
+            }},
+        }
+    },
+    {
+        'appVersion': '60.0',
+        'productName': 'Widget',
+        'version': '60',
+        'buildNumber': 8,
+        'updateChannels': ['x', 'y'],
+        'ftpServer': 'archive',
+        'bouncerServer': 'download',
+        'enUSPlatforms': ['foo', 'bar'],
+        'hashFunction': 'sha512',
+        'partialUpdates': {
+            '40': {'buildNumber': '2'},
+            '50': {'buildNumber': '4'},
+        },
+        'requiresMirrors': True,
+        'updateLine': {
+            'for': {},
+            'fields': {'detailsURL': 'https://some.text/details', 'type': 'minor'},
+        },
     },
     {
         'productName': 'Widget',

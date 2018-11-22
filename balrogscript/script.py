@@ -144,33 +144,37 @@ def submit_toplevel(task, config, balrog_auth):
             version, build_number = v.split("build")
             partials[version] = {"buildNumber": build_number}
 
-    creator = create_creator(
-        api_root=config['api_root'], auth=auth,
-        dummy=config['dummy'],
-        suffix=task['payload'].get('blob_suffix', ''),
-        complete_mar_filename_pattern=task['payload'].get('complete_mar_filename_pattern'),
-        complete_mar_bouncer_product_pattern=task['payload'].get('complete_mar_bouncer_product_pattern'),
-    )
+    suffixes = task['payload'].get('update_line', {}).keys() or ['']
+
+    for suffix in suffixes:
+        creator = create_creator(
+            api_root=config['api_root'], auth=auth,
+            dummy=config['dummy'],
+            suffix=task['payload'].get('blob_suffix', '') + suffix,
+            complete_mar_filename_pattern=task['payload'].get('complete_mar_filename_pattern'),
+            complete_mar_bouncer_product_pattern=task['payload'].get('complete_mar_bouncer_product_pattern'),
+        )
+
+        retry(lambda: creator.run(
+            appVersion=task['payload']['app_version'],
+            productName=task['payload']['product'].capitalize(),
+            version=task['payload']['version'],
+            buildNumber=task['payload']['build_number'],
+            updateChannels=task['payload']['channel_names'],
+            ftpServer=task['payload']['archive_domain'],
+            bouncerServer=task['payload']['download_domain'],
+            enUSPlatforms=task['payload']['platforms'],
+            hashFunction='sha512',
+            partialUpdates=partials,
+            requiresMirrors=task['payload']['require_mirrors'],
+            updateLine=task['payload'].get('update_line', {}).get(suffix),
+        ))
+
     pusher = create_pusher(
         api_root=config['api_root'], auth=auth,
         dummy=config['dummy'],
         suffix=task['payload'].get('blob_suffix', ''),
     )
-
-    retry(lambda: creator.run(
-        appVersion=task['payload']['app_version'],
-        productName=task['payload']['product'].capitalize(),
-        version=task['payload']['version'],
-        buildNumber=task['payload']['build_number'],
-        updateChannels=task['payload']['channel_names'],
-        ftpServer=task['payload']['archive_domain'],
-        bouncerServer=task['payload']['download_domain'],
-        enUSPlatforms=task['payload']['platforms'],
-        hashFunction='sha512',
-        partialUpdates=partials,
-        requiresMirrors=task['payload']['require_mirrors'],
-    ))
-
     retry(lambda: pusher.run(
         productName=task['payload']['product'].capitalize(),
         version=task['payload']['version'],

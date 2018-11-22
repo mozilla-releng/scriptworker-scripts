@@ -122,17 +122,12 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
 
     def generate_data(self, appVersion, productName, version, buildNumber,
                       updateChannels, ftpServer, bouncerServer,
-                      enUSPlatforms, **updateKwargs):
+                      enUSPlatforms, updateLine, **updateKwargs):
         details_product = productName.lower()
         if details_product == "devedition":
             details_product = "firefox"
-
-        data = {
-            'platforms': {},
-            'fileUrls': {},
-            'appVersion': appVersion,
-            'displayVersion': getPrettyVersion(version),
-            'updateLine': [
+        if updateLine is None:
+            updateLine = [
                 {
                     'for': {},
                     'fields': {
@@ -141,6 +136,13 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
                     },
                 },
             ]
+
+        data = {
+            'platforms': {},
+            'fileUrls': {},
+            'appVersion': appVersion,
+            'displayVersion': getPrettyVersion(version),
+            'updateLine': updateLine,
         }
 
         fileUrls = self._getFileUrls(productName, version, buildNumber,
@@ -166,11 +168,11 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
 
     def run(self, appVersion, productName, version, buildNumber,
             updateChannels, ftpServer, bouncerServer,
-            enUSPlatforms, hashFunction, **updateKwargs):
+            enUSPlatforms, hashFunction, updateLine, **updateKwargs):
         data = self.generate_data(appVersion, productName, version,
                                   buildNumber, updateChannels,
                                   ftpServer, bouncerServer, enUSPlatforms,
-                                  **updateKwargs)
+                                  updateLine, **updateKwargs)
         name = get_release_blob_name(productName, version, buildNumber,
                                      self.suffix)
         api = Release(name=name, auth=self.auth, api_root=self.api_root)
