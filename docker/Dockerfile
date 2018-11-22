@@ -21,8 +21,6 @@ RUN virtualenv /app/py2 --python=/usr/bin/python --system-site-packages \
     && source /app/py2/bin/activate && \
     pip install -r /app/fbs_requirements.txt && deactivate
 
-RUN hg clone https://hg.mozilla.org/build/tools /app/tools
-
 RUN mkdir -p /app/bin
 COPY ./ /app
 COPY docker/*sh /app/bin/

@@ -26,6 +26,5 @@
                                "balrog_password": "BALROG_PASSWORD",
                                "balrog_username": "BALROG_USERNAME"}},
  "verbose": true,
- "work_dir": "balrogscript/test/test_work_dir",
- "tools_location": "..."
+ "work_dir": "balrogscript/test/test_work_dir"
 }

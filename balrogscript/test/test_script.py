@@ -12,10 +12,7 @@ from balrogscript.test import (nightly_manifest, config, nightly_config,
 from balrogscript.task import (get_task, validate_task_schema, get_task_server)
 from balrogscript.script import setup_logging, main, setup_config
 
-sys.path.insert(0, os.path.join(
-    os.path.dirname(__file__), "../tools/lib/python"
-))
-from balrog.submitter.cli import (
+from balrogscript.submitter.cli import (
     NightlySubmitterV4,
     ReleaseCreatorV9,
     ReleasePusher,
@@ -376,7 +373,7 @@ def test_setup_logging(verbose):
 # load_config {{{1
 def test_load_config():
     config_path = os.path.join(BASE_DIR, 'data/hardcoded_config.json')
-    assert bscript.load_config(config_path)['tools_location'] == '...'
+    assert bscript.load_config(config_path)['verbose']
     with pytest.raises(SystemExit):
         bscript.load_config(os.path.join(BASE_DIR, "nonexistent.path"))
 
