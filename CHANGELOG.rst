@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[3.2.1] = (2018-11-21)
+----------------------
+
+Removed
+~~~~~~~
+
+- Removed dependency on https://hg.mozilla.org/build.tools. (`#40
+  <https://github.com/mozilla-releng/balrogscript/issues/40>`_)
+
+
 [3.2.0] = (2018-08-30)
 ----------------------
 
