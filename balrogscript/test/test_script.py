@@ -40,32 +40,32 @@ def test_get_task_payload(nightly_config):
 # create_locale_submitter {{{1
 def test_create_locale_submitter_nightly_style(config, nightly_manifest):
     balrog_auth = (None, None)
-    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], balrog_auth, config)
+    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], '', balrog_auth, config)
     assert isinstance(submitter, NightlySubmitterV4)
 
     nightly_manifest[0].pop("partialInfo", None)
-    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], balrog_auth, config)
+    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], '', balrog_auth, config)
     assert isinstance(submitter, NightlySubmitterV4)
 
 
 def test_create_locale_submitter_release_style(config, release_manifest):
     balrog_auth = (None, None)
 
-    submitter, release = bscript.create_locale_submitter(release_manifest[0], balrog_auth, config)
+    submitter, release = bscript.create_locale_submitter(release_manifest[0], '', balrog_auth, config)
     assert isinstance(submitter, ReleaseSubmitterV9)
 
     release_manifest[0].pop("partialInfo", None)
-    submitter, release = bscript.create_locale_submitter(release_manifest[0], balrog_auth, config)
+    submitter, release = bscript.create_locale_submitter(release_manifest[0], '', balrog_auth, config)
     assert isinstance(submitter, ReleaseSubmitterV9)
 
     release_manifest[0].pop("tc_release", None)
     with pytest.raises(RuntimeError):
-        submitter, release = bscript.create_locale_submitter(release_manifest[0], balrog_auth, config)
+        submitter, release = bscript.create_locale_submitter(release_manifest[0], '', balrog_auth, config)
 
 
 def test_create_locale_submitter_nightly_metadata(config, nightly_manifest):
     balrog_auth = (None, None)
-    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], balrog_auth, config)
+    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], '', balrog_auth, config)
 
     exp = {
         'platform': "android-api-15",
@@ -95,14 +95,14 @@ def test_create_locale_submitter_nightly_metadata(config, nightly_manifest):
 
 def test_create_locale_submitter_nightly_creates_valid_submitter(config, nightly_manifest):
     balrog_auth = (None, None)
-    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], balrog_auth, config)
+    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], '', balrog_auth, config)
     lambda: submitter.run(**release)
 
 
 # submit_locale {{{1
 def test_submit_locale(config, nightly_config, nightly_manifest, mocker):
     balrog_auth = (None, None)
-    _, release = bscript.create_locale_submitter(nightly_manifest[0], balrog_auth, config)
+    _, release = bscript.create_locale_submitter(nightly_manifest[0], '', balrog_auth, config)
 
     def fake_submitter(**kwargs):
         assert kwargs == release
