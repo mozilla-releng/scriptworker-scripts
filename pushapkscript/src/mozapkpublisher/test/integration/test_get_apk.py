@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 import os
 import re
@@ -21,7 +22,7 @@ from mozapkpublisher.get_apk import GetAPK
 def test_download_files(get_apk_args, apks_file_regexes):
     temp_dir = tempfile.mkdtemp()
     get_apk_args['output-directory'] = temp_dir
-    GetAPK(get_apk_args).run()
+    asyncio.run(GetAPK(get_apk_args).run())
     files_in_temp_dir = [
         name for name in os.listdir(temp_dir) if os.path.isfile(os.path.join(temp_dir, name))
     ]
