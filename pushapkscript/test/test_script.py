@@ -4,7 +4,7 @@ import os
 from scriptworker import client, artifacts
 from unittest.mock import MagicMock
 
-from pushapkscript import googleplay, jarsigner, task
+from pushapkscript import googleplay, jarsigner, task, manifest
 from pushapkscript.script import async_main, get_default_config, main, _log_warning_forewords
 
 
@@ -27,6 +27,7 @@ async def test_async_main(monkeypatch, android_product, expected_strings_call_co
     )
     monkeypatch.setattr(googleplay, 'is_allowed_to_push_to_google_play', lambda _: False)
     monkeypatch.setattr(jarsigner, 'verify', lambda _, __: None)
+    monkeypatch.setattr(manifest, 'verify', lambda _, __: None)
     monkeypatch.setattr(task, 'extract_android_product_from_scopes', lambda _: android_product)
 
     google_play_strings_call_counter = (n for n in range(0, 2))

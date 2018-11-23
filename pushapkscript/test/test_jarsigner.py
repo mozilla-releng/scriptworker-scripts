@@ -70,35 +70,6 @@ class JarSignerTest(unittest.TestCase):
             with self.assertRaises(SignatureError):
                 jarsigner.verify(self.context, '/path/to/apk')
 
-    def test_raises_error_when_digest_is_not_sha1_for_fennec(self):
-        with patch('subprocess.run') as run:
-            run.return_value = MagicMock()
-            run.return_value.returncode = 0
-            run.return_value.stdout = 'Digest algorithm: SHA-256'
-
-            with self.assertRaises(SignatureError):
-                jarsigner.verify(self.context, '/path/to/apk')
-
-    def test_expects_sha256_for_focus_or_klar(self):
-        self.context.task['scopes'] = ['project:mobile:focus:releng:product:focus']
-        self.context.config['taskcluster_scope_prefix'] = 'project:mobile:focus:releng:product:'
-        self.context.config['jarsigner_certificate_aliases']['focus'] = 'focus'
-        with patch('subprocess.run') as run:
-            run.return_value = MagicMock()
-            run.return_value.returncode = 0
-            run.return_value.stdout = 'Digest algorithm: SHA-256'
-
-            jarsigner.verify(self.context, '/path/to/apk')
-
-    def test_raises_error_when_no_digest_algo_is_returned_by_jarsigner(self):
-        with patch('subprocess.run') as run:
-            run.return_value = MagicMock()
-            run.return_value.returncode = 0
-            run.return_value.stdout = 'Some random output'
-
-            with self.assertRaises(SignatureError):
-                jarsigner.verify(self.context, '/path/to/apk')
-
     def test_pluck_configuration_sets_every_argument(self):
         self.assertEqual(
             jarsigner._pluck_configuration(self.context),

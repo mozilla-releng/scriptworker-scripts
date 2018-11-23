@@ -6,7 +6,7 @@ import os
 
 from scriptworker import client, artifacts
 
-from pushapkscript import googleplay, jarsigner, task
+from pushapkscript import googleplay, jarsigner, task, manifest
 
 
 log = logging.getLogger(__name__)
@@ -27,7 +27,9 @@ async def async_main(context):
     ]
 
     log.info('Verifying APKs\' signatures...')
-    [jarsigner.verify(context, apk_path) for apk_path in all_apks_paths]
+    for apk_path in all_apks_paths:
+        jarsigner.verify(context, apk_path)
+        manifest.verify(context, apk_path)
 
     if task.extract_android_product_from_scopes(context) == 'focus':
         log.warn('Focus does not upload strings automatically. Skipping Google Play strings search.')
