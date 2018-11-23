@@ -226,9 +226,9 @@ async def test_sign_file_with_autograph(context, mocker, to, expected):
 # Will need to bump Autograph version in .travis.yml file
 @pytest.mark.asyncio
 @pytest.mark.parametrize('to,expected,scope', ((
-    'to', 'to', 'autograph_fennec_sha1',
+    'to', 'to', 'autograph_apk_fennec_sha1',
 ), (
-    None, 'from', 'autograph_fennec_sha1',
+    None, 'from', 'autograph_apk_fennec_sha1',
 )))
 async def test_sign_custom_apk_with_autograph(context, mocker, to, expected, scope):
     open_mock = mocker.mock_open(read_data=b'0xdeadbeef')
