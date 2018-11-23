@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [9.5.1] - 2018-11-22
+### Fixed
+- APK SHA1 detection
+
 ## [9.5.0] - 2018-11-22
 ### Changed
 - Renamed `autograph_fennec_sha1` into `autograph_apk_fennec_sha1`. It was unused.
