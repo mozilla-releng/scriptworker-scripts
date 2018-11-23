@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.0] - 2018-11-23
+
+### Changed
+* Digest algorithm is not checked by jarsigner anymore. Instead, pushapkscript parses `META-INF/MANIFEST.MF`. This allows several digests to be used. Otherwise jarsigner inconsistently reports one of the digests.
+
 
 ## [0.8.0] - 2018-06-22
 
@@ -14,11 +19,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 * `google_play_track` in task payload can now be a random string. Value is enforced by mozapkpublisher.
 
+
 ## [0.7.0] - 2018-04-27
 
 ### Added
 * Support for Firefox Focus
 * Support for Google Play's new internal track.
+
 
 ## [0.6.0] - 2018-04-20
 
