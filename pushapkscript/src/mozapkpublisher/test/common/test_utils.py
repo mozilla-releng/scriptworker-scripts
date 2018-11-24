@@ -27,7 +27,7 @@ def test_download_file():
     with aioresponses() as mocked:
         loop = asyncio.get_event_loop()
         origin_data = b'a' * 1025
-        mocked.get('https://dummy-url.tld/file', status=200, body=origin_data)
+        mocked.get('https://dummy-url.tld/file', status=200, body=origin_data, headers={'content-length': '0'})
         with tempfile.NamedTemporaryFile() as temp_file:
             loop.run_until_complete(download(temp_file))
             temp_file.seek(0)
