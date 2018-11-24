@@ -223,4 +223,5 @@ if __name__ == '__main__':
 
     myScript = GetAPK()
     signal.signal(signal.SIGINT, myScript.signal_handler)
-    asyncio.run(myScript.run())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(myScript.run())

@@ -1,6 +1,6 @@
-import requests
 import aiohttp
-import asyncio
+import pytest
+import requests
 import tempfile
 
 from aioresponses import aioresponses
@@ -17,19 +17,14 @@ def test_load_json_url(monkeypatch):
     response_mock.json.assert_called_once_with()
 
 
-def test_download_file():
-    # This is defined as a separate function so we don't get a warning about a "session being created outside of
-    # a co-routine
-    async def download(temp_file):
-        async with aiohttp.ClientSession() as session:
-            await download_file(session, 'https://dummy-url.tld/file', temp_file.name)
-
+@pytest.mark.asyncio
+async def test_download_file():
     with aioresponses() as mocked:
-        loop = asyncio.get_event_loop()
         origin_data = b'a' * 1025
         mocked.get('https://dummy-url.tld/file', status=200, body=origin_data, headers={'content-length': '0'})
         with tempfile.NamedTemporaryFile() as temp_file:
-            loop.run_until_complete(download(temp_file))
+            async with aiohttp.ClientSession() as session:
+                await download_file(session, 'https://dummy-url.tld/file', temp_file.name)
             temp_file.seek(0)
             data = temp_file.read()
 
