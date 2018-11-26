@@ -6,6 +6,17 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[3.3.0] = (2018-11-26)
+----------------------
+
+Added
+~~~~~
+
+- Imported tests from build-tools. (`#42 <https://github.com/mozilla-releng/balrogscript/issues/42>`_)
+- Added `suffixes` to `submit-locale` action to update multiple blobs. (`#43 <https://github.com/mozilla-releng/balrogscript/issues/43>`_)
+- Added `update_line` to `submit-toplevel` to create multiple blobs with different update metadata. (`#43 <https://github.com/mozilla-releng/balrogscript/issues/43>`_)
+
+
 [3.2.1] = (2018-11-21)
 ----------------------
 
