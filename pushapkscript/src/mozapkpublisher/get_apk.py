@@ -85,7 +85,8 @@ class GetAPK(Base):
         for api_suffix in self.get_api_suffix(version, architecture):
             apk_base_url = self.generate_apk_base_url(version, build, locale, api_suffix)
             urls_and_locations = craft_apk_and_checksums_url_and_download_locations(
-                apk_base_url, self.config.download_directory, version, build, locale, architecture
+                apk_base_url, self.config.download_directory, version, build, locale, architecture,
+                api_suffix, self.config.latest_nightly
             )
             apk = urls_and_locations['apk']
             checksums = urls_and_locations['checksums']
@@ -108,6 +109,16 @@ class GetAPK(Base):
             self.download(version, build, architecture, locale)
 
     def run(self):
+        # For latest-nightly, there's only one build, and the only locale is "en-US"
+        # Perhaps instead of custom validation, this behaviour/validation should happen in our argparse validation.
+        # The only downside to specifying this within argparse is that the best solution (IMHO) is
+        # with subcommands (https://stackoverflow.com/a/17909525), but that's a breaking change
+        if self.config.latest_nightly and (
+                self.config.build != self.parser.get_default('build') or
+                self.config.locale != self.parser.get_default('locale')):
+            print('None of the arguments --build, --locale and --version can be used with --latest-nightly')
+            sys.exit(1)
+
         version = self.get_version_name()
         architecture = self.config.arch
         build = str(self.config.build)
@@ -120,7 +131,8 @@ class GetAPK(Base):
             self.download(version, build, architecture, locale)
 
 
-def craft_apk_and_checksums_url_and_download_locations(base_apk_url, download_directory, version, build, locale, architecture):
+def craft_apk_and_checksums_url_and_download_locations(base_apk_url, download_directory, version, build, locale,
+                                                       architecture, api_suffix, latest_nightly):
     file_names = _craft_apk_and_checksums_file_names(version, locale, architecture)
 
     urls_and_locations = {
@@ -130,7 +142,12 @@ def craft_apk_and_checksums_url_and_download_locations(base_apk_url, download_di
         } for extension, file_name in file_names.items()
     }
 
-    if get_firefox_major_version_number(version) >= 59:
+    if latest_nightly:
+        urls_and_locations['checksums']['url'] = \
+            '{}/nightly/latest-mozilla-central-android-{}/en-US/fennec-{}.en-US.android-{}.checksums'.format(
+                FTP_BASE_URL, api_suffix, version, _get_architecture_in_file_name(architecture)
+            )
+    elif get_firefox_major_version_number(version) >= 59:
         urls_and_locations['checksums']['url'] = '{}/{}'.format(
             generate_base_directory(version, build), 'SHA512SUMS'
         )
