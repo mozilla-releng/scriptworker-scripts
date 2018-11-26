@@ -27,18 +27,16 @@ log = logging.getLogger(__name__)
 
 
 # create_locale_submitter {{{1
-def create_locale_submitter(e, balrog_auth, config):
+def create_locale_submitter(e, extra_suffix, balrog_auth, config):
     auth = balrog_auth
 
     if "tc_release" in e:
         log.info("Taskcluster Release style Balrog submission")
 
-        complete_info = e['completeInfo']
-        partial_info = e.get('partialInfo')
         submitter = ReleaseSubmitterV9(
             api_root=config['api_root'], auth=auth,
             dummy=config['dummy'],
-            suffix=e.get('blob_suffix', ''),
+            suffix=e.get('blob_suffix', '') + extra_suffix,
         )
 
         data = {
@@ -51,17 +49,15 @@ def create_locale_submitter(e, balrog_auth, config):
             'hashFunction': e['hashType'],
             'extVersion': e['extVersion'],
             'buildID': e['buildid'],
-            'completeInfo': complete_info
+            'completeInfo': e['completeInfo'],
         }
-        if partial_info:
-            data['partialInfo'] = partial_info
+        if 'partialInfo' in e:
+            data['partialInfo'] = e['partialInfo']
         return submitter, data
 
     elif "tc_nightly" in e:
         log.info("Taskcluster Nightly style Balrog submission")
 
-        complete_info = e['completeInfo']
-        partial_info = e.get('partialInfo')
         submitter = NightlySubmitterV4(api_root=config['api_root'], auth=auth,
                                        dummy=config['dummy'],
                                        url_replacements=e.get('url_replacements', []))
@@ -75,10 +71,10 @@ def create_locale_submitter(e, balrog_auth, config):
             'locale': e["locale"],
             'hashFunction': e['hashType'],
             'extVersion': e["extVersion"],
-            'completeInfo': complete_info
+            'completeInfo': e['completeInfo'],
         }
-        if partial_info:
-            data['partialInfo'] = partial_info
+        if 'partialInfo' in e:
+            data['partialInfo'] = e['partialInfo']
         return submitter, data
     else:
         raise RuntimeError("Unknown Balrog submission style. Check manifest.json")
@@ -92,11 +88,14 @@ def submit_locale(task, config, balrog_auth):
     # Read the manifest from disk
     manifest = get_manifest(config, upstream_artifacts)
 
+    suffixes = task['payload'].get('suffixes', [''])
+
     for e in manifest:
-        # Get release metadata from manifest
-        submitter, release = create_locale_submitter(e, balrog_auth, config)
-        # Connect to balrog and submit the metadata
-        retry(lambda: submitter.run(**release))
+        for suffix in suffixes:
+            # Get release metadata from manifest
+            submitter, release = create_locale_submitter(e, suffix, balrog_auth, config)
+            # Connect to balrog and submit the metadata
+            retry(lambda: submitter.run(**release))
 
 
 # schedule {{{1
@@ -145,33 +144,37 @@ def submit_toplevel(task, config, balrog_auth):
             version, build_number = v.split("build")
             partials[version] = {"buildNumber": build_number}
 
-    creator = create_creator(
-        api_root=config['api_root'], auth=auth,
-        dummy=config['dummy'],
-        suffix=task['payload'].get('blob_suffix', ''),
-        complete_mar_filename_pattern=task['payload'].get('complete_mar_filename_pattern'),
-        complete_mar_bouncer_product_pattern=task['payload'].get('complete_mar_bouncer_product_pattern'),
-    )
+    suffixes = task['payload'].get('update_line', {}).keys() or ['']
+
+    for suffix in suffixes:
+        creator = create_creator(
+            api_root=config['api_root'], auth=auth,
+            dummy=config['dummy'],
+            suffix=task['payload'].get('blob_suffix', '') + suffix,
+            complete_mar_filename_pattern=task['payload'].get('complete_mar_filename_pattern'),
+            complete_mar_bouncer_product_pattern=task['payload'].get('complete_mar_bouncer_product_pattern'),
+        )
+
+        retry(lambda: creator.run(
+            appVersion=task['payload']['app_version'],
+            productName=task['payload']['product'].capitalize(),
+            version=task['payload']['version'],
+            buildNumber=task['payload']['build_number'],
+            updateChannels=task['payload']['channel_names'],
+            ftpServer=task['payload']['archive_domain'],
+            bouncerServer=task['payload']['download_domain'],
+            enUSPlatforms=task['payload']['platforms'],
+            hashFunction='sha512',
+            partialUpdates=partials,
+            requiresMirrors=task['payload']['require_mirrors'],
+            updateLine=task['payload'].get('update_line', {}).get(suffix),
+        ))
+
     pusher = create_pusher(
         api_root=config['api_root'], auth=auth,
         dummy=config['dummy'],
         suffix=task['payload'].get('blob_suffix', ''),
     )
-
-    retry(lambda: creator.run(
-        appVersion=task['payload']['app_version'],
-        productName=task['payload']['product'].capitalize(),
-        version=task['payload']['version'],
-        buildNumber=task['payload']['build_number'],
-        updateChannels=task['payload']['channel_names'],
-        ftpServer=task['payload']['archive_domain'],
-        bouncerServer=task['payload']['download_domain'],
-        enUSPlatforms=task['payload']['platforms'],
-        hashFunction='sha512',
-        partialUpdates=partials,
-        requiresMirrors=task['payload']['require_mirrors'],
-    ))
-
     retry(lambda: pusher.run(
         productName=task['payload']['product'].capitalize(),
         version=task['payload']['version'],
