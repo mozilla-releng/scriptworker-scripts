@@ -52,28 +52,41 @@ def test_get_api_suffix(version, architure, expected):
 
 def test_craft_apk_and_checksums_url_and_download_locations():
     assert craft_apk_and_checksums_url_and_download_locations(
-        'https://ftp.mozilla.org/pub/mobile/candidates/52.0b1-candidates/build1/android-api-15/multi',
-        '/a/fake/download/directory', '52.0b1', 1, 'multi', 'arm'
+        'https://ftp.mozilla.org/pub/mobile/candidates/64.0b3-candidates/build1/android-api-16/multi',
+        '/a/fake/download/directory', '64.0b3', 1, 'multi', 'arm', 'api-16', False
     ) == {
         'apk': {
-            'url': 'https://ftp.mozilla.org/pub/mobile/candidates/52.0b1-candidates/build1/android-api-15/multi/fennec-52.0b1.multi.android-arm.apk',
-            'download_location': '/a/fake/download/directory/fennec-52.0b1.multi.android-arm.apk',
+            'url': 'https://ftp.mozilla.org/pub/mobile/candidates/64.0b3-candidates/build1/android-api-16/multi/fennec-64.0b3.multi.android-arm.apk',
+            'download_location': '/a/fake/download/directory/fennec-64.0b3.multi.android-arm.apk',
         },
         'checksums': {
-            'url': 'https://ftp.mozilla.org/pub/mobile/candidates/52.0b1-candidates/build1/android-api-15/multi/fennec-52.0b1.multi.android-arm.checksums',
-            'download_location': '/a/fake/download/directory/fennec-52.0b1.multi.android-arm.checksums',
+            'url': 'https://ftp.mozilla.org/pub/mobile/candidates/64.0b3-candidates/build1/SHA512SUMS',
+            'download_location': '/a/fake/download/directory/fennec-64.0b3.multi.android-arm.checksums',
         },
     }
     assert craft_apk_and_checksums_url_and_download_locations(
+        'https://ftp.mozilla.org/pub/mobile/candidates/52.0b1-candidates/build1/android-api-15/multi',
+        '/a/fake/download/directory', '52.0b1', 1, 'multi', 'arm', 'api-15', False
+    ) == {
+           'apk': {
+               'url': 'https://ftp.mozilla.org/pub/mobile/candidates/52.0b1-candidates/build1/android-api-15/multi/fennec-52.0b1.multi.android-arm.apk',
+               'download_location': '/a/fake/download/directory/fennec-52.0b1.multi.android-arm.apk',
+           },
+           'checksums': {
+               'url': 'https://ftp.mozilla.org/pub/mobile/candidates/52.0b1-candidates/build1/android-api-15/multi/fennec-52.0b1.multi.android-arm.checksums',
+               'download_location': '/a/fake/download/directory/fennec-52.0b1.multi.android-arm.checksums',
+           },
+       }
+    assert craft_apk_and_checksums_url_and_download_locations(
         'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-api-15',
-        '/a/fake/download/directory', '53.0a1', 1, 'multi', 'arm'
+        '/a/fake/download/directory', '53.0a1', 1, 'multi', 'arm', 'api-15', True
     ) == {
         'apk': {
             'url': 'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-api-15/fennec-53.0a1.multi.android-arm.apk',
             'download_location': '/a/fake/download/directory/fennec-53.0a1.multi.android-arm.apk',
         },
         'checksums': {
-            'url': 'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-api-15/fennec-53.0a1.multi.android-arm.checksums',
+            'url': 'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-api-15/en-US/fennec-53.0a1.en-US.android-arm.checksums',
             'download_location': '/a/fake/download/directory/fennec-53.0a1.multi.android-arm.checksums',
         },
     }
