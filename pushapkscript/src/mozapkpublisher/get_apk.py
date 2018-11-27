@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import aiohttp
+import asyncio
 import sys
 import os
 import re
@@ -76,7 +78,7 @@ class GetAPK(Base):
                 'api-{}'.format(api_level) for api_level in api_levels
             ]
 
-    def download(self, version, build, architecture, locale):
+    async def download(self, session, version, build, architecture, locale):
         try:
             os.makedirs(self.config.download_directory)
         except FileExistsError:
@@ -91,8 +93,10 @@ class GetAPK(Base):
             apk = urls_and_locations['apk']
             checksums = urls_and_locations['checksums']
 
-            download_file(apk['url'], apk['download_location'])
-            download_file(checksums['url'], checksums['download_location'])
+            await asyncio.gather(
+                download_file(session, apk['url'], apk['download_location']),
+                download_file(session, checksums['url'], checksums['download_location'])
+            )
 
             check_apk_against_checksum_file(apk['download_location'], checksums['download_location'])
 
@@ -104,11 +108,14 @@ class GetAPK(Base):
         return self.config.version
 
     # Download all the archs if none is given
-    def download_all(self, version, build, locale):
-        for architecture in self.arch_values:
-            self.download(version, build, architecture, locale)
+    async def download_all(self, session, version, build, locale):
+        download_coroutines = [
+            self.download(session, version, build, architecture, locale)
+            for architecture in self.arch_values
+        ]
+        await asyncio.gather(*download_coroutines)
 
-    def run(self):
+    async def run(self):
         # For latest-nightly, there's only one build, and the only locale is "en-US"
         # Perhaps instead of custom validation, this behaviour/validation should happen in our argparse validation.
         # The only downside to specifying this within argparse is that the best solution (IMHO) is
@@ -118,17 +125,18 @@ class GetAPK(Base):
                 self.config.locale != self.parser.get_default('locale')):
             print('None of the arguments --build, --locale and --version can be used with --latest-nightly')
             sys.exit(1)
-
         version = self.get_version_name()
         architecture = self.config.arch
         build = str(self.config.build)
         locale = self.config.locale
 
         logger.info('Downloading version "{}" build #{} for arch "{}" (locale "{}")'.format(version, build, architecture, locale))
-        if architecture == "all":
-            self.download_all(version, build, locale)
-        else:
-            self.download(version, build, architecture, locale)
+
+        async with aiohttp.ClientSession() as session:
+            if architecture == "all":
+                await self.download_all(session, version, build, locale)
+            else:
+                await self.download(session, version, build, architecture, locale)
 
 
 def craft_apk_and_checksums_url_and_download_locations(base_apk_url, download_directory, version, build, locale,
@@ -231,4 +239,5 @@ if __name__ == '__main__':
 
     myScript = GetAPK()
     signal.signal(signal.SIGINT, myScript.signal_handler)
-    myScript.run()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(myScript.run())

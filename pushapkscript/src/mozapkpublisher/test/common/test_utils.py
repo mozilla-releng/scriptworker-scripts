@@ -1,7 +1,9 @@
+import aiohttp
+import pytest
 import requests
-import requests_mock
 import tempfile
 
+from aioresponses import aioresponses
 from unittest.mock import MagicMock
 
 from mozapkpublisher.common.utils import load_json_url, file_sha512sum, download_file
@@ -15,16 +17,18 @@ def test_load_json_url(monkeypatch):
     response_mock.json.assert_called_once_with()
 
 
-def test_download_file(monkeypatch):
-    with requests_mock.Mocker() as m:
+@pytest.mark.asyncio
+async def test_download_file():
+    with aioresponses() as mocked:
         origin_data = b'a' * 1025
-        m.get('https://dummy-url.tld/file', content=origin_data)
-
+        mocked.get('https://dummy-url.tld/file', status=200, body=origin_data, headers={'content-length': '0'})
         with tempfile.NamedTemporaryFile() as temp_file:
-            download_file('https://dummy-url.tld/file', temp_file.name)
+            async with aiohttp.ClientSession() as session:
+                await download_file(session, 'https://dummy-url.tld/file', temp_file.name)
             temp_file.seek(0)
             data = temp_file.read()
-    assert data == origin_data
+
+        assert data == origin_data
 
 
 def test_file_sha512sum():

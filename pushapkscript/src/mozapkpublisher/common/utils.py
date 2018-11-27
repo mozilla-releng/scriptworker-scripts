@@ -1,20 +1,25 @@
-import requests
+import aiohttp
 import hashlib
+import humanize
+import logging
+import os
+import requests
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 
 def load_json_url(url):
     return requests.get(url).json()
 
 
-def download_file(url, local_file_path):
-    r = requests.get(url, stream=True)
-    r.raise_for_status()
-
-    with open(local_file_path, 'wb') as f:
-        for chunk in r.iter_content(chunk_size=1024):
-            if chunk:   # filter out keep-alive new chunks
-                f.write(chunk)
+async def download_file(session: aiohttp.ClientSession, url, local_file_path):
+    async with session.get(url, raise_for_status=True) as response:
+        logger.info('Downloading... {} ({}) to "{}"'
+                    .format(url, humanize.naturalsize(response.headers['content-length']), local_file_path))
+        with open(local_file_path, 'wb') as f:
+            f.write(await response.read())
+            logger.info('Downloaded "{}"'.format(os.path.basename(local_file_path)))
 
 
 def file_sha512sum(file_path):
