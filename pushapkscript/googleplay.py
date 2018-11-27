@@ -81,7 +81,7 @@ def should_commit_transaction(context):
 def get_google_play_strings_path(artifacts_per_task_id, failed_artifacts_per_task_id):
     if failed_artifacts_per_task_id:
         _check_google_play_string_is_the_only_failed_task(failed_artifacts_per_task_id)
-        log.warn("Google Play strings not found. Listings and what's new section won't be updated")
+        log.warning("Google Play strings not found. Listings and what's new section won't be updated")
         return None
 
     path = _find_unique_google_play_strings_file_in_dict(artifacts_per_task_id)

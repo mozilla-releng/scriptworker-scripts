@@ -32,7 +32,7 @@ async def async_main(context):
         manifest.verify(context, apk_path)
 
     if task.extract_android_product_from_scopes(context) == 'focus':
-        log.warn('Focus does not upload strings automatically. Skipping Google Play strings search.')
+        log.warning('Focus does not upload strings automatically. Skipping Google Play strings search.')
         google_play_strings_path = None
     else:
         log.info('Finding whether Google Play strings can be updated...')
@@ -51,12 +51,12 @@ async def async_main(context):
 def _log_warning_forewords(context):
     if googleplay.is_allowed_to_push_to_google_play(context):
         if googleplay.should_commit_transaction(context):
-            log.warn('You will publish APKs to Google Play. This action is irreversible,\
+            log.warning('You will publish APKs to Google Play. This action is irreversible,\
 if no error is detected either by this script or by Google Play.')
         else:
-            log.warn('APKs will be submitted to Google Play, but no change will not be committed.')
+            log.warning('APKs will be submitted to Google Play, but no change will not be committed.')
     else:
-        log.warn('You do not have the rights to reach Google Play. *All* requests will be mocked.')
+        log.warning('You do not have the rights to reach Google Play. *All* requests will be mocked.')
 
 
 def get_default_config():
