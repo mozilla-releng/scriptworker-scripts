@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.0.0] = (2018-11-28)
+-----------------------
+
+Added
+~~~~~
+
+- Added suppport for declarative artifacts
+  (`#1466714 <https://bugzilla.mozilla.org/show_bug.cgi?id=1466714>`_)
+
 [7.10.2] = (2018-11-07)
 -----------------------
 
