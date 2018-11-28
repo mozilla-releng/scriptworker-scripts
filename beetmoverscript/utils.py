@@ -161,7 +161,8 @@ def generate_beetmover_template_args(context):
     elif 'locale' in task['payload']:
         tmpl_args['locales'] = [task['payload']['locale']]
 
-    product_name = get_product_name(release_props["appName"].lower(), release_props["stage_platform"])
+    product_name = get_product_name(
+        release_props["appName"].lower(), release_props["stage_platform"])
     if tmpl_args.get('locales') and (
             # we only apply the repacks template if not english or android "multi" locale
             set(tmpl_args.get('locales')).isdisjoint({'en-US', 'multi'})):
@@ -286,3 +287,22 @@ def get_bucket_name(context, product):
 
 def get_bucket_url_prefix(context):
     return context.config['bucket_config'][context.bucket]['url_prefix']
+
+
+def validated_task_id(task_id):
+    """Validate the format of a taskcluster taskId."""
+    pattern = r'^[A-Za-z0-9_-]{8}[Q-T][A-Za-z0-9_-][CGKOSWaeimquy26-][A-Za-z0-9_-]{10}[AQgw]$'
+    if re.fullmatch(pattern, task_id):
+        return task_id
+    raise ValueError("No valid taskId found.")
+
+
+def extract_file_config_from_artifact_map(artifact_map, path, task_id, locale):
+    """Return matching artifact map config."""
+    for entry in artifact_map:
+        if entry['taskId'] != task_id or entry['locale'] != locale:
+            continue
+        if not entry['paths'].get(path):
+            continue
+        return entry['paths'][path]
+    raise TaskVerificationError('No artifact map entry for {}/{} {}'.format(task_id, locale, path))

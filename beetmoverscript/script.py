@@ -29,7 +29,7 @@ from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
     get_upstream_artifacts, get_release_props,
     add_checksums_to_artifacts, get_task_bucket, get_task_action, validate_bucket_paths,
-    get_updated_buildhub_artifact
+    get_updated_buildhub_artifact, get_taskId_from_full_path
 )
 from beetmoverscript.utils import (
     get_hash, generate_beetmover_manifest,
@@ -38,7 +38,7 @@ from beetmoverscript.utils import (
     get_bucket_name, get_bucket_url_prefix,
     is_release_action, is_promotion_action, get_partials_props,
     get_product_name, is_partner_action, is_partner_private_task,
-    is_partner_public_task, write_json
+    is_partner_public_task, write_json, extract_file_config_from_artifact_map
 )
 
 log = logging.getLogger(__name__)
@@ -53,21 +53,7 @@ async def push_to_nightly(context):
 
     Upon successful transfer, generate checksums files and manifests to be
     consumed downstream by balrogworkers."""
-    # determine artifacts to beetmove
-    context.artifacts_to_beetmove = get_upstream_artifacts(context)
-
     context.release_props = get_release_props(context)
-
-    # generate beetmover mapping manifest
-    mapping_manifest = generate_beetmover_manifest(context)
-
-    # perform another validation check against the bucket path
-    validate_bucket_paths(context.bucket, mapping_manifest['s3_bucket_path'])
-
-    # some files to-be-determined via script configs need to have their
-    # contents pretty named, so doing it here before even beetmoving begins
-    blobs = context.config.get('blobs_needing_prettynaming_contents', [])
-    alter_unpretty_contents(context, blobs, mapping_manifest)
 
     # balrog_manifest is written and uploaded as an artifact which is used by
     # a subsequent balrogworker task in the release graph. Balrogworker uses
@@ -83,10 +69,30 @@ async def push_to_nightly(context):
     # upload it to S3
     context.checksums = dict()
 
-    # for each artifact in manifest
-    #   a. map each upstream artifact to pretty name release bucket format
-    #   b. upload to corresponding S3 location
-    await move_beets(context, context.artifacts_to_beetmove, mapping_manifest)
+    # TODO: if artifactMap passes schema validation
+    if context.task['payload'].get('artifactMap'):
+        # determine artifacts to beetmove
+        context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
+        await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task['payload']['artifactMap'])
+    else:
+        # determine artifacts to beetmove
+        context.artifacts_to_beetmove = get_upstream_artifacts(context)
+
+        # generate beetmover mapping manifest
+        mapping_manifest = generate_beetmover_manifest(context)
+
+        # perform another validation check against the bucket path
+        validate_bucket_paths(context.bucket, mapping_manifest['s3_bucket_path'])
+
+        # some files to-be-determined via script configs need to have their
+        # contents pretty named, so doing it here before even beetmoving begins
+        blobs = context.config.get('blobs_needing_prettynaming_contents', [])
+        alter_unpretty_contents(context, blobs, mapping_manifest)
+
+        # for each artifact in manifest
+        #   a. map each upstream artifact to pretty name release bucket format
+        #   b. upload to corresponding S3 location
+        await move_beets(context, context.artifacts_to_beetmove, manifest=mapping_manifest)
 
     #  write balrog_manifest to a file and add it to list of artifacts
     add_balrog_manifest_to_artifacts(context)
@@ -163,21 +169,30 @@ async def push_to_maven(context):
     context.checksums = dict()  # Needed by downstream calls
     context.raw_balrog_manifest = dict()    # Needed by downstream calls
 
-    mapping_manifest = generate_beetmover_manifest(context)
-    validate_bucket_paths(context.bucket, mapping_manifest['s3_bucket_path'])
+    if context.task['payload'].get('artifactMap'):
+        context.artifacts_to_beetmove = _extract_and_check_maven_artifacts_to_beetmove(
+            artifacts_to_beetmove,
+            context.config.get('zip_max_file_size_in_mb', DEFAULT_ZIP_MAX_FILE_SIZE_IN_MB),
+            artifact_map=context.task['payload'].get('artifactMap')
+        )
 
-    context.artifacts_to_beetmove = _extract_and_check_maven_artifacts_to_beetmove(
-        artifacts_to_beetmove,
-        mapping_manifest,
-        context.config.get('zip_max_file_size_in_mb', DEFAULT_ZIP_MAX_FILE_SIZE_IN_MB)
-    )
+        await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task['payload']['artifactMap'])
+    else:
+        mapping_manifest = generate_beetmover_manifest(context)
+        validate_bucket_paths(context.bucket, mapping_manifest['s3_bucket_path'])
 
-    await move_beets(context, context.artifacts_to_beetmove, mapping_manifest)
+        context.artifacts_to_beetmove = _extract_and_check_maven_artifacts_to_beetmove(
+            artifacts_to_beetmove,
+            context.config.get('zip_max_file_size_in_mb', DEFAULT_ZIP_MAX_FILE_SIZE_IN_MB),
+            mapping_manifest=mapping_manifest
+        )
+
+        await move_beets(context, context.artifacts_to_beetmove, manifest=mapping_manifest)
 
 
-def _extract_and_check_maven_artifacts_to_beetmove(artifacts, mapping_manifest, zip_max_file_size_in_mb):
+def _extract_and_check_maven_artifacts_to_beetmove(artifacts, zip_max_file_size_in_mb, mapping_manifest=None, artifact_map=None):
     expected_files = maven_utils.get_maven_expected_files_per_archive_per_task_id(
-        artifacts, mapping_manifest
+        artifacts, mapping_manifest=mapping_manifest, artifact_map=artifact_map
     )
 
     extracted_paths_per_archive = zip.check_and_extract_zip_archives(
@@ -191,12 +206,17 @@ def _extract_and_check_maven_artifacts_to_beetmove(artifacts, mapping_manifest, 
         raise NotImplementedError('More than 1 archive extracted. Only 1 is supported at once')
     extracted_paths_per_relative_path = list(extracted_paths_per_archive.values())[0]
 
-    return {
-        'en-US': {
-            os.path.basename(path_in_archive): full_path
-            for path_in_archive, full_path in extracted_paths_per_relative_path.items()
+    if artifact_map:
+        return {
+            'en-US': extracted_paths_per_relative_path
         }
-    }
+    else:
+        return {
+            'en-US': {
+                os.path.basename(path_in_archive): full_path
+                for path_in_archive, full_path in extracted_paths_per_relative_path.items()
+            }
+        }
 
 
 # copy_beets {{{1
@@ -293,7 +313,7 @@ async def async_main(context):
 
 
 # move_beets {{{1
-async def move_beets(context, artifacts_to_beetmove, manifest):
+async def move_beets(context, artifacts_to_beetmove, manifest=None, artifact_map=None):
     beets = []
 
     for locale in artifacts_to_beetmove:
@@ -316,26 +336,49 @@ async def move_beets(context, artifacts_to_beetmove, manifest):
         # move beets
         for artifact in artifacts_to_beetmove[locale]:
             source = artifacts_to_beetmove[locale][artifact]
-            artifact_pretty_name = manifest['mapping'][locale][artifact]['s3_key']
 
             # update buildhub.json file
             # if there is no installer then there will be no buildhub.json artifact
             # in logical coding terms, this means that if installer_path is an empty
             # string, then this if-block is never reached
             if artifact == BUILDHUB_ARTIFACT:
-                write_json(source, get_updated_buildhub_artifact(source, installer_path, context, manifest, locale))
+                write_json(source, get_updated_buildhub_artifact(
+                    source, installer_path, context, locale, manifest=manifest, artifact_map=artifact_map))
 
-            destinations = [os.path.join(manifest["s3_bucket_path"],
-                                         dest) for dest in
-                            manifest['mapping'][locale][artifact]['destinations']]
+            if artifact_map:
+                task_id = get_taskId_from_full_path(source)
+                # Should only ever be one (taskId, locale) match.
+                map_entry = extract_file_config_from_artifact_map(
+                    artifact_map, artifact, task_id, locale)
 
-            balrog_manifest = manifest['mapping'][locale][artifact].get('update_balrog_manifest')
-            # For partials
-            from_buildid = manifest['mapping'][locale][artifact].get('from_buildid')
+                artifact_pretty_name = map_entry['checksums_path']
+                destinations = map_entry['destinations']
+                update_balrog_manifest = map_entry.get('update_balrog_manifest', False)
+                balrog_format = map_entry.get('balrog_format', '')
+                from_buildid = map_entry.get('from_buildid')
+            else:
+                artifact_pretty_name = manifest['mapping'][locale][artifact]['s3_key']
+                destinations = [os.path.join(manifest["s3_bucket_path"],
+                                             dest) for dest in
+                                manifest['mapping'][locale][artifact]['destinations']]
+                update_balrog_manifest = manifest['mapping'][locale][artifact].get(
+                    'update_balrog_manifest')
+                # Adjust old template format.
+                # artifact map specifies these separately.
+                # templates say "update_balrog_manifest": true
+                # or "update_balrog_manifest": {"format": mozinfo}
+                if isinstance(update_balrog_manifest, dict):
+                    balrog_format = update_balrog_manifest.get('format')
+                    update_balrog_manifest = True
+                else:
+                    balrog_format = ''
+                from_buildid = manifest['mapping'][locale][artifact].get('from_buildid')
+
             beets.append(
                 asyncio.ensure_future(
                     move_beet(context, source, destinations, locale=locale,
-                              update_balrog_manifest=balrog_manifest,
+                              update_balrog_manifest=update_balrog_manifest,
+                              balrog_format=balrog_format,
                               from_buildid=from_buildid,
                               artifact_pretty_name=artifact_pretty_name)
                 )
@@ -358,7 +401,7 @@ async def move_beets(context, artifacts_to_beetmove, manifest):
 
 # move_beet {{{1
 async def move_beet(context, source, destinations, locale,
-                    update_balrog_manifest, from_buildid, artifact_pretty_name):
+                    update_balrog_manifest, balrog_format, from_buildid, artifact_pretty_name):
     await retry_upload(context=context, destinations=destinations, path=source)
 
     if context.checksums.get(artifact_pretty_name) is None:
@@ -376,10 +419,8 @@ async def move_beet(context, source, destinations, locale,
         if from_buildid:
             context.raw_balrog_manifest[locale].setdefault('partialInfo', []).append(balrog_info)
         else:
-            if update_balrog_manifest is True:
-                update_balrog_manifest = {'format': ''}
-            context.raw_balrog_manifest[locale].setdefault('completeInfo', {})[
-                update_balrog_manifest['format']] = balrog_info
+            context.raw_balrog_manifest[locale].setdefault(
+                'completeInfo', {})[balrog_format] = balrog_info
 
 
 # move_partner_beets {{{1
@@ -460,7 +501,8 @@ def get_destination_for_partner_repack_path(context, manifest, full_path, locale
             locale, {'version': version, 'build_number': build_number},
             PARTNER_REPACK_PUBLIC_REGEXES
         )
-        prefix = PARTNER_REPACK_PUBLIC_PREFIX_TMPL.format(version=version, build_number=build_number)
+        prefix = PARTNER_REPACK_PUBLIC_PREFIX_TMPL.format(
+            version=version, build_number=build_number)
         return os.path.join(prefix, pretty_full_path)
 
 

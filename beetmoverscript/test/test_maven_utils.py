@@ -114,8 +114,120 @@ from beetmoverscript.maven_utils import get_maven_expected_files_per_archive_per
 def test_get_maven_expected_files_per_archive_per_task_id(upstream_artifacts_per_task_id, mapping_manifest, expected, raises):
     if raises:
         with pytest.raises(ValueError):
-            get_maven_expected_files_per_archive_per_task_id(upstream_artifacts_per_task_id, mapping_manifest)
+            get_maven_expected_files_per_archive_per_task_id(
+                upstream_artifacts_per_task_id, mapping_manifest=mapping_manifest)
     else:
         assert get_maven_expected_files_per_archive_per_task_id(
-            upstream_artifacts_per_task_id, mapping_manifest
+            upstream_artifacts_per_task_id, mapping_manifest=mapping_manifest
+        ) == expected
+
+
+@pytest.mark.parametrize('upstream_artifacts_per_task_id, artifact_map, expected, raises', ((
+    {
+        'someTaskId': [{
+            'paths': ['/work_dir/cot/someTaskId/public/build/target.maven.zip'],
+        }],
+    },
+    [
+        {
+            'taskId': 'someTaskId',
+            'paths': {
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.aar': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.aar.md5': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.aar.sha1': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.pom': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.pom.md5': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.pom.sha1': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-javadoc.jar': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-javadoc.jar.md5': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-javadoc.jar.sha1': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-sources.jar': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-sources.jar.md5': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-sources.jar.sha1': {},
+            }
+        }
+    ],
+    {
+        'someTaskId': {
+            '/work_dir/cot/someTaskId/public/build/target.maven.zip': [
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.aar',
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.aar.md5',
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.aar.sha1',
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.pom',
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.pom.md5',
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.pom.sha1',
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-javadoc.jar',
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-javadoc.jar.md5',
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-javadoc.jar.sha1',
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-sources.jar',
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-sources.jar.md5',
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-sources.jar.sha1',
+            ],
+        },
+    },
+    False,
+), (
+    {
+        'someTaskId': [{
+            'paths': ['/work_dir/cot/someTaskId/public/build/target.maven.zip'],
+        }],
+    },
+    [
+        {
+            'taskId': 'someOtherTaskId',
+            'paths': {
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.aar': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.aar.md5': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.aar.sha1': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.pom': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.pom.md5': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3.pom.sha1': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-javadoc.jar': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-javadoc.jar.md5': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-javadoc.jar.sha1': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-sources.jar': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-sources.jar.md5': {},
+                'org/mozilla/geckoview-beta-x86/62.0b3/geckoview-beta-x86-62.0b3-sources.jar.sha1': {},
+            }
+        }
+    ],
+    {},
+    StopIteration,
+), (
+    {
+        'someTaskId': [{
+            'paths': ['/work_dir/cot/someTaskId/public/build/target.maven.zip'],
+        }],
+    },
+    [
+        {
+            'taskId': 'someTaskId',
+            'no_paths': {}
+        }
+    ],
+    {},
+    KeyError,
+), (
+    {
+        'someTaskId': [{
+            'paths': ['/work_dir/cot/someTaskId/public/build/target.maven.zip'],
+        }],
+    },
+    [
+        {
+            'taskId': 'someTaskId',
+            'paths': 'not a dict'
+        }
+    ],
+    {},
+    AttributeError,
+)))
+def test_get_maven_expected_files_per_archive_per_task_id_with_map(upstream_artifacts_per_task_id, artifact_map, expected, raises):
+    if raises:
+        with pytest.raises(raises):
+            get_maven_expected_files_per_archive_per_task_id(
+                upstream_artifacts_per_task_id, artifact_map=artifact_map)
+    else:
+        assert get_maven_expected_files_per_archive_per_task_id(
+            upstream_artifacts_per_task_id, artifact_map=artifact_map
         ) == expected

@@ -43,7 +43,7 @@ mapping:
     target.apk:
       s3_key: fake-{{ version }}.{{ locale }}.target.apk
       destinations:
-        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix }}fake {{ version }}.{{ locale }}.target.apk
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.apk
         - latest-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.apk
 
 {% endfor %}

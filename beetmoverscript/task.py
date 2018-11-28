@@ -188,17 +188,22 @@ def update_props(context, props, platform_mapping):
     return props
 
 
-def get_updated_buildhub_artifact(path, installer_path, context, manifest, locale):
+def get_updated_buildhub_artifact(path, installer_path, context, locale, manifest=None, artifact_map=None):
     """
     Read the file into a dict, alter the fields below, and return the updated dict
     buildhub.json fields that should be changed: download.size, download.date, download.url
     """
     contents = utils.load_json(path)
     installer_name = os.path.basename(installer_path)
-    dest = manifest['mapping'][locale][installer_name]['destinations']
+    if artifact_map:
+        task_id = get_taskId_from_full_path(path)
+        cfg = utils.extract_file_config_from_artifact_map(artifact_map, installer_name, task_id, locale)
+        dest = cfg['destinations']
+    else:
+        dest = manifest['mapping'][locale][installer_name]['destinations']
     url_prefix = context.config["bucket_config"][context.bucket]["url_prefix"]
     # assume url_prefix is ASCII safe
-    url = urllib.parse.quote(urllib.parse.urljoin(manifest["s3_bucket_path"], dest[0]))
+    url = urllib.parse.quote(urllib.parse.urljoin(url_prefix, dest[0]))
 
     # Update fields
     contents['download']['size'] = utils.get_size(installer_path)
@@ -206,3 +211,19 @@ def get_updated_buildhub_artifact(path, installer_path, context, manifest, local
     contents['download']['url'] = urllib.parse.urljoin(url_prefix, url)
 
     return contents
+
+
+def get_taskId_from_full_path(full_path_artifact):
+    """ Temporary fix: Extract the taskId from a full path artifact
+    Input: '/src/beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.mozinfo.json'
+    Output: 'eSzfNqMZT_mSiQQXu8hyqg'
+    """
+    split_path = full_path_artifact.split(os.path.sep)
+    try:
+        cot_dir_index = split_path.index('cot')
+        possible_task_id = split_path[cot_dir_index+1]
+        return utils.validated_task_id(possible_task_id)
+    except (IndexError, ValueError):
+        raise ScriptWorkerTaskException(
+            "taskId unable to be extracted from path {}".format(full_path_artifact)
+        )

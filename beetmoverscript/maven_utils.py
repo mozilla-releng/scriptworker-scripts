@@ -3,14 +3,22 @@ import os
 _MAVEN_ZIP_SUFFIX = '.maven.zip'
 
 
-def get_maven_expected_files_per_archive_per_task_id(upstream_artifacts_per_task_id, mapping_manifest):
-    task_id, maven_zip_full_path = _get_task_id_and_full_path_of_maven_archive(upstream_artifacts_per_task_id)
+def get_maven_expected_files_per_archive_per_task_id(upstream_artifacts_per_task_id, mapping_manifest=None, artifact_map=None):
+    task_id, maven_zip_full_path = _get_task_id_and_full_path_of_maven_archive(
+        upstream_artifacts_per_task_id)
 
-    return {
-        task_id: {
-            maven_zip_full_path: _get_maven_expected_files_in_archive(mapping_manifest)
+    if artifact_map:
+        return {
+            task_id: {
+                maven_zip_full_path: _get_maven_expected_files_from_map(artifact_map, task_id)
+            }
         }
-    }
+    else:
+        return {
+            task_id: {
+                maven_zip_full_path: _get_maven_expected_files_in_archive(mapping_manifest)
+            }
+        }
 
 
 def _get_task_id_and_full_path_of_maven_archive(upstream_artifacts_per_task_id):
@@ -47,6 +55,15 @@ def _get_maven_expected_files_in_archive(mapping_manifest):
             file
         ) for file in files
     ]
+
+
+def _get_maven_expected_files_from_map(artifact_map, task_id):
+    """Extract relevant artifact map entry.
+
+    Artifact map is a list of dicts, and we want the dictionary which has a matching
+    taskId entry. `next()` will find that for us, over a generator."""
+    mapping = next(entry for entry in artifact_map if entry['taskId'] == task_id)
+    return list(mapping['paths'].keys())
 
 
 def _remove_first_directory_from_bucket(s3_bucket_path):

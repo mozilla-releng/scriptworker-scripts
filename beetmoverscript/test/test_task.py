@@ -10,7 +10,7 @@ from beetmoverscript.task import (
     get_upstream_artifacts, get_upstream_artifacts_with_zip_extract_param,
     generate_checksums_manifest, get_task_bucket, get_task_action,
     validate_bucket_paths, get_release_props, is_custom_checksums_task,
-    get_schema_key_by_action
+    get_taskId_from_full_path, get_schema_key_by_action
 )
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -332,6 +332,13 @@ def test_get_release_props(context, mocker, taskjson, locale, relprops, expected
         get_release_props(context)
 
 
+# get_release_props {{{1
+def test_get_release_props_raises(context, mocker):
+    context.task = get_fake_valid_task(taskjson='task_missing_relprops.json')
+    with pytest.raises(ScriptWorkerTaskException):
+        get_release_props(context)
+
+
 # is_custom_beetmover_checksums_task {{{1
 @pytest.mark.parametrize("kind,expected", ((
     "beetmover-source", "-source"
@@ -343,3 +350,26 @@ def test_get_release_props(context, mocker, taskjson, locale, relprops, expected
 def test_is_custom_beetmover_task(context, kind, expected):
     context.task['tags']['kind'] = kind
     assert is_custom_checksums_task(context) == expected
+
+
+@pytest.mark.parametrize("path, expected", ((
+    '/src/beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.mozinfo.json', 'eSzfNqMZT_mSiQQXu8hyqg'
+), (
+    '/src/beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8cotg/public/build/target.mozinfo.json', 'eSzfNqMZT_mSiQQXu8cotg'
+), (
+    'test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.mozinfo.json', 'eSzfNqMZT_mSiQQXu8hyqg'
+),))
+def test_get_taskId_from_full_path(path, expected):
+    assert get_taskId_from_full_path(path) == expected
+
+
+@pytest.mark.parametrize("path", ((
+    'test_work_dir/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.mozinfo.json'
+), (
+    'test_work_dir/cot'
+), (
+    '/src/beetmoverscript/test/test_work_dir/cot/public/build/target.mozinfo.json'
+),))
+def test_get_taskId_from_full_path_raises(path):
+    with pytest.raises(ScriptWorkerTaskException):
+        get_taskId_from_full_path(path)
