@@ -150,11 +150,10 @@ six==1.11.0 \
 slugid==1.0.7 \
     --hash=sha256:6dab3c7eef0bb423fb54cb7752e0f466ddd0ee495b78b763be60e8a27f69e779 \
     # via taskcluster
-taskcluster-urls==10.1.0 \
-    --hash=sha256:2a26f33f948c8c1820f9b7992d9964a10462729b4bd223565a5f19df828c09ce \
-    --hash=sha256:a572a8a5f2db1cef3d36d1b2b7d7bdba97d66c1f9b61e45bd2dce32e41d03e34 \
-    --hash=sha256:c15459df52813c21312b8dc608df8f5069cb47a7114946738d953c3d383f4a0b \
-    # via taskcluster
+taskcluster-urls==11.0.0 \
+    --hash=sha256:74bd2110b5daaebcec5e1d287bf137b61cb8cf6b2d8f5f2b74183e32bc4e7c87 \
+    --hash=sha256:2aceab7cf5b1948bc197f2e5e50c371aa48181ccd490b8bada00f1e3baf0c5cc \
+    --hash=sha256:18dcaa9c2412d34ff6c78faca33f0dd8f2384e3f00a98d5832c62d6d664741f0    # via taskcluster
 taskcluster==5.0.0 \
     --hash=sha256:2a71da6388211967cbd8b2af69352741edac2fd05962a8d3ec37c0d3ac9f2d66 \
     --hash=sha256:528e1822b465cac70e621b468562d776f5108ae65d5b4bdac4f563e610c4393e \
