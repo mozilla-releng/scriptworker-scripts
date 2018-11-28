@@ -25,7 +25,7 @@
         "release": "release"
     },
 
-    "taskcluster_scope_prefix": "project:releng:googleplay:",
+    "taskcluster_scope_prefixes": ["project:releng:googleplay:"],
 
     "verbose": true
 }

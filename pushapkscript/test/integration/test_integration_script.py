@@ -57,7 +57,7 @@ class ConfigFileGenerator(object):
                     "certificate": "/dummy/path/to/certificate.p12"
                 }}
             }},
-            "taskcluster_scope_prefix": "project:releng:googleplay:"
+            "taskcluster_scope_prefixes": ["project:releng:googleplay:"]
         }}'''.format(
             work_dir=self.work_dir, test_data_dir=self.test_data_dir, project_data_dir=project_data_dir,
             keystore_path=self.keystore_manager.keystore_path,

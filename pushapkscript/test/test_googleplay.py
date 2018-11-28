@@ -30,7 +30,7 @@ class GooglePlayTest(unittest.TestCase):
                     'certificate': '/path/to/dummy_non_p12_file',
                 },
             },
-            'taskcluster_scope_prefix': 'project:releng:googleplay:',
+            'taskcluster_scope_prefixes': ['project:releng:googleplay:'],
         }
         self.context.task = {
             'scopes': ['project:releng:googleplay:release'],

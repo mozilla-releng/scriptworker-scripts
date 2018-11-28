@@ -20,7 +20,7 @@ class JarSignerTest(unittest.TestCase):
                 'release': 'release_alias',
                 'dep': 'dep_alias',
             },
-            'taskcluster_scope_prefix': 'project:releng:googleplay:',
+            'taskcluster_scope_prefixes': ['project:releng:googleplay:'],
         }
         self.context.task = {
             'scopes': ['project:releng:googleplay:aurora'],
@@ -29,7 +29,7 @@ class JarSignerTest(unittest.TestCase):
         self.minimal_context = MagicMock()
         self.minimal_context.config = {
             'jarsigner_key_store': '/path/to/keystore',
-            'taskcluster_scope_prefix': 'project:releng:googleplay:',
+            'taskcluster_scope_prefixes': ['project:releng:googleplay:'],
         }
         self.minimal_context.task = {
             'scopes': ['project:releng:googleplay:aurora'],

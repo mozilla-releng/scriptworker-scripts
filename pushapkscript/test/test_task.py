@@ -103,41 +103,79 @@ def test_validate_real_life_tasks(context, task):
     validate_task_schema(context)
 
 
-@pytest.mark.parametrize('prefix, task, expected', ((
-    'project:releng:googleplay:',
-    {'scopes': ['project:releng:googleplay:aurora']},
+@pytest.mark.parametrize('prefixes, scopes, raises, expected', ((
+    ['project:releng:googleplay:'],
+    ['project:releng:googleplay:aurora'],
+    False,
     'aurora',
 ), (
-    'project:releng:googleplay:',
-    {'scopes': ['project:releng:googleplay:beta']},
+    ['project:releng:googleplay:'],
+    ['project:releng:googleplay:beta'],
+    False,
     'beta',
 ), (
-    'project:releng:googleplay:',
-    {'scopes': ['project:releng:googleplay:release']},
+    ['project:releng:googleplay:'],
+    ['project:releng:googleplay:release'],
+    False,
     'release',
 ), (
-    'project:mobile:focus:googleplay:product:',
-    {'scopes': ['project:mobile:focus:googleplay:product:focus']},
+    ['project:mobile:focus:googleplay:product:'],
+    ['project:mobile:focus:googleplay:product:focus'],
+    False,
     'focus',
 ), (
-    'project:mobile:reference-browser:googleplay:product:',
-    {'scopes': ['project:mobile:reference-browser:googleplay:product:reference-browser:dep']},
+    ['project:mobile:reference-browser:googleplay:product:'],
+    ['project:mobile:reference-browser:googleplay:product:reference-browser:dep'],
+    False,
     'reference-browser',
+), (
+    ['project:mobile:reference-browser:googleplay:product:'],
+    ['project:mobile:reference-browser:googleplay:product:reference-browser'],
+    False,
+    'reference-browser',
+), (
+    ['project:mobile:focus:googleplay:product:'],
+    [],
+    True,
+    None,
+), (
+    [],
+    ['project:mobile:focus:googleplay:product:focus'],
+    True,
+    None,
+), (
+    ['project:releng:googleplay:'],
+    ['project:releng:googleplay:beta', 'project:releng:googleplay:release'],
+    True,
+    None,
+), (
+    ['project:releng:googleplay:', 'project:mobile:focus:releng:googleplay'],
+    ['project:releng:googleplay:beta', 'project:mobile:focus:releng:googleplay:product:focus'],
+    True,
+    None,
+), (
+    ['project:mobile:reference_browser:releng:googleplay:'],
+    [
+        'project:mobile:reference_browser:releng:googleplay:product:reference_browser',
+        'project:mobile:reference_browser:releng:googleplay:product:reference_browser_dep',
+    ],
+    True,
+    None,
+), (
+    ['project:mobile:focus:releng:googleplay', 'project:mobile:reference_browser:releng:googleplay:'],
+    [
+        'project:mobile:focus:releng:googleplay:product:focus',
+        'project:mobile:reference_browser:releng:googleplay:product:reference_browser',
+    ],
+    True,
+    None,
 )))
-def test_extract_supported_android_products(context, prefix, task, expected):
-    context.task = task
-    context.config = {
-        'taskcluster_scope_prefix': prefix,
-    }
-    assert extract_android_product_from_scopes(context) == expected
+def test_extract_supported_android_products(context, prefixes, scopes, raises, expected):
+    context.task = {'scopes': scopes}
+    context.config = {'taskcluster_scope_prefixes': prefixes}
 
-
-def test_extract_android_product_from_scopes_fails_when_too_many_products_are_given(context):
-    context.task = {
-        'scopes': ['project:releng:googleplay:beta', 'project:releng:googleplay:release']
-    }
-    context.config = {
-        'taskcluster_scope_prefix': 'project:releng:googleplay:',
-    }
-    with pytest.raises(TaskVerificationError):
-        extract_android_product_from_scopes(context)
+    if raises:
+        with pytest.raises(TaskVerificationError):
+            extract_android_product_from_scopes(context)
+    else:
+        assert extract_android_product_from_scopes(context) == expected

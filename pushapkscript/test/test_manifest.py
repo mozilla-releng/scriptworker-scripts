@@ -16,7 +16,7 @@ def test_verify(monkeypatch, does_apk_have_expected_digest, raises):
     monkeypatch.setattr(manifest, '_does_apk_have_expected_digest', lambda _, __: does_apk_have_expected_digest)
 
     context = MagicMock()
-    context.config = {'taskcluster_scope_prefix': 'project:releng:googleplay:'}
+    context.config = {'taskcluster_scope_prefixes': ['project:releng:googleplay:']}
     context.task = {
         'scopes': ['project:releng:googleplay:aurora'],
     }
