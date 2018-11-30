@@ -118,7 +118,7 @@ def test_check_correct_apk_product_types():
             'reference-browser.apk': {
                 'package_name': 'org.mozilla.reference.browser'
             }
-        }, [PRODUCT.FOCUS, PRODUCT.KLAR, PRODUCT.REFERENCE_BROWSER])
+        }, [PRODUCT.FOCUS, PRODUCT.KLAR])
 
 
 def test_check_all_apks_have_the_same_package_name():

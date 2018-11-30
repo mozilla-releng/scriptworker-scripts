@@ -18,10 +18,15 @@ _ARCHITECTURE_ORDER_REGARDING_VERSION_CODE = ('armeabi-v7a', 'x86')
 
 def cross_check_apks(apks_metadata_per_paths):
     logger.info("Checking APKs' metadata and content...")
-    if PRODUCT.is_focus_flavor(list(apks_metadata_per_paths.values())[0]['package_name']):
+    package_name = list(apks_metadata_per_paths.values())[0]['package_name']
+    if PRODUCT.is_focus_flavor(package_name):
         cross_check_focus_apks(apks_metadata_per_paths)
+    elif PRODUCT.is_reference_browser(package_name):
+        cross_check_reference_browser_apks(apks_metadata_per_paths)
     else:
         cross_check_fennec_apks(apks_metadata_per_paths)
+
+    logger.info('APKs are sane!')
 
 
 def cross_check_fennec_apks(apks_metadata_per_paths):
@@ -41,13 +46,16 @@ def cross_check_fennec_apks(apks_metadata_per_paths):
 
     _check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths)
 
-    logger.info('APKs are sane!')
+
+def cross_check_reference_browser_apks(apks_metadata_per_paths):
+    _check_all_apks_have_the_same_package_name(apks_metadata_per_paths)
+    _check_apks_version_codes_are_correctly_ordered(apks_metadata_per_paths)
+    _check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths)
 
 
 def cross_check_focus_apks(apks_metadata_per_paths):
     _check_number_of_distinct_packages(apks_metadata_per_paths, 2)
-    _check_correct_apk_product_types(apks_metadata_per_paths, [PRODUCT.FOCUS, PRODUCT.KLAR, PRODUCT.REFERENCE_BROWSER])
-    logger.info('APKs are sane!')
+    _check_correct_apk_product_types(apks_metadata_per_paths, [PRODUCT.FOCUS, PRODUCT.KLAR])
 
 
 def _check_number_of_distinct_packages(apks_metadata_per_paths, max_packages):

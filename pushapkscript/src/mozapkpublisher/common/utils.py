@@ -52,8 +52,8 @@ class PRODUCT(Enum):
 
     @staticmethod
     def is_focus_flavor(value):
-        return PRODUCT.contains_value(value) and (
-                PRODUCT(value) == PRODUCT.FOCUS or
-                PRODUCT(value) == PRODUCT.KLAR or
-                PRODUCT(value) == PRODUCT.REFERENCE_BROWSER
-        )
+        return PRODUCT.contains_value(value) and (PRODUCT(value) == PRODUCT.FOCUS or PRODUCT(value) == PRODUCT.KLAR)
+
+    @staticmethod
+    def is_reference_browser(value):
+        return PRODUCT.contains_value(value) and PRODUCT(value) == PRODUCT.REFERENCE_BROWSER

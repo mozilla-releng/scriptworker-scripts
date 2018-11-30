@@ -31,7 +31,7 @@ _DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
 _ADDITIONAL_TRACK_VALUES = {
     'org.mozilla.focus': ['nightly'],
     'org.mozilla.klar': ['nightly'],
-    'org.mozilla.reference.browser': ['nightly']
+    'org.mozilla.reference.browser': ['nightly'],
 }
 
 logger = logging.getLogger(__name__)
