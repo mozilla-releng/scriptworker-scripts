@@ -46,7 +46,7 @@ def cross_check_fennec_apks(apks_metadata_per_paths):
 
 def cross_check_focus_apks(apks_metadata_per_paths):
     _check_number_of_distinct_packages(apks_metadata_per_paths, 2)
-    _check_correct_apk_product_types(apks_metadata_per_paths, [PRODUCT.FOCUS, PRODUCT.KLAR])
+    _check_correct_apk_product_types(apks_metadata_per_paths, [PRODUCT.FOCUS, PRODUCT.KLAR, PRODUCT.REFERENCE_BROWSER])
     logger.info('APKs are sane!')
 
 
