@@ -7,7 +7,7 @@ from pushapkscript.task import extract_android_product_from_scopes
 
 log = logging.getLogger(__name__)
 
-_AUTHORIZED_PRODUCTS_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release', 'focus', 'reference-browser')
+_AUTHORIZED_PRODUCTS_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release', 'focus')
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
