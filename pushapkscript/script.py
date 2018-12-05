@@ -31,8 +31,8 @@ async def async_main(context):
         jarsigner.verify(context, apk_path)
         manifest.verify(context, apk_path)
 
-    if task.extract_android_product_from_scopes(context) == 'focus':
-        log.warning('Focus does not upload strings automatically. Skipping Google Play strings search.')
+    if task.extract_android_product_from_scopes(context) in ['focus', 'reference-browser']:
+        log.warning('This product does not upload strings automatically. Skipping Google Play strings search.')
         google_play_strings_path = None
     else:
         log.info('Finding whether Google Play strings can be updated...')
