@@ -32,7 +32,7 @@ async def async_main(context):
         manifest.verify(context, apk_path)
 
     if task.extract_android_product_from_scopes(context) in ['focus', 'reference-browser']:
-        log.warning('Focus does not upload strings automatically. Skipping Google Play strings search.')
+        log.warning('This product does not upload strings automatically. Skipping Google Play strings search.')
         google_play_strings_path = None
     else:
         log.info('Finding whether Google Play strings can be updated...')
