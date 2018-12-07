@@ -8,7 +8,7 @@ let
   pypi2nix = import (pkgs.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./pypi2nix.json))) { inherit pkgs; };
 
   self = python.mkDerivation rec {
-    name = "shipitsript-${version}";
+    name = "shipitscript-${version}";
     src = builtins.filterSource
       (path: type: baseNameOf path != ".git"
                 && baseNameOf path != "result"
@@ -23,7 +23,7 @@ let
     passthru = {
 
       docker = pkgs.dockerTools.buildImage {
-        name = "shipitsript";
+        name = "shipitscript";
         tag = version;
         contents = [
           self
