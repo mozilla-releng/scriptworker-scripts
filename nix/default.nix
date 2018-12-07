@@ -9,7 +9,10 @@ let
 
   self = python.mkDerivation rec {
     name = "shipitsript-${version}";
-    src = builtins.filterSource (path: type: type != "directory" || baseNameOf path != ".git") ../.;
+    src = builtins.filterSource
+      (path: type: baseNameOf path != ".git"
+                && baseNameOf path != "result"
+                ) ../.;
     doCheck = false;
     buildInputs = builtins.attrValues python.packages;
     propagatedBuildInputs = with python.packages; [
