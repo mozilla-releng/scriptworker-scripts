@@ -5,7 +5,7 @@ let
   python = import ./requirements.nix { inherit pkgs; };
   version = builtins.replaceStrings ["\n"] [""]
     (builtins.readFile (toString ../version.txt));
-  pypi2nix = import (pkgs.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./pypi2nix.json))) { inherit pkgs; };
+  pypi2nix = import (pkgs.fetchFromGitHub (pkgs.lib.importJSON ./pypi2nix.json)) { inherit pkgs; };
 
   self = python.mkDerivation rec {
     name = "shipitscript-${version}";
