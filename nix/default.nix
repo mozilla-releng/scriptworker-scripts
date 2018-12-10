@@ -1,6 +1,10 @@
-{ pkgs ? import <nixpkgs> {} }:
-
 let
+  nixpkgsRev = "49996e17ae9daf3c3447fb5e8500dc78b4fde995";
+  nixpkgs = builtins.fetchTarball {
+    url    = "https://github.com/NixOS/nixpkgs/archive/${nixpkgsRev}.tar.gz";
+    sha256 = "0g41p9ip5axb8bc51k9294q3jsn4s1v4qc8irqk52rrpycbvj9jb";
+  };
+  pkgs = import nixpkgs { config = {}; };
 
   python = import ./requirements.nix { inherit pkgs; };
   version = builtins.replaceStrings ["\n"] [""]
