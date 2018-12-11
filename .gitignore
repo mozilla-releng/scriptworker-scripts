@@ -67,5 +67,6 @@ work_dir
 artifact_dir
 build-tools
 
-#nix
+# nix
 nix/result
+result
