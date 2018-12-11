@@ -1,18 +1,19 @@
-{ nixpkgs ? null }:
+let
+  pkgsJSON = builtins.fromJSON (builtins.readFile ./nixpkgs.json);
+  pypi2nixJSON = builtins.fromJSON (builtins.readFile ./pypi2nix.json); 
+  pkgsSrc = builtins.fetchTarball { inherit (pkgsJSON) url sha256; };
+  pypi2nixSrc = builtins.fetchTarball { inherit (pypi2nixJSON) url sha256; };
+  overlay = self: super: {
+    pypi2nix = import pypi2nixSrc { pkgs = self; };
+  };
+in
+{ pkgs ? import pkgsSrc { config = {}; overlays = [ overlay ]; }
+}:
 
 let
-  pkgs = if nixpkgs != null then nixpkgs
-  else
-    let
-      pkgsJSON = builtins.fromJSON (builtins.readFile ./nixpkgs.json);
-      nixpkgs = builtins.fetchTarball { inherit (pkgsJSON) url sha256; };
-    in
-    import nixpkgs { config = {}; };
-
   python = import ./requirements.nix { inherit pkgs; };
   version = builtins.replaceStrings ["\n"] [""]
     (builtins.readFile (toString ../version.txt));
-  pypi2nix = import (pkgs.fetchFromGitHub (pkgs.lib.importJSON ./pypi2nix.json)) { inherit pkgs; };
 
   self = python.mkDerivation rec {
     name = "shipitscript-${version}";
@@ -25,8 +26,9 @@ let
     ];
 
     passthru = {
+      inherit python;
 
-      docker = pkgs.dockerTools.buildImage {
+      docker = pkgs.dockerTools.buildLayeredImage {
         name = "shipitscript";
         tag = version;
         contents = [
@@ -39,7 +41,7 @@ let
       # ./result
       update = pkgs.writeScript "update-${self.name}" ''
         pushd ${toString ./.}
-        ${pypi2nix}/bin/pypi2nix \
+        ${pkgs.pypi2nix}/bin/pypi2nix \
           -V 3.7 \
           -r ../requirements.txt \
           -e flit \
