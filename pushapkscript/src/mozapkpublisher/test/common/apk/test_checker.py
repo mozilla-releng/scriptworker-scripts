@@ -101,8 +101,11 @@ def test_check_correct_apk_product_types():
         },
         'klar.apk': {
             'package_name': 'org.mozilla.klar'
+        },
+        'reference-browser.apk': {
+            'package_name': 'org.mozilla.reference.browser'
         }
-    }, [PRODUCT.FOCUS, PRODUCT.KLAR])
+    }, [PRODUCT.FOCUS, PRODUCT.KLAR, PRODUCT.REFERENCE_BROWSER])
 
     with pytest.raises(BadSetOfApks):
         _check_correct_apk_product_types({
@@ -111,6 +114,9 @@ def test_check_correct_apk_product_types():
             },
             'klar.apk': {
                 'package_name': 'org.mozilla.klar'
+            },
+            'reference-browser.apk': {
+                'package_name': 'org.mozilla.reference.browser'
             }
         }, [PRODUCT.FOCUS, PRODUCT.KLAR])
 
