@@ -17,6 +17,6 @@ def extract_android_product_from_scopes(context):
         too_many_item_error_message='More than one valid scope given',
     )
 
-    android_product = scope[len(prefix):]
+    android_product = scope.split(':')[prefix.count(':')]  # the chunk after the prefix is the product name
 
     return android_product
