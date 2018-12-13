@@ -115,6 +115,10 @@ class TaskTest(unittest.TestCase):
             'prefix': 'project:mobile:focus:googleplay:product:',
             'task': {'scopes': ['project:mobile:focus:googleplay:product:focus']},
             'expected': 'focus',
+        }, {
+            'prefix': 'project:mobile:reference-browser:googleplay:product:',
+            'task': {'scopes': ['project:mobile:reference-browser:googleplay:product:reference-browser:dep']},
+            'expected': 'reference-browser',
         })
 
         for item in data:
