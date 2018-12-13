@@ -41,14 +41,16 @@ def extract_metadata(original_apk_path):
         metadata['api_level'] = int(androguard_apk.get_min_sdk_version())
         metadata['version_code'] = androguard_apk.get_androidversion_code()
 
-        if PRODUCT.is_focus_flavor(package_name) or PRODUCT.is_reference_browser(package_name):
+        if PRODUCT.is_focus_flavor(package_name):
             return metadata
 
         with ZipFile(apk_copy.name) as apk_zip:
             metadata['architecture'] = _extract_architecture(apk_zip, original_apk_path)
-            metadata['firefox_version'] = _extract_firefox_version(apk_zip)
-            metadata['firefox_build_id'] = _extract_firefox_build_id(apk_zip)
             metadata['locales'] = _extract_locales(apk_zip)
+
+            if not PRODUCT.is_reference_browser(package_name):
+                metadata['firefox_version'] = _extract_firefox_version(apk_zip)
+                metadata['firefox_build_id'] = _extract_firefox_build_id(apk_zip)
 
     return metadata
 
