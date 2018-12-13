@@ -41,7 +41,7 @@ def extract_metadata(original_apk_path):
         metadata['api_level'] = int(androguard_apk.get_min_sdk_version())
         metadata['version_code'] = androguard_apk.get_androidversion_code()
 
-        if PRODUCT.is_focus_flavor(package_name):
+        if PRODUCT.is_focus_flavor(package_name) or PRODUCT.is_reference_browser(package_name):
             return metadata
 
         with ZipFile(apk_copy.name) as apk_zip:
