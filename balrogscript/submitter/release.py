@@ -70,6 +70,7 @@ update_platform_map = {
     'win32': ['WINNT_x86-msvc', 'WINNT_x86-msvc-x86', 'WINNT_x86-msvc-x64'],
     'win64': ['WINNT_x86_64-msvc', 'WINNT_x86_64-msvc-x64'],
     'win64-asan-reporter': ['WINNT_x86_64-msvc-x64-asan'],
+    'win64-aarch64': ['WINNT_aarch64-msvc-aarch64'],
 }
 
 
