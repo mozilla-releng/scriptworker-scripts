@@ -86,8 +86,10 @@ def test_check_and_extract_zip_archives():
             },
         }
 
+        mapping_manifest = {'s3_bucket_path': 'dummy'}
         files_once_extracted = check_and_extract_zip_archives(
-            artifacts_per_task_id, expected_files_per_archive_per_task_id, zip_max_size_in_mb=100
+            artifacts_per_task_id, expected_files_per_archive_per_task_id,
+            zip_max_size_in_mb=100, mapping_manifest=mapping_manifest,
         )
 
         assert files_once_extracted == {
@@ -125,8 +127,10 @@ def test_check_and_extract_zip_archives_for_given_task():
             archive2_path: ['some_file2', 'some/subfolder/file2'],
         }
 
+        mapping_manifest = {'s3_bucket_path': 'dummy'}
         extracted_files = _check_and_extract_zip_archives_for_given_task(
-            'someTaskId', expected_files_per_archive, zip_max_size_in_mb=100
+            'someTaskId', expected_files_per_archive, zip_max_size_in_mb=100,
+            mapping_manifest=mapping_manifest
         )
 
         assert extracted_files == {
@@ -149,8 +153,10 @@ def test_check_extract_and_delete_zip_archive():
 
     with tempfile.TemporaryDirectory() as d:
         archive_path = _create_zip(d, files_and_content)
+        mapping_manifest = {'s3_bucket_path': 'dummy'}
         extracted_files = _check_extract_and_delete_zip_archive(
-            archive_path, files_and_content.keys(), zip_max_size_in_mb=100
+            archive_path, files_and_content.keys(), zip_max_size_in_mb=100,
+            mapping_manifest=mapping_manifest
         )
         assert extracted_files == {
             'some_file': os.path.join(d, 'some_archive.zip.out', 'some_file'),
@@ -277,45 +283,131 @@ def test_ensure_files_in_archive_have_decent_sizes(zip_metadata, zip_max_size_in
         _ensure_files_in_archive_have_decent_sizes('/some/archive.zip', zip_metadata, zip_max_size_in_mb)
 
 
-@pytest.mark.parametrize('files_in_archive, expected_files, raises', ((
+@pytest.mark.parametrize('files_in_archive, expected_files, mapping_manifest, raises', ((
     ['some_file', 'some/other/file'],
     ['some_file', 'some/other/file'],
+    {'s3_bucket_path': 'dummy'},
     False,
 ), (
     ['/some/absolute/path'],
     ['/some/absolute/file'],
+    {'s3_bucket_path': 'dummy'},
     True,
 ), (
     ['some/.///redundant/path'],
     ['some/.///redundant/path'],
+    {'s3_bucket_path': 'dummy'},
     True,
 ), (
     ['some/../../../etc/passwd'],
     ['some/../../../etc/passwd'],
+    {'s3_bucket_path': 'dummy'},
     True,
 ), (
     ['some_file', 'some_wrong_file'],
     ['some_file', 'some_other_file'],
+    {'s3_bucket_path': 'dummy'},
     True,
 ), (
     ['some_file'],
     ['some_file', 'some_missing_file'],
+    {'s3_bucket_path': 'dummy'},
     True,
 ), (
     ['some_file', 'some_unexpected_file'],
     ['some_file'],
+    {'s3_bucket_path': 'dummy'},
     True,
 ), (
     ['some_duplicated_file', 'some_duplicated_file'],
     ['some_duplicated_file', 'some_duplicated_file'],
+    {'s3_bucket_path': 'dummy'},
     True,
+), (
+    [
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20181129.145599-1.pom',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20189929.145558-1.aar.sha1',
+    ],
+    [
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.pom',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.aar.sha1',
+    ],
+    {'s3_bucket_path': 'dummy-SNAPSHOT'},
+    True,
+), (
+    [
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-2018INVALID1129.145558-1.pom',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20181129.MIXED-1.aar.sha1',
+    ],
+    [
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.pom',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.aar.sha1',
+    ],
+    {'s3_bucket_path': 'dummy-SNAPSHOT'},
+    True,
+), (
+    [
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-020181129.145558-1.pom',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20181129.-failure.aar.sha1',
+    ],
+    [
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.pom',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.aar.sha1',
+    ],
+    {'s3_bucket_path': 'dummy-SNAPSHOT'},
+    True,
+), (
+    [
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20181129.145558-1.pom',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20181130.145558-1.aar.sha1',
+    ],
+    [
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.pom',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.aar.sha1',
+    ],
+    {'s3_bucket_path': 'dummy-SNAPSHOT'},
+    True,
+), (
+    [
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20181129.145558-1-sources.jar',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20181129.145558-1-sources.jar.md5',
+    ],
+    [
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar.md5',
+    ],
+    {
+        's3_bucket_path': 'dummy-SNAPSHOT',
+        'mapping': {
+            'en-US': {
+                'browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar': {
+                    'destinations': [
+                        'browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar'
+                    ],
+                    's3_key': 'browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar',
+                },
+                'browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar.md5': {
+                    'destinations': [
+                        'browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar.md5'
+                    ],
+                    's3_key': 'browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar.md5'
+                }
+            }
+        }
+    },
+    False,
 )))
-def test_ensure_all_expected_files_are_present_in_archive(files_in_archive, expected_files, raises):
+def test_ensure_all_expected_files_are_present_in_archive(files_in_archive,
+                                                          expected_files,
+                                                          mapping_manifest,
+                                                          raises):
     if raises:
         with pytest.raises(TaskVerificationError):
-            _ensure_all_expected_files_are_present_in_archive('/some/archive.zip', files_in_archive, expected_files)
+            _ensure_all_expected_files_are_present_in_archive('/some/archive.zip', files_in_archive,
+                                                              expected_files, mapping_manifest)
     else:
-        _ensure_all_expected_files_are_present_in_archive('/some/archive.zip', files_in_archive, expected_files)
+        _ensure_all_expected_files_are_present_in_archive('/some/archive.zip', files_in_archive,
+                                                          expected_files, mapping_manifest)
 
 
 def test_extract_and_check_output_files():

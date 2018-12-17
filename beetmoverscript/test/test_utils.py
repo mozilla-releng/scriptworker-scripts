@@ -328,7 +328,6 @@ def test_beetmover_template_args_generation(context, taskjson, partials):
     context.task['payload']['upstreamArtifacts'][0]['locale'] = 'en-US'
     expected_template_args['template_key'] = 'fake_nightly'
     expected_template_args['locales'] = ['en-US']
-    # import pdb; pdb.set_trace()
     template_args = generate_beetmover_template_args(context)
     assert template_args == expected_template_args
 
@@ -455,6 +454,33 @@ def test_beetmover_template_args_maven(context, branch, version, artifact_id,
     else:
         with pytest.raises(TaskVerificationError):
             generate_beetmover_template_args(context)
+
+
+@pytest.mark.parametrize('branch, version, artifact_id, expected_version', ((
+    '', '1.0.1-SNAPSHOT', 'browser-session', '1.0.1'
+), (
+    '', '0.25.2-SNAPSHOT', 'browser-session', '0.25.2'
+)))
+def test_beetmover_template_args_maven_snapshot(context, branch, version, artifact_id,
+                                                expected_version):
+    context.bucket = 'maven'
+    context.action = 'push-to-maven'
+    context.task['payload']['version'] = version
+    context.task['payload']['artifact_id'] = artifact_id
+    context.release_props['branch'] = branch
+    # there's inherited buildid here from the context fixture
+    del context.release_props['buildid']
+    context.release_props['appName'] = 'geckoview'
+
+    assert generate_beetmover_template_args(context) == {
+        'artifact_id': artifact_id,
+        'template_key': 'maven_geckoview',
+        'version': expected_version,
+        'snapshot_version': version,
+        'date_timestamp': '{{date_timestamp}}',
+        'clock_timestamp': '{{clock_timestamp}}',
+        'build_number': '{{build_number}}'
+    }
 
 
 @pytest.mark.parametrize('locale_in_payload, locales_in_upstream_artifacts, raises', ((

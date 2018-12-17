@@ -122,7 +122,7 @@ async def test_push_to_maven(context, mocker, extract_zip_output, ErrorRaised):
     mocker.patch('beetmoverscript.maven_utils.get_maven_expected_files_per_archive_per_task_id',
                  new=lambda _, **kwargs: ('', {}))
     mocker.patch('beetmoverscript.zip.check_and_extract_zip_archives',
-                 new=lambda _, __, ___: extract_zip_output)
+                 new=lambda _, __, ___, ____: extract_zip_output)
 
     if ErrorRaised is None:
         async def assert_artifacts_to_beetmove(_, artifacts_to_beetmove, **kwargs):
@@ -204,7 +204,7 @@ async def test_push_to_maven_with_map(context, mocker, artifact_map, extract_zip
     mocker.patch('beetmoverscript.maven_utils.get_maven_expected_files_per_archive_per_task_id',
                  new=lambda _, **kwargs: ('', {}))
     mocker.patch('beetmoverscript.zip.check_and_extract_zip_archives',
-                 new=lambda _, __, ___: extract_zip_output)
+                 new=lambda _, __, ___, ____: extract_zip_output)
 
     if ErrorRaised is None:
         async def assert_artifacts_to_beetmove(_, artifacts_to_beetmove, **kwargs):

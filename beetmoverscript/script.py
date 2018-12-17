@@ -196,7 +196,7 @@ def _extract_and_check_maven_artifacts_to_beetmove(artifacts, zip_max_file_size_
     )
 
     extracted_paths_per_archive = zip.check_and_extract_zip_archives(
-        artifacts, expected_files, zip_max_file_size_in_mb
+        artifacts, expected_files, zip_max_file_size_in_mb, mapping_manifest
     )
 
     number_of_extracted_archives = len(extracted_paths_per_archive)
