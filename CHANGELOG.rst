@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.1.0] = (2018-12-17)
+----------------------
+
+Added
+~~~~~
+
+- Support for maven.mozilla.org snapshots releases. (`#1493942
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1493942>`_)
+
+
 [8.0.0] = (2018-11-28)
 -----------------------
 
