@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.2.0] = (2018-12-18)
+----------------------
+
+Added
+~~~~~
+
+- Added support for win64-aarch64 builds. (`#1514407 <https://bugzilla.mozilla.org/show_bug.cgi?id=1514407>`_)
+
+
 [8.1.1] = (2018-12-18)
 ----------------------
 
