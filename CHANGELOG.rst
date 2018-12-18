@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.1.1] = (2018-12-18)
+----------------------
+
+Fixed
+~~~~~
+
+- Bugfix in geckoview in-tree snapshot logic given declarative artifacts.
+  (`#1493942 <https://bugzilla.mozilla.org/show_bug.cgi?id=1493942>`_)
+
+
 [8.1.0] = (2018-12-17)
 ----------------------
 
