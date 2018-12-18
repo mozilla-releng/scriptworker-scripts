@@ -58,7 +58,7 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
         - latest-{{ branch }}-l10n/firefox-{{ version }}.{{ locale }}.{{ platform }}.dmg.asc
-  {% elif platform in ["win32", "win64"] %}
+  {% elif platform in ["win32", "win64", "win64-aarch64"] %}
     target.zip:
       s3_key: firefox-{{ version }}.{{ locale }}.{{ platform }}.zip
       destinations:

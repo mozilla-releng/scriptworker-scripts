@@ -24,7 +24,7 @@ mapping:
       destinations:
         - {{ platform }}/{{ locale }}/buildhub.json
 
-  {% if platform in ["win32", "win64"] %}
+  {% if platform in ["win32", "win64", "win64-aarch64"] %}
     target.zip:
       s3_key: {{ platform }}/{{ locale }}/firefox-{{ version }}.zip
       destinations:

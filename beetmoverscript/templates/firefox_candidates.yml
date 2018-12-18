@@ -208,7 +208,7 @@ mapping:
       destinations:
         - SHA512SUMMARY
   {% endif %}
-  {% if platform in ["win32", "win64"] %}
+  {% if platform in ["win32", "win64", "win64-aarch64"] %}
     mar.exe:
       s3_key: mar-tools/{{ stage_platform }}/mar.exe
       destinations:
@@ -259,6 +259,12 @@ mapping:
       s3_key: win64_info.txt
       destinations:
         - win64_info.txt
+  {% endif %}
+  {% if platform in ["win64-aarch64"] %}
+    target_info.txt:
+      s3_key: win64_aarch64_info.txt
+      destinations:
+        - win64_aarch64_info.txt
   {% endif %}
   {% if platform in ["mac"] %}
     target_info.txt:
