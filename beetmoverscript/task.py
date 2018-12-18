@@ -195,20 +195,20 @@ def get_updated_buildhub_artifact(path, installer_path, context, locale, manifes
     """
     contents = utils.load_json(path)
     installer_name = os.path.basename(installer_path)
+    url_prefix = context.config["bucket_config"][context.bucket]["url_prefix"]
     if artifact_map:
         task_id = get_taskId_from_full_path(path)
         cfg = utils.extract_file_config_from_artifact_map(artifact_map, installer_name, task_id, locale)
         dest = cfg['destinations']
+        url = urllib.parse.quote(urllib.parse.urljoin(url_prefix, dest[0]))
     else:
         dest = manifest['mapping'][locale][installer_name]['destinations']
-    url_prefix = context.config["bucket_config"][context.bucket]["url_prefix"]
-    # assume url_prefix is ASCII safe
-    url = urllib.parse.quote(urllib.parse.urljoin(url_prefix, dest[0]))
+        url = urllib.parse.quote(urllib.parse.urljoin(manifest["s3_bucket_path"], dest[0]))
 
     # Update fields
     contents['download']['size'] = utils.get_size(installer_path)
     contents['download']['date'] = str(arrow.utcnow())
-    contents['download']['url'] = urllib.parse.urljoin(url_prefix, url)
+    contents['download']['url'] = url
 
     return contents
 
