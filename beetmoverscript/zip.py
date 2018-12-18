@@ -198,7 +198,7 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
                     file_, zip_path
                 )
             )
-        if 'SNAPSHOT' in mapping_manifest['s3_bucket_path']:
+        if mapping_manifest and 'SNAPSHOT' in mapping_manifest['s3_bucket_path']:
             (date, clock, bno) = _extract_and_check_timestamps(file_,
                                                                SNAPSHOT_TIMESTAMP_REGEX)
             _args = {
