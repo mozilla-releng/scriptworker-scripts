@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[3.4.0] = (2018-12-18)
+----------------------
+
+Added
+~~~~~
+
+- Add support for win64-aarch64 builds. (`#1514407 <https://github.com/mozilla-releng/balrogscript/issues/1514407>`_)
+
+
 [3.3.0] = (2018-11-26)
 ----------------------
 
