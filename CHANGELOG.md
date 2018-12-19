@@ -2,7 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.10.0] - TBD
+## [0.10.0] - 2018-12-19
+
+### Added
+* Support pushing [`reference-browser`](https://github.com/mozilla-mobile/reference-browser)
+
 ### Changed
 - Configuration: `taskcluster_scope_prefix` now becomes `taskcluster_scope_prefixes` and takes a JSON array.
 
