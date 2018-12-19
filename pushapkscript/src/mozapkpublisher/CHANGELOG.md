@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.10.0] - 2018-12-19
+
+### Fixed
+* Nightly en-US releases are downloadable
+
+### Added
+* Support pushing [`reference-browser`](https://github.com/mozilla-mobile/reference-browser)
+* APK Downloads now happen in parallel
+
+
 ## [0.9.2] - 2018-11-08
 
 ### Fixed
