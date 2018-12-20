@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Upcoming]
+
+### Changed
+* `schema_file` is no longer recommended in configuration
+
 ## [0.10.1] - 2018-12-20
 
 ### Changed

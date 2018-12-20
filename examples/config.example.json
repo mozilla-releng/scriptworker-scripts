@@ -1,6 +1,5 @@
 {
     "work_dir": "/absolute/path/to/work_dir",
-    "schema_file": "/project/path/to/pushapkscript/pushapkscript/data/pushapk_task_schema.json",
 
     "google_play_accounts": {
         "aurora": {

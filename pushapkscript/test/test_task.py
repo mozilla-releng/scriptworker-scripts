@@ -1,4 +1,5 @@
 import os
+import pushapkscript
 import pytest
 
 from scriptworker.client import validate_task_schema
@@ -6,7 +7,6 @@ from scriptworker.context import Context
 from scriptworker.exceptions import TaskVerificationError
 
 from pushapkscript.task import extract_android_product_from_scopes
-
 from pushapkscript.test.helpers.task_generator import TaskGenerator
 
 
@@ -14,7 +14,7 @@ from pushapkscript.test.helpers.task_generator import TaskGenerator
 def context():
     context_ = Context()
     context_.config = {
-        'schema_file': os.path.join(os.getcwd(), 'pushapkscript', 'data', 'pushapk_task_schema.json'),
+        'schema_file': os.path.join(os.path.dirname(pushapkscript.__file__), 'data/pushapk_task_schema.json'),
     }
     return context_
 

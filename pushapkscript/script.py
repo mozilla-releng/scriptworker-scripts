@@ -65,7 +65,7 @@ def get_default_config():
 
     return {
         'work_dir': os.path.join(parent_dir, 'work_dir'),
-        'schema_file': os.path.join(cwd, 'pushapkscript', 'data', 'pushapk_task_schema.json'),
+        'schema_file': os.path.join(os.path.dirname(__file__), 'data/pushapk_task_schema.json'),
         'verbose': False,
     }
 
