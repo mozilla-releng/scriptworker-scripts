@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.10.1] - 2018-12-20
+
+### Fixed
+* Reference Browser doesn't try to find `firefox_version` anymore.
+
 ## [0.10.0] - 2018-12-19
 
 ### Fixed
