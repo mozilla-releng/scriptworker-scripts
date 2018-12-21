@@ -1,3 +1,4 @@
+import pushapkscript
 import pytest
 import os
 
@@ -75,7 +76,7 @@ def test_get_default_config():
     parent_dir = os.path.dirname(os.getcwd())
     assert get_default_config() == {
         'work_dir': os.path.join(parent_dir, 'work_dir'),
-        'schema_file': os.path.join(os.getcwd(), 'pushapkscript/data/pushapk_task_schema.json'),
+        'schema_file': os.path.join(os.path.dirname(pushapkscript.__file__), 'data/pushapk_task_schema.json'),
         'verbose': False,
     }
 

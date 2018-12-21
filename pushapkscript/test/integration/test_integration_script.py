@@ -46,7 +46,6 @@ class ConfigFileGenerator(object):
     def _generate_json(self):
         return json.loads('''{{
             "work_dir": "{work_dir}",
-            "schema_file": "{project_data_dir}/pushapk_task_schema.json",
             "verbose": true,
 
             "jarsigner_key_store": "{keystore_path}",
@@ -59,7 +58,7 @@ class ConfigFileGenerator(object):
             }},
             "taskcluster_scope_prefixes": ["project:releng:googleplay:"]
         }}'''.format(
-            work_dir=self.work_dir, test_data_dir=self.test_data_dir, project_data_dir=project_data_dir,
+            work_dir=self.work_dir, test_data_dir=self.test_data_dir,
             keystore_path=self.keystore_manager.keystore_path,
             certificate_alias=self.keystore_manager.certificate_alias
         ))
