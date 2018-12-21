@@ -5,6 +5,7 @@ import os
 import pytest
 import subprocess
 import shutil
+import zipfile
 
 from mardor.cli import do_verify
 from scriptworker.utils import makedirs
@@ -198,6 +199,14 @@ def _verify_apk_signature(keystore_path, apk_path, certificate_alias):
     return command.returncode == 0
 
 
+def _extract_compress_type_per_filename(path):
+    with zipfile.ZipFile(path) as zip:
+        return {
+            zip_info.filename: zip_info.compress_type
+            for zip_info in zip.infolist()
+        }
+
+
 @pytest.mark.asyncio
 @skip_when_no_autograph_server
 async def test_integration_autograph_focus(context, tmpdir):
@@ -206,6 +215,8 @@ async def test_integration_autograph_focus(context, tmpdir):
     copied_file_folder = os.path.join(context.config['work_dir'], 'cot', 'upstream-task-id1')
     makedirs(copied_file_folder)
     shutil.copy(original_file_path, copied_file_folder)
+
+    zip_infos_before_signature = _extract_compress_type_per_filename(os.path.join(copied_file_folder, file_name))
 
     context.config['signing_server_config'] = _write_server_config(tmpdir)
     context.task = _craft_task([file_name], signing_format='autograph_focus')
@@ -216,6 +227,19 @@ async def test_integration_autograph_focus(context, tmpdir):
     _instantiate_keystore(keystore_path, certificate_path, certificate_alias)
 
     await async_main(context)
+
+    signed_path = os.path.join(tmpdir, 'artifact', file_name)
+    assert _verify_apk_signature(keystore_path, signed_path, certificate_alias)
+
+    zip_infos_after_signature = _extract_compress_type_per_filename(signed_path)
+    for signature_file in ('META-INF/SIGNATURE.RSA', 'META-INF/SIGNATURE.SF', 'META-INF/MANIFEST.MF'):
+        del zip_infos_after_signature[signature_file]
+
+    # We want to make sure compression type hasn't changed after the signature
+    # https://github.com/mozilla-services/autograph/issues/164
+
+
+    assert zip_infos_before_signature == zip_infos_after_signature
 
 def _extract_apk_signature_algorithm(apk_path):
     cmd = [
@@ -231,9 +255,10 @@ def _extract_apk_signature_algorithm(apk_path):
 
     algorithm_line = [line for line in command.stdout.split('\n') if 'Signature algorithm:' in line][0]
     algorithm = algorithm_line.strip().split(' ')[2]
-    return algorithm[:-1]  # remove comma at end of algorithm
+    return algorithm.rstrip(',')
 
 
+# TODO change fennec algorithm to just RSA alone, then add verification of digest algorithm
 @pytest.mark.asyncio
 @skip_when_no_autograph_server
 @pytest.mark.parametrize('format,expected_algorithm', ((
