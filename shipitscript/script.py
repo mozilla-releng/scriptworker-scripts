@@ -80,10 +80,13 @@ ACTION_MAP = {
 def get_default_config():
     cwd = os.getcwd()
     parent_dir = os.path.dirname(cwd)
+    data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
     return {
         'work_dir': os.path.join(parent_dir, 'work_dir'),
         'verbose': False,
+        'mark_as_shipped_schema_file': os.path.join(data_dir, 'mark_as_shipped_task_schema.json'),
+        'mark_as_started_schema_file': os.path.join(data_dir, 'mark_as_started_task_schema.json'),
     }
 
 
