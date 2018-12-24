@@ -14,7 +14,13 @@ async def noop_async(*args, **kwargs):
 
 
 def get_fake_valid_config():
-    return load_json(path="beetmoverscript/test/fake_config.json")
+    config = {
+        'release_schema_file': 'beetmoverscript/data/release_beetmover_task_schema.json',
+        'schema_file': 'beetmoverscript/data/beetmover_task_schema.json',
+        'maven_schema_file': 'beetmoverscript/data/maven_beetmover_task_schema.json',
+    }
+    config.update(load_json(path="beetmoverscript/test/fake_config.json"))
+    return config
 
 
 def get_fake_valid_task(taskjson='task.json'):

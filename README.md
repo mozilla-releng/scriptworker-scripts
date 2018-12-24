@@ -165,7 +165,6 @@ my_email: "scriptworker@example.com"
     "work_dir": "work_dir",
     "artifact_dir": "artifact_dir",
     "verbose": true,
-    "schema_file": "/app/beetmoverworker/beetmoverscript/beetmoverscript/data/beetmover_task_schema.json",
     "aiohttp_max_connections": 10,
     "checksums_digests": ["sha512", "sha256"],
     "blobs_needing_prettynaming_contents": [

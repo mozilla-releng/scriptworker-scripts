@@ -9,9 +9,6 @@
         "target.common.tests.zip"
     ],
     "verbose": true,
-    "release_schema_file": "beetmoverscript/data/release_beetmover_task_schema.json",
-    "schema_file": "beetmoverscript/data/beetmover_task_schema.json",
-    "maven_schema_file": "beetmoverscript/data/maven_beetmover_task_schema.json",
 
     "bucket_config": {
         "nightly": {
