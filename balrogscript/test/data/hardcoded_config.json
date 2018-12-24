@@ -2,11 +2,6 @@
     "artifact_dir": "balrogscript/data/balrog_task_schema.json",
     "disable_certs": false,
     "dummy": false,
-    "schema_files": {
-        "submit-locale": "balrogscript/data/balrog_submit-locale_schema.json",
-        "submit-toplevel": "balrogscript/data/balrog_submit-toplevel_schema.json",
-        "schedule": "balrogscript/data/balrog_schedule_schema.json"
-    },
     "taskcluster_scope_prefix": "project:releng:balrog:",
     "server_config": {
         "dep": {

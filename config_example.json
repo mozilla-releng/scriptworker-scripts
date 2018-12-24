@@ -2,12 +2,6 @@
     "work_dir": "/tmp/work_dir",
     "artifact_dir": "/tmp/artifact_dir",
 
-    "schema_files": {
-        "submit-locale": "balrogscript/data/balrog_submit-locale_schema.json",
-        "submit-toplevel": "balrogscript/data/balrog_submit-toplevel_schema.json",
-        "schedule": "balrogscript/data/balrog_schedule_schema.json"
-    },
-
     "dummy": false,
     "verbose": true,
     "disable_certs": false,
