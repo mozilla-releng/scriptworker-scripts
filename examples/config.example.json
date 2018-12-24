@@ -1,6 +1,5 @@
 {
         "work_dir": "some/work/dir/",
-        "schema_file": "path/to/schema/file",
         "verbose": true,
         "taskcluster_scope_prefix": "project:releng:bouncer:",
         "bouncer_config": {
@@ -16,10 +15,5 @@
                 "username": "some-production-username",
                 "password": "some-production-password"
             }
-      },
-
-      "schema_files": {
-            "submission": "bouncerscript/data/bouncer_submission_task_schema.json",
-            "aliases": "bouncerscript/data/bouncer_aliases_task_schema.json"
       }
 }
