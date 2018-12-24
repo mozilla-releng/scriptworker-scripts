@@ -1,30 +1,44 @@
 {
-"artifact_dir": "balrogscript/data/balrog_task_schema.json",
- "disable_certs": false,
- "dummy": false,
- "schema_files": {
-  "submit-locale": "balrogscript/data/balrog_submit-locale_schema.json",
-  "submit-toplevel": "balrogscript/data/balrog_submit-toplevel_schema.json",
-  "schedule": "balrogscript/data/balrog_schedule_schema.json"
- },
- "taskcluster_scope_prefix": "project:releng:balrog:",
- "server_config": {"dep": {"allowed_channels": ["nightly",
-                                                "release",
-                                                "beta",
-                                                "etc"],
-                           "api_root": "BALROG_API_ROOT",
-                           "balrog_password": "BALROG_PASSWORD",
-                           "balrog_username": "BALROG_USERNAME"},
-                   "nightly": {"allowed_channels": ["nightly"],
-                               "api_root": "BALROG_API_ROOT",
-                               "balrog_password": "BALROG_PASSWORD",
-                               "balrog_username": "BALROG_USERNAME"},
-                   "release": {"allowed_channels": ["release",
-                                                    "release-localtest",
-                                                    "release-cdntest"],
-                               "api_root": "BALROG_API_ROOT",
-                               "balrog_password": "BALROG_PASSWORD",
-                               "balrog_username": "BALROG_USERNAME"}},
- "verbose": true,
- "work_dir": "balrogscript/test/test_work_dir"
+    "artifact_dir": "balrogscript/data/balrog_task_schema.json",
+    "disable_certs": false,
+    "dummy": false,
+    "schema_files": {
+        "submit-locale": "balrogscript/data/balrog_submit-locale_schema.json",
+        "submit-toplevel": "balrogscript/data/balrog_submit-toplevel_schema.json",
+        "schedule": "balrogscript/data/balrog_schedule_schema.json"
+    },
+    "taskcluster_scope_prefix": "project:releng:balrog:",
+    "server_config": {
+        "dep": {
+            "allowed_channels": [
+                "nightly",
+                "release",
+                "beta",
+                "etc"
+            ],
+            "api_root": "BALROG_API_ROOT",
+            "balrog_password": "BALROG_PASSWORD",
+            "balrog_username": "BALROG_USERNAME"
+        },
+        "nightly": {
+            "allowed_channels": [
+                "nightly"
+            ],
+            "api_root": "BALROG_API_ROOT",
+            "balrog_password": "BALROG_PASSWORD",
+            "balrog_username": "BALROG_USERNAME"
+        },
+        "release": {
+            "allowed_channels": [
+                "release",
+                "release-localtest",
+                "release-cdntest"
+            ],
+            "api_root": "BALROG_API_ROOT",
+            "balrog_password": "BALROG_PASSWORD",
+            "balrog_username": "BALROG_USERNAME"
+        }
+    },
+    "verbose": true,
+    "work_dir": "balrogscript/test/test_work_dir"
 }

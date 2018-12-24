@@ -54,5 +54,5 @@
                 "esr-localtest", "esr-cdntest"
             ]
         }
-    },
+    }
 }
