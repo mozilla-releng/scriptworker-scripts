@@ -1,7 +1,6 @@
 {
   "work_dir": "/some/work/dir",
   "verbose": true,
-  "schema_file": "/path/to/pushsnapscript/data/push_snap_task_schema.json",
   "macaroons_locations": {
     "candidate": "/some/candidate_macaroon.cfg",
     "beta": "/some/beta_macaroon.cfg"
