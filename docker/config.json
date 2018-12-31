@@ -1,4 +1,5 @@
-{   "provisioner_id": "test-dummy-provisioner",
+{
+    "provisioner_id": "test-dummy-provisioner",
     "worker_group": "test-dummy-workers",
     "worker_type": "dummy-worker-francis",
     "work_dir": "/app/work",
@@ -6,9 +7,13 @@
     "artifact_dir": "/app/artifacts",
     "artifact_expiration_hours": 24,
     "artifact_upload_timeout": 1200,
-    "task_script": ["/app/py2/bin/python","/app/bin/balrogscript",
-                    "--taskdef","/app/work/task.json",
-                    "--verbose"],
+    "task_script": [
+        "/app/py2/bin/python",
+        "/app/bin/balrogscript",
+        "--taskdef",
+        "/app/work/task.json",
+        "--verbose"
+    ],
     "task_max_timeout": 1200,
     "verbose": true,
     "poll_interval": 10,
