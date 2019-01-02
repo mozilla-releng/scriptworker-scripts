@@ -246,6 +246,7 @@ def setup_config(config_path):
 
 # main {{{1
 def main(config_path=None):
+    # TODO use scriptworker's sync_main(...)
     config = setup_config(config_path)
     setup_logging(config['verbose'])
 
