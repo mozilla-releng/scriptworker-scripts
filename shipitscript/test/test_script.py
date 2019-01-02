@@ -1,5 +1,6 @@
 import os
 import pytest
+import shipitscript
 from unittest.mock import MagicMock
 
 from scriptworker import client
@@ -189,9 +190,12 @@ async def test_async_main(context, monkeypatch, task, raises):
 
 def test_get_default_config():
     parent_dir = os.path.dirname(os.getcwd())
+    data_dir = os.path.join(os.path.dirname(shipitscript.__file__), 'data')
     assert script.get_default_config() == {
         'work_dir': os.path.join(parent_dir, 'work_dir'),
         'verbose': False,
+        'mark_as_shipped_schema_file': os.path.join(data_dir, 'mark_as_shipped_task_schema.json'),
+        'mark_as_started_schema_file': os.path.join(data_dir, 'mark_as_started_task_schema.json'),
     }
 
 
