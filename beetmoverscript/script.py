@@ -631,8 +631,15 @@ def setup_mimetypes():
 
 
 def main(config_path=None):
+    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    default_config = {
+        'schema_file': os.path.join(data_dir, 'beetmover_task_schema.json'),
+        'release_schema_file': os.path.join(data_dir, 'release_beetmover_task_schema.json'),
+        'maven_schema_file': os.path.join(data_dir, 'maven_beetmover_task_schema.json'),
+    }
+
     # There are several task schema. Validation occurs in async_main
-    client.sync_main(async_main, config_path=config_path, should_validate_task=False)
+    client.sync_main(async_main, config_path=config_path, default_config=default_config, should_validate_task=False)
 
 
 __name__ == '__main__' and main()
