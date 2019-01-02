@@ -3,6 +3,7 @@
 from copy import deepcopy
 import json
 import logging
+import os
 import sys
 
 from redo import retry  # noqa: E402
@@ -231,12 +232,21 @@ def setup_config(config_path):
             usage()
         config_path = sys.argv[1]
 
-    config = load_config(config_path)
+    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    config = {
+        'schema_files': {
+            'submit-locale': os.path.join(data_dir, 'balrog_submit-locale_schema.json'),
+            'submit-toplevel': os.path.join(data_dir, 'balrog_submit-toplevel_schema.json'),
+            'schedule': os.path.join(data_dir, 'balrog_schedule_schema.json')
+        },
+    }
+    config.update(load_config(config_path))
     return config
 
 
 # main {{{1
 def main(config_path=None):
+    # TODO use scriptworker's sync_main(...)
     config = setup_config(config_path)
     setup_logging(config['verbose'])
 
