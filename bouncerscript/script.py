@@ -2,6 +2,7 @@
 """ Bouncer main script
 """
 import logging
+import os
 
 from bouncerscript.task import (
     get_task_action, get_task_server, validate_task_schema,
@@ -164,7 +165,16 @@ async def async_main(context):
 
 
 def main(config_path=None):
-    client.sync_main(async_main, config_path=config_path, should_validate_task=False)
+    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    default_config = {
+        'schema_files': {
+            'submission': os.path.join(data_dir, 'bouncer_submission_task_schema.json'),
+            'aliases': os.path.join(data_dir, 'bouncer_aliases_task_schema.json'),
+            'locations': os.path.join(data_dir, 'bouncer_locations_task_schema.json'),
+        }
+    }
+
+    client.sync_main(async_main, config_path=config_path, default_config=default_config, should_validate_task=False)
 
 
 __name__ == '__main__' and main()

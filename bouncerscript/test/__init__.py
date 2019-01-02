@@ -1,6 +1,8 @@
 import aiohttp
 import asyncio
+import bouncerscript
 import json
+import os
 import pytest
 
 from scriptworker.context import Context
@@ -56,7 +58,16 @@ def return_false_sync(*args):
 
 
 def get_fake_valid_config():
-    return load_json(path="bouncerscript/test/fake_config.json")
+    data_dir = os.path.join(os.path.dirname(bouncerscript.__file__), 'data')
+    config = {
+        'schema_files': {
+            'submission': os.path.join(data_dir, 'bouncer_submission_task_schema.json'),
+            'aliases': os.path.join(data_dir, 'bouncer_aliases_task_schema.json'),
+            'locations': os.path.join(data_dir, 'bouncer_locations_task_schema.json'),
+        }
+    }
+    config.update(load_json(path="bouncerscript/test/fake_config.json"))
+    return config
 
 
 def get_fake_valid_task(jobtype):
