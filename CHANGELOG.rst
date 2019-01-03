@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[3.5.0] = (2019-01-02)
+----------------------
+
+Changed
+~~~~~~~
+
+- Specify `schema_file` internally - users of `balrogscript` should no longer set this in config. (`#46 <https://github.com/mozilla-releng/balrogscript/pull/46>`_)
+
+
 [3.4.0] = (2018-12-18)
 ----------------------
 
