@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.2.1] = (2019-12-19)
+----------------------
+
+Changed
+~~~~~~~
+
+- Resolves issue with buildhub.json download.url. (`#200 <https://github.com/mozilla-releng/beetmoverscript/pull/200>`_)
+
+
 [8.2.0] = (2018-12-18)
 ----------------------
 
