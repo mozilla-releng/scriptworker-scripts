@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.3.0] = (2018-01-02)
+----------------------
+
+Changed
+~~~~~~~
+
+- Specify `schema_file` internally - users of `beetmoverscript` should no longer set this in config. (`#201 <https://github.com/mozilla-releng/beetmoverscript/pull/201>`_)
+
+
 [8.2.1] = (2019-12-19)
 ----------------------
 
