@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [upcoming]
+
+### Added
+* Support pushing [`fenix`](https://github.com/mozilla-mobile/fenix) to Google Play 
+
 ## [0.11.0] - 2019-01-02
 
 ### Changed
