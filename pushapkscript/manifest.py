@@ -17,6 +17,7 @@ _DIGEST_ALGORITHM_PER_ANDROID_PRODUCT = {
     'beta': 'SHA1',
     'release': 'SHA1',
     'dep': 'SHA1',
+    'fenix': 'SHA-256',
     'focus': 'SHA-256',
     'reference-browser': 'SHA-256'
 }
