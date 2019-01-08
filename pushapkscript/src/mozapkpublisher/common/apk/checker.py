@@ -23,6 +23,8 @@ def cross_check_apks(apks_metadata_per_paths):
         cross_check_focus_apks(apks_metadata_per_paths)
     elif PRODUCT.is_reference_browser(package_name):
         cross_check_reference_browser_apks(apks_metadata_per_paths)
+    elif PRODUCT.is_fenix(package_name):
+        cross_check_fenix_apks(apks_metadata_per_paths)
     else:
         cross_check_fennec_apks(apks_metadata_per_paths)
 
@@ -45,6 +47,11 @@ def cross_check_fennec_apks(apks_metadata_per_paths):
     _check_all_apks_have_the_same_locales(apks_metadata_per_paths)
 
     _check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths)
+
+
+def cross_check_fenix_apks(apks_metadata_per_paths):
+    _check_all_apks_have_the_same_package_name(apks_metadata_per_paths)
+    _check_apks_version_codes_are_correctly_ordered(apks_metadata_per_paths)
 
 
 def cross_check_reference_browser_apks(apks_metadata_per_paths):

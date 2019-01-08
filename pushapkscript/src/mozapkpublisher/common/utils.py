@@ -39,6 +39,7 @@ def filter_out_identical_values(list_):
 
 class PRODUCT(Enum):
     KLAR = "org.mozilla.klar"
+    FENIX = "org.mozilla.fenix"
     FOCUS = "org.mozilla.focus"
     REFERENCE_BROWSER = "org.mozilla.reference.browser"
 
@@ -53,6 +54,10 @@ class PRODUCT(Enum):
     @staticmethod
     def is_focus_flavor(value):
         return PRODUCT.contains_value(value) and (PRODUCT(value) == PRODUCT.FOCUS or PRODUCT(value) == PRODUCT.KLAR)
+
+    @staticmethod
+    def is_fenix(value):
+        return PRODUCT.contains_value(value) and PRODUCT(value) == PRODUCT.FENIX
 
     @staticmethod
     def is_reference_browser(value):
