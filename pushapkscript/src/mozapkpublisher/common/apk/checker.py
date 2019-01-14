@@ -6,6 +6,7 @@ from mozilla_version.gecko import FennecVersion
 
 from mozapkpublisher.common.apk.history import get_expected_api_levels_for_version, get_expected_architectures_for_version
 from mozapkpublisher.common.exceptions import BadApk, BadSetOfApks, NotMultiLocaleApk
+from mozapkpublisher.common.googleplay import is_package_name_nightly
 from mozapkpublisher.common.utils import filter_out_identical_values, PRODUCT
 
 logger = logging.getLogger(__name__)
@@ -103,7 +104,7 @@ def _check_version_matches_package_name(version, package_name):
     if (
         (package_name == 'org.mozilla.firefox' and sanitized_version.is_release) or
         # Due to project Dawn, Nightly is now using the Aurora package name. See bug 1357351.
-        (package_name == 'org.mozilla.fennec_aurora' and sanitized_version.is_nightly) or
+        (is_package_name_nightly(package_name) and sanitized_version.is_nightly) or
         (
             # XXX Betas aren't following the regular XX.0bY format. Instead they follow XX.0
             # (which looks like release). Therefore, we can't use sanitized_version.is_beta

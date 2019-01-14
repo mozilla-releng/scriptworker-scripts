@@ -1,5 +1,7 @@
 import logging
 
+from mozapkpublisher.common.googleplay import is_package_name_nightly
+
 logger = logging.getLogger(__name__)
 
 
@@ -49,7 +51,7 @@ def get_expected_architectures_for_version(firefox_version, package_name):
     major_version = get_firefox_major_version_number(firefox_version)
     first_aarch64_version = _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE['arm64-v8a']['first_firefox_version']
 
-    if major_version >= first_aarch64_version and package_name != 'org.mozilla.fennec_aurora':
+    if major_version >= first_aarch64_version and not is_package_name_nightly(package_name):
         expected_architectures.remove('arm64-v8a')
 
     return tuple(expected_architectures)
