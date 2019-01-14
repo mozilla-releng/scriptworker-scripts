@@ -2,7 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.11.0]
+## [0.12.0] - 2019-01-14
+
+### Added
+* Allow AArch64 on Fennec Nightly only
+
+## [0.11.0] - 2019-01-09
 
 ### Added
 * Support pushing [`fenix`](https://github.com/mozilla-mobile/fenix) 
