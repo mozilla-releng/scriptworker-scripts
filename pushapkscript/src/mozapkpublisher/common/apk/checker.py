@@ -163,9 +163,13 @@ def _check_all_apks_are_multi_locales(apks_metadata_per_paths):
 
 
 def _check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths):
-    firefox_version = list(apks_metadata_per_paths.values())[0]['firefox_version']
+    single_metadata = list(apks_metadata_per_paths.values())[0]
+    firefox_version = single_metadata['firefox_version']
+    package_name = single_metadata['package_name']
+
     expected_api_levels = get_expected_api_levels_for_version(firefox_version)
-    expected_architectures = get_expected_architectures_for_version(firefox_version)
+    expected_architectures = get_expected_architectures_for_version(firefox_version, package_name)
+
     expected_combos = _craft_expected_combos(firefox_version, expected_api_levels, expected_architectures)
 
     current_combos = set([

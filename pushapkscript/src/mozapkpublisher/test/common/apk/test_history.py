@@ -18,12 +18,17 @@ def test_get_expected_api_levels_for_version(firefox_version, expected):
     assert get_expected_api_levels_for_version(firefox_version) == expected
 
 
-@pytest.mark.parametrize('firefox_version, expected', (
-    ('4.0', ('armeabi-v7a',)),
-    ('14.0', ('armeabi-v7a', 'x86')),
+@pytest.mark.parametrize('firefox_version, package_name, expected', (
+    ('4.0', 'org.mozilla.fennec_aurora', ('armeabi-v7a',)),
+    ('14.0', 'org.mozilla.fennec_aurora', ('armeabi-v7a', 'x86')),
+    ('66.0', 'org.mozilla.fennec_aurora', ('arm64-v8a', 'armeabi-v7a', 'x86')),
+    ('67.0', 'org.mozilla.fennec_aurora', ('arm64-v8a', 'armeabi-v7a', 'x86')),
+    ('66.0', 'org.mozilla.firefox_beta', ('armeabi-v7a', 'x86')),
+    ('67.0', 'org.mozilla.firefox_beta', ('armeabi-v7a', 'x86')),
+    ('66.0', 'org.mozilla.firefox', ('armeabi-v7a', 'x86')),
 ))
-def test_get_expected_architectures_for_version(firefox_version, expected):
-    assert get_expected_architectures_for_version(firefox_version) == expected
+def test_get_expected_architectures_for_version(firefox_version, package_name, expected):
+    assert get_expected_architectures_for_version(firefox_version, package_name) == expected
 
 
 def test_get_expected_things_for_version():

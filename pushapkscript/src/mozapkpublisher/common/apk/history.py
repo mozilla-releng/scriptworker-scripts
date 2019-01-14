@@ -21,8 +21,11 @@ _MAJOR_FIREFOX_VERSIONS_PER_API_LEVEL = {
     }
 }
 
-# TODO: Support ARM64, once bug 1368484 is ready
+# TODO Bug 1490502: Activate x86-64 once ready
 _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE = {
+    'arm64-v8a': {
+        'first_firefox_version': 66,    # Bug 1368484
+    },
     'armeabi-v7a': {
         'first_firefox_version': 4,      # Bug 618789
     },
@@ -36,8 +39,20 @@ def get_expected_api_levels_for_version(firefox_version):
     return _get_expected_things_for_version(firefox_version, _MAJOR_FIREFOX_VERSIONS_PER_API_LEVEL, 'API level')
 
 
-def get_expected_architectures_for_version(firefox_version):
-    return _get_expected_things_for_version(firefox_version, _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE, 'architecture')
+def get_expected_architectures_for_version(firefox_version, package_name):
+    expected_architectures = list(_get_expected_things_for_version(
+        firefox_version, _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE, 'architecture'
+    ))
+
+    # XXX arm64-v8a (aka AArch64) is not planned to ride trains regularly. It may need a couple of
+    # cycles to stabilize. That's why we just expect it on Nightly, for now.
+    major_version = get_firefox_major_version_number(firefox_version)
+    first_aarch64_version = _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE['arm64-v8a']['first_firefox_version']
+
+    if major_version >= first_aarch64_version and package_name != 'org.mozilla.fennec_aurora':
+        expected_architectures.remove('arm64-v8a')
+
+    return tuple(expected_architectures)
 
 
 def _get_expected_things_for_version(firefox_version, dict_of_things, thing_name):

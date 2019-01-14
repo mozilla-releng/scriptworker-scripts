@@ -120,6 +120,8 @@ def test_bad_get_apk_architecture():
 @pytest.mark.parametrize('paths, expected', ((
     ['lib/armeabi-v7a/libmozglue.so', 'lib/armeabi-v7a/libplugin-container.so'], 'armeabi-v7a',
 ), (
+    ['lib/arm64-v8a/libmozglue.so', 'lib/arm64-v8a/libplugin-container.so'], 'arm64-v8a',
+), (
     ['lib/x86/libmozglue.so', 'lib/x86/libplugin-container.so'], 'x86',
 )))
 def test_extract_architecture_from_paths(paths, expected):

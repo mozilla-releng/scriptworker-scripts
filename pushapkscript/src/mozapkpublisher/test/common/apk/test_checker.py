@@ -341,19 +341,54 @@ def test_bad_check_all_apks_are_multi_locales(apks_metadata_per_paths, expected_
         _check_all_apks_are_multi_locales(apks_metadata_per_paths)
 
 
-def test_check_all_architectures_and_api_levels_are_present():
-    _check_all_architectures_and_api_levels_are_present({
-        'arm.apk': {
-            'firefox_version': '57.0',
-            'architecture': 'armeabi-v7a',
-            'api_level': 16,
-        },
-        'x86.apk': {
-            'firefox_version': '57.0',
-            'architecture': 'x86',
-            'api_level': 16,
-        },
-    })
+@pytest.mark.parametrize('apks_metadata_per_paths', ({
+    'arm.apk': {
+        'firefox_version': '57.0',
+        'architecture': 'armeabi-v7a',
+        'api_level': 16,
+        'package_name': 'org.mozilla.firefox'
+    },
+    'x86.apk': {
+        'firefox_version': '57.0',
+        'architecture': 'x86',
+        'api_level': 16,
+        'package_name': 'org.mozilla.firefox'
+    },
+}, {
+    'arm.apk': {
+        'firefox_version': '66.0',
+        'architecture': 'armeabi-v7a',
+        'api_level': 16,
+        'package_name': 'org.mozilla.firefox'
+    },
+    'x86.apk': {
+        'firefox_version': '66.0',
+        'architecture': 'x86',
+        'api_level': 16,
+        'package_name': 'org.mozilla.firefox'
+    },
+}, {
+    'arm.apk': {
+        'firefox_version': '66.0',
+        'architecture': 'armeabi-v7a',
+        'api_level': 16,
+        'package_name': 'org.mozilla.fennec_aurora'
+    },
+    'x86.apk': {
+        'firefox_version': '66.0',
+        'architecture': 'x86',
+        'api_level': 16,
+        'package_name': 'org.mozilla.fennec_aurora'
+    },
+    'aarch64.apk': {
+        'firefox_version': '66.0',
+        'architecture': 'arm64-v8a',
+        'api_level': 16,
+        'package_name': 'org.mozilla.fennec_aurora'
+    },
+}))
+def test_check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths):
+    _check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths)
 
 
 @pytest.mark.parametrize('apks_metadata_per_paths', ({
@@ -361,38 +396,83 @@ def test_check_all_architectures_and_api_levels_are_present():
         'firefox_version': '57.0',
         'architecture': 'armeabi-v7a',
         'api_level': 16,
+        'package_name': 'org.mozilla.firefox',
     },
     'lying-x86.apk': {
         'firefox_version': '57.0',
         'architecture': 'armeabi-v7a',
         'api_level': 16,
+        'package_name': 'org.mozilla.firefox',
     },
 }, {
     'unsupported-api-level-arm.apk': {
         'firefox_version': '57.0',
         'architecture': 'armeabi-v7a',
         'api_level': 15,
+        'package_name': 'org.mozilla.firefox',
     },
     'x86.apk': {
         'firefox_version': '57.0',
         'architecture': 'x86',
         'api_level': 16,
+        'package_name': 'org.mozilla.firefox',
     },
 }, {
     'arm.apk': {
         'firefox_version': '57.0',
         'architecture': 'armeabi-v7a',
         'api_level': 16,
+        'package_name': 'org.mozilla.firefox',
     },
     'unsupported-api-level-arm.apk': {
         'firefox_version': '57.0',
         'architecture': 'armeabi-v7a',
         'api_level': 15,
+        'package_name': 'org.mozilla.firefox',
     },
     'x86.apk': {
         'firefox_version': '57.0',
         'architecture': 'x86',
         'api_level': 16,
+        'package_name': 'org.mozilla.firefox',
+    },
+}, {
+    'arm.apk': {
+        'firefox_version': '66.0',
+        'architecture': 'armeabi-v7a',
+        'api_level': 16,
+        'package_name': 'org.mozilla.firefox_beta'
+    },
+    'x86.apk': {
+        'firefox_version': '66.0',
+        'architecture': 'x86',
+        'api_level': 16,
+        'package_name': 'org.mozilla.firefox_beta'
+    },
+    'aarch64.apk': {
+        'firefox_version': '66.0',
+        'architecture': 'arm64-v8a',
+        'api_level': 16,
+        'package_name': 'org.mozilla.firefox_beta'
+    },
+}, {
+    'arm.apk': {
+        'firefox_version': '66.0',
+        'architecture': 'armeabi-v7a',
+        'api_level': 16,
+        'package_name': 'org.mozilla.firefox'
+    },
+    'x86.apk': {
+        'firefox_version': '66.0',
+        'architecture': 'x86',
+        'api_level': 16,
+        'package_name': 'org.mozilla.firefox'
+    },
+    'aarch64.apk': {
+        'firefox_version': '66.0',
+        'architecture': 'arm64-v8a',
+        'api_level': 16,
+        'package_name': 'org.mozilla.firefox'
     },
 }))
 def test_bad_check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths):
