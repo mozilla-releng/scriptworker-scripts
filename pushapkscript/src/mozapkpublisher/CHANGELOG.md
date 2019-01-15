@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.13.0] - 2019-01-15
+
+### Fixed
+* AArch64 push
+
+### Added
+* Allow an architecture to not share the same API levels with others.
+
 ## [0.12.0] - 2019-01-14
 
 ### Added
