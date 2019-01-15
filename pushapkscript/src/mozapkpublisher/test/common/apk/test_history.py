@@ -1,56 +1,69 @@
 import pytest
 
-from mozapkpublisher.common.apk.history import get_expected_api_levels_for_version, \
-    get_expected_architectures_for_version, _get_expected_things_for_version, \
-    _is_firefox_version_in_range, get_firefox_major_version_number
+from mozapkpublisher.common.apk.history import (
+    craft_combos_pretty_names,
+    get_expected_combos,
+    get_firefox_major_version_number,
+    _is_firefox_version_in_range,
+)
 
 
-@pytest.mark.parametrize('firefox_version, expected', (
-    ('32.0b9', (9,)),
-    ('37.0a2', (9, 11)),
-    ('45.0', (9, 11,)),
-    ('47.0.1', (9, 15,)),
-    ('49.0', (15,)),
-    ('55.0.2', (15,)),
-    ('57.0', (16,)),
-))
-def test_get_expected_api_levels_for_version(firefox_version, expected):
-    assert get_expected_api_levels_for_version(firefox_version) == expected
+@pytest.mark.parametrize('firefox_version, package_name, expected', ((
+    '32.0b9',
+    'org.mozilla.firefox_beta',
+    set([('x86', 9), ('armeabi-v7a', 9)]),
+), (
+    '37.0a2',
+    'org.mozilla.fennec_aurora',
+    set([('x86', 11), ('armeabi-v7a', 9), ('armeabi-v7a', 11)]),
+), (
+    '45.0',
+    'org.mozilla.firefox',
+    set([('x86', 11), ('armeabi-v7a', 9), ('armeabi-v7a', 11)]),
+), (
+    '47.0.1',
+    'org.mozilla.firefox',
+    set([('x86', 15), ('armeabi-v7a', 9), ('armeabi-v7a', 15)]),
+), (
+    '49',
+    'org.mozilla.firefox',
+    set([('x86', 15), ('armeabi-v7a', 15)]),
+), (
+    '55.0.2',
+    'org.mozilla.firefox',
+    set([('x86', 15), ('armeabi-v7a', 15)]),
+), (
+    '57.0',
+    'org.mozilla.firefox',
+    set([('x86', 16), ('armeabi-v7a', 16)]),
+), (
+    '66.0',
+    'org.mozilla.fennec_aurora',
+    set([('x86', 16), ('armeabi-v7a', 16), ('arm64-v8a', 21)]),
+), (
+    '67.0',
+    'org.mozilla.fennec_aurora',
+    set([('x86', 16), ('armeabi-v7a', 16), ('arm64-v8a', 21)]),
+), (
+    '66.0',
+    'org.mozilla.firefox_beta',
+    set([('x86', 16), ('armeabi-v7a', 16)]),
+), (
+    '67.0',
+    'org.mozilla.firefox_beta',
+    set([('x86', 16), ('armeabi-v7a', 16)]),
+), (
+    '66.0',
+    'org.mozilla.firefox',
+    set([('x86', 16), ('armeabi-v7a', 16)]),
+)))
+def test_get_expected_combos(firefox_version, package_name, expected):
+    assert get_expected_combos(firefox_version, package_name) == expected
 
 
-@pytest.mark.parametrize('firefox_version, package_name, expected', (
-    ('4.0', 'org.mozilla.fennec_aurora', ('armeabi-v7a',)),
-    ('14.0', 'org.mozilla.fennec_aurora', ('armeabi-v7a', 'x86')),
-    ('66.0', 'org.mozilla.fennec_aurora', ('arm64-v8a', 'armeabi-v7a', 'x86')),
-    ('67.0', 'org.mozilla.fennec_aurora', ('arm64-v8a', 'armeabi-v7a', 'x86')),
-    ('66.0', 'org.mozilla.firefox_beta', ('armeabi-v7a', 'x86')),
-    ('67.0', 'org.mozilla.firefox_beta', ('armeabi-v7a', 'x86')),
-    ('66.0', 'org.mozilla.firefox', ('armeabi-v7a', 'x86')),
-))
-def test_get_expected_architectures_for_version(firefox_version, package_name, expected):
-    assert get_expected_architectures_for_version(firefox_version, package_name) == expected
-
-
-def test_get_expected_things_for_version():
-    dict_of_things = {
-        'an_old_thing': {
-            'first_firefox_version': 1,
-            'last_firefox_version': 2,
-        },
-        'a_current_thing': {
-            'first_firefox_version': 3,
-        },
-        'zzz-another_current_thing': {
-            'first_firefox_version': 4,
-            'last_firefox_version': 999,
-        },
-        'a_future_thing': {
-            'first_firefox_version': 1000,
-        },
-    }
-    assert _get_expected_things_for_version('57.0', dict_of_things, 'name') == (
-        'a_current_thing', 'zzz-another_current_thing'
-    )
+def test_empty_get_expected_combos():
+    with pytest.raises(ValueError):
+        get_expected_combos('8.0', 'org.mozilla.firefox')
 
 
 @pytest.mark.parametrize('firefox_version, range_dict, expected', (
@@ -77,3 +90,7 @@ def test_is_firefox_version_in_range(firefox_version, range_dict, expected):
 ))
 def test_get_firefox_major_version_number(firefox_version, expected):
     assert get_firefox_major_version_number(firefox_version) == expected
+
+
+def test_craft_combos_pretty_names():
+    assert craft_combos_pretty_names((('x86', 15), ('armeabi-v7a', 15))) == 'x86 API 15+, armeabi-v7a API 15+'

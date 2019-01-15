@@ -35,7 +35,7 @@ def test_generate_apk_base_url():
         'https://ftp.mozilla.org/pub/mobile/candidates/50.0b8-candidates/build1/android-api-15/multi'
 
 
-@pytest.mark.parametrize('version, architure, expected', ((
+@pytest.mark.parametrize('version, architecture, expected', ((
     '45.0', 'arm', ['api-9', 'api-11'],
 ), (
     '47.0', 'arm', ['api-9', 'api-15'],
@@ -46,8 +46,8 @@ def test_generate_apk_base_url():
 ), (
     '56.0', 'arm', ['api-16'],
 )))
-def test_get_api_suffix(version, architure, expected):
-    assert get_apk.get_api_suffix(version, architure) == expected
+def test_get_api_suffix(version, architecture, expected):
+    assert get_apk.get_api_suffix(version, architecture) == expected
 
 
 def test_craft_apk_and_checksums_url_and_download_locations():

@@ -81,7 +81,7 @@ def _extract_architecture_from_paths(apk_path, paths):
     if number_of_unique_architectures == 0:
         raise BadApk('"{}" does not contain any architecture data under these paths: {}'.format(apk_path, paths))
     elif number_of_unique_architectures > 1:
-        raise BadApk('"{}" contains too many architures: {}'.format(apk_path, unique_architectures))
+        raise BadApk('"{}" contains too many architectures: {}'.format(apk_path, unique_architectures))
 
     return unique_architectures[0]
 

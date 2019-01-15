@@ -9,10 +9,18 @@ import signal
 import shutil
 import logging
 
-from mozapkpublisher.common.apk.history import get_expected_api_levels_for_version, get_firefox_major_version_number
+from mozapkpublisher.common.apk.history import (
+    get_expected_api_levels,
+    get_firefox_major_version_number,
+)
 from mozapkpublisher.common.base import Base, ArgumentParser
 from mozapkpublisher.common.exceptions import CheckSumMismatch
-from mozapkpublisher.common.utils import load_json_url, download_file, file_sha512sum
+from mozapkpublisher.common.utils import (
+    download_file,
+    file_sha512sum,
+    get_firefox_package_name,
+    load_json_url,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +80,9 @@ class GetAPK(Base):
         if arch != 'arm':
             return [arch]
         else:
-            api_levels = get_expected_api_levels_for_version(version)
+            api_levels = get_expected_api_levels(
+                version, get_firefox_package_name(version)
+            )
             # TODO support old schemes when no API level was in the path
             return [
                 'api-{}'.format(api_level) for api_level in api_levels
@@ -125,6 +135,7 @@ class GetAPK(Base):
                 self.config.locale != self.parser.get_default('locale')):
             print('None of the arguments --build, --locale and --version can be used with --latest-nightly')
             sys.exit(1)
+
         version = self.get_version_name()
         architecture = self.config.arch
         build = str(self.config.build)

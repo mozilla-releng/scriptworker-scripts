@@ -6,6 +6,8 @@ import os
 import requests
 from enum import Enum
 
+from mozilla_version.gecko import FennecVersion
+
 logger = logging.getLogger(__name__)
 
 
@@ -62,3 +64,15 @@ class PRODUCT(Enum):
     @staticmethod
     def is_reference_browser(value):
         return PRODUCT.contains_value(value) and PRODUCT(value) == PRODUCT.REFERENCE_BROWSER
+
+
+def get_firefox_package_name(firefox_version):
+    version = FennecVersion.parse(firefox_version)
+    if version.is_nightly:
+        return 'org.mozilla.fennec_aurora'
+    elif version.is_beta:
+        return 'org.mozilla.firefox_beta'
+    elif version.is_release:
+        return 'org.mozilla.firefox'
+    else:
+        raise ValueError('Unsupported version: {}'.format(firefox_version))
