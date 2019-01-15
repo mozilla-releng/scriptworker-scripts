@@ -739,6 +739,10 @@ def test_check_version_matches_nightly_regex(version, raises):
     '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-x86_64.tar.bz2',
     False
 ), (
+    'firefox-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-66.0a1.:lang.win64-aarch64.installer.exe',
+    False
+), (
     'firefox-nightly-msi-latest-l10n-ssl',
     '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win64.installer.msi',
     False
@@ -828,6 +832,10 @@ def test_check_version_matches_nightly_regex(version, raises):
     False
 ), (
     'firefox-nightly-latest-l10n-ssl',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-66.0a1.:lang.win64-aarch64.installer.exe',
+    False
+), (
+    'firefox-nightly-latest-l10n-ssl',
     '/firefox/candidates/latest-mozilla-central-l10n/firefox-63.0a1.:lang.win32.installer.exe',
     True
 ), (
@@ -853,6 +861,10 @@ def test_check_version_matches_nightly_regex(version, raises):
 ), (
     'firefox-nightly-latest-ssl',
     '/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win64.installer.exe',
+    False
+), (
+    'firefox-nightly-latest-ssl',
+    '/firefox/nightly/latest-mozilla-central/firefox-66.0a1.en-US.win64-aarch64.installer.exe',
     False
 ), (
     'firefox-nightly-latest-ssl',
@@ -893,6 +905,10 @@ def test_check_version_matches_nightly_regex(version, raises):
 ), (
     'firefox-nightly-latest-l10n',
     '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0a1.:lang.linux-i686.tar.bz2',
+    False
+), (
+    'firefox-nightly-latest-l10n',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-66.0a1.:lang.win64-aarch64.installer.exe',
     False
 ), (
     'firefox-nightly-latest-l10n',

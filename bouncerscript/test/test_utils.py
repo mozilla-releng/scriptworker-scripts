@@ -521,6 +521,49 @@ async def test_does_location_path_exist(context, mocker, platform, path, returne
     False,
 ), (
     "fake-product",
+    ('<?xml version="1.0" encoding="utf-8"?><locations><product id="2005" '
+     'name="firefox-nightly-latest"><location id="9379" os="win">/firefox/nightly/'
+     'latest-mozilla-central-l10n/firefox-66.0a1.:lang.win32.installer.exe'
+     '</location><location id="23647" os="linux">/firefox/nightly/latest-'
+     'mozilla-central-l10n/firefox-66.0a1.:lang.linux-i686.tar.bz2</location>'
+     '<location id="23645" os="osx">/firefox/nightly/latest-mozilla-central-'
+     'l10n/firefox-66.0a1.:lang.mac.dmg</location><location id="23646" '
+     'os="linux64">/firefox/nightly/latest-mozilla-central-l10n/firefox-66.'
+     '0a1.:lang.linux-x86_64.tar.bz2</location><location id="20140" os="win64"'
+     '>/firefox/nightly/latest-mozilla-central-l10n/firefox-66.0a1.:lang.win64.'
+     'installer.exe</location><location id="51281" os="win64-aarch64">/firefox'
+     '/nightly/latest-mozilla-central-l10n/firefox-66.0a1.:lang.win64-aarch64.'
+     'installer.exe</location></product></locations>'),
+    [
+        {
+            "os": "win",
+            "id": "9379",
+            "path": "/firefox/nightly/latest-mozilla-central-l10n/firefox-66.0a1.:lang.win32.installer.exe"
+        }, {
+            "os": "linux",
+            "id": "23647",
+            "path": "/firefox/nightly/latest-mozilla-central-l10n/firefox-66.0a1.:lang.linux-i686.tar.bz2"
+        }, {
+            "os": "osx",
+            "id": "23645",
+            "path": "/firefox/nightly/latest-mozilla-central-l10n/firefox-66.0a1.:lang.mac.dmg"
+        }, {
+            "os": "linux64",
+            "id": "23646",
+            "path": "/firefox/nightly/latest-mozilla-central-l10n/firefox-66.0a1.:lang.linux-x86_64.tar.bz2"
+        }, {
+            "os": "win64",
+            "id": "20140",
+            "path": "/firefox/nightly/latest-mozilla-central-l10n/firefox-66.0a1.:lang.win64.installer.exe"
+        }, {
+            "os": "win64-aarch64",
+            "id": "51281",
+            "path": "/firefox/nightly/latest-mozilla-central-l10n/firefox-66.0a1.:lang.win64-aarch64.installer.exe"
+        }
+    ],
+    False,
+), (
+    "fake-product",
     ('<?xml version="1.0" encoding="utf-8"?><locations><product id="8696" '
      'name="Fennec-62.0b10"><location id="43610" os="android-corrupt-platform">/mobile/releases'
      '/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk</'

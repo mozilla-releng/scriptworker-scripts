@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.4.1] - 2019-01-14
+### Added
+- Added support for aarch64 in bouncer location nightly jobs
+
 ## [3.4.0] - 2019-01-02
 ### Changed
 * `schema_file` is now specified internally and should no longer be set in configuration
