@@ -30,8 +30,8 @@ _DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
 logger = logging.getLogger(__name__)
 
 
-def craft_valid_track_values(additional_track_values):
-    return _DEFAULT_TRACK_VALUES + additional_track_values
+def craft_valid_track_values(has_nightly_track):
+    return _DEFAULT_TRACK_VALUES + (['nightly'] if has_nightly_track else [])
 
 
 def add_general_google_play_arguments(parser):

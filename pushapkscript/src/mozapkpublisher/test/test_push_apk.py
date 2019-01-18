@@ -259,7 +259,7 @@ def test_custom_google_play_track(edit_service_mock, monkeypatch):
     with pytest.raises(WrongArgumentGiven):
         push_apk(APKS, SERVICE_ACCOUNT, credentials, 'nightly', False)
 
-    config['additional_track'] = 'nightly'
+    config['has_nightly_track'] = True
     push_apk(APKS, SERVICE_ACCOUNT, credentials, 'nightly', False)
 
 
