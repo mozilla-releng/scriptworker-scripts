@@ -51,6 +51,7 @@ class GooglePlayTest(unittest.TestCase):
                 'no_gp_string_update': True,
                 'service_account': '{}_account'.format(android_product),
                 'track': 'alpha',
+                'has_nightly_track': False,
             })
 
     def test_craft_push_config_allows_rollout_percentage(self):
@@ -64,6 +65,7 @@ class GooglePlayTest(unittest.TestCase):
             'rollout_percentage': 10,
             'service_account': 'release_account',
             'track': 'rollout',
+            'has_nightly_track': False,
         })
 
     def test_craft_push_config_allows_to_contact_google_play_or_not(self):
@@ -82,7 +84,7 @@ class GooglePlayTest(unittest.TestCase):
         self.assertTrue(config['commit'])
 
     def test_craft_push_config_raises_error_when_android_product_is_not_part_of_config(self):
-        self.context.task['scopes'] = ['project:releng:googleplay:non_exiting_android_product']
+        self.context.task['scopes'] = ['project:releng:googleplay:non_existing_android_product']
         self.assertRaises(TaskVerificationError, craft_push_apk_config, self.context, self.apks)
 
     def test_craft_push_config_raises_error_when_google_play_accounts_does_not_exist(self):

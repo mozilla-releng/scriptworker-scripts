@@ -10,6 +10,30 @@ log = logging.getLogger(__name__)
 _AUTHORIZED_PRODUCTS_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release', 'fenix', 'focus', 'reference-browser')
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
+_PRODUCT_CONFIG = {
+    'dep': {
+        'has_nightly_track': False
+    },
+    'aurora': {
+        'has_nightly_track': False
+    },
+    'beta': {
+        'has_nightly_track': False
+    },
+    'fenix': {
+        'has_nightly_track': True
+    },
+    'focus': {
+        'has_nightly_track': True
+    },
+    'reference-browser': {
+        'has_nightly_track': True
+    },
+    'release': {
+        'has_nightly_track': False
+    },
+}
+
 
 def publish_to_googleplay(context, apks, google_play_strings_path=None):
     from mozapkpublisher.push_apk import PushAPK
@@ -20,6 +44,13 @@ def publish_to_googleplay(context, apks, google_play_strings_path=None):
 
 
 def craft_push_apk_config(context, apks, google_play_strings_path=None):
+    product_name = extract_android_product_from_scopes(context)
+    try:
+        has_nightly_track = _PRODUCT_CONFIG[product_name]['has_nightly_track']
+    except KeyError:
+        raise TaskVerificationError('Android "{}" does not exist in the configuration of this instance.\
+    Are you sure you allowed to push such APK?'.format(product_name))
+
     android_product = extract_android_product_from_scopes(context)
     payload = context.task['payload']
 
@@ -29,6 +60,7 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
         'credentials': get_certificate_path(context, android_product),
         'service_account': get_service_account(context, android_product),
         'track': payload['google_play_track'],
+        'has_nightly_track': has_nightly_track,
     }
 
     if payload.get('rollout_percentage'):
