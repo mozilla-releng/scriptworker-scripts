@@ -1,13 +1,16 @@
 import logging
 
+from scriptworker.context import Context
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
+from pushapkscript.exceptions import ProductValidationError
 from pushapkscript.task import extract_android_product_from_scopes
 
 log = logging.getLogger(__name__)
 
 _AUTHORIZED_PRODUCTS_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release', 'fenix', 'focus', 'reference-browser')
+_DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
@@ -21,16 +24,20 @@ def publish_to_googleplay(context, apks, google_play_strings_path=None):
 
 def craft_push_apk_config(context, apks, google_play_strings_path=None):
     android_product = extract_android_product_from_scopes(context)
-    payload = context.task['payload']
     product_config = _get_product_config(context, android_product)
+    valid_track_values = craft_valid_track_values(product_config['has_nightly_track'])
+    payload = context.task['payload']
+    track = payload['google_play_track']
+
+    if track not in valid_track_values:
+        raise ProductValidationError('Track name "{}" not valid. Allowed values: {}'.format(track, valid_track_values))
 
     push_apk_config = {
         '*args': sorted(apks),   # APKs have been positional arguments since mozapkpublisher 0.6.0
         'commit': should_commit_transaction(context),
         'credentials': product_config['certificate'],
         'service_account': product_config['service_account'],
-        'track': payload['google_play_track'],
-        'has_nightly_track': product_config['has_nightly_track'],
+        'track': payload['google_play_track']
     }
 
     if payload.get('rollout_percentage'):
@@ -46,6 +53,10 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
         push_apk_config['update_gp_strings_from_file'] = google_play_strings_path
 
     return push_apk_config
+
+
+def craft_valid_track_values(has_nightly_track):
+    return _DEFAULT_TRACK_VALUES + (['nightly'] if has_nightly_track else [])
 
 
 def _get_product_config(context, android_product):
@@ -111,3 +122,24 @@ def _find_unique_google_play_strings_file_in_dict(artifact_dict):
         no_item_error_message='Could not find "{}" in upstreamArtifacts: {}'.format(_EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict),
         too_many_item_error_message='"{}" is defined too many times among these upstreamArtifacts {}'.format(_EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict),
     )
+
+
+if __name__ == '__main__':
+    context = Context()
+    context.task = {
+            'payload': {
+                'google_play_track': 'nightly'
+            },
+            'scopes': ['bonk:fenix'],
+        }
+    context.config = {
+        'products': {
+            'fenix': {
+                'has_nightly_track': False,
+                'service_account': '',
+                'certificate': '/home/mitch/dev/mozapkpublisher/bonk.p12'
+            }
+        },
+        'taskcluster_scope_prefixes': ['bonk']
+    }
+    publish_to_googleplay(context, ['/home/mitch/dev/fenix/app/build/outputs/apk/arm/release/app-arm-release-unsigned.apk'])

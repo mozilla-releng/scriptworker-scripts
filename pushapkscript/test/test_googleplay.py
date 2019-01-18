@@ -1,8 +1,10 @@
 import unittest
 
+import pytest
 from scriptworker.exceptions import TaskVerificationError
 from unittest.mock import MagicMock
 
+from pushapkscript.exceptions import ProductValidationError
 from pushapkscript.googleplay import craft_push_apk_config, \
     _get_product_config, should_commit_transaction, get_google_play_strings_path, \
     _check_google_play_string_is_the_only_failed_task, _find_unique_google_play_strings_file_in_dict
@@ -20,19 +22,16 @@ class GooglePlayTest(unittest.TestCase):
                 },
                 'beta': {
                     'has_nightly_track': False,
-
                     'service_account': 'beta_account',
                     'certificate': '/path/to/beta.p12',
                 },
                 'release': {
                     'has_nightly_track': False,
-
                     'service_account': 'release_account',
                     'certificate': '/path/to/release.p12',
                 },
                 'dep': {
                     'has_nightly_track': False,
-
                     'service_account': 'dummy_dep',
                     'certificate': '/path/to/dummy_non_p12_file',
                 },
@@ -58,8 +57,26 @@ class GooglePlayTest(unittest.TestCase):
                 'no_gp_string_update': True,
                 'service_account': '{}_account'.format(android_product),
                 'track': 'alpha',
-                'has_nightly_track': False,
             })
+
+    def test_craft_push_config_validates_track(self):
+        self.context.task['payload']['google_play_track'] = 'fake'
+        with pytest.raises(ProductValidationError):
+            craft_push_apk_config(self.context, self.apks)
+
+        self.context.task['payload']['google_play_track'] = 'nightly'
+        with pytest.raises(ProductValidationError):
+            craft_push_apk_config(self.context, self.apks)
+
+        self.context.config['products']['release']['has_nightly_track'] = True
+        self.assertEqual(craft_push_apk_config(self.context, self.apks), {
+            '*args': ['/path/to/arm_v15.apk', '/path/to/x86.apk'],
+            'credentials': '/path/to/release.p12',
+            'commit': False,
+            'no_gp_string_update': True,
+            'service_account': 'release_account',
+            'track': 'nightly',
+        })
 
     def test_craft_push_config_allows_rollout_percentage(self):
         self.context.task['payload']['google_play_track'] = 'rollout'
@@ -72,7 +89,6 @@ class GooglePlayTest(unittest.TestCase):
             'rollout_percentage': 10,
             'service_account': 'release_account',
             'track': 'rollout',
-            'has_nightly_track': False,
         })
 
     def test_craft_push_config_allows_to_contact_google_play_or_not(self):
