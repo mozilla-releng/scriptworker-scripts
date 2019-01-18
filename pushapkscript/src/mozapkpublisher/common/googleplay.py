@@ -23,15 +23,7 @@ from unittest.mock import MagicMock
 
 from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
 
-# Google play has currently 4 tracks by default. Rollout deploys
-# to a limited percentage of users
-_DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
-
 logger = logging.getLogger(__name__)
-
-
-def craft_valid_track_values(has_nightly_track):
-    return _DEFAULT_TRACK_VALUES + (['nightly'] if has_nightly_track else [])
 
 
 def add_general_google_play_arguments(parser):

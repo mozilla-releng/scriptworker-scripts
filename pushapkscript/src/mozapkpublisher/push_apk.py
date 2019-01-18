@@ -62,11 +62,6 @@ class PushAPK:
         edit_service.commit_transaction()
 
     def run(self):
-        valid_track_values = googleplay.craft_valid_track_values(self.config.has_nightly_track)
-        if not self.config.track in valid_track_values:
-            raise WrongArgumentGiven("Track name '{}' not valid. allowed values: {}".format(
-                self.config.track, valid_track_values))
-
         apks_paths = [apk.name for apk in self.apks]
         apks_metadata_per_paths = {
             apk_path: extractor.extract_metadata(apk_path)
@@ -141,8 +136,6 @@ def main(name=None):
     parser.add_argument('--rollout-percentage', type=int, choices=range(0, 101), metavar='[0-100]',
                         default=None,
                         help='The percentage of user who will get the update. Specify only if track is rollout')
-    parser.add_argument('--has-nightly-track', action='store_true',
-                            help='This product supports the nightly track')
 
     parser.add_argument('apks', metavar='path_to_apk', type=argparse.FileType(), nargs='+',
                         help='The path to the APK to upload. You have to provide every APKs for each architecture/API level. \

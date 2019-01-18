@@ -78,16 +78,6 @@ def set_up_mocks(monkeypatch_, edit_service_mock_):
     set_translations_per_google_play_locale_code(monkeypatch_)
 
 
-def test_tracks(edit_service_mock, monkeypatch):
-    set_up_mocks(monkeypatch, edit_service_mock)
-
-    with pytest.raises(WrongArgumentGiven):
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'fake', False)
-
-    for track in ('alpha', 'beta', 'production'):
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, track, False)
-
-
 def test_invalid_rollout_percentage(edit_service_mock, monkeypatch):
     with pytest.raises(WrongArgumentGiven):
         # missing percentage
@@ -250,17 +240,6 @@ def test_do_not_contact_google_play_flag_does_not_request_google_play(monkeypatc
     # Checks are done by the fact that Google Play doesn't error out. In fact, we
     # provide dummy data. If Google Play was reached, it would have failed at the
     # authentication step
-
-
-def test_custom_google_play_track(edit_service_mock, monkeypatch):
-    set_up_mocks(monkeypatch, edit_service_mock)
-
-    # No "nightly" google play track for Firefox
-    with pytest.raises(WrongArgumentGiven):
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'nightly', False)
-
-    config['has_nightly_track'] = True
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'nightly', False)
 
 
 def test_main_bad_arguments_status_code(monkeypatch):
