@@ -50,7 +50,7 @@ class ConfigFileGenerator(object):
 
             "jarsigner_key_store": "{keystore_path}",
             "jarsigner_certificate_alias": "{certificate_alias}",
-            "google_play_accounts": {{
+            "products": {{
                 "aurora": {{
                     "service_account": "dummy-service-account@iam.gserviceaccount.com",
                     "certificate": "/dummy/path/to/certificate.p12"

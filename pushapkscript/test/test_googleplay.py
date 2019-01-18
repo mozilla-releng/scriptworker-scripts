@@ -3,8 +3,8 @@ import unittest
 from scriptworker.exceptions import TaskVerificationError
 from unittest.mock import MagicMock
 
-from pushapkscript.googleplay import craft_push_apk_config, get_service_account, get_certificate_path, \
-    _get_play_config, should_commit_transaction, get_google_play_strings_path, \
+from pushapkscript.googleplay import craft_push_apk_config, \
+    _get_product_config, should_commit_transaction, get_google_play_strings_path, \
     _check_google_play_string_is_the_only_failed_task, _find_unique_google_play_strings_file_in_dict
 
 
@@ -12,20 +12,27 @@ class GooglePlayTest(unittest.TestCase):
     def setUp(self):
         self.context = MagicMock()
         self.context.config = {
-            'google_play_accounts': {
+            'products': {
                 'aurora': {
+                    'has_nightly_track': False,
                     'service_account': 'aurora_account',
                     'certificate': '/path/to/aurora.p12',
                 },
                 'beta': {
+                    'has_nightly_track': False,
+
                     'service_account': 'beta_account',
                     'certificate': '/path/to/beta.p12',
                 },
                 'release': {
+                    'has_nightly_track': False,
+
                     'service_account': 'release_account',
                     'certificate': '/path/to/release.p12',
                 },
                 'dep': {
+                    'has_nightly_track': False,
+
                     'service_account': 'dummy_dep',
                     'certificate': '/path/to/dummy_non_p12_file',
                 },
@@ -88,7 +95,7 @@ class GooglePlayTest(unittest.TestCase):
         self.assertRaises(TaskVerificationError, craft_push_apk_config, self.context, self.apks)
 
     def test_craft_push_config_raises_error_when_google_play_accounts_does_not_exist(self):
-        del self.context.config['google_play_accounts']
+        del self.context.config['products']
         self.assertRaises(TaskVerificationError, craft_push_apk_config, self.context, self.apks)
 
     def test_craft_push_config_updates_google(self):
@@ -96,28 +103,20 @@ class GooglePlayTest(unittest.TestCase):
         self.assertNotIn('no_gp_string_update', config)
         self.assertEqual(config['update_gp_strings_from_file'], '/path/to/google_play_strings.json')
 
-    def test_get_service_account(self):
-        self.assertEqual(get_service_account(self.context, 'aurora'), 'aurora_account')
-        self.assertEqual(get_service_account(self.context, 'beta'), 'beta_account')
-        self.assertEqual(get_service_account(self.context, 'release'), 'release_account')
-
-    def test_get_certificate_path(self):
-        self.assertEqual(get_certificate_path(self.context, 'aurora'), '/path/to/aurora.p12')
-        self.assertEqual(get_certificate_path(self.context, 'beta'), '/path/to/beta.p12')
-        self.assertEqual(get_certificate_path(self.context, 'release'), '/path/to/release.p12')
-
     def test_get_play_config(self):
-        self.assertEqual(_get_play_config(self.context, 'aurora'), {
-            'service_account': 'aurora_account', 'certificate': '/path/to/aurora.p12'
+        self.assertEqual(_get_product_config(self.context, 'aurora'), {
+            'has_nightly_track': False,
+            'service_account': 'aurora_account',
+            'certificate': '/path/to/aurora.p12'
         })
 
-        self.assertRaises(TaskVerificationError, _get_play_config, self.context, 'non-existing-android-product')
+        self.assertRaises(TaskVerificationError, _get_product_config, self.context, 'non-existing-android-product')
 
         class FakeContext:
             config = {}
 
         context_without_any_account = FakeContext()
-        self.assertRaises(TaskVerificationError, _get_play_config, context_without_any_account, 'whatever-android-product')
+        self.assertRaises(TaskVerificationError, _get_product_config, context_without_any_account, 'whatever-android-product')
 
     def test_should_commit_transaction(self):
         self.context.task['payload']['commit'] = True

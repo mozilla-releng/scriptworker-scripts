@@ -1,16 +1,19 @@
 {
     "work_dir": "/absolute/path/to/work_dir",
 
-    "google_play_accounts": {
+    "products": {
         "aurora": {
+            "has_nightly_track": false,
             "service_account": "service-account-which-have-access-to-aurora@iam.gserviceaccount.com",
             "certificate": "/absolute/path/to/certificate-for-aurora-service-account.p12"
         },
         "beta": {
+            "has_nightly_track": false,
             "service_account": "service-account-which-have-access-to-beta@iam.gserviceaccount.com",
             "certificate": "/absolute/path/to/certificate-for-beta-service-account.p12"
         },
         "release": {
+            "has_nightly_track": false,
             "service_account": "service-account-which-have-access-to-release@iam.gserviceaccount.com",
             "certificate": "/absolute/path/to/certificate-for-release-service-account.p12"
         }
