@@ -62,17 +62,16 @@ class PushAPK:
         edit_service.commit_transaction()
 
     def run(self):
+        valid_track_values = googleplay.craft_valid_track_values(self.config.additional_tracks)
+        if not self.config.track in valid_track_values:
+            raise WrongArgumentGiven("Track name '{}' not valid. allowed values: {}".format(
+                self.config.track, valid_track_values))
+
         apks_paths = [apk.name for apk in self.apks]
         apks_metadata_per_paths = {
             apk_path: extractor.extract_metadata(apk_path)
             for apk_path in apks_paths
         }
-
-        for package_name in [metadata['package_name'] for metadata in apks_metadata_per_paths.values()]:
-            if not googleplay.is_valid_track_value_for_package(self.track, package_name):
-                raise WrongArgumentGiven("Track name '{}' not valid for package: {}. allowed values: {}".format(
-                    self.track, package_name, googleplay.get_valid_track_values_for_package(package_name)))
-
         checker.cross_check_apks(apks_metadata_per_paths)
 
         # Each distinct product must be uploaded in different Google Play transaction, so we split them by package name here.
@@ -142,6 +141,8 @@ def main(name=None):
     parser.add_argument('--rollout-percentage', type=int, choices=range(0, 101), metavar='[0-100]',
                         default=None,
                         help='The percentage of user who will get the update. Specify only if track is rollout')
+    parser.add_argument('--additional-track', dest='additional_tracks', action='append', default=[],
+                            help='Additional applicable Google Play tracks (e.g.: "nightly")')
 
     parser.add_argument('apks', metavar='path_to_apk', type=argparse.FileType(), nargs='+',
                         help='The path to the APK to upload. You have to provide every APKs for each architecture/API level. \

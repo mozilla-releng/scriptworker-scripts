@@ -27,23 +27,11 @@ from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentG
 # to a limited percentage of users
 _DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
 
-# Google play allows the creation of custom release tracks for apps.
-_ADDITIONAL_TRACK_VALUES = {
-    'org.mozilla.fenix': ['nightly'],
-    'org.mozilla.focus': ['nightly'],
-    'org.mozilla.klar': ['nightly'],
-    'org.mozilla.reference.browser': ['nightly'],
-}
-
 logger = logging.getLogger(__name__)
 
 
-def get_valid_track_values_for_package(package_name):
-    return _DEFAULT_TRACK_VALUES + _ADDITIONAL_TRACK_VALUES.get(package_name, [])
-
-
-def is_valid_track_value_for_package(track, package_name):
-    return track in get_valid_track_values_for_package(package_name)
+def craft_valid_track_values(additional_track_values):
+    return _DEFAULT_TRACK_VALUES + additional_track_values
 
 
 def add_general_google_play_arguments(parser):

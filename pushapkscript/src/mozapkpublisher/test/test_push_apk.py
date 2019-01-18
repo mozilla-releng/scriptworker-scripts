@@ -255,21 +255,11 @@ def test_do_not_contact_google_play_flag_does_not_request_google_play(monkeypatc
 def test_custom_google_play_track(edit_service_mock, monkeypatch):
     set_up_mocks(monkeypatch, edit_service_mock)
 
-    monkeypatch.setattr(extractor, 'extract_metadata', lambda _: {
-        'package_name': 'org.mozilla.firefox',
-        'version_code': '1',
-    })
-
     # No "nightly" google play track for Firefox
     with pytest.raises(WrongArgumentGiven):
         push_apk(APKS, SERVICE_ACCOUNT, credentials, 'nightly', False)
 
-    # "nightly" track is an allowed value for Focus
-    monkeypatch.setattr(extractor, 'extract_metadata', lambda _: {
-        'package_name': 'org.mozilla.focus',
-        'version_code': '1',
-    })
-
+    config['additional_track'] = 'nightly'
     push_apk(APKS, SERVICE_ACCOUNT, credentials, 'nightly', False)
 
 
