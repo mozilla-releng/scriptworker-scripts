@@ -6,7 +6,7 @@ import tempfile
 from aioresponses import aioresponses
 from unittest.mock import MagicMock
 
-from mozapkpublisher.common.utils import load_json_url, file_sha512sum, download_file, get_firefox_package_name
+from mozapkpublisher.common.utils import load_json_url, file_sha512sum, download_file, is_firefox_version_nightly
 
 
 def test_load_json_url(monkeypatch):
@@ -41,14 +41,14 @@ ed2aabf90f1f8a5983082a0b88194fe81bc850d3019fd9eca9328584227c84'
 
 
 @pytest.mark.parametrize('version, expected', (
-    ('66.0a1', 'org.mozilla.fennec_aurora'),
-    ('66.0b2', 'org.mozilla.firefox_beta'),
-    ('66.0', 'org.mozilla.firefox'),
+    ('66.0a1', True),
+    ('66.0b2', False),
+    ('66.0', False),
 ))
-def test_get_firefox_package_name(version, expected):
-    assert get_firefox_package_name(version) == expected
+def test_is_firefox_version_nightly(version, expected):
+    assert is_firefox_version_nightly(version) == expected
 
 
-def test_bad_get_firefox_package_name():
+def test_bad_is_firefox_version_nightly():
     with pytest.raises(ValueError):
-        get_firefox_package_name('66.0esr')
+        is_firefox_version_nightly('66.0esr')

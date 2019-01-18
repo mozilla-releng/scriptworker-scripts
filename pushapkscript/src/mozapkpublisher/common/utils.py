@@ -66,13 +66,10 @@ class PRODUCT(Enum):
         return PRODUCT.contains_value(value) and PRODUCT(value) == PRODUCT.REFERENCE_BROWSER
 
 
-def get_firefox_package_name(firefox_version):
+def is_firefox_version_nightly(firefox_version):
     version = FennecVersion.parse(firefox_version)
-    if version.is_nightly:
-        return 'org.mozilla.fennec_aurora'
-    elif version.is_beta:
-        return 'org.mozilla.firefox_beta'
-    elif version.is_release:
-        return 'org.mozilla.firefox'
-    else:
+    if not (version.is_nightly or version.is_beta or version.is_release):
         raise ValueError('Unsupported version: {}'.format(firefox_version))
+
+    return version.is_nightly
+

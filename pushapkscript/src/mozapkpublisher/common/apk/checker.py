@@ -7,7 +7,7 @@ from mozilla_version.gecko import FennecVersion
 from mozapkpublisher.common.apk.history import get_expected_combos, craft_combos_pretty_names
 from mozapkpublisher.common.exceptions import BadApk, BadSetOfApks, NotMultiLocaleApk
 from mozapkpublisher.common.googleplay import is_package_name_nightly
-from mozapkpublisher.common.utils import filter_out_identical_values, PRODUCT
+from mozapkpublisher.common.utils import filter_out_identical_values, PRODUCT, is_firefox_version_nightly
 
 logger = logging.getLogger(__name__)
 
@@ -169,9 +169,8 @@ def _check_all_apks_are_multi_locales(apks_metadata_per_paths):
 def _check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths):
     single_metadata = list(apks_metadata_per_paths.values())[0]
     firefox_version = single_metadata['firefox_version']
-    package_name = single_metadata['package_name']
 
-    expected_combos = get_expected_combos(firefox_version, package_name)
+    expected_combos = get_expected_combos(firefox_version)
 
     current_combos = set([
         (metadata['architecture'], metadata['api_level'])

@@ -455,19 +455,19 @@ def test_bad_check_all_apks_are_multi_locales(apks_metadata_per_paths, expected_
     },
 }, {
     'arm.apk': {
-        'firefox_version': '66.0',
+        'firefox_version': '66.0a1',
         'architecture': 'armeabi-v7a',
         'api_level': 16,
         'package_name': 'org.mozilla.fennec_aurora'
     },
     'x86.apk': {
-        'firefox_version': '66.0',
+        'firefox_version': '66.0a1',
         'architecture': 'x86',
         'api_level': 16,
         'package_name': 'org.mozilla.fennec_aurora'
     },
     'aarch64.apk': {
-        'firefox_version': '66.0',
+        'firefox_version': '66.0a1',
         'architecture': 'arm64-v8a',
         'api_level': 21,
         'package_name': 'org.mozilla.fennec_aurora'

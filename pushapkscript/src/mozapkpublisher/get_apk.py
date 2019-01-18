@@ -18,7 +18,6 @@ from mozapkpublisher.common.exceptions import CheckSumMismatch
 from mozapkpublisher.common.utils import (
     download_file,
     file_sha512sum,
-    get_firefox_package_name,
     load_json_url,
 )
 
@@ -128,9 +127,7 @@ def get_api_suffix(version, arch):
     if arch != 'arm':
         return [arch]
     else:
-        api_levels = get_expected_api_levels(
-            version, get_firefox_package_name(version)
-        )
+        api_levels = get_expected_api_levels(version)
         # TODO support old schemes when no API level was in the path
         return [
             'api-{}'.format(api_level) for api_level in api_levels
