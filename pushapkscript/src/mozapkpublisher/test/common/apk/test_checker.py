@@ -1,7 +1,7 @@
 import pytest
 
 from mozapkpublisher.common.apk.checker import cross_check_apks, \
-    _check_number_of_distinct_packages, _check_correct_apk_product_types, \
+    _check_apk_package_name, \
     _check_all_apks_have_the_same_package_name, \
     _check_all_apks_have_the_same_version, _check_version_matches_package_name, \
     _check_all_apks_have_the_same_build_id, _check_all_apks_have_the_same_locales, \
@@ -11,7 +11,7 @@ from mozapkpublisher.common.utils import PRODUCT
 from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetOfApks
 
 
-@pytest.mark.parametrize('apks_metadata_per_paths', ({
+@pytest.mark.parametrize('apks_metadata_per_paths, skip_check_ordered_version_codes, skip_check_package_names, expected_package_names', (({
     'fennec-57.0.multi.android-arm.apk': {
         'api_level': 16,
         'architecture': 'armeabi-v7a',
@@ -48,7 +48,7 @@ from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetO
         'package_name': 'org.mozilla.firefox',
         'version_code': '2015523300',
     },
-}, {
+}, True, True, []), ({
     '/builds/scriptworker/work/cot/KfG055G3RTCt1etlbYlzkg/public/build/target.apk': {
         'api_level': 16,
         'architecture': 'armeabi-v7a',
@@ -103,7 +103,7 @@ from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetO
         'package_name': 'org.mozilla.fennec_aurora',
         'version_code': '2015605651',
     },
-}, {
+}, True, True, []), ({
     'Focus.apk': {
         'api_level': 21,
         'architecture': 'armeabi-v7',
@@ -116,40 +116,13 @@ from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetO
         'package_name': 'org.mozilla.klar',
         'version_code': '11'
     }
-}))
-def test_cross_check_apks(apks_metadata_per_paths):
-    cross_check_apks(apks_metadata_per_paths)
+}, True, False, ['org.mozilla.focus', 'org.mozilla.klar'])))
+def test_cross_check_apks(apks_metadata_per_paths, skip_check_ordered_version_codes, skip_check_package_names, expected_package_names):
+    cross_check_apks(apks_metadata_per_paths, skip_check_ordered_version_codes, skip_check_package_names, expected_package_names)
 
 
-def test_check_number_of_apks():
-    _check_number_of_distinct_packages({
-        'focus.apk': {
-            'package_name': 'org.mozilla.focus'
-        },
-        'klar-x86.apk': {
-            'package_name': 'org.mozilla.klar'
-        },
-        'klar-arm7.apk': {
-            'package_name': 'org.mozilla.klar'
-        }
-    }, 2)
-
-    with pytest.raises(BadSetOfApks):
-        _check_number_of_distinct_packages({
-            'focus.apk': {
-                'package_name': 'org.mozilla.focus'
-            },
-            'klar.apk': {
-                'package_name': 'org.mozilla.klar'
-            },
-            'fennec.apk': {
-                'package_name': 'org.mozilla.firefox'
-            }
-        }, 2)
-
-
-def test_check_correct_apk_product_types():
-    _check_correct_apk_product_types({
+def test_check_correct_apk_package_names():
+    _check_apk_package_name({
         'fenix.apk': {
             'package_name': 'org.mozilla.fenix'
         },
@@ -162,10 +135,10 @@ def test_check_correct_apk_product_types():
         'reference-browser.apk': {
             'package_name': 'org.mozilla.reference.browser'
         }
-    }, [PRODUCT.FENIX, PRODUCT.FOCUS, PRODUCT.KLAR, PRODUCT.REFERENCE_BROWSER])
+    }, ['org.mozilla.fenix', 'org.mozilla.focus', 'org.mozilla.klar', 'org.mozilla.reference.browser'])
 
     with pytest.raises(BadSetOfApks):
-        _check_correct_apk_product_types({
+        _check_apk_package_name({
             'fennec.apk': {
                 'package_name': 'org.mozilla.firefox'
             },
@@ -175,7 +148,20 @@ def test_check_correct_apk_product_types():
             'reference-browser.apk': {
                 'package_name': 'org.mozilla.reference.browser'
             }
-        }, [PRODUCT.FOCUS, PRODUCT.KLAR])
+        }, ['org.mozilla.focus', 'org.mozilla.klar'])
+
+    with pytest.raises(BadSetOfApks):
+        _check_apk_package_name({
+            'fennec.apk': {
+                'package_name': 'org.mozilla.firefox'
+            },
+            'klar-x86.apk': {
+                'package_name': 'org.mozilla.klar'
+            },
+            'klar-arm.apk': {
+                'package_name': 'org.mozilla.klar'
+            }
+        }, ['org.mozilla.focus', 'org.mozilla.klar', 'org.mozilla.reference.browser'])
 
 
 def test_check_all_apks_have_the_same_package_name():

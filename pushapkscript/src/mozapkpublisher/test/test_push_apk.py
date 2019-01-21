@@ -74,7 +74,7 @@ def set_up_mocks(monkeypatch_, edit_service_mock_):
 
     monkeypatch_.setattr(googleplay, 'EditService', lambda _, __, ___, commit, contact_google_play: edit_service_mock_)
     monkeypatch_.setattr(extractor, 'extract_metadata', _metadata)
-    monkeypatch_.setattr(checker, 'cross_check_apks', lambda _: None)
+    monkeypatch_.setattr(checker, 'cross_check_apks', lambda _, __, ___, ____: None)
     set_translations_per_google_play_locale_code(monkeypatch_)
 
 
@@ -233,7 +233,7 @@ def test_do_not_contact_google_play_flag_does_not_request_google_play(monkeypatc
         'package_name': 'org.mozilla.firefox',
         'version_code': '1',
     })
-    monkeypatch.setattr(checker, 'cross_check_apks', lambda _: None)
+    monkeypatch.setattr(checker, 'cross_check_apks', lambda _, __, ___, ____: None)
     set_translations_per_google_play_locale_code(monkeypatch)
 
     push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', False, contact_google_play=False)

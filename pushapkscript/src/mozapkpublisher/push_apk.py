@@ -67,7 +67,10 @@ class PushAPK:
             apk_path: extractor.extract_metadata(apk_path)
             for apk_path in apks_paths
         }
-        checker.cross_check_apks(apks_metadata_per_paths)
+        checker.cross_check_apks(apks_metadata_per_paths,
+                                 self.config.skip_check_ordered_version_codes,
+                                 self.config.skip_check_package_names,
+                                 self.config.expected_package_names)
 
         # Each distinct product must be uploaded in different Google Play transaction, so we split them by package name here.
         split_apk_metadata = _split_apk_metadata_per_package_name(apks_metadata_per_paths)
@@ -101,7 +104,7 @@ def _split_apk_metadata_per_package_name(apks_metadata_per_paths):
 
 
 def _create_or_update_whats_new(edit_service, package_name, apk_version_code, l10n_strings):
-    if googleplay.is_package_name_nightly(package_name):
+    if package_name == 'org.mozilla.fennec_aurora':
         # See https://github.com/mozilla-l10n/stores_l10n/issues/142
         logger.warning("Nightly detected, What's new section won't be updated")
         return
@@ -136,10 +139,19 @@ def main(name=None):
     parser.add_argument('--rollout-percentage', type=int, choices=range(0, 101), metavar='[0-100]',
                         default=None,
                         help='The percentage of user who will get the update. Specify only if track is rollout')
+    parser.add_argument('--skip-check-ordered-version-codes', action='store_true',
+                            help='skip check that asserts version codes are different, x86 code > arm code')
 
     parser.add_argument('apks', metavar='path_to_apk', type=argparse.FileType(), nargs='+',
                         help='The path to the APK to upload. You have to provide every APKs for each architecture/API level. \
                                             Missing or extra APKs exit the program without uploading anything')
+
+    expected_package_names_group = parser.add_mutually_exclusive_group(required=True)
+    expected_package_names_group.add_argument('--expected-package-name', dest='expected_package_names',
+                                              action='append',
+                                              help='Package names apks are expected to match')
+    expected_package_names_group.add_argument('--skip-check-package-names', action='store_true',
+                                              help='Skip assertion that apks match a specified package name')
 
     google_play_strings_group = parser.add_mutually_exclusive_group(required=True)
     google_play_strings_group.add_argument('--no-gp-string-update', dest='update_google_play_strings',

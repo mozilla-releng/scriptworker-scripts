@@ -39,12 +39,6 @@ without any valid credentials nor valid APKs. In fact, Google Play may error out
 --service-account and --credentials must still be provided (you can just fill them with random string and file).''')
 
 
-def is_package_name_nightly(package_name):
-    # Due to project Dawn, Nightly is now using the Aurora package name.
-    # See https://bugzilla.mozilla.org/show_bug.cgi?id=1357351
-    return package_name == 'org.mozilla.fennec_aurora'
-
-
 class EditService(object):
     def __init__(self, service_account, credentials_file_path, package_name, commit=False, contact_google_play=True):
         self._contact_google_play = contact_google_play
