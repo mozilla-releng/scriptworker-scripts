@@ -4,7 +4,7 @@ import pytest
 from scriptworker.exceptions import TaskVerificationError
 from unittest.mock import MagicMock
 
-from pushapkscript.exceptions import ProductValidationError
+from pushapkscript.exceptions import ConfigValidationError
 from pushapkscript.googleplay import craft_push_apk_config, \
     _get_product_config, should_commit_transaction, get_google_play_strings_path, \
     _check_google_play_string_is_the_only_failed_task, _find_unique_google_play_strings_file_in_dict
@@ -19,21 +19,29 @@ class GooglePlayTest(unittest.TestCase):
                     'has_nightly_track': False,
                     'service_account': 'aurora_account',
                     'certificate': '/path/to/aurora.p12',
+                    'skip_check_package_names': True,
+                    'skip_check_ordered_version_codes': True,
                 },
                 'beta': {
                     'has_nightly_track': False,
                     'service_account': 'beta_account',
                     'certificate': '/path/to/beta.p12',
+                    'skip_check_package_names': True,
+                    'skip_check_ordered_version_codes': True,
                 },
                 'release': {
                     'has_nightly_track': False,
                     'service_account': 'release_account',
                     'certificate': '/path/to/release.p12',
+                    'skip_check_package_names': True,
+                    'skip_check_ordered_version_codes': True,
                 },
                 'dep': {
                     'has_nightly_track': False,
                     'service_account': 'dummy_dep',
                     'certificate': '/path/to/dummy_non_p12_file',
+                    'skip_check_package_names': True,
+                    'skip_check_ordered_version_codes': True,
                 },
             },
             'taskcluster_scope_prefixes': ['project:releng:googleplay:'],
@@ -56,16 +64,18 @@ class GooglePlayTest(unittest.TestCase):
                 'commit': False,
                 'no_gp_string_update': True,
                 'service_account': '{}_account'.format(android_product),
+                'skip_check_package_names': True,
+                'skip_check_ordered_version_codes': True,
                 'track': 'alpha',
             })
 
     def test_craft_push_config_validates_track(self):
         self.context.task['payload']['google_play_track'] = 'fake'
-        with pytest.raises(ProductValidationError):
+        with pytest.raises(TaskVerificationError):
             craft_push_apk_config(self.context, self.apks)
 
         self.context.task['payload']['google_play_track'] = 'nightly'
-        with pytest.raises(ProductValidationError):
+        with pytest.raises(TaskVerificationError):
             craft_push_apk_config(self.context, self.apks)
 
         self.context.config['products']['release']['has_nightly_track'] = True
@@ -75,6 +85,8 @@ class GooglePlayTest(unittest.TestCase):
             'commit': False,
             'no_gp_string_update': True,
             'service_account': 'release_account',
+            'skip_check_package_names': True,
+            'skip_check_ordered_version_codes': True,
             'track': 'nightly',
         })
 
@@ -88,6 +100,8 @@ class GooglePlayTest(unittest.TestCase):
             'no_gp_string_update': True,
             'rollout_percentage': 10,
             'service_account': 'release_account',
+            'skip_check_package_names': True,
+            'skip_check_ordered_version_codes': True,
             'track': 'rollout',
         })
 
@@ -112,7 +126,7 @@ class GooglePlayTest(unittest.TestCase):
 
     def test_craft_push_config_raises_error_when_google_play_accounts_does_not_exist(self):
         del self.context.config['products']
-        self.assertRaises(TaskVerificationError, craft_push_apk_config, self.context, self.apks)
+        self.assertRaises(ConfigValidationError, craft_push_apk_config, self.context, self.apks)
 
     def test_craft_push_config_updates_google(self):
         config = craft_push_apk_config(self.context, self.apks, google_play_strings_path='/path/to/google_play_strings.json')
@@ -123,6 +137,8 @@ class GooglePlayTest(unittest.TestCase):
         self.assertEqual(_get_product_config(self.context, 'aurora'), {
             'has_nightly_track': False,
             'service_account': 'aurora_account',
+            'skip_check_package_names': True,
+            'skip_check_ordered_version_codes': True,
             'certificate': '/path/to/aurora.p12'
         })
 
@@ -132,7 +148,7 @@ class GooglePlayTest(unittest.TestCase):
             config = {}
 
         context_without_any_account = FakeContext()
-        self.assertRaises(TaskVerificationError, _get_product_config, context_without_any_account, 'whatever-android-product')
+        self.assertRaises(ConfigValidationError, _get_product_config, context_without_any_account, 'whatever-android-product')
 
     def test_should_commit_transaction(self):
         self.context.task['payload']['commit'] = True

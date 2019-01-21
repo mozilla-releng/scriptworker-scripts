@@ -4,7 +4,7 @@ from scriptworker.context import Context
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
-from pushapkscript.exceptions import ProductValidationError
+from pushapkscript.exceptions import ConfigValidationError
 from pushapkscript.task import extract_android_product_from_scopes
 
 log = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
     track = payload['google_play_track']
 
     if track not in valid_track_values:
-        raise ProductValidationError('Track name "{}" not valid. Allowed values: {}'.format(track, valid_track_values))
+        raise TaskVerificationError('Track name "{}" not valid. Allowed values: {}'.format(track, valid_track_values))
 
     push_apk_config = {
         '*args': sorted(apks),   # APKs have been positional arguments since mozapkpublisher 0.6.0
@@ -46,6 +46,14 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
     # Only known android_products are allowed to connect to Google Play
     if not is_allowed_to_push_to_google_play(context):
         push_apk_config['do_not_contact_google_play'] = True
+
+    if product_config.get('skip_check_package_names'):
+        push_apk_config['skip_check_package_names'] = True
+    else:
+        push_apk_config['expected_package_names'] = product_config['expected_package_names']
+
+    if product_config.get('skip_check_ordered_version_codes'):
+        push_apk_config['skip_check_ordered_version_codes'] = True
 
     if google_play_strings_path is None:
         push_apk_config['no_gp_string_update'] = True
@@ -63,7 +71,7 @@ def _get_product_config(context, android_product):
     try:
         accounts = context.config['products']
     except KeyError:
-        raise TaskVerificationError('"products" is not part of the configuration')
+        raise ConfigValidationError('"products" is not part of the configuration')
 
     try:
         return accounts[android_product]
