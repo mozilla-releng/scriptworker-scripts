@@ -25,7 +25,8 @@
             "service_account": "service-account-which-have-access-to-focus@iam.gserviceaccount.com",
             "certificate": "/absolute/path/to/certificate-for-release-service-account.p12",
             "expected_package_names": ["org.mozilla.klar", "org.mozilla.focus"],
-            "skip_check_ordered_version_codes":  true
+            "skip_check_ordered_version_codes":  true,
+            "skip_checks_fennec": true
         }
     },
 

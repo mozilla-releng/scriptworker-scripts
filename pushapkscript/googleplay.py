@@ -40,13 +40,8 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
         'track': payload['google_play_track']
     }
 
-    if payload.get('rollout_percentage'):
-        push_apk_config['rollout_percentage'] = payload['rollout_percentage']
-
-    if product_config.get('skip_check_package_names'):
-        push_apk_config['skip_check_package_names'] = True
-    else:
-        push_apk_config['expected_package_names'] = product_config['expected_package_names']
+    if product_config.get('skip_checks_fennec'):
+        push_apk_config['skip_checks_fennec'] = True
 
     if product_config.get('skip_check_ordered_version_codes'):
         push_apk_config['skip_check_ordered_version_codes'] = True
@@ -57,9 +52,16 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
     if product_config.get('skip_check_same_locales'):
         push_apk_config['skip_check_same_locales'] = True
 
-    # Only known android_products are allowed to connect to Google Play
     if not is_allowed_to_push_to_google_play(context):
         push_apk_config['do_not_contact_google_play'] = True
+
+    if payload.get('rollout_percentage'):
+        push_apk_config['rollout_percentage'] = payload['rollout_percentage']
+
+    if product_config.get('skip_check_package_names'):
+        push_apk_config['skip_check_package_names'] = True
+    else:
+        push_apk_config['expected_package_names'] = product_config['expected_package_names']
 
     if google_play_strings_path is None:
         push_apk_config['no_gp_string_update'] = True
@@ -136,24 +138,3 @@ def _find_unique_google_play_strings_file_in_dict(artifact_dict):
         no_item_error_message='Could not find "{}" in upstreamArtifacts: {}'.format(_EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict),
         too_many_item_error_message='"{}" is defined too many times among these upstreamArtifacts {}'.format(_EXPECTED_L10N_STRINGS_FILE_NAME, artifact_dict),
     )
-
-
-if __name__ == '__main__':
-    context = Context()
-    context.task = {
-            'payload': {
-                'google_play_track': 'nightly'
-            },
-            'scopes': ['bonk:fenix'],
-        }
-    context.config = {
-        'products': {
-            'fenix': {
-                'has_nightly_track': False,
-                'service_account': '',
-                'certificate': '/home/mitch/dev/mozapkpublisher/bonk.p12'
-            }
-        },
-        'taskcluster_scope_prefixes': ['bonk']
-    }
-    publish_to_googleplay(context, ['/home/mitch/dev/fenix/app/build/outputs/apk/arm/release/app-arm-release-unsigned.apk'])

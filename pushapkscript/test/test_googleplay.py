@@ -39,6 +39,7 @@ class GooglePlayTest(unittest.TestCase):
                     'certificate': '/path/to/dummy_non_p12_file',
                     'skip_check_package_names': True,
                     'skip_check_ordered_version_codes': True,
+                    'skip_checks_fennec': True,
                 },
             },
             'taskcluster_scope_prefixes': ['project:releng:googleplay:'],
