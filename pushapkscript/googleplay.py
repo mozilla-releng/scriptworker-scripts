@@ -43,10 +43,6 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
     if payload.get('rollout_percentage'):
         push_apk_config['rollout_percentage'] = payload['rollout_percentage']
 
-    # Only known android_products are allowed to connect to Google Play
-    if not is_allowed_to_push_to_google_play(context):
-        push_apk_config['do_not_contact_google_play'] = True
-
     if product_config.get('skip_check_package_names'):
         push_apk_config['skip_check_package_names'] = True
     else:
@@ -54,6 +50,16 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
 
     if product_config.get('skip_check_ordered_version_codes'):
         push_apk_config['skip_check_ordered_version_codes'] = True
+
+    if product_config.get('skip_check_multiple_locales'):
+        push_apk_config['skip_check_multiple_locales'] = True
+
+    if product_config.get('skip_check_same_locales'):
+        push_apk_config['skip_check_same_locales'] = True
+
+    # Only known android_products are allowed to connect to Google Play
+    if not is_allowed_to_push_to_google_play(context):
+        push_apk_config['do_not_contact_google_play'] = True
 
     if google_play_strings_path is None:
         push_apk_config['no_gp_string_update'] = True

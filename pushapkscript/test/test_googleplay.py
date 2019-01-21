@@ -20,21 +20,18 @@ class GooglePlayTest(unittest.TestCase):
                     'service_account': 'aurora_account',
                     'certificate': '/path/to/aurora.p12',
                     'skip_check_package_names': True,
-                    'skip_check_ordered_version_codes': True,
                 },
                 'beta': {
                     'has_nightly_track': False,
                     'service_account': 'beta_account',
                     'certificate': '/path/to/beta.p12',
                     'skip_check_package_names': True,
-                    'skip_check_ordered_version_codes': True,
                 },
                 'release': {
                     'has_nightly_track': False,
                     'service_account': 'release_account',
                     'certificate': '/path/to/release.p12',
                     'skip_check_package_names': True,
-                    'skip_check_ordered_version_codes': True,
                 },
                 'dep': {
                     'has_nightly_track': False,
@@ -65,7 +62,6 @@ class GooglePlayTest(unittest.TestCase):
                 'no_gp_string_update': True,
                 'service_account': '{}_account'.format(android_product),
                 'skip_check_package_names': True,
-                'skip_check_ordered_version_codes': True,
                 'track': 'alpha',
             })
 
@@ -86,7 +82,6 @@ class GooglePlayTest(unittest.TestCase):
             'no_gp_string_update': True,
             'service_account': 'release_account',
             'skip_check_package_names': True,
-            'skip_check_ordered_version_codes': True,
             'track': 'nightly',
         })
 
@@ -101,7 +96,6 @@ class GooglePlayTest(unittest.TestCase):
             'rollout_percentage': 10,
             'service_account': 'release_account',
             'skip_check_package_names': True,
-            'skip_check_ordered_version_codes': True,
             'track': 'rollout',
         })
 
@@ -138,7 +132,6 @@ class GooglePlayTest(unittest.TestCase):
             'has_nightly_track': False,
             'service_account': 'aurora_account',
             'skip_check_package_names': True,
-            'skip_check_ordered_version_codes': True,
             'certificate': '/path/to/aurora.p12'
         })
 
