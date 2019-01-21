@@ -68,6 +68,7 @@ class PushAPK:
             for apk_path in apks_paths
         }
         checker.cross_check_apks(apks_metadata_per_paths,
+                                 self.config.skip_checks_fennec,
                                  self.config.skip_check_multiple_locales,
                                  self.config.skip_check_same_locales,
                                  self.config.skip_check_ordered_version_codes,
@@ -147,6 +148,9 @@ def main(name=None):
                             help='skip check that asserts that apks all have multiple locales')
     parser.add_argument('--skip-check-same-locales', action='store_true',
                             help='skip check that asserts that all apks have the same locales')
+    parser.add_argument('--skip-checks-fennec', action='store_true',
+                            help='skip checks that are Fennec-specific (ini-checking, checking '
+                                 'version-to-package-name compliance')
 
     parser.add_argument('apks', metavar='path_to_apk', type=argparse.FileType(), nargs='+',
                         help='The path to the APK to upload. You have to provide every APKs for each architecture/API level. \

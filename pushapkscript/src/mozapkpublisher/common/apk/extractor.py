@@ -56,8 +56,8 @@ def extract_metadata(original_apk_path):
 
 def _extract_architecture(apk_zip, original_apk_path):
     files_with_architecture_in_path = [
-        file_info.filename for file_info in apk_zip.infolist()
-        if _DIRECTORY_WITH_ARCHITECTURE_METADATA in file_info.filename
+        name for name in apk_zip.namelist()
+        if _DIRECTORY_WITH_ARCHITECTURE_METADATA in name
     ]
 
     if not files_with_architecture_in_path:

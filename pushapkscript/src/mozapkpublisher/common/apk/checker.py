@@ -15,17 +15,11 @@ logger = logging.getLogger(__name__)
 _ARCHITECTURE_ORDER_REGARDING_VERSION_CODE = ('armeabi-v7a', 'arm64-v8a', 'x86')
 
 
-def cross_check_apks(apks_metadata_per_paths, skip_check_multiple_locales, skip_check_same_locales,
+def cross_check_apks(apks_metadata_per_paths, skip_checks_fennec, skip_check_multiple_locales, skip_check_same_locales,
                      skip_check_ordered_version_codes, skip_check_package_names, expected_package_names=None):
     logger.info("Checking APKs' metadata and content...")
-    package_name = list(apks_metadata_per_paths.values())[0]['package_name']
-    if PRODUCT.is_focus_flavor(package_name):
-        pass
-    elif PRODUCT.is_reference_browser(package_name):
-        pass
-    elif PRODUCT.is_fenix(package_name):
-        pass
-    else:
+
+    if not skip_checks_fennec:
         singular_apk_metadata = list(apks_metadata_per_paths.values())[0]
         _check_version_matches_package_name(
             singular_apk_metadata['firefox_version'], singular_apk_metadata['package_name']
