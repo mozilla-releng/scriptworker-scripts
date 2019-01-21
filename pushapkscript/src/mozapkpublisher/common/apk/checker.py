@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 _ARCHITECTURE_ORDER_REGARDING_VERSION_CODE = ('armeabi-v7a', 'arm64-v8a', 'x86')
 
 
-def cross_check_apks(apks_metadata_per_paths, skip_check_ordered_version_codes, skip_check_package_names,
-                     expected_package_names=None):
+def cross_check_apks(apks_metadata_per_paths, skip_check_multiple_locales, skip_check_same_locales,
+                     skip_check_ordered_version_codes, skip_check_package_names, expected_package_names=None):
     logger.info("Checking APKs' metadata and content...")
     package_name = list(apks_metadata_per_paths.values())[0]['package_name']
     if PRODUCT.is_focus_flavor(package_name):
@@ -26,21 +26,21 @@ def cross_check_apks(apks_metadata_per_paths, skip_check_ordered_version_codes, 
     elif PRODUCT.is_fenix(package_name):
         pass
     else:
-        _check_all_apks_have_the_same_package_name(apks_metadata_per_paths)
-        _check_all_apks_have_the_same_version(apks_metadata_per_paths)
-
         singular_apk_metadata = list(apks_metadata_per_paths.values())[0]
         _check_version_matches_package_name(
             singular_apk_metadata['firefox_version'], singular_apk_metadata['package_name']
         )
+        _check_apk_package_name(apks_metadata_per_paths, [singular_apk_metadata['package_name']])
 
+        _check_all_apks_have_the_same_firefox_version(apks_metadata_per_paths)
         _check_all_apks_have_the_same_build_id(apks_metadata_per_paths)
-        _check_apks_version_codes_are_correctly_ordered(apks_metadata_per_paths)
-
-        _check_all_apks_are_multi_locales(apks_metadata_per_paths)
-        _check_all_apks_have_the_same_locales(apks_metadata_per_paths)
-
         _check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths)
+
+    if not skip_check_multiple_locales:
+        _check_all_apks_are_multi_locales(apks_metadata_per_paths)
+
+    if not skip_check_same_locales:
+        _check_all_apks_have_the_same_locales(apks_metadata_per_paths)
 
     if not skip_check_ordered_version_codes:
         _check_apks_version_codes_are_correctly_ordered(apks_metadata_per_paths)
@@ -71,8 +71,7 @@ def _check_piece_of_metadata_is_unique(key, pretty_key, apks_metadata_per_paths)
     logger.info('All APKs have the same {}: {}'.format(pretty_key, unique_items[0]))
 
 
-_check_all_apks_have_the_same_package_name = partial(_check_piece_of_metadata_is_unique, 'package_name', 'package name')
-_check_all_apks_have_the_same_version = partial(_check_piece_of_metadata_is_unique, 'firefox_version', 'Firefox version')
+_check_all_apks_have_the_same_firefox_version = partial(_check_piece_of_metadata_is_unique, 'firefox_version', 'Firefox version')
 _check_all_apks_have_the_same_build_id = partial(_check_piece_of_metadata_is_unique, 'firefox_build_id', 'Firefox BuildID')
 _check_all_apks_have_the_same_locales = partial(_check_piece_of_metadata_is_unique, 'locales', 'locales')
 

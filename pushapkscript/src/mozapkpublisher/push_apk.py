@@ -68,6 +68,8 @@ class PushAPK:
             for apk_path in apks_paths
         }
         checker.cross_check_apks(apks_metadata_per_paths,
+                                 self.config.skip_check_multiple_locales,
+                                 self.config.skip_check_same_locales,
                                  self.config.skip_check_ordered_version_codes,
                                  self.config.skip_check_package_names,
                                  self.config.expected_package_names)
@@ -141,6 +143,10 @@ def main(name=None):
                         help='The percentage of user who will get the update. Specify only if track is rollout')
     parser.add_argument('--skip-check-ordered-version-codes', action='store_true',
                             help='skip check that asserts version codes are different, x86 code > arm code')
+    parser.add_argument('--skip-check-multiple-locales', action='store_true',
+                            help='skip check that asserts that apks all have multiple locales')
+    parser.add_argument('--skip-check-same-locales', action='store_true',
+                            help='skip check that asserts that all apks have the same locales')
 
     parser.add_argument('apks', metavar='path_to_apk', type=argparse.FileType(), nargs='+',
                         help='The path to the APK to upload. You have to provide every APKs for each architecture/API level. \

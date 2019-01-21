@@ -2,16 +2,14 @@ import pytest
 
 from mozapkpublisher.common.apk.checker import cross_check_apks, \
     _check_apk_package_name, \
-    _check_all_apks_have_the_same_package_name, \
-    _check_all_apks_have_the_same_version, _check_version_matches_package_name, \
+    _check_all_apks_have_the_same_firefox_version, _check_version_matches_package_name, \
     _check_all_apks_have_the_same_build_id, _check_all_apks_have_the_same_locales, \
     _check_piece_of_metadata_is_unique, _check_apks_version_codes_are_correctly_ordered, \
     _check_all_apks_are_multi_locales, _check_all_architectures_and_api_levels_are_present
-from mozapkpublisher.common.utils import PRODUCT
 from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetOfApks
 
 
-@pytest.mark.parametrize('apks_metadata_per_paths, skip_check_ordered_version_codes, skip_check_package_names, expected_package_names', (({
+@pytest.mark.parametrize('apks_metadata_per_paths, skip_check_multiple_locales, skip_check_same_locales, skip_check_ordered_version_codes, skip_check_package_names, expected_package_names', (({
     'fennec-57.0.multi.android-arm.apk': {
         'api_level': 16,
         'architecture': 'armeabi-v7a',
@@ -48,7 +46,7 @@ from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetO
         'package_name': 'org.mozilla.firefox',
         'version_code': '2015523300',
     },
-}, True, True, []), ({
+}, False, False, False, True, []), ({
     '/builds/scriptworker/work/cot/KfG055G3RTCt1etlbYlzkg/public/build/target.apk': {
         'api_level': 16,
         'architecture': 'armeabi-v7a',
@@ -103,7 +101,7 @@ from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetO
         'package_name': 'org.mozilla.fennec_aurora',
         'version_code': '2015605651',
     },
-}, True, True, []), ({
+}, False, False, False, True, []), ({
     'Focus.apk': {
         'api_level': 21,
         'architecture': 'armeabi-v7',
@@ -116,9 +114,11 @@ from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetO
         'package_name': 'org.mozilla.klar',
         'version_code': '11'
     }
-}, True, False, ['org.mozilla.focus', 'org.mozilla.klar'])))
-def test_cross_check_apks(apks_metadata_per_paths, skip_check_ordered_version_codes, skip_check_package_names, expected_package_names):
-    cross_check_apks(apks_metadata_per_paths, skip_check_ordered_version_codes, skip_check_package_names, expected_package_names)
+}, True, True, True, False, ['org.mozilla.focus', 'org.mozilla.klar'])))
+def test_cross_check_apks(apks_metadata_per_paths, skip_check_multiple_locales, skip_check_same_locales,
+                          skip_check_ordered_version_codes, skip_check_package_names, expected_package_names):
+    cross_check_apks(apks_metadata_per_paths, skip_check_multiple_locales, skip_check_same_locales,
+                     skip_check_ordered_version_codes, skip_check_package_names, expected_package_names)
 
 
 def test_check_correct_apk_package_names():
@@ -164,29 +164,8 @@ def test_check_correct_apk_package_names():
         }, ['org.mozilla.focus', 'org.mozilla.klar', 'org.mozilla.reference.browser'])
 
 
-def test_check_all_apks_have_the_same_package_name():
-    _check_all_apks_have_the_same_package_name({
-        'arm.apk': {
-            'package_name': 'org.mozilla.firefox',
-        },
-        'x86.apk': {
-            'package_name': 'org.mozilla.firefox',
-        },
-    })
-
-    with pytest.raises(BadSetOfApks):
-        _check_all_apks_have_the_same_package_name({
-            'arm.apk': {
-                'package_name': 'org.mozilla.firefox',
-            },
-            'x86.apk': {
-                'package_name': 'org.mozilla.firefox_beta',
-            },
-        })
-
-
-def test_check_all_apks_have_the_same_version():
-    _check_all_apks_have_the_same_version({
+def test_check_all_apks_have_the_same_firefox_version():
+    _check_all_apks_have_the_same_firefox_version({
         'arm.apk': {
             'firefox_version': '57.0',
         },
@@ -196,7 +175,7 @@ def test_check_all_apks_have_the_same_version():
     })
 
     with pytest.raises(BadSetOfApks):
-        _check_all_apks_have_the_same_version({
+        _check_all_apks_have_the_same_firefox_version({
             'arm.apk': {
                 'firefox_version': '57.0',
             },
