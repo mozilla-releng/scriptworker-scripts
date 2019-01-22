@@ -9,47 +9,46 @@ from mozapkpublisher.common.apk.checker import cross_check_apks, \
 from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetOfApks
 
 
-def test_check_correct_apk_package_names():
-    _check_apk_package_name({
-        'fenix.apk': {
-            'package_name': 'org.mozilla.fenix'
-        },
-        'focus.apk': {
-            'package_name': 'org.mozilla.focus'
-        },
-        'klar.apk': {
-            'package_name': 'org.mozilla.klar'
-        },
-        'reference-browser.apk': {
-            'package_name': 'org.mozilla.reference.browser'
-        }
-    }, ['org.mozilla.fenix', 'org.mozilla.focus', 'org.mozilla.klar', 'org.mozilla.reference.browser'])
-
-    with pytest.raises(BadSetOfApks):
-        _check_apk_package_name({
-            'fennec.apk': {
-                'package_name': 'org.mozilla.firefox'
-            },
-            'klar.apk': {
-                'package_name': 'org.mozilla.klar'
-            },
-            'reference-browser.apk': {
-                'package_name': 'org.mozilla.reference.browser'
-            }
-        }, ['org.mozilla.focus', 'org.mozilla.klar'])
-
-    with pytest.raises(BadSetOfApks):
-        _check_apk_package_name({
-            'fennec.apk': {
-                'package_name': 'org.mozilla.firefox'
-            },
-            'klar-x86.apk': {
-                'package_name': 'org.mozilla.klar'
-            },
-            'klar-arm.apk': {
-                'package_name': 'org.mozilla.klar'
-            }
-        }, ['org.mozilla.focus', 'org.mozilla.klar', 'org.mozilla.reference.browser'])
+@pytest.mark.parametrize('apks_metadata_per_paths, product_types, should_fail', (({
+    'fenix.apk': {
+        'package_name': 'org.mozilla.fenix'
+    },
+    'focus.apk': {
+        'package_name': 'org.mozilla.focus'
+    },
+    'klar.apk': {
+        'package_name': 'org.mozilla.klar'
+    },
+    'reference-browser.apk': {
+        'package_name': 'org.mozilla.reference.browser'
+    }
+}, ['org.mozilla.fenix', 'org.mozilla.focus', 'org.mozilla.klar', 'org.mozilla.reference.browser'], False), ({
+    'fennec.apk': {
+        'package_name': 'org.mozilla.firefox'
+    },
+    'klar.apk': {
+        'package_name': 'org.mozilla.klar'
+    },
+    'reference-browser.apk': {
+        'package_name': 'org.mozilla.reference.browser'
+    }
+}, ['org.mozilla.focus', 'org.mozilla.klar'], True), ({
+    'fennec.apk': {
+        'package_name': 'org.mozilla.firefox'
+    },
+    'klar-x86.apk': {
+        'package_name': 'org.mozilla.klar'
+    },
+    'klar-arm.apk': {
+        'package_name': 'org.mozilla.klar'
+    }
+}, ['org.mozilla.focus', 'org.mozilla.klar', 'org.mozilla.reference.browser'], True)))
+def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types, should_fail):
+    if should_fail:
+        with pytest.raises(BadSetOfApks):
+            _check_apk_package_name(apks_metadata_per_paths, product_types)
+    else:
+        _check_apk_package_name(apks_metadata_per_paths, product_types)
 
 
 @pytest.mark.parametrize('apks_metadata_per_paths, skip_checks_fennec, skip_check_multiple_locales, skip_check_same_locales, skip_check_ordered_version_codes, skip_check_package_names, expected_package_names', (({  # noqa

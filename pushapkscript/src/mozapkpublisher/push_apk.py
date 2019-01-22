@@ -142,13 +142,13 @@ def main(name=None):
     parser.add_argument('--rollout-percentage', type=int, choices=range(0, 101), metavar='[0-100]',
                         default=None,
                         help='The percentage of user who will get the update. Specify only if track is rollout')
-    cls.parser.add_argument('--skip-check-ordered-version-codes', action='store_true',
+    parser.add_argument('--skip-check-ordered-version-codes', action='store_true',
                             help='Skip check that asserts version codes are different, x86 code > arm code')
-    cls.parser.add_argument('--skip-check-multiple-locales', action='store_true',
+    parser.add_argument('--skip-check-multiple-locales', action='store_true',
                             help='Skip check that asserts that apks all have multiple locales')
-    cls.parser.add_argument('--skip-check-same-locales', action='store_true',
+    parser.add_argument('--skip-check-same-locales', action='store_true',
                             help='Skip check that asserts that all apks have the same locales')
-    cls.parser.add_argument('--skip-checks-fennec', action='store_true',
+    parser.add_argument('--skip-checks-fennec', action='store_true',
                             help='Skip checks that are Fennec-specific (ini-checking, checking '
                                  'version-to-package-name compliance)')
 
