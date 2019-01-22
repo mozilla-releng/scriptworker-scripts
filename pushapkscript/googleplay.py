@@ -35,7 +35,8 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
         push_apk_config['rollout_percentage'] = payload['rollout_percentage']
 
     # Only known android_products are allowed to connect to Google Play
-    if not is_allowed_to_push_to_google_play(context):
+    # and only if the configuration of the pushapkscript instance allows it
+    if not is_allowed_to_push_to_google_play(context) or context.config.get('do_not_contact_google_play'):
         push_apk_config['do_not_contact_google_play'] = True
 
     if google_play_strings_path is None:

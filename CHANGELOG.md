@@ -2,7 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.12.0]
+## [upcoming]
+### Added
+* `do_not_contact_google_play` to instance config file
+
+## [0.12.0] - 2019-01-09
 
 ### Added
 * Support pushing [`fenix`](https://github.com/mozilla-mobile/fenix) to Google Play 

@@ -26,5 +26,6 @@
 
     "taskcluster_scope_prefixes": ["project:releng:googleplay:"],
 
+    "do_not_contact_google_play": true,
     "verbose": true
 }
