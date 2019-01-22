@@ -7,5 +7,5 @@ class SignatureError(ScriptWorkerTaskException):
         super().__init__(msg, exit_code=STATUSES['internal-error'])
 
 
-class ConfigValidationError(Exception):
+class ConfigValidationError(ScriptWorkerTaskException):
     pass

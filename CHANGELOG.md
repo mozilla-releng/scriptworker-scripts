@@ -2,13 +2,24 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [upcoming]
+
+### Added
+* New options:
+    * `skip_checks_fennec`: passed to `mozapkpublisher`
+    * `skip_check_ordered_version_codes`: passed to `mozapkpublisher`
+    * `skip_check_multiple_locales`: passed to `mozapkpublisher`
+    * `skip_check_same_locales`: passed to `mozapkpublisher`
+    * `skip_check_package_names`: passed to `mozapkpublisher`
+    * `has_nightly_track`: fails the build if an APK is attempted to be pushed to `nightly` without having a `nightly track
+
+### Changed
+* In config, `google_play_accounts` is now called `products`
+
 ## [0.12.0]
 
 ### Added
-* Support pushing [`fenix`](https://github.com/mozilla-mobile/fenix) to Google Play
-
-### Changed
-* In config, `google_play_accounts` is now called `products` 
+* Support pushing [`fenix`](https://github.com/mozilla-mobile/fenix) to Google Play 
 
 ## [0.11.0] - 2019-01-02
 
