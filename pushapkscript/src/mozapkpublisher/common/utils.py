@@ -4,7 +4,6 @@ import humanize
 import logging
 import os
 import requests
-from enum import Enum
 
 from mozilla_version.gecko import FennecVersion
 
@@ -37,33 +36,6 @@ def file_sha512sum(file_path):
 
 def filter_out_identical_values(list_):
     return list(set(list_))
-
-
-class PRODUCT(Enum):
-    KLAR = "org.mozilla.klar"
-    FENIX = "org.mozilla.fenix"
-    FOCUS = "org.mozilla.focus"
-    REFERENCE_BROWSER = "org.mozilla.reference.browser"
-
-    @staticmethod
-    def get_value_or_none(value):
-        return PRODUCT(value) if PRODUCT.contains_value(value) else None
-
-    @staticmethod
-    def contains_value(value):
-        return any([value == item.value for item in PRODUCT])
-
-    @staticmethod
-    def is_focus_flavor(value):
-        return PRODUCT.contains_value(value) and (PRODUCT(value) == PRODUCT.FOCUS or PRODUCT(value) == PRODUCT.KLAR)
-
-    @staticmethod
-    def is_fenix(value):
-        return PRODUCT.contains_value(value) and PRODUCT(value) == PRODUCT.FENIX
-
-    @staticmethod
-    def is_reference_browser(value):
-        return PRODUCT.contains_value(value) and PRODUCT(value) == PRODUCT.REFERENCE_BROWSER
 
 
 def is_firefox_version_nightly(firefox_version):

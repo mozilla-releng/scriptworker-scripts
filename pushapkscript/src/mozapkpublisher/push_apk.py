@@ -64,7 +64,7 @@ class PushAPK:
     def run(self):
         apks_paths = [apk.name for apk in self.apks]
         apks_metadata_per_paths = {
-            apk_path: extractor.extract_metadata(apk_path)
+            apk_path: extractor.extract_metadata(apk_path, not self.config.skip_checks_fennec)
             for apk_path in apks_paths
         }
         checker.cross_check_apks(apks_metadata_per_paths,

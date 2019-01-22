@@ -45,7 +45,7 @@ def edit_service_mock():
 
 
 def set_up_mocks(monkeypatch_, edit_service_mock_):
-    def _metadata(apk_file_name):
+    def _metadata(apk_file_name, _):
         if apk_file_name == apk_arm.name:
             version_code = '0'
             architecture = 'armeabi-v7a'
@@ -229,7 +229,7 @@ def test_create_or_update_whats_new(edit_service_mock, monkeypatch):
 
 
 def test_do_not_contact_google_play_flag_does_not_request_google_play(monkeypatch):
-    monkeypatch.setattr(extractor, 'extract_metadata', lambda _: {
+    monkeypatch.setattr(extractor, 'extract_metadata', lambda _, __: {
         'package_name': 'org.mozilla.firefox',
         'version_code': '1',
     })

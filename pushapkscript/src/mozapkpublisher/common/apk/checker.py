@@ -6,7 +6,7 @@ from mozilla_version.gecko import FennecVersion
 
 from mozapkpublisher.common.apk.history import get_expected_combos, craft_combos_pretty_names
 from mozapkpublisher.common.exceptions import BadApk, BadSetOfApks, NotMultiLocaleApk
-from mozapkpublisher.common.utils import filter_out_identical_values, PRODUCT
+from mozapkpublisher.common.utils import filter_out_identical_values
 
 logger = logging.getLogger(__name__)
 

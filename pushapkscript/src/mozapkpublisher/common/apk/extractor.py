@@ -10,7 +10,7 @@ from zipfile import ZipFile
 
 
 from mozapkpublisher.common.exceptions import BadApk, NoLocaleFound
-from mozapkpublisher.common.utils import filter_out_identical_values, PRODUCT
+from mozapkpublisher.common.utils import filter_out_identical_values
 
 from configparser import ConfigParser
 
@@ -26,7 +26,7 @@ _OMNI_JA_LOCATION = 'assets/omni.ja'
 _CHROME_MANIFEST_LOCATION = 'chrome/chrome.manifest'
 
 
-def extract_metadata(original_apk_path):
+def extract_metadata(original_apk_path, extract_firefox_metadata):
     logger.info('Extracting metadata from a copy of "{}"...'.format(original_apk_path))
     metadata = {}
 
@@ -45,9 +45,7 @@ def extract_metadata(original_apk_path):
             metadata['architecture'] = _extract_architecture(apk_zip, original_apk_path)
             metadata['locales'] = _extract_locales(apk_zip)
 
-            if not (PRODUCT.is_reference_browser(package_name)
-                    or PRODUCT.is_fenix(package_name)
-                    or PRODUCT.is_focus_flavor(package_name)):
+            if extract_firefox_metadata:
                 metadata['firefox_version'] = _extract_firefox_version(apk_zip)
                 metadata['firefox_build_id'] = _extract_firefox_build_id(apk_zip)
 
