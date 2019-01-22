@@ -52,9 +52,7 @@ def test_check_correct_apk_package_names():
         }, ['org.mozilla.focus', 'org.mozilla.klar', 'org.mozilla.reference.browser'])
 
 
-@pytest.mark.parametrize('apks_metadata_per_paths, skip_checks_fennec, skip_check_multiple_locales, '
-                         'skip_check_same_locales, skip_check_ordered_version_codes, skip_check_package_names, '
-                         'expected_package_names', (({
+@pytest.mark.parametrize('apks_metadata_per_paths, skip_checks_fennec, skip_check_multiple_locales, skip_check_same_locales, skip_check_ordered_version_codes, skip_check_package_names, expected_package_names', (({  # noqa
     'fennec-57.0.multi.android-arm.apk': {
         'api_level': 16,
         'architecture': 'armeabi-v7a',
