@@ -142,15 +142,15 @@ def main(name=None):
     parser.add_argument('--rollout-percentage', type=int, choices=range(0, 101), metavar='[0-100]',
                         default=None,
                         help='The percentage of user who will get the update. Specify only if track is rollout')
-    parser.add_argument('--skip-check-ordered-version-codes', action='store_true',
-                            help='skip check that asserts version codes are different, x86 code > arm code')
-    parser.add_argument('--skip-check-multiple-locales', action='store_true',
-                            help='skip check that asserts that apks all have multiple locales')
-    parser.add_argument('--skip-check-same-locales', action='store_true',
-                            help='skip check that asserts that all apks have the same locales')
-    parser.add_argument('--skip-checks-fennec', action='store_true',
-                            help='skip checks that are Fennec-specific (ini-checking, checking '
-                                 'version-to-package-name compliance')
+    cls.parser.add_argument('--skip-check-ordered-version-codes', action='store_true',
+                            help='Skip check that asserts version codes are different, x86 code > arm code')
+    cls.parser.add_argument('--skip-check-multiple-locales', action='store_true',
+                            help='Skip check that asserts that apks all have multiple locales')
+    cls.parser.add_argument('--skip-check-same-locales', action='store_true',
+                            help='Skip check that asserts that all apks have the same locales')
+    cls.parser.add_argument('--skip-checks-fennec', action='store_true',
+                            help='Skip checks that are Fennec-specific (ini-checking, checking '
+                                 'version-to-package-name compliance)')
 
     parser.add_argument('apks', metavar='path_to_apk', type=argparse.FileType(), nargs='+',
                         help='The path to the APK to upload. You have to provide every APKs for each architecture/API level. \
