@@ -5,7 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.12.0]
 
 ### Added
-* Support pushing [`fenix`](https://github.com/mozilla-mobile/fenix) to Google Play 
+* Support pushing [`fenix`](https://github.com/mozilla-mobile/fenix) to Google Play
+
+### Changed
+* In config, `google_play_accounts` is now called `products` 
 
 ## [0.11.0] - 2019-01-02
 
