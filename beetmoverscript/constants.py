@@ -156,11 +156,11 @@ PRODUCT_TO_PATH = {
 
 PARTNER_REPACK_PUBLIC_PREFIX_TMPL = 'pub/firefox/candidates/{version}-candidates/build{build_number}/'
 PARTNER_REPACK_PRIVATE_REGEXES = (
-    r'^(?P<partner>[^\/%]+)\/{version}-{build_number}\/(?P<subpartner>[^\/%]+)\/(mac|win32|win64|linux-i686|linux-x86_64)\/(?P<locale>[^\/%]+)$',
+    r'^(?P<partner>[^\/%]+)\/{version}-{build_number}\/(?P<subpartner>[^\/%]+)\/(mac|win32|win64(|-aarch64)|linux-i686|linux-x86_64)\/(?P<locale>[^\/%]+)$',
 )
 PARTNER_REPACK_PUBLIC_REGEXES = (
-    r'^(beetmover-checksums\/)?(mac|win32|win64)-EME-free\/[^\/.]+$',
-    r'^partner-repacks\/(?P<partner>[^\/%]+)\/(?P<subpartner>[^\/%]+)\/v\d+\/(mac|win32|win64|linux-i686|linux-x86_64)\/(?P<locale>[^\/%]+)$',
+    r'^(beetmover-checksums\/)?(mac|win32|win64(|-aarch64))-EME-free\/[^\/.]+$',
+    r'^partner-repacks\/(?P<partner>[^\/%]+)\/(?P<subpartner>[^\/%]+)\/v\d+\/(mac|win32|win64(|-aarch64)|linux-i686|linux-x86_64)\/(?P<locale>[^\/%]+)$',
 )
 
 CHECKSUMS_CUSTOM_FILE_NAMING = {
