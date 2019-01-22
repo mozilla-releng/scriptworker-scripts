@@ -44,4 +44,3 @@ def is_firefox_version_nightly(firefox_version):
         raise ValueError('Unsupported version: {}'.format(firefox_version))
 
     return version.is_nightly
-
