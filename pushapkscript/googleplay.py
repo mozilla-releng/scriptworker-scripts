@@ -1,6 +1,5 @@
 import logging
 
-from scriptworker.context import Context
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 

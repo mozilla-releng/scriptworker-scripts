@@ -53,7 +53,9 @@ class ConfigFileGenerator(object):
             "products": {{
                 "aurora": {{
                     "service_account": "dummy-service-account@iam.gserviceaccount.com",
-                    "certificate": "/dummy/path/to/certificate.p12"
+                    "certificate": "/dummy/path/to/certificate.p12",
+                    "has_nightly_track": false,
+                    "skip_check_package_names": true
                 }}
             }},
             "taskcluster_scope_prefixes": ["project:releng:googleplay:"]
@@ -117,6 +119,7 @@ class MainTest(unittest.TestCase):
             'credentials': '/dummy/path/to/certificate.p12',
             'no_gp_string_update': True,
             'service_account': 'dummy-service-account@iam.gserviceaccount.com',
+            'skip_check_package_names': True,
             'track': 'alpha',
         })
 
@@ -139,6 +142,7 @@ class MainTest(unittest.TestCase):
             'no_gp_string_update': True,
             'rollout_percentage': 25,
             'service_account': 'dummy-service-account@iam.gserviceaccount.com',
+            'skip_check_package_names': True,
             'track': 'rollout',
         })
 
@@ -163,6 +167,7 @@ class MainTest(unittest.TestCase):
             'credentials': '/dummy/path/to/certificate.p12',
             'commit': True,
             'service_account': 'dummy-service-account@iam.gserviceaccount.com',
+            'skip_check_package_names': True,
             'track': 'alpha',
             'update_gp_strings_from_file': '{}/work/cot/{}/public/google_play_strings.json'.format(
                 self.test_temp_dir, task_generator.google_play_strings_task_id

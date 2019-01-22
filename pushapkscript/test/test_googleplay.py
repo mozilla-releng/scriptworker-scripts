@@ -41,6 +41,17 @@ class GooglePlayTest(unittest.TestCase):
                     'skip_check_ordered_version_codes': True,
                     'skip_checks_fennec': True,
                 },
+                'focus': {
+                    'has_nightly_track': True,
+                    'service_account': 'focus_account',
+                    'certificate': '/path/to/beta.p12',
+                    'expected_package_names': ['org.mozilla.focus', 'org.mozilla.klar'],
+                    'skip_check_ordered_version_codes': True,
+                    'skip_check_multiple_locales': True,
+                    'skip_check_same_locales': True,
+                    'skip_check_same_package_name': True,
+                    'skip_checks_fennec': True,
+                }
             },
             'taskcluster_scope_prefixes': ['project:releng:googleplay:'],
         }
@@ -108,6 +119,21 @@ class GooglePlayTest(unittest.TestCase):
         self.context.task['scopes'] = ['project:releng:googleplay:dep']
         config = craft_push_apk_config(self.context, self.apks)
         self.assertTrue(config['do_not_contact_google_play'])
+
+    def test_craft_push_config_skip_checking_multiple_locales(self):
+        self.context.task['scopes'] = ['project:releng:googleplay:focus']
+        config = craft_push_apk_config(self.context, self.apks)
+        self.assertIn('skip_check_multiple_locales', config)
+
+    def test_craft_push_config_skip_checking_same_locales(self):
+        self.context.task['scopes'] = ['project:releng:googleplay:focus']
+        config = craft_push_apk_config(self.context, self.apks)
+        self.assertIn('skip_check_same_locales', config)
+
+    def test_craft_push_config_expect_package_names(self):
+        self.context.task['scopes'] = ['project:releng:googleplay:focus']
+        config = craft_push_apk_config(self.context, self.apks)
+        self.assertEquals(['org.mozilla.focus', 'org.mozilla.klar'], config['expected_package_names'])
 
     def test_craft_push_config_allows_committing_apks(self):
         self.context.task['scopes'] = ['project:releng:googleplay:aurora']
