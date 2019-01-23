@@ -14,18 +14,15 @@ from pushapkscript.exceptions import SignatureError
 ))
 def test_verify(monkeypatch, does_apk_have_expected_digest, raises):
     monkeypatch.setattr(manifest, '_does_apk_have_expected_digest', lambda _, __: does_apk_have_expected_digest)
-
-    context = MagicMock()
-    context.config = {'taskcluster_scope_prefixes': ['project:releng:googleplay:']}
-    context.task = {
-        'scopes': ['project:releng:googleplay:aurora'],
+    product_config = {
+        'digest_algorithm': 'SHA-1'
     }
 
     if raises:
         with pytest.raises(SignatureError):
-            manifest.verify(context, '/some/apk_path')
+            manifest.verify(product_config, '/some/apk_path')
     else:
-        manifest.verify(context, '/some/apk_path')
+        manifest.verify(product_config, '/some/apk_path')
 
 
 @pytest.mark.parametrize('manifest_data, digest, expected', ((

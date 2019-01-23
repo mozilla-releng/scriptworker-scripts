@@ -3,30 +3,18 @@ import logging
 import re
 
 from zipfile import ZipFile
-
 from pushapkscript.exceptions import SignatureError
-from pushapkscript.task import extract_android_product_from_scopes
 
 
 log = logging.getLogger(__name__)
 
 _NAME_MARKER = 'Name: '
 _DIGEST_MARKER_PATTERN = re.compile(r'\S+-Digest: ')
-_DIGEST_ALGORITHM_PER_ANDROID_PRODUCT = {
-    'aurora': 'SHA1',
-    'beta': 'SHA1',
-    'release': 'SHA1',
-    'dep': 'SHA1',
-    'fenix': 'SHA-256',
-    'focus': 'SHA-256',
-    'reference-browser': 'SHA-256'
-}
 
 
-def verify(context, apk_path):
+def verify(product_config, apk_path):
     # This prevents https://bugzilla.mozilla.org/show_bug.cgi?id=1332916
-    android_product = extract_android_product_from_scopes(context)
-    expected_digest_algorithm = _DIGEST_ALGORITHM_PER_ANDROID_PRODUCT[android_product]
+    expected_digest_algorithm = product_config['digest_algorithm']
     if not _does_apk_have_expected_digest(apk_path, expected_digest_algorithm):
         raise SignatureError(
             'Wrong digest algorithm: "{}" digest is expected, but it was not found'.format(expected_digest_algorithm)

@@ -3,9 +3,6 @@ import logging
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
-from pushapkscript.exceptions import ConfigValidationError
-from pushapkscript.task import extract_android_product_from_scopes
-
 log = logging.getLogger(__name__)
 
 _AUTHORIZED_PRODUCTS_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release', 'fenix', 'focus', 'reference-browser')
@@ -13,19 +10,16 @@ _DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
-def publish_to_googleplay(context, apks, google_play_strings_path=None):
+def publish_to_googleplay(task_payload, android_product, product_config, apks, google_play_strings_path=None):
     from mozapkpublisher.push_apk import PushAPK
     push_apk = PushAPK(config=craft_push_apk_config(
-        context, apks, google_play_strings_path,
+        task_payload, android_product, product_config, apks, google_play_strings_path,
     ))
     push_apk.run()
 
 
-def craft_push_apk_config(context, apks, google_play_strings_path=None):
-    android_product = extract_android_product_from_scopes(context)
-    product_config = _get_product_config(context, android_product)
+def craft_push_apk_config(payload, android_product, product_config, apks, google_play_strings_path=None):
     valid_track_values = craft_valid_track_values(product_config['has_nightly_track'])
-    payload = context.task['payload']
     track = payload['google_play_track']
 
     if track not in valid_track_values:
@@ -33,7 +27,7 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
 
     push_apk_config = {
         '*args': sorted(apks),   # APKs have been positional arguments since mozapkpublisher 0.6.0
-        'commit': should_commit_transaction(context),
+        'commit': should_commit_transaction(payload),
         'credentials': product_config['certificate'],
         'service_account': product_config['service_account'],
         'track': payload['google_play_track']
@@ -51,7 +45,7 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
     if product_config.get('skip_check_same_locales'):
         push_apk_config['skip_check_same_locales'] = True
 
-    if not is_allowed_to_push_to_google_play(context):
+    if not is_allowed_to_push_to_google_play(android_product):
         push_apk_config['do_not_contact_google_play'] = True
 
     if payload.get('rollout_percentage'):
@@ -74,28 +68,14 @@ def craft_valid_track_values(has_nightly_track):
     return _DEFAULT_TRACK_VALUES + (['nightly'] if has_nightly_track else [])
 
 
-def _get_product_config(context, android_product):
-    try:
-        accounts = context.config['products']
-    except KeyError:
-        raise ConfigValidationError('"products" is not part of the configuration')
-
-    try:
-        return accounts[android_product]
-    except KeyError:
-        raise TaskVerificationError('Android "{}" does not exist in the configuration of this instance.\
-    Are you sure you allowed to push such APK?'.format(android_product))
-
-
-def is_allowed_to_push_to_google_play(context):
-    android_product = extract_android_product_from_scopes(context)
+def is_allowed_to_push_to_google_play(android_product):
     return android_product in _AUTHORIZED_PRODUCTS_TO_REACH_GOOGLE_PLAY
 
 
-def should_commit_transaction(context):
+def should_commit_transaction(task_payload):
     # Don't commit anything by default. Committed APKs can't be unpublished,
     # unless you push a newer set of APKs.
-    return context.task['payload'].get('commit', False)
+    return task_payload.get('commit', False)
 
 
 def get_google_play_strings_path(artifacts_per_task_id, failed_artifacts_per_task_id):

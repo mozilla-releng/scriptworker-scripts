@@ -10,14 +10,14 @@ from pushapkscript.script import async_main, get_default_config, main, _log_warn
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('android_product, expected_strings_call_count', (
-    ('aurora', 1),
-    ('beta', 1),
-    ('release', 1),
-    ('dep', 1),
-    ('focus', 0),
+@pytest.mark.parametrize('android_product, update_google_play_strings, expected_strings_call_count', (
+    ('aurora', True, 1),
+    ('beta', True, 1),
+    ('release', True, 1),
+    ('dep', True, 1),
+    ('focus', False, 0),
 ))
-async def test_async_main(monkeypatch, android_product, expected_strings_call_count):
+async def test_async_main(monkeypatch, android_product, update_google_play_strings, expected_strings_call_count):
     monkeypatch.setattr(
         artifacts,
         'get_upstream_artifacts_full_paths_per_task_id',
@@ -30,6 +30,9 @@ async def test_async_main(monkeypatch, android_product, expected_strings_call_co
     monkeypatch.setattr(jarsigner, 'verify', lambda _, __: None)
     monkeypatch.setattr(manifest, 'verify', lambda _, __: None)
     monkeypatch.setattr(task, 'extract_android_product_from_scopes', lambda _: android_product)
+    monkeypatch.setattr(pushapkscript.script, '_get_product_config', lambda _, __: {
+        'update_google_play_strings': update_google_play_strings,
+    })
 
     google_play_strings_call_counter = (n for n in range(0, 2))
 
@@ -40,10 +43,12 @@ async def test_async_main(monkeypatch, android_product, expected_strings_call_co
 
     monkeypatch.setattr(googleplay, 'get_google_play_strings_path', google_play_strings_call)
 
-    context = {'fake': 'context'}
+    context = MagicMock()
+    context.task = {
+        'payload': {}
+    }
 
-    def assert_google_play_call(context, all_apks_paths, google_play_strings_path):
-        assert context == {'fake': 'context'}
+    def assert_google_play_call(_, __, ___, all_apks_paths, google_play_strings_path):
         assert sorted(all_apks_paths) == ['/some/path/to/another.apk', '/some/path/to/one.apk', '/some/path/to/yet_another.apk']
         if android_product == 'focus':
             assert google_play_strings_path is None
@@ -66,7 +71,7 @@ if no error is detected either by this script or by Google Play.'),
 def test_log_warning_forewords(caplog,  monkeypatch, is_allowed_to_push, should_commit_transaction, expected):
     monkeypatch.setattr(googleplay, 'is_allowed_to_push_to_google_play', lambda _: is_allowed_to_push)
     monkeypatch.setattr(googleplay, 'should_commit_transaction', lambda _: should_commit_transaction)
-    _log_warning_forewords(MagicMock())
+    _log_warning_forewords('product', MagicMock())
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == 'WARNING'
     assert expected in caplog.text

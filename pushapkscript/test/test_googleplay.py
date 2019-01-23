@@ -2,72 +2,65 @@ import unittest
 
 import pytest
 from scriptworker.exceptions import TaskVerificationError
-from unittest.mock import MagicMock
 
 from pushapkscript.exceptions import ConfigValidationError
 from pushapkscript.googleplay import craft_push_apk_config, \
-    _get_product_config, should_commit_transaction, get_google_play_strings_path, \
+    should_commit_transaction, get_google_play_strings_path, \
     _check_google_play_string_is_the_only_failed_task, _find_unique_google_play_strings_file_in_dict
 
 
 class GooglePlayTest(unittest.TestCase):
     def setUp(self):
-        self.context = MagicMock()
-        self.context.config = {
-            'products': {
-                'aurora': {
-                    'has_nightly_track': False,
-                    'service_account': 'aurora_account',
-                    'certificate': '/path/to/aurora.p12',
-                    'skip_check_package_names': True,
-                },
-                'beta': {
-                    'has_nightly_track': False,
-                    'service_account': 'beta_account',
-                    'certificate': '/path/to/beta.p12',
-                    'skip_check_package_names': True,
-                },
-                'release': {
-                    'has_nightly_track': False,
-                    'service_account': 'release_account',
-                    'certificate': '/path/to/release.p12',
-                    'skip_check_package_names': True,
-                },
-                'dep': {
-                    'has_nightly_track': False,
-                    'service_account': 'dummy_dep',
-                    'certificate': '/path/to/dummy_non_p12_file',
-                    'skip_check_package_names': True,
-                    'skip_check_ordered_version_codes': True,
-                    'skip_checks_fennec': True,
-                },
-                'focus': {
-                    'has_nightly_track': True,
-                    'service_account': 'focus_account',
-                    'certificate': '/path/to/beta.p12',
-                    'expected_package_names': ['org.mozilla.focus', 'org.mozilla.klar'],
-                    'skip_check_ordered_version_codes': True,
-                    'skip_check_multiple_locales': True,
-                    'skip_check_same_locales': True,
-                    'skip_check_same_package_name': True,
-                    'skip_checks_fennec': True,
-                }
-            },
-            'taskcluster_scope_prefixes': ['project:releng:googleplay:'],
+        self.product = 'release'
+        self.task_payload = {
+            'google_play_track': 'alpha'
         }
-        self.context.task = {
-            'scopes': ['project:releng:googleplay:release'],
-            'payload': {
-                'google_play_track': 'alpha'
+
+        self.products = {
+            'aurora': {
+                'has_nightly_track': False,
+                'service_account': 'aurora_account',
+                'certificate': '/path/to/aurora.p12',
+                'skip_check_package_names': True,
             },
+            'beta': {
+                'has_nightly_track': False,
+                'service_account': 'beta_account',
+                'certificate': '/path/to/beta.p12',
+                'skip_check_package_names': True,
+            },
+            'release': {
+                'has_nightly_track': False,
+                'service_account': 'release_account',
+                'certificate': '/path/to/release.p12',
+                'skip_check_package_names': True,
+            },
+            'dep': {
+                'has_nightly_track': False,
+                'service_account': 'dummy_dep',
+                'certificate': '/path/to/dummy_non_p12_file',
+                'skip_check_package_names': True,
+                'skip_check_ordered_version_codes': True,
+                'skip_checks_fennec': True,
+            },
+            'focus': {
+                'has_nightly_track': True,
+                'service_account': 'focus_account',
+                'certificate': '/path/to/product.p12',
+                'expected_package_names': ['org.mozilla.focus', 'org.mozilla.klar'],
+                'skip_check_ordered_version_codes': True,
+                'skip_check_multiple_locales': True,
+                'skip_check_same_locales': True,
+                'skip_check_same_package_name': True,
+                'skip_checks_fennec': True,
+            }
         }
         self.apks = ['/path/to/x86.apk', '/path/to/arm_v15.apk']
 
     def test_craft_push_config(self):
         android_products = ('aurora', 'beta', 'release')
         for android_product in android_products:
-            self.context.task['scopes'] = ['project:releng:googleplay:{}'.format(android_product)]
-            self.assertEqual(craft_push_apk_config(self.context, self.apks), {
+            self.assertEqual(craft_push_apk_config(self.task_payload, android_product, self.products[android_product], self.apks), {
                 '*args': ['/path/to/arm_v15.apk', '/path/to/x86.apk'],
                 'credentials': '/path/to/{}.p12'.format(android_product),
                 'commit': False,
@@ -78,16 +71,26 @@ class GooglePlayTest(unittest.TestCase):
             })
 
     def test_craft_push_config_validates_track(self):
-        self.context.task['payload']['google_play_track'] = 'fake'
-        with pytest.raises(TaskVerificationError):
-            craft_push_apk_config(self.context, self.apks)
+        task_payload_fake_track = {
+            'google_play_track': 'fake'
+        }
 
-        self.context.task['payload']['google_play_track'] = 'nightly'
         with pytest.raises(TaskVerificationError):
-            craft_push_apk_config(self.context, self.apks)
+            craft_push_apk_config(task_payload_fake_track, 'release', self.products['release'], self.apks)
 
-        self.context.config['products']['release']['has_nightly_track'] = True
-        self.assertEqual(craft_push_apk_config(self.context, self.apks), {
+        task_payload_nightly_track = {
+            'google_play_track': 'nightly'
+        }
+        with pytest.raises(TaskVerificationError):
+            craft_push_apk_config(task_payload_nightly_track, 'release', self.products['release'], self.apks)
+
+        nightly_product_config = {
+            'has_nightly_track': True,
+            'service_account': 'release_account',
+            'certificate': '/path/to/release.p12',
+            'skip_check_package_names': True,
+        }
+        self.assertEqual(craft_push_apk_config(task_payload_nightly_track, 'release', nightly_product_config, self.apks), {
             '*args': ['/path/to/arm_v15.apk', '/path/to/x86.apk'],
             'credentials': '/path/to/release.p12',
             'commit': False,
@@ -98,9 +101,11 @@ class GooglePlayTest(unittest.TestCase):
         })
 
     def test_craft_push_config_allows_rollout_percentage(self):
-        self.context.task['payload']['google_play_track'] = 'rollout'
-        self.context.task['payload']['rollout_percentage'] = 10
-        self.assertEqual(craft_push_apk_config(self.context, self.apks), {
+        task_payload = {
+            'google_play_track': 'rollout',
+            'rollout_percentage': 10
+        }
+        self.assertEqual(craft_push_apk_config(task_payload, 'release', self.products['release'], self.apks), {
             '*args': ['/path/to/arm_v15.apk', '/path/to/x86.apk'],
             'credentials': '/path/to/release.p12',
             'commit': False,
@@ -112,73 +117,70 @@ class GooglePlayTest(unittest.TestCase):
         })
 
     def test_craft_push_config_allows_to_contact_google_play_or_not(self):
-        self.context.task['scopes'] = ['project:releng:googleplay:aurora']
-        config = craft_push_apk_config(self.context, self.apks)
+        config = craft_push_apk_config(self.task_payload, 'aurora', self.products['aurora'], self.apks)
         self.assertNotIn('do_not_contact_google_play', config)
 
-        self.context.task['scopes'] = ['project:releng:googleplay:dep']
-        config = craft_push_apk_config(self.context, self.apks)
+        config = craft_push_apk_config(self.task_payload, 'dep', self.products['dep'], self.apks)
         self.assertTrue(config['do_not_contact_google_play'])
 
     def test_craft_push_config_skip_checking_multiple_locales(self):
-        self.context.task['scopes'] = ['project:releng:googleplay:focus']
-        config = craft_push_apk_config(self.context, self.apks)
+        product_config = {
+            'has_nightly_track': False,
+            'service_account': 'product',
+            'certificate': '/path/to/product.p12',
+            'skip_check_package_names': True,
+            'skip_check_multiple_locales': True,
+        }
+        config = craft_push_apk_config(self.task_payload, 'product', product_config, self.apks)
         self.assertIn('skip_check_multiple_locales', config)
 
     def test_craft_push_config_skip_checking_same_locales(self):
-        self.context.task['scopes'] = ['project:releng:googleplay:focus']
-        config = craft_push_apk_config(self.context, self.apks)
+        product_config = {
+            'has_nightly_track': False,
+            'service_account': 'product',
+            'certificate': '/path/to/product.p12',
+            'skip_check_package_names': True,
+            'skip_check_same_locales': True,
+        }
+        config = craft_push_apk_config(self.task_payload, 'product', product_config, self.apks)
         self.assertIn('skip_check_same_locales', config)
 
     def test_craft_push_config_expect_package_names(self):
-        self.context.task['scopes'] = ['project:releng:googleplay:focus']
-        config = craft_push_apk_config(self.context, self.apks)
+        product_config = {
+            'has_nightly_track': False,
+            'service_account': 'product',
+            'certificate': '/path/to/product.p12',
+            'expected_package_names': ['org.mozilla.focus', 'org.mozilla.klar']
+        }
+        config = craft_push_apk_config(self.task_payload, 'product', product_config, self.apks)
         self.assertEquals(['org.mozilla.focus', 'org.mozilla.klar'], config['expected_package_names'])
 
     def test_craft_push_config_allows_committing_apks(self):
-        self.context.task['scopes'] = ['project:releng:googleplay:aurora']
-        self.context.task['payload']['commit'] = True
-        config = craft_push_apk_config(self.context, self.apks)
+        task_payload = {
+            'google_play_track': 'alpha',
+            'commit': True
+        }
+        config = craft_push_apk_config(task_payload, 'release', self.products['release'], self.apks)
         self.assertTrue(config['commit'])
 
-    def test_craft_push_config_raises_error_when_android_product_is_not_part_of_config(self):
-        self.context.task['scopes'] = ['project:releng:googleplay:non_existing_android_product']
-        self.assertRaises(TaskVerificationError, craft_push_apk_config, self.context, self.apks)
-
-    def test_craft_push_config_raises_error_when_google_play_accounts_does_not_exist(self):
-        del self.context.config['products']
-        self.assertRaises(ConfigValidationError, craft_push_apk_config, self.context, self.apks)
-
     def test_craft_push_config_updates_google(self):
-        config = craft_push_apk_config(self.context, self.apks, google_play_strings_path='/path/to/google_play_strings.json')
+        config = craft_push_apk_config(self.task_payload, 'release', self.products['release'], self.apks, google_play_strings_path='/path/to/google_play_strings.json')
         self.assertNotIn('no_gp_string_update', config)
         self.assertEqual(config['update_gp_strings_from_file'], '/path/to/google_play_strings.json')
 
-    def test_get_play_config(self):
-        self.assertEqual(_get_product_config(self.context, 'aurora'), {
-            'has_nightly_track': False,
-            'service_account': 'aurora_account',
-            'skip_check_package_names': True,
-            'certificate': '/path/to/aurora.p12'
-        })
-
-        self.assertRaises(TaskVerificationError, _get_product_config, self.context, 'non-existing-android-product')
-
-        class FakeContext:
-            config = {}
-
-        context_without_any_account = FakeContext()
-        self.assertRaises(ConfigValidationError, _get_product_config, context_without_any_account, 'whatever-android-product')
-
     def test_should_commit_transaction(self):
-        self.context.task['payload']['commit'] = True
-        self.assertTrue(should_commit_transaction(self.context))
+        task_payload = {
+            'commit': True
+        }
+        self.assertTrue(should_commit_transaction(task_payload))
 
-        self.context.task['payload']['commit'] = False
-        self.assertFalse(should_commit_transaction(self.context))
+        task_payload = {
+            'commit': False
+        }
+        self.assertFalse(should_commit_transaction(task_payload))
 
-        del self.context.task['payload']['commit']
-        self.assertFalse(should_commit_transaction(self.context))
+        task_payload = {}
+        self.assertFalse(should_commit_transaction(task_payload))
 
     def test_get_google_play_strings_path(self):
         self.assertEqual(

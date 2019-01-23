@@ -52,10 +52,12 @@ class ConfigFileGenerator(object):
             "jarsigner_certificate_alias": "{certificate_alias}",
             "products": {{
                 "aurora": {{
+                    "digest_algorithm": "SHA1",
                     "service_account": "dummy-service-account@iam.gserviceaccount.com",
                     "certificate": "/dummy/path/to/certificate.p12",
                     "has_nightly_track": false,
-                    "skip_check_package_names": true
+                    "skip_check_package_names": true,
+                    "update_google_play_strings": true
                 }}
             }},
             "taskcluster_scope_prefixes": ["project:releng:googleplay:"]
