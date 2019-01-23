@@ -7,7 +7,6 @@ from pushapkscript.task import extract_android_product_from_scopes
 
 log = logging.getLogger(__name__)
 
-_AUTHORIZED_PRODUCTS_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release', 'fenix', 'focus', 'reference-browser')
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
@@ -34,9 +33,8 @@ def craft_push_apk_config(context, apks, google_play_strings_path=None):
     if payload.get('rollout_percentage'):
         push_apk_config['rollout_percentage'] = payload['rollout_percentage']
 
-    # Only known android_products are allowed to connect to Google Play
-    # and only if the configuration of the pushapkscript instance allows it
-    if not is_allowed_to_push_to_google_play(context) or context.config.get('do_not_contact_google_play'):
+    # Only allowed to connect to Google Play if the configuration of the pushapkscript instance allows it
+    if context.config.get('do_not_contact_google_play'):
         push_apk_config['do_not_contact_google_play'] = True
 
     if google_play_strings_path is None:
@@ -66,11 +64,6 @@ def _get_play_config(context, android_product):
     except KeyError:
         raise TaskVerificationError('Android "{}" does not exist in the configuration of this instance.\
     Are you sure you allowed to push such APK?'.format(android_product))
-
-
-def is_allowed_to_push_to_google_play(context):
-    android_product = extract_android_product_from_scopes(context)
-    return android_product in _AUTHORIZED_PRODUCTS_TO_REACH_GOOGLE_PLAY
 
 
 def should_commit_transaction(context):
