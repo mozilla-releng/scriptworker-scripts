@@ -6,9 +6,9 @@
 #    pip-compile-multi
 #
 -r base.txt
-aioresponses==0.5.2 \
-    --hash=sha256:38d9bef90acb0f4e49cde2f635f142e8bf6199dba1a7e09ba32bfc467de85c8c \
-    --hash=sha256:53e8cb51a4aeccbdf3780a6a5b2b2772594af3871bd6e89c73f6f8cbff64f2ff
+aioresponses==0.6.0 \
+    --hash=sha256:ecc90e59d11cdef8b45753b87bd0a673e5556772fd593707bec78c4b06144f9e \
+    --hash=sha256:46ef0568e0bd9a603665649ae0ee42347525ebb1f8078519f24261b478942146
 atomicwrites==1.2.1 \
     --hash=sha256:0312ad34fcad8fac3704d441f7b317e50af620823353ec657a53e981f92920c0 \
     --hash=sha256:ec9ae8adaae229e4f8446952d204a3e4b5fdd2d099f9be3aaf556120135fb3ee \
