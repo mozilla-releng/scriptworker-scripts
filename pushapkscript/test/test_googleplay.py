@@ -42,17 +42,6 @@ class GooglePlayTest(unittest.TestCase):
                 'skip_check_package_names': True,
                 'skip_check_ordered_version_codes': True,
                 'skip_checks_fennec': True,
-            },
-            'focus': {
-                'has_nightly_track': True,
-                'service_account': 'focus_account',
-                'certificate': '/path/to/product.p12',
-                'expected_package_names': ['org.mozilla.focus', 'org.mozilla.klar'],
-                'skip_check_ordered_version_codes': True,
-                'skip_check_multiple_locales': True,
-                'skip_check_same_locales': True,
-                'skip_check_same_package_name': True,
-                'skip_checks_fennec': True,
             }
         }
         self.apks = ['/path/to/x86.apk', '/path/to/arm_v15.apk']
