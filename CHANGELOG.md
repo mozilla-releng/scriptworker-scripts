@@ -6,6 +6,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 * New options:
+    * `digest_algorithm`: expected digest algorithm of signed app. Verified before app deployed to Google Play
+    * `update_google_play_strings`: true if strings should be updated in Google Play for this app
     * `skip_checks_fennec`: passed to `mozapkpublisher`
     * `skip_check_ordered_version_codes`: passed to `mozapkpublisher`
     * `skip_check_multiple_locales`: passed to `mozapkpublisher`
