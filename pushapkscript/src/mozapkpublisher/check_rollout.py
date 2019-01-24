@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import calendar
 import email.utils as eu
 import logging
@@ -8,6 +7,7 @@ import time
 
 import requests
 
+from argparse import ArgumentParser
 from mozapkpublisher.common import googleplay
 
 DAY = 24 * 60 * 60
@@ -34,7 +34,7 @@ def check_rollout(edits_service, package_name, days):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Check for in-progress Firefox for Android staged rollout')
+    parser = ArgumentParser(description='Check for in-progress Firefox for Android staged rollout')
     parser.add_argument('service_account', help='The service account email')
     parser.add_argument('credentials', help='The p12 authentication file', type=argparse.FileType(mode='rb'))
     parser.add_argument('--days', help='The time before we warn about incomplete staged rollout of a release (default: 7)',

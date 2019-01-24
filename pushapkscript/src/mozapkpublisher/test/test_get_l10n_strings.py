@@ -26,5 +26,5 @@ def test_main(tmp_path, monkeypatch):
 
         monkeypatch.setattr(sys, 'argv', incomplete_args)
 
-        with pytest.raises(WrongArgumentGiven):
+        with pytest.raises(SystemExit):
             main()

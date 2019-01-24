@@ -4,34 +4,19 @@ import pytest
 import shutil
 from tempfile import mkdtemp
 
-from mozapkpublisher.common.exceptions import CheckSumMismatch, WrongArgumentGiven
-from mozapkpublisher.get_apk import GetAPK, \
-    craft_apk_and_checksums_url_and_download_locations, _craft_apk_and_checksums_file_names, _get_architecture_in_file_name, \
-    check_apk_against_checksum_file, _fetch_checksum_from_file, _take_out_common_path
-
-VALID_CONFIG = {'version': '50.0b8'}
-get_apk = GetAPK(VALID_CONFIG)
+from mozapkpublisher.common.exceptions import CheckSumMismatch
+from mozapkpublisher.get_apk import craft_apk_and_checksums_url_and_download_locations, _craft_apk_and_checksums_file_names, _get_architecture_in_file_name, \
+    check_apk_against_checksum_file, _fetch_checksum_from_file, _take_out_common_path, get_api_suffix, generate_apk_base_url
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 CHECKSUM_APK = os.path.join(DATA_DIR, 'blob')
 
 
-def test_mutually_exclusive_group():
-    with pytest.raises(WrongArgumentGiven):
-        GetAPK({'clean': True, 'version': True})
-
-    with pytest.raises(WrongArgumentGiven):
-        GetAPK({'clean': True, 'latest_nightly': True})
-
-    with pytest.raises(WrongArgumentGiven):
-        GetAPK({'version': True, 'latest_nightly': True})
-
-
 def test_generate_apk_base_url():
-    assert GetAPK({'latest_nightly': True}).generate_apk_base_url('52.0a1', None, 'multi', 'x86') == \
+    assert generate_apk_base_url(True, '52.0a1', None, 'multi', 'x86') == \
         'https://ftp.mozilla.org/pub/mobile/nightly/latest-mozilla-central-android-x86'
 
-    assert GetAPK({'version': '50.0b8'}).generate_apk_base_url('50.0b8', 1, 'multi', 'api-15') == \
+    assert generate_apk_base_url(False, '50.0b8', 1, 'multi', 'api-15') == \
         'https://ftp.mozilla.org/pub/mobile/candidates/50.0b8-candidates/build1/android-api-15/multi'
 
 
@@ -47,7 +32,7 @@ def test_generate_apk_base_url():
     '56.0', 'arm', ['api-16'],
 )))
 def test_get_api_suffix(version, architecture, expected):
-    assert get_apk.get_api_suffix(version, architecture) == expected
+    assert get_api_suffix(version, architecture) == expected
 
 
 def test_craft_apk_and_checksums_url_and_download_locations():
