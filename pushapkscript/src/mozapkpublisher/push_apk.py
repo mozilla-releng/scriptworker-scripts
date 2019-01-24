@@ -133,34 +133,35 @@ def main(name=None):
     from mozapkpublisher.common import main_logging
     main_logging.init()
 
+    parser = ArgumentParser(description='Upload APKs of Firefox for Android on Google play.')
+
+    googleplay.add_general_google_play_arguments(parser)
+
+    parser.add_argument('--track', action='store', required=True,
+                        help='Track on which to upload')
+    parser.add_argument('--rollout-percentage', type=int, choices=range(0, 101), metavar='[0-100]',
+                        default=None,
+                        help='The percentage of user who will get the update. Specify only if track is rollout')
+
+    parser.add_argument('apks', metavar='path_to_apk', type=argparse.FileType(), nargs='+',
+                        help='The path to the APK to upload. You have to provide every APKs for each architecture/API level. \
+                                            Missing or extra APKs exit the program without uploading anything')
+
+    google_play_strings_group = parser.add_mutually_exclusive_group(required=True)
+    google_play_strings_group.add_argument('--no-gp-string-update', dest='update_google_play_strings',
+                                           action='store_false',
+                                           help="Don't update listings and what's new sections on Google Play")
+    google_play_strings_group.add_argument('--update-gp-strings-from-l10n-store',
+                                           dest='update_google_play_strings_from_store',
+                                           action='store_true',
+                                           help="Download listings and what's new sections from the l10n store and use them \
+                                                           to update Google Play")
+    google_play_strings_group.add_argument('--update-gp-strings-from-file', dest='google_play_strings_file',
+                                           type=argparse.FileType(),
+                                           help="Use file to update listing and what's new section on Google Play.\
+                                                           Such file can be obtained by calling fetch_l10n_strings.py")
+
     try:
-        parser = ArgumentParser(description='Upload APKs of Firefox for Android on Google play.')
-
-        googleplay.add_general_google_play_arguments(parser)
-
-        parser.add_argument('--track', action='store', required=True,
-                            help='Track on which to upload')
-        parser.add_argument('--rollout-percentage', type=int, choices=range(0, 101), metavar='[0-100]',
-                            default=None,
-                            help='The percentage of user who will get the update. Specify only if track is rollout')
-
-        parser.add_argument('apks', metavar='path_to_apk', type=argparse.FileType(), nargs='+',
-                            help='The path to the APK to upload. You have to provide every APKs for each architecture/API level. \
-                                        Missing or extra APKs exit the program without uploading anything')
-
-        google_play_strings_group = parser.add_mutually_exclusive_group(required=True)
-        google_play_strings_group.add_argument('--no-gp-string-update', dest='update_google_play_strings',
-                                               action='store_false',
-                                               help="Don't update listings and what's new sections on Google Play")
-        google_play_strings_group.add_argument('--update-gp-strings-from-l10n-store',
-                                               dest='update_google_play_strings_from_store',
-                                               action='store_true',
-                                               help="Download listings and what's new sections from the l10n store and use them \
-                                                       to update Google Play")
-        google_play_strings_group.add_argument('--update-gp-strings-from-file', dest='google_play_strings_file',
-                                               type=argparse.FileType(),
-                                               help="Use file to update listing and what's new section on Google Play.\
-                                                       Such file can be obtained by calling fetch_l10n_strings.py")
         config = parser.parse_args()
         push_apk(config.apks, config.service_account, config.google_play_credentials_file, config.track,
                  config.update_google_play_strings, config.update_google_play_strings_from_store,
@@ -168,7 +169,7 @@ def main(name=None):
     except WrongArgumentGiven as e:
         parser.print_help(sys.stderr)
         sys.stderr.write('{}: error: {}\n'.format(parser.prog, e))
-        sys.exit(2)
+        raise SystemExit()
 
 
 main(__name__)

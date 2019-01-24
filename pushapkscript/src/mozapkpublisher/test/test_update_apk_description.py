@@ -1,3 +1,5 @@
+import mozapkpublisher
+import os
 import pytest
 import sys
 
@@ -49,3 +51,13 @@ def test_main(monkeypatch):
 
     with pytest.raises(SystemExit):
         main()
+
+    complete_args = [
+        'script',
+        '--package-name', 'org.mozilla.fennec_aurora',
+        '--service-account', 'foo@developer.gserviceaccount.com',
+        '--credentials', os.path.join(os.path.dirname(__file__), 'data', 'blob')
+    ]
+    monkeypatch.setattr(sys, 'argv', complete_args)
+    monkeypatch.setattr(mozapkpublisher.update_apk_description, 'update_apk_description', lambda _, __, ___, ____, _____, ______: None)
+    main()

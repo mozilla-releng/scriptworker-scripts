@@ -49,7 +49,7 @@ def main(name=None):
 
     googleplay.add_general_google_play_arguments(parser)
     parser.add_argument('--package-name', choices=store_l10n.STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME.keys(),
-                            help='The Google play name of the app', required=True)
+                        help='The Google play name of the app', required=True)
     parser.add_argument('--force-locale', help='Force to a specific locale (instead of all)')
     config = parser.parse_args()
     update_apk_description(config.package_name, config.force_locale, config.commit, config.service_account,

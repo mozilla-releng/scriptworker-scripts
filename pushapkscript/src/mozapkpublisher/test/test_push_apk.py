@@ -1,10 +1,11 @@
 import json
+import mozapkpublisher
+import os
 import pytest
 import sys
 
 from unittest.mock import create_autospec
 
-from copy import copy
 from tempfile import NamedTemporaryFile
 
 from mozapkpublisher.common import googleplay, store_l10n
@@ -14,6 +15,7 @@ from mozapkpublisher.push_apk import push_apk, main, _create_or_update_whats_new
     _get_ordered_version_codes, _split_apk_metadata_per_package_name
 from mozapkpublisher.test.common.test_store_l10n import set_translations_per_google_play_locale_code, \
     DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE
+from unittest.mock import patch
 
 
 credentials = NamedTemporaryFile()
@@ -281,3 +283,21 @@ def test_main(monkeypatch):
 
     with pytest.raises(SystemExit):
         main()
+
+    file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
+    fail_manual_validation_args = [
+        'script',
+        '--track', 'rollout',
+        '--service-account', 'foo@developer.gserviceaccount.com',
+        '--credentials', file,
+        '--no-gp-string-update',
+        file
+    ]
+
+    with patch.object(mozapkpublisher.push_apk, 'push_apk', side_effect=SystemExit) as mock_push_apk:
+        monkeypatch.setattr(sys, 'argv', fail_manual_validation_args)
+
+        with pytest.raises(SystemExit):
+            main()
+
+        assert mock_push_apk.called

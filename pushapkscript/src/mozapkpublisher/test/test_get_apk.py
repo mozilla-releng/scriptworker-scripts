@@ -2,11 +2,13 @@ import mock
 import os
 import pytest
 import shutil
+import sys
 from tempfile import mkdtemp
 
 from mozapkpublisher.common.exceptions import CheckSumMismatch
-from mozapkpublisher.get_apk import craft_apk_and_checksums_url_and_download_locations, _craft_apk_and_checksums_file_names, _get_architecture_in_file_name, \
-    check_apk_against_checksum_file, _fetch_checksum_from_file, _take_out_common_path, get_api_suffix, generate_apk_base_url
+from mozapkpublisher.get_apk import main, craft_apk_and_checksums_url_and_download_locations, \
+    _craft_apk_and_checksums_file_names, _get_architecture_in_file_name, check_apk_against_checksum_file, \
+    _fetch_checksum_from_file, _take_out_common_path, get_api_suffix, generate_apk_base_url
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 CHECKSUM_APK = os.path.join(DATA_DIR, 'blob')
@@ -149,3 +151,10 @@ def test_fetch_checksum_from_file(checksum_file):
 ))
 def test_take_out_common_path(checksum_file, apk_file, expected):
     assert _take_out_common_path(checksum_file, apk_file) == expected
+
+
+def test_exits_if_invalid_arguments(monkeypatch):
+    incomplete_args = ['script']
+    monkeypatch.setattr(sys, 'argv', incomplete_args)
+    with pytest.raises(SystemExit):
+        main()

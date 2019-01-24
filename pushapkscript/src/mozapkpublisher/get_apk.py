@@ -231,7 +231,7 @@ def _take_out_common_path(checksum_file, apk_file):
     return os.path.relpath(apk_file, os.path.dirname(checksum_file))
 
 
-if __name__ == '__main__':
+def main():
     from mozapkpublisher.common import main_logging
     main_logging.init()
 
@@ -260,3 +260,7 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, myScript.signal_handler)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(myScript.run())
+
+
+if __name__ == '__main__':
+    main()
