@@ -8,39 +8,49 @@ import sys
 from argparse import ArgumentParser
 from mozapkpublisher.common import googleplay, store_l10n
 from mozapkpublisher.common.apk import extractor, checker
+from mozapkpublisher.common.apk.checker import ExpectedPackageNamesCheck, AnyPackageNamesCheck
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.update_apk_description import create_or_update_listings
 
 logger = logging.getLogger(__name__)
 
 
-def push_apk(apks, service_account, google_play_credentials_file, track, update_google_play_strings=True,
-             update_google_play_strings_from_store=False, google_play_strings_file=None, rollout_percentage=None,
-             commit=True, contact_google_play=True):
+def push_apk(apks, service_account, google_play_credentials_file, track, package_names_check,
+             update_google_play_strings=True, update_google_play_strings_from_store=False,
+             google_play_strings_file=None, rollout_percentage=None, commit=True, contact_google_play=True,
+             skip_check_ordered_version_codes=False, skip_check_multiple_locales=False, skip_check_same_locales=False,
+             skip_checks_fennec=False):
     if track == 'rollout' and rollout_percentage is None:
         raise WrongArgumentGiven("When using track='rollout', rollout percentage must be provided too")
     if rollout_percentage is not None and track != 'rollout':
         raise WrongArgumentGiven("When using rollout-percentage, track must be set to rollout")
 
-    PushAPK(apks, service_account, google_play_credentials_file, track, update_google_play_strings,
+    PushAPK(apks, service_account, google_play_credentials_file, track, package_names_check, update_google_play_strings,
             update_google_play_strings_from_store, google_play_strings_file, rollout_percentage, commit,
-            contact_google_play).run()
+            contact_google_play, skip_check_ordered_version_codes, skip_check_multiple_locales, skip_check_same_locales,
+            skip_checks_fennec).run()
 
 
 class PushAPK:
-    def __init__(self, apks, service_account, google_play_credentials_file, track, update_google_play_strings,
-                 update_google_play_strings_from_store, google_play_strings_file, rollout_percentage, commit,
-                 contact_google_play):
+    def __init__(self, apks, service_account, google_play_credentials_file, track, package_names_check,
+                 update_google_play_strings, update_google_play_strings_from_store, google_play_strings_file,
+                 rollout_percentage, commit, contact_google_play, skip_check_ordered_version_codes,
+                 skip_check_multiple_locales, skip_check_same_locales, skip_checks_fennec):
         self.apks = apks
         self.service_account = service_account
         self.google_play_credentials_file = google_play_credentials_file
         self.track = track
+        self.package_names_check = package_names_check
         self.update_google_play_strings = update_google_play_strings
         self.update_google_play_strings_from_store = update_google_play_strings_from_store
         self.google_play_strings_file = google_play_strings_file
         self.rollout_percentage = rollout_percentage
         self.commit = commit
         self.contact_google_play = contact_google_play
+        self.skip_check_ordered_version_codes = skip_check_ordered_version_codes
+        self.skip_check_multiple_locales = skip_check_multiple_locales
+        self.skip_check_same_locales = skip_check_same_locales
+        self.skip_checks_fennec = skip_checks_fennec
 
     def upload_apks(self, apks_metadata_per_paths, package_name, l10n_strings=None):
         edit_service = googleplay.EditService(
@@ -64,16 +74,15 @@ class PushAPK:
     def run(self):
         apks_paths = [apk.name for apk in self.apks]
         apks_metadata_per_paths = {
-            apk_path: extractor.extract_metadata(apk_path, not self.config.skip_checks_fennec)
+            apk_path: extractor.extract_metadata(apk_path, not self.skip_checks_fennec)
             for apk_path in apks_paths
         }
         checker.cross_check_apks(apks_metadata_per_paths,
-                                 self.config.skip_checks_fennec,
-                                 self.config.skip_check_multiple_locales,
-                                 self.config.skip_check_same_locales,
-                                 self.config.skip_check_ordered_version_codes,
-                                 self.config.skip_check_package_names,
-                                 self.config.expected_package_names)
+                                 self.package_names_check,
+                                 self.skip_checks_fennec,
+                                 self.skip_check_multiple_locales,
+                                 self.skip_check_same_locales,
+                                 self.skip_check_ordered_version_codes)
 
         # Each distinct product must be uploaded in different Google Play transaction, so we split them by package name here.
         split_apk_metadata = _split_apk_metadata_per_package_name(apks_metadata_per_paths)
@@ -179,9 +188,17 @@ def main(name=None):
 
     try:
         config = parser.parse_args()
+
+        if config.expected_package_names:
+            package_names_check = ExpectedPackageNamesCheck(config.expected_package_names)
+        else:
+            package_names_check = AnyPackageNamesCheck()
+
         push_apk(config.apks, config.service_account, config.google_play_credentials_file, config.track,
-                 config.update_google_play_strings, config.update_google_play_strings_from_store,
-                 config.google_play_strings_file, config.rollout_percentage, config.commit, config.contact_google_play)
+                 package_names_check, config.update_google_play_strings, config.update_google_play_strings_from_store,
+                 config.google_play_strings_file, config.rollout_percentage, config.commit, config.contact_google_play,
+                 config.skip_check_ordered_version_codes, config.skip_check_multiple_locales,
+                 config.skip_check_same_locales, config.skip_checks_fennec)
     except WrongArgumentGiven as e:
         parser.print_help(sys.stderr)
         sys.stderr.write('{}: error: {}\n'.format(parser.prog, e))
