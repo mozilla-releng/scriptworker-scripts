@@ -6,6 +6,14 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.3.1] = (2018-01-25)
+----------------------
+
+Changed
+~~~~~~~
+
+- Zip files can now be up to 300MB.
+
 [8.3.0] = (2018-01-02)
 ----------------------
 
