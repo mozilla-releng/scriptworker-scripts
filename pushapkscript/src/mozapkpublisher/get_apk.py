@@ -9,11 +9,11 @@ import signal
 import shutil
 import logging
 
+from argparse import ArgumentParser
 from mozapkpublisher.common.apk.history import (
     get_expected_api_levels,
     get_firefox_major_version_number,
 )
-from mozapkpublisher.common.base import Base, ArgumentParser
 from mozapkpublisher.common.exceptions import CheckSumMismatch
 from mozapkpublisher.common.utils import (
     download_file,
@@ -25,34 +25,19 @@ from mozapkpublisher.common.utils import (
 logger = logging.getLogger(__name__)
 
 FTP_BASE_URL = 'https://ftp.mozilla.org/pub/mobile'
+ARCH_VALUES = ["arm", "x86"]
+JSON_VERSION_URL = "https://product-details.mozilla.org/1.0/firefox_versions.json"
 
 
-class GetAPK(Base):
-    arch_values = ["arm", "x86"]
-
-    json_version_url = "https://product-details.mozilla.org/1.0/firefox_versions.json"
-
-    @classmethod
-    def _init_parser(cls):
-        cls.parser = ArgumentParser(
-            description='Download APKs of Firefox for Android (aka Fennec) from {}'.format(FTP_BASE_URL)
-        )
-
-        exclusive_group = cls.parser.add_mutually_exclusive_group(required=True)
-        exclusive_group.add_argument('--version', default=None, help='Specify version number to download (e.g. 23.0b7)')
-        exclusive_group.add_argument('--latest-nightly', action='store_true', default=False,
-                                     help='Download the latest nightly version')
-
-        cls.parser.add_argument('--build', type=int, default=1, help='Specify build number (default 1)')
-        cls.parser.add_argument(
-            '--arch', choices=cls.arch_values, default='all',
-            help='Specify which architecture to get the apk for. Will download every architecture if not set.'
-        )
-        cls.parser.add_argument('--locale', default='multi', help='Specify which locale to get the apk for')
-        cls.parser.add_argument(
-            '--output-directory', dest='download_directory', default='apk-download',
-            help='Directory in which APKs will be downloaded to. Will be created if needed.'
-        )
+class GetAPK:
+    # TODO: version and latest_nightly are mutually exclusive, improve abstraction so this class isn't if/else-ing
+    def __init__(self, version, latest_nightly, build, arch, locale, download_directory):
+        self.version = version
+        self.latest_nightly = latest_nightly
+        self.build = build
+        self.arch = arch
+        self.locale = locale
+        self.download_directory = download_directory
 
     # Cleanup half downloaded files on Ctrl+C
     def signal_handler(self, signal, frame):
@@ -62,43 +47,22 @@ class GetAPK(Base):
 
     def cleanup(self):
         try:
-            shutil.rmtree(self.config.download_directory)
+            shutil.rmtree(self.download_directory)
             logger.info('Download directory cleaned')
         except FileNotFoundError:
-            logger.warning('{} was not found. Skipping...'.format(self.config.download_directory))
-
-    def generate_apk_base_url(self, version, build, locale, api_suffix):
-        return '{}/nightly/latest-mozilla-central-android-{}'.format(FTP_BASE_URL, api_suffix) \
-            if self.config.latest_nightly else \
-            '{}/android-{}/{}'.format(
-                generate_base_directory(version, build),
-                api_suffix,
-                locale,
-            )
-
-    def get_api_suffix(self, version, arch):
-        if arch != 'arm':
-            return [arch]
-        else:
-            api_levels = get_expected_api_levels(
-                version, get_firefox_package_name(version)
-            )
-            # TODO support old schemes when no API level was in the path
-            return [
-                'api-{}'.format(api_level) for api_level in api_levels
-            ]
+            logger.warning('{} was not found. Skipping...'.format(self.download_directory))
 
     async def download(self, session, version, build, architecture, locale):
         try:
-            os.makedirs(self.config.download_directory)
+            os.makedirs(self.download_directory)
         except FileExistsError:
             pass
 
-        for api_suffix in self.get_api_suffix(version, architecture):
-            apk_base_url = self.generate_apk_base_url(version, build, locale, api_suffix)
+        for api_suffix in get_api_suffix(version, architecture):
+            apk_base_url = generate_apk_base_url(self.latest_nightly, version, build, locale, api_suffix)
             urls_and_locations = craft_apk_and_checksums_url_and_download_locations(
-                apk_base_url, self.config.download_directory, version, build, locale, architecture,
-                api_suffix, self.config.latest_nightly
+                apk_base_url, self.download_directory, version, build, locale, architecture,
+                api_suffix, self.latest_nightly
             )
             apk = urls_and_locations['apk']
             checksums = urls_and_locations['checksums']
@@ -111,17 +75,17 @@ class GetAPK(Base):
             check_apk_against_checksum_file(apk['download_location'], checksums['download_location'])
 
     def get_version_name(self):
-        if self.config.latest_nightly:
-            json = load_json_url(self.json_version_url)
+        if self.latest_nightly:
+            json = load_json_url(JSON_VERSION_URL)
             version_code = json['FIREFOX_NIGHTLY']
             return version_code
-        return self.config.version
+        return self.version
 
     # Download all the archs if none is given
     async def download_all(self, session, version, build, locale):
         download_coroutines = [
             self.download(session, version, build, architecture, locale)
-            for architecture in self.arch_values
+            for architecture in ARCH_VALUES
         ]
         await asyncio.gather(*download_coroutines)
 
@@ -130,16 +94,16 @@ class GetAPK(Base):
         # Perhaps instead of custom validation, this behaviour/validation should happen in our argparse validation.
         # The only downside to specifying this within argparse is that the best solution (IMHO) is
         # with subcommands (https://stackoverflow.com/a/17909525), but that's a breaking change
-        if self.config.latest_nightly and (
-                self.config.build != self.parser.get_default('build') or
-                self.config.locale != self.parser.get_default('locale')):
+        if self.latest_nightly and (
+                self.build != self.parser.get_default('build') or
+                self.locale != self.parser.get_default('locale')):
             print('None of the arguments --build, --locale and --version can be used with --latest-nightly')
             sys.exit(1)
 
         version = self.get_version_name()
-        architecture = self.config.arch
-        build = str(self.config.build)
-        locale = self.config.locale
+        architecture = self.arch
+        build = str(self.build)
+        locale = self.locale
 
         logger.info('Downloading version "{}" build #{} for arch "{}" (locale "{}")'.format(version, build, architecture, locale))
 
@@ -148,6 +112,29 @@ class GetAPK(Base):
                 await self.download_all(session, version, build, locale)
             else:
                 await self.download(session, version, build, architecture, locale)
+
+
+def generate_apk_base_url(latest_nightly, version, build, locale, api_suffix):
+    return '{}/nightly/latest-mozilla-central-android-{}'.format(FTP_BASE_URL, api_suffix) \
+        if latest_nightly else \
+        '{}/android-{}/{}'.format(
+            generate_base_directory(version, build),
+            api_suffix,
+            locale,
+        )
+
+
+def get_api_suffix(version, arch):
+    if arch != 'arm':
+        return [arch]
+    else:
+        api_levels = get_expected_api_levels(
+            version, get_firefox_package_name(version)
+        )
+        # TODO support old schemes when no API level was in the path
+        return [
+            'api-{}'.format(api_level) for api_level in api_levels
+        ]
 
 
 def craft_apk_and_checksums_url_and_download_locations(base_apk_url, download_directory, version, build, locale,
@@ -244,11 +231,36 @@ def _take_out_common_path(checksum_file, apk_file):
     return os.path.relpath(apk_file, os.path.dirname(checksum_file))
 
 
-if __name__ == '__main__':
+def main():
     from mozapkpublisher.common import main_logging
     main_logging.init()
 
-    myScript = GetAPK()
+    parser = ArgumentParser(
+        description='Download APKs of Firefox for Android (aka Fennec) from {}'.format(FTP_BASE_URL)
+    )
+
+    exclusive_group = parser.add_mutually_exclusive_group(required=True)
+    exclusive_group.add_argument('--version', default=None, help='Specify version number to download (e.g. 23.0b7)')
+    exclusive_group.add_argument('--latest-nightly', action='store_true', default=False,
+                                 help='Download the latest nightly version')
+
+    parser.add_argument('--build', type=int, default=1, help='Specify build number (default 1)')
+    parser.add_argument(
+        '--arch', choices=ARCH_VALUES, default='all',
+        help='Specify which architecture to get the apk for. Will download every architecture if not set.'
+    )
+    parser.add_argument('--locale', default='multi', help='Specify which locale to get the apk for')
+    parser.add_argument(
+        '--output-directory', dest='download_directory', default='apk-download',
+        help='Directory in which APKs will be downloaded to. Will be created if needed.'
+    )
+
+    config = parser.parse_args()
+    myScript = GetAPK(config.version, config.latest_nightly, config.build, config.arch, config.locale, config.download_directory)
     signal.signal(signal.SIGINT, myScript.signal_handler)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(myScript.run())
+
+
+if __name__ == '__main__':
+    main()

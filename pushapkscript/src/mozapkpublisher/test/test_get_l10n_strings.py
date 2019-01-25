@@ -1,9 +1,9 @@
+import mozapkpublisher
 import os
 import pytest
 import sys
 
 from contextlib import contextmanager
-from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.get_l10n_strings import main
 
 
@@ -26,5 +26,15 @@ def test_main(tmp_path, monkeypatch):
 
         monkeypatch.setattr(sys, 'argv', incomplete_args)
 
-        with pytest.raises(WrongArgumentGiven):
+        with pytest.raises(SystemExit):
             main()
+
+        complete_args = [
+            'script'
+            '',
+            '--output-file', 'some_file',
+            '--package-name', 'org.mozilla.fennec_aurora',
+        ]
+        monkeypatch.setattr(sys, 'argv', complete_args)
+        monkeypatch.setattr(mozapkpublisher.get_l10n_strings, 'get_l10n_strings', lambda _, __: None)
+        main()

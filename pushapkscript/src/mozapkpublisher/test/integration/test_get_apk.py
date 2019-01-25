@@ -11,18 +11,17 @@ from mozapkpublisher.get_apk import GetAPK
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(strtobool(os.environ.get('SKIP_NETWORK_TESTS', 'true')), reason='Tests requiring network are skipped')
-@pytest.mark.parametrize('get_apk_args, apks_file_regexes', (
+@pytest.mark.parametrize('version, build, arch, apks_file_regexes', (
     # Re-enable latest_nightly once bug 1346752 is fixed
     # ({'latest_nightly': True, 'arch': 'x86'}, (r'fennec-\d{2}\.0a1\.multi\.android-i386\.apk',)),
 
     # Pre-Fennec 53.0b1
-    ({'version': '52.0', 'build': '2', 'arch': 'arm'}, (r'fennec-52\.0\.multi\.android-arm\.apk',)),
-    ({'version': '53.0b1', 'build': '3', 'arch': 'arm'}, (r'fennec-53\.0b1\.multi\.android-arm\.apk',)),
+    ('52.0', '2', 'arm', (r'fennec-52\.0\.multi\.android-arm\.apk',)),
+    ('53.0b1', '3', 'arm', (r'fennec-53\.0b1\.multi\.android-arm\.apk',)),
 ))
-async def test_download_files(get_apk_args, apks_file_regexes):
+async def test_download_files(version, build, arch, apks_file_regexes):
     temp_dir = tempfile.mkdtemp()
-    get_apk_args['output-directory'] = temp_dir
-    await GetAPK(get_apk_args).run()
+    await GetAPK(version, None, build, arch, 'multi', temp_dir).run()
     files_in_temp_dir = [
         name for name in os.listdir(temp_dir) if os.path.isfile(os.path.join(temp_dir, name))
     ]
