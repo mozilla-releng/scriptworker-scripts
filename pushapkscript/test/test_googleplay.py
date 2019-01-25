@@ -67,11 +67,18 @@ class GooglePlayTest(unittest.TestCase):
         })
 
     def test_craft_push_config_allows_to_contact_google_play_or_not(self):
-        self.context.task['scopes'] = ['project:releng:googleplay:aurora']
         config = craft_push_apk_config(self.context, self.apks)
         self.assertNotIn('do_not_contact_google_play', config)
 
-        self.context.task['scopes'] = ['project:releng:googleplay:dep']
+        self.context.config['do_not_contact_google_play'] = True
+        config = craft_push_apk_config(self.context, self.apks)
+        self.assertTrue(config['do_not_contact_google_play'])
+
+    def test_craft_config_instance_config_file_allows_to_contact_google_play_or_not(self):
+        config = craft_push_apk_config(self.context, self.apks)
+        self.assertNotIn('do_not_contact_google_play', config)
+
+        self.context.config['do_not_contact_google_play'] = True
         config = craft_push_apk_config(self.context, self.apks)
         self.assertTrue(config['do_not_contact_google_play'])
 

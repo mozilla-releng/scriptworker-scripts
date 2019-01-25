@@ -49,14 +49,14 @@ async def async_main(context):
 
 
 def _log_warning_forewords(context):
-    if googleplay.is_allowed_to_push_to_google_play(context):
+    if not context.config.get('do_not_contact_google_play'):
         if googleplay.should_commit_transaction(context):
             log.warning('You will publish APKs to Google Play. This action is irreversible,\
 if no error is detected either by this script or by Google Play.')
         else:
             log.warning('APKs will be submitted to Google Play, but no change will not be committed.')
     else:
-        log.warning('You do not have the rights to reach Google Play. *All* requests will be mocked.')
+        log.warning('This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked.')
 
 
 def get_default_config():

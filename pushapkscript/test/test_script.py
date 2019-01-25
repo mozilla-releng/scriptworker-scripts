@@ -26,7 +26,6 @@ async def test_async_main(monkeypatch, android_product, expected_strings_call_co
             'someOtherTaskId': ['/some/path/to/yet_another.apk', ],
         }, {})
     )
-    monkeypatch.setattr(googleplay, 'is_allowed_to_push_to_google_play', lambda _: False)
     monkeypatch.setattr(jarsigner, 'verify', lambda _, __: None)
     monkeypatch.setattr(manifest, 'verify', lambda _, __: None)
     monkeypatch.setattr(task, 'extract_android_product_from_scopes', lambda _: android_product)
@@ -40,10 +39,12 @@ async def test_async_main(monkeypatch, android_product, expected_strings_call_co
 
     monkeypatch.setattr(googleplay, 'get_google_play_strings_path', google_play_strings_call)
 
-    context = {'fake': 'context'}
+    context = MagicMock()
+    context.config = {
+        'do_not_contact_google_play': True
+    }
 
-    def assert_google_play_call(context, all_apks_paths, google_play_strings_path):
-        assert context == {'fake': 'context'}
+    def assert_google_play_call(_, all_apks_paths, google_play_strings_path):
         assert sorted(all_apks_paths) == ['/some/path/to/another.apk', '/some/path/to/one.apk', '/some/path/to/yet_another.apk']
         if android_product == 'focus':
             assert google_play_strings_path is None
@@ -60,13 +61,16 @@ async def test_async_main(monkeypatch, android_product, expected_strings_call_co
     (True, True, 'You will publish APKs to Google Play. This action is irreversible,\
 if no error is detected either by this script or by Google Play.'),
     (True, False, 'APKs will be submitted to Google Play, but no change will not be committed.'),
-    (False, False, 'You do not have the rights to reach Google Play. *All* requests will be mocked.'),
-    (False, True, 'You do not have the rights to reach Google Play. *All* requests will be mocked.'),
+    (False, False, 'This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked.'),
+    (False, True, 'This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked.'),
 ))
 def test_log_warning_forewords(caplog,  monkeypatch, is_allowed_to_push, should_commit_transaction, expected):
-    monkeypatch.setattr(googleplay, 'is_allowed_to_push_to_google_play', lambda _: is_allowed_to_push)
     monkeypatch.setattr(googleplay, 'should_commit_transaction', lambda _: should_commit_transaction)
-    _log_warning_forewords(MagicMock())
+    context = MagicMock()
+    context.config = {
+        'do_not_contact_google_play': not is_allowed_to_push
+    }
+    _log_warning_forewords(context)
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == 'WARNING'
     assert expected in caplog.text
