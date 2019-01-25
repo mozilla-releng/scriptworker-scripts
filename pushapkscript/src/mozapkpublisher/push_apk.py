@@ -169,7 +169,7 @@ def main(name=None):
     except WrongArgumentGiven as e:
         parser.print_help(sys.stderr)
         sys.stderr.write('{}: error: {}\n'.format(parser.prog, e))
-        raise SystemExit()
+        raise SystemExit(2)
 
 
 main(__name__)

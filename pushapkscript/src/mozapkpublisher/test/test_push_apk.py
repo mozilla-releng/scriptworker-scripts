@@ -273,6 +273,13 @@ def test_custom_google_play_track(edit_service_mock, monkeypatch):
     push_apk(APKS, SERVICE_ACCOUNT, credentials, 'nightly', False)
 
 
+def test_main_bad_arguments_status_code(monkeypatch):
+    monkeypatch.setattr(sys, 'argv', ['script'])
+    with pytest.raises(SystemExit) as exception:
+        main()
+    assert exception.value.code == 2
+
+
 def test_main(monkeypatch):
     incomplete_args = [
         '--package-name', 'org.mozilla.fennec_aurora', '--track', 'alpha',
