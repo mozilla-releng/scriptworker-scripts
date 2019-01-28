@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.4.0] = (2019-01-25)
+----------------------
+
+Added
+~~~~~
+
+- Add support for beetmoving win64-aarch64 partner repacks. (`#1522380 <https://bugzilla.mozilla.org/show_bug.cgi?id=1522380>`_)
+
+
 [8.3.1] = (2018-01-25)
 ----------------------
 
