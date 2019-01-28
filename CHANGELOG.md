@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.5.0] - 2019-01-25
+### Added
+- Add win64-aarch64 support for release bouncer entries.
+
 ## [3.4.1] - 2019-01-14
 ### Added
 - Added support for aarch64 in bouncer location nightly jobs
