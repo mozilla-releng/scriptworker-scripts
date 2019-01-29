@@ -3,10 +3,11 @@ import pytest
 import os
 
 from scriptworker import client, artifacts
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pushapkscript import googleplay, jarsigner, task, manifest
 from pushapkscript.script import async_main, get_default_config, main, _log_warning_forewords
+from pushapkscript.test.helpers.mock_file import mock_open
 
 
 @pytest.mark.asyncio
@@ -44,16 +45,17 @@ async def test_async_main(monkeypatch, android_product, expected_strings_call_co
         'do_not_contact_google_play': True
     }
 
-    def assert_google_play_call(_, all_apks_paths, google_play_strings_path):
-        assert sorted(all_apks_paths) == ['/some/path/to/another.apk', '/some/path/to/one.apk', '/some/path/to/yet_another.apk']
+    def assert_google_play_call(_, all_apks_files, google_play_strings_file):
+        assert sorted([file.name for file in all_apks_files]) == ['/some/path/to/another.apk', '/some/path/to/one.apk', '/some/path/to/yet_another.apk']
         if android_product == 'focus':
-            assert google_play_strings_path is None
+            assert google_play_strings_file is None
         else:
-            assert google_play_strings_path == '/some/path.json'
+            assert google_play_strings_file.name == '/some/path.json'
 
     monkeypatch.setattr(googleplay, 'publish_to_googleplay', assert_google_play_call)
 
-    await async_main(context)
+    with patch('pushapkscript.script.open', new=mock_open):
+        await async_main(context)
     assert next(google_play_strings_call_counter) == expected_strings_call_count
 
 

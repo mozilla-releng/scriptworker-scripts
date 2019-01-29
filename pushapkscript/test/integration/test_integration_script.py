@@ -6,7 +6,10 @@ import subprocess
 import tempfile
 import unittest
 
+from mozapkpublisher.push_apk import NoGooglePlayStrings, FileGooglePlayStrings
+
 from pushapkscript.script import main
+from pushapkscript.test.helpers.mock_file import mock_open, MockFile
 from pushapkscript.test.helpers.task_generator import TaskGenerator
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
@@ -64,6 +67,8 @@ class ConfigFileGenerator(object):
         ))
 
 
+@unittest.mock.patch('pushapkscript.script.open', new=mock_open)
+@unittest.mock.patch('pushapkscript.googleplay.open', new=mock_open)
 class MainTest(unittest.TestCase):
 
     def setUp(self):
@@ -99,51 +104,62 @@ class MainTest(unittest.TestCase):
             os.makedirs(target_dir)
             shutil.copy(original_path, target_path)
 
-    @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
-    def test_main_downloads_verifies_signature_and_gives_the_right_config_to_mozapkpublisher(self, PushAPK):
+    @unittest.mock.patch('pushapkscript.googleplay.push_apk')
+    def test_main_downloads_verifies_signature_and_gives_the_right_config_to_mozapkpublisher(self, push_apk):
         task_generator = TaskGenerator()
         task_generator.generate_file(self.config_generator.work_dir)
 
         self._copy_all_apks_to_test_temp_dir(task_generator)
         main(config_path=self.config_generator.generate())
 
-        PushAPK.assert_called_with(config={
-            'credentials': '/dummy/path/to/certificate.p12',
-            '*args': sorted([
-                '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
-                '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
-            ]),
-            'commit': False,
-            'credentials': '/dummy/path/to/certificate.p12',
-            'no_gp_string_update': True,
-            'service_account': 'dummy-service-account@iam.gserviceaccount.com',
-            'track': 'alpha',
-        })
+        push_apk.assert_called_with(
+            [
+                MockFile(
+                    '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id)),
+                MockFile(
+                    '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id)),
+            ],
+            'dummy-service-account@iam.gserviceaccount.com',
+            MockFile('/dummy/path/to/certificate.p12'),
+            'alpha',
+            None,
+            unittest.mock.ANY,
+            False,
+            True
+        )
+        args, _ = push_apk.call_args
+        google_play_strings = args[5]
+        assert isinstance(google_play_strings, NoGooglePlayStrings)
 
-    @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
-    def test_main_allows_rollout_percentage(self, PushAPK):
+    @unittest.mock.patch('pushapkscript.googleplay.push_apk')
+    def test_main_allows_rollout_percentage(self, push_apk):
         task_generator = TaskGenerator(google_play_track='rollout', rollout_percentage=25)
         task_generator.generate_file(self.config_generator.work_dir)
 
         self._copy_all_apks_to_test_temp_dir(task_generator)
         main(config_path=self.config_generator.generate())
 
-        PushAPK.assert_called_with(config={
-            'credentials': '/dummy/path/to/certificate.p12',
-            '*args': sorted([
-                '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
-                '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
-            ]),
-            'credentials': '/dummy/path/to/certificate.p12',
-            'commit': False,
-            'no_gp_string_update': True,
-            'rollout_percentage': 25,
-            'service_account': 'dummy-service-account@iam.gserviceaccount.com',
-            'track': 'rollout',
-        })
+        push_apk.assert_called_with(
+            [
+                MockFile(
+                    '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id)),
+                MockFile(
+                    '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id)),
+            ],
+            'dummy-service-account@iam.gserviceaccount.com',
+            MockFile('/dummy/path/to/certificate.p12'),
+            'rollout',
+            25,
+            unittest.mock.ANY,
+            False,
+            True
+        )
+        args, _ = push_apk.call_args
+        google_play_strings = args[5]
+        assert isinstance(google_play_strings, NoGooglePlayStrings)
 
-    @unittest.mock.patch('mozapkpublisher.push_apk.PushAPK')
-    def test_main_allows_google_play_strings_file_and_commit_transaction(self, PushAPK):
+    @unittest.mock.patch('pushapkscript.googleplay.push_apk')
+    def test_main_allows_google_play_strings_file_and_commit_transaction(self, push_apk):
         task_generator = TaskGenerator(should_commit_transaction=True)
         task_generator.generate_file(self.config_generator.work_dir)
 
@@ -155,16 +171,24 @@ class MainTest(unittest.TestCase):
         )
         main(config_path=self.config_generator.generate())
 
-        PushAPK.assert_called_with(config={
-            '*args': sorted([
-                '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id),
-                '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id),
-            ]),
-            'credentials': '/dummy/path/to/certificate.p12',
-            'commit': True,
-            'service_account': 'dummy-service-account@iam.gserviceaccount.com',
-            'track': 'alpha',
-            'update_gp_strings_from_file': '{}/work/cot/{}/public/google_play_strings.json'.format(
+        push_apk.assert_called_with(
+            [
+                MockFile(
+                    '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.arm_task_id)),
+                MockFile(
+                    '{}/work/cot/{}/public/build/target.apk'.format(self.test_temp_dir, task_generator.x86_task_id)),
+            ],
+            'dummy-service-account@iam.gserviceaccount.com',
+            MockFile('/dummy/path/to/certificate.p12'),
+            'alpha',
+            None,
+            unittest.mock.ANY,
+            True,
+            True
+        )
+        args, _ = push_apk.call_args
+        google_play_strings = args[5]
+        assert isinstance(google_play_strings, FileGooglePlayStrings)
+        assert google_play_strings.file.name == '{}/work/cot/{}/public/google_play_strings.json'.format(
                 self.test_temp_dir, task_generator.google_play_strings_task_id
-            ),
-        })
+            )

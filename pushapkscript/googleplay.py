@@ -1,8 +1,8 @@
 import logging
 
+from mozapkpublisher.push_apk import push_apk, FileGooglePlayStrings, NoGooglePlayStrings
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
-
 from pushapkscript.task import extract_android_product_from_scopes
 
 log = logging.getLogger(__name__)
@@ -10,39 +10,22 @@ log = logging.getLogger(__name__)
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
-def publish_to_googleplay(context, apks, google_play_strings_path=None):
-    from mozapkpublisher.push_apk import PushAPK
-    push_apk = PushAPK(config=craft_push_apk_config(
-        context, apks, google_play_strings_path,
-    ))
-    push_apk.run()
-
-
-def craft_push_apk_config(context, apks, google_play_strings_path=None):
+def publish_to_googleplay(context, apk_files, google_play_strings_file=None):
     android_product = extract_android_product_from_scopes(context)
     payload = context.task['payload']
 
-    push_apk_config = {
-        '*args': sorted(apks),   # APKs have been positional arguments since mozapkpublisher 0.6.0
-        'commit': should_commit_transaction(context),
-        'credentials': get_certificate_path(context, android_product),
-        'service_account': get_service_account(context, android_product),
-        'track': payload['google_play_track'],
-    }
-
-    if payload.get('rollout_percentage'):
-        push_apk_config['rollout_percentage'] = payload['rollout_percentage']
-
-    # Only allowed to connect to Google Play if the configuration of the pushapkscript instance allows it
-    if context.config.get('do_not_contact_google_play'):
-        push_apk_config['do_not_contact_google_play'] = True
-
-    if google_play_strings_path is None:
-        push_apk_config['no_gp_string_update'] = True
-    else:
-        push_apk_config['update_gp_strings_from_file'] = google_play_strings_path
-
-    return push_apk_config
+    with open(get_certificate_path(context, android_product), 'rb') as certificate:
+        push_apk(
+            apk_files,
+            get_service_account(context, android_product),
+            certificate,
+            payload['google_play_track'],
+            payload.get('rollout_percentage'),  # may be None
+            NoGooglePlayStrings() if google_play_strings_file is None else FileGooglePlayStrings(google_play_strings_file),
+            should_commit_transaction(context),
+            # Only allowed to connect to Google Play if the configuration of the pushapkscript instance allows it
+            not context.config.get('do_not_contact_google_play')
+        )
 
 
 def get_service_account(context, android_product):
