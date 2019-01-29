@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [upcoming]
+## [0.14.0] - 2019-01-29
 
 ### Changed
 * `push_apk` must be called as a function with parameters, rather than mocked `argv` arguments
