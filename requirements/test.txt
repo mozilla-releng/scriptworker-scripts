@@ -92,10 +92,9 @@ pydocstyle==3.0.0 \
     --hash=sha256:5741c85e408f9e0ddf873611085e819b809fca90b619f5fd7f34bd4959da3dd4 \
     --hash=sha256:ed79d4ec5e92655eccc21eb0c6cf512e69512b4a97d215ace46d17e4990f2039 \
     # via flake8-docstrings
-pyflakes==2.0.0 \
-    --hash=sha256:9a7662ec724d0120012f6e29d6248ae3727d821bba522a0e6b356eff19126a49 \
-    --hash=sha256:f661252913bc1dbe7fcfcbf0af0db3f42ab65aabd1a6ca68fe5d466bace94dae \
-    # via flake8
+pyflakes==2.1.0 \
+    --hash=sha256:f277f9ca3e55de669fba45b7393a1449009cff5a37d1af10ebb76c52765269cd \
+    --hash=sha256:5e8c00e30c464c99e0b501dc160b13a14af7f27d4dffb529c556e30a159e231d    # via flake8
 pytest-asyncio==0.10.0 \
     --hash=sha256:d734718e25cfc32d2bf78d346e99d33724deeba774cc4afdf491530c6184b63b \
     --hash=sha256:9fac5100fd716cbecf6ef89233e8590a4ad61d729d1732e0a96b84182df1daaf
