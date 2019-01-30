@@ -71,7 +71,7 @@ jsonschema==2.6.0 \
     --hash=sha256:000e68abd33c972a5248544925a0cae7d1125f9bf6c58280d37546b946769a08 \
     --hash=sha256:6ff5f3180870836cae40f06fa10419f557208175f13ad7bc26caa77beb1f6e02 \
     # via scriptworker
-mohawk==1.0.0 \
+mohawk==0.3.4 \
     --hash=sha256:aa57e6626a6ea323ab714779f23734de1d1feca8cb6fc00b65e65ce115c1696a \
     --hash=sha256:fca4e34d8f5492f1c33141c98b96e168a089e5692ce65fb747e4bb613f5fe552    # via taskcluster
 multidict==4.5.2 \
