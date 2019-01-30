@@ -117,10 +117,9 @@ python-dateutil==2.7.5 \
     --hash=sha256:063df5763652e21de43de7d9e00ccf239f953a832941e37be541614732cdfc93 \
     --hash=sha256:88f9287c0174266bb0d8cedd395cfba9c58e87e5ad86b2ce58859bc11be3cf02 \
     # via arrow
-python-gnupg==0.4.3 \
-    --hash=sha256:2d158dfc6b54927752b945ebe57e6a0c45da27747fa3b9ae66eccc0d2147ac0d \
-    --hash=sha256:faa69bab58ed0936f0ccf96c99b92369b7a1819305d37dfe5c927d21a437a09d \
-    # via scriptworker
+python-gnupg==0.4.4 \
+    --hash=sha256:85c231850a0275c9722f06e34b45a22510b83a6a6e88f93b5ae32ba04c95056c \
+    --hash=sha256:45daf020b370bda13a1429c859fcdff0b766c0576844211446f9266cae97fb0e    # via scriptworker
 pyyaml==3.13 \
     --hash=sha256:3d7da3009c0f3e783b2c873687652d83b1bbfd5c88e9813fb7e5b03c0dd3108b \
     --hash=sha256:3ef3092145e9b70e3ddd2c7ad59bdd0252a94dfe3949721633e41344de00a6bf \
