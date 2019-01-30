@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -V 3.7 -r ../requirements.txt -e flit -e intreehooks -e vcversioner -e pytest-runner -e setuptools-scm
+#   pypi2nix -V 3.7 -r ../requirements.txt -e flit -e intreehooks -e vcversioner -e pytest-runner -e setuptools-scm -E gnupg20 -E git
 #
 
 { pkgs ? import <nixpkgs> {},
@@ -35,7 +35,7 @@ let
       };
   };
 
-  commonBuildInputs = [];
+  commonBuildInputs = with pkgs; [ gnupg20 git ];
   commonDoCheck = false;
 
   withPackages = pkgs':
@@ -107,10 +107,10 @@ let
     };
 
     "aiohttp" = python.mkDerivation {
-      name = "aiohttp-3.4.4";
+      name = "aiohttp-3.5.4";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/70/27/6098b4b60a3302a97f8ec97eb85d42f55a2fa904da4a369235a8e3b84352/aiohttp-3.4.4.tar.gz";
-        sha256 = "51afec6ffa50a9da4cdef188971a802beb1ca8e8edb40fa429e5e529db3475fa";
+        url = "https://files.pythonhosted.org/packages/0f/58/c8b83f999da3b13e66249ea32f325be923791c0c10aee6cf16002a3effc1/aiohttp-3.5.4.tar.gz";
+        sha256 = "9c4c83f4fa1938377da32bc2d59379025ceeee8e24b89f72fcbccd8ca22dc9bf";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -131,10 +131,10 @@ let
     };
 
     "arrow" = python.mkDerivation {
-      name = "arrow-0.12.1";
+      name = "arrow-0.13.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/e0/86/4eb5228a43042e9a80fe8c84093a8a36f5db34a3767ebd5e1e7729864e7b/arrow-0.12.1.tar.gz";
-        sha256 = "a558d3b7b6ce7ffc74206a86c147052de23d3d4ef0e17c210dd478c53575c4cd";
+        url = "https://files.pythonhosted.org/packages/5d/c7/468bb95a10fb8ddb5f3f80e1aef06b78f64d6e5df958c39672f80581381f/arrow-0.13.0.tar.gz";
+        sha256 = "9cb4a910256ed536751cd5728673bfb53e6f0026e240466f90c2a92c0b79c895";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -395,10 +395,10 @@ let
     };
 
     "mohawk" = python.mkDerivation {
-      name = "mohawk-0.3.4";
+      name = "mohawk-1.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/19/22/10f696548a8d41ad41b92ab6c848c60c669e18c8681c179265ce4d048b03/mohawk-0.3.4.tar.gz";
-        sha256 = "e98b331d9fa9ece7b8be26094cbe2d57613ae882133cc755167268a984bc0ab3";
+        url = "https://files.pythonhosted.org/packages/f2/05/e9a7e8e8194f77d40f32ef9fba96d3d3bcdd55d3057c3cd6e34b0b1959b2/mohawk-1.0.0.tar.gz";
+        sha256 = "fca4e34d8f5492f1c33141c98b96e168a089e5692ce65fb747e4bb613f5fe552";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -511,10 +511,10 @@ let
     };
 
     "python-gnupg" = python.mkDerivation {
-      name = "python-gnupg-0.4.3";
+      name = "python-gnupg-0.4.4";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/fd/a6/4ae8ec46a256444f65d745a92827c05fe6d4f3f4e1a40289a58ac37fe2b9/python-gnupg-0.4.3.tar.gz";
-        sha256 = "2d158dfc6b54927752b945ebe57e6a0c45da27747fa3b9ae66eccc0d2147ac0d";
+        url = "https://files.pythonhosted.org/packages/a7/4e/a7078f08a42b2563169ef20bc74d136015f1f3d0dbfa229070cf8ed4b686/python-gnupg-0.4.4.tar.gz";
+        sha256 = "45daf020b370bda13a1429c859fcdff0b766c0576844211446f9266cae97fb0e";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -523,7 +523,7 @@ let
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://gnupg.readthedocs.io/en/latest/";
-        license = "Copyright (C) 2008-2018 by Vinay Sajip. All Rights Reserved. See LICENSE.txt for license.";
+        license = "Copyright (C) 2008-2019 by Vinay Sajip. All Rights Reserved. See LICENSE.txt for license.";
         description = "A wrapper for the Gnu Privacy Guard (GPG or GnuPG)";
       };
     };
@@ -588,10 +588,10 @@ let
     };
 
     "scriptworker" = python.mkDerivation {
-      name = "scriptworker-17.0.1";
+      name = "scriptworker-18.0.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/e5/79/2c4b8534b0ff004c8f591d0d69da9334c692ee2e13d1e378dcdbef662721/scriptworker-17.0.1.tar.gz";
-        sha256 = "471acdadaa8796a1a348929303cecdeb11647bf701b5fa9823a88ab982b1042b";
+        url = "https://files.pythonhosted.org/packages/ac/c5/606ee3c2b8fd5f4fe78e8946a7507c526e40200cb9ac398faec28e43b435/scriptworker-18.0.1.tar.gz";
+        sha256 = "d75c1edafe6357ca979587b9d7e7787def9fa4fd08b0dbfb3a085b725d98c03d";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -609,7 +609,6 @@ let
         self."pexpect"
         self."python-gnupg"
         self."taskcluster"
-        self."virtualenv"
       ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/mozilla-releng/scriptworker";
@@ -619,10 +618,10 @@ let
     };
 
     "setuptools-scm" = python.mkDerivation {
-      name = "setuptools-scm-3.1.0";
+      name = "setuptools-scm-3.2.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/09/b4/d148a70543b42ff3d81d57381f33104f32b91f970ad7873f463e75bf7453/setuptools_scm-3.1.0.tar.gz";
-        sha256 = "1191f2a136b5e86f7ca8ab00a97ef7aef997131f1f6d4971be69a1ef387d8b40";
+        url = "https://files.pythonhosted.org/packages/54/85/514ba3ca2a022bddd68819f187ae826986051d130ec5b972076e4f58a9f3/setuptools_scm-3.2.0.tar.gz";
+        sha256 = "52ab47715fa0fc7d8e6cd15168d1a69ba995feb1505131c3e814eb7087b57358";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -778,29 +777,11 @@ let
       };
     };
 
-    "virtualenv" = python.mkDerivation {
-      name = "virtualenv-16.1.0";
-      src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/4e/8b/75469c270ac544265f0020aa7c4ea925c5284b23e445cf3aa8b99f662690/virtualenv-16.1.0.tar.gz";
-        sha256 = "f899fafcd92e1150f40c8215328be38ff24b519cd95357fa6e78e006c7638208";
-      };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "https://virtualenv.pypa.io/";
-        license = licenses.mit;
-        description = "Virtual Python Environment builder";
-      };
-    };
-
     "yarl" = python.mkDerivation {
-      name = "yarl-1.2.6";
+      name = "yarl-1.3.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/43/b8/057c3e5b546ff4b24263164ecda13f6962d85c9dc477fcc0bcdcb3adb658/yarl-1.2.6.tar.gz";
-        sha256 = "c8cbc21bbfa1dd7d5386d48cc814fe3d35b80f60299cdde9279046f399c3b0d8";
+        url = "https://files.pythonhosted.org/packages/fb/84/6d82f6be218c50b547aa29d0315e430cf8a23c52064c92d0a8377d7b7357/yarl-1.3.0.tar.gz";
+        sha256 = "024ecdc12bc02b321bc66b41327f930d1c2c543fa9a561b39861da9388ba7aa9";
       };
       doCheck = commonDoCheck;
       checkPhase = "";

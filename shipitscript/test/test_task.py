@@ -154,7 +154,7 @@ def test_validate_task(context, task, raises):
         with pytest.raises(TaskVerificationError):
             validate_task_schema(context)
     else:
-            validate_task_schema(context)
+        validate_task_schema(context)
 
 
 # get_task_action {{{1

@@ -1,0 +1,61 @@
+provisioner_id: scriptworker-prov-v1
+worker_group: {"$eval": "WORKER_GROUP"}
+worker_type: {"$eval": "WORKER_TYPE"}
+worker_id: {"$eval": "WORKER_ID"}
+
+credentials:
+    clientId: {"$eval": "TASKCLUSTER_CLIENT_ID"}
+    accessToken: {"$eval": "TASKCLUSTER_ACCESS_TOKEN"}
+
+artifact_upload_timeout: 1200
+task_max_timeout: 3600
+task_script: [{"$eval": "TASK_SCRIPT"}, {"$eval": "TASK_SCRIPT_CONFIG"}]
+verbose: true
+
+sign_chain_of_trust: true
+verify_chain_of_trust: true
+verify_cot_signature: true
+cot_job_type: shipit
+cot_product: {"$eval": "COT_PRODUCT"}
+
+log_dir: /tmp/logs
+work_dir: /app/workdir
+artifact_dir: /app/artifacts
+task_log_dir: /app/artifacts/public/logs
+watch_log_file: true
+base_gpg_home_dir: /app/.gnupg
+git_path: {"$eval": "GIT_PATH"}
+gpg_lockfile: /app/.gpg_homedirs.lock
+git_key_repo_dir: /app/gpg_key_repo
+git_key_repo_url: https://github.com/mozilla-releng/cot-gpg-keys.git
+git_commit_signing_pubkey_dir: {"$eval": "PUBKEYS"}
+last_good_git_revision_file: /app/.git_revision
+
+gpg_path: {"$eval": "GPG_PATH"}
+gpg_home: /app/.gnupg
+pubkey_path: /app/pubkey
+privkey_path: /app/privkey
+
+my_email: shipit-scriptworker@mozilla-releng.net
+
+# Chain of Trust settings
+gpg_homedirs:
+    docker-worker:
+        type: flat
+        ignore_suffixes:
+            - .md
+            - .json
+    generic-worker:
+        type: flat
+        ignore_suffixes:
+            - .md
+            - .in
+            - .sh
+    scriptworker:
+        type: signed
+        ignore_suffixes:
+            - .md
+
+scriptworker_provisioners:
+    - scriptworker-prov-v1
+

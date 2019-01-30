@@ -1,10 +1,15 @@
 let
   pkgsJSON = builtins.fromJSON (builtins.readFile ./nixpkgs.json);
-  pypi2nixJSON = builtins.fromJSON (builtins.readFile ./pypi2nix.json); 
+  pypi2nixJSON = builtins.fromJSON (builtins.readFile ./pypi2nix.json);
+  configloaderJSON = builtins.fromJSON (builtins.readFile ./configloader.json);
+  usersKeysJSON = builtins.fromJSON (builtins.readFile ./pubkeys.json);
   pkgsSrc = builtins.fetchTarball { inherit (pkgsJSON) url sha256; };
   pypi2nixSrc = builtins.fetchTarball { inherit (pypi2nixJSON) url sha256; };
+  configloaderSrc = builtins.fetchTarball { inherit (configloaderJSON) url sha256; };
+  usersKeys = builtins.fetchTarball { inherit (usersKeysJSON) url sha256; };
   overlay = self: super: {
     pypi2nix = import pypi2nixSrc { pkgs = self; };
+    configloader = import "${configloaderSrc}/nix" { pkgs = self; };
   };
 in
 { pkgs ? import pkgsSrc { config = {}; overlays = [ overlay ]; }
@@ -14,6 +19,35 @@ let
   python = import ./requirements.nix { inherit pkgs; };
   version = builtins.replaceStrings ["\n"] [""]
     (builtins.readFile (toString ../version.txt));
+  scriptWorkerConfig = pkgs.writeTextDir "scriptworker.yaml" (builtins.readFile ./configs/scriptworker.yaml);
+  workerConfigs = ./configs;
+  cmd = pkgs.writeScriptBin "shipitscript" ''
+      #!${pkgs.bash}/bin/bash
+      set -ex
+      mkdir -p -m 700 $CONFIGDIR
+      # TaskCluster doesn't accept WORKER_ID longer than 22 chars
+      export WORKER_ID=''${HOSTNAME:0:22}
+      export TASK_SCRIPT_CONFIG="$CONFIGDIR/worker.json"
+      $CONFIGLOADER $SCRIPTWORKER_CONFIG_TEMPLATE $CONFIGDIR/scriptworker.json
+      $CONFIGLOADER $TASK_SCRIPT_CONFIG_TEMPLATE_DIR/$APP_CHANNEL/worker.json $TASK_SCRIPT_CONFIG
+      $GIT_PATH config --global gpg.program $GPG_PATH
+      $GIT_PATH clone https://github.com/mozilla-releng/cot-gpg-keys.git /app/gpg_key_repo
+      echo $PUBLIC_KEY | base64 -d > /app/pubkey
+      echo $PRIVATE_KEY | base64 -d > /app/privkey
+      $(dirname $SCRIPTWORKER)/rebuild_gpg_homedirs $CONFIGDIR/scriptworker.json
+      exec $SCRIPTWORKER $CONFIGDIR/scriptworker.json
+    '';
+    # TODO: should this be linked to a stable location, /check.sh?
+    healthcheck = pkgs.writeScriptBin "healthcheck" ''
+      #!${pkgs.bash}/bin/bash
+      created=$(date -r /tmp/logs/worker.log +%s)
+      now=$(date +%s)
+      age=$[ $now - $created ]
+      if [ $age -gt 180 ]; then
+        echo "/tmp/logs/worker.log is too old: $created"
+        exit 1
+      fi
+    '';
 
   self = python.mkDerivation rec {
     name = "shipitscript-${version}";
@@ -28,11 +62,44 @@ let
     passthru = {
       inherit python;
 
-      docker = pkgs.dockerTools.buildLayeredImage {
+      docker = pkgs.dockerTools.buildImage {
+        runAsRoot = ''
+          #!${pkgs.stdenv.shell}
+          ${pkgs.dockerTools.shadowSetup}
+          groupadd --gid 10001 app
+          useradd --gid 10001 --uid 10001 --home-dir /app app
+          mkdir -p --mode=1777 /tmp
+          mkdir -p -m 700 /app
+          chown app:app /app
+          ln -s ${healthcheck}/bin/healthcheck /bin/healthcheck
+        '';
         name = "shipitscript";
         tag = version;
+        config = {
+          User = "app";
+          Cmd = [ "${cmd}/bin/shipitscript" ];
+          Env = [
+            "CONFIGDIR=/app/configs"
+            "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+            "CONFIGLOADER=${pkgs.configloader}/bin/configloader"
+            "SCRIPTWORKER=${python.packages.scriptworker}/bin/scriptworker"
+            "SCRIPTWORKER_CONFIG_TEMPLATE=${scriptWorkerConfig}/scriptworker.yaml"
+            "TASK_SCRIPT_CONFIG_TEMPLATE_DIR=${workerConfigs}"
+            # The following env variables are used in the templates
+            "TASK_SCRIPT=${self}/bin/shipitscript"
+            "MARK_AS_SHIPPED_SCHEMA_FILE=${self}/lib/${python.interpreter.passthru.interpreter.libPrefix}/site-packages/shipitscript/data/mark_as_shipped_task_schema.json"
+            "MARK_AS_STARTED_SCHEMA_FILE=${self}/lib/${python.interpreter.passthru.interpreter.libPrefix}/site-packages/shipitscript/data/mark_as_started_task_schema.json"
+            "PUBKEYS=${usersKeys}/modules/scriptworker/files/git_pubkeys/"
+            # Use custom gnupg without UI
+            "GPG_PATH=${python.packages.gnupg20}/bin/gpg2"
+            "GIT_PATH=${pkgs.git}/bin/git"
+            # "GNUPGHOME=/app/.gnupg"
+          ];
+        };
         contents = [
           self
+          pkgs.coreutils
+          pkgs.bashInteractive
         ];
       };
 
@@ -48,25 +115,12 @@ let
           -e intreehooks \
           -e vcversioner \
           -e pytest-runner \
-          -e setuptools-scm
+          -e setuptools-scm \
+          -E gnupg20 \
+          -E git
       '';
 
-      tarball =
-        let
-          closureInfo = pkgs.closureInfo { rootPaths = [ self ]; };
-        in
-          pkgs.runCommand "${self.name}.nix.tar.gz" {} ''
-            mkdir -p nix/store bin
-            # TODO: add some metadata?
-            for d in $(cat ${closureInfo}/store-paths); do
-              cp -a $d nix/store
-            done
-            ln -s ${self}/bin/shipitscript bin/
-            tar -czf $out --exclude=.attr-0 --exclude=env-vars .
-          '';
-
     };
-
   };
 
 in self

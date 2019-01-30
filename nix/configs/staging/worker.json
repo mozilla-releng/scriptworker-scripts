@@ -1,0 +1,15 @@
+{
+  "work_dir": "/app/workdir",
+  "mark_as_shipped_schema_file": {"$eval": "MARK_AS_SHIPPED_SCHEMA_FILE"},
+  "mark_as_started_schema_file": {"$eval": "MARK_AS_STARTED_SCHEMA_FILE"},
+  "verbose": true,
+  "taskcluster_scope_prefix": "project:releng:ship-it:",
+  "ship_it_instances": {
+    "project:releng:ship-it:server:staging": {
+        "api_root": "https://ship-it-dev.allizom.org",
+        "timeout_in_seconds": 60,
+        "username": "shipit-scriptworker-stage",
+        "password": {"$eval": "SHIPIT_API_PASSWORD"}
+    }
+  }
+}
