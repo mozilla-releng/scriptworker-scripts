@@ -58,7 +58,7 @@ flake8-polyfill==1.0.2 \
     # via flake8-docstrings
 flake8==3.6.0 \
     --hash=sha256:6a35f5b8761f45c5513e3405f110a86bea57982c3b75b766ce7b65217abe1670 \
-    --hash=sha256:c01f8a3963b3571a8e6bd7a4063359aff90749e160778e03817cd9b71c9e07d2
+    --hash=sha256:c01f8a3963b3571a8e6bd7a4063359aff90749e160778e03817cd9b71c9e07d2 # pyup: ignore
 mccabe==0.6.1 \
     --hash=sha256:ab8a6258860da4b6677da4bd2fe5dc2c659cff31b3ee4f7f5d64e79735b80d42 \
     --hash=sha256:dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f \
@@ -86,8 +86,7 @@ py==1.7.0 \
     # via pytest, tox
 pycodestyle==2.4.0 \
     --hash=sha256:cbc619d09254895b0d12c2c691e237b2e91e9b2ecf5e84c26b35400f93dcfb83 \
-    --hash=sha256:cbfca99bd594a10f674d0cd97a3d802a1fdef635d4361e1a2658de47ed261e3a \
-    # via flake8
+    --hash=sha256:cbfca99bd594a10f674d0cd97a3d802a1fdef635d4361e1a2658de47ed261e3a    # via flake8, pyup: ignore
 pydocstyle==3.0.0 \
     --hash=sha256:2258f9b0df68b97bf3a6c29003edc5238ff8879f1efb6f1999988d934e432bd8 \
     --hash=sha256:5741c85e408f9e0ddf873611085e819b809fca90b619f5fd7f34bd4959da3dd4 \
@@ -95,8 +94,7 @@ pydocstyle==3.0.0 \
     # via flake8-docstrings
 pyflakes==2.0.0 \
     --hash=sha256:9a7662ec724d0120012f6e29d6248ae3727d821bba522a0e6b356eff19126a49 \
-    --hash=sha256:f661252913bc1dbe7fcfcbf0af0db3f42ab65aabd1a6ca68fe5d466bace94dae \
-    # via flake8
+    --hash=sha256:f661252913bc1dbe7fcfcbf0af0db3f42ab65aabd1a6ca68fe5d466bace94dae    # via flake8, pyup: ignore
 pytest-asyncio==0.10.0 \
     --hash=sha256:d734718e25cfc32d2bf78d346e99d33724deeba774cc4afdf491530c6184b63b \
     --hash=sha256:9fac5100fd716cbecf6ef89233e8590a4ad61d729d1732e0a96b84182df1daaf
@@ -125,3 +123,5 @@ typing==3.6.6 \
     --hash=sha256:57dcf675a99b74d64dacf6fba08fb17cf7e3d5fdff53d4a30ea2a5e7e52543d4 \
     --hash=sha256:a4c8473ce11a65999c8f59cb093e70686b6c84c98df58c1dae9b3b196089858a \
     # via pathmatch
+entrypoints==0.3.0 \
+    --hash=sha256:589f874b313739ad35be6e0cd7efde2a4e9b6fea91edcc34e58ecbb8dbe56d19 \
