@@ -21,7 +21,7 @@ let
   workerConfigs = ./configs;
   cmd = pkgs.writeScriptBin "shipitscript" ''
       #!${pkgs.bash}/bin/bash
-      set -ex
+      set -e
       mkdir -p -m 700 $CONFIGDIR
       # TaskCluster doesn't accept WORKER_ID longer than 22 chars
       export WORKER_ID=''${HOSTNAME:0:22}
