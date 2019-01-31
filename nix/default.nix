@@ -1,21 +1,19 @@
 let
   pkgsJSON = builtins.fromJSON (builtins.readFile ./nixpkgs.json);
-  pypi2nixJSON = builtins.fromJSON (builtins.readFile ./pypi2nix.json);
-  configloaderJSON = builtins.fromJSON (builtins.readFile ./configloader.json);
-  usersKeysJSON = builtins.fromJSON (builtins.readFile ./pubkeys.json);
   pkgsSrc = builtins.fetchTarball { inherit (pkgsJSON) url sha256; };
-  pypi2nixSrc = builtins.fetchTarball { inherit (pypi2nixJSON) url sha256; };
-  configloaderSrc = builtins.fetchTarball { inherit (configloaderJSON) url sha256; };
-  usersKeys = builtins.fetchTarball { inherit (usersKeysJSON) url sha256; };
-  overlay = self: super: {
-    pypi2nix = import pypi2nixSrc { pkgs = self; };
-    configloader = import "${configloaderSrc}/nix" { pkgs = self; };
-  };
 in
-{ pkgs ? import pkgsSrc { config = {}; overlays = [ overlay ]; }
+{ pkgs ? import pkgsSrc {}
 }:
 
 let
+  pypi2nixJSON = builtins.fromJSON (builtins.readFile ./pypi2nix.json);
+  configloaderJSON = builtins.fromJSON (builtins.readFile ./configloader.json);
+  usersKeysJSON = builtins.fromJSON (builtins.readFile ./pubkeys.json);
+  pypi2nixSrc = builtins.fetchTarball { inherit (pypi2nixJSON) url sha256; };
+  configloaderSrc = builtins.fetchTarball { inherit (configloaderJSON) url sha256; };
+  usersKeys = builtins.fetchTarball { inherit (usersKeysJSON) url sha256; };
+  pypi2nix = import pypi2nixSrc { inherit pkgs; };
+  configloader = import "${configloaderSrc}/nix" { inherit pkgs; };
   python = import ./requirements.nix { inherit pkgs; };
   version = builtins.replaceStrings ["\n"] [""]
     (builtins.readFile (toString ../version.txt));
@@ -81,7 +79,7 @@ let
           Env = [
             "CONFIGDIR=/app/configs"
             "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-            "CONFIGLOADER=${pkgs.configloader}/bin/configloader"
+            "CONFIGLOADER=${configloader}/bin/configloader"
             "SCRIPTWORKER=${python.packages.scriptworker}/bin/scriptworker"
             "SCRIPTWORKER_CONFIG_TEMPLATE=${scriptWorkerConfig}/scriptworker.yaml"
             "TASK_SCRIPT_CONFIG_TEMPLATE_DIR=${workerConfigs}"
@@ -108,7 +106,7 @@ let
       # ./result
       update = pkgs.writeScript "update-${self.name}" ''
         pushd ${toString ./.}
-        ${pkgs.pypi2nix}/bin/pypi2nix \
+        ${pypi2nix}/bin/pypi2nix \
           -V 3.7 \
           -r ../requirements.txt \
           -e flit \
