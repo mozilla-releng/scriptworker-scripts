@@ -2,9 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [upcoming]
+## [0.13.0]
 ### Added
 * `do_not_contact_google_play` to instance config file
+
+### Changed
+* Now compatible with with `mozapkpublisher` > 0.14.0
 
 ## [0.12.0] - 2019-01-09
 
