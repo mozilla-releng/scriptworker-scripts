@@ -52,17 +52,17 @@ class GooglePlayTest(unittest.TestCase):
             publish_to_googleplay(self.context, self.apks)
 
             mock_push_apk.assert_called_with(
-                [MockFile('/path/to/x86.apk'), MockFile('/path/to/arm_v15.apk')],
-                '{}_account'.format(android_product),
-                MockFile('/path/to/{}.p12'.format(android_product)),
-                'alpha',
-                None,
-                ANY,
-                False,
-                True,
+                apks=[MockFile('/path/to/x86.apk'), MockFile('/path/to/arm_v15.apk')],
+                service_account='{}_account'.format(android_product),
+                google_play_credentials_file=MockFile('/path/to/{}.p12'.format(android_product)),
+                track='alpha',
+                rollout_percentage=None,
+                google_play_strings=ANY,
+                commit=False,
+                contact_google_play=True,
             )
-            args, _ = mock_push_apk.call_args
-            google_play_strings = args[5]
+            _, args = mock_push_apk.call_args
+            google_play_strings = args['google_play_strings']
             assert isinstance(google_play_strings, NoGooglePlayStrings)
 
     def test_publish_allows_rollout_percentage(self, mock_push_apk):
@@ -70,40 +70,40 @@ class GooglePlayTest(unittest.TestCase):
         self.context.task['payload']['rollout_percentage'] = 10
         publish_to_googleplay(self.context, self.apks)
         mock_push_apk.assert_called_once_with(
-            ANY,
-            ANY,
-            ANY,
-            'rollout',
-            10,
-            ANY,
-            ANY,
-            ANY,
+            apks=ANY,
+            service_account=ANY,
+            google_play_credentials_file=ANY,
+            track='rollout',
+            rollout_percentage=10,
+            google_play_strings=ANY,
+            commit=ANY,
+            contact_google_play=ANY,
         )
 
     def test_publish_allows_to_contact_google_play_or_not(self, mock_push_apk):
         publish_to_googleplay(self.context, self.apks)
         mock_push_apk.assert_called_with(
-            ANY,
-            ANY,
-            ANY,
-            ANY,
-            ANY,
-            ANY,
-            ANY,
-            True,
+            apks=ANY,
+            service_account=ANY,
+            google_play_credentials_file=ANY,
+            track=ANY,
+            rollout_percentage=ANY,
+            google_play_strings=ANY,
+            commit=ANY,
+            contact_google_play=True,
         )
 
         self.context.config['do_not_contact_google_play'] = True
         publish_to_googleplay(self.context, self.apks)
         mock_push_apk.assert_called_with(
-            ANY,
-            ANY,
-            ANY,
-            ANY,
-            ANY,
-            ANY,
-            ANY,
-            False,
+            apks=ANY,
+            service_account=ANY,
+            google_play_credentials_file=ANY,
+            track=ANY,
+            rollout_percentage=ANY,
+            google_play_strings=ANY,
+            commit=ANY,
+            contact_google_play=False,
         )
 
     def test_publish_allows_committing_apks(self, mock_push_apk):
@@ -111,14 +111,14 @@ class GooglePlayTest(unittest.TestCase):
         publish_to_googleplay(self.context, self.apks)
 
         mock_push_apk.assert_called_with(
-            ANY,
-            ANY,
-            ANY,
-            ANY,
-            ANY,
-            ANY,
-            True,
-            ANY,
+            apks=ANY,
+            service_account=ANY,
+            google_play_credentials_file=ANY,
+            track=ANY,
+            rollout_percentage=ANY,
+            google_play_strings=ANY,
+            commit=True,
+            contact_google_play=ANY,
         )
 
     def test_publish_raises_error_when_android_product_is_not_part_of_config(self, _):
@@ -132,8 +132,8 @@ class GooglePlayTest(unittest.TestCase):
     def test_publish_updates_google_strings_from_file(self, mock_push_apk):
         publish_to_googleplay(self.context, self.apks,
                               google_play_strings_file=MockFile('/path/to/google_play_strings.json'))
-        args, _ = mock_push_apk.call_args
-        google_play_strings = args[5]
+        _, args = mock_push_apk.call_args
+        google_play_strings = args['google_play_strings']
         assert isinstance(google_play_strings, FileGooglePlayStrings)
         assert google_play_strings.file.name == '/path/to/google_play_strings.json'
 

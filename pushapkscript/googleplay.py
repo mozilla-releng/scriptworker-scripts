@@ -16,15 +16,15 @@ def publish_to_googleplay(context, apk_files, google_play_strings_file=None):
 
     with open(get_certificate_path(context, android_product), 'rb') as certificate:
         push_apk(
-            apk_files,
-            get_service_account(context, android_product),
-            certificate,
-            payload['google_play_track'],
-            payload.get('rollout_percentage'),  # may be None
-            NoGooglePlayStrings() if google_play_strings_file is None else FileGooglePlayStrings(google_play_strings_file),
-            should_commit_transaction(context),
+            apks=apk_files,
+            service_account=get_service_account(context, android_product),
+            google_play_credentials_file=certificate,
+            track=payload['google_play_track'],
+            rollout_percentage=payload.get('rollout_percentage'),  # may be None
+            google_play_strings=NoGooglePlayStrings() if google_play_strings_file is None else FileGooglePlayStrings(google_play_strings_file),
+            commit=should_commit_transaction(context),
             # Only allowed to connect to Google Play if the configuration of the pushapkscript instance allows it
-            not context.config.get('do_not_contact_google_play')
+            contact_google_play=not context.config.get('do_not_contact_google_play')
         )
 
 
