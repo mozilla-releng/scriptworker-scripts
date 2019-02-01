@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """ PushAPK main script
 """
+import contextlib
 import logging
 import os
 
@@ -33,17 +34,18 @@ async def async_main(context):
 
     if task.extract_android_product_from_scopes(context) in ['fenix', 'focus', 'reference-browser']:
         log.warning('This product does not upload strings automatically. Skipping Google Play strings search.')
-        google_play_strings_path = None
+        strings_path = None
     else:
         log.info('Finding whether Google Play strings can be updated...')
-        google_play_strings_path = googleplay.get_google_play_strings_path(
+        strings_path = googleplay.get_google_play_strings_path(
             artifacts_per_task_id, failed_artifacts_per_task_id
         )
 
     log.info('Delegating publication to mozapkpublisher...')
-    googleplay.publish_to_googleplay(
-        context, all_apks_paths, google_play_strings_path,
-    )
+    with contextlib.ExitStack() as stack:
+        files = [stack.enter_context(open(apk_file_name)) for apk_file_name in all_apks_paths]
+        strings_file = stack.enter_context(open(strings_path)) if strings_path is not None else None
+        googleplay.publish_to_googleplay(context, files, strings_file)
 
     log.info('Done!')
 
