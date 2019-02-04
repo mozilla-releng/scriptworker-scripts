@@ -4,9 +4,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [upcoming]
 
-### Changed
-* `push_apk` must be called as a function with parameters, rather than mocked `argv` arguments
-
 ### Added
 * Options to skip specific sanity checks
     * `--skip-check-ordered-version-codes`: Skip check that asserts version codes are different, x86 code > arm code
@@ -15,6 +12,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
     * `--skip-checks-fennec`: Skip checks that are Fennec-specific (ini-checking, checking version-to-package-name compliance)
     * `--skip-check-package-names`: Skip assertion that apks match a specified package name
         * Note: if this isn't provided, then you must provide at least one `--expected-package-name`
+
+## [0.14.0] - 2019-01-29
+
+### Changed
+* `push_apk` must be called as a function with parameters, rather than mocked `argv` arguments* Refactors `push_apk` to use a variable Google Play Strings interface  
 
 ### Removed
 * Auto-detection of which package-name corresponds to which sanity checks 
