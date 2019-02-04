@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.4.1] = (2019-02-04)
+----------------------
+
+Added
+~~~~~
+
+- Add .msi support for Thunderbird (`#1516542
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1516542>`_)
+
+
 [8.4.0] = (2019-01-25)
 ----------------------
 
