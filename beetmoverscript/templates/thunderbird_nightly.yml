@@ -221,6 +221,12 @@ mapping:
       destinations:
         - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.zip
         - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.zip
+    target.installer.msi:
+      s3_key: installer.msi
+      destinations:
+        - {{ upload_date }}-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.installer.msi
+        - latest-{{ branch }}/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.installer.msi
+        - latest-{{ branch }}-l10n/thunderbird-{{ version }}.{{ locale }}.{{ platform }}.installer.msi
   {% endif %}
   {% for partial in partials %}
     {{ partial }}:

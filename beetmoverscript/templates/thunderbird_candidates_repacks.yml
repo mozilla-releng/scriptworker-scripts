@@ -32,6 +32,10 @@ mapping:
       s3_key: {{ platform }}/{{ locale }}/Thunderbird Setup {{ version }}.exe
       destinations:
         - {{ platform }}/{{ locale }}/Thunderbird Setup {{ version }}.exe
+    target.installer.msi:
+      s3_key: {{ platform }}/{{ locale }}/Thunderbird Setup {{ version }}.msi
+      destinations:
+        - {{ platform }}/{{ locale }}/Thunderbird Setup {{ version }}.msi
   {% endif %}
   {% if platform in ["win32"] %}
     {% if "esr" not in version %}
