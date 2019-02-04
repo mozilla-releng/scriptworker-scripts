@@ -183,14 +183,14 @@ def main(name=None):
                         default=None,
                         help='The percentage of user who will get the update. Specify only if track is rollout')
     parser.add_argument('--skip-check-ordered-version-codes', action='store_true',
-                            help='Skip check that asserts version codes are different, x86 code > arm code')
+                        help='Skip check that asserts version codes are different, x86 code > arm code')
     parser.add_argument('--skip-check-multiple-locales', action='store_true',
-                            help='Skip check that asserts that apks all have multiple locales')
+                        help='Skip check that asserts that apks all have multiple locales')
     parser.add_argument('--skip-check-same-locales', action='store_true',
-                            help='Skip check that asserts that all apks have the same locales')
+                        help='Skip check that asserts that all apks have the same locales')
     parser.add_argument('--skip-checks-fennec', action='store_true',
-                            help='Skip checks that are Fennec-specific (ini-checking, checking '
-                                 'version-to-package-name compliance)')
+                        help='Skip checks that are Fennec-specific (ini-checking, checking '
+                             'version-to-package-name compliance)')
 
     parser.add_argument('apks', metavar='path_to_apk', type=argparse.FileType(), nargs='+',
                         help='The path to the APK to upload. You have to provide every APKs for each architecture/API level. \
