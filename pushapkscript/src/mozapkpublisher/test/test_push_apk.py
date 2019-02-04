@@ -82,7 +82,7 @@ def set_up_mocks(monkeypatch_, edit_service_mock_):
 def test_invalid_rollout_percentage(edit_service_mock, monkeypatch):
     with pytest.raises(WrongArgumentGiven):
         # missing percentage
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout')
+        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', AnyPackageNamesCheck())
 
     valid_percentage = 1
     invalid_track = 'production'
