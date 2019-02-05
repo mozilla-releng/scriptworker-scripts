@@ -1,75 +1,37 @@
 import logging
 
+from mozapkpublisher.common.apk.checker import AnyPackageNamesCheck, ExpectedPackageNamesCheck
+from mozapkpublisher.push_apk import push_apk, FileGooglePlayStrings, NoGooglePlayStrings
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
-
 log = logging.getLogger(__name__)
 
-_AUTHORIZED_PRODUCTS_TO_REACH_GOOGLE_PLAY = ('aurora', 'beta', 'release', 'fenix', 'focus', 'reference-browser')
-_DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
-def publish_to_googleplay(task_payload, android_product, product_config, apks, google_play_strings_path=None):
-    from mozapkpublisher.push_apk import PushAPK
-    push_apk = PushAPK(config=craft_push_apk_config(
-        task_payload, android_product, product_config, apks, google_play_strings_path,
-    ))
-    push_apk.run()
-
-
-def craft_push_apk_config(payload, android_product, product_config, apks, google_play_strings_path=None):
-    valid_track_values = craft_valid_track_values(product_config['has_nightly_track'])
-    track = payload['google_play_track']
-
-    if track not in valid_track_values:
-        raise TaskVerificationError('Track name "{}" not valid. Allowed values: {}'.format(track, valid_track_values))
-
-    push_apk_config = {
-        '*args': sorted(apks),   # APKs have been positional arguments since mozapkpublisher 0.6.0
-        'commit': should_commit_transaction(payload),
-        'credentials': product_config['certificate'],
-        'service_account': product_config['service_account'],
-        'track': payload['google_play_track']
-    }
-
-    if product_config.get('skip_checks_fennec'):
-        push_apk_config['skip_checks_fennec'] = True
-
-    if product_config.get('skip_check_ordered_version_codes'):
-        push_apk_config['skip_check_ordered_version_codes'] = True
-
-    if product_config.get('skip_check_multiple_locales'):
-        push_apk_config['skip_check_multiple_locales'] = True
-
-    if product_config.get('skip_check_same_locales'):
-        push_apk_config['skip_check_same_locales'] = True
-
-    if not is_allowed_to_push_to_google_play(android_product):
-        push_apk_config['do_not_contact_google_play'] = True
-
-    if payload.get('rollout_percentage'):
-        push_apk_config['rollout_percentage'] = payload['rollout_percentage']
-
+def publish_to_googleplay(contact_google_play, payload, product_config, apk_files, google_play_strings_file=None):
     if product_config.get('skip_check_package_names'):
-        push_apk_config['skip_check_package_names'] = True
+        package_names_check = AnyPackageNamesCheck()
     else:
-        push_apk_config['expected_package_names'] = product_config['expected_package_names']
+        package_names_check = ExpectedPackageNamesCheck(product_config['expected_package_names'])
 
-    if google_play_strings_path is None:
-        push_apk_config['no_gp_string_update'] = True
-    else:
-        push_apk_config['update_gp_strings_from_file'] = google_play_strings_path
-
-    return push_apk_config
-
-
-def craft_valid_track_values(has_nightly_track):
-    return _DEFAULT_TRACK_VALUES + (['nightly'] if has_nightly_track else [])
-
-
-def is_allowed_to_push_to_google_play(android_product):
-    return android_product in _AUTHORIZED_PRODUCTS_TO_REACH_GOOGLE_PLAY
+    with open(product_config['certificate'], 'rb') as certificate:
+        push_apk(
+            apks=apk_files,
+            service_account=product_config['service_account'],
+            google_play_credentials_file=certificate,
+            track=payload['google_play_track'],
+            package_names_check=package_names_check,
+            rollout_percentage=payload.get('rollout_percentage'),  # may be None
+            google_play_strings=NoGooglePlayStrings() if google_play_strings_file is None else FileGooglePlayStrings(google_play_strings_file),
+            commit=should_commit_transaction(payload),
+            # Only allowed to connect to Google Play if the configuration of the pushapkscript instance allows it
+            contact_google_play=contact_google_play,
+            skip_check_ordered_version_codes=bool(product_config.get('skip_check_ordered_version_codes')),
+            skip_check_multiple_locales=bool(product_config.get('skip_check_multiple_locales')),
+            skip_check_same_locales=bool(product_config.get('skip_check_same_locales')),
+            skip_checks_fennec=bool(product_config.get('skip_checks_fennec')),
+        )
 
 
 def should_commit_transaction(task_payload):

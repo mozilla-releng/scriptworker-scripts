@@ -18,7 +18,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 * In config, `google_play_accounts` is now called `products`
 
-## [0.12.0]
+## [0.13.0]
+### Added
+* `do_not_contact_google_play` to instance config file
+
+### Changed
+* Now compatible with with `mozapkpublisher` > 0.14.0
+
+## [0.12.0] - 2019-01-09
 
 ### Added
 * Support pushing [`fenix`](https://github.com/mozilla-mobile/fenix) to Google Play 
