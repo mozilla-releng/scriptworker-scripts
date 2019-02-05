@@ -13,7 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
     * `skip_check_multiple_locales`: passed to `mozapkpublisher`
     * `skip_check_same_locales`: passed to `mozapkpublisher`
     * `skip_check_package_names`: passed to `mozapkpublisher`
-    * `has_nightly_track`: fails the build if an APK is attempted to be pushed to `nightly` without having a `nightly track
+    * `has_nightly_track`: fails build if an APK is attempted to be pushed to `nightly` without having a `nightly track
 
 ### Changed
 * In config, `google_play_accounts` is now called `products`

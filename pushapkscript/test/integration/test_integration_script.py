@@ -131,7 +131,11 @@ class MainTest(unittest.TestCase):
             rollout_percentage=None,
             google_play_strings=unittest.mock.ANY,
             commit=False,
-            contact_google_play=True
+            contact_google_play=True,
+            skip_check_multiple_locales=False,
+            skip_check_ordered_version_codes=False,
+            skip_check_same_locales=False,
+            skip_checks_fennec=False,
         )
         _, args = push_apk.call_args
         package_names_check = args['package_names_check']
@@ -161,7 +165,11 @@ class MainTest(unittest.TestCase):
             rollout_percentage=25,
             google_play_strings=unittest.mock.ANY,
             commit=False,
-            contact_google_play=True
+            contact_google_play=True,
+            skip_check_multiple_locales=False,
+            skip_check_ordered_version_codes=False,
+            skip_check_same_locales=False,
+            skip_checks_fennec=False,
         )
         _, args = push_apk.call_args
         package_names_check = args['package_names_check']
@@ -192,10 +200,15 @@ class MainTest(unittest.TestCase):
             service_account='dummy-service-account@iam.gserviceaccount.com',
             google_play_credentials_file=MockFile('/dummy/path/to/certificate.p12'),
             track='alpha',
+            package_names_check=unittest.mock.ANY,
             rollout_percentage=None,
             google_play_strings=unittest.mock.ANY,
             commit=True,
-            contact_google_play=True
+            contact_google_play=True,
+            skip_check_multiple_locales=False,
+            skip_check_ordered_version_codes=False,
+            skip_check_same_locales=False,
+            skip_checks_fennec=False,
         )
         _, args = push_apk.call_args
         package_names_check = args['package_names_check']

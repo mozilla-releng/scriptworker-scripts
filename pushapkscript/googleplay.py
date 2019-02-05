@@ -6,10 +6,16 @@ from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 log = logging.getLogger(__name__)
 
+_DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
 def publish_to_googleplay(contact_google_play, payload, product_config, apk_files, google_play_strings_file=None):
+    track = payload['google_play_track']
+    valid_track_values = craft_valid_track_values(product_config['has_nightly_track'])
+    if track not in valid_track_values:
+        raise TaskVerificationError('Track name "{}" not valid. Allowed values: {}'.format(track, valid_track_values))
+
     if product_config.get('skip_check_package_names'):
         package_names_check = AnyPackageNamesCheck()
     else:
@@ -20,7 +26,7 @@ def publish_to_googleplay(contact_google_play, payload, product_config, apk_file
             apks=apk_files,
             service_account=product_config['service_account'],
             google_play_credentials_file=certificate,
-            track=payload['google_play_track'],
+            track=track,
             package_names_check=package_names_check,
             rollout_percentage=payload.get('rollout_percentage'),  # may be None
             google_play_strings=NoGooglePlayStrings() if google_play_strings_file is None else FileGooglePlayStrings(google_play_strings_file),
@@ -38,6 +44,10 @@ def should_commit_transaction(task_payload):
     # Don't commit anything by default. Committed APKs can't be unpublished,
     # unless you push a newer set of APKs.
     return task_payload.get('commit', False)
+
+
+def craft_valid_track_values(has_nightly_track):
+    return _DEFAULT_TRACK_VALUES + (['nightly'] if has_nightly_track else [])
 
 
 def get_google_play_strings_path(artifacts_per_task_id, failed_artifacts_per_task_id):

@@ -62,14 +62,20 @@ class GooglePlayTest(unittest.TestCase):
                 service_account='{}_account'.format(android_product),
                 google_play_credentials_file=MockFile('/path/to/{}.p12'.format(android_product)),
                 track='alpha',
-                package_names_check=AnyPackageNamesCheck(),
+                package_names_check=ANY,
                 rollout_percentage=None,
                 google_play_strings=ANY,
                 commit=False,
                 contact_google_play=True,
+                skip_check_multiple_locales=False,
+                skip_check_ordered_version_codes=False,
+                skip_check_same_locales=False,
+                skip_checks_fennec=False,
             )
             _, args = mock_push_apk.call_args
+            package_names_check = args['package_names_check']
             google_play_strings = args['google_play_strings']
+            assert isinstance(package_names_check, AnyPackageNamesCheck)
             assert isinstance(google_play_strings, NoGooglePlayStrings)
 
     def test_craft_push_config_validates_track(self, mock_push_apk):
@@ -110,11 +116,11 @@ class GooglePlayTest(unittest.TestCase):
     def test_craft_push_config_allows_to_contact_google_play_or_not(self, mock_push_apk):
         publish_to_googleplay(True, self.task_payload, self.products['aurora'], self.apks)
         _, args = mock_push_apk.call_args
-        assert args['do_not_contact_google_play'] is None
+        assert args['contact_google_play'] is True
 
         publish_to_googleplay(False, self.task_payload, self.products['aurora'], self.apks)
         _, args = mock_push_apk.call_args
-        assert args['do_not_contact_google_play'] is True
+        assert args['contact_google_play'] is False
 
     def test_craft_push_config_skip_checking_multiple_locales(self, mock_push_apk):
         product_config = {
@@ -155,6 +161,7 @@ class GooglePlayTest(unittest.TestCase):
 
     def test_craft_push_config_allows_committing_apks(self, mock_push_apk):
         task_payload = {
+            'google_play_track': 'production',
             'commit': True
         }
         publish_to_googleplay(True, task_payload, self.products['release'], self.apks)
@@ -166,7 +173,7 @@ class GooglePlayTest(unittest.TestCase):
                               google_play_strings_file=MockFile('/path/to/google_play_strings.json'))
         _, args = mock_push_apk.call_args
         google_play_strings = args['google_play_strings']
-        assert isinstance(google_play_strings, File GooglePlayStrings)
+        assert isinstance(google_play_strings, FileGooglePlayStrings)
         assert google_play_strings.file.name == '/path/to/google_play_strings.json'
 
 

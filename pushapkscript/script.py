@@ -17,9 +17,10 @@ log = logging.getLogger(__name__)
 async def async_main(context):
     android_product = task.extract_android_product_from_scopes(context)
     product_config = _get_product_config(context, android_product)
+    contact_google_play = not bool(context.config.get('do_not_contact_google_play'))
 
     logging.getLogger('oauth2client').setLevel(logging.WARNING)
-    _log_warning_forewords(not bool(context.config.get('do_not_contact_google_play')), context.task['payload'])
+    _log_warning_forewords(contact_google_play, context.task['payload'])
 
     log.info('Verifying upstream artifacts...')
     artifacts_per_task_id, failed_artifacts_per_task_id = artifacts.get_upstream_artifacts_full_paths_per_task_id(context)
@@ -49,7 +50,8 @@ async def async_main(context):
     with contextlib.ExitStack() as stack:
         files = [stack.enter_context(open(apk_file_name)) for apk_file_name in all_apks_paths]
         strings_file = stack.enter_context(open(strings_path)) if strings_path is not None else None
-        googleplay.publish_to_googleplay(context.task['payload'], android_product, product_config, files, strings_file)
+        googleplay.publish_to_googleplay(contact_google_play, context.task['payload'], product_config, files,
+                                         strings_file)
 
     log.info('Done!')
 

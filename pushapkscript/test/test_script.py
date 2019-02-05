@@ -74,7 +74,7 @@ if no error is detected either by this script or by Google Play.'),
 ))
 def test_log_warning_forewords(caplog,  monkeypatch, is_allowed_to_push, should_commit_transaction, expected):
     monkeypatch.setattr(googleplay, 'should_commit_transaction', lambda _: should_commit_transaction)
-    _log_warning_forewords(not is_allowed_to_push, MagicMock())
+    _log_warning_forewords(is_allowed_to_push, MagicMock())
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == 'WARNING'
     assert expected in caplog.text
