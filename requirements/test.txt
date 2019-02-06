@@ -72,10 +72,9 @@ more-itertools==5.0.0 \
 pathmatch==0.2.1 \
     --hash=sha256:b35db907d0532c66132e5bc8aaa20dbfae916441987c8f0abd53ac538376d9a7 \
     # via flake8-per-file-ignores
-pbr==5.1.1 \
-    --hash=sha256:f59d71442f9ece3dffc17bc36575768e1ee9967756e6b6535f0ee1f0054c3d68 \
-    --hash=sha256:f6d5b23f226a2ba58e14e49aa3b1bfaf814d0199144b95d78458212444de1387 \
-    # via mock
+pbr==5.1.2 \
+    --hash=sha256:a7953f66e1f82e4b061f43096a4bcc058f7d3d41de9b94ac871770e8bdd831a2 \
+    --hash=sha256:d717573351cfe09f49df61906cd272abaa759b3e91744396b804965ff7bff38b    # via mock
 pluggy==0.8.1 \
     --hash=sha256:980710797ff6a041e9a73a5787804f848996ecaa6f8a1b1e08224a5894f2074a \
     --hash=sha256:8ddc32f03971bfdf900a81961a48ccf2fb677cf7715108f85295c67405798616    # via pytest, tox
