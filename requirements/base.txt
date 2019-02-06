@@ -133,10 +133,9 @@ pyasn1==0.4.5 \
     --hash=sha256:b00d7bfb6603517e189d1ad76967c7e805139f63e43096e5f871d1277f50aea5 \
     --hash=sha256:9458d0273f95d035de4c0d5e0643f25daba330582cc71bb554fe6969c015042a \
     --hash=sha256:da2420fe13a9452d8ae97a0e478adde1dee153b11ba832a95b223a2ba01c10f7    # via rsa
-python-dateutil==2.7.5 \
-    --hash=sha256:063df5763652e21de43de7d9e00ccf239f953a832941e37be541614732cdfc93 \
-    --hash=sha256:88f9287c0174266bb0d8cedd395cfba9c58e87e5ad86b2ce58859bc11be3cf02 \
-    # via arrow
+python-dateutil==2.8.0 \
+    --hash=sha256:7e6584c74aeed623791615e26efd690f29817a27c73085b78e4bad02493df2fb \
+    --hash=sha256:c89805f6f4d64db21ed966fda138f8a5ed7a4fdbc1a8ee329ce1b74e3c74da9e    # via arrow
 python-gnupg==0.4.4 \
     --hash=sha256:85c231850a0275c9722f06e34b45a22510b83a6a6e88f93b5ae32ba04c95056c \
     --hash=sha256:45daf020b370bda13a1429c859fcdff0b766c0576844211446f9266cae97fb0e    # via scriptworker
