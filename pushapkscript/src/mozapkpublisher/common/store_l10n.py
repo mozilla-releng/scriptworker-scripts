@@ -7,6 +7,7 @@ from mozapkpublisher.common.exceptions import NoTranslationGiven, TranslationMis
 
 logger = logging.getLogger(__name__)
 
+# TODO: receive these options on the CLI, rather than hard-coding this mapping here in mozapkpublisher
 STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME = {
     'org.mozilla.fennec_aurora': {
         'product': 'fx_android',

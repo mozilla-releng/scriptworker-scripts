@@ -6,7 +6,7 @@ import tempfile
 from unittest.mock import MagicMock
 
 from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
-from mozapkpublisher.common.googleplay import add_general_google_play_arguments, EditService, is_package_name_nightly
+from mozapkpublisher.common.googleplay import add_general_google_play_arguments, EditService
 
 
 def test_add_general_google_play_arguments():
@@ -20,12 +20,6 @@ def test_add_general_google_play_arguments():
         assert config.google_play_credentials_file.name == f.name
 
     assert config.service_account == 'dummy@dummy'
-
-
-def test_is_package_name_nightly():
-    assert is_package_name_nightly('org.mozilla.fennec_aurora')
-    assert not is_package_name_nightly('org.mozilla.firefox_beta')
-    assert not is_package_name_nightly('org.mozilla.firefox')
 
 
 def set_up_edit_service_mock(_monkeypatch):

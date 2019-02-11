@@ -37,19 +37,19 @@ from mozapkpublisher.common.apk.history import (
     'org.mozilla.firefox',
     set([('x86', 16), ('armeabi-v7a', 16)]),
 ), (
-    '66.0',
+    '66.0a1',
     'org.mozilla.fennec_aurora',
     set([('x86', 16), ('armeabi-v7a', 16), ('arm64-v8a', 21)]),
 ), (
-    '67.0',
+    '67.0a1',
     'org.mozilla.fennec_aurora',
     set([('x86', 16), ('armeabi-v7a', 16), ('arm64-v8a', 21)]),
 ), (
-    '66.0',
+    '66.0b1',
     'org.mozilla.firefox_beta',
     set([('x86', 16), ('armeabi-v7a', 16)]),
 ), (
-    '67.0',
+    '67.0b1',
     'org.mozilla.firefox_beta',
     set([('x86', 16), ('armeabi-v7a', 16)]),
 ), (
@@ -58,12 +58,12 @@ from mozapkpublisher.common.apk.history import (
     set([('x86', 16), ('armeabi-v7a', 16)]),
 )))
 def test_get_expected_combos(firefox_version, package_name, expected):
-    assert get_expected_combos(firefox_version, package_name) == expected
+    assert get_expected_combos(firefox_version) == expected
 
 
 def test_empty_get_expected_combos():
     with pytest.raises(ValueError):
-        get_expected_combos('8.0', 'org.mozilla.firefox')
+        get_expected_combos('8.0')
 
 
 @pytest.mark.parametrize('firefox_version, range_dict, expected', (

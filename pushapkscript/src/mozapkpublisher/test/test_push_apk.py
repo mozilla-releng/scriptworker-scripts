@@ -10,6 +10,7 @@ from tempfile import NamedTemporaryFile
 
 from mozapkpublisher.common import googleplay, store_l10n
 from mozapkpublisher.common.apk import checker, extractor
+from mozapkpublisher.common.apk.checker import AnyPackageNamesCheck
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.push_apk import push_apk, main, _create_or_update_whats_new, \
     _get_ordered_version_codes, _split_apk_metadata_per_package_name, StoreGooglePlayStrings, FileGooglePlayStrings
@@ -45,7 +46,7 @@ def edit_service_mock():
 
 
 def set_up_mocks(monkeypatch_, edit_service_mock_):
-    def _metadata(apk_file_name):
+    def _metadata(apk_file_name, _):
         if apk_file_name == apk_arm.name:
             version_code = '0'
             architecture = 'armeabi-v7a'
@@ -74,36 +75,26 @@ def set_up_mocks(monkeypatch_, edit_service_mock_):
 
     monkeypatch_.setattr(googleplay, 'EditService', lambda _, __, ___, commit, contact_google_play: edit_service_mock_)
     monkeypatch_.setattr(extractor, 'extract_metadata', _metadata)
-    monkeypatch_.setattr(checker, 'cross_check_apks', lambda _: None)
+    monkeypatch_.setattr(checker, 'cross_check_apks', lambda _, __, ___, ____, _____, ______: None)
     set_translations_per_google_play_locale_code(monkeypatch_)
-
-
-def test_tracks(edit_service_mock, monkeypatch):
-    set_up_mocks(monkeypatch, edit_service_mock)
-
-    with pytest.raises(WrongArgumentGiven):
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'fake')
-
-    for track in ('alpha', 'beta', 'production'):
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, track)
 
 
 def test_invalid_rollout_percentage(edit_service_mock, monkeypatch):
     with pytest.raises(WrongArgumentGiven):
         # missing percentage
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout')
+        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', AnyPackageNamesCheck())
 
     valid_percentage = 1
     invalid_track = 'production'
     with pytest.raises(WrongArgumentGiven):
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, invalid_track, rollout_percentage=valid_percentage)
+        push_apk(APKS, SERVICE_ACCOUNT, credentials, invalid_track, AnyPackageNamesCheck(), rollout_percentage=valid_percentage)
 
 
 def test_valid_rollout_percentage(edit_service_mock, monkeypatch):
     set_up_mocks(monkeypatch, edit_service_mock)
     valid_percentage = 50
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', rollout_percentage=valid_percentage)
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', AnyPackageNamesCheck(), rollout_percentage=valid_percentage)
     edit_service_mock.update_track.assert_called_once_with('rollout', ['0', '1'], valid_percentage)
     edit_service_mock.update_track.reset_mock()
 
@@ -122,7 +113,7 @@ def test_get_ordered_version_codes():
 def test_upload_apk(edit_service_mock, monkeypatch):
     set_up_mocks(monkeypatch, edit_service_mock)
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha')
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck())
 
     for apk_file in (apk_arm, apk_x86):
         edit_service_mock.upload_apk.assert_any_call(apk_file.name)
@@ -135,7 +126,7 @@ def test_upload_apk_with_locales_updated_from_l10n_store(edit_service_mock, monk
     set_up_mocks(monkeypatch, edit_service_mock)
     monkeypatch.setattr(store_l10n, '_translate_moz_locate_into_google_play_one', lambda locale: 'es-US' if locale == 'es-MX' else locale)
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', google_play_strings=StoreGooglePlayStrings())
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck(), google_play_strings=StoreGooglePlayStrings())
 
     expected_locales = (
         ('es-US', 'Navegador web Firefox', 'Corto', 'Descripcion larga', 'Mire a esta caracteristica'),
@@ -159,7 +150,7 @@ def test_upload_apk_with_locales_updated_from_l10n_store(edit_service_mock, monk
 def test_upload_apk_without_locales_updated(edit_service_mock, monkeypatch):
     set_up_mocks(monkeypatch, edit_service_mock)
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha')
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck())
 
     assert edit_service_mock.upload_apk.call_count == 2
     assert edit_service_mock.update_track.call_count == 1
@@ -175,7 +166,7 @@ def test_upload_apk_with_locales_updated_from_file(edit_service_mock, monkeypatc
     with NamedTemporaryFile('r+') as f:
         json.dump(DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE, f)
         f.seek(0)
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', google_play_strings=FileGooglePlayStrings(f))
+        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck(), google_play_strings=FileGooglePlayStrings(f))
 
     assert edit_service_mock.upload_apk.call_count == 2
     assert edit_service_mock.update_track.call_count == 1
@@ -239,38 +230,17 @@ def test_create_or_update_whats_new(edit_service_mock, monkeypatch):
 
 
 def test_do_not_contact_google_play_flag_does_not_request_google_play(monkeypatch):
-    monkeypatch.setattr(extractor, 'extract_metadata', lambda _: {
+    monkeypatch.setattr(extractor, 'extract_metadata', lambda _, __: {
         'package_name': 'org.mozilla.firefox',
         'version_code': '1',
     })
-    monkeypatch.setattr(checker, 'cross_check_apks', lambda _: None)
+    monkeypatch.setattr(checker, 'cross_check_apks', lambda _, __, ___, ____, _____, ______: None)
     set_translations_per_google_play_locale_code(monkeypatch)
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', contact_google_play=False)
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck(), contact_google_play=False)
     # Checks are done by the fact that Google Play doesn't error out. In fact, we
     # provide dummy data. If Google Play was reached, it would have failed at the
     # authentication step
-
-
-def test_custom_google_play_track(edit_service_mock, monkeypatch):
-    set_up_mocks(monkeypatch, edit_service_mock)
-
-    monkeypatch.setattr(extractor, 'extract_metadata', lambda _: {
-        'package_name': 'org.mozilla.firefox',
-        'version_code': '1',
-    })
-
-    # No "nightly" google play track for Firefox
-    with pytest.raises(WrongArgumentGiven):
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'nightly')
-
-    # "nightly" track is an allowed value for Focus
-    monkeypatch.setattr(extractor, 'extract_metadata', lambda _: {
-        'package_name': 'org.mozilla.focus',
-        'version_code': '1',
-    })
-
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'nightly')
 
 
 def test_main_bad_arguments_status_code(monkeypatch):
@@ -298,6 +268,7 @@ def test_main(monkeypatch):
         '--service-account', 'foo@developer.gserviceaccount.com',
         '--credentials', file,
         '--no-gp-string-update',
+        '--skip-check-package-names',
         file
     ]
 

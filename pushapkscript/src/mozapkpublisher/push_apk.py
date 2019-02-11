@@ -7,6 +7,7 @@ import logging
 from argparse import ArgumentParser
 from mozapkpublisher.common import googleplay, store_l10n
 from mozapkpublisher.common.apk import extractor, checker
+from mozapkpublisher.common.apk.checker import ExpectedPackageNamesCheck, AnyPackageNamesCheck
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.update_apk_description import create_or_update_listings
 
@@ -37,8 +38,10 @@ class FileGooglePlayStrings:
         return strings
 
 
-def push_apk(apks, service_account, google_play_credentials_file, track, rollout_percentage=None,
-             google_play_strings=NoGooglePlayStrings(), commit=True, contact_google_play=True):
+def push_apk(apks, service_account, google_play_credentials_file, track, package_names_check,
+             google_play_strings=NoGooglePlayStrings(), rollout_percentage=None, commit=True, contact_google_play=True,
+             skip_check_ordered_version_codes=False, skip_check_multiple_locales=False, skip_check_same_locales=False,
+             skip_checks_fennec=False):
     """
 
     Args:
@@ -47,12 +50,19 @@ def push_apk(apks, service_account, google_play_credentials_file, track, rollout
         google_play_credentials_file: Credentials file to authenticate to Google Play
         track (str): Google Play track to deploy to (e.g.: "nightly"). If "rollout" is chosen, the parameter
             `rollout_percentage` must be specified as well
+        package_names_check: Either mozapkpublisher.common.apk.checker.ExpectedPackageNamesCheck
+            or mozapkpublisher.common.apk.checker.AnyPackageNamesCheck
         rollout_percentage (int): percentage of users to roll out this update to. Must be a number between [0-100].
             This option is only valid if `track` is set to "rollout"
         google_play_strings: Either `NoGooglePlayStrings`, `StoreGooglePlayStrings` or `FileGooglePlayStrings`
         commit (bool): `False` to do a dry-run
         contact_google_play (bool): `False` to avoid communicating with Google Play. Useful if you're using mock
             credentials.
+        skip_checks_fennec (bool): skip Fennec-specific checks
+        skip_check_same_locales (bool): skip check to ensure all APKs have the same locales
+        skip_check_multiple_locales (bool): skip check to ensure all APKs have more than one locale
+        skip_check_ordered_version_codes (bool): skip check to ensure that ensures all APKs have different version codes
+            and that the x86 version code > the arm version code
 
     """
     if track == 'rollout' and rollout_percentage is None:
@@ -60,21 +70,28 @@ def push_apk(apks, service_account, google_play_credentials_file, track, rollout
     if rollout_percentage is not None and track != 'rollout':
         raise WrongArgumentGiven("When using rollout-percentage, track must be set to rollout")
 
-    PushAPK(apks, service_account, google_play_credentials_file, track, google_play_strings, rollout_percentage, commit,
-            contact_google_play).run()
+    PushAPK(apks, service_account, google_play_credentials_file, track, package_names_check, google_play_strings,
+            rollout_percentage, commit, contact_google_play, skip_check_ordered_version_codes,
+            skip_check_multiple_locales, skip_check_same_locales, skip_checks_fennec).run()
 
 
 class PushAPK:
-    def __init__(self, apks, service_account, google_play_credentials_file, track, google_play_strings,
-                 rollout_percentage, commit, contact_google_play):
+    def __init__(self, apks, service_account, google_play_credentials_file, track, package_names_check,
+                 google_play_strings, rollout_percentage, commit, contact_google_play, skip_check_ordered_version_codes,
+                 skip_check_multiple_locales, skip_check_same_locales, skip_checks_fennec):
         self.apks = apks
         self.service_account = service_account
         self.google_play_credentials_file = google_play_credentials_file
         self.track = track
+        self.package_names_check = package_names_check
         self.google_play_strings = google_play_strings
         self.rollout_percentage = rollout_percentage
         self.commit = commit
         self.contact_google_play = contact_google_play
+        self.skip_check_ordered_version_codes = skip_check_ordered_version_codes
+        self.skip_check_multiple_locales = skip_check_multiple_locales
+        self.skip_check_same_locales = skip_check_same_locales
+        self.skip_checks_fennec = skip_checks_fennec
 
     def upload_apks(self, apks_metadata_per_paths, package_name, l10n_strings):
         edit_service = googleplay.EditService(
@@ -99,16 +116,15 @@ class PushAPK:
     def run(self):
         apks_paths = [apk.name for apk in self.apks]
         apks_metadata_per_paths = {
-            apk_path: extractor.extract_metadata(apk_path)
+            apk_path: extractor.extract_metadata(apk_path, not self.skip_checks_fennec)
             for apk_path in apks_paths
         }
-
-        for package_name in [metadata['package_name'] for metadata in apks_metadata_per_paths.values()]:
-            if not googleplay.is_valid_track_value_for_package(self.track, package_name):
-                raise WrongArgumentGiven("Track name '{}' not valid for package: {}. allowed values: {}".format(
-                    self.track, package_name, googleplay.get_valid_track_values_for_package(package_name)))
-
-        checker.cross_check_apks(apks_metadata_per_paths)
+        checker.cross_check_apks(apks_metadata_per_paths,
+                                 self.package_names_check,
+                                 self.skip_checks_fennec,
+                                 self.skip_check_multiple_locales,
+                                 self.skip_check_same_locales,
+                                 self.skip_check_ordered_version_codes)
 
         # Each distinct product must be uploaded in different Google Play transaction, so we split them
         # by package name here.
@@ -131,7 +147,7 @@ def _split_apk_metadata_per_package_name(apks_metadata_per_paths):
 
 
 def _create_or_update_whats_new(edit_service, package_name, apk_version_code, l10n_strings):
-    if googleplay.is_package_name_nightly(package_name):
+    if package_name == 'org.mozilla.fennec_aurora':
         # See https://github.com/mozilla-l10n/stores_l10n/issues/142
         logger.warning("Nightly detected, What's new section won't be updated")
         return
@@ -166,10 +182,26 @@ def main(name=None):
     parser.add_argument('--rollout-percentage', type=int, choices=range(0, 101), metavar='[0-100]',
                         default=None,
                         help='The percentage of user who will get the update. Specify only if track is rollout')
+    parser.add_argument('--skip-check-ordered-version-codes', action='store_true',
+                        help='Skip check that asserts version codes are different, x86 code > arm code')
+    parser.add_argument('--skip-check-multiple-locales', action='store_true',
+                        help='Skip check that asserts that apks all have multiple locales')
+    parser.add_argument('--skip-check-same-locales', action='store_true',
+                        help='Skip check that asserts that all apks have the same locales')
+    parser.add_argument('--skip-checks-fennec', action='store_true',
+                        help='Skip checks that are Fennec-specific (ini-checking, checking '
+                             'version-to-package-name compliance)')
 
     parser.add_argument('apks', metavar='path_to_apk', type=argparse.FileType(), nargs='+',
                         help='The path to the APK to upload. You have to provide every APKs for each architecture/API level. \
                                             Missing or extra APKs exit the program without uploading anything')
+
+    expected_package_names_group = parser.add_mutually_exclusive_group(required=True)
+    expected_package_names_group.add_argument('--expected-package-name', dest='expected_package_names',
+                                              action='append',
+                                              help='Package names apks are expected to match')
+    expected_package_names_group.add_argument('--skip-check-package-names', action='store_true',
+                                              help='Skip assertion that apks match a specified package name')
 
     google_play_strings_group = parser.add_mutually_exclusive_group(required=True)
     google_play_strings_group.add_argument('--no-gp-string-update', dest='update_google_play_strings',
@@ -193,9 +225,16 @@ def main(name=None):
     else:
         google_play_strings = NoGooglePlayStrings()
 
+    if config.expected_package_names:
+        package_names_check = ExpectedPackageNamesCheck(config.expected_package_names)
+    else:
+        package_names_check = AnyPackageNamesCheck()
+
     try:
         push_apk(config.apks, config.service_account, config.google_play_credentials_file, config.track,
-                 config.rollout_percentage, google_play_strings, config.commit, config.contact_google_play)
+                 package_names_check, google_play_strings, config.rollout_percentage, config.commit,
+                 config.contact_google_play, config.skip_check_ordered_version_codes,
+                 config.skip_check_multiple_locales, config.skip_check_same_locales, config.skip_checks_fennec)
     except WrongArgumentGiven as e:
         parser.error(e)
 

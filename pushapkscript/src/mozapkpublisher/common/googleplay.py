@@ -23,27 +23,7 @@ from unittest.mock import MagicMock
 
 from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
 
-# Google play has currently 4 tracks by default. Rollout deploys
-# to a limited percentage of users
-_DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
-
-# Google play allows the creation of custom release tracks for apps.
-_ADDITIONAL_TRACK_VALUES = {
-    'org.mozilla.fenix': ['nightly'],
-    'org.mozilla.focus': ['nightly'],
-    'org.mozilla.klar': ['nightly'],
-    'org.mozilla.reference.browser': ['nightly'],
-}
-
 logger = logging.getLogger(__name__)
-
-
-def get_valid_track_values_for_package(package_name):
-    return _DEFAULT_TRACK_VALUES + _ADDITIONAL_TRACK_VALUES.get(package_name, [])
-
-
-def is_valid_track_value_for_package(track, package_name):
-    return track in get_valid_track_values_for_package(package_name)
 
 
 def add_general_google_play_arguments(parser):
@@ -57,12 +37,6 @@ def add_general_google_play_arguments(parser):
                         help='''Prevent any request to reach Google Play. Use this option if you want to run the script
 without any valid credentials nor valid APKs. In fact, Google Play may error out at the first invalid piece of data sent.
 --service-account and --credentials must still be provided (you can just fill them with random string and file).''')
-
-
-def is_package_name_nightly(package_name):
-    # Due to project Dawn, Nightly is now using the Aurora package name.
-    # See https://bugzilla.mozilla.org/show_bug.cgi?id=1357351
-    return package_name == 'org.mozilla.fennec_aurora'
 
 
 class EditService(object):

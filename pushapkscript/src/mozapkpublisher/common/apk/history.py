@@ -1,6 +1,6 @@
 import logging
 
-from mozapkpublisher.common.googleplay import is_package_name_nightly
+from mozapkpublisher.common.utils import is_firefox_version_nightly
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +49,10 @@ _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE_AND_API_LEVEL = {
 }
 
 
-def get_expected_combos(firefox_version, package_name):
+def get_expected_combos(firefox_version):
     combos = set()
     for architecture in _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE_AND_API_LEVEL:
-        api_levels = get_expected_api_levels(firefox_version, package_name, architecture)
+        api_levels = get_expected_api_levels(firefox_version, architecture)
 
         for api_level in api_levels:
             combos.add((architecture, api_level))
@@ -70,7 +70,7 @@ def get_expected_combos(firefox_version, package_name):
     return combos
 
 
-def get_expected_api_levels(firefox_version, package_name, architecture='armeabi-v7a'):
+def get_expected_api_levels(firefox_version, architecture='armeabi-v7a'):
     return [
         api_level
         for api_level, range_dict in _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE_AND_API_LEVEL[architecture].items()
@@ -80,7 +80,7 @@ def get_expected_api_levels(firefox_version, package_name, architecture='armeabi
             # a couple of cycles to stabilize. That's why we just expect it on Nightly, for now.
             (
                 architecture != 'arm64-v8a' or
-                architecture == 'arm64-v8a' and is_package_name_nightly(package_name)
+                architecture == 'arm64-v8a' and is_firefox_version_nightly(firefox_version)
             )
         )
     ]
