@@ -6,6 +6,7 @@ from mozapkpublisher.push_apk import FileGooglePlayStrings, NoGooglePlayStrings
 from scriptworker.exceptions import TaskVerificationError
 from unittest.mock import patch, ANY
 
+from pushapkscript.exceptions import ConfigValidationError
 from pushapkscript.googleplay import publish_to_googleplay, \
     should_commit_transaction, get_google_play_strings_path, \
     _check_google_play_string_is_the_only_failed_task, _find_unique_google_play_strings_file_in_dict
@@ -174,6 +175,17 @@ class GooglePlayTest(unittest.TestCase):
         google_play_strings = args['google_play_strings']
         assert isinstance(google_play_strings, FileGooglePlayStrings)
         assert google_play_strings.file.name == '/path/to/google_play_strings.json'
+
+
+def test_package_name_validation():
+    task_payload = {
+        'google_play_track': 'production'
+    }
+    product_config = {
+        'has_nightly_track': False
+    }
+    with pytest.raises(ConfigValidationError):
+        publish_to_googleplay(task_payload, product_config, [], contact_google_play=True)
 
 
 def test_should_commit_transaction():

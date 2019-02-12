@@ -69,7 +69,7 @@ async def test_async_main(monkeypatch, android_product, update_google_play_strin
     assert next(google_play_strings_call_counter) == expected_strings_call_count
 
 
-async def test_get_product_config_validation():
+def test_get_product_config_validation():
     context = Context()
     context.config = {}
 

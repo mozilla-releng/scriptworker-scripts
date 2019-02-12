@@ -4,6 +4,9 @@ from mozapkpublisher.common.apk.checker import AnyPackageNamesCheck, ExpectedPac
 from mozapkpublisher.push_apk import push_apk, FileGooglePlayStrings, NoGooglePlayStrings
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
+
+from pushapkscript.exceptions import ConfigValidationError
+
 log = logging.getLogger(__name__)
 
 _DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
@@ -18,8 +21,11 @@ def publish_to_googleplay(payload, product_config, apk_files, contact_google_pla
 
     if product_config.get('skip_check_package_names'):
         package_names_check = AnyPackageNamesCheck()
-    else:
+    elif product_config.get('expected_package_names'):
         package_names_check = ExpectedPackageNamesCheck(product_config['expected_package_names'])
+    else:
+        raise ConfigValidationError('Expected product config to either have "skip_check_package_names" or '
+                                    '"expected_package_names"')
 
     with open(product_config['certificate'], 'rb') as certificate:
         push_apk(
