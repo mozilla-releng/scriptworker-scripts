@@ -56,6 +56,13 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
     "libclearkey.so",
 )
 
+_DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+_MAR_VERIFY_FORMATS = {
+    'autograph_stage_mar384': {
+        'path': os.path.join(_DATA_DIR, 'autograph_stage_mar384.pem'),
+    },
+}
+
 
 # get_suitable_signing_servers {{{1
 def get_suitable_signing_servers(signing_servers, cert_type, signing_formats, raise_on_empty_list=False):
@@ -810,6 +817,14 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
 
     shutil.copyfile(tmp_dst.name, to)
     os.unlink(tmp_dst.name)
+
+    if fmt in _MAR_VERIFY_FORMATS:
+        with open(to, 'rb') as fh:
+            mar = MarReader(fh)
+        with open(_MAR_VERIFY_FORMATS[fmt]) as fh:
+            pem = fh.read()
+        if not mar.verify(pem):
+            raise SigningScriptError("Unable to verify mar signature for {}!".format(fmt))
 
     log.info("wrote mar with autograph signed hash %s to %s", from_, to)
     return to
