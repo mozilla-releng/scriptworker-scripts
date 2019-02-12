@@ -123,6 +123,8 @@ def test_bad_get_apk_architecture():
     ['lib/arm64-v8a/libmozglue.so', 'lib/arm64-v8a/libplugin-container.so'], 'arm64-v8a',
 ), (
     ['lib/x86/libmozglue.so', 'lib/x86/libplugin-container.so'], 'x86',
+), (
+    ['lib/x86_64/libmozglue.so', 'lib/x86_64/libplugin-container.so'], 'x86_64',
 )))
 def test_extract_architecture_from_paths(paths, expected):
     assert _extract_architecture_from_paths('/path/to/apk', paths) == expected

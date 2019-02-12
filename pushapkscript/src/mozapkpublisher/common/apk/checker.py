@@ -11,8 +11,8 @@ from mozapkpublisher.common.utils import filter_out_identical_values
 logger = logging.getLogger(__name__)
 
 
-# x86 must have the highest version code. See bug 1338477 for more context.
-_ARCHITECTURE_ORDER_REGARDING_VERSION_CODE = ('armeabi-v7a', 'arm64-v8a', 'x86')
+# x86* must have the highest version code. See bug 1338477 for more context.
+_ARCHITECTURE_ORDER_REGARDING_VERSION_CODE = ('armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64')
 
 
 class ExpectedPackageNamesCheck:
