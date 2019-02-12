@@ -50,7 +50,7 @@ async def async_main(context):
     with contextlib.ExitStack() as stack:
         files = [stack.enter_context(open(apk_file_name)) for apk_file_name in all_apks_paths]
         strings_file = stack.enter_context(open(strings_path)) if strings_path is not None else None
-        googleplay.publish_to_googleplay(contact_google_play, context.task['payload'], product_config, files,
+        googleplay.publish_to_googleplay(context.task['payload'], product_config, files, contact_google_play,
                                          strings_file)
 
     log.info('Done!')

@@ -13,11 +13,11 @@ from pushapkscript.googleplay import publish_to_googleplay, \
 from pushapkscript.test.helpers.mock_file import mock_open, MockFile
 
 
+# TODO: refactor to pytest instead of unittest
 @patch('pushapkscript.googleplay.open', new=mock_open)
 @patch('pushapkscript.googleplay.push_apk')
 class GooglePlayTest(unittest.TestCase):
     def setUp(self):
-        self.product = 'release'
         self.task_payload = {
             'google_play_track': 'alpha'
         }
@@ -55,7 +55,7 @@ class GooglePlayTest(unittest.TestCase):
     def test_publish_config(self, mock_push_apk):
         android_products = ('aurora', 'beta', 'release')
         for android_product in android_products:
-            publish_to_googleplay(True, self.task_payload, self.products[android_product], self.apks)
+            publish_to_googleplay(self.task_payload, self.products[android_product], self.apks, contact_google_play=True)
 
             mock_push_apk.assert_called_with(
                 apks=[MockFile('/path/to/x86.apk'), MockFile('/path/to/arm_v15.apk')],
@@ -84,13 +84,13 @@ class GooglePlayTest(unittest.TestCase):
         }
 
         with pytest.raises(TaskVerificationError):
-            publish_to_googleplay(True, task_payload_fake_track, self.products['release'], self.apks)
+            publish_to_googleplay(task_payload_fake_track, self.products['release'], self.apks, contact_google_play=True)
 
         task_payload_nightly_track = {
             'google_play_track': 'nightly'
         }
         with pytest.raises(TaskVerificationError):
-            publish_to_googleplay(True, task_payload_nightly_track, self.products['release'], self.apks)
+            publish_to_googleplay(task_payload_nightly_track, self.products['release'], self.apks, contact_google_play=True)
 
         nightly_product_config = {
             'has_nightly_track': True,
@@ -98,7 +98,7 @@ class GooglePlayTest(unittest.TestCase):
             'certificate': '/path/to/release.p12',
             'skip_check_package_names': True,
         }
-        publish_to_googleplay(True, task_payload_nightly_track, nightly_product_config, self.apks)
+        publish_to_googleplay(task_payload_nightly_track, nightly_product_config, self.apks, contact_google_play=True)
         mock_push_apk.assert_called_once()
         _, args = mock_push_apk.call_args
         assert args['track'] == 'nightly'
@@ -108,17 +108,17 @@ class GooglePlayTest(unittest.TestCase):
             'google_play_track': 'rollout',
             'rollout_percentage': 10
         }
-        publish_to_googleplay(True, task_payload, self.products['release'], self.apks)
+        publish_to_googleplay(task_payload, self.products['release'], self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args
         assert args['track'] == 'rollout'
         assert args['rollout_percentage'] == 10
 
     def test_craft_push_config_allows_to_contact_google_play_or_not(self, mock_push_apk):
-        publish_to_googleplay(True, self.task_payload, self.products['aurora'], self.apks)
+        publish_to_googleplay(self.task_payload, self.products['aurora'], self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args
         assert args['contact_google_play'] is True
 
-        publish_to_googleplay(False, self.task_payload, self.products['aurora'], self.apks)
+        publish_to_googleplay(self.task_payload, self.products['aurora'], self.apks, False)
         _, args = mock_push_apk.call_args
         assert args['contact_google_play'] is False
 
@@ -130,7 +130,7 @@ class GooglePlayTest(unittest.TestCase):
             'skip_check_package_names': True,
             'skip_check_multiple_locales': True,
         }
-        publish_to_googleplay(True, self.task_payload, product_config, self.apks)
+        publish_to_googleplay(self.task_payload, product_config, self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args
         assert args['skip_check_multiple_locales'] == True
 
@@ -142,7 +142,7 @@ class GooglePlayTest(unittest.TestCase):
             'skip_check_package_names': True,
             'skip_check_same_locales': True,
         }
-        publish_to_googleplay(True, self.task_payload, product_config, self.apks)
+        publish_to_googleplay(self.task_payload, product_config, self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args
         assert args['skip_check_same_locales'] == True
 
@@ -153,7 +153,7 @@ class GooglePlayTest(unittest.TestCase):
             'certificate': '/path/to/product.p12',
             'expected_package_names': ['org.mozilla.focus', 'org.mozilla.klar']
         }
-        publish_to_googleplay(True, self.task_payload, product_config, self.apks)
+        publish_to_googleplay(self.task_payload, product_config, self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args
         package_names_check = args['package_names_check']
         assert isinstance(package_names_check, ExpectedPackageNamesCheck)
@@ -164,12 +164,12 @@ class GooglePlayTest(unittest.TestCase):
             'google_play_track': 'production',
             'commit': True
         }
-        publish_to_googleplay(True, task_payload, self.products['release'], self.apks)
+        publish_to_googleplay(task_payload, self.products['release'], self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args
         assert args['commit'] is True
 
     def test_publish_updates_google_strings_from_file(self, mock_push_apk):
-        publish_to_googleplay(True, self.task_payload, self.products['release'], self.apks,
+        publish_to_googleplay(self.task_payload, self.products['release'], self.apks, contact_google_play=True,
                               google_play_strings_file=MockFile('/path/to/google_play_strings.json'))
         _, args = mock_push_apk.call_args
         google_play_strings = args['google_play_strings']

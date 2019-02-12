@@ -10,7 +10,7 @@ _DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
-def publish_to_googleplay(contact_google_play, payload, product_config, apk_files, google_play_strings_file=None):
+def publish_to_googleplay(payload, product_config, apk_files, contact_google_play, google_play_strings_file=None):
     track = payload['google_play_track']
     valid_track_values = craft_valid_track_values(product_config['has_nightly_track'])
     if track not in valid_track_values:
