@@ -58,12 +58,12 @@ async def async_main(context):
 
 def _get_product_config(context, android_product):
     try:
-        accounts = context.config['products']
+        products = context.config['products']
     except KeyError:
         raise ConfigValidationError('"products" is not part of the configuration')
 
     try:
-        return accounts[android_product]
+        return products[android_product]
     except KeyError:
         raise TaskVerificationError('Android "{}" does not exist in the configuration of this instance.\
     Are you sure you allowed to push such APK?'.format(android_product))

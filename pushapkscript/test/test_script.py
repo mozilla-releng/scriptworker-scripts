@@ -1,3 +1,6 @@
+from scriptworker.context import Context
+from scriptworker.exceptions import TaskVerificationError
+
 import pushapkscript
 import pytest
 import os
@@ -6,7 +9,8 @@ from scriptworker import client, artifacts
 from unittest.mock import MagicMock, patch
 
 from pushapkscript import googleplay, jarsigner, task, manifest
-from pushapkscript.script import async_main, get_default_config, main, _log_warning_forewords
+from pushapkscript.exceptions import ConfigValidationError
+from pushapkscript.script import async_main, get_default_config, main, _log_warning_forewords, _get_product_config
 from pushapkscript.test.helpers.mock_file import mock_open
 
 
@@ -63,6 +67,39 @@ async def test_async_main(monkeypatch, android_product, update_google_play_strin
     with patch('pushapkscript.script.open', new=mock_open):
         await async_main(context)
     assert next(google_play_strings_call_counter) == expected_strings_call_count
+
+
+async def test_get_product_config_validation():
+    context = Context()
+    context.config = {}
+
+    with pytest.raises(ConfigValidationError):
+        _get_product_config(context, 'fenix')
+
+
+def test_get_product_config_unknown_product():
+    context = Context()
+    context.config = {
+        'products': {
+            'fenix': {}
+        }
+    }
+
+    with pytest.raises(TaskVerificationError):
+        _get_product_config(context, 'unknown')
+
+
+def test_get_product_config():
+    context = Context()
+    context.config = {
+        'products': {
+            'fenix': {
+                'foo': 'bar'
+            }
+        }
+    }
+
+    assert _get_product_config(context, 'fenix') == {'foo': 'bar'}
 
 
 @pytest.mark.parametrize('is_allowed_to_push, should_commit_transaction, expected', (
