@@ -1,7 +1,6 @@
 import os
 import pytest
 
-from unittest.mock import MagicMock
 from zipfile import ZipFile
 
 from pushapkscript import manifest

@@ -4,9 +4,8 @@ import pytest
 from mozapkpublisher.common.apk.checker import AnyPackageNamesCheck, ExpectedPackageNamesCheck
 from mozapkpublisher.push_apk import FileGooglePlayStrings, NoGooglePlayStrings
 from scriptworker.exceptions import TaskVerificationError
-from unittest.mock import MagicMock, patch, ANY
+from unittest.mock import patch, ANY
 
-from pushapkscript.exceptions import ConfigValidationError
 from pushapkscript.googleplay import publish_to_googleplay, \
     should_commit_transaction, get_google_play_strings_path, \
     _check_google_play_string_is_the_only_failed_task, _find_unique_google_play_strings_file_in_dict
@@ -132,7 +131,7 @@ class GooglePlayTest(unittest.TestCase):
         }
         publish_to_googleplay(self.task_payload, product_config, self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args
-        assert args['skip_check_multiple_locales'] == True
+        assert args['skip_check_multiple_locales'] is True
 
     def test_craft_push_config_skip_checking_same_locales(self, mock_push_apk):
         product_config = {
@@ -144,7 +143,7 @@ class GooglePlayTest(unittest.TestCase):
         }
         publish_to_googleplay(self.task_payload, product_config, self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args
-        assert args['skip_check_same_locales'] == True
+        assert args['skip_check_same_locales'] is True
 
     def test_craft_push_config_expect_package_names(self, mock_push_apk):
         product_config = {

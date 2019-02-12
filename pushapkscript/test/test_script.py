@@ -55,7 +55,7 @@ async def test_async_main(monkeypatch, android_product, update_google_play_strin
         'payload': {}
     }
 
-    def assert_google_play_call(_, __, ___, all_apks_files, google_play_strings_file):
+    def assert_google_play_call(_, __, all_apks_files, ___, google_play_strings_file):
         assert sorted([file.name for file in all_apks_files]) == ['/some/path/to/another.apk', '/some/path/to/one.apk', '/some/path/to/yet_another.apk']
         if android_product == 'focus':
             assert google_play_strings_file is None
