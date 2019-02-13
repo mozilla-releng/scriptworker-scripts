@@ -2,7 +2,23 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.13.0]
+## [0.14.0] - 2019-02-13
+
+### Added
+* New options:
+    * `digest_algorithm`: expected digest algorithm of signed app. Verified before app deployed to Google Play
+    * `update_google_play_strings`: true if strings should be updated in Google Play for this app
+    * `skip_checks_fennec`: passed to `mozapkpublisher`
+    * `skip_check_ordered_version_codes`: passed to `mozapkpublisher`
+    * `skip_check_multiple_locales`: passed to `mozapkpublisher`
+    * `skip_check_same_locales`: passed to `mozapkpublisher`
+    * `skip_check_package_names`: passed to `mozapkpublisher`
+    * `has_nightly_track`: fails build if an APK is attempted to be pushed to `nightly` without having a `nightly track
+
+### Changed
+* In config, `google_play_accounts` is now called `products`
+
+## [0.13.0] - 2019-02-01
 ### Added
 * `do_not_contact_google_play` to instance config file
 

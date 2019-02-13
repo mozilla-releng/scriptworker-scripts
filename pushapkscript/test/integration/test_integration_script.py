@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import unittest
 
+from mozapkpublisher.common.apk.checker import AnyPackageNamesCheck
 from mozapkpublisher.push_apk import NoGooglePlayStrings, FileGooglePlayStrings
 
 from pushapkscript.script import main
@@ -53,10 +54,14 @@ class ConfigFileGenerator(object):
 
             "jarsigner_key_store": "{keystore_path}",
             "jarsigner_certificate_alias": "{certificate_alias}",
-            "google_play_accounts": {{
+            "products": {{
                 "aurora": {{
+                    "digest_algorithm": "SHA1",
                     "service_account": "dummy-service-account@iam.gserviceaccount.com",
-                    "certificate": "/dummy/path/to/certificate.p12"
+                    "certificate": "/dummy/path/to/certificate.p12",
+                    "has_nightly_track": false,
+                    "skip_check_package_names": true,
+                    "update_google_play_strings": true
                 }}
             }},
             "taskcluster_scope_prefixes": ["project:releng:googleplay:"]
@@ -122,13 +127,20 @@ class MainTest(unittest.TestCase):
             service_account='dummy-service-account@iam.gserviceaccount.com',
             google_play_credentials_file=MockFile('/dummy/path/to/certificate.p12'),
             track='alpha',
+            package_names_check=unittest.mock.ANY,
             rollout_percentage=None,
             google_play_strings=unittest.mock.ANY,
             commit=False,
-            contact_google_play=True
+            contact_google_play=True,
+            skip_check_multiple_locales=False,
+            skip_check_ordered_version_codes=False,
+            skip_check_same_locales=False,
+            skip_checks_fennec=False,
         )
         _, args = push_apk.call_args
+        package_names_check = args['package_names_check']
         google_play_strings = args['google_play_strings']
+        assert isinstance(package_names_check, AnyPackageNamesCheck)
         assert isinstance(google_play_strings, NoGooglePlayStrings)
 
     @unittest.mock.patch('pushapkscript.googleplay.push_apk')
@@ -149,13 +161,20 @@ class MainTest(unittest.TestCase):
             service_account='dummy-service-account@iam.gserviceaccount.com',
             google_play_credentials_file=MockFile('/dummy/path/to/certificate.p12'),
             track='rollout',
+            package_names_check=unittest.mock.ANY,
             rollout_percentage=25,
             google_play_strings=unittest.mock.ANY,
             commit=False,
-            contact_google_play=True
+            contact_google_play=True,
+            skip_check_multiple_locales=False,
+            skip_check_ordered_version_codes=False,
+            skip_check_same_locales=False,
+            skip_checks_fennec=False,
         )
         _, args = push_apk.call_args
+        package_names_check = args['package_names_check']
         google_play_strings = args['google_play_strings']
+        assert isinstance(package_names_check, AnyPackageNamesCheck)
         assert isinstance(google_play_strings, NoGooglePlayStrings)
 
     @unittest.mock.patch('pushapkscript.googleplay.push_apk')
@@ -181,13 +200,20 @@ class MainTest(unittest.TestCase):
             service_account='dummy-service-account@iam.gserviceaccount.com',
             google_play_credentials_file=MockFile('/dummy/path/to/certificate.p12'),
             track='alpha',
+            package_names_check=unittest.mock.ANY,
             rollout_percentage=None,
             google_play_strings=unittest.mock.ANY,
             commit=True,
-            contact_google_play=True
+            contact_google_play=True,
+            skip_check_multiple_locales=False,
+            skip_check_ordered_version_codes=False,
+            skip_check_same_locales=False,
+            skip_checks_fennec=False,
         )
         _, args = push_apk.call_args
+        package_names_check = args['package_names_check']
         google_play_strings = args['google_play_strings']
+        assert isinstance(package_names_check, AnyPackageNamesCheck)
         assert isinstance(google_play_strings, FileGooglePlayStrings)
         assert google_play_strings.file.name == '{}/work/cot/{}/public/google_play_strings.json'.format(
                 self.test_temp_dir, task_generator.google_play_strings_task_id

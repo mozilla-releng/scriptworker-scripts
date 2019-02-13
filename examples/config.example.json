@@ -1,18 +1,40 @@
 {
     "work_dir": "/absolute/path/to/work_dir",
 
-    "google_play_accounts": {
+    "products": {
         "aurora": {
+            "has_nightly_track": false,
             "service_account": "service-account-which-have-access-to-aurora@iam.gserviceaccount.com",
-            "certificate": "/absolute/path/to/certificate-for-aurora-service-account.p12"
+            "certificate": "/absolute/path/to/certificate-for-aurora-service-account.p12",
+            "update_google_play_strings": true,
+            "digest_algorithm": "SHA1",
+            "skip_check_package_names": true
         },
         "beta": {
+            "has_nightly_track": false,
             "service_account": "service-account-which-have-access-to-beta@iam.gserviceaccount.com",
-            "certificate": "/absolute/path/to/certificate-for-beta-service-account.p12"
+            "certificate": "/absolute/path/to/certificate-for-beta-service-account.p12",
+            "update_google_play_strings":  true,
+            "digest_algorithm": "SHA1",
+            "skip_check_package_names": true
         },
         "release": {
+            "has_nightly_track": false,
             "service_account": "service-account-which-have-access-to-release@iam.gserviceaccount.com",
-            "certificate": "/absolute/path/to/certificate-for-release-service-account.p12"
+            "certificate": "/absolute/path/to/certificate-for-release-service-account.p12",
+            "update_google_play_strings":  true,
+            "digest_algorithm": "SHA1",
+            "skip_check_package_names": true
+        },
+        "focus": {
+            "has_nightly_track": false,
+            "service_account": "service-account-which-have-access-to-focus@iam.gserviceaccount.com",
+            "certificate": "/absolute/path/to/certificate-for-release-service-account.p12",
+            "update_google_play_strings":  true,
+            "digest_algorithm": "SHA-256",
+            "expected_package_names": ["org.mozilla.klar", "org.mozilla.focus"],
+            "skip_check_ordered_version_codes":  true,
+            "skip_checks_fennec": true
         }
     },
 

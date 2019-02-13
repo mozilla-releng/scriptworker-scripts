@@ -1,58 +1,59 @@
 import logging
 
+from mozapkpublisher.common.apk.checker import AnyPackageNamesCheck, ExpectedPackageNamesCheck
 from mozapkpublisher.push_apk import push_apk, FileGooglePlayStrings, NoGooglePlayStrings
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
-from pushapkscript.task import extract_android_product_from_scopes
+
+from pushapkscript.exceptions import ConfigValidationError
 
 log = logging.getLogger(__name__)
 
+_DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
-def publish_to_googleplay(context, apk_files, google_play_strings_file=None):
-    android_product = extract_android_product_from_scopes(context)
-    payload = context.task['payload']
+def publish_to_googleplay(payload, product_config, apk_files, contact_google_play, google_play_strings_file=None):
+    track = payload['google_play_track']
+    valid_track_values = craft_valid_track_values(product_config['has_nightly_track'])
+    if track not in valid_track_values:
+        raise TaskVerificationError('Track name "{}" not valid. Allowed values: {}'.format(track, valid_track_values))
 
-    with open(get_certificate_path(context, android_product), 'rb') as certificate:
+    if product_config.get('skip_check_package_names'):
+        package_names_check = AnyPackageNamesCheck()
+    elif product_config.get('expected_package_names'):
+        package_names_check = ExpectedPackageNamesCheck(product_config['expected_package_names'])
+    else:
+        raise ConfigValidationError('Expected product config to either have "skip_check_package_names" or '
+                                    '"expected_package_names"')
+
+    with open(product_config['certificate'], 'rb') as certificate:
         push_apk(
             apks=apk_files,
-            service_account=get_service_account(context, android_product),
+            service_account=product_config['service_account'],
             google_play_credentials_file=certificate,
-            track=payload['google_play_track'],
+            track=track,
+            package_names_check=package_names_check,
             rollout_percentage=payload.get('rollout_percentage'),  # may be None
             google_play_strings=NoGooglePlayStrings() if google_play_strings_file is None else FileGooglePlayStrings(google_play_strings_file),
-            commit=should_commit_transaction(context),
+            commit=should_commit_transaction(payload),
             # Only allowed to connect to Google Play if the configuration of the pushapkscript instance allows it
-            contact_google_play=not context.config.get('do_not_contact_google_play')
+            contact_google_play=contact_google_play,
+            skip_check_ordered_version_codes=bool(product_config.get('skip_check_ordered_version_codes')),
+            skip_check_multiple_locales=bool(product_config.get('skip_check_multiple_locales')),
+            skip_check_same_locales=bool(product_config.get('skip_check_same_locales')),
+            skip_checks_fennec=bool(product_config.get('skip_checks_fennec')),
         )
 
 
-def get_service_account(context, android_product):
-    return _get_play_config(context, android_product)['service_account']
-
-
-def get_certificate_path(context, android_product):
-    return _get_play_config(context, android_product)['certificate']
-
-
-def _get_play_config(context, android_product):
-    try:
-        accounts = context.config['google_play_accounts']
-    except KeyError:
-        raise TaskVerificationError('"google_play_accounts" is not part of the configuration')
-
-    try:
-        return accounts[android_product]
-    except KeyError:
-        raise TaskVerificationError('Android "{}" does not exist in the configuration of this instance.\
-    Are you sure you allowed to push such APK?'.format(android_product))
-
-
-def should_commit_transaction(context):
+def should_commit_transaction(task_payload):
     # Don't commit anything by default. Committed APKs can't be unpublished,
     # unless you push a newer set of APKs.
-    return context.task['payload'].get('commit', False)
+    return task_payload.get('commit', False)
+
+
+def craft_valid_track_values(has_nightly_track):
+    return _DEFAULT_TRACK_VALUES + (['nightly'] if has_nightly_track else [])
 
 
 def get_google_play_strings_path(artifacts_per_task_id, failed_artifacts_per_task_id):
