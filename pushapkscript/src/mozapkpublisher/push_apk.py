@@ -5,7 +5,7 @@ import json
 import logging
 
 from argparse import ArgumentParser
-from mozapkpublisher.common import googleplay, store_l10n
+from mozapkpublisher.common import googleplay, store_l10n, main_logging
 from mozapkpublisher.common.apk import extractor, checker
 from mozapkpublisher.common.apk.checker import ExpectedPackageNamesCheck, AnyPackageNamesCheck
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
@@ -65,6 +65,9 @@ def push_apk(apks, service_account, google_play_credentials_file, track, package
             and that the x86 version code > the arm version code
 
     """
+    # We want to tune down some logs, even when push_apk() isn't called from the command line
+    main_logging.init()
+
     if track == 'rollout' and rollout_percentage is None:
         raise WrongArgumentGiven("When using track='rollout', rollout percentage must be provided too")
     if rollout_percentage is not None and track != 'rollout':
@@ -169,9 +172,6 @@ def _get_ordered_version_codes(apks):
 def main(name=None):
     if name not in ('__main__', None):
         return
-
-    from mozapkpublisher.common import main_logging
-    main_logging.init()
 
     parser = ArgumentParser(description='Upload APKs of Firefox for Android on Google play.')
 
