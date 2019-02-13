@@ -42,7 +42,6 @@ def cross_check_apks(apks_metadata_per_paths, package_names_check, skip_checks_f
         _check_version_matches_package_name(
             singular_apk_metadata['firefox_version'], singular_apk_metadata['package_name']
         )
-        _check_apk_package_name(apks_metadata_per_paths, [singular_apk_metadata['package_name']])
 
         _check_all_apks_have_the_same_firefox_version(apks_metadata_per_paths)
         _check_all_apks_have_the_same_build_id(apks_metadata_per_paths)
@@ -58,14 +57,6 @@ def cross_check_apks(apks_metadata_per_paths, package_names_check, skip_checks_f
         _check_apks_version_codes_are_correctly_ordered(apks_metadata_per_paths)
 
     logger.info('APKs are sane!')
-
-
-def _check_apk_package_name(apks_metadata_per_paths, product_types):
-    types = set([metadata['package_name'] for metadata in apks_metadata_per_paths.values()])
-
-    if not types == set(product_types):
-        raise BadSetOfApks('Expected product types {}, found {}'.format(product_types, types))
-    logger.info('Expected product types {} found'.format(product_types))
 
 
 def _check_piece_of_metadata_is_unique(key, pretty_key, apks_metadata_per_paths):
