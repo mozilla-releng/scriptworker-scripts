@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [upcoming]
+## [0.14.0] - 2019-02-13
 
 ### Added
 * New options:
@@ -18,7 +18,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 * In config, `google_play_accounts` is now called `products`
 
-## [0.13.0]
+## [0.13.0] - 2019-02-01
 ### Added
 * `do_not_contact_google_play` to instance config file
 
