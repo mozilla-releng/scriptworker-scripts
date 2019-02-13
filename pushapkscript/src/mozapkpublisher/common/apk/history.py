@@ -5,11 +5,10 @@ from mozapkpublisher.common.utils import is_firefox_version_nightly
 logger = logging.getLogger(__name__)
 
 
-# TODO Bug 1505538: Activate x86-64 once ready
 _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE_AND_API_LEVEL = {
-    'arm64-v8a': {
+    'arm64-v8a': {      # Bug 1368484
         21: {
-            'first_firefox_version': 66,    # Bug 1368484
+            'first_firefox_version': 66,
         },
     },
     'armeabi-v7a': {    # Bug 618789
@@ -44,6 +43,11 @@ _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE_AND_API_LEVEL = {
         },
         16: {
             'first_firefox_version': 56,    # Bug 1316462
+        },
+    },
+    'x86_64': {     # Bug 1505538
+        21: {
+            'first_firefox_version': 67,    # Bug 1368484
         },
     },
 }
