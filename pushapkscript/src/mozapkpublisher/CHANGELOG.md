@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.0.1] - 2019-02-12
+
+### Added
+* x86_64 push
+
 ## [1.0.0] - 2019-02-11
 
 ### Added
@@ -12,6 +17,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
     * `--skip-checks-fennec`: Skip checks that are Fennec-specific (ini-checking, checking version-to-package-name compliance)
     * `--skip-check-package-names`: Skip assertion that apks match a specified package name
         * Note: if this isn't provided, then you must provide at least one `--expected-package-name`
+        
+## [0.14.1] - 2019-02-12
+
+**Note: This was released in a branch off of `0.14.0`! These changes don't exist in `1.0.0`**
+
+### Added
+* x86_64 push
 
 ## [0.14.0] - 2019-01-29
 
