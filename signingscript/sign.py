@@ -772,6 +772,28 @@ def get_mar_verification_nick(cert_type, fmt):
         )
 
 
+def verify_mar_signature(cert_type, fmt, mar):
+    """Verify a mar signature, via mardor.
+
+    Args:
+        cert_type (str): the cert scope string
+        fmt (str): the signing format
+        mar (str): the path to the mar file
+
+    Raises:
+        SigningScriptError: if the signature doesn't verify
+
+    """
+    mar_verify_nick = get_mar_verification_nick(cert_type, fmt)
+    try:
+        mar_path = os.path.join(os.path.dirname(sys.executable), 'mar')
+        subprocess.check_call(
+            [mar_path, '-k', mar_verify_nick, '-v', mar], stdout=sys.stdout, stderr=sys.stderr
+        )
+    except subprocess.CalledProcessError as e:
+        raise SigningScriptError(e)
+
+
 async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
     """Signs a hash with autograph, injects it into the file, and writes the result to arg `to` or `from_` if `to` is None.
 
@@ -847,14 +869,7 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
     shutil.copyfile(tmp_dst.name, to)
     os.unlink(tmp_dst.name)
 
-    mar_verify_nick = get_mar_verification_nick(cert_type, fmt)
-    try:
-        mar_path = os.path.join(os.path.dirname(sys.executable), 'mar')
-        subprocess.check_call(
-            [mar_path, '-k', mar_verify_nick, '-v', to], stdout=sys.stdout, stderr=sys.stderr
-        )
-    except subprocess.CalledProcessError as e:
-        raise SigningScriptError(e)
+    verify_mar_signature(cert_type, fmt, to)
 
     log.info("wrote mar with autograph signed hash %s to %s", from_, to)
     return to
