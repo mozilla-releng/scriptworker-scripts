@@ -4,7 +4,7 @@ import os
 import pytest
 import sys
 
-from unittest.mock import create_autospec
+from unittest.mock import create_autospec, MagicMock
 
 from tempfile import NamedTemporaryFile
 
@@ -241,6 +241,16 @@ def test_do_not_contact_google_play_flag_does_not_request_google_play(monkeypatc
     # Checks are done by the fact that Google Play doesn't error out. In fact, we
     # provide dummy data. If Google Play was reached, it would have failed at the
     # authentication step
+
+
+def test_push_apk_tunes_down_logs(monkeypatch):
+    main_logging_mock = MagicMock()
+    monkeypatch.setattr('mozapkpublisher.push_apk.main_logging', main_logging_mock)
+    monkeypatch.setattr('mozapkpublisher.push_apk.PushAPK', MagicMock())
+
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck(), contact_google_play=False)
+
+    main_logging_mock.init.assert_called_once_with()
 
 
 def test_main_bad_arguments_status_code(monkeypatch):
