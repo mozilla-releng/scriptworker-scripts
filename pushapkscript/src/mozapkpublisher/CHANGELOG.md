@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [upcoming breaking change]
+
+### Removed
+
+* Fennec checks no longer implicitly check that all packages have the same name, but rather lean on `--expected-package-name` 
+
 ## [1.0.1] - 2019-02-12
 
 ### Added

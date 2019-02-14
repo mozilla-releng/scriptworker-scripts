@@ -2,7 +2,6 @@ import pytest
 
 from mozapkpublisher.common.apk.checker import (
     cross_check_apks,
-    _check_apk_package_name,
     _check_all_apks_have_the_same_firefox_version,
     _check_version_matches_package_name,
     _check_all_apks_have_the_same_build_id,
@@ -51,11 +50,12 @@ from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetO
     }
 }, ['org.mozilla.focus', 'org.mozilla.klar', 'org.mozilla.reference.browser'], True)))
 def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types, should_fail):
+    expected_names = ExpectedPackageNamesCheck(product_types)
     if should_fail:
         with pytest.raises(BadSetOfApks):
-            _check_apk_package_name(apks_metadata_per_paths, product_types)
+            expected_names.validate(apks_metadata_per_paths)
     else:
-        _check_apk_package_name(apks_metadata_per_paths, product_types)
+        expected_names.validate(apks_metadata_per_paths)
 
 
 @pytest.mark.parametrize('apks_metadata_per_paths, package_names_check, skip_checks_fennec, skip_check_multiple_locales, skip_check_same_locales, skip_check_ordered_version_codes', ((   # noqa
