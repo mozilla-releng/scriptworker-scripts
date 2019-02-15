@@ -787,9 +787,12 @@ def verify_mar_signature(cert_type, fmt, mar):
     mar_verify_nick = get_mar_verification_nick(cert_type, fmt)
     try:
         mar_path = os.path.join(os.path.dirname(sys.executable), 'mar')
+        cmd = [mar_path, '-k', mar_verify_nick, '-v', mar]
+        log.info("Running %s", cmd)
         subprocess.check_call(
-            [mar_path, '-k', mar_verify_nick, '-v', mar], stdout=sys.stdout, stderr=sys.stderr
+            cmd, stdout=sys.stdout, stderr=sys.stderr
         )
+        log.info("Verified signature.")
     except subprocess.CalledProcessError as e:
         raise SigningScriptError(e)
 
