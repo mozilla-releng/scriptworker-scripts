@@ -149,12 +149,12 @@ async def test_integration_autograph_mar_sign_file(context, tmpdir):
 
 @pytest.mark.asyncio
 @skip_when_no_autograph_server
-async def test_integration_autograph_mar_sign_hash(context, tmpdir):
+async def test_integration_autograph_mar_sign_hash(context, tmpdir, mocker):
     file_names = ['partial1.mar', 'partial2.mar']
     for file_name in file_names:
         _copy_files_to_work_dir(file_name, context)
 
-
+    mocker.patch('signingscript.sign.verify_mar_signature', new=lambda *args: None)
     context.config['signing_server_config'] = _write_server_config(tmpdir)
     context.task = _craft_task(file_names, signing_format='autograph_hash_only_mar384')
 
