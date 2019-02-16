@@ -317,6 +317,7 @@ async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
     MarReader_mock.return_value.__enter__ = mocker.Mock(return_value=m_mock)
     MarReader_mock.return_value.__exit__ = mocker.Mock()
     mocker.patch('signingscript.sign.MarReader', MarReader_mock, create=True)
+    mocker.patch('signingscript.sign.verify_mar_signature')
 
     context.task = {
         'scopes': ['project:releng:signing:cert:dep-signing', 'project:releng:signing:format:autograph_hash_only_mar384']
