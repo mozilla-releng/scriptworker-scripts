@@ -137,3 +137,17 @@ async def test_execute_subprocess(exit_code):
             await utils.execute_subprocess(command)
     else:
         await utils.execute_subprocess(command, cwd="/tmp")
+
+
+# is_sha1_apk_autograph_signing_format {{{1
+@pytest.mark.parametrize("format,expected", ((
+    'autograph_apk_sha1', True,
+), (
+    'autograph_apk_not_sha1_but_sha384', False,
+), (
+    'foobar_sha1', False,
+), (
+    'foobar_sha384', False,
+)))
+def test_is_sha1_apk_autograph_signing_format(format, expected):
+    assert utils.is_sha1_apk_autograph_signing_format(format) == expected
