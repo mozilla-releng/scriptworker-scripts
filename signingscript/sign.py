@@ -781,7 +781,7 @@ def verify_mar_signature(cert_type, fmt, mar):
         mar (str): the path to the mar file
 
     Raises:
-        SigningScriptError: if the signature doesn't verify
+        SigningScriptError: if the signature doesn't verify, or the nick isn't found
 
     """
     mar_verify_nick = get_mar_verification_nick(cert_type, fmt)
