@@ -118,16 +118,16 @@ pytest-cov==2.6.1 \
 pytest-mock==1.10.1 \
     --hash=sha256:bfdf02789e3d197bd682a758cae0a4a18706566395fbe2803badcd1335e0173e \
     --hash=sha256:4d0d06d173eecf172703219a71dbd4ade0e13904e6bbce1ce660e2e0dc78b5c4
-pytest==4.2.1 \
-    --hash=sha256:80cfd9c8b9e93f419abcc0400e9f595974a98e44b6863a77d3e1039961bfc9c4 \
-    --hash=sha256:c2396a15726218a2dfef480861c4ba37bd3952ebaaa5b0fede3fc23fddcd7f8c
+pytest==4.3.0 \
+    --hash=sha256:067a1d4bf827ffdd56ad21bd46674703fce77c5957f6c1eef731f6146bfcef1c \
+    --hash=sha256:9687049d53695ad45cf5fdc7bbd51f0c49f1ea3ecfc4b7f3fde7501b541f17f4
 snowballstemmer==1.2.1 \
     --hash=sha256:919f26a68b2c17a7634da993d91339e288964f93c274f1343e3bbbe2096e1128 \
     --hash=sha256:9f3bcd3c401c3e862ec0ebe6d2c069ebc012ce142cce209c098ccb5b09136e89 \
     # via pydocstyle
-testfixtures==6.5.0 \
-    --hash=sha256:59df1b51118978400d9926d5c1efb295f900ae626a54113323732647e453a80f \
-    --hash=sha256:cbd0f095d178de578709bcf4cc6eea896964635d2b41386d1cc7583674809b0e    # via flake8-isort
+testfixtures==6.5.2 \
+    --hash=sha256:7fed0630811db5706be55813b9bacb18c03476ac76852620bca62cd776c846eb \
+    --hash=sha256:ec8df1edc1b3276fefb9360f5f2574ced88cb8a3c7f57830c46cebc430971742    # via flake8-isort
 toml==0.10.0 \
     --hash=sha256:229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c \
     --hash=sha256:235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e \
