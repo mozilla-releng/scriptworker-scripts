@@ -34,6 +34,7 @@ FORMAT_TO_SIGNING_FUNCTION = frozendict({
     "autograph_focus": sign_jar,
     r"autograph_apk_.+": sign_jar,
     "autograph_hash_only_mar384": sign_mar384_with_autograph_hash,
+    "autograph_stage_mar384": sign_mar384_with_autograph_hash,
     "gpg": sign_gpg,
     "jar": sign_jar,
     "focus-jar": sign_jar,

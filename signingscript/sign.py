@@ -13,6 +13,8 @@ import re
 import requests
 from requests_hawk import HawkAuth
 import shutil
+import subprocess
+import sys
 import tarfile
 import tempfile
 import zipfile
@@ -55,6 +57,17 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
     "libclearkey.dylib",
     "libclearkey.so",
 )
+
+_MAR_VERIFY_FORMATS = {
+    'autograph_stage_mar384': {
+        'dep-signing': 'autograph-stage',
+    },
+    'autograph_hash_only_mar384': {
+        'release-signing': 'release',
+        'nightly-signing': 'nightly',
+        'dep-signing': 'dep',
+    },
+}
 
 
 # get_suitable_signing_servers {{{1
@@ -736,6 +749,54 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
     return to
 
 
+def get_mar_verification_nick(cert_type, fmt):
+    """Get the mardor nick for the format/cert_type.
+
+    Args:
+        cert_type (str): the cert scope string
+        fmt (str): the signing format
+
+    Raises:
+        SigningScriptError: if no nick is found
+
+    Returns:
+        str: the mardor nick to use with ``-k``
+
+    """
+    cert_type = cert_type.split(':')[-1]
+    try:
+        return ':mozilla-{}'.format(_MAR_VERIFY_FORMATS[fmt][cert_type])
+    except KeyError as err:
+        raise SigningScriptError(
+            "Can't find mar verify format for {}, {}:\n{}".format(fmt, cert_type, err)
+        )
+
+
+def verify_mar_signature(cert_type, fmt, mar):
+    """Verify a mar signature, via mardor.
+
+    Args:
+        cert_type (str): the cert scope string
+        fmt (str): the signing format
+        mar (str): the path to the mar file
+
+    Raises:
+        SigningScriptError: if the signature doesn't verify, or the nick isn't found
+
+    """
+    mar_verify_nick = get_mar_verification_nick(cert_type, fmt)
+    try:
+        mar_path = os.path.join(os.path.dirname(sys.executable), 'mar')
+        cmd = [mar_path, '-k', mar_verify_nick, '-v', mar]
+        log.info("Running %s", cmd)
+        subprocess.check_call(
+            cmd, stdout=sys.stdout, stderr=sys.stderr
+        )
+        log.info("Verified signature.")
+    except subprocess.CalledProcessError as e:
+        raise SigningScriptError(e)
+
+
 async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
     """Signs a hash with autograph, injects it into the file, and writes the result to arg `to` or `from_` if `to` is None.
 
@@ -810,6 +871,8 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
 
     shutil.copyfile(tmp_dst.name, to)
     os.unlink(tmp_dst.name)
+
+    verify_mar_signature(cert_type, fmt, to)
 
     log.info("wrote mar with autograph signed hash %s to %s", from_, to)
     return to

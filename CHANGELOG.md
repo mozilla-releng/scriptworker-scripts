@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [9.6.0] - 2019-02-19
+### Added
+- `get_mar_verification_nick` and `verify_mar_signature` for mar signature verification.
+- added `autograph_stage_mar384` format for autograph-stage testing.
+
+### Changed
+- `sign_mar384_with_autograph_hash` now verifies the mar signature.
+
+### Removed
+- removed `schema_file` from the example config.
+
 ## [9.5.1] - 2018-11-22
 ### Fixed
 - APK SHA1 detection

@@ -4,6 +4,7 @@ import os
 import os.path
 import pytest
 import shutil
+import subprocess
 import tarfile
 import zipfile
 
@@ -188,12 +189,16 @@ async def test_sign_file_autograph(context, mocker, to, expected):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('to,expected', ((
-    None, 'from',
+@pytest.mark.parametrize('to,expected,format,options', ((
+    None, 'from', 'autograph_mar', None
 ), (
-    'to', 'to'
+    'to', 'to', 'autograph_mar', None
+), (
+    'to', 'to', 'autograph_apk_foo', {'zip': 'passthrough'}
+), (
+    'to', 'to', 'autograph_apk_sha1', {'pkcs7_digest': 'SHA1', 'zip': 'passthrough'}
 )))
-async def test_sign_file_with_autograph(context, mocker, to, expected):
+async def test_sign_file_with_autograph(context, mocker, to, expected, format, options):
     open_mock = mocker.mock_open(read_data=b'0xdeadbeef')
     mocker.patch('builtins.open', open_mock, create=True)
 
@@ -206,19 +211,22 @@ async def test_sign_file_with_autograph(context, mocker, to, expected):
     mocker.patch('signingscript.sign.requests.Session', Session_mock, create=True)
 
     context.task = {
-        'scopes': ['project:releng:signing:cert:dep-signing', 'project:releng:signing:format:autograph_mar']
+        'scopes': ['project:releng:signing:cert:dep-signing', 'project:releng:signing:format:{}'.format(format)]
     }
     context.signing_servers = {
         "project:releng:signing:cert:dep-signing": [
-            utils.SigningServer(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_mar"], "autograph"])
+            utils.SigningServer(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", [format], "autograph"])
         ]
     }
-    assert await sign.sign_file_with_autograph(context, 'from', 'autograph_mar', to=to) == expected
+    assert await sign.sign_file_with_autograph(context, 'from', format, to=to) == expected
     open_mock.assert_called()
+    kwargs = {'input': 'MHhkZWFkYmVlZg=='}
+    if options:
+        kwargs['options'] = options
     session_mock.post.assert_called_with(
         'https://autograph-hsm.dev.mozaws.net/sign/file',
         auth=mocker.ANY,
-        json=[{'input': 'MHhkZWFkYmVlZg=='}])
+        json=[kwargs])
 
 
 @pytest.mark.asyncio
@@ -290,6 +298,41 @@ async def test_sign_file_with_autograph_raises_http_error(context, mocker, to, e
     open_mock.assert_called()
 
 
+# get_mar_verification_nick {{{1
+@pytest.mark.parametrize('format,cert_type,raises,expected', ((
+    'autograph_stage_mar384', 'dep-signing', False, ':mozilla-autograph-stage'
+), (
+    'autograph_hash_only_mar384', 'release-signing', False, ':mozilla-release'
+), (
+    'autograph_hash_only_mar384', 'unknown_cert_type', True, None
+), (
+    'unknown_format', 'dep', True, None
+)))
+def test_get_mar_verification_nick(format, cert_type, raises, expected):
+    if raises:
+        with pytest.raises(SigningScriptError):
+            sign.get_mar_verification_nick(cert_type, format)
+    else:
+        assert sign.get_mar_verification_nick(cert_type, format) == expected
+
+
+# verify_mar_signature {{{1
+@pytest.mark.parametrize('raises', (True, False))
+def test_verify_mar_signature(mocker, raises):
+
+    def fake_check_call(*args, **kwargs):
+        if raises:
+            raise subprocess.CalledProcessError('x', 'foo')
+
+    mocker.patch.object(subprocess, 'check_call', new=fake_check_call)
+    if raises:
+        with pytest.raises(SigningScriptError):
+            sign.verify_mar_signature('dep-signing', 'autograph_stage_mar384', 'foo')
+    else:
+        sign.verify_mar_signature('dep-signing', 'autograph_stage_mar384', 'foo')
+
+
+# sign_mar384_with_autograph_hash {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize('to,expected', ((
     None, 'from',
@@ -317,6 +360,7 @@ async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
     MarReader_mock.return_value.__enter__ = mocker.Mock(return_value=m_mock)
     MarReader_mock.return_value.__exit__ = mocker.Mock()
     mocker.patch('signingscript.sign.MarReader', MarReader_mock, create=True)
+    mocker.patch('signingscript.sign.verify_mar_signature')
 
     context.task = {
         'scopes': ['project:releng:signing:cert:dep-signing', 'project:releng:signing:format:autograph_hash_only_mar384']
