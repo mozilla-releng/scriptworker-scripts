@@ -1,0 +1,6 @@
+{
+    "work_dir": "/tmp/work_dir",
+    "artifact_dir": "/tmp/artifact_dir",
+    "taskcluster_scope_prefixes": ["project:releng:signing:"],
+    "verbose": true
+}
