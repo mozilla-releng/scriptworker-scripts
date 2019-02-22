@@ -1,5 +1,5 @@
-recursive-include applescript/test *
-recursive-include applescript/data *
+recursive-include iscript/test *
+recursive-include iscript/data *
 
 include LICENSE
 include README.md

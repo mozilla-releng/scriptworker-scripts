@@ -5,19 +5,19 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "version.txt"
     version = f.read().rstrip()
 
 setup(
-    name="applescript",
+    name="iscript",
     version=version,
-    description="TaskCluster Apple Script",
+    description="TaskCluster iScript",
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
-    url="https://github.com/escapewindow/applescript",
+    url="https://github.com/escapewindow/iscript",
     packages=find_packages(),
-    package_data={"applescript": ["data/*"]},
+    package_data={"iscript": ["data/*"]},
     include_package_data=True,
     zip_safe=False,
     entry_points={
         "console_scripts": [
-            "applescript = applescript.script:main",
+            "iscript = iscript.script:main",
         ],
     },
     license="MPL2",
