@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <!-- Firefox needs to be able to create non-MAP_JIT executable pages -->
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
+
+    <!-- Firefox does not use MAP_JIT -->
+    <key>com.apple.security.cs.allow-jit</key><false/>
+
+    <!-- When launching Firefox, all executable pages should be signed -->
+    <key>com.apple.security.cs.disable-executable-page-protection</key><false/>
+
+    <!-- Allow loading third party libraries. Needed for Flash and CDMs -->
+    <key>com.apple.security.cs.disable-library-validation</key><false/>
+
+    <!-- Allow dyld environment variables -->
+    <!-- Without this, content processes fail to load libnss3.dylib:
+         dyld: Library not loaded: @executable_path/libnss3.dylib
+         Referenced from: Nightly.app/Contents/MacOS/plugin-container.app/
+                          Contents/MacOS/plugin-container
+         Reason: image not found
+    -->
+    <key>com.apple.security.cs.allow-dyld-environment-variables</key><true/>
+
+    <!-- Don't allow debugging of the processes -->
+    <!-- Notarization fails when debugging is allowed -->
+    <key>com.apple.security.get-task-allow</key><false/>
+  </dict>
+</plist>
