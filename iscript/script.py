@@ -3,7 +3,6 @@
 import aiohttp
 import logging
 import os
-import tarfile
 
 import scriptworker.client
 
@@ -21,7 +20,7 @@ async def async_main(context):
     """
     async with aiohttp.ClientSession() as session:
         context.session = session
-        work_dir = context.config['work_dir']
+        # work_dir = context.config['work_dir']
 
         # get entitlements -- default or from url
         # extract
