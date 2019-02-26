@@ -115,3 +115,24 @@ def match_url_regex(rules, url, callback):
             result = callback(m)
             if result is not None:
                 return result
+
+
+# get_artifact_full_path {{{1
+def get_artifact_path(task_id, path, work_dir=None):
+    """Get the path to an artifact.
+
+    Args:
+        task_id (str): the ``taskId`` from ``upstreamArtifacts``
+        path (str): the ``path`` from ``upstreamArtifacts``
+        work_dir (str, optional): the *script ``work_dir``. If ``None``,
+            return a relative path. Defaults to ``None``.
+
+    Returns:
+        str: the path to the artifact.
+
+    """
+    if work_dir is not None:
+        base_dir = os.path.join(work_dir, 'cot')
+    else:
+        base_dir = 'cot'
+    return os.path.join(base_dir, task_id, path)
