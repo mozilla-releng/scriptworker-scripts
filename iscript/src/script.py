@@ -11,24 +11,23 @@ log = logging.getLogger(__name__)
 
 
 # async_main {{{1
-async def async_main(context):
+async def async_main(config, task):
     """Sign all the things.
 
     Args:
-        context (Context): the signing context.
+        config (dict): the running config.
+        task (dict): the running task.
 
     """
-    async with aiohttp.ClientSession() as session:
-        context.session = session
-        # work_dir = context.config['work_dir']
+    # work_dir = config['work_dir']
 
-        # get entitlements -- default or from url
-        # extract
-        # apple sign
-        # notarize, concurrent across `notary_accounts`
-        # poll
-        # staple
-        # copy to artifact_dir
+    # get entitlements -- default or from url
+    # extract
+    # apple sign
+    # notarize, concurrent across `notary_accounts`
+    # poll
+    # staple
+    # copy to artifact_dir
 
     log.info("Done!")
 
