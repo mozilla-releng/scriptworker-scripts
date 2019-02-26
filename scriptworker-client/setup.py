@@ -5,7 +5,7 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "version.txt"
     version = f.read().rstrip()
 
 setup(
-    name="scriptworker-client",
+    name="scriptworker_client",
     version=version,
     description="Scriptworker *script shared code",
     author="Mozilla Release Engineering",

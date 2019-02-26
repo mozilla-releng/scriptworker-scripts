@@ -1,9 +1,5 @@
 #!/usr/bin/env python
-"""Scripts running in scriptworker will use functions in this file.
-
-This module should be largely standalone.  This should only depend on
-scriptworker.exceptions and scriptworker.constants, or other standalone
-modules, to avoid circular imports.
+"""Python3 scripts running in scriptworker will use functions in this file.
 
 Attributes:
     log (logging.Logger): the log object for the module
@@ -16,8 +12,8 @@ import os
 import sys
 from urllib.parse import unquote
 
-from scriptworker.constants import STATUSES
-from scriptworker.exceptions import ScriptWorkerException, ScriptWorkerTaskException, TaskVerificationError
+from scriptworker_client.constants import STATUSES
+from scriptworker_client.exceptions import ClientError, TaskError, TaskVerificationError
 from scriptworker.utils import load_json_or_yaml, match_url_regex
 
 log = logging.getLogger(__name__)
@@ -33,7 +29,7 @@ def get_task(config):
         dict: the contents of task.json
 
     Raises:
-        ScriptWorkerTaskException: on error.
+        TaskError: on error.
 
     """
     path = os.path.join(config['work_dir'], "task.json")
@@ -54,13 +50,13 @@ def validate_json_schema(data, schema, name="task"):
             Defaults to "task".
 
     Raises:
-        ScriptWorkerTaskException: on failure
+        TaskError: on failure
 
     """
     try:
         jsonschema.validate(data, schema)
     except jsonschema.exceptions.ValidationError as exc:
-        raise ScriptWorkerTaskException(
+        raise TaskError(
             "Can't validate {} schema!\n{}".format(name, str(exc)),
             exit_code=STATUSES['malformed-payload']
         )
@@ -89,15 +85,14 @@ def validate_task_schema(config, task, schema_key='schema_file'):
         log.debug('Task is validated against this schema: {}'.format(task_schema))
 
         validate_json_schema(task, task_schema)
-    # TODO
-    except (KeyError, ScriptWorkerTaskException) as e:
+    except (KeyError, TaskError) as e:
         raise TaskVerificationError('Cannot validate task against schema. Task: {}.'.format(task)) from e
 
 
 def validate_artifact_url(valid_artifact_rules, valid_artifact_task_ids, url):
     """Ensure a URL fits in given scheme, netloc, and path restrictions.
 
-    If we fail any checks, raise a ScriptWorkerTaskException with
+    If we fail any checks, raise a TaskError with
     ``malformed-payload``.
 
     Args:
@@ -110,7 +105,7 @@ def validate_artifact_url(valid_artifact_rules, valid_artifact_task_ids, url):
         str: the ``filepath`` of the path regex.
 
     Raises:
-        ScriptWorkerTaskException: on failure to validate.
+        TaskError: on failure to validate.
 
     """
     def callback(match):
@@ -125,7 +120,7 @@ def validate_artifact_url(valid_artifact_rules, valid_artifact_task_ids, url):
 
     filepath = match_url_regex(valid_artifact_rules, url, callback)
     if filepath is None:
-        raise ScriptWorkerTaskException(
+        raise TaskError(
             "Can't validate url {}".format(url),
             exit_code=STATUSES['malformed-payload']
         )
@@ -192,6 +187,6 @@ def _init_logging(config):
 async def _handle_asyncio_loop(async_main, config, task):
     try:
         await async_main(config, task)
-    except ScriptWorkerException as exc:
+    except ClientError as exc:
         log.exception("Failed to run async_main")
         sys.exit(exc.exit_code)
