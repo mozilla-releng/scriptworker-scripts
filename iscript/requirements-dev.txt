@@ -1,2 +1,2 @@
 aiohttp
-scriptworker-client
+scriptworker_client

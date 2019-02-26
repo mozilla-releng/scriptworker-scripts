@@ -1,9 +1,9 @@
 """iScript exceptions."""
-from scriptworker.exceptions import ScriptWorkerTaskException
-from scriptworker.constants import STATUSES
+from scriptworker_client.exceptions import TaskError
+from scriptworker_client.constants import STATUSES
 
 
-class IScriptError(ScriptWorkerTaskException):
+class IScriptError(TaskError):
     """Something went wrong with signing script."""
 
     def __init__(self, msg):
@@ -17,7 +17,7 @@ class IScriptError(ScriptWorkerTaskException):
         )
 
 
-class FailedSubprocess(ScriptWorkerTaskException):
+class FailedSubprocess(TaskError):
     """Something went wrong during a subprocess exec."""
 
     def __init__(self, msg):

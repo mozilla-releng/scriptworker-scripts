@@ -6,7 +6,7 @@ import tarfile
 import zipfile
 
 # TODO stop importing non-client scriptworker
-from scriptworker.utils import (
+from scriptworker_client.utils import (
     makedirs,
     rm,
 )

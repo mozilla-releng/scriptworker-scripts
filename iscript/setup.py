@@ -22,6 +22,7 @@ setup(
     },
     license="MPL2",
     install_requires=[
-        "scriptworker",
+        "aiohttp",
+        "scriptworker_client",
     ],
 )

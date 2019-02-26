@@ -6,7 +6,7 @@ import os
 import re
 import subprocess
 
-from scriptworker.utils import (
+from scriptworker_client.utils import (
     retry_async,
     rm,
 )

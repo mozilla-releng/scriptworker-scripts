@@ -4,7 +4,7 @@ import aiohttp
 import logging
 import os
 
-import scriptworker-client.client
+from scriptworker_client.client import sync_main
 
 
 log = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ def get_default_config(base_dir=None):
 
 def main():
     """Start signing script."""
-    return scriptworker.client.sync_main(async_main, default_config=get_default_config())
+    return sync_main(async_main, default_config=get_default_config())
 
 
 __name__ == '__main__' and main()
