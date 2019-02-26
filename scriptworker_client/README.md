@@ -1,4 +1,3 @@
-iscript
-=======
+# `scriptworker_client`
 
-This is designed to be run from scriptworker, but runs perfectly fine as a standalone script.
+This package holds shared scriptworker \*script code.
