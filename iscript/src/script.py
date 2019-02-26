@@ -4,7 +4,7 @@ import aiohttp
 import logging
 import os
 
-import scriptworker.client
+import scriptworker-client.client
 
 
 log = logging.getLogger(__name__)
