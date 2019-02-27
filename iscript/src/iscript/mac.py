@@ -4,6 +4,8 @@ import attr
 import logging
 
 from scriptworker_client.utils import get_artifact_path
+from iscript.exceptions import IScriptError
+from iscript.utils import extract_tarfile
 
 log = logging.getLogger(__name__)
 
@@ -15,11 +17,25 @@ class App(object):
     zip_path = attr.ib(default='')
 
 
-def extract_and_sign(config, path, key):
-    pass
-    # extract
+def extract_and_sign(config, from_, parent_dir, key, entitlements_path):
+    """Extract the .app from a tarfile and sign it.
+
+    Args:
+        config (dict): the running config
+        from_ (str): the tarfile path
+        parent_dir (str): the top level directory to extract the app into
+        key (str): the nick of the key to use to sign with
+    """
+    file_list = extract_tarfile(from_, parent_dir)
     # apple sign
     # return app_path
+
+
+def get_key_config(config, key, config_key='mac_config'):
+    try:
+        return config[config_key][key]
+    except KeyError as e:
+        raise IScriptError("Unknown key config {} {}: {}".format(config_key, key, e))
 
 
 async def sign_and_notarize_all(config, task):
@@ -33,17 +49,13 @@ async def sign_and_notarize_all(config, task):
         IScriptError: on fatal error.
 
     """
-    # work_dir = config['work_dir']
-    # get entitlements -- default or from url
+    work_dir = config['work_dir']
+    # TODO get entitlements -- default or from url
+    entitlements_path = os.path.join(work_dir, "browser.entitlements.txt")
 
     # TODO get this from scopes?
     key = 'dep'
 
-    # TODO unlock keychain
-
-    # artifact_paths = [
-    #     {'archive_path': '...', 'app_path': '...', 'zip_path': '...'}
-    # ]
     all_paths = []
     for upstream_artifact_info in task['payload']['upstreamArtifacts']:
         for subpath in upstream_artifact_info['paths']:
@@ -52,9 +64,10 @@ async def sign_and_notarize_all(config, task):
             )
             all_paths.append(App(orig_path=orig_path))
 
-    for app in all_paths:
-        # XXX we may be able to do this concurrently?
-        app.app_path = extract_and_sign(config, app.orig_path, key)
+    # TODO unlock keychain
+    for counter, app in all_paths:
+        parent_dir = os.path.join(work_dir, str(counter))
+        app.app_path = extract_and_sign(config, app.orig_path, parent_dir, key, entitlements_path)
 
     # if notarize:
         # notarize, concurrent across `notary_accounts`

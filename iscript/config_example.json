@@ -2,5 +2,14 @@
     "work_dir": "/tmp/work_dir",
     "artifact_dir": "/tmp/artifact_dir",
     "taskcluster_scope_prefixes": ["project:releng:signing:"],
-    "verbose": true
+    "verbose": true,
+    "notarization_accounts": ["account1"],
+    "mac_config": {
+        "dep": {
+            "notarize": false,
+            "use_notarization_accounts": false,
+            "signing_keychain": "dep.keychain",
+            "keychain_password": "..."
+        }
+    }
 }

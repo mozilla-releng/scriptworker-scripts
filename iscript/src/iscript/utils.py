@@ -5,7 +5,6 @@ import os
 import tarfile
 import zipfile
 
-# TODO stop importing non-client scriptworker
 from scriptworker_client.utils import (
     makedirs,
     rm,
@@ -39,13 +38,19 @@ def _get_tarfile_compression(compression):
     return compression
 
 
-# _extract_tarfile {{{1
-async def _extract_tarfile(from_, compression, top_dir):
-    compression = _get_tarfile_compression(compression)
+# extract_tarfile {{{1
+async def extract_tarfile(from_, parent_dir):
+    """Extract a tarfile.
+
+    Args:
+        from_ (str): the path to the tarball
+        parent_dir (str): the path to the parent directory to extract into.
+            This function currently assumes this directory has been created
+            and cleaned as appropriate.
+    """
+    compression = _get_tarfile_compression(from_.split('.')[-1])
     try:
         files = []
-        rm(top_dir)
-        makedirs(top_dir)
         with tarfile.open(from_, mode='r:{}'.format(compression)) as t:
             t.extractall(path=top_dir)
             for name in t.getnames():
