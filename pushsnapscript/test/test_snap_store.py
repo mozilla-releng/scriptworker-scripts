@@ -251,6 +251,9 @@ def test_pluck_metadata():
         2: {
             'version': GeckoSnapVersion.parse('63.0b2-1'),
         },
+        3: {
+            'version': GeckoSnapVersion.parse('62.0-1'),
+        },
         4: {
             'version': GeckoSnapVersion.parse('63.0b3-1'),
         },

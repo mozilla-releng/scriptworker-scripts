@@ -24,15 +24,15 @@ from snapcraft.storeapi.errors import StoreReviewError      # noqa
 log = logging.getLogger(__name__)
 
 
-_VERSION_TYPE_PER_CHANNEL = {
-    'edge': VersionType.BETA,
-    'beta': VersionType.BETA,
-    'candidate': VersionType.RELEASE,
-    'stable': VersionType.RELEASE,
+_VERSION_TYPES_PER_CHANNEL = {
+    'edge': (VersionType.BETA,),
+    'beta': (VersionType.BETA, VersionType.RELEASE,),
+    'candidate': (VersionType.RELEASE,),
+    'stable': (VersionType.RELEASE,),
 
-    'esr': VersionType.ESR,
-    'esr/stable': VersionType.ESR,
-    'esr/candidate': VersionType.ESR,
+    'esr': (VersionType.ESR,),
+    'esr/stable': (VersionType.ESR,),
+    'esr/candidate': (VersionType.ESR,),
 }
 
 # TODO: Parametrize this once we have other products
@@ -100,7 +100,7 @@ def _store_session(macaroon_location):
 def _release_if_needed(store, channel, snap_file_path):
     # We can't easily know what's the revision and the version of the current and the latest snap.
     # That's why this function fetches all availables revisions, transforms the data, and then
-    # finds what's current and latest,
+    # finds what's current and latest.
     all_revisions = _list_all_revisions(store)
     metadata_per_revision = _pluck_metadata(all_revisions)
     metadata_per_revision = _filter_versions_that_are_not_the_same_type(metadata_per_revision, channel)
@@ -149,12 +149,12 @@ def _pluck_metadata(snap_revisions):
 
 
 def _filter_versions_that_are_not_the_same_type(metadata_per_revision, channel):
-    expected_version_type = _VERSION_TYPE_PER_CHANNEL[channel]
+    expected_version_types = _VERSION_TYPES_PER_CHANNEL[channel]
 
     return {
         revision: revision_metadata
         for revision, revision_metadata in metadata_per_revision.items()
-        if revision_metadata['version'].version_type == expected_version_type
+        if revision_metadata['version'].version_type in expected_version_types
     }
 
 
