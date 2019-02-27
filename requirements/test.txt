@@ -74,13 +74,12 @@ pathmatch==0.2.1 \
 pbr==5.1.2 \
     --hash=sha256:a7953f66e1f82e4b061f43096a4bcc058f7d3d41de9b94ac871770e8bdd831a2 \
     --hash=sha256:d717573351cfe09f49df61906cd272abaa759b3e91744396b804965ff7bff38b    # via mock
-pluggy==0.8.1 \
-    --hash=sha256:980710797ff6a041e9a73a5787804f848996ecaa6f8a1b1e08224a5894f2074a \
-    --hash=sha256:8ddc32f03971bfdf900a81961a48ccf2fb677cf7715108f85295c67405798616    # via pytest, tox
-py==1.7.0 \
-    --hash=sha256:bf92637198836372b520efcba9e020c330123be8ce527e535d185ed4b6f45694 \
-    --hash=sha256:e76826342cefe3c3d5f7e8ee4316b80d1dd8a300781612ddbc765c17ba25a6c6 \
-    # via pytest, tox
+pluggy==0.9.0 \
+    --hash=sha256:19ecf9ce9db2fce065a7a0586e07cfb4ac8614fe96edf628a264b1c70116cf8f \
+    --hash=sha256:84d306a647cc805219916e62aab89caa97a33a1dd8c342e87a37f91073cd4746    # via pytest, tox
+py==1.8.0 \
+    --hash=sha256:64f65755aee5b381cea27766a3a147c3f15b9b6b9ac88676de66ba2ae36793fa \
+    --hash=sha256:dc639b046a6e2cff5bbe40194ad65936d6ba360b52b3c3fe1d08a82dd50b5e53    # via pytest, tox
 pycodestyle==2.4.0 \
     --hash=sha256:cbc619d09254895b0d12c2c691e237b2e91e9b2ecf5e84c26b35400f93dcfb83 \
     --hash=sha256:cbfca99bd594a10f674d0cd97a3d802a1fdef635d4361e1a2658de47ed261e3a    # via flake8, pyup: ignore
