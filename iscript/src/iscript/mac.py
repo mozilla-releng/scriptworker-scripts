@@ -3,7 +3,11 @@
 import attr
 import logging
 
-from scriptworker_client.utils import get_artifact_path
+from scriptworker_client.utils import (
+    get_artifact_path,
+    makedirs,
+    rm,
+)
 from iscript.exceptions import IScriptError
 from iscript.utils import extract_tarfile
 
@@ -26,12 +30,36 @@ def extract_and_sign(config, from_, parent_dir, key, entitlements_path):
         parent_dir (str): the top level directory to extract the app into
         key (str): the nick of the key to use to sign with
     """
+    key_config = get_key_config(config, key)
+    rm(parent_dir)
+    makedirs(parent_dir)
     file_list = extract_tarfile(from_, parent_dir)
+    app_dir = os.path.join(parent_dir, get_app_dir(file_list))
     # apple sign
     # return app_path
 
 
+def get_app_dir(file_list):
+    """
+    """
+    pass
+
+
 def get_key_config(config, key, config_key='mac_config'):
+    """Get the key subconfig from ``config``.
+
+    Args:
+        config (dict): the running config
+        key (str): the key nickname, e.g. ``dep``
+        config_key (str): the config key to use, e.g. ``mac_config``
+
+    Raises:
+        IScriptError: on invalid ``key`` or ``config_key``
+
+    Returns:
+        dict: the subconfig for the given ``config_key`` and ``key``
+
+    """
     try:
         return config[config_key][key]
     except KeyError as e:
