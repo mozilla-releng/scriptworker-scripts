@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 """Utility functions."""
+import asyncio
+from asyncio.subprocess import DEVNULL, PIPE, STDOUT
 import logging
 import os
-import tarfile
 import zipfile
 
 from scriptworker_client.utils import (
     makedirs,
     rm,
+    run_command,
 )
 from iscript.exceptions import IScriptError
 
@@ -28,16 +30,6 @@ async def _create_zipfile(to, files, top_dir, mode='w'):
         raise IScriptError(e)
 
 
-# _get_tarfile_compression {{{1
-def _get_tarfile_compression(compression):
-    compression = compression.lstrip('.')
-    if compression not in ('bz2', 'gz'):
-        raise IScriptError(
-            "{} not a supported tarfile compression format!".format(compression)
-        )
-    return compression
-
-
 # extract_tarfile {{{1
 async def extract_tarfile(from_, parent_dir):
     """Extract a tarfile.
@@ -47,16 +39,14 @@ async def extract_tarfile(from_, parent_dir):
         parent_dir (str): the path to the parent directory to extract into.
             This function currently assumes this directory has been created
             and cleaned as appropriate.
+
     """
-    compression = _get_tarfile_compression(from_.split('.')[-1])
+    tar_exe = 'tar'
     try:
         files = []
-        with tarfile.open(from_, mode='r:{}'.format(compression)) as t:
-            t.extractall(path=top_dir)
-            for name in t.getnames():
-                path = os.path.join(top_dir, name)
-                os.path.isfile(path) and files.append(path)
-        return files
+        await run_command(
+            [tar_exe, 'xvf', from_], cwd=parent_dir
+        )
     except Exception as e:
         raise IScriptError(e)
 
