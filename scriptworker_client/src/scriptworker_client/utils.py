@@ -5,8 +5,11 @@ Attributes:
     log (logging.Logger): the log object for the module
 
 """
+import asyncio
+from asyncio.process import PIPE
 import json
 import logging
+import os
 import re
 from urllib.parse import unquote, urlparse
 import yaml
@@ -136,3 +139,105 @@ def get_artifact_path(task_id, path, work_dir=None):
     else:
         base_dir = 'cot'
     return os.path.join(base_dir, task_id, path)
+
+
+# to_unicode {{{1
+def to_unicode(line):
+    """Avoid ``b'line'`` type messages in the logs.
+
+    Lifted from ``scriptworker.utils.to_unicode``.
+
+    Args:
+        line (str): The bytecode or unicode string.
+
+    Returns:
+        str: the unicode-decoded string, if ``line`` was a bytecode string.
+            Otherwise return ``line`` unmodified.
+
+    """
+    try:
+        line = line.decode('utf-8')
+    except (UnicodeDecodeError, AttributeError):
+        pass
+    return line
+
+
+# pipe_to_log {{{1
+async def pipe_to_log(pipe, filehandles=(), level=logging.DEBUG):
+    """Log from a subprocess PIPE.
+
+    Lifted from ``scriptworker.log.pipe_to_log``
+
+    Args:
+        pipe (filehandle): subprocess process STDOUT or STDERR
+        filehandles (list of filehandles, optional): the filehandle(s) to write
+            to.  If empty, don't write to a separate file.  Defaults to ().
+        level (int, optional): the level to log to.  Defaults to ``logging.INFO``.
+
+    """
+    while True:
+        line = await pipe.readline()
+        if line:
+            line = to_unicode(line)
+            log.log(level, line.rstrip())
+            for filehandle in filehandles:
+                print(line, file=filehandle, end="")
+        else:
+            break
+
+
+# run_command {{{1
+async def run_command(cmd, log_path, log_cmd=None, cwd=None):
+    """Run a command using ``asyncio.create_subprocess_exec``.
+
+    This logs to `log_path` and returns the exit code.
+
+    It also logs the full command at the beginning, and the output at the end.
+    If that's undesirable, we can patch this function to allow for alternate
+    behavior.
+
+    Largely lifted from ``scriptworker.task.run_task``
+
+    We can add a bunch more bells and whistles (timeout, logging options, etc)
+    but let's add those when needed, rather than guessing what we'll need.
+
+    Args:
+        cmd (list): the command to run.
+        log_path (str): the path to the file to write output to. This file
+            will be overwritten. The directory should already exist.
+        log_cmd (str, optional): the command to log. Set this if there is
+            sensitive information in ``cmd``. If ``None``, defaults to ``cmd``.
+            Defaults to ``None``.
+        cwd (str, optional): the directory to run the command in. If ``None``,
+            use ``os.getcwd()``. Defaults to ``None``.
+
+    Returns:
+        int: the exit code of the command
+
+    """
+    cwd = cwd or os.getcwd()
+    log_cmd = log_cmd or cmd
+    log.info("Running {} in {} ...".format(log_cmd, cwd))
+    kwargs = {
+        'stdout': PIPE,
+        'stderr': PIPE,
+        'stdin': None,
+        'close_fds': True,
+        'preexec_fn': lambda: os.setsid(),
+        'cwd': cwd,
+    }
+    proc = await asyncio.create_subprocess_exec(*cmd, **kwargs)
+    with open(log_path, 'w') as log_filehandle:
+        stderr_future = asyncio.ensure_future(
+            pipe_to_log(proc.stderr, filehandles=[log_filehandle])
+        )
+        stdout_future = asyncio.ensure_future(
+            pipe_to_log(proc.stdout, filehandles=[log_filehandle])
+        )
+        _, pending = await asyncio.wait(
+            [stderr_future, stdout_future]
+        )
+        exitcode = await proc.wait()
+        await asyncio.wait([stdout_future, stderr_future])
+    log.info("{} in {} exited {}".format(log_cmd, cwd, exitcode))
+    return exitcode
