@@ -29,3 +29,7 @@ class FailedSubprocess(TaskError):
         super(FailedSubprocess, self).__init__(
             msg, exit_code=STATUSES['internal-error']
         )
+
+
+class UnknownAppDir(TaskError):
+    """There is no single app dir found for an app"""

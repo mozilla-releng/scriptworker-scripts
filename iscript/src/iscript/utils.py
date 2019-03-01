@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 """Utility functions."""
 import asyncio
-from asyncio.subprocess import DEVNULL, PIPE, STDOUT
 import logging
 import os
 import zipfile
 
 from scriptworker_client.utils import (
-    makedirs,
-    rm,
     run_command,
 )
 from iscript.exceptions import IScriptError
@@ -43,7 +40,6 @@ async def extract_tarfile(from_, parent_dir):
     """
     tar_exe = 'tar'
     try:
-        files = []
         await run_command(
             [tar_exe, 'xvf', from_], cwd=parent_dir
         )
@@ -61,15 +57,25 @@ def _owner_filter(tarinfo_obj):
     return tarinfo_obj
 
 
-# _create_tarfile {{{1
-async def _create_tarfile(to, files, compression, top_dir):
-    compression = _get_tarfile_compression(compression)
-    try:
-        log.info("Creating tarfile {}...".format(to))
-        with tarfile.open(to, mode='w:{}'.format(compression)) as t:
-            for f in files:
-                relpath = os.path.relpath(f, top_dir)
-                t.add(f, arcname=relpath, filter=_owner_filter)
-        return to
-    except Exception as e:
-        raise IScriptError(e)
+# raise_future_exceptions {{{1
+async def raise_future_exceptions(futures):
+    """Await a list of futures and raise any exceptions.
+
+    Args:
+        futures (list): the futures to await
+
+    Raises:
+        Exception: on error
+
+    Returns:
+        list: the results from the futures
+
+    """
+    await asyncio.wait(futures)
+    results = []
+    for fut in futures:
+        exc = fut.exception()
+        if exc:
+            raise exc
+        results.append(fut.result())
+    return results
