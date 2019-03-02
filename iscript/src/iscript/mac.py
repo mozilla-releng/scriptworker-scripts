@@ -9,10 +9,14 @@ import os
 from scriptworker_client.utils import (
     extract_tarball,
     get_artifact_path,
+    list_files,
     makedirs,
-    raise_future_exceptions,
     rm,
     run_command,
+)
+from iscript.utils import (
+    raise_future_exceptions,
+    semaphore_wrapper,
 )
 from iscript.exceptions import IScriptError, UnknownAppDir
 
@@ -59,17 +63,31 @@ async def sign(config, app, key, entitlements_path):
         ['xattr', '-cr', app.app_path], cwd=app.parent_dir,
         exception=IScriptError
     )
-    await run_command(
-        [
-            'codesign', '--force', '-o', 'runtime', '--verbose',
-            '--sign', key_config['identity'], '--entitlements',
-            entitlements_path
-        ],
-        cwd=app.parent_dir, exception=IScriptError
-    )
-    # find "$BUNDLE" -type f -exec \
-    #    codesign --force -o runtime --verbose --sign "$IDENTITY" \
-    #    --entitlements ${ENTITLEMENTS_FILE} {} \;
+    initial_files = []
+    for path in INITIAL_FILES_TO_SIGN:
+        initial_files.extend(glob(os.path.join(app.app_path, path)))
+    futures = []
+    semaphore = asyncio.Semaphore(10)
+    for path in initial_files:
+        futures.append(asyncio.ensure_future(
+            semaphore_wrapper(
+                semaphore,
+                run_command,
+                [
+                    'codesign', '--force', '-o', 'runtime', '--verbose',
+                    '--sign', key_config['identity'], '--entitlements',
+                    entitlements_path
+                ],
+                cwd=app.parent_dir, exception=IScriptError
+            )
+        ))
+    await raise_future_exceptions(futures)
+    for path in list_files(app.app_path):
+        pass
+        # skip if initial files?
+        # semaphore sign
+        # codesign --force -o runtime --verbose --sign "$IDENTITY" \
+        # --entitlements ${ENTITLEMENTS_FILE} $path
     # codesign --force -o runtime --verbose --sign "$IDENTITY" \
     #   --entitlements ${ENTITLEMENTS_FILE} "$BUNDLE"
     # codesign -vvv --deep --strict "$BUNDLE"

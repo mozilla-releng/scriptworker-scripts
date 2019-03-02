@@ -79,3 +79,29 @@ async def raise_future_exceptions(futures):
             raise exc
         results.append(fut.result())
     return results
+
+
+async def semaphore_wrapper(semaphore, action, *args, **kwargs):
+    """Wrap an async function with semaphores.
+
+    Usage::
+
+        semaphore = asyncio.Semaphore(10)  # max 10 concurrent
+        futures = []
+        futures.append(asyncio.ensure_future(
+            semaphore, do_something, arg1, arg2, kwarg1='foo'
+        ))
+        await raise_future_exceptions(futures)
+
+    Args:
+        semaphore (asyncio.Semaphore): the semaphore to wrap the action with
+        action (callable): an asyncio coroutine
+        *args: the args to send to the coroutine
+        **kwargs: the kwargs to send to the coroutine
+
+    Returns:
+        the result of ``action``.
+
+    """
+    async with semaphore:
+        return await action(*args, **kwargs)

@@ -163,7 +163,7 @@ def to_unicode(line):
 
 
 # pipe_to_log {{{1
-async def pipe_to_log(pipe, filehandles=(), level=logging.DEBUG):
+async def pipe_to_log(pipe, filehandles=(), level=logging.INFO):
     """Log from a subprocess PIPE.
 
     Lifted from ``scriptworker.log.pipe_to_log``
@@ -250,3 +250,29 @@ async def run_command(cmd, log_path, log_cmd=None, cwd=None, exception=None,
         raise exception("{} in {} exited {}!".format(log_cmd, cwd, exitcode))
     log.info("{} in {} exited {}".format(log_cmd, cwd, exitcode))
     return exitcode
+
+
+# list_files {{{1
+def list_files(path, ignore=None):
+    """Recursively list the files in a directory.
+
+    Args:
+        path (str): the top directory
+        ignore (list): the directory or file names to ignore. If ``None``,
+            use ``('.', '..')``. Defaults to ``None``.
+
+    Yields:
+        iterable: the paths to the files
+
+    """
+    if ignore is None:
+        ignore = ('.', '..')
+    with os.scandir(path) as it:
+        for entry in it:
+            if entry.name in ignore:
+                continue
+            if entry.is_file():
+                yield os.path.join(path, entry.name)
+            elif entry.is_dir():
+                for file_ in list_files(os.path.join(path, entry.name)):
+                    yield file_
