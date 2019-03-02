@@ -12,22 +12,23 @@ from scriptworker_client.utils import (
     makedirs,
     raise_future_exceptions,
     rm,
+    run_command,
 )
-from iscript.exceptions import IScriptError
+from iscript.exceptions import IScriptError, UnknownAppDir
 
 log = logging.getLogger(__name__)
 
 
 INITIAL_FILES_TO_SIGN = (
-    "Contents/MacOS/XUL",
-    "Contents/MacOS/pingsender",
-    "Contents/MacOS/*.dylib",
-    "Contents/MacOS/crashreporter.app/Contents/MacOS/minidump-analyzer",
-    "Contents/MacOS/crashreporter.app/Contents/MacOS/crashreporter",
-    "Contents/MacOS/firefox-bin",
-    "Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container",
-    "Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater",
-    "Contents/MacOS/firefox",
+    'Contents/MacOS/XUL',
+    'Contents/MacOS/pingsender',
+    'Contents/MacOS/*.dylib',
+    'Contents/MacOS/crashreporter.app/Contents/MacOS/minidump-analyzer',
+    'Contents/MacOS/crashreporter.app/Contents/MacOS/crashreporter',
+    'Contents/MacOS/firefox-bin',
+    'Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container',
+    'Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater',
+    'Contents/MacOS/firefox',
 )
 
 
@@ -40,19 +41,32 @@ class App(object):
 
 
 async def sign(config, app, key, entitlements_path):
-    """Extract the .app from a tarfile and sign it.
+    """Sign the .app.
 
     Args:
         config (dict): the running config
         from_ (str): the tarfile path
         parent_dir (str): the top level directory to extract the app into
         key (str): the nick of the key to use to sign with
+
+    Raises:
+        IScriptError: on error.
+
     """
     key_config = get_key_config(config, key)
     app.app_path = get_app_dir(app.parent_dir)
-    # xattr -cr app.app_path
-    # codesign --force -o runtime --verbose --sign $IDENTITY
-    #    --entitlements entitlements_path
+    await run_command(
+        ['xattr', '-cr', app.app_path], cwd=app.parent_dir,
+        exception=IScriptError
+    )
+    await run_command(
+        [
+            'codesign', '--force', '-o', 'runtime', '--verbose',
+            '--sign', key_config['identity'], '--entitlements',
+            entitlements_path
+        ],
+        cwd=app.parent_dir, exception=IScriptError
+    )
     # find "$BUNDLE" -type f -exec \
     #    codesign --force -o runtime --verbose --sign "$IDENTITY" \
     #    --entitlements ${ENTITLEMENTS_FILE} {} \;
@@ -60,11 +74,11 @@ async def sign(config, app, key, entitlements_path):
     #   --entitlements ${ENTITLEMENTS_FILE} "$BUNDLE"
     # codesign -vvv --deep --strict "$BUNDLE"
 
-    # return app_path
-
 
 def get_app_dir(parent_dir):
     """Get the .app directory in a ``parent_dir``.
+
+    This assumes there is one, and only one, .app directory in ``parent_dir``.
 
     Args:
         parent_dir (str): the parent directory path
@@ -73,7 +87,12 @@ def get_app_dir(parent_dir):
         UnknownAppDir: if there is no single app dir
 
     """
-    pass
+    apps = glob('{}/*.app'.format(parent_dir))
+    if len(apps) != 1:
+        raise UnknownAppDir("Can't find a single .app in {}: {}".format(
+            parent_dir, apps
+        ))
+    return apps[0]
 
 
 def get_key_config(config, key, config_key='mac_config'):
@@ -94,7 +113,7 @@ def get_key_config(config, key, config_key='mac_config'):
     try:
         return config[config_key][key]
     except KeyError as e:
-        raise IScriptError("Unknown key config {} {}: {}".format(config_key, key, e))
+        raise IScriptError('Unknown key config {} {}: {}'.format(config_key, key, e))
 
 
 async def sign_and_notarize_all(config, task):

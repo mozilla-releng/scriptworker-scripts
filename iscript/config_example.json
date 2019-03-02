@@ -8,6 +8,7 @@
         "dep": {
             "notarize_type": "multi_account",
             "signing_keychain": "dep.keychain",
+            "identity": "...",
             "keychain_password": "..."
         }
     }

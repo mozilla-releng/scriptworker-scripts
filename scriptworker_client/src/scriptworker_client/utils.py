@@ -187,7 +187,8 @@ async def pipe_to_log(pipe, filehandles=(), level=logging.DEBUG):
 
 
 # run_command {{{1
-async def run_command(cmd, log_path, log_cmd=None, cwd=None):
+async def run_command(cmd, log_path, log_cmd=None, cwd=None, exception=None,
+                      expected_exit_codes=(0, )):
     """Run a command using ``asyncio.create_subprocess_exec``.
 
     This logs to `log_path` and returns the exit code.
@@ -210,6 +211,12 @@ async def run_command(cmd, log_path, log_cmd=None, cwd=None):
             Defaults to ``None``.
         cwd (str, optional): the directory to run the command in. If ``None``,
             use ``os.getcwd()``. Defaults to ``None``.
+        exception (Exception, optional): the exception to raise if the exit
+            code isn't in ``expected_exit_codes``. If ``None``, don't raise.
+            Defaults to ``None``.
+        expected_exit_codes (list, optional): the list of exit codes for
+            a successful run. Only used if ``exception`` is not ``None``.
+            Defaults to ``(0, )``.
 
     Returns:
         int: the exit code of the command
@@ -239,5 +246,7 @@ async def run_command(cmd, log_path, log_cmd=None, cwd=None):
         )
         exitcode = await proc.wait()
         await asyncio.wait([stdout_future, stderr_future])
+    if exception and exitcode not in expected_exit_codes:
+        raise exception("{} in {} exited {}!".format(log_cmd, cwd, exitcode))
     log.info("{} in {} exited {}".format(log_cmd, cwd, exitcode))
     return exitcode
