@@ -63,9 +63,12 @@ async def sign(config, app, key, entitlements_path):
         ['xattr', '-cr', app.app_path], cwd=app.parent_dir,
         exception=IScriptError
     )
+    # find initial files from INITIAL_FILES_TO_SIGN globs
     initial_files = []
     for path in INITIAL_FILES_TO_SIGN:
         initial_files.extend(glob(os.path.join(app.app_path, path)))
+
+    # sign initial files
     futures = []
     semaphore = asyncio.Semaphore(10)
     for path in initial_files:
@@ -76,21 +79,49 @@ async def sign(config, app, key, entitlements_path):
                 [
                     'codesign', '--force', '-o', 'runtime', '--verbose',
                     '--sign', key_config['identity'], '--entitlements',
-                    entitlements_path
+                    entitlements_path, path
                 ],
                 cwd=app.parent_dir, exception=IScriptError
             )
         ))
     await raise_future_exceptions(futures)
+
+    # sign everything
+    futures = []
     for path in list_files(app.app_path):
-        pass
-        # skip if initial files?
-        # semaphore sign
-        # codesign --force -o runtime --verbose --sign "$IDENTITY" \
-        # --entitlements ${ENTITLEMENTS_FILE} $path
-    # codesign --force -o runtime --verbose --sign "$IDENTITY" \
-    #   --entitlements ${ENTITLEMENTS_FILE} "$BUNDLE"
-    # codesign -vvv --deep --strict "$BUNDLE"
+        if path in initial_files:
+            continue
+        futures.append(
+            semaphore_wrapper(
+                semaphore,
+                run_command,
+                [
+                    'codesign', '--force', '-o', 'runtime', '--verbose',
+                    '--sign', key_config['identity'], '--entitlements',
+                    entitlements_path, path
+                ],
+                cwd=app.parent_dir, exception=IScriptError
+            )
+        )
+    await raise_future_exceptions(futures)
+
+    # sign bundle
+    await run_command(
+        [
+            'codesign', '--force', '-o', 'runtime', '--verbose',
+            '--sign', key_config['identity'], '--entitlements',
+            entitlements_path, app.app_path
+        ],
+        cwd=app.parent_dir, exception=IScriptError
+    )
+
+    # verify bundle
+    await run_command(
+        [
+            'codesign', '-vvv', '--deep', '--strict', app.app_path
+        ]
+        cwd=app.parent_dir, exception=IScriptError
+    )
 
 
 def get_app_dir(parent_dir):
@@ -190,6 +221,7 @@ async def sign_and_notarize_all(config, task):
 
         for app in all_paths:
             # notarize, concurrent across `notary_accounts`
+            # sudo
             pass
 
         for app in all_paths:
