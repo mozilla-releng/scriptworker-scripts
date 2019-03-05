@@ -2,8 +2,6 @@
 """Utility functions."""
 import asyncio
 import logging
-import os
-import zipfile
 
 from scriptworker_client.utils import (
     run_command,

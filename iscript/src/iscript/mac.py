@@ -44,6 +44,7 @@ class App(object):
     parent_dir = attr.ib(default='')
     app_path = attr.ib(default='')
     zip_path = attr.ib(default='')
+    notary_log_path = attr.ib(default='')
 
 
 # sign {{{1
@@ -224,6 +225,50 @@ def get_app_paths(config, task):
     return all_paths
 
 
+# extract_all {{{1
+async def extract_all_apps(work_dir, all_paths):
+    """Extract all the apps into their own directories.
+
+    Args:
+        work_dir (str): the ``work_dir`` path
+        all_paths (list): a list of ``App`` objects with their ``orig_path`` set
+
+    Raises:
+        IScriptError: on failure
+
+    """
+    futures = []
+    for counter, app in enumerate(all_paths):
+        app.parent_dir = os.path.join(work_dir, str(counter))
+        rm(app.parent_dir)
+        makedirs(app.parent_dir)
+        futures.append(asyncio.ensure_future(
+            extract_tarball(app.orig_path, app.parent_dir)
+        ))
+    await raise_future_exceptions(futures)
+
+
+async def sign_all_apps(key_config, entitlements_path, all_paths):
+    """Sign all the apps.
+
+    Args:
+        key_config (dict): the config for this signing key
+        entitlements_path (str): the path to the entitlements file, used
+            for signing
+        all_paths (list): the list of ``App`` objects
+
+    Raises:
+        IScriptError: on failure
+
+    """
+    futures = []
+    for app in all_paths:
+        futures.append(asyncio.ensure_future(
+            sign(key_config, app, entitlements_path)
+        ))
+    await raise_future_exceptions(futures)
+
+
 # sign_and_notarize_all {{{1
 async def sign_and_notarize_all(config, task):
     """Sign and notarize all mac apps for this task.
@@ -245,30 +290,14 @@ async def sign_and_notarize_all(config, task):
     key_config = get_key_config(config, key)
 
     all_paths = get_app_paths(config, task)
-
-    # extract
-    futures = []
-    for counter, app in enumerate(all_paths):
-        app.parent_dir = os.path.join(work_dir, str(counter))
-        rm(app.parent_dir)
-        makedirs(app.parent_dir)
-        futures.append(asyncio.ensure_future(
-            extract_tarball(app.orig_path, app.parent_dir)
-        ))
-    await raise_future_exceptions(futures)
-
-    # sign
+    await extract_all_apps(work_dir, all_paths)
     await unlock_keychain(key_config['signing_keychain'], key_config['keychain_password'])
-    futures = []
-    for app in all_paths:
-        futures.append(asyncio.ensure_future(
-            sign(key_config, app, entitlements_path)
-        ))
-    await raise_future_exceptions(futures)
+    await sign_all_apps(key_config, entitlements_path, all_paths)
 
-    poll_uuids = []
+    # poll_uuids = []
     if key_config['notarize_type'] == 'multi_account':
         futures = []
+        # zip up apps
         for app in all_paths:
             app.zip_path = os.path.join(
                 app.parent_dir, "{}.zip".format(os.path.basename(app.parent_dir))
@@ -281,7 +310,9 @@ async def sign_and_notarize_all(config, task):
             ))
         await raise_future_exceptions(futures)
 
+        # notarize apps
         for app in all_paths:
+            app.notary_log_path = os.path.join(app.parent_dir, 'notary.log')
             # notarize, concurrent across `local_notarization_accounts`
             # sudo
             pass
