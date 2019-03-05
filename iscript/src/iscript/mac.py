@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Signingscript task functions."""
+"""iscript mac signing/notarization functions."""
 import asyncio
 import attr
 from glob import glob
