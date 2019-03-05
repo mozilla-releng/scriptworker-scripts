@@ -7,10 +7,12 @@ Attributes:
 """
 import asyncio
 from asyncio.process import PIPE
+from contextlib import contextmanager
 import json
 import logging
 import os
 import re
+import tempfile
 from urllib.parse import unquote, urlparse
 import yaml
 from scriptworker_client.exceptions import TaskError
@@ -186,8 +188,25 @@ async def pipe_to_log(pipe, filehandles=(), level=logging.INFO):
             break
 
 
+# get_log_filehandle {{{1
+@contextmanager
+def get_log_filehandle(log_path=None):
+    """Open a log filehandle.
+
+    Args:
+        log_path (str, optional): the path to log to. If ``None``, create
+            a temp file to log to, and delete once we exit the context.
+            Defaults to ``None``.
+    """
+    if log_path is not None:
+        with open(log_path, 'w') as log_filehandle:
+            yield log_filehandle
+    else:
+        with tempfile.TemporaryFile(mode='w') as log_filehandle:
+
+
 # run_command {{{1
-async def run_command(cmd, log_path, log_cmd=None, cwd=None, exception=None,
+async def run_command(cmd, log_path=None, log_cmd=None, cwd=None, exception=None,
                       expected_exit_codes=(0, )):
     """Run a command using ``asyncio.create_subprocess_exec``.
 
@@ -204,8 +223,10 @@ async def run_command(cmd, log_path, log_cmd=None, cwd=None, exception=None,
 
     Args:
         cmd (list): the command to run.
-        log_path (str): the path to the file to write output to. This file
-            will be overwritten. The directory should already exist.
+        log_path (str, optional): the path to the file to write output to.
+            This file will be overwritten. The directory should already exist.
+            If ``None``, create a temp file to log to that will be deleted
+            after the command is complete. Defaults to ``None``.
         log_cmd (str, optional): the command to log. Set this if there is
             sensitive information in ``cmd``. If ``None``, defaults to ``cmd``.
             Defaults to ``None``.
@@ -234,7 +255,7 @@ async def run_command(cmd, log_path, log_cmd=None, cwd=None, exception=None,
         'cwd': cwd,
     }
     proc = await asyncio.create_subprocess_exec(*cmd, **kwargs)
-    with open(log_path, 'w') as log_filehandle:
+    with get_log_filehandle(log_path=log_path) as log_filehandle:
         stderr_future = asyncio.ensure_future(
             pipe_to_log(proc.stderr, filehandles=[log_filehandle])
         )

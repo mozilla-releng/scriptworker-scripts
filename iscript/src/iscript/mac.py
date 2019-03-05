@@ -5,6 +5,7 @@ import attr
 from glob import glob
 import logging
 import os
+import pexpect
 
 from scriptworker_client.utils import (
     extract_tarball,
@@ -15,6 +16,7 @@ from scriptworker_client.utils import (
     run_command,
 )
 from iscript.utils import (
+    create_zipfile,
     raise_future_exceptions,
     semaphore_wrapper,
 )
@@ -124,6 +126,36 @@ async def sign(config, app, key, entitlements_path):
     )
 
 
+async def unlock_keychain(signing_keychain, keychain_password):
+    """Unlock the signing keychain.
+
+    Args:
+        signing_keychain (str): the path to the signing keychain
+        keychain_password (str): the keychain password
+
+    Raises:
+        IScriptError: on timeout or failure
+
+    """
+    child = pexpect.spawn('security', ['unlock-keychain', signing_keychain], encoding='utf-8')
+    try:
+        while True:
+            index = child.expect([pexpect.EOF, r"password to unlock.*: "], async_=True)
+            if index == 0:
+                break
+            child.sendline(b'keychain_password')
+    except (pexpect.exceptions.TIMEOUT) as exc:
+        raise IScriptError("Timeout trying to unlock the keychain {}: {}!".format(signing_keychain, exc))
+    child.close()
+    if child.exitstatus != 0 or child.signalstatus is not None:
+        raise IScriptError(
+            "Failed unlocking {}! exit {} signal {}".format(
+                signing_keychain, child.exitstatus, child.signalstatus
+            )
+        )
+
+
+
 def get_app_dir(parent_dir):
     """Get the .app directory in a ``parent_dir``.
 
@@ -194,7 +226,7 @@ async def sign_and_notarize_all(config, task):
             all_paths.append(App(orig_path=orig_path))
 
     # extract
-    for counter, app in all_paths:
+    for counter, app in enumerate(all_paths):
         app.parent_dir = os.path.join(work_dir, str(counter))
         rm(app.parent_dir)
         makedirs(app.parent_dir)
@@ -204,7 +236,7 @@ async def sign_and_notarize_all(config, task):
     await raise_future_exceptions(futures)
 
     # sign
-    # TODO unlock keychain using key_config['signing_keychain'] and key_config['keychain_password']
+    await unlock_keychain(key_config['signing_keychain'], key_config['keychain_password'])
     futures = []
     for app in all_paths:
         futures.append(asyncio.ensure_future(
@@ -212,11 +244,18 @@ async def sign_and_notarize_all(config, task):
         ))
     await raise_future_exceptions(futures)
 
+    poll_uuids = []
     if key_config['notarize_type'] == 'multi_account':
         futures = []
         for app in all_paths:
+            app.zip_path = os.path.join(
+                app.parent_dir, "{}.zip".format(os.path.basename(app.parent_dir))
+            )
             # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
-            pass
+            futures.append(asyncio.ensure_future(
+                create_zipfile(
+                )
+            )
         await raise_future_exceptions(futures)
 
         for app in all_paths:
@@ -224,10 +263,11 @@ async def sign_and_notarize_all(config, task):
             # sudo
             pass
 
-        for app in all_paths:
-            pass
-            # poll
+    for app in all_paths:
+        pass
+        # poll
 
+    if key_config['notarize_type'] == 'multi_account':
         for app in all_paths:
             # staple
             pass
