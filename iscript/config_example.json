@@ -3,13 +3,15 @@
     "artifact_dir": "/tmp/artifact_dir",
     "taskcluster_scope_prefixes": ["project:releng:signing:"],
     "verbose": true,
-    "notarization_accounts": ["account1"],
+    "local_notarization_accounts": ["account1"],
     "mac_config": {
         "dep": {
             "notarize_type": "multi_account",
             "signing_keychain": "dep.keychain",
             "identity": "...",
             "keychain_password": "..."
+            "apple_notarization_account": "...",
+            "apple_notarization_password": "..."
         }
     }
 }

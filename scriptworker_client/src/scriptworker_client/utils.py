@@ -203,6 +203,7 @@ def get_log_filehandle(log_path=None):
             yield log_filehandle
     else:
         with tempfile.TemporaryFile(mode='w') as log_filehandle:
+            yield log_filehandle
 
 
 # run_command {{{1

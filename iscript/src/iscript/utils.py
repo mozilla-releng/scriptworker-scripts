@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 # create_zipfile {{{1
-async def create_zipfile(to, files, top_dir, mode='w'):
+async def create_zipfile(to, files, top_dir):
     """Create a zipfile.
 
     Args:
@@ -30,13 +30,8 @@ async def create_zipfile(to, files, top_dir, mode='w'):
     try:
         log.info("Creating zipfile {}...".format(to))
         await run_command(
-            ["zip", to, *files],
-            cwd=top_dir,
+            ["zip", to, *files], cwd=top_dir, exception=IScriptError
         )
-        with zipfile.ZipFile(to, mode=mode, compression=zipfile.ZIP_DEFLATED) as z:
-            for f in files:
-                relpath = os.path.relpath(f, top_dir)
-                z.write(f, arcname=relpath)
         return to
     except Exception as e:
         raise IScriptError(e)

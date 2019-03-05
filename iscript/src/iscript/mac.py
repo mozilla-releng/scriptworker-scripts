@@ -46,6 +46,7 @@ class App(object):
     zip_path = attr.ib(default='')
 
 
+# sign {{{1
 async def sign(config, app, key, entitlements_path):
     """Sign the .app.
 
@@ -121,11 +122,12 @@ async def sign(config, app, key, entitlements_path):
     await run_command(
         [
             'codesign', '-vvv', '--deep', '--strict', app.app_path
-        ]
+        ],
         cwd=app.parent_dir, exception=IScriptError
     )
 
 
+# unlock_keychain {{{1
 async def unlock_keychain(signing_keychain, keychain_password):
     """Unlock the signing keychain.
 
@@ -155,7 +157,7 @@ async def unlock_keychain(signing_keychain, keychain_password):
         )
 
 
-
+# get_app_dir {{{1
 def get_app_dir(parent_dir):
     """Get the .app directory in a ``parent_dir``.
 
@@ -176,6 +178,7 @@ def get_app_dir(parent_dir):
     return apps[0]
 
 
+# get_key_config {{{1
 def get_key_config(config, key, config_key='mac_config'):
     """Get the key subconfig from ``config``.
 
@@ -197,6 +200,31 @@ def get_key_config(config, key, config_key='mac_config'):
         raise IScriptError('Unknown key config {} {}: {}'.format(config_key, key, e))
 
 
+# get_app_paths {{{1
+def get_app_paths(config, task):
+    """Create a list of ``App`` objects from the task.
+
+    These will have their ``orig_path`` set.
+
+    Args:
+        config (dict): the running config
+        task (dict): the running task
+
+    Returns:
+        list: a list of App objects
+
+    """
+    all_paths = []
+    for upstream_artifact_info in task['payload']['upstreamArtifacts']:
+        for subpath in upstream_artifact_info['paths']:
+            orig_path = get_artifact_path(
+                upstream_artifact_info['taskId'], subpath, work_dir=config['work_dir'],
+            )
+            all_paths.append(App(orig_path=orig_path))
+    return all_paths
+
+
+# sign_and_notarize_all {{{1
 async def sign_and_notarize_all(config, task):
     """Sign and notarize all mac apps for this task.
 
@@ -216,16 +244,10 @@ async def sign_and_notarize_all(config, task):
     key = 'dep'
     key_config = get_key_config(config, key)
 
-    all_paths = []
-    futures = []
-    for upstream_artifact_info in task['payload']['upstreamArtifacts']:
-        for subpath in upstream_artifact_info['paths']:
-            orig_path = get_artifact_path(
-                upstream_artifact_info['taskId'], subpath, work_dir=config['work_dir'],
-            )
-            all_paths.append(App(orig_path=orig_path))
+    all_paths = get_app_paths(config, task)
 
     # extract
+    futures = []
     for counter, app in enumerate(all_paths):
         app.parent_dir = os.path.join(work_dir, str(counter))
         rm(app.parent_dir)
@@ -254,12 +276,13 @@ async def sign_and_notarize_all(config, task):
             # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
             futures.append(asyncio.ensure_future(
                 create_zipfile(
+                    app.zip_path, app.app_path, app.parent_dir,
                 )
-            )
+            ))
         await raise_future_exceptions(futures)
 
         for app in all_paths:
-            # notarize, concurrent across `notary_accounts`
+            # notarize, concurrent across `local_notarization_accounts`
             # sudo
             pass
 
