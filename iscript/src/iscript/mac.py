@@ -46,6 +46,20 @@ class App(object):
     zip_path = attr.ib(default='')
     notary_log_path = attr.ib(default='')
 
+    def check_required_attrs(required_attrs):
+        """Make sure the ``required_attrs`` are set.
+
+        Args:
+            required_attrs (list): list of attribute strings
+
+        Raises:
+            IScriptError: on missing attr
+
+        """
+        for att in required_attrs:
+            if not hasattr(app, att) or not getattr(app, att):
+                raise IScriptError('Missing {} attr!'.format(a))
+
 
 # sign {{{1
 async def sign(config, app, key, entitlements_path):
@@ -239,11 +253,39 @@ async def extract_all_apps(work_dir, all_paths):
     """
     futures = []
     for counter, app in enumerate(all_paths):
+        app.check_required_attrs(['orig_path'])
         app.parent_dir = os.path.join(work_dir, str(counter))
         rm(app.parent_dir)
         makedirs(app.parent_dir)
         futures.append(asyncio.ensure_future(
             extract_tarball(app.orig_path, app.parent_dir)
+        ))
+    await raise_future_exceptions(futures)
+
+
+async def create_all_app_zipfiles(all_paths):
+    """Create notarization zipfiles for all the apps.
+
+    Args:
+        all_paths (list): list of ``App`` objects
+
+    Raises:
+        IScriptError: on failure
+
+    """
+    futures = []
+    required_attrs = ['parent_dir', 'zip_path', 'app_path']
+    # zip up apps
+    for app in all_paths:
+        app.check_required_attrs(required_attrs)
+        app.zip_path = os.path.join(
+            app.parent_dir, "{}.zip".format(os.path.basename(app.parent_dir))
+        )
+        # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
+        futures.append(asyncio.ensure_future(
+            create_zipfile(
+                app.zip_path, app.app_path, app.parent_dir,
+            )
         ))
     await raise_future_exceptions(futures)
 
@@ -296,25 +338,17 @@ async def sign_and_notarize_all(config, task):
 
     # poll_uuids = []
     if key_config['notarize_type'] == 'multi_account':
-        futures = []
-        # zip up apps
-        for app in all_paths:
-            app.zip_path = os.path.join(
-                app.parent_dir, "{}.zip".format(os.path.basename(app.parent_dir))
-            )
-            # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
-            futures.append(asyncio.ensure_future(
-                create_zipfile(
-                    app.zip_path, app.app_path, app.parent_dir,
-                )
-            ))
-        await raise_future_exceptions(futures)
+        await create_all_app_zipfiles(all_paths)
 
         # notarize apps
         for app in all_paths:
             app.notary_log_path = os.path.join(app.parent_dir, 'notary.log')
             # notarize, concurrent across `local_notarization_accounts`
-            # sudo
+            # need a helper function to wrap in sudo with a pool of accts
+
+            # sudo user xcrun altool --notarize-app -f app.zip_path
+            # --primary-bundle-id BUNDLEID -u key_config['apple_notarization_account']
+            # --password key_config['apple_notarization_password']
             pass
 
     for app in all_paths:
