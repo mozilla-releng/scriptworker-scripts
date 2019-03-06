@@ -33,17 +33,12 @@ def mark_as_shipped_action(context):
     release_name = context.task['payload']['release_name']
 
     log.info('Marking the release as shipped ...')
-    ship_actions.mark_as_shipped(context.ship_it_instance_config,
-                                 release_name)
-
-
-def mark_as_shipped_v2_action(context):
-    """Action to perform is to tell Ship-it v2 API that a release can be marked
-    as shipped"""
-    release_name = context.task['payload']['release_name']
-
-    log.info('Marking the release as shipped ...')
-    ship_actions.mark_as_shipped_v2(context.ship_it_instance_config, release_name)
+    if 'api_root' in context.ship_it_instance_config:
+        ship_actions.mark_as_shipped(context.ship_it_instance_config,
+                                     release_name)
+    if 'api_root_v2' in context.ship_it_instance_config:
+        ship_actions.mark_as_shipped_v2(context.ship_it_instance_config,
+                                        release_name)
 
 
 def mark_as_started_action(context):
@@ -72,7 +67,6 @@ def mark_as_started_action(context):
 # ACTION_MAP {{{1
 ACTION_MAP = {
     'mark-as-shipped': mark_as_shipped_action,
-    'mark-as-shipped-v2': mark_as_shipped_v2_action,
     'mark-as-started': mark_as_started_action,
 }
 

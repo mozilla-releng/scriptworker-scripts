@@ -19,10 +19,8 @@ assert context  # silence pyflakes
     (('project:releng:ship-it:server:dev', 'project:releng:ship-it:server:production',), 'server', True),
     (('some:random:scope',), 'server', True),
     (('project:releng:ship-it:action:mark-as-shipped',), 'action', False),
-    (('project:releng:ship-it:action:mark-as-shipped-v2',), 'action', False),
     (('project:releng:ship-it:action:mark-as-started',), 'action', False),
     (('project:releng:ship-it:action:mark-as-shipped', 'project:releng:ship-it:action:mark-as-started'), 'action', True),
-    (('project:releng:ship-it:action:mark-as-shipped-v2', 'project:releng:ship-it:action:mark-as-started'), 'action', True),
     (('some:random:scope',), 'action', True),
 ))
 def test_get_scope(context, scopes, sufix, raises):
@@ -90,31 +88,12 @@ def test_fail_get_ship_it_instance_config_from_scope(context, scope):
         ],
     }, False),
     ({
-        'dependencies': ['someTaskId'],
-        'payload': {
-            'release_name': 'Firefox-59.0b3-build1'
-        },
-        'scopes': [
-            'project:releng:ship-it:server:dev',
-            'project:releng:ship-it:action:mark-as-shipped-v2',
-        ],
-    }, False),
-    ({
         'payload': {
             'release_name': 'Firefox-59.0b3-build1'
         },
         'scopes': [
             'project:releng:ship-it:server:dev',
             'project:releng:ship-it:action:mark-as-shipped',
-        ],
-    }, True),
-    ({
-        'payload': {
-            'release_name': 'Firefox-59.0b3-build1'
-        },
-        'scopes': [
-            'project:releng:ship-it:server:dev',
-            'project:releng:ship-it:action:mark-as-shipped-v2',
         ],
     }, True),
     ({
@@ -161,7 +140,6 @@ def test_validate_task(context, task, raises):
 @pytest.mark.parametrize('scopes,expected,raises', (
     (('project:releng:ship-it:action:mark-as-random'), None, True),
     (('project:releng:ship-it:action:mark-as-shipped'), 'mark-as-shipped', False),
-    (('project:releng:ship-it:action:mark-as-shipped-v2'), 'mark-as-shipped-v2', False),
     (('project:releng:ship-it:action:mark-as-started'), 'mark-as-started', False)
 ))
 def test_get_task_action(context, scopes, expected, raises):

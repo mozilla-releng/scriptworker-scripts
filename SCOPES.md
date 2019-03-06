@@ -13,11 +13,6 @@ Supported scope prefixes:
   * **Conflicts**: with any other `{scope_prefix}:action:*`
   * **Branch Restrictions**: `None`
 
-* `{scope_prefix}:action:mark-as-shipped-v2`
-  * Tells shipitscript to update Ship-it v2 by marking that release as `shipped`
-  * **Conflicts**: with any other `{scope_prefix}:action:*`
-  * **Branch Restrictions**: `None`
-
 * `{scope_prefix}:action:mark-as-started`
   * Tells shipitscript to update Ship-it by marking that release as `started`
   * **Conflicts**: with any other `{scope_prefix}:action:*`
