@@ -8,6 +8,7 @@
         "dep": {
             "notarize_type": "multi_account",
             "signing_keychain": "dep.keychain",
+            "base_bundle_id": "org.mozilla.firefox_dep",
             "identity": "...",
             "keychain_password": "..."
             "apple_notarization_account": "...",

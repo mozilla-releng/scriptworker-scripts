@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """iscript mac signing/notarization functions."""
+import arrow
 import asyncio
 import attr
 from glob import glob
@@ -46,7 +47,7 @@ class App(object):
     zip_path = attr.ib(default='')
     notary_log_path = attr.ib(default='')
 
-    def check_required_attrs(required_attrs):
+    def check_required_attrs(self, required_attrs):
         """Make sure the ``required_attrs`` are set.
 
         Args:
@@ -57,8 +58,8 @@ class App(object):
 
         """
         for att in required_attrs:
-            if not hasattr(app, att) or not getattr(app, att):
-                raise IScriptError('Missing {} attr!'.format(a))
+            if not hasattr(self, att) or not getattr(self, att):
+                raise IScriptError('Missing {} attr!'.format(att))
 
 
 # sign {{{1
@@ -263,6 +264,7 @@ async def extract_all_apps(work_dir, all_paths):
     await raise_future_exceptions(futures)
 
 
+# create_all_app_zipfiles {{{1
 async def create_all_app_zipfiles(all_paths):
     """Create notarization zipfiles for all the apps.
 
@@ -290,6 +292,7 @@ async def create_all_app_zipfiles(all_paths):
     await raise_future_exceptions(futures)
 
 
+# sign_all_apps {{{1
 async def sign_all_apps(key_config, entitlements_path, all_paths):
     """Sign all the apps.
 
@@ -309,6 +312,79 @@ async def sign_all_apps(key_config, entitlements_path, all_paths):
             sign(key_config, app, entitlements_path)
         ))
     await raise_future_exceptions(futures)
+
+
+# get_bundle_id {{{1
+def get_bundle_id(base_bundle_id):
+    """Get a bundle id for notarization
+
+    Args:
+        base_bundle_id (str): the base string to use for the bundle id
+
+    Returns:
+        str: the bundle id
+
+    """
+    now = arrow.utcnow()
+    # XXX we may want to encode more information in here. runId?
+    return "{}.{}.{}".format(
+        base_bundle_id,
+        os.environ.get('TASK_ID', 'None'),
+        "{}{}".format(now.timestamp, now.microsecond),
+    )
+
+
+async def wrap_notarization_with_sudo(config, key_config, all_paths):
+    """Wrap the notarization requests with sudo.
+
+    Apple creates a lockfile per user for notarization. To notarize concurrently,
+    we use sudo against a set of accounts (``config['local_notarization_accounts']``).
+
+    Raises:
+        IScriptError: on failure
+
+    Returns:
+        list of strings: the list of UUIDs
+
+    """
+    futures = []
+    accounts = config['local_notarization_accounts']
+    counter = 0
+    uuids = []
+
+    for app in all_paths:
+        app.check_required_attrs(['zip_path'])
+
+    while counter < len(all_paths):
+        futures = []
+        for account in accounts:
+            app = all_paths[counter]
+            app.notary_log_path = os.path.join(app.parent_dir, 'notary.log')
+            bundle_id = get_bundle_id(key_config['base_bundle_id'])
+            base_cmd = [
+                'sudo', '-u', account,
+                'xcrun', 'altool', '--notarize-app',
+                '-f', app.zip_path,
+                '--primary-bundle-id', bundle_id,
+                '-u', key_config['apple_notarization_account'],
+                '--password',
+            ]
+            log_cmd = base_cmd + ['********']
+            # TODO wrap in retry?
+            futures.append(asyncio.ensure_future(
+                run_command(
+                    base_cmd + [key_config['apple_notarization_password']],
+                    log_path=app.notary_log_path,
+                    log_cmd=log_cmd,
+                    exception=IScriptError,
+                )
+            ))
+            counter += 1
+            if counter >= len(all_paths):
+                break
+        await raise_future_exceptions(futures)
+    # TODO for each log_path, find the uuid and append
+    return uuids
 
 
 # sign_and_notarize_all {{{1
@@ -336,22 +412,11 @@ async def sign_and_notarize_all(config, task):
     await unlock_keychain(key_config['signing_keychain'], key_config['keychain_password'])
     await sign_all_apps(key_config, entitlements_path, all_paths)
 
-    # poll_uuids = []
     if key_config['notarize_type'] == 'multi_account':
         await create_all_app_zipfiles(all_paths)
+        poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths)
 
-        # notarize apps
-        for app in all_paths:
-            app.notary_log_path = os.path.join(app.parent_dir, 'notary.log')
-            # notarize, concurrent across `local_notarization_accounts`
-            # need a helper function to wrap in sudo with a pool of accts
-
-            # sudo user xcrun altool --notarize-app -f app.zip_path
-            # --primary-bundle-id BUNDLEID -u key_config['apple_notarization_account']
-            # --password key_config['apple_notarization_password']
-            pass
-
-    for app in all_paths:
+    for uuid in poll_uuids:
         pass
         # poll
 
