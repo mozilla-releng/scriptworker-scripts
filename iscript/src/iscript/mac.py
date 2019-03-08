@@ -7,6 +7,7 @@ from glob import glob
 import logging
 import os
 import pexpect
+import tempfile
 
 from scriptworker_client.utils import (
     extract_tarball,
@@ -21,7 +22,12 @@ from iscript.utils import (
     raise_future_exceptions,
     semaphore_wrapper,
 )
-from iscript.exceptions import IScriptError, UnknownAppDir
+from iscript.exceptions import (
+    InvalidNotarization,
+    IScriptError,
+    TimeoutError,
+    UnknownAppDir,
+)
 
 log = logging.getLogger(__name__)
 
@@ -152,7 +158,8 @@ async def unlock_keychain(signing_keychain, keychain_password):
         keychain_password (str): the keychain password
 
     Raises:
-        IScriptError: on timeout or failure
+        IScriptError: on failure
+        TimeoutFailure: on timeout
 
     """
     child = pexpect.spawn('security', ['unlock-keychain', signing_keychain], encoding='utf-8')
@@ -163,7 +170,7 @@ async def unlock_keychain(signing_keychain, keychain_password):
                 break
             child.sendline(b'keychain_password')
     except (pexpect.exceptions.TIMEOUT) as exc:
-        raise IScriptError("Timeout trying to unlock the keychain {}: {}!".format(signing_keychain, exc))
+        raise TimeoutError("Timeout trying to unlock the keychain {}: {}!".format(signing_keychain, exc))
     child.close()
     if child.exitstatus != 0 or child.signalstatus is not None:
         raise IScriptError(
@@ -410,6 +417,42 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
     for app in all_paths:
         uuids.append(get_uuid_from_log(app.notarization_log_path))
     return uuids
+
+
+# poll_notarization_uuid {{{1
+async def poll_notarization_uuid(uuid, user, pass, timeout, log_path, sleep_time=15):
+    """Poll to see if the notarization for ``uuid`` is complete.
+
+    Args:
+        uuid (str): the uuid to poll for
+        user (str): the apple user to poll with
+        pass (str): the apple password to poll with
+        timeout (int): the maximum wait time
+        sleep_time (int): the time to sleep between polling
+
+    Raises:
+        TimeoutError: on timeout
+        InvalidNotarization: if the notarization fails with ``invalid``
+        IScriptError: on unexpected failure
+
+    """
+    start = arrow.utcnow().timestamp
+    timeout_time = start + timeout
+    base_cmd = ['xcrun', 'altool', '--notarization-info', uuid, '-u', user, '--password']
+    log_cmd = base_cmd + ['********']
+    while 1:
+        await run_command(
+            base_cmd + [pass], log_path=log_path, log_cmd=log_cmd,
+            exception=IScriptError,
+        )
+        # TODO look at log_path for status
+        status = ''
+        if status == 'success':
+            break
+        if status == 'invalid':
+            raise InvalidNotarization('Invalid notarization for uuid {}!'.format(uuid))
+        if arrow.utcnow().timestamp > timeout_time:
+            raise TimeoutError("Timed out polling for uuid {}!".format(uuid))
 
 
 # sign_and_notarize_all {{{1

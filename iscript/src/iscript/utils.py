@@ -6,7 +6,7 @@ import logging
 from scriptworker_client.utils import (
     run_command,
 )
-from iscript.exceptions import IScriptError
+from iscript.exceptions import IScriptError, TimeoutError
 
 log = logging.getLogger(__name__)
 
@@ -56,11 +56,13 @@ async def extract_tarfile(from_, parent_dir):
 
 
 # raise_future_exceptions {{{1
-async def raise_future_exceptions(futures):
+async def raise_future_exceptions(futures, timeout=None):
     """Await a list of futures and raise any exceptions.
 
     Args:
         futures (list): the futures to await
+        timeout (int, optional): If not ``None``, timeout after this many seconds.
+            Defaults to ``None``.
 
     Raises:
         Exception: on error
@@ -69,7 +71,11 @@ async def raise_future_exceptions(futures):
         list: the results from the futures
 
     """
-    await asyncio.wait(futures)
+    done, pending = await asyncio.wait(futures, timeout=timeout)
+    if pending:
+        raise TimeoutError("{} futures still pending after timeout of {}".format(
+            len(pending), timeout
+        ))
     results = []
     for fut in futures:
         exc = fut.exception()
@@ -79,6 +85,7 @@ async def raise_future_exceptions(futures):
     return results
 
 
+# semaphore_wrapper {{{1
 async def semaphore_wrapper(semaphore, action, *args, **kwargs):
     """Wrap an async function with semaphores.
 

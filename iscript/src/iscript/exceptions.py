@@ -17,7 +17,7 @@ class IScriptError(TaskError):
         )
 
 
-class FailedSubprocess(TaskError):
+class FailedSubprocess(IScriptError):
     """Something went wrong during a subprocess exec."""
 
     def __init__(self, msg):
@@ -31,5 +31,13 @@ class FailedSubprocess(TaskError):
         )
 
 
-class UnknownAppDir(TaskError):
+class UnknownAppDir(IScriptError):
+    """There is no single app dir found for an app"""
+
+
+class InvalidNotarization(IScriptError):
+    """There is no single app dir found for an app"""
+
+
+class TimeoutError(IScriptError):
     """There is no single app dir found for an app"""
