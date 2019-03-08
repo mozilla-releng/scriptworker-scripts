@@ -10,7 +10,7 @@
             "signing_keychain": "dep.keychain",
             "base_bundle_id": "org.mozilla.firefox_dep",
             "identity": "...",
-            "keychain_password": "..."
+            "keychain_password": "...",
             "apple_notarization_account": "...",
             "apple_notarization_password": "..."
         }
