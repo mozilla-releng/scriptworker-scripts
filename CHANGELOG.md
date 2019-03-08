@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.6] - 2019-03-08
+### Fixed
+* Package which was missing the embedded snapcraft
+* Unpinned requests which is breaking puppet
+
+
 ## [0.2.5] - 2019-03-05
 ### Changed
 * Allow release version numbers on beta (for RCs)
