@@ -45,7 +45,7 @@ class App(object):
     parent_dir = attr.ib(default='')
     app_path = attr.ib(default='')
     zip_path = attr.ib(default='')
-    notary_log_path = attr.ib(default='')
+    notarization_log_path = attr.ib(default='')
 
     def check_required_attrs(self, required_attrs):
         """Make sure the ``required_attrs`` are set.
@@ -334,6 +334,30 @@ def get_bundle_id(base_bundle_id):
     )
 
 
+# get_uuid_from_log {{{1
+def get_uuid_from_log(log_path):
+    """Get the UUID from the notarization log.
+
+    Args:
+        log_path (str): the path to the log
+
+    Raises:
+        IScriptError: if we can't find the UUID
+
+    Returns:
+        str: the uuid
+
+    """
+    with open(log_path, 'r') as fh:
+        for line in fh.readline():
+            # XXX double check this looks like a uuid? Perhaps switch to regex
+            if line.startswith('RequestUUID ='):
+                parts = line.split(' ')
+                return parts[2]
+    raise IScriptError("Can't find UUID in {}!".format(log_path))
+
+
+# wrap_notarization_with_sudo {{{1
 async def wrap_notarization_with_sudo(config, key_config, all_paths):
     """Wrap the notarization requests with sudo.
 
@@ -359,7 +383,7 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
         futures = []
         for account in accounts:
             app = all_paths[counter]
-            app.notary_log_path = os.path.join(app.parent_dir, 'notary.log')
+            app.notarization_log_path = os.path.join(app.parent_dir, 'notarization.log')
             bundle_id = get_bundle_id(key_config['base_bundle_id'])
             base_cmd = [
                 'sudo', '-u', account,
@@ -374,7 +398,7 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
             futures.append(asyncio.ensure_future(
                 run_command(
                     base_cmd + [key_config['apple_notarization_password']],
-                    log_path=app.notary_log_path,
+                    log_path=app.notarization_log_path,
                     log_cmd=log_cmd,
                     exception=IScriptError,
                 )
@@ -383,7 +407,8 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
             if counter >= len(all_paths):
                 break
         await raise_future_exceptions(futures)
-    # TODO for each log_path, find the uuid and append
+    for app in all_paths:
+        uuids.append(get_uuid_from_log(app.notarization_log_path))
     return uuids
 
 
