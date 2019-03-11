@@ -260,6 +260,12 @@ mapping:
       destinations:
         - win64_info.txt
   {% endif %}
+  {% if platform in ["win64-aarch64"] %}
+    target_info.txt:
+      s3_key: win64_aarch64_info.txt
+      destinations:
+        - win64_aarch64_info.txt
+  {% endif %}
   {% if platform in ["mac"] %}
     target_info.txt:
       s3_key: macosx64_info.txt
