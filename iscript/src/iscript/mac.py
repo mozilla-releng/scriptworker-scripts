@@ -8,7 +8,6 @@ import logging
 import os
 import pexpect
 import re
-import tempfile
 
 from scriptworker_client.utils import (
     extract_tarball,
@@ -369,7 +368,7 @@ def get_uuid_from_log(log_path):
 
 
 # get_notarization_status_from_log {{{1
-def get_notarization_status_from_log(log_path)
+def get_notarization_status_from_log(log_path):
     """Get the status from the notarization log.
 
     Args:
@@ -387,7 +386,7 @@ def get_notarization_status_from_log(log_path)
         m = regex.search(contents)
         if m is not None:
             return m.status
-    except OSError as err:
+    except OSError:
         return
 
 
@@ -447,13 +446,13 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
 
 
 # poll_notarization_uuid {{{1
-async def poll_notarization_uuid(uuid, user, pass, timeout, log_path, sleep_time=15):
+async def poll_notarization_uuid(uuid, username, password, timeout, log_path, sleep_time=15):
     """Poll to see if the notarization for ``uuid`` is complete.
 
     Args:
         uuid (str): the uuid to poll for
-        user (str): the apple user to poll with
-        pass (str): the apple password to poll with
+        username (str): the apple user to poll with
+        password (str): the apple password to poll with
         timeout (int): the maximum wait time
         sleep_time (int): the time to sleep between polling
 
@@ -465,11 +464,11 @@ async def poll_notarization_uuid(uuid, user, pass, timeout, log_path, sleep_time
     """
     start = arrow.utcnow().timestamp
     timeout_time = start + timeout
-    base_cmd = ['xcrun', 'altool', '--notarization-info', uuid, '-u', user, '--password']
+    base_cmd = ['xcrun', 'altool', '--notarization-info', uuid, '-u', username, '--password']
     log_cmd = base_cmd + ['********']
     while 1:
         await run_command(
-            base_cmd + [pass], log_path=log_path, log_cmd=log_cmd,
+            base_cmd + [password], log_path=log_path, log_cmd=log_cmd,
             exception=IScriptError,
         )
         status = get_notarization_status_from_log(log_path)
