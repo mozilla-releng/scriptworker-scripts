@@ -24,6 +24,7 @@ STAGE_PLATFORM_MAP = {
     'macosx64-devedition': 'mac',
     'win32-devedition': 'win32',
     'win64-devedition': 'win64',
+    'win64-aarch64-devedition': 'win64-aarch64',
 }
 
 NORMALIZED_BALROG_PLATFORMS = {
@@ -32,6 +33,7 @@ NORMALIZED_BALROG_PLATFORMS = {
     "macosx64-devedition": "macosx64",
     "win32-devedition": "win32",
     "win64-devedition": "win64",
+    'win64-aarch64-devedition': 'win64-aarch64',
 }
 
 NORMALIZED_FILENAME_PLATFORMS = NORMALIZED_BALROG_PLATFORMS.copy()
