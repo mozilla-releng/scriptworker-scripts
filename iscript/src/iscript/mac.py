@@ -50,8 +50,10 @@ class App(object):
     orig_path = attr.ib(default='')
     parent_dir = attr.ib(default='')
     app_path = attr.ib(default='')
+    app_name = attr.ib(default='')
     zip_path = attr.ib(default='')
     notarization_log_path = attr.ib(default='')
+    target_path = attr.ib(default='')
 
     def check_required_attrs(self, required_attrs):
         """Make sure the ``required_attrs`` are set.
@@ -84,8 +86,9 @@ async def sign(config, app, key, entitlements_path):
     """
     key_config = get_key_config(config, key)
     app.app_path = get_app_dir(app.parent_dir)
+    app.app_name = os.path.basename(app.app_path)
     await run_command(
-        ['xattr', '-cr', app.app_path], cwd=app.parent_dir,
+        ['xattr', '-cr', app.app_name], cwd=app.parent_dir,
         exception=IScriptError
     )
     # find initial files from INITIAL_FILES_TO_SIGN globs
@@ -135,7 +138,7 @@ async def sign(config, app, key, entitlements_path):
         [
             'codesign', '--force', '-o', 'runtime', '--verbose',
             '--sign', key_config['identity'], '--entitlements',
-            entitlements_path, app.app_path
+            entitlements_path, app.app_name
         ],
         cwd=app.parent_dir, exception=IScriptError
     )
@@ -143,7 +146,7 @@ async def sign(config, app, key, entitlements_path):
     # verify bundle
     await run_command(
         [
-            'codesign', '-vvv', '--deep', '--strict', app.app_path
+            'codesign', '-vvv', '--deep', '--strict', app.app_name
         ],
         cwd=app.parent_dir, exception=IScriptError
     )
@@ -162,6 +165,7 @@ async def unlock_keychain(signing_keychain, keychain_password):
         TimeoutFailure: on timeout
 
     """
+    log.info("Unlocking signing keychain {}".format(signing_keychain))
     child = pexpect.spawn('security', ['unlock-keychain', signing_keychain], encoding='utf-8')
     try:
         while True:
@@ -259,6 +263,7 @@ async def extract_all_apps(work_dir, all_paths):
         IScriptError: on failure
 
     """
+    log.info("Extracting all apps")
     futures = []
     for counter, app in enumerate(all_paths):
         app.check_required_attrs(['orig_path'])
@@ -313,6 +318,7 @@ async def sign_all_apps(key_config, entitlements_path, all_paths):
         IScriptError: on failure
 
     """
+    log.info("Signing all apps")
     futures = []
     for app in all_paths:
         futures.append(asyncio.ensure_future(
@@ -401,13 +407,13 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
         IScriptError: on failure
 
     Returns:
-        list of strings: the list of UUIDs
+        dict: uuid to log path
 
     """
     futures = []
     accounts = config['local_notarization_accounts']
     counter = 0
-    uuids = []
+    uuids = {}
 
     for app in all_paths:
         app.check_required_attrs(['zip_path'])
@@ -441,7 +447,7 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
                 break
         await raise_future_exceptions(futures)
     for app in all_paths:
-        uuids.append(get_uuid_from_log(app.notarization_log_path))
+        uuids[get_uuid_from_log(app.notarization_log_path)] = app.notarization_log_path
     return uuids
 
 
@@ -506,16 +512,63 @@ async def sign_and_notarize_all(config, task):
     await unlock_keychain(key_config['signing_keychain'], key_config['keychain_password'])
     await sign_all_apps(key_config, entitlements_path, all_paths)
 
+    log.info("Notarizing")
     if key_config['notarize_type'] == 'multi_account':
         await create_all_app_zipfiles(all_paths)
         poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths)
+    # TODO else create a zip for all apps, poll without sudo
 
-    for uuid in poll_uuids:
-        pass
-        # poll
+    log.info("Polling for notarization status")
+    futures = []
+    for uuid, log_path in poll_uuids.items():
+        futures.append(asyncio.ensure_future(
+            poll_notarization_uuid(
+                uuid, key_config['apple_notarization_account'],
+                key_config['apple_notarization_password'],
+                key_config['notarization_poll_timeout'],
+                log_path, sleep_time=15
+            )
+        ))
+    results = await raise_future_exceptions(futures)
+    if set(results) != {'success'}:
+        raise IScriptError("Failure polling notarization!")  # XXX This may not be reachable
 
-    if key_config['notarize_type'] == 'multi_account':
-        for app in all_paths:
-            # staple
-            pass
-    # tar up the app_dir, into artifact_dir
+    log.info("Stapling apps")
+    for app in all_paths:
+        # XXX do this concurrently if it saves us time without breaking
+        await run_command(
+            ['xcrun', 'stapler', 'staple', '-v', app.app_name],
+            cwd=app.parent_dir, exception=IScriptError
+        )
+
+    log.info("Tarring up artifacts")
+    futures = []
+    for app in all_paths:
+        # If we downloaded public/build/locale/target.tar.gz, then write to
+        # artifact_dir/public/build/locale/target.tar.gz
+        app.target_path = '{}/public/{}'.format(
+            config['artifact_dir'], app.orig_path.split('public/')
+        )
+        os.makedirs(os.path.dirname(app.target_path))
+        # TODO: different tar commands based on suffix?
+        futures.append(run_command(
+            ['tar', 'czvf', app.target_path, app.app_name],
+            cwd=app.parent_dir, exception=IScriptError,
+        ))
+    await raise_future_exceptions(futures)
+
+    log.info("Creating PKG files")
+    futures = []
+    for app in all_paths:
+        pkg_path = app.target_path.replace('tar.gz', 'pkg')
+        futures.append(run_command(
+            [
+                'sudo', 'pkgbuild', '--install-location', '/Applications', '--component',
+                app.app_path, pkg_path
+            ],
+            cwd=app.parent_dir, exception=IScriptError
+        ))
+    await raise_future_exceptions(futures)
+
+    # TODO sign pkg? If so, we might write to a tmp location, then sign and
+    # copy to the artifact_dir

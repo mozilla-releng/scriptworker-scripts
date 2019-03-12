@@ -12,7 +12,8 @@
             "identity": "...",
             "keychain_password": "...",
             "apple_notarization_account": "...",
-            "apple_notarization_password": "..."
+            "apple_notarization_password": "...",
+            "notarization_poll_timeout": 900,
         }
     }
 }
