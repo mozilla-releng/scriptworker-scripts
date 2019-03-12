@@ -18,15 +18,9 @@ async def async_main(config, task):
         task (dict): the running task.
 
     """
-    # work_dir = config['work_dir']
-
-    # get entitlements -- default or from url
-    # extract
-    # apple sign
-    # notarize, concurrent across `notary_accounts`
-    # poll
-    # staple
-    # copy to artifact_dir
+    # XXX we can change behavior based on task definition. For now,
+    # mac signing+notarizing is all we do.
+    await sign_and_notarize_all(config, task)
 
     log.info("Done!")
 

@@ -572,3 +572,5 @@ async def sign_and_notarize_all(config, task):
 
     # TODO sign pkg? If so, we might write to a tmp location, then sign and
     # copy to the artifact_dir
+
+    log.info("Done signing and notarizing apps.")
