@@ -7,6 +7,7 @@ from glob import glob
 import logging
 import os
 import pexpect
+import re
 import tempfile
 
 from scriptworker_client.utils import (
@@ -355,13 +356,39 @@ def get_uuid_from_log(log_path):
         str: the uuid
 
     """
-    with open(log_path, 'r') as fh:
-        for line in fh.readline():
-            # XXX double check this looks like a uuid? Perhaps switch to regex
-            if line.startswith('RequestUUID ='):
-                parts = line.split(' ')
-                return parts[2]
+    try:
+        with open(log_path, 'r') as fh:
+            for line in fh.readline():
+                # XXX double check this looks like a uuid? Perhaps switch to regex
+                if line.startswith('RequestUUID ='):
+                    parts = line.split(' ')
+                    return parts[2]
+    except OSError as err:
+        raise IScriptError("Can't find UUID in {}: {}".format(log_path, err))
     raise IScriptError("Can't find UUID in {}!".format(log_path))
+
+
+# get_notarization_status_from_log {{{1
+def get_notarization_status_from_log(log_path)
+    """Get the status from the notarization log.
+
+    Args:
+        log_path (str): the path to the log file to parse
+
+    Returns:
+        str: either ``success`` or ``invalid``, depending on status
+        None: if we have neither success nor invalid status
+
+    """
+    regex = re.compile(r'Status: (?P<status>success|invalid)')
+    try:
+        with open(log_path, 'r') as fh:
+            contents = fh.read()
+        m = regex.search(contents)
+        if m is not None:
+            return m.status
+    except OSError as err:
+        return
 
 
 # wrap_notarization_with_sudo {{{1
@@ -445,12 +472,12 @@ async def poll_notarization_uuid(uuid, user, pass, timeout, log_path, sleep_time
             base_cmd + [pass], log_path=log_path, log_cmd=log_cmd,
             exception=IScriptError,
         )
-        # TODO look at log_path for status
-        status = ''
+        status = get_notarization_status_from_log(log_path)
         if status == 'success':
             break
         if status == 'invalid':
             raise InvalidNotarization('Invalid notarization for uuid {}!'.format(uuid))
+        await asyncio.sleep(sleep_time)
         if arrow.utcnow().timestamp > timeout_time:
             raise TimeoutError("Timed out polling for uuid {}!".format(uuid))
 
