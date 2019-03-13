@@ -52,8 +52,10 @@ class App(object):
     app_path = attr.ib(default='')
     app_name = attr.ib(default='')
     zip_path = attr.ib(default='')
+    pkg_path = attr.ib(default='')
     notarization_log_path = attr.ib(default='')
-    target_path = attr.ib(default='')
+    target_tar_path = attr.ib(default='')
+    target_pkg_path = attr.ib(default='')
 
     def check_required_attrs(self, required_attrs):
         """Make sure the ``required_attrs`` are set.
@@ -546,13 +548,13 @@ async def sign_and_notarize_all(config, task):
     for app in all_paths:
         # If we downloaded public/build/locale/target.tar.gz, then write to
         # artifact_dir/public/build/locale/target.tar.gz
-        app.target_path = '{}/public/{}'.format(
+        app.target_tar_path = '{}/public/{}'.format(
             config['artifact_dir'], app.orig_path.split('public/')
         )
-        os.makedirs(os.path.dirname(app.target_path))
+        os.makedirs(os.path.dirname(app.target_tar_path))
         # TODO: different tar commands based on suffix?
         futures.append(run_command(
-            ['tar', 'czvf', app.target_path, app.app_name],
+            ['tar', 'czvf', app.target_tar_path, app.app_name],
             cwd=app.parent_dir, exception=IScriptError,
         ))
     await raise_future_exceptions(futures)
@@ -560,17 +562,31 @@ async def sign_and_notarize_all(config, task):
     log.info("Creating PKG files")
     futures = []
     for app in all_paths:
-        pkg_path = app.target_path.replace('tar.gz', 'pkg')
-        futures.append(run_command(
-            [
-                'sudo', 'pkgbuild', '--install-location', '/Applications', '--component',
-                app.app_path, pkg_path
-            ],
-            cwd=app.parent_dir, exception=IScriptError
+        app.pkg_path = app.app_path.replace('.app', '.pkg')
+        futures.append(asyncio.ensure_future(
+            run_command(
+                [
+                    'sudo', 'pkgbuild', '--install-location', '/Applications', '--component',
+                    app.app_path, app.pkg_path
+                ],
+                cwd=app.parent_dir, exception=IScriptError
+            )
         ))
     await raise_future_exceptions(futures)
 
-    # TODO sign pkg? If so, we might write to a tmp location, then sign and
-    # copy to the artifact_dir
+    log.info("Signing pkgs")
+    futures = []
+    for app in all_paths:
+        app.target_pkg_path = app.target_tar_path.replace('.tar.gz', '.app')
+        # passwords? keychain?
+        futures.append(asyncio.ensure_future(
+            run_command(
+                [
+                    'productsign', '--sign', key_config['pkg_cert_id'],
+                    app.pkg_path, app.target_pkg_path
+                ],
+            )
+        ))
+    await raise_future_exceptions(futures)
 
     log.info("Done signing and notarizing apps.")

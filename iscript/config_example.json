@@ -11,6 +11,7 @@
             "base_bundle_id": "org.mozilla.firefox_dep",
             "identity": "...",
             "keychain_password": "...",
+            "pkg_cert_id": "...",
             "apple_notarization_account": "...",
             "apple_notarization_password": "...",
             "notarization_poll_timeout": 900,

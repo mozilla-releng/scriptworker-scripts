@@ -4,6 +4,7 @@ import logging
 import os
 
 from scriptworker_client.client import sync_main
+from iscript.mac import sign_and_notarize_all
 
 
 log = logging.getLogger(__name__)
