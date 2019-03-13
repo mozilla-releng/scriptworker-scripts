@@ -18,8 +18,8 @@ class ClientError(Exception):
     exit_code = STATUSES['internal-error']
 
 
-class TaskError(ClientError):
-    """Scriptworker-client task error.
+class BaseTaskError(ClientError):
+    """Scriptworker-client base task error.
 
     To use::
 
@@ -49,7 +49,16 @@ class TaskError(ClientError):
         super(TaskError, self).__init__(*args, **kwargs)
 
 
-class TaskVerificationError(TaskError):
+class TaskError(BaseTaskError):
+    """Scriptworker-client task error"""
+    pass
+
+
+class TimeoutError(BaseTaskError):
+    """Scriptworker-client timeout error"""
+
+
+class TaskVerificationError(BaseTaskError):
     """Verification error on a Taskcluster task.
 
     Use it when your script fails to validate any input from the task definition

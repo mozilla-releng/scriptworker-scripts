@@ -9,6 +9,10 @@ import os
 import pexpect
 import re
 
+from scriptworker_client.aio import (
+    raise_future_exceptions,
+    semaphore_wrapper,
+)
 from scriptworker_client.utils import (
     extract_tarball,
     get_artifact_path,
@@ -16,11 +20,6 @@ from scriptworker_client.utils import (
     makedirs,
     rm,
     run_command,
-)
-from iscript.utils import (
-    create_zipfile,
-    raise_future_exceptions,
-    semaphore_wrapper,
 )
 from iscript.exceptions import (
     InvalidNotarization,
@@ -299,8 +298,11 @@ async def create_all_app_zipfiles(all_paths):
         )
         # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
         futures.append(asyncio.ensure_future(
-            create_zipfile(
-                app.zip_path, [app.app_path], app.parent_dir,
+            run_command(
+                [
+                    'zip', app.zip_path, app.app_path,
+                ],
+                cwd=app.parent_dir, exception=IScriptError,
             )
         ))
     await raise_future_exceptions(futures)
@@ -326,7 +328,7 @@ async def create_one_app_zipfile(work_dir, all_paths):
     for app in all_paths:
         app.check_required_attrs(required_attrs)
         app_paths.append(app.app_path)
-    await create_zipfile(zip_path, app_paths, work_dir)
+    await run_command(['zip', zip_path, *app_paths], cwd=work_dir, exception=IScriptError)
     return zip_path
 
 
