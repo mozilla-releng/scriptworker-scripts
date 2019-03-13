@@ -73,3 +73,7 @@ class TaskVerificationError(BaseTaskError):
 
         """
         super().__init__(msg, exit_code=STATUSES['malformed-payload'])
+
+
+class RetryError(BaseTaskError):
+    """Scriptworker-client retry error"""

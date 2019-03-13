@@ -1,2 +1,4 @@
+aiohttp
+async_timeout
 jsonschema
 PyYAML

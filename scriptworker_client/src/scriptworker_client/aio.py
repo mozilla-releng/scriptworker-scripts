@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 """Async helper functions."""
+import aiohttp
 import asyncio
+import async_timeout
 import logging
 import random
 
-from scriptworker_client.exceptions import TimeoutError
+from scriptworker_client.exceptions import RetryError, TaskError, TimeoutError
 
 log = logging.getLogger(__name__)
 
@@ -137,3 +139,62 @@ async def retry_async(func, attempts=5, sleeptime_callback=calculate_sleep_time,
             sleep_time = sleeptime_callback(attempt, **sleeptime_kwargs)
             log.debug("retry_async: {}: sleeping {} seconds before retry".format(func.__name__, sleep_time))
             await asyncio.sleep(sleep_time)
+
+
+# request {{{1
+async def request(url, timeout=60, method='get', good=(200, ),
+                  retry_statuses=tuple(range(500, 512)), return_type='text',
+                  num_attempts=1, sterilized_url=None, **kwargs):
+    """Async aiohttp request wrapper.
+
+    Args:
+        url (str): the url to request
+        timeout (int, optional): timeout after this many seconds. Default is 60.
+        method (str, optional): The request method to use.  Default is 'get'.
+        good (list, optional): the set of good status codes.  Default is (200, )
+        retry_statuses (list, optional): the set of status codes that result in a retry.
+            Default is tuple(range(500, 512)).
+        return_type (str, optional): The type of value to return.  Takes
+            'json' or 'text'; other values will return the response object.
+            Default is text.
+        num_attempts (int, optional): The number of attempts to perform,
+            retrying on a response status in ``retry_statuses``. Defaults to 1.
+        sterilized_url (str, optional): If set, log using this url instead of
+            the real url. This can help avoid logging credentials or tokens.
+            If ``None``, log the real url. Defaults to ``None``.
+        **kwargs: the kwargs to send to the aiohttp request function.
+
+    Returns:
+        object: the response text() if return_type is 'text'; the response
+            json() if return_type is 'json'; the aiohttp request response
+            object otherwise.
+
+    Raises:
+        RetryError: if the status code is in the retry list.
+        TaskError: if the status code is not in the retry list or good list.
+
+    """
+    sterilized_url = sterilized_url or url
+    async with aiohttp.ClientSession() as session:
+        async with async_timeout.timeout(timeout):
+            log.debug("{} {}".format(method.upper(), sterilized_url))
+
+            async def request_helper():
+                async with session.request(method, url, **kwargs) as resp:
+                    log.debug("Status {}".format(resp.status))
+                    message = "Bad status {}".format(resp.status)
+                    if resp.status in retry_statuses:
+                        raise RetryError(message)
+                    if resp.status not in good:
+                        raise TaskError(message)
+                    if return_type == 'text':
+                        return await resp.text()
+                    elif return_type == 'json':
+                        return await resp.json()
+                    else:
+                        return resp
+
+            return await retry_async(
+                request_helper, attempts=num_attempts,
+                retry_exceptions=(asyncio.TimeoutError, RetryError),
+            )
