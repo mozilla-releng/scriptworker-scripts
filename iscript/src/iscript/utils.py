@@ -25,14 +25,11 @@ async def create_zipfile(to, files, top_dir):
         IScriptError: on failure
 
     """
-    try:
-        log.info("Creating zipfile {}...".format(to))
-        await run_command(
-            ["zip", to, *files], cwd=top_dir, exception=IScriptError
-        )
-        return to
-    except Exception as e:
-        raise IScriptError(e)
+    log.info("Creating zipfile {}...".format(to))
+    await run_command(
+        ["zip", to, *files], cwd=top_dir, exception=IScriptError
+    )
+    return to
 
 
 # extract_tarfile {{{1
