@@ -10,10 +10,6 @@ from scriptworker_client.exceptions import RetryError, TaskError, TimeoutError
 
 log = logging.getLogger(__name__)
 
-_DELAY_FACTOR = 0.1
-_RANDOMIZATION_FACTOR = 0.25
-_MAX_DELAY = 30
-
 
 # raise_future_exceptions {{{1
 async def raise_future_exceptions(futures, timeout=None):
@@ -74,28 +70,34 @@ async def semaphore_wrapper(semaphore, action, *args, **kwargs):
 
 
 # retry_async {{{1
-def calculate_sleep_time(attempt):
-    """Calculate retry sleep time.
+def calculate_sleep_time(attempt, delay_factor=5.0, randomization_factor=.5, max_delay=120):
+    """Calculate the sleep time between retries, in seconds.
 
-    From ``taskcluster.utils`` and the go client
-    https://github.com/taskcluster/go-got/blob/031f55c/backoff.go#L24-L29
+    Based off of `taskcluster.utils.calculateSleepTime`, but with kwargs instead
+    of constant `delay_factor`/`randomization_factor`/`max_delay`.  The taskcluster
+    function generally slept for less than a second, which didn't always get
+    past server issues.
 
     Args:
-        attempt (int): the attempt number
+        attempt (int): the retry attempt number
+        delay_factor (float, optional): a multiplier for the delay time.  Defaults to 5.
+        randomization_factor (float, optional): a randomization multiplier for the
+            delay time.  Defaults to .5.
+        max_delay (float, optional): the max delay to sleep.  Defaults to 120 (seconds).
 
     Returns:
-        float: the sleep time between attempts
+        float: the time to sleep, in seconds.
 
     """
     if attempt <= 0:
         return 0
 
     # We subtract one to get exponents: 1, 2, 3, 4, 5, ..
-    delay = float(2 ** (attempt - 1)) * float(_DELAY_FACTOR)
-    # Apply randomization factor
-    delay = delay * (_RANDOMIZATION_FACTOR * (random.random() * 2 - 1) + 1)
+    delay = float(2 ** (attempt - 1)) * float(delay_factor)
+    # Apply randomization factor.  Only increase the delay here.
+    delay = delay * (randomization_factor * random.random() + 1)
     # Always limit with a maximum delay
-    return min(delay, _MAX_DELAY)
+    return min(delay, max_delay)
 
 
 async def retry_async(func, attempts=5, sleeptime_callback=calculate_sleep_time,
@@ -107,7 +109,7 @@ async def retry_async(func, attempts=5, sleeptime_callback=calculate_sleep_time,
         func (function): an awaitable function.
         attempts (int, optional): the number of attempts to make.  Default is 5.
         sleeptime_callback (function, optional): the function to use to determine
-            how long to sleep after each attempt.  Defaults to ``calculateSleepTime``.
+            how long to sleep after each attempt.  Defaults to ``calculate_sleep_time``.
         retry_exceptions (list or exception, optional): the exception(s) to retry on.
             Defaults to ``Exception``.
         args (list, optional): the args to pass to ``function``.  Defaults to ()
