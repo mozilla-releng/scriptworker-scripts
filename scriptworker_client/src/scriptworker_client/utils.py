@@ -6,7 +6,7 @@ Attributes:
 
 """
 import asyncio
-from asyncio.process import PIPE
+from asyncio.subprocess import PIPE
 from contextlib import contextmanager
 import json
 import logging

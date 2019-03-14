@@ -38,32 +38,31 @@ def get_task(config):
     return contents
 
 
-def validate_json_schema(data, schema, name="task"):
-    """Given data and a jsonschema, let's validate it.
+def verify_json_schema(data, schema, name="task"):
+    """Given data and a jsonschema, let's verify it.
 
     This happens for tasks and chain of trust artifacts.
 
     Args:
-        data (dict): the json to validate.
-        schema (dict): the jsonschema to validate against.
+        data (dict): the json to verify.
+        schema (dict): the jsonschema to verify against.
         name (str, optional): the name of the json, for exception messages.
             Defaults to "task".
 
     Raises:
-        TaskError: on failure
+        TaskVerificationError: on failure
 
     """
     try:
         jsonschema.validate(data, schema)
     except jsonschema.exceptions.ValidationError as exc:
-        raise TaskError(
-            "Can't validate {} schema!\n{}".format(name, str(exc)),
-            exit_code=STATUSES['malformed-payload']
+        raise TaskVerificationError(
+            "Can't verify {} schema!\n{}".format(name, str(exc)),
         )
 
 
-def validate_task_schema(config, task, schema_key='schema_file'):
-    """Validate the task definition.
+def verify_task_schema(config, task, schema_key='schema_file'):
+    """Verify the task definition.
 
     Args:
         config (dict): the running config
@@ -82,14 +81,14 @@ def validate_task_schema(config, task, schema_key='schema_file'):
             schema_path = schema_path[key]
 
         task_schema = load_json_or_yaml(schema_path, is_path=True)
-        log.debug('Task is validated against this schema: {}'.format(task_schema))
+        log.debug('Task is verified against this schema: {}'.format(task_schema))
 
-        validate_json_schema(task, task_schema)
+        verify_json_schema(task, task_schema)
     except (KeyError, TaskError) as e:
-        raise TaskVerificationError('Cannot validate task against schema. Task: {}.'.format(task)) from e
+        raise TaskVerificationError('Cannot verify task against schema. Task: {}.'.format(task)) from e
 
 
-def validate_artifact_url(valid_artifact_rules, valid_artifact_task_ids, url):
+def verify_artifact_url(valid_artifact_rules, valid_artifact_task_ids, url):
     """Ensure a URL fits in given scheme, netloc, and path restrictions.
 
     If we fail any checks, raise a TaskError with
@@ -105,7 +104,7 @@ def validate_artifact_url(valid_artifact_rules, valid_artifact_task_ids, url):
         str: the ``filepath`` of the path regex.
 
     Raises:
-        TaskError: on failure to validate.
+        TaskError: on failure to verify.
 
     """
     def callback(match):
@@ -121,14 +120,14 @@ def validate_artifact_url(valid_artifact_rules, valid_artifact_task_ids, url):
     filepath = match_url_regex(valid_artifact_rules, url, callback)
     if filepath is None:
         raise TaskError(
-            "Can't validate url {}".format(url),
+            "Can't verify url {}".format(url),
             exit_code=STATUSES['malformed-payload']
         )
     return unquote(filepath).lstrip('/')
 
 
 def sync_main(async_main, config_path=None, default_config=None,
-              should_validate_task=True, loop_function=asyncio.get_event_loop):
+              should_verify_task=True, loop_function=asyncio.get_event_loop):
     """Entry point for scripts using scriptworker.
 
     This function sets up the basic needs for a script to run. More specifically:
@@ -143,7 +142,7 @@ def sync_main(async_main, config_path=None, default_config=None,
             Loads from ``sys.argv[1]`` if ``None``. Defaults to None.
         default_config (dict, optional): the default config to use for ``_init_config``.
             defaults to None.
-        should_validate_task (bool, optional): whether we should validate the task
+        should_verify_task (bool, optional): whether we should verify the task
             schema. Defaults to True.
         loop_function (function, optional): the function to call to get the
             event loop; here for testing purposes. Defaults to
@@ -153,8 +152,8 @@ def sync_main(async_main, config_path=None, default_config=None,
     config = _init_config(config_path, default_config)
     _init_logging(config)
     task = get_task(config)
-    if should_validate_task:
-        validate_task_schema(config, task)
+    if should_verify_task:
+        verify_task_schema(config, task)
     loop = loop_function()
     loop.run_until_complete(_handle_asyncio_loop(async_main, config, task))
 
