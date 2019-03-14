@@ -36,7 +36,7 @@ class BaseTaskError(ClientError):
     """
 
     def __init__(self, *args, exit_code=1, **kwargs):
-        """Initialize TaskError.
+        """Initialize BaseTaskError.
 
         Args:
             *args: These are passed on via super().
@@ -46,16 +46,15 @@ class BaseTaskError(ClientError):
 
         """
         self.exit_code = exit_code
-        super(TaskError, self).__init__(*args, **kwargs)
+        super(BaseTaskError, self).__init__(*args, **kwargs)
 
 
 class TaskError(BaseTaskError):
-    """Scriptworker-client task error"""
-    pass
+    """Scriptworker-client base task error."""
 
 
 class TimeoutError(BaseTaskError):
-    """Scriptworker-client timeout error"""
+    """Scriptworker-client timeout error."""
 
 
 class TaskVerificationError(BaseTaskError):
@@ -76,4 +75,4 @@ class TaskVerificationError(BaseTaskError):
 
 
 class RetryError(BaseTaskError):
-    """Scriptworker-client retry error"""
+    """Scriptworker-client retry error."""

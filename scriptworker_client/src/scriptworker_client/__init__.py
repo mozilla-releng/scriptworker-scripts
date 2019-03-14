@@ -1,1 +1,1 @@
-"""scriptworker-client shared code"""
+"""scriptworker-client shared code."""

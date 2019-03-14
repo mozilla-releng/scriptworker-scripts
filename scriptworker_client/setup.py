@@ -19,6 +19,7 @@ setup(
     zip_safe=False,
     license="MPL2",
     install_requires=[
+        'aiohttp',
         'jsonschema',
         'PyYAML',
     ],
