@@ -60,7 +60,7 @@ class TimeoutError(BaseTaskError):
 class TaskVerificationError(BaseTaskError):
     """Verification error on a Taskcluster task.
 
-    Use it when your script fails to validate any input from the task definition
+    Use it when your script fails to verify any input from the task definition
 
     """
 
