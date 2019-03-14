@@ -10,6 +10,10 @@ from scriptworker_client.exceptions import RetryError, TaskError, TimeoutError
 
 log = logging.getLogger(__name__)
 
+_DELAY_FACTOR = 0.1
+_RANDOMIZATION_FACTOR = 0.25
+_MAX_DELAY = 30
+
 
 # raise_future_exceptions {{{1
 async def raise_future_exceptions(futures, timeout=None):
@@ -83,19 +87,15 @@ def calculate_sleep_time(attempt):
         float: the sleep time between attempts
 
     """
-    DELAY_FACTOR = 0.1
-    RANDOMIZATION_FACTOR = 0.25
-    MAX_DELAY = 30
-
     if attempt <= 0:
         return 0
 
     # We subtract one to get exponents: 1, 2, 3, 4, 5, ..
-    delay = float(2 ** (attempt - 1)) * float(DELAY_FACTOR)
+    delay = float(2 ** (attempt - 1)) * float(_DELAY_FACTOR)
     # Apply randomization factor
-    delay = delay * (RANDOMIZATION_FACTOR * (random.random() * 2 - 1) + 1)
+    delay = delay * (_RANDOMIZATION_FACTOR * (random.random() * 2 - 1) + 1)
     # Always limit with a maximum delay
-    return min(delay, MAX_DELAY)
+    return min(delay, _MAX_DELAY)
 
 
 async def retry_async(func, attempts=5, sleeptime_callback=calculate_sleep_time,

@@ -104,3 +104,19 @@ async def test_semaphore_wrapper():
     results2 = await aio.raise_future_exceptions(futures)
     assert len(results2) == 4
     assert results1 == results2[0:2]
+
+
+# retry_async {{{1
+@pytest.mark.parametrize('attempt', (0, 1, 2, 3, 4, 5))
+def test_calculate_sleep_time(attempt):
+    """The sleep time for attempt number ``attempt`` is between ``min_delay``
+    and ``max_delay``.
+
+    """
+    if attempt == 0:
+        min_delay = max_delay = 0
+    else:
+        min_delay = (float(2 ** (attempt - 1)) * float(aio._DELAY_FACTOR)) * ((aio._RANDOMIZATION_FACTOR * -1) + 1)
+        max_delay = min(aio._MAX_DELAY, (float(2 ** (attempt - 1)) * float(aio._DELAY_FACTOR)) * ((aio._RANDOMIZATION_FACTOR * 1) + 1))
+    t = aio.calculate_sleep_time(attempt)
+    assert min_delay <= t <= max_delay
