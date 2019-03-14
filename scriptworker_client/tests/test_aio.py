@@ -2,7 +2,9 @@
 # coding=utf-8
 """Test scriptworker_client.aio
 """
+import aiohttp
 import asyncio
+from async_generator import asynccontextmanager
 from datetime import datetime
 import mock
 import os
@@ -175,3 +177,74 @@ async def test_retry_async_always_fail():
             )
             assert status is None
     assert retry_count['always_fail'] == 5
+
+
+# request {{{1
+class FakeSession():
+    statuses = None
+
+    @asynccontextmanager
+    async def request(self, method, url, **kwargs):
+        """Fake request. "url" should be a comma-delimited set of integers
+        that we'll use for status.
+        """
+
+        async def _fake_text():
+            return method
+
+        async def _fake_json():
+            return {'method': method}
+
+        if not self.statuses:
+            self.statuses = url.split(',')
+        resp = mock.MagicMock()
+        resp.status = int(self.statuses.pop(0))
+        resp.text = _fake_text
+        resp.json = _fake_json
+
+        yield resp
+
+
+@asynccontextmanager
+async def GetFakeSession():
+    yield FakeSession()
+
+
+async def noop_async(*args, **kwargs):
+    pass
+
+
+@pytest.mark.parametrize('url,method,return_type,expected,exception,num_attempts', ((
+    '200', 'expected', 'text', 'expected', None, 1
+), (
+    '200', 'expected', 'json', {'method': 'expected'}, None, 1
+), (
+    '200', 'expected', 'response', 'expected', None, 1
+), (
+    '500,200', 'expected', 'text', 'expected', None, 3
+), (
+    '500', 'expected', 'text', 'expected', RetryError, 2
+), (
+    '404', 'expected', 'text', 'expected', TaskError, 1
+)))
+@pytest.mark.asyncio
+async def test_request(mocker, url, method, return_type, expected, exception, num_attempts):
+    """A request returns the expected value, or raises ``exception`` if not ``None``.
+
+    """
+    mocker.patch.object(aiohttp, 'ClientSession', new=GetFakeSession)
+    mocker.patch.object(asyncio, 'sleep', new=noop_async)
+
+    if not exception:
+        result = await aio.request(
+            url, method=method, return_type=return_type, num_attempts=num_attempts
+        )
+        if return_type in ('text', 'json'):
+            assert result == expected
+        else:
+            assert await result.text() == expected
+    else:
+        with pytest.raises(exception):
+            await aio.request(
+                url, method=method, return_type=return_type, num_attempts=num_attempts
+            )
