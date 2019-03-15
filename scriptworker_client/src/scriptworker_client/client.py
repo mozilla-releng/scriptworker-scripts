@@ -27,7 +27,7 @@ def get_task(config):
         dict: the contents of task.json
 
     Raises:
-        TaskError: on error.
+        ClientError: on error.
 
     """
     path = os.path.join(config['work_dir'], "task.json")
@@ -146,6 +146,6 @@ def _init_logging(config):
 async def _handle_asyncio_loop(async_main, config, task):
     try:
         await async_main(config, task)
-    except ClientError as exc:
+    except TaskError as exc:
         log.exception("Failed to run async_main")
         sys.exit(exc.exit_code)

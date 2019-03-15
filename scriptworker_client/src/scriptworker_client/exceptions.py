@@ -5,20 +5,6 @@ from scriptworker_client.constants import STATUSES
 
 
 class ClientError(Exception):
-    """The base exception in scriptworker-client.
-
-    When raised inside of the run_loop loop, set the taskcluster task
-    status to at least ``self.exit_code``.
-
-    Attributes:
-        exit_code (int): this is set to 5 (internal-error).
-
-    """
-
-    exit_code = STATUSES['internal-error']
-
-
-class BaseTaskError(ClientError):
     """Scriptworker-client base task error.
 
     To use::
@@ -36,7 +22,7 @@ class BaseTaskError(ClientError):
     """
 
     def __init__(self, *args, exit_code=1, **kwargs):
-        """Initialize BaseTaskError.
+        """Initialize ClientError.
 
         Args:
             *args: These are passed on via super().
@@ -46,18 +32,18 @@ class BaseTaskError(ClientError):
 
         """
         self.exit_code = exit_code
-        super(BaseTaskError, self).__init__(*args, **kwargs)
+        super(ClientError, self).__init__(*args, **kwargs)
 
 
-class TaskError(BaseTaskError):
+class TaskError(ClientError):
     """Scriptworker-client base task error."""
 
 
-class TimeoutError(BaseTaskError):
+class TimeoutError(ClientError):
     """Scriptworker-client timeout error."""
 
 
-class TaskVerificationError(BaseTaskError):
+class TaskVerificationError(ClientError):
     """Verification error on a Taskcluster task.
 
     Use it when your script fails to verify any input from the task definition
@@ -74,5 +60,5 @@ class TaskVerificationError(BaseTaskError):
         super().__init__(msg, exit_code=STATUSES['malformed-payload'])
 
 
-class RetryError(BaseTaskError):
+class RetryError(ClientError):
     """Scriptworker-client retry error."""
