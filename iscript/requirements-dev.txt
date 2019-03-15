@@ -1,4 +1,5 @@
 aiohttp
+arrow
 attrs
 pexpect
 scriptworker_client

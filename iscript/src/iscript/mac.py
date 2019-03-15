@@ -14,7 +14,6 @@ from scriptworker_client.aio import (
     semaphore_wrapper,
 )
 from scriptworker_client.utils import (
-    extract_tarball,
     get_artifact_path,
     list_files,
     makedirs,
@@ -46,6 +45,26 @@ INITIAL_FILES_TO_SIGN = (
 
 @attr.s
 class App(object):
+    """Track the various paths related to each app.
+
+    Attributes:
+        orig_path (str): the original path of the app tarball.
+        parent_dir (str): the directory that contains the .app.
+        app_path (str): the path to the .app directory.
+        app_name (str): the basename of the .app directory.
+        zip_path (str): the zipfile path for notarization, if we use the
+            ``multi_account`` workflow.
+        pkg_path (str): the unsigned .pkg path.
+        notarization_log_path (str): the path to the logfile for notarization,
+            if we use the ``multi_account`` workflow. This is currently
+            overwritten each time we poll.
+        target_tar_path: the path inside of ``artifact_dir`` for the signed
+            and notarized tarball.
+        target_pkg_path: the path inside of ``artifact_dir`` for the signed
+            and notarized .pkg.
+
+    """
+
     orig_path = attr.ib(default='')
     parent_dir = attr.ib(default='')
     app_path = attr.ib(default='')
@@ -272,7 +291,10 @@ async def extract_all_apps(work_dir, all_paths):
         rm(app.parent_dir)
         makedirs(app.parent_dir)
         futures.append(asyncio.ensure_future(
-            extract_tarball(app.orig_path, app.parent_dir)
+            run_command(
+                ['tar', 'xvf', app.orig_path], cwd=app.parent_dir,
+                exception=IScriptError
+            )
         ))
     await raise_future_exceptions(futures)
 
@@ -357,7 +379,7 @@ async def sign_all_apps(key_config, entitlements_path, all_paths):
 
 # get_bundle_id {{{1
 def get_bundle_id(base_bundle_id):
-    """Get a bundle id for notarization
+    """Get a bundle id for notarization.
 
     Args:
         base_bundle_id (str): the base string to use for the bundle id
@@ -578,7 +600,7 @@ async def poll_all_notarization_status(key_config, poll_uuids):
 
 # staple_apps {{{1
 async def staple_apps(all_paths):
-    """Staple the notarization results to each app
+    """Staple the notarization results to each app.
 
     Args:
         all_paths (list): the list of App objects
@@ -618,7 +640,7 @@ async def tar_apps(config, all_paths):
         app.target_tar_path = '{}/public/{}'.format(
             config['artifact_dir'], app.orig_path.split('public/')
         )
-        os.makedirs(os.path.dirname(app.target_tar_path))
+        makedirs(os.path.dirname(app.target_tar_path))
         # TODO: different tar commands based on suffix?
         futures.append(run_command(
             ['tar', 'czvf', app.target_tar_path, app.app_name],
@@ -629,7 +651,7 @@ async def tar_apps(config, all_paths):
 
 # create_pkg_files {{{1
 async def create_pkg_files(all_paths):
-    """Create .pkg installers from the .app files
+    """Create .pkg installers from the .app files.
 
     Args:
         all_paths: (list): the list of App objects to pkg
@@ -655,7 +677,7 @@ async def create_pkg_files(all_paths):
 
 
 async def sign_pkg_files(key_config, all_paths):
-    """Sign the .pkg installers
+    """Sign the .pkg installers.
 
     These will be written into the ``artifact_dir``
 

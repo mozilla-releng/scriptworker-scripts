@@ -32,12 +32,12 @@ class FailedSubprocess(IScriptError):
 
 
 class UnknownAppDir(IScriptError):
-    """There is no single app dir found for an app"""
+    """There is no single app dir found for an app."""
 
 
 class InvalidNotarization(IScriptError):
-    """There is no single app dir found for an app"""
+    """Apple returned an invalid status for notarization."""
 
 
 class TimeoutError(IScriptError):
-    """There is no single app dir found for an app"""
+    """We have hit a timeout."""

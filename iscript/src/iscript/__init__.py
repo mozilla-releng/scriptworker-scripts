@@ -1,1 +1,1 @@
-"""iScript for scriptworker"""
+"""iScript for scriptworker."""

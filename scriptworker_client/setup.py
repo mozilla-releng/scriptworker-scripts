@@ -16,7 +16,7 @@ setup(
     package_dir={'': 'src'},
     py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob('src/*.py')],
     include_package_data=True,
-    zip_safe=False,
+    zip_safe=True,
     license="MPL2",
     install_requires=[
         'aiohttp',

@@ -11,6 +11,7 @@ from contextlib import contextmanager
 import json
 import logging
 import os
+import shutil
 import tempfile
 import yaml
 from scriptworker_client.exceptions import TaskError
@@ -236,3 +237,45 @@ def list_files(path, ignore_list=None):
             elif entry.is_dir():
                 for file_ in list_files(os.path.join(path, entry.name), ignore_list=ignore_list):
                     yield file_
+
+
+# makedirs {{{1
+def makedirs(path):
+    """Equivalent to mkdir -p.
+
+    Args:
+        path (str): the path to mkdir -p
+
+    Raises:
+        TaskError: if path exists already and the realpath is not a dir.
+
+    """
+    if path:
+        if not os.path.exists(path):
+            log.debug("makedirs({})".format(path))
+            os.makedirs(path)
+        else:
+            realpath = os.path.realpath(path)
+            if not os.path.isdir(realpath):
+                raise TaskError(
+                    "makedirs: {} already exists and is not a directory!".format(path)
+                )
+
+
+# rm {{{1
+def rm(path):
+    """Equivalent to rm -rf.
+
+    Make sure ``path`` doesn't exist after this call.  If it's a dir,
+    shutil.rmtree(); if it's a file, os.remove(); if it doesn't exist,
+    ignore.
+
+    Args:
+        path (str): the path to nuke.
+
+    """
+    if path and os.path.exists(path):
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)

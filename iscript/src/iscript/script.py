@@ -10,7 +10,6 @@ from iscript.mac import sign_and_notarize_all
 log = logging.getLogger(__name__)
 
 
-# async_main {{{1
 async def async_main(config, task):
     """Sign all the things.
 

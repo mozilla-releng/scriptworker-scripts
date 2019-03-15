@@ -23,7 +23,9 @@ setup(
     license="MPL2",
     install_requires=[
         "aiohttp",
+        "arrow",
         "attrs",
+        "pexpect",
         "scriptworker_client",
     ],
 )
