@@ -1,0 +1,27 @@
+{
+    "title": "Test Schema",
+    "type": "object",
+    "properties": {
+        "this_is_a_task": {
+            "type": "boolean"
+        },
+        "payload": {
+            "type": "object",
+            "properties": {
+                "payload_required_property": {
+                    "type": "string"
+                }
+            },
+            "required": ["payload_required_property"]
+        },
+        "extra": {
+            "type": "object",
+            "properties": {
+                "optional_property": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "required": ["this_is_a_task", "payload"]
+}

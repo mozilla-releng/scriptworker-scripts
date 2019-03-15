@@ -3,11 +3,14 @@
 """Test scriptworker_client.client
 """
 import json
+import logging
+import mock
 import os
 import pytest
+import sys
 import tempfile
 import scriptworker_client.client as client
-from scriptworker_client.exceptions import TaskVerificationError
+from scriptworker_client.exceptions import TaskError, TaskVerificationError
 
 
 # helpers {{{1
@@ -97,3 +100,109 @@ def test_verify_task_schema():
             client.verify_task_schema(config, {"list-of-strings": ["a", "a"]}, "foo.bar")
         with pytest.raises(TaskVerificationError):
             client.verify_task_schema(config, {"list-of-strings": ["a", "a"]}, "nonexistent_path")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('should_verify_task', (True, False))
+async def test_sync_main_runs_fully(should_verify_task):
+    with tempfile.TemporaryDirectory() as work_dir:
+        config = {
+            'work_dir': work_dir,
+            'schema_file': os.path.join(
+                os.path.dirname(__file__), 'data', 'basic_schema.json'
+            ),
+        }
+        with open(os.path.join(config['work_dir'], 'task.json'), "w") as fh:
+            fh.write(json.dumps({
+                "this_is_a_task": True,
+                "payload": {
+                    "payload_required_property": "..."
+                }
+            }))
+        async_main_calls = []
+        run_until_complete_calls = []
+
+        async def async_main(*args):
+            async_main_calls.append(args)
+
+        def count_run_until_complete(arg1):
+            run_until_complete_calls.append(arg1)
+
+        fake_loop = mock.MagicMock()
+        fake_loop.run_until_complete = count_run_until_complete
+
+        def loop_function():
+            return fake_loop
+
+        kwargs = {'loop_function': loop_function}
+
+        if not should_verify_task:
+            kwargs['should_verify_task'] = False
+
+        with tempfile.NamedTemporaryFile('w+') as f:
+            json.dump(config, f)
+            f.seek(0)
+
+            kwargs['config_path'] = f.name
+            client.sync_main(async_main, **kwargs)
+
+        for i in run_until_complete_calls:
+            await i  # suppress coroutine not awaited warning
+        assert len(run_until_complete_calls) == 1  # run_until_complete was called once
+        assert len(async_main_calls) == 1  # async_main was called once
+
+
+def test_usage(capsys, monkeypatch):
+    monkeypatch.setattr(sys, 'argv', ['my_binary'])
+    with pytest.raises(SystemExit):
+        client._usage()
+
+    captured = capsys.readouterr()
+    assert captured.out == ''
+    assert captured.err == 'Usage: my_binary CONFIG_FILE\n'
+
+
+@pytest.mark.parametrize('is_verbose, log_level', (
+    (True, logging.DEBUG),
+    (False, logging.INFO),
+))
+def test_init_logging(monkeypatch, is_verbose, log_level):
+    basic_config_mock = mock.MagicMock()
+    config = {'verbose': is_verbose}
+
+    monkeypatch.setattr(logging, 'basicConfig', basic_config_mock)
+    client._init_logging(config)
+
+    basic_config_mock.assert_called_once_with(
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        level=log_level,
+    )
+    assert logging.getLogger('taskcluster').level == logging.WARNING
+
+
+@pytest.mark.asyncio
+async def test_handle_asyncio_loop():
+    config = {}
+
+    async def async_main(*args, **kwargs):
+        config['was_async_main_called'] = True
+
+    await client._handle_asyncio_loop(async_main, config, {})
+
+    assert config.get('was_async_main_called')
+
+
+@pytest.mark.asyncio
+async def test_fail_handle_asyncio_loop(mocker):
+    m = mocker.patch.object(client, "log")
+
+    async def async_error(*args, **kwargs):
+        exception = TaskError('async_error!')
+        exception.exit_code = 42
+        raise exception
+
+    with pytest.raises(SystemExit) as excinfo:
+        await client._handle_asyncio_loop(async_error, {}, {})
+
+    assert excinfo.value.code == 42
+    m.exception.assert_called_once_with("Failed to run async_main")
