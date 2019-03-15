@@ -78,6 +78,9 @@ def test_get_task():
     True
 )))
 def test_verify_json_schema(data, schema, raises):
+    """``verify_json_schema`` raises if the data doesn't verify against the schema.
+
+    """
     if raises:
         with pytest.raises(TaskVerificationError):
             client.verify_json_schema(data, schema)
@@ -87,6 +90,9 @@ def test_verify_json_schema(data, schema, raises):
 
 # verify_task_schema {{{1
 def test_verify_task_schema():
+    """``verify_task_schema`` raises if the task doesn't match the schema.
+
+    """
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "schema.json")
         with open(path, 'w') as fh:
@@ -106,6 +112,9 @@ def test_verify_task_schema():
 @pytest.mark.asyncio
 @pytest.mark.parametrize('should_verify_task', (True, False))
 async def test_sync_main_runs_fully(should_verify_task):
+    """``sync_main`` runs fully.
+
+    """
     with tempfile.TemporaryDirectory() as work_dir:
         config = {
             'work_dir': work_dir,
@@ -154,6 +163,9 @@ async def test_sync_main_runs_fully(should_verify_task):
 
 
 def test_usage(capsys, monkeypatch):
+    """``_usage`` prints the expected error and exits.
+
+    """
     monkeypatch.setattr(sys, 'argv', ['my_binary'])
     with pytest.raises(SystemExit):
         client._usage()
@@ -168,6 +180,9 @@ def test_usage(capsys, monkeypatch):
     (False, logging.INFO),
 ))
 def test_init_logging(monkeypatch, is_verbose, log_level):
+    """``_init_logging`` sets the logging module format and level.
+
+    """
     basic_config_mock = mock.MagicMock()
     config = {'verbose': is_verbose}
 
@@ -183,6 +198,9 @@ def test_init_logging(monkeypatch, is_verbose, log_level):
 
 @pytest.mark.asyncio
 async def test_handle_asyncio_loop():
+    """``_handle_asyncio_loop`` calls ``async_main``.
+
+    """
     config = {}
 
     async def async_main(*args, **kwargs):
@@ -195,6 +213,9 @@ async def test_handle_asyncio_loop():
 
 @pytest.mark.asyncio
 async def test_fail_handle_asyncio_loop(mocker):
+    """``_handle_asyncio_loop`` exits properly on failure.
+
+    """
     m = mocker.patch.object(client, "log")
 
     async def async_error(*args, **kwargs):

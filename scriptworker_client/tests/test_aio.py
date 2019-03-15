@@ -157,7 +157,8 @@ async def fake_sleep(*args, **kwargs):
 
 @pytest.mark.asyncio
 async def test_retry_async_fail_first():
-    """
+    """``retry_async`` retries if the first attempt fails.
+
     """
     global retry_count
     retry_count['fail_first'] = 0
@@ -168,6 +169,9 @@ async def test_retry_async_fail_first():
 
 @pytest.mark.asyncio
 async def test_retry_async_always_fail():
+    """``retry_async`` gives up if we fail the max number of attempts.
+
+    """
     global retry_count
     retry_count['always_fail'] = 0
     with mock.patch('asyncio.sleep', new=fake_sleep):
@@ -181,12 +185,15 @@ async def test_retry_async_always_fail():
 
 # request {{{1
 class FakeSession():
+    """Aiohttp session mock."""
+
     statuses = None
 
     @asynccontextmanager
     async def request(self, method, url, **kwargs):
         """Fake request. "url" should be a comma-delimited set of integers
         that we'll use for status.
+
         """
 
         async def _fake_text():
@@ -207,11 +214,14 @@ class FakeSession():
 
 @asynccontextmanager
 async def GetFakeSession():
+    """Helper class to replace ``aiohttp.ClientSession()``
+
+    """
     yield FakeSession()
 
 
 async def noop_async(*args, **kwargs):
-    pass
+    """Noop coroutine."""
 
 
 @pytest.mark.parametrize('url,method,return_type,expected,exception,num_attempts', ((
