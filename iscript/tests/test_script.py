@@ -4,7 +4,6 @@
 """
 import os
 import pytest
-import tempfile
 import iscript.script as script
 
 
@@ -29,15 +28,14 @@ async def test_async_main(mocker):
 
 
 # get_default_config {{{1
-def test_get_default_config():
+def test_get_default_config(tmpdir):
     """``get_default_config`` returns a dict with expected keys/values.
 
     """
-    with tempfile.TemporaryDirectory() as tmp:
-        config = script.get_default_config(base_dir=tmp)
-        assert config['work_dir'] == os.path.join(tmp, 'work')
-        for k in ('artifact_dir', 'schema_file'):
-            assert k in config
+    config = script.get_default_config(base_dir=tmpdir)
+    assert config['work_dir'] == os.path.join(tmpdir, 'work')
+    for k in ('artifact_dir', 'schema_file'):
+        assert k in config
 
 
 # main {{{1

@@ -97,7 +97,7 @@ def test_to_unicode(input, expected):
 
 # pipe_to_log {{{1
 @pytest.mark.asyncio
-async def test_pipe_to_log():
+async def test_pipe_to_log(tmpdir):
     """``pipe_to_log`` writes command output to the log filehandle.
 
     """
@@ -107,31 +107,29 @@ async def test_pipe_to_log():
         stdout=PIPE, stderr=PIPE, stdin=None
     )
     tasks = []
-    with tempfile.TemporaryDirectory() as tmp:
-        path = os.path.join(tmp, 'log')
-        with open(path, 'w') as log_fh:
-            tasks.append(utils.pipe_to_log(proc.stderr, filehandles=[log_fh]))
-            tasks.append(utils.pipe_to_log(proc.stdout, filehandles=[log_fh]))
-            await asyncio.wait(tasks)
-            await proc.wait()
-        with open(path, 'r') as fh:
-            assert fh.read() in ("foo\nbar\n", "bar\nfoo\n")
+    path = os.path.join(tmpdir, 'log')
+    with open(path, 'w') as log_fh:
+        tasks.append(utils.pipe_to_log(proc.stderr, filehandles=[log_fh]))
+        tasks.append(utils.pipe_to_log(proc.stdout, filehandles=[log_fh]))
+        await asyncio.wait(tasks)
+        await proc.wait()
+    with open(path, 'r') as fh:
+        assert fh.read() in ("foo\nbar\n", "bar\nfoo\n")
 
 
 # get_log_filehandle {{{1
 @pytest.mark.parametrize('path', (None, 'log'))
-def test_get_log_filehandle(path):
+def test_get_log_filehandle(path, tmpdir):
     """``get_log_filehandle`` gives a writable filehandle.
 
     """
-    with tempfile.TemporaryDirectory() as tmp:
-        if path:
-            path = os.path.join(tmp, path)
-        with utils.get_log_filehandle(log_path=path) as log_fh:
-            log_fh.write('foo')
-        if path:
-            with open(path) as fh:
-                assert fh.read() == 'foo'
+    if path:
+        path = os.path.join(tmpdir, path)
+    with utils.get_log_filehandle(log_path=path) as log_fh:
+        log_fh.write('foo')
+    if path:
+        with open(path) as fh:
+            assert fh.read() == 'foo'
 
 
 # run_command {{{1
@@ -143,7 +141,7 @@ def test_get_log_filehandle(path):
     1, ['foo\nbar\n', 'bar\nfoo\n'], TaskError, True
 )))
 @pytest.mark.asyncio
-async def test_run_command(command, status, expected_log, exception, raises):
+async def test_run_command(command, status, expected_log, exception, raises, tmpdir):
     """``run_command`` runs the expected command, logs its output, and exits
     with its exit status. If ``exception`` is set and we exit non-zero, we
     raise that exception.
@@ -151,15 +149,14 @@ async def test_run_command(command, status, expected_log, exception, raises):
     """
     if not isinstance(expected_log, list):
         expected_log = [expected_log]
-    with tempfile.TemporaryDirectory() as tmp:
-        log_path = os.path.join(tmp, 'log')
-        if raises:
-            with pytest.raises(exception):
-                await utils.run_command(command, log_path=log_path, cwd=tmp, exception=exception)
-        else:
-            assert await utils.run_command(command, log_path=log_path, cwd=tmp, exception=exception) == status
-            with open(log_path, 'r') as fh:
-                assert fh.read() in expected_log
+    log_path = os.path.join(tmpdir, 'log')
+    if raises:
+        with pytest.raises(exception):
+            await utils.run_command(command, log_path=log_path, cwd=tmpdir, exception=exception)
+    else:
+        assert await utils.run_command(command, log_path=log_path, cwd=tmpdir, exception=exception) == status
+        with open(log_path, 'r') as fh:
+            assert fh.read() in expected_log
 
 
 # list_files {{{1
@@ -195,7 +192,7 @@ def test_list_files():
 ), (
     '%s/foo/bar/baz', False
 )))
-def test_makedirs(path, raises):
+def test_makedirs(path, raises, tmpdir):
     """``makedirs`` creates ``path`` and all missing parent directories if it is a
     nonexistent directory. If ``path`` is ``None``, it is noop. And if ``path``
     is an existing file, it raises ``TaskError``.
@@ -205,12 +202,11 @@ def test_makedirs(path, raises):
         with pytest.raises(TaskError):
             utils.makedirs(path)
     else:
-        with tempfile.TemporaryDirectory() as tmp:
-            if path and '%s' in path:
-                path = path % tmp
-            utils.makedirs(path)
-            if path:
-                assert os.path.isdir(path)
+        if path and '%s' in path:
+            path = path % tmpdir
+        utils.makedirs(path)
+        if path:
+            assert os.path.isdir(path)
 
 
 # rm {{{1
@@ -225,8 +221,7 @@ def test_rm_file():
     assert not os.path.exists(tmp)
 
 
-def test_rm_dir():
-    tmp = tempfile.mkdtemp()
-    assert os.path.exists(tmp)
-    utils.rm(tmp)
-    assert not os.path.exists(tmp)
+def test_rm_dir(tmpdir):
+    assert os.path.exists(tmpdir)
+    utils.rm(tmpdir)
+    assert not os.path.exists(tmpdir)

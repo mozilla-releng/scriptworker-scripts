@@ -11,7 +11,6 @@ import os
 import pytest
 import re
 import shutil
-import tempfile
 import time
 import scriptworker_client.aio as aio
 from scriptworker_client.exceptions import RetryError, TaskError, TimeoutError

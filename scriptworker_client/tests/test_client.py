@@ -9,7 +9,6 @@ import mock
 import os
 import pytest
 import sys
-import tempfile
 import scriptworker_client.client as client
 from scriptworker_client.exceptions import TaskError, TaskVerificationError
 
@@ -33,16 +32,15 @@ FAKE_SCHEMA = {
 }
 
 # get_task {{{1
-def test_get_task():
+def test_get_task(tmpdir):
     """Get the contents of ``work_dir/task.json``.
 
     """
     expected = {'foo': 'bar'}
-    with tempfile.TemporaryDirectory() as tmp:
-        config = {'work_dir': tmp}
-        with open(os.path.join(tmp, 'task.json'), 'w') as fh:
-            fh.write(json.dumps(expected))
-        assert client.get_task(config) == expected
+    config = {'work_dir': str(tmpdir)}
+    with open(os.path.join(tmpdir, 'task.json'), 'w') as fh:
+        fh.write(json.dumps(expected))
+    assert client.get_task(config) == expected
 
 
 # verify_json_schema {{{1
@@ -89,77 +87,76 @@ def test_verify_json_schema(data, schema, raises):
 
 
 # verify_task_schema {{{1
-def test_verify_task_schema():
+def test_verify_task_schema(tmpdir):
     """``verify_task_schema`` raises if the task doesn't match the schema.
 
     """
-    with tempfile.TemporaryDirectory() as tmp:
-        path = os.path.join(tmp, "schema.json")
-        with open(path, 'w') as fh:
-            fh.write(json.dumps(FAKE_SCHEMA))
-        config = {
-            "foo": {
-                "bar": path
-            },
-        }
-        client.verify_task_schema(config, {"list-of-strings": ["a"]}, "foo.bar")
-        with pytest.raises(TaskVerificationError):
-            client.verify_task_schema(config, {"list-of-strings": ["a", "a"]}, "foo.bar")
-        with pytest.raises(TaskVerificationError):
-            client.verify_task_schema(config, {"list-of-strings": ["a", "a"]}, "nonexistent_path")
+    path = os.path.join(tmpdir, "schema.json")
+    with open(path, 'w') as fh:
+        fh.write(json.dumps(FAKE_SCHEMA))
+    config = {
+        "foo": {
+            "bar": path
+        },
+    }
+    client.verify_task_schema(config, {"list-of-strings": ["a"]}, "foo.bar")
+    with pytest.raises(TaskVerificationError):
+        client.verify_task_schema(config, {"list-of-strings": ["a", "a"]}, "foo.bar")
+    with pytest.raises(TaskVerificationError):
+        client.verify_task_schema(config, {"list-of-strings": ["a", "a"]}, "nonexistent_path")
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('should_verify_task', (True, False))
-async def test_sync_main_runs_fully(should_verify_task):
+async def test_sync_main_runs_fully(tmpdir, should_verify_task):
     """``sync_main`` runs fully.
 
     """
-    with tempfile.TemporaryDirectory() as work_dir:
-        config = {
-            'work_dir': work_dir,
-            'schema_file': os.path.join(
-                os.path.dirname(__file__), 'data', 'basic_schema.json'
-            ),
-        }
-        with open(os.path.join(config['work_dir'], 'task.json'), "w") as fh:
-            fh.write(json.dumps({
-                "this_is_a_task": True,
-                "payload": {
-                    "payload_required_property": "..."
-                }
-            }))
-        async_main_calls = []
-        run_until_complete_calls = []
+    work_dir = str(tmpdir)
+    config = {
+        'work_dir': work_dir,
+        'schema_file': os.path.join(
+            os.path.dirname(__file__), 'data', 'basic_schema.json'
+        ),
+    }
+    with open(os.path.join(config['work_dir'], 'task.json'), "w") as fh:
+        fh.write(json.dumps({
+            "this_is_a_task": True,
+            "payload": {
+                "payload_required_property": "..."
+            }
+        }))
+    async_main_calls = []
+    run_until_complete_calls = []
 
-        async def async_main(*args):
-            async_main_calls.append(args)
+    async def async_main(*args):
+        async_main_calls.append(args)
 
-        def count_run_until_complete(arg1):
-            run_until_complete_calls.append(arg1)
+    def count_run_until_complete(arg1):
+        run_until_complete_calls.append(arg1)
 
-        fake_loop = mock.MagicMock()
-        fake_loop.run_until_complete = count_run_until_complete
+    fake_loop = mock.MagicMock()
+    fake_loop.run_until_complete = count_run_until_complete
 
-        def loop_function():
-            return fake_loop
+    def loop_function():
+        return fake_loop
 
-        kwargs = {'loop_function': loop_function}
+    kwargs = {'loop_function': loop_function}
 
-        if not should_verify_task:
-            kwargs['should_verify_task'] = False
+    if not should_verify_task:
+        kwargs['should_verify_task'] = False
 
-        with tempfile.NamedTemporaryFile('w+') as f:
-            json.dump(config, f)
-            f.seek(0)
+    config_path = os.path.join(tmpdir, 'config.json')
+    with open(config_path, 'w') as fh:
+        json.dump(config, fh)
 
-            kwargs['config_path'] = f.name
-            client.sync_main(async_main, **kwargs)
+    kwargs['config_path'] = config_path
+    client.sync_main(async_main, **kwargs)
 
-        for i in run_until_complete_calls:
-            await i  # suppress coroutine not awaited warning
-        assert len(run_until_complete_calls) == 1  # run_until_complete was called once
-        assert len(async_main_calls) == 1  # async_main was called once
+    for i in run_until_complete_calls:
+        await i  # suppress coroutine not awaited warning
+    assert len(run_until_complete_calls) == 1  # run_until_complete was called once
+    assert len(async_main_calls) == 1  # async_main was called once
 
 
 def test_usage(capsys, monkeypatch):
@@ -230,20 +227,19 @@ async def test_fail_handle_asyncio_loop(mocker):
     m.exception.assert_called_once_with("Failed to run async_main")
 
 
-def test_init_config_cli(mocker):
+def test_init_config_cli(mocker, tmpdir):
     """_init_config can get its config from the commandline if not specified.
 
     """
     mocker.patch.object(sys, 'argv', new=['x'])
     with pytest.raises(SystemExit):
         client._init_config()
-    with tempfile.TemporaryDirectory() as tmp:
-        path = os.path.join(tmp, 'foo.json')
-        config = {'a': 'b'}
-        default_config = {'c': 'd'}
-        with open(path, 'w') as fh:
-            fh.write(json.dumps(config))
-        expected = deepcopy(default_config)
-        expected.update(config)
-        mocker.patch.object(sys, 'argv', new=['x', path])
-        assert client._init_config(default_config=default_config) == expected
+    path = os.path.join(tmpdir, 'foo.json')
+    config = {'a': 'b'}
+    default_config = {'c': 'd'}
+    with open(path, 'w') as fh:
+        fh.write(json.dumps(config))
+    expected = deepcopy(default_config)
+    expected.update(config)
+    mocker.patch.object(sys, 'argv', new=['x', path])
+    assert client._init_config(default_config=default_config) == expected

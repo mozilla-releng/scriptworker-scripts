@@ -4,9 +4,13 @@
 """
 import os
 import pytest
-import tempfile
 import iscript.mac as mac
 from iscript.exceptions import IScriptError
+
+
+# helpers {{{1
+async def noop_async(*args, **kwargs):
+    pass
 
 
 # App {{{1
@@ -25,3 +29,9 @@ def test_app():
 
 
 # sign {{{1
+@pytest.mark.asyncio
+async def test_sign(mocker, tmpdir):
+    """Render ``sign`` noop and verify we have complete code coverage.
+
+    """
+    mocker.patch.object(mac, 'run_command', new=noop_async)
