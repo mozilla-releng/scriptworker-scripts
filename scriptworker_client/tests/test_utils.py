@@ -164,7 +164,8 @@ async def test_run_command(command, status, expected_log, exception, raises):
 
 # list_files {{{1
 def test_list_files():
-    """
+    """``list_files`` yields a list of all files in a directory, ignoring
+    ``ignored_list``.
 
     """
     parent_dir = os.path.dirname(__file__)
@@ -180,3 +181,52 @@ def test_list_files():
 
     assert set(all_paths + [ignored]) == set(expected_paths)
     assert set(expected_paths) - set(paths_with_ignore) == {ignored}
+
+
+# makedirs {{{1
+@pytest.mark.parametrize('path, raises', ((
+    None, False
+), (
+    os.path.join(os.path.dirname(__file__), 'data', 'bad.json'), True
+), (
+    os.path.join(os.path.dirname(__file__), 'data', 'bad.json', 'bar'), True
+), (
+    os.path.dirname(__file__), False
+), (
+    '%s/foo/bar/baz', False
+)))
+def test_makedirs(path, raises):
+    """``makedirs`` creates ``path`` and all missing parent directories if it is a
+    nonexistent directory. If ``path`` is ``None``, it is noop. And if ``path``
+    is an existing file, it raises ``TaskError``.
+
+    """
+    if raises:
+        with pytest.raises(TaskError):
+            utils.makedirs(path)
+    else:
+        with tempfile.TemporaryDirectory() as tmp:
+            if path and '%s' in path:
+                path = path % tmp
+            utils.makedirs(path)
+            if path:
+                assert os.path.isdir(path)
+
+
+# rm {{{1
+def test_rm_empty():
+    utils.rm(None)
+
+
+def test_rm_file():
+    _, tmp = tempfile.mkstemp()
+    assert os.path.exists(tmp)
+    utils.rm(tmp)
+    assert not os.path.exists(tmp)
+
+
+def test_rm_dir():
+    tmp = tempfile.mkdtemp()
+    assert os.path.exists(tmp)
+    utils.rm(tmp)
+    assert not os.path.exists(tmp)

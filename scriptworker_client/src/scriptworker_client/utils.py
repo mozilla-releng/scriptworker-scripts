@@ -251,15 +251,12 @@ def makedirs(path):
 
     """
     if path:
-        if not os.path.exists(path):
+        try:
             log.debug("makedirs({})".format(path))
-            os.makedirs(path)
-        else:
             realpath = os.path.realpath(path)
-            if not os.path.isdir(realpath):
-                raise TaskError(
-                    "makedirs: {} already exists and is not a directory!".format(path)
-                )
+            os.makedirs(realpath, exist_ok=True)
+        except OSError as e:
+            raise TaskError("makedirs: error creating {}: {}".format(path, e)) from e
 
 
 # rm {{{1
