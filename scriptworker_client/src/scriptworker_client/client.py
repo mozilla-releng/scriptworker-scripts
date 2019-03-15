@@ -10,11 +10,9 @@ import jsonschema
 import logging
 import os
 import sys
-from urllib.parse import unquote
 
-from scriptworker_client.constants import STATUSES
-from scriptworker_client.exceptions import ClientError, TaskError, TaskVerificationError
-from scriptworker_client.utils import load_json_or_yaml, match_url_regex
+from scriptworker_client.exceptions import ClientError, TaskVerificationError
+from scriptworker_client.utils import load_json_or_yaml
 
 log = logging.getLogger(__name__)
 

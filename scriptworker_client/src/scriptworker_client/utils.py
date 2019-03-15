@@ -11,9 +11,7 @@ from contextlib import contextmanager
 import json
 import logging
 import os
-import re
 import tempfile
-from urllib.parse import unquote, urlparse
 import yaml
 from scriptworker_client.exceptions import TaskError
 
@@ -60,66 +58,6 @@ def load_json_or_yaml(string, is_path=False, file_type='json',
         if exception is not None:
             repl_dict = {'exc': str(exc), 'file_type': file_type}
             raise exception(message % repl_dict)
-
-
-# match_url_path_callback {{{1
-def match_url_path_callback(match):
-    """Return the path, as a ``match_url_regex`` callback.
-
-    Args:
-        match (re.match): the regex match object from ``match_url_regex``
-
-    Returns:
-        string: the path matched in the regex.
-
-    """
-    path_info = match.groupdict()
-    return path_info['path']
-
-
-# match_url_regex {{{1
-def match_url_regex(rules, url, callback):
-    """Given rules and a callback, find the rule that matches the url.
-
-    Rules look like::
-
-        (
-            {
-                'schemes': ['https', 'ssh'],
-                'netlocs': ['hg.mozilla.org'],
-                'path_regexes': [
-                    "^(?P<path>/mozilla-(central|unified))(/|$)",
-                ]
-            },
-            ...
-        )
-
-    Args:
-        rules (list): a list of dictionaries specifying lists of ``schemes``,
-            ``netlocs``, and ``path_regexes``.
-        url (str): the url to test
-        callback (function): a callback that takes an ``re.MatchObject``.
-            If it returns None, continue searching.  Otherwise, return the
-            value from the callback.
-
-    Returns:
-        value: the value from the callback, or None if no match.
-
-    """
-    parts = urlparse(url)
-    path = unquote(parts.path)
-    for rule in rules:
-        if parts.scheme not in rule['schemes']:
-            continue
-        if parts.netloc not in rule['netlocs']:
-            continue
-        for regex in rule['path_regexes']:
-            m = re.search(regex, path)
-            if m is None:
-                continue
-            result = callback(m)
-            if result is not None:
-                return result
 
 
 # get_artifact_full_path {{{1
