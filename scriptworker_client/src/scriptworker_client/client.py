@@ -88,44 +88,6 @@ def verify_task_schema(config, task, schema_key='schema_file'):
         raise TaskVerificationError('Cannot verify task against schema. Task: {}.'.format(task)) from e
 
 
-def verify_artifact_url(valid_artifact_rules, valid_artifact_task_ids, url):
-    """Ensure a URL fits in given scheme, netloc, and path restrictions.
-
-    If we fail any checks, raise a TaskError with
-    ``malformed-payload``.
-
-    Args:
-        valid_artifact_rules (tuple): the tests to run, with ``schemas``, ``netlocs``,
-            and ``path_regexes``.
-        valid_artifact_task_ids (list): the list of valid task IDs to download from.
-        url (str): the url of the artifact.
-
-    Returns:
-        str: the ``filepath`` of the path regex.
-
-    Raises:
-        TaskError: on failure to verify.
-
-    """
-    def callback(match):
-        path_info = match.groupdict()
-        # make sure we're pointing at a valid task ID
-        if 'taskId' in path_info and \
-                path_info['taskId'] not in valid_artifact_task_ids:
-            return
-        if 'filepath' not in path_info:
-            return
-        return path_info['filepath']
-
-    filepath = match_url_regex(valid_artifact_rules, url, callback)
-    if filepath is None:
-        raise TaskError(
-            "Can't verify url {}".format(url),
-            exit_code=STATUSES['malformed-payload']
-        )
-    return unquote(filepath).lstrip('/')
-
-
 def sync_main(async_main, config_path=None, default_config=None,
               should_verify_task=True, loop_function=asyncio.get_event_loop):
     """Entry point for scripts using scriptworker.
