@@ -2,6 +2,7 @@
 # coding=utf-8
 """Test scriptworker_client.client
 """
+from copy import deepcopy
 import json
 import logging
 import mock
@@ -206,3 +207,22 @@ async def test_fail_handle_asyncio_loop(mocker):
 
     assert excinfo.value.code == 42
     m.exception.assert_called_once_with("Failed to run async_main")
+
+
+def test_init_config_cli(mocker):
+    """_init_config can get its config from the commandline if not specified.
+
+    """
+    mocker.patch.object(sys, 'argv', new=['x'])
+    with pytest.raises(SystemExit):
+        client._init_config()
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, 'foo.json')
+        config = {'a': 'b'}
+        default_config = {'c': 'd'}
+        with open(path, 'w') as fh:
+            fh.write(json.dumps(config))
+        expected = deepcopy(default_config)
+        expected.update(config)
+        mocker.patch.object(sys, 'argv', new=['x', path])
+        assert client._init_config(default_config=default_config) == expected
