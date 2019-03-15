@@ -84,7 +84,7 @@ def verify_task_schema(config, task, schema_key='schema_file'):
         log.debug('Task is verified against this schema: {}'.format(task_schema))
 
         verify_json_schema(task, task_schema)
-    except (KeyError, TaskError) as e:
+    except (KeyError, OSError) as e:
         raise TaskVerificationError('Cannot verify task against schema. Task: {}.'.format(task)) from e
 
 

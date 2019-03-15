@@ -10,6 +10,24 @@ import scriptworker_client.client as client
 from scriptworker_client.exceptions import TaskVerificationError
 
 
+# helpers {{{1
+
+FAKE_SCHEMA = {
+    "title": "foo",
+    "type": "object",
+    "properties": {
+        "list-of-strings": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": True,
+            "items": {
+                "type": "string",
+            }
+        },
+    },
+    "required": ["list-of-strings"],
+}
+
 # get_task {{{1
 def test_get_task():
     """Get the contents of ``work_dir/task.json``.
@@ -23,103 +41,36 @@ def test_get_task():
         assert client.get_task(config) == expected
 
 
+# verify_json_schema {{{1
 @pytest.mark.parametrize('data,schema,raises', ((
     {
         "list-of-strings": ['a', 'b'],
     },
-    {
-        "title": "foo",
-        "type": "object",
-        "properties": {
-            "list-of-strings": {
-                "type": "array",
-                "minItems": 1,
-                "uniqueItems": True,
-                "items": {
-                    "type": "string",
-                }
-            },
-        },
-    },
+    FAKE_SCHEMA,
     False
 ), (
     {
         "list-of-strings": ['a', 'a'],
     },
-    {
-        "title": "foo",
-        "type": "object",
-        "properties": {
-            "list-of-strings": {
-                "type": "array",
-                "minItems": 1,
-                "uniqueItems": True,
-                "items": {
-                    "type": "string",
-                }
-            },
-        },
-    },
+    FAKE_SCHEMA,
     True
 ), (
     {
         "list-of-strings": [],
     },
-    {
-        "title": "foo",
-        "type": "object",
-        "properties": {
-            "list-of-strings": {
-                "type": "array",
-                "minItems": 1,
-                "uniqueItems": True,
-                "items": {
-                    "type": "string",
-                }
-            },
-        },
-        "required": ["list-of-strings"],
-    },
+    FAKE_SCHEMA,
     True
 ), (
     {
         "list-of-strings": {"foo": "bar"},
     },
-    {
-        "title": "foo",
-        "type": "object",
-        "properties": {
-            "list-of-strings": {
-                "type": "array",
-                "minItems": 1,
-                "uniqueItems": True,
-                "items": {
-                    "type": "string",
-                }
-            },
-        },
-        "required": ["list-of-strings"],
-    },
+    FAKE_SCHEMA,
     True
 ), (
     {
         "invalid-key": {},
     },
-    {
-        "title": "foo",
-        "type": "object",
-        "properties": {
-            "list-of-strings": {
-                "type": "array",
-                "minItems": 1,
-                "uniqueItems": True,
-                "items": {
-                    "type": "string",
-                }
-            },
-        },
-        "required": ["list-of-strings"],
-    },
+    FAKE_SCHEMA,
     True
 )))
 def test_verify_json_schema(data, schema, raises):
@@ -128,3 +79,21 @@ def test_verify_json_schema(data, schema, raises):
             client.verify_json_schema(data, schema)
     else:
         client.verify_json_schema(data, schema)
+
+
+# verify_task_schema {{{1
+def test_verify_task_schema():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "schema.json")
+        with open(path, 'w') as fh:
+            fh.write(json.dumps(FAKE_SCHEMA))
+        config = {
+            "foo": {
+                "bar": path
+            },
+        }
+        client.verify_task_schema(config, {"list-of-strings": ["a"]}, "foo.bar")
+        with pytest.raises(TaskVerificationError):
+            client.verify_task_schema(config, {"list-of-strings": ["a", "a"]}, "foo.bar")
+        with pytest.raises(TaskVerificationError):
+            client.verify_task_schema(config, {"list-of-strings": ["a", "a"]}, "nonexistent_path")
