@@ -20,16 +20,6 @@ class IScriptError(TaskError):
 class FailedSubprocess(IScriptError):
     """Something went wrong during a subprocess exec."""
 
-    def __init__(self, msg):
-        """Initialize FailedSubprocess.
-
-        Args:
-            msg (str): the reason for throwing an exception.
-        """
-        super(FailedSubprocess, self).__init__(
-            msg, exit_code=STATUSES['internal-error']
-        )
-
 
 class UnknownAppDir(IScriptError):
     """There is no single app dir found for an app."""

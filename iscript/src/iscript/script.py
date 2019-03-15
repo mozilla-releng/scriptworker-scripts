@@ -38,10 +38,10 @@ def get_default_config(base_dir=None):
     """
     base_dir = base_dir or os.path.dirname(os.getcwd())
     default_config = {
-        'work_dir': os.path.join(base_dir, 'work_dir'),
-        'artifact_dir': os.path.join(base_dir, '/src/signing/artifact_dir'),
+        'work_dir': os.path.join(base_dir, 'work'),
+        'artifact_dir': os.path.join(base_dir, 'artifacts'),
         'schema_file': os.path.join(os.path.dirname(__file__), 'data', 'i_task_schema.json'),
-        'notary_accounts': [],
+        'local_notarization_accounts': [],
     }
     return default_config
 
