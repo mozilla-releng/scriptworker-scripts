@@ -12,7 +12,7 @@ class ClientError(Exception):
         import sys
         try:
             ...
-        except TaskError as exc:
+        except ClientError as exc:
             log.exception("log message")
             sys.exit(exc.exit_code)
 

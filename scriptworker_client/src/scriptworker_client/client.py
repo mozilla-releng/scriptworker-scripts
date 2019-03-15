@@ -146,6 +146,6 @@ def _init_logging(config):
 async def _handle_asyncio_loop(async_main, config, task):
     try:
         await async_main(config, task)
-    except TaskError as exc:
+    except ClientError as exc:
         log.exception("Failed to run async_main")
         sys.exit(exc.exit_code)
