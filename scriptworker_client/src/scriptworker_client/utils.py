@@ -213,26 +213,26 @@ async def run_command(cmd, log_path=None, log_cmd=None, cwd=None, exception=None
 
 
 # list_files {{{1
-def list_files(path, ignore=None):
+def list_files(path, ignore_list=None):
     """Recursively list the files in a directory.
 
     Args:
         path (str): the top directory
-        ignore (list): the directory or file names to ignore. If ``None``,
+        ignore_list (list): the directory or file names to ignore. If ``None``,
             use ``('.', '..')``. Defaults to ``None``.
 
     Yields:
         iterable: the paths to the files
 
     """
-    if ignore is None:
-        ignore = ('.', '..')
+    if ignore_list is None:
+        ignore_list = ('.', '..')
     with os.scandir(path) as it:
         for entry in it:
-            if entry.name in ignore:
+            if entry.name in ignore_list:
                 continue
             if entry.is_file():
                 yield os.path.join(path, entry.name)
             elif entry.is_dir():
-                for file_ in list_files(os.path.join(path, entry.name)):
+                for file_ in list_files(os.path.join(path, entry.name), ignore_list=ignore_list):
                     yield file_
