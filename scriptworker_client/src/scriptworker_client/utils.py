@@ -192,7 +192,7 @@ async def run_command(cmd, log_path=None, log_cmd=None, cwd=None, exception=None
         'stderr': PIPE,
         'stdin': None,
         'close_fds': True,
-        'preexec_fn': lambda: os.setsid(),
+        'preexec_fn': os.setsid,
         'cwd': cwd,
     }
     proc = await asyncio.create_subprocess_exec(*cmd, **kwargs)
