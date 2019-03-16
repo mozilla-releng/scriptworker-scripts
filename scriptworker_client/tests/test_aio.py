@@ -89,10 +89,10 @@ async def test_semaphore_wrapper():
     """
     sem = asyncio.Semaphore(2)
     futures = [
-        asyncio.ensure_future(aio.semaphore_wrapper(sem, async_time, sleep_time=.1)),
-        asyncio.ensure_future(aio.semaphore_wrapper(sem, async_time, sleep_time=.1)),
-        asyncio.ensure_future(aio.semaphore_wrapper(sem, async_time, sleep_time=.1)),
-        asyncio.ensure_future(aio.semaphore_wrapper(sem, async_time, sleep_time=.1)),
+        asyncio.ensure_future(aio.semaphore_wrapper(sem, async_time(sleep_time=.1))),
+        asyncio.ensure_future(aio.semaphore_wrapper(sem, async_time(sleep_time=.1))),
+        asyncio.ensure_future(aio.semaphore_wrapper(sem, async_time(sleep_time=.1))),
+        asyncio.ensure_future(aio.semaphore_wrapper(sem, async_time(sleep_time=.1))),
     ]
     with pytest.raises(TimeoutError):
         await aio.raise_future_exceptions(futures, timeout=.15)
