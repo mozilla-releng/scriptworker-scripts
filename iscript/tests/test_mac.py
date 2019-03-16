@@ -8,7 +8,7 @@ import os
 import pexpect
 import pytest
 import iscript.mac as mac
-from iscript.exceptions import IScriptError, TimeoutError
+from iscript.exceptions import IScriptError, TimeoutError, UnknownAppDir
 from scriptworker_client.utils import makedirs
 
 
@@ -121,3 +121,88 @@ async def test_unlock_keychain_failure(mocker):
     mocker.patch.object(pexpect, 'spawn', new=partial(fake_spawn, child))
     with pytest.raises(IScriptError):
         await mac.unlock_keychain('x', 'y')
+
+
+# get_app_dir {{{1
+@pytest.mark.parametrize('apps, raises', ((
+    [], True,
+), (
+    ['foo.app'], False,
+), (
+    ['foo.notanapp'], True,
+), (
+    ['one.app', 'two.app'], True,
+)))
+def test_get_app_dir(tmpdir, apps, raises):
+    """``get_app_dir`` returns the single ``.app`` dir in ``parent_dir``, and
+    raises ``UnknownAppDir`` if there is greater or fewer than one ``.app``.
+
+    """
+    for app in apps:
+        os.makedirs(os.path.join(tmpdir, app))
+
+    if raises:
+        with pytest.raises(UnknownAppDir):
+            mac.get_app_dir(tmpdir)
+    else:
+        assert mac.get_app_dir(tmpdir) == os.path.join(tmpdir, apps[0])
+
+
+# get_key_config {{{1
+@pytest.mark.parametrize('key, config_key, raises', ((
+    'dep', 'mac_config', False
+), (
+    'nightly', 'mac_config', False
+), (
+    'invalid_key', 'mac_config', True
+), (
+    'dep', 'invalid_config_key', True
+)))
+def test_get_config_key(key, config_key, raises):
+    """``get_config_key`` returns the correct subconfig.
+
+    """
+    config = {
+        'mac_config': {
+            'dep': {
+                'key': 'dep',
+            },
+            'nightly': {
+                'key': 'nightly',
+            },
+        },
+    }
+    if raises:
+        with pytest.raises(IScriptError):
+            mac.get_key_config(config, key, config_key=config_key)
+    else:
+        assert mac.get_key_config(config, key, config_key=config_key) == config[config_key][key]
+
+
+# get_app_paths {{{1
+def test_get_app_paths():
+    """``get_app_paths`` creates ``App`` objects with ``orig_path`` set to
+    the cot-downloaded artifact paths.
+
+    """
+    config = {'work_dir': 'work'}
+    task = {
+        'payload': {
+            'upstreamArtifacts': [{
+                'paths': ['public/foo'],
+                'taskId': 'task1',
+            }, {
+                'paths': ['public/bar', 'public/baz'],
+                'taskId': 'task2',
+            }],
+        }
+    }
+    paths = []
+    apps = mac.get_app_paths(config, task)
+    for app in apps:
+        assert isinstance(app, mac.App)
+        paths.append(app.orig_path)
+    assert paths == [
+        'work/cot/task1/public/foo', 'work/cot/task2/public/bar',
+        'work/cot/task2/public/baz'
+    ]

@@ -61,7 +61,7 @@ def load_json_or_yaml(string, is_path=False, file_type='json',
             raise exception(message % repl_dict)
 
 
-# get_artifact_full_path {{{1
+# get_artifact_path {{{1
 def get_artifact_path(task_id, path, work_dir=None):
     """Get the path to an artifact.
 
