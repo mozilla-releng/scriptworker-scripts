@@ -34,4 +34,16 @@ async def test_sign(mocker, tmpdir):
     """Render ``sign`` noop and verify we have complete code coverage.
 
     """
+    config = {
+        'mac_config': {
+            'key': {
+                'identity': 'id',
+            },
+        },
+    }
+    app = mac.App()
+    app.parent_dir = str(tmpdir)
+    entitlements_path = os.path.join(tmpdir, 'entitlements')
+    os.makedirs(os.path.join(tmpdir, 'foo.app'))
     mocker.patch.object(mac, 'run_command', new=noop_async)
+    await mac.sign(config, app, 'key', entitlements_path)

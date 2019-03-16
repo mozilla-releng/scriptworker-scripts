@@ -186,6 +186,7 @@ async def run_command(cmd, log_path=None, log_cmd=None, cwd=None, exception=None
     cwd = cwd or os.getcwd()
     log_cmd = log_cmd or cmd
     log.info("Running {} in {} ...".format(log_cmd, cwd))
+
     kwargs = {
         'stdout': PIPE,
         'stderr': PIPE,
@@ -217,6 +218,9 @@ async def run_command(cmd, log_path=None, log_cmd=None, cwd=None, exception=None
 def list_files(path, ignore_list=None):
     """Recursively list the files in a directory.
 
+    This currently treats softlinks as files, even if they're pointing to
+    directories.
+
     Args:
         path (str): the top directory
         ignore_list (list): the directory or file names to ignore. If ``None``,
@@ -232,11 +236,11 @@ def list_files(path, ignore_list=None):
         for entry in it:
             if entry.name in ignore_list:
                 continue
-            if entry.is_file():
-                yield os.path.join(path, entry.name)
-            elif entry.is_dir():
+            if entry.is_dir():
                 for file_ in list_files(os.path.join(path, entry.name), ignore_list=ignore_list):
                     yield file_
+            else:
+                yield os.path.join(path, entry.name)
 
 
 # makedirs {{{1

@@ -62,6 +62,8 @@ async def async_time(sleep_time=0):
         succeed(1, sleep_time=3),
     ],
     None, TimeoutError, .1
+), (
+    [], None, False, None
 )))
 @pytest.mark.asyncio
 async def test_raise_future_exceptions(coroutines, expected, raises, timeout):

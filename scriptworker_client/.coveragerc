@@ -1,5 +1,5 @@
 [run]
 branch = True
 omit =
-    iscript/tests/*
+    scriptworker_client/tests/*
     .tox/*

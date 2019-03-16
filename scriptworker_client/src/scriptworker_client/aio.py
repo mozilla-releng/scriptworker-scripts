@@ -28,6 +28,8 @@ async def raise_future_exceptions(futures, timeout=None):
         list: the results from the futures
 
     """
+    if not futures:
+        return
     done, pending = await asyncio.wait(futures, timeout=timeout)
     if pending:
         raise TimeoutError("{} futures still pending after timeout of {}".format(
