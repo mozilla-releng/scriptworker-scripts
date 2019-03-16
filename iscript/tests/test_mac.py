@@ -6,11 +6,19 @@ import os
 import pytest
 import iscript.mac as mac
 from iscript.exceptions import IScriptError
+from scriptworker_client.utils import makedirs
 
 
 # helpers {{{1
 async def noop_async(*args, **kwargs):
     pass
+
+
+def touch(path):
+    parent_dir = os.path.dirname(path)
+    makedirs(parent_dir)
+    with open(path, 'w') as fh:
+        pass
 
 
 # App {{{1
@@ -44,6 +52,9 @@ async def test_sign(mocker, tmpdir):
     app = mac.App()
     app.parent_dir = str(tmpdir)
     entitlements_path = os.path.join(tmpdir, 'entitlements')
-    os.makedirs(os.path.join(tmpdir, 'foo.app'))
+    app_path = os.path.join(tmpdir, 'foo.app')
+    for p in list(mac.INITIAL_FILES_TO_SIGN) + ['Resources/MacOS/foo']:
+        p = p.replace('*', 'foo')
+        touch(os.path.join(app_path, p))
     mocker.patch.object(mac, 'run_command', new=noop_async)
     await mac.sign(config, app, 'key', entitlements_path)

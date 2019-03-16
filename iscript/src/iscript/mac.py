@@ -123,13 +123,14 @@ async def sign(config, app, key, entitlements_path):
         futures.append(asyncio.ensure_future(
             semaphore_wrapper(
                 semaphore,
-                run_command,
-                [
-                    'codesign', '--force', '-o', 'runtime', '--verbose',
-                    '--sign', key_config['identity'], '--entitlements',
-                    entitlements_path, path
-                ],
-                cwd=app.parent_dir, exception=IScriptError
+                run_command(
+                    [
+                        'codesign', '--force', '-o', 'runtime', '--verbose',
+                        '--sign', key_config['identity'], '--entitlements',
+                        entitlements_path, path
+                    ],
+                    cwd=app.parent_dir, exception=IScriptError
+                )
             )
         ))
     await raise_future_exceptions(futures)
@@ -139,18 +140,19 @@ async def sign(config, app, key, entitlements_path):
     for path in list_files(app.app_path):
         if path in initial_files:
             continue
-        futures.append(
+        futures.append(asyncio.ensure_future(
             semaphore_wrapper(
                 semaphore,
-                run_command,
-                [
-                    'codesign', '--force', '-o', 'runtime', '--verbose',
-                    '--sign', key_config['identity'], '--entitlements',
-                    entitlements_path, path
-                ],
-                cwd=app.parent_dir, exception=IScriptError
+                run_command(
+                    [
+                        'codesign', '--force', '-o', 'runtime', '--verbose',
+                        '--sign', key_config['identity'], '--entitlements',
+                        entitlements_path, path
+                    ],
+                    cwd=app.parent_dir, exception=IScriptError
+                )
             )
-        )
+        ))
     await raise_future_exceptions(futures)
 
     # sign bundle
