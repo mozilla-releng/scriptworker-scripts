@@ -2,6 +2,7 @@
 # coding=utf-8
 """Test iscript.mac
 """
+import arrow
 from functools import partial
 import mock
 import os
@@ -325,3 +326,25 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
             await mac.sign_all_apps(key_config, entitlements_path, all_paths)
     else:
         await mac.sign_all_apps(key_config, entitlements_path, all_paths)
+
+
+# get_bundle_id {{{1
+@pytest.mark.parametrize('task_id', (None, 'asdf'))
+@pytest.mark.parametrize('counter', (None, 3))
+def test_get_bundle_id(mocker, task_id, counter):
+    """``get_bundle_id`` returns a unique bundle id
+    """
+    now = mock.MagicMock()
+    now.timestamp = 51
+    now.microsecond = 50
+    mocker.patch.object(arrow, 'utcnow', return_value=now)
+    base = 'org.foo.base'
+    expected = base
+    if task_id:
+        expected = '{}.{}.{}{}'.format(expected, task_id, now.timestamp, now.microsecond)
+        mocker.patch.object(os, 'environ', new={'TASK_ID': task_id})
+    else:
+        expected = '{}.None.{}{}'.format(expected, now.timestamp, now.microsecond)
+    if counter:
+        expected = '{}.{}'.format(expected, counter)
+    assert mac.get_bundle_id(base, counter=counter) == expected

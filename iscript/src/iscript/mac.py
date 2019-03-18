@@ -383,7 +383,7 @@ async def sign_all_apps(key_config, entitlements_path, all_paths):
 
 
 # get_bundle_id {{{1
-def get_bundle_id(base_bundle_id):
+def get_bundle_id(base_bundle_id, counter=None):
     """Get a bundle id for notarization.
 
     Args:
@@ -395,11 +395,14 @@ def get_bundle_id(base_bundle_id):
     """
     now = arrow.utcnow()
     # XXX we may want to encode more information in here. runId?
-    return "{}.{}.{}".format(
+    bundle_id = "{}.{}.{}".format(
         base_bundle_id,
         os.environ.get('TASK_ID', 'None'),
-        "{}{}".format(now.timestamp, now.microsecond),
+        '{}{}'.format(now.timestamp, now.microsecond),
     )
+    if counter:
+        bundle_id = '{}.{}'.format(bundle_id, str(counter))
+    return bundle_id
 
 
 # get_uuid_from_log {{{1
@@ -424,7 +427,7 @@ def get_uuid_from_log(log_path):
                     parts = line.split(' ')
                     return parts[2]
     except OSError as err:
-        raise IScriptError("Can't find UUID in {}: {}".format(log_path, err))
+        raise IScriptError("Can't find UUID in {}: {}".format(log_path, err)) from err
     raise IScriptError("Can't find UUID in {}!".format(log_path))
 
 
@@ -478,7 +481,7 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
         for account in accounts:
             app = all_paths[counter]
             app.notarization_log_path = os.path.join(app.parent_dir, 'notarization.log')
-            bundle_id = get_bundle_id(key_config['base_bundle_id'])
+            bundle_id = get_bundle_id(key_config['base_bundle_id'], counter=str(counter))
             base_cmd = [
                 'sudo', '-u', account,
                 'xcrun', 'altool', '--notarize-app',
