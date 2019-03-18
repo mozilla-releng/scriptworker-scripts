@@ -333,6 +333,7 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
 @pytest.mark.parametrize('counter', (None, 3))
 def test_get_bundle_id(mocker, task_id, counter):
     """``get_bundle_id`` returns a unique bundle id
+
     """
     now = mock.MagicMock()
     now.timestamp = 51
@@ -348,3 +349,29 @@ def test_get_bundle_id(mocker, task_id, counter):
     if counter:
         expected = '{}.{}'.format(expected, counter)
     assert mac.get_bundle_id(base, counter=counter) == expected
+
+
+# get_uuid_from_log {{{1
+@pytest.mark.parametrize('uuid, raises', ((
+    '07307e2c-db26-494c-8630-cfa239d4b86b', False,
+), (
+    'd4d31c49-c075-4ea1-bb7f-150c74f608e1', False,
+), (
+    'd4d31c49-c075-4ea1-bb7f-150c74f608e1', 'missing file',
+), (
+    '%%%%\\\\=', 'missing uuid',
+)))
+def test_get_uuid_from_log(tmpdir, uuid, raises):
+    """``get_uuid_from_log`` returns the correct uuid from the logfile if present.
+    It raises if it has problems finding the uuid in the log.
+
+    """
+    log_path = os.path.join(str(tmpdir), 'log')
+    if raises != 'missing file':
+        with open(log_path, 'w') as fh:
+            fh.write("foo\nbar\nbaz\n RequestUUID = {} \nblah\n".format(uuid))
+    if raises:
+        with pytest.raises(IScriptError):
+            mac.get_uuid_from_log(log_path)
+    else:
+        assert mac.get_uuid_from_log(log_path) == uuid

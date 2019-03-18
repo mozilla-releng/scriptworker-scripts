@@ -248,8 +248,8 @@ def get_key_config(config, key, config_key='mac_config'):
     """
     try:
         return config[config_key][key]
-    except KeyError as e:
-        raise IScriptError('Unknown key config {} {}: {}'.format(config_key, key, e))
+    except KeyError as err:
+        raise IScriptError('Unknown key config {} {}: {}'.format(config_key, key, err)) from err
 
 
 # get_app_paths {{{1
@@ -419,13 +419,13 @@ def get_uuid_from_log(log_path):
         str: the uuid
 
     """
+    regex = re.compile(r'RequestUUID = (?P<uuid>[a-zA-Z0-9-]+)')
     try:
         with open(log_path, 'r') as fh:
-            for line in fh.readline():
-                # XXX double check this looks like a uuid? Perhaps switch to regex
-                if line.startswith('RequestUUID ='):
-                    parts = line.split(' ')
-                    return parts[2]
+            for line in fh.readlines():
+                m = regex.search(line)
+                if m:
+                    return m['uuid']
     except OSError as err:
         raise IScriptError("Can't find UUID in {}: {}".format(log_path, err)) from err
     raise IScriptError("Can't find UUID in {}!".format(log_path))
@@ -451,7 +451,7 @@ def get_notarization_status_from_log(log_path):
         if m is not None:
             return m.status
     except OSError:
-        return
+        pass
 
 
 # wrap_notarization_with_sudo {{{1
