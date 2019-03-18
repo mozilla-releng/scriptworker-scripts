@@ -211,7 +211,7 @@ def test_get_app_paths():
 # extract_all_apps {{{1
 @pytest.mark.parametrize('raises', (True, False))
 @pytest.mark.asyncio
-async def test_extract_all_apps(mocker, raises, tmpdir):
+async def test_extract_all_apps(mocker, tmpdir, raises):
     """``extract_all_apps`` creates ``parent_dir`` and raises if any tar command
     fails. The ``run_command`` calls all start with a commandline that calls
     ``tar``.
@@ -237,3 +237,31 @@ async def test_extract_all_apps(mocker, raises, tmpdir):
         await mac.extract_all_apps(work_dir, all_paths)
         for i in ('0', '1', '2'):
             assert os.path.isdir(os.path.join(work_dir, i))
+
+
+# create_all_app_zipfiles {{{1
+@pytest.mark.parametrize('raises', (True, False))
+@pytest.mark.asyncio
+async def test_create_all_app_zipfiles(mocker, tmpdir, raises):
+    """``create_all_app_zipfiles`` calls ``zip -r``, and raises on failure.
+
+    """
+
+    async def fake_run_command(*args, **kwargs):
+        assert args[0][0:2] == ['zip', '-r']
+        if raises:
+            raise IScriptError('foo')
+
+    mocker.patch.object(mac, 'run_command', new=fake_run_command)
+    all_paths = []
+    work_dir = str(tmpdir)
+    for i in range(3):
+        parent_dir = os.path.join(work_dir, str(i))
+        app_name = 'fx {}.app'.format(str(i))
+        all_paths.append(mac.App(parent_dir=parent_dir, app_name=app_name))
+
+    if raises:
+        with pytest.raises(IScriptError):
+            await mac.create_all_app_zipfiles(all_paths)
+    else:
+        await mac.create_all_app_zipfiles(all_paths)

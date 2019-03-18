@@ -315,7 +315,7 @@ async def create_all_app_zipfiles(all_paths):
 
     """
     futures = []
-    required_attrs = ['parent_dir', 'zip_path', 'app_path']
+    required_attrs = ['parent_dir', 'app_name']
     # zip up apps
     for app in all_paths:
         app.check_required_attrs(required_attrs)
@@ -326,7 +326,7 @@ async def create_all_app_zipfiles(all_paths):
         futures.append(asyncio.ensure_future(
             run_command(
                 [
-                    'zip', app.zip_path, app.app_path,
+                    'zip', '-r', app.zip_path, app.app_name,
                 ],
                 cwd=app.parent_dir, exception=IScriptError,
             )
