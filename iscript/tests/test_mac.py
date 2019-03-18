@@ -294,3 +294,34 @@ async def test_create_one_app_zipfile(mocker, tmpdir, raises):
             await mac.create_one_app_zipfile(work_dir, all_paths)
     else:
         await mac.create_one_app_zipfile(work_dir, all_paths)
+
+
+# sign_all_apps {{{1
+@pytest.mark.parametrize('raises', (True, False))
+@pytest.mark.asyncio
+async def test_sign_all_apps(mocker, tmpdir, raises):
+    """``sign_all_apps`` calls ``sign`` and raises on failure.
+
+    """
+    key_config = {'x': 'y'}
+    entitlements_path = 'fake_entitlements_path'
+    work_dir = str(tmpdir)
+    all_paths = [
+        mac.App(parent_dir=os.path.join(work_dir, '0')),
+        mac.App(parent_dir=os.path.join(work_dir, '1')),
+        mac.App(parent_dir=os.path.join(work_dir, '2')),
+    ]
+
+    async def fake_sign(arg1, arg2, arg3):
+        assert arg1 == key_config
+        assert arg2 in all_paths
+        assert arg3 == entitlements_path
+        if raises:
+            raise IScriptError('foo')
+
+    mocker.patch.object(mac, 'sign', new=fake_sign)
+    if raises:
+        with pytest.raises(IScriptError):
+            await mac.sign_all_apps(key_config, entitlements_path, all_paths)
+    else:
+        await mac.sign_all_apps(key_config, entitlements_path, all_paths)

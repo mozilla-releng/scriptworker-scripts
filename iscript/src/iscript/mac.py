@@ -105,6 +105,7 @@ async def sign(config, app, key, entitlements_path):
 
     """
     key_config = get_key_config(config, key)
+    app.check_required_attrs(['parent_dir'])
     app.app_path = get_app_dir(app.parent_dir)
     app.app_name = os.path.basename(app.app_path)
     await run_command(
