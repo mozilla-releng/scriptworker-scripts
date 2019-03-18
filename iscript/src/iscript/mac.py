@@ -449,7 +449,7 @@ def get_notarization_status_from_log(log_path):
             contents = fh.read()
         m = regex.search(contents)
         if m is not None:
-            return m.status
+            return m['status']
     except OSError:
         pass
 

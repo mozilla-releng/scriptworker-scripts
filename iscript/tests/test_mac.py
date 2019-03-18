@@ -369,9 +369,32 @@ def test_get_uuid_from_log(tmpdir, uuid, raises):
     log_path = os.path.join(str(tmpdir), 'log')
     if raises != 'missing file':
         with open(log_path, 'w') as fh:
-            fh.write("foo\nbar\nbaz\n RequestUUID = {} \nblah\n".format(uuid))
+            fh.write('foo\nbar\nbaz\n RequestUUID = {} \nblah\n'.format(uuid))
     if raises:
         with pytest.raises(IScriptError):
             mac.get_uuid_from_log(log_path)
     else:
         assert mac.get_uuid_from_log(log_path) == uuid
+
+
+# get_notarization_status_from_log {{{1
+@pytest.mark.parametrize('has_log, status, expected', ((
+    True, 'invalid', 'invalid'
+), (
+    True, 'success', 'success'
+), (
+    True, 'unknown', None
+), (
+    False, None, None
+)))
+def test_get_notarization_status_from_log(tmpdir, has_log, status, expected):
+    """``get_notarization_status_from_log`` finds a valid status in the log
+    and returns it. If there is a problem or missing/unknown status, it
+    returns ``None``.
+
+    """
+    log_path = os.path.join(str(tmpdir), 'log')
+    if has_log:
+        with open(log_path, 'w') as fh:
+            fh.write('foo\nbar\nbaz\n Status: {} \nblah\n'.format(status))
+    assert mac.get_notarization_status_from_log(log_path) == expected
