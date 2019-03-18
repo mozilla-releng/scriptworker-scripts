@@ -213,11 +213,13 @@ def test_get_app_paths():
 @pytest.mark.asyncio
 async def test_extract_all_apps(mocker, raises, tmpdir):
     """``extract_all_apps`` creates ``parent_dir`` and raises if any tar command
-    fails.
+    fails. The ``run_command`` calls all start with a commandline that calls
+    ``tar``.
 
     """
 
     async def fake_run_command(*args, **kwargs):
+        assert args[0][0] == 'tar'
         if raises:
             raise IScriptError('foo')
 
