@@ -206,3 +206,32 @@ def test_get_app_paths():
         'work/cot/task1/public/foo', 'work/cot/task2/public/bar',
         'work/cot/task2/public/baz'
     ]
+
+
+# extract_all_apps {{{1
+@pytest.mark.parametrize('raises', (True, False))
+@pytest.mark.asyncio
+async def test_extract_all_apps(mocker, raises, tmpdir):
+    """``extract_all_apps`` creates ``parent_dir`` and raises if any tar command
+    fails.
+
+    """
+
+    async def fake_run_command(*args, **kwargs):
+        if raises:
+            raise IScriptError('foo')
+
+    mocker.patch.object(mac, 'run_command', new=fake_run_command)
+    work_dir = os.path.join(str(tmpdir), 'work')
+    all_paths = [
+        mac.App(orig_path=os.path.join(work_dir, 'orig1')),
+        mac.App(orig_path=os.path.join(work_dir, 'orig2')),
+        mac.App(orig_path=os.path.join(work_dir, 'orig3')),
+    ]
+    if raises:
+        with pytest.raises(IScriptError):
+            await mac.extract_all_apps(work_dir, all_paths)
+    else:
+        await mac.extract_all_apps(work_dir, all_paths)
+        for i in ('0', '1', '2'):
+            assert os.path.isdir(os.path.join(work_dir, i))
