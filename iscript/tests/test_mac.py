@@ -265,3 +265,32 @@ async def test_create_all_app_zipfiles(mocker, tmpdir, raises):
             await mac.create_all_app_zipfiles(all_paths)
     else:
         await mac.create_all_app_zipfiles(all_paths)
+
+
+# create_one_app_zipfile {{{1
+@pytest.mark.parametrize('raises', (True, False))
+@pytest.mark.asyncio
+async def test_create_one_app_zipfile(mocker, tmpdir, raises):
+    """``create_one_app_zipfile`` calls the expected cmdline, and raises on
+    failure.
+
+    """
+    work_dir = str(tmpdir)
+
+    async def fake_run_command(*args, **kwargs):
+        assert args[0] == [
+            'zip', '-r', os.path.join(work_dir, 'target.zip'),
+            '0/0.app', '1/1.app', '2/2.app'
+        ]
+        if raises:
+            raise IScriptError('foo')
+
+    mocker.patch.object(mac, 'run_command', new=fake_run_command)
+    all_paths = []
+    for i in range(3):
+        all_paths.append(mac.App(app_path=os.path.join(work_dir, str(i), '{}.app'.format(i))))
+    if raises:
+        with pytest.raises(IScriptError):
+            await mac.create_one_app_zipfile(work_dir, all_paths)
+    else:
+        await mac.create_one_app_zipfile(work_dir, all_paths)

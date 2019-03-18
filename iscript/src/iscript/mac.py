@@ -353,8 +353,8 @@ async def create_one_app_zipfile(work_dir, all_paths):
     zip_path = os.path.join(work_dir, 'target.zip')
     for app in all_paths:
         app.check_required_attrs(required_attrs)
-        app_paths.append(app.app_path)
-    await run_command(['zip', zip_path, *app_paths], cwd=work_dir, exception=IScriptError)
+        app_paths.append(os.path.relpath(app.app_path, work_dir))
+    await run_command(['zip', '-r', zip_path, *app_paths], cwd=work_dir, exception=IScriptError)
     return zip_path
 
 
