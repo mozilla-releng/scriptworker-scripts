@@ -36,11 +36,15 @@ async def raise_future_exceptions(futures, timeout=None):
             len(pending), timeout
         ))
     results = []
+    exceptions = []
     for fut in futures:
         exc = fut.exception()
         if exc:
-            raise exc
-        results.append(fut.result())
+            exceptions.append(exc)
+        else:
+            results.append(fut.result())
+    if exceptions:
+        raise exceptions[0]
     return results
 
 
