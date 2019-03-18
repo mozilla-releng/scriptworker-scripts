@@ -114,6 +114,8 @@ let
           -e vcversioner \
           -e pytest-runner \
           -e setuptools-scm \
+          -E libffi \
+          -E openssl \
           -E gnupg20 \
           -E git
       '';
