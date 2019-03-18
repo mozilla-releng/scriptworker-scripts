@@ -58,7 +58,7 @@ def load_json_or_yaml(string, is_path=False, file_type='json',
     except (OSError, ValueError, yaml.scanner.ScannerError) as exc:
         if exception is not None:
             repl_dict = {'exc': str(exc), 'file_type': file_type}
-            raise exception(message % repl_dict)
+            raise exception(message % repl_dict) from exc
 
 
 # get_artifact_path {{{1

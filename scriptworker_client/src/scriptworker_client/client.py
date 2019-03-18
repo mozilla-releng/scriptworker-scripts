@@ -56,7 +56,7 @@ def verify_json_schema(data, schema, name="task"):
     except jsonschema.exceptions.ValidationError as exc:
         raise TaskVerificationError(
             "Can't verify {} schema!\n{}".format(name, str(exc)),
-        )
+        ) from exc
 
 
 def verify_task_schema(config, task, schema_key='schema_file'):
