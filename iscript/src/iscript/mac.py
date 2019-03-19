@@ -611,9 +611,7 @@ async def poll_all_notarization_status(key_config, poll_uuids):
                 log_path, sleep_time=15
             )
         ))
-    results = await raise_future_exceptions(futures)
-    if set(results) != {'success'}:
-        raise IScriptError("Failure polling notarization!")  # XXX This may not be reachable
+    await raise_future_exceptions(futures)
 
 
 # staple_apps {{{1

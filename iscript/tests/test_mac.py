@@ -525,6 +525,12 @@ async def test_notarize_no_sudo(mocker, tmpdir, raises):
 )))
 @pytest.mark.asyncio
 async def test_poll_notarization_uuid(mocker, tmpdir, statuses, exception):
+    """``poll_notarization_uuid``: returns ``None`` on success; raises a
+    ``TimeoutError`` on timeout; raises ``IScriptError`` on failure; and raises
+    ``InvalidNotarization`` on ``invalid`` status from Apple. Also, it doesn't
+    log passwords.
+
+    """
     pw = 'test_apple_password'
 
     async def fake_retry_async(_, args, kwargs):
@@ -554,7 +560,37 @@ async def test_poll_notarization_uuid(mocker, tmpdir, statuses, exception):
 
 
 # poll_all_notarization_status {{{1
-@pytest.mark.parametrize('exception', (None, IScriptError, TimeoutError))
+@pytest.mark.parametrize('poll_uuids, raises', ((
+    {'uuid': 'log_path'}, True,
+), (
+    {'uuid': 'log_path'}, False,
+), (
+    {'uuid1': 'log_path1', 'uuid2': 'log_path2'}, False
+)))
 @pytest.mark.asyncio
-async def poll_all_notarization_status(tmpdir, exception):
-    pass
+async def test_poll_all_notarization_status(mocker, tmpdir, poll_uuids, raises):
+    """```poll_all_notarization_status`` concurrently runs a number of
+    ``poll_notarization_uuid`` calls, and raises if any of those calls raise.
+
+    """
+
+    async def fake_raise_future_exceptions(futures):
+        await asyncio.wait(futures)
+        assert len(futures) == len(poll_uuids)
+        if raises:
+            raise IScriptError('foo')
+
+    key_config = {
+        'apple_notarization_account': 'test_apple_account',
+        'apple_notarization_password': 'test_apple_password',
+        'notarization_poll_timeout': 1,
+    }
+
+    mocker.patch.object(mac, 'raise_future_exceptions', new=fake_raise_future_exceptions)
+    mocker.patch.object(mac, 'poll_notarization_uuid', new=noop_async)
+    if raises:
+        with pytest.raises(IScriptError):
+            await mac.poll_all_notarization_status(key_config, poll_uuids)
+
+    else:
+        assert await mac.poll_all_notarization_status(key_config, poll_uuids) is None
