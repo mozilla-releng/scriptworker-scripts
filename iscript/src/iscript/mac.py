@@ -626,12 +626,15 @@ async def staple_apps(all_paths):
 
     """
     log.info("Stapling apps")
+    futures = []
     for app in all_paths:
-        # XXX do this concurrently if it saves us time without breaking
-        await run_command(
-            ['xcrun', 'stapler', 'staple', '-v', app.app_name],
-            cwd=app.parent_dir, exception=IScriptError
-        )
+        futures.append(asyncio.ensure_future(
+            run_command(
+                ['xcrun', 'stapler', 'staple', '-v', app.app_name],
+                cwd=app.parent_dir, exception=IScriptError
+            )
+        ))
+    await raise_future_exceptions(futures)
 
 
 # tar_apps {{{1

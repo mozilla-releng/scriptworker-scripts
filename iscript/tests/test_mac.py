@@ -594,3 +594,26 @@ async def test_poll_all_notarization_status(mocker, tmpdir, poll_uuids, raises):
 
     else:
         assert await mac.poll_all_notarization_status(key_config, poll_uuids) is None
+
+
+# staple_apps {{{1
+@pytest.mark.parametrize('raises', (True, False))
+@pytest.mark.asyncio
+async def test_staple_apps(mocker, raises):
+    """``staple_apps`` runs stapling concurrently for each ``App``, and raises
+    any exceptions hit along the way.
+
+    """
+
+    async def fake_run_command(*args, **kwargs):
+        assert args[0][0] == 'xcrun'
+        if raises:
+            raise IScriptError('foo')
+
+    all_paths = [mac.App(), mac.App(), mac.App()]
+    mocker.patch.object(mac, 'run_command', new=fake_run_command)
+    if raises:
+        with pytest.raises(IScriptError):
+            await mac.staple_apps(all_paths)
+    else:
+        assert await mac.staple_apps(all_paths) is None
