@@ -3,6 +3,7 @@
 """Test iscript.mac
 """
 import arrow
+import asyncio
 from functools import partial
 import mock
 import os
@@ -398,3 +399,55 @@ def test_get_notarization_status_from_log(tmpdir, has_log, status, expected):
         with open(log_path, 'w') as fh:
             fh.write('foo\nbar\nbaz\n Status: {} \nblah\n'.format(status))
     assert mac.get_notarization_status_from_log(log_path) == expected
+
+
+# wrap_notarization_with_sudo {{{1
+@pytest.mark.parametrize('raises', (True, False))
+@pytest.mark.asyncio
+async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
+    """``wrap_notarization_with_sudo`` chunks its requests into one concurrent
+    request per each of the ``local_notarization_accounts``.
+
+    """
+    futures_len = [3, 3, 2]
+
+    async def fake_raise_future_exceptions(futures, **kwargs):
+        """``raise_future_exceptions`` mocker."""
+
+        await asyncio.wait(futures)
+        assert len(futures) == futures_len.pop(0)
+        if raises:
+            raise IScriptError('foo')
+
+    def fake_get_uuid_from_log(path):
+        return path
+
+    work_dir = str(tmpdir)
+    config = {
+        'local_notarization_accounts': ['acct0', 'acct1', 'acct2'],
+    }
+    key_config = {
+        'base_bundle_id': 'org.iscript.test',
+        'apple_notarization_account': 'test_apple_account',
+        'apple_notarization_password': 'test_apple_password',
+    }
+    all_paths = []
+    expected = {}
+    # Let's create 8 apps, with 3 sudo accounts, so we expect batches of 3, 3, 2
+    for i in range(8):
+        parent_dir = os.path.join(work_dir, str(i))
+        notarization_log_path = os.path.join(parent_dir, 'notarization.log')
+        all_paths.append(mac.App(
+            parent_dir=parent_dir,
+            zip_path=os.path.join(parent_dir, '{}.zip'.format(i)),
+        ))
+        expected[notarization_log_path] = notarization_log_path
+
+    mocker.patch.object(mac, 'retry_async', new=noop_async)
+    mocker.patch.object(mac, 'raise_future_exceptions', new=fake_raise_future_exceptions)
+    mocker.patch.object(mac, 'get_uuid_from_log', new=fake_get_uuid_from_log)
+    if raises:
+        with pytest.raises(IScriptError):
+            await mac.wrap_notarization_with_sudo(config, key_config, all_paths)
+    else:
+        assert await mac.wrap_notarization_with_sudo(config, key_config, all_paths) == expected

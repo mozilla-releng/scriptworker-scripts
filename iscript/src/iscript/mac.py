@@ -11,6 +11,7 @@ import re
 
 from scriptworker_client.aio import (
     raise_future_exceptions,
+    retry_async,
     semaphore_wrapper,
 )
 from scriptworker_client.utils import (
@@ -474,7 +475,7 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
     uuids = {}
 
     for app in all_paths:
-        app.check_required_attrs(['zip_path'])
+        app.check_required_attrs(['zip_path', 'parent_dir'])
 
     while counter < len(all_paths):
         futures = []
@@ -491,13 +492,15 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
                 '--password',
             ]
             log_cmd = base_cmd + ['********']
-            # TODO wrap in retry?
             futures.append(asyncio.ensure_future(
-                run_command(
-                    base_cmd + [key_config['apple_notarization_password']],
-                    log_path=app.notarization_log_path,
-                    log_cmd=log_cmd,
-                    exception=IScriptError,
+                retry_async(
+                    run_command,
+                    args=[base_cmd + [key_config['apple_notarization_password']]],
+                    kwargs={
+                        'log_path': app.notarization_log_path,
+                        'log_cmd': log_cmd,
+                        'exception': IScriptError,
+                    },
                 )
             ))
             counter += 1
