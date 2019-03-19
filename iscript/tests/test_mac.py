@@ -10,7 +10,9 @@ import os
 import pexpect
 import pytest
 import iscript.mac as mac
-from iscript.exceptions import IScriptError, TimeoutError, UnknownAppDir
+from iscript.exceptions import (
+    InvalidNotarization, IScriptError, TimeoutError, UnknownAppDir,
+)
 from scriptworker_client.utils import makedirs
 
 
@@ -507,3 +509,52 @@ async def test_notarize_no_sudo(mocker, tmpdir, raises):
             await mac.notarize_no_sudo(work_dir, key_config, zip_path)
     else:
         assert await mac.notarize_no_sudo(work_dir, key_config, zip_path) == expected
+
+
+# poll_notarization_uuid {{{1
+@pytest.mark.parametrize('statuses, exception', ((
+    ['success'], None
+), (
+    [None, 'success'], None
+), (
+    [None], IScriptError
+), (
+    ['invalid'], InvalidNotarization
+), (
+    [None, None, None, None, None, None, None, None, None], TimeoutError
+)))
+@pytest.mark.asyncio
+async def test_poll_notarization_uuid(mocker, tmpdir, statuses, exception):
+    pw = 'test_apple_password'
+
+    async def fake_retry_async(_, args, kwargs):
+        cmd = args[0]
+        end = len(cmd) - 1
+        assert cmd[0] == 'xcrun'
+        log_cmd = kwargs['log_cmd']
+        assert cmd[0:end] == log_cmd[0:end]
+        assert cmd[end] != log_cmd[end]
+        assert cmd[end] == pw
+        assert log_cmd[end].replace('*', '') == ''
+        if exception is IScriptError:
+            raise IScriptError('foo')
+
+    def fake_get_notarization_status_from_log(path):
+        return statuses.pop(0)
+
+    mocker.patch.object(mac, 'retry_async', new=fake_retry_async)
+    mocker.patch.object(
+        mac, 'get_notarization_status_from_log', new=fake_get_notarization_status_from_log
+    )
+    if exception:
+        with pytest.raises(exception):
+            await mac.poll_notarization_uuid('uuid', 'user', pw, .5, '/dev/null', sleep_time=.1)
+    else:
+        assert await mac.poll_notarization_uuid('uuid', 'user', pw, .5, '/dev/null', sleep_time=.1) is None
+
+
+# poll_all_notarization_status {{{1
+@pytest.mark.parametrize('exception', (None, IScriptError, TimeoutError))
+@pytest.mark.asyncio
+async def poll_all_notarization_status(tmpdir, exception):
+    pass

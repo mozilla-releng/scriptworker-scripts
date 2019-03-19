@@ -567,9 +567,14 @@ async def poll_notarization_uuid(uuid, username, password, timeout, log_path, sl
     base_cmd = ['xcrun', 'altool', '--notarization-info', uuid, '-u', username, '--password']
     log_cmd = base_cmd + ['********']
     while 1:
-        await run_command(
-            base_cmd + [password], log_path=log_path, log_cmd=log_cmd,
-            exception=IScriptError,
+        await retry_async(
+            run_command,
+            args=[base_cmd + [password]],
+            kwargs={
+                'log_path': log_path,
+                'log_cmd': log_cmd,
+                'exception': IScriptError,
+            },
         )
         status = get_notarization_status_from_log(log_path)
         if status == 'success':
@@ -689,6 +694,7 @@ async def create_pkg_files(all_paths):
     await raise_future_exceptions(futures)
 
 
+# sign_pkg_files {{{1
 async def sign_pkg_files(key_config, all_paths):
     """Sign the .pkg installers.
 
