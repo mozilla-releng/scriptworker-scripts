@@ -406,10 +406,22 @@ def test_get_notarization_status_from_log(tmpdir, has_log, status, expected):
 @pytest.mark.asyncio
 async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
     """``wrap_notarization_with_sudo`` chunks its requests into one concurrent
-    request per each of the ``local_notarization_accounts``.
+    request per each of the ``local_notarization_accounts``. It doesn't log
+    the password.
 
     """
     futures_len = [3, 3, 2]
+    pw = 'test_apple_password'
+
+    async def fake_retry_async(_, args, kwargs):
+        cmd = args[0]
+        end = len(cmd) - 1
+        assert cmd[0] == 'sudo'
+        log_cmd = kwargs['log_cmd']
+        assert cmd[0:end] == log_cmd[0:end]
+        assert cmd[end] != log_cmd[end]
+        assert cmd[end] == pw
+        assert log_cmd[end].replace('*', '') == ''
 
     async def fake_raise_future_exceptions(futures, **kwargs):
         """``raise_future_exceptions`` mocker."""
@@ -429,7 +441,7 @@ async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
     key_config = {
         'base_bundle_id': 'org.iscript.test',
         'apple_notarization_account': 'test_apple_account',
-        'apple_notarization_password': 'test_apple_password',
+        'apple_notarization_password': pw,
     }
     all_paths = []
     expected = {}
@@ -443,7 +455,7 @@ async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
         ))
         expected[notarization_log_path] = notarization_log_path
 
-    mocker.patch.object(mac, 'retry_async', new=noop_async)
+    mocker.patch.object(mac, 'retry_async', new=fake_retry_async)
     mocker.patch.object(mac, 'raise_future_exceptions', new=fake_raise_future_exceptions)
     mocker.patch.object(mac, 'get_uuid_from_log', new=fake_get_uuid_from_log)
     if raises:
@@ -451,3 +463,47 @@ async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
             await mac.wrap_notarization_with_sudo(config, key_config, all_paths)
     else:
         assert await mac.wrap_notarization_with_sudo(config, key_config, all_paths) == expected
+
+
+# notarize_no_sudo {{{1
+@pytest.mark.parametrize('raises', (True, False))
+@pytest.mark.asyncio
+async def test_notarize_no_sudo(mocker, tmpdir, raises):
+    """``notarize_no_sudo`` creates a single request to notarize that doesn't
+    log the password.
+
+    """
+    pw = 'test_apple_password'
+
+    async def fake_retry_async(_, args, kwargs):
+        cmd = args[0]
+        end = len(cmd) - 1
+        assert cmd[0] == 'xcrun'
+        log_cmd = kwargs['log_cmd']
+        assert cmd[0:end] == log_cmd[0:end]
+        assert cmd[end] != log_cmd[end]
+        assert cmd[end] == pw
+        assert log_cmd[end].replace('*', '') == ''
+        if raises:
+            raise IScriptError('foo')
+
+    def fake_get_uuid_from_log(path):
+        return path
+
+    work_dir = str(tmpdir)
+    zip_path = os.path.join(work_dir, 'zip_path')
+    log_path = os.path.join(work_dir, 'notarization.log')
+    key_config = {
+        'base_bundle_id': 'org.iscript.test',
+        'apple_notarization_account': 'test_apple_account',
+        'apple_notarization_password': pw,
+    }
+    expected = {log_path: log_path}
+
+    mocker.patch.object(mac, 'retry_async', new=fake_retry_async)
+    mocker.patch.object(mac, 'get_uuid_from_log', new=fake_get_uuid_from_log)
+    if raises:
+        with pytest.raises(IScriptError):
+            await mac.notarize_no_sudo(work_dir, key_config, zip_path)
+    else:
+        assert await mac.notarize_no_sudo(work_dir, key_config, zip_path) == expected

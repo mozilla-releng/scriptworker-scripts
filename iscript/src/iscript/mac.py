@@ -513,7 +513,7 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
 
 
 # notarize_no_sudo {{{1
-async def notarize_no_sudo(config, key_config, zip_path):
+async def notarize_no_sudo(work_dir, key_config, zip_path):
     """Create a notarization request, without sudo, for a single zip.
 
     Raises:
@@ -523,7 +523,7 @@ async def notarize_no_sudo(config, key_config, zip_path):
         dict: uuid to log path
 
     """
-    notarization_log_path = os.path.join(config['work_dir'], 'notarization.log')
+    notarization_log_path = os.path.join(work_dir, 'notarization.log')
     bundle_id = get_bundle_id(key_config['base_bundle_id'])
     base_cmd = [
         'xcrun', 'altool', '--notarize-app', '-f', zip_path,
@@ -532,12 +532,14 @@ async def notarize_no_sudo(config, key_config, zip_path):
         '--password',
     ]
     log_cmd = base_cmd + ['********']
-    # TODO wrap in retry?
-    await run_command(
-        base_cmd + [key_config['apple_notarization_password']],
-        log_path=notarization_log_path,
-        log_cmd=log_cmd,
-        exception=IScriptError,
+    await retry_async(
+        run_command,
+        args=[base_cmd + [key_config['apple_notarization_password']]],
+        kwargs={
+            'log_path': notarization_log_path,
+            'log_cmd': log_cmd,
+            'exception': IScriptError,
+        },
     )
     uuids = {get_uuid_from_log(notarization_log_path): notarization_log_path}
     return uuids
@@ -748,7 +750,7 @@ async def sign_and_notarize_all(config, task):
         poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths)
     else:
         zip_path = await create_one_app_zipfile(work_dir, all_paths)
-        poll_uuids = await notarize_no_sudo(config, key_config, zip_path)
+        poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
 
     await poll_all_notarization_status(key_config, poll_uuids)
     await staple_apps(all_paths)
