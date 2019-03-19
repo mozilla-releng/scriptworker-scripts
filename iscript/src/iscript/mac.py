@@ -628,6 +628,7 @@ async def staple_apps(all_paths):
     log.info("Stapling apps")
     futures = []
     for app in all_paths:
+        app.check_required_attrs(['app_name', 'parent_dir'])
         futures.append(asyncio.ensure_future(
             run_command(
                 ['xcrun', 'stapler', 'staple', '-v', app.app_name],
@@ -638,13 +639,13 @@ async def staple_apps(all_paths):
 
 
 # tar_apps {{{1
-async def tar_apps(config, all_paths):
+async def tar_apps(artifact_dir, all_paths):
     """Create tar artifacts from the app directories.
 
     These tar artifacts will live in the ``artifact_dir``
 
     Args:
-        config (dict): the running config
+        artifact_dir (str): the path of the artifact upload directory
         all_paths (list): the App objects to tar up
 
     Raises:
@@ -654,10 +655,11 @@ async def tar_apps(config, all_paths):
     log.info("Tarring up artifacts")
     futures = []
     for app in all_paths:
+        app.check_required_attrs(['app_name', 'orig_path', 'parent_dir'])
         # If we downloaded public/build/locale/target.tar.gz, then write to
         # artifact_dir/public/build/locale/target.tar.gz
         app.target_tar_path = '{}/public/{}'.format(
-            config['artifact_dir'], app.orig_path.split('public/')
+            artifact_dir, app.orig_path.split('public/')[1]
         )
         makedirs(os.path.dirname(app.target_tar_path))
         # TODO: different tar commands based on suffix?

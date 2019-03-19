@@ -546,7 +546,8 @@ async def test_poll_notarization_uuid(mocker, tmpdir, statuses, exception):
             raise IScriptError('foo')
 
     def fake_get_notarization_status_from_log(path):
-        return statuses.pop(0)
+        status = statuses.pop(0)
+        return status
 
     mocker.patch.object(mac, 'retry_async', new=fake_retry_async)
     mocker.patch.object(
@@ -610,10 +611,55 @@ async def test_staple_apps(mocker, raises):
         if raises:
             raise IScriptError('foo')
 
-    all_paths = [mac.App(), mac.App(), mac.App()]
+    all_paths = []
+    for i in range(3):
+        all_paths.append(mac.App(
+            parent_dir=str(i),
+            app_name='{}.app'.format(i),
+        ))
     mocker.patch.object(mac, 'run_command', new=fake_run_command)
     if raises:
         with pytest.raises(IScriptError):
             await mac.staple_apps(all_paths)
     else:
         assert await mac.staple_apps(all_paths) is None
+
+
+# tar_apps {{{1
+@pytest.mark.parametrize('raises', (True, False))
+@pytest.mark.asyncio
+async def test_tar_apps(mocker, tmpdir, raises):
+    """``tar_apps`` runs tar concurrently for each ``App``, creating the
+    app ``target_tar_path``s, and raises any exceptions hit along the way.
+
+    """
+
+    async def fake_raise_future_exceptions(futures):
+        await asyncio.wait(futures)
+        if raises:
+            raise IScriptError('foo')
+
+    work_dir = os.path.join(tmpdir, 'work')
+    artifact_dir = os.path.join(tmpdir, 'artifact')
+    all_paths = []
+    expected = []
+    for i in range(3):
+        parent_dir = os.path.join(work_dir, str(i))
+        app_name = '{}.app'.format(i)
+        orig_path = os.path.join(work_dir, 'cot', 'foo', 'public', 'build', str(i), '{}.tar.gz'.format(i))
+        # overload pkg_path to track i
+        all_paths.append(mac.App(
+            parent_dir=parent_dir, app_name=app_name, orig_path=orig_path, pkg_path=str(i)
+        ))
+        expected.append(os.path.join(artifact_dir, 'public', 'build/{}/{}.tar.gz'.format(i, i)))
+
+    mocker.patch.object(mac, 'run_command', new=noop_async)
+    mocker.patch.object(mac, 'raise_future_exceptions', new=fake_raise_future_exceptions)
+    if raises:
+        with pytest.raises(IScriptError):
+            await mac.tar_apps(artifact_dir, all_paths)
+    else:
+        assert await mac.tar_apps(artifact_dir, all_paths) is None
+        assert [x.target_tar_path for x in all_paths] == expected
+        for path in expected:
+            assert os.path.isdir(os.path.dirname(path))
