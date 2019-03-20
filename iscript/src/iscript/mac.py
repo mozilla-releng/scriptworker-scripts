@@ -715,6 +715,7 @@ async def sign_pkg_files(key_config, all_paths):
     log.info("Signing pkgs")
     futures = []
     for app in all_paths:
+        app.check_required_attrs(['target_tar_path', 'parent_dir'])
         app.target_pkg_path = app.target_tar_path.replace('.tar.gz', '.app')
         # passwords? keychain?
         futures.append(asyncio.ensure_future(

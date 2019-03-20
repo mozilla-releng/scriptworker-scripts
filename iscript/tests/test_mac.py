@@ -691,3 +691,32 @@ async def test_create_pkg_files(mocker, raises):
             await mac.create_pkg_files(all_paths)
     else:
         assert await mac.create_pkg_files(all_paths) is None
+
+
+# sign_pkg_files {{{1
+@pytest.mark.parametrize('raises', (True, False))
+@pytest.mark.asyncio
+async def test_sign_pkg_files(mocker, raises):
+    """``sign_pkg_files`` runs productsign concurrently for each ``App``, and
+    raises any exceptions hit along the way.
+
+    """
+
+    async def fake_run_command(cmd, **kwargs):
+        assert cmd[0:2] == ['productsign', '--sign']
+        if raises:
+            raise IScriptError('foo')
+
+    key_config = {'pkg_cert_id': 'cert'}
+    all_paths = []
+    for i in range(3):
+        all_paths.append(mac.App(
+            target_tar_path='foo/artifacts/{}.tar.gz'.format(i),
+            parent_dir='foo/{}'.format(i),
+        ))
+    mocker.patch.object(mac, 'run_command', new=fake_run_command)
+    if raises:
+        with pytest.raises(IScriptError):
+            await mac.sign_pkg_files(key_config, all_paths)
+    else:
+        assert await mac.sign_pkg_files(key_config, all_paths) is None
