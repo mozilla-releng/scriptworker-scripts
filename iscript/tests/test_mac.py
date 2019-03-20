@@ -43,6 +43,31 @@ def test_app():
         a.check_required_attrs(['app_path'])
 
 
+# set_app_path_and_name {{{1
+def test_app_path_and_name(mocker):
+    """``app_path_and_name`` sets the ``app_path`` and ``app_name`` if not
+    already set.
+
+    """
+
+    def fake_get_app_dir(parent_dir):
+        x = os.path.basename(parent_dir)
+        return os.path.join(parent_dir, '{}.app'.format(x))
+
+    all_paths = [
+        mac.App(parent_dir='foo/1'),
+        mac.App(parent_dir='foo/2', app_path='foo/2/2.app'),
+        mac.App(parent_dir='foo/3', app_path='foo/4/4.app', app_name='4.app'),
+    ]
+    mocker.patch.object(mac, 'get_app_dir', new=fake_get_app_dir)
+    expected = [
+        ['foo/1/1.app', '1.app'], ['foo/2/2.app', '2.app'], ['foo/4/4.app', '4.app']
+    ]
+    for app in all_paths:
+        set_app_path_and_name(app)
+        assert [app.app_path, app.app_name] == expected.pop(0)
+
+
 # sign {{{1
 @pytest.mark.asyncio
 async def test_sign(mocker, tmpdir):
@@ -703,19 +728,22 @@ async def test_sign_pkg_files(mocker, raises):
         if raises:
             raise IScriptError('foo')
 
+    config = {'artifact_dir': 'artifacts'}
     key_config = {'pkg_cert_id': 'cert'}
     all_paths = []
     for i in range(3):
         all_paths.append(mac.App(
-            target_tar_path='foo/artifacts/{}.tar.gz'.format(i),
             parent_dir='foo/{}'.format(i),
+            orig_path='public/{}/{}.tar.gz'.format(i, i),
+            app_path='foo/{}/{}.app'.format(i, i),
+            app_name='{}.app'.format(i),
         ))
     mocker.patch.object(mac, 'run_command', new=fake_run_command)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.sign_pkg_files(key_config, all_paths)
+            await mac.sign_pkg_files(config, key_config, all_paths)
     else:
-        assert await mac.sign_pkg_files(key_config, all_paths) is None
+        assert await mac.sign_pkg_files(config, key_config, all_paths) is None
 
 
 # sign_and_notarize_all {{{1

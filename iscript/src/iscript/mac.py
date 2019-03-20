@@ -91,6 +91,28 @@ class App(object):
                 raise IScriptError('Missing {} attr!'.format(att))
 
 
+# set_app_path_and_name {{{1
+def set_app_path_and_name(app):
+    """Set the ``App`` ``app_path`` and ``app_name``.
+
+    Because we might follow different workflows, we might not call ``sign``
+    before ``create_pkg_files``. Let's move this logic into its own function.
+
+    If ``app_path`` or ``app_name`` is already set, don't set them again.
+    This is only to save some cycles.
+
+    Args:
+        app (App): the app to set.
+
+    Raises:
+        IScriptError: if ``parent_dir`` isn't set.
+
+    """
+    app.check_required_attrs(['parent_dir'])
+    app.app_path = app.app_path or get_app_dir(app.parent_dir)
+    app.app_name = app.app_name or os.path.basename(app.app_path)
+
+
 # sign {{{1
 async def sign(key_config, app, entitlements_path):
     """Sign the .app.
@@ -105,9 +127,7 @@ async def sign(key_config, app, entitlements_path):
         IScriptError: on error.
 
     """
-    app.check_required_attrs(['parent_dir'])
-    app.app_path = get_app_dir(app.parent_dir)
-    app.app_name = os.path.basename(app.app_path)
+    set_app_path_and_name(app)
     await run_command(
         ['xattr', '-cr', app.app_name], cwd=app.parent_dir,
         exception=IScriptError
@@ -685,7 +705,8 @@ async def create_pkg_files(all_paths):
     log.info("Creating PKG files")
     futures = []
     for app in all_paths:
-        app.check_required_attrs(['app_path', 'parent_dir'])
+        # call set_app_path_and_name because we may not have called sign() earlier
+        set_app_path_and_name(app)
         app.pkg_path = app.app_path.replace('.app', '.pkg')
         futures.append(asyncio.ensure_future(
             run_command(
@@ -700,12 +721,13 @@ async def create_pkg_files(all_paths):
 
 
 # sign_pkg_files {{{1
-async def sign_pkg_files(key_config, all_paths):
+async def sign_pkg_files(config, key_config, all_paths):
     """Sign the .pkg installers.
 
     These will be written into the ``artifact_dir``
 
     Args:
+        config (dict): the running config
         key_config (dict): the running config for this key
         all_paths (list): the list of App objects to sign pkg for
 
@@ -716,8 +738,10 @@ async def sign_pkg_files(key_config, all_paths):
     log.info("Signing pkgs")
     futures = []
     for app in all_paths:
-        app.check_required_attrs(['target_tar_path', 'parent_dir'])
-        app.target_pkg_path = app.target_tar_path.replace('.tar.gz', '.app')
+        app.check_required_attrs(['parent_dir', 'orig_path'])
+        app.target_pkg_path = '{}/public/{}'.format(
+            config['artifact_dir'], app.orig_path.split('public/')[1]
+        ).replace('.tar.gz', '.app')
         # passwords? keychain?
         futures.append(asyncio.ensure_future(
             run_command(
@@ -768,6 +792,33 @@ async def sign_and_notarize_all(config, task):
     await staple_apps(all_paths)
     await tar_apps(config['artifact_dir'], all_paths)
     await create_pkg_files(all_paths)
-    await sign_pkg_files(key_config, all_paths)
+    await sign_pkg_files(config, key_config, all_paths)
+
+    log.info("Done signing and notarizing apps.")
+
+
+# create_and_sign_all_pkg_files {{{1
+async def create_and_sign_all_pkg_files(config, task):
+    """Create and sign all pkg files for this task.
+
+    Args:
+        config (dict): the running configuration
+        task (dict): the running task
+
+    Raises:
+        IScriptError: on fatal error.
+
+    """
+    work_dir = config['work_dir']
+
+    # TODO get this from scopes?
+    key = 'dep'
+    key_config = get_key_config(config, key)
+
+    all_paths = get_app_paths(config, task)
+    await extract_all_apps(work_dir, all_paths)
+    await unlock_keychain(key_config['signing_keychain'], key_config['keychain_password'])
+    await create_pkg_files(all_paths)
+    await sign_pkg_files(config, key_config, all_paths)
 
     log.info("Done signing and notarizing apps.")
