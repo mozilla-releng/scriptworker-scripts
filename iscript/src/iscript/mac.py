@@ -92,7 +92,7 @@ class App(object):
 
 
 # sign {{{1
-async def sign(config, app, key, entitlements_path):
+async def sign(key_config, app, entitlements_path):
     """Sign the .app.
 
     Args:
@@ -105,7 +105,6 @@ async def sign(config, app, key, entitlements_path):
         IScriptError: on error.
 
     """
-    key_config = get_key_config(config, key)
     app.check_required_attrs(['parent_dir'])
     app.app_path = get_app_dir(app.parent_dir)
     app.app_name = os.path.basename(app.app_path)
@@ -663,9 +662,11 @@ async def tar_apps(artifact_dir, all_paths):
         )
         makedirs(os.path.dirname(app.target_tar_path))
         # TODO: different tar commands based on suffix?
-        futures.append(run_command(
-            ['tar', 'czvf', app.target_tar_path, app.app_name],
-            cwd=app.parent_dir, exception=IScriptError,
+        futures.append(asyncio.ensure_future(
+            run_command(
+                ['tar', 'czvf', app.target_tar_path, app.app_name],
+                cwd=app.parent_dir, exception=IScriptError,
+            )
         ))
     await raise_future_exceptions(futures)
 
@@ -765,7 +766,7 @@ async def sign_and_notarize_all(config, task):
 
     await poll_all_notarization_status(key_config, poll_uuids)
     await staple_apps(all_paths)
-    await tar_apps(config, all_paths)
+    await tar_apps(config['artifact_dir'], all_paths)
     await create_pkg_files(all_paths)
     await sign_pkg_files(key_config, all_paths)
 
