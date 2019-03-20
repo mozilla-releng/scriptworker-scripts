@@ -64,7 +64,7 @@ def test_app_path_and_name(mocker):
         ['foo/1/1.app', '1.app'], ['foo/2/2.app', '2.app'], ['foo/4/4.app', '4.app']
     ]
     for app in all_paths:
-        set_app_path_and_name(app)
+        mac.set_app_path_and_name(app)
         assert [app.app_path, app.app_name] == expected.pop(0)
 
 
