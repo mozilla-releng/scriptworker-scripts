@@ -658,13 +658,13 @@ async def staple_apps(all_paths):
 
 
 # tar_apps {{{1
-async def tar_apps(artifact_dir, all_paths):
+async def tar_apps(config, all_paths):
     """Create tar artifacts from the app directories.
 
     These tar artifacts will live in the ``artifact_dir``
 
     Args:
-        artifact_dir (str): the path of the artifact upload directory
+        config (dict): the running config
         all_paths (list): the App objects to tar up
 
     Raises:
@@ -678,7 +678,7 @@ async def tar_apps(artifact_dir, all_paths):
         # If we downloaded public/build/locale/target.tar.gz, then write to
         # artifact_dir/public/build/locale/target.tar.gz
         app.target_tar_path = '{}/public/{}'.format(
-            artifact_dir, app.orig_path.split('public/')[1]
+            config['artifact_dir'], app.orig_path.split('public/')[1]
         )
         makedirs(os.path.dirname(app.target_tar_path))
         # TODO: different tar commands based on suffix?
@@ -790,7 +790,7 @@ async def sign_and_notarize_all(config, task):
 
     await poll_all_notarization_status(key_config, poll_uuids)
     await staple_apps(all_paths)
-    await tar_apps(config['artifact_dir'], all_paths)
+    await tar_apps(config, all_paths)
     await create_pkg_files(all_paths)
     await sign_pkg_files(config, key_config, all_paths)
 

@@ -542,7 +542,7 @@ async def test_notarize_no_sudo(mocker, tmpdir, raises):
 ), (
     ['invalid'], InvalidNotarization
 ), (
-    [None, None, None, None, None, None, None, None, None], TimeoutError
+    [None, None, None, None, None, None, None, None, None, None, None], TimeoutError
 )))
 @pytest.mark.asyncio
 async def test_poll_notarization_uuid(mocker, tmpdir, statuses, exception):
@@ -661,7 +661,7 @@ async def test_tar_apps(mocker, tmpdir, raises):
             raise IScriptError('foo')
 
     work_dir = os.path.join(tmpdir, 'work')
-    artifact_dir = os.path.join(tmpdir, 'artifact')
+    config = {'artifact_dir': os.path.join(tmpdir, 'artifact')}
     all_paths = []
     expected = []
     for i in range(3):
@@ -672,15 +672,15 @@ async def test_tar_apps(mocker, tmpdir, raises):
         all_paths.append(mac.App(
             parent_dir=parent_dir, app_name=app_name, orig_path=orig_path, pkg_path=str(i)
         ))
-        expected.append(os.path.join(artifact_dir, 'public', 'build/{}/{}.tar.gz'.format(i, i)))
+        expected.append(os.path.join(config['artifact_dir'], 'public', 'build/{}/{}.tar.gz'.format(i, i)))
 
     mocker.patch.object(mac, 'run_command', new=noop_async)
     mocker.patch.object(mac, 'raise_future_exceptions', new=fake_raise_future_exceptions)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.tar_apps(artifact_dir, all_paths)
+            await mac.tar_apps(config, all_paths)
     else:
-        assert await mac.tar_apps(artifact_dir, all_paths) is None
+        assert await mac.tar_apps(config, all_paths) is None
         assert [x.target_tar_path for x in all_paths] == expected
         for path in expected:
             assert os.path.isdir(os.path.dirname(path))
