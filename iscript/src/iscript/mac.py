@@ -684,6 +684,7 @@ async def create_pkg_files(all_paths):
     log.info("Creating PKG files")
     futures = []
     for app in all_paths:
+        app.check_required_attrs(['app_path', 'parent_dir'])
         app.pkg_path = app.app_path.replace('.app', '.pkg')
         futures.append(asyncio.ensure_future(
             run_command(

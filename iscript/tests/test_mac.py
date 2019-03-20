@@ -663,3 +663,31 @@ async def test_tar_apps(mocker, tmpdir, raises):
         assert [x.target_tar_path for x in all_paths] == expected
         for path in expected:
             assert os.path.isdir(os.path.dirname(path))
+
+
+# create_pkg_files {{{1
+@pytest.mark.parametrize('raises', (True, False))
+@pytest.mark.asyncio
+async def test_create_pkg_files(mocker, raises):
+    """``create_pkg_files`` runs pkgbuild concurrently for each ``App``, and
+    raises any exceptions hit along the way.
+
+    """
+
+    async def fake_run_command(cmd, **kwargs):
+        assert cmd[0:2] == ['sudo', 'pkgbuild']
+        if raises:
+            raise IScriptError('foo')
+
+    all_paths = []
+    for i in range(3):
+        all_paths.append(mac.App(
+            app_path='foo/{}/{}.app'.format(i, i),
+            parent_dir='foo/{}'.format(i),
+        ))
+    mocker.patch.object(mac, 'run_command', new=fake_run_command)
+    if raises:
+        with pytest.raises(IScriptError):
+            await mac.create_pkg_files(all_paths)
+    else:
+        assert await mac.create_pkg_files(all_paths) is None
