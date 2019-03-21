@@ -793,3 +793,48 @@ async def test_sign_and_notarize_all(mocker, tmpdir, notarize_type):
     mocker.patch.object(mac, 'get_notarization_status_from_log', return_value=None)
     mocker.patch.object(mac, 'get_uuid_from_log', return_value='uuid')
     await mac.sign_and_notarize_all(config, task)
+
+
+# create_and_sign_all_pkg_files {{{1
+@pytest.mark.asyncio
+async def test_create_and_sign_all_pkg_files(mocker, tmpdir):
+    """Mock ``create_and_sign_all_pkg_files`` for full line coverage."""
+
+    artifact_dir = os.path.join(str(tmpdir), 'artifact')
+    work_dir = os.path.join(str(tmpdir), 'work')
+    config = {
+        'artifact_dir': artifact_dir,
+        'work_dir': work_dir,
+        'local_notarization_accounts': ['acct0', 'acct1', 'acct2'],
+        'mac_config': {
+            'dep': {
+                'notarize_type': 'single_zip',
+                'signing_keychain': 'keychain_path',
+                'base_bundle_id': 'org.test',
+                'identity': 'id',
+                'keychain_password': 'keychain_password',
+                'pkg_cert_id': 'cert_id',
+                'apple_notarization_account': 'apple_account',
+                'apple_notarization_password': 'apple_password',
+                'notarization_poll_timeout': 2,
+            },
+        },
+    }
+
+    task = {
+        'payload': {
+            'upstreamArtifacts': [{
+                'taskId': 'task1',
+                'paths': ['public/build/1/target.tar.gz', 'public/build/2/target.tar.gz'],
+            }, {
+                'taskId': 'task2',
+                'paths': ['public/build/3/target.tar.gz'],
+            }],
+        },
+    }
+
+    mocker.patch.object(mac, 'run_command', new=noop_async)
+    mocker.patch.object(mac, 'unlock_keychain', new=noop_async)
+    mocker.patch.object(mac, 'get_app_dir', return_value=os.path.join(work_dir, 'foo/bar.app'))
+    mocker.patch.object(mac, 'list_files', return_value='foo/bar.app')
+    await mac.create_and_sign_all_pkg_files(config, task)
