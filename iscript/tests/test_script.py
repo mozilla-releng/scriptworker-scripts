@@ -4,27 +4,51 @@
 """
 import os
 import pytest
+from iscript.exceptions import IScriptError
 import iscript.script as script
 
 
 # async_main {{{1
+@pytest.mark.parametrize('behavior, raises', ((
+    'mac_pkg', False
+), (
+    'mac_notarize', False
+), (
+    None, False,
+), (
+    'invalid_behavior', True
+)))
 @pytest.mark.asyncio
-async def test_async_main(mocker):
+async def test_async_main(mocker, behavior, raises):
     """``async_main`` calls ``sign_and_notarize_all``.
 
     """
 
-    calls = []
+    notarize_calls = []
+    pkg_calls = []
     config = {'a': 'b'}
-    task = {'c': 'd'}
+    task = {'c': 'd', 'payload': {}}
+    if behavior:
+        task['payload']['behavior'] = behavior
     expected = [[(config, task), {}]]
 
-    async def test_sign(*args, **kwargs):
-        calls.append([args, kwargs])
+    async def test_notarize(*args, **kwargs):
+        notarize_calls.append([args, kwargs])
 
-    mocker.patch.object(script, 'sign_and_notarize_all', new=test_sign)
-    await script.async_main(config, task)
-    assert calls == expected
+    async def test_pkg(*args, **kwargs):
+        pkg_calls.append([args, kwargs])
+
+    mocker.patch.object(script, 'sign_and_notarize_all', new=test_notarize)
+    mocker.patch.object(script, 'create_and_sign_all_pkg_files', new=test_pkg)
+    if raises:
+        with pytest.raises(IScriptError):
+            await script.async_main(config, task)
+    else:
+        await script.async_main(config, task)
+        if behavior == 'mac_notarize':
+            assert notarize_calls == expected
+        else:
+            assert pkg_calls == expected
 
 
 # get_default_config {{{1

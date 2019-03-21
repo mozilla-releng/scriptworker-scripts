@@ -48,6 +48,10 @@
             },
             "entitlementsUrl": {
               "type": "string"
+            },
+            "behavior": {
+              "type": "string",
+              "enum": ["mac_notarize", "mac_pkg"]
             }
           },
           "required": ["upstreamArtifacts"]

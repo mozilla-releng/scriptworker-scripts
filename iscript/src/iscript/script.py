@@ -4,7 +4,8 @@ import logging
 import os
 
 from scriptworker_client.client import sync_main
-from iscript.mac import sign_and_notarize_all
+from iscript.exceptions import IScriptError
+from iscript.mac import create_and_sign_all_pkg_files, sign_and_notarize_all
 
 
 log = logging.getLogger(__name__)
@@ -18,9 +19,13 @@ async def async_main(config, task):
         task (dict): the running task.
 
     """
-    # XXX we can change behavior based on task definition. For now,
-    # mac signing+notarizing is all we do.
-    await sign_and_notarize_all(config, task)
+    behavior = task['payload'].get('behavior', 'mac_pkg')
+    if behavior == 'mac_pkg':
+        await create_and_sign_all_pkg_files(config, task)
+    elif behavior == 'mac_notarize':
+        await sign_and_notarize_all(config, task)
+    else:
+        raise IScriptError('Unknown iscript behavior {}!'.format(behavior))
 
     log.info("Done!")
 
