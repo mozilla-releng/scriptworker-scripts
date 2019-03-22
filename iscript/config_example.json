@@ -1,6 +1,6 @@
 {
-    "work_dir": "/tmp/work_dir",
-    "artifact_dir": "/tmp/artifact_dir",
+    "work_dir": "/tmp/work",
+    "artifact_dir": "/tmp/artifacts",
     "taskcluster_scope_prefixes": ["project:releng:signing:"],
     "verbose": true,
     "local_notarization_accounts": ["account1"],

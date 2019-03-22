@@ -215,7 +215,7 @@ async def unlock_keychain(signing_keychain, keychain_password):
             index = child.expect([pexpect.EOF, r"password to unlock.*: "], async_=True)
             if index == 0:
                 break
-            child.sendline(keychain_password.encode('utf-8'))
+            child.sendline(keychain_password)
     except (pexpect.exceptions.TIMEOUT) as exc:
         raise TimeoutError(
             "Timeout trying to unlock the keychain {}: {}!".format(signing_keychain, exc)
