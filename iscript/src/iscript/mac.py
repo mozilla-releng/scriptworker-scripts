@@ -212,7 +212,7 @@ async def unlock_keychain(signing_keychain, keychain_password):
     child = pexpect.spawn('security', ['unlock-keychain', signing_keychain], encoding='utf-8')
     try:
         while True:
-            index = child.expect([pexpect.EOF, r"password to unlock.*: "], async_=True)
+            index = await child.expect([pexpect.EOF, r"password to unlock {}: ".format(signing_keychain)], async_=True)
             if index == 0:
                 break
             child.sendline(keychain_password)
