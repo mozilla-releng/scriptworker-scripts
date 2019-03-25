@@ -713,7 +713,8 @@ async def create_pkg_files(key_config, all_paths):
             run_command(
                 [
                     'sudo', 'pkgbuild', '--sign', key_config['pkg_cert_id'],
-                    '--install-location', '/Applications', '--component',
+                    '--install-location', '/Applications', '--keychain',
+                    key_config['signing_keychain'], '--component',
                     app.app_path, app.pkg_path
                 ],
                 cwd=app.parent_dir, exception=IScriptError
