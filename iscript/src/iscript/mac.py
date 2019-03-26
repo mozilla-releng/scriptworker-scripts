@@ -742,11 +742,11 @@ async def sign_pkg_files(config, key_config, all_paths):
         app.target_pkg_path = '{}/public/{}'.format(
             config['artifact_dir'], app.orig_path.split('public/')[1]
         ).replace('.tar.gz', '.app')
-        # passwords? keychain?
         futures.append(asyncio.ensure_future(
             run_command(
                 [
                     'productsign', '--sign', key_config['pkg_cert_id'],
+                    '--keychain', key_config['signing_keychain'],
                     app.pkg_path, app.target_pkg_path
                 ],
                 cwd=app.parent_dir, exception=IScriptError
