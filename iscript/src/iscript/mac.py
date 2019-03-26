@@ -742,6 +742,7 @@ async def sign_pkg_files(config, key_config, all_paths):
         app.target_pkg_path = '{}/public/{}'.format(
             config['artifact_dir'], app.orig_path.split('public/')[1]
         ).replace('.tar.gz', '.app')
+        makedirs(os.path.dirname(app.target_pkg_path))
         futures.append(asyncio.ensure_future(
             run_command(
                 [
