@@ -692,11 +692,10 @@ async def tar_apps(config, all_paths):
 
 
 # create_pkg_files {{{1
-async def create_pkg_files(key_config, all_paths):
+async def create_pkg_files(all_paths):
     """Create .pkg installers from the .app files.
 
     Args:
-        key_config (dict): the running config for this key
         all_paths: (list): the list of App objects to pkg
 
     Raises:
@@ -712,9 +711,7 @@ async def create_pkg_files(key_config, all_paths):
         futures.append(asyncio.ensure_future(
             run_command(
                 [
-                    'sudo', 'pkgbuild', '--sign', key_config['pkg_cert_id'],
-                    '--install-location', '/Applications', '--keychain',
-                    key_config['signing_keychain'], '--component',
+                    'sudo', 'pkgbuild', '--install-location', '/Applications', '--component',
                     app.app_path, app.pkg_path
                 ],
                 cwd=app.parent_dir, exception=IScriptError
@@ -794,8 +791,8 @@ async def sign_and_notarize_all(config, task):
     await poll_all_notarization_status(key_config, poll_uuids)
     await staple_apps(all_paths)
     await tar_apps(config, all_paths)
-    await create_pkg_files(key_config, all_paths)
-    # await sign_pkg_files(config, key_config, all_paths)
+    await create_pkg_files(all_paths)
+    await sign_pkg_files(config, key_config, all_paths)
 
     log.info("Done signing and notarizing apps.")
 
@@ -821,7 +818,7 @@ async def create_and_sign_all_pkg_files(config, task):
     all_paths = get_app_paths(config, task)
     await extract_all_apps(work_dir, all_paths)
     await unlock_keychain(key_config['signing_keychain'], key_config['keychain_password'])
-    await create_pkg_files(key_config, all_paths)
-    # await sign_pkg_files(config, key_config, all_paths)
+    await create_pkg_files(all_paths)
+    await sign_pkg_files(config, key_config, all_paths)
 
     log.info("Done signing and notarizing apps.")
