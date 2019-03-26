@@ -8,6 +8,7 @@ import logging
 import os
 import pexpect
 import re
+from shutil import copy2
 
 from scriptworker_client.aio import (
     raise_future_exceptions,
@@ -692,10 +693,11 @@ async def tar_apps(config, all_paths):
 
 
 # create_pkg_files {{{1
-async def create_pkg_files(all_paths):
+async def create_pkg_files(key_config, all_paths):
     """Create .pkg installers from the .app files.
 
     Args:
+        key_config (dict): the running config for this key
         all_paths: (list): the list of App objects to pkg
 
     Raises:
@@ -711,7 +713,9 @@ async def create_pkg_files(all_paths):
         futures.append(asyncio.ensure_future(
             run_command(
                 [
-                    'sudo', 'pkgbuild', '--install-location', '/Applications', '--component',
+                    'sudo', 'pkgbuild', '--sign', key_config['pkg_cert_id'],
+                    '--keychain', key_config['signing_keychain'],
+                    '--install-location', '/Applications', '--component',
                     app.app_path, app.pkg_path
                 ],
                 cwd=app.parent_dir, exception=IScriptError
@@ -719,41 +723,29 @@ async def create_pkg_files(all_paths):
         ))
     await raise_future_exceptions(futures)
 
+zip test.zip Firefox.pkg
+security unlock-keychain /builds/notarization/signing-and-notarization.keychain
+xcrun altool --notarize-app -f test.zip --primary-bundle-id "org.mozilla.nightly.nthomas" -u nick.thomas@mozilla.com --pas "@keychain:AC_PASSWORD"
+xcrun stapler staple -v Firefox.pkg
 
-# sign_pkg_files {{{1
-async def sign_pkg_files(config, key_config, all_paths):
-    """Sign the .pkg installers.
 
-    These will be written into the ``artifact_dir``
+# copy_pkgs_to_artifact_dir {{{1
+async def copy_pkgs_to_artifact_dir(config, all_paths):
+    """Copy the files to the artifact directory.
 
     Args:
         config (dict): the running config
-        key_config (dict): the running config for this key
         all_paths (list): the list of App objects to sign pkg for
 
-    Raises:
-        IScriptError: on failure
-
     """
-    log.info("Signing pkgs")
-    futures = []
+    log.info("Copying pkgs to the artifact dir")
     for app in all_paths:
-        app.check_required_attrs(['parent_dir', 'orig_path'])
+        app.check_required_attrs(['parent_dir', 'orig_path', 'pkg_path'])
         app.target_pkg_path = '{}/public/{}'.format(
             config['artifact_dir'], app.orig_path.split('public/')[1]
         ).replace('.tar.gz', '.app')
         makedirs(os.path.dirname(app.target_pkg_path))
-        futures.append(asyncio.ensure_future(
-            run_command(
-                [
-                    'productsign', '--sign', key_config['pkg_cert_id'],
-                    '--keychain', key_config['signing_keychain'],
-                    app.pkg_path, app.target_pkg_path
-                ],
-                cwd=app.parent_dir, exception=IScriptError
-            )
-        ))
-    await raise_future_exceptions(futures)
+        copy2(app.pkg_path, app.target_pkg_path)
 
 
 # sign_and_notarize_all {{{1
@@ -792,8 +784,18 @@ async def sign_and_notarize_all(config, task):
     await poll_all_notarization_status(key_config, poll_uuids)
     await staple_apps(all_paths)
     await tar_apps(config, all_paths)
-    await create_pkg_files(all_paths)
-    await sign_pkg_files(config, key_config, all_paths)
+    await create_pkg_files(key_config, all_paths)
+    # if key_config['notarize_type'] == 'multi_account':
+    #     await notarize_pkg_files(config, key_config, all_paths)
+    #     # TODO get this to do the pkg files rather than zip files
+    #     poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths)
+    # else:
+    #     # TODO get this to do the pkg files rather than app dirs
+    #     zip_path = await create_one_app_zipfile(work_dir, all_paths)
+    #     poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
+
+    # TODO copy all of those to the artifact_dir
+    await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing and notarizing apps.")
 
@@ -801,6 +803,8 @@ async def sign_and_notarize_all(config, task):
 # create_and_sign_all_pkg_files {{{1
 async def create_and_sign_all_pkg_files(config, task):
     """Create and sign all pkg files for this task.
+
+    This function doesn't do any notarization.
 
     Args:
         config (dict): the running configuration
@@ -819,7 +823,7 @@ async def create_and_sign_all_pkg_files(config, task):
     all_paths = get_app_paths(config, task)
     await extract_all_apps(work_dir, all_paths)
     await unlock_keychain(key_config['signing_keychain'], key_config['keychain_password'])
-    await create_pkg_files(all_paths)
-    await sign_pkg_files(config, key_config, all_paths)
+    await create_pkg_files(key_config, all_paths)
+    await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing and notarizing apps.")
