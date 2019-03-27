@@ -1,5 +1,5 @@
 arrow
-balrogclient
+balrogclient>=0.1.0
 cryptography
 enum34
 # Pinning functools b/c pip returns a bogus 3.2.3.post2

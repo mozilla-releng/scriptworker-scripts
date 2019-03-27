@@ -40,32 +40,41 @@ def test_get_task_payload(nightly_config):
 # create_locale_submitter {{{1
 def test_create_locale_submitter_nightly_style(config, nightly_manifest):
     balrog_auth = (None, None)
-    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], '', balrog_auth, config)
+    auth0_secrets = None
+    submitter, release = bscript.create_locale_submitter(
+        nightly_manifest[0], '', balrog_auth, auth0_secrets, config)
     assert isinstance(submitter, NightlySubmitterV4)
 
     nightly_manifest[0].pop("partialInfo", None)
-    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], '', balrog_auth, config)
+    submitter, release = bscript.create_locale_submitter(
+        nightly_manifest[0], '', balrog_auth, auth0_secrets, config)
     assert isinstance(submitter, NightlySubmitterV4)
 
 
 def test_create_locale_submitter_release_style(config, release_manifest):
     balrog_auth = (None, None)
+    auth0_secrets = None
 
-    submitter, release = bscript.create_locale_submitter(release_manifest[0], '', balrog_auth, config)
+    submitter, release = bscript.create_locale_submitter(
+        release_manifest[0], '', balrog_auth, auth0_secrets, config)
     assert isinstance(submitter, ReleaseSubmitterV9)
 
     release_manifest[0].pop("partialInfo", None)
-    submitter, release = bscript.create_locale_submitter(release_manifest[0], '', balrog_auth, config)
+    submitter, release = bscript.create_locale_submitter(
+        release_manifest[0], '', balrog_auth, auth0_secrets, config)
     assert isinstance(submitter, ReleaseSubmitterV9)
 
     release_manifest[0].pop("tc_release", None)
     with pytest.raises(RuntimeError):
-        submitter, release = bscript.create_locale_submitter(release_manifest[0], '', balrog_auth, config)
+        submitter, release = bscript.create_locale_submitter(
+            release_manifest[0], '', balrog_auth, auth0_secrets, config)
 
 
 def test_create_locale_submitter_nightly_metadata(config, nightly_manifest):
     balrog_auth = (None, None)
-    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], '', balrog_auth, config)
+    auth0_secrets = None
+    submitter, release = bscript.create_locale_submitter(
+        nightly_manifest[0], '', balrog_auth, auth0_secrets, config)
 
     exp = {
         'platform': "android-api-15",
@@ -95,14 +104,17 @@ def test_create_locale_submitter_nightly_metadata(config, nightly_manifest):
 
 def test_create_locale_submitter_nightly_creates_valid_submitter(config, nightly_manifest):
     balrog_auth = (None, None)
-    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], '', balrog_auth, config)
+    auth0_secrets = None
+    submitter, release = bscript.create_locale_submitter(
+        nightly_manifest[0], '', balrog_auth, auth0_secrets, config)
     lambda: submitter.run(**release)
 
 
 # submit_locale {{{1
 def test_submit_locale(config, nightly_config, nightly_manifest, mocker):
     balrog_auth = (None, None)
-    _, release = bscript.create_locale_submitter(nightly_manifest[0], '', balrog_auth, config)
+    auth0_secrets = None
+    _, release = bscript.create_locale_submitter(nightly_manifest[0], '', balrog_auth, auth0_secrets, config)
 
     def fake_submitter(**kwargs):
         assert kwargs == release
@@ -111,20 +123,21 @@ def test_submit_locale(config, nightly_config, nightly_manifest, mocker):
     m = mock.MagicMock()
     m.run = fake_submitter
     mocker.patch.object(bscript, "create_locale_submitter", return_value=(m, release))
-    bscript.submit_locale(task, config, balrog_auth)
+    bscript.submit_locale(task, config, balrog_auth, auth0_secrets)
 
 
 # schedule {{{1
 def test_create_scheduler(config):
     balrog_auth = (None, None)
     assert isinstance(
-        bscript.create_scheduler(api_root=config['api_root'], auth=balrog_auth),
+        bscript.create_scheduler(api_root=config['api_root'], auth=balrog_auth, auth0_secrets=None),
         ReleaseScheduler
     )
 
 
 def test_schedule(config, mocker):
     balrog_auth = (None, None)
+    auth0_secrets = None
 
     task = {
         'payload': {
@@ -149,7 +162,7 @@ def test_schedule(config, mocker):
     m.run = fake_scheduler
     mocker.patch.object(bscript, "create_scheduler", return_value=m)
 
-    bscript.schedule(task, config, balrog_auth)
+    bscript.schedule(task, config, balrog_auth, auth0_secrets)
     assert real == expected
 
 
@@ -157,7 +170,7 @@ def test_schedule(config, mocker):
 def test_create_creator(config):
     balrog_auth = (None, None)
     assert isinstance(
-        bscript.create_creator(api_root=config['api_root'], auth=balrog_auth),
+        bscript.create_creator(api_root=config['api_root'], auth=balrog_auth, auth0_secrets=None),
         ReleaseCreatorV9
     )
 
@@ -165,7 +178,7 @@ def test_create_creator(config):
 def test_create_pusher(config):
     balrog_auth = (None, None)
     assert isinstance(
-        bscript.create_pusher(api_root=config['api_root'], auth=balrog_auth),
+        bscript.create_pusher(api_root=config['api_root'], auth=balrog_auth, auth0_secrets=None),
         ReleasePusher
     )
 
@@ -293,6 +306,7 @@ def test_create_pusher(config):
 )))
 def test_submit_toplevel(task, creator_expected, pusher_expected, nightly_config, mocker):
     balrog_auth = (None, None)
+    auth0_secrets = None
     results = []
 
     def fake(**kwargs):
@@ -303,7 +317,7 @@ def test_submit_toplevel(task, creator_expected, pusher_expected, nightly_config
 
     mocker.patch.object(bscript, "create_creator", return_value=m)
     mocker.patch.object(bscript, "create_pusher", return_value=m)
-    bscript.submit_toplevel(task, nightly_config, balrog_auth)
+    bscript.submit_toplevel(task, nightly_config, balrog_auth, auth0_secrets)
     assert results[0] == creator_expected
     assert results[1] == pusher_expected
 

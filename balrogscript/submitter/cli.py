@@ -107,12 +107,13 @@ class ReleaseCreatorFileUrlsMixin(object):
 class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
     schemaVersion = 9
 
-    def __init__(self, api_root, auth, dummy=False, suffix="",
+    def __init__(self, api_root, auth, auth0_secrets=None, dummy=False, suffix="",
                  from_suffix="",
                  complete_mar_filename_pattern=None,
                  complete_mar_bouncer_product_pattern=None):
         self.api_root = api_root
         self.auth = auth
+        self.auth0_secrets = auth0_secrets
         self.suffix = suffix
         self.from_suffix = from_suffix
         if dummy:
@@ -175,7 +176,7 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
                                   updateLine, **updateKwargs)
         name = get_release_blob_name(productName, version, buildNumber,
                                      self.suffix)
-        api = Release(name=name, auth=self.auth, api_root=self.api_root)
+        api = Release(name=name, auth=self.auth, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
         try:
             current_data, data_version = api.get_data()
         except HTTPError as e:
@@ -196,9 +197,10 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
 class NightlySubmitterBase(object):
     build_type = 'nightly'
 
-    def __init__(self, api_root, auth, dummy=False, url_replacements=None):
+    def __init__(self, api_root, auth, auth0_secrets=None, dummy=False, url_replacements=None):
         self.api_root = api_root
         self.auth = auth
+        self.auth0_secrets = auth0_secrets
         self.dummy = dummy
         self.url_replacements = url_replacements
 
@@ -242,7 +244,7 @@ class NightlySubmitterBase(object):
         name = get_nightly_blob_name(productName, branch, build_type, buildID,
                                      self.dummy)
         api = SingleLocale(name=name, build_target=build_target, locale=locale,
-                           auth=self.auth, api_root=self.api_root)
+                           auth=self.auth, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
 
         # wrap operations into "atomic" functions that can be retried
         def update_dated():
@@ -272,6 +274,7 @@ class NightlySubmitterBase(object):
 
         latest = SingleLocale(
             api_root=self.api_root, auth=self.auth,
+            auth0_secrets=self.auth0_secrets,
             name=get_nightly_blob_name(productName, branch, build_type,
                                        'latest', self.dummy),
             build_target=build_target, locale=locale)
@@ -369,9 +372,10 @@ class MultipleUpdatesReleaseMixin(object):
 
 
 class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
-    def __init__(self, api_root, auth, dummy=False, suffix="", from_suffix=""):
+    def __init__(self, api_root, auth, auth0_secrets=None, dummy=False, suffix="", from_suffix=""):
         self.api_root = api_root
         self.auth = auth
+        self.auth0_secrets = auth0_secrets
         self.suffix = suffix
         if dummy:
             self.suffix += "-dummy"
@@ -396,7 +400,8 @@ class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
                                           **updateKwargs))
 
         api = SingleLocale(name=name, build_target=build_target, locale=locale,
-                           auth=self.auth, api_root=self.api_root)
+                           auth=self.auth, auth0_secrets=self.auth0_secrets,
+                           api_root=self.api_root)
         current_data, data_version = api.get_data()
         api.update_build(
             data_version=data_version,
@@ -406,9 +411,10 @@ class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
 
 
 class ReleasePusher(object):
-    def __init__(self, api_root, auth, dummy=False, suffix=""):
+    def __init__(self, api_root, auth, auth0_secrets=None, dummy=False, suffix=""):
         self.api_root = api_root
         self.auth = auth
+        self.auth0_secrets = auth0_secrets
         self.suffix = suffix
         if dummy:
             self.suffix += "-dummy"
@@ -420,14 +426,15 @@ class ReleasePusher(object):
             data = {"mapping": name}
             if backgroundRate:
                 data["backgroundRate"] = backgroundRate
-            Rule(api_root=self.api_root, auth=self.auth, rule_id=rule_id
-                 ).update_rule(**data)
+            Rule(api_root=self.api_root, auth=self.auth,
+                 auth0_secrets=self.auth0_secrets, rule_id=rule_id).update_rule(**data)
 
 
 class ReleaseScheduler(object):
-    def __init__(self, api_root, auth, dummy=False, suffix=""):
+    def __init__(self, api_root, auth, auth0_secrets=None, dummy=False, suffix=""):
         self.api_root = api_root
         self.auth = auth
+        self.auth0_secrets = auth0_secrets
         self.suffix = suffix
         if dummy:
             self.suffix = "-dummy"
@@ -444,7 +451,9 @@ class ReleaseScheduler(object):
             when = soon
 
         for rule_id in rule_ids:
-            data, data_version = Rule(api_root=self.api_root, auth=self.auth, rule_id=rule_id).get_data()
+            data, data_version = Rule(
+                api_root=self.api_root, auth=self.auth, auth0_secrets=self.auth0_secrets,
+                rule_id=rule_id).get_data()
             # If the _currently_ shipped release is at a background rate of
             # 100%, it's safe to set it as the fallback mapping. (Everyone
             # was getting it anyways, so it's OK for them to fall back to
@@ -465,5 +474,6 @@ class ReleaseScheduler(object):
             if backgroundRate:
                 data["backgroundRate"] = backgroundRate
 
-            ScheduledRuleChange(api_root=self.api_root, auth=self.auth, rule_id=rule_id
-                                ).add_scheduled_rule_change(**data)
+            ScheduledRuleChange(
+                api_root=self.api_root, auth=self.auth, auth0_secrets=self.auth0_secrets,
+                rule_id=rule_id).add_scheduled_rule_change(**data)
