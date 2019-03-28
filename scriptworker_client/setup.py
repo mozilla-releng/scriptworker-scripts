@@ -12,15 +12,13 @@ setup(
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
     url="https://github.com/escapewindow/scriptworker-scripts/tree/master/scriptworker-client",
-    packages=find_packages('src'),
-    package_dir={'': 'src'},
-    py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob('src/*.py')],
+    packages=find_packages("src"),
+    package_dir={"": "src"},
+    py_modules=[
+        os.path.splitext(os.path.basename(path))[0] for path in glob("src/*.py")
+    ],
     include_package_data=True,
     zip_safe=True,
     license="MPL2",
-    install_requires=[
-        'aiohttp',
-        'jsonschema',
-        'PyYAML',
-    ],
+    install_requires=["aiohttp", "jsonschema", "PyYAML"],
 )

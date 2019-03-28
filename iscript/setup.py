@@ -15,17 +15,7 @@ setup(
     package_data={"iscript": ["data/*"]},
     include_package_data=True,
     zip_safe=False,
-    entry_points={
-        "console_scripts": [
-            "iscript = iscript.script:main",
-        ],
-    },
+    entry_points={"console_scripts": ["iscript = iscript.script:main"]},
     license="MPL2",
-    install_requires=[
-        "aiohttp",
-        "arrow",
-        "attrs",
-        "pexpect",
-        "scriptworker_client",
-    ],
+    install_requires=["aiohttp", "arrow", "attrs", "pexpect", "scriptworker_client"],
 )

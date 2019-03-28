@@ -57,7 +57,7 @@ class TaskVerificationError(ClientError):
             msg (string): the error message
 
         """
-        super().__init__(msg, exit_code=STATUSES['malformed-payload'])
+        super().__init__(msg, exit_code=STATUSES["malformed-payload"])
 
 
 class RetryError(ClientError):

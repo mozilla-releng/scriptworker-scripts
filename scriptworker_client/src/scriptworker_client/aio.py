@@ -32,9 +32,9 @@ async def raise_future_exceptions(futures, timeout=None):
         return
     done, pending = await asyncio.wait(futures, timeout=timeout)
     if pending:
-        raise TimeoutError("{} futures still pending after timeout of {}".format(
-            len(pending), timeout
-        ))
+        raise TimeoutError(
+            "{} futures still pending after timeout of {}".format(len(pending), timeout)
+        )
     results = []
     exceptions = []
     for fut in futures:
@@ -74,7 +74,9 @@ async def semaphore_wrapper(semaphore, coro):
 
 
 # retry_async {{{1
-def calculate_sleep_time(attempt, delay_factor=5.0, randomization_factor=.5, max_delay=120):
+def calculate_sleep_time(
+    attempt, delay_factor=5.0, randomization_factor=0.5, max_delay=120
+):
     """Calculate the sleep time between retries, in seconds.
 
     Based off of `taskcluster.utils.calculateSleepTime`, but with kwargs instead
@@ -104,9 +106,15 @@ def calculate_sleep_time(attempt, delay_factor=5.0, randomization_factor=.5, max
     return min(delay, max_delay)
 
 
-async def retry_async(func, attempts=5, sleeptime_callback=calculate_sleep_time,
-                      retry_exceptions=Exception, args=(), kwargs=None,
-                      sleeptime_kwargs=None):
+async def retry_async(
+    func,
+    attempts=5,
+    sleeptime_callback=calculate_sleep_time,
+    retry_exceptions=Exception,
+    args=(),
+    kwargs=None,
+    sleeptime_kwargs=None,
+):
     """Retry ``func``, where ``func`` is an awaitable.
 
     Args:
@@ -143,14 +151,26 @@ async def retry_async(func, attempts=5, sleeptime_callback=calculate_sleep_time,
                 raise
             sleeptime_kwargs = sleeptime_kwargs or {}
             sleep_time = sleeptime_callback(attempt, **sleeptime_kwargs)
-            log.debug("retry_async: {}: sleeping {} seconds before retry".format(func.__name__, sleep_time))
+            log.debug(
+                "retry_async: {}: sleeping {} seconds before retry".format(
+                    func.__name__, sleep_time
+                )
+            )
             await asyncio.sleep(sleep_time)
 
 
 # request {{{1
-async def request(url, timeout=60, method='get', good=(200, ),
-                  retry_statuses=tuple(range(500, 512)), return_type='text',
-                  num_attempts=1, sterilized_url=None, **kwargs):
+async def request(
+    url,
+    timeout=60,
+    method="get",
+    good=(200,),
+    retry_statuses=tuple(range(500, 512)),
+    return_type="text",
+    num_attempts=1,
+    sterilized_url=None,
+    **kwargs
+):
     """Async aiohttp request wrapper.
 
     Args:
@@ -193,14 +213,15 @@ async def request(url, timeout=60, method='get', good=(200, ),
                         raise RetryError(message)
                     if resp.status not in good:
                         raise TaskError(message)
-                    if return_type == 'text':
+                    if return_type == "text":
                         return await resp.text()
-                    elif return_type == 'json':
+                    elif return_type == "json":
                         return await resp.json()
                     else:
                         return resp
 
             return await retry_async(
-                request_helper, attempts=num_attempts,
+                request_helper,
+                attempts=num_attempts,
                 retry_exceptions=(asyncio.TimeoutError, RetryError),
             )

@@ -19,13 +19,13 @@ async def async_main(config, task):
         task (dict): the running task.
 
     """
-    behavior = task['payload'].get('behavior', 'mac_pkg')
-    if behavior == 'mac_pkg':
+    behavior = task["payload"].get("behavior", "mac_pkg")
+    if behavior == "mac_pkg":
         await create_and_sign_all_pkg_files(config, task)
-    elif behavior == 'mac_notarize':
+    elif behavior == "mac_notarize":
         await sign_and_notarize_all(config, task)
     else:
-        raise IScriptError('Unknown iscript behavior {}!'.format(behavior))
+        raise IScriptError("Unknown iscript behavior {}!".format(behavior))
 
     log.info("Done!")
 
@@ -43,10 +43,12 @@ def get_default_config(base_dir=None):
     """
     base_dir = base_dir or os.path.dirname(os.getcwd())
     default_config = {
-        'work_dir': os.path.join(base_dir, 'work'),
-        'artifact_dir': os.path.join(base_dir, 'artifacts'),
-        'schema_file': os.path.join(os.path.dirname(__file__), 'data', 'i_task_schema.json'),
-        'local_notarization_accounts': [],
+        "work_dir": os.path.join(base_dir, "work"),
+        "artifact_dir": os.path.join(base_dir, "artifacts"),
+        "schema_file": os.path.join(
+            os.path.dirname(__file__), "data", "i_task_schema.json"
+        ),
+        "local_notarization_accounts": [],
     }
     return default_config
 
@@ -56,4 +58,4 @@ def main():
     return sync_main(async_main, default_config=get_default_config())
 
 
-__name__ == '__main__' and main()
+__name__ == "__main__" and main()

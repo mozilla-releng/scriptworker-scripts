@@ -23,10 +23,8 @@ FAKE_SCHEMA = {
             "type": "array",
             "minItems": 1,
             "uniqueItems": True,
-            "items": {
-                "type": "string",
-            }
-        },
+            "items": {"type": "string"},
+        }
     },
     "required": ["list-of-strings"],
 }
@@ -36,45 +34,24 @@ def test_get_task(tmpdir):
     """Get the contents of ``work_dir/task.json``.
 
     """
-    expected = {'foo': 'bar'}
-    config = {'work_dir': str(tmpdir)}
-    with open(os.path.join(tmpdir, 'task.json'), 'w') as fh:
+    expected = {"foo": "bar"}
+    config = {"work_dir": str(tmpdir)}
+    with open(os.path.join(tmpdir, "task.json"), "w") as fh:
         fh.write(json.dumps(expected))
     assert client.get_task(config) == expected
 
 
 # verify_json_schema {{{1
-@pytest.mark.parametrize('data,schema,raises', ((
-    {
-        "list-of-strings": ['a', 'b'],
-    },
-    FAKE_SCHEMA,
-    False
-), (
-    {
-        "list-of-strings": ['a', 'a'],
-    },
-    FAKE_SCHEMA,
-    True
-), (
-    {
-        "list-of-strings": [],
-    },
-    FAKE_SCHEMA,
-    True
-), (
-    {
-        "list-of-strings": {"foo": "bar"},
-    },
-    FAKE_SCHEMA,
-    True
-), (
-    {
-        "invalid-key": {},
-    },
-    FAKE_SCHEMA,
-    True
-)))
+@pytest.mark.parametrize(
+    "data,schema,raises",
+    (
+        ({"list-of-strings": ["a", "b"]}, FAKE_SCHEMA, False),
+        ({"list-of-strings": ["a", "a"]}, FAKE_SCHEMA, True),
+        ({"list-of-strings": []}, FAKE_SCHEMA, True),
+        ({"list-of-strings": {"foo": "bar"}}, FAKE_SCHEMA, True),
+        ({"invalid-key": {}}, FAKE_SCHEMA, True),
+    ),
+)
 def test_verify_json_schema(data, schema, raises):
     """``verify_json_schema`` raises if the data doesn't verify against the schema.
 
@@ -92,40 +69,40 @@ def test_verify_task_schema(tmpdir):
 
     """
     path = os.path.join(tmpdir, "schema.json")
-    with open(path, 'w') as fh:
+    with open(path, "w") as fh:
         fh.write(json.dumps(FAKE_SCHEMA))
-    config = {
-        "foo": {
-            "bar": path
-        },
-    }
+    config = {"foo": {"bar": path}}
     client.verify_task_schema(config, {"list-of-strings": ["a"]}, "foo.bar")
     with pytest.raises(TaskVerificationError):
         client.verify_task_schema(config, {"list-of-strings": ["a", "a"]}, "foo.bar")
     with pytest.raises(TaskVerificationError):
-        client.verify_task_schema(config, {"list-of-strings": ["a", "a"]}, "nonexistent_path")
+        client.verify_task_schema(
+            config, {"list-of-strings": ["a", "a"]}, "nonexistent_path"
+        )
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('should_verify_task', (True, False))
+@pytest.mark.parametrize("should_verify_task", (True, False))
 async def test_sync_main_runs_fully(tmpdir, should_verify_task):
     """``sync_main`` runs fully.
 
     """
     work_dir = str(tmpdir)
     config = {
-        'work_dir': work_dir,
-        'schema_file': os.path.join(
-            os.path.dirname(__file__), 'data', 'basic_schema.json'
+        "work_dir": work_dir,
+        "schema_file": os.path.join(
+            os.path.dirname(__file__), "data", "basic_schema.json"
         ),
     }
-    with open(os.path.join(config['work_dir'], 'task.json'), "w") as fh:
-        fh.write(json.dumps({
-            "this_is_a_task": True,
-            "payload": {
-                "payload_required_property": "..."
-            }
-        }))
+    with open(os.path.join(config["work_dir"], "task.json"), "w") as fh:
+        fh.write(
+            json.dumps(
+                {
+                    "this_is_a_task": True,
+                    "payload": {"payload_required_property": "..."},
+                }
+            )
+        )
     async_main_calls = []
     run_until_complete_calls = []
 
@@ -141,16 +118,16 @@ async def test_sync_main_runs_fully(tmpdir, should_verify_task):
     def loop_function():
         return fake_loop
 
-    kwargs = {'loop_function': loop_function}
+    kwargs = {"loop_function": loop_function}
 
     if not should_verify_task:
-        kwargs['should_verify_task'] = False
+        kwargs["should_verify_task"] = False
 
-    config_path = os.path.join(tmpdir, 'config.json')
-    with open(config_path, 'w') as fh:
+    config_path = os.path.join(tmpdir, "config.json")
+    with open(config_path, "w") as fh:
         json.dump(config, fh)
 
-    kwargs['config_path'] = config_path
+    kwargs["config_path"] = config_path
     client.sync_main(async_main, **kwargs)
 
     for i in run_until_complete_calls:
@@ -163,34 +140,32 @@ def test_usage(capsys, monkeypatch):
     """``_usage`` prints the expected error and exits.
 
     """
-    monkeypatch.setattr(sys, 'argv', ['my_binary'])
+    monkeypatch.setattr(sys, "argv", ["my_binary"])
     with pytest.raises(SystemExit):
         client._usage()
 
     captured = capsys.readouterr()
-    assert captured.out == ''
-    assert captured.err == 'Usage: my_binary CONFIG_FILE\n'
+    assert captured.out == ""
+    assert captured.err == "Usage: my_binary CONFIG_FILE\n"
 
 
-@pytest.mark.parametrize('is_verbose, log_level', (
-    (True, logging.DEBUG),
-    (False, logging.INFO),
-))
+@pytest.mark.parametrize(
+    "is_verbose, log_level", ((True, logging.DEBUG), (False, logging.INFO))
+)
 def test_init_logging(monkeypatch, is_verbose, log_level):
     """``_init_logging`` sets the logging module format and level.
 
     """
     basic_config_mock = mock.MagicMock()
-    config = {'verbose': is_verbose}
+    config = {"verbose": is_verbose}
 
-    monkeypatch.setattr(logging, 'basicConfig', basic_config_mock)
+    monkeypatch.setattr(logging, "basicConfig", basic_config_mock)
     client._init_logging(config)
 
     basic_config_mock.assert_called_once_with(
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        level=log_level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=log_level
     )
-    assert logging.getLogger('taskcluster').level == logging.WARNING
+    assert logging.getLogger("taskcluster").level == logging.WARNING
 
 
 @pytest.mark.asyncio
@@ -201,11 +176,11 @@ async def test_handle_asyncio_loop():
     config = {}
 
     async def async_main(*args, **kwargs):
-        config['was_async_main_called'] = True
+        config["was_async_main_called"] = True
 
     await client._handle_asyncio_loop(async_main, config, {})
 
-    assert config.get('was_async_main_called')
+    assert config.get("was_async_main_called")
 
 
 @pytest.mark.asyncio
@@ -216,7 +191,7 @@ async def test_fail_handle_asyncio_loop(mocker):
     m = mocker.patch.object(client, "log")
 
     async def async_error(*args, **kwargs):
-        exception = TaskError('async_error!')
+        exception = TaskError("async_error!")
         exception.exit_code = 42
         raise exception
 
@@ -231,15 +206,15 @@ def test_init_config_cli(mocker, tmpdir):
     """_init_config can get its config from the commandline if not specified.
 
     """
-    mocker.patch.object(sys, 'argv', new=['x'])
+    mocker.patch.object(sys, "argv", new=["x"])
     with pytest.raises(SystemExit):
         client._init_config()
-    path = os.path.join(tmpdir, 'foo.json')
-    config = {'a': 'b'}
-    default_config = {'c': 'd'}
-    with open(path, 'w') as fh:
+    path = os.path.join(tmpdir, "foo.json")
+    config = {"a": "b"}
+    default_config = {"c": "d"}
+    with open(path, "w") as fh:
         fh.write(json.dumps(config))
     expected = deepcopy(default_config)
     expected.update(config)
-    mocker.patch.object(sys, 'argv', new=['x', path])
+    mocker.patch.object(sys, "argv", new=["x", path])
     assert client._init_config(default_config=default_config) == expected

@@ -30,7 +30,7 @@ def get_task(config):
         ClientError: on error.
 
     """
-    path = os.path.join(config['work_dir'], "task.json")
+    path = os.path.join(config["work_dir"], "task.json")
     message = "Can't read task from {}!\n%(exc)s".format(path)
     contents = load_json_or_yaml(path, is_path=True, message=message)
     return contents
@@ -55,11 +55,11 @@ def verify_json_schema(data, schema, name="task"):
         jsonschema.validate(data, schema)
     except jsonschema.exceptions.ValidationError as exc:
         raise TaskVerificationError(
-            "Can't verify {} schema!\n{}".format(name, str(exc)),
+            "Can't verify {} schema!\n{}".format(name, str(exc))
         ) from exc
 
 
-def verify_task_schema(config, task, schema_key='schema_file'):
+def verify_task_schema(config, task, schema_key="schema_file"):
     """Verify the task definition.
 
     Args:
@@ -73,21 +73,28 @@ def verify_task_schema(config, task, schema_key='schema_file'):
 
     """
     schema_path = config
-    schema_keys = schema_key.split('.')
+    schema_keys = schema_key.split(".")
     try:
         for key in schema_keys:
             schema_path = schema_path[key]
 
         task_schema = load_json_or_yaml(schema_path, is_path=True)
-        log.debug('Task is verified against this schema: {}'.format(task_schema))
+        log.debug("Task is verified against this schema: {}".format(task_schema))
 
         verify_json_schema(task, task_schema)
     except (KeyError, OSError) as e:
-        raise TaskVerificationError('Cannot verify task against schema. Task: {}.'.format(task)) from e
+        raise TaskVerificationError(
+            "Cannot verify task against schema. Task: {}.".format(task)
+        ) from e
 
 
-def sync_main(async_main, config_path=None, default_config=None,
-              should_verify_task=True, loop_function=asyncio.get_event_loop):
+def sync_main(
+    async_main,
+    config_path=None,
+    default_config=None,
+    should_verify_task=True,
+    loop_function=asyncio.get_event_loop,
+):
     """Entry point for scripts using scriptworker.
 
     This function sets up the basic needs for a script to run. More specifically:
@@ -131,16 +138,16 @@ def _init_config(config_path=None, default_config=None):
 
 
 def _usage():
-    print('Usage: {} CONFIG_FILE'.format(sys.argv[0]), file=sys.stderr)
+    print("Usage: {} CONFIG_FILE".format(sys.argv[0]), file=sys.stderr)
     sys.exit(1)
 
 
 def _init_logging(config):
     logging.basicConfig(
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        level=logging.DEBUG if config.get('verbose') else logging.INFO
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.DEBUG if config.get("verbose") else logging.INFO,
     )
-    logging.getLogger('taskcluster').setLevel(logging.WARNING)
+    logging.getLogger("taskcluster").setLevel(logging.WARNING)
 
 
 async def _handle_asyncio_loop(async_main, config, task):

@@ -20,9 +20,13 @@ log = logging.getLogger(__name__)
 
 
 # load_json_or_yaml {{{1
-def load_json_or_yaml(string, is_path=False, file_type='json',
-                      exception=TaskError,
-                      message="Failed to load %(file_type)s: %(exc)s"):
+def load_json_or_yaml(
+    string,
+    is_path=False,
+    file_type="json",
+    exception=TaskError,
+    message="Failed to load %(file_type)s: %(exc)s",
+):
     """Load json or yaml from a filehandle or string, and raise a custom exception on failure.
 
     Args:
@@ -41,7 +45,7 @@ def load_json_or_yaml(string, is_path=False, file_type='json',
         Exception: as specified, on failure
 
     """
-    if file_type == 'json':
+    if file_type == "json":
         _load_fh = json.load
         _load_str = json.loads
     else:
@@ -50,14 +54,14 @@ def load_json_or_yaml(string, is_path=False, file_type='json',
 
     try:
         if is_path:
-            with open(string, 'r') as fh:
+            with open(string, "r") as fh:
                 contents = _load_fh(fh)
         else:
             contents = _load_str(string)
         return contents
     except (OSError, ValueError, yaml.scanner.ScannerError) as exc:
         if exception is not None:
-            repl_dict = {'exc': str(exc), 'file_type': file_type}
+            repl_dict = {"exc": str(exc), "file_type": file_type}
             raise exception(message % repl_dict) from exc
 
 
@@ -76,9 +80,9 @@ def get_artifact_path(task_id, path, work_dir=None):
 
     """
     if work_dir is not None:
-        base_dir = os.path.join(work_dir, 'cot')
+        base_dir = os.path.join(work_dir, "cot")
     else:
-        base_dir = 'cot'
+        base_dir = "cot"
     return os.path.join(base_dir, task_id, path)
 
 
@@ -97,7 +101,7 @@ def to_unicode(line):
 
     """
     try:
-        line = line.decode('utf-8')
+        line = line.decode("utf-8")
     except (UnicodeDecodeError, AttributeError):
         pass
     return line
@@ -138,16 +142,17 @@ def get_log_filehandle(log_path=None):
             Defaults to ``None``.
     """
     if log_path is not None:
-        with open(log_path, 'w') as log_filehandle:
+        with open(log_path, "w") as log_filehandle:
             yield log_filehandle
     else:
-        with tempfile.TemporaryFile(mode='w') as log_filehandle:
+        with tempfile.TemporaryFile(mode="w") as log_filehandle:
             yield log_filehandle
 
 
 # run_command {{{1
-async def run_command(cmd, log_path=None, log_cmd=None, cwd=None, exception=None,
-                      expected_exit_codes=(0, )):
+async def run_command(
+    cmd, log_path=None, log_cmd=None, cwd=None, exception=None, expected_exit_codes=(0,)
+):
     """Run a command using ``asyncio.create_subprocess_exec``.
 
     This logs to `log_path` and returns the exit code.
@@ -188,12 +193,12 @@ async def run_command(cmd, log_path=None, log_cmd=None, cwd=None, exception=None
     log.info("Running {} in {} ...".format(log_cmd, cwd))
 
     kwargs = {
-        'stdout': PIPE,
-        'stderr': PIPE,
-        'stdin': None,
-        'close_fds': True,
-        'preexec_fn': os.setsid,
-        'cwd': cwd,
+        "stdout": PIPE,
+        "stderr": PIPE,
+        "stdin": None,
+        "close_fds": True,
+        "preexec_fn": os.setsid,
+        "cwd": cwd,
     }
     proc = await asyncio.create_subprocess_exec(*cmd, **kwargs)
     with get_log_filehandle(log_path=log_path) as log_filehandle:
@@ -203,9 +208,7 @@ async def run_command(cmd, log_path=None, log_cmd=None, cwd=None, exception=None
         stdout_future = asyncio.ensure_future(
             pipe_to_log(proc.stdout, filehandles=[log_filehandle])
         )
-        _, pending = await asyncio.wait(
-            [stderr_future, stdout_future]
-        )
+        _, pending = await asyncio.wait([stderr_future, stdout_future])
         exitcode = await proc.wait()
         await asyncio.wait([stdout_future, stderr_future])
     if exception and exitcode not in expected_exit_codes:
@@ -231,13 +234,15 @@ def list_files(path, ignore_list=None):
 
     """
     if ignore_list is None:
-        ignore_list = ('.', '..')
+        ignore_list = (".", "..")
     with os.scandir(path) as it:
         for entry in it:
             if entry.name in ignore_list:
                 continue
             if entry.is_dir():
-                for file_ in list_files(os.path.join(path, entry.name), ignore_list=ignore_list):
+                for file_ in list_files(
+                    os.path.join(path, entry.name), ignore_list=ignore_list
+                ):
                     yield file_
             else:
                 yield os.path.join(path, entry.name)

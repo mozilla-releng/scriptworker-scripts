@@ -8,12 +8,12 @@ Attributes:
 
 # These should mirror `scriptworker.constants.STATUSES`.
 STATUSES = {
-    'success': 0,
-    'failure': 1,
-    'worker-shutdown': 2,
-    'malformed-payload': 3,
-    'resource-unavailable': 4,
-    'internal-error': 5,
-    'superseded': 6,
-    'intermittent-task': 7,
+    "success": 0,
+    "failure": 1,
+    "worker-shutdown": 2,
+    "malformed-payload": 3,
+    "resource-unavailable": 4,
+    "internal-error": 5,
+    "superseded": 6,
+    "intermittent-task": 7,
 }

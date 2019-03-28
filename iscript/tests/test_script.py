@@ -9,15 +9,15 @@ import iscript.script as script
 
 
 # async_main {{{1
-@pytest.mark.parametrize('behavior, raises', ((
-    'mac_pkg', False
-), (
-    'mac_notarize', False
-), (
-    None, False,
-), (
-    'invalid_behavior', True
-)))
+@pytest.mark.parametrize(
+    "behavior, raises",
+    (
+        ("mac_pkg", False),
+        ("mac_notarize", False),
+        (None, False),
+        ("invalid_behavior", True),
+    ),
+)
 @pytest.mark.asyncio
 async def test_async_main(mocker, behavior, raises):
     """``async_main`` calls ``sign_and_notarize_all``.
@@ -26,10 +26,10 @@ async def test_async_main(mocker, behavior, raises):
 
     notarize_calls = []
     pkg_calls = []
-    config = {'a': 'b'}
-    task = {'c': 'd', 'payload': {}}
+    config = {"a": "b"}
+    task = {"c": "d", "payload": {}}
     if behavior:
-        task['payload']['behavior'] = behavior
+        task["payload"]["behavior"] = behavior
     expected = [[(config, task), {}]]
 
     async def test_notarize(*args, **kwargs):
@@ -38,14 +38,14 @@ async def test_async_main(mocker, behavior, raises):
     async def test_pkg(*args, **kwargs):
         pkg_calls.append([args, kwargs])
 
-    mocker.patch.object(script, 'sign_and_notarize_all', new=test_notarize)
-    mocker.patch.object(script, 'create_and_sign_all_pkg_files', new=test_pkg)
+    mocker.patch.object(script, "sign_and_notarize_all", new=test_notarize)
+    mocker.patch.object(script, "create_and_sign_all_pkg_files", new=test_pkg)
     if raises:
         with pytest.raises(IScriptError):
             await script.async_main(config, task)
     else:
         await script.async_main(config, task)
-        if behavior == 'mac_notarize':
+        if behavior == "mac_notarize":
             assert notarize_calls == expected
         else:
             assert pkg_calls == expected
@@ -57,8 +57,8 @@ def test_get_default_config(tmpdir):
 
     """
     config = script.get_default_config(base_dir=tmpdir)
-    assert config['work_dir'] == os.path.join(tmpdir, 'work')
-    for k in ('artifact_dir', 'schema_file'):
+    assert config["work_dir"] == os.path.join(tmpdir, "work")
+    for k in ("artifact_dir", "schema_file"):
         assert k in config
 
 
@@ -71,7 +71,7 @@ async def test_main(mocker):
     """
 
     calls = []
-    config = {'a': 'b'}
+    config = {"a": "b"}
 
     def fake_main(*args, **kwargs):
         calls.append([args, kwargs])
@@ -82,8 +82,8 @@ async def test_main(mocker):
     async def fake_async_main(*args, **kwargs):
         pass
 
-    mocker.patch.object(script, 'sync_main', new=fake_main)
-    mocker.patch.object(script, 'async_main', new=fake_async_main)
-    mocker.patch.object(script, 'get_default_config', new=fake_config)
+    mocker.patch.object(script, "sync_main", new=fake_main)
+    mocker.patch.object(script, "async_main", new=fake_async_main)
+    mocker.patch.object(script, "get_default_config", new=fake_config)
     script.main()
-    assert calls == [[(fake_async_main, ), {'default_config': config}]]
+    assert calls == [[(fake_async_main,), {"default_config": config}]]
