@@ -57,6 +57,7 @@ class App(object):
         app_zip_path (str): the zipfile path for notarization, if we use the
             ``multi_account`` workflow.
         pkg_path (str): the unsigned .pkg path.
+        pkg_name (str): the basename of the .pkg path.
         pkg_zip_path (str): the zipfile path for notarization, if we use the
         notarization_log_path (str): the path to the logfile for notarization,
             if we use the ``multi_account`` workflow. This is currently
@@ -327,8 +328,8 @@ async def extract_all_apps(work_dir, all_paths):
     await raise_future_exceptions(futures)
 
 
-# create_all_app_zipfiles {{{1
-async def create_all_app_zipfiles(all_paths):
+# create_all_notarization_zipfiles {{{1
+async def create_all_notarization_zipfiles(all_paths, path_attr='app_name'):
     """Create notarization zipfiles for all the apps.
 
     Args:
@@ -339,7 +340,7 @@ async def create_all_app_zipfiles(all_paths):
 
     """
     futures = []
-    required_attrs = ['parent_dir', 'app_name']
+    required_attrs = ['parent_dir', path_attr]
     # zip up apps
     for app in all_paths:
         app.check_required_attrs(required_attrs)
@@ -347,41 +348,11 @@ async def create_all_app_zipfiles(all_paths):
             app.parent_dir, "{}.zip".format(os.path.basename(app.parent_dir))
         )
         # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
+        path = getattr(app, path_attr)
         futures.append(asyncio.ensure_future(
             run_command(
                 [
-                    'zip', '-r', app.app_zip_path, app.app_name,
-                ],
-                cwd=app.parent_dir, exception=IScriptError,
-            )
-        ))
-    await raise_future_exceptions(futures)
-
-
-# create_all_pkg_zipfiles {{{1
-async def create_all_pkg_zipfiles(all_paths):
-    """Create notarization zipfiles for all the pkgs.
-
-    Args:
-        all_paths (list): list of ``App`` objects
-
-    Raises:
-        IScriptError: on failure
-
-    """
-    futures = []
-    required_attrs = ['parent_dir', 'pkg_path']
-    # zip up apps
-    for app in all_paths:
-        app.check_required_attrs(required_attrs)
-        app.pkg_zip_path = os.path.join(
-            app.parent_dir, "{}.zip".format(os.path.basename(app.parent_dir))
-        )
-        # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
-        futures.append(asyncio.ensure_future(
-            run_command(
-                [
-                    'zip', '-r', app.pkg_zip_path, app.app_name,
+                    'zip', '-r', app.app_zip_path, path,
                 ],
                 cwd=app.parent_dir, exception=IScriptError,
             )
@@ -390,14 +361,14 @@ async def create_all_pkg_zipfiles(all_paths):
 
 
 # create_one_notarization_zipfile {{{1
-async def create_one_notarization_zipfile(work_dir, all_paths, app_path_attr='app_path'):
+async def create_one_notarization_zipfile(work_dir, all_paths, path_attr='app_path'):
     """Create a single notarization zipfile for all the apps.
 
     Args:
         work-dir (str): the script work directory
         all_paths (list): list of ``App`` objects
-        app_path_attr (str, optional): the attribute for the paths we'll be
-            zipping up. Defaults to ``app_path``
+        path_attr (str, optional): the attribute for the paths we'll be zipping
+            up. Defaults to ``app_path``
 
     Raises:
         IScriptError: on failure
@@ -406,12 +377,12 @@ async def create_one_notarization_zipfile(work_dir, all_paths, app_path_attr='ap
         str: the zip path
 
     """
-    required_attrs = [app_path_attr]
+    required_attrs = [path_attr]
     app_paths = []
-    app_zip_path = os.path.join(work_dir, '{}.zip'.format(app_path_attr))
+    app_zip_path = os.path.join(work_dir, '{}.zip'.format(path_attr))
     for app in all_paths:
         app.check_required_attrs(required_attrs)
-        app_paths.append(os.path.relpath(getattr(app, app_path_attr), work_dir))
+        app_paths.append(os.path.relpath(getattr(app, path_attr), work_dir))
     await run_command(['zip', '-r', app_zip_path, *app_paths], cwd=work_dir, exception=IScriptError)
     return app_zip_path
 
@@ -512,7 +483,7 @@ def get_notarization_status_from_log(log_path):
 
 
 # wrap_notarization_with_sudo {{{1
-async def wrap_notarization_with_sudo(config, key_config, all_paths, zip_attr='app_zip_path'):
+async def wrap_notarization_with_sudo(config, key_config, all_paths, path_attr='app_zip_path'):
     """Wrap the notarization requests with sudo.
 
     Apple creates a lockfile per user for notarization. To notarize concurrently,
@@ -522,7 +493,7 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths, zip_attr='a
         config (dict): the running config
         key_config (dict): the config for this signing key
         all_paths (list): the list of ``App`` objects
-        zip_attr (str, optional): the attribute that the zip path is under.
+        path_attr (str, optional): the attribute that the zip path is under.
             Defaults to ``app_zip_path``
 
     Raises:
@@ -538,7 +509,7 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths, zip_attr='a
     uuids = {}
 
     for app in all_paths:
-        app.check_required_attrs([zip_attr, 'parent_dir'])
+        app.check_required_attrs([path_attr, 'parent_dir'])
 
     while counter < len(all_paths):
         futures = []
@@ -546,7 +517,7 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths, zip_attr='a
             app = all_paths[counter]
             app.notarization_log_path = os.path.join(app.parent_dir, 'notarization.log')
             bundle_id = get_bundle_id(key_config['base_bundle_id'], counter=str(counter))
-            zip_path = getattr(app, app_zip_path)
+            zip_path = getattr(app, path_attr)
             base_cmd = [
                 'sudo', '-u', account,
                 'xcrun', 'altool', '--notarize-app',
@@ -757,6 +728,7 @@ async def create_pkg_files(key_config, all_paths):
         # call set_app_path_and_name because we may not have called sign() earlier
         set_app_path_and_name(app)
         app.pkg_path = app.app_path.replace('.app', '.pkg')
+        app.pkg_name = os.path.basename(app.pkg_path)
         futures.append(asyncio.ensure_future(
             run_command(
                 [
@@ -817,10 +789,10 @@ async def sign_and_notarize_all(config, task):
 
     log.info("Notarizing")
     if key_config['notarize_type'] == 'multi_account':
-        await create_all_app_zipfiles(all_paths)
-        poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths, zip_attr='app_zip_path')
+        await create_all_notarization_zipfiles(all_paths, path_attr='app_name')
+        poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths, path_attr='app_zip_path')
     else:
-        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, app_path_attr='app_path')
+        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, path_attr='app_path')
         poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
 
     await poll_all_notarization_status(key_config, poll_uuids)
@@ -828,10 +800,10 @@ async def sign_and_notarize_all(config, task):
     await tar_apps(config, all_paths)
     await create_pkg_files(key_config, all_paths)
     if key_config['notarize_type'] == 'multi_account':
-        awaitcreate_all_pkg_zipfiles(all_paths)
-        poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths, zip_attr='pkg_zip_path')
+        await create_all_notarization_zipfiles(all_paths, path_attr='pkg_name')
+        poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths, path_attr='pkg_zip_path')
     else:
-        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, app_path_attr='pkg_path')
+        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, path_attr='pkg_path')
         poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
     await staple_notarization(all_paths, path_attr='pkg_path')
     await copy_pkgs_to_artifact_dir(config, all_paths)
