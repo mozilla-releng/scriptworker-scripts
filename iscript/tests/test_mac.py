@@ -259,11 +259,11 @@ async def test_extract_all_apps(mocker, tmpdir, raises):
             assert os.path.isdir(os.path.join(work_dir, i))
 
 
-# create_all_app_zipfiles {{{1
+# create_all_notarization_zipfiles {{{1
 @pytest.mark.parametrize("raises", (True, False))
 @pytest.mark.asyncio
-async def test_create_all_app_zipfiles(mocker, tmpdir, raises):
-    """``create_all_app_zipfiles`` calls ``zip -r``, and raises on failure.
+async def test_create_all_notarization_zipfiles(mocker, tmpdir, raises):
+    """``create_all_notarization_zipfiles`` calls ``zip -r``, and raises on failure.
 
     """
 
@@ -282,9 +282,9 @@ async def test_create_all_app_zipfiles(mocker, tmpdir, raises):
 
     if raises:
         with pytest.raises(IScriptError):
-            await mac.create_all_app_zipfiles(all_paths)
+            await mac.create_all_notarization_zipfiles(all_paths)
     else:
-        await mac.create_all_app_zipfiles(all_paths)
+        await mac.create_all_notarization_zipfiles(all_paths)
 
 
 # create_one_app_zipfile {{{1
@@ -476,7 +476,7 @@ async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
         all_paths.append(
             mac.App(
                 parent_dir=parent_dir,
-                zip_path=os.path.join(parent_dir, "{}.zip".format(i)),
+                app_zip_path=os.path.join(parent_dir, "{}.zip".format(i)),
             )
         )
         expected[notarization_log_path] = notarization_log_path
@@ -522,7 +522,7 @@ async def test_notarize_no_sudo(mocker, tmpdir, raises):
         return path
 
     work_dir = str(tmpdir)
-    zip_path = os.path.join(work_dir, "zip_path")
+    app_zip_path = os.path.join(work_dir, "zip_path")
     log_path = os.path.join(work_dir, "notarization.log")
     key_config = {
         "base_bundle_id": "org.iscript.test",
