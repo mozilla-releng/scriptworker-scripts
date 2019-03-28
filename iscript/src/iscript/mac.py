@@ -54,9 +54,10 @@ class App(object):
         parent_dir (str): the directory that contains the .app.
         app_path (str): the path to the .app directory.
         app_name (str): the basename of the .app directory.
-        zip_path (str): the zipfile path for notarization, if we use the
+        app_zip_path (str): the zipfile path for notarization, if we use the
             ``multi_account`` workflow.
         pkg_path (str): the unsigned .pkg path.
+        pkg_zip_path (str): the zipfile path for notarization, if we use the
         notarization_log_path (str): the path to the logfile for notarization,
             if we use the ``multi_account`` workflow. This is currently
             overwritten each time we poll.
@@ -71,8 +72,9 @@ class App(object):
     parent_dir = attr.ib(default='')
     app_path = attr.ib(default='')
     app_name = attr.ib(default='')
-    zip_path = attr.ib(default='')
+    app_zip_path = attr.ib(default='')
     pkg_path = attr.ib(default='')
+    pkg_zip_path = attr.ib(default='')
     notarization_log_path = attr.ib(default='')
     target_tar_path = attr.ib(default='')
     target_pkg_path = attr.ib(default='')
@@ -341,14 +343,14 @@ async def create_all_app_zipfiles(all_paths):
     # zip up apps
     for app in all_paths:
         app.check_required_attrs(required_attrs)
-        app.zip_path = os.path.join(
+        app.app_zip_path = os.path.join(
             app.parent_dir, "{}.zip".format(os.path.basename(app.parent_dir))
         )
         # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
         futures.append(asyncio.ensure_future(
             run_command(
                 [
-                    'zip', '-r', app.zip_path, app.app_name,
+                    'zip', '-r', app.app_zip_path, app.app_name,
                 ],
                 cwd=app.parent_dir, exception=IScriptError,
             )
@@ -356,12 +358,46 @@ async def create_all_app_zipfiles(all_paths):
     await raise_future_exceptions(futures)
 
 
-# create_one_app_zipfile {{{1
-async def create_one_app_zipfile(work_dir, all_paths):
-    """Create a single notarization zipfile for all the apps.
+# create_all_pkg_zipfiles {{{1
+async def create_all_pkg_zipfiles(all_paths):
+    """Create notarization zipfiles for all the pkgs.
 
     Args:
         all_paths (list): list of ``App`` objects
+
+    Raises:
+        IScriptError: on failure
+
+    """
+    futures = []
+    required_attrs = ['parent_dir', 'pkg_path']
+    # zip up apps
+    for app in all_paths:
+        app.check_required_attrs(required_attrs)
+        app.pkg_zip_path = os.path.join(
+            app.parent_dir, "{}.zip".format(os.path.basename(app.parent_dir))
+        )
+        # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
+        futures.append(asyncio.ensure_future(
+            run_command(
+                [
+                    'zip', '-r', app.pkg_zip_path, app.app_name,
+                ],
+                cwd=app.parent_dir, exception=IScriptError,
+            )
+        ))
+    await raise_future_exceptions(futures)
+
+
+# create_one_notarization_zipfile {{{1
+async def create_one_notarization_zipfile(work_dir, all_paths, app_path_attr='app_path'):
+    """Create a single notarization zipfile for all the apps.
+
+    Args:
+        work-dir (str): the script work directory
+        all_paths (list): list of ``App`` objects
+        app_path_attr (str, optional): the attribute for the paths we'll be
+            zipping up. Defaults to ``app_path``
 
     Raises:
         IScriptError: on failure
@@ -370,14 +406,14 @@ async def create_one_app_zipfile(work_dir, all_paths):
         str: the zip path
 
     """
-    required_attrs = ['app_path']
+    required_attrs = [app_path_attr]
     app_paths = []
-    zip_path = os.path.join(work_dir, 'target.zip')
+    app_zip_path = os.path.join(work_dir, '{}.zip'.format(app_path_attr))
     for app in all_paths:
         app.check_required_attrs(required_attrs)
-        app_paths.append(os.path.relpath(app.app_path, work_dir))
-    await run_command(['zip', '-r', zip_path, *app_paths], cwd=work_dir, exception=IScriptError)
-    return zip_path
+        app_paths.append(os.path.relpath(getattr(app, app_path_attr), work_dir))
+    await run_command(['zip', '-r', app_zip_path, *app_paths], cwd=work_dir, exception=IScriptError)
+    return app_zip_path
 
 
 # sign_all_apps {{{1
@@ -476,11 +512,18 @@ def get_notarization_status_from_log(log_path):
 
 
 # wrap_notarization_with_sudo {{{1
-async def wrap_notarization_with_sudo(config, key_config, all_paths):
+async def wrap_notarization_with_sudo(config, key_config, all_paths, zip_attr='app_zip_path'):
     """Wrap the notarization requests with sudo.
 
     Apple creates a lockfile per user for notarization. To notarize concurrently,
     we use sudo against a set of accounts (``config['local_notarization_accounts']``).
+
+    Args:
+        config (dict): the running config
+        key_config (dict): the config for this signing key
+        all_paths (list): the list of ``App`` objects
+        zip_attr (str, optional): the attribute that the zip path is under.
+            Defaults to ``app_zip_path``
 
     Raises:
         IScriptError: on failure
@@ -495,7 +538,7 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
     uuids = {}
 
     for app in all_paths:
-        app.check_required_attrs(['zip_path', 'parent_dir'])
+        app.check_required_attrs([zip_attr, 'parent_dir'])
 
     while counter < len(all_paths):
         futures = []
@@ -503,10 +546,11 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths):
             app = all_paths[counter]
             app.notarization_log_path = os.path.join(app.parent_dir, 'notarization.log')
             bundle_id = get_bundle_id(key_config['base_bundle_id'], counter=str(counter))
+            zip_path = getattr(app, app_zip_path)
             base_cmd = [
                 'sudo', '-u', account,
                 'xcrun', 'altool', '--notarize-app',
-                '-f', app.zip_path,
+                '-f', zip_path,
                 '--primary-bundle-id', bundle_id,
                 '-u', key_config['apple_notarization_account'],
                 '--password',
@@ -634,12 +678,14 @@ async def poll_all_notarization_status(key_config, poll_uuids):
     await raise_future_exceptions(futures)
 
 
-# staple_apps {{{1
-async def staple_apps(all_paths):
+# staple_notarization {{{1
+async def staple_notarization(all_paths, path_attr='app_name'):
     """Staple the notarization results to each app.
 
     Args:
         all_paths (list): the list of App objects
+        path_attr (str, optional): the path attribute to staple. Defaults to
+            ``app_name``
 
     Raises:
         IScriptError: on failure
@@ -648,10 +694,11 @@ async def staple_apps(all_paths):
     log.info("Stapling apps")
     futures = []
     for app in all_paths:
-        app.check_required_attrs(['app_name', 'parent_dir'])
+        app.check_required_attrs([path_attr, 'parent_dir'])
+        path = getattr(app, path_attr)
         futures.append(asyncio.ensure_future(
             run_command(
-                ['xcrun', 'stapler', 'staple', '-v', app.app_name],
+                ['xcrun', 'stapler', 'staple', '-v', path],
                 cwd=app.parent_dir, exception=IScriptError
             )
         ))
@@ -723,11 +770,6 @@ async def create_pkg_files(key_config, all_paths):
         ))
     await raise_future_exceptions(futures)
 
-zip test.zip Firefox.pkg
-security unlock-keychain /builds/notarization/signing-and-notarization.keychain
-xcrun altool --notarize-app -f test.zip --primary-bundle-id "org.mozilla.nightly.nthomas" -u nick.thomas@mozilla.com --pas "@keychain:AC_PASSWORD"
-xcrun stapler staple -v Firefox.pkg
-
 
 # copy_pkgs_to_artifact_dir {{{1
 async def copy_pkgs_to_artifact_dir(config, all_paths):
@@ -776,25 +818,22 @@ async def sign_and_notarize_all(config, task):
     log.info("Notarizing")
     if key_config['notarize_type'] == 'multi_account':
         await create_all_app_zipfiles(all_paths)
-        poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths)
+        poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths, zip_attr='app_zip_path')
     else:
-        zip_path = await create_one_app_zipfile(work_dir, all_paths)
+        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, app_path_attr='app_path')
         poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
 
     await poll_all_notarization_status(key_config, poll_uuids)
-    await staple_apps(all_paths)
+    await staple_notarization(all_paths, path_attr='app_name')
     await tar_apps(config, all_paths)
     await create_pkg_files(key_config, all_paths)
-    # if key_config['notarize_type'] == 'multi_account':
-    #     await notarize_pkg_files(config, key_config, all_paths)
-    #     # TODO get this to do the pkg files rather than zip files
-    #     poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths)
-    # else:
-    #     # TODO get this to do the pkg files rather than app dirs
-    #     zip_path = await create_one_app_zipfile(work_dir, all_paths)
-    #     poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
-
-    # TODO copy all of those to the artifact_dir
+    if key_config['notarize_type'] == 'multi_account':
+        awaitcreate_all_pkg_zipfiles(all_paths)
+        poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths, zip_attr='pkg_zip_path')
+    else:
+        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, app_path_attr='pkg_path')
+        poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
+    await staple_notarization(all_paths, path_attr='pkg_path')
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing and notarizing apps.")
