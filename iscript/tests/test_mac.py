@@ -287,11 +287,11 @@ async def test_create_all_notarization_zipfiles(mocker, tmpdir, raises):
         await mac.create_all_notarization_zipfiles(all_paths)
 
 
-# create_one_app_zipfile {{{1
+# create_one_notarization_zipfile {{{1
 @pytest.mark.parametrize("raises", (True, False))
 @pytest.mark.asyncio
-async def test_create_one_app_zipfile(mocker, tmpdir, raises):
-    """``create_one_app_zipfile`` calls the expected cmdline, and raises on
+async def test_create_one_notarization_zipfile(mocker, tmpdir, raises):
+    """``create_one_notarization_zipfile`` calls the expected cmdline, and raises on
     failure.
 
     """
@@ -317,9 +317,9 @@ async def test_create_one_app_zipfile(mocker, tmpdir, raises):
         )
     if raises:
         with pytest.raises(IScriptError):
-            await mac.create_one_app_zipfile(work_dir, all_paths)
+            await mac.create_one_notarization_zipfile(work_dir, all_paths)
     else:
-        await mac.create_one_app_zipfile(work_dir, all_paths)
+        await mac.create_one_notarization_zipfile(work_dir, all_paths)
 
 
 # sign_all_apps {{{1
@@ -640,11 +640,11 @@ async def test_poll_all_notarization_status(mocker, tmpdir, poll_uuids, raises):
         assert await mac.poll_all_notarization_status(key_config, poll_uuids) is None
 
 
-# staple_apps {{{1
+# staple_notarization {{{1
 @pytest.mark.parametrize("raises", (True, False))
 @pytest.mark.asyncio
-async def test_staple_apps(mocker, raises):
-    """``staple_apps`` runs stapling concurrently for each ``App``, and raises
+async def test_staple_notarization(mocker, raises):
+    """``staple_notarization`` runs stapling concurrently for each ``App``, and raises
     any exceptions hit along the way.
 
     """
@@ -660,9 +660,9 @@ async def test_staple_apps(mocker, raises):
     mocker.patch.object(mac, "run_command", new=fake_run_command)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.staple_apps(all_paths)
+            await mac.staple_notarization(all_paths)
     else:
-        assert await mac.staple_apps(all_paths) is None
+        assert await mac.staple_notarization(all_paths) is None
 
 
 # tar_apps {{{1

@@ -404,7 +404,7 @@ async def create_one_notarization_zipfile(work_dir, all_paths, path_attr="app_pa
     """Create a single notarization zipfile for all the apps.
 
     Args:
-        work-dir (str): the script work directory
+        work_dir (str): the script work directory
         all_paths (list): list of ``App`` objects
         path_attr (str, optional): the attribute for the paths we'll be zipping
             up. Defaults to ``app_path``
