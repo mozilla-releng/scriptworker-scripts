@@ -103,7 +103,7 @@ async def test_unlock_keychain_successful(results, mocker):
 
     """
 
-    def fake_expect(*args, **kwargs):
+    async def fake_expect(*args, **kwargs):
         return results.pop(0)
 
     child = mocker.Mock()
@@ -120,7 +120,7 @@ async def test_unlock_keychain_timeout(mocker):
 
     """
 
-    def fake_expect(*args, **kwargs):
+    async def fake_expect(*args, **kwargs):
         raise pexpect.exceptions.TIMEOUT("foo")
 
     child = mocker.Mock()
@@ -139,7 +139,7 @@ async def test_unlock_keychain_failure(mocker):
     """
     results = [0]
 
-    def fake_expect(*args, **kwargs):
+    async def fake_expect(*args, **kwargs):
         return results.pop(0)
 
     child = mocker.Mock()
