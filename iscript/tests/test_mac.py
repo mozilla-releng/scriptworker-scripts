@@ -301,7 +301,7 @@ async def test_create_one_notarization_zipfile(mocker, tmpdir, raises):
         assert args[0] == [
             "zip",
             "-r",
-            os.path.join(work_dir, "target.zip"),
+            os.path.join(work_dir, "app_path.zip"),
             "0/0.app",
             "1/1.app",
             "2/2.app",
