@@ -54,11 +54,10 @@ class App(object):
         parent_dir (str): the directory that contains the .app.
         app_path (str): the path to the .app directory.
         app_name (str): the basename of the .app directory.
-        app_zip_path (str): the zipfile path for notarization, if we use the
+        zip_path (str): the zipfile path for notarization, if we use the
             ``multi_account`` workflow.
         pkg_path (str): the unsigned .pkg path.
         pkg_name (str): the basename of the .pkg path.
-        pkg_zip_path (str): the zipfile path for notarization, if we use the
         notarization_log_path (str): the path to the logfile for notarization,
             if we use the ``multi_account`` workflow. This is currently
             overwritten each time we poll.
@@ -73,9 +72,9 @@ class App(object):
     parent_dir = attr.ib(default="")
     app_path = attr.ib(default="")
     app_name = attr.ib(default="")
-    app_zip_path = attr.ib(default="")
+    zip_path = attr.ib(default="")
     pkg_path = attr.ib(default="")
-    pkg_zip_path = attr.ib(default="")
+    pkg_name = attr.ib(default="")
     notarization_log_path = attr.ib(default="")
     target_tar_path = attr.ib(default="")
     target_pkg_path = attr.ib(default="")
@@ -382,7 +381,7 @@ async def create_all_notarization_zipfiles(all_paths, path_attr="app_name"):
     # zip up apps
     for app in all_paths:
         app.check_required_attrs(required_attrs)
-        app.app_zip_path = os.path.join(
+        app.zip_path = os.path.join(
             app.parent_dir, "{}.zip".format(os.path.basename(app.parent_dir))
         )
         # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
@@ -390,7 +389,7 @@ async def create_all_notarization_zipfiles(all_paths, path_attr="app_name"):
         futures.append(
             asyncio.ensure_future(
                 run_command(
-                    ["zip", "-r", app.app_zip_path, path],
+                    ["zip", "-r", app.zip_path, path],
                     cwd=app.parent_dir,
                     exception=IScriptError,
                 )
@@ -418,14 +417,14 @@ async def create_one_notarization_zipfile(work_dir, all_paths, path_attr="app_pa
     """
     required_attrs = [path_attr]
     app_paths = []
-    app_zip_path = os.path.join(work_dir, "{}.zip".format(path_attr))
+    zip_path = os.path.join(work_dir, "{}.zip".format(path_attr))
     for app in all_paths:
         app.check_required_attrs(required_attrs)
         app_paths.append(os.path.relpath(getattr(app, path_attr), work_dir))
     await run_command(
-        ["zip", "-r", app_zip_path, *app_paths], cwd=work_dir, exception=IScriptError
+        ["zip", "-r", zip_path, *app_paths], cwd=work_dir, exception=IScriptError
     )
-    return app_zip_path
+    return zip_path
 
 
 # sign_all_apps {{{1
@@ -523,7 +522,7 @@ def get_notarization_status_from_log(log_path):
 
 # wrap_notarization_with_sudo {{{1
 async def wrap_notarization_with_sudo(
-    config, key_config, all_paths, path_attr="app_zip_path"
+    config, key_config, all_paths, path_attr="zip_path"
 ):
     """Wrap the notarization requests with sudo.
 
@@ -535,7 +534,7 @@ async def wrap_notarization_with_sudo(
         key_config (dict): the config for this signing key
         all_paths (list): the list of ``App`` objects
         path_attr (str, optional): the attribute that the zip path is under.
-            Defaults to ``app_zip_path``
+            Defaults to ``zip_path``
 
     Raises:
         IScriptError: on failure
@@ -881,7 +880,7 @@ async def sign_and_notarize_all(config, task):
     if key_config["notarize_type"] == "multi_account":
         await create_all_notarization_zipfiles(all_paths, path_attr="app_name")
         poll_uuids = await wrap_notarization_with_sudo(
-            config, key_config, all_paths, path_attr="app_zip_path"
+            config, key_config, all_paths, path_attr="zip_path"
         )
     else:
         zip_path = await create_one_notarization_zipfile(
@@ -896,7 +895,7 @@ async def sign_and_notarize_all(config, task):
     if key_config["notarize_type"] == "multi_account":
         await create_all_notarization_zipfiles(all_paths, path_attr="pkg_name")
         poll_uuids = await wrap_notarization_with_sudo(
-            config, key_config, all_paths, path_attr="pkg_zip_path"
+            config, key_config, all_paths, path_attr="zip_path"
         )
     else:
         zip_path = await create_one_notarization_zipfile(
