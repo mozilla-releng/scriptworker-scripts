@@ -841,10 +841,10 @@ async def copy_pkgs_to_artifact_dir(config, all_paths):
     """
     log.info("Copying pkgs to the artifact dir")
     for app in all_paths:
-        app.check_required_attrs(["parent_dir", "orig_path", "pkg_path"])
+        app.check_required_attrs(["orig_path", "pkg_path"])
         app.target_pkg_path = "{}/public/{}".format(
             config["artifact_dir"], app.orig_path.split("public/")[1]
-        ).replace(".tar.gz", ".app")
+        ).replace(".tar.gz", ".pkg")
         makedirs(os.path.dirname(app.target_pkg_path))
         copy2(app.pkg_path, app.target_pkg_path)
 

@@ -190,7 +190,10 @@ def test_get_config_key(key, config_key, raises):
     """``get_config_key`` returns the correct subconfig.
 
     """
-    config = {"mac_config": {"dep": {"key": "dep"}, "nightly": {"key": "nightly"}}}
+    config = {
+        "mac_config": {"dep": {"key": "dep"}, "nightly": {"key": "nightly"}},
+        "foo": "bar",  # define just to keep black from formating on one line
+    }
     if raises:
         with pytest.raises(IScriptError):
             mac.get_key_config(config, key, config_key=config_key)
@@ -732,10 +735,7 @@ async def test_create_pkg_files(mocker, raises):
         if raises:
             raise IScriptError("foo")
 
-    key_config = {
-        "pkg_cert_id": "pkg.cert",
-        "signing_keychain": "signing.keychain",
-    }
+    key_config = {"pkg_cert_id": "pkg.cert", "signing_keychain": "signing.keychain"}
     all_paths = []
     for i in range(3):
         all_paths.append(
@@ -749,6 +749,44 @@ async def test_create_pkg_files(mocker, raises):
             await mac.create_pkg_files(key_config, all_paths)
     else:
         assert await mac.create_pkg_files(key_config, all_paths) is None
+
+
+# copy_pkgs_to_artifact_dir {{{1
+@pytest.mark.asyncio
+async def test_copy_pkgs_to_artifact_dir(tmpdir):
+    """``copy_pkgs_to_artifact_dir`` creates all needed parent directories and
+    copies pkg artifacts successfully.
+
+    """
+    num_pkgs = 3
+    work_dir = os.path.join(str(tmpdir), "work")
+    artifact_dir = os.path.join(str(tmpdir), "artifact")
+    config = {"artifact_dir": artifact_dir, "work_dir": work_dir}
+    all_paths = []
+    expected_paths = []
+    for i in range(num_pkgs):
+        app = mac.App(
+            pkg_path=os.path.join(work_dir, str(i), "target.pkg".format(i)),
+            orig_path=os.path.join(
+                work_dir, "cot/taskId/public/build/{}/target-{}.tar.gz".format(i, i)
+            ),
+        )
+        expected_path = os.path.join(
+            artifact_dir, "public/build/{}/target-{}.pkg".format(i, i)
+        )
+        expected_paths.append(expected_path)
+        makedirs(os.path.dirname(app.pkg_path))
+        with open(app.pkg_path, "w") as fh:
+            fh.write(expected_path)
+        all_paths.append(app)
+
+    await mac.copy_pkgs_to_artifact_dir(config, all_paths)
+    for i in range(num_pkgs):
+        expected_path = expected_paths[i]
+        assert os.path.exists(expected_path)
+        assert expected_path == all_paths[i].target_pkg_path
+        with open(expected_path) as fh:
+            assert fh.read() == expected_path
 
 
 # sign_and_notarize_all {{{1
