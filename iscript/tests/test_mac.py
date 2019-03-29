@@ -476,7 +476,7 @@ async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
         all_paths.append(
             mac.App(
                 parent_dir=parent_dir,
-                app_zip_path=os.path.join(parent_dir, "{}.zip".format(i)),
+                zip_path=os.path.join(parent_dir, "{}.zip".format(i)),
             )
         )
         expected[notarization_log_path] = notarization_log_path
@@ -522,7 +522,7 @@ async def test_notarize_no_sudo(mocker, tmpdir, raises):
         return path
 
     work_dir = str(tmpdir)
-    app_zip_path = os.path.join(work_dir, "app_zip_path")
+    zip_path = os.path.join(work_dir, "zip_path")
     log_path = os.path.join(work_dir, "notarization.log")
     key_config = {
         "base_bundle_id": "org.iscript.test",
@@ -535,9 +535,9 @@ async def test_notarize_no_sudo(mocker, tmpdir, raises):
     mocker.patch.object(mac, "get_uuid_from_log", new=fake_get_uuid_from_log)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.notarize_no_sudo(work_dir, key_config, app_zip_path)
+            await mac.notarize_no_sudo(work_dir, key_config, zip_path)
     else:
-        assert await mac.notarize_no_sudo(work_dir, key_config, app_zip_path) == expected
+        assert await mac.notarize_no_sudo(work_dir, key_config, zip_path) == expected
 
 
 # poll_notarization_uuid {{{1
