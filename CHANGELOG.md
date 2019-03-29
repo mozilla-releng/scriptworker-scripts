@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.0.0] - 2019-03-29
+
+### Changed
+* Bumps version to `1.0.0` since `pushapkscript` is used in production
+
 ## [0.14.0] - 2019-02-13
 
 ### Added
