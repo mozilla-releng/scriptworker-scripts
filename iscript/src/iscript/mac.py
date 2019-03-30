@@ -154,6 +154,8 @@ async def sign(key_config, app, entitlements_path):
                             "-o",
                             "runtime",
                             "--verbose",
+                            "--keychain",
+                            key_config["signing_keychain"],
                             "--sign",
                             key_config["identity"],
                             "--entitlements",
