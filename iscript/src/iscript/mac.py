@@ -356,7 +356,7 @@ async def extract_all_apps(work_dir, all_paths):
         futures.append(
             asyncio.ensure_future(
                 run_command(
-                    ["tar", "xvf", app.orig_path],
+                    ["tar", "xf", app.orig_path],
                     cwd=app.parent_dir,
                     exception=IScriptError,
                 )
