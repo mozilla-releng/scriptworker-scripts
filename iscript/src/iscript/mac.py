@@ -912,7 +912,8 @@ async def sign_and_notarize_all(config, task):
 async def create_and_sign_all_pkg_files(config, task):
     """Create and sign all pkg files for this task.
 
-    This function doesn't do any notarization.
+    This function doesn't do any notarization. It currently assumes the app
+    is already signed.
 
     Args:
         config (dict): the running configuration
