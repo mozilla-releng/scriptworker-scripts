@@ -20,6 +20,7 @@ async def async_main(config, task):
 
     """
     behavior = task["payload"].get("behavior", "mac_pkg")
+    log.debug("Behavior %s", behavior)
     if behavior == "mac_pkg":
         await create_and_sign_all_pkg_files(config, task)
     elif behavior == "mac_notarize":
