@@ -164,10 +164,10 @@ async def sign_app(key_config, app, entitlements_path):
                          ],
                          cwd=app.parent_dir,
                          exception=IScriptError,
-                     ),
-                 )
-             )
-         )
+                     )
+    #             )
+    #         )
+    #     )
     # await raise_future_exceptions(futures)
 
     # sign everything
@@ -196,10 +196,10 @@ async def sign_app(key_config, app, entitlements_path):
                         ],
                         cwd=app.parent_dir,
                         exception=IScriptError,
-                    ),
-                )
-            )
-        )
+                    )
+    #            )
+    #        )
+    #    )
     # await raise_future_exceptions(futures)
 
     # sign bundle
