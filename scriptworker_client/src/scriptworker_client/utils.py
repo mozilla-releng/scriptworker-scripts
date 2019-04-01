@@ -142,10 +142,10 @@ def get_log_filehandle(log_path=None):
             Defaults to ``None``.
     """
     if log_path is not None:
-        with open(log_path, "rw") as log_filehandle:
+        with open(log_path, "w+") as log_filehandle:
             yield log_filehandle
     else:
-        with tempfile.TemporaryFile(mode="rw") as log_filehandle:
+        with tempfile.TemporaryFile(mode="w+") as log_filehandle:
             yield log_filehandle
 
 
