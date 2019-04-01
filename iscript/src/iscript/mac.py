@@ -117,7 +117,7 @@ def set_app_path_and_name(app):
 
 
 # sign {{{1
-async def sign(key_config, app, entitlements_path):
+async def sign_app(key_config, app, entitlements_path):
     """Sign the .app.
 
     Args:
@@ -450,8 +450,10 @@ async def sign_all_apps(key_config, entitlements_path, all_paths):
     log.info("Signing all apps")
     futures = []
     for app in all_paths:
-        futures.append(asyncio.ensure_future(sign(key_config, app, entitlements_path)))
-    await raise_future_exceptions(futures)
+        # Try signing synchronously
+        await sign_app(key_config, app, entitlements_path)
+    #    futures.append(asyncio.ensure_future(sign_app(key_config, app, entitlements_path)))
+    # await raise_future_exceptions(futures)
 
 
 # get_bundle_id {{{1
@@ -808,7 +810,7 @@ async def create_pkg_files(key_config, all_paths):
     log.info("Creating PKG files")
     futures = []
     for app in all_paths:
-        # call set_app_path_and_name because we may not have called sign() earlier
+        # call set_app_path_and_name because we may not have called sign_app() earlier
         set_app_path_and_name(app)
         app.pkg_path = app.app_path.replace(".app", ".pkg")
         app.pkg_name = os.path.basename(app.pkg_path)
