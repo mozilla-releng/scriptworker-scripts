@@ -9,7 +9,6 @@ from unittest.mock import create_autospec, MagicMock
 from tempfile import NamedTemporaryFile
 
 from mozapkpublisher.common import googleplay, store_l10n
-from mozapkpublisher.common.apk import checker, extractor
 from mozapkpublisher.common.apk.checker import AnyPackageNamesCheck
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.push_apk import push_apk, main, _create_or_update_whats_new, \
@@ -46,36 +45,48 @@ def edit_service_mock():
 
 
 def set_up_mocks(monkeypatch_, edit_service_mock_):
-    def _metadata(apk_file_name, _):
-        if apk_file_name == apk_arm.name:
-            version_code = '0'
-            architecture = 'armeabi-v7a'
-        elif apk_file_name == apk_x86.name:
-            version_code = '1'
-            architecture = 'x86'
-
+    def _metadata(*args, **kwargs):
         return {
-            'architecture': architecture,
-            'firefox_build_id': '20171112125738',
-            'version_code': version_code,
-            'package_name': 'org.mozilla.firefox',
-            'locales': (
-                'an', 'ar', 'as', 'ast', 'az', 'be', 'bg', 'bn-IN', 'br', 'ca', 'cak', 'cs', 'cy',
-                'da', 'de', 'dsb', 'el', 'en-GB', 'en-US', 'en-ZA', 'eo', 'es-AR', 'es-CL', 'es-ES',
-                'es-MX', 'et', 'eu', 'fa', 'ff', 'fi', 'fr', 'fy-NL', 'ga-IE', 'gd', 'gl', 'gn',
-                'gu-IN', 'he', 'hi-IN', 'hr', 'hsb', 'hu', 'hy-AM', 'id', 'is', 'it', 'ja', 'ka',
-                'kab', 'kk', 'kn', 'ko', 'lo', 'lt', 'lv', 'mai', 'ml', 'mr', 'ms', 'my', 'nb-NO',
-                'nl', 'nn-NO', 'or', 'pa-IN', 'pl', 'pt-BR', 'pt-PT', 'rm', 'ro', 'ru', 'sk', 'sl',
-                'son', 'sq', 'sr', 'sv-SE', 'ta', 'te', 'th', 'tr', 'uk', 'ur', 'uz', 'wo', 'xh',
-                'zam', 'zh-CN', 'zh-TW',
-            ),
-            'api_level': 16,
-            'firefox_version': '57.0'
+            apk_arm.name: {
+                'architecture': 'armeabi-v7a',
+                'firefox_build_id': '20171112125738',
+                'version_code': '0',
+                'package_name': 'org.mozilla.firefox',
+                'locales': (
+                    'an', 'ar', 'as', 'ast', 'az', 'be', 'bg', 'bn-IN', 'br', 'ca', 'cak', 'cs', 'cy',
+                    'da', 'de', 'dsb', 'el', 'en-GB', 'en-US', 'en-ZA', 'eo', 'es-AR', 'es-CL', 'es-ES',
+                    'es-MX', 'et', 'eu', 'fa', 'ff', 'fi', 'fr', 'fy-NL', 'ga-IE', 'gd', 'gl', 'gn',
+                    'gu-IN', 'he', 'hi-IN', 'hr', 'hsb', 'hu', 'hy-AM', 'id', 'is', 'it', 'ja', 'ka',
+                    'kab', 'kk', 'kn', 'ko', 'lo', 'lt', 'lv', 'mai', 'ml', 'mr', 'ms', 'my', 'nb-NO',
+                    'nl', 'nn-NO', 'or', 'pa-IN', 'pl', 'pt-BR', 'pt-PT', 'rm', 'ro', 'ru', 'sk', 'sl',
+                    'son', 'sq', 'sr', 'sv-SE', 'ta', 'te', 'th', 'tr', 'uk', 'ur', 'uz', 'wo', 'xh',
+                    'zam', 'zh-CN', 'zh-TW',
+                ),
+                'api_level': 16,
+                'firefox_version': '57.0',
+            },
+            apk_x86.name: {
+                'architecture': 'x86',
+                'firefox_build_id': '20171112125738',
+                'version_code': '1',
+                'package_name': 'org.mozilla.firefox',
+                'locales': (
+                    'an', 'ar', 'as', 'ast', 'az', 'be', 'bg', 'bn-IN', 'br', 'ca', 'cak', 'cs', 'cy',
+                    'da', 'de', 'dsb', 'el', 'en-GB', 'en-US', 'en-ZA', 'eo', 'es-AR', 'es-CL', 'es-ES',
+                    'es-MX', 'et', 'eu', 'fa', 'ff', 'fi', 'fr', 'fy-NL', 'ga-IE', 'gd', 'gl', 'gn',
+                    'gu-IN', 'he', 'hi-IN', 'hr', 'hsb', 'hu', 'hy-AM', 'id', 'is', 'it', 'ja', 'ka',
+                    'kab', 'kk', 'kn', 'ko', 'lo', 'lt', 'lv', 'mai', 'ml', 'mr', 'ms', 'my', 'nb-NO',
+                    'nl', 'nn-NO', 'or', 'pa-IN', 'pl', 'pt-BR', 'pt-PT', 'rm', 'ro', 'ru', 'sk', 'sl',
+                    'son', 'sq', 'sr', 'sv-SE', 'ta', 'te', 'th', 'tr', 'uk', 'ur', 'uz', 'wo', 'xh',
+                    'zam', 'zh-CN', 'zh-TW',
+                ),
+                'api_level': 16,
+                'firefox_version': '57.0',
+            }
         }
 
     monkeypatch_.setattr(googleplay, 'EditService', lambda _, __, ___, commit, contact_google_play: edit_service_mock_)
-    monkeypatch_.setattr(extractor, 'extract_metadata', _metadata)
-    monkeypatch_.setattr(checker, 'cross_check_apks', lambda _, __, ___, ____, _____, ______: None)
+    monkeypatch_.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', _metadata)
     set_translations_per_google_play_locale_code(monkeypatch_)
 
 
@@ -230,11 +241,16 @@ def test_create_or_update_whats_new(edit_service_mock, monkeypatch):
 
 
 def test_do_not_contact_google_play_flag_does_not_request_google_play(monkeypatch):
-    monkeypatch.setattr(extractor, 'extract_metadata', lambda _, __: {
-        'package_name': 'org.mozilla.firefox',
-        'version_code': '1',
+    monkeypatch.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', lambda *args, **kwargs: {
+        apk_arm.name: {
+            'package_name': 'org.mozilla.firefox',
+            'version_code': '0',
+        },
+        apk_x86.name: {
+            'package_name': 'org.mozilla.firefox',
+            'version_code': '1',
+        },
     })
-    monkeypatch.setattr(checker, 'cross_check_apks', lambda _, __, ___, ____, _____, ______: None)
     set_translations_per_google_play_locale_code(monkeypatch)
 
     push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck(), contact_google_play=False)
@@ -246,7 +262,9 @@ def test_do_not_contact_google_play_flag_does_not_request_google_play(monkeypatc
 def test_push_apk_tunes_down_logs(monkeypatch):
     main_logging_mock = MagicMock()
     monkeypatch.setattr('mozapkpublisher.push_apk.main_logging', main_logging_mock)
-    monkeypatch.setattr('mozapkpublisher.push_apk.PushAPK', MagicMock())
+    monkeypatch.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', MagicMock())
+    monkeypatch.setattr('mozapkpublisher.push_apk._split_apk_metadata_per_package_name', MagicMock())
+    monkeypatch.setattr('mozapkpublisher.push_apk._upload_apks', MagicMock())
 
     push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck(), contact_google_play=False)
 
