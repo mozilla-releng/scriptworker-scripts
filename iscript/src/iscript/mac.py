@@ -164,9 +164,9 @@ async def sign_app(key_config, app, entitlements_path):
         entitlements_path,
     ]
 
-    app_executable = get_bundle_executable(app.app_dir)
-    app_dir_len = len(app.app_dir)
-    contents_dir = os.path.join(app.app_dir, "Contents")
+    app_executable = get_bundle_executable(app.app_path)
+    app_path_len = len(app.app_path)
+    contents_dir = os.path.join(app.app_path, "Contents")
     for top_dir, dirs, files in os.walk(contents_dir):
         for dir_ in dirs:
             abs_dir = os.path.join(top_dir, dir_)
@@ -186,7 +186,7 @@ async def sign_app(key_config, app, entitlements_path):
         for file_ in files:
             abs_file = os.path.join(top_dir, file_)
             # Deal with inner .app's above, not here.
-            if top_dir[app_dir_len:].count(".app") > 0:
+            if top_dir[app_path_len:].count(".app") > 0:
                 log.debug("Skipping %s because it's part of an inner app.", abs_file)
             # app_executable gets gined with the outer package.
             if file_ == app_executable:
