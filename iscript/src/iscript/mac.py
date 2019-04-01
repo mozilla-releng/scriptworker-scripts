@@ -447,8 +447,8 @@ async def sign_all_apps(key_config, entitlements_path, all_paths):
     for app in all_paths:
         # Try signing synchronously
         set_app_path_and_name(app)
-        await sign_app(key_config, app, entitlements_path)
-        await verify_app_signature(key_config, app, entitlements_path)
+        await sign_app(key_config, app.app_path, entitlements_path)
+        await verify_app_signature(app)
     #    futures.append(asyncio.ensure_future(sign_app(key_config, app, entitlements_path)))
     # await raise_future_exceptions(futures)
 
