@@ -124,7 +124,7 @@ def get_bundle_executable(appdir):
 
 
 # sign_app {{{1
-async def sign_app(key_config, app, entitlements_path):
+async def sign_app(key_config, app_path, entitlements_path):
     """Sign the .app.
 
     Largely taken from build-tools' ``dmg_signfile``.
@@ -143,9 +143,10 @@ async def sign_app(key_config, app, entitlements_path):
     # /builds/notarization/signing-and-notarization.keychain -e /builds/notarization/browser.entitlements.txt -v
 
     SIGN_DIRS = ("MacOS", "Library")
-    set_app_path_and_name(app)
+    parent_dir = os.path.dirname(app_path)
+    app_name = os.path.basename(app_path)
     await run_command(
-        ["xattr", "-cr", app.app_name], cwd=app.parent_dir, exception=IScriptError
+        ["xattr", "-cr", app_name], cwd=parent_dir, exception=IScriptError
     )
     identity = key_config["identity"]
     keychain = key_config["signing_keychain"]
@@ -164,9 +165,9 @@ async def sign_app(key_config, app, entitlements_path):
         entitlements_path,
     ]
 
-    app_executable = get_bundle_executable(app.app_path)
-    app_path_len = len(app.app_path)
-    contents_dir = os.path.join(app.app_path, "Contents")
+    app_executable = get_bundle_executable(app_path)
+    app_path_len = len(app_path)
+    contents_dir = os.path.join(app_path, "Contents")
     for top_dir, dirs, files in os.walk(contents_dir):
         for dir_ in dirs:
             abs_dir = os.path.join(top_dir, dir_)
@@ -445,6 +446,7 @@ async def sign_all_apps(key_config, entitlements_path, all_paths):
     # futures = []
     for app in all_paths:
         # Try signing synchronously
+        set_app_path_and_name(app)
         await sign_app(key_config, app, entitlements_path)
         await verify_app_signature(key_config, app, entitlements_path)
     #    futures.append(asyncio.ensure_future(sign_app(key_config, app, entitlements_path)))
