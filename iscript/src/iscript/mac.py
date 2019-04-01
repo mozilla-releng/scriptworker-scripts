@@ -116,7 +116,7 @@ def set_app_path_and_name(app):
     app.app_name = app.app_name or os.path.basename(app.app_path)
 
 
-# sign {{{1
+# sign_app {{{1
 async def sign_app(key_config, app, entitlements_path):
     """Sign the .app.
 
@@ -143,43 +143,43 @@ async def sign_app(key_config, app, entitlements_path):
     futures = []
     semaphore = asyncio.Semaphore(10)
     for path in initial_files:
-        futures.append(
-            asyncio.ensure_future(
-                semaphore_wrapper(
-                    semaphore,
-                    run_command(
-                        [
-                            "codesign",
-                            "--force",
-                            "-o",
-                            "runtime",
-                            "--verbose",
-                            "--keychain",
-                            key_config["signing_keychain"],
-                            "--sign",
-                            key_config["identity"],
-                            "--entitlements",
-                            entitlements_path,
-                            path,
-                        ],
-                        cwd=app.parent_dir,
-                        exception=IScriptError,
-                    ),
-                )
-            )
-        )
-    await raise_future_exceptions(futures)
+    #     futures.append(
+    #         asyncio.ensure_future(
+    #             semaphore_wrapper(
+    #                 semaphore,
+        await run_command(
+                         [
+                             "codesign",
+                             "--force",
+                             "-o",
+                             "runtime",
+                             "--verbose",
+                             "--keychain",
+                             key_config["signing_keychain"],
+                             "--sign",
+                             key_config["identity"],
+                             "--entitlements",
+                             entitlements_path,
+                             path,
+                         ],
+                         cwd=app.parent_dir,
+                         exception=IScriptError,
+                     ),
+                 )
+             )
+         )
+    # await raise_future_exceptions(futures)
 
     # sign everything
     futures = []
     for path in list_files(app.app_path):
         if path in initial_files:
             continue
-        futures.append(
-            asyncio.ensure_future(
-                semaphore_wrapper(
-                    semaphore,
-                    run_command(
+        # futures.append(
+        #    asyncio.ensure_future(
+        #        semaphore_wrapper(
+        #            semaphore,
+        await run_command(
                         [
                             "codesign",
                             "--force",
@@ -200,7 +200,7 @@ async def sign_app(key_config, app, entitlements_path):
                 )
             )
         )
-    await raise_future_exceptions(futures)
+    # await raise_future_exceptions(futures)
 
     # sign bundle
     await run_command(
