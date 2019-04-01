@@ -7,21 +7,12 @@ from glob import glob
 import logging
 import os
 import pexpect
+import plistlib
 import re
 from shutil import copy2
 
-from scriptworker_client.aio import (
-    raise_future_exceptions,
-    retry_async,
-    semaphore_wrapper,
-)
-from scriptworker_client.utils import (
-    get_artifact_path,
-    list_files,
-    makedirs,
-    rm,
-    run_command,
-)
+from scriptworker_client.aio import raise_future_exceptions, retry_async
+from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_command
 from iscript.exceptions import (
     InvalidNotarization,
     IScriptError,
@@ -32,16 +23,12 @@ from iscript.exceptions import (
 log = logging.getLogger(__name__)
 
 
-INITIAL_FILES_TO_SIGN = (
-    "Contents/MacOS/XUL",
-    "Contents/MacOS/pingsender",
-    "Contents/MacOS/*.dylib",
-    "Contents/MacOS/crashreporter.app/Contents/MacOS/minidump-analyzer",
-    "Contents/MacOS/crashreporter.app/Contents/MacOS/crashreporter",
-    "Contents/MacOS/firefox-bin",
-    "Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container",
-    "Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater",
-    "Contents/MacOS/firefox",
+MAC_DESIGNATED_REQUIREMENTS = (
+    """=designated => ( """
+    """(anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.9] ) """
+    """or (anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] """
+    """and certificate leaf[field.1.2.840.113635.100.6.1.13] and certificate """
+    """leaf[subject.OU] = "%(subject_ou)s"))"""
 )
 
 
@@ -116,9 +103,31 @@ def set_app_path_and_name(app):
     app.app_name = app.app_name or os.path.basename(app.app_path)
 
 
+# get_bundle_executable {{{1
+def get_bundle_executable(appdir):
+    """Return the CFBundleIdentifier from a Mac application.
+
+    Args:
+        appdir (str): the path to the app
+
+    Returns:
+        str: the CFBundleIdentifier
+
+    Raises:
+        InvalidFileException: on ``plistlib.load`` error
+        KeyError: if the plist doesn't include ``CFBundleIdentifier``
+
+    """
+    return plistlib.readPlist(os.path.join(appdir, "Contents", "Info.plist"))[
+        "CFBundleExecutable"
+    ]
+
+
 # sign_app {{{1
 async def sign_app(key_config, app, entitlements_path):
     """Sign the .app.
+
+    Largely taken from build-tools' ``dmg_signfile``.
 
     Args:
         config (dict): the running config
@@ -130,99 +139,84 @@ async def sign_app(key_config, app, entitlements_path):
         IScriptError: on error.
 
     """
+    # ./sign_app.py -a '0/Firefox Nightly.app' -i 5CRZ7A4MG5 -k
+    # /builds/notarization/signing-and-notarization.keychain -e /builds/notarization/browser.entitlements.txt -v
+
+    SIGN_DIRS = ("MacOS", "Library")
     set_app_path_and_name(app)
     await run_command(
         ["xattr", "-cr", app.app_name], cwd=app.parent_dir, exception=IScriptError
     )
-    # find initial files from INITIAL_FILES_TO_SIGN globs
-    initial_files = []
-    for path in INITIAL_FILES_TO_SIGN:
-        initial_files.extend(glob(os.path.join(app.app_path, path)))
+    identity = key_config["identity"]
+    keychain = key_config["signing_keychain"]
+    sign_command = [
+        "codesign",
+        "-s",
+        identity,
+        "-fv",
+        "--keychain",
+        keychain,
+        "--requirement",
+        MAC_DESIGNATED_REQUIREMENTS % {"subject_ou": identity},
+        "-o",
+        "runtime",
+        "--entitlements",
+        entitlements_path,
+    ]
 
-    # sign initial files
-    futures = []
-    semaphore = asyncio.Semaphore(10)
-    for path in initial_files:
-    #     futures.append(
-    #         asyncio.ensure_future(
-    #             semaphore_wrapper(
-    #                 semaphore,
-        await run_command(
-                         [
-                             "codesign",
-                             "--force",
-                             "-o",
-                             "runtime",
-                             "--verbose",
-                             "--keychain",
-                             key_config["signing_keychain"],
-                             "--sign",
-                             key_config["identity"],
-                             "--entitlements",
-                             entitlements_path,
-                             path,
-                         ],
-                         cwd=app.parent_dir,
-                         exception=IScriptError,
-                     )
-    #             )
-    #         )
-    #     )
-    # await raise_future_exceptions(futures)
-
-    # sign everything
-    futures = []
-    for path in list_files(app.app_path):
-        if path in initial_files:
+    app_executable = get_bundle_executable(app.app_dir)
+    app_dir_len = len(app.app_dir)
+    contents_dir = os.path.join(app.app_dir, "Contents")
+    for top_dir, dirs, files in os.walk(contents_dir):
+        for dir_ in dirs:
+            abs_dir = os.path.join(top_dir, dir_)
+            if top_dir == contents_dir and dir_ not in SIGN_DIRS:
+                log.debug("Skipping %s because it's not in SIGN_DIRS.", abs_dir)
+                dirs.remove(dir_)
+                continue
+            if dir_.endswith(".app"):
+                await sign_app(key_config, abs_dir, entitlements_path)
+        if top_dir == contents_dir:
+            log.debug(
+                "Skipping file iteration in %s because it's the root directory.",
+                top_dir,
+            )
             continue
-        # futures.append(
-        #    asyncio.ensure_future(
-        #        semaphore_wrapper(
-        #            semaphore,
-        await run_command(
-                        [
-                            "codesign",
-                            "--force",
-                            "-o",
-                            "runtime",
-                            "--keychain",
-                            key_config["signing_keychain"],
-                            "--verbose",
-                            "--sign",
-                            key_config["identity"],
-                            "--entitlements",
-                            entitlements_path,
-                            path,
-                        ],
-                        cwd=app.parent_dir,
-                        exception=IScriptError,
-                    )
-    #            )
-    #        )
-    #    )
-    # await raise_future_exceptions(futures)
 
-    # sign bundle
-    await run_command(
-        [
-            "codesign",
-            "--force",
-            "-o",
-            "runtime",
-            "--verbose",
-            "--keychain",
-            key_config["signing_keychain"],
-            "--sign",
-            key_config["identity"],
-            "--entitlements",
-            entitlements_path,
-            app.app_name,
-        ],
-        cwd=app.parent_dir,
-        exception=IScriptError,
-    )
+        for file_ in files:
+            abs_file = os.path.join(top_dir, file_)
+            # Deal with inner .app's above, not here.
+            if top_dir[app_dir_len:].count(".app") > 0:
+                log.debug("Skipping %s because it's part of an inner app.", abs_file)
+            # app_executable gets gined with the outer package.
+            if file_ == app_executable:
+                log.debug("Skipping %s because it's the main executable.", abs_file)
+                continue
+            dir_ = os.path.dirname(abs_file)
+            await run_command(
+                sign_command + [file_],
+                cwd=dir_,
+                exception=IScriptError,
+                output_log_on_exception=True,
+            )
 
-    # verify bundle
+    # TODO dmg_signfile
+
+
+# verify_app_signature
+async def verify_app_signature(app):
+    """Verify the app signature.
+
+    Args:
+        app (App): the app to verify
+
+    Raises:
+        IScriptError: on failure
+
+    """
+    required_attrs = ["parent_dir", "app_name"]
+    app.check_required_attrs(required_attrs)
+    # TODO concurrent?
     await run_command(
         ["codesign", "-vvv", "--deep", "--strict", app.app_name],
         cwd=app.parent_dir,
@@ -448,10 +442,11 @@ async def sign_all_apps(key_config, entitlements_path, all_paths):
 
     """
     log.info("Signing all apps")
-    futures = []
+    # futures = []
     for app in all_paths:
         # Try signing synchronously
         await sign_app(key_config, app, entitlements_path)
+        await verify_app_signature(key_config, app, entitlements_path)
     #    futures.append(asyncio.ensure_future(sign_app(key_config, app, entitlements_path)))
     # await raise_future_exceptions(futures)
 

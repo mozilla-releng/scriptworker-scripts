@@ -142,16 +142,17 @@ def get_log_filehandle(log_path=None):
             Defaults to ``None``.
     """
     if log_path is not None:
-        with open(log_path, "w") as log_filehandle:
+        with open(log_path, "rw") as log_filehandle:
             yield log_filehandle
     else:
-        with tempfile.TemporaryFile(mode="w") as log_filehandle:
+        with tempfile.TemporaryFile(mode="rw") as log_filehandle:
             yield log_filehandle
 
 
 # run_command {{{1
 async def run_command(
-    cmd, log_path=None, log_cmd=None, cwd=None, exception=None, expected_exit_codes=(0,)
+    cmd, log_path=None, log_cmd=None, cwd=None, exception=None, expected_exit_codes=(0,),
+    output_log_on_exception=False,
 ):
     """Run a command using ``asyncio.create_subprocess_exec``.
 
@@ -183,6 +184,8 @@ async def run_command(
         expected_exit_codes (list, optional): the list of exit codes for
             a successful run. Only used if ``exception`` is not ``None``.
             Defaults to ``(0, )``.
+        output_log_on_exception (bool, optional): log the output log if we're
+            raising an exception.
 
     Returns:
         int: the exit code of the command
@@ -211,9 +214,13 @@ async def run_command(
         _, pending = await asyncio.wait([stderr_future, stdout_future])
         exitcode = await proc.wait()
         await asyncio.wait([stdout_future, stderr_future])
-    if exception and exitcode not in expected_exit_codes:
-        raise exception("{} in {} exited {}!".format(log_cmd, cwd, exitcode))
-    log.info("{} in {} exited {}".format(log_cmd, cwd, exitcode))
+        if exception and exitcode not in expected_exit_codes:
+            log_contents = ""
+            if output_log_on_exception:
+                log_filehandle.seek(0)
+                log_contents = log_filehandle.read()
+            raise exception("%s in %s exited %s!\n%s", log_cmd, cwd, exitcode, log_contents)
+    log.info("%s in %s exited %d",  log_cmd, cwd, exitcode)
     return exitcode
 
 
