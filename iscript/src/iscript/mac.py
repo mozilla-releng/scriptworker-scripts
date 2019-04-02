@@ -580,32 +580,28 @@ async def wrap_notarization_with_sudo(
                 key_config["base_bundle_id"], counter=str(counter)
             )
             zip_path = getattr(app, path_attr)
-            base_cmdln = ' '.join(
-                "xcrun",
-                "altool",
-                "--notarize-app",
-                "-f",
-                zip_path,
-                "--primary-bundle-id",
-                '"{}"'.format(bundle_id),
-                "-u",
-                key_config["apple_notarization_account"],
-                "--password",
+            base_cmdln = " ".join(
+                [
+                    "xcrun",
+                    "altool",
+                    "--notarize-app",
+                    "-f",
+                    zip_path,
+                    "--primary-bundle-id",
+                    '"{}"'.format(bundle_id),
+                    "-u",
+                    key_config["apple_notarization_account"],
+                    "--password",
+                ]
             )
             cmd = [
                 "sudo",
                 "su",
                 account,
                 "-c",
-                base_cmdln + " {}".format(key_config["apple_notarization_password"])
+                base_cmdln + " {}".format(key_config["apple_notarization_password"]),
             ]
-            log_cmd = [
-                "sudo",
-                "su",
-                account,
-                "-c",
-                base_cmdln + " ********"
-            ]
+            log_cmd = ["sudo", "su", account, "-c", base_cmdln + " ********"]
             futures.append(
                 asyncio.ensure_future(
                     retry_async(
