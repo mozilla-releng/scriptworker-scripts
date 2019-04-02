@@ -25,6 +25,13 @@ async def async_main(config, task):
         await create_and_sign_all_pkg_files(config, task)
     elif behavior == "mac_notarize":
         await sign_and_notarize_all(config, task)
+    elif behavior == "mac_sign":
+        # For dep
+        raise NotImplementedError("mac_sign to be implemented")
+    elif behavior == "mac_sign_and_pkg":
+        # For staging releases; or should we mac_notarize but skip notarization
+        # for dep?
+        raise NotImplementedError("mac_sign to be implemented")
     else:
         raise IScriptError("Unknown iscript behavior {}!".format(behavior))
 

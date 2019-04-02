@@ -928,6 +928,7 @@ async def sign_and_notarize_all(config, task):
             work_dir, all_paths, path_attr="pkg_path"
         )
         poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
+    await poll_all_notarization_status(key_config, poll_uuids)
     await staple_notarization(all_paths, path_attr="pkg_path")
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
