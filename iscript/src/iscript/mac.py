@@ -139,9 +139,6 @@ async def sign_app(key_config, app_path, entitlements_path):
         IScriptError: on error.
 
     """
-    # ./sign_app.py -a '0/Firefox Nightly.app' -i 5CRZ7A4MG5 -k
-    # /builds/notarization/signing-and-notarization.keychain -e /builds/notarization/browser.entitlements.txt -v
-
     SIGN_DIRS = ("MacOS", "Library")
     parent_dir = os.path.dirname(app_path)
     app_name = os.path.basename(app_path)
@@ -189,7 +186,7 @@ async def sign_app(key_config, app_path, entitlements_path):
             # Deal with inner .app's above, not here.
             if top_dir[app_path_len:].count(".app") > 0:
                 log.debug("Skipping %s because it's part of an inner app.", abs_file)
-            # app_executable gets gined with the outer package.
+            # app_executable gets signed with the outer package.
             if file_ == app_executable:
                 log.debug("Skipping %s because it's the main executable.", abs_file)
                 continue
@@ -201,7 +198,25 @@ async def sign_app(key_config, app_path, entitlements_path):
                 output_log_on_exception=True,
             )
 
-    # TODO dmg_signfile
+    # Contents/Resources/gmp-clearkey/0.1/libclearkey.dylib hack
+    # XXX test adding Resources to SIGN_DIRS
+    if "Contents/" not in app_path:
+        dir_ = os.path.join(contents_dir, "Resources/gmp-clearkey/0.1")
+        file_ = "libclearkey.dylib"
+        await run_command(
+            sign_command + [file_],
+            cwd=dir_,
+            exception=IScriptError,
+            output_log_on_exception=True,
+        )
+
+    # sign bundle
+    await run_command(
+        sign_command + [app_name],
+        cwd=parent_dir,
+        exception=IScriptError,
+        output_log_on_exception=True,
+    )
 
 
 # verify_app_signature
