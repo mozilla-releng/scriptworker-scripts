@@ -398,7 +398,7 @@ async def create_all_notarization_zipfiles(all_paths, path_attr="app_name"):
     for app in all_paths:
         app.check_required_attrs(required_attrs)
         app.zip_path = os.path.join(
-            app.parent_dir, "{}.zip".format(os.path.basename(app.parent_dir))
+            app.parent_dir, "{}{}.zip".format(path_attr, os.path.basename(app.parent_dir))
         )
         # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
         path = getattr(app, path_attr)
