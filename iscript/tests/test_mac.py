@@ -335,20 +335,25 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
     key_config = {"x": "y"}
     entitlements_path = "fake_entitlements_path"
     work_dir = str(tmpdir)
-    all_paths = [
-        mac.App(parent_dir=os.path.join(work_dir, "0")),
-        mac.App(parent_dir=os.path.join(work_dir, "1")),
-        mac.App(parent_dir=os.path.join(work_dir, "2")),
-    ]
+    all_paths = []
+    app_paths = []
+    for i in range(3):
+        app_path = "{}.app".format(str(i))
+        app_paths.append(app_path)
+        all_paths.append(
+            mac.App(parent_dir=os.path.join(work_dir, str(i)), app_path=app_path)
+        )
 
     async def fake_sign(arg1, arg2, arg3):
         assert arg1 == key_config
-        assert arg2 in all_paths
+        assert arg2 in app_paths
         assert arg3 == entitlements_path
         if raises:
             raise IScriptError("foo")
 
-    mocker.patch.object(mac, "sign", new=fake_sign)
+    mocker.patch.object(mac, "set_app_path_and_name", return_value=None)
+    mocker.patch.object(mac, "sign_app", new=fake_sign)
+    mocker.patch.object(mac, "verify_app_signature", new=noop_async)
     if raises:
         with pytest.raises(IScriptError):
             await mac.sign_all_apps(key_config, entitlements_path, all_paths)
