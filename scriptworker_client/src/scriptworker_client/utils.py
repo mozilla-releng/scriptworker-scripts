@@ -151,7 +151,12 @@ def get_log_filehandle(log_path=None):
 
 # run_command {{{1
 async def run_command(
-    cmd, log_path=None, log_cmd=None, cwd=None, exception=None, expected_exit_codes=(0,),
+    cmd,
+    log_path=None,
+    log_cmd=None,
+    cwd=None,
+    exception=None,
+    expected_exit_codes=(0,),
     output_log_on_exception=False,
 ):
     """Run a command using ``asyncio.create_subprocess_exec``.
@@ -219,8 +224,10 @@ async def run_command(
             if output_log_on_exception:
                 log_filehandle.seek(0)
                 log_contents = log_filehandle.read()
-            raise exception("%s in %s exited %s!\n%s", log_cmd, cwd, exitcode, log_contents)
-    log.info("%s in %s exited %d",  log_cmd, cwd, exitcode)
+            raise exception(
+                "%s in %s exited %s!\n%s", log_cmd, cwd, exitcode, log_contents
+            )
+    log.info("%s in %s exited %d", log_cmd, cwd, exitcode)
     return exitcode
 
 
