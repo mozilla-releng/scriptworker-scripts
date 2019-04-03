@@ -14,7 +14,8 @@
             "pkg_cert_id": "...",
             "apple_notarization_account": "...",
             "apple_notarization_password": "...",
-            "notarization_poll_timeout": 900,
+            "also_notarize_pkg": true,
+            "notarization_poll_timeout": 900
         }
     }
 }

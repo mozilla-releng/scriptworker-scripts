@@ -918,18 +918,19 @@ async def sign_and_notarize_all(config, task):
     await staple_notarization(all_paths, path_attr="app_name")
     await tar_apps(config, all_paths)
     await create_pkg_files(key_config, all_paths)
-    if key_config["notarize_type"] == "multi_account":
-        await create_all_notarization_zipfiles(all_paths, path_attr="pkg_name")
-        poll_uuids = await wrap_notarization_with_sudo(
-            config, key_config, all_paths, path_attr="zip_path"
-        )
-    else:
-        zip_path = await create_one_notarization_zipfile(
-            work_dir, all_paths, path_attr="pkg_path"
-        )
-        poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
-    await poll_all_notarization_status(key_config, poll_uuids)
-    await staple_notarization(all_paths, path_attr="pkg_path")
+    if key_config.get("also_notarize_pkg", True):
+        if key_config["notarize_type"] == "multi_account":
+            await create_all_notarization_zipfiles(all_paths, path_attr="pkg_name")
+            poll_uuids = await wrap_notarization_with_sudo(
+                config, key_config, all_paths, path_attr="zip_path"
+            )
+        else:
+            zip_path = await create_one_notarization_zipfile(
+                work_dir, all_paths, path_attr="pkg_path"
+            )
+            poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
+        await poll_all_notarization_status(key_config, poll_uuids)
+        await staple_notarization(all_paths, path_attr="pkg_path")
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing and notarizing apps.")
