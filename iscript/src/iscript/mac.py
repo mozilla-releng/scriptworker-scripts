@@ -398,7 +398,8 @@ async def create_all_notarization_zipfiles(all_paths, path_attr="app_name"):
     for app in all_paths:
         app.check_required_attrs(required_attrs)
         app.zip_path = os.path.join(
-            app.parent_dir, "{}{}.zip".format(path_attr, os.path.basename(app.parent_dir))
+            app.parent_dir,
+            "{}{}.zip".format(path_attr, os.path.basename(app.parent_dir)),
         )
         # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
         path = getattr(app, path_attr)
@@ -462,7 +463,9 @@ async def sign_all_apps(key_config, entitlements_path, all_paths):
     # sign apps concurrently
     for app in all_paths:
         set_app_path_and_name(app)
-        futures.append(asyncio.ensure_future(sign_app(key_config, app, entitlements_path)))
+        futures.append(
+            asyncio.ensure_future(sign_app(key_config, app.app_path, entitlements_path))
+        )
     await raise_future_exceptions(futures)
     # verify signatures
     futures = []
