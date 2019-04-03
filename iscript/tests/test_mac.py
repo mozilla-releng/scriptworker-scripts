@@ -839,7 +839,6 @@ async def test_sign_and_notarize_all(mocker, tmpdir, notarize_type):
     mocker.patch.object(
         mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
     )
-    mocker.patch.object(mac, "list_files", return_value="foo/bar.app")
     mocker.patch.object(mac, "get_notarization_status_from_log", return_value=None)
     mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
@@ -893,5 +892,4 @@ async def test_create_and_sign_all_pkg_files(mocker, tmpdir):
     mocker.patch.object(
         mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
     )
-    mocker.patch.object(mac, "list_files", return_value="foo/bar.app")
     await mac.create_and_sign_all_pkg_files(config, task)
