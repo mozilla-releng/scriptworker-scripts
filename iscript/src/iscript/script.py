@@ -6,10 +6,10 @@ import os
 from scriptworker_client.client import sync_main
 from iscript.exceptions import IScriptError
 from iscript.mac import (
-    create_and_sign_all_pkg_files,
-    sign,
-    sign_and_notarize_all,
-    sign_and_pkg,
+    notarize_behavior,
+    pkg_behavior,
+    sign_behavior,
+    sign_and_pkg_behavior,
 )
 
 
@@ -28,16 +28,16 @@ async def async_main(config, task):
     behavior = task["payload"].get("behavior", "mac_pkg")
     log.debug("Behavior %s", behavior)
     if behavior == "mac_pkg":
-        await create_and_sign_all_pkg_files(config, task)
+        await pkg_behavior(config, task)
     elif behavior == "mac_notarize":
         # TODO not for dep
-        await sign_and_notarize_all(config, task)
+        await notarize_behavior(config, task)
     elif behavior == "mac_sign":
-        await sign(config, task)
+        await sign_behavior(config, task)
     elif behavior == "mac_sign_and_pkg":
         # For staging releases; or should we mac_notarize but skip notarization
         # for dep?
-        await sign_and_pkg(config, task)
+        await sign_and_pkg_behavior(config, task)
     else:
         raise IScriptError("Unknown iscript behavior {}!".format(behavior))
 

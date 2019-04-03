@@ -813,10 +813,10 @@ async def test_copy_pkgs_to_artifact_dir(tmpdir):
             assert fh.read() == expected_path
 
 
-# sign {{{1
+# sign_behavior {{{1
 @pytest.mark.asyncio
-async def test_sign(mocker, tmpdir):
-    """Mock ``sign`` for full line coverage."""
+async def test_sign_behavior(mocker, tmpdir):
+    """Mock ``sign_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
     work_dir = os.path.join(str(tmpdir), "work")
@@ -860,13 +860,13 @@ async def test_sign(mocker, tmpdir):
     mocker.patch.object(
         mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
     )
-    await mac.sign(config, task)
+    await mac.sign_behavior(config, task)
 
 
-# sign_and_pkg {{{1
+# sign_and_pkg_behavior {{{1
 @pytest.mark.asyncio
-async def test_sign_and_pkg(mocker, tmpdir):
-    """Mock ``sign_and_pkg`` for full line coverage."""
+async def test_sign_and_pkg_behavior(mocker, tmpdir):
+    """Mock ``sign_and_pkg_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
     work_dir = os.path.join(str(tmpdir), "work")
@@ -911,16 +911,16 @@ async def test_sign_and_pkg(mocker, tmpdir):
         mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
     )
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
-    await mac.sign_and_pkg(config, task)
+    await mac.sign_and_pkg_behavior(config, task)
 
 
-# sign_and_notarize_all {{{1
+# notarize_behavior {{{1
 @pytest.mark.parametrize(
     "notarize_type", ("multi_account", "single_account", "single_zip")
 )
 @pytest.mark.asyncio
-async def test_sign_and_notarize_all(mocker, tmpdir, notarize_type):
-    """Mock ``sign_and_notarize_all`` for full line coverage."""
+async def test_notarize_behavior(mocker, tmpdir, notarize_type):
+    """Mock ``notarize_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
     work_dir = os.path.join(str(tmpdir), "work")
@@ -968,13 +968,13 @@ async def test_sign_and_notarize_all(mocker, tmpdir, notarize_type):
     mocker.patch.object(mac, "get_notarization_status_from_log", return_value=None)
     mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
-    await mac.sign_and_notarize_all(config, task)
+    await mac.notarize_behavior(config, task)
 
 
-# create_and_sign_all_pkg_files {{{1
+# pkg_behavior {{{1
 @pytest.mark.asyncio
-async def test_create_and_sign_all_pkg_files(mocker, tmpdir):
-    """Mock ``create_and_sign_all_pkg_files`` for full line coverage."""
+async def test_pkg_behavior(mocker, tmpdir):
+    """Mock ``pkg_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
     work_dir = os.path.join(str(tmpdir), "work")
@@ -1018,4 +1018,4 @@ async def test_create_and_sign_all_pkg_files(mocker, tmpdir):
     mocker.patch.object(
         mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
     )
-    await mac.create_and_sign_all_pkg_files(config, task)
+    await mac.pkg_behavior(config, task)

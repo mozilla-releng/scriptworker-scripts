@@ -45,10 +45,10 @@ async def test_async_main(mocker, behavior, raises):
     async def test_sign_and_pkg(*args, **kwargs):
         calls.setdefault("sign_and_pkg", []).append([args, kwargs])
 
-    mocker.patch.object(script, "sign_and_notarize_all", new=test_notarize)
-    mocker.patch.object(script, "create_and_sign_all_pkg_files", new=test_pkg)
-    mocker.patch.object(script, "sign", new=test_sign)
-    mocker.patch.object(script, "sign_and_pkg", new=test_sign_and_pkg)
+    mocker.patch.object(script, "notarize_behavior", new=test_notarize)
+    mocker.patch.object(script, "pkg_behavior", new=test_pkg)
+    mocker.patch.object(script, "sign_behavior", new=test_sign)
+    mocker.patch.object(script, "sign_and_pkg_behavior", new=test_sign_and_pkg)
     if raises:
         with pytest.raises(IScriptError):
             await script.async_main(config, task)

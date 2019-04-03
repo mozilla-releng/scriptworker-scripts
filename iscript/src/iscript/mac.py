@@ -886,8 +886,8 @@ async def download_entitlements_file(config, task):
     return to
 
 
-# sign_and_notarize_all {{{1
-async def sign_and_notarize_all(config, task):
+# notarize_behavior {{{1
+async def notarize_behavior(config, task):
     """Sign and notarize all mac apps for this task.
 
     Args:
@@ -939,8 +939,8 @@ async def sign_and_notarize_all(config, task):
     log.info("Done signing and notarizing apps.")
 
 
-# sign {{{1
-async def sign(config, task):
+# sign_behavior {{{1
+async def sign_behavior(config, task):
     """Sign all mac apps for this task.
 
     Args:
@@ -969,7 +969,7 @@ async def sign(config, task):
 
 
 # sign_and_pkg {{{1
-async def sign_and_pkg(config, task):
+async def sign_and_pkg_behavior(config, task):
     """Sign all mac apps for this task.
 
     Args:
@@ -1006,7 +1006,7 @@ async def sign_and_pkg(config, task):
 
 
 # create_and_sign_all_pkg_files {{{1
-async def create_and_sign_all_pkg_files(config, task):
+async def pkg_behavior(config, task):
     """Create and sign all pkg files for this task.
 
     This function doesn't do any notarization. It currently assumes the app
