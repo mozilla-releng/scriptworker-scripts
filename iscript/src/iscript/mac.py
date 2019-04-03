@@ -869,6 +869,23 @@ async def copy_pkgs_to_artifact_dir(config, all_paths):
         copy2(app.pkg_path, app.target_pkg_path)
 
 
+async def download_entitlements_file(config, task):
+    """Download the entitlements file into the work dir.
+
+    Args:
+        config (dict): the running configuration
+        task (dict): the running task
+
+    Returns:
+        str: the path to the downloaded entitlments file
+
+    """
+    # TODO download from file:/// or other url
+    # TODO populate `raises` section of docstring
+    to = os.path.join(config["work_dir"], "browser.entitlements.txt")
+    return to
+
+
 # sign_and_notarize_all {{{1
 async def sign_and_notarize_all(config, task):
     """Sign and notarize all mac apps for this task.
@@ -882,8 +899,7 @@ async def sign_and_notarize_all(config, task):
 
     """
     work_dir = config["work_dir"]
-    # TODO get entitlements -- default or from url
-    entitlements_path = os.path.join(work_dir, "browser.entitlements.txt")
+    entitlements_path = await download_entitlements_file(config, task)
 
     # TODO get this from scopes?
     key = "dep"
@@ -936,8 +952,7 @@ async def sign(config, task):
 
     """
     work_dir = config["work_dir"]
-    # TODO get entitlements -- default or from url
-    entitlements_path = os.path.join(work_dir, "browser.entitlements.txt")
+    entitlements_path = await download_entitlements_file(config, task)
 
     # TODO get this from scopes?
     key = "dep"
@@ -966,8 +981,7 @@ async def sign_and_pkg(config, task):
 
     """
     work_dir = config["work_dir"]
-    # TODO get entitlements -- default or from url
-    entitlements_path = os.path.join(work_dir, "browser.entitlements.txt")
+    entitlements_path = await download_entitlements_file(config, task)
 
     # TODO get this from scopes?
     key = "dep"
