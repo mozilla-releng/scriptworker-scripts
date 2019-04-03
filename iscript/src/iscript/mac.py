@@ -458,14 +458,17 @@ async def sign_all_apps(key_config, entitlements_path, all_paths):
 
     """
     log.info("Signing all apps")
-    # futures = []
+    futures = []
+    # sign apps concurrently
     for app in all_paths:
-        # Try signing synchronously
         set_app_path_and_name(app)
-        await sign_app(key_config, app.app_path, entitlements_path)
-        await verify_app_signature(app)
-    #    futures.append(asyncio.ensure_future(sign_app(key_config, app, entitlements_path)))
-    # await raise_future_exceptions(futures)
+        futures.append(asyncio.ensure_future(sign_app(key_config, app, entitlements_path)))
+    await raise_future_exceptions(futures)
+    # verify signatures
+    futures = []
+    for app in all_paths:
+        futures.append(asyncio.ensure_future(verify_app_signature(app)))
+    await raise_future_exceptions(futures)
 
 
 # get_bundle_id {{{1
@@ -918,7 +921,7 @@ async def sign_and_notarize_all(config, task):
     await staple_notarization(all_paths, path_attr="app_name")
     await tar_apps(config, all_paths)
     await create_pkg_files(key_config, all_paths)
-    if key_config.get("also_notarize_pkg", True):
+    if key_config.get("also_notarize_pkg", False):
         if key_config["notarize_type"] == "multi_account":
             await create_all_notarization_zipfiles(all_paths, path_attr="pkg_name")
             poll_uuids = await wrap_notarization_with_sudo(
