@@ -813,6 +813,107 @@ async def test_copy_pkgs_to_artifact_dir(tmpdir):
             assert fh.read() == expected_path
 
 
+# sign {{{1
+@pytest.mark.asyncio
+async def test_sign(mocker, tmpdir):
+    """Mock ``sign`` for full line coverage."""
+
+    artifact_dir = os.path.join(str(tmpdir), "artifact")
+    work_dir = os.path.join(str(tmpdir), "work")
+    config = {
+        "artifact_dir": artifact_dir,
+        "work_dir": work_dir,
+        "local_notarization_accounts": ["acct0", "acct1", "acct2"],
+        "mac_config": {
+            "dep": {
+                "notarize_type": "",
+                "signing_keychain": "keychain_path",
+                "base_bundle_id": "org.test",
+                "identity": "id",
+                "keychain_password": "keychain_password",
+                "pkg_cert_id": "cert_id",
+                "apple_notarization_account": "apple_account",
+                "apple_notarization_password": "apple_password",
+                "notarization_poll_timeout": 2,
+            }
+        },
+    }
+
+    task = {
+        "payload": {
+            "upstreamArtifacts": [
+                {
+                    "taskId": "task1",
+                    "paths": [
+                        "public/build/1/target.tar.gz",
+                        "public/build/2/target.tar.gz",
+                    ],
+                },
+                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"]},
+            ]
+        }
+    }
+
+    mocker.patch.object(mac, "run_command", new=noop_async)
+    mocker.patch.object(mac, "unlock_keychain", new=noop_async)
+    mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
+    mocker.patch.object(
+        mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
+    )
+    await mac.sign(config, task)
+
+
+# sign_and_pkg {{{1
+@pytest.mark.asyncio
+async def test_sign_and_pkg(mocker, tmpdir):
+    """Mock ``sign_and_pkg`` for full line coverage."""
+
+    artifact_dir = os.path.join(str(tmpdir), "artifact")
+    work_dir = os.path.join(str(tmpdir), "work")
+    config = {
+        "artifact_dir": artifact_dir,
+        "work_dir": work_dir,
+        "local_notarization_accounts": ["acct0", "acct1", "acct2"],
+        "mac_config": {
+            "dep": {
+                "notarize_type": "",
+                "signing_keychain": "keychain_path",
+                "base_bundle_id": "org.test",
+                "identity": "id",
+                "keychain_password": "keychain_password",
+                "pkg_cert_id": "cert_id",
+                "apple_notarization_account": "apple_account",
+                "apple_notarization_password": "apple_password",
+                "notarization_poll_timeout": 2,
+            }
+        },
+    }
+
+    task = {
+        "payload": {
+            "upstreamArtifacts": [
+                {
+                    "taskId": "task1",
+                    "paths": [
+                        "public/build/1/target.tar.gz",
+                        "public/build/2/target.tar.gz",
+                    ],
+                },
+                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"]},
+            ]
+        }
+    }
+
+    mocker.patch.object(mac, "run_command", new=noop_async)
+    mocker.patch.object(mac, "unlock_keychain", new=noop_async)
+    mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
+    mocker.patch.object(
+        mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
+    )
+    mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
+    await mac.sign_and_pkg(config, task)
+
+
 # sign_and_notarize_all {{{1
 @pytest.mark.parametrize(
     "notarize_type", ("multi_account", "single_account", "single_zip")
