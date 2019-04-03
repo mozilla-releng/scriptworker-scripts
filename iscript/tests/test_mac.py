@@ -835,6 +835,7 @@ async def test_sign_and_notarize_all(mocker, tmpdir, notarize_type):
 
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
+    mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
     mocker.patch.object(mac, "poll_notarization_uuid", new=noop_async)
     mocker.patch.object(
         mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
