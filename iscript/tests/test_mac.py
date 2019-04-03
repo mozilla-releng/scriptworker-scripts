@@ -73,22 +73,29 @@ def test_app_path_and_name(mocker):
         assert [app.app_path, app.app_name] == expected.pop(0)
 
 
-# sign {{{1
+# sign_app {{{1
 @pytest.mark.asyncio
-async def test_sign(mocker, tmpdir):
-    """Render ``sign`` noop and verify we have complete code coverage.
+async def test_sign_app(mocker, tmpdir):
+    """Render ``sign_app`` noop and verify we have complete code coverage.
 
     """
-    key_config = {"identity": "id"}
-    app = mac.App()
-    app.parent_dir = str(tmpdir)
+    key_config = {"identity": "id", "signing_keychain": "keychain"}
     entitlements_path = os.path.join(tmpdir, "entitlements")
     app_path = os.path.join(tmpdir, "foo.app")
-    for p in list(mac.INITIAL_FILES_TO_SIGN) + ["Resources/MacOS/foo"]:
-        p = p.replace("*", "foo")
-        touch(os.path.join(app_path, p))
+
+    contents_dir = os.path.join(app_path, "Contents")
+    dir1 = os.path.join(contents_dir, "MacOS")
+    dir2 = os.path.join(dir1, "foo.app", "Contents", "MacOS")
+    ignore_dir = os.path.join(contents_dir, "ignoreme")
+    for dir_ in (dir1, dir2, ignore_dir):
+        makedirs(dir_)
+    for dir_ in (dir1, dir2):
+        touch(os.path.join(dir_, "other"))
+        touch(os.path.join(dir_, "main"))
+    touch(os.path.join(contents_dir, "dont_sign"))
     mocker.patch.object(mac, "run_command", new=noop_async)
-    await mac.sign(key_config, app, entitlements_path)
+    mocker.patch.object(mac, "get_bundle_executable", return_value="main")
+    await mac.sign_app(key_config, app_path, entitlements_path)
 
 
 # unlock_keychain {{{1
