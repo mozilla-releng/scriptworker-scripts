@@ -31,10 +31,7 @@ def create_or_update_listings(edit_service, l10n_strings):
     logger.info('Listing updated for {} locale(s)'.format(len(l10n_strings)))
 
 
-def main(name=None):
-    if name not in ('__main__', None):
-        return
-
+def main():
     from mozapkpublisher.common import main_logging
     main_logging.init()
 
@@ -56,4 +53,4 @@ def main(name=None):
                            config.google_play_credentials_file, config.contact_google_play)
 
 
-main(__name__)
+__name__ == '__main__' and main()

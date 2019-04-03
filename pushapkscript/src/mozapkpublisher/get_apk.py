@@ -259,5 +259,4 @@ def main():
     loop.run_until_complete(myScript.run())
 
 
-if __name__ == '__main__':
-    main()
+__name__ == '__main__' and main()

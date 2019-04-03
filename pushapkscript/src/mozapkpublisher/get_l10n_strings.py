@@ -15,10 +15,7 @@ def get_l10n_strings(package_name, output_file):
     json.dump(l10n_strings, output_file)
 
 
-def main(name=None):
-    if name not in ('__main__', None):
-        return
-
+def main():
     from mozapkpublisher.common import main_logging
     main_logging.init()
 
@@ -36,4 +33,4 @@ def main(name=None):
     get_l10n_strings(config.package_name, config.output_file)
 
 
-main(__name__)
+__name__ == '__main__' and main()

@@ -5,10 +5,7 @@ import argparse
 from mozapkpublisher.common.apk import add_apk_checks_arguments, extract_and_check_apks_metadata
 
 
-def main(name=None):
-    if name not in ('__main__', None):
-        return
-
+def main():
     parser = argparse.ArgumentParser(
         description='Check set of APKs is valid. These checks are also performed in push_apk.py'
     )
@@ -28,4 +25,4 @@ def main(name=None):
     )
 
 
-main(__name__)
+__name__ == '__main__' and main()

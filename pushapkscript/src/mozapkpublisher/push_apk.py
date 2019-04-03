@@ -173,10 +173,7 @@ def _get_ordered_version_codes(apks):
     return sorted([apk['version_code'] for apk in apks.values()])
 
 
-def main(name=None):
-    if name not in ('__main__', None):
-        return
-
+def main():
     parser = argparse.ArgumentParser(description='Upload APKs of Firefox for Android on Google play.')
 
     googleplay.add_general_google_play_arguments(parser)
@@ -231,4 +228,4 @@ def main(name=None):
         parser.error(e)
 
 
-main(__name__)
+__name__ == '__main__' and main()
