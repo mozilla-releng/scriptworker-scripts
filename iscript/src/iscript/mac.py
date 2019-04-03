@@ -139,6 +139,7 @@ async def sign_app(key_config, app_path, entitlements_path):
         IScriptError: on error.
 
     """
+    # XXX remove Resources when we move gmp-clearkey
     SIGN_DIRS = ("MacOS", "Library", "Resources")
     parent_dir = os.path.dirname(app_path)
     app_name = os.path.basename(app_path)
@@ -198,18 +199,6 @@ async def sign_app(key_config, app_path, entitlements_path):
                 output_log_on_exception=True,
             )
 
-    # # Contents/Resources/gmp-clearkey/0.1/libclearkey.dylib hack
-    # # XXX test adding Resources to SIGN_DIRS
-    # if "Contents/" not in app_path:
-    #     dir_ = os.path.join(contents_dir, "Resources/gmp-clearkey/0.1")
-    #     file_ = "libclearkey.dylib"
-    #     await run_command(
-    #         sign_command + [file_],
-    #         cwd=dir_,
-    #         exception=IScriptError,
-    #         output_log_on_exception=True,
-    #     )
-
     # sign bundle
     await run_command(
         sign_command + [app_name],
@@ -232,7 +221,6 @@ async def verify_app_signature(app):
     """
     required_attrs = ["parent_dir", "app_name"]
     app.check_required_attrs(required_attrs)
-    # TODO concurrent?
     await run_command(
         ["codesign", "-vvv", "--deep", "--strict", app.app_name],
         cwd=app.parent_dir,
