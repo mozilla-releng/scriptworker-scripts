@@ -8,6 +8,7 @@ from functools import partial
 import mock
 import os
 import pexpect
+import plistlib
 import pytest
 import iscript.mac as mac
 from iscript.exceptions import (
@@ -71,6 +72,17 @@ def test_app_path_and_name(mocker):
     for app in all_paths:
         mac.set_app_path_and_name(app)
         assert [app.app_path, app.app_name] == expected.pop(0)
+
+
+# get_bundle_executable {{{1
+def test_get_bundle_executable(mocker):
+    """``get_bundle_executable`` returns the CFBundleExecutable.
+
+    """
+    mocker.patch.object(
+        plistlib, "readPlist", return_value={"CFBundleExecutable": "main"}
+    )
+    assert mac.get_bundle_executable("foo") == "main"
 
 
 # sign_app {{{1
