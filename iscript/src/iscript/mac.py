@@ -923,6 +923,74 @@ async def sign_and_notarize_all(config, task):
     log.info("Done signing and notarizing apps.")
 
 
+# sign {{{1
+async def sign(config, task):
+    """Sign all mac apps for this task.
+
+    Args:
+        config (dict): the running configuration
+        task (dict): the running task
+
+    Raises:
+        IScriptError: on fatal error.
+
+    """
+    work_dir = config["work_dir"]
+    # TODO get entitlements -- default or from url
+    entitlements_path = os.path.join(work_dir, "browser.entitlements.txt")
+
+    # TODO get this from scopes?
+    key = "dep"
+    key_config = get_key_config(config, key)
+
+    all_paths = get_app_paths(config, task)
+    await extract_all_apps(work_dir, all_paths)
+    await unlock_keychain(
+        key_config["signing_keychain"], key_config["keychain_password"]
+    )
+    await sign_all_apps(key_config, entitlements_path, all_paths)
+    await tar_apps(config, all_paths)
+    log.info("Done signing apps.")
+
+
+# sign_and_pkg {{{1
+async def sign_and_pkg(config, task):
+    """Sign all mac apps for this task.
+
+    Args:
+        config (dict): the running configuration
+        task (dict): the running task
+
+    Raises:
+        IScriptError: on fatal error.
+
+    """
+    work_dir = config["work_dir"]
+    # TODO get entitlements -- default or from url
+    entitlements_path = os.path.join(work_dir, "browser.entitlements.txt")
+
+    # TODO get this from scopes?
+    key = "dep"
+    key_config = get_key_config(config, key)
+
+    all_paths = get_app_paths(config, task)
+    await extract_all_apps(work_dir, all_paths)
+    await unlock_keychain(
+        key_config["signing_keychain"], key_config["keychain_password"]
+    )
+    await sign_all_apps(key_config, entitlements_path, all_paths)
+    await tar_apps(config, all_paths)
+
+    # pkg
+    await unlock_keychain(
+        key_config["signing_keychain"], key_config["keychain_password"]
+    )
+    await create_pkg_files(key_config, all_paths)
+    await copy_pkgs_to_artifact_dir(config, all_paths)
+
+    log.info("Done signing apps and creating pkgs.")
+
+
 # create_and_sign_all_pkg_files {{{1
 async def create_and_sign_all_pkg_files(config, task):
     """Create and sign all pkg files for this task.
@@ -952,4 +1020,4 @@ async def create_and_sign_all_pkg_files(config, task):
     await create_pkg_files(key_config, all_paths)
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
-    log.info("Done signing and notarizing apps.")
+    log.info("Done creating pkgs.")
