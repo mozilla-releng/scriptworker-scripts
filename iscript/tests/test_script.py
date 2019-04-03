@@ -14,18 +14,19 @@ import iscript.script as script
     (
         ("mac_pkg", False),
         ("mac_notarize", False),
+        ("mac_sign", False),
+        ("mac_sign_and_pkg", False),
         (None, False),
         ("invalid_behavior", True),
     ),
 )
 @pytest.mark.asyncio
 async def test_async_main(mocker, behavior, raises):
-    """``async_main`` calls ``sign_and_notarize_all``.
+    """``async_main`` calls the appropriate function based on behavior
 
     """
 
-    notarize_calls = []
-    pkg_calls = []
+    calls = {}
     config = {"a": "b"}
     task = {"c": "d", "payload": {}}
     if behavior:
@@ -33,22 +34,34 @@ async def test_async_main(mocker, behavior, raises):
     expected = [[(config, task), {}]]
 
     async def test_notarize(*args, **kwargs):
-        notarize_calls.append([args, kwargs])
+        calls.setdefault("notarize", []).append([args, kwargs])
 
     async def test_pkg(*args, **kwargs):
-        pkg_calls.append([args, kwargs])
+        calls.setdefault("pkg", []).append([args, kwargs])
+
+    async def test_sign(*args, **kwargs):
+        calls.setdefault("sign", []).append([args, kwargs])
+
+    async def test_sign_and_pkg(*args, **kwargs):
+        calls.setdefault("sign_and_pkg", []).append([args, kwargs])
 
     mocker.patch.object(script, "sign_and_notarize_all", new=test_notarize)
     mocker.patch.object(script, "create_and_sign_all_pkg_files", new=test_pkg)
+    mocker.patch.object(script, "sign", new=test_sign)
+    mocker.patch.object(script, "sign_and_pkg", new=test_sign_and_pkg)
     if raises:
         with pytest.raises(IScriptError):
             await script.async_main(config, task)
     else:
         await script.async_main(config, task)
         if behavior == "mac_notarize":
-            assert notarize_calls == expected
+            assert calls.get("notarize") == expected
+        elif behavior == "mac_sign":
+            assert calls.get("sign") == expected
+        elif behavior == "mac_sign_and_pkg":
+            assert calls.get("sign_and_pkg") == expected
         else:
-            assert pkg_calls == expected
+            assert calls.get("pkg") == expected
 
 
 # get_default_config {{{1
