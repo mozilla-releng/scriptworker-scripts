@@ -923,6 +923,12 @@ async def sign_and_notarize_all(config, task):
     await poll_all_notarization_status(key_config, poll_uuids)
     await staple_notarization(all_paths, path_attr="app_name")
     await tar_apps(config, all_paths)
+
+    # pkg
+    # Unlock keychain again in case it's locked since previous unlock
+    await unlock_keychain(
+        key_config["signing_keychain"], key_config["keychain_password"]
+    )
     await create_pkg_files(key_config, all_paths)
     await copy_pkgs_to_artifact_dir(config, all_paths)
 

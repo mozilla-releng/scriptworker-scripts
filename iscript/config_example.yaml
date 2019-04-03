@@ -6,7 +6,7 @@ local_notarization_accounts: ["account1"]
 mac_config:
     dep:
         notarize_type: multi_account
-        signing_keychain: dep.keychain
+        signing_keychain: /path/to/dep.keychain
         base_bundle_id: org.mozilla.firefox_dep
         identity: ...
         keychain_password: ...
