@@ -32,7 +32,7 @@ def get_task(config):
     """
     path = os.path.join(config["work_dir"], "task.json")
     message = "Can't read task from {}!\n%(exc)s".format(path)
-    contents = load_json_or_yaml(path, is_path=True, file_type='yaml', message=message)
+    contents = load_json_or_yaml(path, is_path=True, message=message)
     return contents
 
 
@@ -132,7 +132,7 @@ def _init_config(config_path=None, default_config=None):
         config_path = sys.argv[1]
 
     config = {} if default_config is None else default_config
-    config.update(load_json_or_yaml(config_path, is_path=True))
+    config.update(load_json_or_yaml(config_path, file_type='yaml', is_path=True))
 
     return config
 
