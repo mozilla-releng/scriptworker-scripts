@@ -10,7 +10,7 @@ class TestNightlySubmitterBase(unittest.TestCase):
         url_replacements = [
             ("ftp.mozilla.org", "download.cdn.mozilla.net")
         ]
-        submitter = NightlySubmitterBase(api_root=None, auth=None, auth0_secrets=None,
+        submitter = NightlySubmitterBase(api_root=None, auth0_secrets=None,
                                          url_replacements=url_replacements)
         self.assertEqual(
             'http://download.cdn.mozilla.net/pub/mozilla.org/some/file',
@@ -25,7 +25,7 @@ class TestNightlySubmitterV4(unittest.TestCase):
         url_replacements = [
             ("ftp.mozilla.org", "download.cdn.mozilla.net")
         ]
-        submitter = NightlySubmitterV4(api_root=None, auth=None, auth0_secrets=None,
+        submitter = NightlySubmitterV4(api_root=None, auth0_secrets=None,
                                        url_replacements=url_replacements)
         completeInfo = [{
             'size': 123,
@@ -43,7 +43,7 @@ class TestNightlySubmitterV4(unittest.TestCase):
             }]})
 
     def test_no_canonical_ur_replacement(self):
-        submitter = NightlySubmitterV4(api_root=None, auth=None, auth0_secrets=None,
+        submitter = NightlySubmitterV4(api_root=None, auth0_secrets=None,
                                        url_replacements=None)
         completeInfo = [{
             'size': 123,
@@ -92,7 +92,7 @@ class TestUpdateIdempotency(unittest.TestCase):
             "hash": "c_hash1",
             "size": 2,
         }]
-        submitter = NightlySubmitterV4("api_root", auth=None, auth0_secrets=None)
+        submitter = NightlySubmitterV4("api_root", auth0_secrets=None)
         submitter.run(platform="linux64", buildID="b1", productName="pr1",
                       branch="b1", appVersion="a1", locale="l1",
                       hashFunction='sha512', extVersion="v1",
@@ -140,7 +140,7 @@ class TestUpdateIdempotency(unittest.TestCase):
             # Third call, get data from the dated blob
             (data, 1)]
 
-        submitter = NightlySubmitterV4("api_root", auth=None, auth0_secrets=None)
+        submitter = NightlySubmitterV4("api_root", auth0_secrets=None)
         submitter.run(platform="linux64", buildID="b1", productName="pr1",
                       branch="b1", appVersion="a1", locale="l1",
                       hashFunction='sha512', extVersion="v1",
@@ -182,7 +182,7 @@ class TestUpdateIdempotency(unittest.TestCase):
             # Third call, get data from the dated blob
             (data, 1)]
 
-        submitter = NightlySubmitterV4("api_root", auth=None, auth0_secrets=None)
+        submitter = NightlySubmitterV4("api_root", auth0_secrets=None)
         submitter.run(platform="linux64", buildID="b1", productName="pr1",
                       branch="b1", appVersion="a1", locale="l1",
                       hashFunction='sha512', extVersion="v1",

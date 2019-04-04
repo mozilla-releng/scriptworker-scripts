@@ -17,8 +17,6 @@ Scriptworker Specfic:
 
 Balrog Specific:
 - `BALROG_API_ROOT`
-- `BALROG_USERNAME`
-- `BALROG_PASSWORD`
 
 ### task.json
 

@@ -28,14 +28,12 @@ log = logging.getLogger(__name__)
 
 
 # create_locale_submitter {{{1
-def create_locale_submitter(e, extra_suffix, balrog_auth, auth0_secrets, config):
-    auth = balrog_auth
-
+def create_locale_submitter(e, extra_suffix, auth0_secrets, config):
     if "tc_release" in e:
         log.info("Taskcluster Release style Balrog submission")
 
         submitter = ReleaseSubmitterV9(
-            api_root=config['api_root'], auth=auth, auth0_secrets=auth0_secrets,
+            api_root=config['api_root'], auth0_secrets=auth0_secrets,
             dummy=config['dummy'],
             suffix=e.get('blob_suffix', '') + extra_suffix,
         )
@@ -59,7 +57,7 @@ def create_locale_submitter(e, extra_suffix, balrog_auth, auth0_secrets, config)
     elif "tc_nightly" in e:
         log.info("Taskcluster Nightly style Balrog submission")
 
-        submitter = NightlySubmitterV4(api_root=config['api_root'], auth=auth,
+        submitter = NightlySubmitterV4(api_root=config['api_root'],
                                        auth0_secrets=auth0_secrets,
                                        dummy=config['dummy'],
                                        url_replacements=e.get('url_replacements', []))
@@ -83,7 +81,7 @@ def create_locale_submitter(e, extra_suffix, balrog_auth, auth0_secrets, config)
 
 
 # submit_locale {{{1
-def submit_locale(task, config, balrog_auth, auth0_secrets):
+def submit_locale(task, config, auth0_secrets):
     """Submit a release blob to balrog."""
     upstream_artifacts = get_upstream_artifacts(task)
 
@@ -95,7 +93,7 @@ def submit_locale(task, config, balrog_auth, auth0_secrets):
     for e in manifest:
         for suffix in suffixes:
             # Get release metadata from manifest
-            submitter, release = create_locale_submitter(e, suffix, balrog_auth, auth0_secrets, config)
+            submitter, release = create_locale_submitter(e, suffix, auth0_secrets, config)
             # Connect to balrog and submit the metadata
             retry(lambda: submitter.run(**release))
 
@@ -105,11 +103,10 @@ def create_scheduler(**kwargs):
     return ReleaseScheduler(**kwargs)
 
 
-def schedule(task, config, balrog_auth, auth0_secrets):
+def schedule(task, config, auth0_secrets):
     """Schedule a release to ship on balrog channel(s)"""
-    auth = balrog_auth
     scheduler = create_scheduler(
-        api_root=config['api_root'], auth=auth,
+        api_root=config['api_root'],
         auth0_secrets=auth0_secrets,
         dummy=config['dummy'],
         suffix=task['payload'].get('blob_suffix', ''),
@@ -137,9 +134,8 @@ def create_pusher(**kwargs):
     return ReleasePusher(**kwargs)
 
 
-def submit_toplevel(task, config, balrog_auth, auth0_secrets):
+def submit_toplevel(task, config, auth0_secrets):
     """Push a top-level release blob to balrog."""
-    auth = balrog_auth
     partials = {}
     if task['payload'].get('partial_versions'):
         for v in task['payload']['partial_versions'].split(','):
@@ -151,7 +147,7 @@ def submit_toplevel(task, config, balrog_auth, auth0_secrets):
 
     for suffix in suffixes:
         creator = create_creator(
-            api_root=config['api_root'], auth=auth,
+            api_root=config['api_root'],
             auth0_secrets=auth0_secrets,
             dummy=config['dummy'],
             suffix=task['payload'].get('blob_suffix', '') + suffix,
@@ -175,7 +171,7 @@ def submit_toplevel(task, config, balrog_auth, auth0_secrets):
         ))
 
     pusher = create_pusher(
-        api_root=config['api_root'], auth=auth,
+        api_root=config['api_root'],
         auth0_secrets=auth0_secrets,
         dummy=config['dummy'],
         suffix=task['payload'].get('blob_suffix', ''),
@@ -210,10 +206,6 @@ def update_config(config, server='default'):
     config = deepcopy(config)
 
     config['api_root'] = config['server_config'][server]['api_root']
-    basic_auth = (
-        config['server_config'][server]['balrog_username'],
-        config['server_config'][server]['balrog_password'],
-    )
     auth0_secrets = dict(
         domain=config['server_config'][server]['auth0_domain'],
         client_id=config['server_config'][server]['auth0_client_id'],
@@ -221,7 +213,7 @@ def update_config(config, server='default'):
         audience=config['server_config'][server]['auth0_audience'],
     )
     del(config['server_config'])
-    return (basic_auth, auth0_secrets), config
+    return auth0_secrets, config
 
 
 # load_config {{{1
@@ -229,8 +221,8 @@ def load_config(path=None):
     try:
         with open(path) as fh:
             config = json.load(fh)
-    except (ValueError, OSError, IOError) as e:
-        print >> sys.stderr, "Can't read config file {}!\n{}".format(path, e)
+    except (ValueError, OSError, IOError):
+        log.fatal("Can't read config file %s", path)
         sys.exit(5)
     return config
 
@@ -265,14 +257,14 @@ def main(config_path=None):
     validate_task_schema(config, task, action)
 
     server = get_task_server(task, config)
-    (balrog_auth, auth0_secrets), config = update_config(config, server)
+    auth0_secrets, config = update_config(config, server)
 
     if action == 'submit-toplevel':
-        submit_toplevel(task, config, balrog_auth, auth0_secrets)
+        submit_toplevel(task, config, auth0_secrets)
     elif action == 'schedule':
-        schedule(task, config, balrog_auth, auth0_secrets)
+        schedule(task, config, auth0_secrets)
     else:
-        submit_locale(task, config, balrog_auth, auth0_secrets)
+        submit_locale(task, config, auth0_secrets)
 
 
 __name__ == '__main__' and main()

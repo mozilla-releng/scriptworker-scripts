@@ -43,8 +43,6 @@ def config():
             "server_config": {
                 "nightly": {
                     "api_root": "BALROG_API_ROOT",
-                    "balrog_username": "BALROG_USERNAME",
-                    "balrog_password": "BALROG_PASSWORD",
                     "auth0_domain": "AUTH0_DOMAIN",
                     "auth0_client_id": "AUTH0_CLIENT_ID",
                     "auth0_client_secret": "AUTH0_CLIENT_SECRET",
@@ -57,8 +55,6 @@ def config():
                     "auth0_client_id": "AUTH0_CLIENT_ID",
                     "auth0_client_secret": "AUTH0_CLIENT_SECRET",
                     "auth0_audience": "AUTH0_AUDIENCE",
-                    "balrog_username": "BALROG_USERNAME",
-                    "balrog_password": "BALROG_PASSWORD",
                     "allowed_channels": ["release", "release-localtest", "release-cdntest"]
                 },
                 "dep": {
@@ -67,8 +63,6 @@ def config():
                     "auth0_client_id": "AUTH0_CLIENT_ID",
                     "auth0_client_secret": "AUTH0_CLIENT_SECRET",
                     "auth0_audience": "AUTH0_AUDIENCE",
-                    "balrog_username": "BALROG_USERNAME",
-                    "balrog_password": "BALROG_PASSWORD",
                     "allowed_channels": ["nightly", "release", "beta", "etc"]
                 },
 
