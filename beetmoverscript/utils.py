@@ -309,8 +309,31 @@ def validated_task_id(task_id):
     raise ValueError("No valid taskId found.")
 
 
-def extract_file_config_from_artifact_map(artifact_map, path, task_id, locale):
+def exists_or_endswith(filename, basenames):
+    if isinstance(basenames, str):
+        basenames = [basenames]
+    for artifact in basenames:
+        if filename == artifact or filename.endswith(artifact):
+            return True
+    return False
+
+
+def extract_full_artifact_map_path(artifact_map, basepath):
+    """The way artifact map is build allows both `public/build/target.apk` but
+    also `public/build/en-US/target.dmg` depending on platform/product. In order
+    to solve this, given the basename of the installer artifact, we iterate in
+    the artifact_map searching for the correct name to use.
+
+    If no path is found, it returns `None` naturally."""
+    for entry in artifact_map:
+        for path in entry['paths']:
+            if path.endswith(basepath):
+                return path
+
+
+def extract_file_config_from_artifact_map(artifact_map, basepath, task_id, locale):
     """Return matching artifact map config."""
+    path = extract_full_artifact_map_path(artifact_map, basepath)
     for entry in artifact_map:
         if entry['taskId'] != task_id or entry['locale'] != locale:
             continue

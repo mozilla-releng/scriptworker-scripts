@@ -38,7 +38,8 @@ from beetmoverscript.utils import (
     get_bucket_name, get_bucket_url_prefix,
     is_release_action, is_promotion_action, get_partials_props,
     get_product_name, is_partner_action, is_partner_private_task,
-    is_partner_public_task, write_json, extract_file_config_from_artifact_map
+    is_partner_public_task, write_json, extract_file_config_from_artifact_map,
+    exists_or_endswith
 )
 
 log = logging.getLogger(__name__)
@@ -322,9 +323,9 @@ async def move_beets(context, artifacts_to_beetmove, manifest=None, artifact_map
         buildhub_artifact_exists = False
         # get path of installer beet
         for artifact in artifacts_to_beetmove[locale]:
-            if artifact in INSTALLER_ARTIFACTS:
+            if exists_or_endswith(artifact, INSTALLER_ARTIFACTS):
                 installer_path = artifacts_to_beetmove[locale][artifact]
-            if artifact == BUILDHUB_ARTIFACT:
+            if exists_or_endswith(artifact, BUILDHUB_ARTIFACT):
                 buildhub_artifact_exists = True
 
         # throws error if buildhub.json is present and installer isn't
@@ -341,7 +342,7 @@ async def move_beets(context, artifacts_to_beetmove, manifest=None, artifact_map
             # if there is no installer then there will be no buildhub.json artifact
             # in logical coding terms, this means that if installer_path is an empty
             # string, then this if-block is never reached
-            if artifact == BUILDHUB_ARTIFACT:
+            if exists_or_endswith(artifact, BUILDHUB_ARTIFACT):
                 write_json(source, get_updated_buildhub_artifact(
                     source, installer_path, context, locale, manifest=manifest, artifact_map=artifact_map))
 

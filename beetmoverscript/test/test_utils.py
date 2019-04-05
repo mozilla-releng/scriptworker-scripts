@@ -15,8 +15,13 @@ from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    get_releases_prefix, get_product_name,
                                    is_partner_private_task, is_partner_public_task,
                                    _check_locale_consistency, validated_task_id,
-                                   extract_file_config_from_artifact_map)
-from beetmoverscript.constants import HASH_BLOCK_SIZE
+                                   extract_file_config_from_artifact_map,
+                                   exists_or_endswith)
+from beetmoverscript.constants import (
+    HASH_BLOCK_SIZE, INSTALLER_ARTIFACTS,
+    BUILDHUB_ARTIFACT
+)
+
 
 assert context  # silence pyflakes
 
@@ -680,3 +685,32 @@ def test_extract_file_config_from_artifact_map_raises(task_id, locale, filename)
     with pytest.raises(TaskVerificationError):
         extract_file_config_from_artifact_map(
             task_def['payload']['artifactMap'], filename, task_id, locale)
+
+
+@pytest.mark.parametrize("filename, basenames, expected", ((
+    "public/build/target.dmg", INSTALLER_ARTIFACTS, True
+), (
+    "public/build/en-US/target.dmg", INSTALLER_ARTIFACTS, True
+), (
+    "sfvxcvcxvbvcb", INSTALLER_ARTIFACTS, False
+), (
+    "public/build/target.dmgx", INSTALLER_ARTIFACTS, False
+), (
+    "target.dmg", INSTALLER_ARTIFACTS, True
+), (
+    "target.dmgx", INSTALLER_ARTIFACTS, False
+), (
+    "public/build/en-US/buildhub.json", BUILDHUB_ARTIFACT, True
+), (
+    "public/build/buildhub.json", BUILDHUB_ARTIFACT, True
+), (
+    "buildhub.json", BUILDHUB_ARTIFACT, True
+), (
+    "public/build/buildhub.jsonxX", BUILDHUB_ARTIFACT, False
+), (
+    "buildhub.jsonsdf03094", BUILDHUB_ARTIFACT, False
+), (
+    "buildhub.jsonXXX", BUILDHUB_ARTIFACT, False
+)))
+def test_exists_or_endswith(filename, basenames, expected):
+    assert exists_or_endswith(filename, basenames) == expected
