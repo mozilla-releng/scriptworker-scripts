@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.4.3] = (2019-04-05)
+----------------------
+
+Fixed
+~~~~~
+
+- Fix buildhub.json in the declarative artifacts world. (`#1539067
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1539067>`_)
+
+
 [8.4.1] = (2019-02-04)
 ----------------------
 
