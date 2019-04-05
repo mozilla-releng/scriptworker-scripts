@@ -2,6 +2,7 @@
 
 import argparse
 
+from mozapkpublisher.common import main_logging
 from mozapkpublisher.common.apk import add_apk_checks_arguments, extract_and_check_apks_metadata
 
 
@@ -13,6 +14,8 @@ def main():
     add_apk_checks_arguments(parser)
 
     config = parser.parse_args()
+
+    main_logging.init()
 
     extract_and_check_apks_metadata(
         config.apks,
