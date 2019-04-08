@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.4.4] = (2019-04-08)
+----------------------
+
+Fixed
+~~~~~
+
+- Fix locale and artifact mismatching in the declarative artifacts world. (`#1542500
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1542500>`_)
+
 [8.4.3] = (2019-04-05)
 ----------------------
 
