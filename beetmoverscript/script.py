@@ -319,17 +319,17 @@ async def move_beets(context, artifacts_to_beetmove, manifest=None, artifact_map
 
     for locale in artifacts_to_beetmove:
 
-        installer_path = ''
+        installer_artifact = ''
         buildhub_artifact_exists = False
         # get path of installer beet
         for artifact in artifacts_to_beetmove[locale]:
             if exists_or_endswith(artifact, INSTALLER_ARTIFACTS):
-                installer_path = artifacts_to_beetmove[locale][artifact]
+                installer_artifact = artifact
             if exists_or_endswith(artifact, BUILDHUB_ARTIFACT):
                 buildhub_artifact_exists = True
 
         # throws error if buildhub.json is present and installer isn't
-        if not installer_path and buildhub_artifact_exists:
+        if not installer_artifact and buildhub_artifact_exists:
             raise ScriptWorkerTaskException(
                 "could not determine installer path from task payload"
             )
@@ -343,8 +343,13 @@ async def move_beets(context, artifacts_to_beetmove, manifest=None, artifact_map
             # in logical coding terms, this means that if installer_path is an empty
             # string, then this if-block is never reached
             if exists_or_endswith(artifact, BUILDHUB_ARTIFACT):
-                write_json(source, get_updated_buildhub_artifact(
-                    source, installer_path, context, locale, manifest=manifest, artifact_map=artifact_map))
+                write_json(source,
+                           get_updated_buildhub_artifact(
+                               path=source, installer_artifact=installer_artifact,
+                               installer_path=artifacts_to_beetmove[locale][installer_artifact],
+                               context=context, locale=locale,
+                               manifest=manifest, artifact_map=artifact_map)
+                           )
 
             if artifact_map:
                 task_id = get_taskId_from_full_path(source)

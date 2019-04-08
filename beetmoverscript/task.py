@@ -188,20 +188,19 @@ def update_props(context, props, platform_mapping):
     return props
 
 
-def get_updated_buildhub_artifact(path, installer_path, context, locale, manifest=None, artifact_map=None):
+def get_updated_buildhub_artifact(path, installer_artifact, installer_path, context, locale, manifest=None, artifact_map=None):
     """
     Read the file into a dict, alter the fields below, and return the updated dict
     buildhub.json fields that should be changed: download.size, download.date, download.url
     """
     contents = utils.load_json(path)
-    installer_name = os.path.basename(installer_path)
     url_prefix = context.config["bucket_config"][context.bucket]["url_prefix"]
     if artifact_map:
         task_id = get_taskId_from_full_path(installer_path)
-        cfg = utils.extract_file_config_from_artifact_map(artifact_map, installer_name, task_id, locale)
+        cfg = utils.extract_file_config_from_artifact_map(artifact_map, installer_artifact, task_id, locale)
         path = urllib.parse.quote(cfg['destinations'][0])
     else:
-        dest = manifest['mapping'][locale][installer_name]['destinations'][0]
+        dest = manifest['mapping'][locale][installer_artifact]['destinations'][0]
         path = urllib.parse.quote(urllib.parse.urljoin(manifest["s3_bucket_path"], dest))
     url = urllib.parse.urljoin(url_prefix, path)
 

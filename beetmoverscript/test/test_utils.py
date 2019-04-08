@@ -16,6 +16,7 @@ from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    is_partner_private_task, is_partner_public_task,
                                    _check_locale_consistency, validated_task_id,
                                    extract_file_config_from_artifact_map,
+                                   extract_full_artifact_map_path,
                                    exists_or_endswith)
 from beetmoverscript.constants import (
     HASH_BLOCK_SIZE, INSTALLER_ARTIFACTS,
@@ -685,6 +686,20 @@ def test_extract_file_config_from_artifact_map_raises(task_id, locale, filename)
     with pytest.raises(TaskVerificationError):
         extract_file_config_from_artifact_map(
             task_def['payload']['artifactMap'], filename, task_id, locale)
+
+
+@pytest.mark.parametrize("path,locale,found", ((
+    "buildhub.json", 'en-US', 'buildhub.json'
+), (
+    "buildhub.json", 'en-GB', None
+), (
+    'foobar', 'en-GB', None
+), (
+    'foobar', 'en-US', None
+)))
+def test_extract_full_artifact_map_path(path, locale, found):
+    task_def = get_fake_valid_task(taskjson='task_artifact_map.json')
+    assert extract_full_artifact_map_path(task_def['payload']['artifactMap'], path, locale) == found
 
 
 @pytest.mark.parametrize("filename, basenames, expected", ((
