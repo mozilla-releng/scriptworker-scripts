@@ -33,41 +33,14 @@ def mark_as_shipped_action(context):
     release_name = context.task['payload']['release_name']
 
     log.info('Marking the release as shipped ...')
-    if 'api_root' in context.ship_it_instance_config:
-        ship_actions.mark_as_shipped(context.ship_it_instance_config,
-                                     release_name)
     if 'api_root_v2' in context.ship_it_instance_config:
         ship_actions.mark_as_shipped_v2(context.ship_it_instance_config,
                                         release_name)
 
 
-def mark_as_started_action(context):
-    """Action to perform is to tell Ship-it v1 API that a release has started.
-    This is useful to simulate the RelMan human `Do eet` action."""
-    # process the values from the task payload?
-    # add a new sip_action to hack the HTML
-    payload = context.task['payload']
-    release_name = payload['release_name']
-
-    data = dict(
-        product=payload['product'],
-        version=payload['version'],
-        buildNumber=payload['build_number'],
-        branch=payload['branch'],
-        mozillaRevision=payload['revision'],
-        l10nChangesets=payload['l10n_changesets'],
-        partials=payload['partials'],
-    )
-
-    log.info('Marking the release as started in Ship-it v1 ...')
-    ship_actions.mark_as_started(context.ship_it_instance_config,
-                                 release_name, data)
-
-
 # ACTION_MAP {{{1
 ACTION_MAP = {
     'mark-as-shipped': mark_as_shipped_action,
-    'mark-as-started': mark_as_started_action,
 }
 
 
@@ -80,7 +53,6 @@ def get_default_config():
         'work_dir': os.path.join(parent_dir, 'work_dir'),
         'verbose': False,
         'mark_as_shipped_schema_file': os.path.join(data_dir, 'mark_as_shipped_task_schema.json'),
-        'mark_as_started_schema_file': os.path.join(data_dir, 'mark_as_started_task_schema.json'),
     }
 
 

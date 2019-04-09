@@ -4,14 +4,11 @@ from scriptworker import client
 from scriptworker.exceptions import TaskVerificationError, ScriptWorkerTaskException
 from scriptworker.utils import get_single_item_from_sequence
 
-
 log = logging.getLogger(__name__)
-
 
 # SCHEMA_MAP {{{1
 SCHEMA_MAP = {
     'mark-as-shipped': 'mark_as_shipped_schema_file',
-    'mark-as-started': 'mark_as_started_schema_file',
 }
 
 

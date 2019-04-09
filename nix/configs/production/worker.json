@@ -6,10 +6,10 @@
   "taskcluster_scope_prefix": "project:releng:ship-it:",
   "ship_it_instances": {
     "project:releng:ship-it:server:staging": {
-        "api_root": "https://ship-it.mozilla.org",
+        "api_root_v2": "https://shipit-api.mozilla-releng.net",
         "timeout_in_seconds": 60,
-        "username": "shipit-scriptworker",
-        "password": {"$eval": "SHIPIT_API_PASSWORD"}
+        "taskcluster_client_id": "TODO",
+        "taskcluster_access_token": {"$eval": "TASKCLUSTER_ACCESS_TOKEN"}
     }
   }
 }
