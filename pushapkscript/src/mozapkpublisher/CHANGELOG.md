@@ -2,11 +2,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [upcoming breaking change]
+
+## [2.0.0] - 2019-04-10
+
+### Added
+* `check_apks.py`. This script runs the same checks as `push_apk.py`
+* Allow AArch64 on Fennec Nightly and Beta only
 
 ### Removed
+* Fennec checks no longer implicitly check that all packages have the same name, but rather lean on `--expected-package-name`
 
-* Fennec checks no longer implicitly check that all packages have the same name, but rather lean on `--expected-package-name` 
 
 ## [1.0.1] - 2019-02-12
 
@@ -23,7 +28,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
     * `--skip-checks-fennec`: Skip checks that are Fennec-specific (ini-checking, checking version-to-package-name compliance)
     * `--skip-check-package-names`: Skip assertion that apks match a specified package name
         * Note: if this isn't provided, then you must provide at least one `--expected-package-name`
-        
+
 ## [0.14.1] - 2019-02-12
 
 **Note: This was released in a branch off of `0.14.0`! These changes don't exist in `1.0.0`**
@@ -37,7 +42,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * `push_apk` must be called as a function with parameters, rather than mocked `argv` arguments* Refactors `push_apk` to use a variable Google Play Strings interface  
 
 ### Removed
-* Auto-detection of which package-name corresponds to which sanity checks 
+* Auto-detection of which package-name corresponds to which sanity checks
 
 ## [0.13.0] - 2019-01-15
 
@@ -55,7 +60,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.11.0] - 2019-01-09
 
 ### Added
-* Support pushing [`fenix`](https://github.com/mozilla-mobile/fenix) 
+* Support pushing [`fenix`](https://github.com/mozilla-mobile/fenix)
 
 ## [0.10.1] - 2018-12-20
 
@@ -179,7 +184,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.2.3] - 2017-04-21
 
-### Added 
+### Added
 * Verifies if `rollout_percentage` is actually used on the rollout channel. Without it, you may go full rollout, like explained in [bug 1354038 comment 2](https://bugzilla.mozilla.org/show_bug.cgi?id=1354038#c2)
 
 
@@ -234,7 +239,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.1.3] - 2016-11-09
 
-### Added 
+### Added
 * Check to prevent single locale APKs to be pushed ([bug 1314712](https://bugzilla.mozilla.org/show_bug.cgi?id=1314712))
 * --dry-run flag
 
