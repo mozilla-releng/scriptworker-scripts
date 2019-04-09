@@ -1,13 +1,13 @@
 import logging
 
-from mozapkpublisher.common.utils import is_firefox_version_nightly
-
 logger = logging.getLogger(__name__)
 
 
 _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE_AND_API_LEVEL = {
     'arm64-v8a': {      # Bug 1368484
         21: {
+            # XXX AArch64 first shipped in Nightly 66, and then arrived in beta in 67.
+            # It's not on release yet. Logic is down below.
             'first_firefox_version': 66,
         },
     },
@@ -53,10 +53,10 @@ _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE_AND_API_LEVEL = {
 }
 
 
-def get_expected_combos(firefox_version):
+def get_expected_combos(firefox_version, package_name):
     combos = set()
     for architecture in _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE_AND_API_LEVEL:
-        api_levels = get_expected_api_levels(firefox_version, architecture)
+        api_levels = get_expected_api_levels(firefox_version, architecture, package_name)
 
         for api_level in api_levels:
             combos.add((architecture, api_level))
@@ -74,17 +74,22 @@ def get_expected_combos(firefox_version):
     return combos
 
 
-def get_expected_api_levels(firefox_version, architecture='armeabi-v7a'):
+def get_expected_api_levels(firefox_version, architecture='armeabi-v7a', package_name='org.mozilla.firefox'):
     return [
         api_level
         for api_level, range_dict in _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE_AND_API_LEVEL[architecture].items()
         if (
             _is_firefox_version_in_range(firefox_version, range_dict) and
-            # XXX arm64-v8a (aka AArch64) is not planned to ride trains regularly. It may need
-            # a couple of cycles to stabilize. That's why we just expect it on Nightly, for now.
+            # XXX arm64-v8a (aka AArch64) is not planned to ride trains regularly.
+            # It's currently expected on nightly and beta, for now.
             (
                 architecture != 'arm64-v8a' or
-                architecture == 'arm64-v8a' and is_firefox_version_nightly(firefox_version)
+                (
+                    architecture == 'arm64-v8a' and (
+                        package_name == 'org.mozilla.fennec_aurora' or
+                        package_name == 'org.mozilla.firefox_beta' and get_firefox_major_version_number(firefox_version) >= 67
+                    )
+                )
             )
         )
     ]

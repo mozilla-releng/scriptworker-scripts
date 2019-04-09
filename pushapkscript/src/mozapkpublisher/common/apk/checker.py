@@ -149,7 +149,7 @@ def _check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths)
     single_metadata = list(apks_metadata_per_paths.values())[0]
     firefox_version = single_metadata['firefox_version']
 
-    expected_combos = get_expected_combos(firefox_version)
+    expected_combos = get_expected_combos(firefox_version, single_metadata['package_name'])
 
     current_combos = set([
         (metadata['architecture'], metadata['api_level'])
