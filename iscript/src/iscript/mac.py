@@ -32,6 +32,7 @@ MAC_DESIGNATED_REQUIREMENTS = (
 )
 
 
+# App {{{1
 @attr.s
 class App(object):
     """Track the various paths related to each app.
@@ -79,6 +80,24 @@ class App(object):
         for att in required_attrs:
             if not hasattr(self, att) or not getattr(self, att):
                 raise IScriptError("Missing {} attr!".format(att))
+
+
+# tar helpers {{{1
+def _get_tar_create_options(path):
+    base_opts = "c"
+    if path.endswith(".tar.gz"):
+        return "{}zf".format(base_opts)
+    elif path.endswith(".tar.bz2"):
+        return "{}jf".format(base_opts)
+    else:
+        raise IScriptError("Unknown tarball suffix in path {}".format(path))
+
+
+def _get_pkg_name_from_tarball(path):
+    for ext in (".tar.gz", ".tar.bz2"):
+        if path.endswith(ext):
+            return path.replace(ext, ".pkg")
+    raise IScriptError("Unknown tarball suffix in path {}".format(path))
 
 
 # set_app_path_and_name {{{1
@@ -794,11 +813,15 @@ async def tar_apps(config, all_paths):
             config["artifact_dir"], app.orig_path.split("public/")[1]
         )
         makedirs(os.path.dirname(app.target_tar_path))
-        # TODO: different tar commands based on suffix?
         futures.append(
             asyncio.ensure_future(
                 run_command(
-                    ["tar", "czvf", app.target_tar_path, app.app_name],
+                    [
+                        "tar",
+                        _get_tar_create_options(app.target_tar_path),
+                        app.target_tar_path,
+                        app.app_name,
+                    ],
                     cwd=app.parent_dir,
                     exception=IScriptError,
                 )
@@ -862,9 +885,11 @@ async def copy_pkgs_to_artifact_dir(config, all_paths):
     log.info("Copying pkgs to the artifact dir")
     for app in all_paths:
         app.check_required_attrs(["orig_path", "pkg_path"])
-        app.target_pkg_path = "{}/public/{}".format(
-            config["artifact_dir"], app.orig_path.split("public/")[1]
-        ).replace(".tar.gz", ".pkg")
+        app.target_pkg_path = _get_pkg_name_from_tarball(
+            "{}/public/{}".format(
+                config["artifact_dir"], app.orig_path.split("public/")[1]
+            )
+        )
         makedirs(os.path.dirname(app.target_pkg_path))
         log.debug("Copying %s to %s", app.pkg_path, app.target_pkg_path)
         copy2(app.pkg_path, app.target_pkg_path)

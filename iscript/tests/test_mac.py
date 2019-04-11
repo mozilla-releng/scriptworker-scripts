@@ -47,6 +47,39 @@ def test_app():
         a.check_required_attrs(["app_path"])
 
 
+# tar helpers {{{1
+@pytest.mark.parametrize(
+    "path, expected, raises",
+    (
+        ("foo/bar/target.tar.gz", "czf", False),
+        ("foo/bar/target.tar.bz2", "cjf", False),
+        ("foo/bar/target.tar.xz", None, True),
+    ),
+)
+def test_get_tar_create_options(path, expected, raises):
+    if raises:
+        with pytest.raises(IScriptError):
+            mac._get_tar_create_options(path)
+    else:
+        assert mac._get_tar_create_options(path) == expected
+
+
+@pytest.mark.parametrize(
+    "path, expected, raises",
+    (
+        ("foo/bar/target.tar.gz", "foo/bar/target.pkg", False),
+        ("foo/bar/target.tar.bz2", "foo/bar/target.pkg", False),
+        ("foo/bar/target.tar.xz", None, True),
+    ),
+)
+def test_get_pkg_name_from_tarball(path, expected, raises):
+    if raises:
+        with pytest.raises(IScriptError):
+            mac._get_pkg_name_from_tarball(path)
+    else:
+        assert mac._get_pkg_name_from_tarball(path) == expected
+
+
 # set_app_path_and_name {{{1
 def test_app_path_and_name(mocker):
     """``app_path_and_name`` sets the ``app_path`` and ``app_name`` if not
@@ -621,7 +654,7 @@ async def test_poll_notarization_uuid(mocker, tmpdir, statuses, exception):
     else:
         assert (
             await mac.poll_notarization_uuid(
-                "uuid", "user", pw, 0.5, "/dev/null", sleep_time=0.1
+                "uuid", "user", pw, 0.6, "/dev/null", sleep_time=0.1
             )
             is None
         )
