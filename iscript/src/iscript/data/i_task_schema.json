@@ -51,7 +51,7 @@
             },
             "behavior": {
               "type": "string",
-              "enum": ["mac_notarize", "mac_pkg"]
+              "enum": ["mac_notarize", "mac_pkg", "mac_sign", "mac_sign_and_pkg"]
             }
           },
           "required": ["upstreamArtifacts"]
