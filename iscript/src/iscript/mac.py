@@ -177,11 +177,10 @@ async def sign_app(key_config, app_path, entitlements_path):
         keychain,
         "--requirement",
         MAC_DESIGNATED_REQUIREMENTS % {"subject_ou": identity},
-        "-o",
-        "runtime",
-        "--entitlements",
-        entitlements_path,
     ]
+
+    if key_config.get("sign_with_entitlements", False):
+        sign_command.extend(["-o", "runtime", "--entitlements", entitlements_path])
 
     app_executable = get_bundle_executable(app_path)
     app_path_len = len(app_path)

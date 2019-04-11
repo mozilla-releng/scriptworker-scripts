@@ -119,12 +119,17 @@ def test_get_bundle_executable(mocker):
 
 
 # sign_app {{{1
+@pytest.mark.parametrize("sign_with_entitlements", (True, False))
 @pytest.mark.asyncio
-async def test_sign_app(mocker, tmpdir):
+async def test_sign_app(mocker, tmpdir, sign_with_entitlements):
     """Render ``sign_app`` noop and verify we have complete code coverage.
 
     """
-    key_config = {"identity": "id", "signing_keychain": "keychain"}
+    key_config = {
+        "identity": "id",
+        "signing_keychain": "keychain",
+        "sign_with_entitlements": sign_with_entitlements,
+    }
     entitlements_path = os.path.join(tmpdir, "entitlements")
     app_path = os.path.join(tmpdir, "foo.app")
 

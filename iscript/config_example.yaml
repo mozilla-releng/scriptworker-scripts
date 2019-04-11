@@ -12,6 +12,7 @@ mac_config:
             - mac_sign
             - mac_sign_and_pkg
             - mac_notarize
+        sign_with_entitlements: true
         base_bundle_id: org.mozilla.firefox_dep
         identity: ...
         keychain_password: ...
