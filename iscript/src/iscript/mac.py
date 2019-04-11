@@ -908,7 +908,7 @@ async def download_entitlements_file(config, task):
     """
     # TODO download from file:/// or other url
     # TODO populate `raises` section of docstring
-    to = os.path.join(config["work_dir"], "browser.entitlements.txt")
+    to = os.path.join(config["work_dir"], "..", "browser.entitlements.txt")
     return to
 
 
