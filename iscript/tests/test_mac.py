@@ -626,7 +626,7 @@ async def test_poll_notarization_uuid(mocker, tmpdir, statuses, exception):
     else:
         assert (
             await mac.poll_notarization_uuid(
-                "uuid", "user", pw, 0.6, "/dev/null", sleep_time=0.1
+                "uuid", "user", pw, 1, "/dev/null", sleep_time=0.1
             )
             is None
         )
