@@ -7,6 +7,11 @@ mac_config:
     dep:
         notarize_type: multi_account
         signing_keychain: /path/to/dep.keychain
+        supported_behaviors:
+            - mac_pkg
+            - mac_sign
+            - mac_sign_and_pkg
+            - mac_notarize
         base_bundle_id: org.mozilla.firefox_dep
         identity: ...
         keychain_password: ...

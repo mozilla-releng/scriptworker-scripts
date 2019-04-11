@@ -11,6 +11,7 @@ from iscript.mac import (
     sign_behavior,
     sign_and_pkg_behavior,
 )
+from iscript.util import get_key_config
 
 
 log = logging.getLogger(__name__)
@@ -24,24 +25,34 @@ async def async_main(config, task):
         task (dict): the running task.
 
     """
-    # TODO check scopes
-    behavior = task["payload"].get("behavior", "mac_pkg")
-    log.debug("Behavior %s", behavior)
+    base_key = "mac_config"  # We may support ios_config someday
+    key_config = get_key_config(config, task, base_key=base_key)
+    behavior = task["payload"].get("behavior", "mac_sign")
+    if (
+        behavior == "mac_notarize"
+        and "mac_notarize" not in key_config["supported_behaviors"]
+        and "mac_sign_and_pkg" in key_config["supported_behaviors"]
+    ):
+        behavior = "mac_sign_and_pkg"
+    if behavior not in key_config["supported_behaviors"]:
+        raise IScriptError(
+            "Unsupported behavior {} given scopes {}!".format(behavior, task["scopes"])
+        )
     if behavior == "mac_pkg":
         await pkg_behavior(config, task)
+        return
     elif behavior == "mac_notarize":
-        # TODO not for dep
         await notarize_behavior(config, task)
+        return
     elif behavior == "mac_sign":
         await sign_behavior(config, task)
+        return
     elif behavior == "mac_sign_and_pkg":
         # For staging releases; or should we mac_notarize but skip notarization
         # for dep?
         await sign_and_pkg_behavior(config, task)
-    else:
-        raise IScriptError("Unknown iscript behavior {}!".format(behavior))
-
-    log.info("Done!")
+        return
+    raise IScriptError("Unknown iscript behavior {}!".format(behavior))
 
 
 def get_default_config(base_dir=None):
