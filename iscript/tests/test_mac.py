@@ -228,34 +228,6 @@ def test_get_app_dir(tmpdir, apps, raises):
         assert mac.get_app_dir(tmpdir) == os.path.join(tmpdir, apps[0])
 
 
-# get_key_config {{{1
-@pytest.mark.parametrize(
-    "key, config_key, raises",
-    (
-        ("dep", "mac_config", False),
-        ("nightly", "mac_config", False),
-        ("invalid_key", "mac_config", True),
-        ("dep", "invalid_config_key", True),
-    ),
-)
-def test_get_config_key(key, config_key, raises):
-    """``get_config_key`` returns the correct subconfig.
-
-    """
-    config = {
-        "mac_config": {"dep": {"key": "dep"}, "nightly": {"key": "nightly"}},
-        "foo": "bar",  # define just to keep black from formating on one line
-    }
-    if raises:
-        with pytest.raises(IScriptError):
-            mac.get_key_config(config, key, config_key=config_key)
-    else:
-        assert (
-            mac.get_key_config(config, key, config_key=config_key)
-            == config[config_key][key]
-        )
-
-
 # get_app_paths {{{1
 def test_get_app_paths():
     """``get_app_paths`` creates ``App`` objects with ``orig_path`` set to
@@ -893,6 +865,7 @@ async def test_sign_behavior(mocker, tmpdir):
     mocker.patch.object(
         mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
     )
+    mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
     await mac.sign_behavior(config, task)
 
 
@@ -944,6 +917,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
         mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
     )
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
+    mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
     await mac.sign_and_pkg_behavior(config, task)
 
 
@@ -1001,6 +975,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type):
     mocker.patch.object(mac, "get_notarization_status_from_log", return_value=None)
     mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
+    mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
     await mac.notarize_behavior(config, task)
 
 
@@ -1048,6 +1023,7 @@ async def test_pkg_behavior(mocker, tmpdir):
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
+    mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
     mocker.patch.object(
         mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
     )

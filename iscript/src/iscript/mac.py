@@ -19,6 +19,7 @@ from iscript.exceptions import (
     TimeoutError,
     UnknownAppDir,
 )
+from iscript.util import get_key_config
 
 log = logging.getLogger(__name__)
 
@@ -307,30 +308,6 @@ def get_app_dir(parent_dir):
             "Can't find a single .app in {}: {}".format(parent_dir, apps)
         )
     return apps[0]
-
-
-# get_key_config {{{1
-def get_key_config(config, key, config_key="mac_config"):
-    """Get the key subconfig from ``config``.
-
-    Args:
-        config (dict): the running config
-        key (str): the key nickname, e.g. ``dep``
-        config_key (str): the config key to use, e.g. ``mac_config``
-
-    Raises:
-        IScriptError: on invalid ``key`` or ``config_key``
-
-    Returns:
-        dict: the subconfig for the given ``config_key`` and ``key``
-
-    """
-    try:
-        return config[config_key][key]
-    except KeyError as err:
-        raise IScriptError(
-            "Unknown key config {} {}: {}".format(config_key, key, err)
-        ) from err
 
 
 # get_app_paths {{{1
@@ -927,9 +904,7 @@ async def notarize_behavior(config, task):
     work_dir = config["work_dir"]
     entitlements_path = await download_entitlements_file(config, task)
 
-    # TODO get this from scopes?
-    key = "dep"
-    key_config = get_key_config(config, key)
+    key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
     await extract_all_apps(work_dir, all_paths)
@@ -980,9 +955,7 @@ async def sign_behavior(config, task):
     work_dir = config["work_dir"]
     entitlements_path = await download_entitlements_file(config, task)
 
-    # TODO get this from scopes?
-    key = "dep"
-    key_config = get_key_config(config, key)
+    key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
     await extract_all_apps(work_dir, all_paths)
@@ -1009,9 +982,7 @@ async def sign_and_pkg_behavior(config, task):
     work_dir = config["work_dir"]
     entitlements_path = await download_entitlements_file(config, task)
 
-    # TODO get this from scopes?
-    key = "dep"
-    key_config = get_key_config(config, key)
+    key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
     await extract_all_apps(work_dir, all_paths)
@@ -1048,9 +1019,7 @@ async def pkg_behavior(config, task):
     """
     work_dir = config["work_dir"]
 
-    # TODO get this from scopes?
-    key = "dep"
-    key_config = get_key_config(config, key)
+    key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
     await extract_all_apps(work_dir, all_paths)
