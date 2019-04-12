@@ -1,12 +1,10 @@
 import unittest
 
 import pytest
-from mozapkpublisher.common.apk.checker import AnyPackageNamesCheck, ExpectedPackageNamesCheck
 from mozapkpublisher.push_apk import FileGooglePlayStrings, NoGooglePlayStrings
 from scriptworker.exceptions import TaskVerificationError
 from unittest.mock import patch, ANY
 
-from pushapkscript.exceptions import ConfigValidationError
 from pushapkscript.googleplay import publish_to_googleplay, \
     should_commit_transaction, get_google_play_strings_path, \
     _check_google_play_string_is_the_only_failed_task, _find_unique_google_play_strings_file_in_dict
@@ -27,19 +25,22 @@ class GooglePlayTest(unittest.TestCase):
                 'has_nightly_track': False,
                 'service_account': 'aurora_account',
                 'certificate': '/path/to/aurora.p12',
-                'skip_check_package_names': True,
+                'skip_check_package_names': False,
+                'expected_package_names': ['org.mozilla.fennec_aurora'],
             },
             'beta': {
                 'has_nightly_track': False,
                 'service_account': 'beta_account',
                 'certificate': '/path/to/beta.p12',
-                'skip_check_package_names': True,
+                'skip_check_package_names': False,
+                'expected_package_names': ['org.mozilla.firefox_beta'],
             },
             'release': {
                 'has_nightly_track': False,
                 'service_account': 'release_account',
                 'certificate': '/path/to/release.p12',
-                'skip_check_package_names': True,
+                'skip_check_package_names': False,
+                'expected_package_names': ['org.mozilla.firefox'],
             },
             'dep': {
                 'has_nightly_track': False,
@@ -48,13 +49,19 @@ class GooglePlayTest(unittest.TestCase):
                 'skip_check_package_names': True,
                 'skip_check_ordered_version_codes': True,
                 'skip_checks_fennec': True,
+                'expected_package_names': ['org.mozilla.fennec_aurora'],
             }
         }
         self.apks = [MockFile('/path/to/x86.apk'), MockFile('/path/to/arm_v15.apk')]
 
     def test_publish_config(self, mock_push_apk):
-        android_products = ('aurora', 'beta', 'release')
-        for android_product in android_products:
+        test_params = (
+            ('aurora', ['org.mozilla.fennec_aurora']),
+            ('beta', ['org.mozilla.firefox_beta']),
+            ('release', ['org.mozilla.firefox']),
+        )
+        for android_product, expected_package_names in test_params:
+            self.task_payload
             publish_to_googleplay(self.task_payload, self.products[android_product], self.apks, contact_google_play=True)
 
             mock_push_apk.assert_called_with(
@@ -62,7 +69,8 @@ class GooglePlayTest(unittest.TestCase):
                 service_account='{}_account'.format(android_product),
                 google_play_credentials_file=MockFile('/path/to/{}.p12'.format(android_product)),
                 track='alpha',
-                package_names_check=ANY,
+                expected_package_names=expected_package_names,
+                skip_check_package_names=False,
                 rollout_percentage=None,
                 google_play_strings=ANY,
                 commit=False,
@@ -73,10 +81,7 @@ class GooglePlayTest(unittest.TestCase):
                 skip_checks_fennec=False,
             )
             _, args = mock_push_apk.call_args
-            package_names_check = args['package_names_check']
-            google_play_strings = args['google_play_strings']
-            assert isinstance(package_names_check, AnyPackageNamesCheck)
-            assert isinstance(google_play_strings, NoGooglePlayStrings)
+            assert isinstance(args['google_play_strings'], NoGooglePlayStrings)
 
     def test_craft_push_config_validates_track(self, mock_push_apk):
         task_payload_fake_track = {
@@ -155,9 +160,7 @@ class GooglePlayTest(unittest.TestCase):
         }
         publish_to_googleplay(self.task_payload, product_config, self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args
-        package_names_check = args['package_names_check']
-        assert isinstance(package_names_check, ExpectedPackageNamesCheck)
-        assert package_names_check.expected_product_types == ['org.mozilla.focus', 'org.mozilla.klar']
+        assert args['expected_package_names'] == ['org.mozilla.focus', 'org.mozilla.klar']
 
     def test_craft_push_config_allows_committing_apks(self, mock_push_apk):
         task_payload = {
@@ -175,17 +178,6 @@ class GooglePlayTest(unittest.TestCase):
         google_play_strings = args['google_play_strings']
         assert isinstance(google_play_strings, FileGooglePlayStrings)
         assert google_play_strings.file.name == '/path/to/google_play_strings.json'
-
-
-def test_package_name_validation():
-    task_payload = {
-        'google_play_track': 'production'
-    }
-    product_config = {
-        'has_nightly_track': False
-    }
-    with pytest.raises(ConfigValidationError):
-        publish_to_googleplay(task_payload, product_config, [], contact_google_play=True)
 
 
 def test_should_commit_transaction():

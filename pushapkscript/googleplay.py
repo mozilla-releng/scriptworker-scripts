@@ -1,11 +1,8 @@
 import logging
 
-from mozapkpublisher.common.apk.checker import AnyPackageNamesCheck, ExpectedPackageNamesCheck
 from mozapkpublisher.push_apk import push_apk, FileGooglePlayStrings, NoGooglePlayStrings
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
-
-from pushapkscript.exceptions import ConfigValidationError
 
 log = logging.getLogger(__name__)
 
@@ -19,21 +16,14 @@ def publish_to_googleplay(payload, product_config, apk_files, contact_google_pla
     if track not in valid_track_values:
         raise TaskVerificationError('Track name "{}" not valid. Allowed values: {}'.format(track, valid_track_values))
 
-    if product_config.get('skip_check_package_names'):
-        package_names_check = AnyPackageNamesCheck()
-    elif product_config.get('expected_package_names'):
-        package_names_check = ExpectedPackageNamesCheck(product_config['expected_package_names'])
-    else:
-        raise ConfigValidationError('Expected product config to either have "skip_check_package_names" or '
-                                    '"expected_package_names"')
-
     with open(product_config['certificate'], 'rb') as certificate:
         push_apk(
             apks=apk_files,
             service_account=product_config['service_account'],
             google_play_credentials_file=certificate,
             track=track,
-            package_names_check=package_names_check,
+            expected_package_names=product_config.get('expected_package_names'),
+            skip_check_package_names=bool(product_config.get('skip_check_package_names')),
             rollout_percentage=payload.get('rollout_percentage'),  # may be None
             google_play_strings=NoGooglePlayStrings() if google_play_strings_file is None else FileGooglePlayStrings(google_play_strings_file),
             commit=should_commit_transaction(payload),
