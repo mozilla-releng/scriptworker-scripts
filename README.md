@@ -203,3 +203,19 @@ Your docker-signing-server shell should be able to read the `signing.log`, which
 Follow the [scriptworker readme](https://github.com/mozilla-releng/scriptworker/blob/master/README.rst) to set up scriptworker, and use `["path/to/signingscript", "path/to/script_config.json"]` as your `task_script`.
 
 Make sure your `work_dir` and `artifact_dir` point to the same directories between the scriptworker config and the signingscript config!
+
+## Dependency management
+
+This project uses [pip-compile-multi](https://pypi.org/project/pip-compile-multi/) for hard-pinning dependencies versions.
+Please see its documentation for usage instructions.
+In short, `requirements/base.in` contains the list of direct requirements with occasional version constraints (like `Django<2`)
+and `requirements/base.txt` is automatically generated from it by adding recursive tree of dependencies with fixed versions.
+The same goes for `test`.
+
+To upgrade dependency versions and hashes, run `pip-compile-multi -g base -g test`.
+
+To add a new dependency without upgrade, add it to `requirements/base.in` and run `pip-compile-multi --no-upgrade -g base -g test`.
+
+For installation always use `.txt` files. For example, command `pip install -Ue . -r requirements/test.txt` will install
+this project in test mode, testing requirements and development tools.
+Another useful command is `pip-sync requirements/test.txt`, it uninstalls packages from your virtualenv that aren't listed in the file.

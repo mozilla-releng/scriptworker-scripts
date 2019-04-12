@@ -1,6 +1,0 @@
-mar
-mock
-pytest
-pytest-mock
-pytest-cov
-pytest-asyncio

@@ -1,7 +1,6 @@
 arrow
 mar>=3.0.0
 datadog
-python-jose
 scriptworker
 signtool>=3.1.6
 taskcluster
