@@ -46,9 +46,6 @@
               "minItems": 1,
               "uniqueItems": true
             },
-            "entitlementsUrl": {
-              "type": "string"
-            },
             "behavior": {
               "type": "string",
               "enum": ["mac_notarize", "mac_pkg", "mac_sign", "mac_sign_and_pkg"]
