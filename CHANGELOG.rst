@@ -6,6 +6,23 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.4.5] = (2019-04-18)
+----------------------
+
+Added
+~~~~~
+
+- Add support for appservices (`#1536079
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1536079>`_)
+
+
+Fixed
+~~~~~
+
+- Fix buildhub.json in the declarative artifacts world. (`#1539067
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1539067>`_)
+
+
 [8.4.4] = (2019-04-08)
 ----------------------
 
