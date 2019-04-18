@@ -194,6 +194,11 @@ def _generate_beetmover_template_args_maven(task, release_props):
         raise TaskVerificationError('At least one digit is undefined. Got: {}'.format(version))
     tmpl_args['version'] = '.'.join(str(n) for n in version)
 
+    # XXX: some appservices maven.zip files have a different structure,
+    # encompassing only `pom` and `jar` files. We toggle that behavior in the
+    # mapping by using this flag
+    tmpl_args['is_jar'] = task['payload'].get('is_jar')
+
     if isinstance(payload_version, MavenVersion) and payload_version.is_snapshot:
         tmpl_args['snapshot_version'] = payload_version
         tmpl_args['date_timestamp'] = "{{date_timestamp}}"

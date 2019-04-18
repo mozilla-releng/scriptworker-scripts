@@ -430,6 +430,24 @@ def test_beetmover_template_args_generation_release(context):
     assert template_args == expected_template_args
 
 
+def test_beetmover_template_args_generation_release_is_jar(context):
+    context.bucket = 'dep'
+    context.action = 'push-to-maven'
+    context.task['payload']['version'] = '0.26.0'
+    context.task['payload']['artifact_id'] = 'fenix-megazord-forUnitTests'
+    context.task['payload']['is_jar'] = True
+
+    expected_template_args = {
+        'artifact_id': 'fenix-megazord-forUnitTests',
+        'is_jar': True,
+        'template_key': 'maven_Fake',
+        'version': '0.26.20990205110000',
+    }
+
+    template_args = generate_beetmover_template_args(context)
+    assert template_args == expected_template_args
+
+
 @pytest.mark.parametrize('branch, version, artifact_id, build_id, expected_version, raises', ((
     'mozilla-central', '63.0a1', 'geckoview-nightly-x86', '20181231120000', '63.0.20181231120000', False,
 ), (
@@ -455,6 +473,7 @@ def test_beetmover_template_args_maven(context, branch, version, artifact_id,
         assert generate_beetmover_template_args(context) == {
             'artifact_id': artifact_id,
             'template_key': 'maven_geckoview',
+            'is_jar': None,
             'version': expected_version,
         }
     else:
@@ -483,6 +502,7 @@ def test_beetmover_template_args_maven_snapshot(context, branch, version, artifa
         'template_key': 'maven_geckoview',
         'version': expected_version,
         'snapshot_version': version,
+        'is_jar': None,
         'date_timestamp': '{{date_timestamp}}',
         'clock_timestamp': '{{clock_timestamp}}',
         'build_number': '{{build_number}}'

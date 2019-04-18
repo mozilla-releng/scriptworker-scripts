@@ -11,6 +11,10 @@ MIME_MAP = {
     '.mar': 'application/octet-stream',
     '.msi': 'application/x-msi',
     '.xpi': 'application/x-xpinstall',
+    '.md5': 'text/plain',
+    '.sha1': 'text/plain',
+    '.pom': 'application/xml',
+    '.aar': 'application/java-archive',
 }
 
 STAGE_PLATFORM_MAP = {
