@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.2] - 2019-04-18
+### Fixed
+* When multiple package names were used, packages weren't filtered properly 
+
+
 ## [2.0.1] - 2019-04-12
 ### Fixed
 * Missing tar.gz package which was missing due to a pypi error
