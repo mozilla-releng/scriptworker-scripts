@@ -104,7 +104,7 @@ def push_apk(
             google_play_credentials_file,
             commit,
             contact_google_play,
-            apks_metadata_per_paths,
+            apks_metadata,
             package_name,
             l10n_strings,
             track,
