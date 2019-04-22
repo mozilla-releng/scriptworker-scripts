@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [2.0.2] - 2019-04-18
+## [2.0.2] - 2019-04-22
 ### Fixed
 * When multiple package names were used, packages weren't filtered properly 
 
