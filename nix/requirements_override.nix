@@ -14,5 +14,4 @@ self: super: {
     '';
   });
 
-  gnupg20 = pkgs.gnupg20.override { pinentry = null; guiSupport = false; };
 }

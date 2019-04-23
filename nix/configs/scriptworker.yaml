@@ -18,44 +18,17 @@ verify_cot_signature: true
 cot_job_type: shipit
 cot_product: {"$eval": "COT_PRODUCT"}
 
+# Calls to Github API are limited to 60 an hour. Using an API token allows to raise the limit to
+# 5000 per hour. https://developer.github.com/v3/#rate-limiting
+github_oauth_token: ""
+
 log_dir: /tmp/logs
 work_dir: /app/workdir
 artifact_dir: /app/artifacts
 task_log_dir: /app/artifacts/public/logs
 watch_log_file: true
-base_gpg_home_dir: /app/.gnupg
-git_path: {"$eval": "GIT_PATH"}
-gpg_lockfile: /app/.gpg_homedirs.lock
-git_key_repo_dir: /app/gpg_key_repo
-git_key_repo_url: https://github.com/mozilla-releng/cot-gpg-keys.git
-git_commit_signing_pubkey_dir: {"$eval": "PUBKEYS"}
-last_good_git_revision_file: /app/.git_revision
-
-gpg_path: {"$eval": "GPG_PATH"}
-gpg_home: /app/.gnupg
-pubkey_path: /app/pubkey
-privkey_path: /app/privkey
-
-my_email: shipit-scriptworker@mozilla-releng.net
-
-# Chain of Trust settings
-gpg_homedirs:
-    docker-worker:
-        type: flat
-        ignore_suffixes:
-            - .md
-            - .json
-    generic-worker:
-        type: flat
-        ignore_suffixes:
-            - .md
-            - .in
-            - .sh
-    scriptworker:
-        type: signed
-        ignore_suffixes:
-            - .md
 
 scriptworker_provisioners:
     - scriptworker-prov-v1
 
+ed25519_private_key_path: /app/configs/ed25519_privkey

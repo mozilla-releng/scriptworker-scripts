@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -V 3.7 -r ../requirements.txt -e flit -e intreehooks -e vcversioner -e pytest-runner -e setuptools-scm -E libffi -E openssl -E gnupg20 -E git
+#   pypi2nix -V 3.7 -r ../requirements.txt -e flit -e intreehooks -e vcversioner -e pytest-runner -e setuptools-scm -E libffi -E openssl
 #
 
 { pkgs ? import <nixpkgs> {},
@@ -35,7 +35,7 @@ let
       };
   };
 
-  commonBuildInputs = with pkgs; [ libffi openssl gnupg20 git ];
+  commonBuildInputs = with pkgs; [ libffi openssl ];
   commonDoCheck = false;
 
   withPackages = pkgs':
@@ -89,10 +89,10 @@ let
 
   generated = self: {
     "PyYAML" = python.mkDerivation {
-      name = "PyYAML-3.13";
+      name = "PyYAML-5.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/9e/a3/1d13970c3f36777c583f136c136f804d70f500168edc1edea6daa7200769/PyYAML-3.13.tar.gz";
-        sha256 = "3ef3092145e9b70e3ddd2c7ad59bdd0252a94dfe3949721633e41344de00a6bf";
+        url = "https://files.pythonhosted.org/packages/9f/2c/9417b5c774792634834e730932745bc09a7d36754ca00acf1ccd1ac2594d/PyYAML-5.1.tar.gz";
+        sha256 = "436bc774ecf7c103814098159fbb84c2715d25980175292c648f2da143909f95";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -100,7 +100,7 @@ let
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "http://pyyaml.org/wiki/PyYAML";
+        homepage = "https://github.com/yaml/pyyaml";
         license = licenses.mit;
         description = "YAML parser and emitter for Python";
       };
@@ -205,10 +205,10 @@ let
     };
 
     "certifi" = python.mkDerivation {
-      name = "certifi-2018.11.29";
+      name = "certifi-2019.3.9";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/55/54/3ce77783acba5979ce16674fc98b1920d00b01d337cfaaf5db22543505ed/certifi-2018.11.29.tar.gz";
-        sha256 = "47f9c83ef4c0c621eaef743f133f09fa8a74a9b75f037e8624f83bd1b6626cb7";
+        url = "https://files.pythonhosted.org/packages/06/b8/d1ea38513c22e8c906275d135818fee16ad8495985956a9b7e2bb21942a1/certifi-2019.3.9.tar.gz";
+        sha256 = "b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -223,10 +223,10 @@ let
     };
 
     "cffi" = python.mkDerivation {
-      name = "cffi-1.12.2";
+      name = "cffi-1.12.3";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/64/7c/27367b38e6cc3e1f49f193deb761fe75cda9f95da37b67b422e62281fcac/cffi-1.12.2.tar.gz";
-        sha256 = "e113878a446c6228669144ae8a56e268c91b7f1fafae927adc4879d9849e0ea7";
+        url = "https://files.pythonhosted.org/packages/93/1a/ab8c62b5838722f29f3daffcc8d4bd61844aa9b5f437341cc890ceee483b/cffi-1.12.3.tar.gz";
+        sha256 = "041c81822e9f84b1d9c401182e174996f0bae9991f33725d059b771744290774";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -283,35 +283,18 @@ let
       };
     };
 
-    "defusedxml" = python.mkDerivation {
-      name = "defusedxml-0.5.0";
-      src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/74/ba/4ba4e89e21b5a2e267d80736ea674609a0a33cc4435a6d748ef04f1f9374/defusedxml-0.5.0.tar.gz";
-        sha256 = "24d7f2f94f7f3cb6061acb215685e5125fbcdc40a857eff9de22518820b0a4f4";
-      };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "https://github.com/tiran/defusedxml";
-        license = "PSFL";
-        description = "XML bomb protection for Python stdlib modules";
-      };
-    };
-
     "dictdiffer" = python.mkDerivation {
-      name = "dictdiffer-0.7.2";
+      name = "dictdiffer-0.8.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/17/15/64f26a8a8e7f7f0f06c6e55ab11b45a098762ed3f80e9457848f7a0501d7/dictdiffer-0.7.2.tar.gz";
-        sha256 = "b6eed4cf74ed31ae9646257a9f802bb09e545ca817d5c0119d747b6a05b6a22d";
+        url = "https://files.pythonhosted.org/packages/ba/ed/cee2a41eefad60860a8b64513d2be7b15cbc5a4e3ecaa4c9921b11732629/dictdiffer-0.8.0.tar.gz";
+        sha256 = "b3ad476fc9cca60302b52c50e1839342d2092aeaba586d69cbf9249f87f52463";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [
         self."pytest-runner"
+        self."setuptools-scm"
       ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -541,44 +524,6 @@ let
       };
     };
 
-    "pexpect" = python.mkDerivation {
-      name = "pexpect-4.6.0";
-      src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/89/43/07d07654ee3e25235d8cea4164cdee0ec39d1fda8e9203156ebe403ffda4/pexpect-4.6.0.tar.gz";
-        sha256 = "2a8e88259839571d1251d278476f3eec5db26deb73a70be5ed5dc5435e418aba";
-      };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [
-        self."ptyprocess"
-      ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "https://pexpect.readthedocs.io/";
-        license = "ISC license";
-        description = "Pexpect allows easy control of interactive console applications.";
-      };
-    };
-
-    "ptyprocess" = python.mkDerivation {
-      name = "ptyprocess-0.6.0";
-      src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/7d/2d/e4b8733cf79b7309d84c9081a4ab558c89d8c89da5961bf4ddb050ca1ce0/ptyprocess-0.6.0.tar.gz";
-        sha256 = "923f299cc5ad920c68f2bc0bc98b75b9f838b93b599941a6b63ddbc2476394c0";
-      };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "https://github.com/pexpect/ptyprocess";
-        license = "UNKNOWN";
-        description = "Run a subprocess in a pseudo terminal";
-      };
-    };
-
     "pycparser" = python.mkDerivation {
       name = "pycparser-2.19";
       src = pkgs.fetchurl {
@@ -657,24 +602,6 @@ let
       };
     };
 
-    "python-gnupg" = python.mkDerivation {
-      name = "python-gnupg-0.4.4";
-      src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/a7/4e/a7078f08a42b2563169ef20bc74d136015f1f3d0dbfa229070cf8ed4b686/python-gnupg-0.4.4.tar.gz";
-        sha256 = "45daf020b370bda13a1429c859fcdff0b766c0576844211446f9266cae97fb0e";
-      };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "http://gnupg.readthedocs.io/en/latest/";
-        license = "Copyright (C) 2008-2019 by Vinay Sajip. All Rights Reserved. See LICENSE.txt for license.";
-        description = "A wrapper for the Gnu Privacy Guard (GPG or GnuPG)";
-      };
-    };
-
     "pytoml" = python.mkDerivation {
       name = "pytoml-0.1.20";
       src = pkgs.fetchurl {
@@ -694,10 +621,10 @@ let
     };
 
     "redo" = python.mkDerivation {
-      name = "redo-2.0.2";
+      name = "redo-2.0.3";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/02/61/a23bb9e8ef2047f205f2005cb6ef34f6f9991eb9a4125cc1a9623b315928/redo-2.0.2.tar.gz";
-        sha256 = "703603d61b4ae7fa14a9dce3db22d8789284e99be997f558137612e847ead3cb";
+        url = "https://files.pythonhosted.org/packages/cc/e5/4e38d5c58aea3868d380841f9c2655f6ac80452189b318ab35dd4eed7cf3/redo-2.0.3.tar.gz";
+        sha256 = "71161cb0e928d824092a5f16203939bbc0867ce4c4685db263cf22c3ae7634a8";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -736,10 +663,10 @@ let
     };
 
     "scriptworker" = python.mkDerivation {
-      name = "scriptworker-21.0.0";
+      name = "scriptworker-23.0.2";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/92/3a/fdbd4f63670c9c3834a9074311afb74dd5632483c4e688093e75e48eacb6/scriptworker-21.0.0.tar.gz";
-        sha256 = "07f00e4020ce404f83482c3bad1c59cec4c0ea4a9e10fb20b787b3c5116b6300";
+        url = "https://files.pythonhosted.org/packages/0d/69/78771323912809fba6810dfbccb4b07749bd8d474332d17e4c2e7f13f4b4/scriptworker-23.0.2.tar.gz";
+        sha256 = "dfc14639559a07a2b0883193390e313187d1f9c5107cd102ccbf88806debcb80";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -749,14 +676,12 @@ let
         self."PyYAML"
         self."aiohttp"
         self."arrow"
-        self."defusedxml"
+        self."cryptography"
         self."dictdiffer"
         self."frozendict"
         self."github3.py"
         self."json-e"
         self."jsonschema"
-        self."pexpect"
-        self."python-gnupg"
         self."taskcluster"
       ];
       meta = with pkgs.stdenv.lib; {
@@ -785,10 +710,10 @@ let
     };
 
     "shipitapi" = python.mkDerivation {
-      name = "shipitapi-2.1.0";
+      name = "shipitapi-3.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/bc/27/26495d9233c5ae6e046a2da5592d34c4b074e89989b4bf99215e8ab376af/shipitapi-2.1.0.tar.gz";
-        sha256 = "19afb9c9f248f8aa588667a8f245b622bf61fa46b187f63728a9af743537806c";
+        url = "https://files.pythonhosted.org/packages/0f/56/50ad1c2aa6ffbb36bc03c289b4d0bdef9e5c14644bc7a13aae9672973b0b/shipitapi-3.0.0.tar.gz";
+        sha256 = "1d1e91dfde1f06e6e8de7ef97888bd2dbb61cb3b8b3670d0024d91b2a5452738";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -826,10 +751,10 @@ let
     };
 
     "slugid" = python.mkDerivation {
-      name = "slugid-1.0.7";
+      name = "slugid-2.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/dd/96/b05c6d357f8d6932bea2b360537360517d1154b82cc71b8eccb70b28bdde/slugid-1.0.7.tar.gz";
-        sha256 = "6dab3c7eef0bb423fb54cb7752e0f466ddd0ee495b78b763be60e8a27f69e779";
+        url = "https://files.pythonhosted.org/packages/ef/28/7e1a7c14277853b3082fe08af2bc601ca6772497f48f359dac806a7f90c9/slugid-2.0.0.tar.gz";
+        sha256 = "a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -844,10 +769,10 @@ let
     };
 
     "taskcluster" = python.mkDerivation {
-      name = "taskcluster-6.0.0";
+      name = "taskcluster-7.0.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/06/6a/66bf42549bb69618159b0515c3001b9b8c21bbb5b28f16fcb14cfeef3318/taskcluster-6.0.0.tar.gz";
-        sha256 = "48ecd4898c7928deddfb34cb1cfe2b2505c68416e6c503f8a7f3dd0572425e96";
+        url = "https://files.pythonhosted.org/packages/c6/a9/2a20af412902aed28c5add3b8592c17665d4649886c0edcf7abca4dcc44c/taskcluster-7.0.1.tar.gz";
+        sha256 = "93027ec6949289d8267595c5770c3d3f0902d9461d98081544dce60764f94f46";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -906,10 +831,10 @@ let
     };
 
     "urllib3" = python.mkDerivation {
-      name = "urllib3-1.24.1";
+      name = "urllib3-1.24.2";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/b1/53/37d82ab391393565f2f831b8eedbffd57db5a718216f82f1a8b4d381a1c1/urllib3-1.24.1.tar.gz";
-        sha256 = "de9529817c93f27c8ccbfead6985011db27bd0ddfcdb2d86f3f663385c6a9c22";
+        url = "https://files.pythonhosted.org/packages/fd/fa/b21f4f03176463a6cccdb612a5ff71b927e5224e83483012747c12fc5d62/urllib3-1.24.2.tar.gz";
+        sha256 = "9a247273df709c4fedb38c711e44292304f73f39ab01beda9f6b9fc375669ac3";
       };
       doCheck = commonDoCheck;
       checkPhase = "";

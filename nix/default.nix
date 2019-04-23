@@ -8,10 +8,8 @@ in
 let
   pypi2nixJSON = builtins.fromJSON (builtins.readFile ./pypi2nix.json);
   configloaderJSON = builtins.fromJSON (builtins.readFile ./configloader.json);
-  usersKeysJSON = builtins.fromJSON (builtins.readFile ./pubkeys.json);
   pypi2nixSrc = builtins.fetchTarball { inherit (pypi2nixJSON) url sha256; };
   configloaderSrc = builtins.fetchTarball { inherit (configloaderJSON) url sha256; };
-  usersKeys = builtins.fetchTarball { inherit (usersKeysJSON) url sha256; };
   pypi2nix = import pypi2nixSrc { inherit pkgs; };
   configloader = import "${configloaderSrc}/nix" { inherit pkgs; };
   python = import ./requirements.nix { inherit pkgs; };
@@ -28,11 +26,8 @@ let
       export TASK_SCRIPT_CONFIG="$CONFIGDIR/worker.json"
       $CONFIGLOADER $SCRIPTWORKER_CONFIG_TEMPLATE $CONFIGDIR/scriptworker.json
       $CONFIGLOADER $TASK_SCRIPT_CONFIG_TEMPLATE_DIR/$APP_CHANNEL/worker.json $TASK_SCRIPT_CONFIG
-      $GIT_PATH config --global gpg.program $GPG_PATH
-      $GIT_PATH clone https://github.com/mozilla-releng/cot-gpg-keys.git /app/gpg_key_repo
-      echo $PUBLIC_KEY | base64 -d > /app/pubkey
-      echo $PRIVATE_KEY | base64 -d > /app/privkey
-      $(dirname $SCRIPTWORKER)/rebuild_gpg_homedirs $CONFIGDIR/scriptworker.json
+      echo $ED25519_PRIVKEY > $CONFIGDIR/ed25519_privkey
+      chmod 600 $CONFIGDIR/ed25519_privkey
       exec $SCRIPTWORKER $CONFIGDIR/scriptworker.json
     '';
     # TODO: should this be linked to a stable location, /check.sh?
@@ -86,12 +81,6 @@ let
             # The following env variables are used in the templates
             "TASK_SCRIPT=${self}/bin/shipitscript"
             "MARK_AS_SHIPPED_SCHEMA_FILE=${self}/lib/${python.interpreter.passthru.interpreter.libPrefix}/site-packages/shipitscript/data/mark_as_shipped_task_schema.json"
-            "MARK_AS_STARTED_SCHEMA_FILE=${self}/lib/${python.interpreter.passthru.interpreter.libPrefix}/site-packages/shipitscript/data/mark_as_started_task_schema.json"
-            "PUBKEYS=${usersKeys}/modules/scriptworker/files/git_pubkeys/"
-            # Use custom gnupg without UI
-            "GPG_PATH=${python.packages.gnupg20}/bin/gpg2"
-            "GIT_PATH=${pkgs.git}/bin/git"
-            # "GNUPGHOME=/app/.gnupg"
           ];
         };
         contents = [
@@ -115,9 +104,7 @@ let
           -e pytest-runner \
           -e setuptools-scm \
           -E libffi \
-          -E openssl \
-          -E gnupg20 \
-          -E git
+          -E openssl
       '';
 
     };
