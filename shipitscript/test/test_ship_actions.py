@@ -41,5 +41,6 @@ def test_mark_as_shipped_v2(monkeypatch, timeout, expected_timeout):
         timeout=expected_timeout,
     )
     release_instance_mock.update_status.assert_called_with(
-        'Firefox-59.0b1-build1', status='shipped'
+        'Firefox-59.0b1-build1', status='shipped',
+        headers={'X-Forwarded-Proto': 'https', 'X-Forwarded-Port': '80'},
     )

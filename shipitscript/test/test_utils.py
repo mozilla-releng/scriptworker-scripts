@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 from scriptworker.exceptions import ScriptWorkerTaskException
 from shipitscript.utils import (
-    get_auth_primitives_v2, check_release_has_values_v2, same_timing
+    get_auth_primitives_v2, check_release_has_values_v2, same_timing, get_request_headers,
 )
 
 
@@ -82,9 +82,9 @@ def test_generic_validation_v2(monkeypatch, release_info,  values, raises):
 
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
-            check_release_has_values_v2(ReleaseClassMock, release_name, **values)
+            check_release_has_values_v2(ReleaseClassMock, release_name, {}, **values)
     else:
-        check_release_has_values_v2(ReleaseClassMock, release_name, **values)
+        check_release_has_values_v2(ReleaseClassMock, release_name, {}, **values)
 
 
 @pytest.mark.parametrize('time1,time2, expected', (
@@ -95,3 +95,12 @@ def test_generic_validation_v2(monkeypatch, release_info,  values, raises):
 ))
 def test_same_timing(time1, time2, expected):
     assert same_timing(time1, time2) == expected
+
+
+@pytest.mark.parametrize('api_root, expected', (
+    ('http://example.com', {"X-Forwarded-Proto": "https", "X-Forwarded-Port": "80"}),
+    ('https://example.com', {"X-Forwarded-Proto": "https", "X-Forwarded-Port": "443"}),
+    ('https://example.com:1234', {"X-Forwarded-Proto": "https", "X-Forwarded-Port": "1234"}),
+))
+def test_request_headers(api_root, expected):
+    assert get_request_headers(api_root) == expected

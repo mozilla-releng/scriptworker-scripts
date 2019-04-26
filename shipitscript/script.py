@@ -33,9 +33,8 @@ def mark_as_shipped_action(context):
     release_name = context.task['payload']['release_name']
 
     log.info('Marking the release as shipped ...')
-    if 'api_root_v2' in context.ship_it_instance_config:
-        ship_actions.mark_as_shipped_v2(context.ship_it_instance_config,
-                                        release_name)
+    ship_actions.mark_as_shipped_v2(context.ship_it_instance_config,
+                                    release_name)
 
 
 # ACTION_MAP {{{1

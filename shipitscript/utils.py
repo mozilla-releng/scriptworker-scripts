@@ -1,5 +1,6 @@
 import arrow
 import logging
+import urllib.parse
 
 from scriptworker.exceptions import ScriptWorkerTaskException
 
@@ -23,11 +24,38 @@ def get_auth_primitives_v2(ship_it_instance_config):
     return (taskcluster_client_id, taskcluster_access_token, api_root, timeout_in_seconds)
 
 
-def check_release_has_values_v2(release_api, release_name, **kwargs):
+def get_request_headers(api_root):
+    """Create headers needed for shipit requests"""
+    # shipit API forces https:// by redirecting to the HTTPS port if the
+    # request uses http:// or the traffic comes from the proxy, which sets the
+    # "X-Forwarded-Proto" header to "https".
+    # Shipitscript workers work in the same cluster with shipit, and they use
+    # http:// and local addresses in order to bypass the load balancer.
+    # The X-Forwarded-Proto header affects flask_talisman and prevents it from
+    # upgrading the connection to https://.
+    # The X-Forwarded-Port header explicitly specifies the used port to prevent
+    # the API using the nginx proxy port to construct the mohawk payload.
+
+    parsed_url = urllib.parse.urlsplit(api_root)
+    if parsed_url.port:
+        port = parsed_url.port
+    else:
+        if parsed_url.scheme == "https":
+            port = 443
+        else:
+            port = 80
+    headers = {
+        "X-Forwarded-Proto": "https",
+        "X-Forwarded-Port": str(port),
+    }
+    return headers
+
+
+def check_release_has_values_v2(release_api, release_name, headers, **kwargs):
     """Function to make an API call to Ship-it v2 to grab release information
     and validate that fields that had just been updated are correctly reflected
     in the API returns"""
-    release_info = release_api.getRelease(release_name)
+    release_info = release_api.getRelease(release_name, headers=headers)
     log.info("Full release details: {}".format(release_info))
 
     for key, value in kwargs.items():

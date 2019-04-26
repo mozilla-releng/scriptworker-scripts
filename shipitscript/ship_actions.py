@@ -3,7 +3,7 @@ import logging
 import shipitapi
 
 from shipitscript.utils import (
-    get_auth_primitives_v2, check_release_has_values_v2
+    get_auth_primitives_v2, check_release_has_values_v2, get_request_headers
 )
 
 log = logging.getLogger(__name__)
@@ -21,5 +21,6 @@ def mark_as_shipped_v2(ship_it_instance_config, release_name):
         api_root=api_root, timeout=timeout_in_seconds)
 
     log.info('Marking the release as shipped...')
-    release_api.update_status(release_name, status='shipped')
-    check_release_has_values_v2(release_api, release_name, status='shipped')
+    headers = get_request_headers(api_root)
+    release_api.update_status(release_name, status='shipped', headers=headers)
+    check_release_has_values_v2(release_api, release_name, headers, status='shipped')
