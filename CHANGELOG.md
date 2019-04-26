@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.0.2] - 2019-04-26
+
+### Added
+* New option `require_track`: forces any tasks matcheing the config to have the track defined in `require_track`
+
+
 ## [1.0.1] - 2019-04-12
 
 ###
