@@ -1,8 +1,6 @@
 ALIASES_REGEXES = {
     'thunderbird-beta-latest': r'^Thunderbird-\d+\.0b\d+$',
     'thunderbird-beta-latest-ssl': r'^Thunderbird-\d+\.0b\d+-SSL$',
-    'thunderbird-next-latest': r'^Thunderbird-\d+\.\d+(\.\d+)?$',
-    'thunderbird-next-latest-ssl': r'^Thunderbird-\d+\.\d+(\.\d+)?-SSL$',
     'thunderbird-latest': r'^Thunderbird-\d+\.\d+(\.\d+)?$',
     'thunderbird-latest-ssl': r'^Thunderbird-\d+\.\d+(\.\d+)?-SSL$',
     'fennec-beta-latest': r'^Fennec-\d+\.0b\d+$',

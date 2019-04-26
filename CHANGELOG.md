@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## X.Y.Z] - TODO
+### Removed
+- `thunderbird-next-latest` and `thunderbird-next-latest-ssl` as valid regexes since they are being unused
+
 ## [3.5.0] - 2019-01-25
 ### Added
 - Add win64-aarch64 support for release bouncer entries.
