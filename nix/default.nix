@@ -1,8 +1,13 @@
 let
   pkgsJSON = builtins.fromJSON (builtins.readFile ./nixpkgs.json);
   pkgsSrc = builtins.fetchTarball { inherit (pkgsJSON) url sha256; };
+  overlays = [ (
+    self: super: {
+        python37 = super.python37.override { openssl = self.openssl_1_1; };
+    }
+  ) ];
 in
-{ pkgs ? import pkgsSrc {}
+{ pkgs ? import pkgsSrc { inherit overlays; }
 }:
 
 let

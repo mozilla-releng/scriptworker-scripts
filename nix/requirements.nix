@@ -543,10 +543,10 @@ let
     };
 
     "pyrsistent" = python.mkDerivation {
-      name = "pyrsistent-0.14.11";
+      name = "pyrsistent-0.15.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/8c/46/4e93ab8a379d7efe93f20a0fb8a27bdfe88942cc954ab0210c3164e783e0/pyrsistent-0.14.11.tar.gz";
-        sha256 = "3ca82748918eb65e2d89f222b702277099aca77e34843c5eb9d52451173970e2";
+        url = "https://files.pythonhosted.org/packages/2c/a7/8a50738eb27e204aa271abe170dec7bdbb07128ed892fb3a92f14a69bae3/pyrsistent-0.15.1.tar.gz";
+        sha256 = "5403d37f4d55ff4572b5b5676890589f367a9569529c6f728c11046c4ea4272b";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -710,10 +710,10 @@ let
     };
 
     "shipitapi" = python.mkDerivation {
-      name = "shipitapi-3.0.0";
+      name = "shipitapi-3.1.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/0f/56/50ad1c2aa6ffbb36bc03c289b4d0bdef9e5c14644bc7a13aae9672973b0b/shipitapi-3.0.0.tar.gz";
-        sha256 = "1d1e91dfde1f06e6e8de7ef97888bd2dbb61cb3b8b3670d0024d91b2a5452738";
+        url = "https://files.pythonhosted.org/packages/9c/b8/fef11fda5c8c13c86d1fd97bcd200e5d93c62a1e7c009ffe28476423370a/shipitapi-3.1.0.tar.gz";
+        sha256 = "14b3749d2b1d9b197edc5387c752fbf265e343ebea57efd7eb6d7212a530a997";
       };
       doCheck = commonDoCheck;
       checkPhase = "";

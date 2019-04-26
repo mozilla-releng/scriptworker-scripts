@@ -12,9 +12,9 @@ task_max_timeout: 3600
 task_script: [{"$eval": "TASK_SCRIPT"}, {"$eval": "TASK_SCRIPT_CONFIG"}]
 verbose: true
 
-sign_chain_of_trust: true
 verify_chain_of_trust: true
-verify_cot_signature: true
+sign_chain_of_trust: {"$eval": "APP_CHANNEL == 'production'"}
+verify_cot_signature: {"$eval": "APP_CHANNEL == 'production'"}
 cot_job_type: shipit
 cot_product: {"$eval": "COT_PRODUCT"}
 

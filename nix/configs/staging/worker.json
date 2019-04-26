@@ -5,7 +5,7 @@
   "taskcluster_scope_prefix": "project:releng:ship-it:",
   "ship_it_instances": {
     "project:releng:ship-it:server:staging": {
-        "api_root_v2": "https://api.shipit.staging.mozilla-releng.net",
+        "api_root_v2": "http://10.8.9.239",
         "timeout_in_seconds": 60,
         "taskcluster_client_id": {"$eval": "TASKCLUSTER_CLIENT_ID"},
         "taskcluster_access_token": {"$eval": "TASKCLUSTER_ACCESS_TOKEN"}
