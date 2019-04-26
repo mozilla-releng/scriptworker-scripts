@@ -35,6 +35,17 @@
             "expected_package_names": ["org.mozilla.klar", "org.mozilla.focus"],
             "skip_check_ordered_version_codes":  true,
             "skip_checks_fennec": true
+        },
+        "fenix-beta": {
+            "require_track": "beta",
+            "service_account": "service-account-fenix-beta@iam.gserviceaccount.com",
+            "certficiate": "/absolute/path/to/certificate-for-fenix-beta-service-account.p12",
+            "update_google_play_strings": false,
+            "digest_algorithm": "SHA-256",
+            "expected_package_names": ["org.mozilla.fenix.beta"],
+            "skip_check_multiple_locales": true,
+            "skip_check_same_locales": true,
+            "skip_checks_fennec": true
         }
     },
 

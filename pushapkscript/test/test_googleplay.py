@@ -50,7 +50,7 @@ class GooglePlayTest(unittest.TestCase):
                 'skip_check_ordered_version_codes': True,
                 'skip_checks_fennec': True,
                 'expected_package_names': ['org.mozilla.fennec_aurora'],
-            }
+            },
         }
         self.apks = [MockFile('/path/to/x86.apk'), MockFile('/path/to/arm_v15.apk')]
 
@@ -61,7 +61,6 @@ class GooglePlayTest(unittest.TestCase):
             ('release', ['org.mozilla.firefox']),
         )
         for android_product, expected_package_names in test_params:
-            self.task_payload
             publish_to_googleplay(self.task_payload, self.products[android_product], self.apks, contact_google_play=True)
 
             mock_push_apk.assert_called_with(
@@ -178,6 +177,17 @@ class GooglePlayTest(unittest.TestCase):
         google_play_strings = args['google_play_strings']
         assert isinstance(google_play_strings, FileGooglePlayStrings)
         assert google_play_strings.file.name == '/path/to/google_play_strings.json'
+
+    def test_require_track(self, _):
+        task_payload = {
+            'google_play_track': 'alpha',
+        }
+        product_config = {
+            'require_track': 'beta',
+            'has_nightly_track': False,
+        }
+        with pytest.raises(TaskVerificationError):
+            publish_to_googleplay(task_payload, product_config, self.apks, True)
 
 
 def test_should_commit_transaction():

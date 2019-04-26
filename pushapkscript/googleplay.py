@@ -12,7 +12,8 @@ _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 def publish_to_googleplay(payload, product_config, apk_files, contact_google_play, google_play_strings_file=None):
     track = payload['google_play_track']
-    valid_track_values = craft_valid_track_values(product_config['has_nightly_track'])
+    valid_track_values = craft_valid_track_values(product_config.get('require_track'),
+                                                  product_config['has_nightly_track'])
     if track not in valid_track_values:
         raise TaskVerificationError('Track name "{}" not valid. Allowed values: {}'.format(track, valid_track_values))
 
@@ -42,8 +43,11 @@ def should_commit_transaction(task_payload):
     return task_payload.get('commit', False)
 
 
-def craft_valid_track_values(has_nightly_track):
-    return _DEFAULT_TRACK_VALUES + (['nightly'] if has_nightly_track else [])
+def craft_valid_track_values(require_track, has_nightly_track):
+    if require_track:
+        return [require_track]
+    else:
+        return _DEFAULT_TRACK_VALUES + (['nightly'] if has_nightly_track else [])
 
 
 def get_google_play_strings_path(artifacts_per_task_id, failed_artifacts_per_task_id):
