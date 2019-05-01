@@ -30,6 +30,7 @@ tasks:
         else: ${event.release.tag_name}
 
   in:
+    # this can be removed after we completely switch to GCP
     - taskId: '${as_slugid("py36")}'
       provisionerId: aws-provisioner-v1
       workerType: github-worker
