@@ -11,7 +11,11 @@ import plistlib
 import re
 from shutil import copy2
 
-from scriptworker_client.aio import raise_future_exceptions, retry_async
+from scriptworker_client.aio import (
+    raise_future_exceptions,
+    retry_async,
+    semaphore_wrapper,
+)
 from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_command
 from iscript.exceptions import (
     InvalidNotarization,
@@ -820,6 +824,7 @@ async def create_pkg_files(key_config, all_paths):
     """
     log.info("Creating PKG files")
     futures = []
+    semaphore = asyncio.Semaphore(10)
     for app in all_paths:
         # call set_app_path_and_name because we may not have called sign_app() earlier
         set_app_path_and_name(app)
@@ -827,22 +832,25 @@ async def create_pkg_files(key_config, all_paths):
         app.pkg_name = os.path.basename(app.pkg_path)
         futures.append(
             asyncio.ensure_future(
-                run_command(
-                    [
-                        "sudo",
-                        "pkgbuild",
-                        "--sign",
-                        key_config["pkg_cert_id"],
-                        "--keychain",
-                        key_config["signing_keychain"],
-                        "--install-location",
-                        "/Applications",
-                        "--component",
-                        app.app_path,
-                        app.pkg_path,
-                    ],
-                    cwd=app.parent_dir,
-                    exception=IScriptError,
+                semaphore_wrapper(
+                    semaphore,
+                    run_command(
+                        [
+                            "sudo",
+                            "pkgbuild",
+                            "--sign",
+                            key_config["pkg_cert_id"],
+                            "--keychain",
+                            key_config["signing_keychain"],
+                            "--install-location",
+                            "/Applications",
+                            "--component",
+                            app.app_path,
+                            app.pkg_path,
+                        ],
+                        cwd=app.parent_dir,
+                        exception=IScriptError,
+                    ),
                 )
             )
         )

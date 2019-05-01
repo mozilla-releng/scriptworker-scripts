@@ -56,9 +56,9 @@ async def semaphore_wrapper(semaphore, coro):
 
         semaphore = asyncio.Semaphore(10)  # max 10 concurrent
         futures = []
-        futures.append(asyncio.ensure_future(
+        futures.append(asyncio.ensure_future(semaphore_wrapper(
             semaphore, do_something(arg1, arg2, kwarg1='foo')
-        ))
+        )))
         await raise_future_exceptions(futures)
 
     Args:
