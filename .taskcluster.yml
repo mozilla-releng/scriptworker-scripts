@@ -132,8 +132,8 @@ tasks:
       scopes:
         - docker-worker:capability:privileged
       metadata:
-        name: docker build
-        description: build latest docker image
+        name: docker build (${branch_or_version})
+        description: build latest docker image (${branch_or_version})
         owner: ${owner}
         source: ${repository}/raw/${head_rev}/.taskcluster.yml
 
@@ -164,7 +164,7 @@ tasks:
         scopes:
           - secrets:get:project/releng/beetmoverscript/deploy
         metadata:
-          name: docker push
-          description: push docker image
+          name: docker push (${branch_or_version})
+          description: push docker image (${branch_or_version})
           owner: ${owner}
           source: ${repository}/raw/${head_rev}/.taskcluster.yml
