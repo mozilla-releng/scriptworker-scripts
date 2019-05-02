@@ -1,10 +1,10 @@
-import asyncio
 import os
 import pytest
 import tempfile
 
 from scriptworker.context import Context
 
+from signingscript.exceptions import SigningScriptError
 from signingscript.script import get_default_config
 from signingscript.utils import load_signing_server_config, mkdir
 

@@ -6,18 +6,20 @@ import difflib
 import fnmatch
 import glob
 import logging
-from mardor.reader import MarReader
-from mardor.writer import add_signature_block
 import os
 import re
+# TODO: Use aiohttp for this.
 import requests
-from requests_hawk import HawkAuth
 import shutil
 import subprocess
 import sys
 import tarfile
 import tempfile
 import zipfile
+
+from requests_hawk import HawkAuth
+from mardor.reader import MarReader
+from mardor.writer import add_signature_block
 
 from scriptworker.utils import (
     get_single_item_from_sequence,
@@ -31,6 +33,13 @@ from signingscript import task
 from signingscript import utils
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
+
+try:
+    # NB. The widevine module needs to be deployed separately
+    import widevine
+except ImportError:
+    widevine = None
+
 
 log = logging.getLogger(__name__)
 
@@ -58,14 +67,15 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
     "libclearkey.so",
 )
 
-_MAR_VERIFY_FORMATS = {
+# These are the keys used to verify if a keyid isn't specified
+_DEFAULT_MAR_VERIFY_KEYS = {
     'autograph_stage_mar384': {
-        'dep-signing': 'autograph-stage',
+        'dep-signing': 'autograph-stage.pem',
     },
     'autograph_hash_only_mar384': {
-        'release-signing': 'release',
-        'nightly-signing': 'nightly',
-        'dep-signing': 'dep',
+        'release-signing': 'release_primary.pem',
+        'nightly-signing': 'nightly_aurora_level3_primary.pem',
+        'dep-signing': 'dep1.pem',
     },
 }
 
@@ -97,7 +107,7 @@ def get_suitable_signing_servers(signing_servers, cert_type, signing_formats, ra
 
     if raise_on_empty_list and not suitable_signing_servers:
         raise SigningScriptError(
-            "No signing servers found with cert type {}".format(cert_type)
+            f"No signing servers found with cert type {cert_type} and formats {signing_formats}"
         )
     else:
         return suitable_signing_servers
@@ -156,10 +166,10 @@ async def sign_file(context, from_, fmt, to=None):
 
     """
     if utils.is_autograph_signing_format(fmt):
-        log.info("sign_file(): signing {} with {}... using autograph /sign/file".format(from_, fmt))
+        log.info("sign_file(): signing %s with %s... using autograph /sign/file", from_, fmt)
         await sign_file_with_autograph(context, from_, fmt, to=to)
     else:
-        log.info("sign_file(): signing {} with {}... using signing server".format(from_, fmt))
+        log.info("sign_file(): signing %s with %s... using signing server", from_, fmt)
         cmd = build_signtool_cmd(context, from_, fmt, to=to)
         await utils.execute_subprocess(cmd)
     return to or from_
@@ -180,7 +190,7 @@ async def sign_gpg(context, from_, fmt):
         list: the path to the signed file, and sig.
 
     """
-    to = "{}.asc".format(from_)
+    to = f"{from_}.asc"
     await sign_file(context, from_, fmt, to=to)
     return [from_, to]
 
@@ -324,7 +334,8 @@ async def sign_widevine_zip(context, orig_path, fmt):
     # Get file list
     all_files = await _get_zipfile_files(orig_path)
     files_to_sign = _get_widevine_signing_files(all_files)
-    log.debug("Widevine files to sign: {}".format(files_to_sign))
+    is_autograph = utils.is_autograph_signing_format(fmt)
+    log.debug("Widevine files to sign: %s", files_to_sign)
     if files_to_sign:
         # Extract all files so we can create `precomplete` with the full
         # file list
@@ -333,10 +344,15 @@ async def sign_widevine_zip(context, orig_path, fmt):
         # Sign the appropriate inner files
         for from_, fmt in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
-            to = "{}.sig".format(from_)
-            tasks.append(asyncio.ensure_future(sign_file(
-                context, from_, fmt, to=to
-            )))
+            to = f"{from_}.sig"
+            if is_autograph:
+                tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(
+                    context, from_, "blessed" in fmt, to=to
+                )))
+            else:
+                tasks.append(asyncio.ensure_future(sign_file(
+                    context, from_, fmt, to=to
+                )))
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(tmp_dir, all_files)
@@ -378,7 +394,8 @@ async def sign_widevine_tar(context, orig_path, fmt):
     # Get file list
     all_files = await _get_tarfile_files(orig_path, compression)
     files_to_sign = _get_widevine_signing_files(all_files)
-    log.debug("Widevine files to sign: {}".format(files_to_sign))
+    is_autograph = utils.is_autograph_signing_format(fmt)
+    log.debug("Widevine files to sign: %s", files_to_sign)
     if files_to_sign:
         # Extract all files so we can create `precomplete` with the full
         # file list
@@ -394,11 +411,16 @@ async def sign_widevine_tar(context, orig_path, fmt):
                 continue
             # Move the sig location on mac. This should be noop on linux.
             to = _get_mac_sigpath(from_)
-            log.debug("Adding {} to the sigfile paths...".format(to))
+            log.debug("Adding %s to the sigfile paths...", to)
             makedirs(os.path.dirname(to))
-            tasks.append(asyncio.ensure_future(sign_file(
-                context, from_, fmt, to=to
-            )))
+            if is_autograph:
+                tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(
+                    context, from_, "blessed" in fmt, to=to
+                )))
+            else:
+                tasks.append(asyncio.ensure_future(sign_file(
+                    context, from_, fmt, to=to
+                )))
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(tmp_dir, all_files)
@@ -682,15 +704,86 @@ async def _create_tarfile(context, to, files, compression, tmp_dir=None):
         raise SigningScriptError(e)
 
 
+async def call_autograph(url, user, password, request_json):
+    """Call autograph and return the json response."""
+    auth = HawkAuth(id=user, key=password)
+    with requests.Session() as session:
+        r = session.post(url, json=request_json, auth=auth)
+        log.debug("Autograph response: %s",
+                  r.text[:120] if len(r.text) >= 120 else r.text)
+        r.raise_for_status()
+        return r.json()
+
+
+def make_signing_req(input_bytes, server, fmt, keyid=None):
+    """Make a signing request object to pass to autograph."""
+    base64_input = base64.b64encode(input_bytes).decode('ascii')
+    sign_req = {"input": base64_input}
+
+    if keyid:
+        sign_req['keyid'] = keyid
+
+    # TODO: Is this the right place to do this?
+    if utils.is_apk_autograph_signing_format(fmt):
+        # We don't want APKs to have their compression changed
+        sign_req['options'] = {'zip': 'passthrough'}
+
+        if utils.is_sha1_apk_autograph_signing_format(fmt):
+            # We ask for a SHA1 digest from Autograph
+            # https://github.com/mozilla-services/autograph/pull/166/files
+            sign_req['options']['pkcs7_digest'] = "SHA1"
+
+    return [sign_req]
+
+
+async def sign_with_autograph(server, input_bytes, fmt, autograph_method, keyid=None):
+    """Signs data with autograph and returns the result.
+
+    Args:
+        server (SigningServer): the server to connect to sign
+        input_bytes (bytes): the source data to sign
+        fmt (str): the format to sign with
+        autograph_method (str): which autograph method to use to sign. must be
+                                one of 'file', 'hash', or 'data'
+        keyid (str): which key to use on autograph (optional)
+
+    Raises:
+        Requests.RequestException: on failure
+        SigningScriptError: when no suitable signing server is found for fmt
+
+    Returns:
+        bytes: the signed data
+
+    """
+    if autograph_method not in {'file', 'hash', 'data'}:
+        raise SigningScriptError(f"Unsupported autograph method: {autograph_method}")
+
+    sign_req = make_signing_req(input_bytes, server, fmt, keyid)
+
+    log.debug("signing data with format %s with %s", fmt, autograph_method)
+
+    url = f"{server.server}/sign/{autograph_method}"
+
+    sign_resp = await retry_async(call_autograph, args=(url, server.user,
+                                                        server.password,
+                                                        sign_req),
+                                  attempts=3, sleeptime_kwargs={'delay_factor': 2.0})
+
+    if autograph_method == 'file':
+        return sign_resp[0]['signed_file']
+    else:
+        return sign_resp[0]['signature']
+
+
 async def sign_file_with_autograph(context, from_, fmt, to=None):
-    """Signs a file with autograph and writes the result to arg `to` or `from_` if `to` is None.
+    """Signs file with autograph and writes the results to a file.
 
     Args:
         context (Context): the signing context
         from_ (str): the source file to sign
         fmt (str): the format to sign with
         to (str, optional): the target path to sign to. If None, overwrite
-            `from_`. Defaults to None.
+                            `from_`. Defaults to None.
 
     Raises:
         Requests.RequestException: on failure
@@ -701,93 +794,126 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
 
     """
     if not utils.is_autograph_signing_format(fmt):
-        raise SigningScriptError(
-            "No signing servers found supporting signing format {}".format(fmt)
-        )
+        raise SigningScriptError(f"Not an autograph format: {fmt}")
     cert_type = task.task_cert_type(context)
-    servers = get_suitable_signing_servers(context.signing_servers, cert_type, [fmt], raise_on_empty_list=True)
+    servers = get_suitable_signing_servers(context.signing_servers, cert_type,
+                                           [fmt], raise_on_empty_list=True)
     s = servers[0]
     to = to or from_
-
-    with open(from_, 'rb') as fin:
-        input_bytes = fin.read()
-
-    # We need to base64 data for autograph. b64encode() returns bytes, though. We need utf8 strings
-    # to make Python's JSON decoder happy
-    base64_input = base64.b64encode(input_bytes).decode('utf-8')
-
-    # build and run the signature request
-    sign_req = [{"input": base64_input}]
-
-    if utils.is_apk_autograph_signing_format(fmt):
-        # We don't want APKs to have their compression changed
-        sign_req[0]['options'] = {'zip': 'passthrough'}
-
-        if utils.is_sha1_apk_autograph_signing_format(fmt):
-            # We ask for a SHA1 digest from Autograph
-            # https://github.com/mozilla-services/autograph/pull/166/files
-            sign_req[0]['options']['pkcs7_digest'] = "SHA1"
-
-    log.debug("using the default autograph keyid for %s", s.user)
-
-    url = "%s/sign/file" % s.server
-
-    async def make_sign_req():
-        auth = HawkAuth(id=s.user, key=s.password)
-        with requests.Session() as session:
-            r = session.post(url, json=sign_req, auth=auth)
-            log.debug("Autograph response: {}".format(r.text[:120] if len(r.text) >= 120 else r.text))
-            r.raise_for_status()
-            return r.json()
-
-    sign_resp = await retry_async(make_sign_req)
-
+    input_bytes = open(from_, 'rb').read()
+    signed_bytes = base64.b64decode(await sign_with_autograph(s, input_bytes, fmt, 'file'))
     with open(to, 'wb') as fout:
-        fout.write(base64.b64decode(sign_resp[0]['signed_file']))
-
-    log.info("autograph wrote signed_file %s to %s", from_, to)
+        fout.write(signed_bytes)
     return to
 
 
-def get_mar_verification_nick(cert_type, fmt):
-    """Get the mardor nick for the format/cert_type.
+async def sign_gpg_with_autograph(context, from_, fmt):
+    """Signs file with autograph and writes the results to a file.
+
+    Args:
+        context (Context): the signing context
+        from_ (str): the source file to sign
+        fmt (str): the format to sign with
+
+    Raises:
+        Requests.RequestException: on failure
+        SigningScriptError: when no suitable signing server is found for fmt
+
+    Returns:
+        list: the path to the signed file, and sig.
+
+    """
+    if not utils.is_autograph_signing_format(fmt):
+        raise SigningScriptError(f"Not an autograph format: {fmt}")
+    cert_type = task.task_cert_type(context)
+    servers = get_suitable_signing_servers(context.signing_servers, cert_type,
+                                           [fmt], raise_on_empty_list=True)
+    s = servers[0]
+    to = f"{from_}.asc"
+    input_bytes = open(from_, 'rb').read()
+    signature = await sign_with_autograph(s, input_bytes, fmt, 'data')
+    with open(to, 'w') as fout:
+        fout.write(signature)
+    return [from_, to]
+
+
+async def sign_hash_with_autograph(context, hash_, fmt, keyid=None):
+    """Signs hash with autograph and returns the result.
+
+    Args:
+        context (Context): the signing context
+        hash_ (bytes): the input hash to sign
+        fmt (str): the format to sign with
+        keyid (str): which key to use on autograph (optional)
+
+    Raises:
+        Requests.RequestException: on failure
+        SigningScriptError: when no suitable signing server is found for fmt
+
+    Returns:
+        bytes: the signature
+
+    """
+    if not utils.is_autograph_signing_format(fmt):
+        raise SigningScriptError(f"Not an autograph format: {fmt}")
+    cert_type = task.task_cert_type(context)
+    servers = get_suitable_signing_servers(context.signing_servers, cert_type,
+                                           [fmt], raise_on_empty_list=True)
+    s = servers[0]
+    signature = base64.b64decode(await sign_with_autograph(s, hash_, fmt, 'hash',  keyid))
+    return signature
+
+
+def get_mar_verification_key(cert_type, fmt, keyid):
+    """Get the public key file for the format/cert_type.
 
     Args:
         cert_type (str): the cert scope string
         fmt (str): the signing format
+        keyid (str): the key id to use (can be None)
 
     Raises:
-        SigningScriptError: if no nick is found
+        SigningScriptError: if no key is found
 
     Returns:
-        str: the mardor nick to use with ``-k``
+        str: the public key to use with ``-k``
 
     """
+    # Cert types are like ...
     cert_type = cert_type.split(':')[-1]
+    data_dir = os.path.join(os.path.dirname(__file__), "data")
     try:
-        return ':mozilla-{}'.format(_MAR_VERIFY_FORMATS[fmt][cert_type])
+        if keyid is None:
+            return os.path.join(data_dir, _DEFAULT_MAR_VERIFY_KEYS[fmt][cert_type])
+        else:
+            # Make sure you can't try and read outside of the data directory
+            if '/' in keyid:
+                raise SigningScriptError("/ not allowed in keyids")
+            keyid = os.path.basename(keyid)
+            return os.path.join(data_dir, f"{keyid}.pem")
     except KeyError as err:
         raise SigningScriptError(
-            "Can't find mar verify format for {}, {}:\n{}".format(fmt, cert_type, err)
+            f"Can't find mar verify key for {fmt}, {cert_type} ({keyid}):\n{err}"
         )
 
 
-def verify_mar_signature(cert_type, fmt, mar):
+def verify_mar_signature(cert_type, fmt, mar, keyid=None):
     """Verify a mar signature, via mardor.
 
     Args:
         cert_type (str): the cert scope string
         fmt (str): the signing format
         mar (str): the path to the mar file
+        keyid (str, optional): the key id to use (can be None)
 
     Raises:
         SigningScriptError: if the signature doesn't verify, or the nick isn't found
 
     """
-    mar_verify_nick = get_mar_verification_nick(cert_type, fmt)
+    mar_verify_key = get_mar_verification_key(cert_type, fmt, keyid)
     try:
         mar_path = os.path.join(os.path.dirname(sys.executable), 'mar')
-        cmd = [mar_path, '-k', mar_verify_nick, '-v', mar]
+        cmd = [mar_path, '-k', mar_verify_key, '-v', mar]
         log.info("Running %s", cmd)
         subprocess.check_call(
             cmd, stdout=sys.stdout, stderr=sys.stderr
@@ -815,47 +941,27 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
         str: the path to the signed file
 
     """
-    log.info("sign_mar384_with_autograph_hash(): signing {} with {}... using autograph /sign/hash".format(from_, fmt))
-    if not utils.is_autograph_signing_format(fmt):
-        raise SigningScriptError(
-            "No signing servers found supporting signing format {}".format(fmt)
-        )
     cert_type = task.task_cert_type(context)
-    servers = get_suitable_signing_servers(context.signing_servers, cert_type, [fmt], raise_on_empty_list=True)
-    s = servers[0]
-    to = to or from_
+    # Get any key id that the task may have specified
+    fmt, keyid = utils.split_autograph_format(fmt)
+    # Call to check that we have a server available
+    get_suitable_signing_servers(context.signing_servers, cert_type, [fmt],
+                                 raise_on_empty_list=True)
 
     hash_algo, expected_signature_length = 'sha384', 512
 
     # Add a dummy signature into a temporary file (TODO: dedup with mardor.cli do_hash)
-    tmp = tempfile.TemporaryFile()
-    with open(from_, 'rb') as f:
-        add_signature_block(f, tmp, hash_algo)
+    with tempfile.TemporaryFile() as tmp:
+        with open(from_, 'rb') as f:
+            add_signature_block(f, tmp, hash_algo)
 
-    tmp.seek(0)
+        tmp.seek(0)
 
-    with MarReader(tmp) as m:
-        hashes = m.calculate_hashes()
-    h = hashes[0][1]
+        with MarReader(tmp) as m:
+            hashes = m.calculate_hashes()
+        h = hashes[0][1]
 
-    tmp.close()
-
-    # build and run the hash signature request
-    sign_req = [{"input": base64.b64encode(h).decode('ascii')}]
-    log.debug("signing mar with hash alg %s using the default autograph keyid for %s", hash_algo, s.user)
-
-    url = "%s/sign/hash" % s.server
-
-    async def make_sign_req():
-        auth = HawkAuth(id=s.user, key=s.password)
-        with requests.Session() as session:
-            r = session.post(url, json=sign_req, auth=auth)
-            log.debug("Autograph response: {}".format(r.text[:120] if len(r.text) >= 120 else r.text))
-            r.raise_for_status()
-            return r.json()
-
-    sign_resp = await retry_async(make_sign_req)
-    signature = base64.b64decode(sign_resp[0]['signature'])
+    signature = await sign_hash_with_autograph(context, h, fmt, keyid)
 
     # Add a signature to the MAR file (TODO: dedup with mardor.cli do_add_signature)
     if len(signature) != expected_signature_length:
@@ -869,10 +975,48 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
         with open(from_, 'rb') as src:
             add_signature_block(src, dst, hash_algo, signature)
 
+    to = to or from_
     shutil.copyfile(tmp_dst.name, to)
     os.unlink(tmp_dst.name)
 
-    verify_mar_signature(cert_type, fmt, to)
+    verify_mar_signature(cert_type, fmt, to, keyid)
 
     log.info("wrote mar with autograph signed hash %s to %s", from_, to)
+    return to
+
+
+async def sign_widevine_with_autograph(context, from_, blessed, to=None):
+    """Create a widevine signature using autograph as a backend.
+
+    Args:
+        context (Context): the signing context
+        from_ (str): the source file to sign
+        fmt (str): the format to sign with
+        blessed (bool): whether to use blessed signing or not
+        to (str, optional): the target path to sign to. If None, write to
+            `{from_}.sig`. Defaults to None.
+
+    Raises:
+        Requests.RequestException: on failure
+        SigningScriptError: when no suitable signing server is found for fmt
+
+    Returns:
+        str: the path to the signature file
+
+    """
+    if not widevine:
+        raise ImportError("widevine module not available")
+
+    to = to or f"{from_}.sig"
+    flags = 1 if blessed else 0
+    fmt = "autograph_widevine"
+
+    h = widevine.generate_widevine_hash(from_, flags)
+
+    signature = await sign_hash_with_autograph(context, h, fmt)
+
+    with open(to, 'wb') as fout:
+        certificate = open(context.config['widevine_cert'], 'rb').read()
+        sig = widevine.generate_widevine_signature(signature, certificate, flags)
+        fout.write(sig)
     return to

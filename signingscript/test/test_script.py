@@ -54,7 +54,6 @@ async def test_async_main_gpg(tmpdir, tmpfile, mocker):
             break
     else:
         assert False, "couldn't find copy_to_dir call that created KEY"
-    os.remove(fake_gpg_pubkey)
 
 
 @pytest.mark.asyncio
@@ -91,7 +90,8 @@ async def test_async_main_autograph(tmpdir, mocker):
     await async_main_helper(tmpdir, mocker, formats, {}, 'autograph')
 
 
-def test_craft_aiohttp_connector():
+@pytest.mark.asyncio
+async def test_craft_aiohttp_connector():
     context = Context()
     context.config = {}
     connector = script._craft_aiohttp_connector(context)
@@ -113,3 +113,19 @@ def test_main(monkeypatch):
     monkeypatch.setattr(scriptworker.client, 'sync_main', sync_main_mock)
     script.main()
     sync_main_mock.asset_called_once_with(script.async_main, default_config=script.get_default_config())
+
+
+@pytest.mark.asyncio
+async def test_async_main_widevine_no_cert_defined(tmpdir, mocker):
+    formats = ['autograph_widevine']
+    with pytest.raises(Exception) as e:
+        await async_main_helper(tmpdir, mocker, formats)
+        assert e.args[0] == "Widevine format is enabled, but widevine_cert is not defined"
+
+
+@pytest.mark.asyncio
+async def test_async_main_widevine(tmp_path, mocker):
+    mocker.patch.object(script, 'copy_to_dir')
+    tmp_cert = tmp_path / "widevine.crt"
+    formats = ['autograph_widevine']
+    await async_main_helper(tmp_path, mocker, formats, {'widevine_cert': tmp_cert})

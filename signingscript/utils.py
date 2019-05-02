@@ -7,7 +7,6 @@ import json
 import logging
 import os
 from shutil import copyfile
-import traceback
 from collections import namedtuple
 
 from signingscript.exceptions import FailedSubprocess, SigningServerError
@@ -73,7 +72,7 @@ def load_signing_server_config(context):
         context (Context): the signing context
 
     Returns:
-        dict of lists: keyed by signing cert type, value is a list of SigningServer named tuples
+        dict of lists: keyed by signing cert type, value is a list of SigningServer instances
 
     """
     path = context.config['signing_server_config']
@@ -128,7 +127,7 @@ def copy_to_dir(source, parent_dir, target=None):
         else:
             log.info("Not copying %s to itself" % (source))
     except (IOError, OSError):
-        traceback.print_exc()
+        log.exception("Can't copy %s to %s!", source, target_path)
         raise SigningServerError("Can't copy {} to {}!".format(source, target_path))
 
 
@@ -189,3 +188,19 @@ def is_sha1_apk_autograph_signing_format(format_):
     """
     # this list could grow if we wanted to filter out other custom signatures
     return is_apk_autograph_signing_format(format_) and format_.endswith('_sha1')
+
+
+def split_autograph_format(format_):
+    """Return the format and keyid from an autograph format specifier.
+
+    Args:
+        format_ (str): the format to use
+
+    Returns:
+        format_, keyid: the plain signing format to use, and optional keyid
+
+    """
+    if ':' in format_:
+        return format_.split(':', 1)
+    else:
+        return format_, None

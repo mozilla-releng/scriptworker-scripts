@@ -185,17 +185,17 @@ def _instantiate_keystore(keystore_path, certificate_path, certificate_alias):
     )
 
 
-def _verify_apk_signature(keystore_path, apk_path, certificate_alias):
+def _verify_apk_signature(keystore_path, apk_path, certificate_alias, strict=True):
     cmd = [
-        _get_java_path('jarsigner'), '-verify', '-strict', '-verbose',
+        _get_java_path('jarsigner'), '-verify', '-verbose',
         '-keystore', keystore_path,
         apk_path,
         certificate_alias
     ]
+    if strict:
+        cmd += ['-strict']
     log.info("running {}".format(cmd))
-    command = subprocess.run(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
-    )
+    command = subprocess.run(cmd, universal_newlines=True)
     return command.returncode == 0
 
 
@@ -229,7 +229,7 @@ async def test_integration_autograph_focus(context, tmpdir):
     await async_main(context)
 
     signed_path = os.path.join(tmpdir, 'artifact', file_name)
-    assert _verify_apk_signature(keystore_path, signed_path, certificate_alias)
+    assert _verify_apk_signature(keystore_path, signed_path, certificate_alias, strict=False)
 
     zip_infos_after_signature = _extract_compress_type_per_filename(signed_path)
     for signature_file in ('META-INF/SIGNATURE.RSA', 'META-INF/SIGNATURE.SF', 'META-INF/MANIFEST.MF'):

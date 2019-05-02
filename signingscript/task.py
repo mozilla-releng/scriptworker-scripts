@@ -23,7 +23,7 @@ from scriptworker.utils import retry_request, get_single_item_from_sequence
 
 from signingscript.sign import get_suitable_signing_servers, sign_gpg, \
     sign_jar, sign_macapp, sign_signcode, sign_widevine, sign_file, \
-    sign_mar384_with_autograph_hash
+    sign_mar384_with_autograph_hash, sign_gpg_with_autograph
 from signingscript.exceptions import SigningServerError
 from signingscript.utils import is_autograph_signing_format
 
@@ -32,10 +32,11 @@ log = logging.getLogger(__name__)
 FORMAT_TO_SIGNING_FUNCTION = frozendict({
     # TODO: Remove the next item (in favor of the regex one), once Focus is migrated
     "autograph_focus": sign_jar,
-    r"autograph_apk_.+": sign_jar,
-    "autograph_hash_only_mar384": sign_mar384_with_autograph_hash,
-    "autograph_stage_mar384": sign_mar384_with_autograph_hash,
+    "autograph_apk_.+": sign_jar,
+    "autograph_hash_only_mar384(:\\w+)?": sign_mar384_with_autograph_hash,
+    "autograph_stage_mar384(:\\w+)?": sign_mar384_with_autograph_hash,
     "gpg": sign_gpg,
+    "autograph_gpg": sign_gpg_with_autograph,
     "jar": sign_jar,
     "focus-jar": sign_jar,
     "macapp": sign_macapp,
@@ -44,7 +45,7 @@ FORMAT_TO_SIGNING_FUNCTION = frozendict({
     # sha2signcodestub uses a generic sign_file
     "signcode": sign_signcode,
     "widevine": sign_widevine,
-    "widevine_blessed": sign_widevine,
+    "autograph_widevine": sign_widevine,
     "default": sign_file,
 })
 
@@ -79,20 +80,19 @@ def task_cert_type(context):
 
 # task_signing_formats {{{1
 def task_signing_formats(context):
-    """Get the list of signing formats from the task signing scopes.
+    """Get the list of signing formats from the task payload.
 
     Args:
         context (Context): the signing context.
 
     Returns:
-        list: the signing formats.
+        set: the signing formats.
 
     """
-    scopes = _extract_scopes_from_unique_prefix(
-        scopes=context.task['scopes'],
-        prefixes=_get_format_prefixes(context)
-    )
-    return [scope.split(':')[-1] for scope in scopes]
+    formats = set()
+    for u in context.task.get('payload', {}).get('upstreamArtifacts', []):
+        formats.update(u['formats'])
+    return formats
 
 
 def _extract_scopes_from_unique_prefix(scopes, prefixes):
@@ -108,10 +108,6 @@ def _extract_scopes_from_unique_prefix(scopes, prefixes):
 
 def _get_cert_prefixes(context):
     return _get_scope_prefixes(context, 'cert')
-
-
-def _get_format_prefixes(context):
-    return _get_scope_prefixes(context, 'format')
 
 
 def _get_scope_prefixes(context, sub_namespace):
@@ -243,7 +239,7 @@ def _sort_formats(formats):
     """
     # Widevine formats must be after other formats other than macapp; GPG must
     # be last.
-    for fmt in ("widevine", "widevine_blessed", "macapp", "gpg"):
+    for fmt in ("widevine", "autograph_widevine", "macapp", "gpg", "autograph_gpg"):
         if fmt in formats:
             formats.remove(fmt)
             formats.append(fmt)
@@ -251,7 +247,7 @@ def _sort_formats(formats):
 
 
 # build_filelist_dict {{{1
-def build_filelist_dict(context, all_signing_formats):
+def build_filelist_dict(context):
     """Build a dictionary of cot-downloaded paths and formats.
 
     Scriptworker will pre-download and pre-verify the `upstreamArtifacts`
@@ -260,13 +256,9 @@ def build_filelist_dict(context, all_signing_formats):
 
     Args:
         context (Context): the signing context
-        all_signing_formats (list): the superset of valid signing formats,
-            based on the task scopes.  If the file signing formats are not
-            a subset, throw an exception.
 
     Raises:
-        TaskVerificationError: if the files don't exist on disk, or the
-            file signing formats are not a subset of all_signing_formats.
+        TaskVerificationError: if the files don't exist on disk
 
     Returns:
         dict of dicts: the dictionary of relative `path` to a dictionary with
@@ -274,7 +266,6 @@ def build_filelist_dict(context, all_signing_formats):
 
     """
     filelist_dict = {}
-    all_signing_formats_set = set(all_signing_formats)
     messages = []
     for artifact_dict in context.task['payload']['upstreamArtifacts']:
         for path in artifact_dict['paths']:
@@ -284,12 +275,6 @@ def build_filelist_dict(context, all_signing_formats):
             )
             if not os.path.exists(full_path):
                 messages.append("{} doesn't exist!".format(full_path))
-            formats_set = set(artifact_dict['formats'])
-            if not set(formats_set).issubset(all_signing_formats_set):
-                messages.append("{} {} illegal format(s) {}!".format(
-                    artifact_dict['taskId'], path,
-                    formats_set.difference(all_signing_formats_set)
-                ))
             filelist_dict[path] = {
                 "full_path": full_path,
                 "formats": _sort_formats(artifact_dict['formats']),

@@ -36,17 +36,21 @@ async def async_main(context):
         context.signing_servers = load_signing_server_config(context)
 
         all_signing_formats = task_signing_formats(context)
-        if 'gpg' in all_signing_formats:
+        if 'gpg' in all_signing_formats or 'autograph_gpg' in all_signing_formats:
             if not context.config.get('gpg_pubkey'):
                 raise Exception("GPG format is enabled but gpg_pubkey is not defined")
             if not os.path.exists(context.config['gpg_pubkey']):
                 raise Exception("gpg_pubkey ({}) doesn't exist!".format(context.config['gpg_pubkey']))
 
+        if 'autograph_widevine' in all_signing_formats:
+            if not context.config.get('widevine_cert'):
+                raise Exception("Widevine format is enabled, but widevine_cert is not defined")
+
         if not all(is_autograph_signing_format(format_) for format_ in all_signing_formats):
             log.info("getting signingserver token")
             await get_token(context, os.path.join(work_dir, 'token'), task_cert_type(context), all_signing_formats)
 
-        filelist_dict = build_filelist_dict(context, all_signing_formats)
+        filelist_dict = build_filelist_dict(context)
         for path, path_dict in filelist_dict.items():
             copy_to_dir(path_dict['full_path'], context.config['work_dir'], target=path)
             log.info("signing %s", path)
@@ -58,7 +62,7 @@ async def async_main(context):
                 copy_to_dir(
                     os.path.join(work_dir, source), context.config['artifact_dir'], target=source
                 )
-            if 'gpg' in path_dict['formats']:
+            if 'gpg' in path_dict['formats'] or 'autograph_gpg' in path_dict['formats']:
                 copy_to_dir(
                     context.config['gpg_pubkey'], context.config['artifact_dir'], target="public/build/KEY"
                 )
@@ -69,7 +73,7 @@ def _craft_aiohttp_connector(context):
     kwargs = {}
     if context.config.get('ssl_cert'):
         sslcontext = ssl.create_default_context(cafile=context.config['ssl_cert'])
-        kwargs['ssl_context'] = sslcontext
+        kwargs['ssl'] = sslcontext
     return aiohttp.TCPConnector(**kwargs)
 
 
@@ -99,6 +103,7 @@ def get_default_config(base_dir=None):
         'dmg': 'dmg',
         'hfsplus': 'hfsplus',
         'gpg_pubkey': None,
+        'widevine_cert': None,
     }
     return default_config
 

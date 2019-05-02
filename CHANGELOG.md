@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [10.0.0] - 2019-04-18
+### Added
+- added autograph_gpg and autograph_widevine signing functions
+- Key ids can be specified by appending ':<keyid>' to the signing format. e.g.
+  "autograph_hash_only_mar384:firefox_20190321_dev"
+
+### Changed
+- stop looking at signing scope format specifiers, and only pay attention to
+  formats specified in upstreamArtifacts
+
 ## [9.6.0] - 2019-02-19
 ### Added
 - `get_mar_verification_nick` and `verify_mar_signature` for mar signature verification.

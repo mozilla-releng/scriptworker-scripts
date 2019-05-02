@@ -27,7 +27,7 @@ Remember the path to `./fake_ca/ca.crt` ; this will be the file that signingscri
 
 First, you need `python>=3.6.0`.
 
-Next, create a python35 virtualenv, and install signingscript:
+Next, create a python36 virtualenv, and install signingscript:
 
     # create the virtualenv in ./venv3
     virtualenv3 venv3
@@ -163,7 +163,6 @@ It will look like this:
       "schedulerId": "-",
       "scopes": [
         "project:releng:signing:cert:dep-signing",
-        "project:releng:signing:format:gpg"
       ],
       "tags": {},
       "taskGroupId": "CRzxWtujTYa2hOs20evVCA",
@@ -174,7 +173,7 @@ The important entries to edit are the `upstreamArtifacts`, the `dependencies`, a
 
 The `upstreamArtifacts` point to the file(s) to sign.  Because scriptworker downloads and verifies their shas, signingscript expects to find the files under `$work_dir/cot/$upstream_task_id/$path`
 
-The first scope, `project:releng:signing:cert:dep-signing`, matches the scope in your password json that you created.  The second scope, `project:releng:signing:format:gpg`, specifies which signing format to use.  (You can specify multiple formats by adding multiple `project:releng:signing:format:` scopes)
+The scope, `project:releng:signing:cert:dep-signing`, matches the scope in your password json that you created.
 
 Write this to `task.json` in your `work_dir`.
 
