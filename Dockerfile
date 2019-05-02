@@ -17,7 +17,7 @@ USER app
 WORKDIR /app
 
 RUN python -m venv /app
-RUN ./bin/pip install -r requirements-prod.txt
+RUN ./bin/pip install -r requirements-dev.txt
 RUN ./bin/pip install -e .
 RUN ./bin/pip install https://github.com/rail/configloader/archive/f5ce2db480fd159af77e1927dbd595abc7412163.tar.gz
 COPY docker.d/healthcheck /bin/healthcheck
