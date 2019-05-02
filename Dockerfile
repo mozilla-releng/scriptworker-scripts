@@ -6,11 +6,12 @@ RUN groupadd --gid 10001 app && \
 
 
 COPY --chown=10001:10001 . /app
+
 # generate /app/version.json according to https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
 RUN apt-get update && apt-get -yq install git && \
     cd /app && /app/docker.d/generate_version_json.sh && \
     apt-get remove -yq git && \
-    apt-get autoremove -yq git && \
+    apt-get autoremove -yq && \
     apt-get clean
 
 USER app
