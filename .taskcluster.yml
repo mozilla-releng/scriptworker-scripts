@@ -31,7 +31,7 @@ tasks:
 
   in:
     # this can be removed after we completely switch to GCP, also need to remove it from push deps
-    - taskId: '${as_slugid("py36")}'
+    - taskId: {$eval: as_slugid("py36")}
       provisionerId: aws-provisioner-v1
       workerType: github-worker
       created: {$fromNow: ''}
@@ -63,7 +63,7 @@ tasks:
         owner: ${owner}
         source: ${repository}/raw/${head_rev}/.taskcluster.yml
 
-    - taskId: '${as_slugid("py37")}'
+    - taskId: {$eval: as_slugid("py37")}
       provisionerId: aws-provisioner-v1
       workerType: github-worker
       created: {$fromNow: ''}
@@ -95,10 +95,10 @@ tasks:
         owner: ${owner}
         source: ${repository}/raw/${head_rev}/.taskcluster.yml
 
-    - taskId: '${as_slugid("docker_build")}'
+    - taskId: {$eval: as_slugid("docker_build")}
       dependencies:
-        - '${as_slugid("py36")}'
-        - '${as_slugid("py37")}'
+        - {$eval: as_slugid("py36")}
+        - {$eval: as_slugid("py37")}
       provisionerId: aws-provisioner-v1
       workerType: releng-svc
       created: {$fromNow: ''}
@@ -139,9 +139,9 @@ tasks:
 
     - $if: 'branch_or_version != "pull-request"'
       then:
-        taskId: '${as_slugid("docker_push")}'
+        taskId: {$eval: as_slugid("docker_push")}
         dependencies:
-          - '${as_slugid("docker_build")}'
+          - {$eval: as_slugid("docker_build")}
         provisionerId: aws-provisioner-v1
         workerType: releng-svc
         created: {$fromNow: ''}
