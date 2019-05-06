@@ -284,6 +284,42 @@ def test_validate_task_schema(context, schema="submission"):
     "fennec-latest": "Fennec-70.0.1",
 }, False
 ), ({
+    "thunderbird-beta-latest": "Thunderbird-70.0b2",
+}, False
+), ({
+    "thunderbird-beta-latest-ssl": "Thunderbird-70.0b2-SSL",
+}, False
+), ({
+    "thunderbird-beta-msi-latest-ssl": "Thunderbird-70.0b2-msi-SSL",
+}, False
+), ({
+    "thunderbird-latest": "Thunderbird-60.6.1",
+}, False
+), ({
+    "thunderbird-latest-ssl": "Thunderbird-60.6.1-SSL",
+}, False
+), ({
+    "thunderbird-msi-latest-ssl": "Thunderbird-60.6.1-msi-SSL",
+}, False
+), ({
+    "Thunderbird-beta-latest": "Thunderbird-70.0",
+}, True
+), ({
+    "Thunderbird-beta-latest-ssl": "Thunderbird-70.0.1-SSL",
+}, True
+), ({
+    "thunderbird-beta-msi-latest-ssl": "Thunderbird-60.6.1-msi-SSL",
+}, True
+), ({
+    "thunderbird-latest": "Thunderbird-70.0b1",
+}, True
+), ({
+    "thunderbird-latest-ssl": "Thunderbird-70.0b1-SSL",
+}, True
+), ({
+    "thunderbird-msi-latest-ssl": "Thunderbird-70.0b1-msi-SSL",
+}, True
+), ({
     "corrupt-alias": "corrupt-entry",
 }, True
 )))
@@ -508,6 +544,10 @@ def test_check_locations_match(locations, product_config, raises):
 ), (
     "Thunderbird-62.0b7-SSL",
     "/thunderbird/releases/62.0b7/win64/:lang/Thunderbird%20Setup%2062.0b7.exe",
+    False,
+), (
+    "Thunderbird-67.0b2-msi-SSL",
+    "/thunderbird/releases/67.0b2/win64/:lang/Thunderbird%20Setup%2067.0b2.msi",
     False,
 ), (
     "Thunderbird-62.0b7-SSL",

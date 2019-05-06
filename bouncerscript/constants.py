@@ -1,8 +1,10 @@
 ALIASES_REGEXES = {
     'thunderbird-beta-latest': r'^Thunderbird-\d+\.0b\d+$',
     'thunderbird-beta-latest-ssl': r'^Thunderbird-\d+\.0b\d+-SSL$',
+    'thunderbird-beta-msi-latest-ssl': r'^Thunderbird-\d+\.0b\d+-msi-SSL$',
     'thunderbird-latest': r'^Thunderbird-\d+\.\d+(\.\d+)?$',
     'thunderbird-latest-ssl': r'^Thunderbird-\d+\.\d+(\.\d+)?-SSL$',
+    'thunderbird-msi-latest-ssl': r'^Thunderbird-\d+\.\d+(\.\d+)?-msi-SSL$',
     'fennec-beta-latest': r'^Fennec-\d+\.0b\d+$',
     'fennec-latest': r'^Fennec-\d+\.\d+(\.\d+)?$',
     'firefox-devedition-stub': r'^Devedition-\d+\.0b\d+-stub$',
@@ -32,7 +34,8 @@ PRODUCT_TO_DESTINATIONS_REGEXES = {
     'firefox-rc': r'^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$',
     'firefox': r'^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi))$',
     'devedition': r'^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi))$',
-    'thunderbird': r'^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar))$',
+    'thunderbird': (r'^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/'
+                    r'(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar|msi))$'),
 }
 
 _BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT = {
