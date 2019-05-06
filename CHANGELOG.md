@@ -2,9 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## X.Y.Z] - TODO
+## 3.5.1] - 2019-05-06
 ### Removed
 - `thunderbird-next-latest` and `thunderbird-next-latest-ssl` as valid regexes since they are being unused
+
+### Added
+- Add thunderbird msi installers
 
 ## [3.5.0] - 2019-01-25
 ### Added
