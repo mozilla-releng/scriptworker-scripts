@@ -95,47 +95,50 @@ tasks:
         owner: ${owner}
         source: ${repository}/raw/${head_rev}/.taskcluster.yml
 
-    - taskId: {$eval: as_slugid("docker_build")}
-      dependencies:
-        - {$eval: as_slugid("py36")}
-        - {$eval: as_slugid("py37")}
-      provisionerId: aws-provisioner-v1
-      workerType: releng-svc
-      created: {$fromNow: ''}
-      deadline: {$fromNow: '1 hour'}
-      extra:
-        github:
-          events:
-            - pull_request.opened
-            - pull_request.reopened
-            - pull_request.synchronize
-            - push
-            - release
-      payload:
-        capabilities:
-          privileged: true
-        maxRunTime: 3600
-        image: mozilla/taskboot:latest
-        command:
-          - taskboot
-          - --git-repository=${repository}
-          - --git-revision=${head_rev}
-          - build
-          - --write=/image.tar
-          - --tag=registry.hub.docker.com/mozillareleases/beetmoverscript:${branch_or_version}
-          - Dockerfile
-        artifacts:
-          public/beetmoverscript/image.tar:
-            expires: {$fromNow: '2 weeks'}
-            path: /image.tar
-            type: file
-      scopes:
-        - docker-worker:capability:privileged
-      metadata:
-        name: docker build (${branch_or_version})
-        description: build latest docker image (${branch_or_version})
-        owner: ${owner}
-        source: ${repository}/raw/${head_rev}/.taskcluster.yml
+    # Limit docker operations to pushes only
+    - $if: 'branch_or_version != "pull-request"'
+      then:
+        taskId: {$eval: as_slugid("docker_build")}
+        dependencies:
+          - {$eval: as_slugid("py36")}
+          - {$eval: as_slugid("py37")}
+        provisionerId: aws-provisioner-v1
+        workerType: releng-svc
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '1 hour'}
+        extra:
+          github:
+            events:
+              - pull_request.opened
+              - pull_request.reopened
+              - pull_request.synchronize
+              - push
+              - release
+        payload:
+          capabilities:
+            privileged: true
+          maxRunTime: 3600
+          image: mozilla/taskboot:latest
+          command:
+            - taskboot
+            - --git-repository=${repository}
+            - --git-revision=${head_rev}
+            - build
+            - --write=/image.tar
+            - --tag=registry.hub.docker.com/mozillareleases/beetmoverscript:${branch_or_version}
+            - Dockerfile
+          artifacts:
+            public/beetmoverscript/image.tar:
+              expires: {$fromNow: '2 weeks'}
+              path: /image.tar
+              type: file
+        scopes:
+          - docker-worker:capability:privileged
+        metadata:
+          name: docker build (${branch_or_version})
+          description: build latest docker image (${branch_or_version})
+          owner: ${owner}
+          source: ${repository}/raw/${head_rev}/.taskcluster.yml
 
     - $if: 'branch_or_version != "pull-request"'
       then:
