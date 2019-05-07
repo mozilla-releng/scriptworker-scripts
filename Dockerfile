@@ -1,5 +1,5 @@
 ARG PYTHON_VERSION=3.7
-FROM python:${PYTHON_VERSION}-slim
+FROM python:${PYTHON_VERSION}
 
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
