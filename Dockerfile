@@ -4,7 +4,6 @@ FROM python:${PYTHON_VERSION}-slim
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
 
-
 COPY --chown=10001:10001 . /app
 
 # generate /app/version.json according to https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
@@ -20,7 +19,7 @@ WORKDIR /app
 RUN python -m venv /app
 RUN ./bin/pip install -r requirements-dev.txt
 RUN ./bin/pip install -e .
-RUN ./bin/pip install https://github.com/rail/configloader/archive/f5ce2db480fd159af77e1927dbd595abc7412163.tar.gz
+RUN ./bin/pip install https://github.com/rail/configloader/archive/edc1fc846e225e5dc1c35070ab68f336a10596f2.tar.gz
 
 COPY docker.d/healthcheck /bin/healthcheck
 COPY docker.d/init.sh /app/bin/init.sh
