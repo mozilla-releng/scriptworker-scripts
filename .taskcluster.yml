@@ -131,10 +131,11 @@ tasks:
             taskclusterProxy: true
           maxRunTime: 3600
           image: mozilla/taskboot:latest
+          env:
+            TASKCLUSTER_SECRET: project/releng/beetmoverscript/deploy
           command:
             - taskboot
             - push-artifact
-            - --secret=project/releng/beetmoverscript/deploy
         scopes:
           - secrets:get:project/releng/beetmoverscript/deploy
         metadata:
