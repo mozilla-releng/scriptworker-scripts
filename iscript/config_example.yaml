@@ -3,6 +3,7 @@ artifact_dir: /tmp/artifacts
 taskcluster_scope_prefix: "project:releng:signing:"
 verbose: true
 local_notarization_accounts: ["account1"]
+concurrency_limit: 2
 mac_config:
     dep:
         notarize_type: multi_account
@@ -19,4 +20,5 @@ mac_config:
         pkg_cert_id: ...
         apple_notarization_account: ...
         apple_notarization_password: ...
+        concurrency_limit: 10
         notarization_poll_timeout: 900

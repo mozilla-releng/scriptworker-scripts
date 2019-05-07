@@ -770,6 +770,7 @@ async def test_create_pkg_files(mocker, raises):
             raise IScriptError("foo")
 
     key_config = {"pkg_cert_id": "pkg.cert", "signing_keychain": "signing.keychain"}
+    config = {"concurrency_limit": 2}
     all_paths = []
     for i in range(3):
         all_paths.append(
@@ -780,9 +781,9 @@ async def test_create_pkg_files(mocker, raises):
     mocker.patch.object(mac, "run_command", new=fake_run_command)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.create_pkg_files(key_config, all_paths)
+            await mac.create_pkg_files(config, key_config, all_paths)
     else:
-        assert await mac.create_pkg_files(key_config, all_paths) is None
+        assert await mac.create_pkg_files(config, key_config, all_paths) is None
 
 
 # copy_pkgs_to_artifact_dir {{{1

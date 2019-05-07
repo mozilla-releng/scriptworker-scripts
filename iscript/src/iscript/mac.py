@@ -811,7 +811,7 @@ async def tar_apps(config, all_paths):
 
 
 # create_pkg_files {{{1
-async def create_pkg_files(key_config, all_paths):
+async def create_pkg_files(config, key_config, all_paths):
     """Create .pkg installers from the .app files.
 
     Args:
@@ -824,7 +824,7 @@ async def create_pkg_files(key_config, all_paths):
     """
     log.info("Creating PKG files")
     futures = []
-    semaphore = asyncio.Semaphore(10)
+    semaphore = asyncio.Semaphore(config.get("concurrency_limit", 2))
     for app in all_paths:
         # call set_app_path_and_name because we may not have called sign_app() earlier
         set_app_path_and_name(app)
@@ -941,7 +941,7 @@ async def notarize_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
-    await create_pkg_files(key_config, all_paths)
+    await create_pkg_files(config, key_config, all_paths)
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing and notarizing apps.")
@@ -1003,7 +1003,7 @@ async def sign_and_pkg_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
-    await create_pkg_files(key_config, all_paths)
+    await create_pkg_files(config, key_config, all_paths)
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing apps and creating pkgs.")
@@ -1033,7 +1033,7 @@ async def pkg_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
-    await create_pkg_files(key_config, all_paths)
+    await create_pkg_files(config, key_config, all_paths)
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done creating pkgs.")
