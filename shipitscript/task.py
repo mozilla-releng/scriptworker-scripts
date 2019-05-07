@@ -48,6 +48,6 @@ def get_task_action(context):
 
     # SCHEMA_MAP and ACTION_MAP share the keys as being the action scopes
     if action not in SCHEMA_MAP:
-        raise ScriptWorkerTaskException('\n'.join("Invalid action scope"))
+        raise ScriptWorkerTaskException("Invalid action scope: {}".format(action))
 
     return action
