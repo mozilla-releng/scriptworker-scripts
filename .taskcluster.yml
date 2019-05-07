@@ -101,7 +101,7 @@ tasks:
             - --git-revision=${head_rev}
             - build
             - --write=/image.tar
-            - --tag=registry.hub.docker.com/mozillareleases/beetmoverscript:${branch_or_version}
+            - --tag=registry.hub.docker.com/mozilla/beetmoverscript:${branch_or_version}
             - Dockerfile
           artifacts:
             public/beetmoverscript/image.tar:
@@ -131,10 +131,9 @@ tasks:
             taskclusterProxy: true
           maxRunTime: 3600
           image: mozilla/taskboot:latest
-          env:
-            TASKCLUSTER_SECRET: project/releng/beetmoverscript/deploy
           command:
             - taskboot
+            - --secret=project/releng/beetmoverscript/deploy
             - push-artifact
         scopes:
           - secrets:get:project/releng/beetmoverscript/deploy
