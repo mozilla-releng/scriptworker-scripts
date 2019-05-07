@@ -38,7 +38,8 @@
         "taskType": "signing"
       }
     ],
-    "google_play_track": "beta",
+    "google_play_track": "alpha",
+    "certificate_alias": "firefox-alpha",
     "commit": false
   },
   "metadata": {

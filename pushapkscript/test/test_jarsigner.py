@@ -24,6 +24,7 @@ class JarSignerTest(unittest.TestCase):
         }
         self.context.task = {
             'scopes': ['project:releng:googleplay:aurora'],
+            'payload': {},
         }
 
         self.minimal_context = MagicMock()
@@ -33,6 +34,7 @@ class JarSignerTest(unittest.TestCase):
         }
         self.minimal_context.task = {
             'scopes': ['project:releng:googleplay:aurora'],
+            'payload': {},
         }
 
     def test_verify_should_call_executable_with_right_arguments(self):
@@ -76,13 +78,7 @@ class JarSignerTest(unittest.TestCase):
             (
                 '/path/to/jarsigner',
                 '/path/to/keystore',
-                {
-                    'aurora': 'aurora_alias',
-                    'beta': 'beta_alias',
-                    'release': 'release_alias',
-                    'dep': 'dep_alias',
-                },
-                'aurora'
+                'aurora_alias',
             )
         )
 
@@ -92,12 +88,61 @@ class JarSignerTest(unittest.TestCase):
             (
                 'jarsigner',
                 '/path/to/keystore',
-                {
-                    'aurora': 'nightly',
-                    'beta': 'nightly',
-                    'release': 'release',
-                    'dep': 'dep',
-                },
-                'aurora'
+                'nightly',
             )
         )
+
+    def test_pluck_configuration_accepts_certificate_alias(self):
+        context = MagicMock()
+        context.config = {
+            'jarsigner_key_store': '/path/to/keystore',
+            'taskcluster_scope_prefixes': ['project:releng:googleplay:'],
+            'jarsigner_certificate_aliases': {},
+        }
+        context.task = {
+            'scopes': ['project:releng:googleplay:fenix'],
+            'payload': {
+                'certificate_alias': 'fenix-beta'
+            },
+        }
+        self.assertEqual(
+            jarsigner._pluck_configuration(context),
+            (
+                'jarsigner',
+                '/path/to/keystore',
+                'fenix-beta'
+            )
+        )
+
+    def test_pluck_configuration_raise_multiple_alias_source(self):
+        context = MagicMock()
+        context.config = {
+            'jarsigner_key_store': '/path/to/keystore',
+            'taskcluster_scope_prefixes': ['project:releng:googleplay:'],
+            'jarsigner_certificate_aliases': {
+                'aurora': 'aurora_alias',
+            },
+        }
+        context.task = {
+            'scopes': ['project:releng:googleplay:aurora'],
+            'payload': {
+                'certificate_alias': 'firefox-aurora'
+            },
+        }
+
+        with self.assertRaises(ValueError):
+            jarsigner._pluck_configuration(context)
+
+    def test_pluck_configuration_raise_no_alias_source(self):
+        context = MagicMock()
+        context.config = {
+            'jarsigner_key_store': '/path/to/keystore',
+            'taskcluster_scope_prefixes': ['project:releng:googleplay:'],
+            'jarsigner_certificate_aliases': {},
+        }
+        context.task = {
+            'scopes': ['project:releng:googleplay:aurora'],
+            'payload': {},
+        }
+        with self.assertRaises(ValueError):
+            jarsigner._pluck_configuration(context)

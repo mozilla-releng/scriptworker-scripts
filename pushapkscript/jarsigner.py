@@ -8,8 +8,7 @@ log = logging.getLogger(__name__)
 
 
 def verify(context, apk_path):
-    binary_path, keystore_path, certificate_aliases, android_product = _pluck_configuration(context)
-    certificate_alias = certificate_aliases[android_product]
+    binary_path, keystore_path, certificate_alias = _pluck_configuration(context)
 
     completed_process = subprocess.run([
         binary_path, '-verify', '-strict',
@@ -48,4 +47,17 @@ def _pluck_configuration(context):
         'dep': 'dep',
     })
     android_product = extract_android_product_from_scopes(context)
-    return binary_path, keystore_path, certificate_aliases, android_product
+    alias_from_product = certificate_aliases.get(android_product)
+    alias_from_payload = context.task['payload'].get('certificate_alias')
+
+    if not alias_from_payload and not alias_from_product:
+        raise ValueError('Certificate alias was not provided by the payload nor '
+                         'in "jarsigner_certificate_aliases" under the product name of '
+                         '"{}"'.format(android_product))
+
+    if alias_from_payload and alias_from_product:
+        raise ValueError('A certificate alias was provided both by the payload ("{}") and '
+                         'in "jarsigner_certificate_aliases" ("{}"). It should only be provided '
+                         'from a single source'.format(alias_from_payload, alias_from_product))
+
+    return binary_path, keystore_path, alias_from_payload or alias_from_product
