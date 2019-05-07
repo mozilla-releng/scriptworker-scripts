@@ -133,8 +133,8 @@ tasks:
           image: mozilla/taskboot:latest
           command:
             - taskboot
-            - --secret=project/releng/beetmoverscript/deploy
             - push-artifact
+            - --secret=project/releng/beetmoverscript/deploy
         scopes:
           - secrets:get:project/releng/beetmoverscript/deploy
         metadata:
