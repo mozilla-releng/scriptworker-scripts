@@ -36,14 +36,6 @@ tasks:
       workerType: github-worker
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
-      extra:
-        github:
-          events:
-            - pull_request.opened
-            - pull_request.reopened
-            - pull_request.synchronize
-            - push
-            - release
       payload:
         maxRunTime: 3600
         image: python:3.6
@@ -68,14 +60,6 @@ tasks:
       workerType: github-worker
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
-      extra:
-        github:
-          events:
-            - pull_request.opened
-            - pull_request.reopened
-            - pull_request.synchronize
-            - push
-            - release
       payload:
         maxRunTime: 3600
         image: python:3.7
@@ -106,14 +90,6 @@ tasks:
         workerType: releng-svc
         created: {$fromNow: ''}
         deadline: {$fromNow: '1 hour'}
-        extra:
-          github:
-            events:
-              - pull_request.opened
-              - pull_request.reopened
-              - pull_request.synchronize
-              - push
-              - release
         payload:
           capabilities:
             privileged: true
@@ -149,11 +125,6 @@ tasks:
         workerType: releng-svc
         created: {$fromNow: ''}
         deadline: {$fromNow: '1 hour'}
-        extra:
-          github:
-            events:
-              - push
-              - release
         payload:
           features:
             # Needed for access to secret
