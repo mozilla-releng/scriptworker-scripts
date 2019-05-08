@@ -32,6 +32,7 @@ tasks:
   in:
     # this can be removed after we completely switch to GCP, also need to remove it from push deps
     - taskId: {$eval: as_slugid("py36")}
+      taskGroupId: {$eval: as_slugid("taskGroupId")}
       provisionerId: aws-provisioner-v1
       workerType: github-worker
       created: {$fromNow: ''}
@@ -56,6 +57,7 @@ tasks:
         source: ${repository}/raw/${head_rev}/.taskcluster.yml
 
     - taskId: {$eval: as_slugid("py37")}
+      taskGroupId: {$eval: as_slugid("taskGroupId")}
       provisionerId: aws-provisioner-v1
       workerType: github-worker
       created: {$fromNow: ''}
@@ -83,6 +85,7 @@ tasks:
     - $if: 'branch_or_version != "pull-request"'
       then:
         taskId: {$eval: as_slugid("docker_build")}
+        taskGroupId: {$eval: as_slugid("taskGroupId")}
         dependencies:
           - {$eval: as_slugid("py36")}
           - {$eval: as_slugid("py37")}
@@ -95,6 +98,8 @@ tasks:
             privileged: true
           maxRunTime: 3600
           image: mozilla/taskboot:latest
+          env:
+            TASK_GROUP_ID: {$eval: as_slugid("taskGroupId")}
           command:
             - taskboot
             - --git-repository=${repository}
@@ -119,6 +124,7 @@ tasks:
     - $if: 'branch_or_version != "pull-request"'
       then:
         taskId: {$eval: as_slugid("docker_push")}
+        taskGroupId: {$eval: as_slugid("taskGroupId")}
         dependencies:
           - {$eval: as_slugid("docker_build")}
         provisionerId: aws-provisioner-v1
