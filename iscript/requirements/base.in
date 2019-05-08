@@ -2,4 +2,5 @@ aiohttp
 arrow
 attrs
 pexpect
+requests_hawk
 scriptworker_client
