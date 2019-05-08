@@ -105,7 +105,6 @@ tasks:
             - build
             - --write=/image.tar
             - --tag=registry.hub.docker.com/mozilla/beetmoverscript:${branch_or_version}
-            - --build-arg TASK_GROUP_ID=${as_slugid("taskGroupId")}
             - Dockerfile
           artifacts:
             public/beetmoverscript/image.tar:
