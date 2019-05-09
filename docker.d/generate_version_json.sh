@@ -9,6 +9,6 @@ cat > version.json <<EOF
     "commit": "${commit}",
     "version": "${version}",
     "source": "https://github.com/mozilla-releng/beetmoverscript",
-    "build": "https://tools.taskcluster.net/groups/${TASK_GROUP_ID}"
+    "build": "https://github.com/mozilla-releng/beetmoverscript/commit/${commit}"
 }
 EOF
