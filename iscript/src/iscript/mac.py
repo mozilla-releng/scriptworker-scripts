@@ -462,12 +462,13 @@ async def sign_all_apps(config, key_config, entitlements_path, all_paths):
         futures.append(asyncio.ensure_future(verify_app_signature(app)))
     await raise_future_exceptions(futures)
     # sign widevine
-    futures = []
-    for app in all_paths:
-        futures.append(
-            asyncio.ensure_future(sign_widevine_dir(config, key_config, app.app_path))
-        )
-    await raise_future_exceptions(futures)
+    # XXX uncomment when we can contact autograph
+    # futures = []
+    # for app in all_paths:
+    #     futures.append(
+    #         asyncio.ensure_future(sign_widevine_dir(config, key_config, app.app_path))
+    #     )
+    # await raise_future_exceptions(futures)
 
 
 # get_bundle_id {{{1
