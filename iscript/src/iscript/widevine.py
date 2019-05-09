@@ -7,7 +7,6 @@ import glob
 import logging
 import os
 import requests
-import tempfile
 
 from iscript.createprecomplete import generate_precomplete
 from iscript.exceptions import IScriptError
@@ -47,8 +46,8 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
 )
 
 
-# sign_widevine_tar {{{1
-async def sign_widevine_tar(config, key_config, orig_path, fmt):
+# sign_widevine_dir {{{1
+async def sign_widevine_dir(config, key_config, app_dir, fmt):
     """Sign the internals of a tarfile with the widevine key.
 
     Extract the entire tarball, but only sign a handful of files (see
@@ -62,33 +61,22 @@ async def sign_widevine_tar(config, key_config, orig_path, fmt):
     Args:
         config (dict): the running config
         key_config (dict): the config for this signing key
-        orig_path (str): the source file to sign
+        app_dir (str): the .app directory to sign
         fmt (str): the format to sign with
 
     Returns:
         str: the path to the signed archive
 
     """
-    _, compression = os.path.splitext(orig_path)
-    # This will get cleaned up when we nuke `work_dir`. Clean up at that point
-    # rather than immediately after `sign_widevine`, to optimize task runtime
-    # speed over disk space.
-    tmp_dir = tempfile.mkdtemp(prefix="wvtar", dir=config["work_dir"])
-    # Get file list
-    # TODO look at the extracted dir
-    all_files = []  # await _get_tarfile_files(orig_path, compression)
+    all_files = []
+    for top_dir, dirs, files in os.walk(app_dir):
+        for file_ in files:
+            all_files.append(os.path.join(top_dir, file_))
     files_to_sign = _get_widevine_signing_files(all_files)
     log.debug("Widevine files to sign: %s", files_to_sign)
     if files_to_sign:
-        # TODO walk the already extracted dir
         tasks = []
-        # Sign the appropriate inner files
         for from_, fmt in files_to_sign.items():
-            from_ = os.path.join(tmp_dir, from_)
-            # Don't try to sign directories
-            if not os.path.isfile(from_):
-                continue
-            # Move the sig location on mac. This should be noop on linux.
             to = _get_mac_sigpath(from_)
             log.debug("Adding %s to the sigfile paths...", to)
             makedirs(os.path.dirname(to))
@@ -101,15 +89,11 @@ async def sign_widevine_tar(config, key_config, orig_path, fmt):
             )
             all_files.append(to)
         await raise_future_exceptions(tasks)
-        remove_extra_files(tmp_dir, all_files)
+        remove_extra_files(app_dir, all_files)
         # Regenerate the `precomplete` file, which is used for cleanup before
         # applying a complete mar.
-        _run_generate_precomplete(config, tmp_dir)
-        # XXX
-        # await _create_tarfile(
-        #    context, orig_path, all_files, compression, tmp_dir=tmp_dir
-        # )
-    return orig_path
+        _run_generate_precomplete(config, app_dir)
+    return app_dir
 
 
 # _get_mac_sigpath {{{1
@@ -149,25 +133,22 @@ def _get_widevine_signing_files(file_list):
 
 
 # _run_generate_precomplete {{{1
-def _run_generate_precomplete(config, tmp_dir):
+def _run_generate_precomplete(config, app_dir):
     """Regenerate `precomplete` file with widevine sig paths for complete mar."""
     log.info("Generating `precomplete` file...")
-    path = _ensure_one_precomplete(tmp_dir, "before")
+    path = _ensure_one_precomplete(app_dir, "before")
     with open(path, "r") as fh:
         before = fh.readlines()
     generate_precomplete(os.path.dirname(path))
-    path = _ensure_one_precomplete(tmp_dir, "after")
+    path = _ensure_one_precomplete(app_dir, "after")
     with open(path, "r") as fh:
         after = fh.readlines()
     # Create diff file
-    diff_path = os.path.join(config["work_dir"], "precomplete.diff")
+    makedirs(os.path.join(config["artifact_dir"], "public", "logs"))
+    diff_path = os.path.join(config["artifact_dir"], "public", "logs", "precomplete.diff")
     with open(diff_path, "w") as fh:
         for line in difflib.ndiff(before, after):
             fh.write(line)
-    # XXX
-    # utils.copy_to_dir(
-    #    diff_path, config["artifact_dir"], target="public/logs/precomplete.diff"
-    # )
 
 
 # _ensure_one_precomplete {{{1
