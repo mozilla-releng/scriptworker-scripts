@@ -24,6 +24,7 @@ from iscript.exceptions import (
     UnknownAppDir,
 )
 from iscript.util import get_key_config
+from iscript.widevine import sign_widevine_dir
 
 log = logging.getLogger(__name__)
 
@@ -432,10 +433,11 @@ async def create_one_notarization_zipfile(work_dir, all_paths, path_attr="app_pa
 
 
 # sign_all_apps {{{1
-async def sign_all_apps(key_config, entitlements_path, all_paths):
+async def sign_all_apps(config, key_config, entitlements_path, all_paths):
     """Sign all the apps.
 
     Args:
+        config (dict): the running config
         key_config (dict): the config for this signing key
         entitlements_path (str): the path to the entitlements file, used
             for signing
@@ -458,6 +460,13 @@ async def sign_all_apps(key_config, entitlements_path, all_paths):
     futures = []
     for app in all_paths:
         futures.append(asyncio.ensure_future(verify_app_signature(app)))
+    await raise_future_exceptions(futures)
+    # sign widevine
+    futures = []
+    for app in all_paths:
+        futures.append(
+            asyncio.ensure_future(sign_widevine_dir(config, key_config, app.app_path))
+        )
     await raise_future_exceptions(futures)
 
 
@@ -918,7 +927,7 @@ async def notarize_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
-    await sign_all_apps(key_config, entitlements_path, all_paths)
+    await sign_all_apps(config, key_config, entitlements_path, all_paths)
 
     log.info("Notarizing")
     if key_config["notarize_type"] == "multi_account":
@@ -969,7 +978,7 @@ async def sign_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
-    await sign_all_apps(key_config, entitlements_path, all_paths)
+    await sign_all_apps(config, key_config, entitlements_path, all_paths)
     await tar_apps(config, all_paths)
     log.info("Done signing apps.")
 
@@ -996,7 +1005,7 @@ async def sign_and_pkg_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
-    await sign_all_apps(key_config, entitlements_path, all_paths)
+    await sign_all_apps(config, key_config, entitlements_path, all_paths)
     await tar_apps(config, all_paths)
 
     # pkg

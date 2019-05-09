@@ -362,6 +362,7 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
 
     """
     key_config = {"x": "y"}
+    config = {}
     entitlements_path = "fake_entitlements_path"
     work_dir = str(tmpdir)
     all_paths = []
@@ -383,11 +384,12 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
     mocker.patch.object(mac, "set_app_path_and_name", return_value=None)
     mocker.patch.object(mac, "sign_app", new=fake_sign)
     mocker.patch.object(mac, "verify_app_signature", new=noop_async)
+    mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.sign_all_apps(key_config, entitlements_path, all_paths)
+            await mac.sign_all_apps(config, key_config, entitlements_path, all_paths)
     else:
-        await mac.sign_all_apps(key_config, entitlements_path, all_paths)
+        await mac.sign_all_apps(config, key_config, entitlements_path, all_paths)
 
 
 # get_bundle_id {{{1
@@ -872,6 +874,7 @@ async def test_sign_behavior(mocker, tmpdir):
         mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
     )
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     await mac.sign_behavior(config, task)
 
 
@@ -924,6 +927,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
     )
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     await mac.sign_and_pkg_behavior(config, task)
 
 
@@ -982,6 +986,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type):
     mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     await mac.notarize_behavior(config, task)
 
 

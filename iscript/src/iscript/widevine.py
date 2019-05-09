@@ -47,7 +47,7 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
 
 
 # sign_widevine_dir {{{1
-async def sign_widevine_dir(config, key_config, app_dir, fmt):
+async def sign_widevine_dir(config, key_config, app_dir):
     """Sign the internals of a tarfile with the widevine key.
 
     Extract the entire tarball, but only sign a handful of files (see
@@ -62,7 +62,6 @@ async def sign_widevine_dir(config, key_config, app_dir, fmt):
         config (dict): the running config
         key_config (dict): the config for this signing key
         app_dir (str): the .app directory to sign
-        fmt (str): the format to sign with
 
     Returns:
         str: the path to the signed archive
@@ -145,7 +144,9 @@ def _run_generate_precomplete(config, app_dir):
         after = fh.readlines()
     # Create diff file
     makedirs(os.path.join(config["artifact_dir"], "public", "logs"))
-    diff_path = os.path.join(config["artifact_dir"], "public", "logs", "precomplete.diff")
+    diff_path = os.path.join(
+        config["artifact_dir"], "public", "logs", "precomplete.diff"
+    )
     with open(diff_path, "w") as fh:
         for line in difflib.ndiff(before, after):
             fh.write(line)
