@@ -91,7 +91,7 @@ tasks:
         features:
           dind: true
         maxRunTime: 3600
-        image: python:3.7
+        image: "mozillareleases/python-test-runner"
         command:
           - "/bin/bash"
           - "-c"
@@ -99,7 +99,6 @@ tasks:
             git clone ${repository} repo
             && cd repo
             && git checkout ${head_rev}
-            && apt-get update && apt-get install -yq docker
             && docker build --tag registry.hub.docker.com/mozilla/shipitscript:${branch_or_version} .
             && docker save registry.hub.docker.com/mozilla/beetmoverscript:${branch_or_version} > /tmp/image.tar
         artifacts:
