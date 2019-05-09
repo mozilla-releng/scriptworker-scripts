@@ -1,6 +1,7 @@
 aiohttp
 arrow
 attrs
+macholib
 pexpect
-requests_hawk
+requests-hawk
 scriptworker_client
