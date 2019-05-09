@@ -239,7 +239,7 @@ async def sign_with_autograph(
 
     log.debug("signing data with format %s with %s", fmt, autograph_method)
 
-    url = f"{key_config.widevine_url}/sign/{autograph_method}"
+    url = f"{key_config['widevine_url']}/sign/{autograph_method}"
 
     sign_resp = await retry_async(
         call_autograph,
