@@ -94,13 +94,12 @@ tasks:
         image: "mozillareleases/python-test-runner"
         command:
           - "/bin/bash"
-          - "-cx"
+          - "-cxe"
           - >-
             git clone ${repository} repo
             && cd repo
             && git checkout ${head_rev}
-            && docker build --tag registry.hub.docker.com/mozilla/shipitscript:${branch_or_version} .
-            && docker images
+            && docker build --tag registry.hub.docker.com/mozilla/beetmoverscript:${branch_or_version} .
             && docker save registry.hub.docker.com/mozilla/beetmoverscript:${branch_or_version} > /tmp/image.tar
         artifacts:
           public/beetmoverscript/image.tar:
