@@ -48,7 +48,7 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
 
 
 # sign_widevine_tar {{{1
-async def sign_widevine_tar(context, orig_path, fmt):
+async def sign_widevine_tar(config, key_config, orig_path, fmt):
     """Sign the internals of a tarfile with the widevine key.
 
     Extract the entire tarball, but only sign a handful of files (see
@@ -60,7 +60,8 @@ async def sign_widevine_tar(context, orig_path, fmt):
     but that's not possible with compressed tarballs.
 
     Args:
-        context (Context): the signing context
+        config (dict): the running config
+        key_config (dict): the config for this signing key
         orig_path (str): the source file to sign
         fmt (str): the format to sign with
 
@@ -72,7 +73,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
     # This will get cleaned up when we nuke `work_dir`. Clean up at that point
     # rather than immediately after `sign_widevine`, to optimize task runtime
     # speed over disk space.
-    tmp_dir = tempfile.mkdtemp(prefix="wvtar", dir=context.config["work_dir"])
+    tmp_dir = tempfile.mkdtemp(prefix="wvtar", dir=config["work_dir"])
     # Get file list
     # TODO look at the extracted dir
     all_files = []  # await _get_tarfile_files(orig_path, compression)
@@ -94,7 +95,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
             tasks.append(
                 asyncio.ensure_future(
                     sign_widevine_with_autograph(
-                        context, from_, "blessed" in fmt, to=to
+                        key_config, from_, "blessed" in fmt, to=to
                     )
                 )
             )
@@ -103,7 +104,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
         remove_extra_files(tmp_dir, all_files)
         # Regenerate the `precomplete` file, which is used for cleanup before
         # applying a complete mar.
-        _run_generate_precomplete(context, tmp_dir)
+        _run_generate_precomplete(config, tmp_dir)
         # XXX
         # await _create_tarfile(
         #    context, orig_path, all_files, compression, tmp_dir=tmp_dir
@@ -148,7 +149,7 @@ def _get_widevine_signing_files(file_list):
 
 
 # _run_generate_precomplete {{{1
-def _run_generate_precomplete(context, tmp_dir):
+def _run_generate_precomplete(config, tmp_dir):
     """Regenerate `precomplete` file with widevine sig paths for complete mar."""
     log.info("Generating `precomplete` file...")
     path = _ensure_one_precomplete(tmp_dir, "before")
@@ -159,13 +160,13 @@ def _run_generate_precomplete(context, tmp_dir):
     with open(path, "r") as fh:
         after = fh.readlines()
     # Create diff file
-    diff_path = os.path.join(context.config["work_dir"], "precomplete.diff")
+    diff_path = os.path.join(config["work_dir"], "precomplete.diff")
     with open(diff_path, "w") as fh:
         for line in difflib.ndiff(before, after):
             fh.write(line)
     # XXX
     # utils.copy_to_dir(
-    #    diff_path, context.config["artifact_dir"], target="public/logs/precomplete.diff"
+    #    diff_path, config["artifact_dir"], target="public/logs/precomplete.diff"
     # )
 
 
@@ -218,7 +219,7 @@ async def call_autograph(url, user, password, request_json):
         return r.json()
 
 
-def make_signing_req(input_bytes, server, fmt, keyid=None):
+def make_signing_req(input_bytes, keyid=None):
     """Make a signing request object to pass to autograph."""
     base64_input = base64.b64encode(input_bytes).decode("ascii")
     sign_req = {"input": base64_input}
@@ -229,11 +230,13 @@ def make_signing_req(input_bytes, server, fmt, keyid=None):
     return [sign_req]
 
 
-async def sign_with_autograph(server, input_bytes, fmt, autograph_method, keyid=None):
+async def sign_with_autograph(
+    key_config, input_bytes, fmt, autograph_method, keyid=None
+):
     """Signs data with autograph and returns the result.
 
     Args:
-        server (SigningServer): the server to connect to sign
+        key_config (dict): the running config for this key
         input_bytes (bytes): the source data to sign
         fmt (str): the format to sign with
         autograph_method (str): which autograph method to use to sign. must be
@@ -242,7 +245,6 @@ async def sign_with_autograph(server, input_bytes, fmt, autograph_method, keyid=
 
     Raises:
         Requests.RequestException: on failure
-        IScriptError: when no suitable signing server is found for fmt
 
     Returns:
         bytes: the signed data
@@ -251,15 +253,15 @@ async def sign_with_autograph(server, input_bytes, fmt, autograph_method, keyid=
     if autograph_method not in {"file", "hash", "data"}:
         raise IScriptError(f"Unsupported autograph method: {autograph_method}")
 
-    sign_req = make_signing_req(input_bytes, server, fmt, keyid)
+    sign_req = make_signing_req(input_bytes, keyid)
 
     log.debug("signing data with format %s with %s", fmt, autograph_method)
 
-    url = f"{server.server}/sign/{autograph_method}"
+    url = f"{key_config.widevine_url}/sign/{autograph_method}"
 
     sign_resp = await retry_async(
         call_autograph,
-        args=(url, server.user, server.password, sign_req),
+        args=(url, key_config["widevine_user"], key_config["widevine_pass"], sign_req),
         attempts=3,
         sleeptime_kwargs={"delay_factor": 2.0},
     )
@@ -274,7 +276,7 @@ async def sign_file_with_autograph(key_config, from_, fmt, to=None):
     """Signs file with autograph and writes the results to a file.
 
     Args:
-        key_config (dict): the signing config
+        key_config (dict): the running config for this key
         from_ (str): the source file to sign
         fmt (str): the format to sign with
         to (str, optional): the target path to sign to. If None, overwrite
@@ -282,17 +284,15 @@ async def sign_file_with_autograph(key_config, from_, fmt, to=None):
 
     Raises:
         Requests.RequestException: on failure
-        IScriptError: when no suitable signing server is found for fmt
 
     Returns:
         str: the path to the signed file
 
     """
-    s = key_config["widevine_url"]
     to = to or from_
     input_bytes = open(from_, "rb").read()
     signed_bytes = base64.b64decode(
-        await sign_with_autograph(s, input_bytes, fmt, "file")
+        await sign_with_autograph(key_config, input_bytes, fmt, "file")
     )
     with open(to, "wb") as fout:
         fout.write(signed_bytes)
@@ -303,31 +303,29 @@ async def sign_hash_with_autograph(key_config, hash_, fmt, keyid=None):
     """Signs hash with autograph and returns the result.
 
     Args:
-        key_config (dict): the signing config
+        key_config (dict): the running config for this key
         hash_ (bytes): the input hash to sign
         fmt (str): the format to sign with
         keyid (str): which key to use on autograph (optional)
 
     Raises:
         Requests.RequestException: on failure
-        SigningScriptError: when no suitable signing server is found for fmt
 
     Returns:
         bytes: the signature
 
     """
-    s = key_config["widevine_url"]
     signature = base64.b64decode(
-        await sign_with_autograph(s, hash_, fmt, "hash", keyid)
+        await sign_with_autograph(key_config, hash_, fmt, "hash", keyid)
     )
     return signature
 
 
-async def sign_widevine_with_autograph(context, from_, blessed, to=None):
+async def sign_widevine_with_autograph(key_config, from_, blessed, to=None):
     """Create a widevine signature using autograph as a backend.
 
     Args:
-        context (Context): the signing context
+        key_config (dict): the running config for this key
         from_ (str): the source file to sign
         fmt (str): the format to sign with
         blessed (bool): whether to use blessed signing or not
@@ -336,7 +334,6 @@ async def sign_widevine_with_autograph(context, from_, blessed, to=None):
 
     Raises:
         Requests.RequestException: on failure
-        SigningScriptError: when no suitable signing server is found for fmt
 
     Returns:
         str: the path to the signature file
@@ -351,10 +348,10 @@ async def sign_widevine_with_autograph(context, from_, blessed, to=None):
 
     h = widevine.generate_widevine_hash(from_, flags)
 
-    signature = await sign_hash_with_autograph(context, h, fmt)
+    signature = await sign_hash_with_autograph(key_config, h, fmt)
 
     with open(to, "wb") as fout:
-        certificate = open(context.config["widevine_cert"], "rb").read()
+        certificate = open(key_config["widevine_cert"], "rb").read()
         sig = widevine.generate_widevine_signature(signature, certificate, flags)
         fout.write(sig)
     return to
