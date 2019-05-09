@@ -1,6 +1,4 @@
-ARG PYTHON_VERSION=3.7
-ARG TASK_GROUP_ID
-FROM python:${PYTHON_VERSION}
+FROM python:3.7
 
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
