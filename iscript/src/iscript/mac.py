@@ -297,7 +297,8 @@ async def unlock_keychain(signing_keychain, keychain_password):
 def get_app_dir(parent_dir):
     """Get the .app directory in a ``parent_dir``.
 
-    This assumes there is one, and only one, .app directory in ``parent_dir``.
+    This assumes there is one, and only one, .app directory in ``parent_dir``,
+    though it can be in a subdirectory.
 
     Args:
         parent_dir (str): the parent directory path
@@ -306,7 +307,7 @@ def get_app_dir(parent_dir):
         UnknownAppDir: if there is no single app dir
 
     """
-    apps = glob("{}/*.app".format(parent_dir))
+    apps = glob("{}/*.app".format(parent_dir)) + glob("{}/*/*.app".format(parent_dir))
     if len(apps) != 1:
         raise UnknownAppDir(
             "Can't find a single .app in {}: {}".format(parent_dir, apps)
@@ -796,7 +797,7 @@ async def tar_apps(config, all_paths):
     log.info("Tarring up artifacts")
     futures = []
     for app in all_paths:
-        app.check_required_attrs(["app_name", "orig_path", "parent_dir"])
+        app.check_required_attrs(["orig_path", "parent_dir"])
         # If we downloaded public/build/locale/target.tar.gz, then write to
         # artifact_dir/public/build/locale/target.tar.gz
         app.target_tar_path = "{}/public/{}".format(
@@ -810,7 +811,7 @@ async def tar_apps(config, all_paths):
                         "tar",
                         _get_tar_create_options(app.target_tar_path),
                         app.target_tar_path,
-                        app.app_name,
+                        ".",
                     ],
                     cwd=app.parent_dir,
                     exception=IScriptError,
