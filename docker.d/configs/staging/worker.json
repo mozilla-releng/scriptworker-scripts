@@ -1,6 +1,6 @@
 {
   "work_dir": "/app/workdir",
-  "mark_as_shipped_schema_file": {"$eval": "MARK_AS_SHIPPED_SCHEMA_FILE"},
+  "mark_as_shipped_schema_file": "/app/shipitscript/data/mark_as_shipped_task_schema.json",
   "verbose": true,
   "taskcluster_scope_prefix": "project:releng:ship-it:",
   "ship_it_instances": {

@@ -9,7 +9,7 @@ credentials:
 
 artifact_upload_timeout: 1200
 task_max_timeout: 3600
-task_script: [{"$eval": "TASK_SCRIPT"}, {"$eval": "TASK_SCRIPT_CONFIG"}]
+task_script: ["/app/bin/shipitscript", "/app/configs/worker_config.json"]
 verbose: true
 
 verify_chain_of_trust: true
@@ -22,7 +22,7 @@ cot_product: {"$eval": "COT_PRODUCT"}
 # 5000 per hour. https://developer.github.com/v3/#rate-limiting
 github_oauth_token: ""
 
-log_dir: /tmp/logs
+log_dir: /app/logs
 work_dir: /app/workdir
 artifact_dir: /app/artifacts
 task_log_dir: /app/artifacts/public/logs
