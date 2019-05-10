@@ -811,6 +811,8 @@ async def tar_apps(config, all_paths):
                         "tar",
                         _get_tar_create_options(app.target_tar_path),
                         app.target_tar_path,
+                        "--exclude", "notarization.log",
+                        "--exclude", "*.zip",
                         ".",
                     ],
                     cwd=app.parent_dir,
