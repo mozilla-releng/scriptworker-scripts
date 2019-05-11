@@ -2,7 +2,15 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.0.4] - 2019-05-14
+
+### Fixes
+* `certificate_alias` is now added to the schema
+
+
 ## [1.0.3] - 2019-05-07
+
+### Added
 * New task parameter `certificate_alias`: defines the specific certificate alias that should be used to verify the APK  to upload
 
 ## [1.0.2] - 2019-04-26

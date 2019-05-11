@@ -50,6 +50,9 @@
                     "minItems": 1,
                     "uniqueItems": true
                 },
+                "certificate_alias": {
+                  "type": "string"
+                },
                 "google_play_track": {
                   "type": "string"
                 },
