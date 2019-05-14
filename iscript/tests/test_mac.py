@@ -511,7 +511,7 @@ async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
     # Let's create 8 apps, with 3 sudo accounts, so we expect batches of 3, 3, 2
     for i in range(8):
         parent_dir = os.path.join(work_dir, str(i))
-        notarization_log_path = os.path.join(parent_dir, "notarization.log")
+        notarization_log_path = f"{parent_dir}-notarization.log"
         all_paths.append(
             mac.App(
                 parent_dir=parent_dir,
@@ -725,6 +725,10 @@ async def test_tar_apps(mocker, tmpdir, raises):
     for i in range(3):
         parent_dir = os.path.join(work_dir, str(i))
         app_name = "{}.app".format(i)
+        makedirs(parent_dir)
+        # touch parent_dir/app_name
+        with open(os.path.join(parent_dir, app_name), "w") as fh:
+            fh.write("foo")
         orig_path = os.path.join(
             work_dir, "cot", "foo", "public", "build", str(i), "{}.tar.gz".format(i)
         )

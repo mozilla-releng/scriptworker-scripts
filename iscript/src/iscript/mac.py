@@ -339,7 +339,7 @@ def get_app_paths(config, task):
     return all_paths
 
 
-# extract_all {{{1
+# extract_all_apps {{{1
 async def extract_all_apps(work_dir, all_paths):
     """Extract all the apps into their own directories.
 
@@ -386,10 +386,8 @@ async def create_all_notarization_zipfiles(all_paths, path_attr="app_name"):
     # zip up apps
     for app in all_paths:
         app.check_required_attrs(required_attrs)
-        app.zip_path = os.path.join(
-            app.parent_dir,
-            "{}{}.zip".format(path_attr, os.path.basename(app.parent_dir)),
-        )
+        parent_base_name = os.path.basename(app.parent_dir)
+        app.zip_path = f"{app.parent_dir}-{path_attr}{parent_base_name}.zip"
         # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
         path = getattr(app, path_attr)
         futures.append(
@@ -579,7 +577,7 @@ async def wrap_notarization_with_sudo(
         futures = []
         for account in accounts:
             app = all_paths[counter]
-            app.notarization_log_path = os.path.join(app.parent_dir, "notarization.log")
+            app.notarization_log_path = f"{app.parent_dir}-notarization.log"
             bundle_id = get_bundle_id(
                 key_config["base_bundle_id"], counter=str(counter)
             )
@@ -811,10 +809,8 @@ async def tar_apps(config, all_paths):
                         "tar",
                         _get_tar_create_options(app.target_tar_path),
                         app.target_tar_path,
-                        "--exclude", "notarization.log",
-                        "--exclude", "*.zip",
-                        ".",
-                    ],
+                    ]
+                    + os.listdir(app.parent_dir),
                     cwd=app.parent_dir,
                     exception=IScriptError,
                 )
