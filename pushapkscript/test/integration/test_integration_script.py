@@ -43,33 +43,32 @@ class ConfigFileGenerator(object):
 
     def generate(self):
         with open(self.config_file, 'w') as f:
-            json.dump(self._generate_json(), f)
+            json.dump(self._generate_config(), f)
         return self.config_file
 
-    def _generate_json(self):
-        return json.loads('''{{
-            "work_dir": "{work_dir}",
-            "verbose": true,
+    def _generate_config(self):
+        work_dir = self.work_dir
+        keystore_path = self.keystore_manager.keystore_path
+        certificate_alias = self.keystore_manager.certificate_alias
+        return {
+            "work_dir": work_dir,
+            "verbose": True,
 
-            "jarsigner_key_store": "{keystore_path}",
-            "jarsigner_certificate_alias": "{certificate_alias}",
-            "products": {{
-                "aurora": {{
+            "jarsigner_key_store": keystore_path,
+            "jarsigner_certificate_alias": certificate_alias,
+            "products": {
+                "aurora": {
                     "digest_algorithm": "SHA1",
                     "service_account": "dummy-service-account@iam.gserviceaccount.com",
                     "certificate": "/dummy/path/to/certificate.p12",
-                    "has_nightly_track": false,
-                    "skip_check_package_names": false,
-                    "update_google_play_strings": true,
+                    "has_nightly_track": False,
+                    "skip_check_package_names": False,
+                    "update_google_play_strings": True,
                     "expected_package_names": ["org.mozilla.fennec_aurora"]
-                }}
-            }},
+                }
+            },
             "taskcluster_scope_prefixes": ["project:releng:googleplay:"]
-        }}'''.format(
-            work_dir=self.work_dir, test_data_dir=self.test_data_dir,
-            keystore_path=self.keystore_manager.keystore_path,
-            certificate_alias=self.keystore_manager.certificate_alias
-        ))
+        }
 
 
 @unittest.mock.patch('pushapkscript.script.open', new=mock_open)
