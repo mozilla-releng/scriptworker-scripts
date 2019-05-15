@@ -10,23 +10,18 @@ _DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
 _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
-def publish_to_googleplay(payload, product_config, apk_files, contact_google_play, google_play_strings_file=None):
-    track = payload['google_play_track']
-    valid_track_values = craft_valid_track_values(product_config.get('require_track'),
-                                                  product_config['has_nightly_track'])
-    if track not in valid_track_values:
-        raise TaskVerificationError('Track name "{}" not valid. Allowed values: {}'.format(track, valid_track_values))
-
-    with open(product_config['certificate'], 'rb') as certificate:
+def publish_to_googleplay(payload, product_config, publish_config, apk_files, contact_google_play, google_play_strings_file=None):
+    with open(publish_config['certificate'], 'rb') as certificate:
         push_apk(
             apks=apk_files,
-            service_account=product_config['service_account'],
+            service_account=publish_config['service_account'],
             google_play_credentials_file=certificate,
-            track=track,
-            expected_package_names=product_config.get('expected_package_names'),
-            skip_check_package_names=bool(product_config.get('skip_check_package_names')),
+            track='rollout' if payload.get('rollout_percentage') else publish_config['google_play_track'],
+            expected_package_names=publish_config['package_names'],
+            skip_check_package_names=False,
             rollout_percentage=payload.get('rollout_percentage'),  # may be None
-            google_play_strings=NoGooglePlayStrings() if google_play_strings_file is None else FileGooglePlayStrings(google_play_strings_file),
+            google_play_strings=NoGooglePlayStrings() if google_play_strings_file is None else FileGooglePlayStrings(
+                google_play_strings_file),
             commit=should_commit_transaction(payload),
             # Only allowed to connect to Google Play if the configuration of the pushapkscript instance allows it
             contact_google_play=contact_google_play,

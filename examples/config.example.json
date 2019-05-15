@@ -6,26 +6,29 @@
             "product_names": ["aurora", "beta", "release"],
             "update_google_play_strings": true,
             "digest_algorithm": "SHA1",
-            "skip_check_package_names": true,
             "use_scope_for_channel": true,
+            "map_channels_to_apps": true,
             "channels": {
                 "aurora": {
                     "package_names": ["org.mozilla.fennec_aurora"],
                     "google_play_track": "beta",
                     "service_account": "firefox-aurora@iam.gserviceaccount.com",
-                    "certificate": "/firefox-aurora.p12"
+                    "certificate": "/firefox-nightly.p12",
+                    "certificate_alias": "nightly"
                 },
                 "beta": {
                     "package_names": ["org.mozilla.firefox_beta"],
                     "google_play_track": "production",
                     "service_account": "firefox-beta@iam.gserviceaccount.com",
-                    "certificate": "/firefox-beta.p12"
+                    "certificate": "/firefox.p12",
+                    "certificate_alias": "release"
                 },
                 "release": {
                     "package_names": ["org.mozilla.firefox"],
                     "google_play_track": "production",
                     "service_account": "firefox-production@iam.gserviceaccount.com",
-                    "certificate": "/firefox-production.p12"
+                    "certificate": "/firefox.p12",
+                    "certificate_alias": "release"
                 }
             }
         },{
@@ -34,20 +37,12 @@
             "digest_algorithm": "SHA-256",
             "skip_check_ordered_version_codes":  true,
             "skip_checks_fennec": true,
-            "use_scope_for_channel": false,
-            "channels": {
-                "beta": {
-                    "expected_package_names": ["org.mozilla.klar", "org.mozilla.focus"],
-                    "google_play_track": "beta",
-                    "service_account": "focus-beta@iam.gserviceaccount.com",
-                    "certificate": "/focus-beta.p12"
-                },
-                "release": {
-                    "expected_package_names": ["org.mozilla.klar", "org.mozilla.focus"],
-                    "google_play_track": "production",
-                    "service_account": "focus-production@iam.gserviceaccount.com",
-                    "certificate": "/focus-production.p12"
-                }
+            "map_channels_to_apps": false,
+            "single_app_config": {
+                "package_names": ["org.mozilla.klar", "org.mozilla.focus"],
+                "service_account": "focus@iam.gserviceaccount.com",
+                "certificate": "/focus.p12",
+                "certificate_alias": "focus"
             }
         },{
             "product_names": ["fenix"],
@@ -56,25 +51,28 @@
             "skip_check_multiple_locales": true,
             "skip_check_same_locales": true,
             "skip_checks_fennec": true,
-            "use_scope_for_channel": false,
+            "map_channels_to_apps": true,
             "channels": {
                 "nightly": {
-                    "expected_package_names": ["org.mozilla.fenix.nightly"],
+                    "package_names": ["org.mozilla.fenix.nightly"],
                     "google_play_track": "beta",
                     "service_account": "fenix-nightly@iam.gserviceaccount.com",
-                    "certificate": "/fenix-beta.p12"
+                    "certificate": "/fenix-nightly.p12",
+                    "certificate_alias": "fenix-nightly"
                 },
                 "beta": {
-                    "expected_package_names": ["org.mozilla.fenix.beta"],
+                    "package_names": ["org.mozilla.fenix.beta"],
                     "google_play_track": "production",
                     "service_account": "fenix-beta@iam.gserviceaccount.com",
-                    "certificate": "/fenix-beta.p12"
+                    "certificate": "/fenix-beta.p12",
+                    "certificate_alias": "fenix-beta"
                 },
                 "release": {
-                    "expected_package_names": ["org.mozilla.fenix"],
+                    "package_names": ["org.mozilla.fenix"],
                     "google_play_track": "production",
                     "service_account": "fenix-production@iam.gserviceaccount.com",
-                    "certificate": "/fenix-production.p12"
+                    "certificate": "/fenix-production.p12",
+                    "certificate_alias": "fenix-production"
                 }
             }
         }]

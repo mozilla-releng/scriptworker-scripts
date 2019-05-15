@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 async def async_main(context):
     android_product = task.extract_android_product_from_scopes(context)
     product_config = _get_product_config(context, android_product)
+    publish_config = _get_publish_config(product_config, context.task['payload'], android_product)
     contact_google_play = not bool(context.config.get('do_not_contact_google_play'))
 
     logging.getLogger('oauth2client').setLevel(logging.WARNING)
@@ -34,7 +35,7 @@ async def async_main(context):
 
     log.info('Verifying APKs\' signatures...')
     for apk_path in all_apks_paths:
-        jarsigner.verify(context, apk_path)
+        jarsigner.verify(context, publish_config, apk_path)
         manifest.verify(product_config, apk_path)
 
     if product_config['update_google_play_strings']:
@@ -50,7 +51,7 @@ async def async_main(context):
     with contextlib.ExitStack() as stack:
         files = [stack.enter_context(open(apk_file_name)) for apk_file_name in all_apks_paths]
         strings_file = stack.enter_context(open(strings_path)) if strings_path is not None else None
-        googleplay.publish_to_googleplay(context.task['payload'], product_config, files, contact_google_play,
+        googleplay.publish_to_googleplay(context.task['payload'], product_config, publish_config, files, contact_google_play,
                                          strings_file)
 
     log.info('Done!')
@@ -63,10 +64,24 @@ def _get_product_config(context, android_product):
         raise ConfigValidationError('"products" is not part of the configuration')
 
     try:
-        return products[android_product]
-    except KeyError:
+        return [product for product in products if android_product in product['product_names']][0]
+    except IndexError:
         raise TaskVerificationError('Android "{}" does not exist in the configuration of this instance.\
     Are you sure you allowed to push such APK?'.format(android_product))
+
+
+def _get_publish_config(product_config, payload, android_product):
+    if not product_config.get('map_channels_to_apps'):
+        # There's a single Google Play Store app that uses the "tracks" feature to represent different channels.
+        return {
+            'google_play_track': payload.get('google_play_track') or payload['channel'],
+            **product_config['single_app_config'],
+        }
+
+    if product_config.get('use_scope_for_channel'):
+        return product_config['channels'][android_product]
+
+    return product_config['channels'][payload.get('google_play_track') or payload['channel']]
 
 
 def _log_warning_forewords(contact_google_play, task_payload):

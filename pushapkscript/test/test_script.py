@@ -10,7 +10,8 @@ from unittest.mock import MagicMock, patch
 
 from pushapkscript import googleplay, jarsigner, task, manifest
 from pushapkscript.exceptions import ConfigValidationError
-from pushapkscript.script import async_main, get_default_config, main, _log_warning_forewords, _get_product_config
+from pushapkscript.script import async_main, get_default_config, main, _log_warning_forewords, _get_product_config, \
+    _get_publish_config
 from pushapkscript.test.helpers.mock_file import mock_open
 
 
@@ -80,9 +81,9 @@ def test_get_product_config_validation():
 def test_get_product_config_unknown_product():
     context = Context()
     context.config = {
-        'products': {
-            'fenix': {}
-        }
+        'products': [{
+            'product_names': ['fenix']
+        }]
     }
 
     with pytest.raises(TaskVerificationError):
@@ -92,14 +93,72 @@ def test_get_product_config_unknown_product():
 def test_get_product_config():
     context = Context()
     context.config = {
-        'products': {
-            'fenix': {
+        'products': [{
+            'product_names': ['fenix'],
+            'foo': 'bar',
+        }]
+    }
+
+    assert _get_product_config(context, 'fenix') == {'product_names': ['fenix'], 'foo': 'bar'}
+
+
+def test_get_publish_config_fennec():
+    aurora_config = {
+        'map_channels_to_apps': True,
+        'use_scope_for_channel': True,
+        'channels': {
+            'aurora': {
                 'foo': 'bar'
             }
         }
     }
+    assert _get_publish_config(aurora_config, {}, 'aurora') == {'foo': 'bar'}
 
-    assert _get_product_config(context, 'fenix') == {'foo': 'bar'}
+
+def test_get_publish_config_focus_old():
+    focus_config = {
+        'single_app_config': {
+            'foo': 'bar'
+        }
+    }
+    focus_payload = {'google_play_track': 'beta'}
+    assert _get_publish_config(focus_config, focus_payload, 'focus') == {'foo': 'bar', 'google_play_track': 'beta'}
+
+
+def test_get_publish_config_focus():
+    focus_config = {
+        'single_app_config': {
+            'foo': 'bar'
+        }
+    }
+    focus_payload = {'channel': 'beta'}
+    assert _get_publish_config(focus_config, focus_payload, 'focus') == {'foo': 'bar', 'google_play_track': 'beta'}
+
+
+def test_get_publish_config_fenix_old():
+    fenix_config = {
+        'map_channels_to_apps': True,
+        'channels': {
+            'nightly': {
+                'foo': 'bar',
+            }
+        }
+    }
+    focus_payload = {'google_play_track': 'nightly'}
+    assert _get_publish_config(fenix_config, focus_payload, 'focus') == {'foo': 'bar'}
+
+
+def test_get_publish_config_fenix():
+    fenix_config = {
+        'map_channels_to_apps': True,
+        'channels': {
+            'nightly': {
+                'foo': 'bar',
+            }
+        }
+    }
+    focus_payload = {'channel': 'nightly'}
+    assert _get_publish_config(fenix_config, focus_payload, 'focus') == {'foo': 'bar'}
 
 
 @pytest.mark.parametrize('is_allowed_to_push, should_commit_transaction, expected', (
