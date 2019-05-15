@@ -14,11 +14,15 @@ class TaskGenerator(object):
     def generate_file(self, work_dir):
         task_file = os.path.join(work_dir, 'task.json')
         with open(task_file, 'w') as f:
-            json.dump(self.generate_json(), f)
+            json.dump(self.generate_task(), f)
         return task_file
 
-    def generate_json(self):
-        json_content = json.loads('''{{
+    def generate_task(self):
+        arm_task_id = self.arm_task_id
+        x86_task_id = self.x86_task_id
+        strings_task_id = self.google_play_strings_task_id
+        google_play_track = self.google_play_track
+        task = {
           "provisionerId": "some-provisioner-id",
           "workerType": "some-worker-type",
           "schedulerId": "some-scheduler-id",
@@ -28,36 +32,31 @@ class TaskGenerator(object):
           "created": "2015-05-08T16:15:58.903Z",
           "deadline": "2015-05-08T18:15:59.010Z",
           "expires": "2016-05-08T18:15:59.010Z",
-          "dependencies": ["{arm_task_id}", "{x86_task_id}"],
+          "dependencies": [arm_task_id, x86_task_id],
           "scopes": ["project:releng:googleplay:aurora"],
-          "payload": {{
-            "upstreamArtifacts": [{{
+          "payload": {
+            "upstreamArtifacts": [{
               "paths": ["public/build/target.apk"],
-              "taskId": "{arm_task_id}",
+              "taskId": arm_task_id,
               "taskType": "signing"
-            }}, {{
+            }, {
               "paths": ["public/build/target.apk"],
-              "taskId": "{x86_task_id}",
+              "taskId": x86_task_id,
               "taskType": "signing"
-            }}, {{
+            }, {
               "paths": ["public/google_play_strings.json"],
-              "taskId": "{strings_task_id}",
+              "taskId": strings_task_id,
               "taskType": "build",
-              "optional": true
-            }}],
-            "google_play_track": "{google_play_track}"
-          }}
-        }}'''.format(
-            arm_task_id=self.arm_task_id,
-            x86_task_id=self.x86_task_id,
-            strings_task_id=self.google_play_strings_task_id,
-            google_play_track=self.google_play_track,
-        ))
+              "optional": True
+            }],
+            "google_play_track": google_play_track
+          }
+        }
 
         if self.rollout_percentage:
-            json_content['payload']['rollout_percentage'] = self.rollout_percentage
+            task['payload']['rollout_percentage'] = self.rollout_percentage
 
         if self.should_commit_transaction:
-            json_content['payload']['commit'] = True
+            task['payload']['commit'] = True
 
-        return json_content
+        return task

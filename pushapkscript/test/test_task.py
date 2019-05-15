@@ -20,7 +20,7 @@ def context():
 
 
 def test_validate_task(context):
-    context.task = TaskGenerator().generate_json()
+    context.task = TaskGenerator().generate_task()
     validate_task_schema(context)
 
 
