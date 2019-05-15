@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.4.6] = (2019-05-15)
+----------------------
+
+Added
+~~~~~
+
+- Add pkg mime type (`#1514903
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1514903>`_)
+
 [8.4.5] = (2019-04-18)
 ----------------------
 

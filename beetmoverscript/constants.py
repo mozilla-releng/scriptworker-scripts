@@ -15,6 +15,7 @@ MIME_MAP = {
     '.sha1': 'text/plain',
     '.pom': 'application/xml',
     '.aar': 'application/java-archive',
+    '.pkg': 'application/x-newton-compatible-pkg',
 }
 
 STAGE_PLATFORM_MAP = {
