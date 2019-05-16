@@ -261,9 +261,17 @@ def test_get_app_paths():
 
 
 # extract_all_apps {{{1
-@pytest.mark.parametrize("raises", (True, False))
+@pytest.mark.parametrize(
+    "suffix, command, raises",
+    (
+        ("dmg", "7z", False),
+        ("tar.gz", "tar", False),
+        ("tar.bz2", "tar", False),
+        ("unknown_ext", None, True),
+    ),
+)
 @pytest.mark.asyncio
-async def test_extract_all_apps(mocker, tmpdir, raises):
+async def test_extract_all_apps(mocker, tmpdir, suffix, command, raises):
     """``extract_all_apps`` creates ``parent_dir`` and raises if any tar command
     fails. The ``run_command`` calls all start with a commandline that calls
     ``tar``.
@@ -271,7 +279,7 @@ async def test_extract_all_apps(mocker, tmpdir, raises):
     """
 
     async def fake_run_command(*args, **kwargs):
-        assert args[0][0] in ("tar", "7z")
+        assert args[0][0] == command
         if raises:
             raise IScriptError("foo")
 
@@ -279,9 +287,9 @@ async def test_extract_all_apps(mocker, tmpdir, raises):
     work_dir = os.path.join(str(tmpdir), "work")
     config = {"work_dir": work_dir, "7z": "7z"}
     all_paths = [
-        mac.App(orig_path=os.path.join(work_dir, "orig1.tar.bz2")),
-        mac.App(orig_path=os.path.join(work_dir, "orig2.tar.gz")),
-        mac.App(orig_path=os.path.join(work_dir, "orig3.dmg")),
+        mac.App(orig_path=os.path.join(work_dir, f"orig1.{suffix}")),
+        mac.App(orig_path=os.path.join(work_dir, f"orig2.{suffix}")),
+        mac.App(orig_path=os.path.join(work_dir, f"orig3.{suffix}")),
     ]
     if raises:
         with pytest.raises(IScriptError):
