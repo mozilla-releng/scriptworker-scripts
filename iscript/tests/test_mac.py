@@ -737,6 +737,7 @@ async def test_tar_apps(mocker, tmpdir, raises):
             mac.App(
                 parent_dir=parent_dir,
                 app_name=app_name,
+                app_path=os.path.join(parent_dir, app_name),
                 orig_path=orig_path,
                 pkg_path=str(i),
             )
