@@ -817,7 +817,7 @@ async def tar_apps(config, all_paths):
         # artifact_dir/public/build/locale/target.tar.gz
         app.target_tar_path = "{}/public/{}".format(
             config["artifact_dir"], app.orig_path.split("public/")[1]
-        ).replace(".dmg", ".tar.bz2")
+        ).replace(".dmg", ".tar.gz")
         makedirs(os.path.dirname(app.target_tar_path))
         futures.append(
             asyncio.ensure_future(
