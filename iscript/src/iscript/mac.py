@@ -812,13 +812,14 @@ async def tar_apps(config, all_paths):
     log.info("Tarring up artifacts")
     futures = []
     for app in all_paths:
-        app.check_required_attrs(["orig_path", "parent_dir"])
+        app.check_required_attrs(["orig_path", "parent_dir", "app_path", "app_name"])
         # If we downloaded public/build/locale/target.tar.gz, then write to
         # artifact_dir/public/build/locale/target.tar.gz
         app.target_tar_path = "{}/public/{}".format(
             config["artifact_dir"], app.orig_path.split("public/")[1]
         ).replace(".dmg", ".tar.gz")
         makedirs(os.path.dirname(app.target_tar_path))
+        cwd = os.path.basename(app_path)
         futures.append(
             asyncio.ensure_future(
                 run_command(
@@ -826,9 +827,9 @@ async def tar_apps(config, all_paths):
                         "tar",
                         _get_tar_create_options(app.target_tar_path),
                         app.target_tar_path,
+                        app.app_name,
                     ]
-                    + os.listdir(app.parent_dir),
-                    cwd=app.parent_dir,
+                    cwd=cwd,
                     exception=IScriptError,
                 )
             )
