@@ -243,10 +243,10 @@ async def verify_app_signature(app):
         IScriptError: on failure
 
     """
-    required_attrs = ["parent_dir", "app_name"]
+    required_attrs = ["parent_dir", "app_path"]
     app.check_required_attrs(required_attrs)
     await run_command(
-        ["codesign", "-vvv", "--deep", "--strict", app.app_name],
+        ["codesign", "-vvv", "--deep", "--strict", app.app_path],
         cwd=app.parent_dir,
         exception=IScriptError,
     )
