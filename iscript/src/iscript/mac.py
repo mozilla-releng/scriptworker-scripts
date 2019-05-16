@@ -3,6 +3,7 @@
 import arrow
 import asyncio
 import attr
+from copy import deepcopy
 from glob import glob
 import logging
 import os
