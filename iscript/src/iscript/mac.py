@@ -765,13 +765,13 @@ async def poll_all_notarization_status(key_config, poll_uuids):
 
 
 # staple_notarization {{{1
-async def staple_notarization(all_paths, path_attr="app_name"):
+async def staple_notarization(all_paths, path_attr="app_path"):
     """Staple the notarization results to each app.
 
     Args:
         all_paths (list): the list of App objects
         path_attr (str, optional): the path attribute to staple. Defaults to
-            ``app_name``
+            ``app_path``
 
     Raises:
         IScriptError: on failure
@@ -781,12 +781,13 @@ async def staple_notarization(all_paths, path_attr="app_name"):
     futures = []
     for app in all_paths:
         app.check_required_attrs([path_attr, "parent_dir"])
-        path = getattr(app, path_attr)
+        cwd = os.path.dirname(getattr(app, path_attr))
+        path = os.path.basename(getattr(app, path_attr))
         futures.append(
             asyncio.ensure_future(
                 run_command(
                     ["xcrun", "stapler", "staple", "-v", path],
-                    cwd=app.parent_dir,
+                    cwd=cwd,
                     exception=IScriptError,
                 )
             )
@@ -958,7 +959,7 @@ async def notarize_behavior(config, task):
         poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
 
     await poll_all_notarization_status(key_config, poll_uuids)
-    await staple_notarization(all_paths, path_attr="app_name")
+    await staple_notarization(all_paths, path_attr="app_path")
     await tar_apps(config, all_paths)
 
     # pkg
