@@ -78,11 +78,6 @@
 
     "jarsigner_binary": "jarsigner",
     "jarsigner_key_store": "/absolute/path/to/keystore",
-    "jarsigner_certificate_aliases": {
-        "aurora": "nightly",
-        "beta": "release",
-        "release": "release"
-    },
 
     "taskcluster_scope_prefixes": ["project:releng:googleplay:"],
 
