@@ -828,7 +828,7 @@ async def tar_apps(config, all_paths):
                         _get_tar_create_options(app.target_tar_path),
                         app.target_tar_path,
                         app.app_name,
-                    ]
+                    ],
                     cwd=cwd,
                     exception=IScriptError,
                 )
