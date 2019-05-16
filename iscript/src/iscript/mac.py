@@ -25,7 +25,10 @@ from iscript.exceptions import (
 )
 from iscript.util import get_key_config
 
-# from iscript.widevine import sign_widevine_dir
+from iscript.widevine import sign_widevine_dir
+
+# XXX silence linting; remove me when widevine is working
+assert sign_widevine_dir
 
 log = logging.getLogger(__name__)
 
