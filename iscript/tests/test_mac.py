@@ -271,22 +271,23 @@ async def test_extract_all_apps(mocker, tmpdir, raises):
     """
 
     async def fake_run_command(*args, **kwargs):
-        assert args[0][0] == "tar"
+        assert args[0][0] in ("tar", "7z")
         if raises:
             raise IScriptError("foo")
 
     mocker.patch.object(mac, "run_command", new=fake_run_command)
     work_dir = os.path.join(str(tmpdir), "work")
+    config = {"work_dir": work_dir, "7z": "7z"}
     all_paths = [
-        mac.App(orig_path=os.path.join(work_dir, "orig1")),
-        mac.App(orig_path=os.path.join(work_dir, "orig2")),
-        mac.App(orig_path=os.path.join(work_dir, "orig3")),
+        mac.App(orig_path=os.path.join(work_dir, "orig1.tar.bz2")),
+        mac.App(orig_path=os.path.join(work_dir, "orig2.tar.gz")),
+        mac.App(orig_path=os.path.join(work_dir, "orig3.dmg")),
     ]
     if raises:
         with pytest.raises(IScriptError):
-            await mac.extract_all_apps(work_dir, all_paths)
+            await mac.extract_all_apps(config, all_paths)
     else:
-        await mac.extract_all_apps(work_dir, all_paths)
+        await mac.extract_all_apps(config, all_paths)
         for i in ("0", "1", "2"):
             assert os.path.isdir(os.path.join(work_dir, i))
 
@@ -310,7 +311,10 @@ async def test_create_all_notarization_zipfiles(mocker, tmpdir, raises):
     for i in range(3):
         parent_dir = os.path.join(work_dir, str(i))
         app_name = "fx {}.app".format(str(i))
-        all_paths.append(mac.App(parent_dir=parent_dir, app_name=app_name))
+        app_path = os.path.join(parent_dir, app_name)
+        all_paths.append(
+            mac.App(parent_dir=parent_dir, app_name=app_name, app_path=app_path)
+        )
 
     if raises:
         with pytest.raises(IScriptError):
@@ -695,7 +699,12 @@ async def test_staple_notarization(mocker, raises):
 
     all_paths = []
     for i in range(3):
-        all_paths.append(mac.App(parent_dir=str(i), app_name="{}.app".format(i)))
+        parent_dir = str(i)
+        app_name = f"{i}.app"
+        app_path = os.path.join(parent_dir, app_name)
+        all_paths.append(
+            mac.App(parent_dir=parent_dir, app_name=app_name, app_path=app_path)
+        )
     mocker.patch.object(mac, "run_command", new=fake_run_command)
     if raises:
         with pytest.raises(IScriptError):
@@ -872,6 +881,7 @@ async def test_sign_behavior(mocker, tmpdir):
         }
     }
 
+    mocker.patch.object(os, "listdir", return_value=[])
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
@@ -924,6 +934,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
         }
     }
 
+    mocker.patch.object(os, "listdir", return_value=[])
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
@@ -980,6 +991,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type):
         }
     }
 
+    mocker.patch.object(os, "listdir", return_value=[])
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
