@@ -360,8 +360,7 @@ async def extract_all_apps(config, all_paths):
         app.parent_dir = os.path.join(work_dir, str(counter))
         rm(app.parent_dir)
         makedirs(app.parent_dir)
-        # XXX clean this up, coverage
-        if app.orig_path.endswith(".tar.bz2"):
+        if app.orig_path.endswith((".tar.bz2", ".tar.gz", ".tgz")):
             futures.append(
                 asyncio.ensure_future(
                     run_command(
