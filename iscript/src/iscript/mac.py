@@ -386,7 +386,7 @@ async def extract_all_apps(config, all_paths):
 
 
 # create_all_notarization_zipfiles {{{1
-async def create_all_notarization_zipfiles(all_paths, path_attr="app_name"):
+async def create_all_notarization_zipfiles(all_paths, path_attr="app_path"):
     """Create notarization zipfiles for all the apps.
 
     Args:
@@ -402,9 +402,10 @@ async def create_all_notarization_zipfiles(all_paths, path_attr="app_name"):
     for app in all_paths:
         app.check_required_attrs(required_attrs)
         parent_base_name = os.path.basename(app.parent_dir)
+        cwd = os.path.dirname(getattr(app, path_attr))
+        path = os.path.basename(getattr(app, path_attr))
         app.zip_path = f"{app.parent_dir}-{path_attr}{parent_base_name}.zip"
         # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
-        path = getattr(app, path_attr)
         futures.append(
             asyncio.ensure_future(
                 run_command(
@@ -946,7 +947,7 @@ async def notarize_behavior(config, task):
 
     log.info("Notarizing")
     if key_config["notarize_type"] == "multi_account":
-        await create_all_notarization_zipfiles(all_paths, path_attr="app_name")
+        await create_all_notarization_zipfiles(all_paths, path_attr="app_path")
         poll_uuids = await wrap_notarization_with_sudo(
             config, key_config, all_paths, path_attr="zip_path"
         )
