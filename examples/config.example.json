@@ -7,7 +7,7 @@
         "digest_algorithm": "SHA1",
         "use_scope_for_channel": true,
         "map_channels_to_apps": true,
-        "channels": {
+        "apps": {
             "aurora": {
                 "package_names": ["org.mozilla.fennec_aurora"],
                 "google_play_track": "beta",
@@ -51,7 +51,7 @@
         "skip_check_same_locales": true,
         "skip_checks_fennec": true,
         "map_channels_to_apps": true,
-        "channels": {
+        "apps": {
             "nightly": {
                 "package_names": ["org.mozilla.fenix.nightly"],
                 "google_play_track": "beta",

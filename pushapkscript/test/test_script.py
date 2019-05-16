@@ -106,7 +106,7 @@ def test_get_publish_config_fennec():
     aurora_config = {
         'map_channels_to_apps': True,
         'use_scope_for_channel': True,
-        'channels': {
+        'apps': {
             'aurora': {
                 'foo': 'bar'
             }
@@ -138,7 +138,7 @@ def test_get_publish_config_focus():
 def test_get_publish_config_fenix_old():
     fenix_config = {
         'map_channels_to_apps': True,
-        'channels': {
+        'apps': {
             'nightly': {
                 'foo': 'bar',
             }
@@ -151,7 +151,7 @@ def test_get_publish_config_fenix_old():
 def test_get_publish_config_fenix():
     fenix_config = {
         'map_channels_to_apps': True,
-        'channels': {
+        'apps': {
             'nightly': {
                 'foo': 'bar',
             }

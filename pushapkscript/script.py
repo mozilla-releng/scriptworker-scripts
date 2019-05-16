@@ -79,9 +79,9 @@ def _get_publish_config(product_config, payload, android_product):
         }
 
     if product_config.get('use_scope_for_channel'):
-        return product_config['channels'][android_product]
+        return product_config['apps'][android_product]
 
-    return product_config['channels'][payload.get('google_play_track') or payload['channel']]
+    return product_config['apps'][payload.get('google_play_track') or payload['channel']]
 
 
 def _log_warning_forewords(contact_google_play, task_payload):

@@ -63,7 +63,7 @@ class ConfigFileGenerator(object):
                 "skip_check_package_names": True,
                 "use_scope_for_channel": True,
                 "map_channels_to_apps": True,
-                "channels": {
+                "apps": {
                     "aurora": {
                         "package_names": ["org.mozilla.fennec_aurora"],
                         "google_play_track": "beta",
@@ -131,7 +131,7 @@ class ConfigFileGenerator(object):
                 "skip_check_same_locales": True,
                 "skip_checks_fennec": True,
                 "map_channels_to_apps": True,
-                "channels": {
+                "apps": {
                     "nightly": {
                         "package_names": ["org.mozilla.fenix.nightly"],
                         "google_play_track": "beta",
