@@ -20,7 +20,7 @@ class GooglePlayTest(unittest.TestCase):
             'google_play_track': 'beta',
             'package_names': ['org.mozilla.fennec_aurora'],
             'service_account': 'service_account',
-            'certificate': '/certificate.p12',
+            'google_credentials_file': '/google_credentials.p12',
         }
         self.apks = [MockFile('/path/to/x86.apk'), MockFile('/path/to/arm_v15.apk')]
 
@@ -30,7 +30,7 @@ class GooglePlayTest(unittest.TestCase):
         mock_push_apk.assert_called_with(
             apks=[MockFile('/path/to/x86.apk'), MockFile('/path/to/arm_v15.apk')],
             service_account='service_account',
-            google_play_credentials_file=MockFile('/certificate.p12'),
+            google_play_credentials_file=MockFile('/google_credentials.p12'),
             track='beta',
             expected_package_names=['org.mozilla.fennec_aurora'],
             skip_check_package_names=False,
@@ -85,7 +85,7 @@ class GooglePlayTest(unittest.TestCase):
             'google_play_track': 'beta',
             'package_names': ['a', 'b'],
             'service_account': 'service_account',
-            'certificate': '/certificate.p12',
+            'google_credentials_file': '/google_credentials.p12',
         }
         publish_to_googleplay({}, {}, publish_config, self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args

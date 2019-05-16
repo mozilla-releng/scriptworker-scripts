@@ -68,21 +68,21 @@ class ConfigFileGenerator(object):
                         "package_names": ["org.mozilla.fennec_aurora"],
                         "google_play_track": "beta",
                         "service_account": "firefox-aurora@iam.gserviceaccount.com",
-                        "certificate": "/firefox-nightly.p12",
+                        "google_credentials_file": "/firefox-nightly.p12",
                         "certificate_alias": "nightly",
                     },
                     "beta": {
                         "package_names": ["org.mozilla.firefox_beta"],
                         "google_play_track": "production",
                         "service_account": "firefox-beta@iam.gserviceaccount.com",
-                        "certificate": "/firefox.p12",
+                        "google_credentials_file": "/firefox.p12",
                         "certificate_alias": "release",
                     },
                     "release": {
                         "package_names": ["org.mozilla.firefox"],
                         "google_play_track": "production",
                         "service_account": "firefox-production@iam.gserviceaccount.com",
-                        "certificate": "/firefox.p12",
+                        "google_credentials_file": "/firefox.p12",
                         "certificate_alias": "release",
                     }
                 }
@@ -108,7 +108,7 @@ class ConfigFileGenerator(object):
                 "single_app_config": {
                     "package_names": ["org.mozilla.focus", "org.mozilla.klar"],
                     "service_account": "focus@iam.gserviceaccount.com",
-                    "certificate": "/focus.p12",
+                    "google_credentials_file": "/focus.p12",
                     "certificate_alias": "focus",
                 }
             }],
@@ -136,21 +136,21 @@ class ConfigFileGenerator(object):
                         "package_names": ["org.mozilla.fenix.nightly"],
                         "google_play_track": "beta",
                         "service_account": "fenix-nightly@iam.gserviceaccount.com",
-                        "certificate": "/fenix-nightly.p12",
+                        "google_credentials_file": "/fenix-nightly.p12",
                         "certificate_alias": "fenix-nightly",
                     },
                     "beta": {
                         "package_names": ["org.mozilla.fenix.beta"],
                         "google_play_track": "production",
                         "service_account": "fenix-beta@iam.gserviceaccount.com",
-                        "certificate": "/fenix-beta.p12",
+                        "google_credentials_file": "/fenix-beta.p12",
                         "certificate_alias": "fenix-beta",
                     },
                     "release": {
                         "package_names": ["org.mozilla.fenix"],
                         "google_play_track": "production",
                         "service_account": "fenix-production@iam.gserviceaccount.com",
-                        "certificate": "/fenix-production.p12",
+                        "google_credentials_file": "/fenix-production.p12",
                         "certificate_alias": "fenix-production",
                     }
                 }

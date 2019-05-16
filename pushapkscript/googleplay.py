@@ -11,7 +11,7 @@ _EXPECTED_L10N_STRINGS_FILE_NAME = 'public/google_play_strings.json'
 
 
 def publish_to_googleplay(payload, product_config, publish_config, apk_files, contact_google_play, google_play_strings_file=None):
-    with open(publish_config['certificate'], 'rb') as certificate:
+    with open(publish_config['google_credentials_file'], 'rb') as certificate:
         push_apk(
             apks=apk_files,
             service_account=publish_config['service_account'],
