@@ -410,7 +410,7 @@ async def create_all_notarization_zipfiles(all_paths, path_attr="app_path"):
             asyncio.ensure_future(
                 run_command(
                     ["zip", "-r", app.zip_path, path],
-                    cwd=app.parent_dir,
+                    cwd=cwd,
                     exception=IScriptError,
                 )
             )
