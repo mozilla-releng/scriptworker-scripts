@@ -24,7 +24,7 @@ from iscript.exceptions import (
     UnknownAppDir,
 )
 from iscript.util import get_key_config
-from iscript.widevine import sign_widevine_dir
+# from iscript.widevine import sign_widevine_dir
 
 log = logging.getLogger(__name__)
 
@@ -340,7 +340,7 @@ def get_app_paths(config, task):
 
 
 # extract_all_apps {{{1
-async def extract_all_apps(work_dir, all_paths):
+async def extract_all_apps(config, all_paths):
     """Extract all the apps into their own directories.
 
     Args:
@@ -353,20 +353,35 @@ async def extract_all_apps(work_dir, all_paths):
     """
     log.info("Extracting all apps")
     futures = []
+    work_dir = config["work_dir"]
     for counter, app in enumerate(all_paths):
         app.check_required_attrs(["orig_path"])
         app.parent_dir = os.path.join(work_dir, str(counter))
         rm(app.parent_dir)
         makedirs(app.parent_dir)
-        futures.append(
-            asyncio.ensure_future(
-                run_command(
-                    ["tar", "xf", app.orig_path],
-                    cwd=app.parent_dir,
-                    exception=IScriptError,
+        # XXX clean this up, coverage
+        if app.orig_path.endswith(".tar.bz2"):
+            futures.append(
+                asyncio.ensure_future(
+                    run_command(
+                        ["tar", "xf", app.orig_path],
+                        cwd=app.parent_dir,
+                        exception=IScriptError,
+                    )
                 )
             )
-        )
+        elif app.orig_path.endswith(".dmg"):
+            futures.append(
+                asyncio.ensure_future(
+                    run_command(
+                        [config["7z"], "x", app.orig_path],
+                        cwd=app.parent_dir,
+                        exception=IScriptError,
+                    )
+                )
+            )
+        else:
+            raise IScriptError(f"unknown file type {app.orig_path}")
     await raise_future_exceptions(futures)
 
 
@@ -923,7 +938,7 @@ async def notarize_behavior(config, task):
     key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
-    await extract_all_apps(work_dir, all_paths)
+    await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
@@ -968,13 +983,12 @@ async def sign_behavior(config, task):
         IScriptError: on fatal error.
 
     """
-    work_dir = config["work_dir"]
     entitlements_path = await download_entitlements_file(config, task)
 
     key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
-    await extract_all_apps(work_dir, all_paths)
+    await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
@@ -995,13 +1009,12 @@ async def sign_and_pkg_behavior(config, task):
         IScriptError: on fatal error.
 
     """
-    work_dir = config["work_dir"]
     entitlements_path = await download_entitlements_file(config, task)
 
     key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
-    await extract_all_apps(work_dir, all_paths)
+    await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
@@ -1033,12 +1046,10 @@ async def pkg_behavior(config, task):
         IScriptError: on fatal error.
 
     """
-    work_dir = config["work_dir"]
-
     key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
-    await extract_all_apps(work_dir, all_paths)
+    await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
