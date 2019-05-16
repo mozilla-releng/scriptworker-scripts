@@ -155,6 +155,7 @@ async def run_command(
     log_path=None,
     log_cmd=None,
     cwd=None,
+    env=None,
     exception=None,
     expected_exit_codes=(0,),
     output_log_on_exception=False,
@@ -208,6 +209,8 @@ async def run_command(
         "preexec_fn": os.setsid,
         "cwd": cwd,
     }
+    if env is not None:
+        kwargs["env"] = env
     proc = await asyncio.create_subprocess_exec(*cmd, **kwargs)
     with get_log_filehandle(log_path=log_path) as log_filehandle:
         stderr_future = asyncio.ensure_future(

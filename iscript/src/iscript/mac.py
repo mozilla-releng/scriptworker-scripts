@@ -822,6 +822,9 @@ async def tar_apps(config, all_paths):
         makedirs(os.path.dirname(app.target_tar_path))
         cwd = os.path.dirname(app.app_path)
         path = os.path.basename(app.app_path)
+        env = deepcopy(os.environ)
+        # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
+        env["COPYFILE_DISABLE"] = "1"
         futures.append(
             asyncio.ensure_future(
                 run_command(
@@ -832,6 +835,7 @@ async def tar_apps(config, all_paths):
                         path,
                     ],
                     cwd=cwd,
+                    env=env,
                     exception=IScriptError,
                 )
             )
