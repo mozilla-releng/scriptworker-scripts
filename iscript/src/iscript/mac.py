@@ -100,7 +100,7 @@ def _get_tar_create_options(path):
 
 
 def _get_pkg_name_from_tarball(path):
-    for ext in (".tar.gz", ".tar.bz2"):
+    for ext in (".tar.gz", ".tar.bz2", ".dmg"):
         if path.endswith(ext):
             return path.replace(ext, ".pkg")
     raise IScriptError("Unknown tarball suffix in path {}".format(path))
@@ -817,7 +817,7 @@ async def tar_apps(config, all_paths):
         # artifact_dir/public/build/locale/target.tar.gz
         app.target_tar_path = "{}/public/{}".format(
             config["artifact_dir"], app.orig_path.split("public/")[1]
-        )
+        ).replace(".dmg", ".tar.bz2")
         makedirs(os.path.dirname(app.target_tar_path))
         futures.append(
             asyncio.ensure_future(
