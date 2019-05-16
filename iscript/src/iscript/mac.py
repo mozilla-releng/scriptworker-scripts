@@ -822,7 +822,6 @@ async def tar_apps(config, all_paths):
         ).replace(".dmg", ".tar.gz")
         makedirs(os.path.dirname(app.target_tar_path))
         cwd = os.path.dirname(app.app_path)
-        path = os.path.basename(app.app_path)
         env = deepcopy(os.environ)
         # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
         env["COPYFILE_DISABLE"] = "1"
@@ -833,8 +832,8 @@ async def tar_apps(config, all_paths):
                         "tar",
                         _get_tar_create_options(app.target_tar_path),
                         app.target_tar_path,
-                        path,
-                    ],
+                    ]
+                    + os.listdir(cwd),
                     cwd=cwd,
                     env=env,
                     exception=IScriptError,
