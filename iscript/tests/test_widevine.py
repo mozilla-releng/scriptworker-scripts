@@ -16,149 +16,52 @@ import iscript.widevine as iwv
 
 
 ## helper constants, fixtures, functions {{{1
-# TEST_CERT_TYPE = '{}cert:dep-signing'.format(DEFAULT_SCOPE_PREFIX)
-#
-#
-# @pytest.fixture(scope='function')
-# def task_defn():
-#    return {
-#        'provisionerId': 'meh',
-#        'workerType': 'workertype',
-#        'schedulerId': 'task-graph-scheduler',
-#        'taskGroupId': 'some',
-#        'routes': [],
-#        'retries': 5,
-#        'created': '2015-05-08T16:15:58.903Z',
-#        'deadline': '2015-05-08T18:15:59.010Z',
-#        'expires': '2016-05-08T18:15:59.010Z',
-#        'dependencies': ['VALID_TASK_ID'],
-#        'scopes': ['signing'],
-#        'payload': {
-#          'upstreamArtifacts': [{
-#            'taskType': 'build',
-#            'taskId': 'VALID_TASK_ID',
-#            'formats': ['gpg'],
-#            'paths': ['public/build/firefox-52.0a1.en-US.win64.installer.exe'],
-#          }]
-#        }
-#    }
-#
-#
-# @contextmanager
-# def context_die(*args, **kwargs):
-#    raise IScriptError("dying")
-#
-#
-# def is_tarfile(archive):
-#    try:
-#        import tarfile
-#        tarfile.open(archive)
-#    except tarfile.ReadError:
-#        return False
-#    return True
-#
-#
-# async def assert_file_permissions(archive):
-#    with tarfile.open(archive, mode='r') as t:
-#        for member in t.getmembers():
-#            assert member.uid == 0
-#            assert member.gid == 0
-#
-#
-# async def helper_archive(context, filename, create_fn, extract_fn, *args):
-#    tmpdir = context.config['artifact_dir']
-#    archive = os.path.join(context.config['work_dir'], filename)
-#    # Add a directory to tickle the tarfile isfile() call
-#    files = [__file__, SERVER_CONFIG_PATH]
-#    await create_fn(
-#        context, archive, [__file__, SERVER_CONFIG_PATH], *args,
-#        tmp_dir=BASE_DIR
-#    )
-#    # Not relevant for zip
-#    if is_tarfile(archive):
-#        await assert_file_permissions(archive)
-#    await extract_fn(context, archive, *args, tmp_dir=tmpdir)
-#    for path in files:
-#        target_path = os.path.join(tmpdir, os.path.relpath(path, BASE_DIR))
-#        assert os.path.exists(target_path)
-#        assert os.path.isfile(target_path)
-#        hash1 = get_hash(path)
-#        hash2 = get_hash(target_path)
-#        assert hash1 == hash2
-#
-#
-## sign_file {{{1
-# @pytest.mark.asyncio
-# @pytest.mark.parametrize('to,expected', ((
-#    None, 'from',
-# ), (
-#    'to', 'to'
-# )))
-# async def test_sign_file_cert_signing_server(context, mocker, to, expected):
-#    context.task = {
-#        'scopes': ['project:releng:signing:cert:dep-signing']
-#    }
-#    mocker.patch.object(sign, 'build_signtool_cmd', new=noop_sync)
-#    mocker.patch.object(utils, 'execute_subprocess', new=noop_async)
-#    assert await sign.sign_file(context, 'from', 'blah', to=to) == expected
-#
-#
-## sign_file {{{1
-# @pytest.mark.asyncio
-# @pytest.mark.parametrize('to,expected', (
-#    (None, 'from'),
-#    ('to', 'to')))
-# async def test_sign_file_autograph(context, mocker, to, expected):
-#    context.task = {
-#        'scopes': ['project:releng:signing:cert:dep-signing']
-#    }
-#    context.signing_servers = {
-#        "project:releng:signing:cert:dep-signing": [
-#            SigningServer(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_mar"], "autograph"])
-#        ]
-#    }
-#    mocker.patch.object(sign, 'sign_file_with_autograph', new=noop_async)
-#
-#    assert await sign.sign_file(context, 'from', 'autograph_mar', to=to) == expected
-#
-#
-# @pytest.mark.asyncio
-# @pytest.mark.parametrize('to,expected,format,options', (
-#    (None, 'from', 'autograph_mar', None),
-#    ('to', 'to', 'autograph_mar', None),
-#    ('to', 'to', 'autograph_apk_foo', {'zip': 'passthrough'}),
-#    ('to', 'to', 'autograph_apk_sha1', {'pkcs7_digest': 'SHA1', 'zip': 'passthrough'})))
-# async def test_sign_file_with_autograph(context, mocker, to, expected, format, options):
-#    open_mock = mocker.mock_open(read_data=b'0xdeadbeef')
-#    mocker.patch('builtins.open', open_mock, create=True)
-#
-#    session_mock = mocker.MagicMock()
-#    session_mock.post.return_value.json.return_value = [{'signed_file': 'bW96aWxsYQ=='}]
-#
-#    Session_mock = mocker.Mock()
-#    Session_mock.return_value.__enter__ = mocker.Mock(return_value=session_mock)
-#    Session_mock.return_value.__exit__ = mocker.Mock()
-#    mocker.patch('signingscript.sign.requests.Session', Session_mock, create=True)
-#
-#    context.task = {
-#        'scopes': ['project:releng:signing:cert:dep-signing']
-#    }
-#    context.signing_servers = {
-#        "project:releng:signing:cert:dep-signing": [
-#            SigningServer(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", [format], "autograph"])
-#        ]
-#    }
-#    assert await sign.sign_file_with_autograph(context, 'from', format, to=to) == expected
-#    open_mock.assert_called()
-#    kwargs = {'input': 'MHhkZWFkYmVlZg=='}
-#    if options:
-#        kwargs['options'] = options
-#    session_mock.post.assert_called_with(
-#        'https://autograph-hsm.dev.mozaws.net/sign/file',
-#        auth=mocker.ANY,
-#        json=[kwargs])
-#
-#
+@pytest.fixture(scope="function")
+def key_config():
+    return {
+        "widevine_url": "https://autograph-hsm.dev.mozaws.net",
+        "widevine_user": "widevine_user",
+        "widevine_pass": "widevine_pass",
+        "widevine_cert": "widevine_cert",
+    }
+
+
+# sign_file_with_autograph {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "to,expected,format,options",
+    (
+        (None, "from", "autograph_widevine", None),
+        ("to", "to", "autograph_widevine", None),
+    ),
+)
+async def test_sign_file_with_autograph(
+    key_config, mocker, to, expected, format, options
+):
+    open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
+    mocker.patch("builtins.open", open_mock, create=True)
+
+    session_mock = mocker.MagicMock()
+    session_mock.post.return_value.json.return_value = [{"signed_file": "bW96aWxsYQ=="}]
+
+    Session_mock = mocker.Mock()
+    Session_mock.return_value.__enter__ = mocker.Mock(return_value=session_mock)
+    Session_mock.return_value.__exit__ = mocker.Mock()
+    mocker.patch("iscript.widevine.requests.Session", Session_mock, create=True)
+
+    assert (
+        await iwv.sign_file_with_autograph(key_config, "from", format, to=to)
+        == expected
+    )
+    open_mock.assert_called()
+    kwargs = {"input": "MHhkZWFkYmVlZg=="}
+    if options:
+        kwargs["options"] = options
+    session_mock.post.assert_called_with(
+        "https://autograph-hsm.dev.mozaws.net/sign/file", auth=mocker.ANY, json=[kwargs]
+    )
+
+
 # @pytest.mark.asyncio
 # @pytest.mark.parametrize('to,expected', (
 #    (None, 'from',),
