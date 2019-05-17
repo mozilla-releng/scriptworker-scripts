@@ -10,8 +10,9 @@ import pexpect
 import plistlib
 import re
 from shutil import copy2
+from urllib.parse import urlparse
 
-from scriptworker_client.aio import raise_future_exceptions, retry_async
+from scriptworker_client.aio import raise_future_exceptions, retry_async, download
 from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_command
 from iscript.exceptions import (
     InvalidNotarization,
@@ -881,11 +882,22 @@ async def download_entitlements_file(config, task):
     Returns:
         str: the path to the downloaded entitlments file
 
+    Raises:
+        RetryError: if downloading over the network, and retries failed.
+        TaskError: if the status code is not in the retry list or good list.
+
     """
-    # TODO download from file:/// or other url
-    # TODO populate `raises` section of docstring
-    to = os.path.join(config["work_dir"], "..", "browser.entitlements.txt")
-    return to
+    entitlements_location = str(task.get("payload", {}).get("entitlements-url"))
+    # TODO what if empty
+    source_uri = urlparse(entitlements_location)
+    if source_uri.scheme in ["file", ""]:
+        return os.path.realpath(os.path.join(config["work_dir"], source_uri.path))
+    else:
+        destination = os.path.realpath(
+            os.path.join(config["work_dir"], "..", os.path.basename(source_uri.path))
+        )
+        await download(entitlements_location, destination, num_attempts=4)
+        return destination
 
 
 # notarize_behavior {{{1

@@ -11,6 +11,7 @@ import pexpect
 import plistlib
 import pytest
 import iscript.mac as mac
+import scriptworker_client.aio as aio
 from iscript.exceptions import (
     InvalidNotarization,
     IScriptError,
@@ -1033,3 +1034,22 @@ async def test_pkg_behavior(mocker, tmpdir):
         mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
     )
     await mac.pkg_behavior(config, task)
+
+
+# download_entitlements_file {{{
+@pytest.mark.parametrize(
+    "entitlements_file, expected",
+    (
+        ("/foo/bar.plist", "/foo/bar.plist"),
+        ("file:///foo/bar.plist", "/foo/bar.plist"),
+        ("https://dummyhost.com/foo/bar.plist", "{tmpdir}/bar.plist"),
+    ),
+)
+@pytest.mark.asyncio
+async def test_download_entitlements_file(mocker, tmpdir, entitlements_file, expected):
+    work_dir = os.path.join(str(tmpdir), "work")
+    config = {"work_dir": work_dir}
+    task = {"payload": {"entitlements-url": entitlements_file}}
+    mocker.patch.object(mac, "download", new=noop_async)
+    expected = expected.format(tmpdir=tmpdir)
+    assert await mac.download_entitlements_file(config, task) == expected

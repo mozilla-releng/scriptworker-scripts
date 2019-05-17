@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Async helper functions."""
+import os
 import aiohttp
 import asyncio
 import async_timeout
@@ -7,6 +8,7 @@ import logging
 import random
 
 from scriptworker_client.exceptions import RetryError, TaskError, TimeoutError
+from scriptworker_client.utils import makedirs
 
 log = logging.getLogger(__name__)
 
@@ -224,4 +226,77 @@ async def request(
                 request_helper,
                 attempts=num_attempts,
                 retry_exceptions=(asyncio.TimeoutError, RetryError),
+            )
+
+
+# download {{{1
+async def download(
+    url,
+    destination,
+    timeout=60,
+    method="get",
+    good=(200,),
+    retry_statuses=tuple(range(500, 512)),
+    chunk_size=4096,
+    num_attempts=1,
+    sterilized_url=None,
+    **kwargs
+):
+    """Async aiohttp request wrapper.
+
+    Args:
+        url (str): the url to request
+        destination (str|Path-like): the destination file to write.
+        timeout (int, optional): timeout after this many seconds. Default is 60.
+        method (str, optional): The request method to use.  Default is 'get'.
+        good (list, optional): the set of good status codes.  Default is (200, )
+        retry_statuses (list, optional): the set of status codes that result in a retry.
+            Default is tuple(range(500, 512)).
+        chunk_size (int, optional): The number of bytes to read per chunk.
+        num_attempts (int, optional): The number of attempts to perform,
+            retrying on a response status in ``retry_statuses``. Defaults to 1.
+        sterilized_url (str, optional): If set, log using this url instead of
+            the real url. This can help avoid logging credentials or tokens.
+            If ``None``, log the real url. Defaults to ``None``.
+        **kwargs: the kwargs to send to the aiohttp request function.
+
+    Returns:
+        object: the response text() if return_type is 'text'; the response
+            json() if return_type is 'json'; the aiohttp request response
+            object otherwise.
+
+    Raises:
+        RetryError: if the status code is in the retry list.
+        TaskError: if the status code is not in the retry list or good list.
+
+    """
+    sterilized_url = sterilized_url or url
+    async with aiohttp.ClientSession() as session:
+        async with async_timeout.timeout(timeout):
+            log.debug("{} {}".format(method.upper(), sterilized_url))
+
+            async def request_helper():
+                async with session.request(method, url, **kwargs) as resp:
+                    log.debug("Status {}".format(resp.status))
+                    message = "Bad status {}".format(resp.status)
+                    if resp.status in retry_statuses:
+                        raise RetryError(message)
+                    if resp.status not in good:
+                        raise TaskError(message)
+                    makedirs(os.path.dirname(destination))
+                    with open(destination, "wb") as fd:
+                        while True:
+                            chunk = await resp.content.read(chunk_size)
+                            if not chunk:
+                                break
+                            fd.write(chunk)
+
+            return await retry_async(
+                request_helper,
+                attempts=num_attempts,
+                retry_exceptions=(
+                    asyncio.TimeoutError,
+                    aiohttp.ClientPayloadError,
+                    RetryError,
+                ),
             )

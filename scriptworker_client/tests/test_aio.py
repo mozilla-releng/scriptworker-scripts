@@ -175,6 +175,18 @@ async def test_retry_async_always_fail():
     assert retry_count["always_fail"] == 5
 
 
+class FakeContent:
+    """Aiohttp resp.content mock."""
+
+    def __init__(self):
+        self.text = bytes("expected", "ascii")
+
+    async def read(self, chunk_size=4096):
+        result = self.text[:chunk_size]
+        self.text = self.text[chunk_size:]
+        return result
+
+
 # request {{{1
 class FakeSession:
     """Aiohttp session mock."""
@@ -200,6 +212,8 @@ class FakeSession:
         resp.status = int(self.statuses.pop(0))
         resp.text = _fake_text
         resp.json = _fake_json
+
+        resp.content = FakeContent()
 
         yield resp
 
@@ -250,3 +264,33 @@ async def test_request(
             await aio.request(
                 url, method=method, return_type=return_type, num_attempts=num_attempts
             )
+
+
+@pytest.mark.parametrize(
+    "url,destination,expected,exception,num_attempts",
+    (
+        ("200", "200.txt", "expected", None, 1),
+        ("500,200", "500200.txt", "expected", None, 3),
+        ("500", "500.txt", "expected", RetryError, 2),
+        ("404", "404.txt", "expected", TaskError, 1),
+    ),
+)
+@pytest.mark.asyncio
+async def test_download(mocker, url, destination, expected, exception, num_attempts):
+    """A request returns the expected value, or raises ``exception`` if not ``None``.
+
+    """
+    mocker.patch.object(aiohttp, "ClientSession", new=GetFakeSession)
+    mocker.patch.object(asyncio, "sleep", new=noop_async)
+
+    if not exception:
+        result = await aio.download(
+            url, destination=destination, num_attempts=num_attempts
+        )
+        with open(destination, "r") as f:
+            result = f.read()
+            assert result == expected
+            os.unlink(destination)
+    else:
+        with pytest.raises(exception):
+            await aio.download(url, destination=destination, num_attempts=num_attempts)
