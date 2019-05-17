@@ -233,29 +233,24 @@ async def test_sign_file_with_autograph_raises_http_error(
 #    assert sign._get_widevine_signing_files(filenames) == expected
 #
 #
-## _run_generate_precomplete {{{1
-# @pytest.mark.parametrize("num_precomplete,raises", ((
-#    1, False,
-# ), (
-#    0, True,
-# ), (
-#    2, True,
-# )))
-# def test_run_generate_precomplete(context, num_precomplete, raises, mocker):
-#    mocker.patch.object(sign, "generate_precomplete", new=noop_sync)
-#    work_dir = context.config['work_dir']
-#    for i in range(0, num_precomplete):
-#        path = os.path.join(work_dir, "foo", str(i))
-#        makedirs(path)
-#        with open(os.path.join(path, "precomplete"), "w") as fh:
-#            fh.write("blah")
-#    if raises:
-#        with pytest.raises(IScriptError):
-#            sign._run_generate_precomplete(context, work_dir)
-#    else:
-#        sign._run_generate_precomplete(context, work_dir)
-#
-#
+# _run_generate_precomplete {{{1
+@pytest.mark.parametrize("num_precomplete,raises", ((1, False), (0, True), (2, True)))
+def test_run_generate_precomplete(tmp_path, num_precomplete, raises, mocker):
+    mocker.patch.object(iwv, "generate_precomplete", new=lambda x: None)
+    work_dir = tmp_path / "work"
+    config = {"artifact_dir": tmp_path / "artifacts"}
+    for i in range(0, num_precomplete):
+        path = os.path.join(work_dir, "foo", str(i))
+        makedirs(path)
+        with open(os.path.join(path, "precomplete"), "w") as fh:
+            fh.write("blah")
+    if raises:
+        with pytest.raises(IScriptError):
+            iwv._run_generate_precomplete(config, work_dir)
+    else:
+        iwv._run_generate_precomplete(config, work_dir)
+
+
 # remove_extra_files {{{1
 def test_remove_extra_files(tmp_path):
     extra = ["a", "b/c"]
