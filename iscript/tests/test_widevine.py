@@ -210,29 +210,46 @@ async def test_sign_file_with_autograph_raises_http_error(
 #        await sign.sign_widevine(context, filename, fmt)
 #
 #
-## _get_widevine_signing_files {{{1
-# @pytest.mark.parametrize('filenames,expected', ((
-#    ['firefox.dll', 'XUL.so', 'firefox.bin', 'blah'], {}
-# ), (
-#    ('firefox', 'blah/XUL', 'foo/bar/libclearkey.dylib', 'baz/plugin-container', 'ignore'), {
-#        'firefox': 'widevine',
-#        'blah/XUL': 'widevine',
-#        'foo/bar/libclearkey.dylib': 'widevine',
-#        'baz/plugin-container': 'widevine_blessed',
-#    }
-# ), (
-#    # Test for existing signature files
-#    (
-#        'firefox', 'blah/XUL', 'blah/XUL.sig',
-#        'foo/bar/libclearkey.dylib', 'foo/bar/libclearkey.dylib.sig',
-#        'plugin-container', 'plugin-container.sig', 'ignore'
-#    ),
-#    {'firefox': 'widevine'}
-# )))
-# def test_get_widevine_signing_files(filenames, expected):
-#    assert sign._get_widevine_signing_files(filenames) == expected
-#
-#
+# _get_widevine_signing_files {{{1
+@pytest.mark.parametrize(
+    "filenames,expected",
+    (
+        (["firefox.dll", "XUL.so", "firefox.bin", "blah"], {}),
+        (
+            (
+                "firefox",
+                "blah/XUL",
+                "foo/bar/libclearkey.dylib",
+                "baz/plugin-container",
+                "ignore",
+            ),
+            {
+                "firefox": "widevine",
+                "blah/XUL": "widevine",
+                "foo/bar/libclearkey.dylib": "widevine",
+                "baz/plugin-container": "widevine_blessed",
+            },
+        ),
+        (
+            # Test for existing signature files
+            (
+                "firefox",
+                "blah/XUL",
+                "blah/XUL.sig",
+                "foo/bar/libclearkey.dylib",
+                "foo/bar/libclearkey.dylib.sig",
+                "plugin-container",
+                "plugin-container.sig",
+                "ignore",
+            ),
+            {"firefox": "widevine"},
+        ),
+    ),
+)
+def test_get_widevine_signing_files(filenames, expected):
+    assert iwv._get_widevine_signing_files(filenames) == expected
+
+
 # _run_generate_precomplete {{{1
 @pytest.mark.parametrize("num_precomplete,raises", ((1, False), (0, True), (2, True)))
 def test_run_generate_precomplete(tmp_path, num_precomplete, raises, mocker):
