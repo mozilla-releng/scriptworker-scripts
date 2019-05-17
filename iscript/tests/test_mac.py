@@ -262,9 +262,17 @@ def test_get_app_paths():
 
 
 # extract_all_apps {{{1
-@pytest.mark.parametrize("raises", (True, False))
+@pytest.mark.parametrize(
+    "suffix, command, raises",
+    (
+        ("dmg", "7z", False),
+        ("tar.gz", "tar", False),
+        ("tar.bz2", "tar", False),
+        ("unknown_ext", None, True),
+    ),
+)
 @pytest.mark.asyncio
-async def test_extract_all_apps(mocker, tmpdir, raises):
+async def test_extract_all_apps(mocker, tmpdir, suffix, command, raises):
     """``extract_all_apps`` creates ``parent_dir`` and raises if any tar command
     fails. The ``run_command`` calls all start with a commandline that calls
     ``tar``.
@@ -272,22 +280,23 @@ async def test_extract_all_apps(mocker, tmpdir, raises):
     """
 
     async def fake_run_command(*args, **kwargs):
-        assert args[0][0] == "tar"
+        assert args[0][0] == command
         if raises:
             raise IScriptError("foo")
 
     mocker.patch.object(mac, "run_command", new=fake_run_command)
     work_dir = os.path.join(str(tmpdir), "work")
+    config = {"work_dir": work_dir, "7z": "7z"}
     all_paths = [
-        mac.App(orig_path=os.path.join(work_dir, "orig1")),
-        mac.App(orig_path=os.path.join(work_dir, "orig2")),
-        mac.App(orig_path=os.path.join(work_dir, "orig3")),
+        mac.App(orig_path=os.path.join(work_dir, f"orig1.{suffix}")),
+        mac.App(orig_path=os.path.join(work_dir, f"orig2.{suffix}")),
+        mac.App(orig_path=os.path.join(work_dir, f"orig3.{suffix}")),
     ]
     if raises:
         with pytest.raises(IScriptError):
-            await mac.extract_all_apps(work_dir, all_paths)
+            await mac.extract_all_apps(config, all_paths)
     else:
-        await mac.extract_all_apps(work_dir, all_paths)
+        await mac.extract_all_apps(config, all_paths)
         for i in ("0", "1", "2"):
             assert os.path.isdir(os.path.join(work_dir, i))
 
@@ -311,7 +320,10 @@ async def test_create_all_notarization_zipfiles(mocker, tmpdir, raises):
     for i in range(3):
         parent_dir = os.path.join(work_dir, str(i))
         app_name = "fx {}.app".format(str(i))
-        all_paths.append(mac.App(parent_dir=parent_dir, app_name=app_name))
+        app_path = os.path.join(parent_dir, app_name)
+        all_paths.append(
+            mac.App(parent_dir=parent_dir, app_name=app_name, app_path=app_path)
+        )
 
     if raises:
         with pytest.raises(IScriptError):
@@ -363,6 +375,7 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
 
     """
     key_config = {"x": "y"}
+    config = {}
     entitlements_path = "fake_entitlements_path"
     work_dir = str(tmpdir)
     all_paths = []
@@ -384,11 +397,12 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
     mocker.patch.object(mac, "set_app_path_and_name", return_value=None)
     mocker.patch.object(mac, "sign_app", new=fake_sign)
     mocker.patch.object(mac, "verify_app_signature", new=noop_async)
+    mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.sign_all_apps(key_config, entitlements_path, all_paths)
+            await mac.sign_all_apps(config, key_config, entitlements_path, all_paths)
     else:
-        await mac.sign_all_apps(key_config, entitlements_path, all_paths)
+        await mac.sign_all_apps(config, key_config, entitlements_path, all_paths)
 
 
 # get_bundle_id {{{1
@@ -510,7 +524,7 @@ async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
     # Let's create 8 apps, with 3 sudo accounts, so we expect batches of 3, 3, 2
     for i in range(8):
         parent_dir = os.path.join(work_dir, str(i))
-        notarization_log_path = os.path.join(parent_dir, "notarization.log")
+        notarization_log_path = f"{parent_dir}-notarization.log"
         all_paths.append(
             mac.App(
                 parent_dir=parent_dir,
@@ -694,7 +708,12 @@ async def test_staple_notarization(mocker, raises):
 
     all_paths = []
     for i in range(3):
-        all_paths.append(mac.App(parent_dir=str(i), app_name="{}.app".format(i)))
+        parent_dir = str(i)
+        app_name = f"{i}.app"
+        app_path = os.path.join(parent_dir, app_name)
+        all_paths.append(
+            mac.App(parent_dir=parent_dir, app_name=app_name, app_path=app_path)
+        )
     mocker.patch.object(mac, "run_command", new=fake_run_command)
     if raises:
         with pytest.raises(IScriptError):
@@ -724,6 +743,10 @@ async def test_tar_apps(mocker, tmpdir, raises):
     for i in range(3):
         parent_dir = os.path.join(work_dir, str(i))
         app_name = "{}.app".format(i)
+        makedirs(parent_dir)
+        # touch parent_dir/app_name
+        with open(os.path.join(parent_dir, app_name), "w") as fh:
+            fh.write("foo")
         orig_path = os.path.join(
             work_dir, "cot", "foo", "public", "build", str(i), "{}.tar.gz".format(i)
         )
@@ -732,6 +755,7 @@ async def test_tar_apps(mocker, tmpdir, raises):
             mac.App(
                 parent_dir=parent_dir,
                 app_name=app_name,
+                app_path=os.path.join(parent_dir, app_name),
                 orig_path=orig_path,
                 pkg_path=str(i),
             )
@@ -771,6 +795,7 @@ async def test_create_pkg_files(mocker, raises):
             raise IScriptError("foo")
 
     key_config = {"pkg_cert_id": "pkg.cert", "signing_keychain": "signing.keychain"}
+    config = {"concurrency_limit": 2}
     all_paths = []
     for i in range(3):
         all_paths.append(
@@ -781,9 +806,9 @@ async def test_create_pkg_files(mocker, raises):
     mocker.patch.object(mac, "run_command", new=fake_run_command)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.create_pkg_files(key_config, all_paths)
+            await mac.create_pkg_files(config, key_config, all_paths)
     else:
-        assert await mac.create_pkg_files(key_config, all_paths) is None
+        assert await mac.create_pkg_files(config, key_config, all_paths) is None
 
 
 # copy_pkgs_to_artifact_dir {{{1
@@ -865,6 +890,7 @@ async def test_sign_behavior(mocker, tmpdir):
         }
     }
 
+    mocker.patch.object(os, "listdir", return_value=[])
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
@@ -872,6 +898,7 @@ async def test_sign_behavior(mocker, tmpdir):
         mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
     )
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     await mac.sign_behavior(config, task)
 
 
@@ -916,6 +943,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
         }
     }
 
+    mocker.patch.object(os, "listdir", return_value=[])
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
@@ -924,6 +952,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
     )
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     await mac.sign_and_pkg_behavior(config, task)
 
 
@@ -971,6 +1000,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type):
         }
     }
 
+    mocker.patch.object(os, "listdir", return_value=[])
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
@@ -982,6 +1012,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type):
     mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     await mac.notarize_behavior(config, task)
 
 

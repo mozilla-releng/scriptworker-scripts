@@ -135,7 +135,7 @@ def test_get_log_filehandle(path, tmpdir):
 
 # run_command {{{1
 @pytest.mark.parametrize(
-    "command, status, expected_log, exception, output_log, raises",
+    "command, status, expected_log, exception, output_log, env, raises",
     (
         (
             ["bash", "-c", ">&2 echo bar && echo foo && exit 1"],
@@ -143,6 +143,7 @@ def test_get_log_filehandle(path, tmpdir):
             ["foo\nbar\n", "bar\nfoo\n"],
             None,
             False,
+            None,
             False,
         ),
         (
@@ -151,6 +152,7 @@ def test_get_log_filehandle(path, tmpdir):
             ["foo\nbar\n", "bar\nfoo\n"],
             TaskError,
             False,
+            {"foo": "bar"},
             True,
         ),
         (
@@ -159,13 +161,14 @@ def test_get_log_filehandle(path, tmpdir):
             ["foo\nbar\n", "bar\nfoo\n"],
             TaskError,
             True,
+            None,
             True,
         ),
     ),
 )
 @pytest.mark.asyncio
 async def test_run_command(
-    command, status, expected_log, exception, output_log, raises, tmpdir
+    command, status, expected_log, exception, output_log, env, raises, tmpdir
 ):
     """``run_command`` runs the expected command, logs its output, and exits
     with its exit status. If ``exception`` is set and we exit non-zero, we
@@ -181,6 +184,7 @@ async def test_run_command(
                 command,
                 log_path=log_path,
                 cwd=tmpdir,
+                env=env,
                 exception=exception,
                 output_log_on_exception=output_log,
             )
@@ -190,6 +194,7 @@ async def test_run_command(
                 command,
                 log_path=log_path,
                 cwd=tmpdir,
+                env=env,
                 exception=exception,
                 output_log_on_exception=output_log,
             )

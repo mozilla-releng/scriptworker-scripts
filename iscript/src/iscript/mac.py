@@ -3,6 +3,7 @@
 import arrow
 import asyncio
 import attr
+from copy import deepcopy
 from glob import glob
 import logging
 import os
@@ -12,7 +13,11 @@ import re
 from shutil import copy2
 from urllib.parse import urlparse
 
-from scriptworker_client.aio import raise_future_exceptions, retry_async, download
+from scriptworker_client.aio import (
+    raise_future_exceptions,
+    retry_async,
+    semaphore_wrapper,
+)
 from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_command
 from iscript.exceptions import (
     InvalidNotarization,
@@ -21,6 +26,11 @@ from iscript.exceptions import (
     UnknownAppDir,
 )
 from iscript.util import get_key_config
+
+from iscript.widevine import sign_widevine_dir
+
+# XXX silence linting; remove me when widevine is working
+assert sign_widevine_dir
 
 log = logging.getLogger(__name__)
 
@@ -96,7 +106,7 @@ def _get_tar_create_options(path):
 
 
 def _get_pkg_name_from_tarball(path):
-    for ext in (".tar.gz", ".tar.bz2"):
+    for ext in (".tar.gz", ".tar.bz2", ".dmg"):
         if path.endswith(ext):
             return path.replace(ext, ".pkg")
     raise IScriptError("Unknown tarball suffix in path {}".format(path))
@@ -239,10 +249,10 @@ async def verify_app_signature(app):
         IScriptError: on failure
 
     """
-    required_attrs = ["parent_dir", "app_name"]
+    required_attrs = ["parent_dir", "app_path"]
     app.check_required_attrs(required_attrs)
     await run_command(
-        ["codesign", "-vvv", "--deep", "--strict", app.app_name],
+        ["codesign", "-vvv", "--deep", "--strict", app.app_path],
         cwd=app.parent_dir,
         exception=IScriptError,
     )
@@ -293,7 +303,8 @@ async def unlock_keychain(signing_keychain, keychain_password):
 def get_app_dir(parent_dir):
     """Get the .app directory in a ``parent_dir``.
 
-    This assumes there is one, and only one, .app directory in ``parent_dir``.
+    This assumes there is one, and only one, .app directory in ``parent_dir``,
+    though it can be in a subdirectory.
 
     Args:
         parent_dir (str): the parent directory path
@@ -302,7 +313,7 @@ def get_app_dir(parent_dir):
         UnknownAppDir: if there is no single app dir
 
     """
-    apps = glob("{}/*.app".format(parent_dir))
+    apps = glob("{}/*.app".format(parent_dir)) + glob("{}/*/*.app".format(parent_dir))
     if len(apps) != 1:
         raise UnknownAppDir(
             "Can't find a single .app in {}: {}".format(parent_dir, apps)
@@ -334,8 +345,8 @@ def get_app_paths(config, task):
     return all_paths
 
 
-# extract_all {{{1
-async def extract_all_apps(work_dir, all_paths):
+# extract_all_apps {{{1
+async def extract_all_apps(config, all_paths):
     """Extract all the apps into their own directories.
 
     Args:
@@ -348,25 +359,39 @@ async def extract_all_apps(work_dir, all_paths):
     """
     log.info("Extracting all apps")
     futures = []
+    work_dir = config["work_dir"]
     for counter, app in enumerate(all_paths):
         app.check_required_attrs(["orig_path"])
         app.parent_dir = os.path.join(work_dir, str(counter))
         rm(app.parent_dir)
         makedirs(app.parent_dir)
-        futures.append(
-            asyncio.ensure_future(
-                run_command(
-                    ["tar", "xf", app.orig_path],
-                    cwd=app.parent_dir,
-                    exception=IScriptError,
+        if app.orig_path.endswith((".tar.bz2", ".tar.gz", ".tgz")):
+            futures.append(
+                asyncio.ensure_future(
+                    run_command(
+                        ["tar", "xf", app.orig_path],
+                        cwd=app.parent_dir,
+                        exception=IScriptError,
+                    )
                 )
             )
-        )
+        elif app.orig_path.endswith(".dmg"):
+            futures.append(
+                asyncio.ensure_future(
+                    run_command(
+                        [config["7z"], "x", app.orig_path],
+                        cwd=app.parent_dir,
+                        exception=IScriptError,
+                    )
+                )
+            )
+        else:
+            raise IScriptError(f"unknown file type {app.orig_path}")
     await raise_future_exceptions(futures)
 
 
 # create_all_notarization_zipfiles {{{1
-async def create_all_notarization_zipfiles(all_paths, path_attr="app_name"):
+async def create_all_notarization_zipfiles(all_paths, path_attr="app_path"):
     """Create notarization zipfiles for all the apps.
 
     Args:
@@ -381,18 +406,15 @@ async def create_all_notarization_zipfiles(all_paths, path_attr="app_name"):
     # zip up apps
     for app in all_paths:
         app.check_required_attrs(required_attrs)
-        app.zip_path = os.path.join(
-            app.parent_dir,
-            "{}{}.zip".format(path_attr, os.path.basename(app.parent_dir)),
-        )
+        parent_base_name = os.path.basename(app.parent_dir)
+        cwd = os.path.dirname(getattr(app, path_attr))
+        path = os.path.basename(getattr(app, path_attr))
+        app.zip_path = f"{app.parent_dir}-{path_attr}{parent_base_name}.zip"
         # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
-        path = getattr(app, path_attr)
         futures.append(
             asyncio.ensure_future(
                 run_command(
-                    ["zip", "-r", app.zip_path, path],
-                    cwd=app.parent_dir,
-                    exception=IScriptError,
+                    ["zip", "-r", app.zip_path, path], cwd=cwd, exception=IScriptError
                 )
             )
         )
@@ -429,10 +451,11 @@ async def create_one_notarization_zipfile(work_dir, all_paths, path_attr="app_pa
 
 
 # sign_all_apps {{{1
-async def sign_all_apps(key_config, entitlements_path, all_paths):
+async def sign_all_apps(config, key_config, entitlements_path, all_paths):
     """Sign all the apps.
 
     Args:
+        config (dict): the running config
         key_config (dict): the config for this signing key
         entitlements_path (str): the path to the entitlements file, used
             for signing
@@ -456,6 +479,14 @@ async def sign_all_apps(key_config, entitlements_path, all_paths):
     for app in all_paths:
         futures.append(asyncio.ensure_future(verify_app_signature(app)))
     await raise_future_exceptions(futures)
+    # sign widevine
+    # XXX uncomment when we can contact autograph
+    # futures = []
+    # for app in all_paths:
+    #     futures.append(
+    #         asyncio.ensure_future(sign_widevine_dir(config, key_config, app.app_path))
+    #     )
+    # await raise_future_exceptions(futures)
 
 
 # get_bundle_id {{{1
@@ -565,7 +596,7 @@ async def wrap_notarization_with_sudo(
         futures = []
         for account in accounts:
             app = all_paths[counter]
-            app.notarization_log_path = os.path.join(app.parent_dir, "notarization.log")
+            app.notarization_log_path = f"{app.parent_dir}-notarization.log"
             bundle_id = get_bundle_id(
                 key_config["base_bundle_id"], counter=str(counter)
             )
@@ -737,13 +768,13 @@ async def poll_all_notarization_status(key_config, poll_uuids):
 
 
 # staple_notarization {{{1
-async def staple_notarization(all_paths, path_attr="app_name"):
+async def staple_notarization(all_paths, path_attr="app_path"):
     """Staple the notarization results to each app.
 
     Args:
         all_paths (list): the list of App objects
         path_attr (str, optional): the path attribute to staple. Defaults to
-            ``app_name``
+            ``app_path``
 
     Raises:
         IScriptError: on failure
@@ -753,12 +784,13 @@ async def staple_notarization(all_paths, path_attr="app_name"):
     futures = []
     for app in all_paths:
         app.check_required_attrs([path_attr, "parent_dir"])
-        path = getattr(app, path_attr)
+        cwd = os.path.dirname(getattr(app, path_attr))
+        path = os.path.basename(getattr(app, path_attr))
         futures.append(
             asyncio.ensure_future(
                 run_command(
                     ["xcrun", "stapler", "staple", "-v", path],
-                    cwd=app.parent_dir,
+                    cwd=cwd,
                     exception=IScriptError,
                 )
             )
@@ -783,13 +815,17 @@ async def tar_apps(config, all_paths):
     log.info("Tarring up artifacts")
     futures = []
     for app in all_paths:
-        app.check_required_attrs(["app_name", "orig_path", "parent_dir"])
+        app.check_required_attrs(["orig_path", "parent_dir", "app_path"])
         # If we downloaded public/build/locale/target.tar.gz, then write to
         # artifact_dir/public/build/locale/target.tar.gz
         app.target_tar_path = "{}/public/{}".format(
             config["artifact_dir"], app.orig_path.split("public/")[1]
-        )
+        ).replace(".dmg", ".tar.gz")
         makedirs(os.path.dirname(app.target_tar_path))
+        cwd = os.path.dirname(app.app_path)
+        env = deepcopy(os.environ)
+        # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
+        env["COPYFILE_DISABLE"] = "1"
         futures.append(
             asyncio.ensure_future(
                 run_command(
@@ -797,9 +833,10 @@ async def tar_apps(config, all_paths):
                         "tar",
                         _get_tar_create_options(app.target_tar_path),
                         app.target_tar_path,
-                        app.app_name,
-                    ],
-                    cwd=app.parent_dir,
+                    ]
+                    + [f for f in os.listdir(cwd) if f != "[]"],
+                    cwd=cwd,
+                    env=env,
                     exception=IScriptError,
                 )
             )
@@ -808,7 +845,7 @@ async def tar_apps(config, all_paths):
 
 
 # create_pkg_files {{{1
-async def create_pkg_files(key_config, all_paths):
+async def create_pkg_files(config, key_config, all_paths):
     """Create .pkg installers from the .app files.
 
     Args:
@@ -821,6 +858,7 @@ async def create_pkg_files(key_config, all_paths):
     """
     log.info("Creating PKG files")
     futures = []
+    semaphore = asyncio.Semaphore(config.get("concurrency_limit", 2))
     for app in all_paths:
         # call set_app_path_and_name because we may not have called sign_app() earlier
         set_app_path_and_name(app)
@@ -828,22 +866,25 @@ async def create_pkg_files(key_config, all_paths):
         app.pkg_name = os.path.basename(app.pkg_path)
         futures.append(
             asyncio.ensure_future(
-                run_command(
-                    [
-                        "sudo",
-                        "pkgbuild",
-                        "--sign",
-                        key_config["pkg_cert_id"],
-                        "--keychain",
-                        key_config["signing_keychain"],
-                        "--install-location",
-                        "/Applications",
-                        "--component",
-                        app.app_path,
-                        app.pkg_path,
-                    ],
-                    cwd=app.parent_dir,
-                    exception=IScriptError,
+                semaphore_wrapper(
+                    semaphore,
+                    run_command(
+                        [
+                            "sudo",
+                            "pkgbuild",
+                            "--sign",
+                            key_config["pkg_cert_id"],
+                            "--keychain",
+                            key_config["signing_keychain"],
+                            "--install-location",
+                            "/Applications",
+                            "--component",
+                            app.app_path,
+                            app.pkg_path,
+                        ],
+                        cwd=app.parent_dir,
+                        exception=IScriptError,
+                    ),
                 )
             )
         )
@@ -918,15 +959,15 @@ async def notarize_behavior(config, task):
     key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
-    await extract_all_apps(work_dir, all_paths)
+    await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
-    await sign_all_apps(key_config, entitlements_path, all_paths)
+    await sign_all_apps(config, key_config, entitlements_path, all_paths)
 
     log.info("Notarizing")
     if key_config["notarize_type"] == "multi_account":
-        await create_all_notarization_zipfiles(all_paths, path_attr="app_name")
+        await create_all_notarization_zipfiles(all_paths, path_attr="app_path")
         poll_uuids = await wrap_notarization_with_sudo(
             config, key_config, all_paths, path_attr="zip_path"
         )
@@ -937,7 +978,7 @@ async def notarize_behavior(config, task):
         poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
 
     await poll_all_notarization_status(key_config, poll_uuids)
-    await staple_notarization(all_paths, path_attr="app_name")
+    await staple_notarization(all_paths, path_attr="app_path")
     await tar_apps(config, all_paths)
 
     # pkg
@@ -945,7 +986,7 @@ async def notarize_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
-    await create_pkg_files(key_config, all_paths)
+    await create_pkg_files(config, key_config, all_paths)
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing and notarizing apps.")
@@ -963,17 +1004,16 @@ async def sign_behavior(config, task):
         IScriptError: on fatal error.
 
     """
-    work_dir = config["work_dir"]
     entitlements_path = await download_entitlements_file(config, task)
 
     key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
-    await extract_all_apps(work_dir, all_paths)
+    await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
-    await sign_all_apps(key_config, entitlements_path, all_paths)
+    await sign_all_apps(config, key_config, entitlements_path, all_paths)
     await tar_apps(config, all_paths)
     log.info("Done signing apps.")
 
@@ -990,24 +1030,23 @@ async def sign_and_pkg_behavior(config, task):
         IScriptError: on fatal error.
 
     """
-    work_dir = config["work_dir"]
     entitlements_path = await download_entitlements_file(config, task)
 
     key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
-    await extract_all_apps(work_dir, all_paths)
+    await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
-    await sign_all_apps(key_config, entitlements_path, all_paths)
+    await sign_all_apps(config, key_config, entitlements_path, all_paths)
     await tar_apps(config, all_paths)
 
     # pkg
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
-    await create_pkg_files(key_config, all_paths)
+    await create_pkg_files(config, key_config, all_paths)
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing apps and creating pkgs.")
@@ -1028,16 +1067,14 @@ async def pkg_behavior(config, task):
         IScriptError: on fatal error.
 
     """
-    work_dir = config["work_dir"]
-
     key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
-    await extract_all_apps(work_dir, all_paths)
+    await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
-    await create_pkg_files(key_config, all_paths)
+    await create_pkg_files(config, key_config, all_paths)
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done creating pkgs.")
