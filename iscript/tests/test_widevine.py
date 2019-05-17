@@ -62,71 +62,37 @@ async def test_sign_file_with_autograph(
     )
 
 
-# @pytest.mark.asyncio
-# @pytest.mark.parametrize('to,expected', (
-#    (None, 'from',),
-#    ('to', 'to')))
-# async def test_sign_file_with_autograph_invalid_format_errors(context, mocker, to, expected):
-#    context.task = {
-#        'scopes': ['project:releng:signing:cert:dep-signing']
-#    }
-#    context.signing_servers = {}
-#    with pytest.raises(IScriptError):
-#        await sign.sign_file_with_autograph(context, 'from', 'mar', to=to)
-#
-#
-# @pytest.mark.asyncio
-# @pytest.mark.parametrize('to,expected', (
-#    (None, 'from',),
-#    ('to', 'to')))
-# async def test_sign_file_with_autograph_no_suitable_servers_errors(context, mocker, to, expected):
-#    context.task = {
-#        'scopes': ['project:releng:signing:cert:dep-signing']
-#    }
-#    context.signing_servers = {}
-#    with pytest.raises(IScriptError):
-#        await sign.sign_file_with_autograph(context, 'from', 'autograph_mar', to=to)
-#
-#
-# @pytest.mark.asyncio
-# @pytest.mark.parametrize('to,expected', ((
-#    None, 'from',
-# ), (
-#    'to', 'to'
-# )))
-# async def test_sign_file_with_autograph_raises_http_error(context, mocker, to, expected):
-#    open_mock = mocker.mock_open(read_data=b'0xdeadbeef')
-#    mocker.patch('builtins.open', open_mock, create=True)
-#
-#    session_mock = mocker.MagicMock()
-#    post_mock_response = session_mock.post.return_value
-#    post_mock_response.raise_for_status.side_effect = sign.requests.exceptions.RequestException
-#    post_mock_response.json.return_value = [{'signed_file': 'bW96aWxsYQ=='}]
-#
-#    @contextmanager
-#    def session_context():
-#        yield session_mock
-#
-#    mocker.patch('signingscript.sign.requests.Session', session_context)
-#
-#    async def fake_retry_async(func, args=(), attempts=5, sleeptime_kwargs=None):
-#        await func(*args)
-#
-#    mocker.patch.object(sign, 'retry_async', new=fake_retry_async)
-#
-#    context.task = {
-#        'scopes': ['project:releng:signing:cert:dep-signing']
-#    }
-#    context.signing_servers = {
-#        "project:releng:signing:cert:dep-signing": [
-#            SigningServer(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_mar"], "autograph"])
-#        ]
-#    }
-#    with pytest.raises(sign.requests.exceptions.RequestException):
-#        await sign.sign_file_with_autograph(context, 'from', 'autograph_mar', to=to)
-#    open_mock.assert_called()
-#
-#
+@pytest.mark.asyncio
+@pytest.mark.parametrize("to,expected", ((None, "from"), ("to", "to")))
+async def test_sign_file_with_autograph_raises_http_error(
+    key_config, mocker, to, expected
+):
+    open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
+    mocker.patch("builtins.open", open_mock, create=True)
+
+    session_mock = mocker.MagicMock()
+    post_mock_response = session_mock.post.return_value
+    post_mock_response.raise_for_status.side_effect = (
+        iwv.requests.exceptions.RequestException
+    )
+    post_mock_response.json.return_value = [{"signed_file": "bW96aWxsYQ=="}]
+
+    @contextmanager
+    def session_context():
+        yield session_mock
+
+    mocker.patch("iscript.widevine.requests.Session", session_context)
+
+    async def fake_retry_async(func, args=(), attempts=5, sleeptime_kwargs=None):
+        await func(*args)
+
+    mocker.patch.object(iwv, "retry_async", new=fake_retry_async)
+
+    with pytest.raises(iwv.requests.exceptions.RequestException):
+        await iwv.sign_file_with_autograph(key_config, "from", "autograph_mar", to=to)
+    open_mock.assert_called()
+
+
 ## sign_macapp {{{1
 # @pytest.mark.asyncio
 # @pytest.mark.parametrize('filename,expected', ((
