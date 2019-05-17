@@ -81,6 +81,7 @@ def _get_publish_config(product_config, payload, android_product):
     if product_config.get('use_scope_for_channel'):
         return product_config['apps'][android_product]
 
+    # Task payloads should migrate from specifying "google_play_track" to "channel"
     return product_config['apps'][payload.get('google_play_track') or payload['channel']]
 
 

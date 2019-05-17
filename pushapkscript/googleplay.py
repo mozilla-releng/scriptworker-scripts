@@ -38,13 +38,6 @@ def should_commit_transaction(task_payload):
     return task_payload.get('commit', False)
 
 
-def craft_valid_track_values(require_track, has_nightly_track):
-    if require_track:
-        return [require_track]
-    else:
-        return _DEFAULT_TRACK_VALUES + (['nightly'] if has_nightly_track else [])
-
-
 def get_google_play_strings_path(artifacts_per_task_id, failed_artifacts_per_task_id):
     if failed_artifacts_per_task_id:
         _check_google_play_string_is_the_only_failed_task(failed_artifacts_per_task_id)

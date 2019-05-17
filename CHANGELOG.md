@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.0] - 
+
+### Changes
+* Structure of config to support both cases of "channels map to individual apps" and "channels map to Google Play tracks within a single app"
+
 ## [1.0.4] - 2019-05-13
 
 ### Fixes
