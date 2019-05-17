@@ -833,7 +833,7 @@ async def tar_apps(config, all_paths):
                         _get_tar_create_options(app.target_tar_path),
                         app.target_tar_path,
                     ]
-                    + os.listdir(cwd),
+                    + [f for f in os.listdir(cwd) if f != "[]"],
                     cwd=cwd,
                     env=env,
                     exception=IScriptError,
