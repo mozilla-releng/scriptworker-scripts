@@ -15,7 +15,7 @@ from iscript.exceptions import IScriptError
 import iscript.widevine as iwv
 
 
-## helper constants, fixtures, functions {{{1
+# helper constants, fixtures, functions {{{1
 @pytest.fixture(scope="function")
 def key_config():
     return {
@@ -254,6 +254,17 @@ def test_remove_extra_files(tmp_path):
 
 
 # autograph {{{1
+@pytest.mark.parametrize(
+    "input_bytes, keyid, expected",
+    (
+        (b"asdf", None, [{"input": "YXNkZg=="}]),
+        (b"asdf", "key1", [{"input": "YXNkZg==", "keyid": "key1"}]),
+    ),
+)
+def test_make_signing_req(input_bytes, keyid, expected):
+    assert iwv.make_signing_req(input_bytes, keyid=keyid) == expected
+
+
 @pytest.mark.asyncio
 async def test_bad_autograph_method():
     with pytest.raises(IScriptError):
@@ -262,36 +273,32 @@ async def test_bad_autograph_method():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("blessed", (True, False))
-async def test_widevine_autograph(mocker, tmp_path, blessed):
+async def test_widevine_autograph(mocker, tmp_path, blessed, key_config):
     wv = mocker.patch("iscript.widevine.widevine")
     wv.generate_widevine_hash.return_value = b"hashhashash"
     wv.generate_widevine_signature.return_value = b"sigwidevinesig"
-    called_format = None
 
-    async def fake_sign(key_config, h, fmt, *args):
-        nonlocal called_format
-        called_format = fmt
-        return base64.b64encode(b"sigautographsig")
+    async def fake_call(*args, **kwargs):
+        return [{"signature": base64.b64encode(b"sigwidevinesig")}]
 
-    mocker.patch.object(iwv, "sign_with_autograph", fake_sign)
+    mocker.patch.object(iwv, "call_autograph", fake_call)
 
     cert = tmp_path / "widevine.crt"
     cert.write_bytes(b"TMPCERT")
-    key_config = {"widevine_cert": cert}
+    key_config["widevine_cert"] = cert
 
     to = tmp_path / "signed.sig"
     to = await iwv.sign_widevine_with_autograph(key_config, "from", blessed, to=to)
 
     assert b"sigwidevinesig" == to.read_bytes()
-    assert called_format == "autograph_widevine"
 
 
 @pytest.mark.asyncio
 async def test_no_widevine(mocker, tmp_path):
-    async def fake_sign_hash(*args, **kwargs):
-        return b"sigautographsig"
+    async def fake_call(*args, **kwargs):
+        return [{"signature": b"sigautographsig"}]
 
-    mocker.patch.object(iwv, "sign_hash_with_autograph", fake_sign_hash)
+    mocker.patch.object(iwv, "call_autograph", fake_call)
 
     with pytest.raises(ImportError):
         to = tmp_path / "signed.sig"
