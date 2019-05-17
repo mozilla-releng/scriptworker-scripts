@@ -26,6 +26,14 @@ def key_config():
     }
 
 
+async def noop_async(*args, **kwargs):
+    ...
+
+
+def noop_sync(*args, **kwargs):
+    ...
+
+
 # sign_file_with_autograph {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -93,123 +101,76 @@ async def test_sign_file_with_autograph_raises_http_error(
     open_mock.assert_called()
 
 
-## sign_macapp {{{1
-# @pytest.mark.asyncio
-# @pytest.mark.parametrize('filename,expected', ((
-#    'foo.dmg', 'foo.tar.gz',
-# ), (
-#    'foo.tar.bz2', 'foo.tar.bz2',
-# )))
-# async def test_sign_macapp(context, mocker, filename, expected):
-#    mocker.patch.object(sign, '_convert_dmg_to_tar_gz', new=noop_async)
-#    mocker.patch.object(sign, 'sign_file', new=noop_async)
-#    assert await sign.sign_macapp(context, filename, 'blah') == expected
-#
-#
-## sign_signcode {{{1
-# @pytest.mark.asyncio
-# @pytest.mark.parametrize('filename,fmt,raises', ((
-#    'foo.msi', 'sha2signcode', False
-# ), (
-#    'setup.exe', 'osslsigncode', False
-# ), (
-#    'foo.zip', 'signcode', False
-# ), (
-#    'raises.invalid.extension', 'sha2signcode', True
-# )))
-# async def test_sign_signcode(context, mocker, filename, fmt, raises):
-#    files = ["x/foo.dll", "y/msvcblah.dll", "z/setup.exe", "ignore"]
-#
-#    async def fake_unzip(_, f, **kwargs):
-#        assert f.endswith('.zip')
-#        return files
-#
-#    async def fake_sign(_, filename, *args):
-#        assert os.path.basename(filename) in ("foo.dll", "setup.exe", "foo.msi")
-#
-#    mocker.patch.object(sign, '_extract_zipfile', new=fake_unzip)
-#    mocker.patch.object(sign, 'sign_file', new=fake_sign)
-#    mocker.patch.object(sign, '_create_zipfile', new=noop_async)
-#    if raises:
-#        with pytest.raises(IScriptError):
-#            await sign.sign_signcode(context, filename, fmt)
-#    else:
-#        await sign.sign_signcode(context, filename, fmt)
-#
-#
-## sign_widevine {{{1
-# @pytest.mark.asyncio
-# @pytest.mark.parametrize('filename,fmt,raises,should_sign,orig_files', (
-#    ('foo.tar.gz', 'widevine', False, True, None),
-#    ('foo.zip', 'widevine_blessed', False, True, None),
-#    ('foo.dmg', 'widevine', False, True, [
-#        "foo.app/Contents/MacOS/firefox",
-#        "foo.app/Contents/MacOS/bar.app/Contents/MacOS/plugin-container",
-#        "foo.app/ignore",
-#    ]),
-#    ('foo.unknown', 'widevine', True, False, None),
-#    ('foo.zip', 'widevine', False, False, None),
-#    ('foo.dmg', 'widevine', False, False, None),
-#    ('foo.tar.bz2', 'widevine', False, False, None),
-#    ('foo.zip', 'autograph_widevine', False, True, None),
-#    ('foo.dmg', 'autograph_widevine', False, True, None),
-#    ('foo.tar.bz2', 'autograph_widevine', False, True, None),
-# ))
-# async def test_sign_widevine(context, mocker, filename, fmt, raises,
-#                             should_sign, orig_files):
-#    if should_sign:
-#        files = orig_files or ["isdir/firefox", "firefox/firefox", "y/plugin-container", "z/blah", "ignore"]
-#    else:
-#        files = orig_files or ["z/blah", "ignore"]
-#
-#    async def fake_filelist(*args, **kwargs):
-#        return files
-#
-#    async def fake_unzip(_, f, **kwargs):
-#        assert f.endswith('.zip')
-#        return files
-#
-#    async def fake_untar(_, f, comp, **kwargs):
-#        assert f.endswith('.tar.{}'.format(comp.lstrip('.')))
-#        return files
-#
-#    async def fake_undmg(_, f):
-#        assert f.endswith('.dmg')
-#
-#    async def fake_sign(_, f, fmt, **kwargs):
-#        if f.endswith("firefox"):
-#            assert fmt == "widevine"
-#        elif f.endswith("container"):
-#            assert fmt == "widevine_blessed"
-#        else:
-#            assert False, "unexpected file and format {} {}!".format(f, fmt)
-#        if 'MacOS' in f:
-#            assert f not in files, "We should have renamed this file!"
-#
-#    def fake_isfile(path):
-#        return 'isdir' not in path
-#
-#    mocker.patch.object(sign, '_get_tarfile_files', new=fake_filelist)
-#    mocker.patch.object(sign, '_extract_tarfile', new=fake_untar)
-#    mocker.patch.object(sign, '_get_zipfile_files', new=fake_filelist)
-#    mocker.patch.object(sign, '_extract_zipfile', new=fake_unzip)
-#    mocker.patch.object(sign, '_convert_dmg_to_tar_gz', new=fake_undmg)
-#    mocker.patch.object(sign, 'sign_file', new=noop_async)
-#    mocker.patch.object(sign, 'sign_widevine_with_autograph', new=noop_async)
-#    mocker.patch.object(sign, 'makedirs', new=noop_sync)
-#    mocker.patch.object(sign, 'generate_precomplete', new=noop_sync)
-#    mocker.patch.object(sign, '_create_tarfile', new=noop_async)
-#    mocker.patch.object(sign, '_create_zipfile', new=noop_async)
-#    mocker.patch.object(sign, '_run_generate_precomplete', new=noop_sync)
-#    mocker.patch.object(os.path, 'isfile', new=fake_isfile)
-#
-#    if raises:
-#        with pytest.raises(IScriptError):
-#            await sign.sign_widevine(context, filename, fmt)
-#    else:
-#        await sign.sign_widevine(context, filename, fmt)
-#
-#
+# sign_widevine_dir {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "filename,fmt,should_sign,orig_files",
+    (
+        ("foo.tar.gz", "widevine", True, None),
+        ("foo.zip", "widevine_blessed", True, None),
+        (
+            "foo.dmg",
+            "widevine",
+            True,
+            [
+                "foo.app/Contents/MacOS/firefox",
+                "foo.app/Contents/MacOS/bar.app/Contents/MacOS/plugin-container",
+                "foo.app/ignore",
+            ],
+        ),
+        ("foo.zip", "widevine", False, None),
+        ("foo.dmg", "widevine", False, None),
+        ("foo.tar.bz2", "widevine", False, None),
+        ("foo.zip", "autograph_widevine", True, None),
+        ("foo.dmg", "autograph_widevine", True, None),
+        ("foo.tar.bz2", "autograph_widevine", True, None),
+    ),
+)
+async def test_sign_widevine_dir(
+    key_config, mocker, filename, fmt, should_sign, orig_files, tmp_path
+):
+    if should_sign:
+        files = orig_files or [
+            "isdir/firefox",
+            "firefox/firefox",
+            "y/plugin-container",
+            "z/blah",
+            "ignore",
+        ]
+    else:
+        files = orig_files or ["z/blah", "ignore"]
+
+    def fake_walk(_):
+        yield ("", [], files)
+
+    config = {"artifact_dir": tmp_path / "artifacts"}
+
+    async def fake_filelist(*args, **kwargs):
+        return files
+
+    async def fake_sign(_, f, fmt, **kwargs):
+        if f.endswith("firefox"):
+            assert fmt == "widevine"
+        elif f.endswith("container"):
+            assert fmt == "widevine_blessed"
+        else:
+            assert False, "unexpected file and format {} {}!".format(f, fmt)
+        if "MacOS" in f:
+            assert f not in files, "We should have renamed this file!"
+
+    def fake_isfile(path):
+        return "isdir" not in path
+
+    mocker.patch.object(iwv, "sign_widevine_with_autograph", new=noop_async)
+    mocker.patch.object(iwv, "makedirs", new=noop_sync)
+    mocker.patch.object(iwv, "generate_precomplete", new=noop_sync)
+    mocker.patch.object(iwv, "_run_generate_precomplete", new=noop_sync)
+    mocker.patch.object(os.path, "isfile", new=fake_isfile)
+    mocker.patch.object(os, "walk", new=fake_walk)
+
+    await iwv.sign_widevine_dir(config, key_config, filename)
+
+
 # _get_widevine_signing_files {{{1
 @pytest.mark.parametrize(
     "filenames,expected",
@@ -253,7 +214,7 @@ def test_get_widevine_signing_files(filenames, expected):
 # _run_generate_precomplete {{{1
 @pytest.mark.parametrize("num_precomplete,raises", ((1, False), (0, True), (2, True)))
 def test_run_generate_precomplete(tmp_path, num_precomplete, raises, mocker):
-    mocker.patch.object(iwv, "generate_precomplete", new=lambda x: None)
+    mocker.patch.object(iwv, "generate_precomplete", new=noop_sync)
     work_dir = tmp_path / "work"
     config = {"artifact_dir": tmp_path / "artifacts"}
     for i in range(0, num_precomplete):
