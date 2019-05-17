@@ -14,6 +14,7 @@ from shutil import copy2
 from urllib.parse import urlparse
 
 from scriptworker_client.aio import (
+    download,
     raise_future_exceptions,
     retry_async,
     semaphore_wrapper,
@@ -22,6 +23,7 @@ from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_comma
 from iscript.exceptions import (
     InvalidNotarization,
     IScriptError,
+    TaskError,
     TimeoutError,
     UnknownAppDir,
 )
@@ -928,8 +930,12 @@ async def download_entitlements_file(config, task):
         TaskError: if the status code is not in the retry list or good list.
 
     """
-    entitlements_location = str(task.get("payload", {}).get("entitlements-url"))
-    # TODO what if empty
+    try:
+        entitlements_location = str(task["payload"]["entitlements-url"])
+    except KeyError:
+        raise TaskError("No entitlements-url in the task payload.")
+    if not entitlements_location:
+        raise TaskError("Empty entitlements-url in the task payload.")
     source_uri = urlparse(entitlements_location)
     if source_uri.scheme in ["file", ""]:
         return os.path.realpath(os.path.join(config["work_dir"], source_uri.path))

@@ -15,6 +15,7 @@ import scriptworker_client.aio as aio
 from iscript.exceptions import (
     InvalidNotarization,
     IScriptError,
+    TaskError,
     TimeoutError,
     UnknownAppDir,
 )
@@ -886,7 +887,8 @@ async def test_sign_behavior(mocker, tmpdir):
                     ],
                 },
                 {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"]},
-            ]
+            ],
+            "entitlements-url": "dummy.plist",
         }
     }
 
@@ -939,7 +941,8 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
                     ],
                 },
                 {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"]},
-            ]
+            ],
+            "entitlements-url": "dummy.plist",
         }
     }
 
@@ -996,7 +999,8 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type):
                     ],
                 },
                 {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"]},
-            ]
+            ],
+            "entitlements-url": "dummy.plist",
         }
     }
 
@@ -1069,18 +1073,34 @@ async def test_pkg_behavior(mocker, tmpdir):
 
 # download_entitlements_file {{{
 @pytest.mark.parametrize(
-    "entitlements_file, expected",
+    "entitlements_file, expected, exception",
     (
-        ("/foo/bar.plist", "/foo/bar.plist"),
-        ("file:///foo/bar.plist", "/foo/bar.plist"),
-        ("https://dummyhost.com/foo/bar.plist", "{tmpdir}/bar.plist"),
+        ("/foo/bar.plist", "/foo/bar.plist", None),
+        ("file:///foo/bar.plist", "/foo/bar.plist", None),
+        ("https://dummyhost.com/foo/bar.plist", "{tmpdir}/bar.plist", None),
+        ("", "", TaskError),
     ),
 )
 @pytest.mark.asyncio
-async def test_download_entitlements_file(mocker, tmpdir, entitlements_file, expected):
+async def test_download_entitlements_file(
+    mocker, tmpdir, entitlements_file, expected, exception
+):
     work_dir = os.path.join(str(tmpdir), "work")
     config = {"work_dir": work_dir}
     task = {"payload": {"entitlements-url": entitlements_file}}
     mocker.patch.object(mac, "download", new=noop_async)
     expected = expected.format(tmpdir=tmpdir)
-    assert await mac.download_entitlements_file(config, task) == expected
+    if exception:
+        with pytest.raises(exception):
+            await mac.download_entitlements_file(config, task) == expected
+    else:
+        assert await mac.download_entitlements_file(config, task) == expected
+
+
+@pytest.mark.asyncio
+async def test_download_entitlements_file_bad_task(mocker, tmpdir):
+    work_dir = os.path.join(str(tmpdir), "work")
+    config = {"work_dir": work_dir}
+    task = {}
+    with pytest.raises(TaskError):
+        await mac.download_entitlements_file(config, task)
