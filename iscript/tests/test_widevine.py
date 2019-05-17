@@ -46,7 +46,7 @@ import iscript.widevine as iwv
 #
 # @contextmanager
 # def context_die(*args, **kwargs):
-#    raise SigningScriptError("dying")
+#    raise IScriptError("dying")
 #
 #
 # def is_tarfile(archive):
@@ -107,7 +107,7 @@ import iscript.widevine as iwv
 #
 #
 # def test_get_suitable_signing_servers_raises_signingscript_error(context):
-#    with pytest.raises(SigningScriptError):
+#    with pytest.raises(IScriptError):
 #        sign.get_suitable_signing_servers(context.signing_servers, TEST_CERT_TYPE, signing_formats=['invalid'], raise_on_empty_list=True)
 #
 #
@@ -218,7 +218,7 @@ import iscript.widevine as iwv
 #        'scopes': ['project:releng:signing:cert:dep-signing']
 #    }
 #    context.signing_servers = {}
-#    with pytest.raises(SigningScriptError):
+#    with pytest.raises(IScriptError):
 #        await sign.sign_file_with_autograph(context, 'from', 'mar', to=to)
 #
 #
@@ -231,7 +231,7 @@ import iscript.widevine as iwv
 #        'scopes': ['project:releng:signing:cert:dep-signing']
 #    }
 #    context.signing_servers = {}
-#    with pytest.raises(SigningScriptError):
+#    with pytest.raises(IScriptError):
 #        await sign.sign_file_with_autograph(context, 'from', 'autograph_mar', to=to)
 #
 #
@@ -285,7 +285,7 @@ import iscript.widevine as iwv
 # ))
 # def test_get_mar_verification_key(format, cert_type, keyid, raises, expected):
 #    if raises:
-#        with pytest.raises(SigningScriptError):
+#        with pytest.raises(IScriptError):
 #            sign.get_mar_verification_key(cert_type, format, keyid)
 #    else:
 #        assert sign.get_mar_verification_key(cert_type, format, keyid) == expected
@@ -301,7 +301,7 @@ import iscript.widevine as iwv
 #
 #    mocker.patch.object(subprocess, 'check_call', new=fake_check_call)
 #    if raises:
-#        with pytest.raises(SigningScriptError):
+#        with pytest.raises(IScriptError):
 #            sign.verify_mar_signature('dep-signing', 'autograph_stage_mar384', 'foo')
 #    else:
 #        sign.verify_mar_signature('dep-signing', 'autograph_stage_mar384', 'foo')
@@ -392,7 +392,7 @@ import iscript.widevine as iwv
 #        'scopes': ['project:releng:signing:cert:dep-signing']
 #    }
 #    context.signing_servers = {}
-#    with pytest.raises(SigningScriptError):
+#    with pytest.raises(IScriptError):
 #        await sign.sign_mar384_with_autograph_hash(context, 'from', 'mar', to=to)
 #
 #
@@ -407,7 +407,7 @@ import iscript.widevine as iwv
 #        'scopes': ['project:releng:signing:cert:dep-signing']
 #    }
 #    context.signing_servers = {}
-#    with pytest.raises(SigningScriptError):
+#    with pytest.raises(IScriptError):
 #        await sign.sign_mar384_with_autograph_hash(context, 'from', 'autograph_hash_only_mar384', to=to)
 #
 #
@@ -447,7 +447,7 @@ import iscript.widevine as iwv
 #            SigningServer("https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_hash_only_mar384"], "autograph")
 #        ]
 #    }
-#    with pytest.raises(SigningScriptError):
+#    with pytest.raises(IScriptError):
 #        assert await sign.sign_mar384_with_autograph_hash(context, 'from', 'autograph_hash_only_mar384', to=to) == expected
 #
 #    open_mock.assert_called()
@@ -519,7 +519,7 @@ import iscript.widevine as iwv
 #    mocker.patch.object(sign, 'sign_file', new=fake_sign)
 #    mocker.patch.object(sign, '_create_zipfile', new=noop_async)
 #    if raises:
-#        with pytest.raises(SigningScriptError):
+#        with pytest.raises(IScriptError):
 #            await sign.sign_signcode(context, filename, fmt)
 #    else:
 #        await sign.sign_signcode(context, filename, fmt)
@@ -592,7 +592,7 @@ import iscript.widevine as iwv
 #    mocker.patch.object(os.path, 'isfile', new=fake_isfile)
 #
 #    if raises:
-#        with pytest.raises(SigningScriptError):
+#        with pytest.raises(IScriptError):
 #            await sign.sign_widevine(context, filename, fmt)
 #    else:
 #        await sign.sign_widevine(context, filename, fmt)
@@ -649,7 +649,7 @@ import iscript.widevine as iwv
 #        with open(os.path.join(path, "precomplete"), "w") as fh:
 #            fh.write("blah")
 #    if raises:
-#        with pytest.raises(SigningScriptError):
+#        with pytest.raises(IScriptError):
 #            sign._run_generate_precomplete(context, work_dir)
 #    else:
 #        sign._run_generate_precomplete(context, work_dir)
@@ -679,178 +679,37 @@ import iscript.widevine as iwv
 #        assert os.path.exists(os.path.join(work_dir, f))
 #
 #
-## _extract_zipfile _create_zipfile {{{1
-# @pytest.mark.asyncio
-# async def test_get_zipfile_files():
-#    assert sorted(
-#        await sign._get_zipfile_files(os.path.join(TEST_DATA_DIR, "test.zip"))
-#    ) == ["a", "b", "c/", "c/d", "c/e/", "c/e/f"]
-#
-#
-# @pytest.mark.asyncio
-# async def test_working_zipfile(context):
-#    await helper_archive(
-#        context, "foo.zip", sign._create_zipfile, sign._extract_zipfile
-#    )
-#    files = ["c/d", "c/e/f"]
-#    tmp_dir = os.path.join(context.config['work_dir'], "foo")
-#    expected = [os.path.join(tmp_dir, f) for f in files]
-#    assert await sign._extract_zipfile(
-#        context, os.path.join(TEST_DATA_DIR, "test.zip"),
-#        files=files, tmp_dir=tmp_dir
-#    ) == expected
-#    for f in expected:
-#        assert os.path.exists(f)
-#
-#
-# @pytest.mark.asyncio
-# async def test_bad_create_zipfile(context, mocker):
-#    mocker.patch.object(zipfile, 'ZipFile', new=context_die)
-#    with pytest.raises(SigningScriptError):
-#        await sign._create_zipfile(context, "foo.zip", [])
-#
-#
-# @pytest.mark.asyncio
-# async def test_bad_extract_zipfile(context, mocker):
-#    mocker.patch.object(sign, 'rm', new=die)
-#    with pytest.raises(SigningScriptError):
-#        await sign._extract_zipfile(context, "foo.zip")
-#
-#
-# @pytest.mark.asyncio
-# async def test_zipfile_append_write(context):
-#    top_dir = os.path.dirname(os.path.dirname(__file__))
-#    rel_files = ["test/test_script.py", "test/test_sign.py"]
-#    abs_files = [os.path.join(top_dir, f) for f in rel_files]
-#    full_rel_files = ["a", "b", "c/", "c/d", "c/e/", "c/e/f"] + rel_files
-#    to = os.path.join(context.config['work_dir'], "test.zip")
-#
-#    # mode='w' -- zipfile should only have these two files
-#    shutil.copyfile(os.path.join(TEST_DATA_DIR, "test.zip"), to)
-#    await sign._create_zipfile(context, to, abs_files, tmp_dir=top_dir, mode='w')
-#    assert sorted(await sign._get_zipfile_files(to)) == rel_files
-#
-#    # mode='a' -- zipfile should have previous files + new files
-#    shutil.copyfile(os.path.join(TEST_DATA_DIR, "test.zip"), to)
-#    await sign._create_zipfile(context, to, abs_files, tmp_dir=top_dir, mode='a')
-#    assert sorted(await sign._get_zipfile_files(to)) == full_rel_files
-#
-#
-## tarfile {{{1
-# @pytest.mark.asyncio
-# @pytest.mark.parametrize("path,compression", ((
-#    os.path.join(TEST_DATA_DIR, "test.tar.bz2"),
-#    "bz2"
-# ), (
-#    os.path.join(TEST_DATA_DIR, "test.tar.gz"),
-#    "gz"
-# )))
-# async def test_get_tarfile_files(path, compression):
-#    assert sorted(
-#        await sign._get_tarfile_files(path, compression)
-#    ) == [".", "./a", "./b", "./c", "./c/d", "./c/e", "./c/e/f"]
-#
-#
-# @pytest.mark.parametrize("compression,expected,raises", ((
-#    ".gz", "gz", False
-# ), (
-#    "bz2", "bz2", False
-# ), (
-#    "superstrong_compression!!!", None, True
-# )))
-# def test_get_tarfile_compression(compression, expected, raises):
-#    if raises:
-#        with pytest.raises(SigningScriptError):
-#            sign._get_tarfile_compression(compression)
-#    else:
-#        assert sign._get_tarfile_compression(compression) == expected
-#
-#
-# @pytest.mark.asyncio
-# async def test_working_tarfile(context):
-#    await helper_archive(
-#        context, "foo.tar.gz", sign._create_tarfile, sign._extract_tarfile, "gz"
-#    )
-#
-#
-# @pytest.mark.asyncio
-# async def test_bad_create_tarfile(context, mocker):
-#    mocker.patch.object(tarfile, 'open', new=context_die)
-#    with pytest.raises(SigningScriptError):
-#        await sign._create_tarfile(context, "foo.tar.gz", [], ".bz2")
-#
-#
-# @pytest.mark.asyncio
-# async def test_bad_extract_tarfile(context, mocker):
-#    mocker.patch.object(tarfile, 'open', new=context_die)
-#    with pytest.raises(SigningScriptError):
-#        await sign._extract_tarfile(context, "foo.tar.gz", "gz")
-#
-#
-# @pytest.mark.asyncio
-# async def test_tarfile_append_write(context):
-#    top_dir = os.path.dirname(os.path.dirname(__file__))
-#    rel_files = ["test/test_script.py", "test/test_sign.py"]
-#    abs_files = [os.path.join(top_dir, f) for f in rel_files]
-#    to = os.path.join(context.config['work_dir'], "test.tar.bz2")
-#
-#    # mode='w' -- tarfile should only have these two files
-#    shutil.copyfile(os.path.join(TEST_DATA_DIR, "test.tar.bz2"), to)
-#    await sign._create_tarfile(
-#        context, to, abs_files, 'bz2', tmp_dir=top_dir
-#    )
-#    assert sorted(await sign._get_tarfile_files(to, 'bz2')) == rel_files
-#
-#
-# def test_signreq_task_keyid():
-#    input_bytes = b"hello world"
-#    fmt = "autograph_hash_only_mar384"
-#    s = SigningServer("https://autograph-hsm.dev.mozaws.net", "alice", "bob",
-#                      [fmt], "autograph")
-#    req = sign.make_signing_req(input_bytes, s, fmt, "newkeyid")
-#
-#    assert req[0]['keyid'] == 'newkeyid'
-#    assert req[0]['input'] == 'aGVsbG8gd29ybGQ='
-#
-#
-# @pytest.mark.asyncio
-# async def test_bad_autograph_method():
-#    with pytest.raises(SigningScriptError):
-#        await sign.sign_with_autograph(None, None, None, "badformat")
-#
-#
-# @pytest.mark.asyncio
-# async def test_bad_autograph_format(context):
-#    with pytest.raises(SigningScriptError):
-#        await sign.sign_file_with_autograph(context, "", "badformat")
-#
-#    with pytest.raises(SigningScriptError):
-#        await sign.sign_hash_with_autograph(context, "", "badformat")
-#
-#
-# @pytest.mark.asyncio
-# @pytest.mark.parametrize("blessed", (True, False))
-# async def test_widevine_autograph(context, mocker, tmp_path, blessed):
-#    wv = mocker.patch('signingscript.sign.widevine')
-#    wv.generate_widevine_hash.return_value = b"hashhashash"
-#    wv.generate_widevine_signature.return_value = b"sigwidevinesig"
-#    called_format = None
-#
-#    async def fake_sign_hash(context, h, fmt):
-#        nonlocal called_format
-#        called_format = fmt
-#        return b"sigautographsig"
-#    mocker.patch('signingscript.sign.sign_hash_with_autograph', fake_sign_hash)
-#
-#    cert = tmp_path / "widevine.crt"
-#    cert.write_bytes(b"TMPCERT")
-#    context.config['widevine_cert'] = cert
-#
-#    to = tmp_path / "signed.sig"
-#    to = await sign.sign_widevine_with_autograph(context, "from", blessed, to=to)
-#
-#    assert b"sigwidevinesig" == to.read_bytes()
-#    assert called_format == 'autograph_widevine'
+# autograph {{{1
+@pytest.mark.asyncio
+async def test_bad_autograph_method():
+    with pytest.raises(IScriptError):
+        await iwv.sign_with_autograph(None, None, None, "badformat")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("blessed", (True, False))
+async def test_widevine_autograph(mocker, tmp_path, blessed):
+    wv = mocker.patch("iscript.widevine.widevine")
+    wv.generate_widevine_hash.return_value = b"hashhashash"
+    wv.generate_widevine_signature.return_value = b"sigwidevinesig"
+    called_format = None
+
+    async def fake_sign_hash(key_config, h, fmt):
+        nonlocal called_format
+        called_format = fmt
+        return b"sigautographsig"
+
+    mocker.patch.object(iwv, "sign_hash_with_autograph", fake_sign_hash)
+
+    cert = tmp_path / "widevine.crt"
+    cert.write_bytes(b"TMPCERT")
+    key_config = {"widevine_cert": cert}
+
+    to = tmp_path / "signed.sig"
+    to = await iwv.sign_widevine_with_autograph(key_config, "from", blessed, to=to)
+
+    assert b"sigwidevinesig" == to.read_bytes()
+    assert called_format == "autograph_widevine"
 
 
 @pytest.mark.asyncio
