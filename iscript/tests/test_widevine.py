@@ -256,30 +256,30 @@ async def test_sign_file_with_autograph_raises_http_error(
 #        sign._run_generate_precomplete(context, work_dir)
 #
 #
-## remove_extra_files {{{1
-# def test_remove_extra_files(context):
-#    extra = ["a", "b/c"]
-#    good = ["d", "e/f"]
-#    work_dir = context.config['work_dir']
-#    all_files = []
-#    for f in extra + good:
-#        path = os.path.join(work_dir, f)
-#        makedirs(os.path.dirname(path))
-#        with open(path, "w") as fh:
-#            fh.write("x")
-#        if f in good:
-#            all_files.append(path)
-#    for f in good:
-#        assert os.path.exists(os.path.join(work_dir, f))
-#    output = sign.remove_extra_files(work_dir, all_files)
-#    for f in extra:
-#        path = os.path.realpath(os.path.join(work_dir, f))
-#        assert path in output
-#        assert not os.path.exists(path)
-#    for f in good:
-#        assert os.path.exists(os.path.join(work_dir, f))
-#
-#
+# remove_extra_files {{{1
+def test_remove_extra_files(tmp_path):
+    extra = ["a", "b/c"]
+    good = ["d", "e/f"]
+    work_dir = tmp_path
+    all_files = []
+    for f in extra + good:
+        path = os.path.join(work_dir, f)
+        makedirs(os.path.dirname(path))
+        with open(path, "w") as fh:
+            fh.write("x")
+        if f in good:
+            all_files.append(path)
+    for f in good:
+        assert os.path.exists(os.path.join(work_dir, f))
+    output = iwv.remove_extra_files(work_dir, all_files)
+    for f in extra:
+        path = os.path.realpath(os.path.join(work_dir, f))
+        assert path in output
+        assert not os.path.exists(path)
+    for f in good:
+        assert os.path.exists(os.path.join(work_dir, f))
+
+
 # autograph {{{1
 @pytest.mark.asyncio
 async def test_bad_autograph_method():
