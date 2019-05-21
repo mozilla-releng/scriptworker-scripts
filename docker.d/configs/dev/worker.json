@@ -22,7 +22,7 @@
         },
         "maven-staging": {
             "credentials": {
-                "id": {"$eval": "MAVE_STAGING_ID"},
+                "id": {"$eval": "MAVEN_STAGING_ID"},
                 "key": {"$eval": "MAVEN_STAGING_KEY"}
             },
             "buckets": {
