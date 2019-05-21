@@ -1,5 +1,5 @@
 {
-    "work_dir": "/app/work",
+    "work_dir": "/app/workdir",
     "artifact_dir": "/app/artifacts",
     "aiohttp_max_connections": 10,
     "checksums_digests": ["sha512", "sha256"],

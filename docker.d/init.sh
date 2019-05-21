@@ -14,7 +14,12 @@ export TASK_SCRIPT_CONFIG="$CONFIGDIR/worker.json"
 mkdir -p -m 700 $CONFIGDIR
 
 # Eval JSON-e expressions in the config templates
-$CONFIGLOADER --worker-id-prefix=beetmover- /app/docker.d/configs/scriptworker.yaml $CONFIGDIR/scriptworker.json
+if [ $APP_CHANNEL == "production" ]; then
+    WORKER_ID_PREFIX="beetmover-"
+else
+    WORKER_ID_PREFIX="beetmover-dev-"
+fi
+$CONFIGLOADER --worker-id-prefix=$WORKER_ID_PREFIX /app/docker.d/configs/scriptworker.yaml $CONFIGDIR/scriptworker.json
 $CONFIGLOADER /app/docker.d/configs/$APP_CHANNEL/worker.json $CONFIGDIR/worker_config.json
 
 echo $ED25519_PRIVKEY > $CONFIGDIR/ed25519_privkey
