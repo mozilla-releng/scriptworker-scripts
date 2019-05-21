@@ -1,18 +1,14 @@
-ARG PYTHON_VERSION=3.7
-ARG TASK_GROUP_ID
-FROM python:${PYTHON_VERSION}
+FROM python:3.7
 
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
 
-COPY --chown=10001:10001 . /app
-
-# generate /app/version.json according to https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
-RUN env
-RUN cd /app && TASK_GROUP_ID=$TASK_GROUP_ID /app/docker.d/generate_version_json.sh
-
 USER app
 WORKDIR /app
+
+COPY . /app
+# generate /app/version.json according to https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
+RUN cd /app && /app/docker.d/generate_version_json.sh
 
 RUN python -m venv /app
 RUN ./bin/pip install -r requirements-dev.txt
