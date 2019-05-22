@@ -1,0 +1,117 @@
+version: 1
+policy:
+  pullRequests: public
+tasks:
+  $let:
+    head_rev:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.sha}
+      else:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.after}
+        else: ${event.release.tag_name}
+
+    repository:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.repo.html_url}
+      else: ${event.repository.html_url}
+
+    owner: ${event.sender.login}@users.noreply.github.com
+
+    docker_tag:
+      $if: 'tasks_for == "github-pull-request"'
+      then: pull-request
+      else:
+        $if: 'tasks_for == "github-push"'
+        then:
+          $if: 'event.ref[:10] == "refs/tags/"'
+          then: ${event.ref[10:]} # strip "refs/tags/"
+          else: ${event.ref[11:]} # strip "refs/heads/"
+        else: "v${event.release.tag_name}" # prefix the version with "v"
+
+  in:
+    - taskId: '${as_slugid("py37")}'
+      provisionerId: aws-provisioner-v1
+      workerType: github-worker
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '4 hours'}
+      payload:
+        maxRunTime: 3600
+        image: python:3.7
+        command:
+          - sh
+          - -lxce
+          - >-
+            git clone ${repository} /src &&
+            cd /src &&
+            git config advice.detachedHead false &&
+            git checkout ${head_rev} &&
+            pip install tox &&
+            tox -e py37
+      metadata:
+        name: tox py37 (${docker_tag})
+        description: code linting & unit tests on py37 (${docker_tag})
+        owner: ${owner}
+        source: ${repository}/raw/${head_rev}/.taskcluster.yml
+
+    - taskId: '${as_slugid("docker_build")}'
+      dependencies:
+        - '${as_slugid("py37")}'
+      provisionerId: aws-provisioner-v1
+      workerType: github-worker
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '4 hours'}
+      payload:
+        features:
+          dind: true
+        maxRunTime: 3600
+        image: mozillareleases/python-test-runner
+        command:
+          - bash
+          - -ce
+          - >-
+            git clone ${repository} /src &&
+            cd /src &&
+            git config advice.detachedHead false &&
+            git checkout ${head_rev} &&
+            docker build -f Dockerfile -t registry.hub.docker.com/mozilla/beetmoverscript:${docker_tag} . &&
+            curl --unix-socket /var/run/docker.sock http:/images/registry.hub.docker.com/mozilla/beetmoverscript:${docker_tag}/get -o /tmp/image.tar
+        artifacts:
+          public/beetmoverscript/image.tar:
+            expires: {$fromNow: '2 weeks'}
+            path: /tmp/image.tar
+            type: file
+      metadata:
+        name: docker build (${docker_tag})
+        description: build latest docker image (${docker_tag})
+        owner: ${owner}
+        source: ${repository}/raw/${head_rev}/.taskcluster.yml
+
+    - $if: 'tasks_for != "github-pull-request"'
+      then:
+        $if: 'repository == "https://github.com/mozilla-releng/beetmoverscript"'
+        then:
+          taskId: '${as_slugid("docker_push")}'
+          dependencies:
+            - '${as_slugid("docker_build")}'
+          provisionerId: aws-provisioner-v1
+          workerType: github-worker
+          created: {$fromNow: ''}
+          deadline: {$fromNow: '4 hours'}
+          payload:
+            features:
+              # Needed for access to secret
+              taskclusterProxy: true
+            maxRunTime: 3600
+            image: mozilla/taskboot:latest
+            command:
+              - taskboot
+              - --secret=project/releng/beetmoverscript/deploy
+              - push-artifact
+          scopes:
+            - secrets:get:project/releng/beetmoverscript/deploy
+          metadata:
+            name: docker push (${docker_tag})
+            description: push docker image (${docker_tag})
+            owner: ${owner}
+            source: ${repository}/raw/${head_rev}/.taskcluster.yml
