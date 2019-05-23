@@ -54,64 +54,75 @@ tasks:
         owner: ${owner}
         source: ${repository}/raw/${head_rev}/.taskcluster.yml
 
-    - $if: 'tasks_for != "github-pull-request"'
-      then:
-        taskId: '${as_slugid("docker_build")}'
-        dependencies:
-          - '${as_slugid("py37")}'
-        provisionerId: aws-provisioner-v1
-        workerType: releng-svc
-        created: {$fromNow: ''}
-        deadline: {$fromNow: '4 hours'}
-        payload:
-          capabilities:
-            privileged: true
-          maxRunTime: 3600
-          image: mozilla/taskboot:latest
-          command:
-            - taskboot
-            - --git-repository=${repository}
-            - --git-revision=${head_rev}
-            - build
-            - --write=/image.tar
-            - --tag=registry.hub.docker.com/mozilla/shipitscript:${docker_tag}
-            - Dockerfile
-          artifacts:
-            public/shipitscript/image.tar:
-              expires: {$fromNow: '2 weeks'}
-              path: /image.tar
-              type: file
-        scopes:
-          - docker-worker:capability:privileged
-        metadata:
-          name: docker build (${docker_tag})
-          description: build latest docker image (${docker_tag})
-          owner: ${owner}
-          source: ${repository}/raw/${head_rev}/.taskcluster.yml
+    - taskId: '${as_slugid("docker_build")}'
+      dependencies:
+        - '${as_slugid("py37")}'
+      provisionerId: aws-provisioner-v1
+      workerType: github-worker
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '4 hours'}
+      payload:
+        features:
+          dind: true
+        maxRunTime: 3600
+        image: mozillareleases/python-test-runner
+        command:
+          - bash
+          - -ce
+          - >-
+            git clone ${repository} /src &&
+            cd /src &&
+            git config advice.detachedHead false &&
+            git checkout ${head_rev} &&
+            docker build -f Dockerfile -t mozilla/shipitscript:${docker_tag} . &&
+            docker save mozilla/shipitscript:${docker_tag} > /tmp/image.tar
+        artifacts:
+          public/image.tar:
+            expires: {$fromNow: '2 weeks'}
+            path: /tmp/image.tar
+            type: file
+      metadata:
+        name: docker build (${docker_tag})
+        description: build latest docker image (${docker_tag})
+        owner: ${owner}
+        source: ${repository}/raw/${head_rev}/.taskcluster.yml
 
     - $if: 'tasks_for != "github-pull-request"'
       then:
-        taskId: '${as_slugid("docker_push")}'
-        dependencies:
-          - '${as_slugid("docker_build")}'
-        provisionerId: aws-provisioner-v1
-        workerType: releng-svc
-        created: {$fromNow: ''}
-        deadline: {$fromNow: '4 hours'}
-        payload:
-          features:
-            # Needed for access to secret
-            taskclusterProxy: true
-          maxRunTime: 3600
-          image: mozilla/taskboot:latest
-          command:
-            - taskboot
-            - --secret=project/releng/shipitscript/deploy
-            - push-artifact
-        scopes:
-          - secrets:get:project/releng/shipitscript/deploy
-        metadata:
-          name: docker push (${docker_tag})
-          description: push docker image (${docker_tag})
-          owner: ${owner}
-          source: ${repository}/raw/${head_rev}/.taskcluster.yml
+        $if: 'repository == "https://github.com/mozilla-releng/shipitscript"'
+        then:
+          taskId: '${as_slugid("docker_push")}'
+          dependencies:
+            - '${as_slugid("docker_build")}'
+          provisionerId: aws-provisioner-v1
+          workerType: github-worker
+          created: {$fromNow: ''}
+          deadline: {$fromNow: '4 hours'}
+          payload:
+            features:
+              # Needed for access to secret
+              taskclusterProxy: true
+              dind: true
+            maxRunTime: 3600
+            image: mozillareleases/python-test-runner
+            command:
+              - bash
+              - -ce
+              - >-
+                git clone ${repository} /src &&
+                cd /src &&
+                git config advice.detachedHead false &&
+                git checkout ${head_rev} &&
+                IMAGE_TASK_ID=${as_slugid("docker_build")}
+                SECRET_URL=http://taskcluster/secrets/v1/secret/project/releng/shipitscript/deploy
+                DOCKERHUB_EMAIL=release+dockerhub+services@mozilla.com
+                DOCKERHUB_USER=mozillarelengservices
+                TAG=mozilla/shipitscript:${docker_tag}
+                ./docker.d/push_image.sh
+          scopes:
+            - secrets:get:project/releng/shipitscript/deploy
+          metadata:
+            name: docker push (${docker_tag})
+            description: push docker image (${docker_tag})
+            owner: ${owner}
+            source: ${repository}/raw/${head_rev}/.taskcluster.yml
