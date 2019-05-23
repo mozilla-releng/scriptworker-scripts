@@ -79,9 +79,15 @@ def _get_publish_config(product_config, payload, android_product):
         }
 
     if product_config.get('use_scope_for_channel'):
-        return product_config['apps'][android_product]
+        publish_config = product_config['apps'][android_product]
+        if payload.get('google_play_track'):
+            publish_config['google_play_track'] = payload['google_play_track']
+        return publish_config
 
     # Task payloads should migrate from specifying "google_play_track" to "channel"
+    # TODO: once this migration^ is complete, payload "google_play_track" should be used to override the track
+    # for the targeted channel
+    # https://github.com/mozilla-releng/pushapkscript/issues/88
     return product_config['apps'][payload.get('google_play_track') or payload['channel']]
 
 

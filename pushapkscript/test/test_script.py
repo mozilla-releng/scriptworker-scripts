@@ -115,6 +115,22 @@ def test_get_publish_config_fennec():
     assert _get_publish_config(aurora_config, {}, 'aurora') == {'foo': 'bar'}
 
 
+def test_get_publish_config_fennec_track_override():
+    aurora_config = {
+        'map_channels_to_apps': True,
+        'use_scope_for_channel': True,
+        'apps': {
+            'aurora': {
+                'foo': 'bar'
+            }
+        }
+    }
+    assert _get_publish_config(aurora_config, {'google_play_track': 'internal_qa'}, 'aurora') == {
+        'foo': 'bar',
+        'google_play_track': 'internal_qa',
+    }
+
+
 def test_get_publish_config_focus_old():
     focus_config = {
         'single_app_config': {
