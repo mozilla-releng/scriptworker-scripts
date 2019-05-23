@@ -74,10 +74,10 @@ tasks:
             cd /src &&
             git config advice.detachedHead false &&
             git checkout ${head_rev} &&
-            docker build -f Dockerfile -t registry.hub.docker.com/mozilla/beetmoverscript:${docker_tag} . &&
-            curl --unix-socket /var/run/docker.sock http:/images/registry.hub.docker.com/mozilla/beetmoverscript:${docker_tag}/get -o /tmp/image.tar
+            docker build -f Dockerfile -t mozilla/beetmoverscript:${docker_tag} . &&
+            docker save mozilla/beetmoverscript:${docker_tag} > /tmp/image.tar
         artifacts:
-          public/beetmoverscript/image.tar:
+          public/image.tar:
             expires: {$fromNow: '2 weeks'}
             path: /tmp/image.tar
             type: file
@@ -102,12 +102,23 @@ tasks:
             features:
               # Needed for access to secret
               taskclusterProxy: true
+              dind: true
             maxRunTime: 3600
-            image: mozilla/taskboot:latest
+            image: mozillareleases/python-test-runner
             command:
-              - taskboot
-              - --secret=project/releng/beetmoverscript/deploy
-              - push-artifact
+              - bash
+              - -ce
+              - >-
+                git clone ${repository} /src &&
+                cd /src &&
+                git config advice.detachedHead false &&
+                git checkout ${head_rev} &&
+                IMAGE_TASK_ID=${as_slugid("docker_build")}
+                SECRET_URL=http://taskcluster/secrets/v1/secret/project/releng/beetmoverscript/deploy
+                DOCKERHUB_EMAIL=release+dockerhub+services@mozilla.com
+                DOCKERHUB_USER=mozillarelengservices
+                TAG=mozilla/beetmoverscript:${docker_tag}
+                ./docker.d/push_image.sh
           scopes:
             - secrets:get:project/releng/beetmoverscript/deploy
           metadata:
