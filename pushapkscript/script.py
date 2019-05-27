@@ -63,35 +63,55 @@ def _get_product_config(context, android_product):
     except KeyError:
         raise ConfigValidationError('"products" is not part of the configuration')
 
-    try:
-        return [product for product in products if android_product in product['product_names']][0]
-    except IndexError:
-        raise TaskVerificationError('Android "{}" does not exist in the configuration of this instance.\
-    Are you sure you allowed to push such APK?'.format(android_product))
+    matching_products = [product for product in products if android_product in product['product_names']]
+
+    if len(matching_products) == 0:
+        raise TaskVerificationError('Android "{}" does not exist in the configuration of this '
+                                    'instance. Are you sure you allowed to push such an '
+                                    'APK?'.format(android_product))
+
+    if len(matching_products) > 1:
+        raise TaskVerificationError('The configuration is invalid: multiple product configs match '
+                                    'the product "{}"'.format(android_product))
+
+    return matching_products[0]
 
 
 def _get_publish_config(product_config, payload, android_product):
     if product_config.get('map_channels_to_tracks'):
+        if product_config.get('use_scope_for_channel'):
+            raise ValueError('Config is invalid: when mapping channels to tracks, the track '
+                             'should only be determined from the payload. Fix this by removing '
+                             '"use_scope_for_channel" for product "{}"'.format(android_product))
+
         # Focus uses a single app and the "tracks" feature to represent different channels,
         # rather than a separate app-per-channel.
-        return {
+        publish_config = {
             'google_play_track': payload.get('google_play_track') or payload['channel'],
             **product_config['single_app_config'],
         }
 
     # If we're not mapping channels to tracks, then we're mapping each channel to a separate
     # app on the Google Play Store.
-    if product_config.get('use_scope_for_channel'):
+    elif product_config.get('use_scope_for_channel'):
         publish_config = product_config['apps'][android_product]
         if payload.get('google_play_track'):
-            publish_config['google_play_track'] = payload['google_play_track']
-        return publish_config
+            publish_config['google_play_track'] = payload.get('google_play_track')
 
     # Task payloads should migrate from specifying "google_play_track" to "channel"
     # TODO: once this migration^ is complete, payload "google_play_track" should be used to override the track
     # for the targeted channel
     # https://github.com/mozilla-releng/pushapkscript/issues/88
-    return product_config['apps'][payload.get('google_play_track') or payload['channel']]
+    else:
+        channel = payload.get('google_play_track') or payload['channel']
+        publish_config = product_config['apps'][channel]
+
+    rollout_percentage = payload.get('rollout_percentage')
+    if rollout_percentage:
+        publish_config['google_play_track'] = 'rollout'
+        publish_config['rollout_percentage'] = rollout_percentage
+        log.info('"rollout_percentage" is set, so the target Google Play track will be "rollout"')
+    return publish_config
 
 
 def _log_warning_forewords(contact_google_play, task_payload):

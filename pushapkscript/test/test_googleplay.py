@@ -47,10 +47,14 @@ class GooglePlayTest(unittest.TestCase):
         assert isinstance(args['google_play_strings'], NoGooglePlayStrings)
 
     def test_publish_allows_rollout_percentage(self, mock_push_apk):
-        task_payload = {
-            'rollout_percentage': 10
+        publish_config = {
+            'google_play_track': 'rollout',
+            'rollout_percentage': 10,
+            'package_names': ['org.mozilla.fennec_aurora'],
+            'service_account': 'service_account',
+            'google_credentials_file': '/google_credentials.p12',
         }
-        publish_to_googleplay(task_payload, {}, self.publish_config, self.apks, contact_google_play=True)
+        publish_to_googleplay({}, {}, publish_config, self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args
         assert args['track'] == 'rollout'
         assert args['rollout_percentage'] == 10
@@ -83,13 +87,13 @@ class GooglePlayTest(unittest.TestCase):
     def test_craft_push_config_expect_package_names(self, mock_push_apk):
         publish_config = {
             'google_play_track': 'beta',
-            'package_names': ['a', 'b'],
+            'package_names': ['org.mozilla.focus', 'org.mozilla.klar'],
             'service_account': 'service_account',
             'google_credentials_file': '/google_credentials.p12',
         }
         publish_to_googleplay({}, {}, publish_config, self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args
-        assert args['expected_package_names'] == ['a', 'b']
+        assert args['expected_package_names'] == ['org.mozilla.focus', 'org.mozilla.klar']
 
     def test_craft_push_config_allows_committing_apks(self, mock_push_apk):
         task_payload = {

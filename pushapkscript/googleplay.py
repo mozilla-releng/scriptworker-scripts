@@ -16,10 +16,10 @@ def publish_to_googleplay(payload, product_config, publish_config, apk_files, co
             apks=apk_files,
             service_account=publish_config['service_account'],
             google_play_credentials_file=certificate,
-            track='rollout' if payload.get('rollout_percentage') else publish_config['google_play_track'],
+            track=publish_config['google_play_track'],
             expected_package_names=publish_config['package_names'],
             skip_check_package_names=False,
-            rollout_percentage=payload.get('rollout_percentage'),  # may be None
+            rollout_percentage=publish_config.get('rollout_percentage'),  # may be None
             google_play_strings=NoGooglePlayStrings() if google_play_strings_file is None else FileGooglePlayStrings(
                 google_play_strings_file),
             commit=should_commit_transaction(payload),
