@@ -2,7 +2,6 @@ import logging
 import subprocess
 
 from pushapkscript.exceptions import SignatureError
-from pushapkscript.task import extract_android_product_from_scopes
 
 log = logging.getLogger(__name__)
 

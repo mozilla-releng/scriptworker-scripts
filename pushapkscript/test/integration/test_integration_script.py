@@ -297,7 +297,6 @@ class MainTest(unittest.TestCase):
         _, args = push_apk.call_args
         assert isinstance(args['google_play_strings'], NoGooglePlayStrings)
 
-
     @unittest.mock.patch('pushapkscript.googleplay.push_apk')
     def test_main_downloads_verifies_signature_and_gives_the_right_config_to_mozapkpublisher(self, push_apk):
         task_generator = TaskGenerator()
