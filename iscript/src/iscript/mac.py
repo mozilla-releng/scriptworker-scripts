@@ -160,17 +160,15 @@ async def sign_app(key_config, app_path, entitlements_path):
     Largely taken from build-tools' ``dmg_signfile``.
 
     Args:
-        config (dict): the running config
-        from_ (str): the tarfile path
-        parent_dir (str): the top level directory to extract the app into
-        key (str): the nick of the key to use to sign with
+        key_config (dict): the running config
+        app_path (str): the path to the app to be signed (extracted)
+        entitlements_path (str): the path to the entitlements file for signing
 
     Raises:
         IScriptError: on error.
 
     """
-    # XXX remove Resources when we move gmp-clearkey
-    SIGN_DIRS = ("MacOS", "Library", "Resources")
+    SIGN_DIRS = ("MacOS", "Library")
     parent_dir = os.path.dirname(app_path)
     app_name = os.path.basename(app_path)
     await run_command(
@@ -227,6 +225,19 @@ async def sign_app(key_config, app_path, entitlements_path):
                 exception=IScriptError,
                 output_log_on_exception=True,
             )
+
+    # special case Contents/Resources/gmp-clearkey/0.1/libclearkey.dylib
+    # which is living in the wrong place (bug 1100450), but isn't trivial to move.
+    # Only do this for the top level app and not nested apps
+    if "Contents/" not in app_path:
+        dir_ = os.path.join(contents_dir, "Resources/gmp-clearkey/0.1/")
+        file_ = "libclearkey.dylib"
+        await run_command(
+            sign_command + [file_],
+            cwd=dir_,
+            exception=IScriptError,
+            output_log_on_exception=True,
+        )
 
     # sign bundle
     await run_command(
