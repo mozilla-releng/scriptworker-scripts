@@ -19,18 +19,18 @@ test_data_dir = os.path.join(this_dir, '..', 'data')
 
 
 class KeystoreManager(object):
-    def __init__(self, test_data_dir, project_data_dir):
-        self.keystore_path = os.path.join(test_data_dir, 'keystore')
-        self.project_data_dir = project_data_dir
-        self.keystore_password = '12345678'
+    def __init__(self, temp_dir):
+        self.keystore_path = os.path.join(temp_dir, 'keystore')
 
     def add_certificate(self, certificate_alias):
         subprocess.run([
             'keytool', '-import', '-noprompt',
             # JDK 9 changes default type to PKCS12, which causes "jarsigner -verify" to fail
             '-storetype', 'jks',
-            '-keystore', self.keystore_path, '-storepass', self.keystore_password,
-            '-file', os.path.join(self.project_data_dir, 'android-nightly.cer'), '-alias', certificate_alias
+            '-keystore', self.keystore_path,
+            '-storepass', '12345678',
+            '-file', os.path.join(project_data_dir, 'android-nightly.cer'),
+            '-alias', certificate_alias
         ])
 
 
@@ -62,7 +62,6 @@ class ConfigFileGenerator(object):
                 "digest_algorithm": "SHA1",
                 "skip_check_package_names": True,
                 "use_scope_for_channel": True,
-                "map_channels_to_apps": True,
                 "apps": {
                     "aurora": {
                         "package_names": ["org.mozilla.fennec_aurora"],
@@ -104,7 +103,7 @@ class ConfigFileGenerator(object):
                 "digest_algorithm": "SHA1",
                 "skip_check_ordered_version_codes": True,
                 "skip_checks_fennec": True,
-                "map_channels_to_apps": False,
+                "map_channels_to_tracks": True,
                 "single_app_config": {
                     "package_names": ["org.mozilla.focus", "org.mozilla.klar"],
                     "service_account": "focus@iam.gserviceaccount.com",
@@ -130,7 +129,6 @@ class ConfigFileGenerator(object):
                 "skip_check_multiple_locales": True,
                 "skip_check_same_locales": True,
                 "skip_checks_fennec": True,
-                "map_channels_to_apps": True,
                 "apps": {
                     "nightly": {
                         "package_names": ["org.mozilla.fenix.nightly"],
@@ -166,7 +164,7 @@ class MainTest(unittest.TestCase):
     def setUp(self):
         self.test_temp_dir_fp = tempfile.TemporaryDirectory()
         self.test_temp_dir = self.test_temp_dir_fp.name
-        self.keystore_manager = KeystoreManager(self.test_temp_dir, project_data_dir)
+        self.keystore_manager = KeystoreManager(self.test_temp_dir)
 
         self.config_generator = ConfigFileGenerator(self.test_temp_dir, self.keystore_manager)
 

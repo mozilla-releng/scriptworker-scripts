@@ -32,11 +32,14 @@ async def test_async_main(monkeypatch, android_product, update_google_play_strin
             'someOtherTaskId': ['/some/path/to/yet_another.apk', ],
         }, {})
     )
-    monkeypatch.setattr(jarsigner, 'verify', lambda _, __: None)
+    monkeypatch.setattr(jarsigner, 'verify', lambda _, __, ___: None)
     monkeypatch.setattr(manifest, 'verify', lambda _, __: None)
     monkeypatch.setattr(task, 'extract_android_product_from_scopes', lambda _: android_product)
     monkeypatch.setattr(pushapkscript.script, '_get_product_config', lambda _, __: {
         'update_google_play_strings': update_google_play_strings,
+        'apps': {
+            android_product: {}
+        }
     })
 
     google_play_strings_call_counter = (n for n in range(0, 2))
@@ -53,10 +56,12 @@ async def test_async_main(monkeypatch, android_product, update_google_play_strin
         'do_not_contact_google_play': True
     }
     context.task = {
-        'payload': {}
+        'payload': {
+            'channel': android_product
+        }
     }
 
-    def assert_google_play_call(_, __, all_apks_files, ___, google_play_strings_file):
+    def assert_google_play_call(_, __, ___, all_apks_files, ____, google_play_strings_file):
         assert sorted([file.name for file in all_apks_files]) == ['/some/path/to/another.apk', '/some/path/to/one.apk', '/some/path/to/yet_another.apk']
         if android_product == 'focus':
             assert google_play_strings_file is None
@@ -104,7 +109,6 @@ def test_get_product_config():
 
 def test_get_publish_config_fennec():
     aurora_config = {
-        'map_channels_to_apps': True,
         'use_scope_for_channel': True,
         'apps': {
             'aurora': {
@@ -117,7 +121,6 @@ def test_get_publish_config_fennec():
 
 def test_get_publish_config_fennec_track_override():
     aurora_config = {
-        'map_channels_to_apps': True,
         'use_scope_for_channel': True,
         'apps': {
             'aurora': {
@@ -133,6 +136,7 @@ def test_get_publish_config_fennec_track_override():
 
 def test_get_publish_config_focus_old():
     focus_config = {
+        'map_channels_to_tracks': True,
         'single_app_config': {
             'foo': 'bar'
         }
@@ -143,6 +147,7 @@ def test_get_publish_config_focus_old():
 
 def test_get_publish_config_focus():
     focus_config = {
+        'map_channels_to_tracks': True,
         'single_app_config': {
             'foo': 'bar'
         }
@@ -153,7 +158,6 @@ def test_get_publish_config_focus():
 
 def test_get_publish_config_fenix_old():
     fenix_config = {
-        'map_channels_to_apps': True,
         'apps': {
             'nightly': {
                 'foo': 'bar',
@@ -166,7 +170,6 @@ def test_get_publish_config_fenix_old():
 
 def test_get_publish_config_fenix():
     fenix_config = {
-        'map_channels_to_apps': True,
         'apps': {
             'nightly': {
                 'foo': 'bar',

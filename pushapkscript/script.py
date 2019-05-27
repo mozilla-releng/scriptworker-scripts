@@ -71,13 +71,16 @@ def _get_product_config(context, android_product):
 
 
 def _get_publish_config(product_config, payload, android_product):
-    if not product_config.get('map_channels_to_apps'):
-        # There's a single Google Play Store app that uses the "tracks" feature to represent different channels.
+    if product_config.get('map_channels_to_tracks'):
+        # Focus uses a single app and the "tracks" feature to represent different channels,
+        # rather than a separate app-per-channel.
         return {
             'google_play_track': payload.get('google_play_track') or payload['channel'],
             **product_config['single_app_config'],
         }
 
+    # If we're not mapping channels to tracks, then we're mapping each channel to a separate
+    # app on the Google Play Store.
     if product_config.get('use_scope_for_channel'):
         publish_config = product_config['apps'][android_product]
         if payload.get('google_play_track'):
