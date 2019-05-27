@@ -14,7 +14,7 @@ from pushapkscript.exceptions import SignatureError
 def test_verify(monkeypatch, does_apk_have_expected_digest, raises):
     monkeypatch.setattr(manifest, '_does_apk_have_expected_digest', lambda _, __: does_apk_have_expected_digest)
     product_config = {
-        'digest_algorithm': 'SHA-1'
+        'digest_algorithm': 'SHA1'
     }
 
     if raises:
