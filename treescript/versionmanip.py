@@ -19,6 +19,10 @@ ALLOWED_BUMP_FILES = (
     'config/milestone.txt',
     'mail/config/version.txt',
     'mail/config/version_display.txt',
+    'mobile/android/config/version-files/beta/version.txt',
+    'mobile/android/config/version-files/beta/version_display.txt',
+    'mobile/android/config/version-files/release/version.txt',
+    'mobile/android/config/version-files/release/version_display.txt',
 )
 
 
