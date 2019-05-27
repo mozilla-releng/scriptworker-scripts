@@ -32,7 +32,7 @@
     },{
         "product_names": ["focus"],
         "update_google_play_strings": false,
-        "digest_algorithm": "SHA256",
+        "digest_algorithm": "SHA-256",
         "skip_check_ordered_version_codes": true,
         "skip_checks_fennec": true,
         "map_channels_to_tracks": true,
@@ -45,7 +45,7 @@
     },{
         "product_names": ["fenix"],
         "update_google_play_strings": false,
-        "digest_algorithm": "SHA256",
+        "digest_algorithm": "SHA-256",
         "skip_check_multiple_locales": true,
         "skip_check_same_locales": true,
         "skip_checks_fennec": true,
