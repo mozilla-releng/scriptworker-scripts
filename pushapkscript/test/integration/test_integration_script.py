@@ -27,6 +27,8 @@ class KeystoreManager(object):
     def add_certificate(self, certificate_path):
         subprocess.run([
             'keytool', '-import', '-noprompt',
+            # JDK 9 changes default type to PKCS12, which causes "jarsigner -verify" to fail
+            '-storetype', 'jks',
             '-keystore', self.keystore_path, '-storepass', self.keystore_password,
             '-file', certificate_path, '-alias', self.certificate_alias
         ])
