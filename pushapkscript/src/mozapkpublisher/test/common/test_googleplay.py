@@ -3,6 +3,7 @@ import pytest
 import random
 import tempfile
 
+from googleapiclient.errors import HttpError
 from unittest.mock import MagicMock
 
 from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
@@ -74,7 +75,7 @@ def test_edit_service_commits_only_when_option_is_provided(monkeypatch):
 def test_edit_service_is_allowed_to_not_make_a_single_call_to_google_play(monkeypatch):
     edit_service_mock = set_up_edit_service_mock(monkeypatch)
     edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name', commit=True, contact_google_play=False)
-    upload_apk_result = edit_service.upload_apk(apk_path='/path/to/dummy.apk')
+    edit_service.upload_apk(apk_path='/path/to/dummy.apk')
     edit_service.update_listings(
         language='some_language', title='some_title', full_description='some_description', short_description='some_desc'
     )
@@ -82,7 +83,6 @@ def test_edit_service_is_allowed_to_not_make_a_single_call_to_google_play(monkey
     edit_service.update_whats_new(language='some_language', apk_version_code='some_version_code', whats_new='some_text')
     edit_service.commit_transaction()
 
-    assert upload_apk_result == {'versionCode': 'fake-version-code'}    # Value set when contact_google_play is False
     edit_service_mock.apks().upload.assert_not_called()
     edit_service_mock.apklistings().update.assert_not_called()
     edit_service_mock.tracks().update.assert_not_called()
@@ -98,15 +98,41 @@ def test_upload_apk_returns_files_metadata(monkeypatch):
     edit_mock.apks().upload.reset_mock()
 
     edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name')
-    response = edit_service.upload_apk(apk_path='/path/to/dummy.apk')
-    assert response == {
-        'binary': {'sha1': '1234567890abcdef1234567890abcdef12345678'}, 'versionCode': 2015012345
-    }
+    edit_service.upload_apk(apk_path='/path/to/dummy.apk')
     edit_mock.apks().upload.assert_called_once_with(
         editId=edit_service._edit_id,
         packageName='dummy_package_name',
         media_body='/path/to/dummy.apk',
     )
+
+
+@pytest.mark.parametrize('http_status_code', (400, 403))
+def test_upload_apk_errors_out(monkeypatch, http_status_code):
+    edit_mock = set_up_edit_service_mock(monkeypatch)
+    edit_mock.apks().upload().execute.side_effect = HttpError(
+        # XXX status is presented as a string by googleapiclient
+        resp={'status': str(http_status_code)},
+        # XXX content must be bytes
+        # https://github.com/googleapis/google-api-python-client/blob/ffea1a7fe9d381d23ab59048263c631cc2b45323/googleapiclient/errors.py#L41
+        content=b'{"error": {"errors": [{"reason": "someRandomReason"}] } }',
+    )
+    edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name')
+
+    with pytest.raises(HttpError):
+        edit_service.upload_apk(apk_path='/path/to/dummy.apk')
+
+
+def test_upload_apk_does_not_error_out_when_apk_is_already_published(monkeypatch):
+    edit_mock = set_up_edit_service_mock(monkeypatch)
+    edit_mock.apks().upload().execute.side_effect = HttpError(
+        # XXX status is presented as a string by googleapiclient
+        resp={'status': '403'},
+        # XXX content must be bytes
+        # https://github.com/googleapis/google-api-python-client/blob/ffea1a7fe9d381d23ab59048263c631cc2b45323/googleapiclient/errors.py#L41
+        content=b'{"error": {"errors": [{"reason": "apkUpgradeVersionConflict"}] } }',
+    )
+    edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name')
+    edit_service.upload_apk(apk_path='/path/to/dummy.apk')
 
 
 def test_update_track(monkeypatch):

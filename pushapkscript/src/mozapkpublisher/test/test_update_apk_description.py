@@ -16,7 +16,6 @@ credentials = NamedTemporaryFile()
 
 def test_update_apk_description_force_locale(monkeypatch):
     edit_service_mock = create_autospec(googleplay.EditService)
-    edit_service_mock.upload_apk.side_effect = [{'versionCode': str(i)} for i in range(2)]
     monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____, _____: edit_service_mock)
     monkeypatch.setattr(store_l10n, '_translations_per_google_play_locale_code', {
         'google_play_locale': {

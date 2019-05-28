@@ -40,7 +40,6 @@ def edit_service_mock():
 
         return {'versionCode': str(version_code)}
 
-    _edit_service_mock.upload_apk.side_effect = _generate_version_code
     return _edit_service_mock
 
 

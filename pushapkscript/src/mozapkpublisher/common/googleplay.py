@@ -14,10 +14,12 @@
 
 import argparse
 import httplib2
+import json
 import logging
 
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
+from googleapiclient.errors import HttpError
 # HACK: importing mock in production is useful for option `--do-not-contact-google-play`
 from unittest.mock import MagicMock
 
@@ -80,14 +82,23 @@ class EditService(object):
     @transaction_required
     def upload_apk(self, apk_path):
         logger.info('Uploading "{}"'.format(apk_path))
-        response = self._service.apks().upload(
-            editId=self._edit_id,
-            packageName=self._package_name,
-            media_body=apk_path
-        ).execute()
-        logger.info('"{}" uploaded'.format(apk_path))
-        logger.debug('Upload response: {}'.format(response))
-        return response
+        try:
+            response = self._service.apks().upload(
+                editId=self._edit_id,
+                packageName=self._package_name,
+                media_body=apk_path
+            ).execute()
+            logger.info('"{}" uploaded'.format(apk_path))
+            logger.debug('Upload response: {}'.format(response))
+        except HttpError as e:
+            if e.resp['status'] == '403':
+                # XXX This is really how data is returned by the googleapiclient.
+                error_content = json.loads(e.content)
+                errors = error_content['error']['errors']
+                if len(errors) == 1 and errors[0]['reason'] == 'apkUpgradeVersionConflict':
+                    logger.warn('APK "{}" has already been uploaded on Google Play. Skipping...'.format(apk_path))
+                    return
+            raise
 
     @transaction_required
     def update_track(self, track, version_codes, rollout_percentage=None):
