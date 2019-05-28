@@ -226,18 +226,7 @@ async def sign_app(key_config, app_path, entitlements_path):
                 output_log_on_exception=True,
             )
 
-    # special case Contents/Resources/gmp-clearkey/0.1/libclearkey.dylib
-    # which is living in the wrong place (bug 1100450), but isn't trivial to move.
-    # Only do this for the top level app and not nested apps
-    if "Contents/" not in app_path:
-        dir_ = os.path.join(contents_dir, "Resources/gmp-clearkey/0.1/")
-        file_ = "libclearkey.dylib"
-        await run_command(
-            sign_command + [file_],
-            cwd=dir_,
-            exception=IScriptError,
-            output_log_on_exception=True,
-        )
+    await sign_libclearkey(contents_dir, sign_command, app_path)
 
     # sign bundle
     await run_command(
@@ -246,6 +235,34 @@ async def sign_app(key_config, app_path, entitlements_path):
         exception=IScriptError,
         output_log_on_exception=True,
     )
+
+
+async def sign_libclearkey(contents_dir, sign_command, app_path):
+    """Sign libclearkey if it exists.
+
+    Special case Contents/Resources/gmp-clearkey/0.1/libclearkey.dylib
+    which is living in the wrong place (bug 1100450), but isn't trivial to move.
+    Only do this for the top level app and not nested apps
+
+    Args:
+        contents_dir (str): the ``Contents/`` directory path
+        sign_command (list): the command to sign with
+        app_path (str): the path to the .app dir
+
+    Raises:
+        IScriptError: on failure
+
+    """
+    if "Contents/" not in app_path:
+        dir_ = os.path.join(contents_dir, "Resources/gmp-clearkey/0.1/")
+        file_ = "libclearkey.dylib"
+        if os.path.exists(os.path.join(dir_, file_)):
+            await run_command(
+                sign_command + [file_],
+                cwd=dir_,
+                exception=IScriptError,
+                output_log_on_exception=True,
+            )
 
 
 # verify_app_signature

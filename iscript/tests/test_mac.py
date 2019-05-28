@@ -119,9 +119,11 @@ def test_get_bundle_executable(mocker):
 
 
 # sign_app {{{1
-@pytest.mark.parametrize("sign_with_entitlements", (True, False))
+@pytest.mark.parametrize(
+    "sign_with_entitlements,has_clearkey", ((True, True), (False, False))
+)
 @pytest.mark.asyncio
-async def test_sign_app(mocker, tmpdir, sign_with_entitlements):
+async def test_sign_app(mocker, tmpdir, sign_with_entitlements, has_clearkey):
     """Render ``sign_app`` noop and verify we have complete code coverage.
 
     """
@@ -143,6 +145,11 @@ async def test_sign_app(mocker, tmpdir, sign_with_entitlements):
         touch(os.path.join(dir_, "other"))
         touch(os.path.join(dir_, "main"))
     touch(os.path.join(contents_dir, "dont_sign"))
+    if has_clearkey:
+        dir_ = os.path.join(contents_dir, "Resources/gmp-clearkey/0.1")
+        file_ = "libclearkey.dylib"
+        makedirs(dir_)
+        touch(os.path.join(dir_, file_))
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="main")
     await mac.sign_app(key_config, app_path, entitlements_path)
