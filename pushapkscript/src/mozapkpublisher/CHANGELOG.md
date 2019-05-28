@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.0.0] - 2019-05-28
+### Changed
+* `push_apk` doesn't error out anymore if an APK has already been uploaded
+
+### Removed
+* Python 3.5 support
+
+
 ## [2.0.2] - 2019-04-22
 ### Fixed
 * When multiple package names were used, packages weren't filtered properly 
