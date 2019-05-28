@@ -465,6 +465,13 @@ async def sign_all_apps(config, key_config, entitlements_path, all_paths):
 
     """
     log.info("Signing all apps")
+    # sign widevine
+    futures = []
+    for app in all_paths:
+        futures.append(
+            asyncio.ensure_future(sign_widevine_dir(config, key_config, app.app_path))
+        )
+    await raise_future_exceptions(futures)
     futures = []
     # sign apps concurrently
     for app in all_paths:
@@ -477,13 +484,6 @@ async def sign_all_apps(config, key_config, entitlements_path, all_paths):
     futures = []
     for app in all_paths:
         futures.append(asyncio.ensure_future(verify_app_signature(app)))
-    await raise_future_exceptions(futures)
-    # sign widevine
-    futures = []
-    for app in all_paths:
-        futures.append(
-            asyncio.ensure_future(sign_widevine_dir(config, key_config, app.app_path))
-        )
     await raise_future_exceptions(futures)
 
 
@@ -951,6 +951,9 @@ async def notarize_behavior(config, task):
         key_config["signing_keychain"], key_config["keychain_password"]
     )
     await sign_all_apps(config, key_config, entitlements_path, all_paths)
+
+    # XXX copy signed tarballs to artifacts before notarization for debugging
+    await tar_apps(config, all_paths)
 
     log.info("Notarizing")
     if key_config["notarize_type"] == "multi_account":
