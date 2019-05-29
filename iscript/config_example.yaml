@@ -4,7 +4,6 @@ taskcluster_scope_prefix: "project:releng:signing:"
 verbose: true
 local_notarization_accounts: ["account1"]
 concurrency_limit: 2
-7z: path/to/7z
 mac_config:
     dep:
         notarize_type: multi_account

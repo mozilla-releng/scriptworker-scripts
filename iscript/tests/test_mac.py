@@ -302,7 +302,7 @@ async def test_extract_all_apps(mocker, tmpdir, suffix, command, raises):
 
     mocker.patch.object(mac, "run_command", new=fake_run_command)
     work_dir = os.path.join(str(tmpdir), "work")
-    config = {"work_dir": work_dir, "7z": "7z"}
+    config = {"work_dir": work_dir}
     all_paths = [
         mac.App(orig_path=os.path.join(work_dir, f"orig1.{suffix}")),
         mac.App(orig_path=os.path.join(work_dir, f"orig2.{suffix}")),

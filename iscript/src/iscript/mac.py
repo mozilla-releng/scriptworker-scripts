@@ -408,7 +408,6 @@ async def extract_all_apps(config, all_paths):
             futures.append(
                 asyncio.ensure_future(
                     run_command(
-                        # [config["7z"], "x", app.orig_path],
                         [unpack_dmg, app.orig_path, unpack_mountpoint, app.parent_dir],
                         cwd=app.parent_dir,
                         exception=IScriptError,
