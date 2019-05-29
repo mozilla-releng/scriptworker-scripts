@@ -856,8 +856,10 @@ async def tar_apps(config, all_paths):
             asyncio.ensure_future(
                 run_command(
                     [
-                        "tar",
+                        "gtar",
                         _get_tar_create_options(app.target_tar_path),
+                        "--preserve",
+                        "--xattrs",
                         app.target_tar_path,
                     ]
                     + [f for f in os.listdir(cwd) if f != "[]"],
