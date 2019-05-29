@@ -326,6 +326,86 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
     False,
 ), (
     {
+        '/some/release/target.arm.apk': {
+            'api_level': 16,
+            'architecture': 'armeabi-v7a',
+            'firefox_version': '68.0',
+            'firefox_build_id': '20190115103851',
+            'locales': (
+                'an', 'ar', 'as', 'ast', 'az', 'be', 'bg', 'bn-BD', 'bn-IN', 'br', 'bs', 'ca', 'cak',
+                'cs', 'cy', 'da', 'de', 'dsb', 'el', 'en-CA', 'en-GB', 'en-US', 'en-ZA', 'eo', 'es-AR',
+                'es-CL', 'es-ES', 'es-MX', 'et', 'eu', 'fa', 'ff', 'fi', 'fr', 'fy-NL', 'ga-IE', 'gd',
+                'gl', 'gn', 'gu-IN', 'he', 'hi-IN', 'hr', 'hsb', 'hu', 'hy-AM', 'id', 'is', 'it', 'ja',
+                'ka', 'kab', 'kk', 'kn', 'ko', 'lij', 'lo', 'lt', 'lv', 'mai', 'ml', 'mr', 'ms', 'my',
+                'nb-NO', 'ne-NP', 'nl', 'nn-NO', 'oc', 'or', 'pa-IN', 'pl', 'pt-BR', 'pt-PT', 'rm',
+                'ro', 'ru', 'sk', 'sl', 'son', 'sq', 'sr', 'sv-SE', 'ta', 'te', 'th', 'tr', 'trs',
+                'uk', 'ur', 'uz', 'vi', 'wo', 'xh', 'zam', 'zh-CN', 'zh-TW'
+            ),
+            'package_name': 'org.mozilla.firefox',
+            'version_code': '1',
+        },
+        '/some/release/target.x86.apk': {
+            'api_level': 16,
+            'architecture': 'x86',
+            'firefox_version': '68.0',
+            'firefox_build_id': '20190115103851',
+            'locales': (
+                'an', 'ar', 'as', 'ast', 'az', 'be', 'bg', 'bn-BD', 'bn-IN', 'br', 'bs', 'ca', 'cak',
+                'cs', 'cy', 'da', 'de', 'dsb', 'el', 'en-CA', 'en-GB', 'en-US', 'en-ZA', 'eo', 'es-AR',
+                'es-CL', 'es-ES', 'es-MX', 'et', 'eu', 'fa', 'ff', 'fi', 'fr', 'fy-NL', 'ga-IE', 'gd',
+                'gl', 'gn', 'gu-IN', 'he', 'hi-IN', 'hr', 'hsb', 'hu', 'hy-AM', 'id', 'is', 'it', 'ja',
+                'ka', 'kab', 'kk', 'kn', 'ko', 'lij', 'lo', 'lt', 'lv', 'mai', 'ml', 'mr', 'ms', 'my',
+                'nb-NO', 'ne-NP', 'nl', 'nn-NO', 'oc', 'or', 'pa-IN', 'pl', 'pt-BR', 'pt-PT', 'rm',
+                'ro', 'ru', 'sk', 'sl', 'son', 'sq', 'sr', 'sv-SE', 'ta', 'te', 'th', 'tr', 'trs',
+                'uk', 'ur', 'uz', 'vi', 'wo', 'xh', 'zam', 'zh-CN', 'zh-TW'
+            ),
+            'package_name': 'org.mozilla.firefox',
+            'version_code': '3',
+        },
+        '/some/release/target.aarch64.apk': {
+            'api_level': 21,
+            'architecture': 'arm64-v8a',
+            'firefox_version': '68.0',
+            'firefox_build_id': '20190115103851',
+            'locales': (
+                'an', 'ar', 'as', 'ast', 'az', 'be', 'bg', 'bn-BD', 'bn-IN', 'br', 'bs', 'ca', 'cak',
+                'cs', 'cy', 'da', 'de', 'dsb', 'el', 'en-CA', 'en-GB', 'en-US', 'en-ZA', 'eo', 'es-AR',
+                'es-CL', 'es-ES', 'es-MX', 'et', 'eu', 'fa', 'ff', 'fi', 'fr', 'fy-NL', 'ga-IE', 'gd',
+                'gl', 'gn', 'gu-IN', 'he', 'hi-IN', 'hr', 'hsb', 'hu', 'hy-AM', 'id', 'is', 'it', 'ja',
+                'ka', 'kab', 'kk', 'kn', 'ko', 'lij', 'lo', 'lt', 'lv', 'mai', 'ml', 'mr', 'ms', 'my',
+                'nb-NO', 'ne-NP', 'nl', 'nn-NO', 'oc', 'or', 'pa-IN', 'pl', 'pt-BR', 'pt-PT', 'rm',
+                'ro', 'ru', 'sk', 'sl', 'son', 'sq', 'sr', 'sv-SE', 'ta', 'te', 'th', 'tr', 'trs',
+                'uk', 'ur', 'uz', 'vi', 'wo', 'xh', 'zam', 'zh-CN', 'zh-TW'
+            ),
+            'package_name': 'org.mozilla.firefox',
+            'version_code': '2015605651',
+        },
+        '/some/release/target.x86_64.apk': {
+            'api_level': 21,
+            'architecture': 'x86_64',
+            'firefox_version': '68.0',
+            'firefox_build_id': '20190115103851',
+            'locales': (
+                'an', 'ar', 'as', 'ast', 'az', 'be', 'bg', 'bn-BD', 'bn-IN', 'br', 'bs', 'ca', 'cak',
+                'cs', 'cy', 'da', 'de', 'dsb', 'el', 'en-CA', 'en-GB', 'en-US', 'en-ZA', 'eo', 'es-AR',
+                'es-CL', 'es-ES', 'es-MX', 'et', 'eu', 'fa', 'ff', 'fi', 'fr', 'fy-NL', 'ga-IE', 'gd',
+                'gl', 'gn', 'gu-IN', 'he', 'hi-IN', 'hr', 'hsb', 'hu', 'hy-AM', 'id', 'is', 'it', 'ja',
+                'ka', 'kab', 'kk', 'kn', 'ko', 'lij', 'lo', 'lt', 'lv', 'mai', 'ml', 'mr', 'ms', 'my',
+                'nb-NO', 'ne-NP', 'nl', 'nn-NO', 'oc', 'or', 'pa-IN', 'pl', 'pt-BR', 'pt-PT', 'rm',
+                'ro', 'ru', 'sk', 'sl', 'son', 'sq', 'sr', 'sv-SE', 'ta', 'te', 'th', 'tr', 'trs',
+                'uk', 'ur', 'uz', 'vi', 'wo', 'xh', 'zam', 'zh-CN', 'zh-TW'
+            ),
+            'package_name': 'org.mozilla.firefox',
+            'version_code': '4',
+        },
+    },
+    ExpectedPackageNamesCheck(['org.mozilla.firefox']),
+    False,
+    False,
+    False,
+    False,
+), (
+    {
         'Focus.apk': {
             'api_level': 21,
             'architecture': 'armeabi-v7',

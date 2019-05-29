@@ -6,9 +6,9 @@ logger = logging.getLogger(__name__)
 _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE_AND_API_LEVEL = {
     'arm64-v8a': {      # Bug 1368484
         21: {
-            # XXX AArch64 first shipped in Nightly 66, and then arrived in beta in 67.
-            # It's not on release yet. Logic is down below.
-            'first_firefox_version': 66,
+            # XXX AArch64 first shipped in Nightly 66, then in Beta 67, then on Release 68.
+            # Logic for 66 and 67 is down below.
+            'first_firefox_version': 68,
         },
     },
     'armeabi-v7a': {    # Bug 618789
@@ -79,20 +79,22 @@ def get_expected_api_levels(firefox_version, architecture='armeabi-v7a', package
         api_level
         for api_level, range_dict in _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE_AND_API_LEVEL[architecture].items()
         if (
-            _is_firefox_version_in_range(firefox_version, range_dict) and
-            # XXX arm64-v8a (aka AArch64) is not planned to ride trains regularly.
-            # It's currently expected on nightly and beta, for now.
+            _is_firefox_version_in_range(firefox_version, range_dict) or
+            # XXX arm64-v8a shipped on Nightly between 66 and 67, and on Beta on 67.
             (
-                architecture != 'arm64-v8a' or
-                (
-                    architecture == 'arm64-v8a' and (
-                        package_name == 'org.mozilla.fennec_aurora' or
-                        package_name == 'org.mozilla.firefox_beta' and get_firefox_major_version_number(firefox_version) >= 67
-                    )
+                architecture == 'arm64-v8a' and (
+                    get_firefox_major_version_number(firefox_version) in
+                    _EXCEPTIONALLY_SHIPPED_MAJOR_NUMBERS_PER_PACKAGE_NAME.get(package_name, ())
                 )
             )
         )
     ]
+
+
+_EXCEPTIONALLY_SHIPPED_MAJOR_NUMBERS_PER_PACKAGE_NAME = {
+    'org.mozilla.fennec_aurora': (66, 67,),
+    'org.mozilla.firefox_beta': (67,),
+}
 
 
 def _is_firefox_version_in_range(firefox_version, range_dict):

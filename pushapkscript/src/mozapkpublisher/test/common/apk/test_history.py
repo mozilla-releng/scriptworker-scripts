@@ -68,6 +68,10 @@ from mozapkpublisher.common.apk.history import (
     '67.0',
     'org.mozilla.firefox',
     set([('x86', 16), ('x86_64', 21), ('armeabi-v7a', 16)]),
+), (
+    '68.0',
+    'org.mozilla.firefox',
+    set([('x86', 16), ('x86_64', 21), ('armeabi-v7a', 16), ('arm64-v8a', 21)]),
 )))
 def test_get_expected_combos(firefox_version, package_name, expected):
     assert get_expected_combos(firefox_version, package_name) == expected
