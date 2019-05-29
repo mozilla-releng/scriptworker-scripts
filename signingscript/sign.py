@@ -433,6 +433,41 @@ async def sign_widevine_tar(context, orig_path, fmt):
     return orig_path
 
 
+# sign_omnija {{{1
+async def sign_omnija(context, orig_path, fmt):
+    """Call the appropriate helper function to do omnija signing.
+
+    Args:
+        context (Context): the signing context
+        orig_path (str): the source file to sign
+        fmt (str): the format to sign with
+
+    Raises:
+        SigningScriptError: on unknown suffix.
+
+    Returns:
+        str: the path to the signed archive
+
+    """
+    file_base, file_extension = os.path.splitext(orig_path)
+    raise NotImplementedError("OmniJa signing not yet supported")
+    # Convert dmg to tarball
+    if file_extension == '.dmg':
+        await _convert_dmg_to_tar_gz(context, orig_path)
+        orig_path = "{}.tar.gz".format(file_base)
+    ext_to_fn = {
+        '.zip': sign_widevine_zip,
+        '.tar.bz2': sign_widevine_tar,
+        '.tar.gz': sign_widevine_tar,
+    }
+    for ext, signing_func in ext_to_fn.items():
+        if orig_path.endswith(ext):
+            return await signing_func(context, orig_path, fmt)
+    raise SigningScriptError(
+        "Unknown widevine file format for {}".format(orig_path)
+    )
+
+
 # _should_sign_windows {{{1
 def _should_sign_windows(filename):
     """Return True if filename should be signed."""

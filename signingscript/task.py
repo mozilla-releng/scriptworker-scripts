@@ -23,7 +23,8 @@ from scriptworker.utils import retry_request, get_single_item_from_sequence
 
 from signingscript.sign import get_suitable_signing_servers, sign_gpg, \
     sign_jar, sign_macapp, sign_signcode, sign_widevine, sign_file, \
-    sign_mar384_with_autograph_hash, sign_gpg_with_autograph
+    sign_mar384_with_autograph_hash, sign_gpg_with_autograph, \
+    sign_omnija
 from signingscript.exceptions import SigningServerError
 from signingscript.utils import is_autograph_signing_format
 
@@ -46,6 +47,7 @@ FORMAT_TO_SIGNING_FUNCTION = frozendict({
     "signcode": sign_signcode,
     "widevine": sign_widevine,
     "autograph_widevine": sign_widevine,
+    "autograph_omnija": sign_omnija,
     "default": sign_file,
 })
 
@@ -239,7 +241,9 @@ def _sort_formats(formats):
     """
     # Widevine formats must be after other formats other than macapp; GPG must
     # be last.
-    for fmt in ("widevine", "autograph_widevine", "macapp", "gpg", "autograph_gpg"):
+    for fmt in ("widevine", "autograph_widevine", "autograph_omnija",
+                "macapp", "gpg", "autograph_gpg",
+                ):
         if fmt in formats:
             formats.remove(fmt)
             formats.append(fmt)
