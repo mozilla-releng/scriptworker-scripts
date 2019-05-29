@@ -298,7 +298,7 @@ def rm(path):
 
     """
     if path and os.path.exists(path):
-        if os.path.isdir(path):
+        if os.path.isdir(path) and not os.path.islink(path):
             shutil.rmtree(path)
         else:
             os.remove(path)
