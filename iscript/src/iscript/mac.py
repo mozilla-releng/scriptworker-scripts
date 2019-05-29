@@ -387,6 +387,7 @@ async def extract_all_apps(config, all_paths):
     log.info("Extracting all apps")
     futures = []
     work_dir = config["work_dir"]
+    unpack_dmg = os.path.join(os.path.dirname(__file__), "data", "unpack-diskimage")
     for counter, app in enumerate(all_paths):
         app.check_required_attrs(["orig_path"])
         app.parent_dir = os.path.join(work_dir, str(counter))
@@ -403,10 +404,12 @@ async def extract_all_apps(config, all_paths):
                 )
             )
         elif app.orig_path.endswith(".dmg"):
+            unpack_mountpoint = os.path.join("/tmp", f"{counter}-unpack")
             futures.append(
                 asyncio.ensure_future(
                     run_command(
-                        [config["7z"], "x", app.orig_path],
+                        # [config["7z"], "x", app.orig_path],
+                        [unpack_dmg, app.orig_path, unpack_mountpoint, app.parent_dir],
                         cwd=app.parent_dir,
                         exception=IScriptError,
                     )
