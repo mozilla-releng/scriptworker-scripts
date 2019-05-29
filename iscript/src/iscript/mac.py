@@ -418,6 +418,10 @@ async def extract_all_apps(config, all_paths):
         else:
             raise IScriptError(f"unknown file type {app.orig_path}")
     await raise_future_exceptions(futures)
+    if app.orig_path.endswith(".dmg"):
+        # nuke the softlink to /Applications
+        for counter, app in enumerate(all_paths):
+            rm(os.path.join(app.parent_dir, " "))
 
 
 # create_all_notarization_zipfiles {{{1
