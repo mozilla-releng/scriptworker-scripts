@@ -271,7 +271,17 @@ def test_get_app_paths():
 @pytest.mark.parametrize(
     "suffix, command, raises",
     (
-        ("dmg", "7z", False),
+        (
+            "dmg",
+            os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                "src",
+                "iscript",
+                "data",
+                "unpack-diskimage",
+            ),
+            False,
+        ),
         ("tar.gz", "tar", False),
         ("tar.bz2", "tar", False),
         ("unknown_ext", None, True),
