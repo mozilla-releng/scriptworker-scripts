@@ -28,9 +28,6 @@ from iscript.util import get_key_config
 
 from iscript.widevine import sign_widevine_dir
 
-# XXX silence linting; remove me when widevine is working
-assert sign_widevine_dir
-
 log = logging.getLogger(__name__)
 
 
@@ -985,9 +982,6 @@ async def notarize_behavior(config, task):
         key_config["signing_keychain"], key_config["keychain_password"]
     )
     await sign_all_apps(config, key_config, entitlements_path, all_paths)
-
-    # XXX copy signed tarballs to artifacts before notarization for debugging
-    await tar_apps(config, all_paths)
 
     log.info("Notarizing")
     if key_config["notarize_type"] == "multi_account":
