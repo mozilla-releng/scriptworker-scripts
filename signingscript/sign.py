@@ -43,16 +43,18 @@ except ImportError:
 
 sys.path.append(  # append the mozbuild vendor
     os.path.abspath(
-        os.path.realpath(
-            os.path.dirname(__file__)
-            ),
-        '..',
-        'vendored',
-        'mozbuild'
+        os.path.join(
+            os.path.realpath(
+                os.path.dirname(__file__)
+                ),
+            '..',
+            'vendored',
+            'mozbuild',
+            )
         )
     )
-
-import mozjar
+print(sys.path, __file__)
+from mozpack import mozjar
 
 
 log = logging.getLogger(__name__)
@@ -1164,7 +1166,7 @@ async def merge_omnija_files(orig, signed, to):
         signed_zip = zipfile.ZipFile(signed, 'r')
         for fname in signed_zip.namelist():
             if fname.startswith('META-INF'):
-                dest_writer.add(
+                to_writer.add(
                     fname,
                     signed_zip.open(fname, 'r'))
         jarlog = list(orig_jarreader.entries.keys())
