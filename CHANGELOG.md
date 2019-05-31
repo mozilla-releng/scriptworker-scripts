@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.0] - 2019-05-31
+
+### Added
+- Allowed Fennec beta/release version files
+
 ## [1.1.3] - 2018-10-31
 
 ### Fixed
