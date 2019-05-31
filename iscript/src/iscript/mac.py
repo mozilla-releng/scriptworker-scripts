@@ -26,7 +26,7 @@ from iscript.exceptions import (
 )
 from iscript.util import get_key_config
 
-from iscript.widevine import sign_widevine_dir
+from iscript.autograph import sign_widevine_dir
 
 log = logging.getLogger(__name__)
 
