@@ -62,3 +62,11 @@ class TaskVerificationError(ClientError):
 
 class RetryError(ClientError):
     """Scriptworker-client retry error."""
+
+
+class Download404(ClientError):
+    """Scriptworker-client download 404 error."""
+
+
+class DownloadError(ClientError):
+    """Scriptworker-client download error."""

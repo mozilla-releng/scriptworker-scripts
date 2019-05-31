@@ -4,9 +4,17 @@ import aiohttp
 import asyncio
 import async_timeout
 import logging
+import os
 import random
 
-from scriptworker_client.exceptions import RetryError, TaskError, TimeoutError
+from scriptworker_client.exceptions import (
+    Download404,
+    DownloadError,
+    RetryError,
+    TaskError,
+    TimeoutError,
+)
+from scriptworker_client.utils import makedirs
 
 log = logging.getLogger(__name__)
 
@@ -225,3 +233,60 @@ async def request(
                 attempts=num_attempts,
                 retry_exceptions=(asyncio.TimeoutError, RetryError),
             )
+
+
+# download_file {{{1
+async def _log_download_error(resp, log_url, msg):
+    log.debug(
+        msg, {"url": log_url, "status": resp.status, "body": (await resp.text())[:1000]}
+    )
+    for i, h in enumerate(resp.history):
+        log.debug(
+            "Redirect history %s: %s; body=%s",
+            log_url,
+            h.status,
+            (await h.text())[:1000],
+        )
+
+
+async def download_file(url, abs_filename, log_url=None, chunk_size=128, timeout=300):
+    """Download a file, async.
+
+    Args:
+        url (str): the url to download
+        abs_filename (str): the path to download to
+        log_url (str, optional): the url to log, should ``url`` contain sensitive information.
+            If ``None``, use ``url``. Defaults to ``None``
+        chunk_size (int, optional): the chunk size to read from the response
+            at a time. Default is 128.
+        timeout (int, optional): seconds to time out the request. Default is 300.
+
+    """
+    aiohttp_timeout = aiohttp.ClientTimeout(total=timeout)
+    async with aiohttp.ClientSession(timeout=aiohttp_timeout) as session:
+        log_url = log_url or url
+        log.info("Downloading %s", log_url)
+        parent_dir = os.path.dirname(abs_filename)
+        async with session.get(url) as resp:
+            if resp.status == 404:
+                await _log_download_error(
+                    resp, log_url, "404 downloading %(url)s: %(status)s; body=%(body)s"
+                )
+                raise Download404("{} status {}!".format(log_url, resp.status))
+            elif resp.status != 200:
+                await _log_download_error(
+                    resp,
+                    log_url,
+                    "Failed to download %(url)s: %(status)s; body=%(body)s",
+                )
+                raise DownloadError(
+                    "{} status {} is not 200!".format(log_url, resp.status)
+                )
+            makedirs(parent_dir)
+            with open(abs_filename, "wb") as fd:
+                while True:
+                    chunk = await resp.content.read(chunk_size)
+                    if not chunk:
+                        break
+                    fd.write(chunk)
+        log.info("Done")

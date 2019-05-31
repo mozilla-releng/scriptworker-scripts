@@ -13,7 +13,13 @@ import re
 import shutil
 import time
 import scriptworker_client.aio as aio
-from scriptworker_client.exceptions import RetryError, TaskError, TimeoutError
+from scriptworker_client.exceptions import (
+    Download404,
+    DownloadError,
+    RetryError,
+    TaskError,
+    TimeoutError,
+)
 
 
 # helpers {{{1
@@ -39,6 +45,64 @@ async def async_time(sleep_time=0):
     """
     await asyncio.sleep(sleep_time)
     return int("{}{}".format(int(time.time()), str(datetime.now().microsecond)[0:4]))
+
+
+class FakeSession:
+    """Aiohttp session mock."""
+
+    statuses = None
+    content = [b"first", b"second", None]
+
+    @asynccontextmanager
+    async def request(self, method, url, **kwargs):
+        """Fake request. "url" should be a comma-delimited set of integers
+        that we'll use for status.
+
+        """
+
+        async def _fake_text():
+            return method
+
+        async def _fake_json():
+            return {"method": method}
+
+        async def _fake_content_read(*args, **kwargs):
+            return self.content.pop(0)
+
+        if not self.statuses:
+            self.statuses = url.split(",")
+        resp = mock.MagicMock()
+        resp.status = int(self.statuses.pop(0))
+        resp.text = _fake_text
+        resp.json = _fake_json
+        # Fake download: will give `firstsecond`
+        content = mock.MagicMock()
+        content.read = _fake_content_read
+        resp.content = content
+        # Fake history for _log_download_error
+        history = mock.MagicMock()
+        history.status = resp.status
+        history.text = _fake_text
+        resp.history = [history, history]
+
+        yield resp
+
+    @asynccontextmanager
+    async def get(self, url, **kwargs):
+        async with self.request("get", url, **kwargs) as resp:
+            yield resp
+
+
+@asynccontextmanager
+async def GetFakeSession(*args, **kwargs):
+    """Helper class to replace ``aiohttp.ClientSession()``
+
+    """
+    yield FakeSession()
+
+
+async def noop_async(*args, **kwargs):
+    """Noop coroutine."""
 
 
 # raise_future_exceptions {{{1
@@ -176,46 +240,6 @@ async def test_retry_async_always_fail():
 
 
 # request {{{1
-class FakeSession:
-    """Aiohttp session mock."""
-
-    statuses = None
-
-    @asynccontextmanager
-    async def request(self, method, url, **kwargs):
-        """Fake request. "url" should be a comma-delimited set of integers
-        that we'll use for status.
-
-        """
-
-        async def _fake_text():
-            return method
-
-        async def _fake_json():
-            return {"method": method}
-
-        if not self.statuses:
-            self.statuses = url.split(",")
-        resp = mock.MagicMock()
-        resp.status = int(self.statuses.pop(0))
-        resp.text = _fake_text
-        resp.json = _fake_json
-
-        yield resp
-
-
-@asynccontextmanager
-async def GetFakeSession():
-    """Helper class to replace ``aiohttp.ClientSession()``
-
-    """
-    yield FakeSession()
-
-
-async def noop_async(*args, **kwargs):
-    """Noop coroutine."""
-
-
 @pytest.mark.parametrize(
     "url,method,return_type,expected,exception,num_attempts",
     (
@@ -250,3 +274,26 @@ async def test_request(
             await aio.request(
                 url, method=method, return_type=return_type, num_attempts=num_attempts
             )
+
+
+# download_file {{{1
+@pytest.mark.parametrize(
+    "url,expected,raises",
+    (
+        ("200", "firstsecond", False),
+        ("404", None, Download404),
+        ("500", None, DownloadError),
+    ),
+)
+@pytest.mark.asyncio
+async def test_download_file(tmpdir, url, expected, raises, mocker):
+    mocker.patch.object(aiohttp, "ClientSession", new=GetFakeSession)
+    path = os.path.join(tmpdir, "foo")
+    if raises:
+        with pytest.raises(raises):
+            await aio.download_file(url, path)
+    else:
+        await aio.download_file(url, path)
+        with open(path, "r") as fh:
+            contents = fh.read()
+        assert contents == expected
