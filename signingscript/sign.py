@@ -504,11 +504,10 @@ async def sign_omnija_zip(context, orig_path, fmt):
     # This will get cleaned up when we nuke `work_dir`. Clean up at that point
     # rather than immediately after `sign_omnija`, to optimize task runtime
     # speed over disk space.
-    tmp_dir = tempfile.mkdtemp(prefix="oj_zip", dir=context.config['work_dir'])
+    tmp_dir = tempfile.mkdtemp(prefix="ojzip", dir=context.config['work_dir'])
     # Get file list
     all_files = await _get_zipfile_files(orig_path)
     files_to_sign = _get_omnija_signing_files(all_files)
-    is_autograph = utils.is_autograph_signing_format(fmt)
     log.debug("Omnija files to sign: %s", files_to_sign)
     if files_to_sign:
         all_files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
@@ -522,6 +521,56 @@ async def sign_omnija_zip(context, orig_path, fmt):
         await raise_future_exceptions(tasks)
         await _create_zipfile(
             context, orig_path, all_files, mode='w', tmp_dir=tmp_dir
+        )
+    return orig_path
+
+
+# sign_omnija_tar {{{1
+async def sign_omnija_tar(context, orig_path, fmt):
+    """Sign the internals of a tarfile with the omnija key for all omni.ja files.
+
+    Extract the files to sign, then sign them with autograph, recreating the omni.ja
+    from the original to preserve performance tweeks but adding signing info.
+    Then recreate the tarball.
+
+    Args:
+        context (Context): the signing context
+        orig_path (str): the source file to sign
+        fmt (str): the format to sign with
+
+    Returns:
+        str: the path to the signed archive
+
+    """
+    _, compression = os.path.splitext(orig_path)
+    # This will get cleaned up when we nuke `work_dir`. Clean up at that point
+    # rather than immediately after `sign_widevine`, to optimize task runtime
+    # speed over disk space.
+    tmp_dir = tempfile.mkdtemp(prefix="ojtar", dir=context.config['work_dir'])
+    # Get file list
+    all_files = await _get_tarfile_files(orig_path, compression)
+    files_to_sign = _get_omnija_signing_files(all_files)
+    is_autograph = utils.is_autograph_signing_format(fmt)
+    log.debug("Omnija files to sign: %s", files_to_sign)
+    if files_to_sign:
+        # Extract all files so we can create `precomplete` with the full
+        # file list
+        all_files = await _extract_tarfile(
+            context, orig_path, compression, tmp_dir=tmp_dir
+        )
+        tasks = []
+        # Sign the appropriate inner files
+        for from_, fmt in files_to_sign.items():
+            from_ = os.path.join(tmp_dir, from_)
+            # Don't try to sign directories
+            if not os.path.isfile(from_):
+                continue
+            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(
+                context, from_, "omnijaformatXXXCALLEKTODO",
+            )))
+        await raise_future_exceptions(tasks)
+        await _create_tarfile(
+            context, orig_path, all_files, compression, tmp_dir=tmp_dir
         )
     return orig_path
 
@@ -1146,11 +1195,17 @@ async def sign_omnija_with_autograph(context, from_):
     Returns:
         str: the path to the signature file
     """
-    raise NotImplementedError("Not Yet Written")
-    signed_out = tempfile.mkstemp(prefix="oj_signed", dir=context.config['work_dir'])
-    merged_out = tempfile.mkstemp(prefix="oj_merged", dir=context.config['work_dir'])
+    signed_out = os.path.join(
+        tempfile.mkstemp(prefix="oj_signed", dir=context.config['work_dir']),
+        'omni.ja')
+    merged_out = os.path.join(
+        tempfile.mkstemp(prefix="oj_merged", dir=context.config['work_dir']),
+        'omni.ja')
     await sign_file_with_autograph(context, from_, "XXXCallek", to=signed_out)
     await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
+    with open(from_, 'wb') as fout:
+        with open(merged_out, 'rb') as fin:
+            fout.write(fin.read())
     return from_
 
 
