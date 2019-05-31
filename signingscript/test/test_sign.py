@@ -725,7 +725,7 @@ async def test_convert_dmg_to_tar_gz(context, monkeypatch, tmpdir):
         assert command in (
             ['dmg', 'extract', abs_dmg_path, 'tmp.hfs'],
             ['hfsplus', 'tmp.hfs', 'extractall', '/', '{}/app'.format(tmpdir)],
-            ['tar', 'czvf', abs_tarball_path, '.'],
+            ['tar', 'czf', abs_tarball_path, '.'],
         )
 
     @contextmanager

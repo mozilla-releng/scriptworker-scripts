@@ -588,7 +588,7 @@ async def _convert_dmg_to_tar_gz(context, from_):
         await utils.execute_subprocess(undmg_cmd, cwd=temp_dir)
         hfsplus_cmd = [hfsplus_executable_location, "tmp.hfs", "extractall", "/", app_dir]
         await utils.execute_subprocess(hfsplus_cmd, cwd=temp_dir)
-        tar_cmd = ['tar', 'czvf', abs_to, '.']
+        tar_cmd = ['tar', 'czf', abs_to, '.']
         await utils.execute_subprocess(tar_cmd, cwd=app_dir)
 
     return to
