@@ -137,7 +137,7 @@ def build_signtool_cmd(context, from_, fmt, to=None, servers=None):
     signtool = context.config['signtool']
     if not isinstance(signtool, (list, tuple)):
         signtool = [signtool]
-    cmd = signtool + ["-v", "-n", nonce, "-t", token, "-c", ssl_cert]
+    cmd = signtool + ["-n", nonce, "-t", token, "-c", ssl_cert]
     for s in get_suitable_signing_servers(
         context.signing_servers, cert_type, [fmt]
     ):
