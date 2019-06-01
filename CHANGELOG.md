@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [10.1.0] - 2019-05-31
+### Added
+- added `log_level` kwarg to `execute_subprocess`
+
+### Changed
+- removed a lot of verbosity
+- changed undmg log level to debug
+
 ## [10.0.0] - 2019-04-18
 ### Added
 - added autograph_gpg and autograph_widevine signing functions

@@ -136,7 +136,7 @@ def test_build_signtool_cmd(context, signtool, from_, to, fmt):
     context.config['ssl_cert'] = 'cert'
     work_dir = context.config['work_dir']
     assert sign.build_signtool_cmd(context, from_, fmt, to=to) == [
-        'signtool', "-v",
+        'signtool',
         "-n", os.path.join(work_dir, "nonce"),
         "-t", os.path.join(work_dir, "token"),
         "-c", 'cert',
@@ -725,7 +725,7 @@ async def test_convert_dmg_to_tar_gz(context, monkeypatch, tmpdir):
         assert command in (
             ['dmg', 'extract', abs_dmg_path, 'tmp.hfs'],
             ['hfsplus', 'tmp.hfs', 'extractall', '/', '{}/app'.format(tmpdir)],
-            ['tar', 'czvf', abs_tarball_path, '.'],
+            ['tar', 'czf', abs_tarball_path, '.'],
         )
 
     @contextmanager

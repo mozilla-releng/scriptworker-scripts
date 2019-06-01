@@ -80,7 +80,7 @@ async def test_log_output(tmpdir, mocker):
     with open(SERVER_CONFIG_PATH, 'r') as fh:
         contents = fh.read()
 
-    def info(msg):
+    def log(_, msg):
         logged.append(msg)
 
     class AsyncIterator:
@@ -95,7 +95,7 @@ async def test_log_output(tmpdir, mocker):
                 return self.contents.pop(0).encode('utf-8')
 
     mocklog = mocker.patch.object(utils, 'log')
-    mocklog.info = info
+    mocklog.log = log
     mockfh = mock.MagicMock()
     aiter = AsyncIterator()
     mockfh.readline = aiter.__anext__

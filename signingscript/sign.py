@@ -137,7 +137,7 @@ def build_signtool_cmd(context, from_, fmt, to=None, servers=None):
     signtool = context.config['signtool']
     if not isinstance(signtool, (list, tuple)):
         signtool = [signtool]
-    cmd = signtool + ["-v", "-n", nonce, "-t", token, "-c", ssl_cert]
+    cmd = signtool + ["-n", nonce, "-t", token, "-c", ssl_cert]
     for s in get_suitable_signing_servers(
         context.signing_servers, cert_type, [fmt]
     ):
@@ -585,10 +585,10 @@ async def _convert_dmg_to_tar_gz(context, from_):
         app_dir = os.path.join(temp_dir, "app")
         utils.mkdir(app_dir)
         undmg_cmd = [dmg_executable_location, "extract", abs_from, "tmp.hfs"]
-        await utils.execute_subprocess(undmg_cmd, cwd=temp_dir)
+        await utils.execute_subprocess(undmg_cmd, cwd=temp_dir, log_level=logging.DEBUG)
         hfsplus_cmd = [hfsplus_executable_location, "tmp.hfs", "extractall", "/", app_dir]
-        await utils.execute_subprocess(hfsplus_cmd, cwd=temp_dir)
-        tar_cmd = ['tar', 'czvf', abs_to, '.']
+        await utils.execute_subprocess(hfsplus_cmd, cwd=temp_dir, log_level=logging.DEBUG)
+        tar_cmd = ['tar', 'czf', abs_to, '.']
         await utils.execute_subprocess(tar_cmd, cwd=app_dir)
 
     return to

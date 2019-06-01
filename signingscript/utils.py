@@ -87,17 +87,18 @@ def load_signing_server_config(context):
     return cfg
 
 
-async def log_output(fh):
+async def log_output(fh, log_level=logging.INFO):
     """Log the output from an async generator.
 
     Args:
         fh (async generator): the async generator to log output from
+        log_level (int, optional): the logging level. Defaults to logging.INFO
 
     """
     while True:
         line = await fh.readline()
         if line:
-            log.info(line.decode("utf-8").rstrip())
+            log.log(log_level, line.decode("utf-8").rstrip())
         else:
             break
 
@@ -131,11 +132,12 @@ def copy_to_dir(source, parent_dir, target=None):
         raise SigningServerError("Can't copy {} to {}!".format(source, target_path))
 
 
-async def execute_subprocess(command, **kwargs):
+async def execute_subprocess(command, log_level=logging.INFO, **kwargs):
     """Execute a command in a subprocess.
 
     Args:
         command (list): the command to run
+        log_level (int, optional): the logging level. Defaults to logging.INFO
         **kwargs: the kwargs to pass to subprocess
 
     Raises:
@@ -149,8 +151,8 @@ async def execute_subprocess(command, **kwargs):
     subprocess = await asyncio.create_subprocess_exec(
         *command, stdout=PIPE, stderr=STDOUT, **kwargs
     )
-    log.info("COMMAND OUTPUT: ")
-    await log_output(subprocess.stdout)
+    log.log(log_level, "COMMAND OUTPUT: ")
+    await log_output(subprocess.stdout, log_level=log_level)
     exitcode = await subprocess.wait()
     log.info("exitcode {}".format(exitcode))
 
