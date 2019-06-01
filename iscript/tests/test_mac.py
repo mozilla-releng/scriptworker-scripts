@@ -865,6 +865,27 @@ async def test_copy_pkgs_to_artifact_dir(tmpdir):
             assert fh.read() == expected_path
 
 
+# download_entitlements_file {{{1
+@pytest.mark.parametrize("url", ("foo", None))
+@pytest.mark.asyncio
+async def test_download_entitlements_file(url, mocker):
+    """``download_entitlements_file`` downloads the specified entitlements-url
+    and returns the path. If no entitlements-url is specified, it returns
+    ``None``.
+
+    """
+    mocker.patch.object(mac, "retry_async", new=noop_async)
+    config = {"work_dir": "work"}
+    task = {"payload": {}}
+    if url:
+        task["payload"]["entitlements-url"] = url
+    val = await mac.download_entitlements_file(config, task)
+    if url:
+        assert val == "work/browser.entitlements.txt"
+    else:
+        assert val is None
+
+
 # sign_behavior {{{1
 @pytest.mark.asyncio
 async def test_sign_behavior(mocker, tmpdir):
