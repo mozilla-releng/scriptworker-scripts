@@ -410,6 +410,7 @@ async def extract_all_apps(config, all_paths):
                         [unpack_dmg, app.orig_path, unpack_mountpoint, app.parent_dir],
                         cwd=app.parent_dir,
                         exception=IScriptError,
+                        log_level=logging.DEBUG,
                     )
                 )
             )
