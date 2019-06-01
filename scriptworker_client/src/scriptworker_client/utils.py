@@ -164,10 +164,6 @@ async def run_command(
 
     This logs to `log_path` and returns the exit code.
 
-    It also logs the full command at the beginning, and the output at the end.
-    If that's undesirable, we can patch this function to allow for alternate
-    behavior.
-
     Largely lifted from ``scriptworker.task.run_task``
 
     We can add a bunch more bells and whistles (timeout, logging options, etc)
