@@ -39,7 +39,7 @@ class TaskError(ClientError):
     """Scriptworker-client base task error."""
 
 
-class TimeoutError(ClientError):
+class TimeoutError(ClientError, TimeoutError):
     """Scriptworker-client timeout error."""
 
 

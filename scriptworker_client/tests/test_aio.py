@@ -18,7 +18,6 @@ from scriptworker_client.exceptions import (
     DownloadError,
     RetryError,
     TaskError,
-    TimeoutError,
 )
 
 

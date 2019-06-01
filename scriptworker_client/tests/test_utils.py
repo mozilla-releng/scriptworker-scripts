@@ -16,7 +16,7 @@ import subprocess
 import tempfile
 import time
 import scriptworker_client.utils as utils
-from scriptworker_client.exceptions import RetryError, TaskError, TimeoutError
+from scriptworker_client.exceptions import RetryError, TaskError
 
 
 # helpers {{{1
