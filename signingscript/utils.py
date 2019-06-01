@@ -92,7 +92,7 @@ async def log_output(fh, log_level=logging.INFO):
 
     Args:
         fh (async generator): the async generator to log output from
-        log_level (int): the logging level
+        log_level (int, optional): the logging level. Defaults to logging.INFO
 
     """
     while True:
@@ -137,7 +137,7 @@ async def execute_subprocess(command, log_level=logging.INFO, **kwargs):
 
     Args:
         command (list): the command to run
-        log_level (int): the logging level
+        log_level (int, optional): the logging level. Defaults to logging.INFO
         **kwargs: the kwargs to pass to subprocess
 
     Raises:
