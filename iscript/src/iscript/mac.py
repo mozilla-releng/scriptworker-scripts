@@ -13,10 +13,12 @@ import re
 from shutil import copy2
 
 from scriptworker_client.aio import (
+    download_file,
     raise_future_exceptions,
     retry_async,
     semaphore_wrapper,
 )
+from scriptworker_client.exceptions import DownloadError
 from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_command
 from iscript.exceptions import (
     InvalidNotarization,
@@ -951,11 +953,16 @@ async def download_entitlements_file(config, task):
 
     Returns:
         str: the path to the downloaded entitlments file
+        None: if no entitlements-url is specified in the task payload
 
     """
-    # TODO download from file:/// or other url
-    # TODO populate `raises` section of docstring
-    to = os.path.join(config["work_dir"], "..", "browser.entitlements.txt")
+    url = task["payload"].get("entitlements-url")
+    if not url:
+        return
+    to = os.path.join(config["work_dir"], "browser.entitlements.txt")
+    await retry_async(
+        download_file, retry_exceptions=(DownloadError, TimeoutError), args=(url, to)
+    )
     return to
 
 
