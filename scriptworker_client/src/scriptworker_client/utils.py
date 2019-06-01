@@ -154,6 +154,7 @@ async def run_command(
     cmd,
     log_path=None,
     log_cmd=None,
+    log_level=logging.INFO,
     cwd=None,
     env=None,
     exception=None,
@@ -178,6 +179,8 @@ async def run_command(
         log_cmd (str, optional): the command to log. Set this if there is
             sensitive information in ``cmd``. If ``None``, defaults to ``cmd``.
             Defaults to ``None``.
+        log_level (int, optional): the level to log the command output.
+            Defaults to ``logging.INFO``.
         cwd (str, optional): the directory to run the command in. If ``None``,
             use ``os.getcwd()``. Defaults to ``None``.
         exception (Exception, optional): the exception to raise if the exit
@@ -210,10 +213,10 @@ async def run_command(
     proc = await asyncio.create_subprocess_exec(*cmd, **kwargs)
     with get_log_filehandle(log_path=log_path) as log_filehandle:
         stderr_future = asyncio.ensure_future(
-            pipe_to_log(proc.stderr, filehandles=[log_filehandle])
+            pipe_to_log(proc.stderr, filehandles=[log_filehandle], level=log_level)
         )
         stdout_future = asyncio.ensure_future(
-            pipe_to_log(proc.stdout, filehandles=[log_filehandle])
+            pipe_to_log(proc.stdout, filehandles=[log_filehandle], level=log_level)
         )
         _, pending = await asyncio.wait([stderr_future, stdout_future])
         exitcode = await proc.wait()
