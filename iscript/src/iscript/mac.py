@@ -945,6 +945,7 @@ async def copy_pkgs_to_artifact_dir(config, all_paths):
         copy2(app.pkg_path, app.target_pkg_path)
 
 
+# download_entitlements_file {{{1
 async def download_entitlements_file(config, key_config, task):
     """Download the entitlements file into the work dir.
 
@@ -955,6 +956,9 @@ async def download_entitlements_file(config, key_config, task):
     Returns:
         str: the path to the downloaded entitlments file
         None: if not ``key_config["sign_with_entitlements"]``
+
+    Raises:
+        KeyError: if the plist doesn't include ``CFBundleIdentifier``
 
     """
     if not key_config["sign_with_entitlements"]:
