@@ -945,7 +945,7 @@ async def copy_pkgs_to_artifact_dir(config, all_paths):
         copy2(app.pkg_path, app.target_pkg_path)
 
 
-async def download_entitlements_file(config, task):
+async def download_entitlements_file(config, key_config, task):
     """Download the entitlements file into the work dir.
 
     Args:
@@ -954,12 +954,12 @@ async def download_entitlements_file(config, task):
 
     Returns:
         str: the path to the downloaded entitlments file
-        None: if no entitlements-url is specified in the task payload
+        None: if not ``key_config["sign_with_entitlements"]``
 
     """
-    url = task["payload"].get("entitlements-url")
-    if not url:
+    if not key_config["sign_with_entitlements"]:
         return
+    url = task["payload"]["entitlements-url"]
     to = os.path.join(config["work_dir"], "browser.entitlements.txt")
     await retry_async(
         download_file, retry_exceptions=(DownloadError, TimeoutError), args=(url, to)
@@ -980,9 +980,9 @@ async def notarize_behavior(config, task):
 
     """
     work_dir = config["work_dir"]
-    entitlements_path = await download_entitlements_file(config, task)
 
     key_config = get_key_config(config, task, base_key="mac_config")
+    entitlements_path = await download_entitlements_file(config, key_config, task)
 
     all_paths = get_app_paths(config, task)
     await extract_all_apps(config, all_paths)
@@ -1030,9 +1030,8 @@ async def sign_behavior(config, task):
         IScriptError: on fatal error.
 
     """
-    entitlements_path = await download_entitlements_file(config, task)
-
     key_config = get_key_config(config, task, base_key="mac_config")
+    entitlements_path = await download_entitlements_file(config, key_config, task)
 
     all_paths = get_app_paths(config, task)
     await extract_all_apps(config, all_paths)
@@ -1056,9 +1055,8 @@ async def sign_and_pkg_behavior(config, task):
         IScriptError: on fatal error.
 
     """
-    entitlements_path = await download_entitlements_file(config, task)
-
     key_config = get_key_config(config, task, base_key="mac_config")
+    entitlements_path = await download_entitlements_file(config, key_config, task)
 
     all_paths = get_app_paths(config, task)
     await extract_all_apps(config, all_paths)

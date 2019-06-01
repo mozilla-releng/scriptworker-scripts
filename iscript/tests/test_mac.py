@@ -28,7 +28,7 @@ async def noop_async(*args, **kwargs):
 def touch(path):
     parent_dir = os.path.dirname(path)
     makedirs(parent_dir)
-    with open(path, "w") as fh:
+    with open(path, "w"):
         pass
 
 
@@ -866,9 +866,18 @@ async def test_copy_pkgs_to_artifact_dir(tmpdir):
 
 
 # download_entitlements_file {{{1
-@pytest.mark.parametrize("url", ("foo", None))
+@pytest.mark.parametrize(
+    "url, use_entitlements, raises, expected",
+    (
+        ("foo", True, False, "work/browser.entitlements.txt"),
+        ("foo", False, False, None),
+        (None, True, KeyError, None),
+    ),
+)
 @pytest.mark.asyncio
-async def test_download_entitlements_file(url, mocker):
+async def test_download_entitlements_file(
+    url, use_entitlements, raises, expected, mocker
+):
     """``download_entitlements_file`` downloads the specified entitlements-url
     and returns the path. If no entitlements-url is specified, it returns
     ``None``.
@@ -877,13 +886,16 @@ async def test_download_entitlements_file(url, mocker):
     mocker.patch.object(mac, "retry_async", new=noop_async)
     config = {"work_dir": "work"}
     task = {"payload": {}}
+    key_config = {"sign_with_entitlements": use_entitlements}
     if url:
         task["payload"]["entitlements-url"] = url
-    val = await mac.download_entitlements_file(config, task)
-    if url:
-        assert val == "work/browser.entitlements.txt"
+    if raises:
+        with pytest.raises(raises):
+            await mac.download_entitlements_file(config, key_config, task)
     else:
-        assert val is None
+        assert (
+            await mac.download_entitlements_file(config, key_config, task) == expected
+        )
 
 
 # sign_behavior {{{1
@@ -901,6 +913,7 @@ async def test_sign_behavior(mocker, tmpdir):
             "dep": {
                 "notarize_type": "",
                 "signing_keychain": "keychain_path",
+                "sign_with_entitlements": False,
                 "base_bundle_id": "org.test",
                 "identity": "id",
                 "keychain_password": "keychain_password",
@@ -954,6 +967,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
             "dep": {
                 "notarize_type": "",
                 "signing_keychain": "keychain_path",
+                "sign_with_entitlements": False,
                 "base_bundle_id": "org.test",
                 "identity": "id",
                 "keychain_password": "keychain_password",
@@ -1011,6 +1025,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type):
             "dep": {
                 "notarize_type": notarize_type,
                 "signing_keychain": "keychain_path",
+                "sign_with_entitlements": False,
                 "base_bundle_id": "org.test",
                 "identity": "id",
                 "keychain_password": "keychain_password",
