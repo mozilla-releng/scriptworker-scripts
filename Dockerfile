@@ -7,8 +7,6 @@ USER app
 WORKDIR /app
 
 COPY . /app
-# generate /app/version.json according to https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
-RUN cd /app && /app/docker.d/generate_version_json.sh
 
 RUN python -m venv /app
 RUN ./bin/pip install -r requirements.txt

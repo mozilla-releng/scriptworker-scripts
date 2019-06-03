@@ -9,6 +9,6 @@ cat > version.json <<EOF
     "commit": "${commit}",
     "version": "${version}",
     "source": "https://github.com/mozilla-releng/shipitscript",
-    "build": "https://github.com/mozilla-releng/shipitscript/commit/${commit}"
+    "build": "https://tools.taskcluster.net/tasks/${TASK_ID}"
 }
 EOF

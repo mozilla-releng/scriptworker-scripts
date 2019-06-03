@@ -74,8 +74,11 @@ tasks:
             cd /src &&
             git config advice.detachedHead false &&
             git checkout ${head_rev} &&
+            docker.d/generate_version_json.sh &&
+            cat version.json &&
             docker build -f Dockerfile -t mozilla/shipitscript:${docker_tag} . &&
-            docker save mozilla/shipitscript:${docker_tag} > /tmp/image.tar
+            docker save mozilla/shipitscript:${docker_tag} > /tmp/image.tar &&
+            docker images --no-trunc mozilla/shipitscript | grep ${docker_tag}
         artifacts:
           public/image.tar:
             expires: {$fromNow: '2 weeks'}
