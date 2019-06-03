@@ -947,3 +947,67 @@ async def test_gpg_autograph(context, mocker, tmp_path):
 
     with pytest.raises(SigningScriptError):
         result = await sign.sign_gpg_with_autograph(context, tmp, 'gpg')
+
+
+# sign_omnija {{{1  -- 537
+@pytest.mark.asyncio
+@pytest.mark.parametrize('filename,raises,should_sign,orig_files', (
+    ('foo.unknown', True, False, None),
+    ('foo.zip', False, True, None),
+    ('foo.dmg', False, True, None),
+    ('foo.tar.bz2', False, True, None),
+))
+async def test_sign_omnija(context, mocker, filename, raises,
+                             should_sign, orig_files):
+    fmt = "autograph_omnija"
+    if should_sign:
+        files = orig_files or ["isdir/firefox", "firefox/firefox", "y/plugin-container", "z/blah", "ignore"]
+    else:
+        files = orig_files or ["z/blah", "ignore"]
+
+    async def fake_filelist(*args, **kwargs):
+        return files
+
+    async def fake_unzip(_, f, **kwargs):
+        assert f.endswith('.zip')
+        return files
+
+    async def fake_untar(_, f, comp, **kwargs):
+        assert f.endswith('.tar.{}'.format(comp.lstrip('.')))
+        return files
+
+    async def fake_undmg(_, f):
+        assert f.endswith('.dmg')
+
+    async def fake_sign(_, f, fmt, **kwargs):
+        if f.endswith("firefox"):
+            assert fmt == "widevine"
+        elif f.endswith("container"):
+            assert fmt == "widevine_blessed"
+        else:
+            assert False, "unexpected file and format {} {}!".format(f, fmt)
+        if 'MacOS' in f:
+            assert f not in files, "We should have renamed this file!"
+
+    def fake_isfile(path):
+        return 'isdir' not in path
+
+    mocker.patch.object(sign, '_get_tarfile_files', new=fake_filelist)
+    mocker.patch.object(sign, '_extract_tarfile', new=fake_untar)
+    mocker.patch.object(sign, '_get_zipfile_files', new=fake_filelist)
+    mocker.patch.object(sign, '_extract_zipfile', new=fake_unzip)
+    mocker.patch.object(sign, '_convert_dmg_to_tar_gz', new=fake_undmg)
+    mocker.patch.object(sign, 'sign_file', new=noop_async)
+    mocker.patch.object(sign, 'sign_omnija_with_autograph', new=noop_async)
+    mocker.patch.object(sign, 'makedirs', new=noop_sync)
+    mocker.patch.object(sign, 'generate_precomplete', new=noop_sync)
+    mocker.patch.object(sign, '_create_tarfile', new=noop_async)
+    mocker.patch.object(sign, '_create_zipfile', new=noop_async)
+    mocker.patch.object(sign, '_run_generate_precomplete', new=noop_sync)
+    mocker.patch.object(os.path, 'isfile', new=fake_isfile)
+
+    if raises:
+        with pytest.raises(SigningScriptError):
+            await sign.sign_omnija(context, filename, fmt)
+    else:
+        await sign.sign_omnija(context, filename, fmt)
