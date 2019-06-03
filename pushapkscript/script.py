@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 async def async_main(context):
     android_product = task.extract_android_product_from_scopes(context)
     product_config = _get_product_config(context, android_product)
+    publish_config = _get_publish_config(product_config, context.task['payload'], android_product)
     contact_google_play = not bool(context.config.get('do_not_contact_google_play'))
 
     logging.getLogger('oauth2client').setLevel(logging.WARNING)
@@ -34,7 +35,7 @@ async def async_main(context):
 
     log.info('Verifying APKs\' signatures...')
     for apk_path in all_apks_paths:
-        jarsigner.verify(context, apk_path)
+        jarsigner.verify(context, publish_config, apk_path)
         manifest.verify(product_config, apk_path)
 
     if product_config['update_google_play_strings']:
@@ -50,7 +51,7 @@ async def async_main(context):
     with contextlib.ExitStack() as stack:
         files = [stack.enter_context(open(apk_file_name)) for apk_file_name in all_apks_paths]
         strings_file = stack.enter_context(open(strings_path)) if strings_path is not None else None
-        googleplay.publish_to_googleplay(context.task['payload'], product_config, files, contact_google_play,
+        googleplay.publish_to_googleplay(context.task['payload'], product_config, publish_config, files, contact_google_play,
                                          strings_file)
 
     log.info('Done!')
@@ -62,11 +63,55 @@ def _get_product_config(context, android_product):
     except KeyError:
         raise ConfigValidationError('"products" is not part of the configuration')
 
-    try:
-        return products[android_product]
-    except KeyError:
-        raise TaskVerificationError('Android "{}" does not exist in the configuration of this instance.\
-    Are you sure you allowed to push such APK?'.format(android_product))
+    matching_products = [product for product in products if android_product in product['product_names']]
+
+    if len(matching_products) == 0:
+        raise TaskVerificationError('Android "{}" does not exist in the configuration of this '
+                                    'instance. Are you sure you allowed to push such an '
+                                    'APK?'.format(android_product))
+
+    if len(matching_products) > 1:
+        raise TaskVerificationError('The configuration is invalid: multiple product configs match '
+                                    'the product "{}"'.format(android_product))
+
+    return matching_products[0]
+
+
+def _get_publish_config(product_config, payload, android_product):
+    if product_config.get('map_channels_to_tracks'):
+        if product_config.get('use_scope_for_channel'):
+            raise ValueError('Config is invalid: when mapping channels to tracks, the track '
+                             'should only be determined from the payload. Fix this by removing '
+                             '"use_scope_for_channel" for product "{}"'.format(android_product))
+
+        # Focus uses a single app and the "tracks" feature to represent different channels,
+        # rather than a separate app-per-channel.
+        publish_config = {
+            'google_play_track': payload.get('google_play_track') or payload['channel'],
+            **product_config['single_app_config'],
+        }
+
+    # If we're not mapping channels to tracks, then we're mapping each channel to a separate
+    # app on the Google Play Store.
+    elif product_config.get('use_scope_for_channel'):
+        publish_config = product_config['apps'][android_product]
+        if payload.get('google_play_track'):
+            publish_config['google_play_track'] = payload.get('google_play_track')
+
+    # Task payloads should migrate from specifying "google_play_track" to "channel"
+    # TODO: once this migration^ is complete, payload "google_play_track" should be used to override the track
+    # for the targeted channel
+    # https://github.com/mozilla-releng/pushapkscript/issues/88
+    else:
+        channel = payload.get('google_play_track') or payload['channel']
+        publish_config = product_config['apps'][channel]
+
+    rollout_percentage = payload.get('rollout_percentage')
+    if rollout_percentage:
+        publish_config['google_play_track'] = 'rollout'
+        publish_config['rollout_percentage'] = rollout_percentage
+        log.info('"rollout_percentage" is set, so the target Google Play track will be "rollout"')
+    return publish_config
 
 
 def _log_warning_forewords(contact_google_play, task_payload):

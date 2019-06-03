@@ -20,7 +20,7 @@ def context():
 
 
 def test_validate_task(context):
-    context.task = TaskGenerator().generate_task()
+    context.task = TaskGenerator().generate_task('aurora')
     validate_task_schema(context)
 
 

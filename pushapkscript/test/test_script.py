@@ -10,7 +10,8 @@ from unittest.mock import MagicMock, patch
 
 from pushapkscript import googleplay, jarsigner, task, manifest
 from pushapkscript.exceptions import ConfigValidationError
-from pushapkscript.script import async_main, get_default_config, main, _log_warning_forewords, _get_product_config
+from pushapkscript.script import async_main, get_default_config, main, _log_warning_forewords, _get_product_config, \
+    _get_publish_config
 from pushapkscript.test.helpers.mock_file import mock_open
 
 
@@ -31,11 +32,14 @@ async def test_async_main(monkeypatch, android_product, update_google_play_strin
             'someOtherTaskId': ['/some/path/to/yet_another.apk', ],
         }, {})
     )
-    monkeypatch.setattr(jarsigner, 'verify', lambda _, __: None)
+    monkeypatch.setattr(jarsigner, 'verify', lambda _, __, ___: None)
     monkeypatch.setattr(manifest, 'verify', lambda _, __: None)
     monkeypatch.setattr(task, 'extract_android_product_from_scopes', lambda _: android_product)
     monkeypatch.setattr(pushapkscript.script, '_get_product_config', lambda _, __: {
         'update_google_play_strings': update_google_play_strings,
+        'apps': {
+            android_product: {}
+        }
     })
 
     google_play_strings_call_counter = (n for n in range(0, 2))
@@ -52,10 +56,12 @@ async def test_async_main(monkeypatch, android_product, update_google_play_strin
         'do_not_contact_google_play': True
     }
     context.task = {
-        'payload': {}
+        'payload': {
+            'channel': android_product
+        }
     }
 
-    def assert_google_play_call(_, __, all_apks_files, ___, google_play_strings_file):
+    def assert_google_play_call(_, __, ___, all_apks_files, ____, google_play_strings_file):
         assert sorted([file.name for file in all_apks_files]) == ['/some/path/to/another.apk', '/some/path/to/one.apk', '/some/path/to/yet_another.apk']
         if android_product == 'focus':
             assert google_play_strings_file is None
@@ -80,9 +86,9 @@ def test_get_product_config_validation():
 def test_get_product_config_unknown_product():
     context = Context()
     context.config = {
-        'products': {
-            'fenix': {}
-        }
+        'products': [{
+            'product_names': ['fenix']
+        }]
     }
 
     with pytest.raises(TaskVerificationError):
@@ -92,14 +98,172 @@ def test_get_product_config_unknown_product():
 def test_get_product_config():
     context = Context()
     context.config = {
-        'products': {
-            'fenix': {
-                'foo': 'bar'
+        'products': [{
+            'product_names': ['fenix'],
+            'foo': 'bar',
+        }]
+    }
+
+    assert _get_product_config(context, 'fenix') == {'product_names': ['fenix'], 'foo': 'bar'}
+
+
+def test_get_publish_config_fennec():
+    aurora_config = {
+        'use_scope_for_channel': True,
+        'apps': {
+            'aurora': {
+                'google_play_track': 'beta',
+                'certificate_alias': 'aurora'
             }
         }
     }
+    assert _get_publish_config(aurora_config, {}, 'aurora') == {
+        'certificate_alias': 'aurora',
+        'google_play_track': 'beta',
+    }
 
-    assert _get_product_config(context, 'fenix') == {'foo': 'bar'}
+
+def test_get_publish_config_fennec_track_override():
+    aurora_config = {
+        'use_scope_for_channel': True,
+        'apps': {
+            'aurora': {
+                'google_play_track': 'beta',
+                'certificate_alias': 'aurora'
+            }
+        }
+    }
+    assert _get_publish_config(aurora_config, {'google_play_track': 'internal_qa'}, 'aurora') == {
+        'certificate_alias': 'aurora',
+        'google_play_track': 'internal_qa',
+    }
+
+
+def test_get_publish_config_fennec_rollout():
+    aurora_config = {
+        'use_scope_for_channel': True,
+        'apps': {
+            'aurora': {
+                'google_play_track': 'beta',
+                'certificate_alias': 'aurora'
+            }
+        }
+    }
+    assert _get_publish_config(aurora_config, {'rollout_percentage': 10}, 'aurora') == {
+        'certificate_alias': 'aurora',
+        'google_play_track': 'rollout',
+        'rollout_percentage': 10,
+    }
+
+
+def test_get_publish_config_focus_old():
+    focus_config = {
+        'map_channels_to_tracks': True,
+        'single_app_config': {
+            'certificate_alias': 'focus'
+        }
+    }
+    focus_payload = {'google_play_track': 'beta'}
+    assert _get_publish_config(focus_config, focus_payload, 'focus') == {
+        'certificate_alias': 'focus',
+        'google_play_track': 'beta',
+    }
+
+
+def test_get_publish_config_focus():
+    focus_config = {
+        'map_channels_to_tracks': True,
+        'single_app_config': {
+            'certificate_alias': 'focus'
+        }
+    }
+    focus_payload = {'channel': 'beta'}
+    assert _get_publish_config(focus_config, focus_payload, 'focus') == {
+        'certificate_alias': 'focus',
+        'google_play_track': 'beta',
+    }
+
+
+def test_get_publish_config_focus_rollout():
+    focus_config = {
+        'map_channels_to_tracks': True,
+        'single_app_config': {
+            'certificate_alias': 'focus'
+        }
+    }
+    focus_payload = {
+        'channel': 'rollout',
+        'rollout_percentage': 10
+    }
+    assert _get_publish_config(focus_config, focus_payload, 'focus') == {
+        'certificate_alias': 'focus',
+        'google_play_track': 'rollout',
+        'rollout_percentage': 10,
+    }
+
+
+def test_get_publish_config_fenix_old():
+    fenix_config = {
+        'apps': {
+            'production': {
+                'certificate_alias': 'fenix',
+                'google_play_track': 'production',
+            }
+        }
+    }
+    fenix_payload = {'google_play_track': 'production'}
+    assert _get_publish_config(fenix_config, fenix_payload, 'focus') == {
+        'certificate_alias': 'fenix',
+        'google_play_track': 'production',
+    }
+
+
+def test_get_publish_config_fenix():
+    fenix_config = {
+        'apps': {
+            'production': {
+                'certificate_alias': 'fenix',
+                'google_play_track': 'production',
+            }
+        }
+    }
+    fenix_payload = {'channel': 'production'}
+    assert _get_publish_config(fenix_config, fenix_payload, 'focus') == {
+        'certificate_alias': 'fenix',
+        'google_play_track': 'production',
+    }
+
+
+def test_get_publish_config_fenix_rollout():
+    fenix_config = {
+        'apps': {
+            'production': {
+                'certificate_alias': 'fenix',
+                'google_play_track': 'production',
+            }
+        }
+    }
+    fenix_payload = {
+        'channel': 'production',
+        'rollout_percentage': 10,
+    }
+    assert _get_publish_config(fenix_config, fenix_payload, 'focus') == {
+        'certificate_alias': 'fenix',
+        'google_play_track': 'rollout',
+        'rollout_percentage': 10,
+    }
+
+
+def test_invalid_map_to_tracks_with_scope_as_channel():
+    invalid_config = {
+        'map_channels_to_tracks': True,
+        'use_scope_for_channel': True,
+        'single_app_config': {
+            'certificate_alias': 'invalid',
+        }
+    }
+    with pytest.raises(ValueError):
+        _get_publish_config(invalid_config, {'google_play_track': 'rollout'}, 'scope-name')
 
 
 @pytest.mark.parametrize('is_allowed_to_push, should_commit_transaction, expected', (

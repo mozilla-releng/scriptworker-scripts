@@ -56,6 +56,9 @@
                 "google_play_track": {
                   "type": "string"
                 },
+                "channel": {
+                  "type": "string"
+                },
                 "rollout_percentage": {
                   "type": "integer",
                   "minimum": 0,
@@ -65,7 +68,7 @@
                   "type": "boolean"
                 }
             },
-            "required": ["upstreamArtifacts", "google_play_track"],
+            "required": ["upstreamArtifacts"],
             "additionalProperties": false
         }
     },
