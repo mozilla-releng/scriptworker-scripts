@@ -466,7 +466,6 @@ async def sign_omnija(context, orig_path, fmt):
 
     """
     file_base, file_extension = os.path.splitext(orig_path)
-    raise NotImplementedError("OmniJa signing not yet supported")
     # Convert dmg to tarball
     if file_extension == '.dmg':
         await _convert_dmg_to_tar_gz(context, orig_path)

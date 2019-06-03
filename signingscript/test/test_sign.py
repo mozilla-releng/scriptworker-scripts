@@ -951,19 +951,19 @@ async def test_gpg_autograph(context, mocker, tmp_path):
 
 # sign_omnija {{{1  -- 537
 @pytest.mark.asyncio
-@pytest.mark.parametrize('filename,raises,should_sign,orig_files', (
-    ('foo.unknown', True, False, None),
-    ('foo.zip', False, True, None),
-    ('foo.dmg', False, True, None),
-    ('foo.tar.bz2', False, True, None),
+@pytest.mark.parametrize('filename,raises,should_sign', (
+    ('foo.unknown', True, False),
+    ('foo.zip', False, True),
+    ('foo.dmg', False, True),
+    ('foo.tar.bz2', False, True),
 ))
 async def test_sign_omnija(context, mocker, filename, raises,
-                             should_sign, orig_files):
+                           should_sign):
     fmt = "autograph_omnija"
     if should_sign:
-        files = orig_files or ["isdir/firefox", "firefox/firefox", "y/plugin-container", "z/blah", "ignore"]
+        files = ["firefox/omni.ja", "firefox/browser/omni.ja", "z/blah", "ignore"]
     else:
-        files = orig_files or ["z/blah", "ignore"]
+        files = ["z/blah", "ignore"]
 
     async def fake_filelist(*args, **kwargs):
         return files
@@ -979,15 +979,8 @@ async def test_sign_omnija(context, mocker, filename, raises,
     async def fake_undmg(_, f):
         assert f.endswith('.dmg')
 
-    async def fake_sign(_, f, fmt, **kwargs):
-        if f.endswith("firefox"):
-            assert fmt == "widevine"
-        elif f.endswith("container"):
-            assert fmt == "widevine_blessed"
-        else:
-            assert False, "unexpected file and format {} {}!".format(f, fmt)
-        if 'MacOS' in f:
-            assert f not in files, "We should have renamed this file!"
+    async def failure(*args, **kwargs):
+        assert False, "Sign_file is used"
 
     def fake_isfile(path):
         return 'isdir' not in path
@@ -997,7 +990,7 @@ async def test_sign_omnija(context, mocker, filename, raises,
     mocker.patch.object(sign, '_get_zipfile_files', new=fake_filelist)
     mocker.patch.object(sign, '_extract_zipfile', new=fake_unzip)
     mocker.patch.object(sign, '_convert_dmg_to_tar_gz', new=fake_undmg)
-    mocker.patch.object(sign, 'sign_file', new=noop_async)
+    mocker.patch.object(sign, 'sign_file', new=failure)
     mocker.patch.object(sign, 'sign_omnija_with_autograph', new=noop_async)
     mocker.patch.object(sign, 'makedirs', new=noop_sync)
     mocker.patch.object(sign, 'generate_precomplete', new=noop_sync)
