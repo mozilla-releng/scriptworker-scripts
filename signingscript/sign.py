@@ -549,7 +549,6 @@ async def sign_omnija_tar(context, orig_path, fmt):
     # Get file list
     all_files = await _get_tarfile_files(orig_path, compression)
     files_to_sign = _get_omnija_signing_files(all_files)
-    is_autograph = utils.is_autograph_signing_format(fmt)
     log.debug("Omnija files to sign: %s", files_to_sign)
     if files_to_sign:
         # Extract all files so we can create `precomplete` with the full
@@ -1179,13 +1178,15 @@ async def sign_widevine_with_autograph(context, from_, blessed, to=None):
 
 
 async def sign_omnija_with_autograph(context, from_):
-    """Sign the omni.ja file specified using autograph and then
+    """Sign the omnija file specified using autograph.
+
+    This function overwrites from_
     rebuild it using the signed meta-data and the original omni.ja
     in order to facilitate the performance wins we do as part of the build
 
     Args:
         context (Context): the signing context
-        from_ (str): the source file to sign
+        from_ (str): the source file to sign (overwrites)
 
     Raises:
         Requests.RequestException: on failure
@@ -1193,6 +1194,7 @@ async def sign_omnija_with_autograph(context, from_):
 
     Returns:
         str: the path to the signature file
+
     """
     signed_out = os.path.join(
         tempfile.mkstemp(prefix="oj_signed", dir=context.config['work_dir']),
@@ -1209,6 +1211,23 @@ async def sign_omnija_with_autograph(context, from_):
 
 
 async def merge_omnija_files(orig, signed, to):
+    """Merge multiple omnijar files together.
+
+    This takes the original file, and reads it in, including performance
+    characteristics (e.g. jarlog ordering for preloading),
+    then adds data from the "signed" copy (the META-INF folder)
+    and finally writes it all out to a new omni.ja file.
+
+    Args:
+        context (Context): the signing context
+        orig (str): the source file to sign
+        signed (str): the signed file, without optimizations
+        to (str): the output path for the merge
+
+    Returns:
+        bool: always True if function succeeded.
+
+    """
     orig_jarreader = mozjar.JarReader(orig)
     with mozjar.JarWriter(to, compress=orig_jarreader.compression) as to_writer:
         for origjarfile in orig_jarreader:
