@@ -241,6 +241,26 @@ def test_get_app_dir(tmpdir, apps, raises):
 
 
 # get_app_paths {{{1
+@pytest.mark.parametrize(
+    "path, expected, raises",
+    (
+        ("public/build/foo", "public/", False),
+        ("releng/partner/bar", "releng/partner/", False),
+        ("unknown/prefix/baz", None, True),
+    ),
+)
+def test_get_artifact_prefix(path, expected, raises):
+    """``_get_artifact_prefix`` returns the known prefix of the artifact path,
+    or raises ``IScriptError`` if the prefix is unknown.
+
+    """
+    if raises:
+        with pytest.raises(IScriptError):
+            mac._get_artifact_prefix(path)
+    else:
+        assert mac._get_artifact_prefix(path) == expected
+
+
 def test_get_app_paths():
     """``get_app_paths`` creates ``App`` objects with ``orig_path`` set to
     the cot-downloaded artifact paths.
@@ -743,9 +763,12 @@ async def test_staple_notarization(mocker, raises):
 
 
 # tar_apps {{{1
-@pytest.mark.parametrize("raises", (True, False))
+@pytest.mark.parametrize(
+    "raises, artifact_prefix",
+    ((True, "public/"), (False, "public/"), (False, "releng/partner/")),
+)
 @pytest.mark.asyncio
-async def test_tar_apps(mocker, tmpdir, raises):
+async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
     """``tar_apps`` runs tar concurrently for each ``App``, creating the
     app ``target_tar_path``s, and raises any exceptions hit along the way.
 
@@ -768,7 +791,7 @@ async def test_tar_apps(mocker, tmpdir, raises):
         with open(os.path.join(parent_dir, app_name), "w") as fh:
             fh.write("foo")
         orig_path = os.path.join(
-            work_dir, "cot", "foo", "public", "build", str(i), "{}.tar.gz".format(i)
+            work_dir, "cot", "foo", artifact_prefix, "build", str(i), f"{i}.tar.gz"
         )
         # overload pkg_path to track i
         all_paths.append(
@@ -776,13 +799,17 @@ async def test_tar_apps(mocker, tmpdir, raises):
                 parent_dir=parent_dir,
                 app_name=app_name,
                 app_path=os.path.join(parent_dir, app_name),
+                artifact_prefix=artifact_prefix,
                 orig_path=orig_path,
                 pkg_path=str(i),
             )
         )
         expected.append(
             os.path.join(
-                config["artifact_dir"], "public", "build/{}/{}.tar.gz".format(i, i)
+                config["artifact_dir"],
+                artifact_prefix,
+                "build",
+                "{}/{}.tar.gz".format(i, i),
             )
         )
 
@@ -832,8 +859,9 @@ async def test_create_pkg_files(mocker, raises):
 
 
 # copy_pkgs_to_artifact_dir {{{1
+@pytest.mark.parametrize("artifact_prefix", ("public/", "releng/partner/"))
 @pytest.mark.asyncio
-async def test_copy_pkgs_to_artifact_dir(tmpdir):
+async def test_copy_pkgs_to_artifact_dir(tmpdir, artifact_prefix):
     """``copy_pkgs_to_artifact_dir`` creates all needed parent directories and
     copies pkg artifacts successfully.
 
@@ -847,12 +875,13 @@ async def test_copy_pkgs_to_artifact_dir(tmpdir):
     for i in range(num_pkgs):
         app = mac.App(
             pkg_path=os.path.join(work_dir, str(i), "target.pkg".format(i)),
+            artifact_prefix=artifact_prefix,
             orig_path=os.path.join(
-                work_dir, "cot/taskId/public/build/{}/target-{}.tar.gz".format(i, i)
+                work_dir, f"cot/taskId/{artifact_prefix}build/{i}/target-{i}.tar.gz"
             ),
         )
         expected_path = os.path.join(
-            artifact_dir, "public/build/{}/target-{}.pkg".format(i, i)
+            artifact_dir, f"{artifact_prefix}build/{i}/target-{i}.pkg"
         )
         expected_paths.append(expected_path)
         makedirs(os.path.dirname(app.pkg_path))

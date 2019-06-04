@@ -41,6 +41,8 @@ MAC_DESIGNATED_REQUIREMENTS = (
     """leaf[subject.OU] = "%(subject_ou)s"))"""
 )
 
+KNOWN_ARTIFACT_PREFIXES = ("public/", "releng/partner/")
+
 
 # App {{{1
 @attr.s
@@ -78,6 +80,7 @@ class App(object):
     target_tar_path = attr.ib(default="")
     target_pkg_path = attr.ib(default="")
     formats = attr.ib(default="")
+    artifact_prefix = attr.ib(default="")
 
     def check_required_attrs(self, required_attrs):
         """Make sure the ``required_attrs`` are set.
@@ -350,6 +353,13 @@ def get_app_dir(parent_dir):
 
 
 # get_app_paths {{{1
+def _get_artifact_prefix(path):
+    for prefix in KNOWN_ARTIFACT_PREFIXES:
+        if path.startswith(prefix):
+            return prefix
+    raise IScriptError(f"Unknown artifact prefix for {path}!")
+
+
 def get_app_paths(config, task):
     """Create a list of ``App`` objects from the task.
 
@@ -370,7 +380,11 @@ def get_app_paths(config, task):
                 upstream_artifact_info["taskId"], subpath, work_dir=config["work_dir"]
             )
             all_paths.append(
-                App(orig_path=orig_path, formats=upstream_artifact_info["formats"])
+                App(
+                    orig_path=orig_path,
+                    formats=upstream_artifact_info["formats"],
+                    artifact_prefix=_get_artifact_prefix(subpath),
+                )
             )
     return all_paths
 
@@ -854,11 +868,15 @@ async def tar_apps(config, all_paths):
     log.info("Tarring up artifacts")
     futures = []
     for app in all_paths:
-        app.check_required_attrs(["orig_path", "parent_dir", "app_path"])
+        app.check_required_attrs(
+            ["orig_path", "parent_dir", "app_path", "artifact_prefix"]
+        )
         # If we downloaded public/build/locale/target.tar.gz, then write to
         # artifact_dir/public/build/locale/target.tar.gz
-        app.target_tar_path = "{}/public/{}".format(
-            config["artifact_dir"], app.orig_path.split("public/")[1]
+        app.target_tar_path = "{}/{}{}".format(
+            config["artifact_dir"],
+            app.artifact_prefix,
+            app.orig_path.split(app.artifact_prefix)[1],
         ).replace(".dmg", ".tar.gz")
         makedirs(os.path.dirname(app.target_tar_path))
         cwd = os.path.dirname(app.app_path)
@@ -941,10 +959,12 @@ async def copy_pkgs_to_artifact_dir(config, all_paths):
     """
     log.info("Copying pkgs to the artifact dir")
     for app in all_paths:
-        app.check_required_attrs(["orig_path", "pkg_path"])
+        app.check_required_attrs(["orig_path", "pkg_path", "artifact_prefix"])
         app.target_pkg_path = _get_pkg_name_from_tarball(
-            "{}/public/{}".format(
-                config["artifact_dir"], app.orig_path.split("public/")[1]
+            "{}/{}{}".format(
+                config["artifact_dir"],
+                app.artifact_prefix,
+                app.orig_path.split(app.artifact_prefix)[1],
             )
         )
         makedirs(os.path.dirname(app.target_pkg_path))
