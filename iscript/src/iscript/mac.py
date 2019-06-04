@@ -59,10 +59,11 @@ class App(object):
         notarization_log_path (str): the path to the logfile for notarization,
             if we use the ``multi_account`` workflow. This is currently
             overwritten each time we poll.
-        target_tar_path: the path inside of ``artifact_dir`` for the signed
+        target_tar_path (str): the path inside of ``artifact_dir`` for the signed
             and notarized tarball.
-        target_pkg_path: the path inside of ``artifact_dir`` for the signed
+        target_pkg_path (str): the path inside of ``artifact_dir`` for the signed
             and notarized .pkg.
+        formats (list): the list of formats to sign with.
 
     """
 
@@ -76,6 +77,7 @@ class App(object):
     notarization_log_path = attr.ib(default="")
     target_tar_path = attr.ib(default="")
     target_pkg_path = attr.ib(default="")
+    formats = attr.ib(default="")
 
     def check_required_attrs(self, required_attrs):
         """Make sure the ``required_attrs`` are set.
@@ -367,7 +369,9 @@ def get_app_paths(config, task):
             orig_path = get_artifact_path(
                 upstream_artifact_info["taskId"], subpath, work_dir=config["work_dir"]
             )
-            all_paths.append(App(orig_path=orig_path))
+            all_paths.append(
+                App(orig_path=orig_path, formats=upstream_artifact_info["formats"])
+            )
     return all_paths
 
 
@@ -502,9 +506,12 @@ async def sign_all_apps(config, key_config, entitlements_path, all_paths):
     # sign widevine
     futures = []
     for app in all_paths:
-        futures.append(
-            asyncio.ensure_future(sign_widevine_dir(config, key_config, app.app_path))
-        )
+        if "widevine" in app.formats:
+            futures.append(
+                asyncio.ensure_future(
+                    sign_widevine_dir(config, key_config, app.app_path)
+                )
+            )
     await raise_future_exceptions(futures)
     futures = []
     # sign apps concurrently

@@ -250,8 +250,12 @@ def test_get_app_paths():
     task = {
         "payload": {
             "upstreamArtifacts": [
-                {"paths": ["public/foo"], "taskId": "task1"},
-                {"paths": ["public/bar", "public/baz"], "taskId": "task2"},
+                {"paths": ["public/foo"], "taskId": "task1", "formats": ["macapp"]},
+                {
+                    "paths": ["public/bar", "public/baz"],
+                    "taskId": "task2",
+                    "formats": ["macapp"],
+                },
             ]
         }
     }
@@ -930,12 +934,17 @@ async def test_sign_behavior(mocker, tmpdir):
             "upstreamArtifacts": [
                 {
                     "taskId": "task1",
+                    "formats": ["macapp"],
                     "paths": [
                         "public/build/1/target.tar.gz",
                         "public/build/2/target.tar.gz",
                     ],
                 },
-                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"]},
+                {
+                    "taskId": "task2",
+                    "paths": ["public/build/3/target.tar.gz"],
+                    "formats": ["macapp"],
+                },
             ]
         }
     }
@@ -984,12 +993,17 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
             "upstreamArtifacts": [
                 {
                     "taskId": "task1",
+                    "formats": ["macapp", "widevine"],
                     "paths": [
                         "public/build/1/target.tar.gz",
                         "public/build/2/target.tar.gz",
                     ],
                 },
-                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"]},
+                {
+                    "taskId": "task2",
+                    "paths": ["public/build/3/target.tar.gz"],
+                    "formats": ["macapp", "widevine"],
+                },
             ]
         }
     }
@@ -1042,12 +1056,17 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type):
             "upstreamArtifacts": [
                 {
                     "taskId": "task1",
+                    "formats": ["macapp", "widevine"],
                     "paths": [
                         "public/build/1/target.tar.gz",
                         "public/build/2/target.tar.gz",
                     ],
                 },
-                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"]},
+                {
+                    "taskId": "task2",
+                    "paths": ["public/build/3/target.tar.gz"],
+                    "formats": ["macapp", "widevine"],
+                },
             ]
         }
     }
@@ -1099,12 +1118,17 @@ async def test_pkg_behavior(mocker, tmpdir):
             "upstreamArtifacts": [
                 {
                     "taskId": "task1",
+                    "formats": ["macapp"],
                     "paths": [
                         "public/build/1/target.tar.gz",
                         "public/build/2/target.tar.gz",
                     ],
                 },
-                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"]},
+                {
+                    "taskId": "task2",
+                    "paths": ["public/build/3/target.tar.gz"],
+                    "formats": ["macapp", "widevine"],
+                },
             ]
         }
     }
