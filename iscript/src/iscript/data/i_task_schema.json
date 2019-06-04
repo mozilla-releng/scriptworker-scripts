@@ -32,6 +32,15 @@
                   "taskId": {
                     "type": "string"
                   },
+                  "formats": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": ["macapp", "widevine", "omnija"]
+                    }
+                  },
                   "paths": {
                     "type": "array",
                     "minItems": 1,
