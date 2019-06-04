@@ -979,8 +979,8 @@ async def test_sign_omnija(context, mocker, filename, raises,
     async def fake_undmg(_, f):
         assert f.endswith('.dmg')
 
-    async def failure(*args, **kwargs):
-        assert False, "Sign_file is used"
+    def failure(*args, **kwargs):
+        assert False, "failure is used"
 
     def fake_isfile(path):
         return 'isdir' not in path
@@ -990,13 +990,12 @@ async def test_sign_omnija(context, mocker, filename, raises,
     mocker.patch.object(sign, '_get_zipfile_files', new=fake_filelist)
     mocker.patch.object(sign, '_extract_zipfile', new=fake_unzip)
     mocker.patch.object(sign, '_convert_dmg_to_tar_gz', new=fake_undmg)
-    mocker.patch.object(sign, 'sign_file', new=failure)
     mocker.patch.object(sign, 'sign_omnija_with_autograph', new=noop_async)
     mocker.patch.object(sign, 'makedirs', new=noop_sync)
     mocker.patch.object(sign, 'generate_precomplete', new=noop_sync)
     mocker.patch.object(sign, '_create_tarfile', new=noop_async)
     mocker.patch.object(sign, '_create_zipfile', new=noop_async)
-    mocker.patch.object(sign, '_run_generate_precomplete', new=noop_sync)
+    mocker.patch.object(sign, '_run_generate_precomplete', new=failure)
     mocker.patch.object(os.path, 'isfile', new=fake_isfile)
 
     if raises:
@@ -1004,3 +1003,16 @@ async def test_sign_omnija(context, mocker, filename, raises,
             await sign.sign_omnija(context, filename, fmt)
     else:
         await sign.sign_omnija(context, filename, fmt)
+
+
+# _get_omnija_signing_files {{{1  -- 621
+@pytest.mark.parametrize('filenames,expected', ((
+    ['firefox.dll', 'XUL.so', 'firefox.bin', 'blah'], {}
+), (
+    ('firefox', 'blah/omni.ja', 'foo/bar/libclearkey.dylib', 'baz/omni.ja', 'ignore'), {
+        'blah/omni.ja': 'omnija',
+        'baz/omni.ja': 'omnija',
+    }
+)))
+def test_get_omnija_signing_files(filenames, expected):
+    assert sign._get_omnija_signing_files(filenames) == expected
