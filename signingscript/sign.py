@@ -53,8 +53,8 @@ sys.path.append(  # append the mozbuild vendor
             )
         )
     )
-print(sys.path, __file__)
-from mozpack import mozjar
+
+from mozpack import mozjar  # noqa: E402
 
 
 log = logging.getLogger(__name__)
