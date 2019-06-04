@@ -951,19 +951,16 @@ async def test_gpg_autograph(context, mocker, tmp_path):
 
 # sign_omnija {{{1  -- 537
 @pytest.mark.asyncio
-@pytest.mark.parametrize('filename,raises,should_sign', (
-    ('foo.unknown', True, False),
-    ('foo.zip', False, True),
-    ('foo.dmg', False, True),
-    ('foo.tar.bz2', False, True),
+@pytest.mark.parametrize('filename,raises', (
+    ('foo.unknown', True),
+    ('foo.zip', False),
+    ('foo.dmg', False),
+    ('foo.tar.bz2', False),
 ))
-async def test_sign_omnija(context, mocker, filename, raises,
-                           should_sign):
+async def test_sign_omnija(context, mocker, filename, raises):
     fmt = "autograph_omnija"
-    if should_sign:
-        files = ["firefox/omni.ja", "firefox/browser/omni.ja", "z/blah", "ignore"]
-    else:
-        files = ["z/blah", "ignore"]
+    files = ["isdir/omni.ja", "firefox/omni.ja",
+             "firefox/browser/omni.ja", "z/blah", "ignore"]
 
     async def fake_filelist(*args, **kwargs):
         return files
@@ -979,9 +976,6 @@ async def test_sign_omnija(context, mocker, filename, raises,
     async def fake_undmg(_, f):
         assert f.endswith('.dmg')
 
-    def failure(*args, **kwargs):
-        assert False, "failure is used"
-
     def fake_isfile(path):
         return 'isdir' not in path
 
@@ -991,11 +985,8 @@ async def test_sign_omnija(context, mocker, filename, raises,
     mocker.patch.object(sign, '_extract_zipfile', new=fake_unzip)
     mocker.patch.object(sign, '_convert_dmg_to_tar_gz', new=fake_undmg)
     mocker.patch.object(sign, 'sign_omnija_with_autograph', new=noop_async)
-    mocker.patch.object(sign, 'makedirs', new=noop_sync)
-    mocker.patch.object(sign, 'generate_precomplete', new=noop_sync)
     mocker.patch.object(sign, '_create_tarfile', new=noop_async)
     mocker.patch.object(sign, '_create_zipfile', new=noop_async)
-    mocker.patch.object(sign, '_run_generate_precomplete', new=failure)
     mocker.patch.object(os.path, 'isfile', new=fake_isfile)
 
     if raises:
