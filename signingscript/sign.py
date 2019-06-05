@@ -1203,12 +1203,11 @@ async def sign_omnija_with_autograph(context, from_):
         str: the path to the signature file
 
     """
-    signed_out = os.path.join(
-        tempfile.mkstemp(prefix="oj_signed", dir=context.config['work_dir'])[1],
-        'omni.ja')
-    merged_out = os.path.join(
-        tempfile.mkstemp(prefix="oj_merged", dir=context.config['work_dir'])[1],
-        'omni.ja')
+    signed_out = tempfile.mkstemp(
+        prefix="oj_signed", suffix='.ja', dir=context.config['work_dir'])[1]
+    merged_out = tempfile.mkstemp(
+        prefix="oj_merged", suffix='.ja', dir=context.config['work_dir'])[1]
+
     await sign_file_with_autograph(context, from_, "autograph_omnija", to=signed_out)
     await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
     with open(from_, 'wb') as fout:
@@ -1249,7 +1248,8 @@ async def merge_omnija_files(orig, signed, to):
                 to_writer.add(
                     fname,
                     signed_zip.open(fname, 'r'))
-        jarlog = list(orig_jarreader.entries.keys())
-        preloads = jarlog[:jarlog.index(orig_jarreader.last_preloaded) + 1]
-        to_writer.preload(preloads)
+        if orig_jarreader.last_preloaded:
+            jarlog = list(orig_jarreader.entries.keys())
+            preloads = jarlog[:jarlog.index(orig_jarreader.last_preloaded) + 1]
+            to_writer.preload(preloads)
     return True
