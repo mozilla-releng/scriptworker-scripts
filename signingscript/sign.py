@@ -515,7 +515,7 @@ async def sign_omnija_zip(context, orig_path, fmt):
         for from_, fmt in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
             tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(
-                context, from_, "omnijaformatXXXCALLEKTODO",
+                context, from_,
             )))
         await raise_future_exceptions(tasks)
         await _create_zipfile(
@@ -564,7 +564,7 @@ async def sign_omnija_tar(context, orig_path, fmt):
             if not os.path.isfile(from_):
                 continue
             tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(
-                context, from_, "omnijaformatXXXCALLEKTODO",
+                context, from_,
             )))
         await raise_future_exceptions(tasks)
         await _create_tarfile(
@@ -888,6 +888,13 @@ def make_signing_req(input_bytes, server, fmt, keyid=None):
             # https://github.com/mozilla-services/autograph/pull/166/files
             sign_req['options']['pkcs7_digest'] = "SHA1"
 
+    if "omnija" in fmt:
+        sign_req.setdefault('options', {})
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1533818#c9
+        sign_req['options']['id'] = 'omni.ja@mozilla.org'
+        sign_req['options']['cose_algorithms'] = ['ES256']
+        sign_req['options']['pkcs7_digest'] = 'SHA256'
+
     return [sign_req]
 
 
@@ -1197,12 +1204,12 @@ async def sign_omnija_with_autograph(context, from_):
 
     """
     signed_out = os.path.join(
-        tempfile.mkstemp(prefix="oj_signed", dir=context.config['work_dir']),
+        tempfile.mkstemp(prefix="oj_signed", dir=context.config['work_dir'])[1],
         'omni.ja')
     merged_out = os.path.join(
-        tempfile.mkstemp(prefix="oj_merged", dir=context.config['work_dir']),
+        tempfile.mkstemp(prefix="oj_merged", dir=context.config['work_dir'])[1],
         'omni.ja')
-    await sign_file_with_autograph(context, from_, "XXXCallek", to=signed_out)
+    await sign_file_with_autograph(context, from_, "autograph_omnija", to=signed_out)
     await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
     with open(from_, 'wb') as fout:
         with open(merged_out, 'rb') as fin:
