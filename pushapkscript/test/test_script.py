@@ -156,20 +156,6 @@ def test_get_publish_config_fennec_rollout():
     }
 
 
-def test_get_publish_config_focus_old():
-    focus_config = {
-        'map_channels_to_tracks': True,
-        'single_app_config': {
-            'certificate_alias': 'focus'
-        }
-    }
-    focus_payload = {'google_play_track': 'beta'}
-    assert _get_publish_config(focus_config, focus_payload, 'focus') == {
-        'certificate_alias': 'focus',
-        'google_play_track': 'beta',
-    }
-
-
 def test_get_publish_config_focus():
     focus_config = {
         'map_channels_to_tracks': True,
@@ -199,22 +185,6 @@ def test_get_publish_config_focus_rollout():
         'certificate_alias': 'focus',
         'google_play_track': 'rollout',
         'rollout_percentage': 10,
-    }
-
-
-def test_get_publish_config_fenix_old():
-    fenix_config = {
-        'apps': {
-            'production': {
-                'certificate_alias': 'fenix',
-                'google_play_track': 'production',
-            }
-        }
-    }
-    fenix_payload = {'google_play_track': 'production'}
-    assert _get_publish_config(fenix_config, fenix_payload, 'focus') == {
-        'certificate_alias': 'fenix',
-        'google_play_track': 'production',
     }
 
 
