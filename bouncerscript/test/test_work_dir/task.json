@@ -19,7 +19,6 @@
             "Firefox-99999": {
                 "options": {
                     "add_locales": true,
-                    "check_uptake": true,
                     "ssl_only": false
                 },
                 "paths_per_bouncer_platform": {
