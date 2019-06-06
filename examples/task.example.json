@@ -33,7 +33,6 @@
             "Firefox-60.0b1": {
                 "options": {
                     "add_locales": true,
-                    "check_uptake": true,
                     "ssl_only": false
                 },
                 "paths_per_bouncer_platform": {
@@ -47,7 +46,6 @@
             "Firefox-60.0b1-Complete": {
                 "options": {
                     "add_locales": true,
-                    "check_uptake": true,
                     "ssl_only": false
                 },
                 "paths_per_bouncer_platform": {
@@ -61,7 +59,6 @@
             "Firefox-60.0b1-Partial-None": {
                 "options": {
                     "add_locales": true,
-                    "check_uptake": true,
                     "ssl_only": false
                 },
                 "paths_per_bouncer_platform": {
@@ -75,7 +72,6 @@
             "Firefox-60.0b1-SSL": {
                 "options": {
                     "add_locales": true,
-                    "check_uptake": true,
                     "ssl_only": true
                 },
                 "paths_per_bouncer_platform": {
@@ -89,7 +85,6 @@
             "Firefox-60.0b1-stub": {
                 "options": {
                     "add_locales": true,
-                    "check_uptake": true,
                     "ssl_only": true
                 },
                 "paths_per_bouncer_platform": {
