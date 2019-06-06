@@ -1,6 +1,7 @@
 import asyncio
 import base64
 from contextlib import contextmanager
+from hashlib import sha256
 import os
 import os.path
 import pytest
@@ -1023,3 +1024,56 @@ async def test_sign_omnija(context, mocker, filename, raises):
 )))
 def test_get_omnija_signing_files(filenames, expected):
     assert sign._get_omnija_signing_files(filenames) == expected
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('orig', (
+    'no_preload_unsigned_omni.ja',
+    'preload_unsigned_omni.ja',
+    )
+)
+async def test_omnija_same(mocker, tmpdir, orig):
+    copy_from = os.path.join(tmpdir, 'omni.ja')
+    shutil.copyfile(os.path.join(TEST_DATA_DIR, orig), copy_from)
+    copy_to = os.path.join(tmpdir, 'new_omni.ja')
+
+    class mockedZipFile(object):
+        def __init__(self, name, mode, *args, **kwargs):
+            assert name == 'signed.ja'
+            assert mode == 'r'
+
+        def namelist(self):
+            return ['foobar', 'baseball']
+
+    mocker.patch.object(sign.zipfile, 'ZipFile', mockedZipFile)
+    await sign.merge_omnija_files(copy_from, 'signed.ja', copy_to)
+    assert open(copy_from, 'rb').read() == open(copy_to, 'rb').read()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('orig,signed,sha256_expected', (
+    (
+        'no_preload_unsigned_omni.ja',
+        'no_preload_signed_omni.ja',
+        '851890c7eac926ad1dfd1fc4b7bf96e57b519d87806f1055fe108d493e753f98',
+        ),
+    (
+        'preload_unsigned_omni.ja',
+        'preload_signed_omni.ja',
+        'd619ab6c25b31950540847b520d0791625ab4ca31ee4f58d02409c784f9206cd'
+        ),
+    )
+)
+async def test_omnija_sign(tmpdir, mocker, context, orig, signed,
+                           sha256_expected):
+    copy_from = os.path.join(tmpdir, 'omni.ja')
+    shutil.copyfile(os.path.join(TEST_DATA_DIR, orig), copy_from)
+
+    async def mocked_autograph(context, from_, fmt, to):
+        assert fmt == 'autograph_omnija'
+        shutil.copyfile(os.path.join(TEST_DATA_DIR, signed), to)
+
+    mocker.patch.object(sign, 'sign_file_with_autograph', mocked_autograph)
+    await sign.sign_omnija_with_autograph(context, copy_from)
+    sha256_actual = sha256(open(copy_from, 'rb').read()).hexdigest()
+    assert sha256_actual == sha256_expected
