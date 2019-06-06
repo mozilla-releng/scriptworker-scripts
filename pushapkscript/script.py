@@ -87,7 +87,7 @@ def _get_publish_config(product_config, payload, android_product):
         # Focus uses a single app and the "tracks" feature to represent different channels,
         # rather than a separate app-per-channel.
         publish_config = {
-            'google_play_track': payload.get('google_play_track') or payload['channel'],
+            'google_play_track': payload['channel'],
             **product_config['single_app_config'],
         }
 
@@ -98,13 +98,10 @@ def _get_publish_config(product_config, payload, android_product):
         if payload.get('google_play_track'):
             publish_config['google_play_track'] = payload.get('google_play_track')
 
-    # Task payloads should migrate from specifying "google_play_track" to "channel"
-    # TODO: once this migration^ is complete, payload "google_play_track" should be used to override the track
-    # for the targeted channel
-    # https://github.com/mozilla-releng/pushapkscript/issues/88
     else:
-        channel = payload.get('google_play_track') or payload['channel']
-        publish_config = product_config['apps'][channel]
+        publish_config = product_config['apps'][payload['channel']]
+        if payload.get('google_play_track'):
+            publish_config['google_play_track'] = payload.get('google_play_track')
 
     rollout_percentage = payload.get('rollout_percentage')
     if rollout_percentage:

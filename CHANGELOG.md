@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.1.0] - 2019-06-06
+
+### Changes
+* In the task payload, `google_play_track` now explicitly overrides the track in Google Play, and `channel` is required to disambiguate between apps
+
+
 ## [2.0.0] - 2019-06-03 
 
 ### Changes
