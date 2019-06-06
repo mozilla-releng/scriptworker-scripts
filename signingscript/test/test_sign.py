@@ -872,6 +872,22 @@ def test_signreq_task_keyid():
     assert req[0]['input'] == 'aGVsbG8gd29ybGQ='
 
 
+def test_signreq_task_omnija():
+    input_bytes = b"hello world"
+    fmt = "autograph_omnija"
+    s = SigningServer("https://autograph-hsm.dev.mozaws.net", "alice", "bob",
+                      [fmt], "autograph")
+    req = sign.make_signing_req(input_bytes, s, fmt, "newkeyid")
+
+    assert req[0]['keyid'] == 'newkeyid'
+    assert req[0]['input'] == 'aGVsbG8gd29ybGQ='
+    assert req[0]['options']['id'] == 'omni.ja@mozilla.org'
+    assert isinstance(req[0]['options']['cose_algorithms'], type([]))
+    assert len(req[0]['options']['cose_algorithms']) == 1
+    assert req[0]['options']['cose_algorithms'][0] == 'ES256'
+    assert req[0]['options']['pkcs7_digest'] == 'SHA256'
+
+
 @pytest.mark.asyncio
 async def test_bad_autograph_method():
     with pytest.raises(SigningScriptError):
