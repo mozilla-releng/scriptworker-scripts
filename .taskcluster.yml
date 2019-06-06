@@ -18,16 +18,34 @@ tasks:
 
     owner: ${event.sender.login}@users.noreply.github.com
 
+    shouldPush:
+      $if: 'tasks_for == "github-pull-request"'
+      then: false
+      else:
+        $if: 'event.repository.html_url != "https://github.com/mozilla-releng/beetmoverscript"'
+        then:
+          false
+        else:
+          $if: 'tasks_for == "github-release"'
+          then: true
+          else:
+            $if: 'event.ref in ["refs/heads/master", "refs/heads/dev"]'
+            then: true
+            else: false
+
     docker_tag:
       $if: 'tasks_for == "github-pull-request"'
       then: pull-request
       else:
-        $if: 'tasks_for == "github-push"'
-        then:
-          $if: 'event.ref[:10] == "refs/tags/"'
-          then: ${event.ref[10:]} # strip "refs/tags/"
-          else: ${event.ref[11:]} # strip "refs/heads/"
-        else: "v${event.release.tag_name}" # prefix the version with "v"
+        $if: 'tasks_for == "github-release"'
+        then: "v${event.release.tag_name}" # prefix the version with "v"
+        else: # push
+          $if: 'event.ref == "refs/heads/master"'
+          then: latest
+          else:
+            $if: 'event.ref == "refs/heads/dev"'
+            then: dev
+            else: garbage
 
   in:
     - taskId: '${as_slugid("py37")}'
@@ -54,78 +72,85 @@ tasks:
         owner: ${owner}
         source: ${repository}/raw/${head_rev}/.taskcluster.yml
 
-    - taskId: '${as_slugid("docker_build")}'
-      dependencies:
-        - '${as_slugid("py37")}'
-      provisionerId: aws-provisioner-v1
-      workerType: github-worker
-      created: {$fromNow: ''}
-      deadline: {$fromNow: '4 hours'}
-      payload:
-        features:
-          dind: true
-        maxRunTime: 3600
-        image: mozillareleases/python-test-runner
-        command:
-          - bash
-          - -ce
-          - >-
-            git clone ${repository} /src &&
-            cd /src &&
-            git config advice.detachedHead false &&
-            git checkout ${head_rev} &&
-            docker.d/generate_version_json.sh &&
-            cat version.json &&
-            docker build -f Dockerfile -t mozilla/beetmoverscript:${docker_tag} . &&
-            docker save mozilla/beetmoverscript:${docker_tag} > /tmp/image.tar &&
-            docker images --no-trunc mozilla/beetmoverscript | grep ${docker_tag}
-        artifacts:
-          public/image.tar:
-            expires: {$fromNow: '2 weeks'}
-            path: /tmp/image.tar
-            type: file
-      metadata:
-        name: docker build (${docker_tag})
-        description: build latest docker image (${docker_tag})
-        owner: ${owner}
-        source: ${repository}/raw/${head_rev}/.taskcluster.yml
-
-    - $if: 'tasks_for != "github-pull-request"'
+    - $if: 'shouldPush'
       then:
-        $if: 'repository == "https://github.com/mozilla-releng/beetmoverscript"'
-        then:
-          taskId: '${as_slugid("docker_push")}'
-          dependencies:
-            - '${as_slugid("docker_build")}'
-          provisionerId: aws-provisioner-v1
-          workerType: github-worker
-          created: {$fromNow: ''}
-          deadline: {$fromNow: '4 hours'}
-          payload:
-            features:
-              # Needed for access to secret
-              taskclusterProxy: true
-              dind: true
-            maxRunTime: 3600
-            image: mozillareleases/python-test-runner
-            command:
-              - bash
-              - -ce
-              - >-
-                git clone ${repository} /src &&
-                cd /src &&
-                git config advice.detachedHead false &&
-                git checkout ${head_rev} &&
-                IMAGE_TASK_ID=${as_slugid("docker_build")}
-                SECRET_URL=http://taskcluster/secrets/v1/secret/project/releng/beetmoverscript/deploy
-                DOCKERHUB_EMAIL=release+dockerhub+services@mozilla.com
-                DOCKERHUB_USER=mozillarelengservices
-                TAG=mozilla/beetmoverscript:${docker_tag}
-                ./docker.d/push_image.sh
-          scopes:
-            - secrets:get:project/releng/beetmoverscript/deploy
-          metadata:
-            name: docker push (${docker_tag})
-            description: push docker image (${docker_tag})
-            owner: ${owner}
-            source: ${repository}/raw/${head_rev}/.taskcluster.yml
+        taskId: '${as_slugid("docker_build")}'
+        dependencies:
+          - '${as_slugid("py37")}'
+        provisionerId: aws-provisioner-v1
+        workerType: github-worker
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '24 hours'}
+        payload:
+          features:
+            dind: true
+            taskclusterProxy: true
+          maxRunTime: 3600
+          image: mozillareleases/python-test-runner
+          env:
+            SECRET_URL: http://taskcluster/secrets/v1/secret/project/releng/beetmoverscript/deploy
+            DOCKERHUB_EMAIL: release+dockerhub+services@mozilla.com
+            DOCKERHUB_USER: mozillarelengservices
+            TAG: mozilla/beetmoverscript:${docker_tag}
+
+          command:
+            - bash
+            - -ce
+            - >-
+              git clone ${repository} /src &&
+              cd /src &&
+              git config advice.detachedHead false &&
+              git checkout ${head_rev} &&
+              docker.d/generate_version_json.sh &&
+              cat version.json &&
+              docker build -f Dockerfile -t mozilla/beetmoverscript:${docker_tag} . &&
+              docker save mozilla/beetmoverscript:${docker_tag} > /tmp/image.tar &&
+              ./docker.d/push_image.sh
+          artifacts:
+            public/image.tar:
+              expires: {$fromNow: '8 weeks'}
+              path: /tmp/image.tar
+              type: file
+        scopes:
+          - secrets:get:project/releng/beetmoverscript/deploy
+        metadata:
+          name: build and push docker image (${docker_tag})
+          description: build and push docker image (${docker_tag})
+          owner: ${owner}
+          source: ${repository}/raw/${head_rev}/.taskcluster.yml
+
+      else: # run docker build to verify it works
+        taskId: '${as_slugid("docker_build")}'
+        dependencies:
+          - '${as_slugid("py37")}'
+        provisionerId: aws-provisioner-v1
+        workerType: github-worker
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '24 hours'}
+        payload:
+          features:
+            dind: true
+          maxRunTime: 3600
+          image: mozillareleases/python-test-runner
+          command:
+            - bash
+            - -ce
+            - >-
+              git clone ${repository} /src &&
+              cd /src &&
+              git config advice.detachedHead false &&
+              git checkout ${head_rev} &&
+              docker.d/generate_version_json.sh &&
+              cat version.json &&
+              docker build -f Dockerfile -t mozilla/beetmoverscript:${docker_tag} . &&
+              docker save mozilla/beetmoverscript:${docker_tag} > /tmp/image.tar
+          artifacts:
+            public/image.tar:
+              expires: {$fromNow: '2 weeks'}
+              path: /tmp/image.tar
+              type: file
+        metadata:
+          name: docker build (${docker_tag})
+          description: build docker image (${docker_tag})
+          owner: ${owner}
+          source: ${repository}/raw/${head_rev}/.taskcluster.yml
