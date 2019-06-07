@@ -41,6 +41,22 @@ except ImportError:
     widevine = None
 
 
+sys.path.append(  # append the mozbuild vendor
+    os.path.abspath(
+        os.path.join(
+            os.path.realpath(
+                os.path.dirname(__file__)
+                ),
+            '..',
+            'vendored',
+            'mozbuild',
+            )
+        )
+    )
+
+from mozpack import mozjar  # noqa: E402
+
+
 log = logging.getLogger(__name__)
 
 _ZIP_ALIGNMENT = '4'  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
@@ -433,6 +449,130 @@ async def sign_widevine_tar(context, orig_path, fmt):
     return orig_path
 
 
+# sign_omnija {{{1
+async def sign_omnija(context, orig_path, fmt):
+    """Call the appropriate helper function to do omnija signing.
+
+    Args:
+        context (Context): the signing context
+        orig_path (str): the source file to sign
+        fmt (str): the format to sign with
+
+    Raises:
+        SigningScriptError: on unknown suffix.
+
+    Returns:
+        str: the path to the signed archive
+
+    """
+    file_base, file_extension = os.path.splitext(orig_path)
+    # Convert dmg to tarball
+    if file_extension == '.dmg':
+        await _convert_dmg_to_tar_gz(context, orig_path)
+        orig_path = "{}.tar.gz".format(file_base)
+    ext_to_fn = {
+        '.zip': sign_omnija_zip,
+        '.tar.bz2': sign_omnija_tar,
+        '.tar.gz': sign_omnija_tar,
+    }
+    for ext, signing_func in ext_to_fn.items():
+        if orig_path.endswith(ext):
+            return await signing_func(context, orig_path, fmt)
+    raise SigningScriptError(
+        "Unknown omnija file format for {}".format(orig_path)
+    )
+
+
+# sign_omnija_zip {{{1
+async def sign_omnija_zip(context, orig_path, fmt):
+    """Sign the internals of a zipfile with the omnija key for all omni.ja files.
+
+    Extract the files to sign, then sign them with autograph, recreating the omni.ja
+    from the original to preserve performance tweeks but adding signing info,
+    Then append the sigfiles to the zipfile.
+
+    Args:
+        context (Context): the signing context
+        orig_path (str): the source file to sign
+        fmt (str): the format to sign with
+
+    Returns:
+        str: the path to the signed archive
+
+    """
+    # This will get cleaned up when we nuke `work_dir`. Clean up at that point
+    # rather than immediately after `sign_omnija`, to optimize task runtime
+    # speed over disk space.
+    tmp_dir = tempfile.mkdtemp(prefix="ojzip", dir=context.config['work_dir'])
+    # Get file list
+    all_files = await _get_zipfile_files(orig_path)
+    files_to_sign = _get_omnija_signing_files(all_files)
+    log.debug("Omnija files to sign: %s", files_to_sign)
+    if files_to_sign:
+        all_files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
+        tasks = []
+        # Sign the appropriate inner files
+        for from_, fmt in files_to_sign.items():
+            from_ = os.path.join(tmp_dir, from_)
+            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(
+                context, from_,
+            )))
+        await raise_future_exceptions(tasks)
+        await _create_zipfile(
+            context, orig_path, all_files, mode='w', tmp_dir=tmp_dir
+        )
+    return orig_path
+
+
+# sign_omnija_tar {{{1
+async def sign_omnija_tar(context, orig_path, fmt):
+    """Sign the internals of a tarfile with the omnija key for all omni.ja files.
+
+    Extract the files to sign, then sign them with autograph, recreating the omni.ja
+    from the original to preserve performance tweeks but adding signing info.
+    Then recreate the tarball.
+
+    Args:
+        context (Context): the signing context
+        orig_path (str): the source file to sign
+        fmt (str): the format to sign with
+
+    Returns:
+        str: the path to the signed archive
+
+    """
+    _, compression = os.path.splitext(orig_path)
+    # This will get cleaned up when we nuke `work_dir`. Clean up at that point
+    # rather than immediately after `sign_widevine`, to optimize task runtime
+    # speed over disk space.
+    tmp_dir = tempfile.mkdtemp(prefix="ojtar", dir=context.config['work_dir'])
+    # Get file list
+    all_files = await _get_tarfile_files(orig_path, compression)
+    files_to_sign = _get_omnija_signing_files(all_files)
+    log.debug("Omnija files to sign: %s", files_to_sign)
+    if files_to_sign:
+        # Extract all files so we can create `precomplete` with the full
+        # file list
+        all_files = await _extract_tarfile(
+            context, orig_path, compression, tmp_dir=tmp_dir
+        )
+        tasks = []
+        # Sign the appropriate inner files
+        for from_, fmt in files_to_sign.items():
+            from_ = os.path.join(tmp_dir, from_)
+            # Don't try to sign directories
+            if not os.path.isfile(from_):
+                continue
+            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(
+                context, from_,
+            )))
+        await raise_future_exceptions(tasks)
+        await _create_tarfile(
+            context, orig_path, all_files, compression, tmp_dir=tmp_dir
+        )
+    return orig_path
+
+
 # _should_sign_windows {{{1
 def _should_sign_windows(filename):
     """Return True if filename should be signed."""
@@ -482,6 +622,21 @@ def _get_widevine_signing_files(file_list):
                 files[filename] = fmt
             else:
                 log.debug("{} is already signed! Skipping...".format(filename))
+    return files
+
+
+# _get_omnija_signing_files {{{1
+def _get_omnija_signing_files(file_list):
+    """Return a dict of path:signing_format for each path to be signed."""
+    files = {}
+    for filename in file_list:
+        fmt = None
+        base_filename = os.path.basename(filename)
+        if base_filename in {'omni.ja'}:
+            fmt = 'omnija'
+        if fmt:
+            log.debug("Found {} to sign {}".format(filename, fmt))
+            files[filename] = fmt
     return files
 
 
@@ -732,6 +887,13 @@ def make_signing_req(input_bytes, server, fmt, keyid=None):
             # We ask for a SHA1 digest from Autograph
             # https://github.com/mozilla-services/autograph/pull/166/files
             sign_req['options']['pkcs7_digest'] = "SHA1"
+
+    if "omnija" in fmt:
+        sign_req.setdefault('options', {})
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1533818#c9
+        sign_req['options']['id'] = 'omni.ja@mozilla.org'
+        sign_req['options']['cose_algorithms'] = ['ES256']
+        sign_req['options']['pkcs7_digest'] = 'SHA256'
 
     return [sign_req]
 
@@ -1020,3 +1182,74 @@ async def sign_widevine_with_autograph(context, from_, blessed, to=None):
         sig = widevine.generate_widevine_signature(signature, certificate, flags)
         fout.write(sig)
     return to
+
+
+async def sign_omnija_with_autograph(context, from_):
+    """Sign the omnija file specified using autograph.
+
+    This function overwrites from_
+    rebuild it using the signed meta-data and the original omni.ja
+    in order to facilitate the performance wins we do as part of the build
+
+    Args:
+        context (Context): the signing context
+        from_ (str): the source file to sign (overwrites)
+
+    Raises:
+        Requests.RequestException: on failure
+        SigningScriptError: when no suitable signing server is found for fmt
+
+    Returns:
+        str: the path to the signature file
+
+    """
+    signed_out = tempfile.mkstemp(
+        prefix="oj_signed", suffix='.ja', dir=context.config['work_dir'])[1]
+    merged_out = tempfile.mkstemp(
+        prefix="oj_merged", suffix='.ja', dir=context.config['work_dir'])[1]
+
+    await sign_file_with_autograph(context, from_, "autograph_omnija", to=signed_out)
+    await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
+    with open(from_, 'wb') as fout:
+        with open(merged_out, 'rb') as fin:
+            fout.write(fin.read())
+    return from_
+
+
+async def merge_omnija_files(orig, signed, to):
+    """Merge multiple omnijar files together.
+
+    This takes the original file, and reads it in, including performance
+    characteristics (e.g. jarlog ordering for preloading),
+    then adds data from the "signed" copy (the META-INF folder)
+    and finally writes it all out to a new omni.ja file.
+
+    Args:
+        context (Context): the signing context
+        orig (str): the source file to sign
+        signed (str): the signed file, without optimizations
+        to (str): the output path for the merge
+
+    Returns:
+        bool: always True if function succeeded.
+
+    """
+    orig_jarreader = mozjar.JarReader(orig)
+    with mozjar.JarWriter(to, compress=orig_jarreader.compression) as to_writer:
+        for origjarfile in orig_jarreader:
+            to_writer.add(
+                origjarfile.filename,
+                origjarfile,
+                compress=origjarfile.compress)
+        # Use ZipFile here because mozjar can't read the signed copies
+        signed_zip = zipfile.ZipFile(signed, 'r')
+        for fname in signed_zip.namelist():
+            if fname.startswith('META-INF'):
+                to_writer.add(
+                    fname,
+                    signed_zip.open(fname, 'r'))
+        if orig_jarreader.last_preloaded:
+            jarlog = list(orig_jarreader.entries.keys())
+            preloads = jarlog[:jarlog.index(orig_jarreader.last_preloaded) + 1]
+            to_writer.preload(preloads)
+    return True

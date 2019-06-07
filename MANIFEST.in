@@ -2,6 +2,8 @@ recursive-include requirements *
 recursive-include signingscript/test *
 recursive-include signingscript/data *
 
+recursive-include vendored *
+
 include LICENSE
 include README.md
 include example_server_config.json
