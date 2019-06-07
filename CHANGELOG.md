@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [11.0.0] - 2019-06-07
+### Added
+- added `vendored` directory for externally hosted code
+- imported mozpack and mozbuild from mozilla-central at a specific rev supporting
+  py3 in parts we use
+- added support for omni.ja signing (as xpi signing) via autograph. Preserving
+  gecko optimizations of the package.
+
 ## [10.1.0] - 2019-05-31
 ### Added
 - added `log_level` kwarg to `execute_subprocess`
