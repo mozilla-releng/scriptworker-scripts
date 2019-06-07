@@ -2,6 +2,26 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+# 4.2.2 - 2019-06-07
+### Fixed
+- Do not prefix tag version with "v"
+
+# 4.2.1 - 2019-06-04
+### Changed
+- Unify docker build and push tasks
+
+# 4.2.0 - 2019-05-09
+### Added
+- Generate docker images as a part of CI
+
+# 4.1.0 - 2019-05-09
+### Added
+- Use special headers to work around https issues
+
+# [4.0.0] - 2010-03-06
+### Removed
+- Removed Ship-it v1 support
+
 # [3.2.0] - 2019-03-06
 ### Added
 - Simplify Ship-it v2 support
