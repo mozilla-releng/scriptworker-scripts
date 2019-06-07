@@ -968,16 +968,22 @@ async def test_gpg_autograph(context, mocker, tmp_path):
 
 # sign_omnija {{{1  -- 537
 @pytest.mark.asyncio
-@pytest.mark.parametrize('filename,raises', (
-    ('foo.unknown', True),
-    ('foo.zip', False),
-    ('foo.dmg', False),
-    ('foo.tar.bz2', False),
+@pytest.mark.parametrize('filename,raises,nofiles', (
+    ('foo.unknown', True, False),
+    ('foo.zip', False, False),
+    ('foo.dmg', False, False),
+    ('foo.tar.bz2', False, False),
+    ('foo.zip', False, True),
+    ('foo.dmg', False, True),
+    ('foo.tar.bz2', False, True),
 ))
-async def test_sign_omnija(context, mocker, filename, raises):
+async def test_sign_omnija(context, mocker, filename, raises, nofiles):
     fmt = "autograph_omnija"
     files = ["isdir/omni.ja", "firefox/omni.ja",
              "firefox/browser/omni.ja", "z/blah", "ignore"]
+    if nofiles:
+        # Don't have any omni.ja
+        files = ["z/blah", "ignore"]
 
     async def fake_filelist(*args, **kwargs):
         return files
