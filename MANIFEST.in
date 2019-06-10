@@ -2,7 +2,7 @@ recursive-include requirements *
 recursive-include signingscript/test *
 recursive-include signingscript/data *
 
-recursive-include vendored *
+recursive-include signingscript/vendored *
 
 include LICENSE
 include README.md

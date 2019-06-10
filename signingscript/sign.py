@@ -47,7 +47,6 @@ sys.path.append(  # append the mozbuild vendor
             os.path.realpath(
                 os.path.dirname(__file__)
                 ),
-            '..',
             'vendored',
             'mozbuild',
             )
