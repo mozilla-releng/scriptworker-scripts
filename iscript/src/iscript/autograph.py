@@ -5,8 +5,11 @@ import base64
 import difflib
 import glob
 import logging
+from mozpack import mozjar
 import os
 import requests
+import tempfile
+import zipfile
 
 from iscript.createprecomplete import generate_precomplete
 from iscript.exceptions import IScriptError
@@ -190,7 +193,21 @@ def remove_extra_files(top_dir, file_list):
 
 # autograph {{{1
 async def call_autograph(url, user, password, request_json):
-    """Call autograph and return the json response."""
+    """Call autograph and return the json response.
+
+    Args:
+        url (str): the endpoint url
+        user (str): the autograph user
+        password (str): the autograph password
+        request_json (dict): list of dictionaries, from ``make_signing_req``
+
+    Raises:
+        requests.RequestException: on failure
+
+    Returns:
+        dict: the response json
+
+    """
     auth = HawkAuth(id=user, key=password)
     with requests.Session() as session:
         r = session.post(url, json=request_json, auth=auth)
@@ -201,13 +218,31 @@ async def call_autograph(url, user, password, request_json):
         return r.json()
 
 
-def make_signing_req(input_bytes, keyid=None):
-    """Make a signing request object to pass to autograph."""
+def make_signing_req(input_bytes, fmt, keyid=None):
+    """Make a signing request object to pass to autograph.
+
+    Args:
+        input_bytes (bytestring): the hash or filedata to sign
+        fmt (string): the format to sign with
+        keyid (string, optional): the keyid to use to sign with. If ``None``,
+            we use the default keyid configured in autograph. Defaults to ``None``.
+
+    Returns:
+        list: the signing request json
+
+    """
     base64_input = base64.b64encode(input_bytes).decode("ascii")
     sign_req = {"input": base64_input}
 
     if keyid:
         sign_req["keyid"] = keyid
+
+    if "omnija" in fmt:
+        sign_req.setdefault("options", {})
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1533818#c9
+        sign_req["options"]["id"] = "omni.ja@mozilla.org"
+        sign_req["options"]["cose_algorithms"] = ["ES256"]
+        sign_req["options"]["pkcs7_digest"] = "SHA256"
 
     return [sign_req]
 
@@ -235,15 +270,19 @@ async def sign_with_autograph(
     if autograph_method not in {"file", "hash", "data"}:
         raise IScriptError(f"Unsupported autograph method: {autograph_method}")
 
-    sign_req = make_signing_req(input_bytes, keyid)
+    sign_req = make_signing_req(input_bytes, fmt, keyid=keyid)
+    short_fmt = fmt.replace("autograph_", "")
+    url = key_config[f"{short_fmt}_url"]
+    user = key_config[f"{short_fmt}_user"]
+    pw = key_config[f"{short_fmt}_pass"]
 
     log.debug("signing data with format %s with %s", fmt, autograph_method)
 
-    url = f"{key_config['widevine_url']}/sign/{autograph_method}"
+    url = f"{url}/sign/{autograph_method}"
 
     sign_resp = await retry_async(
         call_autograph,
-        args=(url, key_config["widevine_user"], key_config["widevine_pass"], sign_req),
+        args=(url, user, pw, sign_req),
         attempts=3,
         sleeptime_kwargs={"delay_factor": 2.0},
     )
@@ -303,6 +342,97 @@ async def sign_hash_with_autograph(key_config, hash_, fmt, keyid=None):
     return signature
 
 
+# omnija {{{1
+def _get_omnija_signing_files(file_list):
+    """Return a dict of path:signing_format for each path to be signed."""
+    files = {}
+    for filename in file_list:
+        fmt = None
+        base_filename = os.path.basename(filename)
+        if base_filename in {"omni.ja"}:
+            fmt = "omnija"
+        if fmt:
+            log.debug("Found {} to sign {}".format(filename, fmt))
+            files[filename] = fmt
+    return files
+
+
+async def sign_omnija_with_autograph(config, key_config, app_path):
+    """Sign the omnija file specified using autograph.
+
+    This function overwrites from_
+    rebuild it using the signed meta-data and the original omni.ja
+    in order to facilitate the performance wins we do as part of the build
+
+    Args:
+        config (dict): the running config
+        key_config (dict): the running config for this key
+        app_path (str): the path to the .app dir
+
+    Raises:
+        Requests.RequestException: on failure
+
+    Returns:
+        str: the path to the signature file
+
+    """
+    all_files = []
+    for top_dir, dirs, files in os.walk(app_path):
+        for file_ in files:
+            all_files.append(os.path.join(top_dir, file_))
+    files_to_sign = _get_omnija_signing_files(all_files)
+    for from_ in files_to_sign:
+        signed_out = tempfile.mkstemp(
+            prefix="oj_signed", suffix=".ja", dir=config["work_dir"]
+        )[1]
+        merged_out = tempfile.mkstemp(
+            prefix="oj_merged", suffix=".ja", dir=config["work_dir"]
+        )[1]
+
+        await sign_file_with_autograph(key_config, from_, "omnija", to=None)
+        await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
+        with open(from_, "wb") as fout:
+            with open(merged_out, "rb") as fin:
+                fout.write(fin.read())
+    return files_to_sign
+
+
+async def merge_omnija_files(orig, signed, to):
+    """Merge multiple omnijar files together.
+
+    This takes the original file, and reads it in, including performance
+    characteristics (e.g. jarlog ordering for preloading),
+    then adds data from the "signed" copy (the META-INF folder)
+    and finally writes it all out to a new omni.ja file.
+
+    Args:
+        orig (str): the source file to sign
+        signed (str): the signed file, without optimizations
+        to (str): the output path for the merge
+
+    Returns:
+        bool: always True if function succeeded.
+
+    """
+    orig_jarreader = mozjar.JarReader(orig)
+    with mozjar.JarWriter(to, compress=orig_jarreader.compression) as to_writer:
+        for origjarfile in orig_jarreader:
+            to_writer.add(
+                origjarfile.filename, origjarfile, compress=origjarfile.compress
+            )
+        # Use ZipFile here because mozjar can't read the signed copies
+        signed_zip = zipfile.ZipFile(signed, "r")
+        for fname in signed_zip.namelist():
+            if fname.startswith("META-INF"):
+                to_writer.add(fname, signed_zip.open(fname, "r"))
+        if orig_jarreader.last_preloaded:
+            jarlog = list(orig_jarreader.entries.keys())
+            preloads = jarlog[: jarlog.index(orig_jarreader.last_preloaded) + 1]
+            to_writer.preload(preloads)
+    return True
+
+
+# sign_widevine_with_autograph {{{1
 async def sign_widevine_with_autograph(key_config, from_, blessed, to=None):
     """Create a widevine signature using autograph as a backend.
 

@@ -28,7 +28,7 @@ from iscript.exceptions import (
 )
 from iscript.util import get_key_config
 
-from iscript.autograph import sign_widevine_dir
+from iscript.autograph import sign_omnija_with_autograph, sign_widevine_dir
 
 log = logging.getLogger(__name__)
 
@@ -517,10 +517,20 @@ async def sign_all_apps(config, key_config, entitlements_path, all_paths):
 
     """
     log.info("Signing all apps")
+    # sign omni.ja
+    futures = []
+    for app in all_paths:
+        if {"autograph_omnija", "omnija"} & set(app.formats):
+            futures.append(
+                asyncio.ensure_future(
+                    sign_omnija_with_autograph(config, key_config, app.app_path)
+                )
+            )
+    await raise_future_exceptions(futures)
     # sign widevine
     futures = []
     for app in all_paths:
-        if "widevine" in app.formats:
+        if {"autograph_widevine", "widevine"} & set(app.formats):
             futures.append(
                 asyncio.ensure_future(
                     sign_widevine_dir(config, key_config, app.app_path)

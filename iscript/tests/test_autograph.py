@@ -98,7 +98,7 @@ async def test_sign_file_with_autograph_raises_http_error(
 
     with pytest.raises(autograph.requests.exceptions.RequestException):
         await autograph.sign_file_with_autograph(
-            key_config, "from", "autograph_mar", to=to
+            key_config, "from", "autograph_widevine", to=to
         )
     open_mock.assert_called()
 
@@ -257,14 +257,19 @@ def test_remove_extra_files(tmp_path):
 
 # autograph {{{1
 @pytest.mark.parametrize(
-    "input_bytes, keyid, expected",
+    "input_bytes, fmt, keyid, expected",
     (
-        (b"asdf", None, [{"input": "YXNkZg=="}]),
-        (b"asdf", "key1", [{"input": "YXNkZg==", "keyid": "key1"}]),
+        (b"asdf", "widevine", None, [{"input": "YXNkZg=="}]),
+        (
+            b"asdf",
+            "autograph_widevine",
+            "key1",
+            [{"input": "YXNkZg==", "keyid": "key1"}],
+        ),
     ),
 )
-def test_make_signing_req(input_bytes, keyid, expected):
-    assert autograph.make_signing_req(input_bytes, keyid=keyid) == expected
+def test_make_signing_req(input_bytes, fmt, keyid, expected):
+    assert autograph.make_signing_req(input_bytes, fmt, keyid=keyid) == expected
 
 
 @pytest.mark.asyncio
