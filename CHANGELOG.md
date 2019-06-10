@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [11.0.1] - 2019-06-10
+### Fixed
+- bugfix release to make sure vendored/ directory is properly included
+  in whl and source distributions
+
 ## [11.0.0] - 2019-06-07
 ### Added
 - added `vendored` directory for externally hosted code
