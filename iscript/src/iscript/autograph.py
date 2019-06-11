@@ -70,6 +70,7 @@ async def sign_widevine_dir(config, key_config, app_dir):
         str: the path to the signed archive
 
     """
+    log.info(f"Signing widevine in {app_dir}...")
     all_files = []
     for top_dir, dirs, files in os.walk(app_dir):
         for file_ in files:
@@ -376,6 +377,7 @@ async def sign_omnija_with_autograph(config, key_config, app_path):
         str: the path to the signature file
 
     """
+    log.info(f"Signing omnija in {app_dir}...")
     all_files = []
     for top_dir, dirs, files in os.walk(app_path):
         for file_ in files:
