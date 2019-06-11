@@ -244,6 +244,7 @@ def make_signing_req(input_bytes, fmt, keyid=None):
         sign_req["options"]["id"] = "omni.ja@mozilla.org"
         sign_req["options"]["cose_algorithms"] = ["ES256"]
         sign_req["options"]["pkcs7_digest"] = "SHA256"
+        log.debug(f"omnija sign_req options: {sign_req['options']}")
 
     return [sign_req]
 
