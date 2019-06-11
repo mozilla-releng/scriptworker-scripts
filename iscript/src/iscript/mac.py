@@ -856,6 +856,7 @@ async def staple_notarization(all_paths, path_attr="app_path"):
                     ["xcrun", "stapler", "staple", "-v", path],
                     cwd=cwd,
                     exception=IScriptError,
+                    log_level=logging.DEBUG,
                 )
             )
         )
