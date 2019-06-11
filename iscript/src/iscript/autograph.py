@@ -350,7 +350,7 @@ def _get_omnija_signing_files(file_list):
         fmt = None
         base_filename = os.path.basename(filename)
         if base_filename in {"omni.ja"}:
-            fmt = "omnija"
+            fmt = "autograph_omnija"
         if fmt:
             log.debug("Found {} to sign {}".format(filename, fmt))
             files[filename] = fmt
@@ -389,7 +389,9 @@ async def sign_omnija_with_autograph(config, key_config, app_path):
             prefix="oj_merged", suffix=".ja", dir=config["work_dir"]
         )[1]
 
-        await sign_file_with_autograph(key_config, from_, "omnija", to=None)
+        await sign_file_with_autograph(
+            key_config, from_, "autograph_omnija", to=signed_out
+        )
         await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
         with open(from_, "wb") as fout:
             with open(merged_out, "rb") as fin:

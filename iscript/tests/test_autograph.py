@@ -1,21 +1,20 @@
-import asyncio
 import base64
 from contextlib import contextmanager
+from hashlib import sha256
 import os
 import os.path
 import pytest
 import shutil
-import subprocess
-import tarfile
-import zipfile
 
 from scriptworker_client.utils import makedirs
 
 from iscript.exceptions import IScriptError
 import iscript.autograph as autograph
 
-
 # helper constants, fixtures, functions {{{1
+TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+
+
 @pytest.fixture(scope="function")
 def key_config():
     return {
@@ -266,6 +265,21 @@ def test_remove_extra_files(tmp_path):
             "key1",
             [{"input": "YXNkZg==", "keyid": "key1"}],
         ),
+        (
+            b"asdf",
+            "autograph_omnija",
+            None,
+            [
+                {
+                    "input": "YXNkZg==",
+                    "options": {
+                        "id": "omni.ja@mozilla.org",
+                        "cose_algorithms": ["ES256"],
+                        "pkcs7_digest": "SHA256",
+                    },
+                }
+            ],
+        ),
     ),
 )
 def test_make_signing_req(input_bytes, fmt, keyid, expected):
@@ -312,3 +326,78 @@ async def test_no_widevine(mocker, tmp_path):
     with pytest.raises(ImportError):
         to = tmp_path / "signed.sig"
         to = await autograph.sign_widevine_with_autograph({}, "from", True, to=to)
+
+
+# omnija {{{1
+@pytest.mark.parametrize(
+    "filenames,expected",
+    (
+        (["firefox.dll", "XUL.so", "firefox.bin", "blah"], {}),
+        (
+            (
+                "firefox",
+                "blah/omni.ja",
+                "foo/bar/libclearkey.dylib",
+                "baz/omni.ja",
+                "ignore",
+            ),
+            {"blah/omni.ja": "autograph_omnija", "baz/omni.ja": "autograph_omnija"},
+        ),
+    ),
+)
+def test_get_omnija_signing_files(filenames, expected):
+    assert autograph._get_omnija_signing_files(filenames) == expected
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "orig", ("no_preload_unsigned_omni.ja", "preload_unsigned_omni.ja")
+)
+async def test_omnija_same(mocker, tmpdir, orig):
+    copy_from = os.path.join(tmpdir, "omni.ja")
+    shutil.copyfile(os.path.join(TEST_DATA_DIR, orig), copy_from)
+    copy_to = os.path.join(tmpdir, "new_omni.ja")
+
+    class mockedZipFile(object):
+        def __init__(self, name, mode, *args, **kwargs):
+            assert name == "signed.ja"
+            assert mode == "r"
+
+        def namelist(self):
+            return ["foobar", "baseball"]
+
+    mocker.patch.object(autograph.zipfile, "ZipFile", mockedZipFile)
+    await autograph.merge_omnija_files(copy_from, "signed.ja", copy_to)
+    assert open(copy_from, "rb").read() == open(copy_to, "rb").read()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "orig,signed,sha256_expected",
+    (
+        (
+            "no_preload_unsigned_omni.ja",
+            "no_preload_signed_omni.ja",
+            "851890c7eac926ad1dfd1fc4b7bf96e57b519d87806f1055fe108d493e753f98",
+        ),
+        (
+            "preload_unsigned_omni.ja",
+            "preload_signed_omni.ja",
+            "d619ab6c25b31950540847b520d0791625ab4ca31ee4f58d02409c784f9206cd",
+        ),
+    ),
+)
+async def test_omnija_sign(tmpdir, mocker, orig, signed, sha256_expected):
+    copy_from = os.path.join(tmpdir, "omni.ja")
+    shutil.copyfile(os.path.join(TEST_DATA_DIR, orig), copy_from)
+    config = {"work_dir": tmpdir}
+    key_config = {}
+
+    async def mocked_autograph(key_config, from_, fmt, to):
+        assert fmt == "autograph_omnija"
+        shutil.copyfile(os.path.join(TEST_DATA_DIR, signed), to)
+
+    mocker.patch.object(autograph, "sign_file_with_autograph", mocked_autograph)
+    await autograph.sign_omnija_with_autograph(config, key_config, tmpdir)
+    sha256_actual = sha256(open(copy_from, "rb").read()).hexdigest()
+    assert sha256_actual == sha256_expected

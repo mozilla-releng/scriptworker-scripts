@@ -1022,7 +1022,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
             "upstreamArtifacts": [
                 {
                     "taskId": "task1",
-                    "formats": ["macapp", "widevine"],
+                    "formats": ["macapp", "autograph_widevine", "autograph_omnija"],
                     "paths": [
                         "public/build/1/target.tar.gz",
                         "public/build/2/target.tar.gz",
@@ -1031,7 +1031,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
                 {
                     "taskId": "task2",
                     "paths": ["public/build/3/target.tar.gz"],
-                    "formats": ["macapp", "widevine"],
+                    "formats": ["macapp", "widevine", "omnija"],
                 },
             ]
         }
@@ -1046,6 +1046,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
     )
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "sign_omnija_with_autograph", new=noop_async)
     mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     await mac.sign_and_pkg_behavior(config, task)
 
