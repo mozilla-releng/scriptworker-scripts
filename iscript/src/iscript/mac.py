@@ -517,6 +517,8 @@ async def sign_all_apps(config, key_config, entitlements_path, all_paths):
 
     """
     log.info("Signing all apps")
+    for app in all_paths:
+        set_app_path_and_name(app)
     # sign omni.ja
     futures = []
     for app in all_paths:
@@ -540,7 +542,6 @@ async def sign_all_apps(config, key_config, entitlements_path, all_paths):
     futures = []
     # sign apps concurrently
     for app in all_paths:
-        set_app_path_and_name(app)
         futures.append(
             asyncio.ensure_future(sign_app(key_config, app.app_path, entitlements_path))
         )
