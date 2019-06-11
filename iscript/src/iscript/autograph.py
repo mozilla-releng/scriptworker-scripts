@@ -377,7 +377,7 @@ async def sign_omnija_with_autograph(config, key_config, app_path):
         str: the path to the signature file
 
     """
-    log.info(f"Signing omnija in {app_dir}...")
+    log.info(f"Signing omnija in {app_path}...")
     all_files = []
     for top_dir, dirs, files in os.walk(app_path):
         for file_ in files:
