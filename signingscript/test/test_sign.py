@@ -286,7 +286,7 @@ async def test_sign_file_with_autograph_raises_http_error(context, mocker, to, e
 
 # get_mar_verification_key {{{1
 @pytest.mark.parametrize('format,cert_type,keyid,raises,expected', (
-    ('autograph_stage_mar384', 'dep-signing', None, False, os.path.join(BASE_DIR, 'signingscript/data', 'autograph-stage.pem')),
+    ('autograph_stage_mar384', 'dep-signing', None, False, os.path.join(BASE_DIR, 'signingscript/data', 'autograph_stage.pem')),
     ('autograph_hash_only_mar384', 'release-signing', None, False, os.path.join(BASE_DIR, 'signingscript/data', 'release_primary.pem')),
     ('autograph_hash_only_mar384', 'unknown_cert_type', None, True, None),
     ('unknown_format', 'dep', None, True, None),
