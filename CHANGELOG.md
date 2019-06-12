@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [11.0.2] - 2019-06-12
+### Fixed
+- Fixed the `autograph_stage.pem` reference in `sign.py`
+
 ## [11.0.1] - 2019-06-10
 ### Fixed
 - bugfix release to make sure vendored/ directory is properly included
