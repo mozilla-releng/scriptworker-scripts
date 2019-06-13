@@ -10,6 +10,7 @@ import os
 import pexpect
 import plistlib
 import re
+import shlex
 from shutil import copy2
 
 from scriptworker_client.aio import (
@@ -684,7 +685,8 @@ async def wrap_notarization_with_sudo(
                 "su",
                 account,
                 "-c",
-                base_cmdln + " {}".format(key_config["apple_notarization_password"]),
+                base_cmdln
+                + " {}".format(shlex.quote(key_config["apple_notarization_password"])),
             ]
             log_cmd = ["sudo", "su", account, "-c", base_cmdln + " ********"]
             futures.append(
