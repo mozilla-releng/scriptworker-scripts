@@ -350,7 +350,13 @@ async def update_keychain_search_path(config, signing_keychain):
     """
     await run_command(
         ["security", "list-keychains", "-s", signing_keychain]
-        + config.get("default_keychains", []),
+        + config.get(
+            "default_keychains",
+            [
+                f"{os.environ['HOME']}/Library/Keychains/login.keychain-db",
+                "/Library/Keychains/System.keychain",
+            ],
+        ),
         cwd=config["work_dir"],
         exception=IScriptError,
     )
