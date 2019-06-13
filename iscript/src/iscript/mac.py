@@ -331,6 +331,31 @@ async def unlock_keychain(signing_keychain, keychain_password):
         )
 
 
+async def update_keychain_search_path(config, signing_keychain):
+    """Add the signing keychain to the keychain search path.
+
+    Mac signing is failing without this, and works with it. In addition, if we
+    add both nightly and release keychains to the search path simultaneously,
+    duplicate key IDs break signing. Instead, let's run ``security
+    list-keychains -s`` every time, to make sure it's populated with the right
+    keychains.
+
+    Args:
+        config (dict): the running config
+        signing_keychain (str): the path to the signing keychain
+
+    Raises:
+        IScriptError: on failure
+
+    """
+    await run_command(
+        ["security", "list-keychains", "-s", signing_keychain]
+        + config.get("default_keychains", []),
+        cwd=config["work_dir"],
+        exception=IScriptError,
+    )
+
+
 # get_app_dir {{{1
 def get_app_dir(parent_dir):
     """Get the .app directory in a ``parent_dir``.
@@ -1034,6 +1059,7 @@ async def notarize_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
+    await update_keychain_search_path(config, key_config["signing_keychain"])
     await sign_all_apps(config, key_config, entitlements_path, all_paths)
 
     log.info("Notarizing")
@@ -1057,6 +1083,7 @@ async def notarize_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
+    await update_keychain_search_path(config, key_config["signing_keychain"])
     await create_pkg_files(config, key_config, all_paths)
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
@@ -1143,6 +1170,7 @@ async def pkg_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
+    await update_keychain_search_path(config, key_config["signing_keychain"])
     await create_pkg_files(config, key_config, all_paths)
     await copy_pkgs_to_artifact_dir(config, all_paths)
 

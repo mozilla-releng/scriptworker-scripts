@@ -4,6 +4,9 @@ taskcluster_scope_prefix: "project:releng:signing:"
 verbose: true
 local_notarization_accounts: ["account1"]
 concurrency_limit: 2
+default_keychains:
+    - "/Users/cltbld/Library/Keychains/login.keychain-db"
+    - "/Library/Keychains/System.keychain"
 mac_config:
     dep:
         notarize_type: multi_account
