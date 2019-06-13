@@ -38,7 +38,7 @@
                     "uniqueItems": true,
                     "items": {
                       "type": "string",
-                      "enum": ["macapp", "widevine", "omnija"]
+                      "enum": ["macapp", "widevine", "omnija", "autograph_widevine", "autograph_omnija"]
                     }
                   },
                   "paths": {
