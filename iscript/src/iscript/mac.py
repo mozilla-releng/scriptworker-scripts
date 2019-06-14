@@ -1116,6 +1116,7 @@ async def sign_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
+    await update_keychain_search_path(config, key_config["signing_keychain"])
     await sign_all_apps(config, key_config, entitlements_path, all_paths)
     await tar_apps(config, all_paths)
     log.info("Done signing apps.")
@@ -1141,6 +1142,7 @@ async def sign_and_pkg_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
+    await update_keychain_search_path(config, key_config["signing_keychain"])
     await sign_all_apps(config, key_config, entitlements_path, all_paths)
     await tar_apps(config, all_paths)
 
@@ -1148,6 +1150,7 @@ async def sign_and_pkg_behavior(config, task):
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
+    await update_keychain_search_path(config, key_config["signing_keychain"])
     await create_pkg_files(config, key_config, all_paths)
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
