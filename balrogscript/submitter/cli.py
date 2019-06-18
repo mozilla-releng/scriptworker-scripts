@@ -81,7 +81,7 @@ class ReleaseCreatorFileUrlsMixin(object):
 
         for channel in uniqueChannels:
             data["fileUrls"][channel]["partials"] = {}
-            for previousVersion, previousInfo in partialUpdates.iteritems():
+            for previousVersion, previousInfo in partialUpdates.items():
                 from_ = get_release_blob_name(productName, previousVersion,
                                               previousInfo["buildNumber"],
                                               self.from_suffix)
@@ -255,7 +255,7 @@ class NightlySubmitterBase(object):
                 all(p in current_data.get("partials", [])
                     for p in data.get("partials", [])))
             if skip_submission:
-                log.warn("Dated data didn't change, skipping update")
+                log.warning("Dated data didn't change, skipping update")
                 return
             # explicitly pass data version
             api.update_build(
@@ -282,7 +282,7 @@ class NightlySubmitterBase(object):
             latest_data, latest_data_version = latest.get_data()
             source_data, _ = api.get_data()
             if source_data == latest_data:
-                log.warn("Latest data didn't change, skipping update")
+                log.warning("Latest data didn't change, skipping update")
                 return
             latest.update_build(
                 product=productName,

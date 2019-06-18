@@ -1,5 +1,6 @@
 import re
-from urlparse import urlunsplit
+
+from urllib.parse import urlunsplit
 
 
 def getProductDetails(product, appVersion):

@@ -143,7 +143,7 @@ def submit_toplevel(task, config, auth0_secrets):
             version, build_number = v.split("build")
             partials[version] = {"buildNumber": build_number}
 
-    suffixes = task['payload'].get('update_line', {}).keys() or ['']
+    suffixes = list(task['payload'].get('update_line', {}).keys()) or ['']
 
     for suffix in suffixes:
         creator = create_creator(
@@ -186,7 +186,7 @@ def submit_toplevel(task, config, auth0_secrets):
 
 # usage {{{1
 def usage():
-    print >> sys.stderr, "Usage: {} CONFIG_FILE".format(sys.argv[0])
+    print("Usage: {} CONFIG_FILE".format(sys.argv[0]), file=sys.stderr)
     sys.exit(2)
 
 

@@ -1,9 +1,6 @@
 arrow
 balrogclient>=0.2.0
 cryptography
-enum34
-# Pinning functools b/c pip returns a bogus 3.2.3.post2
-functools32==3.2.3-2
 idna
 ipaddress
 jsonschema
@@ -11,6 +8,5 @@ mar
 pyasn1
 python-dateutil
 requests
-six
 # Pinning towncrier b/c towncrier 18.6.0 drops py2 support
 towncrier==18.5.0
