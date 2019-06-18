@@ -6,6 +6,35 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[6.0.0] = (2019-06-18)
+----------------------
+
+Added
+~~~~~
+
+- Python 3.6 and 3.7 support
+
+Removed
+~~~~~~~
+
+- Python 2.7 support
+
+[5.0.0] = (2019-04-04)
+----------------------
+
+Removed
+~~~~~~~
+
+- Basic auth support
+
+[4.0.0] = (2019-03-23)
+----------------------
+
+Added
+~~~~~
+
+- Auth0 support
+
 [3.5.0] = (2019-01-02)
 ----------------------
 
