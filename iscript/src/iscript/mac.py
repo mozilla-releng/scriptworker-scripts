@@ -271,16 +271,19 @@ async def sign_libclearkey(contents_dir, sign_command, app_path):
 
 
 # verify_app_signature
-async def verify_app_signature(app):
+async def verify_app_signature(key_config, app):
     """Verify the app signature.
 
     Args:
+        key_config (dict): the config for this signing key
         app (App): the app to verify
 
     Raises:
         IScriptError: on failure
 
     """
+    if not key_config.get("verify_mac_signature", True):
+        return
     required_attrs = ["parent_dir", "app_path"]
     app.check_required_attrs(required_attrs)
     await run_command(
@@ -581,7 +584,7 @@ async def sign_all_apps(config, key_config, entitlements_path, all_paths):
     # verify signatures
     futures = []
     for app in all_paths:
-        futures.append(asyncio.ensure_future(verify_app_signature(app)))
+        futures.append(asyncio.ensure_future(verify_app_signature(key_config, app)))
     await raise_future_exceptions(futures)
 
 

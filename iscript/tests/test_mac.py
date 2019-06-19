@@ -25,6 +25,10 @@ async def noop_async(*args, **kwargs):
     pass
 
 
+async def fail_async(*args, **kwargs):
+    raise IScriptError("fail_async exception")
+
+
 def touch(path):
     parent_dir = os.path.dirname(path)
     makedirs(parent_dir)
@@ -153,6 +157,17 @@ async def test_sign_app(mocker, tmpdir, sign_with_entitlements, has_clearkey):
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="main")
     await mac.sign_app(key_config, app_path, entitlements_path)
+
+
+# verify_app_signature {{{1
+@pytest.mark.asyncio
+async def test_verify_app_signature_noop(mocker):
+    """``verify_app_signature`` is noop when ``verify_mac_signature`` is False."""
+
+    key_config = {"verify_mac_signature": False}
+    # If we actually run_command, raise to show we're doing too much
+    mocker.patch.object(mac, "run_command", new=fail_async)
+    await mac.verify_app_signature(key_config, mac.App())
 
 
 # unlock_keychain {{{1
