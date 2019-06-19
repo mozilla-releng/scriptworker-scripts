@@ -270,7 +270,7 @@ async def sign_libclearkey(contents_dir, sign_command, app_path):
             )
 
 
-# verify_app_signature
+# verify_app_signature {{{1
 async def verify_app_signature(key_config, app):
     """Verify the app signature.
 
@@ -969,6 +969,9 @@ async def create_pkg_files(config, key_config, all_paths):
         set_app_path_and_name(app)
         app.pkg_path = app.app_path.replace(".app", ".pkg")
         app.pkg_name = os.path.basename(app.pkg_path)
+        pkg_opts = []
+        if key_config.get("pkg_cert_id"):
+            pkg_opts = ["--sign", key_config["pkg_cert_id"]]
         futures.append(
             asyncio.ensure_future(
                 semaphore_wrapper(
@@ -977,8 +980,6 @@ async def create_pkg_files(config, key_config, all_paths):
                         [
                             "sudo",
                             "pkgbuild",
-                            "--sign",
-                            key_config["pkg_cert_id"],
                             "--keychain",
                             key_config["signing_keychain"],
                             "--install-location",
@@ -986,7 +987,8 @@ async def create_pkg_files(config, key_config, all_paths):
                             "--component",
                             app.app_path,
                             app.pkg_path,
-                        ],
+                        ]
+                        + pkg_opts,
                         cwd=app.parent_dir,
                         exception=IScriptError,
                     ),

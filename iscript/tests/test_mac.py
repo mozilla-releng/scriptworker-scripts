@@ -843,9 +843,11 @@ async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
 
 
 # create_pkg_files {{{1
-@pytest.mark.parametrize("raises", (True, False))
+@pytest.mark.parametrize(
+    "pkg_cert_id, raises", ((None, True), (None, False), ("pkg.cert", False))
+)
 @pytest.mark.asyncio
-async def test_create_pkg_files(mocker, raises):
+async def test_create_pkg_files(mocker, pkg_cert_id, raises):
     """``create_pkg_files`` runs pkgbuild concurrently for each ``App``, and
     raises any exceptions hit along the way.
 
@@ -856,7 +858,7 @@ async def test_create_pkg_files(mocker, raises):
         if raises:
             raise IScriptError("foo")
 
-    key_config = {"pkg_cert_id": "pkg.cert", "signing_keychain": "signing.keychain"}
+    key_config = {"pkg_cert_id": pkg_cert_id, "signing_keychain": "signing.keychain"}
     config = {"concurrency_limit": 2}
     all_paths = []
     for i in range(3):
