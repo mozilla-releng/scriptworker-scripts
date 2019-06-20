@@ -711,6 +711,8 @@ async def wrap_notarization_with_sudo(
                     '"{}"'.format(bundle_id),
                     "-u",
                     key_config["apple_notarization_account"],
+                    "--asc-provider",
+                    key_config["apple_asc_provider"],
                     "--password",
                 ]
             )
@@ -768,6 +770,8 @@ async def notarize_no_sudo(work_dir, key_config, zip_path):
         bundle_id,
         "-u",
         key_config["apple_notarization_account"],
+        "--asc-provider",
+        key_config["apple_asc_provider"],
         "--password",
     ]
     log_cmd = base_cmd + ["********"]

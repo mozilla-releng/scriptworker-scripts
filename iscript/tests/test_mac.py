@@ -573,6 +573,7 @@ async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
         "base_bundle_id": "org.iscript.test",
         "apple_notarization_account": "test_apple_account",
         "apple_notarization_password": pw,
+        "apple_asc_provider": "apple_asc_provider",
     }
     all_paths = []
     expected = {}
@@ -635,6 +636,7 @@ async def test_notarize_no_sudo(mocker, tmpdir, raises):
         "base_bundle_id": "org.iscript.test",
         "apple_notarization_account": "test_apple_account",
         "apple_notarization_password": pw,
+        "apple_asc_provider": "apple_asc_provider",
     }
     expected = {log_path: log_path}
 
@@ -732,6 +734,7 @@ async def test_poll_all_notarization_status(mocker, tmpdir, poll_uuids, raises):
     key_config = {
         "apple_notarization_account": "test_apple_account",
         "apple_notarization_password": "test_apple_password",
+        "apple_asc_provider": "apple_asc_provider",
         "notarization_poll_timeout": 1,
     }
 
@@ -970,6 +973,7 @@ async def test_sign_behavior(mocker, tmpdir):
                 "pkg_cert_id": "cert_id",
                 "apple_notarization_account": "apple_account",
                 "apple_notarization_password": "apple_password",
+                "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
             }
         },
@@ -1029,6 +1033,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
                 "pkg_cert_id": "cert_id",
                 "apple_notarization_account": "apple_account",
                 "apple_notarization_password": "apple_password",
+                "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
             }
         },
@@ -1093,6 +1098,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type):
                 "pkg_cert_id": "cert_id",
                 "apple_notarization_account": "apple_account",
                 "apple_notarization_password": "apple_password",
+                "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
             }
         },
@@ -1155,6 +1161,7 @@ async def test_pkg_behavior(mocker, tmpdir):
                 "pkg_cert_id": "cert_id",
                 "apple_notarization_account": "apple_account",
                 "apple_notarization_password": "apple_password",
+                "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
             }
         },
