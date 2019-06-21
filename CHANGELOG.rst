@@ -6,6 +6,14 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.4.7] = (2019-06-21)
+----------------------
+
+Fixed
+~~~~~
+
+- Android-Components couldn't ship 1.0.0
+
 [8.4.6] = (2019-05-15)
 ----------------------
 

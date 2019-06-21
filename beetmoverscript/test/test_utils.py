@@ -441,25 +441,27 @@ def test_beetmover_template_args_generation_release_is_jar(context):
         'artifact_id': 'fenix-megazord-forUnitTests',
         'is_jar': True,
         'template_key': 'maven_Fake',
-        'version': '0.26.20990205110000',
+        'version': '0.26.0',
     }
 
     template_args = generate_beetmover_template_args(context)
     assert template_args == expected_template_args
 
 
-@pytest.mark.parametrize('branch, version, artifact_id, build_id, expected_version, raises', ((
-    'mozilla-central', '63.0a1', 'geckoview-nightly-x86', '20181231120000', '63.0.20181231120000', False,
+@pytest.mark.parametrize('product, branch, version, artifact_id, build_id, expected_version, raises', ((
+    'geckoview', 'mozilla-central', '63.0a1', 'geckoview-nightly-x86', '20181231120000', '63.0.20181231120000', False,
 ), (
-    'mozilla-beta', '63.0b2', 'geckoview-beta-armeabi-v7a', '20181231120000', '63.0.20181231120000', False,
+    'geckoview', 'mozilla-beta', '63.0b2', 'geckoview-beta-armeabi-v7a', '20181231120000', '63.0.20181231120000', False,
 ), (
-    'mozilla-release', '63.0', 'geckoview-arm64-v8a', '20181231120000', '63.0.20181231120000', False,
+    'geckoview', 'mozilla-release', '63.0', 'geckoview-arm64-v8a', '20181231120000', '63.0.20181231120000', False,
 ), (
-    '', '0.25.1', 'browser-session', None, None, True,
+    'components', '', '0.25.1', 'browser-session', None, '0.25.1', False,
 ), (
-    '', '1.0', 'browser-session', None, None, True,
+    'components', '', '1.0.0', 'browser-session', None, '1.0.0', False,
+), (
+    'components', '', '1.0', 'browser-session', None, None, True,
 )))
-def test_beetmover_template_args_maven(context, branch, version, artifact_id,
+def test_beetmover_template_args_maven(product, context, branch, version, artifact_id,
                                        build_id, expected_version, raises):
     context.bucket = 'maven'
     context.action = 'push-to-maven'
@@ -467,12 +469,12 @@ def test_beetmover_template_args_maven(context, branch, version, artifact_id,
     context.task['payload']['artifact_id'] = artifact_id
     context.release_props['branch'] = branch
     context.release_props['buildid'] = build_id
-    context.release_props['appName'] = 'geckoview'
+    context.release_props['appName'] = product
 
     if not raises:
         assert generate_beetmover_template_args(context) == {
             'artifact_id': artifact_id,
-            'template_key': 'maven_geckoview',
+            'template_key': 'maven_{}'.format(product),
             'is_jar': None,
             'version': expected_version,
         }
@@ -481,12 +483,12 @@ def test_beetmover_template_args_maven(context, branch, version, artifact_id,
             generate_beetmover_template_args(context)
 
 
-@pytest.mark.parametrize('branch, version, artifact_id, expected_version', ((
-    '', '1.0.1-SNAPSHOT', 'browser-session', '1.0.1'
+@pytest.mark.parametrize('product, branch, version, artifact_id, expected_version', ((
+    'components', '', '1.0.1-SNAPSHOT', 'browser-session', '1.0.1'
 ), (
-    '', '0.25.2-SNAPSHOT', 'browser-session', '0.25.2'
+    'components', '', '0.25.2-SNAPSHOT', 'browser-session', '0.25.2'
 )))
-def test_beetmover_template_args_maven_snapshot(context, branch, version, artifact_id,
+def test_beetmover_template_args_maven_snapshot(product, context, branch, version, artifact_id,
                                                 expected_version):
     context.bucket = 'maven'
     context.action = 'push-to-maven'
@@ -495,11 +497,11 @@ def test_beetmover_template_args_maven_snapshot(context, branch, version, artifa
     context.release_props['branch'] = branch
     # there's inherited buildid here from the context fixture
     del context.release_props['buildid']
-    context.release_props['appName'] = 'geckoview'
+    context.release_props['appName'] = product
 
     assert generate_beetmover_template_args(context) == {
         'artifact_id': artifact_id,
-        'template_key': 'maven_geckoview',
+        'template_key': 'maven_{}'.format(product),
         'version': expected_version,
         'snapshot_version': version,
         'is_jar': None,

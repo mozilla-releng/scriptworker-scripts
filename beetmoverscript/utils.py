@@ -180,16 +180,23 @@ def _generate_beetmover_template_args_maven(task, release_props):
         'template_key': 'maven_{}'.format(release_props['appName']),
     }
 
-    # FIXME: this is a temporarily solution while we sanitize the payload
-    # under https://github.com/mozilla-releng/beetmoverscript/issues/196
-    if 'SNAPSHOT' in task['payload']['version']:
-        payload_version = MavenVersion.parse(task['payload']['version'])
-    else:
+    # Geckoview follows the FirefoxVersion pattern
+    if release_props.get('appName') == 'geckoview':
         payload_version = FirefoxVersion.parse(task['payload']['version'])
-    # Change version number to major.minor.buildId because that's what the build task produces
-    version = [payload_version.major_number,
-               payload_version.minor_number,
-               release_props.get('buildid', payload_version.patch_number)]
+        # Change version number to major.minor.buildId because that's what the build task produces
+        version = [
+            payload_version.major_number,
+            payload_version.minor_number,
+            release_props['buildid'],
+        ]
+    else:
+        payload_version = MavenVersion.parse(task['payload']['version'])
+        version = [
+            payload_version.major_number,
+            payload_version.minor_number,
+            payload_version.patch_number,
+        ]
+
     if any(number is None for number in version):
         raise TaskVerificationError('At least one digit is undefined. Got: {}'.format(version))
     tmpl_args['version'] = '.'.join(str(n) for n in version)
