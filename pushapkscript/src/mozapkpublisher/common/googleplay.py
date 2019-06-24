@@ -96,7 +96,9 @@ class EditService(object):
                 error_content = json.loads(e.content)
                 errors = error_content['error']['errors']
                 if len(errors) == 1 and errors[0]['reason'] == 'apkUpgradeVersionConflict':
-                    logger.warn('APK "{}" has already been uploaded on Google Play. Skipping...'.format(apk_path))
+                    logger.warning(
+                        'APK "{}" has already been uploaded on Google Play. Skipping...'.format(apk_path)
+                    )
                     return
             raise
 
