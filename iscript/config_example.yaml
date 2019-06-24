@@ -7,6 +7,7 @@ concurrency_limit: 2
 default_keychains:
     - "/Users/cltbld/Library/Keychains/login.keychain-db"
     - "/Library/Keychains/System.keychain"
+dmg_prefix: dep1
 mac_config:
     dep:
         notarize_type: multi_account
