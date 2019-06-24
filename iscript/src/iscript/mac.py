@@ -457,7 +457,7 @@ async def extract_all_apps(config, all_paths):
             )
         elif app.orig_path.endswith(".dmg"):
             unpack_mountpoint = os.path.join(
-                "/tmp", f"{config['dmg_prefix']}-{counter}-unpack"
+                "/tmp", f"{config.get('dmg_prefix', 'dmg')}-{counter}-unpack"
             )
             futures.append(
                 asyncio.ensure_future(
