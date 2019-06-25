@@ -1,4 +1,3 @@
-import json
 import mozapkpublisher
 import os
 import pytest
@@ -8,13 +7,15 @@ from unittest.mock import create_autospec, MagicMock
 
 from tempfile import NamedTemporaryFile
 
-from mozapkpublisher.common import googleplay, store_l10n
+from mozapkpublisher.common import googleplay
 from mozapkpublisher.common.apk.checker import AnyPackageNamesCheck
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
-from mozapkpublisher.push_apk import push_apk, main, _create_or_update_whats_new, \
-    _get_ordered_version_codes, _split_apk_metadata_per_package_name, StoreGooglePlayStrings, FileGooglePlayStrings
-from mozapkpublisher.test.common.test_store_l10n import set_translations_per_google_play_locale_code, \
-    DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE
+from mozapkpublisher.push_apk import (
+    push_apk,
+    main,
+    _get_ordered_version_codes,
+    _split_apk_metadata_per_package_name,
+)
 from unittest.mock import patch
 
 
@@ -86,7 +87,6 @@ def set_up_mocks(monkeypatch_, edit_service_mock_):
 
     monkeypatch_.setattr(googleplay, 'EditService', lambda _, __, ___, commit, contact_google_play: edit_service_mock_)
     monkeypatch_.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', _metadata)
-    set_translations_per_google_play_locale_code(monkeypatch_)
 
 
 def test_invalid_rollout_percentage(edit_service_mock, monkeypatch):
@@ -132,59 +132,6 @@ def test_upload_apk(edit_service_mock, monkeypatch):
     edit_service_mock.commit_transaction.assert_called_once_with()
 
 
-def test_upload_apk_with_locales_updated_from_l10n_store(edit_service_mock, monkeypatch):
-    set_up_mocks(monkeypatch, edit_service_mock)
-    monkeypatch.setattr(store_l10n, '_translate_moz_locate_into_google_play_one', lambda locale: 'es-US' if locale == 'es-MX' else locale)
-
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck(), google_play_strings=StoreGooglePlayStrings())
-
-    expected_locales = (
-        ('es-US', 'Navegador web Firefox', 'Corto', 'Descripcion larga', 'Mire a esta caracteristica'),
-        ('en-GB', 'Firefox for Android', 'Short', 'Long description', 'Check out this cool feature!'),
-        ('en-US', 'Firefox for Android', 'Short', 'Long description', 'Check out this cool feature!'),
-    )
-
-    for (locale, title, short_description, full_description, whats_new) in expected_locales:
-        edit_service_mock.update_listings.assert_any_call(
-            locale, full_description=full_description, short_description=short_description, title=title
-        )
-
-        for version_code in range(2):
-            edit_service_mock.update_whats_new.assert_any_call(locale, str(version_code), whats_new=whats_new)
-
-    assert edit_service_mock.update_listings.call_count == 3
-    assert edit_service_mock.update_whats_new.call_count == 6
-    edit_service_mock.commit_transaction.assert_called_once_with()
-
-
-def test_upload_apk_without_locales_updated(edit_service_mock, monkeypatch):
-    set_up_mocks(monkeypatch, edit_service_mock)
-
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck())
-
-    assert edit_service_mock.upload_apk.call_count == 2
-    assert edit_service_mock.update_track.call_count == 1
-    assert edit_service_mock.commit_transaction.call_count == 1
-
-    assert edit_service_mock.update_listings.call_count == 0
-    assert edit_service_mock.update_whats_new.call_count == 0
-
-
-def test_upload_apk_with_locales_updated_from_file(edit_service_mock, monkeypatch):
-    set_up_mocks(monkeypatch, edit_service_mock)
-
-    with NamedTemporaryFile('r+') as f:
-        json.dump(DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE, f)
-        f.seek(0)
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck(), google_play_strings=FileGooglePlayStrings(f))
-
-    assert edit_service_mock.upload_apk.call_count == 2
-    assert edit_service_mock.update_track.call_count == 1
-    assert edit_service_mock.commit_transaction.call_count == 1
-
-    assert edit_service_mock.update_listings.call_count == 3
-
-
 def test_get_distinct_package_name_apk_metadata():
     one_package_apks_metadata = {
         'fennec-1.apk': {'package_name': 'org.mozilla.firefox'},
@@ -223,41 +170,6 @@ def test_get_distinct_package_name_apk_metadata():
     assert expected_two_package_metadata == two_package_metadata
 
 
-def test_create_or_update_whats_new(edit_service_mock, monkeypatch):
-    # Don't update Nightly
-    _create_or_update_whats_new(
-        edit_service_mock, 'org.mozilla.fennec_aurora', '1',
-        DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE
-    )
-    assert edit_service_mock.update_whats_new.call_count == 0
-
-    # Update anything else than nightly
-    _create_or_update_whats_new(
-        edit_service_mock, 'org.mozilla.firefox_beta', '1',
-        DUMMY_TRANSLATIONS_PER_GOOGLE_PLAY_LOCALE
-    )
-    assert edit_service_mock.update_whats_new.call_count == 3
-
-
-def test_do_not_contact_google_play_flag_does_not_request_google_play(monkeypatch):
-    monkeypatch.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', lambda *args, **kwargs: {
-        apk_arm.name: {
-            'package_name': 'org.mozilla.firefox',
-            'version_code': '0',
-        },
-        apk_x86.name: {
-            'package_name': 'org.mozilla.firefox',
-            'version_code': '1',
-        },
-    })
-    set_translations_per_google_play_locale_code(monkeypatch)
-
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck(), contact_google_play=False)
-    # Checks are done by the fact that Google Play doesn't error out. In fact, we
-    # provide dummy data. If Google Play was reached, it would have failed at the
-    # authentication step
-
-
 def test_push_apk_tunes_down_logs(monkeypatch):
     main_logging_mock = MagicMock()
     monkeypatch.setattr('mozapkpublisher.push_apk.main_logging', main_logging_mock)
@@ -294,7 +206,6 @@ def test_main(monkeypatch):
         '--track', 'rollout',
         '--service-account', 'foo@developer.gserviceaccount.com',
         '--credentials', file,
-        '--no-gp-string-update',
         '--skip-check-package-names',
         file
     ]

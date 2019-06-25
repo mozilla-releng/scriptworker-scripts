@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.0.0] - TBD
+### Removed
+* `push_apk.py` does not upload strings (like `description` or `whatsnew`) because https://l10n.mozilla-community.org/stores_l10n/ is about to be removed. `update_apk_description.py` remains in case we still want a manual upload while `stores_l10n` is around
+
+
 ## [3.1.0] - 2019-05-28
 ### Added
 * Fennec ARM64 push on Release.
