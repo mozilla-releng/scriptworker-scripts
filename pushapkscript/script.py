@@ -38,21 +38,10 @@ async def async_main(context):
         jarsigner.verify(context, publish_config, apk_path)
         manifest.verify(product_config, apk_path)
 
-    if product_config['update_google_play_strings']:
-        log.info('Finding whether Google Play strings can be updated...')
-        strings_path = googleplay.get_google_play_strings_path(
-            artifacts_per_task_id, failed_artifacts_per_task_id
-        )
-    else:
-        log.warning('This product does not upload strings automatically. Skipping Google Play strings search.')
-        strings_path = None
-
     log.info('Delegating publication to mozapkpublisher...')
     with contextlib.ExitStack() as stack:
         files = [stack.enter_context(open(apk_file_name)) for apk_file_name in all_apks_paths]
-        strings_file = stack.enter_context(open(strings_path)) if strings_path is not None else None
-        googleplay.publish_to_googleplay(context.task['payload'], product_config, publish_config, files, contact_google_play,
-                                         strings_file)
+        googleplay.publish_to_googleplay(context.task['payload'], product_config, publish_config, files, contact_google_play)
 
     log.info('Done!')
 

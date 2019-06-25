@@ -2,13 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.0.0] - TBD
+
+### Removed
+* Google Play strings publication
+
 ## [2.1.0] - 2019-06-06
 
 ### Changes
 * In the task payload, `google_play_track` now explicitly overrides the track in Google Play, and `channel` is required to disambiguate between apps
 
 
-## [2.0.0] - 2019-06-03 
+## [2.0.0] - 2019-06-03
 
 ### Changes
 * Structure of config to support both cases of "channels map to individual apps" and "channels map to Google Play tracks within a single app"
@@ -67,7 +72,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.12.0] - 2019-01-09
 
 ### Added
-* Support pushing [`fenix`](https://github.com/mozilla-mobile/fenix) to Google Play 
+* Support pushing [`fenix`](https://github.com/mozilla-mobile/fenix) to Google Play
 
 ## [0.11.0] - 2019-01-02
 
@@ -125,7 +130,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.5.0] - 2018-03-19
 
-### Changed 
+### Changed
 * `script.async_main()` relies on scriptworker (>= 10.2.0) to:
  * initialize context, config, and task
  * validate the task schema
@@ -208,7 +213,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.1.4] - 2016-11-09
 
-### Changed 
+### Changed
 * Mute debug logs of oauth2client
 
 

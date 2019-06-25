@@ -16,14 +16,14 @@ from pushapkscript.test.helpers.mock_file import mock_open
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('android_product, update_google_play_strings, expected_strings_call_count', (
-    ('aurora', True, 1),
-    ('beta', True, 1),
-    ('release', True, 1),
-    ('dep', True, 1),
-    ('focus', False, 0),
+@pytest.mark.parametrize('android_product', (
+    'aurora',
+    'beta',
+    'release',
+    'dep',
+    'focus',
 ))
-async def test_async_main(monkeypatch, android_product, update_google_play_strings, expected_strings_call_count):
+async def test_async_main(monkeypatch, android_product):
     monkeypatch.setattr(
         artifacts,
         'get_upstream_artifacts_full_paths_per_task_id',
@@ -36,20 +36,10 @@ async def test_async_main(monkeypatch, android_product, update_google_play_strin
     monkeypatch.setattr(manifest, 'verify', lambda _, __: None)
     monkeypatch.setattr(task, 'extract_android_product_from_scopes', lambda _: android_product)
     monkeypatch.setattr(pushapkscript.script, '_get_product_config', lambda _, __: {
-        'update_google_play_strings': update_google_play_strings,
         'apps': {
             android_product: {}
         }
     })
-
-    google_play_strings_call_counter = (n for n in range(0, 2))
-
-    def google_play_strings_call(_, __):
-        string_path = None if android_product == 'focus' else '/some/path.json'
-        next(google_play_strings_call_counter)
-        return string_path
-
-    monkeypatch.setattr(googleplay, 'get_google_play_strings_path', google_play_strings_call)
 
     context = MagicMock()
     context.config = {
@@ -61,18 +51,13 @@ async def test_async_main(monkeypatch, android_product, update_google_play_strin
         }
     }
 
-    def assert_google_play_call(_, __, ___, all_apks_files, ____, google_play_strings_file):
+    def assert_google_play_call(_, __, ___, all_apks_files, ____):
         assert sorted([file.name for file in all_apks_files]) == ['/some/path/to/another.apk', '/some/path/to/one.apk', '/some/path/to/yet_another.apk']
-        if android_product == 'focus':
-            assert google_play_strings_file is None
-        else:
-            assert google_play_strings_file.name == '/some/path.json'
 
     monkeypatch.setattr(googleplay, 'publish_to_googleplay', assert_google_play_call)
 
     with patch('pushapkscript.script.open', new=mock_open):
         await async_main(context)
-    assert next(google_play_strings_call_counter) == expected_strings_call_count
 
 
 def test_get_product_config_validation():

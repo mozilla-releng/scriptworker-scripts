@@ -2,14 +2,12 @@ class TaskGenerator(object):
     def __init__(self, rollout_percentage=None, should_commit_transaction=False):
         self.arm_task_id = 'fwk3elTDSe6FLoqg14piWg'
         self.x86_task_id = 'PKP2v4y0RdqOuLCqhevD2A'
-        self.google_play_strings_task_id = 'bgP9T6AnTpyTVsNA7M3OnA'
         self.should_commit_transaction = should_commit_transaction
         self.rollout_percentage = rollout_percentage
 
     def generate_task(self, product_name, channel=None):
         arm_task_id = self.arm_task_id
         x86_task_id = self.x86_task_id
-        strings_task_id = self.google_play_strings_task_id
         task = {
           "provisionerId": "some-provisioner-id",
           "workerType": "some-worker-type",
@@ -26,16 +24,11 @@ class TaskGenerator(object):
             "upstreamArtifacts": [{
               "paths": ["public/build/target.apk"],
               "taskId": arm_task_id,
-              "taskType": "signing"
+              "taskType": "signing",
             }, {
               "paths": ["public/build/target.apk"],
               "taskId": x86_task_id,
-              "taskType": "signing"
-            }, {
-              "paths": ["public/google_play_strings.json"],
-              "taskId": strings_task_id,
-              "taskType": "build",
-              "optional": True
+              "taskType": "signing",
             }],
           },
         }

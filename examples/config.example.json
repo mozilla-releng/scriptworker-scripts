@@ -3,7 +3,6 @@
 
     "products": [{
         "product_names": ["aurora", "beta", "release"],
-        "update_google_play_strings": true,
         "digest_algorithm": "SHA1",
         "use_scope_for_channel": true,
         "apps": {
@@ -31,7 +30,6 @@
         }
     },{
         "product_names": ["focus"],
-        "update_google_play_strings": false,
         "digest_algorithm": "SHA-256",
         "skip_check_ordered_version_codes": true,
         "skip_checks_fennec": true,
@@ -44,7 +42,6 @@
         }
     },{
         "product_names": ["fenix"],
-        "update_google_play_strings": false,
         "digest_algorithm": "SHA-256",
         "skip_check_multiple_locales": true,
         "skip_check_same_locales": true,

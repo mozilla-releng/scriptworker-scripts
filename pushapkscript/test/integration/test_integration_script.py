@@ -6,8 +6,6 @@ import subprocess
 import tempfile
 import unittest
 
-from mozapkpublisher.push_apk import NoGooglePlayStrings, FileGooglePlayStrings
-
 from pushapkscript.script import main
 from pushapkscript.test.helpers.mock_file import mock_open, MockFile
 from pushapkscript.test.helpers.task_generator import TaskGenerator
@@ -58,7 +56,6 @@ class ConfigFileGenerator(object):
             "jarsigner_key_store": keystore_path,
             "products": [{
                 "product_names": ["aurora", "beta", "release"],
-                "update_google_play_strings": True,
                 "digest_algorithm": "SHA1",
                 "skip_check_package_names": True,
                 "use_scope_for_channel": True,
@@ -99,7 +96,6 @@ class ConfigFileGenerator(object):
             "jarsigner_key_store": keystore_path,
             "products": [{
                 "product_names": ["focus"],
-                "update_google_play_strings": True,
                 "digest_algorithm": "SHA1",
                 "skip_check_ordered_version_codes": True,
                 "skip_checks_fennec": True,
@@ -124,7 +120,6 @@ class ConfigFileGenerator(object):
             "jarsigner_key_store": keystore_path,
             "products": [{
                 "product_names": ["fenix"],
-                "update_google_play_strings": False,
                 "digest_algorithm": "SHA1",
                 "skip_check_multiple_locales": True,
                 "skip_check_same_locales": True,
@@ -220,7 +215,6 @@ class MainTest(unittest.TestCase):
             expected_package_names=['org.mozilla.fennec_aurora'],
             skip_check_package_names=False,
             rollout_percentage=None,
-            google_play_strings=unittest.mock.ANY,
             commit=False,
             contact_google_play=True,
             skip_check_multiple_locales=False,
@@ -228,8 +222,6 @@ class MainTest(unittest.TestCase):
             skip_check_same_locales=False,
             skip_checks_fennec=False,
         )
-        _, args = push_apk.call_args
-        assert isinstance(args['google_play_strings'], NoGooglePlayStrings)
 
     @unittest.mock.patch('pushapkscript.googleplay.push_apk')
     def test_main_focus_style(self, push_apk):
@@ -253,7 +245,6 @@ class MainTest(unittest.TestCase):
             expected_package_names=['org.mozilla.focus', 'org.mozilla.klar'],
             skip_check_package_names=False,
             rollout_percentage=None,
-            google_play_strings=unittest.mock.ANY,
             commit=False,
             contact_google_play=True,
             skip_check_multiple_locales=False,
@@ -261,8 +252,6 @@ class MainTest(unittest.TestCase):
             skip_check_same_locales=False,
             skip_checks_fennec=True,
         )
-        _, args = push_apk.call_args
-        assert isinstance(args['google_play_strings'], NoGooglePlayStrings)
 
     @unittest.mock.patch('pushapkscript.googleplay.push_apk')
     def test_main_fenix_style(self, push_apk):
@@ -286,7 +275,6 @@ class MainTest(unittest.TestCase):
             expected_package_names=['org.mozilla.fenix.nightly'],
             skip_check_package_names=False,
             rollout_percentage=None,
-            google_play_strings=unittest.mock.ANY,
             commit=False,
             contact_google_play=True,
             skip_check_multiple_locales=True,
@@ -294,8 +282,6 @@ class MainTest(unittest.TestCase):
             skip_check_same_locales=True,
             skip_checks_fennec=True,
         )
-        _, args = push_apk.call_args
-        assert isinstance(args['google_play_strings'], NoGooglePlayStrings)
 
     @unittest.mock.patch('pushapkscript.googleplay.push_apk')
     def test_main_downloads_verifies_signature_and_gives_the_right_config_to_mozapkpublisher(self, push_apk):
@@ -319,7 +305,6 @@ class MainTest(unittest.TestCase):
             expected_package_names=['org.mozilla.fennec_aurora'],
             skip_check_package_names=False,
             rollout_percentage=None,
-            google_play_strings=unittest.mock.ANY,
             commit=False,
             contact_google_play=True,
             skip_check_multiple_locales=False,
@@ -327,8 +312,6 @@ class MainTest(unittest.TestCase):
             skip_check_same_locales=False,
             skip_checks_fennec=False,
         )
-        _, args = push_apk.call_args
-        assert isinstance(args['google_play_strings'], NoGooglePlayStrings)
 
     @unittest.mock.patch('pushapkscript.googleplay.push_apk')
     def test_main_allows_rollout_percentage(self, push_apk):
@@ -352,7 +335,6 @@ class MainTest(unittest.TestCase):
             expected_package_names=['org.mozilla.fennec_aurora'],
             skip_check_package_names=False,
             rollout_percentage=25,
-            google_play_strings=unittest.mock.ANY,
             commit=False,
             contact_google_play=True,
             skip_check_multiple_locales=False,
@@ -360,22 +342,15 @@ class MainTest(unittest.TestCase):
             skip_check_same_locales=False,
             skip_checks_fennec=False,
         )
-        _, args = push_apk.call_args
-        assert isinstance(args['google_play_strings'], NoGooglePlayStrings)
 
     @unittest.mock.patch('pushapkscript.googleplay.push_apk')
-    def test_main_allows_google_play_strings_file_and_commit_transaction(self, push_apk):
+    def test_main_allows_commit_transaction(self, push_apk):
         task_generator = TaskGenerator(should_commit_transaction=True)
 
         self.write_task_file(task_generator.generate_task('aurora'))
 
         self._copy_all_apks_to_test_temp_dir(task_generator)
         self.keystore_manager.add_certificate('nightly')
-        self._copy_single_file_to_test_temp_dir(
-            task_id=task_generator.google_play_strings_task_id,
-            origin_file_name='google_play_strings.json',
-            destination_path='public/google_play_strings.json',
-        )
         main(config_path=self.config_generator.generate_fennec_config())
 
         push_apk.assert_called_with(
@@ -391,7 +366,6 @@ class MainTest(unittest.TestCase):
             expected_package_names=['org.mozilla.fennec_aurora'],
             skip_check_package_names=False,
             rollout_percentage=None,
-            google_play_strings=unittest.mock.ANY,
             commit=True,
             contact_google_play=True,
             skip_check_multiple_locales=False,
@@ -399,9 +373,3 @@ class MainTest(unittest.TestCase):
             skip_check_same_locales=False,
             skip_checks_fennec=False,
         )
-        _, args = push_apk.call_args
-        google_play_strings = args['google_play_strings']
-        assert isinstance(google_play_strings, FileGooglePlayStrings)
-        assert google_play_strings.file.name == '{}/work/cot/{}/public/google_play_strings.json'.format(
-                self.test_temp_dir, task_generator.google_play_strings_task_id
-            )
