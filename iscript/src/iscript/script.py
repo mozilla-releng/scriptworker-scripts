@@ -4,6 +4,7 @@ import logging
 import os
 
 from scriptworker_client.client import sync_main
+from scriptworker_client.utils import run_command
 from iscript.exceptions import IScriptError
 from iscript.mac import (
     notarize_behavior,
@@ -25,6 +26,7 @@ async def async_main(config, task):
         task (dict): the running task.
 
     """
+    await run_command(["hostname"])
     base_key = "mac_config"  # We may support ios_config someday
     key_config = get_key_config(config, task, base_key=base_key)
     behavior = task["payload"].get("behavior", "mac_sign")
