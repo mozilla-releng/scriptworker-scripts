@@ -32,7 +32,7 @@ async def test_async_main(monkeypatch):
 @pytest.mark.parametrize('is_allowed', (True, False))
 def test_log_warning_forewords(caplog, monkeypatch, is_allowed):
     monkeypatch.setattr(task, 'is_allowed_to_push_to_snap_store', lambda _: is_allowed)
-    _log_warning_forewords(context=MagicMock())
+    _log_warning_forewords(channel='test-channel'))
 
     if is_allowed:
         assert not caplog.records

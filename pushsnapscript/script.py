@@ -13,16 +13,18 @@ log = logging.getLogger(__name__)
 
 async def async_main(context):
     context.task = client.get_task(context.config)
-    _log_warning_forewords(context)
 
     # TODO Sanity checks on the file
     snap_file_path = artifacts.get_snap_file_path(context)
     channel = task.get_snap_channel(context.task)
+
+    _log_warning_forewords(channel)
+
     snap_store.push(context, snap_file_path, channel)
 
 
-def _log_warning_forewords(context):
-    if not task.is_allowed_to_push_to_snap_store(context):
+def _log_warning_forewords(channel):
+    if not task.is_allowed_to_push_to_snap_store(channel):
         log.warning('You do not have the rights to reach Snap store. *All* requests will be mocked.')
 
 

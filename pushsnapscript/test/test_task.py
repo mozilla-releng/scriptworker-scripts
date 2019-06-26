@@ -1,7 +1,6 @@
 import pytest
 
 from scriptworker.exceptions import TaskVerificationError
-from unittest.mock import MagicMock
 
 from pushsnapscript.task import get_snap_channel, is_allowed_to_push_to_snap_store
 
@@ -36,7 +35,3 @@ def test_get_snap_channel(raises, scopes, expected):
 ))
 def test_is_allowed_to_push_to_snap_store(channel, expected):
     assert is_allowed_to_push_to_snap_store(channel=channel) == expected
-
-    context = MagicMock()
-    context.task = {'scopes': ['project:releng:snapcraft:firefox:{}'.format(channel)]}
-    assert is_allowed_to_push_to_snap_store(context=context) == expected
