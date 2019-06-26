@@ -26,7 +26,6 @@ _VERSION_TYPES_PER_CHANNEL = {
     'candidate': (VersionType.RELEASE,),
     'stable': (VersionType.RELEASE,),
 
-    'esr': (VersionType.ESR,),
     'esr/stable': (VersionType.ESR,),
     'esr/candidate': (VersionType.ESR,),
 }
@@ -225,7 +224,6 @@ def _check_current_snap_is_not_released(current_revision, current_version, lates
 
 
 def _pick_revision_and_version_of_latest_released_snap(channel, metadata_per_revision):
-    channel = 'esr/stable' if channel == 'esr' else channel
     item = get_single_item_from_sequence(
         metadata_per_revision.items(),
         lambda item: channel in item[1]['current_channels'],

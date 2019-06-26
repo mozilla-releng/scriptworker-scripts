@@ -266,12 +266,6 @@ def test_pluck_metadata():
         },
     }
 ), (
-    'esr', {
-        5: {
-            'version': GeckoSnapVersion.parse('60.2.1esr-1'),
-        },
-    }
-), (
     'esr/stable', {
         5: {
             'version': GeckoSnapVersion.parse('60.2.1esr-1'),
@@ -509,7 +503,7 @@ def test_check_current_snap_is_not_released(current_revision, current_version, l
     True,
     ValueError,
 ), (
-    'esr',
+    'esr/stable',
     {
         3: {
             'version': '63.0b6-2',
@@ -531,7 +525,7 @@ def test_check_current_snap_is_not_released(current_revision, current_version, l
     False,
     (6, '60.2.1esr'),
 ), (
-    'esr',
+    'esr/stable',
     {
         3: {
             'version': '63.0b6-2',

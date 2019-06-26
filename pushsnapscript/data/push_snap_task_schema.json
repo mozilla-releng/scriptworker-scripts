@@ -12,7 +12,6 @@
         },
         "scopes": {
             "type": "array",
-            "minItems": 1,
             "uniqueItems": true,
             "items": {
                 "type": "string"
@@ -21,6 +20,9 @@
         "payload": {
             "type": "object",
             "properties": {
+                "channel": {
+                    "type": "string"
+                },
                 "upstreamArtifacts": {
                     "type": "array",
                     "items": {

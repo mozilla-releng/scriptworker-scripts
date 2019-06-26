@@ -15,7 +15,7 @@ async def test_async_main(monkeypatch):
     context.config = {'push_to_store': True}
     monkeypatch.setattr(client, 'get_task', lambda _: {})
     monkeypatch.setattr(artifacts, 'get_snap_file_path', lambda _: '/some/file.snap')
-    monkeypatch.setattr(task, 'get_snap_channel', lambda _: 'edge')
+    monkeypatch.setattr(task, 'get_snap_channel', lambda config, channel: 'edge')
 
     def assert_push(context_, file_, channel):
         assert context_ == context

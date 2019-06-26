@@ -16,7 +16,7 @@ async def async_main(context):
 
     # TODO Sanity checks on the file
     snap_file_path = artifacts.get_snap_file_path(context)
-    channel = task.get_snap_channel(context.task)
+    channel = task.get_snap_channel(context.config, context.task)
 
     _log_warning_forewords(context.config, channel)
 
