@@ -1,5 +1,4 @@
 recursive-include pushsnapscript/data *
-recursive-include pushsnapscript/snapcraft *
 recursive-include examples *
 
 include LICENSE
