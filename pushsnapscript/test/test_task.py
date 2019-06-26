@@ -3,7 +3,7 @@ import pytest
 from scriptworker.exceptions import TaskVerificationError
 from unittest.mock import MagicMock
 
-from pushsnapscript.task import pluck_channel, is_allowed_to_push_to_snap_store
+from pushsnapscript.task import get_snap_channel, is_allowed_to_push_to_snap_store
 
 
 @pytest.mark.parametrize('raises, scopes, expected', (
@@ -18,13 +18,13 @@ from pushsnapscript.task import pluck_channel, is_allowed_to_push_to_snap_store
     (True, ['project:releng:snapcraft:firefox:edge'], None),
     (True, ['project:releng:snapcraft:firefox:stable'], None),
 ))
-def test_pluck_channel(raises, scopes, expected):
+def test_get_snap_channel(raises, scopes, expected):
     task = {'scopes': scopes}
     if raises:
         with pytest.raises(TaskVerificationError):
-            pluck_channel(task)
+            get_snap_channel(task)
     else:
-        assert pluck_channel(task) == expected
+        assert get_snap_channel(task) == expected
 
 
 @pytest.mark.parametrize('channel, expected', (

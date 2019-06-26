@@ -7,7 +7,7 @@ _CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE = ('beta', 'candidate', 'esr')
 ALLOWED_CHANNELS = ('mock', *_CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE)
 
 
-def pluck_channel(task):
+def get_snap_channel(task):
     scope = get_single_item_from_sequence(
         task['scopes'],
         lambda scope: scope.startswith(SNAP_SCOPES_PREFIX),
