@@ -40,6 +40,7 @@ def test_push(monkeypatch, channel, expected_macaroon_location, raises, exceptio
 
     context = MagicMock()
     context.config = {
+        'push_to_store': True,
         'macaroons_locations': {
             'beta': '/path/to/macaroon_beta',
             'candidate': '/path/to/macaroon_candidate',

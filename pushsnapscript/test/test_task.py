@@ -26,12 +26,21 @@ def test_get_snap_channel(raises, scopes, expected):
         assert get_snap_channel(task) == expected
 
 
-@pytest.mark.parametrize('channel, expected', (
-    ('beta', True),
-    ('candidate', True),
-    ('esr', True),
 
-    ('mock', False),
 ))
-def test_is_allowed_to_push_to_snap_store(channel, expected):
-    assert is_allowed_to_push_to_snap_store(channel=channel) == expected
+@pytest.mark.parametrize('channel, push_to_store, expected', (
+    ('beta', True, True),
+    ('candidate', True, True),
+    ('esr/stable', True, True),
+    ('esr/candidate', True, True),
+
+    ('beta', False, False),
+    ('candidate', False, False),
+    ('esr/stable', False, False),
+    ('esr/candidate', False, False),
+    ('mock', True, False),
+    ('mock', False, False),
+))
+def test_is_allowed_to_push_to_snap_store(channel, push_to_store, expected):
+    config = {'push_to_store': push_to_store}
+    assert is_allowed_to_push_to_snap_store(config, channel) == expected

@@ -18,13 +18,13 @@ async def async_main(context):
     snap_file_path = artifacts.get_snap_file_path(context)
     channel = task.get_snap_channel(context.task)
 
-    _log_warning_forewords(channel)
+    _log_warning_forewords(context.config, channel)
 
     snap_store.push(context, snap_file_path, channel)
 
 
-def _log_warning_forewords(channel):
-    if not task.is_allowed_to_push_to_snap_store(channel):
+def _log_warning_forewords(config, channel):
+    if not task.is_allowed_to_push_to_snap_store(config, channel):
         log.warning('You do not have the rights to reach Snap store. *All* requests will be mocked.')
 
 

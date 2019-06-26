@@ -26,5 +26,5 @@ def get_snap_channel(task):
     return channel
 
 
-def is_allowed_to_push_to_snap_store(channel=None):
-    return channel in _CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE
+def is_allowed_to_push_to_snap_store(config, channel):
+    return config['push_to_store'] and channel in _CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE

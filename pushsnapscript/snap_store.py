@@ -54,7 +54,7 @@ def push(context, snap_file_path, channel):
         snap_file_path (str): The full path to the snap file
         channel (str): The Snap Store channel.
     """
-    if not task.is_allowed_to_push_to_snap_store(channel=channel):
+    if not task.is_allowed_to_push_to_snap_store(context.config, channel=channel):
         log.warning('Not allowed to push to Snap store. Skipping push...')
         # We don't raise an error because we still want green tasks on dev instances
         return
