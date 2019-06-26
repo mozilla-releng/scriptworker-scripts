@@ -15,8 +15,6 @@ virtualenv3 venv3   # create the virtualenv in ./venv3
 . venv3/bin/activate # activate it
 git clone https://github.com/mozilla-releng/pushsnapscript
 cd pushsnapscript
-git submodule init      # Needed to import the necessary bits of snapcraft
-git submodule update
 pip install pushsnapscript
 ```
 
