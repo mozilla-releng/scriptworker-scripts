@@ -9,7 +9,7 @@ from scriptworker.utils import retry_request
 from mozilla_version.gecko import GeckoVersion
 from bouncerscript.constants import (
     ALIASES_REGEXES, PRODUCT_TO_DESTINATIONS_REGEXES, PRODUCT_TO_PRODUCT_ENTRY,
-    GO_BOUNCER_URL_TMPL, BOUNCER_PATH_REGEXES_PER_PRODUCT,
+    GO_BOUNCER_URL_TMPL, BOUNCER_PATH_REGEXES_PER_PRODUCT, PARTNER_ALIASES_REGEX,
 )
 
 log = logging.getLogger(__name__)
@@ -68,6 +68,16 @@ def matches(name, pattern, fullmatch=False):
     return re.match(pattern, name)
 
 
+def matches_partner_regex(alias, product_name):
+    for alias_pattern, product_pattern in PARTNER_ALIASES_REGEX.items():
+        alias_match = re.match(alias_pattern, alias)
+        product_match = re.match(product_pattern, product_name)
+        if alias_match and product_match and \
+                alias_match.groups()[0] == product_match.groups()[0]:
+            return True
+    return False
+
+
 def get_supported_actions(script_config):
     return tuple(script_config['schema_files'].keys())
 
@@ -82,13 +92,16 @@ def validate_task_schema(context):
 def check_product_names_match_aliases(context):
     """Make sure we don't do any cross-product/channel alias update"""
     aliases = context.task["payload"]["aliases_entries"]
+    all_partner_aliases = "|".join(PARTNER_ALIASES_REGEX.keys())
 
     validations = []
     for alias, product_name in aliases.items():
-        if alias not in ALIASES_REGEXES.keys():
+        if alias in ALIASES_REGEXES.keys():
+            validations.append(matches(product_name, ALIASES_REGEXES[alias]))
+        elif re.match(all_partner_aliases, alias):
+            validations.append(matches_partner_regex(alias, product_name))
+        else:
             raise TaskVerificationError("Unrecognized alias:{}".format(alias))
-
-        validations.append(matches(product_name, ALIASES_REGEXES[alias]))
 
     if not all(validations):
         raise TaskVerificationError("The product/alias pairs are corrupt: {}".format(aliases))
@@ -166,10 +179,11 @@ async def check_aliases_match(context):
     """Function to ensure the values returned by bouncer are the same as the
     ones pushed in the `bouncer aliases` job"""
     aliases = context.task["payload"]["aliases_entries"]
+    url_template = GO_BOUNCER_URL_TMPL[context.server]
 
     for alias, product_name in aliases.items():
         log.info("Checking alias {} ...".format(alias))
-        alias_url = GO_BOUNCER_URL_TMPL.format(alias)
+        alias_url = url_template.format(alias)
         alias_resp = await retry_request(context, alias_url, good=(200, 404))
         if alias_resp == "404 page not found\n":
             # some of the aliases are expected to be 404 (e.g. `fennec-latest`
@@ -178,7 +192,7 @@ async def check_aliases_match(context):
         log.info("Alias {} returned url: {}".format(alias, alias_resp))
 
         log.info("Checking product {} ...".format(product_name))
-        product_url = GO_BOUNCER_URL_TMPL.format(product_name)
+        product_url = url_template.format(product_name)
         product_resp = await retry_request(context, product_url)
         log.info("Product {} returned url: {}".format(product_name, product_resp))
 

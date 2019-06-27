@@ -320,6 +320,34 @@ def test_validate_task_schema(context, schema="submission"):
     "thunderbird-msi-latest-ssl": "Thunderbird-70.0b1-msi-SSL",
 }, True
 ), ({
+    "partner-firefox-beta-foo-bar-baz-latest": "Firefox-69.0b9-foo-bar-baz",
+    "partner-firefox-beta-foo-bar-baz-stub": "Firefox-69.0b9-foo-bar-baz-stub",
+}, False
+), ({
+    "partner-firefox-release-foo-bar-baz-latest": "Firefox-69.0-foo-bar-baz",
+    "partner-firefox-release-foo-bar-baz-stub": "Firefox-69.0-foo-bar-baz-stub",
+}, False
+), ({
+    "partner-firefox-release-foo-bar-baz-latest": "Firefox-69.0.1-foo-bar-baz",
+    "partner-firefox-release-foo-bar-baz-stub": "Firefox-69.0.1-foo-bar-baz-stub",
+}, False
+), ({
+    "partner-firefox-esr-foo-bar-baz-latest": "Firefox-68.0esr-foo-bar-baz",
+    "partner-firefox-esr-foo-bar-baz-stub": "Firefox-68.0esr-foo-bar-baz-stub",
+}, False
+), ({
+    "partner-firefox-esr-foo-bar-baz-latest": "Firefox-68.0.2esr-foo-bar-baz",
+    "partner-firefox-esr-foo-bar-baz-stub": "Firefox-68.0.2esr-foo-bar-baz-stub",
+}, False
+), ({
+    "partner-firefox-beta-foo-bar-baz-latest": "Firefox-69.0b9",
+    "partner-firefox-beta-foo-bar-baz-stub": "Firefox-69.0b9-stub",
+}, True
+), ({
+    "firefox-latest": "Firefox-69.0b9-foo-bar-baz",
+    "firefox-stub": "Firefox-69.0b9-foo-bar-baz-stub",
+}, True
+), ({
     "corrupt-alias": "corrupt-entry",
 }, True
 )))

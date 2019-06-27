@@ -29,6 +29,15 @@ ALIASES_REGEXES = {
     'firefox-sha1-ssl': r'^Firefox-\d+\.\d+(\.\d+)?esr-sha1$',
 }
 
+PARTNER_ALIASES_REGEX = {
+    r'^partner-firefox-beta-(.*)-latest$': r'^Firefox-\d+\.0b\d+-(.*)$',
+    r'^partner-firefox-beta-(.*)-stub$': r'^Firefox-\d+\.0b\d+-(.*)-stub$',
+    r'^partner-firefox-release-(.*)-latest$': r'^Firefox-\d+\.\d+(?:\.\d+)?-(.*)$',
+    r'^partner-firefox-release-(.*)-stub$': r'^Firefox-\d+\.\d+(?:\.\d+)?-(.*)-stub$',
+    r'^partner-firefox-esr-(.*)-latest$': r'^Firefox-\d+\.\d+(?:\.\d+)?esr-(.*)$',
+    r'^partner-firefox-esr-(.*)-stub$': r'^Firefox-\d+\.\d+(?:\.\d+)?esr-(.*)-stub$',
+}
+
 PRODUCT_TO_DESTINATIONS_REGEXES = {
     'fennec': r'^(/mobile/releases/.*?/(?:android-api-16|android-x86)/\:lang/fennec-.*\:lang\.(?:android-arm|android-i386)\.apk)$',
     'firefox-rc': r'^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$',
@@ -80,6 +89,11 @@ BOUNCER_LOCATION_PLATFORMS = [
     'win64-aarch64',
 ]
 
-GO_BOUNCER_URL_TMPL = 'https://download.mozilla.org/?product={}&print=yes'
+GO_BOUNCER_URL_TMPL = {
+    'project:releng:bouncer:server:production':
+        'https://download.mozilla.org/?product={}&print=yes',
+    'project:releng:bouncer:server:staging':
+        'https://bouncer-bouncer-releng.stage.mozaws.net/?product={}&print=yes',
+}
 
 NIGHTLY_VERSION_REGEX = r'\d+\.0a1'

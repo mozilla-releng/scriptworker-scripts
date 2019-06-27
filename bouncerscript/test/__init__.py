@@ -88,6 +88,7 @@ def aliases_context():
     context = Context()
     context.task = get_fake_valid_task("aliases")
     context.config = get_fake_valid_config()
+    context.server = 'project:releng:bouncer:server:production'
 
     yield context
 
