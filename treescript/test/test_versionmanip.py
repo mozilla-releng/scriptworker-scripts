@@ -136,7 +136,7 @@ async def test_bump_version_DONTBUILD_false(mocker, repo_context, new_version):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('new_version', ('87.0', '87.1b3', '123.2esr'))
+@pytest.mark.parametrize('new_version', ('87.0', '87.0b3', '123.2.0esr'))
 async def test_bump_version_invalid_file(mocker, repo_context, new_version):
     called_args = []
 
@@ -177,7 +177,7 @@ async def test_bump_version_missing_file(mocker, repo_context, new_version):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('new_version', ('27.0', '26.1b3', '45.2esr'))
+@pytest.mark.parametrize('new_version', ('27.0', '26.0b3', '45.0esr'))
 async def test_bump_version_smaller_version(mocker, repo_context, new_version):
     called_args = []
 
