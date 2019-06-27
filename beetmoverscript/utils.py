@@ -294,11 +294,26 @@ def get_releases_prefix(product, version):
     return "{}releases/{}/".format(PRODUCT_TO_PATH[product], version)
 
 
+def get_partner_candidates_prefix(prefix, partner):
+    return '{}partner-repacks/{}/v1/'.format(prefix,  partner)
+
+
+def get_partner_releases_prefix(product, version, partner):
+    return "{}releases/partners/{}/{}/".format(PRODUCT_TO_PATH[product], partner, version)
+
+
 def matches_exclude(keyname, excludes):
     for exclude in excludes:
         if re.search(exclude, keyname):
             return True
     return False
+
+
+def get_partner_match(keyname, candidates_prefix, partners):
+    for partner in partners:
+        if keyname.startswith(get_partner_candidates_prefix(candidates_prefix, partner)):
+            return partner
+    return None
 
 
 def get_creds(context):

@@ -17,7 +17,8 @@ from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    _check_locale_consistency, validated_task_id,
                                    extract_file_config_from_artifact_map,
                                    extract_full_artifact_map_path,
-                                   exists_or_endswith)
+                                   exists_or_endswith, get_partner_match,
+                                   get_partner_candidates_prefix, get_partner_releases_prefix)
 from beetmoverscript.constants import (
     HASH_BLOCK_SIZE, INSTALLER_ARTIFACTS,
     BUILDHUB_ARTIFACT
@@ -606,6 +607,17 @@ def test_get_releases_prefix(product, version, expected):
     assert get_releases_prefix(product, version) == expected
 
 
+# get_partner_candidates_prefix {{{1
+def test_get_partner_candidates_prefix():
+    assert get_partner_candidates_prefix("foo/", "p1/s2") == "foo/partner-repacks/p1/s2/v1/"
+
+
+# get_partner_releases_prefix {{{1
+def test_get_partner_releases_prefix():
+    expected = "pub/firefox/releases/partners/p1/s1/bar/"
+    assert get_partner_releases_prefix("firefox", "bar", "p1/s1") == expected
+
+
 # matches_exclude {{{1
 @pytest.mark.parametrize("keyname,expected", ((
     "blah.excludeme", True
@@ -620,6 +632,22 @@ def test_matches_exclude(keyname, expected):
         r"^.*/metoo/.*$",
     ]
     assert matches_exclude(keyname, excludes) == expected
+
+
+# get_partner_match {{{1
+@pytest.mark.parametrize("keyname,partners,expected", ((
+    "blah.excludeme", [], None
+), (
+    "foo/partner-repacks/p1/s1/v1/baz/biz.buzz", ['p1/s1'],  'p1/s1'
+), (
+    "foo/partner-repacks/p1/s1/v1/baz/biz.buzz", ['p1/s1', 'p1/s2'], 'p1/s1'
+), (
+    "foo/partner-repacks/p1/s2/v1/baz/biz.buzz", ['p1/s1', 'p1/s2'], 'p1/s2'
+), (
+    "foo/partner-repacks/p2/s3/v1/baz/biz.buzz", ['p1/s1', 'p1/s2'], None
+)))
+def test_get_partner_match(keyname, partners, expected):
+    assert get_partner_match(keyname, "foo/", partners) == expected
 
 
 # product_name {{{1

@@ -55,10 +55,18 @@
                     },
                     "minItems": 0,
                     "uniqueItems": true
+                },
+                "partners": {
+                    "type": "array",
+                    "minItems": 0,
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string"
+                    }
                 }
             },
             "required": ["product", "build_number", "version"],
-            "optional": ["upstreamArtifacts", "maxRunTime"]
+            "optional": ["upstreamArtifacts", "maxRunTime", "partners"]
 
         }
     },

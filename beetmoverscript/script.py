@@ -33,9 +33,10 @@ from beetmoverscript.task import (
 )
 from beetmoverscript.utils import (
     get_hash, generate_beetmover_manifest,
-    get_size, alter_unpretty_contents, matches_exclude,
-    get_candidates_prefix, get_releases_prefix, get_creds,
-    get_bucket_name, get_bucket_url_prefix,
+    get_size, alter_unpretty_contents, matches_exclude, get_partner_match,
+    get_candidates_prefix, get_releases_prefix,
+    get_partner_releases_prefix, get_partner_candidates_prefix,
+    get_creds, get_bucket_name, get_bucket_url_prefix,
     is_release_action, is_promotion_action, get_partials_props,
     get_product_name, is_partner_action, is_partner_private_task,
     is_partner_public_task, write_json, extract_file_config_from_artifact_map,
@@ -153,9 +154,19 @@ async def push_to_releases(context):
         log.warning("Destination {} already exists with {} keys".format(
                     releases_prefix, len(releases_keys_checksums)))
 
-    # Weed out RELEASE_EXCLUDE matches
+    # Weed out RELEASE_EXCLUDE matches, but allow partners specified in the payload
+    push_partners = context.task['payload'].get('partners', [])
     for k in candidates_keys_checksums.keys():
-        if not matches_exclude(k, RELEASE_EXCLUDE):
+        if '/partner-repacks/' in k:
+            partner_match = get_partner_match(k, candidates_prefix, push_partners)
+            if partner_match:
+                context.artifacts_to_beetmove[k] = k.replace(
+                    get_partner_candidates_prefix(candidates_prefix, partner_match),
+                    get_partner_releases_prefix(product, version, partner_match)
+                )
+            else:
+                log.debug("Excluding partner repack {}".format(k))
+        elif not matches_exclude(k, RELEASE_EXCLUDE):
             context.artifacts_to_beetmove[k] = k.replace(candidates_prefix, releases_prefix)
         else:
             log.debug("Excluding {}".format(k))
