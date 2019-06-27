@@ -3,6 +3,8 @@ import os
 import pytest
 import tempfile
 
+from contextlib import contextmanager
+
 
 def read_file(path):
     with open(path, 'r') as fh:
@@ -33,3 +35,8 @@ def is_slice_in_list(s, l):
     # With edits by Callek to be py3 and pep8 compat
     len_s = len(s)  # so we don't recompute length of s on every iteration
     return any(s == l[i:len_s + i] for i in range(len(l) - len_s + 1))
+
+
+@contextmanager
+def does_not_raise():
+    yield
