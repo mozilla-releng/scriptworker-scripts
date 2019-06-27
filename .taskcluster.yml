@@ -38,7 +38,7 @@ tasks:
       then: pull-request
       else:
         $if: 'tasks_for == "github-release"'
-        then: "v${event.release.tag_name}" # prefix the version with "v"
+        then: ${event.release.tag_name}
         else: # push
           $if: 'event.ref == "refs/heads/master"'
           then: latest
