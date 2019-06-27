@@ -23,6 +23,7 @@ setup(
     },
     license="MPL2",
     install_requires=[
+        "mozilla-version",
         "scriptworker",
         "taskcluster"
     ],
