@@ -602,11 +602,7 @@ def get_bundle_id(base_bundle_id, counter=None):
 
     """
     now = arrow.utcnow()
-    # XXX we may want to encode more information in here. runId?
-    bundle_id = "{}.{}".format(
-        base_bundle_id,
-        os.environ.get("TASK_ID", "None"),
-    )
+    bundle_id = "{}.{}.{}".format(base_bundle_id, now.timestamp, now.microsecond)
     if counter:
         bundle_id = "{}.{}".format(bundle_id, str(counter))
     return bundle_id
