@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.5.0] = (2019-06-26)
+----------------------
+
+Fixed
+~~~~~
+
+- Support for stub installers for partner repacks (`#1538995
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1538995>`_)
+
 [8.4.7] = (2019-06-21)
 ----------------------
 
