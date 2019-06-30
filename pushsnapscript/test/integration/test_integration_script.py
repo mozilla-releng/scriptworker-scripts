@@ -122,6 +122,7 @@ def test_script_can_push_snaps_with_credentials(monkeypatch, channel, expected_r
     with tempfile.NamedTemporaryFile('w+') as macaroon_beta, \
             tempfile.NamedTemporaryFile('w+') as macaroon_candidate:
         config = {
+            'push_to_store': True,
             'macaroons_locations': {
                 'candidate': macaroon_candidate.name,
                 'beta': macaroon_beta.name,

@@ -26,7 +26,6 @@ _VERSION_TYPES_PER_CHANNEL = {
     'candidate': (VersionType.RELEASE,),
     'stable': (VersionType.RELEASE,),
 
-    'esr': (VersionType.ESR,),
     'esr/stable': (VersionType.ESR,),
     'esr/candidate': (VersionType.ESR,),
 }
@@ -54,7 +53,7 @@ def push(context, snap_file_path, channel):
         snap_file_path (str): The full path to the snap file
         channel (str): The Snap Store channel.
     """
-    if not task.is_allowed_to_push_to_snap_store(channel=channel):
+    if not task.is_allowed_to_push_to_snap_store(context.config, channel=channel):
         log.warning('Not allowed to push to Snap store. Skipping push...')
         # We don't raise an error because we still want green tasks on dev instances
         return
@@ -225,7 +224,6 @@ def _check_current_snap_is_not_released(current_revision, current_version, lates
 
 
 def _pick_revision_and_version_of_latest_released_snap(channel, metadata_per_revision):
-    channel = 'esr/stable' if channel == 'esr' else channel
     item = get_single_item_from_sequence(
         metadata_per_revision.items(),
         lambda item: channel in item[1]['current_channels'],

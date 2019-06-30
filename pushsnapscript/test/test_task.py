@@ -1,15 +1,14 @@
 import pytest
 
 from scriptworker.exceptions import TaskVerificationError
-from unittest.mock import MagicMock
 
-from pushsnapscript.task import pluck_channel, is_allowed_to_push_to_snap_store
+from pushsnapscript.task import get_snap_channel, is_allowed_to_push_to_snap_store
 
 
 @pytest.mark.parametrize('raises, scopes, expected', (
     (False, ['project:releng:snapcraft:firefox:candidate'], 'candidate'),
     (False, ['project:releng:snapcraft:firefox:beta'], 'beta'),
-    (False, ['project:releng:snapcraft:firefox:esr'], 'esr'),
+    (False, ['project:releng:snapcraft:firefox:esr'], 'esr/stable'),
     (False, ['project:releng:snapcraft:firefox:mock'], 'mock'),
     (False, ['project:releng:snapcraft:firefox:beta', 'some:other:scope'], 'beta'),
 
@@ -18,25 +17,70 @@ from pushsnapscript.task import pluck_channel, is_allowed_to_push_to_snap_store
     (True, ['project:releng:snapcraft:firefox:edge'], None),
     (True, ['project:releng:snapcraft:firefox:stable'], None),
 ))
-def test_pluck_channel(raises, scopes, expected):
-    task = {'scopes': scopes}
+def test_old_get_snap_channel(raises, scopes, expected):
+    task = {'scopes': scopes, 'payload': {}}
+    config = {'push_to_store': True}
     if raises:
         with pytest.raises(TaskVerificationError):
-            pluck_channel(task)
+            get_snap_channel(config, task)
     else:
-        assert pluck_channel(task) == expected
+        assert get_snap_channel(config, task) == expected
 
 
-@pytest.mark.parametrize('channel, expected', (
-    ('beta', True),
-    ('candidate', True),
-    ('esr', True),
-
-    ('mock', False),
+@pytest.mark.parametrize('raises, channel', (
+    (False, 'candidate'),
+    (False, 'beta'),
+    (False, 'esr/stable'),
+    (False, 'mock'),
+    (False, 'beta'),
+    (False, 'beta'),
+    (True, 'bogus'),
 ))
-def test_is_allowed_to_push_to_snap_store(channel, expected):
-    assert is_allowed_to_push_to_snap_store(channel=channel) == expected
+def test_get_snap_channel_dep(raises, channel):
+    task = {'scopes': [], 'payload': {'channel': channel}}
+    config = {'push_to_store': False}
+    if raises:
+        with pytest.raises(TaskVerificationError):
+            get_snap_channel(config, task)
+    else:
+        assert get_snap_channel(config, task) == channel
 
-    context = MagicMock()
-    context.task = {'scopes': ['project:releng:snapcraft:firefox:{}'.format(channel)]}
-    assert is_allowed_to_push_to_snap_store(context=context) == expected
+
+@pytest.mark.parametrize('raises, scopes, channel', (
+    (False, ['project:releng:snapcraft:firefox:candidate'], 'candidate'),
+    (False, ['project:releng:snapcraft:firefox:beta'], 'beta'),
+    (False, ['project:releng:snapcraft:firefox:esr'], 'esr/stable'),
+    (False, ['project:releng:snapcraft:firefox:esr'], 'esr/candidate'),
+    (False, ['project:releng:snapcraft:firefox:mock'], 'mock'),
+    (False, ['project:releng:snapcraft:firefox:beta', 'some:other:scope'], 'beta'),
+    (False, ['project:releng:snapcraft:firefox:beta', 'project:releng:snapcraft:firefox:candidate'], 'beta'),
+
+    (True, ['project:releng:snapcraft:firefox:candidate'], 'beta'),
+    (True, ['project:releng:snapcraft:firefox:beta'], 'esr/stable'),
+))
+def test_get_snap_channel_prod(raises, scopes, channel):
+    task = {'scopes': scopes, 'payload': {'channel': channel}}
+    config = {'push_to_store': True}
+    if raises:
+        with pytest.raises(TaskVerificationError):
+            get_snap_channel(config, task)
+    else:
+        assert get_snap_channel(config, task) == channel
+
+
+@pytest.mark.parametrize('channel, push_to_store, expected', (
+    ('beta', True, True),
+    ('candidate', True, True),
+    ('esr/stable', True, True),
+    ('esr/candidate', True, True),
+
+    ('beta', False, False),
+    ('candidate', False, False),
+    ('esr/stable', False, False),
+    ('esr/candidate', False, False),
+    ('mock', True, False),
+    ('mock', False, False),
+))
+def test_is_allowed_to_push_to_snap_store(channel, push_to_store, expected):
+    config = {'push_to_store': push_to_store}
+    assert is_allowed_to_push_to_snap_store(config, channel) == expected

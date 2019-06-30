@@ -40,6 +40,7 @@ def test_push(monkeypatch, channel, expected_macaroon_location, raises, exceptio
 
     context = MagicMock()
     context.config = {
+        'push_to_store': True,
         'macaroons_locations': {
             'beta': '/path/to/macaroon_beta',
             'candidate': '/path/to/macaroon_candidate',
@@ -262,12 +263,6 @@ def test_pluck_metadata():
     'stable', {
         3: {
             'version': GeckoSnapVersion.parse('62.0-1'),
-        },
-    }
-), (
-    'esr', {
-        5: {
-            'version': GeckoSnapVersion.parse('60.2.1esr-1'),
         },
     }
 ), (
@@ -508,7 +503,7 @@ def test_check_current_snap_is_not_released(current_revision, current_version, l
     True,
     ValueError,
 ), (
-    'esr',
+    'esr/stable',
     {
         3: {
             'version': '63.0b6-2',
@@ -530,7 +525,7 @@ def test_check_current_snap_is_not_released(current_revision, current_version, l
     False,
     (6, '60.2.1esr'),
 ), (
-    'esr',
+    'esr/stable',
     {
         3: {
             'version': '63.0b6-2',

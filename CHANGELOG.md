@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.0] - 2019-05-27
+### Added
+* Allow specifying the channel in the task payload, rather than scopes.
+* Control whether to publish to the snap store via worker config.
+
+### Changed
+* Include snapcraft as a dependency, rather than via a submodule.
+
 ## [1.0.0] - 2019-03-29
 ### Changed
 * Bumps version to `1.0.0` since `pushsnapscript` is used in production
