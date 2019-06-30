@@ -1,3 +1,0 @@
-[submodule "snapcraft"]
-	path = pushsnapscript/snapcraft
-	url = https://github.com/snapcore/snapcraft.git

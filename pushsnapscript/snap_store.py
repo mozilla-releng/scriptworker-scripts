@@ -1,6 +1,5 @@
 import contextlib
 import logging
-import os
 
 from mozilla_version.version import VersionType
 from mozilla_version.gecko import GeckoSnapVersion
@@ -13,13 +12,10 @@ from pushsnapscript.exceptions import AlreadyLatestError
 # XXX Hack to only import a subset of snapcraft. Otherwise snapcraft can't be built on any other
 # distribution than Ubuntu. The prod instance runs CentOS 6. There isn't a package version of
 # snapcraft on that platform either.
-import sys
-dir_path = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(dir_path, 'snapcraft'))
-from snapcraft import _store as snapcraft_store_client      # noqa
-from snapcraft.storeapi import StoreClient                  # noqa
-from snapcraft.storeapi.constants import DEFAULT_SERIES     # noqa
-from snapcraft.storeapi.errors import StoreReviewError      # noqa
+from snapcraft import _store as snapcraft_store_client
+from snapcraft.storeapi import StoreClient
+from snapcraft.storeapi.constants import DEFAULT_SERIES
+from snapcraft.storeapi.errors import StoreReviewError
 
 log = logging.getLogger(__name__)
 
