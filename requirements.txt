@@ -3,6 +3,7 @@ mozilla-version
 
 # XXX Dependencies required by snapcraft._store.push
 # See https://github.com/snapcore/snapcraft/blob/master/requirements.txt
+snapcraft==2.43.1
 click>=6.2
 progressbar33==2.4
 pyelftools==0.24
