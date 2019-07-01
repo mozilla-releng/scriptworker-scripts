@@ -232,7 +232,7 @@ async def sign_app(key_config, app_path, entitlements_path):
                     "exception": IScriptError,
                     "output_log_on_exception": True,
                 },
-                retry_exceptions=[IScriptError],
+                retry_exceptions=(IScriptError,),
             )
 
     await sign_libclearkey(contents_dir, sign_command, app_path)
@@ -246,7 +246,7 @@ async def sign_app(key_config, app_path, entitlements_path):
             "exception": IScriptError,
             "output_log_on_exception": True,
         },
-        retry_exceptions=[IScriptError],
+        retry_exceptions=(IScriptError,),
     )
 
 
@@ -278,7 +278,7 @@ async def sign_libclearkey(contents_dir, sign_command, app_path):
                     "exception": IScriptError,
                     "output_log_on_exception": True,
                 },
-                retry_exceptions=[IScriptError],
+                retry_exceptions=(IScriptError,),
             )
 
 
@@ -904,11 +904,15 @@ async def staple_notarization(all_paths, path_attr="app_path"):
         path = os.path.basename(getattr(app, path_attr))
         futures.append(
             asyncio.ensure_future(
-                run_command(
-                    ["xcrun", "stapler", "staple", "-v", path],
-                    cwd=cwd,
-                    exception=IScriptError,
-                    log_level=logging.DEBUG,
+                retry_async(
+                    run_command,
+                    args=[["xcrun", "stapler", "staple", "-v", path]],
+                    kwargs={
+                        "cwd": cwd,
+                        "exception": IScriptError,
+                        "log_level": logging.DEBUG,
+                    },
+                    retry_exceptions=(IScriptError,),
                 )
             )
         )

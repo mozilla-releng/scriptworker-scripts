@@ -757,8 +757,8 @@ async def test_staple_notarization(mocker, raises):
 
     """
 
-    async def fake_run_command(*args, **kwargs):
-        assert args[0][0] == "xcrun"
+    async def fake_retry_async(*args, **kwargs):
+        assert kwargs["args"][0][0] == "xcrun"
         if raises:
             raise IScriptError("foo")
 
@@ -770,7 +770,7 @@ async def test_staple_notarization(mocker, raises):
         all_paths.append(
             mac.App(parent_dir=parent_dir, app_name=app_name, app_path=app_path)
         )
-    mocker.patch.object(mac, "run_command", new=fake_run_command)
+    mocker.patch.object(mac, "retry_async", new=fake_retry_async)
     if raises:
         with pytest.raises(IScriptError):
             await mac.staple_notarization(all_paths)
