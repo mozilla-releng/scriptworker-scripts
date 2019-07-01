@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.5.1] = (2019-07-01)
+----------------------
+
+Added
+~~~~~
+
+- Support for declarative-artifats maven jobs (`#1548545
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1548545>`_)
+
+
 [8.5.0] = (2019-06-26)
 ----------------------
 
