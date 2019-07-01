@@ -585,6 +585,9 @@ async def sign_all_apps(config, key_config, entitlements_path, all_paths):
                 )
             )
     await raise_future_exceptions(futures)
+    await unlock_keychain(
+        key_config["signing_keychain"], key_config["keychain_password"]
+    )
     futures = []
     # sign apps concurrently
     for app in all_paths:

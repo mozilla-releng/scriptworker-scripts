@@ -429,7 +429,11 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
     """``sign_all_apps`` calls ``sign`` and raises on failure.
 
     """
-    key_config = {"x": "y"}
+    key_config = {
+        "x": "y",
+        "signing_keychain": "keychain",
+        "keychain_password": "password",
+    }
     config = {}
     entitlements_path = "fake_entitlements_path"
     work_dir = str(tmpdir)
@@ -451,6 +455,7 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
 
     mocker.patch.object(mac, "set_app_path_and_name", return_value=None)
     mocker.patch.object(mac, "sign_app", new=fake_sign)
+    mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "verify_app_signature", new=noop_async)
     mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     if raises:
