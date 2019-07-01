@@ -197,7 +197,7 @@ async def test_push_to_maven(context, mocker, extract_zip_output, ErrorRaised):
 )))
 async def test_push_to_maven_with_map(context, mocker, artifact_map, extract_zip_output, ErrorRaised):
     mocker.patch('beetmoverscript.utils.JINJA_ENV', get_test_jinja_env())
-    context.task['payload']['upstreamArtifacts'] = []
+    context.task['payload']['upstreamArtifacts'] = [{'zipExtract': True}]
     context.task['payload']['artifactMap'] = artifact_map
     mocker.patch('beetmoverscript.task.get_upstream_artifacts_with_zip_extract_param',
                  new=lambda _: None)
@@ -205,7 +205,6 @@ async def test_push_to_maven_with_map(context, mocker, artifact_map, extract_zip
                  new=lambda _, **kwargs: ('', {}))
     mocker.patch('beetmoverscript.zip.check_and_extract_zip_archives',
                  new=lambda _, __, ___, ____: extract_zip_output)
-
     if ErrorRaised is None:
         async def assert_artifacts_to_beetmove(_, artifacts_to_beetmove, **kwargs):
             assert artifacts_to_beetmove == {

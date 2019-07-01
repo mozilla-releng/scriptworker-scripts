@@ -87,7 +87,7 @@
                     "uniqueItems": true
                 }
             },
-            "required": ["upstreamArtifacts", "releaseProperties", "version", "artifact_id"]
+            "required": ["upstreamArtifacts", "releaseProperties"]
         }
     },
     "required": ["payload", "dependencies"]

@@ -126,7 +126,7 @@ def add_balrog_manifest_to_artifacts(context):
 def get_upstream_artifacts(context, preserve_full_paths=False):
     artifacts = {}
     for artifact_dict in context.task['payload']['upstreamArtifacts']:
-        locale = artifact_dict['locale']
+        locale = artifact_dict.get('locale', 'en-US')
         artifacts[locale] = artifacts.get(locale, {})
         for path in artifact_dict['paths']:
             abs_path = scriptworker_artifacts.get_and_check_single_upstream_artifact_full_path(
