@@ -118,7 +118,7 @@ async def retry_async(
     func,
     attempts=5,
     sleeptime_callback=calculate_sleep_time,
-    retry_exceptions=Exception,
+    retry_exceptions=(Exception,),
     args=(),
     kwargs=None,
     sleeptime_kwargs=None,
