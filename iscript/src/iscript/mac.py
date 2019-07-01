@@ -272,7 +272,7 @@ async def sign_libclearkey(contents_dir, sign_command, app_path):
         if os.path.exists(os.path.join(dir_, file_)):
             await retry_async(
                 run_command,
-                [sign_command + [file_]],
+                args=[sign_command + [file_]],
                 kwargs={
                     "cwd": dir_,
                     "exception": IScriptError,
