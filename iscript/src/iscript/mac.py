@@ -232,6 +232,7 @@ async def sign_app(key_config, app_path, entitlements_path):
                     "exception": IScriptError,
                     "output_log_on_exception": True,
                 },
+                retry_exceptions=[IScriptError],
             )
 
     await sign_libclearkey(contents_dir, sign_command, app_path)
@@ -245,6 +246,7 @@ async def sign_app(key_config, app_path, entitlements_path):
             "exception": IScriptError,
             "output_log_on_exception": True,
         },
+        retry_exceptions=[IScriptError],
     )
 
 
@@ -276,6 +278,7 @@ async def sign_libclearkey(contents_dir, sign_command, app_path):
                     "exception": IScriptError,
                     "output_log_on_exception": True,
                 },
+                retry_exceptions=[IScriptError],
             )
 
 
