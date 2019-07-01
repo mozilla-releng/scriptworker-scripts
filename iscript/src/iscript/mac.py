@@ -224,21 +224,27 @@ async def sign_app(key_config, app_path, entitlements_path):
                 log.debug("Skipping %s because it's the main executable.", abs_file)
                 continue
             dir_ = os.path.dirname(abs_file)
-            await run_command(
-                sign_command + [file_],
-                cwd=dir_,
-                exception=IScriptError,
-                output_log_on_exception=True,
+            await retry_async(
+                run_command,
+                args=[sign_command + [file_]],
+                kwargs={
+                    "cwd": dir_,
+                    "exception": IScriptError,
+                    "output_log_on_exception": True,
+                },
             )
 
     await sign_libclearkey(contents_dir, sign_command, app_path)
 
     # sign bundle
-    await run_command(
-        sign_command + [app_name],
-        cwd=parent_dir,
-        exception=IScriptError,
-        output_log_on_exception=True,
+    await retry_async(
+        run_command,
+        args=[sign_command + [app_name]],
+        kwargs={
+            "cwd": parent_dir,
+            "exception": IScriptError,
+            "output_log_on_exception": True,
+        },
     )
 
 
@@ -262,11 +268,14 @@ async def sign_libclearkey(contents_dir, sign_command, app_path):
         dir_ = os.path.join(contents_dir, "Resources/gmp-clearkey/0.1/")
         file_ = "libclearkey.dylib"
         if os.path.exists(os.path.join(dir_, file_)):
-            await run_command(
-                sign_command + [file_],
-                cwd=dir_,
-                exception=IScriptError,
-                output_log_on_exception=True,
+            await retry_async(
+                run_command,
+                [sign_command + [file_]],
+                kwargs={
+                    "cwd": dir_,
+                    "exception": IScriptError,
+                    "output_log_on_exception": True,
+                },
             )
 
 
