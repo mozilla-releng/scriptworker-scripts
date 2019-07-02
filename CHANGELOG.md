@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.6.1] - 2019-07-01
+### Fixed
+- Thunderbird regression from partner stub work
+
 ## 3.6.0] - 2019-06-26
 ### Added
 - support for parter stub installers
