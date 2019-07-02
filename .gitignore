@@ -67,3 +67,6 @@ server_config.json
 work_dir
 artifact_dir
 build-tools
+
+# docs
+wiki
