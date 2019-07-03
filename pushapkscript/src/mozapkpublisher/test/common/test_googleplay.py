@@ -1,4 +1,5 @@
 import argparse
+import json
 import pytest
 import random
 import tempfile
@@ -8,6 +9,7 @@ from unittest.mock import MagicMock
 
 from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
 from mozapkpublisher.common.googleplay import add_general_google_play_arguments, EditService
+from mozapkpublisher.test import does_not_raise
 
 
 def test_add_general_google_play_arguments():
@@ -122,17 +124,33 @@ def test_upload_apk_errors_out(monkeypatch, http_status_code):
         edit_service.upload_apk(apk_path='/path/to/dummy.apk')
 
 
-def test_upload_apk_does_not_error_out_when_apk_is_already_published(monkeypatch):
+@pytest.mark.parametrize('reason, expectation', (
+    ('apkUpgradeVersionConflict', does_not_raise()),
+    ('apkNotificationMessageKeyUpgradeVersionConflict', does_not_raise()),
+    ('someRandomReason', pytest.raises(HttpError)),
+))
+def test_upload_apk_does_not_error_out_when_apk_is_already_published(monkeypatch, reason, expectation):
     edit_mock = set_up_edit_service_mock(monkeypatch)
+    content = {
+        'error': {
+            'errors': [{
+                'reason': reason
+            }],
+        },
+    }
+    # XXX content must be bytes
+    # https://github.com/googleapis/google-api-python-client/blob/ffea1a7fe9d381d23ab59048263c631cc2b45323/googleapiclient/errors.py#L41
+    content_bytes = json.dumps(content).encode('ascii')
+
     edit_mock.apks().upload().execute.side_effect = HttpError(
         # XXX status is presented as a string by googleapiclient
         resp={'status': '403'},
-        # XXX content must be bytes
-        # https://github.com/googleapis/google-api-python-client/blob/ffea1a7fe9d381d23ab59048263c631cc2b45323/googleapiclient/errors.py#L41
-        content=b'{"error": {"errors": [{"reason": "apkUpgradeVersionConflict"}] } }',
+        content=content_bytes,
     )
     edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name')
-    edit_service.upload_apk(apk_path='/path/to/dummy.apk')
+
+    with expectation:
+        edit_service.upload_apk(apk_path='/path/to/dummy.apk')
 
 
 def test_update_track(monkeypatch):

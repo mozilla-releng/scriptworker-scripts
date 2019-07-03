@@ -95,7 +95,12 @@ class EditService(object):
                 # XXX This is really how data is returned by the googleapiclient.
                 error_content = json.loads(e.content)
                 errors = error_content['error']['errors']
-                if len(errors) == 1 and errors[0]['reason'] == 'apkUpgradeVersionConflict':
+                if (
+                    len(errors) == 1 and
+                    errors[0]['reason'] in (
+                        'apkUpgradeVersionConflict', 'apkNotificationMessageKeyUpgradeVersionConflict'
+                    )
+                ):
                     logger.warning(
                         'APK "{}" has already been uploaded on Google Play. Skipping...'.format(apk_path)
                     )
