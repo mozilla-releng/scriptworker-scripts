@@ -122,6 +122,32 @@ def test_get_bundle_executable(mocker):
     assert mac.get_bundle_executable("foo") == "main"
 
 
+# sign_geckodriver {{{1
+@pytest.mark.parametrize("exists", (True, False))
+@pytest.mark.asyncio
+async def test_sign_geckodriver(exists, mocker, tmpdir):
+    """Render ``sign_geckodriver`` noop and verify we have complete code coverage.
+
+    """
+    key_config = {"identity": "id", "signing_keychain": "keychain"}
+    config = {"artifact_dir": os.path.join(tmpdir, "artifacts")}
+    app = mac.App(
+        orig_path=os.path.join(tmpdir, "cot/task1/public/build/geckodriver.tar.gz"),
+        parent_dir=os.path.join(tmpdir, "0"),
+        artifact_prefix=os.path.join("public/build"),
+    )
+
+    makedirs(app.parent_dir)
+    if exists:
+        touch(os.path.join(app.parent_dir, "geckodriver"))
+    mocker.patch.object(mac, "run_command", new=noop_async)
+    if exists:
+        await mac.sign_geckodriver(config, key_config, [app])
+    else:
+        with pytest.raises(IScriptError):
+            await mac.sign_geckodriver(config, key_config, [app])
+
+
 # sign_app {{{1
 @pytest.mark.parametrize(
     "sign_with_entitlements,has_clearkey", ((True, True), (False, False))
