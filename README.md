@@ -31,13 +31,13 @@ require the CloudOps Team.
 Tag a particular revision using the following command:
 
 ```
-git tag -s v$(cat version.txt)
+git tag -s $(cat version.txt)
 ```
 
 Push the tag:
 
 ```
-git push origin v$(cat version.txt)
+git push origin $(cat version.txt)
 ```
 
 CI will run tests, build a docker image, but the image will not be pushed to
@@ -47,11 +47,11 @@ the docker repository.
 Create a github release using the tag pushed in the previous step. This action
 will trigger a CI task group which will run tests, build and push the docker
 image to the repository using the git tag as the docker tag. For example, the
-`v3.4.5` git tag will generate `mozilla/shipitscript:v3.4.5` docker image.
+`3.4.5` git tag will generate `mozilla/shipitscript:3.4.5` docker image.
 
 After a few minutes the Cloudops pipeline should copy the docker image to GCR.
-For example, the `mozilla/shipitscript:v3.4.5` is copied as
-`gcr.io/moz-fx-cloudops-images-global/gcp-pipelines/shipitapi/scriptworker/shipitapi:v3.4.5`.
+For example, the `mozilla/shipitscript:3.4.5` is copied as
+`gcr.io/moz-fx-cloudops-images-global/gcp-pipelines/shipitapi/scriptworker/shipitapi:3.4.5`.
 
 The scriptworkers are automatically deployed to the
 `scriptworker-stage-shipitapi-app-1` workload in the `shipitapi-nonprod` GCP
