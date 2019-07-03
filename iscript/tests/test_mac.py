@@ -1138,10 +1138,10 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type):
     await mac.notarize_behavior(config, task)
 
 
-# pkg_behavior {{{1
+# geckodriver_behavior {{{1
 @pytest.mark.asyncio
-async def test_pkg_behavior(mocker, tmpdir):
-    """Mock ``pkg_behavior`` for full line coverage."""
+async def test_geckodriver_behavior(mocker, tmpdir):
+    """Mock ``geckodriver_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
     work_dir = os.path.join(str(tmpdir), "work")
@@ -1170,26 +1170,14 @@ async def test_pkg_behavior(mocker, tmpdir):
             "upstreamArtifacts": [
                 {
                     "taskId": "task1",
-                    "formats": ["macapp"],
-                    "paths": [
-                        "public/build/1/target.tar.gz",
-                        "public/build/2/target.tar.gz",
-                    ],
-                },
-                {
-                    "taskId": "task2",
-                    "paths": ["public/build/3/target.tar.gz"],
-                    "formats": ["macapp", "widevine"],
-                },
+                    "formats": ["mac_geckodriver"],
+                    "paths": ["public/build/1/geckodriver.tar.gz"],
+                }
             ]
         }
     }
 
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
-    mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
-    mocker.patch.object(
-        mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
-    )
-    await mac.pkg_behavior(config, task)
+    await mac.geckodriver_behavior(config, task)

@@ -1182,12 +1182,9 @@ async def sign_and_pkg_behavior(config, task):
     log.info("Done signing apps and creating pkgs.")
 
 
-# create_and_sign_all_pkg_files {{{1
-async def pkg_behavior(config, task):
-    """Create and sign all pkg files for this task.
-
-    This function doesn't do any notarization. It currently assumes the app
-    is already signed.
+# sign_geckodriver {{{1
+async def geckodriver_behavior(config, task):
+    """Create and sign the geckodriver file for this task.
 
     Args:
         config (dict): the running configuration
@@ -1197,15 +1194,16 @@ async def pkg_behavior(config, task):
         IScriptError: on fatal error.
 
     """
-    key_config = get_key_config(config, task, base_key="mac_config")
+    pass
+    # key_config = get_key_config(config, task, base_key="mac_config")
 
-    all_paths = get_app_paths(config, task)
-    await extract_all_apps(config, all_paths)
-    await unlock_keychain(
-        key_config["signing_keychain"], key_config["keychain_password"]
-    )
-    await update_keychain_search_path(config, key_config["signing_keychain"])
-    await create_pkg_files(config, key_config, all_paths)
-    await copy_pkgs_to_artifact_dir(config, all_paths)
+    # all_paths = get_app_paths(config, task)
+    # await extract_all_apps(config, all_paths)
+    # await unlock_keychain(
+    #     key_config["signing_keychain"], key_config["keychain_password"]
+    # )
+    # await update_keychain_search_path(config, key_config["signing_keychain"])
+    # await create_pkg_files(config, key_config, all_paths)
+    # await copy_pkgs_to_artifact_dir(config, all_paths)
 
-    log.info("Done creating pkgs.")
+    # log.info("Done creating pkgs.")

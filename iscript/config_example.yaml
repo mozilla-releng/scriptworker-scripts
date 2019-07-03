@@ -13,7 +13,7 @@ mac_config:
         notarize_type: multi_account
         signing_keychain: /path/to/dep.keychain
         supported_behaviors:
-            - mac_pkg
+            - mac_geckodriver
             - mac_sign
             - mac_sign_and_pkg
             - mac_notarize

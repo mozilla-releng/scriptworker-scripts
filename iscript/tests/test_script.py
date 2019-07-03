@@ -12,20 +12,20 @@ import iscript.script as script
 @pytest.mark.parametrize(
     "behavior, supported_behaviors, expected_behavior, raises",
     (
-        ("mac_pkg", ["mac_sign", "mac_pkg"], "mac_pkg", False),
+        ("mac_geckodriver", ["mac_sign", "mac_geckodriver"], "mac_geckodriver", False),
         ("mac_notarize", ["mac_sign", "mac_notarize"], "mac_notarize", False),
         ("mac_notarize", ["mac_sign", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),
         ("mac_sign", ["mac_sign"], "mac_sign", False),
         ("mac_sign", ["mac_sign"], "mac_sign", False),
         (
             "mac_sign_and_pkg",
-            ["mac_pkg", "mac_sign_and_pkg"],
+            ["mac_geckodriver", "mac_sign_and_pkg"],
             "mac_sign_and_pkg",
             False,
         ),
         (None, ["mac_sign"], "mac_sign", False),
         ("invalid_behavior", ["mac_sign", "invalid_behavior"], None, True),
-        ("mac_notarize", ["mac_sign", "mac_pkg"], None, True),
+        ("mac_notarize", ["mac_sign", "mac_geckodriver"], None, True),
     ),
 )
 @pytest.mark.asyncio
@@ -47,8 +47,8 @@ async def test_async_main(
     async def test_notarize(*args, **kwargs):
         calls.setdefault("mac_notarize", []).append([args, kwargs])
 
-    async def test_pkg(*args, **kwargs):
-        calls.setdefault("mac_pkg", []).append([args, kwargs])
+    async def test_geckodriver(*args, **kwargs):
+        calls.setdefault("mac_geckodriver", []).append([args, kwargs])
 
     async def test_sign(*args, **kwargs):
         calls.setdefault("mac_sign", []).append([args, kwargs])
@@ -57,7 +57,7 @@ async def test_async_main(
         calls.setdefault("mac_sign_and_pkg", []).append([args, kwargs])
 
     mocker.patch.object(script, "notarize_behavior", new=test_notarize)
-    mocker.patch.object(script, "pkg_behavior", new=test_pkg)
+    mocker.patch.object(script, "geckodriver_behavior", new=test_geckodriver)
     mocker.patch.object(script, "sign_behavior", new=test_sign)
     mocker.patch.object(script, "sign_and_pkg_behavior", new=test_sign_and_pkg)
     mocker.patch.object(script, "get_key_config", return_value=key_config)

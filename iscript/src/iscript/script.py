@@ -7,8 +7,8 @@ from scriptworker_client.client import sync_main
 from scriptworker_client.utils import run_command
 from iscript.exceptions import IScriptError
 from iscript.mac import (
+    geckodriver_behavior,
     notarize_behavior,
-    pkg_behavior,
     sign_behavior,
     sign_and_pkg_behavior,
 )
@@ -40,8 +40,8 @@ async def async_main(config, task):
         raise IScriptError(
             "Unsupported behavior {} given scopes {}!".format(behavior, task["scopes"])
         )
-    if behavior == "mac_pkg":
-        await pkg_behavior(config, task)
+    if behavior == "mac_geckodriver":
+        await geckodriver_behavior(config, task)
         return
     elif behavior == "mac_notarize":
         await notarize_behavior(config, task)
