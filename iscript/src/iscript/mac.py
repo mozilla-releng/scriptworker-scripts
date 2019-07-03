@@ -1260,6 +1260,6 @@ async def geckodriver_behavior(config, task):
         key_config["signing_keychain"], key_config["keychain_password"]
     )
     await update_keychain_search_path(config, key_config["signing_keychain"])
-    sign_geckodriver(config, key_config, all_paths)
+    await sign_geckodriver(config, key_config, all_paths)
 
     log.info("Done signing geckodriver.")
