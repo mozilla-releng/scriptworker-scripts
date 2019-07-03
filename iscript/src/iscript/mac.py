@@ -1251,7 +1251,6 @@ async def geckodriver_behavior(config, task):
         IScriptError: on fatal error.
 
     """
-    pass
     key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
