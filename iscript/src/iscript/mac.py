@@ -158,6 +158,72 @@ def get_bundle_executable(appdir):
     ]
 
 
+# _get_sign_command {{{1
+def _get_sign_command(identity, keychain):
+    return [
+        "codesign",
+        "-s",
+        identity,
+        "-fv",
+        "--keychain",
+        keychain,
+        "--requirement",
+        MAC_DESIGNATED_REQUIREMENTS % {"subject_ou": identity},
+    ]
+
+
+# sign_geckodriver {{{1
+async def sign_geckodriver(config, key_config, all_paths):
+    """Sign geckodriver.
+
+    Args:
+        key_config (dict): the running config
+        all_paths (list): list of App objects
+
+    Raises:
+        IScriptError: on error.
+
+    """
+    identity = key_config["identity"]
+    keychain = key_config["signing_keychain"]
+    sign_command = _get_sign_command(identity, keychain)
+
+    for app in all_paths:
+        app.check_required_attrs(["orig_path", "parent_dir", "artifact_prefix"])
+        app.target_tar_path = "{}/{}{}".format(
+            config["artifact_dir"],
+            app.artifact_prefix,
+            app.orig_path.split(app.artifact_prefix)[1],
+        )
+        file_ = "geckodriver"
+        if not os.path.exists(os.path.join(app.parent_dir, file_)):
+            raise IScriptError(f"No such file {file_}!")
+        await retry_async(
+            run_command,
+            args=[sign_command + [file_]],
+            kwargs={
+                "cwd": app.parent_dir,
+                "exception": IScriptError,
+                "output_log_on_exception": True,
+            },
+            retry_exceptions=(IScriptError,),
+        )
+        env = deepcopy(os.environ)
+        # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
+        env["COPYFILE_DISABLE"] = "1"
+        await run_command(
+            [
+                "tar",
+                _get_tar_create_options(app.target_tar_path),
+                app.target_tar_path,
+                file_,
+            ],
+            cwd=app.parent_dir,
+            env=env,
+            exception=IScriptError,
+        )
+
+
 # sign_app {{{1
 async def sign_app(key_config, app_path, entitlements_path):
     """Sign the .app.
@@ -181,16 +247,7 @@ async def sign_app(key_config, app_path, entitlements_path):
     )
     identity = key_config["identity"]
     keychain = key_config["signing_keychain"]
-    sign_command = [
-        "codesign",
-        "-s",
-        identity,
-        "-fv",
-        "--keychain",
-        keychain,
-        "--requirement",
-        MAC_DESIGNATED_REQUIREMENTS % {"subject_ou": identity},
-    ]
+    sign_command = _get_sign_command(identity, keychain)
 
     if key_config.get("sign_with_entitlements", False):
         sign_command.extend(["-o", "runtime", "--entitlements", entitlements_path])
@@ -1195,15 +1252,14 @@ async def geckodriver_behavior(config, task):
 
     """
     pass
-    # key_config = get_key_config(config, task, base_key="mac_config")
+    key_config = get_key_config(config, task, base_key="mac_config")
 
-    # all_paths = get_app_paths(config, task)
-    # await extract_all_apps(config, all_paths)
-    # await unlock_keychain(
-    #     key_config["signing_keychain"], key_config["keychain_password"]
-    # )
-    # await update_keychain_search_path(config, key_config["signing_keychain"])
-    # await create_pkg_files(config, key_config, all_paths)
-    # await copy_pkgs_to_artifact_dir(config, all_paths)
+    all_paths = get_app_paths(config, task)
+    await extract_all_apps(config, all_paths)
+    await unlock_keychain(
+        key_config["signing_keychain"], key_config["keychain_password"]
+    )
+    await update_keychain_search_path(config, key_config["signing_keychain"])
+    sign_geckodriver(config, key_config, all_paths)
 
-    # log.info("Done creating pkgs.")
+    log.info("Done signing geckodriver.")
