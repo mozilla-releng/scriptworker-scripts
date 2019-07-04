@@ -804,6 +804,7 @@ async def wrap_notarization_with_sudo(
                             "log_cmd": log_cmd,
                             "exception": IScriptError,
                         },
+                        attempts=10,
                     )
                 )
             )
@@ -897,6 +898,7 @@ async def poll_notarization_uuid(
                 "log_cmd": log_cmd,
                 "exception": IScriptError,
             },
+            attempts=10,
         )
         status = get_notarization_status_from_log(log_path)
         if status == "success":
@@ -970,6 +972,7 @@ async def staple_notarization(all_paths, path_attr="app_path"):
                         "log_level": logging.DEBUG,
                     },
                     retry_exceptions=(IScriptError,),
+                    attempts=10,
                 )
             )
         )
