@@ -804,6 +804,7 @@ async def wrap_notarization_with_sudo(
                             "log_cmd": log_cmd,
                             "exception": IScriptError,
                         },
+                        retry_exceptions=(IScriptError,),
                         attempts=10,
                     )
                 )
@@ -898,6 +899,7 @@ async def poll_notarization_uuid(
                 "log_cmd": log_cmd,
                 "exception": IScriptError,
             },
+            retry_exceptions=(IScriptError,),
             attempts=10,
         )
         status = get_notarization_status_from_log(log_path)
