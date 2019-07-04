@@ -196,8 +196,9 @@ async def sign_geckodriver(config, key_config, all_paths):
             app.orig_path.split(app.artifact_prefix)[1],
         )
         file_ = "geckodriver"
-        if not os.path.exists(os.path.join(app.parent_dir, file_)):
-            raise IScriptError(f"No such file {file_}!")
+        path = os.path.join(app.parent_dir, file_)
+        if not os.path.exists(path):
+            raise IScriptError(f"No such file {path}!")
         await retry_async(
             run_command,
             args=[sign_command + [file_]],
@@ -1244,7 +1245,7 @@ async def sign_and_pkg_behavior(config, task):
     log.info("Done signing apps and creating pkgs.")
 
 
-# sign_geckodriver {{{1
+# geckodriver {{{1
 async def geckodriver_behavior(config, task):
     """Create and sign the geckodriver file for this task.
 
