@@ -570,7 +570,7 @@ async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
     futures_len = [3, 3, 2]
     pw = "test_apple_password"
 
-    async def fake_retry_async(_, args, kwargs):
+    async def fake_retry_async(_, args, kwargs, **kw):
         cmd = args[0]
         end = len(cmd) - 1
         assert cmd[0] == "sudo"
@@ -638,7 +638,7 @@ async def test_notarize_no_sudo(mocker, tmpdir, raises):
     """
     pw = "test_apple_password"
 
-    async def fake_retry_async(_, args, kwargs):
+    async def fake_retry_async(_, args, kwargs, **kw):
         cmd = args[0]
         end = len(cmd) - 1
         assert cmd[0] == "xcrun"
@@ -697,7 +697,7 @@ async def test_poll_notarization_uuid(mocker, tmpdir, statuses, exception):
     """
     pw = "test_apple_password"
 
-    async def fake_retry_async(_, args, kwargs):
+    async def fake_retry_async(_, args, kwargs, **kw):
         cmd = args[0]
         end = len(cmd) - 1
         assert cmd[0] == "xcrun"
@@ -1203,6 +1203,13 @@ async def test_geckodriver_behavior(mocker, tmpdir):
         }
     }
 
+    async def fake_extract(_, all_paths):
+        for app in all_paths:
+            app.parent_dir = f"{work_dir}/0"
+            makedirs(app.parent_dir)
+            touch(f"{app.parent_dir}/geckodriver")
+
+    mocker.patch.object(mac, "extract_all_apps", new=fake_extract)
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
