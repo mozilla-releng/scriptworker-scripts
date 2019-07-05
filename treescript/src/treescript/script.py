@@ -54,9 +54,7 @@ async def async_main(config, task):
     actions_to_perform = task_action_types(config, task)
     await log_mercurial_version(config)
     if not await validate_robustcheckout_works(config):
-        raise TreeScriptError(
-            "Robustcheckout can't run on our version of hg, aborting"
-        )
+        raise TreeScriptError("Robustcheckout can't run on our version of hg, aborting")
     await checkout_repo(config, task, work_dir)
     if actions_to_perform:
         await do_actions(config, task, actions_to_perform, work_dir)

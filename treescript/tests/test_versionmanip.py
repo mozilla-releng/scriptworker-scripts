@@ -2,7 +2,6 @@ import os
 import pytest
 
 from treescript.utils import DONTBUILD_MSG
-from scriptworker.context import Context
 from treescript.exceptions import TaskVerificationError
 from treescript.script import get_default_config
 import treescript.versionmanip as vmanip
@@ -17,10 +16,8 @@ def is_slice_in_list(s, l):
 
 @pytest.yield_fixture(scope="function")
 def context(tmpdir):
-    context = Context()
-    context.config = get_default_config()
-    context.config["work_dir"] = os.path.join(tmpdir, "work")
-    context.task = {}
+    config = get_default_config()
+    config["work_dir"] = os.path.join(tmpdir, "work")
     yield context
 
 

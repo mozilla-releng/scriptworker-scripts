@@ -77,7 +77,7 @@ def build_hg_environment():
 
 
 # run_hg_command {{{1
-async def run_hg_command(config, *args, local_repo=None):
+async def run_hg_command(config, *args, local_repo=None, **kwargs):
     """Run a mercurial command.
 
     See-Also ``build_hg_environment``, ``build_hg_command``
@@ -94,7 +94,7 @@ async def run_hg_command(config, *args, local_repo=None):
     env = build_hg_environment()
     if local_repo:
         command.extend(["-R", local_repo])
-    await run_command(command, env=env, exception=FailedSubprocess)
+    await run_command(command, env=env, exception=FailedSubprocess, **kwargs)
 
 
 # log_mercurial_version {{{1
@@ -105,7 +105,10 @@ async def log_mercurial_version(config):
         config (dict): the running config.
 
     """
-    await run_hg_command(config, "-v", "version")
+    path = os.path.join(config["work_dir"], "mercurial_version")
+    await run_hg_command(config, "-v", "version", log_path=path)
+    with open(path) as fh:
+        log.info(fh.read())
 
 
 # validate_robustcheckout_works {{{1

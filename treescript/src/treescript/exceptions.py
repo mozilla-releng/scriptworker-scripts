@@ -11,4 +11,4 @@ class FailedSubprocess(TaskError):
 
 
 class TreeScriptError(TaskError):
-    """Something went wrong with treescript"""
+    """Something went wrong with treescript."""

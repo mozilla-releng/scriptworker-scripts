@@ -9,12 +9,11 @@ it's expected output is something our script can cope with.
 import os
 
 import pytest
-from scriptworker.context import Context
+from scriptworker_client.utils import makedirs
 from treescript import mercurial
 from treescript.exceptions import FailedSubprocess
 from treescript.script import get_default_config
-from treescript.utils import mkdir, DONTBUILD_MSG
-from treescript import utils
+from treescript.utils import DONTBUILD_MSG
 
 
 ROBUSTCHECKOUT_FILE = os.path.abspath(
@@ -26,6 +25,11 @@ UNEXPECTED_ENV_KEYS = (
     "HG HGPROF CDPATH GREP_OPTIONS http_proxy no_proxy "
     "HGPLAINEXCEPT EDITOR VISUAL PAGER NO_PROXY CHGDEBUG".split()
 )
+
+
+@pytest.yield_fixture(scope="function")
+def task():
+    return {"metadata": {"source": "https://hg.mozilla.org/repo-name/file/filename"}}
 
 
 async def noop_async(*args, **kwargs):
@@ -40,28 +44,21 @@ def is_slice_in_list(s, l):
 
 
 @pytest.yield_fixture(scope="function")
-def context(tmpdir):
-    context = Context()
-    context.config = get_default_config()
-    context.config["work_dir"] = os.path.join(tmpdir, "work")
-    context.config["artifact_dir"] = os.path.join(tmpdir, "artifact")
-    mkdir(context.config["work_dir"])
-    mkdir(context.config["artifact_dir"])
-    yield context
-
-
-@pytest.fixture(scope="function")
-def repo_context(tmpdir, context):
-    context.repo = os.path.join(tmpdir, "repo")
-    yield context
+def config(tmpdir):
+    config = get_default_config()
+    config["work_dir"] = os.path.join(tmpdir, "work")
+    config["artifact_dir"] = os.path.join(tmpdir, "artifact")
+    makedirs(config["work_dir"])
+    makedirs(config["artifact_dir"])
+    yield config
 
 
 @pytest.mark.parametrize(
     "hg,args", (("hg", ["blah", "blah", "--baz"]), (["hg"], ["blah", "blah", "--baz"]))
 )
-def test_build_hg_cmd(context, hg, args):
-    context.config["hg"] = hg
-    assert mercurial.build_hg_command(context, *args) == [
+def test_build_hg_cmd(config, hg, args):
+    config["hg"] = hg
+    assert mercurial.build_hg_command(config, *args) == [
         "hg",
         "--config",
         "extensions.robustcheckout={}".format(ROBUSTCHECKOUT_FILE),
@@ -93,88 +90,91 @@ def test_build_hg_env(mocker, my_env):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("args", (["foobar", "--bar"], ["--test", "args", "banana"]))
-async def test_run_hg_command(mocker, context, args):
+async def test_run_hg_command(mocker, config, args):
     called_args = []
 
     async def run_command(*arguments, **kwargs):
         called_args.append([*arguments, kwargs])
 
-    mocker.patch.object(mercurial, "execute_subprocess", new=run_command)
+    mocker.patch.object(mercurial, "run_command", new=run_command)
     env_call = mocker.patch.object(mercurial, "build_hg_environment")
     cmd_call = mocker.patch.object(mercurial, "build_hg_command")
     env = {"HGPLAIN": 1, "LANG": "C"}
     env_call.return_value = env
     cmd_call.return_value = ["hg", *args]
 
-    await mercurial.run_hg_command(context, *args)
+    await mercurial.run_hg_command(config, *args)
 
     env_call.assert_called_with()
-    cmd_call.assert_called_with(context, *args)
-    assert called_args[0] == [["hg"] + args, {"env": env}]
+    cmd_call.assert_called_with(config, *args)
+    assert called_args[0] == [
+        ["hg"] + args,
+        {"env": env, "exception": FailedSubprocess},
+    ]
     assert len(called_args) == 1
 
 
 @pytest.mark.asyncio
-async def test_run_hg_command_localrepo(mocker, context):
+async def test_run_hg_command_localrepo(mocker, config):
     args = ["foobar", "--bar"]
     called_args = []
 
     async def run_command(*arguments, **kwargs):
         called_args.append([*arguments, kwargs])
 
-    mocker.patch.object(mercurial, "execute_subprocess", new=run_command)
+    mocker.patch.object(mercurial, "run_command", new=run_command)
     env_call = mocker.patch.object(mercurial, "build_hg_environment")
     cmd_call = mocker.patch.object(mercurial, "build_hg_command")
     env = {"HGPLAIN": 1, "LANG": "C"}
     env_call.return_value = env
     cmd_call.return_value = ["hg", *args]
 
-    await mercurial.run_hg_command(context, *args, local_repo="/tmp/localrepo")
+    await mercurial.run_hg_command(config, *args, local_repo="/tmp/localrepo")
 
     env_call.assert_called_with()
-    cmd_call.assert_called_with(context, *args)
+    cmd_call.assert_called_with(config, *args)
     assert len(called_args) == 1
     is_slice_in_list(["-R", "/tmp/localrepo"], called_args[0][0])
 
 
 @pytest.mark.asyncio
-async def test_hg_version(context, mocker):
+async def test_hg_version(config, mocker):
     logged = []
 
-    def info(msg):
-        logged.append(msg)
+    def info(msg, *args):
+        logged.append(msg % args)
 
-    mocklog = mocker.patch.object(utils, "log")
+    mocklog = mocker.patch.object(mercurial, "log")
     mocklog.info = info
-    await mercurial.log_mercurial_version(context)
+    await mercurial.log_mercurial_version(config)
 
-    assert "Mercurial Distributed SCM (version" in logged[2]
+    assert logged[0].startswith("Mercurial Distributed SCM (version")
 
 
 @pytest.mark.asyncio
-async def test_validate_robustcheckout_works(context, mocker):
+async def test_validate_robustcheckout_works(config, mocker):
     mocker.patch.object(mercurial, "run_hg_command", new=noop_async)
-    ret = await mercurial.validate_robustcheckout_works(context)
+    ret = await mercurial.validate_robustcheckout_works(config)
     assert ret is True
 
 
 @pytest.mark.asyncio
-async def test_validate_robustcheckout_works_doesnt(context, mocker):
+async def test_validate_robustcheckout_works_doesnt(config, mocker):
     mocked = mocker.patch.object(mercurial, "run_hg_command")
     mocked.side_effect = FailedSubprocess("Mocked failure in test harness")
-    ret = await mercurial.validate_robustcheckout_works(context)
+    ret = await mercurial.validate_robustcheckout_works(config)
     assert ret is False
 
 
 @pytest.mark.asyncio
-async def test_checkout_repo(context, mocker):
+async def test_checkout_repo(config, task, mocker):
     async def check_params(*args, **kwargs):
         assert is_slice_in_list(("--sharebase", "/builds/hg-shared-test"), args)
         assert is_slice_in_list(
             (
                 "robustcheckout",
                 "https://hg.mozilla.org/test-repo",
-                os.path.join(context.config["work_dir"], "src"),
+                os.path.join(config["work_dir"], "src"),
             ),
             args,
         )
@@ -184,18 +184,18 @@ async def test_checkout_repo(context, mocker):
         mercurial, "get_source_repo"
     ).return_value = "https://hg.mozilla.org/test-repo"
 
-    context.config["hg_share_base_dir"] = "/builds/hg-shared-test"
-    context.config["upstream_repo"] = "https://hg.mozilla.org/mozilla-test-unified"
+    config["hg_share_base_dir"] = "/builds/hg-shared-test"
+    config["upstream_repo"] = "https://hg.mozilla.org/mozilla-test-unified"
 
-    await mercurial.checkout_repo(context, context.config["work_dir"])
+    await mercurial.checkout_repo(config, task, config["work_dir"])
 
 
 @pytest.mark.asyncio
-async def test_do_tagging_DONTBUILD_true(context, mocker):
+async def test_do_tagging_DONTBUILD_true(config, task, mocker):
     called_args = []
 
-    async def run_command(context, *arguments, local_repo=None):
-        called_args.append([tuple([context]) + arguments, {"local_repo": local_repo}])
+    async def run_command(config, *arguments, local_repo=None):
+        called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
     mocked_tag_info = mocker.patch.object(mercurial, "get_tag_info")
@@ -204,7 +204,7 @@ async def test_do_tagging_DONTBUILD_true(context, mocker):
     mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
     mocked_dontbuild = mocker.patch.object(mercurial, "get_dontbuild")
     mocked_dontbuild.return_value = True
-    await mercurial.do_tagging(context, context.config["work_dir"])
+    await mercurial.do_tagging(config, task, config["work_dir"])
 
     assert len(called_args) == 2
     assert "local_repo" in called_args[0][1]
@@ -218,11 +218,11 @@ async def test_do_tagging_DONTBUILD_true(context, mocker):
 
 
 @pytest.mark.asyncio
-async def test_do_tagging_DONTBUILD_false(context, mocker):
+async def test_do_tagging_DONTBUILD_false(config, task, mocker):
     called_args = []
 
-    async def run_command(context, *arguments, local_repo=None):
-        called_args.append([tuple([context]) + arguments, {"local_repo": local_repo}])
+    async def run_command(config, *arguments, local_repo=None):
+        called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
     mocked_tag_info = mocker.patch.object(mercurial, "get_tag_info")
@@ -231,7 +231,7 @@ async def test_do_tagging_DONTBUILD_false(context, mocker):
     mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
     mocked_dontbuild = mocker.patch.object(mercurial, "get_dontbuild")
     mocked_dontbuild.return_value = False
-    await mercurial.do_tagging(context, context.config["work_dir"])
+    await mercurial.do_tagging(config, task, config["work_dir"])
 
     assert len(called_args) == 2
     assert "local_repo" in called_args[0][1]
@@ -245,16 +245,16 @@ async def test_do_tagging_DONTBUILD_false(context, mocker):
 
 
 @pytest.mark.asyncio
-async def test_push(repo_context, mocker):
+async def test_push(config, task, mocker):
     called_args = []
 
-    async def run_command(context, *arguments, local_repo=None):
-        called_args.append([tuple([context]) + arguments, {"local_repo": local_repo}])
+    async def run_command(config, *arguments, local_repo=None):
+        called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
     mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
     mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
-    await mercurial.push(repo_context)
+    await mercurial.push(config, task)
 
     assert len(called_args) == 1
     assert "local_repo" in called_args[0][1]
@@ -275,18 +275,18 @@ async def test_push(repo_context, mocker):
         ),
     ),
 )
-async def test_push_ssh(repo_context, mocker, options, expect):
+async def test_push_ssh(config, task, mocker, options, expect):
     called_args = []
 
-    async def run_command(context, *arguments, local_repo=None):
-        called_args.append([tuple([context]) + arguments, {"local_repo": local_repo}])
+    async def run_command(config, *arguments, local_repo=None):
+        called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
 
     print()
-    repo_context.config.update(options)
+    config.update(options)
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
     mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
     mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
-    await mercurial.push(repo_context)
+    await mercurial.push(config, task)
 
     assert len(called_args) == 1
     assert "local_repo" in called_args[0][1]
@@ -296,16 +296,16 @@ async def test_push_ssh(repo_context, mocker, options, expect):
 
 
 @pytest.mark.asyncio
-async def test_log_outgoing(context, mocker):
+async def test_log_outgoing(config, task, mocker):
     called_args = []
 
-    async def run_command(context, *arguments, local_repo=None):
-        called_args.append([tuple([context]) + arguments, {"local_repo": local_repo}])
+    async def run_command(config, *arguments, local_repo=None):
+        called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
     mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
     mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
-    await mercurial.log_outgoing(context, context.config["work_dir"])
+    await mercurial.log_outgoing(config, task, config["work_dir"])
 
     assert len(called_args) == 1
     assert "local_repo" in called_args[0][1]

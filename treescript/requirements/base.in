@@ -1,2 +1,1 @@
-scriptworker !=13.0
-taskcluster
+scriptworker_client

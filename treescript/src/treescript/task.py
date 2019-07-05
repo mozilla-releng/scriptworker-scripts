@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 
 # get_local_repo {{{1
-def get_local_repo(src, src_type='task'):
+def get_local_repo(src, src_type="task"):
     """Get the local repo from the task metadata.
 
     Args:
@@ -24,9 +24,9 @@ def get_local_repo(src, src_type='task'):
         TaskVerificationError: on unexpected input.
 
     """
-    if src_type == 'task':
+    if src_type == "task":
         return os.path.join(get_source_repo(src), "src")
-    elif src_type == 'directory':
+    elif src_type == "directory":
         return os.path.join(src, "src")
     else:
         raise TreeScriptError("Unknown src_type {}".format(src_type))
@@ -58,7 +58,7 @@ def get_source_repo(task):
         )
     parts = source.split("/file/")
     if len(parts) < 2:
-        raise TaskVerificationError("Soure url is in unexpected format")
+        raise TaskVerificationError("Source url is in unexpected format")
     return parts[0]
 
 

@@ -101,9 +101,7 @@ async def bump_version(config, task):
         commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
         if dontbuild:
             commit_msg += DONTBUILD_MSG
-        await run_hg_command(
-            config, "commit", "-m", commit_msg, local_repo=repo
-        )
+        await run_hg_command(config, "commit", "-m", commit_msg, local_repo=repo)
 
 
 def replace_ver_in_file(file, curr_version, new_version):
