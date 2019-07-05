@@ -1,9 +1,8 @@
 import os
 import pytest
 
-from scriptworker.context import Context
-from scriptworker.client import validate_task_schema
-from scriptworker.exceptions import ScriptWorkerTaskException
+from scriptworker_client.client import verify_task_schema
+from scriptworker_client.exceptions import TaskError
 
 from treescript.exceptions import TaskVerificationError
 from treescript.script import get_default_config
@@ -42,20 +41,18 @@ def task_defn():
 
 
 @pytest.yield_fixture(scope="function")
-def context(tmpdir):
-    context = Context()
-    context.config = get_default_config()
-    context.config["work_dir"] = os.path.join(tmpdir, "work")
-    yield context
+def config(tmpdir):
+    config_ = get_default_config()
+    config_["work_dir"] = os.path.join(tmpdir, "work")
+    yield config_
 
 
-# validate_task_schema {{{1
-def test_missing_mandatory_urls_are_reported(context, task_defn):
-    context.task = task_defn
-    del context.task["scopes"]
+# verify_task_schema {{{1
+def test_missing_mandatory_urls_are_reported(config, task_defn):
+    del task_defn["scopes"]
 
-    with pytest.raises(ScriptWorkerTaskException):
-        validate_task_schema(context)
+    with pytest.raises(TaskError):
+        verify_task_schema(config, task_defn)
 
 
 @pytest.mark.parametrize(
@@ -71,16 +68,15 @@ def test_missing_mandatory_urls_are_reported(context, task_defn):
         {"tags": ["mercury"], "revision": 6},
     ),
 )
-def test_tag_info_invalid(context, task_defn, tag_info):
-    context.task = task_defn
-    context.task["payload"]["tag_info"] = tag_info
-    with pytest.raises(ScriptWorkerTaskException):
-        validate_task_schema(context)
+def test_tag_info_invalid(config, task_defn, tag_info):
+    task = task_defn
+    task["payload"]["tag_info"] = tag_info
+    with pytest.raises(TaskVerificationError):
+        verify_task_schema(config, task)
 
 
-def test_no_error_is_reported_when_no_missing_url(context, task_defn):
-    context.task = task_defn
-    validate_task_schema(context)
+def test_no_error_is_reported_when_no_missing_url(config, task_defn):
+    verify_task_schema(config, task_defn)
 
 
 @pytest.mark.parametrize(
