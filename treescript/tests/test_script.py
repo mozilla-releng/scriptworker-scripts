@@ -3,9 +3,7 @@ import mock
 import os
 import pytest
 
-import scriptworker.client
-from scriptworker.context import Context
-from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerException
+from scriptworker_client.exceptions import TaskError
 from unittest.mock import MagicMock
 
 import treescript.script as script
@@ -14,11 +12,6 @@ import treescript.script as script
 # helper constants, fixtures, functions {{{1
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 EXAMPLE_CONFIG = os.path.join(BASE_DIR, "config_example.json")
-
-
-@pytest.fixture(scope="function")
-def context():
-    return Context()
 
 
 def noop_sync(*args, **kwargs):
@@ -46,7 +39,7 @@ def get_conf_file(tmpdir, **kwargs):
 
 
 async def die_async(*args, **kwargs):
-    raise ScriptWorkerTaskException("Expected exception.")
+    raise TaskError("Expected exception.")
 
 
 # async_main {{{1
@@ -54,7 +47,7 @@ async def die_async(*args, **kwargs):
 @pytest.mark.parametrize(
     "robustcheckout_works,raises,actions",
     (
-        (False, ScriptWorkerException, ["some_action"]),
+        (False, TaskError, ["some_action"]),
         (True, None, ["some_action"]),
         (True, None, None),
     ),
@@ -66,7 +59,6 @@ async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions)
     def action_fun(*args, **kwargs):
         return actions
 
-    mocker.patch.object(scriptworker.client, "get_task", new=noop_sync)
     mocker.patch.object(script, "task_action_types", new=action_fun)
     mocker.patch.object(
         script, "validate_robustcheckout_works", new=fake_validate_robustcheckout
@@ -74,12 +66,13 @@ async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions)
     mocker.patch.object(script, "log_mercurial_version", new=noop_async)
     mocker.patch.object(script, "checkout_repo", new=noop_async)
     mocker.patch.object(script, "do_actions", new=noop_async)
-    context = mock.MagicMock()
+    config = mock.MagicMock()
+    task = mock.MagicMock()
     if raises:
         with pytest.raises(raises):
-            await script.async_main(context)
+            await script.async_main(config, task)
     else:
-        await script.async_main(context)
+        await script.async_main(config, task)
 
 
 # get_default_config {{{1
@@ -100,7 +93,7 @@ def test_get_default_config():
         ([], True, False),
     ),
 )
-async def test_do_actions(mocker, context, push_scope, dry_run, push_expect_called):
+async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
     actions = ["tagging", "version_bump"]
     actions += push_scope
     called_tag = [False]
@@ -120,15 +113,15 @@ async def test_do_actions(mocker, context, push_scope, dry_run, push_expect_call
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "push", new=mocked_push)
     mocker.patch.object(script, "log_outgoing", new=noop_async)
-    mocker.patch.object(script, "is_dry_run").return_value = dry_run
-    await script.do_actions(context, actions, directory="/some/folder/here")
+    mocker.patch.object(script, "is_dry_run", return_value=dry_run)
+    await script.do_actions({}, {}, actions, directory="/some/folder/here")
     assert called_tag[0]
     assert called_bump[0]
     assert called_push[0] is push_expect_called
 
 
 @pytest.mark.asyncio
-async def test_do_actions_unknown(mocker, context):
+async def test_do_actions_unknown(mocker):
     actions = ["unknown"]
     called_tag = [False]
     called_bump = [False]
@@ -143,14 +136,14 @@ async def test_do_actions_unknown(mocker, context):
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "log_outgoing", new=noop_async)
     with pytest.raises(NotImplementedError):
-        await script.do_actions(context, actions, directory="/some/folder/here")
+        await script.do_actions({}, {}, actions, directory="/some/folder/here")
     assert called_tag[0] is False
     assert called_bump[0] is False
 
 
 def test_main(monkeypatch):
     sync_main_mock = MagicMock()
-    monkeypatch.setattr(scriptworker.client, "sync_main", sync_main_mock)
+    monkeypatch.setattr(script, "sync_main", sync_main_mock)
     script.main()
     sync_main_mock.asset_called_once_with(
         script.async_main, default_config=script.get_default_config()
