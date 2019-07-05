@@ -6,6 +6,12 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[6.0.0] = (2019-07-04)
+----------------------
+Changed
+~~~~~~~
+- Log to stderr which is unbuffered
+
 [6.0.0] = (2019-06-18)
 ----------------------
 
