@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 """Tree manipulation script."""
-import aiohttp
 import logging
 import os
 
-import scriptworker.client
-from scriptworker.exceptions import ScriptWorkerException
+from scriptworker_client.client import sync_main
+from treescript.exceptions import TreeScriptError
 from treescript.utils import task_action_types, is_dry_run
 from treescript.mercurial import (
     log_mercurial_version,
@@ -20,50 +19,47 @@ from treescript.versionmanip import bump_version
 log = logging.getLogger(__name__)
 
 
-async def do_actions(context, actions, directory):
+async def do_actions(config, task, actions, directory):
     """Perform the set of actions that treescript can perform.
 
     The actions happen in order, tagging, ver bump, then push
     """
     for action in actions:
         if "tagging" == action:
-            await do_tagging(context, directory)
+            await do_tagging(config, task, directory)
         elif "version_bump" == action:
-            await bump_version(context)
+            await bump_version(config, task)
         elif "push" == action:
             pass  # handled after log_outgoing
         else:
             raise NotImplementedError("Unexpected action")
-    await log_outgoing(context, directory)
-    if is_dry_run(context.task):
+    await log_outgoing(config, task, directory)
+    if is_dry_run(task):
         log.info("Not pushing changes, dry_run was forced")
     elif "push" in actions:
-        await push(context)
+        await push(config)
     else:
         log.info("Not pushing changes, lacking scopes")
 
 
 # async_main {{{1
-async def async_main(context):
+async def async_main(config, task):
     """Run all the vcs things.
 
     Args:
-        context (TreeContext): the treescript context.
+        config (dict): the running config.
 
     """
-    connector = aiohttp.TCPConnector()
-    async with aiohttp.ClientSession(connector=connector) as session:
-        context.session = session
-        work_dir = context.config["work_dir"]
-        actions_to_perform = task_action_types(context.task, context.config)
-        await log_mercurial_version(context)
-        if not await validate_robustcheckout_works(context):
-            raise ScriptWorkerException(
-                "Robustcheckout can't run on our version of hg, aborting"
-            )
-        await checkout_repo(context, work_dir)
-        if actions_to_perform:
-            await do_actions(context, actions_to_perform, work_dir)
+    work_dir = config["work_dir"]
+    actions_to_perform = task_action_types(config, task)
+    await log_mercurial_version(config)
+    if not await validate_robustcheckout_works(config):
+        raise TreeScriptError(
+            "Robustcheckout can't run on our version of hg, aborting"
+        )
+    await checkout_repo(config, task, work_dir)
+    if actions_to_perform:
+        await do_actions(config, task, actions_to_perform, work_dir)
     log.info("Done!")
 
 
@@ -92,9 +88,7 @@ def get_default_config(base_dir=None):
 
 def main():
     """Start treescript."""
-    return scriptworker.client.sync_main(
-        async_main, default_config=get_default_config()
-    )
+    return sync_main(async_main, default_config=get_default_config())
 
 
 __name__ == "__main__" and main()

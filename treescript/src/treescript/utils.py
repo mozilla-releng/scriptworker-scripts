@@ -1,10 +1,7 @@
 """Treescript general utility functions."""
-import asyncio
-from asyncio.subprocess import PIPE, STDOUT
 import logging
-import os
 
-from treescript.exceptions import TaskVerificationError, FailedSubprocess
+from treescript.exceptions import TaskVerificationError
 
 log = logging.getLogger(__name__)
 
@@ -14,32 +11,17 @@ VALID_ACTIONS = ("tagging", "version_bump", "push")
 DONTBUILD_MSG = " DONTBUILD"
 
 
-# mkdir {{{1
-def mkdir(path):
-    """Equivalent to `mkdir -p`.
-
-    Args:
-        path (str): the path to mkdir
-
-    """
-    try:
-        os.makedirs(path)
-        log.info("mkdir {}".format(path))
-    except OSError:
-        pass
-
-
 def _sort_actions(actions):
     return sorted(actions, key=VALID_ACTIONS.index)
 
 
-# task_actions {{{1
-def task_action_types(task, script_config):
+# task_action_types {{{1
+def task_action_types(config, task):
     """Extract task actions as scope definitions.
 
     Args:
+        config (dict): the running config.
         task (dict): the task definition.
-        script_config (dict): the script configuration
 
     Raises:
         TaskVerificationError: if the number of cert scopes is not 1.
@@ -51,7 +33,7 @@ def task_action_types(task, script_config):
     actions = [
         s.split(":")[-1]
         for s in task["scopes"]
-        if s.startswith(script_config["taskcluster_scope_prefix"] + "action:")
+        if s.startswith(config["taskcluster_scope_prefix"] + "action:")
     ]
     log.info("Action requests: %s", actions)
     if len(actions) < 1:
@@ -85,47 +67,3 @@ def is_dry_run(task):
     """
     dry_run = task.get("payload", {}).get("dry_run", False)
     return dry_run
-
-
-# log_output {{{1
-async def log_output(fh):
-    """Log the output from an async generator.
-
-    Args:
-        fh (async generator): the async generator to log output from
-
-    """
-    while True:
-        line = await fh.readline()
-        if line:
-            log.info(line.decode("utf-8").rstrip())
-        else:
-            break
-
-
-# execute_subprocess {{{1
-async def execute_subprocess(command, **kwargs):
-    """Execute a command in a subprocess.
-
-    Args:
-        command (list): the command to run
-        **kwargs: the kwargs to pass to subprocess
-
-    Raises:
-        FailedSubprocess: on failure
-
-    """
-    message = 'Running "{}"'.format(" ".join(command))
-    if "cwd" in kwargs:
-        message += " in {}".format(kwargs["cwd"])
-    log.info(message)
-    subprocess = await asyncio.create_subprocess_exec(
-        *command, stdout=PIPE, stderr=STDOUT, **kwargs
-    )
-    log.info("COMMAND OUTPUT: ")
-    await log_output(subprocess.stdout)
-    exitcode = await subprocess.wait()
-    log.info("exitcode {}".format(exitcode))
-
-    if exitcode != 0:
-        raise FailedSubprocess("Command `{}` failed".format(" ".join(command)))

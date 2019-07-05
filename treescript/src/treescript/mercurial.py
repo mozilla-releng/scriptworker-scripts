@@ -3,9 +3,10 @@ import logging
 import os
 import sys
 
-from treescript.utils import execute_subprocess, DONTBUILD_MSG
+from scriptworker_client.utils import run_command
+from treescript.utils import DONTBUILD_MSG
 from treescript.exceptions import FailedSubprocess
-from treescript.task import get_source_repo, get_tag_info, get_dontbuild
+from treescript.task import get_local_repo, get_source_repo, get_tag_info, get_dontbuild
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
 # For environment vars.
@@ -20,20 +21,20 @@ log = logging.getLogger(__name__)
 
 
 # build_hg_command {{{1
-def build_hg_command(context, *args):
+def build_hg_command(config, *args):
     """Generate a mercurial command to run.
 
     See-Also ``build_hg_environment``
 
     Args:
-        context (TreeScriptContext): the treescript context
+        config (dict): the running config.
         *args: the remaining args to pass to the hg command
 
     Returns:
         list: the hg command to run.
 
     """
-    hg = context.config["hg"]
+    hg = config["hg"]
     if not isinstance(hg, (list, tuple)):
         hg = [hg]
     robustcheckout_args = [
@@ -76,85 +77,85 @@ def build_hg_environment():
 
 
 # run_hg_command {{{1
-async def run_hg_command(context, *args, local_repo=None):
+async def run_hg_command(config, *args, local_repo=None):
     """Run a mercurial command.
 
     See-Also ``build_hg_environment``, ``build_hg_command``
 
     Args:
-        context (TreeScriptContext): the treescript context
-        *str: the remaining args to pass to the hg command
+        config (dict): the running config.
+        *str: the remaining args to pass to the hg command.
 
     Returns:
         list: the hg command to run.
 
     """
-    command = build_hg_command(context, *args)
+    command = build_hg_command(config, *args)
     env = build_hg_environment()
     if local_repo:
         command.extend(["-R", local_repo])
-    await execute_subprocess(command, env=env)
+    await run_command(command, env=env, exception=FailedSubprocess)
 
 
 # log_mercurial_version {{{1
-async def log_mercurial_version(context):
+async def log_mercurial_version(config):
     """Run mercurial '-v version' to get used version into logs.
 
     Args:
-        context (TreeScriptContext): the treescript context
+        config (dict): the running config.
 
     """
-    await run_hg_command(context, "-v", "version")
+    await run_hg_command(config, "-v", "version")
 
 
 # validate_robustcheckout_works {{{1
-async def validate_robustcheckout_works(context):
+async def validate_robustcheckout_works(config):
     """Validate that the robustcheckout extension works.
 
     This works by trying to run 'hg robustcheckout -q --help' on
-    hg as defined by our context object.
+    hg as defined by our config.
 
     Args:
-        context (TreeScriptContext): the treescript context
+        config (dict): the running config.
 
     Returns:
         bool: True if robustcheckout seems to work, False otherwise.
 
     """
     try:
-        await run_hg_command(context, "robustcheckout", "-q", "--help")
+        await run_hg_command(config, "robustcheckout", "-q", "--help")
         return True
     except FailedSubprocess:
         return False
 
 
 # checkout_repo {{{1
-async def checkout_repo(context, directory):
+async def checkout_repo(config, task, directory):
     """Perform a clone via robustcheckout, at ${directory}/src.
 
     This function will perform a clone via robustcheckout, using hg's share extension
-    for a cache at 'context.config['hg_share_base_dir']' that robustcheckout will
+    for a cache at 'config['hg_share_base_dir']' that robustcheckout will
     populate if necessary.
 
     Robustcheckout will retry network operations at most 3 times (robustcheckout's default)
     before giving up and causing FailedSubprocess to be raised.
 
     Args:
-        context (TreeScriptContext): the treescript context
+        config (dict): the running config.
+        task (dict): the running task.
         directory (str): The directory to place the resulting clone.
 
     Raises:
         FailedSubprocess: if the clone attempt doesn't succeed.
 
     """
-    share_base = context.config["hg_share_base_dir"]
-    upstream_repo = context.config["upstream_repo"]
-    dest_repo = get_source_repo(context.task)
-    dest_folder = os.path.join(directory, "src")
-    context.repo = dest_folder
+    share_base = config["hg_share_base_dir"]
+    upstream_repo = config["upstream_repo"]
+    dest_repo = get_source_repo(task)
+    dest_folder = get_local_repo(directory, src_type="directory")
     # branch default is used to pull tip of the repo at checkout time
     await run_hg_command(
-        context,
+        config,
         "robustcheckout",
         dest_repo,
         dest_folder,
@@ -168,7 +169,7 @@ async def checkout_repo(context, directory):
 
 
 # do_tagging {{{1
-async def do_tagging(context, directory):
+async def do_tagging(config, task, directory):
     """Perform tagging, at ${directory}/src.
 
     This function will perform a mercurial tag, on 'default' head of target repository.
@@ -183,19 +184,20 @@ async def do_tagging(context, directory):
     the desired revision to tag is known to the local repository.
 
     Args:
-        context (TreeScriptContext): the treescript context
+        config (dict): the running config.
+        task (dict): the running task.
         directory (str): The directory to place the resulting clone.
 
     Raises:
         FailedSubprocess: if the tag attempt doesn't succeed.
 
     """
-    local_repo = os.path.join(directory, "src")
-    tag_info = get_tag_info(context.task)
+    local_repo = get_local_repo(task)
+    tag_info = get_tag_info(task)
     desired_tags = tag_info["tags"]
     desired_rev = tag_info["revision"]
-    dontbuild = get_dontbuild(context.task)
-    dest_repo = get_source_repo(context.task)
+    dontbuild = get_dontbuild(task)
+    dest_repo = get_source_repo(task)
     commit_msg = TAG_MSG.format(revision=desired_rev, tags=", ".join(desired_tags))
     if dontbuild:
         commit_msg += DONTBUILD_MSG
@@ -205,11 +207,11 @@ async def do_tagging(context, directory):
         )
     )
     await run_hg_command(
-        context, "pull", "-r", desired_rev, dest_repo, local_repo=local_repo
+        config, "pull", "-r", desired_rev, dest_repo, local_repo=local_repo
     )
     log.info(commit_msg)
     await run_hg_command(
-        context,
+        config,
         "tag",
         "-m",
         commit_msg,
@@ -221,26 +223,26 @@ async def do_tagging(context, directory):
     )
 
 
-async def log_outgoing(context, directory):
+async def log_outgoing(config, task, directory):
     """Run `hg out` against the current revision in the repository.
 
     This logs current changes that will be pushed (or would have been, if dry-run)
     """
-    local_repo = os.path.join(directory, "src")
-    dest_repo = get_source_repo(context.task)
+    local_repo = get_local_repo(directory, src_type="directory")
+    dest_repo = get_source_repo(task)
     log.info("outgoing changesets..")
     await run_hg_command(
-        context, "out", "-vp", "-r", ".", dest_repo, local_repo=local_repo
+        config, "out", "-vp", "-r", ".", dest_repo, local_repo=local_repo
     )
 
 
-async def push(context):
+async def push(config, task):
     """Run `hg push` against the current source repo."""
-    local_repo = context.repo
-    dest_repo = get_source_repo(context.task)
+    local_repo = get_local_repo(task)
+    dest_repo = get_source_repo(task)
     dest_repo_ssh = dest_repo.replace("https://", "ssh://")
-    ssh_username = context.config.get("hg_ssh_user")
-    ssh_key = context.config.get("hg_ssh_keyfile")
+    ssh_username = config.get("hg_ssh_user")
+    ssh_key = config.get("hg_ssh_keyfile")
     ssh_opt = []
     if ssh_username or ssh_key:
         ssh_opt = ["-e", "ssh"]
@@ -250,5 +252,5 @@ async def push(context):
             ssh_opt[1] += " -i %s" % ssh_key
     log.info("Pushing local changes to {}".format(dest_repo_ssh))
     await run_hg_command(
-        context, "push", *ssh_opt, "-r", ".", "-v", dest_repo_ssh, local_repo=local_repo
+        config, "push", *ssh_opt, "-r", ".", "-v", dest_repo_ssh, local_repo=local_repo
     )

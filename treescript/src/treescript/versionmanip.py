@@ -8,7 +8,7 @@ import os
 from treescript.utils import DONTBUILD_MSG
 from treescript.exceptions import TaskVerificationError
 from treescript.mercurial import run_hg_command
-from treescript.task import get_version_bump_info, get_dontbuild
+from treescript.task import get_version_bump_info, get_dontbuild, get_local_repo
 
 log = logging.getLogger(__name__)
 
@@ -38,10 +38,10 @@ def _get_version(file):
     return lines[-1]
 
 
-async def bump_version(context):
+async def bump_version(config, task):
     """Perform a version bump.
 
-    This function takes its inputs from context.task by using the ``get_version_bump_info``
+    This function takes its inputs from task by using the ``get_version_bump_info``
     function from treescript.task. Using `next_version` and `files`.
 
     This function does nothing (but logs) if the current version and next version
@@ -52,15 +52,16 @@ async def bump_version(context):
                                if the file is not in the target repository.
 
     """
-    bump_info = get_version_bump_info(context.task)
+    bump_info = get_version_bump_info(task)
     next_version = bump_info["next_version"]
     old_next_version = None
     files = bump_info["files"]
     changed = False
+    repo = get_local_repo(task)
     for file in files:
         if old_next_version:
             next_version = old_next_version
-        abs_file = os.path.join(context.repo, file)
+        abs_file = os.path.join(repo, file)
         if file not in ALLOWED_BUMP_FILES:
             raise TaskVerificationError(
                 "Specified file to version bump is not in whitelist"
@@ -96,12 +97,12 @@ async def bump_version(context):
                 file=abs_file, curr_version=curr_version, new_version=next_version
             )
     if changed:
-        dontbuild = get_dontbuild(context.task)
+        dontbuild = get_dontbuild(task)
         commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
         if dontbuild:
             commit_msg += DONTBUILD_MSG
         await run_hg_command(
-            context, "commit", "-m", commit_msg, local_repo=context.repo
+            config, "commit", "-m", commit_msg, local_repo=repo
         )
 
 

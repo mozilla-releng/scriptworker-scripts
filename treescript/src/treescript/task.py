@@ -1,10 +1,35 @@
 #!/usr/bin/env python
 """Treescript task functions."""
 import logging
+import os
 
-from treescript.exceptions import TaskVerificationError
+from treescript.exceptions import TaskVerificationError, TreeScriptError
 
 log = logging.getLogger(__name__)
+
+
+# get_local_repo {{{1
+def get_local_repo(src, src_type='task'):
+    """Get the local repo from the task metadata.
+
+    Args:
+        src (str): the repo url or directory
+        src_type (str, optional): the type of string ``src`` is.
+            Can be "task" or "directory". Defaults to "task"
+
+    Returns:
+        str: the local repo directory
+
+    Raises:
+        TaskVerificationError: on unexpected input.
+
+    """
+    if src_type == 'task':
+        return os.path.join(get_source_repo(src), "src")
+    elif src_type == 'directory':
+        return os.path.join(src, "src")
+    else:
+        raise TreeScriptError("Unknown src_type {}".format(src_type))
 
 
 # get_source_repo {{{1
