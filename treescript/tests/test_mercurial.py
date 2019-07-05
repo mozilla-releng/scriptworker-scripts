@@ -14,17 +14,25 @@ from treescript import mercurial
 from treescript.exceptions import FailedSubprocess
 from treescript.script import get_default_config
 from treescript.utils import mkdir, DONTBUILD_MSG
-from treescript.test import tmpdir, noop_async, is_slice_in_list
 from treescript import utils
-
-assert tmpdir  # silence flake8
 
 
 ROBUSTCHECKOUT_FILE = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), '..', 'py2', 'robustcheckout.py'
+    os.path.dirname(__file__), '..', 'src', 'treescript', 'py2', 'robustcheckout.py'
 ))
 UNEXPECTED_ENV_KEYS = ('HG HGPROF CDPATH GREP_OPTIONS http_proxy no_proxy '
                        'HGPLAINEXCEPT EDITOR VISUAL PAGER NO_PROXY CHGDEBUG'.split())
+
+
+async def noop_async(*args, **kwargs):
+    pass
+
+
+def is_slice_in_list(s, l):
+    # Credit to https://stackoverflow.com/a/20789412/#answer-20789669
+    # With edits by Callek to be py3 and pep8 compat
+    len_s = len(s)  # so we don't recompute length of s on every iteration
+    return any(s == l[i:len_s + i] for i in range(len(l) - len_s + 1))
 
 
 @pytest.yield_fixture(scope='function')

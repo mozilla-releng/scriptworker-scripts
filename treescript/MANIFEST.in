@@ -1,8 +1,9 @@
 include LICENSE
 include README.rst
 include version.txt
-include treescript/data/*
-include treescript/py2/*
+include tests/*
+include src/treescript/data/*
+include src/treescript/py2/*
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]

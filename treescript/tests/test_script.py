@@ -8,18 +8,30 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerException
 from unittest.mock import MagicMock
 
-from treescript.test import noop_async, noop_sync, read_file, tmpdir, BASE_DIR
 import treescript.script as script
 
-assert tmpdir  # silence flake8
 
 # helper constants, fixtures, functions {{{1
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 EXAMPLE_CONFIG = os.path.join(BASE_DIR, 'config_example.json')
 
 
 @pytest.fixture(scope='function')
 def context():
     return Context()
+
+
+def noop_sync(*args, **kwargs):
+    pass
+
+
+async def noop_async(*args, **kwargs):
+    pass
+
+
+def read_file(path):
+    with open(path, 'r') as fh:
+        return fh.read()
 
 
 def get_conf_file(tmpdir, **kwargs):

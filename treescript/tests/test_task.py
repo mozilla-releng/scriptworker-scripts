@@ -8,9 +8,6 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 from treescript.exceptions import TaskVerificationError
 from treescript.script import get_default_config
 import treescript.task as stask
-from treescript.test import tmpdir
-
-assert tmpdir  # silence flake8
 
 
 @pytest.fixture(scope='function')

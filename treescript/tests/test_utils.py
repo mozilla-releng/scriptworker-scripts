@@ -2,12 +2,9 @@ import mock
 import os
 import pytest
 
-from treescript.test import tmpdir
 import treescript.utils as utils
 from treescript.exceptions import TaskVerificationError, FailedSubprocess
 
-
-assert tmpdir  # silence flake8
 
 TEST_ACTION_TAG = 'project:releng:treescript:action:tagging'
 TEST_ACTION_BUMP = 'project:releng:treescript:action:version_bump'

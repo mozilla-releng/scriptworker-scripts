@@ -13,7 +13,7 @@ ROBUSTCHKOUT_SHA_512 = (
 )
 
 ROBUSTCHECKOUT_FILE = os.path.join(
-    os.path.dirname(__file__), '..', 'py2', 'robustcheckout.py'
+    os.path.dirname(__file__), '..', 'src', 'treescript', 'py2', 'robustcheckout.py'
 )
 
 
