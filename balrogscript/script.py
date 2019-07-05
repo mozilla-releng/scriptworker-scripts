@@ -197,7 +197,6 @@ def setup_logging(verbose=False):
         log_level = logging.DEBUG
 
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
-                        stream=sys.stdout,
                         level=log_level)
 
 
