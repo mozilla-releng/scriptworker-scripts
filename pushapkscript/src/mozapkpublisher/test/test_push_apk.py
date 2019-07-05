@@ -29,19 +29,7 @@ SERVICE_ACCOUNT = 'foo@developer.gserviceaccount.com'
 
 @pytest.fixture
 def edit_service_mock():
-    _edit_service_mock = create_autospec(googleplay.EditService)
-
-    def _generate_version_code(apk_file_name):
-        if apk_file_name == apk_arm.name:
-            version_code = 0
-        elif apk_file_name == apk_x86.name:
-            version_code = 1
-        else:
-            raise Exception('Unsupported APK')
-
-        return {'versionCode': str(version_code)}
-
-    return _edit_service_mock
+    return create_autospec(googleplay.EditService)
 
 
 def set_up_mocks(monkeypatch_, edit_service_mock_):

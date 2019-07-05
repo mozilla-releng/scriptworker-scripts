@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import calendar
 import email.utils as eu
 import logging
@@ -9,18 +8,18 @@ import time
 import requests
 
 from argparse import ArgumentParser
-from mozapkpublisher.common import googleplay
+from mozapkpublisher.common.googleplay import EditService, add_general_google_play_arguments
+
 
 DAY = 24 * 60 * 60
 
 logger = logging.getLogger(__name__)
 
 
-def check_rollout(edits_service, package_name, days):
+def check_rollout(edit_service, days):
     """Check if package_name has a release on staged rollout for too long"""
-    edit = edits_service.insert(body={}, packageName=package_name).execute()
-    response = edits_service.tracks().get(editId=edit['id'], track='production', packageName=package_name).execute()
-    releases = response['releases']
+    track_status = edit_service.get_track_status(track='production')
+    releases = track_status['releases']
     for release in releases:
         if release['status'] == 'inProgress':
             url = 'https://archive.mozilla.org/pub/mobile/releases/{}/SHA512SUMS'.format(release['name'])
@@ -36,15 +35,17 @@ def check_rollout(edits_service, package_name, days):
 
 def main():
     parser = ArgumentParser(description='Check for in-progress Firefox for Android staged rollout')
-    parser.add_argument('service_account', help='The service account email')
-    parser.add_argument('credentials', help='The p12 authentication file', type=argparse.FileType(mode='rb'))
+    add_general_google_play_arguments(parser)
     parser.add_argument('--days', help='The time before we warn about incomplete staged rollout of a release (default: 7)',
                         type=int, default=7)
     config = parser.parse_args()
 
-    # TODO: use googleplay.EditService when that is ported to v3
-    service = googleplay.connect(config.service_account, config.credentials.name, 'v3').edits()
-    for (release, age) in check_rollout(service, 'org.mozilla.firefox', config.days):
+    edit_service = EditService(
+        config.service_account,
+        config.google_play_credentials_file.name,
+        package_name='org.mozilla.firefox',
+    )
+    for (release, age) in check_rollout(edit_service, config.days):
         print('fennec {} is on staged rollout at {}% but it shipped {} days ago'.format(
               release['name'], int(release['userFraction'] * 100), int(age / DAY)))
 

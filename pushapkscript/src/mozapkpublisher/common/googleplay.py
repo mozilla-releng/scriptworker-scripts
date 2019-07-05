@@ -45,7 +45,7 @@ class EditService(object):
     def __init__(self, service_account, credentials_file_path, package_name, commit=False, contact_google_play=True):
         self._contact_google_play = contact_google_play
         if self._contact_google_play:
-            general_service = connect(service_account, credentials_file_path)
+            general_service = _connect(service_account, credentials_file_path)
             self._service = general_service.edits()
         else:
             self._service = _craft_google_play_service_mock()
@@ -80,8 +80,16 @@ class EditService(object):
         self._edit_id = None
 
     @transaction_required
+    def get_track_status(self, track):
+        response = self._service.tracks().get(
+            editId=self._edit_id, track=track, packageName=self._package_name
+        ).execute()
+        logger.debug(u'Track "{}" has status: {}'.format(track, response))
+        return response
+
+    @transaction_required
     def upload_apk(self, apk_path):
-        logger.info('Uploading "{}"'.format(apk_path))
+        logger.info('Uploading "{}" ...'.format(apk_path))
         try:
             response = self._service.apks().upload(
                 editId=self._edit_id,
@@ -109,7 +117,12 @@ class EditService(object):
 
     @transaction_required
     def update_track(self, track, version_codes, rollout_percentage=None):
-        body = {u'versionCodes': version_codes}
+        body = {
+            u'releases': [{
+                u'status': 'completed',
+                u'versionCodes': version_codes,
+            }],
+        }
         if rollout_percentage is not None:
             if rollout_percentage < 0 or rollout_percentage > 100:
                 raise WrongArgumentGiven('rollout percentage must be between 0 and 100. Value given: {}'.format(rollout_percentage))
@@ -174,7 +187,7 @@ class _ExecuteDummy():
         return self._return_value
 
 
-def connect(service_account, credentials_file_path, api_version='v2'):
+def _connect(service_account, credentials_file_path):
     """ Connect to the google play interface
     """
 
@@ -188,6 +201,6 @@ def connect(service_account, credentials_file_path, api_version='v2'):
     http = httplib2.Http()
     http = credentials.authorize(http)
 
-    service = build('androidpublisher', api_version, http=http, cache_discovery=False)
+    service = build(serviceName='androidpublisher', version='v3', http=http, cache_discovery=False)
 
     return service

@@ -34,7 +34,7 @@ def set_up_edit_service_mock(_monkeypatch):
     edit_service_mock.insert = lambda body, packageName: new_transaction_mock
     general_service_mock.edits = lambda: edit_service_mock
 
-    _monkeypatch.setattr('mozapkpublisher.common.googleplay.connect', lambda _, __: general_service_mock)
+    _monkeypatch.setattr('mozapkpublisher.common.googleplay._connect', lambda _, __: general_service_mock)
     return edit_service_mock
 
 
@@ -90,6 +90,40 @@ def test_edit_service_is_allowed_to_not_make_a_single_call_to_google_play(monkey
     edit_service_mock.tracks().update.assert_not_called()
     edit_service_mock.apklistings().update.assert_not_called()
     edit_service_mock.commit.assert_not_called()
+
+
+def test_get_track_status(monkeypatch):
+    edit_mock = set_up_edit_service_mock(monkeypatch)
+    release_data = {
+        "releases": [{
+            "name": "61.0",
+            "versionCodes": ["2015506297", "2015506300", "2015565729", "2015565732"],
+            "releaseNotes": [
+                {
+                    "language": "sk",
+                    "text": "* Vylepšenia v rámci Quantum CSS, ktoré urýchľujú načítanie stránok\n* Rýchlejšie posúvanie sa na stránkach",
+                }
+            ],
+            "status": "inProgress",
+            "userFraction": 0.1,
+        }, {
+            "name": "60.0.1",
+            "versionCodes": ["2015558697", "2015558700"],
+            "status": "completed",
+        }],
+    }
+
+    edit_mock.tracks().get().execute.return_value = release_data
+
+    edit_mock.tracks().get.reset_mock()
+
+    edit_service = EditService('service_account', 'credentials_file_path', 'dummy_package_name')
+    assert edit_service.get_track_status(track='production') == release_data
+    edit_mock.tracks().get.assert_called_once_with(
+        editId=edit_service._edit_id,
+        track='production',
+        packageName='dummy_package_name',
+    )
 
 
 def test_upload_apk_returns_files_metadata(monkeypatch):
@@ -162,7 +196,12 @@ def test_update_track(monkeypatch):
         editId=edit_service._edit_id,
         packageName='dummy_package_name',
         track='alpha',
-        body={u'versionCodes': ['2015012345', '2015012347']}
+        body={
+            'releases': [{
+                'status': 'completed',
+                'versionCodes': ['2015012345', '2015012347'],
+            }],
+        },
     )
 
     edit_mock.tracks().update.reset_mock()
@@ -171,7 +210,13 @@ def test_update_track(monkeypatch):
         editId=edit_service._edit_id,
         packageName='dummy_package_name',
         track='rollout',
-        body={u'userFraction': 0.01, u'versionCodes': ['2015012345', '2015012347']}
+        body={
+            'releases': [{
+                'status': 'completed',
+                'versionCodes': ['2015012345', '2015012347']},
+            ],
+            'userFraction': 0.01,
+        },
     )
 
 
