@@ -48,14 +48,21 @@ def task_action_types(task, script_config):
         str: the cert type.
 
     """
-    actions = [s.split(":")[-1] for s in task["scopes"] if
-               s.startswith(script_config["taskcluster_scope_prefix"] + "action:")]
+    actions = [
+        s.split(":")[-1]
+        for s in task["scopes"]
+        if s.startswith(script_config["taskcluster_scope_prefix"] + "action:")
+    ]
     log.info("Action requests: %s", actions)
     if len(actions) < 1:
-        raise TaskVerificationError("Need at least one valid action specified in scopes")
+        raise TaskVerificationError(
+            "Need at least one valid action specified in scopes"
+        )
     invalid_actions = set(actions) - set(VALID_ACTIONS)
     if len(invalid_actions) > 0:
-        raise TaskVerificationError("Task specified invalid actions: {}".format(invalid_actions))
+        raise TaskVerificationError(
+            "Task specified invalid actions: {}".format(invalid_actions)
+        )
 
     return _sort_actions(actions)
 
@@ -108,9 +115,9 @@ async def execute_subprocess(command, **kwargs):
         FailedSubprocess: on failure
 
     """
-    message = 'Running "{}"'.format(' '.join(command))
-    if 'cwd' in kwargs:
-        message += " in {}".format(kwargs['cwd'])
+    message = 'Running "{}"'.format(" ".join(command))
+    if "cwd" in kwargs:
+        message += " in {}".format(kwargs["cwd"])
     log.info(message)
     subprocess = await asyncio.create_subprocess_exec(
         *command, stdout=PIPE, stderr=STDOUT, **kwargs
@@ -121,4 +128,4 @@ async def execute_subprocess(command, **kwargs):
     log.info("exitcode {}".format(exitcode))
 
     if exitcode != 0:
-        raise FailedSubprocess('Command `{}` failed'.format(' '.join(command)))
+        raise FailedSubprocess("Command `{}` failed".format(" ".join(command)))

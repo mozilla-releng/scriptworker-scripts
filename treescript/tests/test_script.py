@@ -13,10 +13,10 @@ import treescript.script as script
 
 # helper constants, fixtures, functions {{{1
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-EXAMPLE_CONFIG = os.path.join(BASE_DIR, 'config_example.json')
+EXAMPLE_CONFIG = os.path.join(BASE_DIR, "config_example.json")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def context():
     return Context()
 
@@ -30,15 +30,15 @@ async def noop_async(*args, **kwargs):
 
 
 def read_file(path):
-    with open(path, 'r') as fh:
+    with open(path, "r") as fh:
         return fh.read()
 
 
 def get_conf_file(tmpdir, **kwargs):
     conf = json.loads(read_file(EXAMPLE_CONFIG))
     conf.update(kwargs)
-    conf['work_dir'] = os.path.join(tmpdir, 'work')
-    conf['artifact_dir'] = os.path.join(tmpdir, 'artifact')
+    conf["work_dir"] = os.path.join(tmpdir, "work")
+    conf["artifact_dir"] = os.path.join(tmpdir, "artifact")
     path = os.path.join(tmpdir, "new_config.json")
     with open(path, "w") as fh:
         json.dump(conf, fh)
@@ -52,29 +52,28 @@ async def die_async(*args, **kwargs):
 # async_main {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    'robustcheckout_works,raises,actions',
-    ((
-        False, ScriptWorkerException, ["some_action"]
-    ), (
-        True, None, ["some_action"]
-    ), (
-        True, None, None
-    ))
+    "robustcheckout_works,raises,actions",
+    (
+        (False, ScriptWorkerException, ["some_action"]),
+        (True, None, ["some_action"]),
+        (True, None, None),
+    ),
 )
 async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions):
-
     async def fake_validate_robustcheckout(_):
         return robustcheckout_works
 
     def action_fun(*args, **kwargs):
         return actions
 
-    mocker.patch.object(scriptworker.client, 'get_task', new=noop_sync)
-    mocker.patch.object(script, 'task_action_types', new=action_fun)
-    mocker.patch.object(script, 'validate_robustcheckout_works', new=fake_validate_robustcheckout)
-    mocker.patch.object(script, 'log_mercurial_version', new=noop_async)
-    mocker.patch.object(script, 'checkout_repo', new=noop_async)
-    mocker.patch.object(script, 'do_actions', new=noop_async)
+    mocker.patch.object(scriptworker.client, "get_task", new=noop_sync)
+    mocker.patch.object(script, "task_action_types", new=action_fun)
+    mocker.patch.object(
+        script, "validate_robustcheckout_works", new=fake_validate_robustcheckout
+    )
+    mocker.patch.object(script, "log_mercurial_version", new=noop_async)
+    mocker.patch.object(script, "checkout_repo", new=noop_async)
+    mocker.patch.object(script, "do_actions", new=noop_async)
     context = mock.MagicMock()
     if raises:
         with pytest.raises(raises):
@@ -87,19 +86,19 @@ async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions)
 def test_get_default_config():
     parent_dir = os.path.dirname(os.getcwd())
     c = script.get_default_config()
-    assert c['work_dir'] == os.path.join(parent_dir, 'work_dir')
+    assert c["work_dir"] == os.path.join(parent_dir, "work_dir")
 
 
 # do_actions {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    'push_scope,dry_run,push_expect_called',
+    "push_scope,dry_run,push_expect_called",
     (
-        (['push'], True, False),
-        (['push'], False, True),
+        (["push"], True, False),
+        (["push"], False, True),
         ([], False, False),
         ([], True, False),
-    )
+    ),
 )
 async def test_do_actions(mocker, context, push_scope, dry_run, push_expect_called):
     actions = ["tagging", "version_bump"]
@@ -117,12 +116,12 @@ async def test_do_actions(mocker, context, push_scope, dry_run, push_expect_call
     async def mocked_push(*args, **kwargs):
         called_push[0] = True
 
-    mocker.patch.object(script, 'do_tagging', new=mocked_tag)
-    mocker.patch.object(script, 'bump_version', new=mocked_bump)
-    mocker.patch.object(script, 'push', new=mocked_push)
-    mocker.patch.object(script, 'log_outgoing', new=noop_async)
-    mocker.patch.object(script, 'is_dry_run').return_value = dry_run
-    await script.do_actions(context, actions, directory='/some/folder/here')
+    mocker.patch.object(script, "do_tagging", new=mocked_tag)
+    mocker.patch.object(script, "bump_version", new=mocked_bump)
+    mocker.patch.object(script, "push", new=mocked_push)
+    mocker.patch.object(script, "log_outgoing", new=noop_async)
+    mocker.patch.object(script, "is_dry_run").return_value = dry_run
+    await script.do_actions(context, actions, directory="/some/folder/here")
     assert called_tag[0]
     assert called_bump[0]
     assert called_push[0] is push_expect_called
@@ -140,17 +139,19 @@ async def test_do_actions_unknown(mocker, context):
     async def mocked_bump(*args, **kwargs):
         called_bump[0] = True
 
-    mocker.patch.object(script, 'do_tagging', new=mocked_tag)
-    mocker.patch.object(script, 'bump_version', new=mocked_bump)
-    mocker.patch.object(script, 'log_outgoing', new=noop_async)
+    mocker.patch.object(script, "do_tagging", new=mocked_tag)
+    mocker.patch.object(script, "bump_version", new=mocked_bump)
+    mocker.patch.object(script, "log_outgoing", new=noop_async)
     with pytest.raises(NotImplementedError):
-        await script.do_actions(context, actions, directory='/some/folder/here')
+        await script.do_actions(context, actions, directory="/some/folder/here")
     assert called_tag[0] is False
     assert called_bump[0] is False
 
 
 def test_main(monkeypatch):
     sync_main_mock = MagicMock()
-    monkeypatch.setattr(scriptworker.client, 'sync_main', sync_main_mock)
+    monkeypatch.setattr(scriptworker.client, "sync_main", sync_main_mock)
     script.main()
-    sync_main_mock.asset_called_once_with(script.async_main, default_config=script.get_default_config())
+    sync_main_mock.asset_called_once_with(
+        script.async_main, default_config=script.get_default_config()
+    )

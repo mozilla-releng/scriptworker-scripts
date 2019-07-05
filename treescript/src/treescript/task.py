@@ -28,8 +28,10 @@ def get_source_repo(task):
     if not source:
         raise TaskVerificationError("No source, how did that happen")
     if not source.startswith("https://hg.mozilla.org/"):
-        raise TaskVerificationError("Unable to operate on sources not in hg.mozilla.org")
-    parts = source.split('/file/')
+        raise TaskVerificationError(
+            "Unable to operate on sources not in hg.mozilla.org"
+        )
+    parts = source.split("/file/")
     if len(parts) < 2:
         raise TaskVerificationError("Soure url is in unexpected format")
     return parts[0]
@@ -73,7 +75,9 @@ def get_version_bump_info(task):
     """
     version_info = task.get("payload", {}).get("version_bump_info")
     if not version_info:
-        raise TaskVerificationError("Requested version bump but no version_bump_info in payload")
+        raise TaskVerificationError(
+            "Requested version bump but no version_bump_info in payload"
+        )
     return version_info
 
 

@@ -21,11 +21,7 @@ setup(
     package_data={"treescript": ["data/*", "py2/*"]},
     include_package_data=True,
     zip_safe=False,
-    entry_points={
-        "console_scripts": [
-            "treescript = treescript.script:main",
-        ],
-    },
+    entry_points={"console_scripts": ["treescript = treescript.script:main"]},
     license="MPL2",
     install_requires=install_requires,
 )

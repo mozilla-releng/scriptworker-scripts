@@ -8,12 +8,12 @@ import hashlib
 import os
 
 ROBUSTCHKOUT_SHA_512 = (
-    '87239f91776d2c8b910daf156661ba4109b073bd7138edd6267b2843f9c9735d'
-    '74d322ff8f52cdea86ba5bf67bf31a101e4d5a8d4b173143b0e1cfd538b2da98'
+    "0cea6b5b270740a0ec0b873de30494fbbb1e86d02e391ad8ee297fe9e414e6536fd5"
+    "3d37130c31b05dd4994a4fa808c36ac3f5a5202d1474362866fde9be87aa"
 )
 
 ROBUSTCHECKOUT_FILE = os.path.join(
-    os.path.dirname(__file__), '..', 'src', 'treescript', 'py2', 'robustcheckout.py'
+    os.path.dirname(__file__), "..", "src", "treescript", "py2", "robustcheckout.py"
 )
 
 
@@ -21,5 +21,5 @@ def test_robustcheckout_sha():
     hasher = hashlib.sha512()
     with open(ROBUSTCHECKOUT_FILE) as f:
         contents = f.read()
-    hasher.update(contents.encode('utf-8'))
+    hasher.update(contents.encode("utf-8"))
     assert hasher.hexdigest() == ROBUSTCHKOUT_SHA_512
