@@ -2,7 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [2.0.0] - 2019-05-27
+## [2.0.1] - 2019-07-08
+
+### Fixed
+* Get credentials from the correct location on esr.
+
+## [2.0.0] - 2019-06-27
 ### Added
 * Allow specifying the channel in the task payload, rather than scopes.
 * Control whether to publish to the snap store via worker config.

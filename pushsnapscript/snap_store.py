@@ -58,7 +58,7 @@ def push(context, snap_file_path, channel):
         # We don't raise an error because we still want green tasks on dev instances
         return
 
-    macaroon_location = context.config['macaroons_locations'][channel]
+    macaroon_location = context.config['macaroons_locations'][channel.split('/', 1)[0]]
     with _store_session(macaroon_location) as store:
         try:
             log.debug('Calling snapcraft.push() with this file: {}'.format(snap_file_path))
