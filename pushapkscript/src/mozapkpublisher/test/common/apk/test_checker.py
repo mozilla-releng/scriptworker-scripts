@@ -457,6 +457,10 @@ def test_check_all_apks_have_the_same_firefox_version():
     ('57.0.1', 'org.mozilla.firefox'),
     ('58.0', 'org.mozilla.firefox_beta'),   # XXX Betas APKs are shipped without "bY"
     ('59.0a1', 'org.mozilla.fennec_aurora'),
+    # XXX 68 allows 68.Y numbers
+    ('68.0', 'org.mozilla.firefox_beta'),
+    ('68.1', 'org.mozilla.firefox_beta'),
+    ('68.2', 'org.mozilla.firefox_beta'),
 ))
 def test_check_version_matches_package_name(version, package_name):
     _check_version_matches_package_name(version, package_name)

@@ -84,11 +84,10 @@ def _check_version_matches_package_name(version, package_name):
         # Due to project Dawn, Nightly is now using the Aurora package name. See bug 1357351.
         (package_name == 'org.mozilla.fennec_aurora' and sanitized_version.is_nightly) or
         (
-            # XXX Betas aren't following the regular XX.0bY format. Instead they follow XX.0
-            # (which looks like release). Therefore, we can't use sanitized_version.is_beta
+            # XXX Betas aren't following the regular XX.YbN format. Instead they follow XX.Y
+            # Therefore, we can't use sanitized_version.is_beta
             package_name == 'org.mozilla.firefox_beta'
             and sanitized_version.is_release
-            and sanitized_version.minor_number == 0
             # We ensure the patch_number is undefined. Calling sanitized_version.patch_number
             # directly raises an (expected) AttributeError
             and getattr(sanitized_version, 'patch_number', None) is None
