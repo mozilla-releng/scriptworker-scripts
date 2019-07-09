@@ -2,15 +2,19 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## 3.6.1] - 2019-07-01
+## [3.6.2] - 2019-07-09
+### Fixed
+- Fennec beta new pattern (68.XbN)
+
+## [3.6.1] - 2019-07-01
 ### Fixed
 - Thunderbird regression from partner stub work
 
-## 3.6.0] - 2019-06-26
+## [3.6.0] - 2019-06-26
 ### Added
 - support for parter stub installers
 
-## 3.5.1] - 2019-05-06
+## [3.5.1] - 2019-05-06
 ### Removed
 - `thunderbird-next-latest` and `thunderbird-next-latest-ssl` as valid regexes since they are being unused
 
