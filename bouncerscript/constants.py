@@ -5,7 +5,8 @@ ALIASES_REGEXES = {
     'thunderbird-latest': r'^Thunderbird-\d+\.\d+(\.\d+)?$',
     'thunderbird-latest-ssl': r'^Thunderbird-\d+\.\d+(\.\d+)?-SSL$',
     'thunderbird-msi-latest-ssl': r'^Thunderbird-\d+\.\d+(\.\d+)?-msi-SSL$',
-    'fennec-beta-latest': r'^Fennec-\d+\.0b\d+$',
+    # TODO Use mozilla-version
+    'fennec-beta-latest': r'^Fennec-\d+\.\d+b\d+$',
     'fennec-latest': r'^Fennec-\d+\.\d+(\.\d+)?$',
     'firefox-devedition-stub': r'^Devedition-\d+\.0b\d+-stub$',
     'firefox-devedition-latest': r'^Devedition-\d+\.0b\d+$',
