@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 import mozapkpublisher
 import os
 import pytest
@@ -27,11 +29,11 @@ SERVICE_ACCOUNT = 'foo@developer.gserviceaccount.com'
 
 
 @pytest.fixture
-def edit_service_mock():
-    return create_autospec(googleplay.EditService)
+def writable_google_play_mock():
+    return create_autospec(googleplay.WritableGooglePlay)
 
 
-def set_up_mocks(monkeypatch_, edit_service_mock_):
+def set_up_mocks(monkeypatch_, writable_google_play_mock_):
     def _metadata(*args, **kwargs):
         return {
             apk_arm.name: {
@@ -72,11 +74,15 @@ def set_up_mocks(monkeypatch_, edit_service_mock_):
             }
         }
 
-    monkeypatch_.setattr(googleplay, 'EditService', lambda _, __, ___, commit, contact_google_play: edit_service_mock_)
+    @contextmanager
+    def fake_transaction(_, __, do_not_commit):
+        yield writable_google_play_mock_
+
+    monkeypatch_.setattr(googleplay.WritableGooglePlay, 'transaction', fake_transaction)
     monkeypatch_.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', _metadata)
 
 
-def test_invalid_rollout_percentage(edit_service_mock, monkeypatch):
+def test_invalid_rollout_percentage():
     with pytest.raises(WrongArgumentGiven):
         # missing percentage
         push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', [])
@@ -87,13 +93,13 @@ def test_invalid_rollout_percentage(edit_service_mock, monkeypatch):
         push_apk(APKS, SERVICE_ACCOUNT, credentials, invalid_track, [], rollout_percentage=valid_percentage)
 
 
-def test_valid_rollout_percentage(edit_service_mock, monkeypatch):
-    set_up_mocks(monkeypatch, edit_service_mock)
+def test_valid_rollout_percentage(writable_google_play_mock, monkeypatch):
+    set_up_mocks(monkeypatch, writable_google_play_mock)
     valid_percentage = 50
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', [], rollout_percentage=valid_percentage)
-    edit_service_mock.update_track.assert_called_once_with('rollout', ['0', '1'], valid_percentage)
-    edit_service_mock.update_track.reset_mock()
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', [], rollout_percentage=valid_percentage, contact_google_play=False)
+    writable_google_play_mock.update_track.assert_called_once_with('rollout', ['0', '1'], valid_percentage)
+    writable_google_play_mock.update_track.reset_mock()
 
 
 def test_get_ordered_version_codes():
@@ -107,16 +113,15 @@ def test_get_ordered_version_codes():
     }) == ['0', '1']    # should be sorted
 
 
-def test_upload_apk(edit_service_mock, monkeypatch):
-    set_up_mocks(monkeypatch, edit_service_mock)
+def test_upload_apk(writable_google_play_mock, monkeypatch):
+    set_up_mocks(monkeypatch, writable_google_play_mock)
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', [])
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', [], contact_google_play=False)
 
     for apk_file in (apk_arm, apk_x86):
-        edit_service_mock.upload_apk.assert_any_call(apk_file.name)
+        writable_google_play_mock.upload_apk.assert_any_call(apk_file.name)
 
-    edit_service_mock.update_track.assert_called_once_with('alpha', ['0', '1'], None)
-    edit_service_mock.commit_transaction.assert_called_once_with()
+    writable_google_play_mock.update_track.assert_called_once_with('alpha', ['0', '1'], None)
 
 
 def test_get_distinct_package_name_apk_metadata():
@@ -162,7 +167,6 @@ def test_push_apk_tunes_down_logs(monkeypatch):
     monkeypatch.setattr('mozapkpublisher.push_apk.main_logging', main_logging_mock)
     monkeypatch.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', MagicMock())
     monkeypatch.setattr('mozapkpublisher.push_apk._split_apk_metadata_per_package_name', MagicMock())
-    monkeypatch.setattr('mozapkpublisher.push_apk._upload_apks', MagicMock())
 
     push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', [], contact_google_play=False)
 

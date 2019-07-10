@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [upcoming]
+
+### Changed
+* Separates read-only logic from logic that requires a transaction
+
 ## [4.1.0] - 2019-07-10
 ### Removed
 * `--skip-check-package-names`. When pushing or checking an APK, expected package names must always be provided

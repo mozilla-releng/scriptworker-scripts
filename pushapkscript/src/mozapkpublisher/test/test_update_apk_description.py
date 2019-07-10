@@ -15,8 +15,8 @@ credentials = NamedTemporaryFile()
 
 
 def test_update_apk_description_force_locale(monkeypatch):
-    edit_service_mock = create_autospec(googleplay.EditService)
-    monkeypatch.setattr(googleplay, 'EditService', lambda _, __, ___, ____, _____: edit_service_mock)
+    google_play_mock = create_autospec(googleplay.WritableGooglePlay)
+    monkeypatch.setattr(googleplay, 'WritableGooglePlay', lambda _, __, ___: google_play_mock)
     monkeypatch.setattr(store_l10n, '_translations_per_google_play_locale_code', {
         'google_play_locale': {
             'title': 'Firefox for Android',
@@ -27,17 +27,16 @@ def test_update_apk_description_force_locale(monkeypatch):
     })
     monkeypatch.setattr(store_l10n, '_translate_moz_locate_into_google_play_one', lambda locale: 'google_play_locale')
 
-    update_apk_description('org.mozilla.firefox_beta', 'en-US', False, 'foo@developer.gserviceaccount.com', credentials, True)
+    update_apk_description('org.mozilla.firefox_beta', 'en-US', False, 'foo@developer.gserviceaccount.com', credentials, False)
 
-    edit_service_mock.update_listings.assert_called_once_with(
+    google_play_mock.update_listings.assert_called_once_with(
         'google_play_locale',
         full_description='Long description',
         short_description='Short',
         title='Firefox for Android',
     )
 
-    assert edit_service_mock.update_listings.call_count == 1
-    edit_service_mock.commit_transaction.assert_called_once_with()
+    assert google_play_mock.update_listings.call_count == 1
 
 
 def test_main(monkeypatch):

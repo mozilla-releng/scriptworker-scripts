@@ -6,6 +6,7 @@ import logging
 from mozapkpublisher.common import googleplay, main_logging
 from mozapkpublisher.common.apk import add_apk_checks_arguments, extract_and_check_apks_metadata
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
+from mozapkpublisher.common.googleplay import WritableGooglePlay, connection_for_options
 
 logger = logging.getLogger(__name__)
 
@@ -62,43 +63,22 @@ def push_apk(
         skip_check_ordered_version_codes,
     )
 
+    # TODO make programmatic usage of this library provide a "GooglePlayConnection" object, rather
+    # than having to provide redundant information like "service_account" and "credentials" when
+    # "contact_google_play" is false
+    connection = connection_for_options(contact_google_play, service_account, google_play_credentials_file)
+
     # Each distinct product must be uploaded in different Google Play transaction, so we split them
     # by package name here.
     split_apk_metadata = _split_apk_metadata_per_package_name(apks_metadata_per_paths)
-
     for (package_name, apks_metadata) in split_apk_metadata.items():
-        _upload_apks(
-            service_account,
-            google_play_credentials_file,
-            commit,
-            contact_google_play,
-            apks_metadata,
-            package_name,
-            track,
-            rollout_percentage,
-        )
+        with WritableGooglePlay.transaction(connection, package_name,
+                                            do_not_commit=not commit) as google_play:
+            for path, metadata in apks_metadata_per_paths.items():
+                google_play.upload_apk(path)
 
-
-def _upload_apks(
-    service_account,
-    google_play_credentials_file,
-    commit,
-    contact_google_play,
-    apks_metadata_per_paths,
-    package_name,
-    track,
-    rollout_percentage,
-):
-    edit_service = googleplay.EditService(
-        service_account, google_play_credentials_file.name, package_name, commit, contact_google_play
-    )
-
-    for path, metadata in apks_metadata_per_paths.items():
-        edit_service.upload_apk(path)
-
-    all_version_codes = _get_ordered_version_codes(apks_metadata_per_paths)
-    edit_service.update_track(track, all_version_codes, rollout_percentage)
-    edit_service.commit_transaction()
+            all_version_codes = _get_ordered_version_codes(apks_metadata_per_paths)
+            google_play.update_track(track, all_version_codes, rollout_percentage)
 
 
 def _split_apk_metadata_per_package_name(apks_metadata_per_paths):
