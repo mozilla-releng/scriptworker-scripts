@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [11.0.3] - 2019-07-10
+### Added
+- New SSL certificates for signing servers
+
 ## [11.0.2] - 2019-06-12
 ### Fixed
 - Fixed the `autograph_stage.pem` reference in `sign.py`
