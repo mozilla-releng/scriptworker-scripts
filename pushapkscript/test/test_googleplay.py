@@ -28,7 +28,6 @@ class GooglePlayTest(unittest.TestCase):
             google_play_credentials_file=MockFile('/google_credentials.p12'),
             track='beta',
             expected_package_names=['org.mozilla.fennec_aurora'],
-            skip_check_package_names=False,
             rollout_percentage=None,
             commit=False,
             contact_google_play=True,
