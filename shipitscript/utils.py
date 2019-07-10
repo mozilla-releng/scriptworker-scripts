@@ -1,9 +1,8 @@
-import arrow
 import logging
 import urllib.parse
 
+import arrow
 from scriptworker.exceptions import ScriptWorkerTaskException
-
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +20,12 @@ def get_auth_primitives_v2(ship_it_instance_config):
     api_root = ship_it_instance_config['api_root_v2']
     timeout_in_seconds = int(ship_it_instance_config.get('timeout_in_seconds', 60))
 
-    return (taskcluster_client_id, taskcluster_access_token, api_root, timeout_in_seconds)
+    return (
+        taskcluster_client_id,
+        taskcluster_access_token,
+        api_root,
+        timeout_in_seconds,
+    )
 
 
 def get_request_headers(api_root):
@@ -44,10 +48,7 @@ def get_request_headers(api_root):
             port = 443
         else:
             port = 80
-    headers = {
-        "X-Forwarded-Proto": "https",
-        "X-Forwarded-Port": str(port),
-    }
+    headers = {"X-Forwarded-Proto": "https", "X-Forwarded-Port": str(port)}
     return headers
 
 

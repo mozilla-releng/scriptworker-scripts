@@ -8,10 +8,10 @@ from scriptworker import client
 
 from shipitscript import ship_actions
 from shipitscript.task import (
-    validate_task_schema, get_ship_it_instance_config_from_scope,
+    get_ship_it_instance_config_from_scope,
     get_task_action,
+    validate_task_schema,
 )
-
 
 log = logging.getLogger(__name__)
 
@@ -33,14 +33,11 @@ def mark_as_shipped_action(context):
     release_name = context.task['payload']['release_name']
 
     log.info('Marking the release as shipped ...')
-    ship_actions.mark_as_shipped_v2(context.ship_it_instance_config,
-                                    release_name)
+    ship_actions.mark_as_shipped_v2(context.ship_it_instance_config, release_name)
 
 
 # ACTION_MAP {{{1
-ACTION_MAP = {
-    'mark-as-shipped': mark_as_shipped_action,
-}
+ACTION_MAP = {'mark-as-shipped': mark_as_shipped_action}
 
 
 def get_default_config():
@@ -51,14 +48,19 @@ def get_default_config():
     return {
         'work_dir': os.path.join(parent_dir, 'work_dir'),
         'verbose': False,
-        'mark_as_shipped_schema_file': os.path.join(data_dir, 'mark_as_shipped_task_schema.json'),
+        'mark_as_shipped_schema_file': os.path.join(
+            data_dir, 'mark_as_shipped_task_schema.json'
+        ),
     }
 
 
 def main(config_path=None):
-    client.sync_main(async_main, config_path=config_path,
-                     default_config=get_default_config(),
-                     should_validate_task=False)
+    client.sync_main(
+        async_main,
+        config_path=config_path,
+        default_config=get_default_config(),
+        should_validate_task=False,
+    )
 
 
 __name__ == '__main__' and main()

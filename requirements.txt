@@ -1,2 +1,0 @@
-scriptworker
-shipitapi>=3.1.0
