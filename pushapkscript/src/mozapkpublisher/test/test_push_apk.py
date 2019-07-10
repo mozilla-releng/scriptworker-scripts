@@ -8,7 +8,6 @@ from unittest.mock import create_autospec, MagicMock
 from tempfile import NamedTemporaryFile
 
 from mozapkpublisher.common import googleplay
-from mozapkpublisher.common.apk.checker import AnyPackageNamesCheck
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.push_apk import (
     push_apk,
@@ -80,19 +79,19 @@ def set_up_mocks(monkeypatch_, edit_service_mock_):
 def test_invalid_rollout_percentage(edit_service_mock, monkeypatch):
     with pytest.raises(WrongArgumentGiven):
         # missing percentage
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', AnyPackageNamesCheck())
+        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', [])
 
     valid_percentage = 1
     invalid_track = 'production'
     with pytest.raises(WrongArgumentGiven):
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, invalid_track, AnyPackageNamesCheck(), rollout_percentage=valid_percentage)
+        push_apk(APKS, SERVICE_ACCOUNT, credentials, invalid_track, [], rollout_percentage=valid_percentage)
 
 
 def test_valid_rollout_percentage(edit_service_mock, monkeypatch):
     set_up_mocks(monkeypatch, edit_service_mock)
     valid_percentage = 50
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', AnyPackageNamesCheck(), rollout_percentage=valid_percentage)
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', [], rollout_percentage=valid_percentage)
     edit_service_mock.update_track.assert_called_once_with('rollout', ['0', '1'], valid_percentage)
     edit_service_mock.update_track.reset_mock()
 
@@ -111,7 +110,7 @@ def test_get_ordered_version_codes():
 def test_upload_apk(edit_service_mock, monkeypatch):
     set_up_mocks(monkeypatch, edit_service_mock)
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck())
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', [])
 
     for apk_file in (apk_arm, apk_x86):
         edit_service_mock.upload_apk.assert_any_call(apk_file.name)
@@ -165,7 +164,7 @@ def test_push_apk_tunes_down_logs(monkeypatch):
     monkeypatch.setattr('mozapkpublisher.push_apk._split_apk_metadata_per_package_name', MagicMock())
     monkeypatch.setattr('mozapkpublisher.push_apk._upload_apks', MagicMock())
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', AnyPackageNamesCheck(), contact_google_play=False)
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', [], contact_google_play=False)
 
     main_logging_mock.init.assert_called_once_with()
 
@@ -194,7 +193,7 @@ def test_main(monkeypatch):
         '--track', 'rollout',
         '--service-account', 'foo@developer.gserviceaccount.com',
         '--credentials', file,
-        '--skip-check-package-names',
+        '--expected-package-name', 'org.mozilla.fennec_aurora',
         file
     ]
 

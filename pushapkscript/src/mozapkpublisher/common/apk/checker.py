@@ -15,27 +15,10 @@ logger = logging.getLogger(__name__)
 _ARCHITECTURE_ORDER_REGARDING_VERSION_CODE = ('armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64')
 
 
-class ExpectedPackageNamesCheck:
-    def __init__(self, expected_product_types):
-        self.expected_product_types = expected_product_types
-
-    def validate(self, apks_metadata_per_paths):
-        types = set([metadata['package_name'] for metadata in apks_metadata_per_paths.values()])
-
-        if not types == set(self.expected_product_types):
-            raise BadSetOfApks('Expected product types {}, found {}'.format(self.expected_product_types, types))
-        logger.info('Expected product types {} found'.format(self.expected_product_types))
-
-
-class AnyPackageNamesCheck:
-    def validate(self, _):
-        pass
-
-
-def cross_check_apks(apks_metadata_per_paths, package_names_check, skip_checks_fennec, skip_check_multiple_locales,
+def cross_check_apks(apks_metadata_per_paths, expected_package_names, skip_checks_fennec, skip_check_multiple_locales,
                      skip_check_same_locales, skip_check_ordered_version_codes):
     logger.info("Checking APKs' metadata and content...")
-    package_names_check.validate(apks_metadata_per_paths)
+    _check_package_names(expected_package_names, apks_metadata_per_paths)
 
     if not skip_checks_fennec:
         singular_apk_metadata = list(apks_metadata_per_paths.values())[0]
@@ -57,6 +40,15 @@ def cross_check_apks(apks_metadata_per_paths, package_names_check, skip_checks_f
         _check_apks_version_codes_are_correctly_ordered(apks_metadata_per_paths)
 
     logger.info('APKs are sane!')
+
+
+def _check_package_names(expected_package_names, apks_metadata_per_paths):
+    types = set([metadata['package_name'] for metadata in apks_metadata_per_paths.values()])
+
+    if not types == set(expected_package_names):
+        raise BadSetOfApks(
+            'Expected package names {}, found {}'.format(expected_package_names, types))
+    logger.info('Found valid package names {}'.format(types))
 
 
 def _check_piece_of_metadata_is_unique(key, pretty_key, apks_metadata_per_paths):

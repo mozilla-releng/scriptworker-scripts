@@ -16,7 +16,6 @@ def push_apk(
     google_play_credentials_file,
     track,
     expected_package_names,
-    skip_check_package_names=False,
     rollout_percentage=None,
     commit=True,
     contact_google_play=True,
@@ -33,8 +32,7 @@ def push_apk(
         google_play_credentials_file: Credentials file to authenticate to Google Play
         track (str): Google Play track to deploy to (e.g.: "nightly"). If "rollout" is chosen, the parameter
             `rollout_percentage` must be specified as well
-        expected_package_names (str): defines what the expected package name must be.
-        skip_check_package_names (bool): skip the checked package name check. Raises if `expected_package_names` is truthy,
+        expected_package_names (list of str): defines what the expected package name must be.
         rollout_percentage (int): percentage of users to roll out this update to. Must be a number between [0-100].
             This option is only valid if `track` is set to "rollout"
         commit (bool): `False` to do a dry-run
@@ -58,7 +56,6 @@ def push_apk(
     apks_metadata_per_paths = extract_and_check_apks_metadata(
         apks,
         expected_package_names,
-        skip_check_package_names,
         skip_checks_fennec,
         skip_check_multiple_locales,
         skip_check_same_locales,
@@ -149,7 +146,6 @@ def main():
             config.google_play_credentials_file,
             config.track,
             config.expected_package_names,
-            config.skip_check_package_names,
             config.rollout_percentage,
             config.commit,
             config.contact_google_play,

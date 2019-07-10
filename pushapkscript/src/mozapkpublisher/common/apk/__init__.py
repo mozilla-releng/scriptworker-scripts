@@ -1,8 +1,6 @@
 import argparse
 
 from mozapkpublisher.common.apk.checker import (
-    AnyPackageNamesCheck,
-    ExpectedPackageNamesCheck,
     cross_check_apks,
 )
 from mozapkpublisher.common.apk.extractor import extract_metadata
@@ -22,34 +20,20 @@ def add_apk_checks_arguments(parser):
     parser.add_argument('--skip-checks-fennec', action='store_true',
                         help='Skip checks that are Fennec-specific (ini-checking, checking '
                              'version-to-package-name compliance)')
-
-    expected_package_names_group = parser.add_mutually_exclusive_group(required=True)
-    expected_package_names_group.add_argument('--expected-package-name', dest='expected_package_names',
-                                              action='append',
-                                              help='Package names apks are expected to match')
-    expected_package_names_group.add_argument('--skip-check-package-names', action='store_true',
-                                              help='Skip assertion that apks match a specified package name')
+    parser.add_argument('--expected-package-name', dest='expected_package_names',
+                        action='append',
+                        help='Package names apks are expected to match',
+                        required=True)
 
 
 def extract_and_check_apks_metadata(
     apks,
     expected_package_names,
-    skip_check_package_names,
     skip_checks_fennec,
     skip_check_multiple_locales,
     skip_check_same_locales,
     skip_check_ordered_version_codes,
 ):
-    if expected_package_names and not skip_check_package_names:
-        package_names_check = ExpectedPackageNamesCheck(expected_package_names)
-    elif not expected_package_names and skip_check_package_names:
-        package_names_check = AnyPackageNamesCheck()
-    else:
-        raise ValueError(
-            'Either expected_package_names or skip_check_package_names must be truthy. '
-            'Values: {}'.format((expected_package_names, skip_check_package_names))
-        )
-
     apks_paths = [apk.name for apk in apks]
     apks_metadata_per_paths = {
         apk_path: extract_metadata(apk_path, not skip_checks_fennec)
@@ -57,7 +41,7 @@ def extract_and_check_apks_metadata(
     }
     cross_check_apks(
         apks_metadata_per_paths,
-        package_names_check,
+        expected_package_names,
         skip_checks_fennec,
         skip_check_multiple_locales,
         skip_check_same_locales,
