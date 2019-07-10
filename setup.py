@@ -1,6 +1,9 @@
 import os
 from setuptools import setup, find_packages
 
+with open("requirements/base.in") as f:
+    install_requires = f.readlines()
+
 
 def get_version():
     PATH = os.path.join(os.path.dirname(__file__), "beetmoverscript/_version.py")
@@ -29,15 +32,7 @@ setup(
         ],
     },
     license="MPL2",
-    install_requires=[
-        "arrow",
-        "scriptworker",
-        "taskcluster",
-        "boto3",
-        "PyYAML",
-        "Jinja2",
-        "redo",
-    ],
+    install_requires=install_requires,
     classifiers=(
         'Intended Audience :: Developers',
         'Natural Language :: English',

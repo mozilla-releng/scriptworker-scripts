@@ -1,6 +1,7 @@
 recursive-include beetmoverscript/test *
 recursive-include beetmoverscript/data *
 recursive-include beetmoverscript/templates *
+graft requirements
 
 include .coveragerc
 include LICENSE

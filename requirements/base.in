@@ -1,9 +1,5 @@
-arrow
-boto3
 Jinja2
+boto3
 mozilla-version
-PyYAML
 redo
 scriptworker
-taskcluster
-towncrier
