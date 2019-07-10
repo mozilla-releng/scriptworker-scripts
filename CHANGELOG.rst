@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.5.2] = (2019-07-10)
+----------------------
+
+Changed
+~~~~~~~
+
+- Switched to pip-compile-multi (`PR#230
+  <https://github.com/mozilla-releng/beetmoverscript/pull/230>`_)
+
+
 [8.5.1] = (2019-07-01)
 ----------------------
 
