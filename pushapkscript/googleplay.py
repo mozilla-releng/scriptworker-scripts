@@ -15,7 +15,6 @@ def publish_to_googleplay(payload, product_config, publish_config, apk_files, co
             google_play_credentials_file=certificate,
             track=publish_config['google_play_track'],
             expected_package_names=publish_config['package_names'],
-            skip_check_package_names=False,
             rollout_percentage=publish_config.get('rollout_percentage'),  # may be None
             commit=should_commit_transaction(payload),
             # Only allowed to connect to Google Play if the configuration of the pushapkscript instance allows it
