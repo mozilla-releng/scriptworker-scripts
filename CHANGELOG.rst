@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.5.3] = (2019-07-11)
+----------------------
+
+Fixed
+~~~~~
+
+- Bugfix in geckoview S3 logic submission. (`#1557269
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1557269>`_)
+
+
 [8.5.2] = (2019-07-10)
 ----------------------
 
