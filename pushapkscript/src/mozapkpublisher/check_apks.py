@@ -20,7 +20,6 @@ def main():
     extract_and_check_apks_metadata(
         config.apks,
         config.expected_package_names,
-        config.skip_check_package_names,
         config.skip_checks_fennec,
         config.skip_check_multiple_locales,
         config.skip_check_same_locales,

@@ -10,8 +10,7 @@ from mozapkpublisher.common.apk.checker import (
     _check_apks_version_codes_are_correctly_ordered,
     _check_all_apks_are_multi_locales,
     _check_all_architectures_and_api_levels_are_present,
-    ExpectedPackageNamesCheck,
-)
+    _check_package_names)
 from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetOfApks
 
 
@@ -50,12 +49,11 @@ from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetO
     }
 }, ['org.mozilla.focus', 'org.mozilla.klar', 'org.mozilla.reference.browser'], True)))
 def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types, should_fail):
-    expected_names = ExpectedPackageNamesCheck(product_types)
     if should_fail:
         with pytest.raises(BadSetOfApks):
-            expected_names.validate(apks_metadata_per_paths)
+            _check_package_names(product_types, apks_metadata_per_paths)
     else:
-        expected_names.validate(apks_metadata_per_paths)
+        _check_package_names(product_types, apks_metadata_per_paths)
 
 
 @pytest.mark.parametrize('apks_metadata_per_paths, package_names_check, skip_checks_fennec, skip_check_multiple_locales, skip_check_same_locales, skip_check_ordered_version_codes', ((   # noqa
@@ -97,7 +95,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'version_code': '2015523300',
         },
     },
-    ExpectedPackageNamesCheck(['org.mozilla.firefox']),
+    ['org.mozilla.firefox'],
     False,
     False,
     False,
@@ -159,7 +157,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'version_code': '2015605651',
         },
     },
-    ExpectedPackageNamesCheck(['org.mozilla.fennec_aurora']),
+    ['org.mozilla.fennec_aurora'],
     False,
     False,
     False,
@@ -239,7 +237,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'version_code': '2015605655',
         },
     },
-    ExpectedPackageNamesCheck(['org.mozilla.fennec_aurora']),
+    ['org.mozilla.fennec_aurora'],
     False,
     False,
     False,
@@ -319,7 +317,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'version_code': '4',
         },
     },
-    ExpectedPackageNamesCheck(['org.mozilla.firefox_beta']),
+    ['org.mozilla.firefox_beta'],
     False,
     False,
     False,
@@ -399,7 +397,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'version_code': '4',
         },
     },
-    ExpectedPackageNamesCheck(['org.mozilla.firefox']),
+    ['org.mozilla.firefox'],
     False,
     False,
     False,
@@ -419,7 +417,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'version_code': '11'
         }
     },
-    ExpectedPackageNamesCheck(['org.mozilla.focus', 'org.mozilla.klar']),
+    ['org.mozilla.focus', 'org.mozilla.klar'],
     True,
     True,
     True,
