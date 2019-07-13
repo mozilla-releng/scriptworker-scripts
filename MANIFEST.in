@@ -4,7 +4,7 @@ recursive-include examples *
 include LICENSE
 include README.md
 include version.txt
-include requirements*.txt
+graft requirements
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
