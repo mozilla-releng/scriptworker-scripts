@@ -8,6 +8,7 @@ include README.rst
 include config_example.json
 include version.json
 include tox.ini
+graft requirements
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
