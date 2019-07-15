@@ -2,9 +2,8 @@ import os
 import pytest
 
 from scriptworker_client.client import verify_task_schema
-from scriptworker_client.exceptions import TaskError
+from scriptworker_client.exceptions import TaskError, TaskVerificationError
 
-from treescript.exceptions import TaskVerificationError
 from treescript.script import get_default_config
 import treescript.task as stask
 
@@ -51,7 +50,7 @@ def config(tmpdir):
 def test_missing_mandatory_urls_are_reported(config, task_defn):
     del task_defn["scopes"]
 
-    with pytest.raises(TaskError):
+    with pytest.raises(TaskVerificationError):
         verify_task_schema(config, task_defn)
 
 
