@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 from mozapkpublisher.common import googleplay
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.common.googleplay import add_general_google_play_arguments, \
-    WritableGooglePlay, MockGooglePlayConnection, ReadOnlyGooglePlay, GooglePlayConnection, \
+    GooglePlayEdit, MockGooglePlayConnection, GooglePlayConnection, \
     connection_for_options
 from mozapkpublisher.test import does_not_raise
 
@@ -55,33 +55,24 @@ def edit_resource_mock():
     return edit_resource
 
 
-def test_read_only_google_play_no_commit_transaction():
+def test_google_play_edit_no_commit_transaction():
     connection = MockGooglePlayConnection()
     mock_edits_resource = MagicMock()
     connection.get_edit_resource = lambda: mock_edits_resource
-    ReadOnlyGooglePlay.create(connection, 'package.name')
+    with GooglePlayEdit.transaction(connection, 'package.name', False) as _:
+        pass
 
     mock_edits_resource.commit.assert_not_called()
 
 
-def test_writable_google_play_commit_transaction():
+def test_google_play_edit_commit_transaction():
     connection = MockGooglePlayConnection()
     mock_edits_resource = MagicMock()
     connection.get_edit_resource = lambda: mock_edits_resource
-    with WritableGooglePlay.transaction(connection, 'package.name') as _:
+    with GooglePlayEdit.transaction(connection, 'package.name', True) as _:
         pass
 
     mock_edits_resource.commit.assert_called_with(editId=ANY, packageName='package.name')
-
-
-def test_writable_google_play_argument_do_not_commit_transaction():
-    connection = MockGooglePlayConnection()
-    mock_edits_resource = MagicMock()
-    connection.get_edit_resource = lambda: mock_edits_resource
-    with WritableGooglePlay.transaction(connection, 'package.name', do_not_commit=True) as _:
-        pass
-
-    mock_edits_resource.commit.assert_not_called()
 
 
 def test_get_track_status(edit_resource_mock):
@@ -108,7 +99,7 @@ def test_get_track_status(edit_resource_mock):
 
     edit_resource_mock.tracks().get.reset_mock()
 
-    google_play = ReadOnlyGooglePlay(edit_resource_mock, 1, 'dummy_package_name')
+    google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
     assert google_play.get_track_status(track='production') == release_data
     edit_resource_mock.tracks().get.assert_called_once_with(
         editId=1,
@@ -123,7 +114,7 @@ def test_upload_apk_returns_files_metadata(edit_resource_mock):
     }
     edit_resource_mock.apks().upload.reset_mock()
 
-    google_play = WritableGooglePlay(edit_resource_mock, 1, 'dummy_package_name')
+    google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
     google_play.upload_apk(apk_path='/path/to/dummy.apk')
     edit_resource_mock.apks().upload.assert_called_once_with(
         editId=google_play._edit_id,
@@ -141,7 +132,7 @@ def test_upload_apk_errors_out(edit_resource_mock, http_status_code):
         # https://github.com/googleapis/google-api-python-client/blob/ffea1a7fe9d381d23ab59048263c631cc2b45323/googleapiclient/errors.py#L41
         content=b'{"error": {"errors": [{"reason": "someRandomReason"}] } }',
     )
-    google_play = WritableGooglePlay(edit_resource_mock, 1, 'dummy_package_name')
+    google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
 
     with pytest.raises(HttpError):
         google_play.upload_apk(apk_path='/path/to/dummy.apk')
@@ -169,14 +160,14 @@ def test_upload_apk_does_not_error_out_when_apk_is_already_published(edit_resour
         resp={'status': '403'},
         content=content_bytes,
     )
-    google_play = WritableGooglePlay(edit_resource_mock, 1, 'dummy_package_name')
+    google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
 
     with expectation:
         google_play.upload_apk(apk_path='/path/to/dummy.apk')
 
 
 def test_update_track(edit_resource_mock):
-    google_play = WritableGooglePlay(edit_resource_mock, 1, 'dummy_package_name')
+    google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
 
     google_play.update_track('alpha', ['2015012345', '2015012347'])
     edit_resource_mock.tracks().update.assert_called_once_with(
@@ -209,14 +200,14 @@ def test_update_track(edit_resource_mock):
 
 @pytest.mark.parametrize('invalid_percentage', (-1, 101))
 def test_update_track_should_refuse_wrong_percentage(edit_resource_mock, invalid_percentage):
-    google_play = WritableGooglePlay(edit_resource_mock, 1, 'dummy_package_name')
+    google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
 
     with pytest.raises(WrongArgumentGiven):
         google_play.update_track('rollout', ['2015012345', '2015012347'], invalid_percentage)
 
 
 def test_update_listings(edit_resource_mock):
-    google_play = WritableGooglePlay(edit_resource_mock, 1, 'dummy_package_name')
+    google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
 
     google_play.update_listings(
         'en-GB',
@@ -237,7 +228,7 @@ def test_update_listings(edit_resource_mock):
 
 
 def test_update_whats_new(edit_resource_mock):
-    google_play = WritableGooglePlay(edit_resource_mock, 1, 'dummy_package_name')
+    google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
 
     google_play.update_whats_new('en-GB', '2015012345', 'Check out this cool feature!')
     edit_resource_mock.apklistings().update.assert_called_once_with(

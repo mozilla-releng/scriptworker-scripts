@@ -30,7 +30,7 @@ SERVICE_ACCOUNT = 'foo@developer.gserviceaccount.com'
 
 @pytest.fixture
 def writable_google_play_mock():
-    return create_autospec(googleplay.WritableGooglePlay)
+    return create_autospec(googleplay.GooglePlayEdit)
 
 
 def set_up_mocks(monkeypatch_, writable_google_play_mock_):
@@ -75,10 +75,10 @@ def set_up_mocks(monkeypatch_, writable_google_play_mock_):
         }
 
     @contextmanager
-    def fake_transaction(_, __, do_not_commit):
+    def fake_transaction(_, __, ___):
         yield writable_google_play_mock_
 
-    monkeypatch_.setattr(googleplay.WritableGooglePlay, 'transaction', fake_transaction)
+    monkeypatch_.setattr(googleplay.GooglePlayEdit, 'transaction', fake_transaction)
     monkeypatch_.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', _metadata)
 
 

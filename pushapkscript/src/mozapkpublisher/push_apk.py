@@ -6,7 +6,7 @@ import logging
 from mozapkpublisher.common import googleplay, main_logging
 from mozapkpublisher.common.apk import add_apk_checks_arguments, extract_and_check_apks_metadata
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
-from mozapkpublisher.common.googleplay import WritableGooglePlay, connection_for_options
+from mozapkpublisher.common.googleplay import GooglePlayEdit, connection_for_options
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +72,7 @@ def push_apk(
     # by package name here.
     split_apk_metadata = _split_apk_metadata_per_package_name(apks_metadata_per_paths)
     for (package_name, apks_metadata) in split_apk_metadata.items():
-        with WritableGooglePlay.transaction(connection, package_name,
-                                            do_not_commit=not commit) as google_play:
+        with GooglePlayEdit.transaction(connection, package_name, commit) as google_play:
             for path, metadata in apks_metadata_per_paths.items():
                 google_play.upload_apk(path)
 

@@ -111,10 +111,14 @@ def connection_for_options(contact_google_play, service_account, credentials_fil
         return MockGooglePlayConnection()
 
 
-class ReadOnlyGooglePlay:
-    """Read-only access to the Google Play store
+class GooglePlayEdit:
+    """Represents an "edit" to an app on the Google Play store
 
-    Create an instance by calling ReadOnlyGooglePlay.create() instead of using the constructor
+    Create an instance by calling GooglePlayEdit.transaction(), instead of using the
+    constructor. This can optionally handle committing the transaction when the "with" block
+    ends.
+
+    E.g.: `with GooglePlayEdit.transaction() as google_play:`
     """
 
     def __init__(self, edit_resource, edit_id, package_name):
@@ -130,26 +134,6 @@ class ReadOnlyGooglePlay:
         ).execute()
         logger.debug('Track "{}" has status: {}'.format(track, response))
         return response
-
-    @staticmethod
-    def create(connection, package_name):
-        edit_resource = connection.get_edit_resource()
-        edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
-        return ReadOnlyGooglePlay(edit_resource, edit_id, package_name)
-
-
-class WritableGooglePlay(ReadOnlyGooglePlay):
-    """Read-write access to the Google Play store
-
-    Create an instance by calling WritableGooglePlay.transaction(), instead of using the
-    constructor. This will automatically handle committing the transaction when the "with" block
-    ends.
-
-    E.g.: `with WritableGooglePlay.transaction() as google_play:`
-    """
-
-    def __init__(self, edit_resource, edit_id, package_name):
-        super().__init__(edit_resource, edit_id, package_name)
 
     def upload_apk(self, apk_path):
         logger.info('Uploading "{}" ...'.format(apk_path))
@@ -222,14 +206,14 @@ class WritableGooglePlay(ReadOnlyGooglePlay):
 
     @staticmethod
     @contextmanager
-    def transaction(connection, package_name, do_not_commit=False):
+    def transaction(connection, package_name, commit):
         edit_resource = connection.get_edit_resource()
         edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
-        google_play = WritableGooglePlay(edit_resource, edit_id, package_name)
+        google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
         yield google_play
-        if do_not_commit:
-            logger.warning('Transaction not committed, since `do_not_commit` was set')
-        else:
+        if commit:
             edit_resource.commit(editId=edit_id, packageName=package_name)
             logger.info('Changes committed')
             logger.debug('edit_id "{}" for "{}" has been committed'.format(edit_id, package_name))
+        else:
+            logger.warning('Transaction not committed, since `commit` was `False`')

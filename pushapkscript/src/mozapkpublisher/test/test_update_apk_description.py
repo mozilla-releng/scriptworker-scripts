@@ -15,8 +15,8 @@ credentials = NamedTemporaryFile()
 
 
 def test_update_apk_description_force_locale(monkeypatch):
-    google_play_mock = create_autospec(googleplay.WritableGooglePlay)
-    monkeypatch.setattr(googleplay, 'WritableGooglePlay', lambda _, __, ___: google_play_mock)
+    google_play_mock = create_autospec(googleplay.GooglePlayEdit)
+    monkeypatch.setattr(googleplay, 'GooglePlayEdit', lambda _, __, ___: google_play_mock)
     monkeypatch.setattr(store_l10n, '_translations_per_google_play_locale_code', {
         'google_play_locale': {
             'title': 'Firefox for Android',
