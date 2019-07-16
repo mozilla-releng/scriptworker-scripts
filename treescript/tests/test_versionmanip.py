@@ -1,8 +1,15 @@
+from contextlib import contextmanager
 import os
 import pytest
 
+from mozilla_version.gecko import (
+    FennecVersion,
+    FirefoxVersion,
+    GeckoVersion,
+    ThunderbirdVersion,
+)
 from treescript.utils import DONTBUILD_MSG
-from treescript.exceptions import TaskVerificationError
+from treescript.exceptions import TaskVerificationError, TreeScriptError
 from treescript.script import get_default_config
 import treescript.versionmanip as vmanip
 
@@ -14,6 +21,11 @@ def is_slice_in_list(s, l):
     return any(s == l[i : len_s + i] for i in range(len(l) - len_s + 1))
 
 
+@contextmanager
+def does_not_raise():
+    yield
+
+
 @pytest.yield_fixture(scope="function")
 def config(tmpdir):
     config_ = get_default_config()
@@ -22,7 +34,7 @@ def config(tmpdir):
 
 
 @pytest.fixture(
-    scope="function", params=("52.5.0", "52.0b3", "# foobar\n52.1a3", "60.1.3esr")
+    scope="function", params=("52.5.0", "52.0b3", "# foobar\n52.0a1", "60.1.3esr")
 )
 def repo_context(tmpdir, config, request, mocker):
     context = mocker.MagicMock()
@@ -49,7 +61,7 @@ def test_get_version(repo_context):
     assert ver == repo_context.xtest_version
 
 
-@pytest.mark.parametrize("new_version", ("87.0", "87.1b3"))
+@pytest.mark.parametrize("new_version", ("87.0", "87.0b3"))
 def test_replace_ver_in_file(repo_context, new_version):
     filepath = os.path.join(repo_context.repo, "config", "milestone.txt")
     old_ver = repo_context.xtest_version
@@ -57,7 +69,7 @@ def test_replace_ver_in_file(repo_context, new_version):
     assert new_version == vmanip._get_version(filepath)
 
 
-@pytest.mark.parametrize("new_version", ("87.0", "87.1b3"))
+@pytest.mark.parametrize("new_version", ("87.0", "87.0b3"))
 def test_replace_ver_in_file_invalid_old_ver(repo_context, new_version):
     filepath = os.path.join(repo_context.repo, "config", "milestone.txt")
     old_ver = "45.0"
@@ -65,16 +77,54 @@ def test_replace_ver_in_file_invalid_old_ver(repo_context, new_version):
         vmanip.replace_ver_in_file(filepath, old_ver, new_version)
 
 
+@pytest.mark.parametrize(
+    "file, expectation, expected_result",
+    (
+        ("browser/config/version.txt", does_not_raise(), FirefoxVersion),
+        ("browser/config/version_display.txt", does_not_raise(), FirefoxVersion),
+        ("mail/config/version.txt", does_not_raise(), ThunderbirdVersion),
+        ("mail/config/version_display.txt", does_not_raise(), ThunderbirdVersion),
+        ("config/milestone.txt", does_not_raise(), GeckoVersion),
+        (
+            "mobile/android/config/version-files/beta/version.txt",
+            does_not_raise(),
+            FennecVersion,
+        ),
+        (
+            "mobile/android/config/version-files/beta/version_display.txt",
+            does_not_raise(),
+            FennecVersion,
+        ),
+        (
+            "mobile/android/config/version-files/release/version.txt",
+            does_not_raise(),
+            FennecVersion,
+        ),
+        (
+            "mobile/android/config/version-files/release/version_display.txt",
+            does_not_raise(),
+            FennecVersion,
+        ),
+        ("some/random/file.txt", pytest.raises(TreeScriptError), None),
+    ),
+)
+def test_find_what_version_parser_to_use(file, expectation, expected_result):
+    with expectation:
+        assert vmanip._find_what_version_parser_to_use(file) == expected_result
+
+
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version", ("87.0", "87.1b3"))
-async def test_bump_version(mocker, repo_context, new_version):
+@pytest.mark.parametrize(
+    "new_version, should_append_esr", (("87.0", True), ("87.0b3", False))
+)
+async def test_bump_version(mocker, repo_context, new_version, should_append_esr):
     called_args = []
 
     async def run_command(context, *arguments, local_repo=None):
         called_args.append([tuple([context]) + arguments, {"local_repo": local_repo}])
 
     test_version = new_version
-    if repo_context.xtest_version.endswith("esr"):
+    if repo_context.xtest_version.endswith("esr") and should_append_esr:
         test_version = new_version + "esr"
 
     relative_files = [os.path.join("config", "milestone.txt")]
@@ -92,7 +142,7 @@ async def test_bump_version(mocker, repo_context, new_version):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version", ("87.0", "87.1b3"))
+@pytest.mark.parametrize("new_version", ("87.0", "87.0b3"))
 async def test_bump_version_DONTBUILD_true(mocker, repo_context, new_version):
     called_args = []
 
@@ -113,7 +163,7 @@ async def test_bump_version_DONTBUILD_true(mocker, repo_context, new_version):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version", ("87.0", "87.1b3"))
+@pytest.mark.parametrize("new_version", ("87.0", "87.0b3"))
 async def test_bump_version_DONTBUILD_false(mocker, repo_context, new_version):
     called_args = []
 
@@ -134,7 +184,7 @@ async def test_bump_version_DONTBUILD_false(mocker, repo_context, new_version):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version", ("87.0", "87.1b3", "123.2esr"))
+@pytest.mark.parametrize("new_version", ("87.0", "87.0b3", "123.2.0esr"))
 async def test_bump_version_invalid_file(mocker, repo_context, new_version):
     called_args = []
 
@@ -160,7 +210,7 @@ async def test_bump_version_invalid_file(mocker, repo_context, new_version):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version", ("87.0", "87.1b3", "123.2esr"))
+@pytest.mark.parametrize("new_version", ("87.0", "87.0b3", "123.2.0esr"))
 async def test_bump_version_missing_file(mocker, repo_context, new_version):
     called_args = []
 
@@ -187,7 +237,7 @@ async def test_bump_version_missing_file(mocker, repo_context, new_version):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version", ("27.0", "26.1b3", "45.2esr"))
+@pytest.mark.parametrize("new_version", ("27.0", "26.0b3", "45.0esr"))
 async def test_bump_version_smaller_version(mocker, repo_context, new_version):
     called_args = []
 
@@ -209,12 +259,7 @@ async def test_bump_version_smaller_version(mocker, repo_context, new_version):
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "new_version,expect_version",
-    (
-        ("87.0", "87.0esr"),
-        ("87.1", "87.1esr"),
-        ("92.0.1", "92.0.1esr"),
-        ("76.9.10esr", "76.9.10esr"),
-    ),
+    (("87.0", "87.0esr"), ("92.0.1", "92.0.1esr"), ("76.9.10esr", "76.9.10esr")),
 )
 async def test_bump_version_esr(mocker, repo_context, new_version, expect_version):
     if not repo_context.xtest_version.endswith("esr"):
@@ -242,8 +287,7 @@ async def test_bump_version_esr(mocker, repo_context, new_version, expect_versio
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "new_version,expect_esr_version",
-    (("87.0", "87.0esr"), ("87.1", "87.1esr"), ("92.0.1", "92.0.1esr")),
+    "new_version,expect_esr_version", (("87.0", "87.0esr"), ("92.0.1", "92.0.1esr"))
 )
 async def test_bump_version_esr_dont_bump_non_esr(
     mocker, config, tmpdir, new_version, expect_esr_version
