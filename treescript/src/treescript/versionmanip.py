@@ -8,7 +8,7 @@ import os
 from treescript.utils import DONTBUILD_MSG
 from treescript.exceptions import TaskVerificationError
 from treescript.mercurial import run_hg_command
-from treescript.task import get_version_bump_info, get_dontbuild, get_local_repo
+from treescript.task import get_version_bump_info, get_dontbuild
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def _get_version(file):
     return lines[-1]
 
 
-async def bump_version(config, task):
+async def bump_version(config, task, directory):
     """Perform a version bump.
 
     This function takes its inputs from task by using the ``get_version_bump_info``
@@ -57,17 +57,14 @@ async def bump_version(config, task):
     old_next_version = None
     files = bump_info["files"]
     changed = False
-    repo = get_local_repo(task)
-    for file in files:
+    for file_ in files:
         if old_next_version:
             next_version = old_next_version
-        abs_file = os.path.join(repo, file)
-        if file not in ALLOWED_BUMP_FILES:
-            raise TaskVerificationError(
-                "Specified file to version bump is not in whitelist"
-            )
+        abs_file = os.path.join(directory, file_)
+        if file_ not in ALLOWED_BUMP_FILES:
+            raise TaskVerificationError(f"{file_} is not in version bump whitelist")
         if not os.path.exists(abs_file):
-            raise TaskVerificationError("Specified file is not in repo")
+            raise TaskVerificationError(f"{abs_file} is not in repo")
         curr_version = _get_version(abs_file)
 
         Comparator = StrictVersion
@@ -101,7 +98,7 @@ async def bump_version(config, task):
         commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
         if dontbuild:
             commit_msg += DONTBUILD_MSG
-        await run_hg_command(config, "commit", "-m", commit_msg, local_repo=repo)
+        await run_hg_command(config, "commit", "-m", commit_msg, local_repo=directory)
 
 
 def replace_ver_in_file(file, curr_version, new_version):

@@ -28,7 +28,7 @@ async def do_actions(config, task, actions, directory):
         if "tagging" == action:
             await do_tagging(config, task, directory)
         elif "version_bump" == action:
-            await bump_version(config, task)
+            await bump_version(config, task, directory)
         elif "push" == action:
             pass  # handled after log_outgoing
         else:
@@ -37,7 +37,7 @@ async def do_actions(config, task, actions, directory):
     if is_dry_run(task):
         log.info("Not pushing changes, dry_run was forced")
     elif "push" in actions:
-        await push(config)
+        await push(config, task, directory)
     else:
         log.info("Not pushing changes, lacking scopes")
 
@@ -51,13 +51,14 @@ async def async_main(config, task):
 
     """
     work_dir = config["work_dir"]
+    source_dir = os.path.join(work_dir, "src")
     actions_to_perform = task_action_types(config, task)
     await log_mercurial_version(config)
     if not await validate_robustcheckout_works(config):
         raise TreeScriptError("Robustcheckout can't run on our version of hg, aborting")
-    await checkout_repo(config, task, work_dir)
+    await checkout_repo(config, task, source_dir)
     if actions_to_perform:
-        await do_actions(config, task, actions_to_perform, work_dir)
+        await do_actions(config, task, actions_to_perform, source_dir)
     log.info("Done!")
 
 

@@ -2,7 +2,7 @@ import os
 import pytest
 
 from scriptworker_client.client import verify_task_schema
-from scriptworker_client.exceptions import TaskError, TaskVerificationError
+from scriptworker_client.exceptions import TaskVerificationError
 
 from treescript.script import get_default_config
 import treescript.task as stask

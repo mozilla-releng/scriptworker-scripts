@@ -6,7 +6,7 @@ import sys
 from scriptworker_client.utils import run_command
 from treescript.utils import DONTBUILD_MSG
 from treescript.exceptions import FailedSubprocess
-from treescript.task import get_local_repo, get_source_repo, get_tag_info, get_dontbuild
+from treescript.task import get_source_repo, get_tag_info, get_dontbuild
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
 # For environment vars.
@@ -133,7 +133,7 @@ async def validate_robustcheckout_works(config):
 
 
 # checkout_repo {{{1
-async def checkout_repo(config, task, directory):
+async def checkout_repo(config, task, dest_folder):
     """Perform a clone via robustcheckout, at ${directory}/src.
 
     This function will perform a clone via robustcheckout, using hg's share extension
@@ -146,7 +146,7 @@ async def checkout_repo(config, task, directory):
     Args:
         config (dict): the running config.
         task (dict): the running task.
-        directory (str): The directory to place the resulting clone.
+        dest_folder (str): The directory to place the resulting clone.
 
     Raises:
         FailedSubprocess: if the clone attempt doesn't succeed.
@@ -155,7 +155,6 @@ async def checkout_repo(config, task, directory):
     share_base = config["hg_share_base_dir"]
     upstream_repo = config["upstream_repo"]
     dest_repo = get_source_repo(task)
-    dest_folder = get_local_repo(directory, src_type="directory")
     # branch default is used to pull tip of the repo at checkout time
     await run_hg_command(
         config,
@@ -172,8 +171,8 @@ async def checkout_repo(config, task, directory):
 
 
 # do_tagging {{{1
-async def do_tagging(config, task, directory):
-    """Perform tagging, at ${directory}/src.
+async def do_tagging(config, task, dest_folder):
+    """Perform tagging, at ${dest_folder}/src.
 
     This function will perform a mercurial tag, on 'default' head of target repository.
     It will tag the revision specified in the tag_info portion of the task payload, using
@@ -189,13 +188,12 @@ async def do_tagging(config, task, directory):
     Args:
         config (dict): the running config.
         task (dict): the running task.
-        directory (str): The directory to place the resulting clone.
+        dest_folder (str): The directory to place the resulting clone.
 
     Raises:
         FailedSubprocess: if the tag attempt doesn't succeed.
 
     """
-    local_repo = get_local_repo(task)
     tag_info = get_tag_info(task)
     desired_tags = tag_info["tags"]
     desired_rev = tag_info["revision"]
@@ -210,7 +208,7 @@ async def do_tagging(config, task, directory):
         )
     )
     await run_hg_command(
-        config, "pull", "-r", desired_rev, dest_repo, local_repo=local_repo
+        config, "pull", "-r", desired_rev, dest_repo, local_repo=dest_folder
     )
     log.info(commit_msg)
     await run_hg_command(
@@ -222,16 +220,15 @@ async def do_tagging(config, task, directory):
         desired_rev,
         "-f",  # Todo only force if needed
         *desired_tags,
-        local_repo=local_repo
+        local_repo=dest_folder
     )
 
 
-async def log_outgoing(config, task, directory):
+async def log_outgoing(config, task, local_repo):
     """Run `hg out` against the current revision in the repository.
 
     This logs current changes that will be pushed (or would have been, if dry-run)
     """
-    local_repo = get_local_repo(directory, src_type="directory")
     dest_repo = get_source_repo(task)
     log.info("outgoing changesets..")
     await run_hg_command(
@@ -239,9 +236,8 @@ async def log_outgoing(config, task, directory):
     )
 
 
-async def push(config, task):
+async def push(config, task, local_repo):
     """Run `hg push` against the current source repo."""
-    local_repo = get_local_repo(task)
     dest_repo = get_source_repo(task)
     dest_repo_ssh = dest_repo.replace("https://", "ssh://")
     ssh_username = config.get("hg_ssh_user")
