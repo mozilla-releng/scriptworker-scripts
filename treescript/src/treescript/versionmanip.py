@@ -53,6 +53,11 @@ async def bump_version(config, task, directory):
     This function does nothing (but logs) if the current version and next version
     match, and nothing if the next_version is actually less than current_version.
 
+    Args:
+        config (dict): the running config
+        task (dict): the running task
+        directory (str): the source directory
+
     raises:
         TaskverificationError: if a file specified is not allowed, or
                                if the file is not in the target repository.
@@ -133,20 +138,25 @@ def _find_what_version_parser_to_use(file_):
         raise TreeScriptError(exc) from exc
 
 
-def replace_ver_in_file(file, curr_version, new_version):
+def replace_ver_in_file(file_, curr_version, new_version):
     """Read in contents of `file` and then update version.
 
     Implementation detail: replaces instances of `curr_version` with `new_version`
     using python3 str.replace().
 
-    raises:
+    Args:
+        file_ (str): the path to the file
+        curr_version (str): the current version
+        new_version (str): the version to bump to
+
+    Raises:
         Exception: if contents before and after match.
 
     """
-    with open(file, "r") as f:
+    with open(file_, "r") as f:
         contents = f.read()
     new_contents = contents.replace(str(curr_version), str(new_version))
     if contents == new_contents:
         raise Exception("Did not expect no changes")
-    with open(file, "w") as f:
+    with open(file_, "w") as f:
         f.write(new_contents)

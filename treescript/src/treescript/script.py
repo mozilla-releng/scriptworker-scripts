@@ -23,6 +23,13 @@ async def do_actions(config, task, actions, directory):
     """Perform the set of actions that treescript can perform.
 
     The actions happen in order, tagging, ver bump, then push
+
+    Args:
+        config (dict): the running config
+        task (dict): the running task
+        actions (list): the actions to perform
+        directory (str): the source directory to use.
+
     """
     for action in actions:
         if "tagging" == action:
@@ -48,6 +55,7 @@ async def async_main(config, task):
 
     Args:
         config (dict): the running config.
+        task (dict): the running task.
 
     """
     work_dir = config["work_dir"]

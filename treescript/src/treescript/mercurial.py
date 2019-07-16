@@ -84,7 +84,10 @@ async def run_hg_command(config, *args, local_repo=None, **kwargs):
 
     Args:
         config (dict): the running config.
-        *str: the remaining args to pass to the hg command.
+        *args: the remaining args to pass to the hg command.
+        local_repo (str, optional): the local repo to use, if specified.
+            Defaults to ``None``.
+        **args: the remaining kwargs to pass to the hg command.
 
     Returns:
         list: the hg command to run.
