@@ -40,7 +40,7 @@ def is_slice_in_list(s, l):
     # Credit to https://stackoverflow.com/a/20789412/#answer-20789669
     # With edits by Callek to be py3 and pep8 compat
     len_s = len(s)  # so we don't recompute length of s on every iteration
-    return any(s == l[i: len_s + i] for i in range(len(l) - len_s + 1))
+    return any(s == l[i : len_s + i] for i in range(len(l) - len_s + 1))
 
 
 @pytest.yield_fixture(scope="function")
@@ -174,7 +174,7 @@ async def test_checkout_repo(config, task, mocker):
             (
                 "robustcheckout",
                 "https://hg.mozilla.org/test-repo",
-                os.path.join(config["work_dir"], "src"),
+                os.path.join(config["work_dir"]),
             ),
             args,
         )
@@ -245,7 +245,7 @@ async def test_do_tagging_DONTBUILD_false(config, task, mocker):
 
 
 @pytest.mark.asyncio
-async def test_push(config, task, mocker):
+async def test_push(config, task, mocker, tmpdir):
     called_args = []
 
     async def run_command(config, *arguments, local_repo=None):
@@ -254,7 +254,7 @@ async def test_push(config, task, mocker):
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
     mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
     mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
-    await mercurial.push(config, task)
+    await mercurial.push(config, task, tmpdir)
 
     assert len(called_args) == 1
     assert "local_repo" in called_args[0][1]
@@ -275,7 +275,7 @@ async def test_push(config, task, mocker):
         ),
     ),
 )
-async def test_push_ssh(config, task, mocker, options, expect):
+async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
     called_args = []
 
     async def run_command(config, *arguments, local_repo=None):
@@ -286,7 +286,7 @@ async def test_push_ssh(config, task, mocker, options, expect):
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
     mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
     mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
-    await mercurial.push(config, task)
+    await mercurial.push(config, task, tmpdir)
 
     assert len(called_args) == 1
     assert "local_repo" in called_args[0][1]
