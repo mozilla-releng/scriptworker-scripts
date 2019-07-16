@@ -30,14 +30,11 @@ def task_action_types(config, task):
         str: the cert type.
 
     """
-    try:
-        actions = [
-            s.split(":")[-1]
-            for s in task["scopes"]
-            if s.startswith(config["taskcluster_scope_prefix"] + "action:")
-        ]
-    except KeyError as exc:
-        raise TaskVerificationError(exc) from exc
+    actions = [
+        s.split(":")[-1]
+        for s in task["scopes"]
+        if s.startswith(config["taskcluster_scope_prefix"] + "action:")
+    ]
     log.info("Action requests: %s", actions)
     if len(actions) < 1:
         raise TaskVerificationError(

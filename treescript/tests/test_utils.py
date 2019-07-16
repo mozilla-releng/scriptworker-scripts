@@ -31,14 +31,14 @@ def test_task_action_types_valid_scopes(actions, scopes):
 def test_task_action_types_invalid_action(scopes):
     task = {"scopes": scopes}
     with pytest.raises(TaskVerificationError):
-        utils.task_action_types(task, SCRIPT_CONFIG)
+        utils.task_action_types(SCRIPT_CONFIG, task)
 
 
 @pytest.mark.parametrize("scopes", ([], ["project:releng:foo:not:for:here"]))
 def test_task_action_types_missing_action(scopes):
     task = {"scopes": scopes}
     with pytest.raises(TaskVerificationError):
-        utils.task_action_types(task, SCRIPT_CONFIG)
+        utils.task_action_types(SCRIPT_CONFIG, task)
 
 
 @pytest.mark.parametrize(
