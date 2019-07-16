@@ -5,7 +5,7 @@ import sys
 
 from scriptworker_client.utils import run_command
 from treescript.utils import DONTBUILD_MSG
-from treescript.exceptions import FailedSubprocess
+from treescript.exceptions import CheckoutError, FailedSubprocess, PushError
 from treescript.task import get_source_repo, get_tag_info, get_dontbuild
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
@@ -77,7 +77,9 @@ def build_hg_environment():
 
 
 # run_hg_command {{{1
-async def run_hg_command(config, *args, local_repo=None, **kwargs):
+async def run_hg_command(
+    config, *args, local_repo=None, exception=FailedSubprocess, **kwargs
+):
     """Run a mercurial command.
 
     See-Also ``build_hg_environment``, ``build_hg_command``
@@ -87,6 +89,8 @@ async def run_hg_command(config, *args, local_repo=None, **kwargs):
         *args: the remaining args to pass to the hg command.
         local_repo (str, optional): the local repo to use, if specified.
             Defaults to ``None``.
+        exception (Exception, optional): the exception to raise on error.
+            Defaults to ``FailedSubprocess``.
         **args: the remaining kwargs to pass to the hg command.
 
     Returns:
@@ -97,7 +101,7 @@ async def run_hg_command(config, *args, local_repo=None, **kwargs):
     env = build_hg_environment()
     if local_repo:
         command.extend(["-R", local_repo])
-    await run_command(command, env=env, exception=FailedSubprocess, **kwargs)
+    await run_command(command, env=env, exception=exception, **kwargs)
 
 
 # log_mercurial_version {{{1
@@ -152,7 +156,7 @@ async def checkout_repo(config, task, dest_folder):
         dest_folder (str): The directory to place the resulting clone.
 
     Raises:
-        FailedSubprocess: if the clone attempt doesn't succeed.
+        CheckoutError: if the clone attempt doesn't succeed.
 
     """
     share_base = config["hg_share_base_dir"]
@@ -170,6 +174,7 @@ async def checkout_repo(config, task, dest_folder):
         upstream_repo,
         "--branch",
         "default",
+        exception=CheckoutError,
     )
 
 
@@ -223,7 +228,7 @@ async def do_tagging(config, task, dest_folder):
         desired_rev,
         "-f",  # Todo only force if needed
         *desired_tags,
-        local_repo=dest_folder
+        local_repo=dest_folder,
     )
 
 
@@ -231,6 +236,15 @@ async def log_outgoing(config, task, local_repo):
     """Run `hg out` against the current revision in the repository.
 
     This logs current changes that will be pushed (or would have been, if dry-run)
+
+    Args:
+        config (dict): the running config
+        task (dict): the running task
+        local_repo (str): the source repo path
+
+    Raises:
+        FailedSubprocess: on failure
+
     """
     dest_repo = get_source_repo(task)
     log.info("outgoing changesets..")
@@ -240,7 +254,17 @@ async def log_outgoing(config, task, local_repo):
 
 
 async def push(config, task, local_repo):
-    """Run `hg push` against the current source repo."""
+    """Run `hg push` against the current source repo.
+
+    Args:
+        config (dict): the running config
+        task (dict): the running task
+        local_repo (str): the source repo path
+
+    Raises:
+        PushError: on failure
+
+    """
     dest_repo = get_source_repo(task)
     dest_repo_ssh = dest_repo.replace("https://", "ssh://")
     ssh_username = config.get("hg_ssh_user")
@@ -254,5 +278,13 @@ async def push(config, task, local_repo):
             ssh_opt[1] += " -i %s" % ssh_key
     log.info("Pushing local changes to {}".format(dest_repo_ssh))
     await run_hg_command(
-        config, "push", *ssh_opt, "-r", ".", "-v", dest_repo_ssh, local_repo=local_repo
+        config,
+        "push",
+        *ssh_opt,
+        "-r",
+        ".",
+        "-v",
+        dest_repo_ssh,
+        local_repo=local_repo,
+        exception=PushError,
     )

@@ -248,7 +248,7 @@ async def test_do_tagging_DONTBUILD_false(config, task, mocker):
 async def test_push(config, task, mocker, tmpdir):
     called_args = []
 
-    async def run_command(config, *arguments, local_repo=None):
+    async def run_command(config, *arguments, local_repo=None, **kwargs):
         called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
@@ -278,7 +278,7 @@ async def test_push(config, task, mocker, tmpdir):
 async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
     called_args = []
 
-    async def run_command(config, *arguments, local_repo=None):
+    async def run_command(config, *arguments, local_repo=None, **kwargs):
         called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
 
     print()
@@ -299,7 +299,7 @@ async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
 async def test_log_outgoing(config, task, mocker):
     called_args = []
 
-    async def run_command(config, *arguments, local_repo=None):
+    async def run_command(config, *arguments, local_repo=None, **kwargs):
         called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)

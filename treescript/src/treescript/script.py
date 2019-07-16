@@ -3,8 +3,9 @@
 import logging
 import os
 
+from scriptworker_client.aio import retry_async
 from scriptworker_client.client import sync_main
-from treescript.exceptions import TreeScriptError
+from treescript.exceptions import CheckoutError, PushError, TreeScriptError
 from treescript.utils import task_action_types, is_dry_run
 from treescript.mercurial import (
     log_mercurial_version,
@@ -29,8 +30,11 @@ async def do_actions(config, task, actions, directory):
         task (dict): the running task
         actions (list): the actions to perform
         directory (str): the source directory to use.
+        attempts (int, optional): the number of attempts to perform,
+            retrying on error.
 
     """
+    await checkout_repo(config, task, directory)
     for action in actions:
         if "tagging" == action:
             await do_tagging(config, task, directory)
@@ -64,9 +68,11 @@ async def async_main(config, task):
     await log_mercurial_version(config)
     if not await validate_robustcheckout_works(config):
         raise TreeScriptError("Robustcheckout can't run on our version of hg, aborting")
-    await checkout_repo(config, task, source_dir)
-    if actions_to_perform:
-        await do_actions(config, task, actions_to_perform, source_dir)
+    await retry_async(
+        do_actions,
+        args=(config, task, actions_to_perform, source_dir),
+        retry_exceptions=(CheckoutError, PushError),
+    )
     log.info("Done!")
 
 
