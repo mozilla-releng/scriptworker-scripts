@@ -37,6 +37,23 @@ def get_source_repo(task):
     return parts[0]
 
 
+# get_branch {{{1
+def get_branch(task):
+    """Get the optional branch from the task payload.
+
+    This is largely for relbranch support in mercurial.
+
+    Args:
+        task (dict): the running task
+
+    Returns:
+        None: if no branch specified
+        str: the branch specified in the task
+
+    """
+    return task.get("payload", {}).get("branch")
+
+
 # get_tag_info {{{1
 def get_tag_info(task):
     """Get the tag information from the task metadata.

@@ -55,6 +55,9 @@
                     },
                     "required": ["next_version", "files"]
                 },
+                "branch": {
+                    "type": "string"
+                },
                 "dry_run": {
                     "type": "boolean"
                 },

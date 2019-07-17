@@ -8,7 +8,7 @@ import tempfile
 from scriptworker_client.utils import run_command
 from treescript.utils import DONTBUILD_MSG
 from treescript.exceptions import CheckoutError, FailedSubprocess, PushError
-from treescript.task import get_source_repo, get_tag_info, get_dontbuild
+from treescript.task import get_branch, get_source_repo, get_tag_info, get_dontbuild
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
 # For environment vars.
@@ -179,6 +179,7 @@ async def checkout_repo(config, task, source_path):
     share_base = config["hg_share_base_dir"]
     upstream_repo = config["upstream_repo"]
     dest_repo = get_source_repo(task)
+    branch = get_branch(task)
     # branch default is used to pull tip of the repo at checkout time
     await run_hg_command(
         config,
@@ -193,6 +194,11 @@ async def checkout_repo(config, task, source_path):
         "default",
         exception=CheckoutError,
     )
+    if branch:
+        log.info("Pulling %s from %s explicitly.", branch, dest_repo)
+        await run_hg_command(
+            config, "pull", "-u", branch, dest_repo, local_repo=source_path
+        )
 
 
 # do_tagging {{{1
