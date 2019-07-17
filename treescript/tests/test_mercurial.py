@@ -36,6 +36,10 @@ async def noop_async(*args, **kwargs):
     pass
 
 
+async def check_tags(_, tag_info, *args):
+    return tag_info["tags"]
+
+
 def is_slice_in_list(s, l):
     # Credit to https://stackoverflow.com/a/20789412/#answer-20789669
     # With edits by Callek to be py3 and pep8 compat
@@ -107,10 +111,8 @@ async def test_run_hg_command(mocker, config, args):
 
     env_call.assert_called_with()
     cmd_call.assert_called_with(config, *args)
-    assert called_args[0] == [
-        ["hg"] + args,
-        {"env": env, "exception": FailedSubprocess},
-    ]
+    assert called_args[0][0] == ["hg"] + args
+    assert called_args[0][1]["env"] == env
     assert len(called_args) == 1
 
 
@@ -194,7 +196,7 @@ async def test_checkout_repo(config, task, mocker):
 async def test_do_tagging_DONTBUILD_true(config, task, mocker):
     called_args = []
 
-    async def run_command(config, *arguments, local_repo=None):
+    async def run_command(config, *arguments, local_repo=None, **kwargs):
         called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
@@ -204,6 +206,7 @@ async def test_do_tagging_DONTBUILD_true(config, task, mocker):
     mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
     mocked_dontbuild = mocker.patch.object(mercurial, "get_dontbuild")
     mocked_dontbuild.return_value = True
+    mocker.patch.object(mercurial, "check_tags", new=check_tags)
     await mercurial.do_tagging(config, task, config["work_dir"])
 
     assert len(called_args) == 2
@@ -231,6 +234,7 @@ async def test_do_tagging_DONTBUILD_false(config, task, mocker):
     mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
     mocked_dontbuild = mocker.patch.object(mercurial, "get_dontbuild")
     mocked_dontbuild.return_value = False
+    mocker.patch.object(mercurial, "check_tags", new=check_tags)
     await mercurial.do_tagging(config, task, config["work_dir"])
 
     assert len(called_args) == 2

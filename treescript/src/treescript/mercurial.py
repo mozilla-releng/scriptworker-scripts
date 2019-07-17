@@ -1,7 +1,9 @@
 """Treescript mercurial functions."""
+import json
 import logging
 import os
 import sys
+import tempfile
 
 from scriptworker_client.utils import run_command
 from treescript.utils import DONTBUILD_MSG
@@ -78,7 +80,12 @@ def build_hg_environment():
 
 # run_hg_command {{{1
 async def run_hg_command(
-    config, *args, local_repo=None, exception=FailedSubprocess, **kwargs
+    config,
+    *args,
+    local_repo=None,
+    exception=FailedSubprocess,
+    return_output=False,
+    **kwargs,
 ):
     """Run a mercurial command.
 
@@ -91,17 +98,30 @@ async def run_hg_command(
             Defaults to ``None``.
         exception (Exception, optional): the exception to raise on error.
             Defaults to ``FailedSubprocess``.
-        **args: the remaining kwargs to pass to the hg command.
+        return_output (bool, optional): return the output of the command
+            if ``True``. Defaults to ``False``.
+        **kwargs: the remaining kwargs to pass to the hg command.
 
     Returns:
-        list: the hg command to run.
+        None: if ``return_output`` is ``False``
+        str: the output if ``return_output`` is ``True``
 
     """
     command = build_hg_command(config, *args)
     env = build_hg_environment()
+    return_value = None
     if local_repo:
         command.extend(["-R", local_repo])
-    await run_command(command, env=env, exception=exception, **kwargs)
+    with tempfile.NamedTemporaryFile() as fp:
+        log_path = fp.name
+        await run_command(
+            command, env=env, exception=exception, log_path=log_path, **kwargs
+        )
+        if return_output:
+            with open(log_path, "r") as fh:
+                return_value = fh.read()
+
+    return return_value
 
 
 # log_mercurial_version {{{1
@@ -112,10 +132,7 @@ async def log_mercurial_version(config):
         config (dict): the running config.
 
     """
-    path = os.path.join(config["work_dir"], "mercurial_version")
-    await run_hg_command(config, "-v", "version", log_path=path)
-    with open(path) as fh:
-        log.info(fh.read())
+    log.info(await run_hg_command(config, "-v", "version", return_output=True))
 
 
 # validate_robustcheckout_works {{{1
@@ -140,7 +157,7 @@ async def validate_robustcheckout_works(config):
 
 
 # checkout_repo {{{1
-async def checkout_repo(config, task, dest_folder):
+async def checkout_repo(config, task, source_path):
     """Perform a clone via robustcheckout, at ${directory}/src.
 
     This function will perform a clone via robustcheckout, using hg's share extension
@@ -153,7 +170,7 @@ async def checkout_repo(config, task, dest_folder):
     Args:
         config (dict): the running config.
         task (dict): the running task.
-        dest_folder (str): The directory to place the resulting clone.
+        source_path (str): The directory to place the resulting clone.
 
     Raises:
         CheckoutError: if the clone attempt doesn't succeed.
@@ -167,7 +184,7 @@ async def checkout_repo(config, task, dest_folder):
         config,
         "robustcheckout",
         dest_repo,
-        dest_folder,
+        source_path,
         "--sharebase",
         share_base,
         "--upstream",
@@ -179,8 +196,67 @@ async def checkout_repo(config, task, dest_folder):
 
 
 # do_tagging {{{1
-async def do_tagging(config, task, dest_folder):
-    """Perform tagging, at ${dest_folder}/src.
+async def get_existing_tags(config, source_path):
+    """Get the existing tags in a mercurial repo.
+
+    Args:
+        config (dict): the running config
+        source_path (str): the path to the repo
+
+    Returns:
+        dict: ``{tag1: revision1, tag2: revision2, ...}``
+
+    """
+    existing_tags = {}
+    output = await run_hg_command(
+        config, "tags", local_repo=source_path, return_output=True
+    )
+    for line in output.splitlines():
+        parts = line.split(" ")
+        if len(parts) > 1:
+            # existing_tags = {TAG: REVISION, ...}
+            existing_tags[parts[0]] = parts[-1].split(":")[-1]
+    log.debug("existing_tags:\n%s", json.dumps(existing_tags, sort_keys=True, indent=4))
+    return existing_tags
+
+
+async def check_tags(config, tag_info, source_path):
+    """Check to see if ``tag_names`` already exist in ``source_path``.
+
+    Return the subset of tags that don't exist.
+
+    Args:
+        config (dict): the running config
+        tag_info (dict): the tags and revision to check
+        source_path (str): the path of the repository on disk
+
+    Returns:
+        list: the subset of tags that don't already exist on the target
+            revision
+
+    """
+    tags = []
+    existing_tags = await get_existing_tags(config, source_path)
+    revision = tag_info["revision"]
+    for tag in tag_info["tags"]:
+        if tag in existing_tags:
+            if revision == existing_tags[tag]:
+                log.info(
+                    "Tag %s already exists on revision %s. Skipping...", tag, revision
+                )
+                continue
+            else:
+                log.warning(
+                    "Tag %s exists on mismatched revision %s! Retagging...",
+                    tag,
+                    revision,
+                )
+        tags.append(tag)
+    return tags
+
+
+async def do_tagging(config, task, source_path):
+    """Perform tagging, at ${source_path}/src.
 
     This function will perform a mercurial tag, on 'default' head of target repository.
     It will tag the revision specified in the tag_info portion of the task payload, using
@@ -196,14 +272,17 @@ async def do_tagging(config, task, dest_folder):
     Args:
         config (dict): the running config.
         task (dict): the running task.
-        dest_folder (str): The directory to place the resulting clone.
+        source_path (str): The directory to place the resulting clone.
 
     Raises:
         FailedSubprocess: if the tag attempt doesn't succeed.
 
     """
     tag_info = get_tag_info(task)
-    desired_tags = tag_info["tags"]
+    desired_tags = await check_tags(config, tag_info, source_path)
+    if not desired_tags:
+        log.info("No unique tags to add; skipping tagging.")
+        return
     desired_rev = tag_info["revision"]
     dontbuild = get_dontbuild(task)
     dest_repo = get_source_repo(task)
@@ -216,7 +295,7 @@ async def do_tagging(config, task, dest_folder):
         )
     )
     await run_hg_command(
-        config, "pull", "-r", desired_rev, dest_repo, local_repo=dest_folder
+        config, "pull", "-r", desired_rev, dest_repo, local_repo=source_path
     )
     log.info(commit_msg)
     await run_hg_command(
@@ -228,10 +307,11 @@ async def do_tagging(config, task, dest_folder):
         desired_rev,
         "-f",  # Todo only force if needed
         *desired_tags,
-        local_repo=dest_folder,
+        local_repo=source_path,
     )
 
 
+# log_outgoing {{{1
 async def log_outgoing(config, task, local_repo):
     """Run `hg out` against the current revision in the repository.
 
@@ -253,6 +333,7 @@ async def log_outgoing(config, task, local_repo):
     )
 
 
+# push {{{1
 async def push(config, task, local_repo):
     """Run `hg push` against the current source repo.
 
