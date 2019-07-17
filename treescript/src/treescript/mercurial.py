@@ -6,9 +6,14 @@ import sys
 import tempfile
 
 from scriptworker_client.utils import run_command
-from treescript.utils import DONTBUILD_MSG
 from treescript.exceptions import CheckoutError, FailedSubprocess, PushError
-from treescript.task import get_branch, get_source_repo, get_tag_info, get_dontbuild
+from treescript.task import (
+    get_branch,
+    get_source_repo,
+    get_tag_info,
+    get_dontbuild,
+    DONTBUILD_MSG,
+)
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
 # For environment vars.

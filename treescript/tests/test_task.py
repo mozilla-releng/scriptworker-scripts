@@ -5,7 +5,14 @@ from scriptworker_client.client import verify_task_schema
 from scriptworker_client.exceptions import TaskVerificationError
 
 from treescript.script import get_default_config
-import treescript.task as stask
+import treescript.task as ttask
+
+
+TEST_ACTION_TAG = "project:releng:treescript:action:tagging"
+TEST_ACTION_BUMP = "project:releng:treescript:action:version_bump"
+TEST_ACTION_INVALID = "project:releng:treescript:action:invalid"
+
+SCRIPT_CONFIG = {"taskcluster_scope_prefix": "project:releng:treescript:"}
 
 
 @pytest.fixture(scope="function")
@@ -98,7 +105,7 @@ def test_no_error_is_reported_when_no_missing_url(config, task_defn):
 def test_get_source_repo_raises(task_defn, source_url, raises):
     task_defn["metadata"]["source"] = source_url
     with pytest.raises(raises):
-        stask.get_source_repo(task_defn)
+        ttask.get_source_repo(task_defn)
 
 
 @pytest.mark.parametrize(
@@ -114,16 +121,16 @@ def test_get_source_repo(task_defn, source_repo):
     task_defn["metadata"]["source"] = "{}/file/default/taskcluster/ci/foobar".format(
         source_repo
     )
-    assert source_repo == stask.get_source_repo(task_defn)
+    assert source_repo == ttask.get_source_repo(task_defn)
 
 
 def test_get_source_repo_no_source(task_defn):
     del task_defn["metadata"]["source"]
     with pytest.raises(TaskVerificationError):
-        stask.get_source_repo(task_defn)
+        ttask.get_source_repo(task_defn)
     del task_defn["metadata"]
     with pytest.raises(TaskVerificationError):
-        stask.get_source_repo(task_defn)
+        ttask.get_source_repo(task_defn)
 
 
 @pytest.mark.parametrize(
@@ -135,13 +142,13 @@ def test_get_source_repo_no_source(task_defn):
 )
 def test_tag_info(task_defn, tag_info):
     task_defn["payload"]["tag_info"] = tag_info
-    tested_info = stask.get_tag_info(task_defn)
+    tested_info = ttask.get_tag_info(task_defn)
     assert tested_info == tag_info
 
 
 def test_tag_missing_tag_info(task_defn):
     with pytest.raises(TaskVerificationError):
-        stask.get_tag_info(task_defn)
+        ttask.get_tag_info(task_defn)
 
 
 @pytest.mark.parametrize(
@@ -156,10 +163,52 @@ def test_tag_missing_tag_info(task_defn):
 )
 def test_bump_info(task_defn, bump_info):
     task_defn["payload"]["version_bump_info"] = bump_info
-    tested_info = stask.get_version_bump_info(task_defn)
+    tested_info = ttask.get_version_bump_info(task_defn)
     assert tested_info == bump_info
 
 
 def test_bump_missing_bump_info(task_defn):
     with pytest.raises(TaskVerificationError):
-        stask.get_version_bump_info(task_defn)
+        ttask.get_version_bump_info(task_defn)
+
+
+# task_task_action_types {{{1
+@pytest.mark.parametrize(
+    "actions,scopes",
+    (
+        (["tagging"], [TEST_ACTION_TAG]),
+        (["version_bump"], [TEST_ACTION_BUMP]),
+        (["tagging", "version_bump"], [TEST_ACTION_BUMP, TEST_ACTION_TAG]),
+    ),
+)
+def test_task_action_types_valid_scopes(actions, scopes):
+    task = {"scopes": scopes}
+    assert actions == ttask.task_action_types(SCRIPT_CONFIG, task)
+
+
+@pytest.mark.parametrize(
+    "scopes", ([TEST_ACTION_INVALID], [TEST_ACTION_TAG, TEST_ACTION_INVALID])
+)
+def test_task_action_types_invalid_action(scopes):
+    task = {"scopes": scopes}
+    with pytest.raises(TaskVerificationError):
+        ttask.task_action_types(SCRIPT_CONFIG, task)
+
+
+@pytest.mark.parametrize("scopes", ([], ["project:releng:foo:not:for:here"]))
+def test_task_action_types_missing_action(scopes):
+    task = {"scopes": scopes}
+    with pytest.raises(TaskVerificationError):
+        ttask.task_action_types(SCRIPT_CONFIG, task)
+
+
+@pytest.mark.parametrize(
+    "task", ({"payload": {}}, {"payload": {"dry_run": False}}, {"scopes": ["foo"]})
+)
+def test_is_dry_run(task):
+    assert False is ttask.is_dry_run(task)
+
+
+def test_is_dry_run_true():
+    task = {"payload": {"dry_run": True}}
+    assert True is ttask.is_dry_run(task)

@@ -8,7 +8,7 @@ from mozilla_version.gecko import (
     GeckoVersion,
     ThunderbirdVersion,
 )
-from treescript.utils import DONTBUILD_MSG
+from treescript.task import DONTBUILD_MSG
 from treescript.exceptions import TaskVerificationError, TreeScriptError
 from treescript.script import get_default_config
 import treescript.versionmanip as vmanip

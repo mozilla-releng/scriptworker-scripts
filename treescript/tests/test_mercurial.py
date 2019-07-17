@@ -13,7 +13,7 @@ from scriptworker_client.utils import makedirs
 from treescript import mercurial
 from treescript.exceptions import FailedSubprocess
 from treescript.script import get_default_config
-from treescript.utils import DONTBUILD_MSG
+from treescript.task import DONTBUILD_MSG
 
 
 ROBUSTCHECKOUT_FILE = os.path.abspath(

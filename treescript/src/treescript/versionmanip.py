@@ -11,10 +11,9 @@ from mozilla_version.gecko import (
     ThunderbirdVersion,
 )
 
-from treescript.utils import DONTBUILD_MSG
 from treescript.exceptions import TaskVerificationError, TreeScriptError
 from treescript.mercurial import run_hg_command
-from treescript.task import get_version_bump_info, get_dontbuild
+from treescript.task import DONTBUILD_MSG, get_version_bump_info, get_dontbuild
 
 log = logging.getLogger(__name__)
 

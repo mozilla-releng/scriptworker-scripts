@@ -6,7 +6,6 @@ import os
 from scriptworker_client.aio import retry_async
 from scriptworker_client.client import sync_main
 from treescript.exceptions import CheckoutError, PushError, TreeScriptError
-from treescript.utils import task_action_types, is_dry_run
 from treescript.mercurial import (
     log_mercurial_version,
     validate_robustcheckout_works,
@@ -15,6 +14,7 @@ from treescript.mercurial import (
     log_outgoing,
     push,
 )
+from treescript.task import task_action_types, is_dry_run
 from treescript.versionmanip import bump_version
 
 log = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ async def do_actions(config, task, actions, directory):
     """
     await checkout_repo(config, task, directory)
     for action in actions:
-        if "tagging" == action:
+        if action in ["tagging", "tag"]:
             await do_tagging(config, task, directory)
         elif "version_bump" == action:
             await bump_version(config, task, directory)

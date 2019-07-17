@@ -70,7 +70,7 @@
                     "uniqueItems": true,
                     "items": {
                         "type": "string",
-                        "enum": ["tagging", "version_bump", "l10n_bump", "push"]
+                        "enum": ["tag", "version_bump", "l10n_bump", "push"]
                     }
                 }
             }
