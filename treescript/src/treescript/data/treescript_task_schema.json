@@ -63,6 +63,15 @@
                 },
                 "dontbuild": {
                     "type": "boolean"
+                },
+                "actions": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string",
+                        "enum": ["tagging", "version_bump", "l10n_bump", "push"]
+                    }
                 }
             }
         }

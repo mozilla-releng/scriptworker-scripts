@@ -6,7 +6,7 @@ from treescript.exceptions import TaskVerificationError
 log = logging.getLogger(__name__)
 
 # This list should be sorted in the order the actions should be taken
-VALID_ACTIONS = ("tagging", "version_bump", "push")
+VALID_ACTIONS = ("tagging", "version_bump", "l10n_bump", "push")
 
 DONTBUILD_MSG = " DONTBUILD"
 
@@ -30,16 +30,20 @@ def task_action_types(config, task):
         str: the cert type.
 
     """
-    actions = [
-        s.split(":")[-1]
-        for s in task["scopes"]
-        if s.startswith(config["taskcluster_scope_prefix"] + "action:")
-    ]
+    if task["payload"].get("actions"):
+        actions = task["payload"]["actions"]
+    else:
+        log.warning("Scopes-based actions are deprecated! Use task.payload.actions instead.")
+        actions = [
+            s.split(":")[-1]
+            for s in task["scopes"]
+            if s.startswith(config["taskcluster_scope_prefix"] + "action:")
+        ]
+        if len(actions) < 1:
+            raise TaskVerificationError(
+                "Need at least one valid action specified in scopes"
+            )
     log.info("Action requests: %s", actions)
-    if len(actions) < 1:
-        raise TaskVerificationError(
-            "Need at least one valid action specified in scopes"
-        )
     invalid_actions = set(actions) - set(VALID_ACTIONS)
     if len(invalid_actions) > 0:
         raise TaskVerificationError(
@@ -49,7 +53,7 @@ def task_action_types(config, task):
     return _sort_actions(actions)
 
 
-# task_actions {{{1
+# is_dry_run {{{1
 def is_dry_run(task):
     """Extract task force_dry_run feature.
 
