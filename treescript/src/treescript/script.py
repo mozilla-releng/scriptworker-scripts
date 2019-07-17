@@ -16,11 +16,12 @@ from treescript.mercurial import (
 )
 from treescript.task import task_action_types, is_dry_run
 from treescript.versionmanip import bump_version
+from treescript.l10n import l10n_bump
 
 log = logging.getLogger(__name__)
 
 
-async def do_actions(config, task, actions, directory):
+async def do_actions(config, task, actions, source_dir):
     """Perform the set of actions that treescript can perform.
 
     The actions happen in order, tagging, ver bump, then push
@@ -29,26 +30,28 @@ async def do_actions(config, task, actions, directory):
         config (dict): the running config
         task (dict): the running task
         actions (list): the actions to perform
-        directory (str): the source directory to use.
+        source_dir (str): the source directory to use.
         attempts (int, optional): the number of attempts to perform,
             retrying on error.
 
     """
-    await checkout_repo(config, task, directory)
+    await checkout_repo(config, task, source_dir)
     for action in actions:
         if action in ["tagging", "tag"]:
-            await do_tagging(config, task, directory)
+            await do_tagging(config, task, source_dir)
         elif "version_bump" == action:
-            await bump_version(config, task, directory)
+            await bump_version(config, task, source_dir)
+        elif "l10n_bump" == action:
+            await l10n_bump(config, task, source_dir)
         elif "push" == action:
             pass  # handled after log_outgoing
         else:
             raise NotImplementedError("Unexpected action")
-    await log_outgoing(config, task, directory)
+    await log_outgoing(config, task, source_dir)
     if is_dry_run(task):
         log.info("Not pushing changes, dry_run was forced")
     elif "push" in actions:
-        await push(config, task, directory)
+        await push(config, task, source_dir)
     else:
         log.info("Not pushing changes, lacking scopes")
 
