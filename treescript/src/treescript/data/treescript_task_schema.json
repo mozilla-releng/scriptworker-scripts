@@ -84,7 +84,7 @@
                                 }
                             }
                         },
-                        "required": ["path", "name", "revision_url", "platform_configs", "version_path"]
+                        "required": ["path", "name", "platform_configs", "version_path"]
                     },
                     "required": ["next_version", "files"]
                 },

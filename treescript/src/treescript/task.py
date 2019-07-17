@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 VALID_ACTIONS = ("tag", "tagging", "version_bump", "l10n_bump", "push")
 
 DONTBUILD_MSG = " DONTBUILD"
+CLOSED_TREE_MSG = " CLOSED TREE"
 
 
 def _sort_actions(actions):
