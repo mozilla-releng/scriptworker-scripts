@@ -227,9 +227,10 @@ async def l10n_bump(config, task, repo_path):
     revision_info = None
     changes = False
 
-    if not ignore_closed_tree and not await check_treestatus():
-        log.info("Treestatus is closed; skipping l10n bump.")
-        return
+    if not ignore_closed_tree:
+        if not await check_treestatus(config, task):
+            log.info("Treestatus is closed; skipping l10n bump.")
+            return
     for bump_config in l10n_bump_info:
         if bump_config.get("revision_url"):
             revision_info = await get_revision_info(bump_config, repo_path)
