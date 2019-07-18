@@ -373,8 +373,9 @@ async def strip_outgoing(config, task, repo_path):
     log.info("Purging %s", repo_path)
     dest_repo = get_source_repo(task)
     dest_repo_ssh = dest_repo.replace("https://", "ssh://")
+    # `hg strip` will abort with an exit code of 255 if the repo is clean.
     await run_hg_command(
-        config, "strip", "--no-backup", "outgoing()", repo_path=repo_path
+        config, "strip", "--no-backup", "outgoing()", repo_path=repo_path, exception=None, expected_exit_codes=(0, 255),
     )
     await run_hg_command(config, "up", "-C", repo_path=repo_path)
     await run_hg_command(config, "purge", "--all", repo_path=repo_path)

@@ -12,6 +12,7 @@ from treescript.mercurial import (
     checkout_repo,
     do_tagging,
     log_outgoing,
+    strip_outgoing,
     push,
 )
 from treescript.task import task_action_types, is_dry_run
@@ -58,6 +59,7 @@ async def do_actions(config, task, actions, source_dir):
             log.info("No changes; skipping push.")
     else:
         log.info("Not pushing changes, lacking scopes")
+    await strip_outgoing(config, task, source_dir)
 
 
 # async_main {{{1
