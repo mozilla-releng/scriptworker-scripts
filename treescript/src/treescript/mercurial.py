@@ -354,7 +354,7 @@ async def log_outgoing(config, task, repo_path):
     )
 
 
-# strip {{{1
+# strip_outgoing {{{1
 async def strip_outgoing(config, task, repo_path):
     """Strip all unpushed outgoing revisions and purge the changes.
 
@@ -366,12 +366,15 @@ async def strip_outgoing(config, task, repo_path):
         task (dict): the running task
         repo_path (str): the path to the repo
 
+    Raises:
+        FailedSubprocess: on error
+
     """
     log.info("Purging %s", repo_path)
     dest_repo = get_source_repo(task)
     dest_repo_ssh = dest_repo.replace("https://", "ssh://")
     await run_hg_command(
-        config, "strip", "--no-backup", "outgoing()", dest_repo_ssh, repo_path=repo_path
+        config, "strip", "--no-backup", "outgoing()", repo_path=repo_path
     )
     await run_hg_command(config, "up", "-C", repo_path=repo_path)
     await run_hg_command(config, "purge", "--all", repo_path=repo_path)
