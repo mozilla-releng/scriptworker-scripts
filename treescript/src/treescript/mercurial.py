@@ -202,7 +202,10 @@ async def checkout_repo(config, task, source_path):
     if branch:
         log.info("Pulling %s from %s explicitly.", branch, dest_repo)
         await run_hg_command(
-            config, "pull", "-u", branch, dest_repo, local_repo=source_path
+            config, "pull", branch, local_repo=source_path
+        )
+        await run_hg_command(
+            config, "update", "-r", branch, local_repo=source_path
         )
 
 
