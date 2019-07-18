@@ -186,7 +186,7 @@ async def get_revision_info(bump_config, repo_path):
     version = get_version(bump_config["version_path"], repo_path)
     repl_dict = {"MAJOR_VERSION": version.major_number}
     url = bump_config["revision_url"] % repl_dict
-    with tempfile.NamedTemporyFile() as fp:
+    with tempfile.NamedTemporaryFile() as fp:
         path = fp.name
         await retry_async(
             download_file, args=(url, path), retry_exceptions=(DownloadError,)
