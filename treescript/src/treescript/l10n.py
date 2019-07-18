@@ -212,9 +212,12 @@ async def l10n_bump(config, task, source_repo):
         task (dict): the running task
         source_repo (str): the source directory
 
-    raises:
+    Raises:
         TaskverificationError: if a file specified is not allowed, or
                                if the file is not in the target repository.
+
+    Returns:
+        bool: True if there are any changes.
 
     """
     log.info("Preparing to bump l10n changesets.")
@@ -222,6 +225,7 @@ async def l10n_bump(config, task, source_repo):
     ignore_closed_tree = get_ignore_closed_tree(task)
     l10n_bump_info = get_l10n_bump_info(task)
     revision_info = None
+    changes = False
 
     if not ignore_closed_tree and not await check_treestatus():
         log.info("Treestatus is closed; skipping l10n bump.")
@@ -248,3 +252,5 @@ async def l10n_bump(config, task, source_repo):
             ignore_closed_tree=ignore_closed_tree,
         )
         await run_hg_command(config, "commit", "-m", message, local_repo=source_repo)
+        changes = True
+    return changes

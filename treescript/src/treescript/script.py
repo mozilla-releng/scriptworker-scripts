@@ -36,13 +36,14 @@ async def do_actions(config, task, actions, source_dir):
 
     """
     await checkout_repo(config, task, source_dir)
+    changes = []
     for action in actions:
         if action in ["tagging", "tag"]:
-            await do_tagging(config, task, source_dir)
+            changes.append(await do_tagging(config, task, source_dir))
         elif "version_bump" == action:
-            await bump_version(config, task, source_dir)
+            changes.append(await bump_version(config, task, source_dir))
         elif "l10n_bump" == action:
-            await l10n_bump(config, task, source_dir)
+            changes.append(await l10n_bump(config, task, source_dir))
         elif "push" == action:
             pass  # handled after log_outgoing
         else:
@@ -51,7 +52,10 @@ async def do_actions(config, task, actions, source_dir):
     if is_dry_run(task):
         log.info("Not pushing changes, dry_run was forced")
     elif "push" in actions:
-        await push(config, task, source_dir)
+        if any(changes):
+            await push(config, task, source_dir)
+        else:
+            log.info("No changes; skipping push.")
     else:
         log.info("Not pushing changes, lacking scopes")
 

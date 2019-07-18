@@ -88,9 +88,12 @@ async def bump_version(config, task, source_repo):
         task (dict): the running task
         source_repo (str): the source directory
 
-    raises:
+    Raises:
         TaskverificationError: if a file specified is not allowed, or
                                if the file is not in the target repository.
+
+    Returns:
+        bool: True if there are changes.
 
     """
     bump_info = get_version_bump_info(task)
@@ -145,6 +148,7 @@ async def bump_version(config, task, source_repo):
         if dontbuild:
             commit_msg += DONTBUILD_MSG
         await run_hg_command(config, "commit", "-m", commit_msg, local_repo=source_repo)
+    return changed
 
 
 def replace_ver_in_file(file_, curr_version, new_version):

@@ -102,12 +102,15 @@ async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
 
     async def mocked_tag(*args, **kwargs):
         called_tag[0] = True
+        return True
 
     async def mocked_bump(*args, **kwargs):
         called_bump[0] = True
+        return True
 
     async def mocked_push(*args, **kwargs):
         called_push[0] = True
+        return True
 
     mocker.patch.object(script, "checkout_repo", new=noop_async)
     mocker.patch.object(script, "do_tagging", new=mocked_tag)

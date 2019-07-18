@@ -288,6 +288,9 @@ async def do_tagging(config, task, source_path):
     Raises:
         FailedSubprocess: if the tag attempt doesn't succeed.
 
+    Returns:
+        bool: True if there are any changes.
+
     """
     tag_info = get_tag_info(task)
     desired_tags = await check_tags(config, tag_info, source_path)
@@ -320,6 +323,7 @@ async def do_tagging(config, task, source_path):
         *desired_tags,
         local_repo=source_path,
     )
+    return True
 
 
 # log_outgoing {{{1
