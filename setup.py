@@ -8,7 +8,7 @@ with open(os.path.join(project_dir, 'version.txt')) as f:
     version = f.read().rstrip()
 
 # We allow commented lines in this file
-with open(os.path.join(project_dir, 'requirements.txt')) as f:
+with open(os.path.join(project_dir, 'requirements/base.in')) as f:
     requirements = [line.rstrip('\n') for line in f if not line.startswith('#')]
 
 
