@@ -66,6 +66,10 @@ def test_build_hg_cmd(config, hg, args):
         "hg",
         "--config",
         "extensions.robustcheckout={}".format(ROBUSTCHECKOUT_FILE),
+        "--config",
+        "extensions.purge=",
+        "--config",
+        "extensions.mq=",
         "blah",
         "blah",
         "--baz",
@@ -131,7 +135,7 @@ async def test_run_hg_command_localrepo(mocker, config):
     env_call.return_value = env
     cmd_call.return_value = ["hg", *args]
 
-    await mercurial.run_hg_command(config, *args, local_repo="/tmp/localrepo")
+    await mercurial.run_hg_command(config, *args, repo_path="/tmp/localrepo")
 
     env_call.assert_called_with()
     cmd_call.assert_called_with(config, *args)
@@ -170,16 +174,21 @@ async def test_validate_robustcheckout_works_doesnt(config, mocker):
 
 @pytest.mark.asyncio
 async def test_checkout_repo(config, task, mocker):
+
+    calls = [
+        (
+            "robustcheckout",
+            "https://hg.mozilla.org/test-repo",
+            os.path.join(config["work_dir"]),
+        ),
+        ("strip", "--no-backup", "outgoing()"),
+        ("up", "-C"),
+        ("purge", "--all"),
+        ("pull", "-b"),
+    ]
+
     async def check_params(*args, **kwargs):
-        assert is_slice_in_list(("--sharebase", "/builds/hg-shared-test"), args)
-        assert is_slice_in_list(
-            (
-                "robustcheckout",
-                "https://hg.mozilla.org/test-repo",
-                os.path.join(config["work_dir"]),
-            ),
-            args,
-        )
+        assert is_slice_in_list(calls.pop(0), args)
 
     mocker.patch.object(mercurial, "run_hg_command", new=check_params)
     mocker.patch.object(
@@ -196,8 +205,8 @@ async def test_checkout_repo(config, task, mocker):
 async def test_do_tagging_DONTBUILD_true(config, task, mocker):
     called_args = []
 
-    async def run_command(config, *arguments, local_repo=None, **kwargs):
-        called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
+    async def run_command(config, *arguments, repo_path=None, **kwargs):
+        called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
     mocked_tag_info = mocker.patch.object(mercurial, "get_tag_info")
@@ -210,8 +219,8 @@ async def test_do_tagging_DONTBUILD_true(config, task, mocker):
     await mercurial.do_tagging(config, task, config["work_dir"])
 
     assert len(called_args) == 2
-    assert "local_repo" in called_args[0][1]
-    assert "local_repo" in called_args[1][1]
+    assert "repo_path" in called_args[0][1]
+    assert "repo_path" in called_args[1][1]
     command = called_args[1][0]
     commit_msg = command[command.index("-m") + 1]
     assert DONTBUILD_MSG in commit_msg
@@ -224,8 +233,8 @@ async def test_do_tagging_DONTBUILD_true(config, task, mocker):
 async def test_do_tagging_DONTBUILD_false(config, task, mocker):
     called_args = []
 
-    async def run_command(config, *arguments, local_repo=None):
-        called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
+    async def run_command(config, *arguments, repo_path=None):
+        called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
     mocked_tag_info = mocker.patch.object(mercurial, "get_tag_info")
@@ -238,8 +247,8 @@ async def test_do_tagging_DONTBUILD_false(config, task, mocker):
     await mercurial.do_tagging(config, task, config["work_dir"])
 
     assert len(called_args) == 2
-    assert "local_repo" in called_args[0][1]
-    assert "local_repo" in called_args[1][1]
+    assert "repo_path" in called_args[0][1]
+    assert "repo_path" in called_args[1][1]
     command = called_args[1][0]
     commit_msg = command[command.index("-m") + 1]
     assert DONTBUILD_MSG not in commit_msg
@@ -252,8 +261,8 @@ async def test_do_tagging_DONTBUILD_false(config, task, mocker):
 async def test_push(config, task, mocker, tmpdir):
     called_args = []
 
-    async def run_command(config, *arguments, local_repo=None, **kwargs):
-        called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
+    async def run_command(config, *arguments, repo_path=None, **kwargs):
+        called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
     mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
@@ -261,7 +270,7 @@ async def test_push(config, task, mocker, tmpdir):
     await mercurial.push(config, task, tmpdir)
 
     assert len(called_args) == 1
-    assert "local_repo" in called_args[0][1]
+    assert "repo_path" in called_args[0][1]
     assert is_slice_in_list(("push", "-r", "."), called_args[0][0])
     assert "ssh://hg.mozilla.org/treescript-test" in called_args[0][0]
     assert "-e" not in called_args[0][0]
@@ -282,8 +291,8 @@ async def test_push(config, task, mocker, tmpdir):
 async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
     called_args = []
 
-    async def run_command(config, *arguments, local_repo=None, **kwargs):
-        called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
+    async def run_command(config, *arguments, repo_path=None, **kwargs):
+        called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
 
     print()
     config.update(options)
@@ -293,7 +302,7 @@ async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
     await mercurial.push(config, task, tmpdir)
 
     assert len(called_args) == 1
-    assert "local_repo" in called_args[0][1]
+    assert "repo_path" in called_args[0][1]
     assert is_slice_in_list(("-r", "."), called_args[0][0])
     assert "ssh://hg.mozilla.org/treescript-test" in called_args[0][0]
     assert is_slice_in_list(("push", "-e", expect), called_args[0][0])
@@ -303,8 +312,8 @@ async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
 async def test_log_outgoing(config, task, mocker):
     called_args = []
 
-    async def run_command(config, *arguments, local_repo=None, **kwargs):
-        called_args.append([tuple([config]) + arguments, {"local_repo": local_repo}])
+    async def run_command(config, *arguments, repo_path=None, **kwargs):
+        called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
     mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
@@ -312,7 +321,7 @@ async def test_log_outgoing(config, task, mocker):
     await mercurial.log_outgoing(config, task, config["work_dir"])
 
     assert len(called_args) == 1
-    assert "local_repo" in called_args[0][1]
+    assert "repo_path" in called_args[0][1]
     assert is_slice_in_list(("out", "-vp"), called_args[0][0])
     assert is_slice_in_list(("-r", "."), called_args[0][0])
     assert is_slice_in_list(
