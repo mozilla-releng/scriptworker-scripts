@@ -113,6 +113,7 @@ async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
         return True
 
     mocker.patch.object(script, "checkout_repo", new=noop_async)
+    mocker.patch.object(script, "strip_outgoing", new=noop_async)
     mocker.patch.object(script, "do_tagging", new=mocked_tag)
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "push", new=mocked_push)
