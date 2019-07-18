@@ -12,3 +12,4 @@ script:
     - tox -e py37
 after_success:
     - tox -e coveralls
+
