@@ -65,7 +65,8 @@ def build_platform_dict(bump_config, repo_path):
     for platform_config in bump_config["platform_configs"]:
         path = os.path.join(repo_path, platform_config["path"])
         log.info("Reading %s for %s locales...", path, platform_config["platforms"])
-        contents = load_json_or_yaml(path, is_path=True)
+        with open(path, "r") as fh:
+            contents = fh.read()
         for locale in contents.splitlines():
             # locale is 1st word in line in shipped-locales
             if platform_config.get("format") == "shipped-locales":
