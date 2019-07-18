@@ -55,18 +55,18 @@ def repo_context(tmpdir, config, request, mocker):
 
 
 def test_get_version(repo_context):
-    ver = vmanip._get_version(
-        os.path.join(repo_context.repo, "config", "milestone.txt")
-    )
+    ver = vmanip.get_version("config/milestone.txt", repo_context.repo)
     assert ver == repo_context.xtest_version
 
 
 @pytest.mark.parametrize("new_version", ("87.0", "87.0b3"))
 def test_replace_ver_in_file(repo_context, new_version):
-    filepath = os.path.join(repo_context.repo, "config", "milestone.txt")
+    filepath = "config/milestone.txt"
     old_ver = repo_context.xtest_version
-    vmanip.replace_ver_in_file(filepath, old_ver, new_version)
-    assert new_version == vmanip._get_version(filepath)
+    vmanip.replace_ver_in_file(
+        os.path.join(repo_context.repo, filepath), old_ver, new_version
+    )
+    assert new_version == vmanip.get_version(filepath, repo_context.repo)
 
 
 @pytest.mark.parametrize("new_version", ("87.0", "87.0b3"))
@@ -133,9 +133,7 @@ async def test_bump_version(mocker, repo_context, new_version, should_append_esr
     mocked_bump_info.return_value = bump_info
     mocker.patch.object(vmanip, "run_hg_command", new=run_command)
     await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
-    assert test_version == vmanip._get_version(
-        os.path.join(repo_context.repo, relative_files[0])
-    )
+    assert test_version == vmanip.get_version(relative_files[0], repo_context.repo)
     assert len(called_args) == 1
     assert "local_repo" in called_args[0][1]
     assert is_slice_in_list(("commit", "-m"), called_args[0][0])
@@ -203,8 +201,8 @@ async def test_bump_version_invalid_file(mocker, repo_context, new_version):
         await vmanip.bump_version(
             repo_context.config, repo_context.task, repo_context.repo
         )
-    assert repo_context.xtest_version == vmanip._get_version(
-        os.path.join(repo_context.repo, relative_files[1])
+    assert repo_context.xtest_version == vmanip.get_version(
+        relative_files[1], repo_context.repo
     )
     assert len(called_args) == 0
 
@@ -230,8 +228,8 @@ async def test_bump_version_missing_file(mocker, repo_context, new_version):
         await vmanip.bump_version(
             repo_context.config, repo_context.task, repo_context.repo
         )
-    assert repo_context.xtest_version == vmanip._get_version(
-        os.path.join(repo_context.repo, relative_files[1])
+    assert repo_context.xtest_version == vmanip.get_version(
+        relative_files[1], repo_context.repo
     )
     assert len(called_args) == 0
 
@@ -250,8 +248,8 @@ async def test_bump_version_smaller_version(mocker, repo_context, new_version):
     mocked_bump_info.return_value = bump_info
     mocker.patch.object(vmanip, "run_hg_command", new=run_command)
     await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
-    assert repo_context.xtest_version == vmanip._get_version(
-        os.path.join(repo_context.repo, relative_files[0])
+    assert repo_context.xtest_version == vmanip.get_version(
+        relative_files[0], repo_context.repo
     )
     assert len(called_args) == 0
 
@@ -277,9 +275,7 @@ async def test_bump_version_esr(mocker, repo_context, new_version, expect_versio
     mocked_bump_info.return_value = bump_info
     mocker.patch.object(vmanip, "run_hg_command", new=run_command)
     await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
-    assert expect_version == vmanip._get_version(
-        os.path.join(repo_context.repo, relative_files[0])
-    )
+    assert expect_version == vmanip.get_version(relative_files[0], repo_context.repo)
     assert len(called_args) == 1
     assert "local_repo" in called_args[0][1]
     assert is_slice_in_list(("commit", "-m"), called_args[0][0])
@@ -297,13 +293,11 @@ async def test_bump_version_esr_dont_bump_non_esr(
     os.mkdir(repo)
     os.mkdir(os.path.join(repo, "config"))
     os.makedirs(os.path.join(repo, "browser", "config"))
-    version_file = os.path.join(repo, "config", "milestone.txt")
-    with open(version_file, "w") as f:
+    version_file = os.path.join("config", "milestone.txt")
+    with open(os.path.join(repo, version_file), "w") as f:
         f.write(version)
-    display_version_file = os.path.join(
-        repo, "browser", "config", "version_display.txt"
-    )
-    with open(display_version_file, "w") as f:
+    display_version_file = os.path.join("browser", "config", "version_display.txt")
+    with open(os.path.join(repo, display_version_file), "w") as f:
         f.write(version + "esr")
 
     called_args = []
@@ -320,10 +314,8 @@ async def test_bump_version_esr_dont_bump_non_esr(
     mocked_bump_info.return_value = bump_info
     mocker.patch.object(vmanip, "run_hg_command", new=run_command)
     await vmanip.bump_version(config, {}, repo)
-    assert expect_esr_version == vmanip._get_version(
-        os.path.join(repo, display_version_file)
-    )
-    assert new_version == vmanip._get_version(os.path.join(repo, version_file))
+    assert expect_esr_version == vmanip.get_version(display_version_file, repo)
+    assert new_version == vmanip.get_version(version_file, repo)
     assert len(called_args) == 1
 
 
@@ -340,7 +332,7 @@ async def test_bump_version_same_version(mocker, repo_context):
     mocked_bump_info.return_value = bump_info
     mocker.patch.object(vmanip, "run_hg_command", new=run_command)
     await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
-    assert repo_context.xtest_version == vmanip._get_version(
-        os.path.join(repo_context.repo, relative_files[0])
+    assert repo_context.xtest_version == vmanip.get_version(
+        relative_files[0], repo_context.repo
     )
     assert len(called_args) == 0

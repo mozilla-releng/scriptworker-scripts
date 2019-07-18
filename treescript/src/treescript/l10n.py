@@ -92,6 +92,7 @@ def build_revision_dict(l10n_bump_info, revision_info, repo_path):
 
     Returns:
         dict: locale to dictionary of platforms and revision
+
     """
     log.info("Building revision dict...")
     platform_dict = build_platform_dict(l10n_bump_info, repo_path)
@@ -171,7 +172,7 @@ async def check_treestatus(config, task):
 
 
 async def get_revision_info(bump_config, source_repo):
-    """Query the l10n changesets from the l10n dashboard
+    """Query the l10n changesets from the l10n dashboard.
 
     Args:
         bump_config (dict): one of the dictionaries from the payload

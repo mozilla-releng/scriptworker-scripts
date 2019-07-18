@@ -115,7 +115,7 @@ async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
     mocker.patch.object(script, "push", new=mocked_push)
     mocker.patch.object(script, "log_outgoing", new=noop_async)
     mocker.patch.object(script, "is_dry_run", return_value=dry_run)
-    await script.do_actions({}, {}, actions, directory="/some/folder/here")
+    await script.do_actions({}, {}, actions, "/some/folder/here")
     assert called_tag[0]
     assert called_bump[0]
     assert called_push[0] is push_expect_called
@@ -138,7 +138,7 @@ async def test_do_actions_unknown(mocker):
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "log_outgoing", new=noop_async)
     with pytest.raises(NotImplementedError):
-        await script.do_actions({}, {}, actions, directory="/some/folder/here")
+        await script.do_actions({}, {}, actions, "/some/folder/here")
     assert called_tag[0] is False
     assert called_bump[0] is False
 
