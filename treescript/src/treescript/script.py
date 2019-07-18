@@ -22,7 +22,7 @@ from treescript.l10n import l10n_bump
 log = logging.getLogger(__name__)
 
 
-async def do_actions(config, task, actions, source_dir):
+async def do_actions(config, task, actions, repo_path):
     """Perform the set of actions that treescript can perform.
 
     The actions happen in order, tagging, ver bump, then push
@@ -31,35 +31,35 @@ async def do_actions(config, task, actions, source_dir):
         config (dict): the running config
         task (dict): the running task
         actions (list): the actions to perform
-        source_dir (str): the source directory to use.
+        repo_path (str): the source directory to use.
         attempts (int, optional): the number of attempts to perform,
             retrying on error.
 
     """
-    await checkout_repo(config, task, source_dir)
+    await checkout_repo(config, task, repo_path)
     changes = []
     for action in actions:
         if action in ["tagging", "tag"]:
-            changes.append(await do_tagging(config, task, source_dir))
+            changes.append(await do_tagging(config, task, repo_path))
         elif "version_bump" == action:
-            changes.append(await bump_version(config, task, source_dir))
+            changes.append(await bump_version(config, task, repo_path))
         elif "l10n_bump" == action:
-            changes.append(await l10n_bump(config, task, source_dir))
+            changes.append(await l10n_bump(config, task, repo_path))
         elif "push" == action:
             pass  # handled after log_outgoing
         else:
             raise NotImplementedError("Unexpected action")
-    await log_outgoing(config, task, source_dir)
+    await log_outgoing(config, task, repo_path)
     if is_dry_run(task):
         log.info("Not pushing changes, dry_run was forced")
     elif "push" in actions:
         if any(changes):
-            await push(config, task, source_dir)
+            await push(config, task, repo_path)
         else:
             log.info("No changes; skipping push.")
     else:
         log.info("Not pushing changes, lacking scopes")
-    # await strip_outgoing(config, task, source_dir)
+    # await strip_outgoing(config, task, repo_path)
 
 
 # async_main {{{1
@@ -72,14 +72,14 @@ async def async_main(config, task):
 
     """
     work_dir = config["work_dir"]
-    source_dir = os.path.join(work_dir, "src")
+    repo_path = os.path.join(work_dir, "src")
     actions_to_perform = task_action_types(config, task)
     await log_mercurial_version(config)
     if not await validate_robustcheckout_works(config):
         raise TreeScriptError("Robustcheckout can't run on our version of hg, aborting")
     await retry_async(
         do_actions,
-        args=(config, task, actions_to_perform, source_dir),
+        args=(config, task, actions_to_perform, repo_path),
         retry_exceptions=(CheckoutError, PushError),
     )
     log.info("Done!")

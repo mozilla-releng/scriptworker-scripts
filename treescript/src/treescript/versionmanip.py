@@ -74,7 +74,7 @@ def get_version(file_, parent_directory=None):
     return VersionClass.parse(lines[-1])
 
 
-async def bump_version(config, task, source_repo):
+async def bump_version(config, task, repo_path):
     """Perform a version bump.
 
     This function takes its inputs from task by using the ``get_version_bump_info``
@@ -86,7 +86,7 @@ async def bump_version(config, task, source_repo):
     Args:
         config (dict): the running config
         task (dict): the running task
-        source_repo (str): the source directory
+        repo_path (str): the source directory
 
     Raises:
         TaskverificationError: if a file specified is not allowed, or
@@ -101,7 +101,7 @@ async def bump_version(config, task, source_repo):
     changed = False
 
     for file_ in files:
-        abs_file = os.path.join(source_repo, file_)
+        abs_file = os.path.join(repo_path, file_)
         if file_ not in ALLOWED_BUMP_FILES:
             raise TaskVerificationError(
                 "{} is not in version bump whitelist".format(file_)
@@ -110,7 +110,7 @@ async def bump_version(config, task, source_repo):
             raise TaskVerificationError("{} is not in repo".format(abs_file))
 
         VersionClass = _find_what_version_parser_to_use(file_)
-        curr_version = get_version(file_, source_repo)
+        curr_version = get_version(file_, repo_path)
         next_version = VersionClass.parse(bump_info["next_version"])
 
         # XXX In the case of ESR, some files (like version.txt) show version numbers without `esr`
@@ -147,7 +147,7 @@ async def bump_version(config, task, source_repo):
         commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
         if dontbuild:
             commit_msg += DONTBUILD_MSG
-        await run_hg_command(config, "commit", "-m", commit_msg, local_repo=source_repo)
+        await run_hg_command(config, "commit", "-m", commit_msg, repo_path=repo_path)
     return changed
 
 

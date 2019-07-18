@@ -171,19 +171,19 @@ async def check_treestatus(config, task):
     return False
 
 
-async def get_revision_info(bump_config, source_repo):
+async def get_revision_info(bump_config, repo_path):
     """Query the l10n changesets from the l10n dashboard.
 
     Args:
         bump_config (dict): one of the dictionaries from the payload
             ``l10n_bump_info``
-        source_repo (str): the path to the source repo
+        repo_path (str): the path to the source repo
 
     Returns:
         str: the contents of the dashboard
 
     """
-    version = get_version(bump_config["version_path"], source_repo)
+    version = get_version(bump_config["version_path"], repo_path)
     repl_dict = {"MAJOR_VERSION": version.major_number}
     url = bump_config["revision_url"] % repl_dict
     with tempfile.NamedTemporyFile() as fp:
@@ -198,7 +198,7 @@ async def get_revision_info(bump_config, source_repo):
 
 
 # l10n_bump {{{1
-async def l10n_bump(config, task, source_repo):
+async def l10n_bump(config, task, repo_path):
     """Perform a version bump.
 
     This function takes its inputs from task by using the ``get_l10n_bump_info``
@@ -210,10 +210,10 @@ async def l10n_bump(config, task, source_repo):
     Args:
         config (dict): the running config
         task (dict): the running task
-        source_repo (str): the source directory
+        repo_path (str): the source directory
 
     Raises:
-        TaskverificationError: if a file specified is not allowed, or
+        TaskVerificationError: if a file specified is not allowed, or
                                if the file is not in the target repository.
 
     Returns:
@@ -232,10 +232,10 @@ async def l10n_bump(config, task, source_repo):
         return
     for bump_config in l10n_bump_info:
         if bump_config.get("revision_url"):
-            revision_info = await get_revision_info(bump_config, source_repo)
-        path = os.path.join(source_repo, bump_config["path"])
+            revision_info = await get_revision_info(bump_config, repo_path)
+        path = os.path.join(repo_path, bump_config["path"])
         old_contents = load_json_or_yaml(path, is_path=True)
-        new_contents = build_revision_dict(bump_config, revision_info, source_repo)
+        new_contents = build_revision_dict(bump_config, revision_info, repo_path)
         if old_contents == new_contents:
             continue
         with open(path, "w") as fh:
@@ -251,6 +251,6 @@ async def l10n_bump(config, task, source_repo):
             dontbuild=dontbuild,
             ignore_closed_tree=ignore_closed_tree,
         )
-        await run_hg_command(config, "commit", "-m", message, local_repo=source_repo)
+        await run_hg_command(config, "commit", "-m", message, repo_path=repo_path)
         changes = True
     return changes
