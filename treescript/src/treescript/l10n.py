@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Treescript l10n support."""
+import json
 import logging
 import os
 import pprint
@@ -8,14 +9,16 @@ import tempfile
 from scriptworker_client.aio import download_file, retry_async
 from scriptworker_client.exceptions import DownloadError
 from scriptworker_client.utils import load_json_or_yaml
-from treescript.exceptions import TreeScriptError
 from treescript.mercurial import run_hg_command
 from treescript.task import (
     CLOSED_TREE_MSG,
     DONTBUILD_MSG,
-    get_l10n_bump_info,
     get_dontbuild,
+    get_ignore_closed_tree,
+    get_l10n_bump_info,
+    get_short_source_repo,
 )
+from treescript.versionmanip import get_version
 
 log = logging.getLogger(__name__)
 
@@ -45,11 +48,12 @@ def build_locale_map(old_contents, new_contents):
 
 
 # build_platform_dict {{{1
-def build_platform_dict(l10n_bump_info, repo_path):
+def build_platform_dict(bump_config, repo_path):
     """Build a dictionary of locale to list of platforms.
 
     Args:
-        l10n_bump_info (dict): the l10n_bump_info from the task payload.
+        bump_config (dict): one of the dictionaries from the
+            payload ``l10n_bump_info``
         repo_path (str): the path to the repo on disk
 
     Returns:
@@ -57,8 +61,8 @@ def build_platform_dict(l10n_bump_info, repo_path):
 
     """
     platform_dict = {}
-    ignore_config = l10n_bump_info.get("ignore_config", {})
-    for platform_config in l10n_bump_info["platform_configs"]:
+    ignore_config = bump_config.get("ignore_config", {})
+    for platform_config in bump_config["platform_configs"]:
         path = os.path.join(repo_path, platform_config["path"])
         log.info("Reading %s for %s locales...", path, platform_config["platforms"])
         contents = load_json_or_yaml(path, is_path=True)
@@ -76,7 +80,7 @@ def build_platform_dict(l10n_bump_info, repo_path):
 
 
 # build_revision_dict {{{1
-async def build_revision_dict(l10n_bump_info, version_list, repo_path):
+def build_revision_dict(l10n_bump_info, revision_info, repo_path):
     """Add l10n revision information to the ``platform_dict``.
 
     The l10n dashboard contains locale to revision information for each
@@ -92,18 +96,7 @@ async def build_revision_dict(l10n_bump_info, version_list, repo_path):
     log.info("Building revision dict...")
     platform_dict = build_platform_dict(l10n_bump_info, repo_path)
     revision_dict = {}
-    if l10n_bump_info.get("revision_url"):
-        repl_dict = {"MAJOR_VERSION": version_list[0]}
-
-        url = l10n_bump_info["revision_url"] % repl_dict
-        with tempfile.NamedTemporyFile() as fp:
-            path = fp.name
-            await retry_async(
-                download_file, args=(url, path), retry_exceptions=(DownloadError,)
-            )
-            with open(path, "r") as fh:
-                revision_info = fh.read()
-        log.info("Got %s", revision_info)
+    if revision_info:
         for line in revision_info.splitlines():
             locale, revision = line.split(" ")
             if locale in platform_dict:
@@ -148,6 +141,61 @@ def build_commit_message(name, locale_map, dontbuild=False, ignore_closed_tree=F
     return message
 
 
+# check_treestatus {{{1
+async def check_treestatus(config, task):
+    """Return True if we can land based on treestatus.
+
+    Args:
+        config (dict): the running config
+        task (dict): the running task
+
+    Returns:
+        bool: ``True`` if the tree is open.
+
+    """
+    tree = get_short_source_repo(task)
+    url = "%s/trees/%s" % (config["treestatus_base_url"], tree)
+    path = os.path.join(config["work_dir"], "treestatus.json")
+    await retry_async(
+        download_file, args=(url, path), retry_exceptions=(DownloadError,)
+    )
+
+    treestatus = load_json_or_yaml(path, is_path=True)
+    if treestatus["result"]["status"] != "closed":
+        log.info(
+            "treestatus is %s - assuming we can land",
+            repr(treestatus["result"]["status"]),
+        )
+        return True
+    return False
+
+
+async def get_revision_info(bump_config, source_repo):
+    """Query the l10n changesets from the l10n dashboard
+
+    Args:
+        bump_config (dict): one of the dictionaries from the payload
+            ``l10n_bump_info``
+        source_repo (str): the path to the source repo
+
+    Returns:
+        str: the contents of the dashboard
+
+    """
+    version = get_version(bump_config["version_path"], source_repo)
+    repl_dict = {"MAJOR_VERSION": version.major_number}
+    url = bump_config["revision_url"] % repl_dict
+    with tempfile.NamedTemporyFile() as fp:
+        path = fp.name
+        await retry_async(
+            download_file, args=(url, path), retry_exceptions=(DownloadError,)
+        )
+        with open(path, "r") as fh:
+            revision_info = fh.read()
+    log.info("Got %s", revision_info)
+    return revision_info
+
+
 # l10n_bump {{{1
 async def l10n_bump(config, task, source_repo):
     """Perform a version bump.
@@ -168,6 +216,34 @@ async def l10n_bump(config, task, source_repo):
                                if the file is not in the target repository.
 
     """
-    # check treestatus and task.payload.ignore_closed_tree
+    log.info("Preparing to bump l10n changesets.")
+    dontbuild = get_dontbuild(task)
+    ignore_closed_tree = get_ignore_closed_tree(task)
     l10n_bump_info = get_l10n_bump_info(task)
-    # bump changesets and commit
+    revision_info = None
+
+    if not ignore_closed_tree and not await check_treestatus():
+        log.info("Treestatus is closed; skipping l10n bump.")
+        return
+    for bump_config in l10n_bump_info:
+        if bump_config.get("revision_url"):
+            revision_info = await get_revision_info(bump_config, source_repo)
+        path = os.path.join(source_repo, bump_config["path"])
+        old_contents = load_json_or_yaml(path, is_path=True)
+        new_contents = build_revision_dict(bump_config, revision_info, source_repo)
+        if old_contents == new_contents:
+            continue
+        with open(path, "w") as fh:
+            fh.write(
+                json.dumps(
+                    new_contents, sort_keys=True, indent=4, separators=(",", ": ")
+                )
+            )
+        locale_map = build_locale_map(old_contents, new_contents)
+        message = build_commit_message(
+            bump_config["name"],
+            locale_map,
+            dontbuild=dontbuild,
+            ignore_closed_tree=ignore_closed_tree,
+        )
+        await run_hg_command(config, "commit", "-m", message, local_repo=source_repo)

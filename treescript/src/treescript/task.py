@@ -50,6 +50,21 @@ def get_source_repo(task):
     return parts[0]
 
 
+def get_short_source_repo(task):
+    """Get the name of the source repo, e.g. mozilla-central.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        str: the name of the source repo
+
+    """
+    source_repo = get_source_repo(task)
+    parts = source_repo.split("/")
+    return parts[-1]
+
+
 # get_branch {{{1
 def get_branch(task):
     """Get the optional branch from the task payload.
@@ -111,6 +126,28 @@ def get_version_bump_info(task):
     return version_info
 
 
+# get_l10n_bump_info {{{1
+def get_l10n_bump_info(task):
+    """Get the l10n bump information from the task metadata.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        object: the tag info structure as passed to the task payload.
+
+    Raises:
+        TaskVerificationError: If run without tag_info in task definition.
+
+    """
+    l10n_bump_info = task.get("payload", {}).get("l10n_bump_info")
+    if not l10n_bump_info:
+        raise TaskVerificationError(
+            "Requested l10n bump but no l10n_bump_info in payload"
+        )
+    return l10n_bump_info
+
+
 # get dontbuild {{{1
 def get_dontbuild(task):
     """Get information on whether DONTBUILD needs to be attached at the end of commit message.
@@ -122,7 +159,21 @@ def get_dontbuild(task):
         boolean: the dontbuild info as passed to the task payload (defaulted to false).
 
     """
-    return task.get("payload", {}).get("dontbuild")
+    return task.get("payload", {}).get("dontbuild", False)
+
+
+# get_ignore_closed_tree {{{1
+def get_ignore_closed_tree(task):
+    """Get information on whether CLOSED TREE needs to be added to the commit message.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        boolean: the ``ignore_closed_tree`` info as passed to the task payload (defaulted to false).
+
+    """
+    return task.get("payload", {}).get("ignore_closed_tree", False)
 
 
 # task_action_types {{{1

@@ -30,20 +30,51 @@ ALLOWED_BUMP_FILES = (
     "mobile/android/config/version-files/release/version_display.txt",
 )
 
+_VERSION_CLASS_PER_BEGINNING_OF_PATH = {
+    "browser/": FirefoxVersion,
+    "config/milestone.txt": GeckoVersion,
+    "mobile/android/": FennecVersion,
+    "mail/": ThunderbirdVersion,
+}
 
-def _get_version(file):
-    """Parse the version from file."""
-    log.info("Reading {} for version information.".format(file))
-    with open(file, "r") as f:
+
+def _find_what_version_parser_to_use(file_):
+    start_string_then_version_class = [
+        cls
+        for path, cls in _VERSION_CLASS_PER_BEGINNING_OF_PATH.items()
+        if file_.startswith(path)
+    ]
+
+    try:
+        return start_string_then_version_class[0]
+    except IndexError as exc:
+        raise TreeScriptError(exc) from exc
+
+
+def get_version(file_, parent_directory=None):
+    """Parse the version from file.
+
+    Args:
+        file_ (str): the version file path
+        parent_directory (str): the directory file_ lives under
+
+    Returns:
+        str: the version.
+
+    """
+    abs_path = os.path.join(parent_directory, file_)
+    log.info("Reading {} for version information.".format(abs_path))
+    VersionClass = _find_what_version_parser_to_use(file_)
+    with open(abs_path, "r") as f:
         contents = f.read()
     log.info("Contents:")
     for line in contents.splitlines():
         log.info(" {}".format(line))
     lines = [l for l in contents.splitlines() if l and not l.startswith("#")]
-    return lines[-1]
+    return VersionClass.parse(lines[-1])
 
 
-async def bump_version(config, task, directory):
+async def bump_version(config, task, source_repo):
     """Perform a version bump.
 
     This function takes its inputs from task by using the ``get_version_bump_info``
@@ -55,7 +86,7 @@ async def bump_version(config, task, directory):
     Args:
         config (dict): the running config
         task (dict): the running task
-        directory (str): the source directory
+        source_repo (str): the source directory
 
     raises:
         TaskverificationError: if a file specified is not allowed, or
@@ -67,7 +98,7 @@ async def bump_version(config, task, directory):
     changed = False
 
     for file_ in files:
-        abs_file = os.path.join(directory, file_)
+        abs_file = os.path.join(source_repo, file_)
         if file_ not in ALLOWED_BUMP_FILES:
             raise TaskVerificationError(
                 "{} is not in version bump whitelist".format(file_)
@@ -76,7 +107,7 @@ async def bump_version(config, task, directory):
             raise TaskVerificationError("{} is not in repo".format(abs_file))
 
         VersionClass = _find_what_version_parser_to_use(file_)
-        curr_version = VersionClass.parse(_get_version(abs_file))
+        curr_version = get_version(file_, source_repo)
         next_version = VersionClass.parse(bump_info["next_version"])
 
         # XXX In the case of ESR, some files (like version.txt) show version numbers without `esr`
@@ -113,28 +144,7 @@ async def bump_version(config, task, directory):
         commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
         if dontbuild:
             commit_msg += DONTBUILD_MSG
-        await run_hg_command(config, "commit", "-m", commit_msg, local_repo=directory)
-
-
-_VERSION_CLASS_PER_BEGINNING_OF_PATH = {
-    "browser/": FirefoxVersion,
-    "config/milestone.txt": GeckoVersion,
-    "mobile/android/": FennecVersion,
-    "mail/": ThunderbirdVersion,
-}
-
-
-def _find_what_version_parser_to_use(file_):
-    start_string_then_version_class = [
-        cls
-        for path, cls in _VERSION_CLASS_PER_BEGINNING_OF_PATH.items()
-        if file_.startswith(path)
-    ]
-
-    try:
-        return start_string_then_version_class[0]
-    except IndexError as exc:
-        raise TreeScriptError(exc) from exc
+        await run_hg_command(config, "commit", "-m", commit_msg, local_repo=source_repo)
 
 
 def replace_ver_in_file(file_, curr_version, new_version):
