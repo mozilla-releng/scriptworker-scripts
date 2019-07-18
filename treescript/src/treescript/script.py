@@ -59,7 +59,7 @@ async def do_actions(config, task, actions, repo_path):
             log.info("No changes; skipping push.")
     else:
         log.info("Not pushing changes, lacking scopes")
-    # await strip_outgoing(config, task, repo_path)
+    await strip_outgoing(config, task, repo_path)
 
 
 # async_main {{{1

@@ -5,7 +5,7 @@ import os
 import sys
 import tempfile
 
-from scriptworker_client.utils import run_command
+from scriptworker_client.utils import run_command, makedirs
 from treescript.exceptions import CheckoutError, FailedSubprocess, PushError
 from treescript.task import (
     get_branch,
@@ -349,9 +349,21 @@ async def log_outgoing(config, task, repo_path):
     """
     dest_repo = get_source_repo(task)
     log.info("outgoing changesets..")
-    await run_hg_command(
-        config, "out", "-vp", "-r", ".", dest_repo, repo_path=repo_path
+    output = await run_hg_command(
+        config,
+        "out",
+        "-vp",
+        "-r",
+        ".",
+        dest_repo,
+        repo_path=repo_path,
+        return_output=True,
     )
+    if output:
+        path = os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff")
+        makedirs(os.path.dirname(path))
+        with open(path, "w") as fh:
+            fh.write(output)
 
 
 # strip_outgoing {{{1
