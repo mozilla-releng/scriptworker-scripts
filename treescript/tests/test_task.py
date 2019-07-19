@@ -133,6 +133,17 @@ def test_get_source_repo_no_source(task_defn):
         ttask.get_source_repo(task_defn)
 
 
+def test_get_short_source_repo(task_defn):
+    assert ttask.get_short_source_repo(task_defn) == "mozilla-test-source"
+
+
+@pytest.mark.parametrize("branch", ("foo", None))
+def test_get_branch(task_defn, branch):
+    if branch:
+        task_defn["payload"]["branch"] = branch
+    assert ttask.get_branch(task_defn) == branch
+
+
 @pytest.mark.parametrize(
     "tag_info",
     (
@@ -172,7 +183,103 @@ def test_bump_missing_bump_info(task_defn):
         ttask.get_version_bump_info(task_defn)
 
 
+@pytest.mark.parametrize(
+    "l10n_bump_info",
+    (
+        [
+            {
+                "path": "mobile/locales/l10n-changesets.json",
+                "name": "Fennec l10n changesets",
+                "version_path": "mobile/android/config/version-files/beta/version.txt",
+                "revision_url": "https://l10n.mozilla.org/shipping/l10n-changesets?av=fennec%(MAJOR_VERSION)s",
+                "platform_configs": [
+                    {
+                        "platforms": ["android-multilocale"],
+                        "path": "mobile/android/locales/maemo-locales",
+                    }
+                ],
+            }
+        ],
+        [
+            {
+                "path": "browser/locales/l10n-changesets.json",
+                "name": "Firefox l10n changesets",
+                "version_path": "browser/config/version.txt",
+                "revision_url": "https://l10n.mozilla.org/shipping/l10n-changesets?av=fx%(MAJOR_VERSION)s",
+                "ignore_config": {
+                    "ja": ["macosx64", "macosx64-devedition"],
+                    "ja-JP-mac": [
+                        "linux",
+                        "linux-devedition",
+                        "linux64",
+                        "linux64-devedition",
+                        "win32",
+                        "win32-devedition",
+                        "win64",
+                        "win64-devedition",
+                        "win64-aarch64",
+                        "win64-aarch64-devedition",
+                    ],
+                },
+                "platform_configs": [
+                    {
+                        "platforms": [
+                            "linux",
+                            "linux-devedition",
+                            "linux64",
+                            "linux64-devedition",
+                            "macosx64",
+                            "macosx64-devedition",
+                            "win32",
+                            "win32-devedition",
+                            "win64",
+                            "win64-devedition",
+                            "win64-aarch64",
+                            "win64-aarch64-devedition",
+                        ],
+                        "path": "browser/locales/shipped-locales",
+                        "format": "shipped-locales",
+                    }
+                ],
+            }
+        ],
+    ),
+)
+def test_get_l10n_bump_info(task_defn, l10n_bump_info):
+    task_defn["payload"]["l10n_bump_info"] = l10n_bump_info
+    tested_info = ttask.get_l10n_bump_info(task_defn)
+    assert tested_info == l10n_bump_info
+
+
+def test_missing_l10n_bump_info(task_defn):
+    with pytest.raises(TaskVerificationError):
+        ttask.get_l10n_bump_info(task_defn)
+
+
+@pytest.mark.parametrize("dontbuild", (True, False))
+def test_get_dontbuild(task_defn, dontbuild):
+    if dontbuild:
+        task_defn["payload"]["dontbuild"] = True
+    assert ttask.get_dontbuild(task_defn) == dontbuild
+
+
+@pytest.mark.parametrize("closed_tree", (True, False))
+def test_get_ignore_closed_tree(task_defn, closed_tree):
+    if closed_tree:
+        task_defn["payload"]["ignore_closed_tree"] = True
+    assert ttask.get_ignore_closed_tree(task_defn) == closed_tree
+
+
 # task_task_action_types {{{1
+@pytest.mark.parametrize(
+    "actions",
+    (["tag"], ["version_bump"], ["tag", "version_bump", "push"])
+)
+def test_task_action_types_actions(actions):
+    task = {"payload": {"actions": actions}}
+    assert actions == ttask.task_action_types(SCRIPT_CONFIG, task)
+
+
 @pytest.mark.parametrize(
     "actions,scopes",
     (
