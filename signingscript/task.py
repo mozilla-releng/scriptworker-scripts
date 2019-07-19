@@ -21,7 +21,7 @@ from scriptworker.utils import retry_request, get_single_item_from_sequence
 from signingscript.sign import get_suitable_signing_servers, sign_gpg, \
     sign_jar, sign_macapp, sign_signcode, sign_widevine, sign_file, \
     sign_mar384_with_autograph_hash, sign_gpg_with_autograph, \
-    sign_omnija
+    sign_omnija, sign_langpack
 from signingscript.exceptions import SigningServerError
 from signingscript.utils import is_autograph_signing_format
 
@@ -45,6 +45,7 @@ FORMAT_TO_SIGNING_FUNCTION = frozendict({
     "widevine": sign_widevine,
     "autograph_widevine": sign_widevine,
     "autograph_omnija": sign_omnija,
+    "autograph_langpack": sign_langpack,
     "default": sign_file,
 })
 

@@ -5,6 +5,7 @@ import base64
 import difflib
 import fnmatch
 import glob
+import json
 import logging
 import os
 import re
@@ -93,6 +94,11 @@ _DEFAULT_MAR_VERIFY_KEYS = {
         'dep-signing': 'dep1.pem',
     },
 }
+
+# Langpacks expect the following re to match for addon id
+LANGPACK_RE = re.compile(
+    r'^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|devedition).mozilla.org$'
+    )
 
 
 # get_suitable_signing_servers {{{1
@@ -287,6 +293,35 @@ async def sign_signcode(context, orig_path, fmt):
     if file_extension == '.zip':
         # Recreate the zipfile
         await _create_zipfile(context, orig_path, files, tmp_dir=tmp_dir)
+    return orig_path
+
+
+# sign_langpack {{{1
+async def sign_langpack(context, orig_path, fmt):
+    """Sign language packs with autograph.
+
+    This validates both the file extension and the language pack ID is sane.
+
+    Args:
+        context (Context): the signing context
+        orig_path (str): the source file to sign
+        fmt (str): the format to sign with
+
+    Returns:
+        str: the path to the signed xpi
+
+    """
+    file_base, file_extension = os.path.splitext(orig_path)
+
+    if not file_extension == '.xpi':
+        raise SigningScriptError("Expected a .xpi")
+
+    id = _langpack_id(orig_path)
+    log.info("Identified {} as extension id: {}".format(orig_path, id))
+    # Sign the appropriate inner files
+    await sign_file_with_autograph(
+        context, orig_path, fmt, extension_id=id
+    )
     return orig_path
 
 
@@ -588,6 +623,30 @@ def _should_sign_windows(filename):
     return False
 
 
+def _langpack_id(filename):
+    """Return a list of id's for the langpacks.
+
+    Side Affect of checking if filenames are actually langpacks.
+    """
+    langpack = zipfile.ZipFile(filename, 'r')
+    id = None
+    with langpack.open('manifest.json', 'r') as f:
+        manifest = json.load(f)
+        if not ('languages' in manifest and
+                'langpack_id' in manifest and
+                'applications' in manifest and
+                'gecko' in manifest['applications'] and
+                'id' in manifest['applications']['gecko'] and
+                LANGPACK_RE.match(
+                    manifest['applications']['gecko']['id']
+                )):
+            raise SigningScriptError(
+                '{} is not a valid langpack'.format(filename)
+                )
+        id = manifest['applications']['gecko']['id']
+    return id
+
+
 # _get_mac_sigpath {{{1
 def _get_mac_sigpath(from_):
     """For mac paths, replace the final Contents/MacOS/ with Contents/Resources/."""
@@ -869,7 +928,7 @@ async def call_autograph(url, user, password, request_json):
         return r.json()
 
 
-def make_signing_req(input_bytes, server, fmt, keyid=None):
+def make_signing_req(input_bytes, server, fmt, keyid=None, extension_id=None):
     """Make a signing request object to pass to autograph."""
     base64_input = base64.b64encode(input_bytes).decode('ascii')
     sign_req = {"input": base64_input}
@@ -887,17 +946,18 @@ def make_signing_req(input_bytes, server, fmt, keyid=None):
             # https://github.com/mozilla-services/autograph/pull/166/files
             sign_req['options']['pkcs7_digest'] = "SHA1"
 
-    if "omnija" in fmt:
+    if "omnija" in fmt or "langpack" in fmt:
         sign_req.setdefault('options', {})
         # https://bugzilla.mozilla.org/show_bug.cgi?id=1533818#c9
-        sign_req['options']['id'] = 'omni.ja@mozilla.org'
+        sign_req['options']['id'] = extension_id
         sign_req['options']['cose_algorithms'] = ['ES256']
         sign_req['options']['pkcs7_digest'] = 'SHA256'
 
     return [sign_req]
 
 
-async def sign_with_autograph(server, input_bytes, fmt, autograph_method, keyid=None):
+async def sign_with_autograph(server, input_bytes, fmt, autograph_method, keyid=None,
+                              extension_id=None):
     """Signs data with autograph and returns the result.
 
     Args:
@@ -907,6 +967,7 @@ async def sign_with_autograph(server, input_bytes, fmt, autograph_method, keyid=
         autograph_method (str): which autograph method to use to sign. must be
                                 one of 'file', 'hash', or 'data'
         keyid (str): which key to use on autograph (optional)
+        extension_id (str): which id to send to autograph for the extension (optional)
 
     Raises:
         Requests.RequestException: on failure
@@ -919,7 +980,7 @@ async def sign_with_autograph(server, input_bytes, fmt, autograph_method, keyid=
     if autograph_method not in {'file', 'hash', 'data'}:
         raise SigningScriptError(f"Unsupported autograph method: {autograph_method}")
 
-    sign_req = make_signing_req(input_bytes, server, fmt, keyid)
+    sign_req = make_signing_req(input_bytes, server, fmt, keyid, extension_id)
 
     log.debug("signing data with format %s with %s", fmt, autograph_method)
 
@@ -936,7 +997,7 @@ async def sign_with_autograph(server, input_bytes, fmt, autograph_method, keyid=
         return sign_resp[0]['signature']
 
 
-async def sign_file_with_autograph(context, from_, fmt, to=None):
+async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=None):
     """Signs file with autograph and writes the results to a file.
 
     Args:
@@ -945,6 +1006,7 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
         fmt (str): the format to sign with
         to (str, optional): the target path to sign to. If None, overwrite
                             `from_`. Defaults to None.
+        extension_id (str, optional): the extension id to use when signing.
 
     Raises:
         Requests.RequestException: on failure
@@ -962,7 +1024,7 @@ async def sign_file_with_autograph(context, from_, fmt, to=None):
     s = servers[0]
     to = to or from_
     input_bytes = open(from_, 'rb').read()
-    signed_bytes = base64.b64decode(await sign_with_autograph(s, input_bytes, fmt, 'file'))
+    signed_bytes = base64.b64decode(await sign_with_autograph(s, input_bytes, fmt, 'file', extension_id=extension_id))
     with open(to, 'wb') as fout:
         fout.write(signed_bytes)
     return to
@@ -1207,7 +1269,10 @@ async def sign_omnija_with_autograph(context, from_):
     merged_out = tempfile.mkstemp(
         prefix="oj_merged", suffix='.ja', dir=context.config['work_dir'])[1]
 
-    await sign_file_with_autograph(context, from_, "autograph_omnija", to=signed_out)
+    await sign_file_with_autograph(
+        context, from_, "autograph_omnija",
+        to=signed_out, extension_id='omni.ja@mozilla.org',
+        )
     await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
     with open(from_, 'wb') as fout:
         with open(merged_out, 'rb') as fin:

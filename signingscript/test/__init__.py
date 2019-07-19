@@ -1,6 +1,7 @@
 import os
 import pytest
 import tempfile
+from contextlib import contextmanager
 
 from scriptworker.context import Context
 
@@ -60,3 +61,8 @@ def context(tmpdir):
     mkdir(context.config['work_dir'])
     mkdir(context.config['artifact_dir'])
     yield context
+
+
+@contextmanager
+def does_not_raise():
+    yield

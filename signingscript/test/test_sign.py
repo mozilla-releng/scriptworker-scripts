@@ -18,7 +18,7 @@ import signingscript.sign as sign
 import signingscript.utils as utils
 from signingscript.test import (
     noop_sync, noop_async, tmpdir, die, BASE_DIR, TEST_DATA_DIR, context,
-    DEFAULT_SCOPE_PREFIX, SERVER_CONFIG_PATH
+    DEFAULT_SCOPE_PREFIX, SERVER_CONFIG_PATH, does_not_raise
 )
 
 assert tmpdir  # silence flake8
@@ -504,6 +504,26 @@ async def test_sign_macapp(context, mocker, filename, expected):
     assert await sign.sign_macapp(context, filename, 'blah') == expected
 
 
+# sign_langpack {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize('filename,id,raises', ((
+    'foo.zip', 'foo-id@firefox.mozilla.org', pytest.raises(SigningScriptError),
+), (
+    '/path/to/foo.xpi', 'foo-id@firefox.mozilla.org', does_not_raise(),
+), (
+    'foo.xpi', 'foo-id@devedition.mozilla.org', does_not_raise(),
+)))
+async def test_sign_langpack(context, mocker, filename, id, raises):
+
+    async def mocked_signer(ctx, fname, fmt, extension_id=None):
+        assert extension_id == id
+
+    mocker.patch.object(sign, '_langpack_id', return_value=id)
+    mocker.patch.object(sign, 'sign_file_with_autograph', new=mocked_signer)
+    with raises:
+        assert await sign.sign_langpack(context, filename, 'blah') == filename
+
+
 # sign_signcode {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize('filename,fmt,raises', ((
@@ -878,11 +898,29 @@ def test_signreq_task_omnija():
     fmt = "autograph_omnija"
     s = SigningServer("https://autograph-hsm.dev.mozaws.net", "alice", "bob",
                       [fmt], "autograph")
-    req = sign.make_signing_req(input_bytes, s, fmt, "newkeyid")
+    req = sign.make_signing_req(
+        input_bytes, s, fmt, "newkeyid", extension_id='omni.ja@mozilla.org')
 
     assert req[0]['keyid'] == 'newkeyid'
     assert req[0]['input'] == 'aGVsbG8gd29ybGQ='
     assert req[0]['options']['id'] == 'omni.ja@mozilla.org'
+    assert isinstance(req[0]['options']['cose_algorithms'], type([]))
+    assert len(req[0]['options']['cose_algorithms']) == 1
+    assert req[0]['options']['cose_algorithms'][0] == 'ES256'
+    assert req[0]['options']['pkcs7_digest'] == 'SHA256'
+
+
+def test_signreq_task_langpack():
+    input_bytes = b"hello world"
+    fmt = "autograph_langpack"
+    s = SigningServer("https://autograph-hsm.dev.mozaws.net", "alice", "bob",
+                      [fmt], "autograph")
+    req = sign.make_signing_req(
+        input_bytes, s, fmt, "newkeyid", extension_id='langpack-en-CA@firefox.mozilla.org')
+
+    assert req[0]['keyid'] == 'newkeyid'
+    assert req[0]['input'] == 'aGVsbG8gd29ybGQ='
+    assert req[0]['options']['id'] == 'langpack-en-CA@firefox.mozilla.org'
     assert isinstance(req[0]['options']['cose_algorithms'], type([]))
     assert len(req[0]['options']['cose_algorithms']) == 1
     assert req[0]['options']['cose_algorithms'][0] == 'ES256'
@@ -1075,7 +1113,7 @@ async def test_omnija_sign(tmpdir, mocker, context, orig, signed,
     copy_from = os.path.join(tmpdir, 'omni.ja')
     shutil.copyfile(os.path.join(TEST_DATA_DIR, orig), copy_from)
 
-    async def mocked_autograph(context, from_, fmt, to):
+    async def mocked_autograph(context, from_, fmt, to, extension_id):
         assert fmt == 'autograph_omnija'
         shutil.copyfile(os.path.join(TEST_DATA_DIR, signed), to)
 
@@ -1083,3 +1121,118 @@ async def test_omnija_sign(tmpdir, mocker, context, orig, signed,
     await sign.sign_omnija_with_autograph(context, copy_from)
     sha256_actual = sha256(open(copy_from, 'rb').read()).hexdigest()
     assert sha256_actual == sha256_expected
+
+
+def test_langpack_id_regex():
+    assert sign.LANGPACK_RE.match(
+        'langpack-en-CA@firefox.mozilla.org'
+        ) is not None
+    assert sign.LANGPACK_RE.match(
+        'langpack-ja-JP-mac@devedition.mozilla.org'
+        ) is not None
+    assert sign.LANGPACK_RE.match(
+        'invalid-langpack-id@example.com'
+        ) is None
+
+
+def test_langpack_id():
+    filename = os.path.join(TEST_DATA_DIR, 'en-CA.xpi')
+    assert sign._langpack_id(filename) == 'langpack-en-CA@firefox.mozilla.org'
+
+
+@pytest.mark.parametrize('json_,raises', (
+    (
+        {},
+        pytest.raises(SigningScriptError)
+    ), (
+        {'languages': {}},
+        pytest.raises(SigningScriptError)
+    ), (
+        {'languages': {},
+         'langpack_id': 'en-CA',
+          },
+        pytest.raises(SigningScriptError)
+    ), (
+        {'languages': {},
+         'langpack_id': 'en-CA',
+         'applications': {}
+          },
+        pytest.raises(SigningScriptError)
+    ), (
+        {'languages': {},
+         'langpack_id': 'en-CA',
+         'applications': {
+            'gecko': {}
+            }
+         },
+        pytest.raises(SigningScriptError)
+    ), (
+        {'languages': {},
+         'langpack_id': 'en-CA',
+         'applications': {
+            'gecko': {}
+            }
+         },
+        pytest.raises(SigningScriptError)
+    ), (
+        {'languages': {},
+         'langpack_id': 'en-CA',
+         'applications': {
+            'gecko': {'id': ''}
+            }
+         },
+        pytest.raises(SigningScriptError)
+    ), (
+        {'languages': {},
+         'langpack_id': 'en-CA',
+         'applications': {
+            'gecko': {'id': 'invalid-langpack-id@example.com'}
+            }
+         },
+        pytest.raises(SigningScriptError)
+    ), (
+        {'languages': {},
+         'langpack_id': 'en-CA',
+         'applications': {
+            'gecko': {'id': 'langpack-en-CA@firefox.mozilla.org'}
+            }
+         },
+        does_not_raise()
+    ), (
+        {'languages': {},
+         'langpack_id': 'en-CA',
+         'applications': {
+            'gecko': {'id': 'langpack-de@devedition.mozilla.org'}
+            }
+         },
+        does_not_raise()
+    ), (
+        {'languages': {},
+         'langpack_id': 'en-CA',
+         'applications': {
+            'gecko': {'id': 'langpack-ja-JP-mac@devedition.mozilla.org'}
+            }
+         },
+        does_not_raise()
+    ), (
+        {'langpack_id': 'en-CA',
+         'applications': {
+            'gecko': {'id': 'langpack-en-CA@firefox.mozilla.org'}
+            }
+         },
+        pytest.raises(SigningScriptError)
+    ))
+)
+def test_langpack_id_raises(json_, raises, mocker):
+    filename = os.path.join(TEST_DATA_DIR, 'en-CA.xpi')
+
+    def load_manifest(*args, **kwargs):
+        return json_
+
+    # Mock ZipFile so we don't actually read the xpi data
+    mocker.patch.object(sign.zipfile, 'ZipFile', autospec=True)
+
+    mocker.patch.object(sign.json, 'load', load_manifest)
+    with raises:
+        id = sign._langpack_id(filename)
+        assert id == json_['applications']['gecko']['id']
