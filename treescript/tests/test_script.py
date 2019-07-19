@@ -94,10 +94,11 @@ def test_get_default_config():
     ),
 )
 async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
-    actions = ["tagging", "version_bump"]
+    actions = ["tagging", "version_bump", "l10n_bump"]
     actions += push_scope
     called_tag = [False]
     called_bump = [False]
+    called_l10n = [False]
     called_push = [False]
 
     async def mocked_tag(*args, **kwargs):
@@ -108,6 +109,10 @@ async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
         called_bump[0] = True
         return True
 
+    async def mocked_l10n(*args, **kwargs):
+        called_l10n[0] = True
+        return True
+
     async def mocked_push(*args, **kwargs):
         called_push[0] = True
         return True
@@ -116,13 +121,54 @@ async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
     mocker.patch.object(script, "strip_outgoing", new=noop_async)
     mocker.patch.object(script, "do_tagging", new=mocked_tag)
     mocker.patch.object(script, "bump_version", new=mocked_bump)
+    mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
     mocker.patch.object(script, "push", new=mocked_push)
     mocker.patch.object(script, "log_outgoing", new=noop_async)
     mocker.patch.object(script, "is_dry_run", return_value=dry_run)
     await script.do_actions({}, {}, actions, "/some/folder/here")
     assert called_tag[0]
     assert called_bump[0]
+    assert called_l10n[0]
     assert called_push[0] is push_expect_called
+
+
+@pytest.mark.asyncio
+async def test_do_actions_no_changes(mocker):
+    actions = ["push"]
+    called_tag = [False]
+    called_bump = [False]
+    called_l10n = [False]
+    called_push = [False]
+
+    async def mocked_tag(*args, **kwargs):
+        called_tag[0] = True
+        return True
+
+    async def mocked_bump(*args, **kwargs):
+        called_bump[0] = True
+        return True
+
+    async def mocked_l10n(*args, **kwargs):
+        called_l10n[0] = True
+        return True
+
+    async def mocked_push(*args, **kwargs):
+        called_push[0] = True
+        return True
+
+    mocker.patch.object(script, "checkout_repo", new=noop_async)
+    mocker.patch.object(script, "strip_outgoing", new=noop_async)
+    mocker.patch.object(script, "do_tagging", new=mocked_tag)
+    mocker.patch.object(script, "bump_version", new=mocked_bump)
+    mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
+    mocker.patch.object(script, "push", new=mocked_push)
+    mocker.patch.object(script, "log_outgoing", new=noop_async)
+    mocker.patch.object(script, "is_dry_run", return_value=False)
+    await script.do_actions({}, {}, actions, "/some/folder/here")
+    assert not called_tag[0]
+    assert not called_bump[0]
+    assert not called_l10n[0]
+    assert not called_push[0]
 
 
 @pytest.mark.asyncio

@@ -272,8 +272,7 @@ def test_get_ignore_closed_tree(task_defn, closed_tree):
 
 # task_task_action_types {{{1
 @pytest.mark.parametrize(
-    "actions",
-    (["tag"], ["version_bump"], ["tag", "version_bump", "push"])
+    "actions", (["tag"], ["version_bump"], ["tag", "version_bump", "push"])
 )
 def test_task_action_types_actions(actions):
     task = {"payload": {"actions": actions}}
