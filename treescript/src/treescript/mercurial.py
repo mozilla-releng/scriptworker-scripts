@@ -226,7 +226,7 @@ async def get_existing_tags(config, repo_path):
     output = await run_hg_command(
         config,
         "tags",
-        "--template='{tag}: {node}\n'",
+        '--template="{tag}: {node}\n"',
         repo_path=repo_path,
         return_output=True,
     )
