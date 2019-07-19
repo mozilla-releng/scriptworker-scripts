@@ -224,16 +224,14 @@ async def get_existing_tags(config, repo_path):
         dict: ``{tag1: revision1, tag2: revision2, ...}``
 
     """
-    existing_tags = {}
     output = await run_hg_command(
-        config, "tags", repo_path=repo_path, return_output=True
+        config,
+        "tags",
+        "--template='{tag}: {node}\n'",
+        repo_path=repo_path,
+        return_output=True,
     )
-    for line in output.splitlines():
-        parts = line.split(" ")
-        if len(parts) > 1:
-            # existing_tags = {TAG: REVISION, ...}
-            existing_tags[parts[0]] = parts[-1].split(":")[-1]
-    log.debug("existing_tags:\n%s", json.dumps(existing_tags, sort_keys=True, indent=4))
+    existing_tags = load_json_or_yaml(output, file_type="yaml")
     return existing_tags
 
 
