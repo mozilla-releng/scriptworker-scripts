@@ -367,7 +367,9 @@ async def test_log_outgoing(config, task, mocker, output):
         ("https://hg.mozilla.org/treescript-test",), called_args[0][0]
     )
     if output:
-        with open(os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff"), "r") as fh:
+        with open(
+            os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff"), "r"
+        ) as fh:
             assert fh.read().rstrip() == output
 
 

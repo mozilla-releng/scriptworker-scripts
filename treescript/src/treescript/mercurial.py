@@ -224,13 +224,11 @@ async def get_existing_tags(config, repo_path):
 
     """
     existing_tags = {}
-    output = load_json_or_yaml(await run_hg_command(
-        config,
-        "tags",
-        "--template=json",
-        repo_path=repo_path,
-        return_output=True,
-    ))
+    output = load_json_or_yaml(
+        await run_hg_command(
+            config, "tags", "--template=json", repo_path=repo_path, return_output=True
+        )
+    )
     for tag_info in output:
         existing_tags[tag_info["tag"]] = tag_info["node"]
     return existing_tags
