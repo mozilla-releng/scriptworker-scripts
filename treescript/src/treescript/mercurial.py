@@ -231,7 +231,6 @@ async def get_existing_tags(config, repo_path):
         return_output=True,
     )
     existing_tags = load_json_or_yaml(output, file_type="yaml")
-    log.info(existing_tags)
     return existing_tags
 
 
