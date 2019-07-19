@@ -1,11 +1,10 @@
 """Treescript mercurial functions."""
-import json
 import logging
 import os
 import sys
 import tempfile
 
-from scriptworker_client.utils import run_command, makedirs
+from scriptworker_client.utils import run_command, makedirs, load_json_or_yaml
 from treescript.exceptions import CheckoutError, FailedSubprocess, PushError
 from treescript.task import (
     get_branch,
