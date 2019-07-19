@@ -5,6 +5,10 @@ from scriptworker_client.utils import makedirs
 import treescript.l10n as l10n
 
 
+async def noop_async(*args, **kwargs):
+    pass
+
+
 # build_locale_map {{{1
 def test_build_locale_map():
     """build_locale_map returns a set of changes between old_contents
@@ -182,3 +186,108 @@ def test_build_platform_dict(contents, mocker, bump_config, expected, tmpdir):
             fh.write(contents.pop(0))
 
     assert l10n.build_platform_dict(bump_config, tmpdir) == expected
+
+
+# build_revision_dict {{{1
+@pytest.mark.parametrize(
+    "revision_info, expected",
+    (
+        (
+            """one onerev
+two tworev
+three threerev
+extra extrarev
+""",
+            {
+                "one": {"revision": "onerev", "platforms": ["platform"]},
+                "two": {"revision": "tworev", "platforms": ["platform"]},
+                "three": {"revision": "threerev", "platforms": ["platform"]},
+            },
+        ),
+        (
+            None,
+            {
+                "one": {"revision": "default", "platforms": ["platform"]},
+                "two": {"revision": "default", "platforms": ["platform"]},
+                "three": {"revision": "default", "platforms": ["platform"]},
+            },
+        ),
+    ),
+)
+def test_build_revision_dict(mocker, revision_info, expected):
+    """``build_revision_dict`` adds l10n dashboard revisions, if available,
+    to the platform_dict; otherwise it adds a revision of "default" to
+    every locale in the platform_dict.
+
+    """
+    platform_dict = {
+        "one": {"platforms": ["platform"]},
+        "two": {"platforms": ["platform"]},
+        "three": {"platforms": ["platform"]},
+    }
+
+    def build_platform_dict(*args):
+        return platform_dict
+
+    mocker.patch.object(l10n, "build_platform_dict", new=build_platform_dict)
+    assert l10n.build_revision_dict({}, revision_info, "") == expected
+
+
+# build_commit_message {{{1
+@pytest.mark.parametrize(
+    "dontbuild, ignore_closed_tree", ((True, True), (False, False))
+)
+def test_build_commit_message(dontbuild, ignore_closed_tree):
+    """build_commit_message adds the correct approval strings and a comment
+    including the changes landed.
+    """
+    locale_map = {
+        "a": "arev",
+        "b": "brev",
+        "c": "crev",
+        "old": "removed",
+        "p": ["platform"],
+    }
+    expected = [
+        "no bug - Bumping foo r=release a=l10n-bump",
+        "",
+        "a -> arev",
+        "b -> brev",
+        "c -> crev",
+        "old -> removed",
+        "p -> ['platform']",
+    ]
+    if dontbuild:
+        expected[0] += l10n.DONTBUILD_MSG
+    if ignore_closed_tree:
+        expected[0] += l10n.CLOSED_TREE_MSG
+    assert (
+        l10n.build_commit_message(
+            "foo",
+            locale_map,
+            dontbuild=dontbuild,
+            ignore_closed_tree=ignore_closed_tree,
+        ).splitlines()
+        == expected
+    )
+
+
+# check_treestatus {{{1
+@pytest.mark.parametrize(
+    "status, expected", (("open", True), ("closed", False), ("approval required", True))
+)
+@pytest.mark.asyncio
+async def test_check_treestatus(status, mocker, expected):
+    config = {"treestatus_base_url": "url", "work_dir": "foo"}
+    treestatus = {
+        "result": {
+            "message_of_the_day": "",
+            "reason": "",
+            "status": status,
+            "tree": "mozilla-central",
+        }
+    }
+    mocker.patch.object(l10n, "download_file", new=noop_async)
+    mocker.patch.object(l10n, "get_short_source_repo", return_value="tree")
+    mocker.patch.object(l10n, "load_json_or_yaml", return_value=treestatus)
+    assert await l10n.check_treestatus(config, {}) == expected
