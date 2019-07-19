@@ -143,7 +143,6 @@ def build_commit_message(name, locale_map, dontbuild=False, ignore_closed_tree=F
         approval_str += CLOSED_TREE_MSG
     message = "no bug - Bumping %s %s\n\n" % (name, approval_str)
     message += comments
-    message = message.encode("utf-8")
     return message
 
 
