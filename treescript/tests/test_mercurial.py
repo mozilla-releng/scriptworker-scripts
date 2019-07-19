@@ -11,7 +11,7 @@ import os
 import pytest
 from scriptworker_client.utils import makedirs
 from treescript import mercurial
-from treescript.exceptions import FailedSubprocess
+from treescript.exceptions import FailedSubprocess, PushError
 from treescript.script import get_default_config
 from treescript.task import DONTBUILD_MSG
 
@@ -30,7 +30,10 @@ UNEXPECTED_ENV_KEYS = (
 
 @pytest.yield_fixture(scope="function")
 def task():
-    return {"metadata": {"source": "https://hg.mozilla.org/repo-name/file/filename"}}
+    return {
+        "payload": {},
+        "metadata": {"source": "https://hg.mozilla.org/repo-name/file/filename"},
+    }
 
 
 async def noop_async(*args, **kwargs):
@@ -177,9 +180,11 @@ async def test_validate_robustcheckout_works_doesnt(config, mocker):
 
 
 # checkout_repo {{{1
+@pytest.mark.parametrize("branch", (None, "foo"))
 @pytest.mark.asyncio
-async def test_checkout_repo(config, task, mocker):
-
+async def test_checkout_repo(config, task, mocker, branch):
+    """checkout_repo calls the expected commands.
+    """
     calls = [
         (
             "robustcheckout",
@@ -190,7 +195,10 @@ async def test_checkout_repo(config, task, mocker):
         ("up", "-C"),
         ("purge", "--all"),
         ("pull", "-b"),
+        ("update", "-r"),
     ]
+    if branch:
+        task["payload"]["branch"] = branch
 
     async def check_params(*args, **kwargs):
         assert is_slice_in_list(calls.pop(0), args)
@@ -207,6 +215,57 @@ async def test_checkout_repo(config, task, mocker):
 
 
 # do_tagging {{{1
+@pytest.mark.asyncio
+async def test_get_existing_tags(config, mocker, tmpdir):
+    """get_existing_tags returns a dictionary of tag:revision from
+    ``hg tags --template=json`` output.
+
+    """
+    expected = {"tag1": "rev1", "tag2": "rev2"}
+
+    async def fake_hg_command(*args, **kwargs):
+        return """
+        [{
+            "node": "rev1",
+            "rev": 1,
+            "tag": "tag1",
+            "type": ""
+        }, {
+            "node": "rev2",
+            "rev": 2,
+            "tag": "tag2",
+            "type": ""
+        }]
+    """
+
+    mocker.patch.object(mercurial, "run_hg_command", new=fake_hg_command)
+    assert await mercurial.get_existing_tags(config, tmpdir) == expected
+
+
+@pytest.mark.asyncio
+async def test_check_tags(config, mocker, tmpdir):
+    """check_tags drops duplicate tags, keeps missing tags, and also keeps
+    duplicate tags that are on different revisions.
+
+    """
+    existing_tags = {
+        "duplicate_tag": "my_revision",
+        "duplicate_tag_different_revision": "different_revision",
+        "extra_tag": "another_revision",
+    }
+    expected = ["duplicate_tag_different_revision", "new_tag"]
+    tag_info = {
+        "revision": "my_revision",
+        "tags": ["duplicate_tag", "duplicate_tag_different_revision", "new_tag"],
+    }
+
+    async def get_existing_tags(*args):
+        return existing_tags
+
+    mocker.patch.object(mercurial, "get_existing_tags", new=get_existing_tags)
+    assert await mercurial.check_tags(config, tag_info, tmpdir) == expected
+
+
 @pytest.mark.asyncio
 async def test_do_tagging_DONTBUILD_true(config, task, mocker):
     called_args = []
@@ -263,6 +322,55 @@ async def test_do_tagging_DONTBUILD_false(config, task, mocker):
     assert is_slice_in_list(("TAG1", "TAG2"), called_args[1][0])
 
 
+@pytest.mark.asyncio
+async def test_do_tagging_no_tags(config, task, mocker):
+    """do_tagging is noop when check_tags returns an empty list."""
+
+    async def check_tags(*args):
+        return []
+
+    async def run_command(config, *arguments, repo_path=None):
+        assert False, "we shouldn't hit this."
+
+    mocker.patch.object(mercurial, "run_hg_command", new=run_command)
+    mocked_tag_info = mocker.patch.object(mercurial, "get_tag_info")
+    mocked_tag_info.return_value = {"revision": "deadbeef", "tags": ["TAG1", "TAG2"]}
+    mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
+    mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
+    mocked_dontbuild = mocker.patch.object(mercurial, "get_dontbuild")
+    mocked_dontbuild.return_value = False
+    mocker.patch.object(mercurial, "check_tags", new=check_tags)
+    await mercurial.do_tagging(config, task, config["work_dir"])
+
+
+# log_outgoing {{{1
+@pytest.mark.parametrize("output", ("hg output!", None))
+@pytest.mark.asyncio
+async def test_log_outgoing(config, task, mocker, output):
+    called_args = []
+
+    async def run_command(config, *arguments, repo_path=None, **kwargs):
+        called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
+        if output:
+            return output
+
+    mocker.patch.object(mercurial, "run_hg_command", new=run_command)
+    mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
+    mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
+    await mercurial.log_outgoing(config, task, config["work_dir"])
+
+    assert len(called_args) == 1
+    assert "repo_path" in called_args[0][1]
+    assert is_slice_in_list(("out", "-vp"), called_args[0][0])
+    assert is_slice_in_list(("-r", "."), called_args[0][0])
+    assert is_slice_in_list(
+        ("https://hg.mozilla.org/treescript-test",), called_args[0][0]
+    )
+    if output:
+        with open(os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff"), "r") as fh:
+            assert fh.read().rstrip() == output
+
+
 # push {{{1
 @pytest.mark.asyncio
 async def test_push(config, task, mocker, tmpdir):
@@ -315,23 +423,17 @@ async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
     assert is_slice_in_list(("push", "-e", expect), called_args[0][0])
 
 
-# log_outgoing {{{1
 @pytest.mark.asyncio
-async def test_log_outgoing(config, task, mocker):
-    called_args = []
+async def test_push_fail(config, task, mocker, tmpdir):
+    """Raise a PushError in run_hg_command and verify we clean up."""
 
-    async def run_command(config, *arguments, repo_path=None, **kwargs):
-        called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
+    async def blow_up(*args, **kwargs):
+        raise PushError("x")
 
-    mocker.patch.object(mercurial, "run_hg_command", new=run_command)
-    mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
-    mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
-    await mercurial.log_outgoing(config, task, config["work_dir"])
+    async def clean_up(*args):
+        assert args == (config, task, tmpdir)
 
-    assert len(called_args) == 1
-    assert "repo_path" in called_args[0][1]
-    assert is_slice_in_list(("out", "-vp"), called_args[0][0])
-    assert is_slice_in_list(("-r", "."), called_args[0][0])
-    assert is_slice_in_list(
-        ("https://hg.mozilla.org/treescript-test",), called_args[0][0]
-    )
+    mocker.patch.object(mercurial, "run_hg_command", new=blow_up)
+    mocker.patch.object(mercurial, "strip_outgoing", new=clean_up)
+    with pytest.raises(PushError):
+        await mercurial.push(config, task, tmpdir)
