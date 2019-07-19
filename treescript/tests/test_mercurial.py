@@ -16,6 +16,7 @@ from treescript.script import get_default_config
 from treescript.task import DONTBUILD_MSG
 
 
+# constants, helpers, fixtures {{{1
 ROBUSTCHECKOUT_FILE = os.path.abspath(
     os.path.join(
         os.path.dirname(__file__), "..", "src", "treescript", "py2", "robustcheckout.py"
@@ -57,6 +58,7 @@ def config(tmpdir):
     yield config
 
 
+# build_hg_cmd {{{1
 @pytest.mark.parametrize(
     "hg,args", (("hg", ["blah", "blah", "--baz"]), (["hg"], ["blah", "blah", "--baz"]))
 )
@@ -96,6 +98,7 @@ def test_build_hg_env(mocker, my_env):
         assert type(returned_env[key]) == str
 
 
+# run_hg_command {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize("args", (["foobar", "--bar"], ["--test", "args", "banana"]))
 async def test_run_hg_command(mocker, config, args):
@@ -143,6 +146,7 @@ async def test_run_hg_command_localrepo(mocker, config):
     is_slice_in_list(["-R", "/tmp/localrepo"], called_args[0][0])
 
 
+# robustcheckout, hg {{{1
 @pytest.mark.asyncio
 async def test_hg_version(config, mocker):
     logged = []
@@ -172,6 +176,7 @@ async def test_validate_robustcheckout_works_doesnt(config, mocker):
     assert ret is False
 
 
+# checkout_repo {{{1
 @pytest.mark.asyncio
 async def test_checkout_repo(config, task, mocker):
 
@@ -201,6 +206,7 @@ async def test_checkout_repo(config, task, mocker):
     await mercurial.checkout_repo(config, task, config["work_dir"])
 
 
+# do_tagging {{{1
 @pytest.mark.asyncio
 async def test_do_tagging_DONTBUILD_true(config, task, mocker):
     called_args = []
@@ -257,6 +263,7 @@ async def test_do_tagging_DONTBUILD_false(config, task, mocker):
     assert is_slice_in_list(("TAG1", "TAG2"), called_args[1][0])
 
 
+# push {{{1
 @pytest.mark.asyncio
 async def test_push(config, task, mocker, tmpdir):
     called_args = []
@@ -308,6 +315,7 @@ async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
     assert is_slice_in_list(("push", "-e", expect), called_args[0][0])
 
 
+# log_outgoing {{{1
 @pytest.mark.asyncio
 async def test_log_outgoing(config, task, mocker):
     called_args = []
