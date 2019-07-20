@@ -188,7 +188,10 @@ async def get_revision_info(bump_config, repo_path):
 
     """
     version = get_version(bump_config["version_path"], repo_path)
-    repl_dict = {"MAJOR_VERSION": version.major_number}
+    repl_dict = {
+        "MAJOR_VERSION": version.major_number,
+        "COMBINED_MAJOR_VERSION": version.major_number + version.minor_number,
+    }
     url = bump_config["revision_url"] % repl_dict
     with tempfile.NamedTemporaryFile() as fp:
         path = fp.name
