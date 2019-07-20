@@ -278,6 +278,7 @@ def test_build_commit_message(dontbuild, ignore_closed_tree):
 )
 @pytest.mark.asyncio
 async def test_check_treestatus(status, mocker, expected):
+    """check_treestatus returns False for a closed tree, and True otherwise."""
     config = {"treestatus_base_url": "url", "work_dir": "foo"}
     treestatus = {
         "result": {
@@ -291,3 +292,110 @@ async def test_check_treestatus(status, mocker, expected):
     mocker.patch.object(l10n, "get_short_source_repo", return_value="tree")
     mocker.patch.object(l10n, "load_json_or_yaml", return_value=treestatus)
     assert await l10n.check_treestatus(config, {}) == expected
+
+
+# get_revision_info {{{1
+@pytest.mark.asyncio
+async def test_get_revision_info(mocker):
+    """get_revision_info downloads l10n changeset information from the
+    l10n dashboard url.
+
+    """
+    expected = "foo bar"
+
+    async def fake_download(url, path):
+        with open(path, "w") as fh:
+            fh.write(expected)
+
+    bump_config = {"revision_url": "foo/{MAJOR_VERSION}", "version_path": ""}
+    version = mocker.MagicMock()
+    version.major_number = "70"
+    mocker.patch.object(l10n, "get_version", return_value=version)
+    mocker.patch.object(l10n, "download_file", new=fake_download)
+    assert await l10n.get_revision_info(bump_config, "")
+
+
+# l10n_bump {{{1
+@pytest.mark.parametrize(
+    "ignore_closed_tree, l10n_bump_info, old_contents, new_contents, changes",
+    (
+        (
+            True,
+            [{"name": "x", "path": "x"}],
+            {
+                "one": {"revision": "onerev", "platforms": ["platform"]},
+                "two": {"revision": "tworev", "platforms": ["platform"]},
+            },
+            {
+                "one": {"revision": "onerev", "platforms": ["platform"]},
+                "two": {"revision": "tworev", "platforms": ["platform"]},
+            },
+            False,
+        ),
+        (
+            False,
+            [
+                {"name": "x", "path": "x", "revision_url": "x"},
+                {"name": "y", "path": "y"},
+            ],
+            {
+                "one": {"revision": "oldonerev", "platforms": ["platform"]},
+                "two": {"revision": "oldtworev", "platforms": ["platform"]},
+            },
+            {
+                "one": {"revision": "newonerev", "platforms": ["platform"]},
+                "two": {"revision": "newtworev", "platforms": ["platform"]},
+            },
+            True,
+        ),
+    ),
+)
+@pytest.mark.asyncio
+async def test_l10n_bump(
+    mocker,
+    ignore_closed_tree,
+    l10n_bump_info,
+    tmpdir,
+    old_contents,
+    new_contents,
+    changes,
+):
+    """l10n_bump flow coverage."""
+    calls = []
+
+    async def check_treestatus(*args):
+        return True
+
+    async def fake_hg(*args, **kwargs):
+        calls.append(args)
+
+    mocker.patch.object(l10n, "get_dontbuild", return_value=False)
+    mocker.patch.object(l10n, "get_ignore_closed_tree", return_value=ignore_closed_tree)
+    mocker.patch.object(l10n, "check_treestatus", new=check_treestatus)
+    mocker.patch.object(l10n, "get_l10n_bump_info", return_value=l10n_bump_info)
+    mocker.patch.object(l10n, "load_json_or_yaml", return_value=old_contents)
+    mocker.patch.object(l10n, "get_revision_info", new=noop_async)
+    mocker.patch.object(l10n, "build_revision_dict", return_value=new_contents)
+    mocker.patch.object(l10n, "run_hg_command", new=fake_hg)
+
+    assert await l10n.l10n_bump({}, {}, tmpdir) == changes
+
+
+@pytest.mark.asyncio
+async def test_l10n_bump_closed_tree(mocker):
+    """l10n_bump should exit if the tree is closed and ignore_closed_tree is
+    False.
+
+    """
+
+    async def check_treestatus(*args):
+        return False
+
+    mocker.patch.object(l10n, "get_dontbuild", return_value=False)
+    mocker.patch.object(l10n, "get_ignore_closed_tree", return_value=False)
+    mocker.patch.object(l10n, "check_treestatus", new=check_treestatus)
+    # this will [intentionally] break if we fail to exit l10n_bump where
+    # we're supposed to
+    mocker.patch.object(l10n, "get_l10n_bump_info", return_value=[{}])
+
+    await l10n.l10n_bump({}, {}, "")
