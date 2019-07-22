@@ -5,8 +5,6 @@ import logging
 import os
 import ssl
 
-from datadog import statsd
-
 import scriptworker.client
 from signingscript.task import build_filelist_dict, get_token, \
     sign, task_cert_type, task_signing_formats
@@ -15,9 +13,6 @@ from signingscript.utils import copy_to_dir, is_autograph_signing_format, \
 
 
 log = logging.getLogger(__name__)
-
-# Common prefix for all metric names produced from this scriptworker.
-statsd.namespace = 'releng.scriptworker.signing'
 
 
 # async_main {{{1

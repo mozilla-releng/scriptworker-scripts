@@ -15,9 +15,6 @@ import os
 import random
 import re
 
-from datadog import statsd, initialize
-import platform
-
 from scriptworker.exceptions import ScriptWorkerException, TaskVerificationError
 from scriptworker.utils import retry_request, get_single_item_from_sequence
 
@@ -189,23 +186,12 @@ async def sign(context, path, signing_formats):
             there are detached sigfiles.
 
     """
-    # We use 8135 by default, as datadog's default of 8125 conflicts
-    # with collectd. Bug 1493265
-    initialize(statsd_host=context.config.get('datadog_host', 'localhost'),
-               statsd_port=context.config.get('datadog_port', 8135))
-
     output = path
     # Loop through the formats and sign one by one.
     for fmt in signing_formats:
         signing_func = _get_signing_function_from_format(fmt)
         log.info("sign(): Signing {} with {}...".format(output, fmt))
-        metric_tags = [
-            'format:{}'.format(fmt),
-            'host:{}'.format(platform.node()),
-            'app:signingscript'
-        ]
-        with statsd.timed('signingfunc.time', tags=metric_tags):
-            output = await signing_func(context, output, fmt)
+        output = await signing_func(context, output, fmt)
     # We want to return a list
     if not isinstance(output, (tuple, list)):
         output = [output]
