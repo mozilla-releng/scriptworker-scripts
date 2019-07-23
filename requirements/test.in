@@ -1,0 +1,7 @@
+-r base.in
+
+coverage>=4.2b1
+flake8
+pytest
+pytest-cov
+pytest-asyncio

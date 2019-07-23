@@ -1,5 +1,5 @@
 sudo: required  # Needed to install a recent version of OpenJDK as well as Python 3.7
-
+dist: xenial
 language: python
 
 matrix:
@@ -9,13 +9,13 @@ matrix:
       env:
         TOXENV=py36
       before_install:
+        - wget https://raw.githubusercontent.com/michaelklishin/jdk_switcher/7e512921ba5a6e93ce304683f099e3c0525330b1/jdk_switcher.sh
+        - source ./jdk_switcher.sh
         - jdk_switcher use openjdk7
     - python: 3.7 # Python 3.7 + Java 8
-      dist: xenial
       env:
         TOXENV=py37
       before_install:
-        # xenial doesn't ship with jdk_switcher
         - wget https://raw.githubusercontent.com/michaelklishin/jdk_switcher/7e512921ba5a6e93ce304683f099e3c0525330b1/jdk_switcher.sh
         - source ./jdk_switcher.sh
         - jdk_switcher use openjdk8
@@ -23,7 +23,6 @@ matrix:
         # manually insert it into the beginning of the path
         - export PATH="/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH"
     - python: 3.7 # Python 3.7 + Java 11
-      dist: xenial
       env:
         TOXENV=py37
 
@@ -32,4 +31,6 @@ install:
 script:
     - java -version
     - tox -e "$TOXENV"
+
+after_success:
     - if [[ $TOXENV == 'py36' ]] ; then tox -e py36-coveralls; else echo "No coverage to do"; fi

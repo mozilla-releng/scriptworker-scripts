@@ -6,4 +6,3 @@ mozapkpublisher>=4,<5
 oauth2client
 pyOpenSSL
 scriptworker
-taskcluster

@@ -1,5 +1,6 @@
 recursive-include pushapkscript/data *
 recursive-include examples/ *
+graft requirements
 
 include LICENSE
 include README.md
