@@ -8,8 +8,9 @@ import time
 import requests
 
 from argparse import ArgumentParser
-from mozapkpublisher.common.googleplay import add_general_google_play_arguments, \
-    GooglePlayConnection, GooglePlayEdit
+
+from mozapkpublisher.common import googleplay
+from mozapkpublisher.common.googleplay import add_general_google_play_arguments
 
 DAY = 24 * 60 * 60
 
@@ -40,11 +41,9 @@ def main():
                         type=int, default=7)
     config = parser.parse_args()
 
-    with GooglePlayEdit.transaction(GooglePlayConnection.open(
-        config.service_account,
-        config.google_play_credentials_file.name
-    ), 'org.mozilla.firefox', True) as google_play:
-        for (release, age) in check_rollout(google_play, config.days):
+    with googleplay.edit(True, config.service_account, config.google_play_credentials_file.name,
+                         'org.mozilla.firefox', commit=False) as edit:
+        for (release, age) in check_rollout(edit, config.days):
             print('fennec {} is on staged rollout at {}% but it shipped {} days ago'.format(
                   release['name'], int(release['userFraction'] * 100), int(age / DAY)))
 

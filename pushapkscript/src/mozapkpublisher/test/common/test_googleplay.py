@@ -42,7 +42,7 @@ def test_google_play_connection(mock_build, _):
     mock_service = MagicMock()
     mock_service.edits.return_value = 'edit resource'
     mock_build.return_value = mock_service
-    assert GooglePlayConnection.open('service_account', 'file').get_edit_resource() == 'edit resource'
+    assert GooglePlayConnection.open('service_account', 'file').edit_resource == 'edit resource'
 
 
 @pytest.fixture
@@ -55,21 +55,25 @@ def edit_resource_mock():
     return edit_resource
 
 
-def test_google_play_edit_no_commit_transaction():
+@patch.object(googleplay, 'MockGooglePlayConnection')
+def test_google_play_edit_no_commit_transaction(google_play_connection_constructor):
     connection = MockGooglePlayConnection()
     mock_edits_resource = MagicMock()
-    connection.get_edit_resource = lambda: mock_edits_resource
-    with GooglePlayEdit.transaction(connection, 'package.name', False) as _:
+    connection.edit_resource = mock_edits_resource
+    google_play_connection_constructor.return_value = connection
+    with googleplay.edit(False, None, None, 'package.name', commit=False) as _:
         pass
 
     mock_edits_resource.commit.assert_not_called()
 
 
-def test_google_play_edit_commit_transaction():
+@patch.object(googleplay, 'MockGooglePlayConnection')
+def test_google_play_edit_commit_transaction(google_play_connection_constructor):
     connection = MockGooglePlayConnection()
     mock_edits_resource = MagicMock()
-    connection.get_edit_resource = lambda: mock_edits_resource
-    with GooglePlayEdit.transaction(connection, 'package.name', True) as _:
+    connection.edit_resource = mock_edits_resource
+    google_play_connection_constructor.return_value = connection
+    with googleplay.edit(False, None, None, 'package.name', commit=True) as _:
         pass
 
     mock_edits_resource.commit.assert_called_with(editId=ANY, packageName='package.name')

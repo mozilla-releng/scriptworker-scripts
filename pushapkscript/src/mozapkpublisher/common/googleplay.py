@@ -45,10 +45,7 @@ without any valid credentials nor valid APKs. In fact, Google Play may error out
 
 class GooglePlayConnection:
     def __init__(self, edit_resource):
-        self._edit_resource = edit_resource
-
-    def get_edit_resource(self):
-        return self._edit_resource
+        self.edit_resource = edit_resource
 
     @staticmethod
     def open(service_account, credentials_file_path):
@@ -81,26 +78,24 @@ class _ExecuteDummy:
 
 
 class MockGooglePlayConnection:
-    @staticmethod
-    def get_edit_resource():
-        edit_service_mock = MagicMock()
+    def __init__(self):
+        edit_resource_mock = MagicMock()
 
-        edit_service_mock.insert = lambda *args, **kwargs: _ExecuteDummy(
+        edit_resource_mock.insert = lambda *args, **kwargs: _ExecuteDummy(
             {'id': 'fake-transaction-id'})
-        edit_service_mock.commit = lambda *args, **kwargs: _ExecuteDummy(None)
+        edit_resource_mock.commit = lambda *args, **kwargs: _ExecuteDummy(None)
 
         apks_mock = MagicMock()
         apks_mock.upload = lambda *args, **kwargs: _ExecuteDummy(
             {'versionCode': 'fake-version-code'})
-        edit_service_mock.apks = lambda *args, **kwargs: apks_mock
+        edit_resource_mock.apks = lambda *args, **kwargs: apks_mock
 
         update_mock = MagicMock()
         update_mock.update = lambda *args, **kwargs: _ExecuteDummy('fake-update-response')
-        edit_service_mock.tracks = lambda *args, **kwargs: update_mock
-        edit_service_mock.listings = lambda *args, **kwargs: update_mock
-        edit_service_mock.apklistings = lambda *args, **kwargs: update_mock
-
-        return edit_service_mock
+        edit_resource_mock.tracks = lambda *args, **kwargs: update_mock
+        edit_resource_mock.listings = lambda *args, **kwargs: update_mock
+        edit_resource_mock.apklistings = lambda *args, **kwargs: update_mock
+        self.edit_resource = edit_resource_mock
 
 
 def connection_for_options(contact_google_play, service_account, credentials_file):
@@ -204,16 +199,18 @@ class GooglePlayEdit:
         ))
         logger.debug(u'Apk listing response: {}'.format(response))
 
-    @staticmethod
-    @contextmanager
-    def transaction(connection, package_name, commit):
-        edit_resource = connection.get_edit_resource()
-        edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
-        google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
-        yield google_play
-        if commit:
-            edit_resource.commit(editId=edit_id, packageName=package_name)
-            logger.info('Changes committed')
-            logger.debug('edit_id "{}" for "{}" has been committed'.format(edit_id, package_name))
-        else:
-            logger.warning('Transaction not committed, since `commit` was `False`')
+
+@contextmanager
+def edit(contact_google_play, service_account, google_play_credentials_file, package_name, *, commit):
+    connection = connection_for_options(contact_google_play, service_account, google_play_credentials_file)
+    edit_resource = connection.edit_resource
+    edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
+    google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
+    yield google_play
+    if commit:
+        edit_resource.commit(editId=edit_id, packageName=package_name)
+        logger.info('Changes committed')
+        logger.debug('edit_id "{}" for "{}" has been committed'.format(edit_id, package_name))
+    else:
+        edit_resource.validate()
+        logger.warning('Transaction not committed, since `commit` was `False`')

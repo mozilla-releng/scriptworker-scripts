@@ -5,18 +5,18 @@ import logging
 
 from argparse import ArgumentParser
 from mozapkpublisher.common import googleplay, store_l10n
-from mozapkpublisher.common.googleplay import connection_for_options, GooglePlayEdit
+from mozapkpublisher.common.googleplay import connection_for_options
 
 logger = logging.getLogger(__name__)
 
 
 def update_apk_description(package_name, force_locale, commit, service_account, google_play_credentials_file,
                            contact_google_play):
-    connection = connection_for_options(contact_google_play, service_account, google_play_credentials_file)
-    with GooglePlayEdit.transaction(connection, package_name, commit) as google_play:
+    with googleplay.edit(contact_google_play, service_account, google_play_credentials_file,
+                         package_name, commit=commit) as edit:
         moz_locales = [force_locale] if force_locale else None
         l10n_strings = store_l10n.get_translations_per_google_play_locale_code(package_name, moz_locales)
-        create_or_update_listings(google_play, l10n_strings)
+        create_or_update_listings(edit, l10n_strings)
 
 
 def create_or_update_listings(google_play, l10n_strings):
