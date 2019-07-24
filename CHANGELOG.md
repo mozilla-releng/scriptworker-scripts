@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [11.0.5] - 2019-07-23
+### Removed
+- Datadog metric collection
+
 ## [11.0.4] - 2019-07-11
 ### Added
 - New SSL certificates for signing servers
