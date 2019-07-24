@@ -43,67 +43,12 @@ without any valid credentials nor valid APKs. In fact, Google Play may error out
 --service-account and --credentials must still be provided (you can just fill them with random string and file).''')
 
 
-class GooglePlayConnection:
-    def __init__(self, edit_resource):
-        self.edit_resource = edit_resource
-
-    @staticmethod
-    def open(service_account, credentials_file_path):
-        # Create an httplib2.Http object to handle our HTTP requests an
-        # authorize it with the Credentials. Note that the first parameter,
-        # service_account_name, is the Email address created for the Service
-        # account. It must be the email address associated with the key that
-        # was created.
-        scope = 'https://www.googleapis.com/auth/androidpublisher'
-        credentials = ServiceAccountCredentials.from_p12_keyfile(
-            service_account,
-            credentials_file_path,
-            scopes=scope
-        )
-        http = httplib2.Http()
-        http = credentials.authorize(http)
-
-        service = build(serviceName='androidpublisher', version='v3', http=http,
-                        cache_discovery=False)
-
-        return GooglePlayConnection(service.edits())
-
-
 class _ExecuteDummy:
     def __init__(self, return_value):
         self._return_value = return_value
 
     def execute(self):
         return self._return_value
-
-
-class MockGooglePlayConnection:
-    def __init__(self):
-        edit_resource_mock = MagicMock()
-
-        edit_resource_mock.insert = lambda *args, **kwargs: _ExecuteDummy(
-            {'id': 'fake-transaction-id'})
-        edit_resource_mock.commit = lambda *args, **kwargs: _ExecuteDummy(None)
-
-        apks_mock = MagicMock()
-        apks_mock.upload = lambda *args, **kwargs: _ExecuteDummy(
-            {'versionCode': 'fake-version-code'})
-        edit_resource_mock.apks = lambda *args, **kwargs: apks_mock
-
-        update_mock = MagicMock()
-        update_mock.update = lambda *args, **kwargs: _ExecuteDummy('fake-update-response')
-        edit_resource_mock.tracks = lambda *args, **kwargs: update_mock
-        edit_resource_mock.listings = lambda *args, **kwargs: update_mock
-        edit_resource_mock.apklistings = lambda *args, **kwargs: update_mock
-        self.edit_resource = edit_resource_mock
-
-
-def connection_for_options(contact_google_play, service_account, credentials_file):
-    if contact_google_play:
-        return GooglePlayConnection.open(service_account, credentials_file.name)
-    else:
-        logger.warning('Not a single request to Google Play will be made, since `contact_google_play` was set')
-        return MockGooglePlayConnection()
 
 
 class GooglePlayEdit:
@@ -201,9 +146,8 @@ class GooglePlayEdit:
 
 
 @contextmanager
-def edit(contact_google_play, service_account, google_play_credentials_file, package_name, *, commit):
-    connection = connection_for_options(contact_google_play, service_account, google_play_credentials_file)
-    edit_resource = connection.edit_resource
+def edit(contact_google_play, service_account, credentials_file_name, package_name, *, commit):
+    edit_resource = edit_resource_for_options(contact_google_play, service_account, credentials_file_name)
     edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
     google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
     yield google_play
@@ -214,3 +158,44 @@ def edit(contact_google_play, service_account, google_play_credentials_file, pac
     else:
         edit_resource.validate()
         logger.warning('Transaction not committed, since `commit` was `False`')
+
+
+def edit_resource_for_options(contact_google_play, service_account, credentials_file_name):
+    if contact_google_play:
+        # Create an httplib2.Http object to handle our HTTP requests an
+        # authorize it with the Credentials. Note that the first parameter,
+        # service_account_name, is the Email address created for the Service
+        # account. It must be the email address associated with the key that
+        # was created.
+        scope = 'https://www.googleapis.com/auth/androidpublisher'
+        credentials = ServiceAccountCredentials.from_p12_keyfile(
+            service_account,
+            credentials_file_name,
+            scopes=scope
+        )
+        http = httplib2.Http()
+        http = credentials.authorize(http)
+
+        service = build(serviceName='androidpublisher', version='v3', http=http,
+                        cache_discovery=False)
+
+        return service.edits()
+    else:
+        logger.warning('Not a single request to Google Play will be made, since `contact_google_play` was set')
+        edit_resource_mock = MagicMock()
+
+        edit_resource_mock.insert = lambda *args, **kwargs: _ExecuteDummy(
+            {'id': 'fake-transaction-id'})
+        edit_resource_mock.commit = lambda *args, **kwargs: _ExecuteDummy(None)
+
+        apks_mock = MagicMock()
+        apks_mock.upload = lambda *args, **kwargs: _ExecuteDummy(
+            {'versionCode': 'fake-version-code'})
+        edit_resource_mock.apks = lambda *args, **kwargs: apks_mock
+
+        update_mock = MagicMock()
+        update_mock.update = lambda *args, **kwargs: _ExecuteDummy('fake-update-response')
+        edit_resource_mock.tracks = lambda *args, **kwargs: update_mock
+        edit_resource_mock.listings = lambda *args, **kwargs: update_mock
+        edit_resource_mock.apklistings = lambda *args, **kwargs: update_mock
+        return edit_resource_mock

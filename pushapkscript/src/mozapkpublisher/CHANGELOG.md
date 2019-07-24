@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [upcoming]
 
 ### Changed
-* Separates read-only logic from logic that requires a transaction
+* Uses RAII to represent operations that require an "edit"
 
 ## [4.1.0] - 2019-07-10
 ### Removed

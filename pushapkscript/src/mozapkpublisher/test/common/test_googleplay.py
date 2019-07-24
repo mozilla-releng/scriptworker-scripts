@@ -12,8 +12,7 @@ from unittest.mock import MagicMock
 from mozapkpublisher.common import googleplay
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.common.googleplay import add_general_google_play_arguments, \
-    GooglePlayEdit, MockGooglePlayConnection, GooglePlayConnection, \
-    connection_for_options
+    GooglePlayEdit, edit_resource_for_options
 from mozapkpublisher.test import does_not_raise
 
 
@@ -30,19 +29,9 @@ def test_add_general_google_play_arguments():
     assert config.service_account == 'dummy@dummy'
 
 
-@patch.object(googleplay, 'MockGooglePlayConnection')
-def test_connection_for_options_contact(mock):
-    connection_for_options(False, '', MagicMock)
-    mock.assert_called_with()
-
-
-@patch.object(googleplay.ServiceAccountCredentials, 'from_p12_keyfile')
-@patch.object(googleplay, 'build')
-def test_google_play_connection(mock_build, _):
-    mock_service = MagicMock()
-    mock_service.edits.return_value = 'edit resource'
-    mock_build.return_value = mock_service
-    assert GooglePlayConnection.open('service_account', 'file').edit_resource == 'edit resource'
+def test_edit_resource_for_options_do_not_contact():
+    edit_resource = edit_resource_for_options(False, '', MagicMock)
+    assert isinstance(edit_resource, MagicMock)
 
 
 @pytest.fixture
@@ -55,24 +44,20 @@ def edit_resource_mock():
     return edit_resource
 
 
-@patch.object(googleplay, 'MockGooglePlayConnection')
-def test_google_play_edit_no_commit_transaction(google_play_connection_constructor):
-    connection = MockGooglePlayConnection()
+@patch.object(googleplay, 'edit_resource_for_options')
+def test_google_play_edit_no_commit_transaction(edit_resource_for_options_):
     mock_edits_resource = MagicMock()
-    connection.edit_resource = mock_edits_resource
-    google_play_connection_constructor.return_value = connection
+    edit_resource_for_options_.return_value = mock_edits_resource
     with googleplay.edit(False, None, None, 'package.name', commit=False) as _:
         pass
 
     mock_edits_resource.commit.assert_not_called()
 
 
-@patch.object(googleplay, 'MockGooglePlayConnection')
-def test_google_play_edit_commit_transaction(google_play_connection_constructor):
-    connection = MockGooglePlayConnection()
+@patch.object(googleplay, 'edit_resource_for_options')
+def test_google_play_edit_commit_transaction(edit_resource_for_options_):
     mock_edits_resource = MagicMock()
-    connection.edit_resource = mock_edits_resource
-    google_play_connection_constructor.return_value = connection
+    edit_resource_for_options_.return_value = mock_edits_resource
     with googleplay.edit(False, None, None, 'package.name', commit=True) as _:
         pass
 

@@ -17,9 +17,9 @@ DAY = 24 * 60 * 60
 logger = logging.getLogger(__name__)
 
 
-def check_rollout(google_play, days):
+def check_rollout(edit, days):
     """Check if package_name has a release on staged rollout for too long"""
-    track_status = google_play.get_track_status(track='production')
+    track_status = edit.get_track_status(track='production')
     releases = track_status['releases']
     for release in releases:
         if release['status'] == 'inProgress':
