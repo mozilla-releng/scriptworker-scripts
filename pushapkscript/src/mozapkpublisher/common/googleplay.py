@@ -146,7 +146,7 @@ class GooglePlayEdit:
 
 
 @contextmanager
-def edit(contact_google_play, service_account, credentials_file_name, package_name, *, commit):
+def edit(service_account, credentials_file_name, package_name, *, contact_google_play, commit):
     edit_resource = edit_resource_for_options(contact_google_play, service_account, credentials_file_name)
     edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
     google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
@@ -156,7 +156,6 @@ def edit(contact_google_play, service_account, credentials_file_name, package_na
         logger.info('Changes committed')
         logger.debug('edit_id "{}" for "{}" has been committed'.format(edit_id, package_name))
     else:
-        edit_resource.validate()
         logger.warning('Transaction not committed, since `commit` was `False`')
 
 

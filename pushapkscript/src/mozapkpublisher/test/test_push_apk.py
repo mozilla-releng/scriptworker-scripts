@@ -75,7 +75,7 @@ def set_up_mocks(monkeypatch_, google_play_edit_mock_):
         }
 
     @contextmanager
-    def fake_edit(_, __, ___, ____, *, commit):
+    def fake_edit(_, __, ___, *, contact_google_play, commit):
         yield google_play_edit_mock_
 
     monkeypatch_.setattr(googleplay, 'edit', fake_edit)

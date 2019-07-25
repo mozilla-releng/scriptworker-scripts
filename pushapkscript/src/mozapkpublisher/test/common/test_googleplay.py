@@ -48,7 +48,7 @@ def edit_resource_mock():
 def test_google_play_edit_no_commit_transaction(edit_resource_for_options_):
     mock_edits_resource = MagicMock()
     edit_resource_for_options_.return_value = mock_edits_resource
-    with googleplay.edit(False, None, None, 'package.name', commit=False) as _:
+    with googleplay.edit(None, None, 'package.name', contact_google_play=False, commit=False) as _:
         pass
 
     mock_edits_resource.commit.assert_not_called()
@@ -58,7 +58,7 @@ def test_google_play_edit_no_commit_transaction(edit_resource_for_options_):
 def test_google_play_edit_commit_transaction(edit_resource_for_options_):
     mock_edits_resource = MagicMock()
     edit_resource_for_options_.return_value = mock_edits_resource
-    with googleplay.edit(False, None, None, 'package.name', commit=True) as _:
+    with googleplay.edit(None, None, 'package.name', contact_google_play=False, commit=True) as _:
         pass
 
     mock_edits_resource.commit.assert_called_with(editId=ANY, packageName='package.name')

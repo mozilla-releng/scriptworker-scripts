@@ -41,8 +41,8 @@ def main():
                         type=int, default=7)
     config = parser.parse_args()
 
-    with googleplay.edit(True, config.service_account, config.google_play_credentials_file.name,
-                         'org.mozilla.firefox', commit=False) as edit:
+    with googleplay.edit(config.service_account, config.google_play_credentials_file.name,
+                         'org.mozilla.firefox', contact_google_play=True, commit=False) as edit:
         for (release, age) in check_rollout(edit, config.days):
             print('fennec {} is on staged rollout at {}% but it shipped {} days ago'.format(
                   release['name'], int(release['userFraction'] * 100), int(age / DAY)))
