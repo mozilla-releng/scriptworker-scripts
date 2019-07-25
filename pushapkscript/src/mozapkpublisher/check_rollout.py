@@ -8,17 +8,18 @@ import time
 import requests
 
 from argparse import ArgumentParser
-from mozapkpublisher.common.googleplay import EditService, add_general_google_play_arguments
 
+from mozapkpublisher.common import googleplay
+from mozapkpublisher.common.googleplay import add_general_google_play_arguments
 
 DAY = 24 * 60 * 60
 
 logger = logging.getLogger(__name__)
 
 
-def check_rollout(edit_service, days):
+def check_rollout(edit, days):
     """Check if package_name has a release on staged rollout for too long"""
-    track_status = edit_service.get_track_status(track='production')
+    track_status = edit.get_track_status(track='production')
     releases = track_status['releases']
     for release in releases:
         if release['status'] == 'inProgress':
@@ -40,14 +41,11 @@ def main():
                         type=int, default=7)
     config = parser.parse_args()
 
-    edit_service = EditService(
-        config.service_account,
-        config.google_play_credentials_file.name,
-        package_name='org.mozilla.firefox',
-    )
-    for (release, age) in check_rollout(edit_service, config.days):
-        print('fennec {} is on staged rollout at {}% but it shipped {} days ago'.format(
-              release['name'], int(release['userFraction'] * 100), int(age / DAY)))
+    with googleplay.edit(config.service_account, config.google_play_credentials_file.name,
+                         'org.mozilla.firefox', contact_google_play=True, commit=False) as edit:
+        for (release, age) in check_rollout(edit, config.days):
+            print('fennec {} is on staged rollout at {}% but it shipped {} days ago'.format(
+                  release['name'], int(release['userFraction'] * 100), int(age / DAY)))
 
 
 __name__ == '__main__' and main()

@@ -13,6 +13,8 @@
 """
 
 import argparse
+from contextlib import contextmanager
+
 import httplib2
 import json
 import logging
@@ -23,7 +25,7 @@ from googleapiclient.errors import HttpError
 # HACK: importing mock in production is useful for option `--do-not-contact-google-play`
 from unittest.mock import MagicMock
 
-from mozapkpublisher.common.exceptions import NoTransactionError, WrongArgumentGiven
+from mozapkpublisher.common.exceptions import WrongArgumentGiven
 
 logger = logging.getLogger(__name__)
 
@@ -41,57 +43,42 @@ without any valid credentials nor valid APKs. In fact, Google Play may error out
 --service-account and --credentials must still be provided (you can just fill them with random string and file).''')
 
 
-class EditService(object):
-    def __init__(self, service_account, credentials_file_path, package_name, commit=False, contact_google_play=True):
-        self._contact_google_play = contact_google_play
-        if self._contact_google_play:
-            general_service = _connect(service_account, credentials_file_path)
-            self._service = general_service.edits()
-        else:
-            self._service = _craft_google_play_service_mock()
-            logger.warning('`--do-not-contact-google-play` option was given. Not a single request to Google Play will be made!')
+class _ExecuteDummy:
+    def __init__(self, return_value):
+        self._return_value = return_value
 
+    def execute(self):
+        return self._return_value
+
+
+class GooglePlayEdit:
+    """Represents an "edit" to an app on the Google Play store
+
+    Create an instance by calling GooglePlayEdit.transaction(), instead of using the
+    constructor. This can optionally handle committing the transaction when the "with" block
+    ends.
+
+    E.g.: `with GooglePlayEdit.transaction() as google_play:`
+    """
+
+    def __init__(self, edit_resource, edit_id, package_name):
+        self._edit_resource = edit_resource
+        self._edit_id = edit_id
         self._package_name = package_name
-        self._commit = commit
-        self.start_new_transaction()
 
-    def start_new_transaction(self):
-        result = self._service.insert(body={}, packageName=self._package_name).execute()
-        self._edit_id = result['id']
-
-    def transaction_required(method):
-        def _transaction_required(*args, **kwargs):
-            edit_service = args[0]
-            if edit_service._edit_id is None:
-                raise NoTransactionError(edit_service._package_name)
-
-            return method(*args, **kwargs)
-        return _transaction_required
-
-    @transaction_required
-    def commit_transaction(self):
-        if self._commit:
-            self._service.commit(editId=self._edit_id, packageName=self._package_name).execute()
-            logger.info('Changes committed')
-            logger.debug('edit_id "{}" for package "{}" has been committed'.format(self._edit_id, self._package_name))
-        else:
-            logger.warning('`commit` option was not given. Transaction not committed.')
-
-        self._edit_id = None
-
-    @transaction_required
     def get_track_status(self, track):
-        response = self._service.tracks().get(
-            editId=self._edit_id, track=track, packageName=self._package_name
+        response = self._edit_resource.tracks().get(
+            editId=self._edit_id,
+            track=track,
+            packageName=self._package_name
         ).execute()
-        logger.debug(u'Track "{}" has status: {}'.format(track, response))
+        logger.debug('Track "{}" has status: {}'.format(track, response))
         return response
 
-    @transaction_required
     def upload_apk(self, apk_path):
         logger.info('Uploading "{}" ...'.format(apk_path))
         try:
-            response = self._service.apks().upload(
+            response = self._edit_resource.apks().upload(
                 editId=self._edit_id,
                 packageName=self._package_name,
                 media_body=apk_path
@@ -103,19 +90,17 @@ class EditService(object):
                 # XXX This is really how data is returned by the googleapiclient.
                 error_content = json.loads(e.content)
                 errors = error_content['error']['errors']
-                if (
-                    len(errors) == 1 and
-                    errors[0]['reason'] in (
-                        'apkUpgradeVersionConflict', 'apkNotificationMessageKeyUpgradeVersionConflict'
-                    )
-                ):
+                if (len(errors) == 1 and errors[0]['reason'] in (
+                        'apkUpgradeVersionConflict',
+                        'apkNotificationMessageKeyUpgradeVersionConflict'
+                )):
                     logger.warning(
-                        'APK "{}" has already been uploaded on Google Play. Skipping...'.format(apk_path)
+                        'APK "{}" has already been uploaded on Google Play. Skipping...'.format(
+                            apk_path)
                     )
                     return
             raise
 
-    @transaction_required
     def update_track(self, track, version_codes, rollout_percentage=None):
         body = {
             u'releases': [{
@@ -125,32 +110,32 @@ class EditService(object):
         }
         if rollout_percentage is not None:
             if rollout_percentage < 0 or rollout_percentage > 100:
-                raise WrongArgumentGiven('rollout percentage must be between 0 and 100. Value given: {}'.format(rollout_percentage))
+                raise WrongArgumentGiven(
+                    'rollout percentage must be between 0 and 100. Value given: {}'.format(
+                        rollout_percentage))
 
             body[u'userFraction'] = rollout_percentage / 100.0  # Ensure float in Python 2
 
-        response = self._service.tracks().update(
+        response = self._edit_resource.tracks().update(
             editId=self._edit_id, track=track, packageName=self._package_name, body=body
         ).execute()
         logger.info('Track "{}" updated with: {}'.format(track, body))
         logger.debug('Track update response: {}'.format(response))
 
-    @transaction_required
     def update_listings(self, language, title, full_description, short_description):
         body = {
             'fullDescription': full_description,
             'shortDescription': short_description,
             'title': title,
         }
-        response = self._service.listings().update(
+        response = self._edit_resource.listings().update(
             editId=self._edit_id, packageName=self._package_name, language=language, body=body
         ).execute()
         logger.info(u'Listing for language "{}" has been updated with: {}'.format(language, body))
         logger.debug(u'Listing response: {}'.format(response))
 
-    @transaction_required
     def update_whats_new(self, language, apk_version_code, whats_new):
-        response = self._service.apklistings().update(
+        response = self._edit_resource.apklistings().update(
             editId=self._edit_id, packageName=self._package_name, language=language,
             apkVersionCode=apk_version_code, body={'recentChanges': whats_new}
         ).execute()
@@ -160,47 +145,56 @@ class EditService(object):
         logger.debug(u'Apk listing response: {}'.format(response))
 
 
-def _craft_google_play_service_mock():
-    edit_service_mock = MagicMock()
-
-    edit_service_mock.insert = lambda *args, **kwargs: _ExecuteDummy({'id': 'fake-transaction-id'})
-    edit_service_mock.commit = lambda *args, **kwargs: _ExecuteDummy(None)
-
-    apks_mock = MagicMock()
-    apks_mock.upload = lambda *args, **kwargs: _ExecuteDummy({'versionCode': 'fake-version-code'})
-    edit_service_mock.apks = lambda *args, **kwargs: apks_mock
-
-    update_mock = MagicMock()
-    update_mock.update = lambda *args, **kwargs: _ExecuteDummy('fake-update-response')
-    edit_service_mock.tracks = lambda *args, **kwargs: update_mock
-    edit_service_mock.listings = lambda *args, **kwargs: update_mock
-    edit_service_mock.apklistings = lambda *args, **kwargs: update_mock
-
-    return edit_service_mock
+@contextmanager
+def edit(service_account, credentials_file_name, package_name, *, contact_google_play, commit):
+    edit_resource = edit_resource_for_options(contact_google_play, service_account, credentials_file_name)
+    edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
+    google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
+    yield google_play
+    if commit:
+        edit_resource.commit(editId=edit_id, packageName=package_name)
+        logger.info('Changes committed')
+        logger.debug('edit_id "{}" for "{}" has been committed'.format(edit_id, package_name))
+    else:
+        logger.warning('Transaction not committed, since `commit` was `False`')
 
 
-class _ExecuteDummy():
-    def __init__(self, return_value):
-        self._return_value = return_value
+def edit_resource_for_options(contact_google_play, service_account, credentials_file_name):
+    if contact_google_play:
+        # Create an httplib2.Http object to handle our HTTP requests an
+        # authorize it with the Credentials. Note that the first parameter,
+        # service_account_name, is the Email address created for the Service
+        # account. It must be the email address associated with the key that
+        # was created.
+        scope = 'https://www.googleapis.com/auth/androidpublisher'
+        credentials = ServiceAccountCredentials.from_p12_keyfile(
+            service_account,
+            credentials_file_name,
+            scopes=scope
+        )
+        http = httplib2.Http()
+        http = credentials.authorize(http)
 
-    def execute(self):
-        return self._return_value
+        service = build(serviceName='androidpublisher', version='v3', http=http,
+                        cache_discovery=False)
 
+        return service.edits()
+    else:
+        logger.warning('Not a single request to Google Play will be made, since `contact_google_play` was set')
+        edit_resource_mock = MagicMock()
 
-def _connect(service_account, credentials_file_path):
-    """ Connect to the google play interface
-    """
+        edit_resource_mock.insert = lambda *args, **kwargs: _ExecuteDummy(
+            {'id': 'fake-transaction-id'})
+        edit_resource_mock.commit = lambda *args, **kwargs: _ExecuteDummy(None)
 
-    # Create an httplib2.Http object to handle our HTTP requests an
-    # authorize it with the Credentials. Note that the first parameter,
-    # service_account_name, is the Email address created for the Service
-    # account. It must be the email address associated with the key that
-    # was created.
-    scope = 'https://www.googleapis.com/auth/androidpublisher'
-    credentials = ServiceAccountCredentials.from_p12_keyfile(service_account, credentials_file_path, scopes=scope)
-    http = httplib2.Http()
-    http = credentials.authorize(http)
+        apks_mock = MagicMock()
+        apks_mock.upload = lambda *args, **kwargs: _ExecuteDummy(
+            {'versionCode': 'fake-version-code'})
+        edit_resource_mock.apks = lambda *args, **kwargs: apks_mock
 
-    service = build(serviceName='androidpublisher', version='v3', http=http, cache_discovery=False)
-
-    return service
+        update_mock = MagicMock()
+        update_mock.update = lambda *args, **kwargs: _ExecuteDummy('fake-update-response')
+        edit_resource_mock.tracks = lambda *args, **kwargs: update_mock
+        edit_resource_mock.listings = lambda *args, **kwargs: update_mock
+        edit_resource_mock.apklistings = lambda *args, **kwargs: update_mock
+        return edit_resource_mock

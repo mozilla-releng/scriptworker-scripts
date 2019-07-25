@@ -21,13 +21,6 @@ class CheckSumMismatch(LoggedError):
         )
 
 
-class NoTransactionError(LoggedError):
-    def __init__(self, package_name):
-        super(NoTransactionError, self).__init__(
-            'Transaction has not been started for package "{}"'.format(package_name)
-        )
-
-
 class NotMultiLocaleApk(LoggedError):
     def __init__(self, apk_path, unique_locales):
         super(NotMultiLocaleApk, self).__init__(

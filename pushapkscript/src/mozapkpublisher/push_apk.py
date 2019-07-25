@@ -65,40 +65,14 @@ def push_apk(
     # Each distinct product must be uploaded in different Google Play transaction, so we split them
     # by package name here.
     split_apk_metadata = _split_apk_metadata_per_package_name(apks_metadata_per_paths)
-
     for (package_name, apks_metadata) in split_apk_metadata.items():
-        _upload_apks(
-            service_account,
-            google_play_credentials_file,
-            commit,
-            contact_google_play,
-            apks_metadata,
-            package_name,
-            track,
-            rollout_percentage,
-        )
+        with googleplay.edit(service_account, google_play_credentials_file.name, package_name,
+                             contact_google_play=contact_google_play, commit=commit) as edit:
+            for path, metadata in apks_metadata_per_paths.items():
+                edit.upload_apk(path)
 
-
-def _upload_apks(
-    service_account,
-    google_play_credentials_file,
-    commit,
-    contact_google_play,
-    apks_metadata_per_paths,
-    package_name,
-    track,
-    rollout_percentage,
-):
-    edit_service = googleplay.EditService(
-        service_account, google_play_credentials_file.name, package_name, commit, contact_google_play
-    )
-
-    for path, metadata in apks_metadata_per_paths.items():
-        edit_service.upload_apk(path)
-
-    all_version_codes = _get_ordered_version_codes(apks_metadata_per_paths)
-    edit_service.update_track(track, all_version_codes, rollout_percentage)
-    edit_service.commit_transaction()
+            all_version_codes = _get_ordered_version_codes(apks_metadata_per_paths)
+            edit.update_track(track, all_version_codes, rollout_percentage)
 
 
 def _split_apk_metadata_per_package_name(apks_metadata_per_paths):

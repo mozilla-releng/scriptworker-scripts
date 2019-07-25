@@ -11,18 +11,16 @@ logger = logging.getLogger(__name__)
 
 def update_apk_description(package_name, force_locale, commit, service_account, google_play_credentials_file,
                            contact_google_play):
-    edit_service = googleplay.EditService(service_account, google_play_credentials_file.name, package_name, commit,
-                                          contact_google_play)
-
-    moz_locales = [force_locale] if force_locale else None
-    l10n_strings = store_l10n.get_translations_per_google_play_locale_code(package_name, moz_locales)
-    create_or_update_listings(edit_service, l10n_strings)
-    edit_service.commit_transaction()
+    with googleplay.edit(service_account, google_play_credentials_file.name, package_name,
+                         contact_google_play=contact_google_play, commit=commit) as edit:
+        moz_locales = [force_locale] if force_locale else None
+        l10n_strings = store_l10n.get_translations_per_google_play_locale_code(package_name, moz_locales)
+        create_or_update_listings(edit, l10n_strings)
 
 
-def create_or_update_listings(edit_service, l10n_strings):
+def create_or_update_listings(edit, l10n_strings):
     for google_play_locale_code, translation in l10n_strings.items():
-        edit_service.update_listings(
+        edit.update_listings(
             google_play_locale_code,
             full_description=translation['long_desc'],
             short_description=translation['short_desc'],
