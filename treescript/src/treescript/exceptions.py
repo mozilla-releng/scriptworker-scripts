@@ -1,12 +1,12 @@
 """Treescript exceptions."""
-from scriptworker_client.exceptions import TaskError, TaskVerificationError
+import scriptworker_client.exceptions as sce
 
 
-class TaskVerificationError(TaskVerificationError):
+class TaskVerificationError(sce.TaskVerificationError):
     """Something went wrong during task verification."""
 
 
-class TreeScriptError(TaskError):
+class TreeScriptError(sce.TaskError):
     """Something went wrong with treescript."""
 
 
