@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Scriptworker-client exceptions."""
 
+import builtins
 from scriptworker_client.constants import STATUSES
 
 
@@ -39,7 +40,7 @@ class TaskError(ClientError):
     """Scriptworker-client base task error."""
 
 
-class TimeoutError(ClientError, TimeoutError):
+class TimeoutError(ClientError, builtins.TimeoutError):
     """Scriptworker-client timeout error."""
 
 
