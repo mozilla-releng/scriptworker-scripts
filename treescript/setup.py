@@ -8,7 +8,7 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "version.txt"
 with open(
     os.path.join(os.path.abspath(os.path.dirname(__file__)), "requirements", "base.in")
 ) as f:
-    install_requires = f.readlines()
+    install_requires = ["scriptworker_client"] + f.readlines()
 
 setup(
     name="treescript",
