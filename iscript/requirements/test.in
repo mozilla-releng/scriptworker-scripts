@@ -6,6 +6,7 @@ pyparsing==2.4.0
 mypy
 tox
 coverage
+python-coveralls
 flake8
 flake8_docstrings
 mock
