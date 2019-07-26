@@ -583,7 +583,7 @@ def _should_sign_windows(filename):
     ]
     ext = os.path.splitext(filename)[1]
     b = os.path.basename(filename)
-    if ext in ('.dll', '.exe', '.msi') and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
+    if ext in ('.dll', '.exe', '.msi', '.bin') and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
         return True
     return False
 
