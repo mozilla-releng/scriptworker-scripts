@@ -67,7 +67,14 @@ _BOUNCER_PATH_REGEXES_PER_PRODUCT_MSI = {
                                             r'(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$'),
 }
 
-BOUNCER_PATH_REGEXES_PER_PRODUCT = [_BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT, _BOUNCER_PATH_REGEXES_PER_PRODUCT_MSI]
+_BOUNCER_PATH_REGEXES_PER_PRODUCT_FENNEC = {
+    'fennec-nightly-latest': (r'^(/mobile/nightly/latest-mozilla-esr\d+-(?:android-api-16|android-x86)/fennec-\d+\.\d+a1\.:lang\.(?:android-arm|android-i386)\.apk)$')
+}
+
+
+BOUNCER_PATH_REGEXES_PER_PRODUCT = [_BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT,
+                                    _BOUNCER_PATH_REGEXES_PER_PRODUCT_MSI,
+                                    _BOUNCER_PATH_REGEXES_PER_PRODUCT_FENNEC]
 
 # XXX A list of tuple is used because we care about the order:
 # the firefox regex also matches the firefox-rc regex.
@@ -101,4 +108,4 @@ GO_BOUNCER_URL_TMPL = {
         'https://bouncer-bouncer-releng.stage.mozaws.net/?product={}&print=yes',
 }
 
-NIGHTLY_VERSION_REGEX = r'\d+\.0a1'
+NIGHTLY_VERSION_REGEX = r'\d+\.\d+a1'

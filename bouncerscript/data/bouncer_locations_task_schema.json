@@ -32,9 +32,13 @@
                 "version": {
                     "type": "string",
                     "minItems": 1
+                },
+                "product": {
+                    "type": "string",
+                    "minItems": 1
                 }
             },
-            "required": ["bouncer_products", "version"],
+            "required": ["bouncer_products", "version", "product"],
             "additionalProperties": false
         }
     },

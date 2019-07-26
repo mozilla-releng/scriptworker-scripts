@@ -223,6 +223,7 @@ async def test_bouncer_locations(locations_context, mocker, info, updated_info,
             return updated_info
 
     locations_context.task["payload"]["bouncer_products"] = ["firefox-nightly-latest"]
+    locations_context.task["payload"]["product"] = "firefox"
     mocker.patch.object(bscript, 'check_product_names_match_nightly_locations', new=noop_sync)
     mocker.patch.object(bscript, 'check_version_matches_nightly_regex', new=noop_sync)
     mocker.patch.object(bscript, 'does_product_exist', new=return_false_async)

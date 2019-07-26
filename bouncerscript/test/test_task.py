@@ -753,6 +753,23 @@ async def test_check_aliases_match(aliases_context, mocker, entries, provided, r
     [
         "firefox-latest",
     ], True
+), (
+    [
+        "fennec-nightly-latest",
+    ], False
+), (
+    [
+        "fennec-nightly-latest",
+        "firefox-latest",
+    ], True
+), (
+    [
+        "fennec-nightly-latest",
+        "firefox-nightly-latest",
+        "firefox-nightly-latest-ssl",
+        "firefox-nightly-latest-l10n",
+        "firefox-nightly-latest-l10n-ssl"
+    ], True
 ))))
 def test_check_product_names_match_nightly_locations(locations_context, products, raises):
     locations_context.task["payload"]["bouncer_products"] = products
@@ -764,37 +781,115 @@ def test_check_product_names_match_nightly_locations(locations_context, products
 
 
 # check_version_matches_nightly_regex {{{1
-@pytest.mark.parametrize("version,raises", (((
-    "63.0a1",
+@pytest.mark.parametrize("version,product,raises", (((
+    "63.0a1", "firefox",
     (False, None)
 ), (
-    "63.0b1",
+    "63.0b1", "firefox",
     (True, ScriptWorkerTaskException)
 ), (
-    "63.0.1a1",
+    "63.0.1a1", "firefox",
     (True, PatternNotMatchedError)
 ), (
-    "63.0.1esr",
+    "63.0.1esr", "firefox",
     (True, ScriptWorkerTaskException)
 ), (
-    "63.0.1",
+    "63.0.1", "firefox",
     (True, ScriptWorkerTaskException)
 ), (
-    "63.0",
+    "63.0", "firefox",
     (True, ScriptWorkerTaskException)
 ), (
-    "ZFJSh389fjSMN<@<Ngv",
+    "ZFJSh389fjSMN<@<Ngv", "firefox",
     (True, PatternNotMatchedError)
 ), (
-    "63",
+    "63", "firefox",
+    (True, PatternNotMatchedError)
+), (
+    "68.1a1", "fennec",
+    (False, None)
+), (
+    "68.0b3", "fennec",
+    (True, ScriptWorkerTaskException)
+), (
+    "68.0b17", "fennec",
+    (True, ScriptWorkerTaskException)
+), (
+    "68.0", "fennec",
+    (True, ScriptWorkerTaskException)
+), (
+    "68.0.1", "fennec",
+    (True, ScriptWorkerTaskException)
+), (
+    "68.1b2", "fennec",
+    (True, ScriptWorkerTaskException)
+), (
+    "68.1.0", "fennec",
+    (True, ScriptWorkerTaskException)
+), (
+    "68.1b3", "fennec",
+    (True, ScriptWorkerTaskException)
+), (
+    "68.1.1", "fennec",
+    (True, ScriptWorkerTaskException)
+), (
+    "68.2a1", "fennec",
+    (False, None)
+), (
+    "68.2b1", "fennec",
+    (True, ScriptWorkerTaskException)
+), (
+    "68.0.1a1", "fennec",
+    (True, PatternNotMatchedError)
+), (
+    "68.1a1b1", "fennec",
+    (True, PatternNotMatchedError)
+), (
+    "68.0.1b1", "fennec",
+    (True, PatternNotMatchedError)
+), (
+    "68.1.0a1", "fennec",
+    (True, PatternNotMatchedError)
+), (
+    "68.1.0b1", "fennec",
+    (True, PatternNotMatchedError)
+), (
+    "68.1.1a1", "fennec",
+    (True, PatternNotMatchedError)
+), (
+    "68.1.1b2", "fennec",
+    (True, PatternNotMatchedError)
+), (
+    "69.0a1", "fennec",
+    (True, PatternNotMatchedError)
+), (
+    "69.0b3", "fennec",
+    (True, PatternNotMatchedError)
+), (
+    "69.0", "fennec",
+    (True, PatternNotMatchedError)
+), (
+    "69.0.1", "fennec",
+    (True, PatternNotMatchedError)
+), (
+    "63.0.1", "fennec",
+    (True, ScriptWorkerTaskException)
+), (
+    "63.0", "fennec",
+    (True, ScriptWorkerTaskException)
+), (
+    "ZFJSh389fjSMN<@<Ngv", "fennec",
+    (True, PatternNotMatchedError)
+), (
+    "63", "fennec",
     (True, PatternNotMatchedError)
 ))))
-def test_check_version_matches_nightly_regex(version, raises):
+def test_check_version_matches_nightly_regex(version, product, raises):
     if raises[0]:
         with pytest.raises(raises[1]):
-            check_version_matches_nightly_regex(version)
+            check_version_matches_nightly_regex(version, product)
     else:
-        check_version_matches_nightly_regex(version)
+        check_version_matches_nightly_regex(version, product)
 
 
 # check_location_path_matches_destination {{{1
@@ -1010,6 +1105,30 @@ def test_check_version_matches_nightly_regex(version, raises):
     'firefox-nightly-latest-l10n',
     '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0.1.:lang.win64.installer.exe',
     True
+), (
+    'fennec-nightly-latest',
+    '/mobile/nightly/latest-mozilla-esr68-android-api-16/fennec-68.1a1.:lang.android-arm.apk',
+    False
+), (
+    'fennec-nightly-latest',
+    '/mobile/nightly/latest-mozilla-esr68-android-api-16/fennec-68.1a1.:lang.android-arm.apk',
+    False
+), (
+    'fennec-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0.1.:lang.win64.installer.exe',
+    True
+), (
+    'fennec-nightly-latest',
+    '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0.1.:lang.win64.installer.exe',
+    True
+), (
+    'fennec-nightly-latest',
+    '/mobile/nightly/latest-mozilla-central-l10n/android-api-16/fennec-68.1a1.:lang.android-arm.apk',
+    True
+), (
+    'fennec-nightly-latest',
+    '/mobile/nightly/latest-mozilla-esr68-android-api-16/fennec-68.1b1.:lang.android-arm.apk',
+    True
 ))))
 def test_check_location_path_matches_destination(product_name, path, raises):
     if raises:
@@ -1020,26 +1139,65 @@ def test_check_location_path_matches_destination(product_name, path, raises):
 
 
 # check_versions_are_successive {{{1
-@pytest.mark.parametrize("current_version,payload_version,raises", (((
+@pytest.mark.parametrize("current_version,payload_version,product,raises", (((
     '63.0a1',
     '64.0a1',
+    'firefox',
     False
 ), (
     '63.0a1',
     '63.0a1',
+    'firefox',
     True
 ), (
     '63.0a1',
     '65.0a1',
+    'firefox',
     True
 ), (
     '64.0a1',
     '63.0a1',
+    'firefox',
+    True
+), (
+    '68.1a1',
+    '68.2a1',
+    'fennec',
+    False,
+), (
+    '68.7a1',
+    '68.8a1',
+    'fennec',
+    False,
+), (
+    '68.7a1',
+    '68.8a1',
+    'fennec',
+    False
+), (
+    '68.1a1',
+    '68.1a1',
+    'fennec',
+    True
+), (
+    '68.1a1',
+    '68.3a1',
+    'fennec',
+    True
+), (
+    '68.2a1',
+    '68.1a1',
+    'fennec',
+    True
+), (
+    '68.2a1',
+    '68.1a1',
+    'VNSJKSGH#(*#HG#LG@()',
     True
 ))))
-def test_check_versions_are_successive(current_version, payload_version, raises):
+def test_check_versions_are_successive(current_version, payload_version, product, raises):
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
-            check_versions_are_successive(current_version, payload_version)
+            check_versions_are_successive(current_version, payload_version, product)
     else:
-        check_versions_are_successive(current_version, payload_version)
+        check_versions_are_successive(current_version, payload_version, product)

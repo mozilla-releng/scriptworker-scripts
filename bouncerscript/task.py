@@ -6,13 +6,19 @@ from scriptworker.exceptions import (
     ScriptWorkerTaskException, TaskVerificationError
 )
 from scriptworker.utils import retry_request
-from mozilla_version.gecko import GeckoVersion
+from mozilla_version.gecko import FirefoxVersion, FennecVersion
 from bouncerscript.constants import (
     ALIASES_REGEXES, PRODUCT_TO_DESTINATIONS_REGEXES, PRODUCT_TO_PRODUCT_ENTRY,
     GO_BOUNCER_URL_TMPL, BOUNCER_PATH_REGEXES_PER_PRODUCT, PARTNER_ALIASES_REGEX,
 )
 
 log = logging.getLogger(__name__)
+
+
+version_map = {
+    'firefox': FirefoxVersion,
+    'fennec': FennecVersion,
+}
 
 
 def get_task_server(task, script_config):
@@ -140,21 +146,44 @@ def check_location_path_matches_destination(product_name, path):
         raise ScriptWorkerTaskException(err_msg)
 
 
-def check_versions_are_successive(current_version, payload_version):
-    current_bouncer_version = GeckoVersion.parse(current_version)
-    candidate_version = GeckoVersion.parse(payload_version)
+def check_versions_are_successive(current_version, payload_version, product):
+    """Function to check if the provided version in the payload and the existing
+    one in bouncer are successive as valid versions."""
 
-    if current_bouncer_version.major_number == candidate_version.major_number:
-        err_msg = ("At this point, in-tree version can't be equal to bouncer "
-                   "counterpart".format(payload_version, current_version))
-        raise ScriptWorkerTaskException(err_msg)
-    elif current_bouncer_version.major_number > candidate_version.major_number:
-        err_msg = ("In-tree version {} can't be less than current bouncer "
-                   "counterpart".format(payload_version, current_version))
-        raise ScriptWorkerTaskException(err_msg)
-    elif (candidate_version.major_number - current_bouncer_version.major_number) > 1:
-        err_msg = ("In-tree version {} can't be greater than current bouncer "
-                   "by more than 1 digit".format(payload_version, current_version))
+    def _successive_sanity(current_identifier, candidate_identifier):
+        if current_identifier == candidate_identifier:
+            err_msg = ("Identifiers for {} and {} can't be equal at this point "
+                       "in the code".format(payload_version, current_version))
+            raise ScriptWorkerTaskException(err_msg)
+        elif current_identifier > candidate_identifier:
+            err_msg = ("In-tree version {} can't be less than current bouncer "
+                       "counterpart".format(payload_version, current_version))
+            raise ScriptWorkerTaskException(err_msg)
+        elif (candidate_identifier - current_identifier) > 1:
+            err_msg = ("In-tree version {} can't be greater than current bouncer "
+                       "by more than 1 digit".format(payload_version, current_version))
+            raise ScriptWorkerTaskException(err_msg)
+
+    # XXX: for Firefox central nightlies we need to handle the major number
+    # while for Fennec nightlies on ESR we need to handle minor_number
+    if product == "firefox":
+        current_bouncer_version = FirefoxVersion.parse(current_version)
+        candidate_version = FirefoxVersion.parse(payload_version)
+
+        _successive_sanity(current_bouncer_version.major_number, candidate_version.major_number)
+    elif product == "fennec":
+        # XXX: this will fail for the next ESR cut, on 75, since that will be a
+        # major_number bump, but also a minor_number. But cutting ESR releases
+        # can vary over time (could be 7 releases or 8 like ESR8, etc);
+        # It's unrecommended to hardcode those variable window times here
+        # in order to ensure the check; So for now we leave this code smell here.
+        # Real fix is to centralize this operation and implement it in mozilla-version directly
+        current_bouncer_version = FennecVersion.parse(current_version)
+        candidate_version = FennecVersion.parse(payload_version)
+
+        _successive_sanity(current_bouncer_version.minor_number, candidate_version.minor_number)
+    else:
+        err_msg = "Unknown product {} in the payload".format(product)
         raise ScriptWorkerTaskException(err_msg)
 
     log.info("Versions are successive. All good")
@@ -200,7 +229,7 @@ async def check_aliases_match(context):
             raise ScriptWorkerTaskException("Alias {} and product {} differ!".format(alias, product_name))
 
 
-def check_version_matches_nightly_regex(version):
-    version = GeckoVersion.parse(version)
+def check_version_matches_nightly_regex(version, product):
+    version = version_map[product].parse(version)
     if not version.is_nightly:
         raise ScriptWorkerTaskException("Version {} is valid but does not match a nightly one".format(version))

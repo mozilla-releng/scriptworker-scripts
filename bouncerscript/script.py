@@ -87,20 +87,21 @@ async def bouncer_aliases(context):
 async def bouncer_locations(context):
     """Implement the bouncer locations behaviour"""
     log.info("Preparing to update locations information in bouncer")
-    products = context.task["payload"]["bouncer_products"]
+    bouncer_products = context.task["payload"]["bouncer_products"]
 
-    log.info("Sanity check products before updating ...")
+    log.info("Sanity check bouncer products before updating ...")
     check_product_names_match_nightly_locations(context)
     log.info("All bouncer products look good before updating them!")
 
     log.info("Sanity checking the version math makes sense ...")
-    check_version_matches_nightly_regex(context.task["payload"]["version"])
+    product = context.task["payload"]["product"]
+    check_version_matches_nightly_regex(context.task["payload"]["version"], product)
     log.info("In-tree version from payload looks good!")
 
     did_bump = False
     payload_version = context.task["payload"]["version"]
 
-    for product_name in products:
+    for product_name in bouncer_products:
         log.info("Sanity check to ensure product exists...")
         if not await does_product_exist(context, product_name):
             err_msg = "Cannot find product {} in bouncer".format(product_name)
@@ -111,22 +112,22 @@ async def bouncer_locations(context):
             platform, path = entry['os'], entry['path']
             log.info("Sanity check product {} platform {}, path {} before bumping"
                      " its version ...".format(product_name, platform, path))
-            check_location_path_matches_destination(product_name, path)
 
+            check_location_path_matches_destination(product_name, path)
             current_version = get_nightly_version(product_name, path)
             if current_version == payload_version:
                 log.info("No-op. Nightly version is the same")
                 continue
 
-            check_versions_are_successive(current_version, payload_version)
+            check_versions_are_successive(current_version, payload_version, product)
             bumped_path = get_version_bumped_path(path, current_version, payload_version)
             log.info("Modifying corresponding path with bumped one {}".format(bumped_path))
             await api_modify_location(context, product_name, platform, bumped_path)
             did_bump = True
 
     if did_bump:
-        log.info("Sanity check to ensure all products have been successfully bumped...")
-        for product_name in products:
+        log.info("Sanity check to ensure all bouncer products have been successfully bumped...")
+        for product_name in bouncer_products:
             locations_info = await get_locations_info(context, product_name)
             for entry in locations_info:
                 platform, path = entry['os'], entry['path']
@@ -139,7 +140,7 @@ async def bouncer_locations(context):
                     err_msg = ("Couldn't find in-tree version {} in the updated "
                                "bouncer path {}".format(payload_version, path))
                     raise ScriptWorkerTaskException(err_msg)
-        log.info("All bumped products look good!")
+        log.info("All bumped bouncer products look good!")
 
 
 action_map = {

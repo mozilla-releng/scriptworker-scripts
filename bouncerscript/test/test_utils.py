@@ -633,6 +633,31 @@ async def test_get_locations_info(context, mocker, product, response, expected,
     '/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0b1.:lang.win64.installer.exe',
     '',
     True
+), (
+    'fennec-nightly-latest',
+    '/mobile/nightly/latest-mozilla-esr68-android-api-16/fennec-68.1a1.:lang.android-arm.apk',
+    '68.1a1',
+    False
+), (
+    'fennec-nightly-latest',
+    '/mobile/nightly/latest-mozilla-esr68-android-x86/fennec-68.1a1.:lang.android-i386.apk',
+    '68.1a1',
+    False
+), (
+    'fennec-nightly-latest',
+    '/mobile/nightly/latest-mozilla-esr68-android-x86/fennec-68.1b1.:lang.android-i386.apk',
+    '',
+    True
+), (
+    'fennec-nightly-latest',
+    '/mobile/nightly/latest-mozilla-esr68-android-x86/fennec-68.1.0.:lang.android-i386.apk',
+    '',
+    True
+), (
+    'fennec-nightly-latest',
+    '/mobile/nightly/latest-mozilla-esr68-android-x86/fennec-68a1.:lang.android-i386.apk',
+    '',
+    True
 )))
 def test_get_nightly_version(product, path, expected, raises):
     if raises:
@@ -653,6 +678,16 @@ def test_get_nightly_version(product, path, expected, raises):
     '63.0a1',
     '64.0b1',
     '/firefox/nightly/latest-mozilla-central-l10n/firefox-64.0b1.:lang.linux-i686.tar.bz2',
+), (
+    '/mobile/nightly/latest-mozilla-esr68-android-x86/fennec-68.1a1.:lang.android-i386.apk',
+    '68.1a1',
+    '68.2a1',
+    '/mobile/nightly/latest-mozilla-esr68-android-x86/fennec-68.2a1.:lang.android-i386.apk',
+), (
+    '/mobile/nightly/latest-mozilla-esr68-android-api-16/fennec-68.1a1.:lang.android-arm.apk',
+    '68.1a1',
+    '68.2a1',
+    '/mobile/nightly/latest-mozilla-esr68-android-api-16/fennec-68.2a1.:lang.android-arm.apk',
 )))
 def test_get_version_bumped_path(path, current_version, next_version, expected):
     assert get_version_bumped_path(path, current_version, next_version) == expected
