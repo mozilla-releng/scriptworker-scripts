@@ -363,9 +363,7 @@ async def test_log_outgoing(config, task, mocker, output):
     assert "repo_path" in called_args[0][1]
     assert is_slice_in_list(("out", "-vp"), called_args[0][0])
     assert is_slice_in_list(("-r", "."), called_args[0][0])
-    assert is_slice_in_list(
-        ("https://hg.mozilla.org/treescript-test",), called_args[0][0]
-    )
+    assert "https://hg.mozilla.org/treescript-test" in called_args[0][0]
     if output:
         with open(
             os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff"), "r"
@@ -428,14 +426,17 @@ async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
 @pytest.mark.asyncio
 async def test_push_fail(config, task, mocker, tmpdir):
     """Raise a PushError in run_hg_command and verify we clean up."""
+    called_args = []
 
     async def blow_up(*args, **kwargs):
         raise PushError("x")
 
     async def clean_up(*args):
         assert args == (config, task, tmpdir)
+        called_args.append(args)
 
     mocker.patch.object(mercurial, "run_hg_command", new=blow_up)
     mocker.patch.object(mercurial, "strip_outgoing", new=clean_up)
     with pytest.raises(PushError):
         await mercurial.push(config, task, tmpdir)
+    assert len(called_args) == 1
