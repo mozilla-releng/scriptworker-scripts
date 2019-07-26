@@ -7,17 +7,47 @@ matrix:
       dist: xenial
       env:
         - TOXENV=py36
+      script:
+        - tox -c iscript/tox.ini
       sudo: true
     - python: 3.7
       dist: xenial
       env:
-        - TOXENV=py37
+        - TOXENV=py37,mypy
+      script:
+        - tox -c iscript/tox.ini
+      sudo: true
+    - python: 3.6
+      dist: xenial
+      env:
+        - TOXENV=py36
+      script:
+        - tox -c treescript/tox.ini
+      sudo: true
+    - python: 3.7
+      dist: xenial
+      env:
+        - TOXENV=py37,mypy
+      script:
+        - tox -c treescript/tox.ini
+      sudo: true
+    - python: 3.6
+      dist: xenial
+      env:
+        - TOXENV=py36
+      script:
+        - tox -c scriptworker_client/tox.ini
+      sudo: true
+    - python: 3.7
+      dist: xenial
+      env:
+        - TOXENV=py37,mypy
+      script:
+        - tox -c scriptworker_client/tox.ini -e py37,mypy
       sudo: true
 
 install:
     - travis_retry pip install tox
-script:
-    - tox
 after_script:
     - tox -e coveralls
 
