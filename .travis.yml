@@ -35,7 +35,7 @@ matrix:
       sudo: true
 
 install:
-    - travis_retry pip install tox
+    - travis_retry pip install pyparsing==2.4.0 tox
 script:
     - tox
 
