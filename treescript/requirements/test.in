@@ -13,3 +13,4 @@ pytest-cov
 pytest-mock
 tox
 virtualenv
+mypy
