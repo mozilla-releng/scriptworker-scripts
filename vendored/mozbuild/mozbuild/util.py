@@ -9,6 +9,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import argparse
 import collections
+import collections.abc
 import ctypes
 import difflib
 import errno
@@ -22,10 +23,8 @@ import stat
 import sys
 import time
 
-from collections import (
-    Iterable,
-    OrderedDict,
-)
+from collections import OrderedDict
+from collections.abc import Iterable
 from io import (
     StringIO,
     BytesIO,
@@ -722,7 +721,7 @@ class HierarchicalStringList(object):
         self._strings = StrictOrderingOnAppendList()
         self._children = {}
 
-    class StringListAdaptor(collections.Sequence):
+    class StringListAdaptor(collections.abc.Sequence):
         def __init__(self, hsl):
             self._hsl = hsl
 
