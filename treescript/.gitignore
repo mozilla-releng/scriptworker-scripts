@@ -42,8 +42,7 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover
-.pytest_cache/
-.mypy_cache
+*.pytest_cache/
 
 # Translations
 *.mo
@@ -66,8 +65,3 @@ config.json
 server_config.json
 work_dir
 artifact_dir
-build-tools
-.python-version
-
-# docs
-wiki

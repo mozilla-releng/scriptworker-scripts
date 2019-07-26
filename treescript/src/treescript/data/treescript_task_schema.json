@@ -1,0 +1,116 @@
+{
+    "title": "Taskcluster treescript task minimal schema",
+    "type": "object",
+    "properties": {
+        "dependencies": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "scopes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "payload": {
+            "type": "object",
+            "properties": {
+                "tag_info": {
+                    "type": "object",
+                    "properties": {
+                        "tags": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "revision": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["tags", "revision"]
+                },
+                "version_bump_info": {
+                    "type": "object",
+                    "properties": {
+                        "next_version": {
+                            "type": "string"
+                        },
+                        "files": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": ["next_version", "files"]
+                },
+                "l10n_bump_info": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "path": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "version_path": {
+                                "type": "string"
+                            },
+                            "revision_url": {
+                                "type": "string"
+                            },
+                            "ignore_config": {
+                                "type": "object"
+                            },
+                            "platform_configs": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "required": ["path", "name", "platform_configs", "version_path"]
+                    },
+                    "required": ["next_version", "files"]
+                },
+                "branch": {
+                    "type": "string"
+                },
+                "dry_run": {
+                    "type": "boolean"
+                },
+                "dontbuild": {
+                    "type": "boolean"
+                },
+                "ignore_closed_tree": {
+                    "type": "boolean"
+                },
+                "actions": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string",
+                        "enum": ["tag", "version_bump", "l10n_bump", "push"]
+                    }
+                }
+            }
+        }
+    },
+    "required": ["scopes", "payload"]
+}

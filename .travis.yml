@@ -6,20 +6,38 @@ matrix:
     - python: 3.6
       dist: xenial
       env:
-        - TOXENV=py36
+        - TOXENV=client-py36
       sudo: true
     - python: 3.7
       dist: xenial
       env:
-        - TOXENV=py37
+        - TOXENV=client-py37
+      sudo: true
+    - python: 3.6
+      dist: xenial
+      env:
+        - TOXENV=iscript-py36
+      sudo: true
+    - python: 3.7
+      dist: xenial
+      env:
+        - TOXENV=iscript-py37
+      sudo: true
+    - python: 3.6
+      dist: xenial
+      env:
+        - TOXENV=treescript-py36
+      sudo: true
+    - python: 3.7
+      dist: xenial
+      env:
+        - TOXENV=treescript-py37
       sudo: true
 
 install:
     - travis_retry pip install tox
 script:
     - tox
-after_script:
-    - tox -e coveralls
 
 # http://docs.travis-ci.com/user/workers/container-based-infrastructure/
 sudo: false
