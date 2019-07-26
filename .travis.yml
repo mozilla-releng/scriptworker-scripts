@@ -6,50 +6,38 @@ matrix:
     - python: 3.6
       dist: xenial
       env:
-        - TOXENV=py36
-      script:
-        - tox -c iscript/tox.ini
+        - TOXENV=client-py36
       sudo: true
     - python: 3.7
       dist: xenial
       env:
-        - TOXENV=py37,mypy
-      script:
-        - tox -c iscript/tox.ini
+        - TOXENV=client-py37
       sudo: true
     - python: 3.6
       dist: xenial
       env:
-        - TOXENV=py36
-      script:
-        - tox -c treescript/tox.ini
+        - TOXENV=iscript-py36
       sudo: true
     - python: 3.7
       dist: xenial
       env:
-        - TOXENV=py37,mypy
-      script:
-        - tox -c treescript/tox.ini
+        - TOXENV=iscript-py37
       sudo: true
     - python: 3.6
       dist: xenial
       env:
-        - TOXENV=py36
-      script:
-        - tox -c scriptworker_client/tox.ini
+        - TOXENV=treescript-py36
       sudo: true
     - python: 3.7
       dist: xenial
       env:
-        - TOXENV=py37,mypy
-      script:
-        - tox -c scriptworker_client/tox.ini -e py37,mypy
+        - TOXENV=treescript-py37
       sudo: true
 
 install:
     - travis_retry pip install tox
-after_script:
-    - tox -e coveralls
+script:
+    - tox
 
 # http://docs.travis-ci.com/user/workers/container-based-infrastructure/
 sudo: false
