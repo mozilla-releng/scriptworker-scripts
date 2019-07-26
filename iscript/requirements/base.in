@@ -4,5 +4,3 @@ attrs
 macholib
 pexpect
 requests-hawk
-scriptworker_client
-mozbuild
