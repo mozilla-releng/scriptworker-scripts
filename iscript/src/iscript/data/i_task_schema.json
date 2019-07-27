@@ -38,7 +38,7 @@
                     "uniqueItems": true,
                     "items": {
                       "type": "string",
-                      "enum": ["macapp", "widevine", "omnija", "autograph_widevine", "autograph_omnija", "mac_geckodriver"]
+                      "enum": ["macapp", "widevine", "omnija", "autograph_widevine", "autograph_omnija", "mac_geckodriver", "autograph_langpack"]
                     }
                   },
                   "paths": {

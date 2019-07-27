@@ -5,6 +5,7 @@ import asyncio
 import attr
 from copy import deepcopy
 from glob import glob
+from itertools import filterfalse
 import logging
 import os
 import pexpect
@@ -29,7 +30,11 @@ from iscript.exceptions import (
 )
 from iscript.util import get_key_config
 
-from iscript.autograph import sign_omnija_with_autograph, sign_widevine_dir
+from iscript.autograph import (
+    sign_langpacks,
+    sign_omnija_with_autograph,
+    sign_widevine_dir,
+)
 
 log = logging.getLogger(__name__)
 
@@ -492,6 +497,20 @@ def get_app_paths(config, task):
                 )
             )
     return all_paths
+
+
+def filter_apps(all_paths, fmt, inverted=False):
+    """Filtres through a list of apps and returns a list of apps back based on filter.
+
+    Args:
+        all_paths: list of App objects
+        fmt: format name to filter
+        inverted (default: False): whether or not to invert the list.
+    """
+    filter_fn = filter
+    if inverted:
+        filter_fn = filterfalse
+    return list(filter_fn(lambda app: fmt in app.formats, all_paths))
 
 
 # extract_all_apps {{{1
@@ -982,16 +1001,6 @@ async def staple_notarization(all_paths, path_attr="app_path"):
     await raise_future_exceptions(futures)
 
 
-async def maybe_sign_langpack(config, all_paths):
-    """Signs langpacks that are specified in all_paths
-
-    returns the App that was signed
-    """
-    if not any(a.formats == 'autograph_langpack' for a in all_paths):
-        return None
-    return None
-
-
 # tar_apps {{{1
 async def tar_apps(config, all_paths):
     """Create tar artifacts from the app directories.
@@ -1159,9 +1168,10 @@ async def notarize_behavior(config, task):
     entitlements_path = await download_entitlements_file(config, key_config, task)
 
     all_paths = get_app_paths(config, task)
-    langpack_app = await maybe_sign_langpack(config, all_paths)
-    if langpack_app:
-        all_paths.remove(langpack_app)
+    langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
+    if langpack_apps:
+        await sign_langpacks(config, key_config, langpack_apps)
+        all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
     await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
@@ -1213,9 +1223,11 @@ async def sign_behavior(config, task):
     entitlements_path = await download_entitlements_file(config, key_config, task)
 
     all_paths = get_app_paths(config, task)
-    langpack_app = await maybe_sign_langpack(config, all_paths)
-    if langpack_app:
-        all_paths.remove(langpack_app)
+    all_paths = get_app_paths(config, task)
+    langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
+    if langpack_apps:
+        await sign_langpacks(config, key_config, langpack_apps)
+        all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
     await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
@@ -1242,9 +1254,10 @@ async def sign_and_pkg_behavior(config, task):
     entitlements_path = await download_entitlements_file(config, key_config, task)
 
     all_paths = get_app_paths(config, task)
-    langpack_app = await maybe_sign_langpack(config, all_paths)
-    if langpack_app:
-        all_paths.remove(langpack_app)
+    langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
+    if langpack_apps:
+        await sign_langpacks(config, key_config, langpack_apps)
+        all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
     await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
@@ -1279,9 +1292,10 @@ async def geckodriver_behavior(config, task):
     key_config = get_key_config(config, task, base_key="mac_config")
 
     all_paths = get_app_paths(config, task)
-    langpack_app = await maybe_sign_langpack(config, all_paths)
-    if langpack_app:
-        all_paths.remove(langpack_app)
+    langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
+    if langpack_apps:
+        await sign_langpacks(config, key_config, langpack_apps)
+        all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
     await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]

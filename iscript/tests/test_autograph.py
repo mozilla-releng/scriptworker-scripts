@@ -9,10 +9,16 @@ import shutil
 from scriptworker_client.utils import makedirs
 
 from iscript.exceptions import IScriptError
+from iscript.mac import App
 import iscript.autograph as autograph
 
 # helper constants, fixtures, functions {{{1
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+
+
+@contextmanager
+def does_not_raise():
+    yield
 
 
 @pytest.fixture(scope="function")
@@ -22,6 +28,9 @@ def key_config():
         "widevine_user": "widevine_user",
         "widevine_pass": "widevine_pass",
         "widevine_cert": "widevine_cert",
+        "langpack_url": "https://autograph-hsm.dev.mozaws.net/langpack",
+        "langpack_user": "langpack_user",
+        "langpack_pass": "langpack_pass",
     }
 
 
@@ -256,18 +265,20 @@ def test_remove_extra_files(tmp_path):
 
 # autograph {{{1
 @pytest.mark.parametrize(
-    "input_bytes, fmt, keyid, expected",
+    "input_bytes, fmt, extension_id, keyid, expected",
     (
-        (b"asdf", "widevine", None, [{"input": "YXNkZg=="}]),
+        (b"asdf", "widevine", None, None, [{"input": "YXNkZg=="}]),
         (
             b"asdf",
             "autograph_widevine",
+            None,
             "key1",
             [{"input": "YXNkZg==", "keyid": "key1"}],
         ),
         (
             b"asdf",
             "autograph_omnija",
+            "omni.ja@mozilla.org",
             None,
             [
                 {
@@ -282,8 +293,13 @@ def test_remove_extra_files(tmp_path):
         ),
     ),
 )
-def test_make_signing_req(input_bytes, fmt, keyid, expected):
-    assert autograph.make_signing_req(input_bytes, fmt, keyid=keyid) == expected
+def test_make_signing_req(input_bytes, fmt, extension_id, keyid, expected):
+    assert (
+        autograph.make_signing_req(
+            input_bytes, fmt, keyid=keyid, extension_id=extension_id
+        )
+        == expected
+    )
 
 
 @pytest.mark.asyncio
@@ -393,11 +409,183 @@ async def test_omnija_sign(tmpdir, mocker, orig, signed, sha256_expected):
     config = {"work_dir": tmpdir}
     key_config = {}
 
-    async def mocked_autograph(key_config, from_, fmt, to):
+    async def mocked_autograph(key_config, from_, fmt, to, extension_id):
         assert fmt == "autograph_omnija"
+        assert extension_id == "omni.ja@mozilla.org"
         shutil.copyfile(os.path.join(TEST_DATA_DIR, signed), to)
 
     mocker.patch.object(autograph, "sign_file_with_autograph", mocked_autograph)
     await autograph.sign_omnija_with_autograph(config, key_config, tmpdir)
     sha256_actual = sha256(open(copy_from, "rb").read()).hexdigest()
     assert sha256_actual == sha256_expected
+
+
+def test_langpack_id_regex():
+    assert autograph.LANGPACK_RE.match("langpack-en-CA@firefox.mozilla.org") is not None
+    assert (
+        autograph.LANGPACK_RE.match("langpack-ja-JP-mac@devedition.mozilla.org")
+        is not None
+    )
+    assert autograph.LANGPACK_RE.match("invalid-langpack-id@example.com") is None
+
+
+def test_langpack_id():
+    filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
+    langpack_app = App(
+        orig_path=filename, formats=["autograph_langpack"], artifact_prefix="public/"
+    )
+    assert autograph.langpack_id(langpack_app) == "langpack-en-CA@firefox.mozilla.org"
+
+
+def test_langpack_id():
+    filename = os.path.join(TEST_DATA_DIR, "en-CA.exe")
+    langpack_app = App(
+        orig_path=filename, formats=["autograph_langpack"], artifact_prefix="public/"
+    )
+    with pytest.raises(IScriptError):
+        assert (
+            autograph.langpack_id(langpack_app) == "langpack-en-CA@firefox.mozilla.org"
+        )
+
+
+@pytest.mark.parametrize(
+    "json_,raises",
+    (
+        ({}, pytest.raises(IScriptError)),
+        ({"languages": {}}, pytest.raises(IScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA"}, pytest.raises(IScriptError)),
+        (
+            {"languages": {}, "langpack_id": "en-CA", "applications": {}},
+            pytest.raises(IScriptError),
+        ),
+        (
+            {"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {}}},
+            pytest.raises(IScriptError),
+        ),
+        (
+            {"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {}}},
+            pytest.raises(IScriptError),
+        ),
+        (
+            {
+                "languages": {},
+                "langpack_id": "en-CA",
+                "applications": {"gecko": {"id": ""}},
+            },
+            pytest.raises(IScriptError),
+        ),
+        (
+            {
+                "languages": {},
+                "langpack_id": "en-CA",
+                "applications": {"gecko": {"id": "invalid-langpack-id@example.com"}},
+            },
+            pytest.raises(IScriptError),
+        ),
+        (
+            {
+                "languages": {},
+                "langpack_id": "en-CA",
+                "applications": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}},
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "languages": {},
+                "langpack_id": "en-CA",
+                "applications": {"gecko": {"id": "langpack-de@devedition.mozilla.org"}},
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "languages": {},
+                "langpack_id": "en-CA",
+                "applications": {
+                    "gecko": {"id": "langpack-ja-JP-mac@devedition.mozilla.org"}
+                },
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "langpack_id": "en-CA",
+                "applications": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}},
+            },
+            pytest.raises(IScriptError),
+        ),
+    ),
+)
+def test_langpack_id_raises(json_, raises, mocker):
+    filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
+    langpack_app = App(
+        orig_path=filename, formats=["autograph_langpck"], artifact_prefix="public/"
+    )
+
+    def load_manifest(*args, **kwargs):
+        return json_
+
+    # Mock ZipFile so we don't actually read the xpi data
+    mocker.patch.object(autograph.zipfile, "ZipFile", autospec=True)
+
+    mocker.patch.object(autograph.json, "load", load_manifest)
+    with raises:
+        id = autograph.langpack_id(langpack_app)
+        assert id == json_["applications"]["gecko"]["id"]
+
+
+@pytest.mark.asyncio
+async def test_langpack_sign(key_config, mocker, tmp_path):
+    mock_ever_called = [False]
+    filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
+    langpack_app = App(
+        orig_path=filename,
+        formats=["autograph_langpack"],
+        artifact_prefix=TEST_DATA_DIR,
+    )
+    config = {"artifact_dir": tmp_path / "artifacts"}
+
+    async def mocked_call_autograph(url, user, password, request_json):
+        mock_ever_called[0] = True
+        # url/user/pass comes from test key_config
+        assert url.startswith("https://autograph-hsm.dev.mozaws.net/langpack")
+        assert user == "langpack_user"
+        assert password == "langpack_pass"
+        assert len(request_json) == 1
+        assert request_json[0]["options"]["id"] == "langpack-en-CA@firefox.mozilla.org"
+        return [{"signed_file": base64.b64encode(open(filename, "rb").read())}]
+
+    mock_obj = mocker.patch.object(
+        autograph, "call_autograph", new=mocked_call_autograph
+    )
+
+    await autograph.sign_langpacks(config, key_config, [langpack_app])
+    expected_hash = "7f4292927b4a26589ee912918de941f498e58ce100041ec3565a82da57a42eab"
+    assert (
+        sha256(open(langpack_app.target_tar_path, "rb").read()).hexdigest()
+        == expected_hash
+    )
+    assert mock_ever_called[0]
+
+
+@pytest.mark.asyncio
+async def test_langpack_sign_wrong_format(key_config, mocker, tmp_path):
+    mock_ever_called = [False]
+    filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
+    langpack_app = App(
+        orig_path=filename, formats=["invalid"], artifact_prefix=TEST_DATA_DIR
+    )
+    config = {"artifact_dir": tmp_path / "artifacts"}
+
+    async def mocked_call_autograph(url, user, password, request_json):
+        mock_ever_called[0] = True
+        return [{"signed_file": base64.b64encode(open(filename, "rb").read())}]
+
+    mock_obj = mocker.patch.object(
+        autograph, "call_autograph", new=mocked_call_autograph
+    )
+
+    with pytest.raises(IScriptError):
+        await autograph.sign_langpacks(config, key_config, [langpack_app])
+    assert not mock_ever_called[0]
