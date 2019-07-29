@@ -29,9 +29,9 @@ aiohttp==3.5.4 \
     --hash=sha256:d4392defd4648badaa42b3e101080ae3313e8f4787cb517efd3f5b8157eaefd6 \
     --hash=sha256:e1c3c582ee11af7f63a34a46f0448fca58e59889396ffdae1f482085061a2889 \
     # via scriptworker, taskcluster
-arrow==0.14.2 \
-    --hash=sha256:03404b624e89ac5e4fc19c52045fa0f3203419fd4dd64f6e8958c522580a574a \
-    --hash=sha256:41be7ea4c53c2cf57bf30f2d614f60c411160133f7a0a8c49111c30fb7e725b5 \
+arrow==0.14.3 \
+    --hash=sha256:20055cd5dd03314c62544138a227ba24fb040b949e7cf785da611d3d4b11d31c \
+    --hash=sha256:33eb1599b93466daa5aba34a70b2507dbe2ce37a5b4cf23608ff2b7d52846132 \
     # via scriptworker
 asn1crypto==0.24.0 \
     --hash=sha256:2f1adbb7546ed199e3c90ef23ec95c5cf3585bac7d11fb7eb562a3fe89c64e87 \
@@ -45,12 +45,12 @@ attrs==19.1.0 \
     --hash=sha256:69c0dbf2ed392de1cb5ec704444b08a5ef81680a61cb899dc08127123af36a79 \
     --hash=sha256:f0b870f674851ecbfbbbd364d6b5cbdff9dcedbc7f3f5e18a6891057f21fe399 \
     # via aiohttp, jsonschema, mozilla-version
-boto3==1.9.185 \
-    --hash=sha256:18fdfbaf8f82059307b8eab31f87c65e7d0e8873f4a5b0c891bd7ce85fc23d41 \
-    --hash=sha256:9b86514e6eaf258ff44fe1e1d08d1c2adc5282e020aaaac1ff4358979101fcd2
-botocore==1.12.185 \
-    --hash=sha256:0d47e674f160f453de7a5b67e9bb12907352d63d0fefabaedfdfbe3b6dc3b657 \
-    --hash=sha256:1f76c7586c90ea2b0d43902d8614fb7bb17869b44692286067015d6516bb043d \
+boto3==1.9.197 \
+    --hash=sha256:01f1792838981191da87bed271f2b486841a282fcd78a3b5bac98e5b85c95ba8 \
+    --hash=sha256:0f1f796abf85e53a8a50b893cbeccd93ee081184453127b663da4b97d72aa0cc
+botocore==1.12.197 \
+    --hash=sha256:6e7c49014430f73ba6ab638d4ad313f8522b8185e476fe1a57ce9cd50c596062 \
+    --hash=sha256:78627966a280328e4a7018758e91e6413d5cae8387e08ab219e232689a92cb45 \
     # via boto3, s3transfer
 certifi==2019.6.16 \
     --hash=sha256:046832c04d4e752f37383b628bc601a7ea7211496b4638f6514d0e5b9acc4939 \
@@ -217,8 +217,8 @@ multidict==4.5.2 \
 pycparser==2.19 \
     --hash=sha256:a988718abfad80b6b157acce7bf130a30876d27603738ac39f140993246b25b3 \
     # via cffi
-pyrsistent==0.15.3 \
-    --hash=sha256:50cffebc87ca91b9d4be2dcc2e479272bcb466b5a0487b6c271f7ddea6917e14 \
+pyrsistent==0.15.4 \
+    --hash=sha256:34b47fa169d6006b32e99d4b3c4031f155e6e68ebcc107d6454852e8e0ee6533 \
     # via jsonschema
 python-dateutil==2.8.0 \
     --hash=sha256:7e6584c74aeed623791615e26efd690f29817a27c73085b78e4bad02493df2fb \
@@ -248,9 +248,9 @@ s3transfer==0.2.1 \
     --hash=sha256:6efc926738a3cd576c2a79725fed9afde92378aa5c6a957e3af010cb019fac9d \
     --hash=sha256:b780f2411b824cb541dbcd2c713d0cb61c7d1bcadae204cdddda2b35cef493ba \
     # via boto3
-scriptworker==23.3.3 \
-    --hash=sha256:12b3268f697c2e3a142a2b04bf7f59a27a058bd79f7740b0e4a2e94eb1c4693f \
-    --hash=sha256:ed5cd71b1e909dc55a079592bf8394d98e9c21fbc9fdcfd9dd8a92f686d5ebae
+scriptworker==23.6.2 \
+    --hash=sha256:3dae59ac6e6bbacd7c933b1c84f32b7b1d2b5bd821d9e80097a78ef8b2590cfa \
+    --hash=sha256:48fb7333c160ac2b0ca02c5bb8df141c8b12102a94ca0453529dc3dfc553239a
 six==1.12.0 \
     --hash=sha256:3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c \
     --hash=sha256:d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73 \
@@ -264,10 +264,10 @@ taskcluster-urls==11.0.0 \
     --hash=sha256:2aceab7cf5b1948bc197f2e5e50c371aa48181ccd490b8bada00f1e3baf0c5cc \
     --hash=sha256:74bd2110b5daaebcec5e1d287bf137b61cb8cf6b2d8f5f2b74183e32bc4e7c87 \
     # via taskcluster
-taskcluster==7.0.1 \
-    --hash=sha256:93027ec6949289d8267595c5770c3d3f0902d9461d98081544dce60764f94f46 \
-    --hash=sha256:97e19674738515e6891f4d7928280aecb2686def8b9d72a15477d7297f34c18c \
-    --hash=sha256:c24a8a67db9306e5ff0fd140e5bb6489ba3dcaf0632b6a2052b2d649a30e7617 \
+taskcluster==15.0.0 \
+    --hash=sha256:3d5f080cf6c27772983dfa3945ad558d1f7d35f5bcdd483cfd2b704aa2180f85 \
+    --hash=sha256:4e4a0348cbe29bf54a7354e67968bc0d8a00e2376d9be37c82b6d0095d9d9341 \
+    --hash=sha256:78d30dc38526ce2cce051b0acecc40021130f8a4d4829cc1a11836ca40a48cd9 \
     # via scriptworker
 uritemplate==3.0.0 \
     --hash=sha256:01c69f4fe8ed503b2951bef85d996a9d22434d2431584b5b107b2981ff416fbd \
