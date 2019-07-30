@@ -6,6 +6,17 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.5.5] = (2019-07-30)
+----------------------
+
+Fixed
+~~~~~
+
+- Fixed pre-stop.sh process checking logic (`#238
+  <https://github.com/mozilla-releng/beetmoverscript/pull/238>`_)
+
+
+
 [8.5.4] = (2019-07-29)
 ----------------------
 

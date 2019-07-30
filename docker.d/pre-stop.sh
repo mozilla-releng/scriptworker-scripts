@@ -24,7 +24,7 @@ while true; do
     kill -0 $SCRIPTWORKER_PID
     status=$?
 
-    if [ $status -eq 0 ]; then
+    if [ $status -ne 0 ]; then
         echo "Process finished, exiting"
         exit 0
     fi
