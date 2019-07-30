@@ -6,6 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.5.4] = (2019-07-29)
+----------------------
+
+Added
+~~~~~
+
+- Add docker.d/pre-stop.sh script to handle Kubernetes preStop hook. (`#235
+  <https://github.com/mozilla-releng/beetmoverscript/pull/235>`_)
+
+
 [8.5.3] = (2019-07-11)
 ----------------------
 
