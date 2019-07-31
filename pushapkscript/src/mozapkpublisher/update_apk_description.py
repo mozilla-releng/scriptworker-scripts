@@ -4,15 +4,15 @@ import argparse
 import logging
 
 from argparse import ArgumentParser
-from mozapkpublisher.common import googleplay, store_l10n
+from mozapkpublisher.common import store, store_l10n
 
 logger = logging.getLogger(__name__)
 
 
 def update_apk_description(package_name, force_locale, commit, service_account, google_play_credentials_file,
                            contact_google_play):
-    with googleplay.edit(service_account, google_play_credentials_file.name, package_name,
-                         contact_google_play=contact_google_play, commit=commit) as edit:
+    with store.edit(service_account, google_play_credentials_file.name, package_name,
+                    contact_google_play=contact_google_play, commit=commit) as edit:
         moz_locales = [force_locale] if force_locale else None
         l10n_strings = store_l10n.get_translations_per_google_play_locale_code(package_name, moz_locales)
         create_or_update_listings(edit, l10n_strings)
@@ -42,7 +42,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    googleplay.add_general_google_play_arguments(parser)
+    store.add_general_google_play_arguments(parser)
     parser.add_argument('--package-name', choices=store_l10n.STORE_PRODUCT_DETAILS_PER_PACKAGE_NAME.keys(),
                         help='The Google play name of the app', required=True)
     parser.add_argument('--force-locale', help='Force to a specific locale (instead of all)')

@@ -34,13 +34,12 @@ def extract_and_check_apks_metadata(
     skip_check_same_locales,
     skip_check_ordered_version_codes,
 ):
-    apks_paths = [apk.name for apk in apks]
-    apks_metadata_per_paths = {
-        apk_path: extract_metadata(apk_path, not skip_checks_fennec)
-        for apk_path in apks_paths
+    apks_metadata = {
+        apk: extract_metadata(apk.name, not skip_checks_fennec)
+        for apk in apks
     }
     cross_check_apks(
-        apks_metadata_per_paths,
+        apks_metadata,
         expected_package_names,
         skip_checks_fennec,
         skip_check_multiple_locales,
@@ -48,4 +47,4 @@ def extract_and_check_apks_metadata(
         skip_check_ordered_version_codes,
     )
 
-    return apks_metadata_per_paths
+    return apks_metadata

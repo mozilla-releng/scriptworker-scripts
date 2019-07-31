@@ -1,13 +1,63 @@
 #!/usr/bin/env python3
 
 import argparse
+from collections import namedtuple
 import logging
 
-from mozapkpublisher.common import googleplay, main_logging
+from mozapkpublisher.common import store, main_logging
 from mozapkpublisher.common.apk import add_apk_checks_arguments, extract_and_check_apks_metadata
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
+from mozapkpublisher.common.store import AmazonStoreEdit
 
 logger = logging.getLogger(__name__)
+
+
+ExtractedApk = namedtuple('ProcessedApk', ['file', 'metadata'])
+
+
+def consumer_callback(publish_config):
+    apks = ['file', 'file2']
+    expected_package_names = ['org.mozilla.fenix']
+
+    def upload_google(package_name, extracted_apks):
+        with store.edit('service_account', 'credentials_file', package_name,
+                        contact_google_play=True, commit=True) as edit:
+            edit.update_app(extracted_apks, publish_config.track, publish_config.rollout_percentage)
+
+    def upload_amazon(package_name, extracted_apks):
+        with AmazonStoreEdit.transaction('client_id', 'client_secret', package_name,
+                                         contact_server=True, commit=True) as edit:
+            edit.update_app(extracted_apks)
+
+    push_apk_callback(apks, upload_amazon if publish_config.target == 'amazon' else upload_google, expected_package_names)
+
+
+def push_apk_callback(
+    apks,
+    upload_apk,
+    expected_package_names,
+    skip_check_ordered_version_codes=False,
+    skip_check_multiple_locales=False,
+    skip_check_same_locales=False,
+    skip_checks_fennec=False,
+):
+    # We want to tune down some logs, even when push_apk() isn't called from the command line
+    main_logging.init()
+
+    apks_metadata = extract_and_check_apks_metadata(
+        apks,
+        expected_package_names,
+        skip_checks_fennec,
+        skip_check_multiple_locales,
+        skip_check_same_locales,
+        skip_check_ordered_version_codes,
+    )
+
+    # Each distinct product must be uploaded in different store transaction, so we split them
+    # by package name here.
+    apks_by_package_name = _apks_by_package_name(apks_metadata)
+    for package_name, extracted_apks in apks_by_package_name.values():
+        upload_apk(package_name, extracted_apks)
 
 
 def push_apk(
@@ -48,14 +98,6 @@ def push_apk(
     # We want to tune down some logs, even when push_apk() isn't called from the command line
     main_logging.init()
 
-    if track == 'rollout' and rollout_percentage is None:
-        raise WrongArgumentGiven("To perform a rollout, you must provide the target track "
-                                 "(probably 'production') and a rollout_percentage")
-    if rollout_percentage is not None and track == 'rollout':
-        logger.warn("track='rollout' is deprecated, assuming you meant 'production'. To avoid "
-                    "message, specify the target track to roll out to (probably 'production'")
-        track = 'production'
-
     apks_metadata_per_paths = extract_and_check_apks_metadata(
         apks,
         expected_package_names,
@@ -67,26 +109,23 @@ def push_apk(
 
     # Each distinct product must be uploaded in different Google Play transaction, so we split them
     # by package name here.
-    split_apk_metadata = _split_apk_metadata_per_package_name(apks_metadata_per_paths)
-    for (package_name, apks_metadata) in split_apk_metadata.items():
-        with googleplay.edit(service_account, google_play_credentials_file.name, package_name,
-                             contact_google_play=contact_google_play, commit=commit) as edit:
-            for path, metadata in apks_metadata_per_paths.items():
-                edit.upload_apk(path)
-
+    apks_by_package_name = _apks_by_package_name(apks_metadata_per_paths)
+    for package_name, extracted_apks in apks_by_package_name.values():
+        with store.edit(service_account, google_play_credentials_file.name, package_name,
+                        contact_google_play=contact_google_play, commit=commit) as edit:
             all_version_codes = _get_ordered_version_codes(apks_metadata_per_paths)
-            edit.update_track(track, all_version_codes, rollout_percentage)
+            edit.update_app(extracted_apks, track, all_version_codes, rollout_percentage)
 
 
-def _split_apk_metadata_per_package_name(apks_metadata_per_paths):
-    split_apk_metadata = {}
-    for (apk_path, metadata) in apks_metadata_per_paths.items():
+def _apks_by_package_name(apks_metadata):
+    apk_package_names = {}
+    for (apk, metadata) in apks_metadata.items():
         package_name = metadata['package_name']
-        if package_name not in split_apk_metadata:
-            split_apk_metadata[package_name] = {}
-        split_apk_metadata[package_name].update({apk_path: metadata})
+        if package_name not in apk_package_names:
+            apk_package_names[package_name] = []
+        apk_package_names[package_name].append(ExtractedApk(apk, metadata))
 
-    return split_apk_metadata
+    return apk_package_names
 
 
 def _get_ordered_version_codes(apks):
@@ -96,7 +135,7 @@ def _get_ordered_version_codes(apks):
 def main():
     parser = argparse.ArgumentParser(description='Upload APKs on the Google Play Store.')
 
-    googleplay.add_general_google_play_arguments(parser)
+    store.add_general_google_play_arguments(parser)
     add_apk_checks_arguments(parser)
 
     parser.add_argument(

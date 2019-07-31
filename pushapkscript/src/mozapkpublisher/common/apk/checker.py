@@ -15,35 +15,35 @@ logger = logging.getLogger(__name__)
 _ARCHITECTURE_ORDER_REGARDING_VERSION_CODE = ('armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64')
 
 
-def cross_check_apks(apks_metadata_per_paths, expected_package_names, skip_checks_fennec, skip_check_multiple_locales,
+def cross_check_apks(apks_metadata, expected_package_names, skip_checks_fennec, skip_check_multiple_locales,
                      skip_check_same_locales, skip_check_ordered_version_codes):
     logger.info("Checking APKs' metadata and content...")
-    _check_package_names(expected_package_names, apks_metadata_per_paths)
+    _check_package_names(expected_package_names, apks_metadata)
 
     if not skip_checks_fennec:
-        singular_apk_metadata = list(apks_metadata_per_paths.values())[0]
+        singular_apk_metadata = list(apks_metadata.values())[0]
         _check_version_matches_package_name(
             singular_apk_metadata['firefox_version'], singular_apk_metadata['package_name']
         )
 
-        _check_all_apks_have_the_same_firefox_version(apks_metadata_per_paths)
-        _check_all_apks_have_the_same_build_id(apks_metadata_per_paths)
-        _check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths)
+        _check_all_apks_have_the_same_firefox_version(apks_metadata)
+        _check_all_apks_have_the_same_build_id(apks_metadata)
+        _check_all_architectures_and_api_levels_are_present(apks_metadata)
 
     if not skip_check_multiple_locales:
-        _check_all_apks_are_multi_locales(apks_metadata_per_paths)
+        _check_all_apks_are_multi_locales(apks_metadata)
 
     if not skip_check_same_locales:
-        _check_all_apks_have_the_same_locales(apks_metadata_per_paths)
+        _check_all_apks_have_the_same_locales(apks_metadata)
 
     if not skip_check_ordered_version_codes:
-        _check_apks_version_codes_are_correctly_ordered(apks_metadata_per_paths)
+        _check_apks_version_codes_are_correctly_ordered(apks_metadata)
 
     logger.info('APKs are sane!')
 
 
-def _check_package_names(expected_package_names, apks_metadata_per_paths):
-    types = set([metadata['package_name'] for metadata in apks_metadata_per_paths.values()])
+def _check_package_names(expected_package_names, apks_metadata):
+    types = set([metadata['package_name'] for metadata in apks_metadata.values()])
 
     if not types == set(expected_package_names):
         raise BadSetOfApks(
@@ -51,8 +51,8 @@ def _check_package_names(expected_package_names, apks_metadata_per_paths):
     logger.info('Found valid package names {}'.format(types))
 
 
-def _check_piece_of_metadata_is_unique(key, pretty_key, apks_metadata_per_paths):
-    all_items = [metadata[key] for metadata in apks_metadata_per_paths.values()]
+def _check_piece_of_metadata_is_unique(key, pretty_key, apks_metadata):
+    all_items = [metadata[key] for metadata in apks_metadata.values()]
     unique_items = filter_out_identical_values(all_items)
 
     if not unique_items:
@@ -91,15 +91,15 @@ def _check_version_matches_package_name(version, package_name):
         raise BadApk('Wrong version number "{}" for package name "{}"'.format(version, package_name))
 
 
-def _check_apks_version_codes_are_correctly_ordered(apks_metadata_per_paths):
+def _check_apks_version_codes_are_correctly_ordered(apks_metadata):
     architectures_per_version_code = {
         metadata['version_code']: metadata['architecture']
-        for metadata in apks_metadata_per_paths.values()
+        for metadata in apks_metadata.values()
     }
 
-    if len(architectures_per_version_code) != len(apks_metadata_per_paths):
+    if len(architectures_per_version_code) != len(apks_metadata):
         raise BadSetOfApks('Some APKs are sharing the same version code! APKs metadata: {}'.format(
-            apks_metadata_per_paths
+            apks_metadata
         ))
 
     sorted_architectures_per_version_code = tuple([
@@ -113,7 +113,7 @@ def _check_apks_version_codes_are_correctly_ordered(apks_metadata_per_paths):
         if index <= previous_index:
             raise BadSetOfApks(
                 'APKs version codes are not correctly ordered. Expected order: {}. Order found: {}. APKs metadata: {}'.format(
-                    _ARCHITECTURE_ORDER_REGARDING_VERSION_CODE, sorted_architectures_per_version_code, apks_metadata_per_paths
+                    _ARCHITECTURE_ORDER_REGARDING_VERSION_CODE, sorted_architectures_per_version_code, apks_metadata
                 )
             )
         previous_index = index
@@ -121,30 +121,30 @@ def _check_apks_version_codes_are_correctly_ordered(apks_metadata_per_paths):
     logger.info('APKs version codes are correctly ordered: {}'.format(architectures_per_version_code))
 
 
-def _check_all_apks_are_multi_locales(apks_metadata_per_paths):
-    for path, metadata in apks_metadata_per_paths.items():
+def _check_all_apks_are_multi_locales(apks_metadata):
+    for apk, metadata in apks_metadata.items():
         locales = metadata['locales']
 
         if not isinstance(locales, tuple):
-            raise BadApk('Locale list is not either a tuple. "{}" has: {}'.format(path, locales))
+            raise BadApk('Locale list is not either a tuple. "{}" has: {}'.format(apk.name, locales))
 
         number_of_locales = len(locales)
 
         if number_of_locales <= 1:
-            raise NotMultiLocaleApk(path, locales)
+            raise NotMultiLocaleApk(apk.name, locales)
 
-        logger.info('"{}" is multilocale.'.format(path))
+        logger.info('"{}" is multilocale.'.format(apk.name))
 
 
-def _check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths):
-    single_metadata = list(apks_metadata_per_paths.values())[0]
+def _check_all_architectures_and_api_levels_are_present(apks_metadata):
+    single_metadata = list(apks_metadata.values())[0]
     firefox_version = single_metadata['firefox_version']
 
     expected_combos = get_expected_combos(firefox_version, single_metadata['package_name'])
 
     current_combos = set([
         (metadata['architecture'], metadata['api_level'])
-        for metadata in apks_metadata_per_paths.values()
+        for metadata in apks_metadata.values()
     ])
 
     missing_combos = expected_combos - current_combos

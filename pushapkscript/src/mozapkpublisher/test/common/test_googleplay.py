@@ -9,9 +9,9 @@ import tempfile
 from googleapiclient.errors import HttpError
 from unittest.mock import MagicMock
 
-from mozapkpublisher.common import googleplay
+from mozapkpublisher.common import store
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
-from mozapkpublisher.common.googleplay import add_general_google_play_arguments, \
+from mozapkpublisher.common.store import add_general_google_play_arguments, \
     GooglePlayEdit, edit_resource_for_options
 from mozapkpublisher.test import does_not_raise
 
@@ -44,21 +44,21 @@ def edit_resource_mock():
     return edit_resource
 
 
-@patch.object(googleplay, 'edit_resource_for_options')
+@patch.object(store, 'edit_resource_for_options')
 def test_google_play_edit_no_commit_transaction(edit_resource_for_options_):
     mock_edits_resource = MagicMock()
     edit_resource_for_options_.return_value = mock_edits_resource
-    with googleplay.edit(None, None, 'package.name', contact_google_play=False, commit=False) as _:
+    with store.edit(None, None, 'package.name', contact_google_play=False, commit=False) as _:
         pass
 
     mock_edits_resource.commit.assert_not_called()
 
 
-@patch.object(googleplay, 'edit_resource_for_options')
+@patch.object(store, 'edit_resource_for_options')
 def test_google_play_edit_commit_transaction(edit_resource_for_options_):
     mock_edits_resource = MagicMock()
     edit_resource_for_options_.return_value = mock_edits_resource
-    with googleplay.edit(None, None, 'package.name', contact_google_play=False, commit=True) as _:
+    with store.edit(None, None, 'package.name', contact_google_play=False, commit=True) as _:
         pass
 
     mock_edits_resource.commit.assert_called_with(editId=ANY, packageName='package.name')

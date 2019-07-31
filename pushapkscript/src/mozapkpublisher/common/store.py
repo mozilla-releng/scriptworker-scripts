@@ -1,4 +1,4 @@
-""" googleplay.py
+""" store.py
 
     The way to get the API access is to
       1) login in in the Google play admin
@@ -14,6 +14,7 @@
 
 import argparse
 from contextlib import contextmanager
+from urllib import request, parse
 
 import httplib2
 import json
@@ -26,6 +27,8 @@ from googleapiclient.errors import HttpError
 from unittest.mock import MagicMock
 
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
+import requests
+from requests import auth
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +54,106 @@ class _ExecuteDummy:
         return self._return_value
 
 
+def http(expected_status, method, url, **kwargs):
+    response = requests.request(
+        method=method,
+        url=url,
+        **kwargs,
+    )
+    if response.status_code != expected_status:
+        raise RuntimeError(f'Expected "{method}" to "{url}" to have status code '
+                           f'"{expected_status}", but received "{response.status_code}" '
+                           f'instead')
+    return response
+
+
+class AmazonAuth(requests.auth.AuthBase):
+    def __init__(self, access_token):
+        self._access_token = access_token
+
+    def __call__(self, request: requests.Request):
+        request.headers['Authorization'] = f'Bearer {self._access_token}'
+        return request
+
+
+class AmazonStoreEdit:
+    def __init__(self, auth, edit_it, package_name):
+        self._auth = auth,
+        self._edit_id = edit_it
+        self._package_name = package_name
+
+    def _http(self, expected_status, method, endpoint, **kwargs):
+        url = f'https://developer.amazon.com/api/appstore/v1/' \
+              f'applications/{self._package_name}/edits/{self._edit_id}' + endpoint
+
+        return http(expected_status, method, url, auth=self._auth, **kwargs)
+
+    def update_app(self, extracted_apks):
+        body = self._http(200, 'get', '/apks').json()
+        existing_apk_ids = [apk['id'] for apk in body]
+
+        for apk_id in existing_apk_ids:
+            response = self._http(200, 'get', f'/apks/{apk_id}')
+            etag = response.headers['ETag']
+            self._http(204, 'delete', f'/apks/{apk_id}', headers={'If-Match': etag})
+
+        for apk, _ in extracted_apks:
+            self._http(200, 'post', '/apks/upload', data=apk)
+
+        response = self._http(200, 'get', '/listings')
+        languages = response.json()['listings'].keys()
+        for locale in languages:
+            response = self._http(200, 'get', f'/listings/{locale}')
+            etag = response.headers['ETag']
+            listing = response.json()
+            listing['recentChanges'] = '✔'
+
+            self._http(200, 'put', f'/listings/{locale}', headers={'If-Match': etag}, json=listing)
+
+    def commit(self):
+        response = self._http(200, 'get', '/')
+        etag = response.headers['ETag']
+        print(f'Edit etag: {etag}')
+
+        self._http(200, 'post', '/validate')  # TODO commit
+
+    @staticmethod
+    @contextmanager
+    def transaction(client_id, client_secret, package_name, *, contact_server, commit):
+        if contact_server:
+            response = http(200, 'post', 'https://api.amazon.com/auth/o2/token', data={
+                'client_id': client_id,
+                'client_secret': client_secret,
+                'grant_type': 'client_credentials',
+                'scope': 'appstore::apps:readwrite',
+            })
+            auth = AmazonAuth(response.json()['access_token'])
+
+            response = http(200, 'post', 'https://developer.amazon.com/api/appstore/v1/'
+                                         'applications/{}/edits'.format(package_name), auth=auth)
+            edit_id = response.json()['id']
+            edit = AmazonStoreEdit(auth, edit_id, package_name)
+        else:
+            logger.warning('Not a single request to Amazon will be made, since `contact_server` '
+                           'was set to `False`')
+            edit = MockAmazonStoreEdit()
+
+        yield edit
+        if commit:
+            edit.commit()
+            logger.info('Changes committed')
+        else:
+            logger.warning('Transaction not committed, since `commit` was `False`')
+
+
+class MockAmazonStoreEdit:
+    def update_app(self, apks):
+        pass
+
+    def commit(self):
+        pass
+
+
 class GooglePlayEdit:
     """Represents an "edit" to an app on the Google Play store
 
@@ -66,6 +169,13 @@ class GooglePlayEdit:
         self._edit_id = edit_id
         self._package_name = package_name
 
+    def update_app(self, extracted_apks, track, rollout_percentage):
+        for apk, _ in extracted_apks:
+            self.upload_apk(apk)
+
+        version_codes = [metadata['version_code'] for _, metadata in extracted_apks]
+        self.update_track(track, version_codes, rollout_percentage)
+
     def get_track_status(self, track):
         response = self._edit_resource.tracks().get(
             editId=self._edit_id,
@@ -75,7 +185,8 @@ class GooglePlayEdit:
         logger.debug('Track "{}" has status: {}'.format(track, response))
         return response
 
-    def upload_apk(self, apk_path):
+    def upload_apk(self, apk):
+        apk_path = apk.name
         logger.info('Uploading "{}" ...'.format(apk_path))
         try:
             response = self._edit_resource.apks().upload(
@@ -101,8 +212,20 @@ class GooglePlayEdit:
                     return
             raise
 
-    def update_track(self, track, version_codes, rollout_percentage=None):
+    def update_track(self, track, version_codes, rollout_percentage):
+        body = {
+            u'releases': [{
+                u'status': 'completed',
+                u'versionCodes': sorted(version_codes),
+            }],
+        }
+
+        if track == 'rollout' and rollout_percentage is None:
+            raise WrongArgumentGiven(
+                "When using track='rollout', rollout percentage must be provided too")
         if rollout_percentage is not None:
+            if track != 'rollout':
+                raise WrongArgumentGiven("When using rollout-percentage, track must be set to rollout")
             if rollout_percentage < 0 or rollout_percentage > 100:
                 raise WrongArgumentGiven(
                     'rollout percentage must be between 0 and 100. Value given: {}'.format(
@@ -187,7 +310,7 @@ def edit_resource_for_options(contact_google_play, service_account, credentials_
 
         return service.edits()
     else:
-        logger.warning('Not a single request to Google Play will be made, since `contact_google_play` was set')
+        logger.warning('Not a single request to Google Play will be made, since `contact_google_play` was set to `False`')
         edit_resource_mock = MagicMock()
 
         edit_resource_mock.insert = lambda *args, **kwargs: _ExecuteDummy(

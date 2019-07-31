@@ -7,7 +7,7 @@ from unittest.mock import create_autospec
 
 from tempfile import NamedTemporaryFile
 
-from mozapkpublisher.common import googleplay, store_l10n
+from mozapkpublisher.common import store, store_l10n
 from mozapkpublisher.update_apk_description import main, update_apk_description
 
 
@@ -15,8 +15,8 @@ credentials = NamedTemporaryFile()
 
 
 def test_update_apk_description_force_locale(monkeypatch):
-    google_play_mock = create_autospec(googleplay.GooglePlayEdit)
-    monkeypatch.setattr(googleplay, 'GooglePlayEdit', lambda _, __, ___: google_play_mock)
+    google_play_mock = create_autospec(store.GooglePlayEdit)
+    monkeypatch.setattr(store, 'GooglePlayEdit', lambda _, __, ___: google_play_mock)
     monkeypatch.setattr(store_l10n, '_translations_per_google_play_locale_code', {
         'google_play_locale': {
             'title': 'Firefox for Android',

@@ -9,13 +9,13 @@ from unittest.mock import create_autospec, MagicMock
 
 from tempfile import NamedTemporaryFile
 
-from mozapkpublisher.common import googleplay
+from mozapkpublisher.common import store
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.push_apk import (
     push_apk,
     main,
     _get_ordered_version_codes,
-    _split_apk_metadata_per_package_name,
+    _apks_by_package_name,
 )
 from unittest.mock import patch
 
@@ -30,7 +30,7 @@ SERVICE_ACCOUNT = 'foo@developer.gserviceaccount.com'
 
 @pytest.fixture
 def google_play_edit_mock():
-    return create_autospec(googleplay.GooglePlayEdit)
+    return create_autospec(store.GooglePlayEdit)
 
 
 def set_up_mocks(monkeypatch_, google_play_edit_mock_):
@@ -78,7 +78,7 @@ def set_up_mocks(monkeypatch_, google_play_edit_mock_):
     def fake_edit(_, __, ___, *, contact_google_play, commit):
         yield google_play_edit_mock_
 
-    monkeypatch_.setattr(googleplay, 'edit', fake_edit)
+    monkeypatch_.setattr(store, 'edit', fake_edit)
     monkeypatch_.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', _metadata)
 
 
@@ -143,7 +143,7 @@ def test_get_distinct_package_name_apk_metadata():
         }
     }
 
-    one_package_metadata = _split_apk_metadata_per_package_name(one_package_apks_metadata)
+    one_package_metadata = _apks_by_package_name(one_package_apks_metadata)
     assert len(one_package_metadata.keys()) == 1
     assert expected_one_package_metadata == one_package_metadata
 
@@ -163,7 +163,7 @@ def test_get_distinct_package_name_apk_metadata():
         }
     }
 
-    two_package_metadata = _split_apk_metadata_per_package_name(two_package_apks_metadata)
+    two_package_metadata = _apks_by_package_name(two_package_apks_metadata)
     assert len(two_package_metadata.keys()) == 2
     assert expected_two_package_metadata == two_package_metadata
 
