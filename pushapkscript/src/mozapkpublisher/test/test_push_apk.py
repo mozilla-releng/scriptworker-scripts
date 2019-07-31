@@ -94,7 +94,7 @@ def test_valid_rollout_percentage_with_track_rollout(google_play_edit_mock, monk
     set_up_mocks(monkeypatch, google_play_edit_mock)
     valid_percentage = 50
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', [], rollout_percentage=valid_percentage, contact_google_play=False)
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', [], rollout_percentage=valid_percentage, contact_server=False)
     google_play_edit_mock.update_track.assert_called_once_with('production', ['0', '1'], valid_percentage)
     google_play_edit_mock.update_track.reset_mock()
 
@@ -122,7 +122,7 @@ def test_get_ordered_version_codes():
 def test_upload_apk(google_play_edit_mock, monkeypatch):
     set_up_mocks(monkeypatch, google_play_edit_mock)
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', [], contact_google_play=False)
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', [], contact_server=False)
 
     for apk_file in (apk_arm, apk_x86):
         google_play_edit_mock.upload_apk.assert_any_call(apk_file.name)
@@ -174,7 +174,7 @@ def test_push_apk_tunes_down_logs(monkeypatch):
     monkeypatch.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', MagicMock())
     monkeypatch.setattr('mozapkpublisher.push_apk._split_apk_metadata_per_package_name', MagicMock())
 
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', [], contact_google_play=False)
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'alpha', [], contact_server=False)
 
     main_logging_mock.init.assert_called_once_with()
 

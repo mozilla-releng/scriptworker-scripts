@@ -20,16 +20,33 @@ def consumer_callback(publish_config):
     expected_package_names = ['org.mozilla.fenix']
 
     def upload_google(package_name, extracted_apks):
-        with store.edit('service_account', 'credentials_file', package_name,
-                        contact_google_play=True, commit=True) as edit:
-            edit.update_app(extracted_apks, publish_config.track, publish_config.rollout_percentage)
+        with open(publish_config['google_credentials_file']) as credentials:
+            with store.edit(
+                publish_config['google_service_account'],
+                credentials,
+                package_name,
+                contact_google_play=True,
+                commit=True
+            ) as edit:
+                edit.update_app(extracted_apks, publish_config['track'],
+                                publish_config['rollout_percentage'])
 
     def upload_amazon(package_name, extracted_apks):
-        with AmazonStoreEdit.transaction('client_id', 'client_secret', package_name,
-                                         contact_server=True, commit=True) as edit:
+        with AmazonStoreEdit.transaction(
+            publish_config['amazon_client_id'],
+            publish_config['amazon_client_secret'],
+            package_name,
+            contact_server=True,
+            commit=True
+        ) as edit:
             edit.update_app(extracted_apks)
 
-    push_apk_callback(apks, upload_amazon if publish_config.target == 'amazon' else upload_google, expected_package_names)
+    push_apk_callback(
+        apks,
+        upload_amazon if publish_config['target_platform'] == 'amazon' else upload_google,
+        expected_package_names,
+        skip_checks_fennec=True,
+    )
 
 
 def push_apk_callback(
@@ -59,42 +76,65 @@ def push_apk_callback(
     for package_name, extracted_apks in apks_by_package_name.values():
         upload_apk(package_name, extracted_apks)
 
+def consumer(publish_config):
+    apks = ['file', 'file2']
+    expected_package_names = ['org.mozilla.fenix']
+
+    google_credentials_file = None
+    if publish_config['target_platform'] == 'google':
+        google_credentials_file = open(publish_config['google_credentials_file'])
+
+    push_apk(
+        apks,
+        expected_package_names,
+        publish_config['target_platform'],
+        publish_config.get('amazon_client_id'),
+        publish_config.get('amazon_client_secret'),
+        publish_config.get('google_service_account'),
+        google_credentials_file,
+        publish_config.get('google_track'),
+        publish_config.get('google_rollout_percentage'),
+        commit=True,
+        contact_server=True,
+        skip_checks_fennec=True,
+    )
+
+    if publish_config['target_platform'] == 'google':
+        google_credentials_file.close()
+
 
 def push_apk(
     apks,
-    service_account,
-    google_play_credentials_file,
-    track,
     expected_package_names,
-    rollout_percentage=None,
+    target_platform,
+    amazon_client_id=None,
+    amazon_client_secret=None,
+    google_service_account=None,
+    google_credentials_file=None,
+    google_track=None,
+    google_rollout_percentage=None,
     commit=True,
-    contact_google_play=True,
+    contact_server=True,
     skip_check_ordered_version_codes=False,
     skip_check_multiple_locales=False,
     skip_check_same_locales=False,
     skip_checks_fennec=False,
 ):
-    """
+    if target_platform == "google" and (
+        google_service_account is None
+        or google_credentials_file is None
+        or google_track is None
+    ):
+        raise ValueError('When "target_platform" is "google", the account, credentials and track '
+                         'must be provided')
 
-    Args:
-        apks: list of APK files
-        service_account: Google Play service account
-        google_play_credentials_file: Credentials file to authenticate to Google Play
-        track (str): Google Play track to deploy to (e.g.: "nightly"). If "rollout" is chosen, the parameter
-            `rollout_percentage` must be specified as well
-        expected_package_names (list of str): defines what the expected package name must be.
-        rollout_percentage (int): percentage of users to roll out this update to. Must be a number between [0-100].
-            This option is only valid if `track` is set to "rollout"
-        commit (bool): `False` to do a dry-run
-        contact_google_play (bool): `False` to avoid communicating with Google Play. Useful if you're using mock
-            credentials.
-        skip_checks_fennec (bool): skip Fennec-specific checks
-        skip_check_same_locales (bool): skip check to ensure all APKs have the same locales
-        skip_check_multiple_locales (bool): skip check to ensure all APKs have more than one locale
-        skip_check_ordered_version_codes (bool): skip check to ensure that ensures all APKs have different version codes
-            and that the x86 version code > the arm version code
+    if target_platform == "amazon" and (
+        amazon_client_id is None
+        or amazon_client_secret is None
+    ):
+        raise ValueError('When "target_platform" is "amazon", the client_id and client_secret '
+                         'must be provided')
 
-    """
     # We want to tune down some logs, even when push_apk() isn't called from the command line
     main_logging.init()
 
@@ -107,14 +147,22 @@ def push_apk(
         skip_check_ordered_version_codes,
     )
 
-    # Each distinct product must be uploaded in different Google Play transaction, so we split them
+    # Each distinct product must be uploaded in different "edit"/transaction, so we split them
     # by package name here.
     apks_by_package_name = _apks_by_package_name(apks_metadata_per_paths)
     for package_name, extracted_apks in apks_by_package_name.values():
-        with store.edit(service_account, google_play_credentials_file.name, package_name,
-                        contact_google_play=contact_google_play, commit=commit) as edit:
-            all_version_codes = _get_ordered_version_codes(apks_metadata_per_paths)
-            edit.update_app(extracted_apks, track, all_version_codes, rollout_percentage)
+        if target_platform == 'amazon':
+            with AmazonStoreEdit.transaction(amazon_client_id, amazon_client_secret, package_name,
+                                             contact_server=contact_server, commit=commit) as edit:
+                edit.update_app(extracted_apks)
+        elif target_platform == 'google':
+            with store.edit(google_service_account, google_credentials_file.name,
+                            package_name, contact_google_play=contact_server,
+                            commit=commit) as edit:
+                edit.update_app(extracted_apks, google_track, google_rollout_percentage)
+        else:
+            raise ValueError(f'Unexpected target platform of "{target_platform}", expected either'
+                             f'"amazon" or "google"')
 
 
 def _apks_by_package_name(apks_metadata):
