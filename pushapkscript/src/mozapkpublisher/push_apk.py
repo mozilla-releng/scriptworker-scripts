@@ -7,7 +7,7 @@ import logging
 from mozapkpublisher.common import store, main_logging
 from mozapkpublisher.common.apk import add_apk_checks_arguments, extract_and_check_apks_metadata
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
-from mozapkpublisher.common.store import AmazonStoreEdit
+from mozapkpublisher.common.store import AmazonStoreEdit, GooglePlayEdit
 
 logger = logging.getLogger(__name__)
 
@@ -15,41 +15,7 @@ logger = logging.getLogger(__name__)
 ExtractedApk = namedtuple('ProcessedApk', ['file', 'metadata'])
 
 
-def consumer_callback(publish_config):
-    apks = ['file', 'file2']
-    expected_package_names = ['org.mozilla.fenix']
-
-    def upload_google(package_name, extracted_apks):
-        with open(publish_config['google_credentials_file']) as credentials:
-            with store.edit(
-                publish_config['google_service_account'],
-                credentials,
-                package_name,
-                contact_google_play=True,
-                commit=True
-            ) as edit:
-                edit.update_app(extracted_apks, publish_config['track'],
-                                publish_config['rollout_percentage'])
-
-    def upload_amazon(package_name, extracted_apks):
-        with AmazonStoreEdit.transaction(
-            publish_config['amazon_client_id'],
-            publish_config['amazon_client_secret'],
-            package_name,
-            contact_server=True,
-            commit=True
-        ) as edit:
-            edit.update_app(extracted_apks)
-
-    push_apk_callback(
-        apks,
-        upload_amazon if publish_config['target_platform'] == 'amazon' else upload_google,
-        expected_package_names,
-        skip_checks_fennec=True,
-    )
-
-
-def push_apk_callback(
+def push_apk(
     apks,
     upload_apk,
     expected_package_names,
@@ -73,96 +39,8 @@ def push_apk_callback(
     # Each distinct product must be uploaded in different store transaction, so we split them
     # by package name here.
     apks_by_package_name = _apks_by_package_name(apks_metadata)
-    for package_name, extracted_apks in apks_by_package_name.values():
+    for package_name, extracted_apks in apks_by_package_name.items():
         upload_apk(package_name, extracted_apks)
-
-def consumer(publish_config):
-    apks = ['file', 'file2']
-    expected_package_names = ['org.mozilla.fenix']
-
-    google_credentials_file = None
-    if publish_config['target_platform'] == 'google':
-        google_credentials_file = open(publish_config['google_credentials_file'])
-
-    push_apk(
-        apks,
-        expected_package_names,
-        publish_config['target_platform'],
-        publish_config.get('amazon_client_id'),
-        publish_config.get('amazon_client_secret'),
-        publish_config.get('google_service_account'),
-        google_credentials_file,
-        publish_config.get('google_track'),
-        publish_config.get('google_rollout_percentage'),
-        commit=True,
-        contact_server=True,
-        skip_checks_fennec=True,
-    )
-
-    if publish_config['target_platform'] == 'google':
-        google_credentials_file.close()
-
-
-def push_apk(
-    apks,
-    expected_package_names,
-    target_platform,
-    amazon_client_id=None,
-    amazon_client_secret=None,
-    google_service_account=None,
-    google_credentials_file=None,
-    google_track=None,
-    google_rollout_percentage=None,
-    commit=True,
-    contact_server=True,
-    skip_check_ordered_version_codes=False,
-    skip_check_multiple_locales=False,
-    skip_check_same_locales=False,
-    skip_checks_fennec=False,
-):
-    if target_platform == "google" and (
-        google_service_account is None
-        or google_credentials_file is None
-        or google_track is None
-    ):
-        raise ValueError('When "target_platform" is "google", the account, credentials and track '
-                         'must be provided')
-
-    if target_platform == "amazon" and (
-        amazon_client_id is None
-        or amazon_client_secret is None
-    ):
-        raise ValueError('When "target_platform" is "amazon", the client_id and client_secret '
-                         'must be provided')
-
-    # We want to tune down some logs, even when push_apk() isn't called from the command line
-    main_logging.init()
-
-    apks_metadata_per_paths = extract_and_check_apks_metadata(
-        apks,
-        expected_package_names,
-        skip_checks_fennec,
-        skip_check_multiple_locales,
-        skip_check_same_locales,
-        skip_check_ordered_version_codes,
-    )
-
-    # Each distinct product must be uploaded in different "edit"/transaction, so we split them
-    # by package name here.
-    apks_by_package_name = _apks_by_package_name(apks_metadata_per_paths)
-    for package_name, extracted_apks in apks_by_package_name.values():
-        if target_platform == 'amazon':
-            with AmazonStoreEdit.transaction(amazon_client_id, amazon_client_secret, package_name,
-                                             contact_server=contact_server, commit=commit) as edit:
-                edit.update_app(extracted_apks)
-        elif target_platform == 'google':
-            with store.edit(google_service_account, google_credentials_file.name,
-                            package_name, contact_google_play=contact_server,
-                            commit=commit) as edit:
-                edit.update_app(extracted_apks, google_track, google_rollout_percentage)
-        else:
-            raise ValueError(f'Unexpected target platform of "{target_platform}", expected either'
-                             f'"amazon" or "google"')
 
 
 def _apks_by_package_name(apks_metadata):
@@ -183,16 +61,14 @@ def _get_ordered_version_codes(apks):
 def main():
     parser = argparse.ArgumentParser(description='Upload APKs on the Google Play Store.')
 
-    store.add_general_google_play_arguments(parser)
-    add_apk_checks_arguments(parser)
+    subparsers = parser.add_subparsers(dest='target_platform', required=True,
+                                       title='Target Platform')
 
-    parser.add_argument(
-        '--track',
-        action='store',
-        required=True,
-        help='Track on which to upload'
-    )
-    parser.add_argument(
+    google_parser = subparsers.add_parser('google')
+    google_parser.add_argument('track', help='Track on which to upload')
+    google_parser.add_argument('--service-account', help='The service account email', required=True)
+    google_parser.add_argument('--credentials', dest='google_play_credentials_file', type=argparse.FileType(mode='rb'), help='The p12 authentication file', required=True)
+    google_parser.add_argument(
         '--rollout-percentage',
         type=int,
         choices=range(0, 101),
@@ -201,18 +77,41 @@ def main():
         help='The percentage of user who will get the update. Specify only if track is rollout'
     )
 
+    amazon_parser = subparsers.add_parser('amazon')
+    amazon_parser.add_argument('--client-id', help='The amazon client id for auth', required=True)
+    amazon_parser.add_argument('--client-secret', help='The amazon client secret for auth', required=True)
+
+    parser.add_argument('--do_not_contact-server', action='store_false', dest='contact_server',
+                        help='''Prevent any request to reach the APK server. Use this option if 
+you want to run the script without any valid credentials nor valid APKs. --service-account and 
+--credentials must still be provided (you can just fill them with random string and file).''')
+    parser.add_argument('--commit', action='store_true', help="Commit changes onto APK server. "
+                                                              "This action cannot be reverted.")
+    add_apk_checks_arguments(parser)
     config = parser.parse_args()
+
+    def upload_google(package_name, extracted_apks):
+        with GooglePlayEdit.transaction(config.service_account,
+                                        config.google_play_credentials_file, package_name,
+                                        contact_server=config.contact_server, commit=config.commit) as edit:
+            edit.update_app(extracted_apks, config.track,
+                            config.rollout_percentage)
+
+    def upload_amazon(package_name, extracted_apks):
+        with AmazonStoreEdit.transaction(
+            config.client_id,
+            config.client_secret,
+            package_name,
+            contact_server=config.contact_server,
+            commit=config.commit
+        ) as edit:
+            edit.update_app(extracted_apks)
 
     try:
         push_apk(
             config.apks,
-            config.service_account,
-            config.google_play_credentials_file,
-            config.track,
+            upload_amazon if config.target_platform == 'amazon' else upload_google,
             config.expected_package_names,
-            config.rollout_percentage,
-            config.commit,
-            config.contact_google_play,
             config.skip_check_ordered_version_codes,
             config.skip_check_multiple_locales,
             config.skip_check_same_locales,

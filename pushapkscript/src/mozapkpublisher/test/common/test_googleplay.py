@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 from mozapkpublisher.common import store
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.common.store import add_general_google_play_arguments, \
-    GooglePlayEdit, edit_resource_for_options
+    GooglePlayEdit, _create_google_edit_resource
 from mozapkpublisher.test import does_not_raise
 
 
@@ -30,7 +30,7 @@ def test_add_general_google_play_arguments():
 
 
 def test_edit_resource_for_options_do_not_contact():
-    edit_resource = edit_resource_for_options(False, '', MagicMock)
+    edit_resource = _create_google_edit_resource(False, '', MagicMock)
     assert isinstance(edit_resource, MagicMock)
 
 
@@ -48,7 +48,8 @@ def edit_resource_mock():
 def test_google_play_edit_no_commit_transaction(edit_resource_for_options_):
     mock_edits_resource = MagicMock()
     edit_resource_for_options_.return_value = mock_edits_resource
-    with store.edit(None, None, 'package.name', contact_google_play=False, commit=False) as _:
+    with GooglePlayEdit.transaction(None, None, 'package.name', contact_server=False,
+                                    commit=False) as _:
         pass
 
     mock_edits_resource.commit.assert_not_called()
@@ -58,7 +59,8 @@ def test_google_play_edit_no_commit_transaction(edit_resource_for_options_):
 def test_google_play_edit_commit_transaction(edit_resource_for_options_):
     mock_edits_resource = MagicMock()
     edit_resource_for_options_.return_value = mock_edits_resource
-    with store.edit(None, None, 'package.name', contact_google_play=False, commit=True) as _:
+    with GooglePlayEdit.transaction(None, None, 'package.name', contact_server=False,
+                                    commit=True) as _:
         pass
 
     mock_edits_resource.commit.assert_called_with(editId=ANY, packageName='package.name')

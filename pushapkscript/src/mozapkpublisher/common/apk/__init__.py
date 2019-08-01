@@ -7,7 +7,7 @@ from mozapkpublisher.common.apk.extractor import extract_metadata
 
 
 def add_apk_checks_arguments(parser):
-    parser.add_argument('apks', metavar='path_to_apk', type=argparse.FileType(), nargs='+',
+    parser.add_argument('apks', metavar='path_to_apk', type=argparse.FileType(mode='rb'), nargs='+',
                         help='The path to the APK to upload. You have to provide every APKs for each architecture/API level. \
                                             Missing or extra APKs exit the program without uploading anything')
 
@@ -35,7 +35,9 @@ def extract_and_check_apks_metadata(
     skip_check_ordered_version_codes,
 ):
     apks_metadata = {
-        apk: extract_metadata(apk.name, not skip_checks_fennec)
+        apk: extract_metadata(apk.name, not skip_check_ordered_version_codes,
+                              not skip_check_same_locales and not skip_check_multiple_locales,
+                              not skip_checks_fennec)
         for apk in apks
     }
     cross_check_apks(

@@ -63,7 +63,7 @@ def http(expected_status, method, url, **kwargs):
     if response.status_code != expected_status:
         raise RuntimeError(f'Expected "{method}" to "{url}" to have status code '
                            f'"{expected_status}", but received "{response.status_code}" '
-                           f'instead')
+                           f'("{response.text}") instead')
     return response
 
 
@@ -78,7 +78,7 @@ class AmazonAuth(requests.auth.AuthBase):
 
 class AmazonStoreEdit:
     def __init__(self, auth, edit_it, package_name):
-        self._auth = auth,
+        self._auth = auth
         self._edit_id = edit_it
         self._package_name = package_name
 
@@ -98,7 +98,8 @@ class AmazonStoreEdit:
             self._http(204, 'delete', f'/apks/{apk_id}', headers={'If-Match': etag})
 
         for apk, _ in extracted_apks:
-            self._http(200, 'post', '/apks/upload', data=apk)
+            self._http(200, 'post', '/apks/upload', data=apk,
+                       headers={'Content-Type': 'application/octet-stream'})
 
         response = self._http(200, 'get', '/listings')
         languages = response.json()['listings'].keys()
@@ -111,11 +112,19 @@ class AmazonStoreEdit:
             self._http(200, 'put', f'/listings/{locale}', headers={'If-Match': etag}, json=listing)
 
     def commit(self):
-        response = self._http(200, 'get', '/')
+        response = self._http(200, 'get', '')
         etag = response.headers['ETag']
-        print(f'Edit etag: {etag}')
 
-        self._http(200, 'post', '/validate')  # TODO commit
+        self._http(200, 'post', '/commit', headers={'If-Match': etag})
+
+    def validate(self):
+        self._http(200, 'post', '/validate')
+
+    def cancel(self):
+        response = self._http(200, 'get', '')
+        etag = response.headers['ETag']
+
+        self._http(204, 'delete', '', headers={'If-Match': etag})
 
     @staticmethod
     @contextmanager
@@ -138,12 +147,20 @@ class AmazonStoreEdit:
                            'was set to `False`')
             edit = MockAmazonStoreEdit()
 
-        yield edit
-        if commit:
-            edit.commit()
-            logger.info('Changes committed')
-        else:
-            logger.warning('Transaction not committed, since `commit` was `False`')
+        try:
+            yield edit
+            if commit:
+                edit.commit()
+                logger.info('Changes committed')
+            else:
+                logger.warning('Edit not committed, since `commit` was `False`. Validating and '
+                               'cancelling the edit...')
+                edit.validate()
+                edit.cancel()
+        except BaseException:
+            logger.warning('An error was encountered, cancelling the edit...')
+            edit.cancel()
+            raise
 
 
 class MockAmazonStoreEdit:
@@ -151,6 +168,12 @@ class MockAmazonStoreEdit:
         pass
 
     def commit(self):
+        pass
+
+    def validate(self):
+        pass
+
+    def cancel(self):
         pass
 
 
@@ -274,22 +297,23 @@ class GooglePlayEdit:
         ))
         logger.debug(u'Apk listing response: {}'.format(response))
 
+    @staticmethod
+    @contextmanager
+    def transaction(service_account, credentials_file_name, package_name, *, contact_server,
+                    commit):
+        edit_resource = _create_google_edit_resource(contact_server, service_account, credentials_file_name)
+        edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
+        google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
+        yield google_play
+        if commit:
+            edit_resource.commit(editId=edit_id, packageName=package_name).execute()
+            logger.info('Changes committed')
+            logger.debug('edit_id "{}" for "{}" has been committed'.format(edit_id, package_name))
+        else:
+            logger.warning('Transaction not committed, since `commit` was `False`')
 
-@contextmanager
-def edit(service_account, credentials_file_name, package_name, *, contact_google_play, commit):
-    edit_resource = edit_resource_for_options(contact_google_play, service_account, credentials_file_name)
-    edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
-    google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
-    yield google_play
-    if commit:
-        edit_resource.commit(editId=edit_id, packageName=package_name).execute()
-        logger.info('Changes committed')
-        logger.debug('edit_id "{}" for "{}" has been committed'.format(edit_id, package_name))
-    else:
-        logger.warning('Transaction not committed, since `commit` was `False`')
 
-
-def edit_resource_for_options(contact_google_play, service_account, credentials_file_name):
+def _create_google_edit_resource(contact_google_play, service_account, credentials_file_name):
     if contact_google_play:
         # Create an httplib2.Http object to handle our HTTP requests an
         # authorize it with the Credentials. Note that the first parameter,
