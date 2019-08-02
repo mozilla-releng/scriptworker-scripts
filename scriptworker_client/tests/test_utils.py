@@ -5,7 +5,6 @@
 import aiohttp
 import asyncio
 from asyncio.subprocess import PIPE
-from async_generator import asynccontextmanager
 from datetime import datetime
 import mock
 import os
@@ -13,10 +12,16 @@ import pytest
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 import scriptworker_client.utils as utils
 from scriptworker_client.exceptions import RetryError, TaskError
+
+if sys.version_info < (3, 7):
+    from async_generator import asynccontextmanager
+else:
+    from contextlib import asynccontextmanager
 
 
 # helpers {{{1

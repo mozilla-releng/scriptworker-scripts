@@ -4,13 +4,13 @@
 """
 import aiohttp
 import asyncio
-from async_generator import asynccontextmanager
 from datetime import datetime
 import mock
 import os
 import pytest
 import re
 import shutil
+import sys
 import time
 import scriptworker_client.aio as aio
 from scriptworker_client.exceptions import (
@@ -19,6 +19,11 @@ from scriptworker_client.exceptions import (
     RetryError,
     TaskError,
 )
+
+if sys.version_info < (3, 7):
+    from async_generator import asynccontextmanager
+else:
+    from contextlib import asynccontextmanager
 
 
 # helpers {{{1
