@@ -140,6 +140,7 @@ def get_log_filehandle(log_path=None):
         log_path (str, optional): the path to log to. If ``None``, create
             a temp file to log to, and delete once we exit the context.
             Defaults to ``None``.
+
     """
     if log_path is not None:
         with open(log_path, "w+") as log_filehandle:
