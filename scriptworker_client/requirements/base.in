@@ -1,3 +1,4 @@
 aiohttp
+async_generator;  python_version < '3.7'
 jsonschema
 PyYAML
