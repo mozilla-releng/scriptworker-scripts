@@ -16,6 +16,7 @@ import scriptworker_client.aio as aio
 from scriptworker_client.exceptions import (
     Download404,
     DownloadError,
+    LockfileError,
     RetryError,
     TaskError,
 )
@@ -161,6 +162,89 @@ async def test_semaphore_wrapper():
     results2 = await aio.raise_future_exceptions(futures)
     assert len(results2) == 4
     assert results1 == results2[0:2]
+
+
+# lockfile {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "use_name, attempts, has_slept", ((False, 2, True), (True, 1, False))
+)
+async def test_lockfile(tmpdir, mocker, attempts, has_slept, use_name):
+    """Given two lockfile paths, a third ``lockfile`` call should hit a
+    ``LockfileError`` after exhausting attempts.
+
+    """
+    paths = [os.path.join(tmpdir, "1"), os.path.join(tmpdir, "2")]
+    sleep_calls = []
+
+    async def fake_sleep(*args):
+        sleep_calls.append(args)
+
+    mocker.patch.object(asyncio, "sleep", new=fake_sleep)
+
+    name = "one" if use_name else None
+    async with aio.lockfile(paths, name=name, attempts=attempts, sleep=0) as path1:
+        assert path1 in paths
+        assert os.path.exists(path1)
+        name = "two" if use_name else None
+        async with aio.lockfile(paths, name=name, attempts=attempts, sleep=0) as path2:
+            assert path2 in paths
+            assert path1 != path2
+            assert os.path.exists(path1)
+            assert os.path.exists(path2)
+            with pytest.raises(LockfileError):
+                name = "three" if use_name else None
+                async with aio.lockfile(
+                    paths, name=name, attempts=attempts, sleep=0
+                ) as path3:
+                    assert path3 is None
+    for path in paths:
+        assert not os.path.exists(path)
+    if has_slept:
+        assert len(sleep_calls) == 1
+    else:
+        assert len(sleep_calls) == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("use_retry_async", (True, False))
+async def test_LockfileFuture(tmpdir, use_retry_async):
+    """Given two lockfile paths, a third ``LockfileFuture.run_with_lockfile``
+    call should hit a ``LockfileError`` after exhausting attempts. The coro
+    args and kwargs should match the values in the map.
+
+    """
+    paths = [os.path.join(tmpdir, "1"), os.path.join(tmpdir, "2")]
+    lockfile_map = {}
+    lockfile_map[paths[0]] = {"path": paths[0], "val": "foo"}
+    lockfile_map[paths[1]] = {"path": paths[1], "val": "bar"}
+    run_calls = []
+    futures = []
+
+    async def run(path, val=None):
+        assert path in lockfile_map
+        assert lockfile_map[path]["val"] == val
+        assert os.path.exists(path)
+        run_calls.append([path, val])
+        await asyncio.sleep(1)
+
+    for i in range(0, 3):
+        lf = aio.LockfileFuture(
+            run,
+            lockfile_map,
+            args=("%(path)s",),
+            kwargs={"val": "%(val)s"},
+            lockfile_kwargs={"name": str(i), "attempts": 2, "sleep": 0.1},
+            use_retry_async=use_retry_async,
+        )
+        futures.append(asyncio.ensure_future(lf.run_with_lockfile()))
+    with pytest.raises(LockfileError):
+        await aio.raise_future_exceptions(futures)
+    assert len(run_calls) == 2
+    assert [paths[0], "foo"] in run_calls
+    assert [paths[1], "bar"] in run_calls
+    for path in paths:
+        assert not os.path.exists(path)
 
 
 # retry_async {{{1

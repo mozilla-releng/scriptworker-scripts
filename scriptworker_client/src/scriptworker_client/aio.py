@@ -3,18 +3,26 @@
 import aiohttp
 import asyncio
 import async_timeout
+import fcntl
 import logging
 import os
 import random
-
+import sys
 from scriptworker_client.exceptions import (
     Download404,
     DownloadError,
+    LockfileError,
     RetryError,
     TaskError,
     TimeoutError,
 )
-from scriptworker_client.utils import makedirs
+from scriptworker_client.utils import makedirs, rm
+
+if sys.version_info < (3, 7):  # pragma: no cover
+    from async_generator import asynccontextmanager
+else:  # pragma: no cover
+    from contextlib import asynccontextmanager
+
 
 log = logging.getLogger(__name__)
 
@@ -79,6 +87,148 @@ async def semaphore_wrapper(semaphore, coro):
     """
     async with semaphore:
         return await coro
+
+
+# lockfile {{{1
+@asynccontextmanager
+async def lockfile(paths, name=None, attempts=10, sleep=30):
+    """Acquire a lockfile from among ``paths`` and yield the path.
+
+    If we want inter-process semaphores, we can use lock files rather than
+    ``asyncio.Semaphore``.
+
+    The reason we're using ``open(path, "x")`` rather than purely relying
+    on ``fcntl.lockf`` is that fcntl file locking doesn't lock the file
+    inside the current process, only for outside processes. If we don't
+    keep track of which lockfiles we've used in our async script, we can
+    easily blow away our own lock if we, say, used ``open(path, "w")`` or
+    ``open(path, "a") and then closed any of the open filehandles.
+
+    (See http://0pointer.de/blog/projects/locking.html for more details.)
+
+    Args:
+        paths (list): a list of path strings to use as lockfiles.
+        name (str, optional): a descriptive name for the process that needs
+            the lockfile, for logging purposes. Defaults to ``None``.
+        attempts (int, optional): the number of attempts to get a lockfile.
+            This means we attempt to get a lockfile from every path in ``paths``, ``attempts`` times. Defaults to 20.
+        sleep (int, optional): the number of seconds to sleep between attempts.
+            We sleep after attempting every path in ``paths``. Defaults to 30.
+
+    Yields:
+        str: the lockfile path acquired.
+
+    Raises:
+        LockfileError: if we've exhausted our attempts.
+
+    """
+    if name is not None:
+        acquired_msg = "Lockfile acquired for {} at %s".format(name)
+        wait_msg = "Couldn't get lock for {}; sleeping %s".format(name)
+        failed_msg = "Can't get lock for {} from paths %s after %s attempts".format(
+            name
+        )
+    else:
+        acquired_msg = "Lockfile acquired at %s"
+        wait_msg = "Couldn't get lock; sleeping %s"
+        failed_msg = "Can't get lock from paths %s after %s attempts"
+    for attempt in range(0, attempts):
+        for path in [item for item in random.sample(paths, len(paths))]:
+            try:
+                # Ensure the file doesn't exist, so we don't blow away
+                # our own lockfiles.
+                with open(path, "x") as fh:
+                    # Acquire an fcntl lock, in case other processes
+                    # use something other than ``lockfile`` to acquire
+                    # locks
+                    try:
+                        fcntl.lockf(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        log.debug(acquired_msg, path)
+                        yield path
+                        return
+                    finally:
+                        rm(path)
+            except (FileExistsError, OSError):
+                continue
+        log.debug(wait_msg, sleep)
+        if attempt < attempts - 1:
+            await asyncio.sleep(sleep)
+    raise LockfileError(failed_msg, paths, attempts)
+
+
+class LockfileFuture:
+    """Create an awaitable that uses lockfiles as a semaphore.
+
+    Attributes:
+        coro (typing.Awaitable): the coroutine to run.
+        args (list): the args to pass to the coroutine.
+        kwargs (dict): the kwargs to pass to the coroutine.
+        retry_async_kwargs (dict): the kwargs to pass to ``retry_async``.
+        use_retry_async (bool): if ``True``, use ``retry_async``.
+        lockfile_kwargs (dict): the kwargs to pass to ``lockfile``.
+        lockfile_map (dict): a mapping between lockfile path keys to arg/kwarg
+            replacement dictionary values. e.g. ``{"path": {"find": "replace"}, ...}``
+
+    """
+
+    def __init__(
+        self,
+        coro,
+        lockfile_map,
+        args=None,
+        kwargs=None,
+        lockfile_kwargs=None,
+        retry_async_kwargs=None,
+        use_retry_async=False,
+    ):
+        """Initialize the ``LockfileFuture``.
+
+        Args:
+            coro (typing.Awaitable): the coroutine to run.
+            args (list, optional): the args to pass to the coroutine. Defaults to ``[]``
+            kwargs (dict, optional): the kwargs to pass to the coroutine. Defaults to ``{}``
+            retry_async_kwargs (dict, optional): the kwargs to pass to ``retry_async``. Defaults to ``{}``.
+            use_retry_async (bool, optional): whether to use ``retry_async``. Defaults to ``False``.
+            lockfile_kwargs (dict, optional): the kwargs to pass to ``lockfile``. Defaults to ``{}``.
+            lockfile_map (dict): a mapping between lockfile path keys to arg/kwarg
+                replacement dictionary values. e.g. ``{"path": {"find": "replace"}, ...}``
+
+        """
+        self.coro = coro
+        self.args = args or ()
+        self.kwargs = kwargs or {}
+        self.lockfile_map = lockfile_map
+        self.lockfile_kwargs = lockfile_kwargs or {}
+        self.retry_async_kwargs = retry_async_kwargs or {}
+        self.use_retry_async = use_retry_async
+
+    async def run_with_lockfile(self):
+        """Run the coro with the lockfile.
+
+        Get a lockfile, update ``self.args`` and ``self.kwargs`` with the
+        corresponding ``self.lockfile_map`` value, then await ``self.coro``
+        (wrapped with ``retry_async`` if ``self.use_retry_async``).
+
+        """
+        async with lockfile(
+            self.lockfile_map.keys(), **self.lockfile_kwargs
+        ) as lockfile_path:
+            args = [
+                arg % self.lockfile_map[lockfile_path] if isinstance(arg, str) else arg
+                for arg in self.args
+            ]
+            kwargs = {
+                key: val % self.lockfile_map[lockfile_path]
+                if isinstance(val, str)
+                else val
+                for key, val in self.kwargs.items()
+            }
+            if self.use_retry_async:
+                await retry_async(
+                    self.coro, args=args, kwargs=kwargs, **self.retry_async_kwargs
+                )
+            else:
+                await self.coro(*args, **kwargs)
 
 
 # retry_async {{{1
@@ -177,7 +327,7 @@ async def request(
     return_type="text",
     num_attempts=1,
     sterilized_url=None,
-    **kwargs
+    **kwargs,
 ):
     """Async aiohttp request wrapper.
 

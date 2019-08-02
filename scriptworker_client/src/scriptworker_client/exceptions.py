@@ -71,3 +71,7 @@ class Download404(ClientError):
 
 class DownloadError(ClientError):
     """Scriptworker-client download error."""
+
+
+class LockfileError(ClientError):
+    """Scriptworker-client lockfile acquiring error."""
