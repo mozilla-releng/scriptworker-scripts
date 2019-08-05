@@ -977,7 +977,8 @@ async def test_download_entitlements_file(
 
 # sign_behavior {{{1
 @pytest.mark.asyncio
-async def test_sign_behavior(mocker, tmpdir):
+@pytest.mark.parametrize("use_langpack", (False, True))
+async def test_sign_behavior(mocker, tmpdir, use_langpack):
     """Mock ``sign_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1022,6 +1023,15 @@ async def test_sign_behavior(mocker, tmpdir):
             ]
         }
     }
+    if use_langpack:
+        mocker.patch.object(mac, "sign_langpacks", new=noop_async)
+        task["payload"]["upstreamArtifacts"].append(
+            {
+                "taskId": "task3",
+                "formats": ["autograph_langpack"],
+                "paths": ["public/build3/target.langpack.xpi"],
+            }
+        )
 
     mocker.patch.object(os, "listdir", return_value=[])
     mocker.patch.object(mac, "run_command", new=noop_async)
@@ -1037,7 +1047,8 @@ async def test_sign_behavior(mocker, tmpdir):
 
 # sign_and_pkg_behavior {{{1
 @pytest.mark.asyncio
-async def test_sign_and_pkg_behavior(mocker, tmpdir):
+@pytest.mark.parametrize("use_langpack", (False, True))
+async def test_sign_and_pkg_behavior(mocker, tmpdir, use_langpack):
     """Mock ``sign_and_pkg_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1082,6 +1093,15 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
             ]
         }
     }
+    if use_langpack:
+        mocker.patch.object(mac, "sign_langpacks", new=noop_async)
+        task["payload"]["upstreamArtifacts"].append(
+            {
+                "taskId": "task3",
+                "formats": ["autograph_langpack"],
+                "paths": ["public/build3/target.langpack.xpi"],
+            }
+        )
 
     mocker.patch.object(os, "listdir", return_value=[])
     mocker.patch.object(mac, "run_command", new=noop_async)
@@ -1099,10 +1119,11 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir):
 
 # notarize_behavior {{{1
 @pytest.mark.parametrize(
-    "notarize_type", ("multi_account", "single_account", "single_zip")
+    "notarize_type,use_langpack",
+    zip(("multi_account", "single_account", "single_zip"), (False, True)),
 )
 @pytest.mark.asyncio
-async def test_notarize_behavior(mocker, tmpdir, notarize_type):
+async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
     """Mock ``notarize_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1147,6 +1168,15 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type):
             ]
         }
     }
+    if use_langpack:
+        mocker.patch.object(mac, "sign_langpacks", new=noop_async)
+        task["payload"]["upstreamArtifacts"].append(
+            {
+                "taskId": "task3",
+                "formats": ["autograph_langpack"],
+                "paths": ["public/build3/target.langpack.xpi"],
+            }
+        )
 
     mocker.patch.object(os, "listdir", return_value=[])
     mocker.patch.object(mac, "run_command", new=noop_async)
@@ -1166,7 +1196,8 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type):
 
 # geckodriver_behavior {{{1
 @pytest.mark.asyncio
-async def test_geckodriver_behavior(mocker, tmpdir):
+@pytest.mark.parametrize("use_langpack", (False, True))
+async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
     """Mock ``geckodriver_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1202,9 +1233,19 @@ async def test_geckodriver_behavior(mocker, tmpdir):
             ]
         }
     }
+    if use_langpack:
+        mocker.patch.object(mac, "sign_langpacks", new=noop_async)
+        task["payload"]["upstreamArtifacts"].append(
+            {
+                "taskId": "task3",
+                "formats": ["autograph_langpack"],
+                "paths": ["public/build3/target.langpack.xpi"],
+            }
+        )
 
     async def fake_extract(_, all_paths):
         for app in all_paths:
+            assert "autograph_langpack" not in app.formats
             app.parent_dir = f"{work_dir}/0"
             makedirs(app.parent_dir)
             touch(f"{app.parent_dir}/geckodriver")
