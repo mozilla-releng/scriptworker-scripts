@@ -11,6 +11,7 @@ class TaskVerificationError(ScriptWorkerTaskException):
 
         Args:
             msg (str): the reason for throwing an exception.
+
         """
         super(TaskVerificationError, self).__init__(
             msg, exit_code=STATUSES['malformed-payload']
@@ -25,6 +26,7 @@ class FailedSubprocess(ScriptWorkerTaskException):
 
         Args:
             msg (str): the reason for throwing an exception.
+
         """
         super(FailedSubprocess, self).__init__(
             msg, exit_code=STATUSES['internal-error']
