@@ -493,7 +493,7 @@ async def sign_widevine_with_autograph(key_config, from_, blessed, to=None):
 def langpack_id(app):
     """Return a list of id's for the langpacks.
 
-    Side Affect of checking if filenames are actually langpacks.
+    Side effect of checking if filenames are actually langpacks.
     """
     _, file_extension = os.path.splitext(app.orig_path)
     if not file_extension == ".xpi":
@@ -543,4 +543,3 @@ async def sign_langpacks(config, key_config, all_paths):
             to=app.target_tar_path,
             extension_id=id,
         )
-    return

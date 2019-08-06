@@ -500,12 +500,13 @@ def get_app_paths(config, task):
 
 
 def filter_apps(all_paths, fmt, inverted=False):
-    """Filtres through a list of apps and returns a list of apps back based on filter.
+    """Filters through a list of apps and returns a list of apps back based on filter.
 
     Args:
         all_paths: list of App objects
         fmt: format name to filter
         inverted (default: False): whether or not to invert the list.
+
     """
     filter_fn = filter
     if inverted:
