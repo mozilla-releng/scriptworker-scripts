@@ -500,7 +500,7 @@ def get_app_paths(config, task):
 
 
 def filter_apps(all_paths, fmt, inverted=False):
-    """Filters through a list of apps and returns a list of apps back based on filter.
+    """Filter all_apps by format.
 
     Args:
         all_paths: list of App objects
