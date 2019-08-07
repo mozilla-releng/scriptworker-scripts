@@ -2,7 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [11.1.0] - 2019-08-07
+### Added
+- Support for langpack signing
+
 ## [11.0.6] - 2019-07-29
+### Added
+- Added `.bin` to list of signable extensions
 ### Removed
 - Obsolete SSL certificates for signing servers
 
