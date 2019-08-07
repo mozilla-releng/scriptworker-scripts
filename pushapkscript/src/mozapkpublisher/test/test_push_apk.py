@@ -1,6 +1,8 @@
 from contextlib import contextmanager
 from zipfile import BadZipFile
 
+from mock import ANY
+
 import mozapkpublisher
 import os
 import pytest
@@ -26,6 +28,8 @@ apk_arm = NamedTemporaryFile()
 
 APKS = [apk_x86, apk_arm]
 SERVICE_ACCOUNT = 'foo@developer.gserviceaccount.com'
+CLIENT_ID = 'client'
+CLIENT_SECRET = 'secret'
 
 
 def patch_extract_metadata(monkeypatch):
@@ -85,30 +89,19 @@ def patch_store_transaction(monkeypatch_, patch_target):
     return mock_edit
 
 
-def test_rollout_without_rollout_percentage():
-    # Note: specifying "track='rollout'" (even with a valid percentage) is currently deprecated
-
-    with pytest.raises(WrongArgumentGiven):
-        # using the track "rollout" without a percentage
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', [])
+def test_google_no_track():
+    with pytest.raises(ValueError):
+        push_apk(APKS, 'google', SERVICE_ACCOUNT, credentials, [])
 
 
-def test_valid_rollout_percentage_with_track_rollout(google_play_edit_mock, monkeypatch):
-    set_up_mocks(monkeypatch, google_play_edit_mock)
-    valid_percentage = 50
-
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', [], rollout_percentage=valid_percentage, contact_server=False)
-    google_play_edit_mock.update_track.assert_called_once_with('production', ['0', '1'], valid_percentage)
-    google_play_edit_mock.update_track.reset_mock()
+def test_amazon_with_track():
+    with pytest.raises(ValueError):
+        push_apk(APKS, 'amazon', CLIENT_ID, CLIENT_SECRET, [], 'alpha')
 
 
-def test_valid_rollout_percentage_with_real_track(google_play_edit_mock, monkeypatch):
-    set_up_mocks(monkeypatch, google_play_edit_mock)
-    valid_percentage = 50
-
-    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'beta', [], rollout_percentage=valid_percentage, contact_google_play=False)
-    google_play_edit_mock.update_track.assert_called_once_with('beta', ['0', '1'], valid_percentage)
-    google_play_edit_mock.update_track.reset_mock()
+def test_amazon_with_rollout():
+    with pytest.raises(ValueError):
+        push_apk(APKS, 'amazon', CLIENT_ID, CLIENT_SECRET, [], rollout_percentage=50)
 
 
 def test_google(monkeypatch):
@@ -126,7 +119,7 @@ def test_amazon(monkeypatch):
     mock_metadata = patch_extract_metadata(monkeypatch)
     mock_edit = patch_store_transaction(monkeypatch, store.AmazonStoreEdit)
 
-    push_apk(APKS, 'amazon', SERVICE_ACCOUNT, credentials, [], contact_server=False)
+    push_apk(APKS, 'amazon', CLIENT_ID, CLIENT_SECRET, [], contact_server=False)
     mock_edit.update_app.assert_called_once_with([
         (apk_arm, mock_metadata[apk_arm]),
         (apk_x86, mock_metadata[apk_x86]),
@@ -190,33 +183,66 @@ def test_main_bad_arguments_status_code(monkeypatch):
     assert exception.value.code == 2
 
 
-def test_main(monkeypatch):
-    incomplete_args = [
-        'script',
-        'amazon',
-        # missing file and credentials
-    ]
-
-    monkeypatch.setattr(sys, 'argv', incomplete_args)
-
-    with pytest.raises(SystemExit):
-        main()
-
+def test_main_google(monkeypatch):
     file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
     fail_manual_validation_args = [
         'script',
         'google',
         '--service-account', 'foo@developer.gserviceaccount.com',
         '--credentials', file,
-        'rollout',
+        'alpha',
         file,
         '--expected-package-name=org.mozilla.fennec_aurora',
     ]
 
-    with patch.object(mozapkpublisher.push_apk, 'push_apk', wraps=mozapkpublisher.push_apk.push_apk) as mock_push_apk:
+    with patch.object(mozapkpublisher.push_apk, 'push_apk') as mock_push_apk:
         monkeypatch.setattr(sys, 'argv', fail_manual_validation_args)
+        main()
 
-        with pytest.raises(BadZipFile):
-            main()
+        mock_push_apk.assert_called_once_with(
+            ANY,
+            'google',
+            'foo@developer.gserviceaccount.com',
+            file,
+            ['org.mozilla.fennec_aurora'],
+            'alpha',
+            None,
+            False,
+            True,
+            False,
+            False,
+            False,
+            False,
+        )
 
-        assert mock_push_apk.called
+
+def test_main_amazon(monkeypatch):
+    file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
+    fail_manual_validation_args = [
+        'script',
+        'amazon',
+        '--client-id', CLIENT_ID,
+        '--client-secret', CLIENT_SECRET,
+        file,
+        '--expected-package-name=org.mozilla.fennec_aurora',
+    ]
+
+    with patch.object(mozapkpublisher.push_apk, 'push_apk') as mock_push_apk:
+        monkeypatch.setattr(sys, 'argv', fail_manual_validation_args)
+        main()
+
+        mock_push_apk.assert_called_once_with(
+            ANY,
+            'amazon',
+            'client',
+            'secret',
+            ['org.mozilla.fennec_aurora'],
+            None,
+            None,
+            False,
+            True,
+            False,
+            False,
+            False,
+            False,
+        )

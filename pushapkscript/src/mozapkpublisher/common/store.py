@@ -97,6 +97,7 @@ class AmazonStoreEdit:
             etag = response.headers['ETag']
             self._http(204, 'delete', f'/apks/{apk_id}', headers={'If-Match': etag})
 
+        # TODO: simplify update_app(...) so it just takes [apks], rather than [(apk, _unused)]
         for apk, _ in extracted_apks:
             self._http(200, 'post', '/apks/upload', data=apk,
                        headers={'Content-Type': 'application/octet-stream'})
@@ -235,7 +236,7 @@ class GooglePlayEdit:
                     return
             raise
 
-    def update_track(self, track, version_codes, rollout_percentage):
+    def update_track(self, track, version_codes, rollout_percentage=None):
         body = {
             u'releases': [{
                 u'status': 'completed',

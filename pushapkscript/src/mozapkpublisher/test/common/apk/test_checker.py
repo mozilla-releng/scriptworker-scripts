@@ -1,3 +1,4 @@
+from mock import Mock
 import pytest
 
 from mozapkpublisher.common.apk.checker import (
@@ -14,37 +15,43 @@ from mozapkpublisher.common.apk.checker import (
 from mozapkpublisher.common.exceptions import NotMultiLocaleApk, BadApk, BadSetOfApks
 
 
+def mock_apk(filename):
+    apk = Mock()
+    apk.name = filename
+    return apk
+
+
 @pytest.mark.parametrize('apks_metadata_per_paths, product_types, should_fail', (({
-    'fenix.apk': {
+    mock_apk('fenix.apk'): {
         'package_name': 'org.mozilla.fenix'
     },
-    'focus.apk': {
+    mock_apk('focus.apk'): {
         'package_name': 'org.mozilla.focus'
     },
-    'klar.apk': {
+    mock_apk('klar.apk'): {
         'package_name': 'org.mozilla.klar'
     },
-    'reference-browser.apk': {
+    mock_apk('reference-browser.apk'): {
         'package_name': 'org.mozilla.reference.browser'
     }
 }, ['org.mozilla.fenix', 'org.mozilla.focus', 'org.mozilla.klar', 'org.mozilla.reference.browser'], False), ({
-    'fennec.apk': {
+    mock_apk('fennec.apk'): {
         'package_name': 'org.mozilla.firefox'
     },
-    'klar.apk': {
+    mock_apk('klar.apk'): {
         'package_name': 'org.mozilla.klar'
     },
-    'reference-browser.apk': {
+    mock_apk('reference-browser.apk'): {
         'package_name': 'org.mozilla.reference.browser'
     }
 }, ['org.mozilla.focus', 'org.mozilla.klar'], True), ({
-    'fennec.apk': {
+    mock_apk('fennec.apk'): {
         'package_name': 'org.mozilla.firefox'
     },
-    'klar-x86.apk': {
+    mock_apk('klar-x86.apk'): {
         'package_name': 'org.mozilla.klar'
     },
-    'klar-arm.apk': {
+    mock_apk('klar-arm.apk'): {
         'package_name': 'org.mozilla.klar'
     }
 }, ['org.mozilla.focus', 'org.mozilla.klar', 'org.mozilla.reference.browser'], True)))
@@ -58,7 +65,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
 
 @pytest.mark.parametrize('apks_metadata_per_paths, package_names_check, skip_checks_fennec, skip_check_multiple_locales, skip_check_same_locales, skip_check_ordered_version_codes', ((   # noqa
     {
-        'fennec-57.0.multi.android-arm.apk': {
+        mock_apk('fennec-57.0.multi.android-arm.apk'): {
             'api_level': 16,
             'architecture': 'armeabi-v7a',
             'firefox_build_id': '20171112125738',
@@ -76,7 +83,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'package_name': 'org.mozilla.firefox',
             'version_code': '2015523297',
         },
-        'fennec-57.0.multi.android-i386.apk': {
+        mock_apk('fennec-57.0.multi.android-i386.apk'): {
             'api_level': 16,
             'architecture': 'x86',
             'firefox_build_id': '20171112125738',
@@ -102,7 +109,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
     False,
 ), (
     {
-        '/builds/scriptworker/work/cot/KfG055G3RTCt1etlbYlzkg/public/build/target.apk': {
+        mock_apk('/builds/scriptworker/work/cot/KfG055G3RTCt1etlbYlzkg/public/build/target.apk'): {
             'api_level': 16,
             'architecture': 'armeabi-v7a',
             'firefox_version': '66.0a1',
@@ -120,7 +127,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'package_name': 'org.mozilla.fennec_aurora',
             'version_code': '2015605649',
         },
-        '/builds/scriptworker/work/cot/T26ZMbPPRJqCBfqTEfbHyg/public/build/target.apk': {
+        mock_apk('/builds/scriptworker/work/cot/T26ZMbPPRJqCBfqTEfbHyg/public/build/target.apk'): {
             'api_level': 16,
             'architecture': 'x86',
             'firefox_version': '66.0a1',
@@ -138,7 +145,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'package_name': 'org.mozilla.fennec_aurora',
             'version_code': '2015605653',
         },
-        '/builds/scriptworker/work/cot/dl5vhYhGRpG7MEj0ODyFuQ/public/build/target.apk': {
+        mock_apk('/builds/scriptworker/work/cot/dl5vhYhGRpG7MEj0ODyFuQ/public/build/target.apk'): {
             'api_level': 21,
             'architecture': 'arm64-v8a',
             'firefox_version': '66.0a1',
@@ -164,7 +171,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
     False,
 ), (
     {
-        '/builds/scriptworker/work/cot/KfG055G3RTCt1etlbYlzkg/public/build/target.apk': {
+        mock_apk('/builds/scriptworker/work/cot/KfG055G3RTCt1etlbYlzkg/public/build/target.apk'): {
             'api_level': 16,
             'architecture': 'armeabi-v7a',
             'firefox_version': '67.0a1',
@@ -182,7 +189,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'package_name': 'org.mozilla.fennec_aurora',
             'version_code': '2015605649',
         },
-        '/builds/scriptworker/work/cot/T26ZMbPPRJqCBfqTEfbHyg/public/build/target.apk': {
+        mock_apk('/builds/scriptworker/work/cot/T26ZMbPPRJqCBfqTEfbHyg/public/build/target.apk'): {
             'api_level': 16,
             'architecture': 'x86',
             'firefox_version': '67.0a1',
@@ -200,7 +207,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'package_name': 'org.mozilla.fennec_aurora',
             'version_code': '2015605653',
         },
-        '/builds/scriptworker/work/cot/dl5vhYhGRpG7MEj0ODyFuQ/public/build/target.apk': {
+        mock_apk('/builds/scriptworker/work/cot/dl5vhYhGRpG7MEj0ODyFuQ/public/build/target.apk'): {
             'api_level': 21,
             'architecture': 'arm64-v8a',
             'firefox_version': '67.0a1',
@@ -218,7 +225,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'package_name': 'org.mozilla.fennec_aurora',
             'version_code': '2015605651',
         },
-        '/builds/scriptworker/work/cot/somtaskId/public/build/target.apk': {
+        mock_apk('/builds/scriptworker/work/cot/somtaskId/public/build/target.apk'): {
             'api_level': 21,
             'architecture': 'x86_64',
             'firefox_version': '67.0a1',
@@ -244,7 +251,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
     False,
 ), (
     {
-        '/some/beta/target.arm.apk': {
+        mock_apk('/some/beta/target.arm.apk'): {
             'api_level': 16,
             'architecture': 'armeabi-v7a',
             'firefox_version': '67.0',
@@ -262,7 +269,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'package_name': 'org.mozilla.firefox_beta',
             'version_code': '1',
         },
-        '/some/beta/target.x86.apk': {
+        mock_apk('/some/beta/target.x86.apk'): {
             'api_level': 16,
             'architecture': 'x86',
             'firefox_version': '67.0',
@@ -280,7 +287,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'package_name': 'org.mozilla.firefox_beta',
             'version_code': '3',
         },
-        '/some/beta/target.aarch64.apk': {
+        mock_apk('/some/beta/target.aarch64.apk'): {
             'api_level': 21,
             'architecture': 'arm64-v8a',
             'firefox_version': '67.0',
@@ -298,7 +305,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'package_name': 'org.mozilla.firefox_beta',
             'version_code': '2015605651',
         },
-        '/some/beta/target.x86_64.apk': {
+        mock_apk('/some/beta/target.x86_64.apk'): {
             'api_level': 21,
             'architecture': 'x86_64',
             'firefox_version': '67.0',
@@ -324,7 +331,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
     False,
 ), (
     {
-        '/some/release/target.arm.apk': {
+        mock_apk('/some/release/target.arm.apk'): {
             'api_level': 16,
             'architecture': 'armeabi-v7a',
             'firefox_version': '68.0',
@@ -342,7 +349,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'package_name': 'org.mozilla.firefox',
             'version_code': '1',
         },
-        '/some/release/target.x86.apk': {
+        mock_apk('/some/release/target.x86.apk'): {
             'api_level': 16,
             'architecture': 'x86',
             'firefox_version': '68.0',
@@ -360,7 +367,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'package_name': 'org.mozilla.firefox',
             'version_code': '3',
         },
-        '/some/release/target.aarch64.apk': {
+        mock_apk('/some/release/target.aarch64.apk'): {
             'api_level': 21,
             'architecture': 'arm64-v8a',
             'firefox_version': '68.0',
@@ -378,7 +385,7 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
             'package_name': 'org.mozilla.firefox',
             'version_code': '2015605651',
         },
-        '/some/release/target.x86_64.apk': {
+        mock_apk('/some/release/target.x86_64.apk'): {
             'api_level': 21,
             'architecture': 'x86_64',
             'firefox_version': '68.0',
@@ -404,13 +411,13 @@ def test_check_correct_apk_package_names(apks_metadata_per_paths, product_types,
     False,
 ), (
     {
-        'Focus.apk': {
+        mock_apk('Focus.apk'): {
             'api_level': 21,
             'architecture': 'armeabi-v7',
             'package_name': 'org.mozilla.focus',
             'version_code': '11'
         },
-        'Klar.apk': {
+        mock_apk('Klar.apk'): {
             'api_level': 21,
             'architecture': 'armeabi-v7',
             'package_name': 'org.mozilla.klar',
@@ -431,10 +438,10 @@ def test_cross_check_apks(apks_metadata_per_paths, package_names_check, skip_che
 
 def test_check_all_apks_have_the_same_firefox_version():
     _check_all_apks_have_the_same_firefox_version({
-        'arm.apk': {
+        mock_apk('arm.apk'): {
             'firefox_version': '57.0',
         },
-        'x86.apk': {
+        mock_apk('x86.apk'): {
             'firefox_version': '57.0',
         },
     })
@@ -479,10 +486,10 @@ def test_bad_check_version_matches_package_name(version, package_name):
 
 def test_check_all_apks_have_the_same_build_id():
     _check_all_apks_have_the_same_build_id({
-        'arm.apk': {
+        mock_apk('arm.apk'): {
             'firefox_build_id': '20171112125738',
         },
-        'x86.apk': {
+        mock_apk('x86.apk'): {
             'firefox_build_id': '20171112125738',
         },
     })
@@ -500,20 +507,20 @@ def test_check_all_apks_have_the_same_build_id():
 
 def test_check_all_apks_have_the_same_locales():
     _check_all_apks_have_the_same_locales({
-        'arm.apk': {
+        mock_apk('arm.apk'): {
             'locales': ('en-US', 'es-ES', 'fr'),
         },
-        'x86.apk': {
+        mock_apk('x86.apk'): {
             'locales': ('en-US', 'es-ES', 'fr'),
         },
     })
 
     with pytest.raises(BadSetOfApks):
         _check_all_apks_have_the_same_locales({
-            'arm.apk': {
+            mock_apk('arm.apk'): {
                 'locales': ('en-US', 'es-ES', 'fr'),
             },
-            'x86.apk': {
+            mock_apk('x86.apk'): {
                 'locales': ('en-US', 'es-MX', 'fr'),
             },
         })
@@ -546,41 +553,41 @@ def test_bad_check_piece_of_metadata_is_unique(apks_metadata_per_paths):
 
 
 @pytest.mark.parametrize('apks_metadata_per_paths', ({
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'version_code': '0',
         'architecture': 'armeabi-v7a',
     },
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'version_code': '1',
         'architecture': 'x86',
     },
 }, {
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'version_code': '0',
         'architecture': 'armeabi-v7a',
     },
-    'arm64.apk': {
+    mock_apk('arm64.apk'): {
         'version_code': '1',
         'architecture': 'arm64-v8a',
     },
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'version_code': '2',
         'architecture': 'x86',
     },
 }, {
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'version_code': '0',
         'architecture': 'armeabi-v7a',
     },
-    'arm64.apk': {
+    mock_apk('arm64.apk'): {
         'version_code': '1',
         'architecture': 'arm64-v8a',
     },
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'version_code': '2',
         'architecture': 'x86',
     },
-    'x86_64.apk': {
+    mock_apk('x86_64.apk'): {
         'version_code': '3',
         'architecture': 'x86_64',
     },
@@ -590,56 +597,56 @@ def test_check_apks_version_codes_are_correctly_ordered(apks_metadata_per_paths)
 
 
 @pytest.mark.parametrize('apks_metadata_per_paths', ({
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'version_code': '1',
         'architecture': 'armeabi-v7a',
     },
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'version_code': '1',
         'architecture': 'x86',
     },
 }, {
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'version_code': '0',
         'architecture': 'x86',
     },
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'version_code': '1',
         'architecture': 'armeabi-v7a',
     },
 }, {
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'version_code': '0',
         'architecture': 'x86',
     },
-    'arm64.apk': {
+    mock_apk('arm64.apk'): {
         'version_code': '1',
         'architecture': 'arm64-v8a',
     },
 }, {
-    'arm64.apk': {
+    mock_apk('arm64.apk'): {
         'version_code': '1',
         'architecture': 'arm64-v8a',
     },
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'version_code': '2',
         'architecture': 'armeabi-v7a',
     },
 }, {
-    'x86_64.apk': {
+    mock_apk('x86_64.apk'): {
         'version_code': '1',
         'architecture': 'x86_64',
     },
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'version_code': '2',
         'architecture': 'x86',
     },
 }, {
-    'x86_64.apk': {
+    mock_apk('x86_64.apk'): {
         'version_code': '1',
         'architecture': 'x86_64',
     },
-    'arm64.apk': {
+    mock_apk('arm64.apk'): {
         'version_code': '2',
         'architecture': 'arm64-v8a',
     },
@@ -651,10 +658,10 @@ def test_bad_check_apks_version_codes_are_correctly_ordered(apks_metadata_per_pa
 
 def test_check_all_apks_are_multi_locales():
     _check_all_apks_are_multi_locales({
-        'arm.apk': {
+        mock_apk('arm.apk'): {
             'locales': ('en-US', 'es-ES', 'fr'),
         },
-        'x86.apk': {
+        mock_apk('x86.apk'): {
             'locales': ('en-US', 'es-ES', 'fr'),
         },
     })
@@ -662,30 +669,30 @@ def test_check_all_apks_are_multi_locales():
 
 @pytest.mark.parametrize('apks_metadata_per_paths, expected_exception', ((
     {
-        'arm.apk': {
+        mock_apk('arm.apk'): {
             'locales': ('en-US', 'es-ES', 'fr'),
         },
-        'x86.apk': {
+        mock_apk('x86.apk'): {
             'locales': ('en-US',),
         },
     },
     NotMultiLocaleApk,
 ), (
     {
-        'arm.apk': {
+        mock_apk('arm.apk'): {
             'locales': ('en-US', 'es-ES', 'fr'),
         },
-        'x86.apk': {
+        mock_apk('x86.apk'): {
             'locales': (),
         },
     },
     NotMultiLocaleApk,
 ), (
     {
-        'arm.apk': {
+        mock_apk('arm.apk'): {
             'locales': ('en-US', 'es-ES', 'fr'),
         },
-        'x86.apk': {
+        mock_apk('x86.apk'): {
             'locales': 'en-US',
         },
     },
@@ -697,45 +704,45 @@ def test_bad_check_all_apks_are_multi_locales(apks_metadata_per_paths, expected_
 
 
 @pytest.mark.parametrize('apks_metadata_per_paths', ({
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'firefox_version': '57.0',
         'architecture': 'armeabi-v7a',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox'
     },
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'firefox_version': '57.0',
         'architecture': 'x86',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox'
     },
 }, {
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'firefox_version': '66.0',
         'architecture': 'armeabi-v7a',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox'
     },
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'firefox_version': '66.0',
         'architecture': 'x86',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox'
     },
 }, {
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'firefox_version': '66.0a1',
         'architecture': 'armeabi-v7a',
         'api_level': 16,
         'package_name': 'org.mozilla.fennec_aurora'
     },
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'firefox_version': '66.0a1',
         'architecture': 'x86',
         'api_level': 16,
         'package_name': 'org.mozilla.fennec_aurora'
     },
-    'aarch64.apk': {
+    mock_apk('aarch64.apk'): {
         'firefox_version': '66.0a1',
         'architecture': 'arm64-v8a',
         'api_level': 21,
@@ -747,83 +754,83 @@ def test_check_all_architectures_and_api_levels_are_present(apks_metadata_per_pa
 
 
 @pytest.mark.parametrize('apks_metadata_per_paths', ({
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'firefox_version': '57.0',
         'architecture': 'armeabi-v7a',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox',
     },
-    'lying-x86.apk': {
+    mock_apk('lying-x86.apk'): {
         'firefox_version': '57.0',
         'architecture': 'armeabi-v7a',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox',
     },
 }, {
-    'unsupported-api-level-arm.apk': {
+    mock_apk('unsupported-api-level-arm.apk'): {
         'firefox_version': '57.0',
         'architecture': 'armeabi-v7a',
         'api_level': 15,
         'package_name': 'org.mozilla.firefox',
     },
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'firefox_version': '57.0',
         'architecture': 'x86',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox',
     },
 }, {
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'firefox_version': '57.0',
         'architecture': 'armeabi-v7a',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox',
     },
-    'unsupported-api-level-arm.apk': {
+    mock_apk('unsupported-api-level-arm.apk'): {
         'firefox_version': '57.0',
         'architecture': 'armeabi-v7a',
         'api_level': 15,
         'package_name': 'org.mozilla.firefox',
     },
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'firefox_version': '57.0',
         'architecture': 'x86',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox',
     },
 }, {
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'firefox_version': '66.0',
         'architecture': 'armeabi-v7a',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox_beta'
     },
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'firefox_version': '66.0',
         'architecture': 'x86',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox_beta'
     },
-    'aarch64.apk': {
+    mock_apk('aarch64.apk'): {
         'firefox_version': '66.0',
         'architecture': 'arm64-v8a',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox_beta'
     },
 }, {
-    'arm.apk': {
+    mock_apk('arm.apk'): {
         'firefox_version': '66.0',
         'architecture': 'armeabi-v7a',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox'
     },
-    'x86.apk': {
+    mock_apk('x86.apk'): {
         'firefox_version': '66.0',
         'architecture': 'x86',
         'api_level': 16,
         'package_name': 'org.mozilla.firefox'
     },
-    'aarch64.apk': {
+    mock_apk('aarch64.apk'): {
         'firefox_version': '66.0',
         'architecture': 'arm64-v8a',
         'api_level': 16,
