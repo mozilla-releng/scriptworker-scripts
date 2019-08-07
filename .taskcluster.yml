@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+version: 1
+policy:
+  pullRequests: public
+tasks:
+  - schedulerId: taskcluster-github
+    created: {$fromNow: ''}
+    deadline: {$fromNow: '2 hours'}
+    expires: {$fromNow: '1 year'}
+    provisionerId: aws-provisioner-v1
+    workerType: github-worker
+    retries: 5
+    payload:
+      maxRunTime: 600
+      image: python:3.7-slim
+      command:
+        - /bin/bash
+        - --login
+        - -cx
+        - exit 0
+    metadata:
+      owner: JohanLorenzo@users.noreply.github.com
+      source: https://github.com/mozilla-releng/treescript
+      name: 'noop'
+      description: 'noop'
