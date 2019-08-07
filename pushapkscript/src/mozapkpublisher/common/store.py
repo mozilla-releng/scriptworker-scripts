@@ -195,7 +195,7 @@ class GooglePlayEdit:
             self.upload_apk(apk)
 
         version_codes = [metadata['version_code'] for _, metadata in extracted_apks]
-        self.update_track(track, version_codes, rollout_percentage)
+        self._update_track(track, version_codes, rollout_percentage)
 
     def get_track_status(self, track):
         response = self._edit_resource.tracks().get(
@@ -233,7 +233,7 @@ class GooglePlayEdit:
                     return
             raise
 
-    def update_track(self, track, version_codes, rollout_percentage=None):
+    def _update_track(self, track, version_codes, rollout_percentage=None):
         body = {
             u'releases': [{
                 u'status': 'completed',

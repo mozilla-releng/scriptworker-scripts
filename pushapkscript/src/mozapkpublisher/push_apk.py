@@ -20,7 +20,7 @@ _STORE_PER_TARGET_PLATFORM = {
 def push_apk(
     apks,
     target_store,
-    user_name,
+    username,
     secret,
     expected_package_names,
     track=None,
@@ -37,7 +37,7 @@ def push_apk(
         apks: list of APK files
         target_store (str): either "google" or "amazon", affects what other parameters will need
             to be provided to this function
-        user_name (str): Google Play service account or Amazon Store client ID
+        username (str): Google Play service account or Amazon Store client ID
         secret (str): Filename of Google Play Credentials file or contents of Amazon Store
             client secret
         expected_package_names (list of str): defines what the expected package names must be.
@@ -99,7 +99,7 @@ def push_apk(
     apks_by_package_name = _apks_by_package_name(apks_metadata_per_paths)
     for package_name, extracted_apks in apks_by_package_name.items():
         store = _STORE_PER_TARGET_PLATFORM[target_store]
-        with store.transaction(user_name, secret, package_name, contact_server=contact_server,
+        with store.transaction(username, secret, package_name, contact_server=contact_server,
                                commit=commit) as edit:
             edit.update_app(extracted_apks, **update_app_kwargs)
 
@@ -118,13 +118,10 @@ def _apks_by_package_name(apks_metadata):
 def main():
     parser = argparse.ArgumentParser(description='Upload APKs on the Google Play Store.')
 
-    subparsers = parser.add_subparsers(dest='target_store', required=True,
-                                       title='Target Store')
+    subparsers = parser.add_subparsers(dest='target_store', title='Target Store')
 
     google_parser = subparsers.add_parser('google')
     google_parser.add_argument('track', help='Track on which to upload')
-    google_parser.add_argument('--service-account', dest='google_service_account', help='The service account email', required=True)
-    google_parser.add_argument('--credentials', dest='google_credentials_filename', help='The p12 authentication filename', required=True)
     google_parser.add_argument(
         '--rollout-percentage',
         type=int,
@@ -134,10 +131,13 @@ def main():
         help='The percentage of user who will get the update. Specify only if track is rollout'
     )
 
-    amazon_parser = subparsers.add_parser('amazon')
-    amazon_parser.add_argument('--client-id', dest='amazon_client_id', help='The amazon client id for auth', required=True)
-    amazon_parser.add_argument('--client-secret', dest='amazon_client_secret', help='The amazon client secret for auth', required=True)
+    subparsers.add_parser('amazon')
 
+    parser.add_argument('--username', required=True,
+                        help='Either the amazon client id or the google service account')
+    parser.add_argument('--secret', required=True,
+                        help='Either the amazon client secret or the file that contains '
+                             'google credentials')
     parser.add_argument('--do-not-contact-server', action='store_false', dest='contact_server',
                         help='''Prevent any request to reach the APK server. Use this option if
 you want to run the script without any valid credentials nor valid APKs. --service-account and
@@ -148,13 +148,9 @@ you want to run the script without any valid credentials nor valid APKs. --servi
     config = parser.parse_args()
 
     if config.target_store == 'google':
-        user_name = config.google_service_account
-        secret = config.google_credentials_filename
         track = config.track
         rollout_percentage = config.rollout_percentage
     else:
-        user_name = config.amazon_client_id
-        secret = config.amazon_client_secret
         track = None
         rollout_percentage = None
 
@@ -162,8 +158,8 @@ you want to run the script without any valid credentials nor valid APKs. --servi
         push_apk(
             config.apks,
             config.target_store,
-            user_name,
-            secret,
+            config.username,
+            config.secret,
             config.expected_package_names,
             track,
             rollout_percentage,

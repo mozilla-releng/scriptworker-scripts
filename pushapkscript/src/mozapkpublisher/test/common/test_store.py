@@ -87,13 +87,13 @@ def edit_resource_mock():
 def test_google_invalid_rollout_percentage():
     with GooglePlayEdit.transaction(None, None, 'org.mozilla.fenix', contact_server=False, commit=False) as edit:
         with pytest.raises(WrongArgumentGiven):
-            edit.update_track('rollout', [1], None)
+            edit._update_track('rollout', [1], None)
 
         with pytest.raises(WrongArgumentGiven):
-            edit.update_track('alpha', [1], 50)
+            edit._update_track('alpha', [1], 50)
 
         with pytest.raises(WrongArgumentGiven):
-            edit.update_track('rollout', [1], 9001)
+            edit._update_track('rollout', [1], 9001)
 
 
 @patch.object(store, '_create_google_edit_resource')
@@ -121,13 +121,13 @@ def test_google_play_edit_no_commit_transaction(create_edit_resource):
 def test_google_update_app():
     edit = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
     edit.upload_apk = MagicMock()
-    edit.update_track = MagicMock()
+    edit._update_track = MagicMock()
     apk_mock = Mock()
     apk_mock.name = '/path/to/dummy.apk'
     edit.update_app([(apk_mock, {'version_code': 1})], 'alpha')
 
     edit.upload_apk.assert_called_once_with(apk_mock)
-    edit.update_track.assert_called_once_with('alpha', [1], None)
+    edit._update_track.assert_called_once_with('alpha', [1], None)
 
 
 def test_google_get_track_status(edit_resource_mock):
@@ -230,7 +230,7 @@ def test_google_upload_apk_does_not_error_out_when_apk_is_already_published(edit
 def test_google_update_track(edit_resource_mock):
     google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
 
-    google_play.update_track('alpha', ['2015012345', '2015012347'])
+    google_play._update_track('alpha', ['2015012345', '2015012347'])
     edit_resource_mock.tracks().update.assert_called_once_with(
         editId=google_play._edit_id,
         packageName='dummy_package_name',
@@ -244,7 +244,7 @@ def test_google_update_track(edit_resource_mock):
     )
 
     edit_resource_mock.tracks().update.reset_mock()
-    google_play.update_track('production', ['2015012345', '2015012347'], rollout_percentage=1)
+    google_play._update_track('production', ['2015012345', '2015012347'], rollout_percentage=1)
     edit_resource_mock.tracks().update.assert_called_once_with(
         editId=google_play._edit_id,
         packageName='dummy_package_name',
@@ -264,7 +264,7 @@ def test_google_update_track_should_refuse_wrong_percentage(edit_resource_mock, 
     google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
 
     with pytest.raises(WrongArgumentGiven):
-        google_play.update_track('production', ['2015012345', '2015012347'], invalid_percentage)
+        google_play._update_track('production', ['2015012345', '2015012347'], invalid_percentage)
 
 
 def test_google_update_listings(edit_resource_mock):

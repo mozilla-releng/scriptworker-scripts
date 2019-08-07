@@ -184,9 +184,9 @@ def test_main_google(monkeypatch):
     file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
     fail_manual_validation_args = [
         'script',
+        '--username', 'foo@developer.gserviceaccount.com',
+        '--secret', file,
         'google',
-        '--service-account', 'foo@developer.gserviceaccount.com',
-        '--credentials', file,
         'alpha',
         file,
         '--expected-package-name=org.mozilla.fennec_aurora',
@@ -217,9 +217,9 @@ def test_main_amazon(monkeypatch):
     file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
     fail_manual_validation_args = [
         'script',
+        '--username', CLIENT_ID,
+        '--secret', CLIENT_SECRET,
         'amazon',
-        '--client-id', CLIENT_ID,
-        '--client-secret', CLIENT_SECRET,
         file,
         '--expected-package-name=org.mozilla.fennec_aurora',
     ]
