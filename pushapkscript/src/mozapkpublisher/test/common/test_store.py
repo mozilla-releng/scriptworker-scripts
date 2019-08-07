@@ -20,12 +20,10 @@ def test_add_general_google_play_arguments():
     parser = argparse.ArgumentParser()
     add_general_google_play_arguments(parser)
 
-    with tempfile.NamedTemporaryFile('wb') as f:
-        config = parser.parse_args([
-            '--service-account', 'dummy@dummy', '--credentials', f.name
-        ])
-        assert config.google_play_credentials_file.name == f.name
-
+    config = parser.parse_args([
+        '--service-account', 'dummy@dummy', '--credentials', 'credentials.p12'
+    ])
+    assert config.google_play_credentials_filename == 'credentials.p12'
     assert config.service_account == 'dummy@dummy'
 
 

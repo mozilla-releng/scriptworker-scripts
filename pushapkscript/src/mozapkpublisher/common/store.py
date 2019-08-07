@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 def add_general_google_play_arguments(parser):
     parser.add_argument('--service-account', help='The service account email', required=True)
-    parser.add_argument('--credentials', dest='google_play_credentials_file', type=argparse.FileType(mode='rb'),
+    parser.add_argument('--credentials', dest='google_play_credentials_filename',
                         help='The p12 authentication file', required=True)
 
     parser.add_argument('--commit', action='store_true',
@@ -192,7 +192,7 @@ class GooglePlayEdit:
         self._edit_id = edit_id
         self._package_name = package_name
 
-    def update_app(self, extracted_apks, track, rollout_percentage):
+    def update_app(self, extracted_apks, track, rollout_percentage=None):
         for apk, _ in extracted_apks:
             self.upload_apk(apk)
 
@@ -299,8 +299,7 @@ class GooglePlayEdit:
 
     @staticmethod
     @contextmanager
-    def transaction(service_account, credentials_file_name, package_name, *, contact_server,
-                    commit):
+    def transaction(service_account, credentials_file_name, package_name, *, contact_server, commit):
         edit_resource = _create_google_edit_resource(contact_server, service_account, credentials_file_name)
         edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
         google_play = GooglePlayEdit(edit_resource, edit_id, package_name)

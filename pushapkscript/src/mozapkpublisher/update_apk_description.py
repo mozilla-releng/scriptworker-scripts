@@ -50,7 +50,7 @@ def main():
     parser.add_argument('--force-locale', help='Force to a specific locale (instead of all)')
     config = parser.parse_args()
     update_apk_description(config.package_name, config.force_locale, config.commit, config.service_account,
-                           config.google_play_credentials_file, config.contact_google_play)
+                           config.google_play_credentials_filename, config.contact_google_play)
 
 
 __name__ == '__main__' and main()
