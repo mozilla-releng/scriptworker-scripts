@@ -115,7 +115,7 @@ def test_find_what_version_parser_to_use(file, expectation, expected_result):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "new_version, should_append_esr", (("87.0", True), ("87.0b3", False))
+    "new_version, should_append_esr", (("68.0", True), ("68.0b3", False))
 )
 async def test_bump_version(mocker, repo_context, new_version, should_append_esr):
     called_args = []
@@ -140,7 +140,7 @@ async def test_bump_version(mocker, repo_context, new_version, should_append_esr
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version", ("87.0", "87.0b3"))
+@pytest.mark.parametrize("new_version", ("68.0", "68.0b3"))
 async def test_bump_version_DONTBUILD_true(mocker, repo_context, new_version):
     called_args = []
 
@@ -161,7 +161,7 @@ async def test_bump_version_DONTBUILD_true(mocker, repo_context, new_version):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version", ("87.0", "87.0b3"))
+@pytest.mark.parametrize("new_version", ("68.0", "68.0b3"))
 async def test_bump_version_DONTBUILD_false(mocker, repo_context, new_version):
     called_args = []
 
@@ -235,7 +235,7 @@ async def test_bump_version_missing_file(mocker, repo_context, new_version):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version", ("27.0", "26.0b3", "45.0esr"))
+@pytest.mark.parametrize("new_version", ("24.0", "31.0b3", "45.0esr"))
 async def test_bump_version_smaller_version(mocker, repo_context, new_version):
     called_args = []
 
@@ -257,7 +257,7 @@ async def test_bump_version_smaller_version(mocker, repo_context, new_version):
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "new_version,expect_version",
-    (("87.0", "87.0esr"), ("92.0.1", "92.0.1esr"), ("76.9.10esr", "76.9.10esr")),
+    (("60.2.0", "60.2.0esr"), ("68.0.1", "68.0.1esr"), ("68.9.10esr", "68.9.10esr")),
 )
 async def test_bump_version_esr(mocker, repo_context, new_version, expect_version):
     if not repo_context.xtest_version.endswith("esr"):
@@ -283,12 +283,12 @@ async def test_bump_version_esr(mocker, repo_context, new_version, expect_versio
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "new_version,expect_esr_version", (("87.0", "87.0esr"), ("92.0.1", "92.0.1esr"))
+    "new_version,expect_esr_version", (("60.0", "60.0esr"), ("68.0.1", "68.0.1esr"))
 )
 async def test_bump_version_esr_dont_bump_non_esr(
     mocker, config, tmpdir, new_version, expect_esr_version
 ):
-    version = "56.0.1"
+    version = "52.0.1"
     repo = os.path.join(tmpdir, "repo")
     os.mkdir(repo)
     os.mkdir(os.path.join(repo, "config"))
