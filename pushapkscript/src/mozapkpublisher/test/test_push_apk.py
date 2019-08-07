@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-from zipfile import BadZipFile
 
 from mock import ANY
 
@@ -13,7 +12,6 @@ from unittest.mock import create_autospec, MagicMock
 from tempfile import NamedTemporaryFile
 
 from mozapkpublisher.common import store
-from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.push_apk import (
     push_apk,
     main,
@@ -73,8 +71,7 @@ def patch_extract_metadata(monkeypatch):
             'firefox_version': '57.0',
         }
     }
-    monkeypatch.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata',
-                         lambda *args, **kwargs: mock_metadata)
+    monkeypatch.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', lambda *args, **kwargs: mock_metadata)
     return mock_metadata
 
 

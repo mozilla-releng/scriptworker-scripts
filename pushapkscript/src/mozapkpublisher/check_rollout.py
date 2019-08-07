@@ -9,7 +9,6 @@ import requests
 
 from argparse import ArgumentParser
 
-from mozapkpublisher.common import store
 from mozapkpublisher.common.store import add_general_google_play_arguments, GooglePlayEdit
 
 DAY = 24 * 60 * 60

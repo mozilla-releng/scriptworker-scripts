@@ -12,9 +12,7 @@
          'key.p12' or use the --credentials option
 """
 
-import argparse
 from contextlib import contextmanager
-from urllib import request, parse
 
 import httplib2
 import json
@@ -28,7 +26,6 @@ from unittest.mock import MagicMock
 
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 import requests
-from requests import auth
 
 logger = logging.getLogger(__name__)
 

@@ -139,8 +139,8 @@ def main():
     amazon_parser.add_argument('--client-secret', dest='amazon_client_secret', help='The amazon client secret for auth', required=True)
 
     parser.add_argument('--do-not-contact-server', action='store_false', dest='contact_server',
-                        help='''Prevent any request to reach the APK server. Use this option if 
-you want to run the script without any valid credentials nor valid APKs. --service-account and 
+                        help='''Prevent any request to reach the APK server. Use this option if
+you want to run the script without any valid credentials nor valid APKs. --service-account and
 --credentials must still be provided (you can just fill them with random string and file).''')
     parser.add_argument('--commit', action='store_true', help="Commit changes onto APK server. "
                                                               "This action cannot be reverted.")
