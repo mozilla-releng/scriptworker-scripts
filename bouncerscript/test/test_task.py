@@ -792,7 +792,7 @@ def test_check_product_names_match_nightly_locations(locations_context, products
     (True, PatternNotMatchedError)
 ), (
     "63.0.1esr", "firefox",
-    (True, ScriptWorkerTaskException)
+    (True, PatternNotMatchedError)
 ), (
     "63.0.1", "firefox",
     (True, ScriptWorkerTaskException)
