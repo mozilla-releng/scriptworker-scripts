@@ -6,19 +6,22 @@ Treescript
 This is designed to be run from scriptworker, but runs perfectly fine as
 a standalone script.
 
-Docs
-----
 
-``README.md`` is the master readme, and ``README.rst`` is generated via
+Update python dependencies
+--------------------------
 
-::
+For python version we use in production::
 
-    pandoc --from=markdown --to=rst README.md > README.rst
+   $ docker run -ti -v $PWD:/src -w /src python:3.7 /bin/bash
+   (docker) /src $ pip install pip-compile-multi
+   (docker) /src $ pip-compile-multi -g base -g test
 
-This is purely because
+For other python versions::
 
-1. @Callek prefers writing markdown, and
-2. pypi appears to deal with rst better than markdown.
+   $ docker run -ti -v $PWD:/src -w /src python:3.6 /bin/bash
+   (docker) /src $ pip install pip-compile-multi
+   (docker) /src $ pip-compile-multi -g base -g test -o "py36.txt"
+
 
 .. |Build Status| image:: https://travis-ci.org/mozilla-releng/treescript.svg?branch=master
    :target: https://travis-ci.org/mozilla-releng/treescript
