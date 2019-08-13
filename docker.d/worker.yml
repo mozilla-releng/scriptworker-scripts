@@ -1,0 +1,26 @@
+work_dir: { "$eval": "WORK_DIR" }
+artifact_dir: { "$eval": "ARTIFACTS_DIR" }
+verbose: { "$eval": "VERBOSE == 'true'" }
+my_ip: { "$eval": "PUBLIC_IP" }
+signing_server_config: { "$eval": "PASSWORDS_PATH"}
+ssl_cert: { "$eval": "SSL_CERT_PATH" }
+taskcluster_scope_prefixes:
+  $match:
+    'COT_PRODUCT == "firefox"':
+      - 'project:releng:signing:'
+    'COT_PRODUCT == "thunderbird"':
+      - 'project:comm:thunderbird:releng:signing:'
+    'COT_PRODUCT == "mobile"':
+      - 'project:mobile:focus:releng:signing:'
+      - 'project:mobile:android-components:releng:signing:'
+      - 'project:mobile:fenix:releng:signing:'
+      - 'project:mobile:reference-browser:releng:signing:'
+    'COT_PRODUCT == "application-services"':
+      - 'project:mozilla:application-services:releng:signing'
+signtool: { "$eval": "SIGNTOOL_PATH" }
+token_duration_seconds: 7200
+dmg: { "$eval": "DMG_PATH" }
+hfsplus: { "$eval": "HFSPLUS_PATH" }
+zipalign: { "$eval": "ZIPALIGN_PATH" }
+gpg_pubkey: { "$eval": "GPG_PUBKEY_PATH" }
+widevine_cert: { "$eval": "WIDEVINE_CERT_PATH" }
