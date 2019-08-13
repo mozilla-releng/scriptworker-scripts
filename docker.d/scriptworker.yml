@@ -17,7 +17,7 @@ verbose: { "$eval": "VERBOSE == 'true'" }
 verify_chain_of_trust: { "$eval": "VERIFY_CHAIN_OF_TRUST == 'true'" }
 sign_chain_of_trust: { "$eval": "SIGN_CHAIN_OF_TRUST == 'true'" }
 verify_cot_signature: { "$eval": "VERIFY_COT_SIGNATURE == 'true'" }
-cot_job_type: { "$eval": "PROJECT_NAME" }
+cot_job_type: scriptworker
 cot_product: { "$eval": "COT_PRODUCT" }
 github_oauth_token: { "$eval": "GITHUB_OAUTH_TOKEN" }
 log_dir: { "$eval": "LOGS_DIR" }
