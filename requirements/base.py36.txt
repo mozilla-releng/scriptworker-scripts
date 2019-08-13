@@ -29,9 +29,9 @@ aiohttp==3.5.4 \
     --hash=sha256:d4392defd4648badaa42b3e101080ae3313e8f4787cb517efd3f5b8157eaefd6 \
     --hash=sha256:e1c3c582ee11af7f63a34a46f0448fca58e59889396ffdae1f482085061a2889 \
     # via scriptworker, taskcluster
-arrow==0.14.4 \
-    --hash=sha256:157dee94b557ffe9a2e13e05669bf48820064cb37d416f547f59baa0d25301d4 \
-    --hash=sha256:47f37968afeaefd0ba3fe4d0c70dc830985f9ab11beeb381d4fc0e8f8151d3d6 \
+arrow==0.14.5 \
+    --hash=sha256:0186026cfd94ca4fb773f30cc5398289a3027480d335e0e5c0d2772643763137 \
+    --hash=sha256:a12de0124d812d15061ed36c7eb4a421fa1b95026a502a0b2062e9ea00fc4446 \
     # via scriptworker
 asn1crypto==0.24.0 \
     --hash=sha256:2f1adbb7546ed199e3c90ef23ec95c5cf3585bac7d11fb7eb562a3fe89c64e87 \
@@ -200,9 +200,9 @@ requests==2.22.0 \
     --hash=sha256:11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4 \
     --hash=sha256:9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31 \
     # via github3.py, taskcluster
-scriptworker==24.0.0 \
-    --hash=sha256:4b65015bfe9e42abebe5e730b26e6d8d0bd59a550da46cb6629a1b04c0f665a9 \
-    --hash=sha256:c662e589665f737c35de909bd131eaeabcc258314f236c4ef3e646dcbcbf3207
+scriptworker==24.0.1 \
+    --hash=sha256:258250240c6daff030db0114458e51932a40c683ebd1273934058909bde66d0a \
+    --hash=sha256:66b1be61131b8d5bd554c83533984453083a4ce3910dc6f293ee02e01b8e11ca
 six==1.12.0 \
     --hash=sha256:3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c \
     --hash=sha256:d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73 \
