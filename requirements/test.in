@@ -17,3 +17,8 @@ pytest-cov
 pytest-mock
 # pytest-random-order?
 tox
+
+# need to use pydocstyle until:
+#  - https://github.com/PyCQA/pydocstyle/issues/375
+#  - https://gitlab.com/pycqa/flake8-docstrings/issues/36
+pydocstyle~=3.0

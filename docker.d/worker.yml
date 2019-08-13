@@ -1,0 +1,15 @@
+work_dir: { "$eval": "WORK_DIR" }
+artifact_dir: { "$eval": "ARTIFACTS_DIR" }
+verbose: { "$eval": "VERBOSE == 'true'" }
+amo_instances:
+  $if: 'ENV == "prod"'
+  then:
+    project:releng:addons.mozilla.org:server:production:
+      amo_server: { "$eval": "AMO_SERVER" }
+      jwt_user: { "$eval": "JWT_USER" }
+      jwt_secret: { "$eval": "JWT_SECRET" }
+  else:
+    project:releng:addons.mozilla.org:server:staging:
+      amo_server: { "$eval": "AMO_SERVER" }
+      jwt_user: { "$eval": "JWT_USER" }
+      jwt_secret: { "$eval": "JWT_SECRET" }

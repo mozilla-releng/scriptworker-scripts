@@ -5,7 +5,7 @@
 #
 #    pip-compile-multi
 #
--r base.txt
+-r base.py36.txt
 aioresponses==0.6.0 \
     --hash=sha256:46ef0568e0bd9a603665649ae0ee42347525ebb1f8078519f24261b478942146 \
     --hash=sha256:ecc90e59d11cdef8b45753b87bd0a673e5556772fd593707bec78c4b06144f9e
