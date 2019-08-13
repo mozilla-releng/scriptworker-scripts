@@ -1,11 +1,9 @@
-arrow
 balrogclient>=0.2.0
-cryptography
 idna
 ipaddress
-jsonschema
 mar
 pyasn1
 python-dateutil
 redo
 requests
+scriptworker

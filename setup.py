@@ -6,18 +6,12 @@ project_dir = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(project_dir, 'requirements/base.in')) as f:
     install_requires = [line.rstrip('\n') for line in f if not line.startswith('#')]
 
-
-def get_version():
-    PATH = os.path.join(os.path.dirname(__file__), "balrogscript/_version.py")
-    d = {}
-    with open(PATH) as filehandle:
-        exec(filehandle.read(), d)
-    return d['__version__']
-
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "version.txt")) as f:
+    version = f.read().rstrip()
 
 setup(
     name="balrogscript",
-    version=get_version(),
+    version=version,
     description="TaskCluster Balrog Script",
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
