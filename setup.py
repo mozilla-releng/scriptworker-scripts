@@ -4,18 +4,12 @@ from setuptools import setup, find_packages
 with open("requirements/base.in") as f:
     install_requires = f.readlines()
 
-
-def get_version():
-    PATH = os.path.join(os.path.dirname(__file__), "beetmoverscript/_version.py")
-    d = {}
-    with open(PATH) as filehandle:
-        exec(filehandle.read(), d)
-    return d['__version__']
-
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "version.txt")) as f:
+    version = f.read().rstrip()
 
 setup(
     name="beetmoverscript",
-    version=get_version(),
+    version=version,
     description="TaskCluster Beetmover Script",
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",

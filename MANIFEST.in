@@ -7,7 +7,7 @@ include .coveragerc
 include LICENSE
 include README.md
 include config_example.json
-include version.json
+include version.txt
 include tox.ini
 
 recursive-exclude * __pycache__

@@ -53,8 +53,8 @@ sudo puppet agent --test  # or unpin or w/e
 ## deploy a new version to production
 
 1. Once your PR is reviewed and passes the tests, have one of the admins review & merge it
-1. Bump to new version in `beetmoverscript/_version.py`.
-1. `towncrier`
+1. Bump to new version in `version.txt`.
+1. `towncrier --version $(cat version)`
 1. Commit with a "%VERSION%" message
 1. `git tag -s %VERSION%`
 1. `git push`
