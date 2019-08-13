@@ -71,10 +71,9 @@ def test_get_scope(context, scopes, sufix, raises):
     ),
 )
 def test_get_ship_it_instance_config_from_scope(context, api_root_v2, scope, raises):
-    context.config['ship_it_instances'][scope] = copy.deepcopy(
-        context.config['ship_it_instances']['project:releng:ship-it:server:dev']
-    )
-    context.config['ship_it_instances'][scope]['api_root_v2'] = api_root_v2
+    context.config['shipit_instance'] = copy.deepcopy(context.config['shipit_instance'])
+    context.config['shipit_instance']['scope'] = scope
+    context.config['shipit_instance']['api_root_v2'] = api_root_v2
     context.task['scopes'] = [scope]
 
     if raises:
@@ -82,6 +81,7 @@ def test_get_ship_it_instance_config_from_scope(context, api_root_v2, scope, rai
             get_ship_it_instance_config_from_scope(context)
     else:
         assert get_ship_it_instance_config_from_scope(context) == {
+            'scope': scope,
             'api_root_v2': api_root_v2,
             'timeout_in_seconds': 1,
             'taskcluster_client_id': 'some-id',

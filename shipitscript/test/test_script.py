@@ -31,6 +31,7 @@ async def test_mark_as_shipped(context, monkeypatch, scopes):
     await script.async_main(context)
     mark_as_shipped_v2_mock.assert_called_with(
         {
+            'scope': scopes[-1],
             'api_root_v2': 'http://some-ship-it.url/v2',
             'timeout_in_seconds': 1,
             'taskcluster_client_id': 'some-id',

@@ -36,13 +36,12 @@ CONFIG_TEMPLATE = '''{{
     "mark_as_shipped_schema_file": "{project_data_dir}/mark_as_shipped_task_schema.json",
     "verbose": true,
 
-    "ship_it_instances": {{
-        "project:releng:ship-it:server:dev": {{
-            "taskcluster_client_id": "some-id",
-            "taskcluster_access_token": "some-token",
-            "api_root_v2": "http://some.ship-it.tld/api/root-v2",
-            "timeout_in_seconds": 1
-        }}
+    "shipit_instance": {{
+        "scope": "project:releng:ship-it:server:dev",
+        "taskcluster_client_id": "some-id",
+        "taskcluster_access_token": "some-token",
+        "api_root_v2": "http://some.ship-it.tld/api/root-v2",
+        "timeout_in_seconds": 1
     }},
     "taskcluster_scope_prefix": "project:releng:ship-it:"
 }}'''

@@ -3,8 +3,8 @@ policy:
   pullRequests: public
 tasks:
   $let:
-    project_name: 'shipitscript'
-    deployed_python_version: 'py37'
+    project_name: 'shipit'
+    python_version: 'py37'
 
     head_rev:
       $if: 'tasks_for == "github-pull-request"'
@@ -14,7 +14,7 @@ tasks:
         then: '${event.after}'
         else: '${event.release.tag_name}'
 
-    repository:
+    repo_url:
       $if: 'tasks_for == "github-pull-request"'
       then: '${event.pull_request.head.repo.html_url}'
       else: '${event.repository.html_url}'
@@ -23,62 +23,49 @@ tasks:
 
     push_docker_image:
       $if: 'tasks_for == "github-pull-request"'
-      then: ''
+      then: '0'
       else:
-        $if: 'tasks_for == "github-release" && event.repository.full_name == "mozilla-releng/${project_name}"'
-        then: '&& apk -U add jq && ./docker.d/push_image.sh'
-        else:
-          $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/master", "refs/heads/dev", "refs/heads/stage"]'
-          then: '&& apk -U add jq && ./docker.d/push_image.sh'
-          else: ''
-
-    docker_release_tag:
-      $if: 'tasks_for == "github-release"'
-      then: '${event.release.tag_name}'
-      else: ''
+        $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev", "refs/heads/prod"]'
+        then: '1'
+        else: '0'
 
     docker_tag:
       $if: 'tasks_for == "github-pull-request"'
       then: 'pull-request'
       else:
-        $if: 'tasks_for == "github-release"'
-        then: 'prod'
-        else:
-          $if: 'event.ref[0:10] == "refs/tags/"'
-          then: '${event.ref[10:]}'
-          else:
-            $if: 'event.ref[0:11] == "refs/heads/"'
-            then: '${event.ref[11:]}'
-            else: '${event.ref}'
+        $if: 'tasks_for == "github-push" && event.ref[0:11] == "refs/heads/"'
+        then: '${event.ref[11:]}'
+        else: 'unknown'
 
   in:
-    - taskId: '${as_slugid(deployed_python_version)}'
+    - taskId: '${as_slugid(python_version)}'
       provisionerId: 'aws-provisioner-v1'
       workerType: 'github-worker'
       created: {$fromNow: ''}
       deadline: {$fromNow: '4 hours'}
       payload:
         maxRunTime: 3600
-        image: 'python:${deployed_python_version[2]}.${deployed_python_version[3]}'
+        image: 'python:${python_version[2]}.${python_version[3]}'
         command:
           - sh
           - -lxce
           - >-
-            git clone ${repository} /src &&
+            cd /tmp &&
+            wget ${repo_url}/archive/${head_rev}.tar.gz &&
+            tar zxf ${head_rev}.tar.gz &&
+            mv ${project_name}script-${head_rev} /src &&
             cd /src &&
-            git config advice.detachedHead false &&
-            git checkout ${head_rev} &&
             pip install tox &&
-            tox -e ${deployed_python_version}
+            tox -e ${python_version}
       metadata:
-        name: 'tox ${deployed_python_version} (${docker_tag})'
-        description: 'code linting & unit tests on ${deployed_python_version} (${docker_tag})'
+        name: 'tox ${python_version} (${docker_tag})'
+        description: 'code linting & unit tests on ${python_version} (${docker_tag})'
         owner: '${owner}'
-        source: '${repository}/raw/${head_rev}/.taskcluster.yml'
+        source: '${repo_url}/raw/${head_rev}/.taskcluster.yml'
 
     - taskId: '${as_slugid("docker_build_and_push")}'
       dependencies:
-        - '${as_slugid(deployed_python_version)}'
+        - '${as_slugid(python_version)}'
       provisionerId: 'aws-provisioner-v1'
       workerType: 'github-worker'
       created: {$fromNow: ''}
@@ -93,45 +80,45 @@ tasks:
         # image: docker:stable
         image: 'docker:1.6.2'
         env:
-          SECRET_URL: 'http://taskcluster/secrets/v1/secret/project/releng/${project_name}/deploy'
           DOCKERHUB_EMAIL: 'release+dockerhub+services@mozilla.com'
           DOCKERHUB_USER: 'mozillarelengservices'
+          DOCKER_REPO: 'mozilla/${project_name}script'
           DOCKER_TAG: '${docker_tag}'
-          DOCKER_REPO: 'mozilla/${project_name}'
-          DOCKER_RELEASE_TAG: '${docker_release_tag}'
           GIT_HEAD_REV: '${head_rev}'
+          PROJECT_NAME: '${project_name}'
+          PUSH_DOCKER_IMAGE: '${push_docker_image}'
+          REPO_URL: '${repo_url}'
+          SECRET_URL: 'http://taskcluster/secrets/v1/secret/project/releng/${project_name}script/deploy'
         command:
           - sh
-          - -ce
+          - -lxce
           - >-
             cd /tmp &&
-            wget ${repository}/archive/${head_rev}.tar.gz &&
+            wget ${repo_url}/archive/${head_rev}.tar.gz &&
             tar zxf ${head_rev}.tar.gz &&
-            mv ${project_name}-${head_rev} /src &&
+            mv ${project_name}script-${head_rev} /src &&
             cd /src &&
-            docker.d/generate_version_json.sh &&
-            cat version.json &&
-            docker build -f Dockerfile -t $DOCKER_REPO:$DOCKER_TAG . &&
-            docker save $DOCKER_REPO:$DOCKER_TAG > /tmp/image.tar
-            ${push_docker_image}
+            ./docker.d/generate_version_json.sh &&
+            ./docker.d/build_image.sh /tmp/image.tar &&
+            ./docker.d/push_image.sh
         artifacts:
           public/image.tar:
             expires: {$fromNow: '8 weeks'}
             path: '/tmp/image.tar'
             type: 'file'
       scopes:
-        $if: 'push_docker_image == ""'
+        $if: 'push_docker_image == "0"'
         then: []
         else:
-          - 'secrets:get:project/releng/${project_name}/deploy'
+          - 'secrets:get:project/releng/${project_name}script/deploy'
       metadata:
         $let:
           description:
-            $if: 'push_docker_image == ""'
+            $if: 'push_docker_image == "0"'
             then: 'build docker image (${docker_tag})'
             else: 'build and push docker image (${docker_tag})'
         in:
           name: '${description}'
           description: '${description}'
           owner: '${owner}'
-          source: '${repository}/raw/${head_rev}/.taskcluster.yml'
+          source: '${repo_url}/raw/${head_rev}/.taskcluster.yml'

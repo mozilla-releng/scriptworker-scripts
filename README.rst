@@ -1,49 +1,46 @@
-# Shipitscript build status
+Shipitscript
+============
 
-[![Build Status](https://travis-ci.org/mozilla-releng/shipitscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/shipitscript)
-[![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/shipitscript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/shipitscript?branch=master)
+|Build Status| |Coverage Status|
 
-# Deployment
+
+Deployment
+----------
 
 Shipit scriptworker is deployed to GCP using Mozilla Cloudops infrastructure
 and deployment process. The scriptworkers are deployed in the same Kubernetes
 cluster with Ship-It API in order to access it.
 
-## Deployment to "dev" environment
+
+Deployment to "dev" environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 After a change is pushed to the `master` branch, CI generates a docker image
-and pushes it to the
-[mozilla/shipitscript](https://hub.docker.com/r/mozilla/shipitscript)
-repository using the `latest` tag. After a few minutes the Cloudpops pipeline
-automatically deploys the image to the `scriptworker-dev-shipitapi-app-1`
-workload in the `shipitapi-nonprod` GCP project. The worker type is set to
-`shipit-dev` and it should handle maple and try based releases. The
-configuration templates can be found under the `docker.d/configs/dev` directory
-of this repository.
+and pushes it to the `mozilla/shipitscript`_ repository using the `latest` tag.
+After a few minutes the Cloudpops pipeline automatically deploys the image to
+the `scriptworker-dev-shipitapi-app-1` workload in the `shipitapi-nonprod` GCP
+project. The worker type is set to `shipit-dev` and it should handle maple and
+try based releases. The configuration templates can be found under the
+`docker.d/configs/dev` directory of this repository.
 
-## Deployment to "production" environment
+Deployment to "production" environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In order to deploy a change to production it has to be tagged, released,
 deployed to stage, and promoted to production. Some steps are manual and some
 require the CloudOps Team.
 
-### Tag
-Tag a particular revision using the following command:
+Tag a particular revision using the following command:::
 
-```
-git tag -s $(cat version.txt)
-```
+   git tag -s $(cat version.txt)
 
-Push the tag:
+Push the tag:::
 
-```
-git push origin $(cat version.txt)
-```
+   git push origin $(cat version.txt)
 
 CI will run tests, build a docker image, but the image will not be pushed to
 the docker repository.
 
-### Create github release
 Create a github release using the tag pushed in the previous step. This action
 will trigger a CI task group which will run tests, build and push the docker
 image to the repository using the git tag as the docker tag. For example, the
@@ -69,3 +66,10 @@ workload in the `shipitapi-prod` GCP project. The worker type is set to
 `shipit-v1` and it should handle production releases. The configuration
 templates can be found under the `docker.d/configs/production` directory of
 this repository.
+
+.. |Build Status| image:: https://travis-ci.org/mozilla-releng/shipitscript.svg?branch=master
+   :target: https://travis-ci.org/mozilla-releng/shipitscript
+.. |Coverage Status| image:: https://coveralls.io/repos/github/mozilla-releng/shipitscript/badge.svg?branch=master
+   :target: https://coveralls.io/github/mozilla-releng/shipitscript?branch=master
+.. _`mozilla/shipitscript`: https://hub.docker.com/r/mozilla/shipitscript
+

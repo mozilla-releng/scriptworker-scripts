@@ -1,0 +1,10 @@
+work_dir: { "$eval": "WORK_DIR" }
+mark_as_shipped_schema_file: { "$eval": "MARK_AS_SHIPPED_SCHEMA_FILE" }
+taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
+verbose: { "$eval": "VERBOSE == 'true'" }
+shipit_instances:
+  scope: { "$eval": "TASKCLUSTER_SCOPE" }
+  api_root_v2: { "$eval": "API_ROOT_V2" }
+  timeout_in_seconds: 60
+  taskcluster_client_id: { "$eval": "TASKCLUSTER_CLIENT_ID" }
+  taskcluster_access_token: { "$eval": "TASKCLUSTER_ACCESS_TOKEN" }

@@ -26,14 +26,14 @@ def _get_scope(context, suffix):
 
 def get_ship_it_instance_config_from_scope(context):
     scope = _get_scope(context, "server")
-    configured_instances = context.config['ship_it_instances']
+    configured_instance = context.config['shipit_instance']
 
-    try:
-        return configured_instances[scope]
-    except KeyError:
-        raise TaskVerificationError(
-            'This worker is not configured to handle scope "{}"'.format(scope)
-        )
+    if configured_instance.get('scope') == scope:
+        return configured_instance
+
+    raise TaskVerificationError(
+        'This worker is not configured to handle scope "{}"'.format(scope)
+    )
 
 
 def validate_task_schema(context):
