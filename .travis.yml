@@ -8,6 +8,7 @@ matrix:
     - python: 3.6 # Python 3.6 + Java 7
       env:
         TOXENV=py36
+        JAVA=7
       before_install:
         - wget https://raw.githubusercontent.com/michaelklishin/jdk_switcher/7e512921ba5a6e93ce304683f099e3c0525330b1/jdk_switcher.sh
         - source ./jdk_switcher.sh
@@ -15,6 +16,7 @@ matrix:
     - python: 3.7 # Python 3.7 + Java 8
       env:
         TOXENV=py37
+        JAVA=8
       before_install:
         - wget https://raw.githubusercontent.com/michaelklishin/jdk_switcher/7e512921ba5a6e93ce304683f099e3c0525330b1/jdk_switcher.sh
         - source ./jdk_switcher.sh
@@ -25,6 +27,7 @@ matrix:
     - python: 3.7 # Python 3.7 + Java 11
       env:
         TOXENV=py37
+        JAVA=11
 
 install:
     - travis_retry pip install tox
@@ -33,4 +36,4 @@ script:
     - tox -e "$TOXENV"
 
 after_success:
-    - if [[ $TOXENV == 'py36' ]] ; then tox -e py36-coveralls; else echo "No coverage to do"; fi
+    - tox -e coveralls
