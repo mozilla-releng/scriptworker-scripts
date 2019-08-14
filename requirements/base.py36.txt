@@ -29,9 +29,9 @@ aiohttp==3.5.4 \
     --hash=sha256:d4392defd4648badaa42b3e101080ae3313e8f4787cb517efd3f5b8157eaefd6 \
     --hash=sha256:e1c3c582ee11af7f63a34a46f0448fca58e59889396ffdae1f482085061a2889 \
     # via scriptworker, taskcluster
-arrow==0.14.5 \
-    --hash=sha256:0186026cfd94ca4fb773f30cc5398289a3027480d335e0e5c0d2772643763137 \
-    --hash=sha256:a12de0124d812d15061ed36c7eb4a421fa1b95026a502a0b2062e9ea00fc4446 \
+arrow==0.14.4 \
+    --hash=sha256:157dee94b557ffe9a2e13e05669bf48820064cb37d416f547f59baa0d25301d4 \
+    --hash=sha256:47f37968afeaefd0ba3fe4d0c70dc830985f9ab11beeb381d4fc0e8f8151d3d6 \
     # via scriptworker
 asn1crypto==0.24.0 \
     --hash=sha256:2f1adbb7546ed199e3c90ef23ec95c5cf3585bac7d11fb7eb562a3fe89c64e87 \
@@ -45,12 +45,12 @@ attrs==19.1.0 \
     --hash=sha256:69c0dbf2ed392de1cb5ec704444b08a5ef81680a61cb899dc08127123af36a79 \
     --hash=sha256:f0b870f674851ecbfbbbd364d6b5cbdff9dcedbc7f3f5e18a6891057f21fe399 \
     # via aiohttp, jsonschema, mozilla-version
-boto3==1.9.204 \
-    --hash=sha256:3ec5b520dbd0a430cdd581a8250991fb0f21ee7e668a8928f15006b312fa86dc \
-    --hash=sha256:8aec0247131a0db1e33d28ad13910e01e6dfa208e8ab8ee5a4095e92dbaabf45
-botocore==1.12.204 \
-    --hash=sha256:56cd1114e0ce35733e890b321160c8c438243f4fa54d3d074dfa6bdce4ee55aa \
-    --hash=sha256:f86504bcc9c44d5b2e7b019f2f279b70f17b1400d2fc4775bc009ec473530cad \
+boto3==1.9.207 \
+    --hash=sha256:2ff8f804f2bc092bee3186d7625e1816e4739e82084131e860ac4d4de9fefbab \
+    --hash=sha256:7a0199369d5e1aca676d7b0e2bf71db67cd488ffbea1e9296ba2df058f6e6745
+botocore==1.12.207 \
+    --hash=sha256:4ef7ab3e5632d55ae91be8a0d404cf586f955c2dca972a6f761de793ddc14ea1 \
+    --hash=sha256:d90d0299dde2b7514586f01f11954c4c6acca58f1508827408690b201ccce8ac \
     # via boto3, s3transfer
 certifi==2019.6.16 \
     --hash=sha256:046832c04d4e752f37383b628bc601a7ea7211496b4638f6514d0e5b9acc4939 \
@@ -256,9 +256,9 @@ s3transfer==0.2.1 \
     --hash=sha256:6efc926738a3cd576c2a79725fed9afde92378aa5c6a957e3af010cb019fac9d \
     --hash=sha256:b780f2411b824cb541dbcd2c713d0cb61c7d1bcadae204cdddda2b35cef493ba \
     # via boto3
-scriptworker==24.0.1 \
-    --hash=sha256:258250240c6daff030db0114458e51932a40c683ebd1273934058909bde66d0a \
-    --hash=sha256:66b1be61131b8d5bd554c83533984453083a4ce3910dc6f293ee02e01b8e11ca
+scriptworker==25.0.0 \
+    --hash=sha256:1846a6c21e24f7ef215cb57e7ded2408943f446a218600572fdfe321b99a40bd \
+    --hash=sha256:7f1c82ef4bea1ae304e114d864e6a402231a5f9ee6762d8435ff39165dfc7e37
 six==1.12.0 \
     --hash=sha256:3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c \
     --hash=sha256:d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73 \
@@ -307,4 +307,4 @@ yarl==1.3.0 \
 
 # WARNING: The following packages were not pinned, but pip requires them to be
 # pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.
-# setuptools==41.0.1        # via jsonschema
+# setuptools==41.1.0        # via jsonschema
