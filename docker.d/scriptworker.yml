@@ -27,4 +27,6 @@ task_log_dir: { "$eval": "TASK_LOGS_DIR" }
 watch_log_file: true
 scriptworker_provisioners:
     - { "$eval": "PROVISIONER_ID" }
+    # backward compatibility
+    - scriptworker-prov-v1
 ed25519_private_key_path: { "$eval": "ED25519_PRIVKEY_PATH" }
