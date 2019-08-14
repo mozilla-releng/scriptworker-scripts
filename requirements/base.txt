@@ -29,9 +29,9 @@ aiohttp==3.5.4 \
     --hash=sha256:d4392defd4648badaa42b3e101080ae3313e8f4787cb517efd3f5b8157eaefd6 \
     --hash=sha256:e1c3c582ee11af7f63a34a46f0448fca58e59889396ffdae1f482085061a2889 \
     # via scriptworker, taskcluster
-arrow==0.14.5 \
-    --hash=sha256:0186026cfd94ca4fb773f30cc5398289a3027480d335e0e5c0d2772643763137 \
-    --hash=sha256:a12de0124d812d15061ed36c7eb4a421fa1b95026a502a0b2062e9ea00fc4446 \
+arrow==0.14.4 \
+    --hash=sha256:157dee94b557ffe9a2e13e05669bf48820064cb37d416f547f59baa0d25301d4 \
+    --hash=sha256:47f37968afeaefd0ba3fe4d0c70dc830985f9ab11beeb381d4fc0e8f8151d3d6 \
     # via scriptworker
 asn1crypto==0.24.0 \
     --hash=sha256:2f1adbb7546ed199e3c90ef23ec95c5cf3585bac7d11fb7eb562a3fe89c64e87 \
@@ -238,9 +238,9 @@ requests==2.22.0 \
     --hash=sha256:9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31
 requests_unixsocket==0.1.5 \
     --hash=sha256:a91bc0138f61fb3396de6358fa81e2cd069a150ade5111f869df01d8bc9d294c
-scriptworker==24.0.1 \
-    --hash=sha256:258250240c6daff030db0114458e51932a40c683ebd1273934058909bde66d0a \
-    --hash=sha256:66b1be61131b8d5bd554c83533984453083a4ce3910dc6f293ee02e01b8e11ca
+scriptworker==25.0.0 \
+    --hash=sha256:1846a6c21e24f7ef215cb57e7ded2408943f446a218600572fdfe321b99a40bd \
+    --hash=sha256:7f1c82ef4bea1ae304e114d864e6a402231a5f9ee6762d8435ff39165dfc7e37
 simplejson==3.8.2 \
     --hash=sha256:057952d5a964737425faca7153e497daee126c88cee424f8331bf8f931430880 \
     --hash=sha256:08b59bcb98c1d7b8d2a5efd275afa18225a82f58bedde4dfec5410e884e0fbbf \
@@ -300,4 +300,4 @@ yarl==1.3.0 \
 
 # WARNING: The following packages were not pinned, but pip requires them to be
 # pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.
-# setuptools==41.0.1        # via jsonschema
+# setuptools==41.1.0        # via jsonschema
