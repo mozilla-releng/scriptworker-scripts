@@ -172,17 +172,17 @@ def test_update_track(edit_resource_mock):
     )
 
     edit_resource_mock.tracks().update.reset_mock()
-    google_play.update_track('rollout', ['2015012345', '2015012347'], rollout_percentage=1)
+    google_play.update_track('production', ['2015012345', '2015012347'], rollout_percentage=1)
     edit_resource_mock.tracks().update.assert_called_once_with(
         editId=google_play._edit_id,
         packageName='dummy_package_name',
-        track='rollout',
+        track='production',
         body={
             'releases': [{
-                'status': 'completed',
+                'status': 'inProgress',
+                'userFraction': 0.01,
                 'versionCodes': ['2015012345', '2015012347']},
             ],
-            'userFraction': 0.01,
         },
     )
 
@@ -192,7 +192,7 @@ def test_update_track_should_refuse_wrong_percentage(edit_resource_mock, invalid
     google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
 
     with pytest.raises(WrongArgumentGiven):
-        google_play.update_track('rollout', ['2015012345', '2015012347'], invalid_percentage)
+        google_play.update_track('production', ['2015012345', '2015012347'], invalid_percentage)
 
 
 def test_update_listings(edit_resource_mock):

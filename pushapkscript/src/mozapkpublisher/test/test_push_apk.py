@@ -82,23 +82,29 @@ def set_up_mocks(monkeypatch_, google_play_edit_mock_):
     monkeypatch_.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', _metadata)
 
 
-def test_invalid_rollout_percentage():
+def test_rollout_without_rollout_percentage():
+    # Note: specifying "track='rollout'" (even with a valid percentage) is currently deprecated
+
     with pytest.raises(WrongArgumentGiven):
-        # missing percentage
+        # using the track "rollout" without a percentage
         push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', [])
 
-    valid_percentage = 1
-    invalid_track = 'production'
-    with pytest.raises(WrongArgumentGiven):
-        push_apk(APKS, SERVICE_ACCOUNT, credentials, invalid_track, [], rollout_percentage=valid_percentage)
 
-
-def test_valid_rollout_percentage(google_play_edit_mock, monkeypatch):
+def test_valid_rollout_percentage_with_track_rollout(google_play_edit_mock, monkeypatch):
     set_up_mocks(monkeypatch, google_play_edit_mock)
     valid_percentage = 50
 
     push_apk(APKS, SERVICE_ACCOUNT, credentials, 'rollout', [], rollout_percentage=valid_percentage, contact_google_play=False)
-    google_play_edit_mock.update_track.assert_called_once_with('rollout', ['0', '1'], valid_percentage)
+    google_play_edit_mock.update_track.assert_called_once_with('production', ['0', '1'], valid_percentage)
+    google_play_edit_mock.update_track.reset_mock()
+
+
+def test_valid_rollout_percentage_with_real_track(google_play_edit_mock, monkeypatch):
+    set_up_mocks(monkeypatch, google_play_edit_mock)
+    valid_percentage = 50
+
+    push_apk(APKS, SERVICE_ACCOUNT, credentials, 'beta', [], rollout_percentage=valid_percentage, contact_google_play=False)
+    google_play_edit_mock.update_track.assert_called_once_with('beta', ['0', '1'], valid_percentage)
     google_play_edit_mock.update_track.reset_mock()
 
 

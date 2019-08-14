@@ -2,9 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [upcoming]
+## [4.2.0] - 2019-08-14
+
+### Added
+* Any track can now be targeted with rollout
 
 ### Changed
+* Using `track="rollout"` is now deprecated (specify the target track instead)
 * Uses RAII to represent operations that require an "edit"
 
 ## [4.1.0] - 2019-07-10
