@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [3.2.0] - 2019-08-14
+## [4.0.0] - 2019-08-14
 
 ### Adds
 * Any google play track now can be rolled out to (not just "production")
