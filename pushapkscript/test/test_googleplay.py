@@ -39,7 +39,7 @@ class GooglePlayTest(unittest.TestCase):
 
     def test_publish_allows_rollout_percentage(self, mock_push_apk):
         publish_config = {
-            'google_play_track': 'rollout',
+            'google_play_track': 'production',
             'rollout_percentage': 10,
             'package_names': ['org.mozilla.fennec_aurora'],
             'service_account': 'service_account',
@@ -47,7 +47,7 @@ class GooglePlayTest(unittest.TestCase):
         }
         publish_to_googleplay({}, {}, publish_config, self.apks, contact_google_play=True)
         _, args = mock_push_apk.call_args
-        assert args['track'] == 'rollout'
+        assert args['track'] == 'production'
         assert args['rollout_percentage'] == 10
 
     def test_craft_push_config_allows_to_contact_google_play_or_not(self, mock_push_apk):

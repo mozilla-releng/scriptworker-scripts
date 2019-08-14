@@ -4,8 +4,6 @@ from mozapkpublisher.push_apk import push_apk
 
 log = logging.getLogger(__name__)
 
-_DEFAULT_TRACK_VALUES = ['production', 'beta', 'alpha', 'rollout', 'internal']
-
 
 def publish_to_googleplay(payload, product_config, publish_config, apk_files, contact_google_play):
     with open(publish_config['google_credentials_file'], 'rb') as certificate:

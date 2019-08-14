@@ -136,7 +136,7 @@ def test_get_publish_config_fennec_rollout():
     }
     assert _get_publish_config(aurora_config, {'rollout_percentage': 10}, 'aurora') == {
         'certificate_alias': 'aurora',
-        'google_play_track': 'rollout',
+        'google_play_track': 'beta',
         'rollout_percentage': 10,
     }
 
@@ -168,7 +168,7 @@ def test_get_publish_config_focus_rollout():
     }
     assert _get_publish_config(focus_config, focus_payload, 'focus') == {
         'certificate_alias': 'focus',
-        'google_play_track': 'rollout',
+        'google_play_track': 'production',
         'rollout_percentage': 10,
     }
 
@@ -204,7 +204,7 @@ def test_get_publish_config_fenix_rollout():
     }
     assert _get_publish_config(fenix_config, fenix_payload, 'focus') == {
         'certificate_alias': 'fenix',
-        'google_play_track': 'rollout',
+        'google_play_track': 'production',
         'rollout_percentage': 10,
     }
 

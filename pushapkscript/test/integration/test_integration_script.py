@@ -326,7 +326,7 @@ class MainTest(unittest.TestCase):
             ],
             service_account='firefox-aurora@iam.gserviceaccount.com',
             google_play_credentials_file=MockFile('/firefox-nightly.p12'),
-            track='rollout',
+            track='beta',
             expected_package_names=['org.mozilla.fennec_aurora'],
             rollout_percentage=25,
             commit=False,

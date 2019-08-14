@@ -94,9 +94,12 @@ def _get_publish_config(product_config, payload, android_product):
 
     rollout_percentage = payload.get('rollout_percentage')
     if rollout_percentage:
-        publish_config['google_play_track'] = 'rollout'
         publish_config['rollout_percentage'] = rollout_percentage
-        log.info('"rollout_percentage" is set, so the target Google Play track will be "rollout"')
+        if publish_config['google_play_track'] == 'rollout':
+            log.warn('Using "rollout" as the Google Play Track is deprecated, please specify the '
+                     'target track that you would like to rollout to, instead. Assuming you meant '
+                     '"production" for this task.')
+            publish_config['google_play_track'] = 'production'
     return publish_config
 
 
