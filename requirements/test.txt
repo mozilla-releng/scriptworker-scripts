@@ -168,4 +168,4 @@ zipp==0.5.2 \
 
 # WARNING: The following packages were not pinned, but pip requires them to be
 # pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.
-# setuptools==41.0.1        # via flake8, jsonschema
+# setuptools==41.1.0        # via flake8, jsonschema
