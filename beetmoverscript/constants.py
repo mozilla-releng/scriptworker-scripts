@@ -1,5 +1,6 @@
 MIME_MAP = {
     '': 'text/plain',
+    '.aar': 'application/java-archive',
     '.apk': 'application/vnd.android.package-archive',
     '.asc': 'text/plain',
     '.beet': 'text/plain',
@@ -7,15 +8,16 @@ MIME_MAP = {
     '.bz2': 'application/octet-stream',
     '.checksums': 'text/plain',
     '.dmg': 'application/x-iso9660-image',
+    '.jar': 'application/java-archive',
     '.json': 'application/json',
     '.mar': 'application/octet-stream',
-    '.msi': 'application/x-msi',
-    '.xpi': 'application/x-xpinstall',
     '.md5': 'text/plain',
-    '.sha1': 'text/plain',
-    '.pom': 'application/xml',
-    '.aar': 'application/java-archive',
+    '.msi': 'application/x-msi',
     '.pkg': 'application/x-newton-compatible-pkg',
+    '.pom': 'application/xml',
+    '.sha1': 'text/plain',
+    '.snap': 'application/octet-stream',
+    '.xpi': 'application/x-xpinstall',
 }
 
 STAGE_PLATFORM_MAP = {
