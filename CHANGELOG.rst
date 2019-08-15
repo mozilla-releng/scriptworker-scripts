@@ -6,6 +6,29 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.5.6] = (2019-08-15)
+----------------------
+
+Changed
+~~~~~~~
+- Generalize worker.json and other parts of dockerization (`#234
+  <https://github.com/mozilla-releng/beetmoverscript/pull/234>`_)
+
+- Remove useless templates from beetmoverscript as we switched to DA (`#239
+  <https://github.com/mozilla-releng/beetmoverscript/pull/239>`_)
+
+- Use longer LOG_MAX_AGE_SEC (`#240
+  <https://github.com/mozilla-releng/beetmoverscript/pull/240>`_)
+
+Added
+~~~~~
+- Add `.snap` and `.jar` MIME types (`#243
+  <https://github.com/mozilla-releng/beetmoverscript/pull/243>`_)
+
+- Add scriptworker-prov-v1 to scriptworker_provisioners (`#242
+  <https://github.com/mozilla-releng/beetmoverscript/pull/242>`_)
+
+
 [8.5.5] = (2019-07-30)
 ----------------------
 
