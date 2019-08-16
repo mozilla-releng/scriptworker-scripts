@@ -2,6 +2,7 @@
 # coding=utf-8
 """Test scriptworker_client.client
 """
+import argparse
 from copy import deepcopy
 import json
 import logging
@@ -81,6 +82,7 @@ def test_verify_task_schema(tmpdir):
         )
 
 
+# sync_main {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize("should_verify_task", (True, False))
 async def test_sync_main_runs_fully(tmpdir, should_verify_task):
@@ -127,26 +129,13 @@ async def test_sync_main_runs_fully(tmpdir, should_verify_task):
     with open(config_path, "w") as fh:
         json.dump(config, fh)
 
-    kwargs["config_path"] = config_path
+    kwargs["commandline_args"] = [config_path]
     client.sync_main(async_main, **kwargs)
 
     for i in run_until_complete_calls:
         await i  # suppress coroutine not awaited warning
     assert len(run_until_complete_calls) == 1  # run_until_complete was called once
     assert len(async_main_calls) == 1  # async_main was called once
-
-
-def test_usage(capsys, monkeypatch):
-    """``_usage`` prints the expected error and exits.
-
-    """
-    monkeypatch.setattr(sys, "argv", ["my_binary"])
-    with pytest.raises(SystemExit):
-        client._usage()
-
-    captured = capsys.readouterr()
-    assert captured.out == ""
-    assert captured.err == "Usage: my_binary CONFIG_FILE\n"
 
 
 @pytest.mark.parametrize(
@@ -202,13 +191,31 @@ async def test_fail_handle_asyncio_loop(mocker):
     m.exception.assert_called_once_with("Failed to run async_main")
 
 
+def test_get_parser():
+    """`get_parser` stores `config_path` and the optional `work_dir` and
+    `artifact_dir`, but raises `SystemExit` on unknown options.
+
+    """
+    parser = client.get_parser()
+    parsed = parser.parse_args(["foo"])
+    assert parsed.config_path == "foo"
+    assert parsed.work_dir is None
+    assert parsed.artifact_dir is None
+    parsed = parser.parse_args(
+        ["--work-dir", "work", "--artifact-dir", "artifact", "bar"]
+    )
+    assert parsed.config_path == "bar"
+    assert parsed.work_dir == "work"
+    assert parsed.artifact_dir == "artifact"
+    for args in ([], ["--illegal", "foo"]):
+        with pytest.raises(SystemExit):
+            parser.parse_args(args)
+
+
 def test_init_config_cli(mocker, tmpdir):
     """_init_config can get its config from the commandline if not specified.
 
     """
-    mocker.patch.object(sys, "argv", new=["x"])
-    with pytest.raises(SystemExit):
-        client._init_config()
     path = os.path.join(tmpdir, "foo.json")
     config = {"a": "b"}
     default_config = {"c": "d"}
@@ -216,5 +223,12 @@ def test_init_config_cli(mocker, tmpdir):
         fh.write(json.dumps(config))
     expected = deepcopy(default_config)
     expected.update(config)
-    mocker.patch.object(sys, "argv", new=["x", path])
-    assert client._init_config(default_config=default_config) == expected
+    parsed_args = argparse.Namespace()
+    parsed_args.config_path = path
+    assert client._init_config(parsed_args, default_config=default_config) == expected
+    parsed_args.work_dir = os.path.join(tmpdir, "work")
+    parsed_args.artifact_dir = os.path.join(tmpdir, "artifact")
+    expected.update(
+        {"work_dir": parsed_args.work_dir, "artifact_dir": parsed_args.artifact_dir}
+    )
+    assert client._init_config(parsed_args, default_config=default_config) == expected

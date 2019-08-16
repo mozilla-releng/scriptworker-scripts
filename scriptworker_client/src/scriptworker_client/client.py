@@ -5,6 +5,7 @@ Attributes:
     log (logging.Logger): the log object for the module
 
 """
+import argparse
 import asyncio
 import jsonschema
 import logging
@@ -17,6 +18,7 @@ from scriptworker_client.utils import load_json_or_yaml
 log = logging.getLogger(__name__)
 
 
+# get_task {{{1
 def get_task(config):
     """Read the task.json from work_dir.
 
@@ -36,6 +38,7 @@ def get_task(config):
     return contents
 
 
+# verify_{json,task}_schema {{{1
 def verify_json_schema(data, schema, name="task"):
     """Given data and a jsonschema, let's verify it.
 
@@ -88,9 +91,12 @@ def verify_task_schema(config, task, schema_key="schema_file"):
         ) from e
 
 
+# sync_main {{{1
 def sync_main(
     async_main,
-    config_path=None,
+    parser=None,
+    parser_desc=None,
+    commandline_args=None,
     default_config=None,
     should_verify_task=True,
     loop_function=asyncio.get_event_loop,
@@ -99,8 +105,7 @@ def sync_main(
 
     This function sets up the basic needs for a script to run. More specifically:
         * it initializes the config
-        * the path to the config file is either taken from `config_path` or from `sys.argv[1]`.
-        * it verifies `sys.argv` doesn't have more arguments than the config path.
+        * config options are either taken from `commandline_args` or from `sys.argv[1:]`.
         * it creates the asyncio event loop so that `async_main` can run
 
     Args:
@@ -116,7 +121,10 @@ def sync_main(
             ``asyncio.get_event_loop``.
 
     """
-    config = _init_config(config_path, default_config)
+    parser = parser or get_parser(parser_desc)
+    commandline_args = commandline_args or sys.argv[1:]
+    parsed_args = parser.parse_args(commandline_args)
+    config = _init_config(parsed_args, default_config)
     _init_logging(config)
     task = get_task(config)
     if should_verify_task:
@@ -125,21 +133,44 @@ def sync_main(
     loop.run_until_complete(_handle_asyncio_loop(async_main, config, task))
 
 
-def _init_config(config_path=None, default_config=None):
-    if config_path is None:
-        if len(sys.argv) != 2:
-            _usage()
-        config_path = sys.argv[1]
+def get_parser(desc=None):
+    """Create a default *script argparse parser.
 
+    Args:
+        desc (str, optional): the description for the parser.
+
+    Returns:
+        argparse.Namespace: the parsed args.
+
+    """
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument(
+        "--work-dir",
+        type=str,
+        required=False,
+        help="The path to use as the script working directory",
+    )
+    parser.add_argument(
+        "--artifact-dir",
+        type=str,
+        required=False,
+        help="The path to use as the artifact upload directory",
+    )
+    parser.add_argument("config_path", type=str)
+    return parser
+
+
+def _init_config(parsed_args, default_config=None):
     config = {} if default_config is None else default_config
-    config.update(load_json_or_yaml(config_path, file_type="yaml", is_path=True))
+    config.update(
+        load_json_or_yaml(parsed_args.config_path, file_type="yaml", is_path=True)
+    )
+    for var in ("work_dir", "artifact_dir"):
+        path = getattr(parsed_args, var, None)
+        if path:
+            config[var] = path
 
     return config
-
-
-def _usage():
-    print("Usage: {} CONFIG_FILE".format(sys.argv[0]), file=sys.stderr)
-    sys.exit(1)
 
 
 def _init_logging(config):
