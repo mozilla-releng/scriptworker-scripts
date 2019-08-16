@@ -5,6 +5,7 @@ RUN groupadd --gid 10001 app && \
 
 RUN apt-get update \
  && apt-get install -y default-jdk \
+ && apt-get clean \
  && ln -s /app/docker.d/healthcheck /bin/healthcheck
 
 USER app
