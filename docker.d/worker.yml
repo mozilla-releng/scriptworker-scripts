@@ -40,7 +40,7 @@ products:
               google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_AURORA_PATH" }
               certificate_alias: nightly
 
-      'COT_PRODUCT == "firefox" && ENV != "prod")':
+      'COT_PRODUCT == "firefox" && ENV != "prod"':
         - product_names: [ "dep" ]
           digest_algorithm: SHA1
           use_scope_for_channel: true
