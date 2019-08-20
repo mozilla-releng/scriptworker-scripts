@@ -10,6 +10,7 @@ CERT_DIR=/app/files
 function import_cert() {
         JARSIGNER_KEY_STORE_NAME=$1
         JARSIGNER_KEY_STORE_CERTIFICATE=$2
+        echo "Importing $JARSIGNER_KEY_STORE_CERTIFICATE as $JARSIGNER_KEY_STORE_NAME into $JARSIGNER_KEY_STORE"
         keytool \
           -importcert \
           -noprompt \
@@ -17,8 +18,14 @@ function import_cert() {
           -file $JARSIGNER_KEY_STORE_CERTIFICATE \
           -keystore $JARSIGNER_KEY_STORE \
           -trustcacerts \
+          -storetype jks \
           -srcstorepass $JARSIGNER_KEY_STORE_PASSWORD \
           -deststorepass $JARSIGNER_KEY_STORE_PASSWORD
+        keytool \
+          -list \
+          -v \
+          -keystore $JARSIGNER_KEY_STORE \
+          -storepass $JARSIGNER_KEY_STORE_PASSWORD
 }
 
 case $COT_PRODUCT in
