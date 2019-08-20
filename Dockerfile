@@ -15,6 +15,6 @@ COPY . /app
 RUN python -m venv /app \
  && ./bin/pip install -r requirements/base.txt \
  && ./bin/pip install -e . \
- && ./bin/pip install https://github.com/rail/configloader/archive/d0336ed42f364ae5da749851d855ada1d6ff9951.tar.gz
+ && ./bin/pip install https://github.com/rail/configloader/archive/8719e33f6ba65e79e188355efabbcf6c9e1f1780.tar.gz
 
 CMD ["/app/docker.d/init.sh"]
