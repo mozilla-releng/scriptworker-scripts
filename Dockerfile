@@ -3,9 +3,7 @@ FROM python:3.7
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
 
-RUN apt-get update \
- && apt-get install -y default-jdk \
- && ln -s /app/docker.d/healthcheck /bin/healthcheck
+RUN ln -s /app/docker.d/healthcheck /bin/healthcheck
 
 USER app
 WORKDIR /app
