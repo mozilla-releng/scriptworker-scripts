@@ -5,6 +5,7 @@ RUN groupadd --gid 10001 app && \
 
 RUN apt-get update \
  && apt-get install -y libsodium-dev \
+ && apt-get clean \
  # XXX Avoid snapcraft from loading useless libs when running on Ubuntu
  && truncate -s 0 /etc/os-release \
  && ln -s /app/docker.d/healthcheck /bin/healthcheck
