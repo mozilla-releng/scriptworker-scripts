@@ -202,6 +202,29 @@ class LockfileFuture:
         self.retry_async_kwargs = retry_async_kwargs or {}
         self.use_retry_async = use_retry_async
 
+    def replace_args(self, obj, repl_dict):
+        """Do string sprintf replacement for all strings in `obj`.
+
+        Args:
+            obj (object): an object to do string replacement in. Non-
+                strings, lists, and dicts will be passed through unchanged.
+            repl_dict (dict): the replacement dictionary. If a string has,
+                e.g. ``%(foo)s`` in it, then a ``repl_dict`` of
+                ``{"foo": "bar"}`` will replace the ``%(foo)s`` with ``bar``.
+
+        Returns:
+            obj, with string replacement if applicable.
+
+        """
+        if isinstance(obj, str):
+            return obj % repl_dict
+        elif isinstance(obj, (list, tuple)):
+            return [self.replace_args(item, repl_dict) for item in obj]
+        elif isinstance(obj, dict):
+            return {key: self.replace_args(val, repl_dict) for key, val in obj.items()}
+        else:
+            return obj
+
     async def run_with_lockfile(self):
         """Run the coro with the lockfile.
 
@@ -213,16 +236,8 @@ class LockfileFuture:
         async with lockfile(
             self.lockfile_map.keys(), **self.lockfile_kwargs
         ) as lockfile_path:
-            args = [
-                arg % self.lockfile_map[lockfile_path] if isinstance(arg, str) else arg
-                for arg in self.args
-            ]
-            kwargs = {
-                key: val % self.lockfile_map[lockfile_path]
-                if isinstance(val, str)
-                else val
-                for key, val in self.kwargs.items()
-            }
+            args = self.replace_args(self.args, self.lockfile_map[lockfile_path])
+            kwargs = self.replace_args(self.kwargs, self.lockfile_map[lockfile_path])
             if self.use_retry_async:
                 await retry_async(
                     self.coro, args=args, kwargs=kwargs, **self.retry_async_kwargs

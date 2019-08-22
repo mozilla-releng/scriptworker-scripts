@@ -247,6 +247,36 @@ async def test_LockfileFuture(tmpdir, use_retry_async):
         assert not os.path.exists(path)
 
 
+@pytest.mark.parametrize(
+    "obj, expected",
+    (
+        # string
+        ("x/%(foo)s/y", "x/bar/y"),
+        # list
+        (["x", "%(foo)s..", 1], ["x", "bar..", 1]),
+        # tuple
+        (("x", "%(foo)s..", True), ["x", "bar..", True]),
+        # dict
+        ({"x": "y", "z": "%(foo)s"}, {"x": "y", "z": "bar"}),
+        # list with dict
+        (["x", {"y": "%(foo)s.."}, 1], ["x", {"y": "bar.."}, 1]),
+        # dict with list
+        ({"x": "y", "z": ["%(foo)s"]}, {"x": "y", "z": ["bar"]}),
+        # other
+        (None, None),
+        (1, 1),
+    ),
+)
+def test_LockfileFuture_replace_args(obj, expected):
+    """``replace_args`` replaces strings recursively, but returns the obj
+    unchanged otherwise.
+
+    """
+    lockfile_map = {"foo": "bar"}
+    lf = aio.LockfileFuture(None, None)
+    assert lf.replace_args(obj, lockfile_map) == expected
+
+
 # retry_async {{{1
 @pytest.mark.parametrize("attempt", (0, 1, 2, 3, 4, 5))
 def test_calculate_sleep_time(attempt):
