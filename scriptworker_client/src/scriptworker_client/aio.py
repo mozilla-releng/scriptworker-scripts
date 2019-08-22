@@ -145,6 +145,7 @@ async def lockfile(paths, name=None, attempts=10, sleep=30):
                         fcntl.lockf(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
                         log.debug(acquired_msg, path)
                         yield path
+                        # We'll clean up `path` in the `finally` block below
                         return
                     finally:
                         rm(path)
