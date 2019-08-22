@@ -1,8 +1,4 @@
 -r base.in
-# until https://gitlab.com/pycqa/flake8-docstrings/issues/36 is fixed
-pydocstyle<4.0.0
-# until packaging fixes their warnings https://github.com/pypa/packaging/issues/170
-pyparsing==2.4.0
 coverage>=4.2
 python-coveralls
 flake8
