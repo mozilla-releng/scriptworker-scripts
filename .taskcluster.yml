@@ -82,7 +82,7 @@ tasks:
         env:
           DOCKERHUB_EMAIL: 'release+dockerhub+services@mozilla.com'
           DOCKERHUB_USER: 'mozillarelengservices'
-          DOCKER_REPO: 'mozilla/${project_name}script'
+          DOCKER_REPO: 'mozilla/releng-${project_name}script'
           DOCKER_TAG: '${docker_tag}'
           GIT_HEAD_REV: '${head_rev}'
           PROJECT_NAME: '${project_name}'
