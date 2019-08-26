@@ -25,7 +25,7 @@ tasks:
       $if: 'tasks_for == "github-pull-request"'
       then: '0'
       else:
-        $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev", "refs/heads/prod"]'
+        $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev", "refs/heads/production"]'
         then: '1'
         else: '0'
 
