@@ -250,7 +250,7 @@ def make_signing_req(input_bytes, fmt, keyid=None, extension_id=None):
         sign_req["options"]["id"] = extension_id
         sign_req["options"]["cose_algorithms"] = ["ES256"]
         sign_req["options"]["pkcs7_digest"] = "SHA256"
-        log.debug(f"omnija sign_req options: {sign_req['options']}")
+        log.debug(f"{fmt} sign_req options: {sign_req['options']}")
 
     return [sign_req]
 
