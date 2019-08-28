@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [4.2.0] - 2019-08-14
+## [5.0.0] - 2019-08-14
 
 ### Added
 * Any track can now be targeted with rollout
