@@ -159,7 +159,7 @@ def edit(service_account, credentials_file_name, package_name, *, contact_google
     google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
     yield google_play
     if commit:
-        edit_resource.commit(editId=edit_id, packageName=package_name)
+        edit_resource.commit(editId=edit_id, packageName=package_name).execute()
         logger.info('Changes committed')
         logger.debug('edit_id "{}" for "{}" has been committed'.format(edit_id, package_name))
     else:
