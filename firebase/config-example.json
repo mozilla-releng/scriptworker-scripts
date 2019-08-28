@@ -1,0 +1,5 @@
+{
+	"flank_jar": "/path/to/flank.jar",
+	"flank_config": "/path/to/flank_config.yml",
+	"google_project": "reference-browser"
+}

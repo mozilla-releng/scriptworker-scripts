@@ -1,0 +1,20 @@
+{
+    "scopes": [],
+    "dependencies": [],
+    "payload": {
+        "results_bucket": "reference-browser_test_artifacts",
+        "directories_to_pull": ["/sdcard/screenshots"],
+        "upstreamArtifacts": [{
+            "taskId": "slug",
+            "taskType": "scriptworker",
+            "paths": ["public/cool.apk", "public/cool-test.apk"],
+            "devices": [{
+                "model": "sailfish",
+                "version": 25
+            }, { 
+                "model": "sailfish" ,
+                "version": 28
+            }]
+        }]
+    }
+}
