@@ -10,6 +10,7 @@ struct Config {
     flank_config: PathBuf,
 }
 
+#[scriptworker_script::main]
 fn do_work(
     config: Config,
     work_dir: &Path,
@@ -61,8 +62,4 @@ struct Attr {
 struct Extra {
     results_bucket: String,
     directories_to_pull: Vec<String>,
-}
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    scriptworker_script::main(do_work)
 }

@@ -59,7 +59,7 @@ where
     Ok(serde_json::from_reader(std::fs::File::open(task_file)?)?)
 }
 
-pub fn main<Config, A, E>(
+pub fn scriptworker_main<Config, A, E>(
     do_work: impl FnOnce(Config, &Path, Task<A, E>) -> Result<(), Box<dyn std::error::Error>>,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
@@ -84,3 +84,6 @@ pub fn get_artifact_path(task_id: &String, path: &Path, work_dir: &Path) -> Path
     }
     work_dir.join("cot").join(task_id).join(path)
 }
+
+#[cfg(not(test))] // Work around for rust-lang/rust#62127
+pub use scriptworker_script_macros::main;
