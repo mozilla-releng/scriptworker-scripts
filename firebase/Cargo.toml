@@ -1,0 +1,11 @@
+[package]
+name = "firebase"
+version = "0.1.0"
+authors = ["Tom Prince <mozilla@hocat.ca>"]
+edition = "2018"
+
+[dependencies]
+clap = "2.33.0"
+serde = "1.0.99"
+serde_derive = "1.0.99"
+scriptworker_script = { path = "../script" }
