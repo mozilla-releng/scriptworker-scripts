@@ -102,19 +102,26 @@ class GooglePlayEdit:
             raise
 
     def update_track(self, track, version_codes, rollout_percentage=None):
-        body = {
-            u'releases': [{
-                u'status': 'completed',
-                u'versionCodes': version_codes,
-            }],
-        }
         if rollout_percentage is not None:
             if rollout_percentage < 0 or rollout_percentage > 100:
                 raise WrongArgumentGiven(
                     'rollout percentage must be between 0 and 100. Value given: {}'.format(
                         rollout_percentage))
 
-            body[u'userFraction'] = rollout_percentage / 100.0  # Ensure float in Python 2
+            release = {
+                u'status': 'inProgress',
+                u'userFraction': rollout_percentage / 100.0,  # Ensure float in Python 2
+                u'versionCodes': version_codes,
+            }
+        else:
+            release = {
+                u'status': 'completed',
+                u'versionCodes': version_codes
+            }
+
+        body = {
+            u'releases': [release],
+        }
 
         response = self._edit_resource.tracks().update(
             editId=self._edit_id, track=track, packageName=self._package_name, body=body
@@ -152,7 +159,7 @@ def edit(service_account, credentials_file_name, package_name, *, contact_google
     google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
     yield google_play
     if commit:
-        edit_resource.commit(editId=edit_id, packageName=package_name)
+        edit_resource.commit(editId=edit_id, packageName=package_name).execute()
         logger.info('Changes committed')
         logger.debug('edit_id "{}" for "{}" has been committed'.format(edit_id, package_name))
     else:
