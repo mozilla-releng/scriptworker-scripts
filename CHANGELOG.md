@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.0.0] - 2019-08-14
+
+### Adds
+* Any google play track now can be rolled out to (not just "production")
+
+### Changes
+* Deprecates `"google_play_track": "rollout"` and `"channel": "rollout"` in task payloads
+* When "rollout" is still used, the target track will be set based on `google_play_track` set in config
+
 ## [3.1.0] - 2019-07-10
 
 ### Changes

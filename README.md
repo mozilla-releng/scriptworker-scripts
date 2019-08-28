@@ -158,9 +158,9 @@ In the case where Release Management isn't connect, there's a temporary workarou
 
 ##### 3. For non-aurora products: Push to the rollout track
 
-If you are confident enough to publish to percentage of our user base, you can use [the rollout track](https://support.google.com/googleplay/android-developer/answer/6346149). Just edit your task definition to contain:
+If you are confident enough to publish to percentage of our user base, you can use "rollout" functionality. Just edit your task definition to contain:
 ```json
-"google_play_track": "rollout",
+"channel": "production",
 "rollout_percentage": 10,
 ```
 if you want to target 10% of the production user base.
