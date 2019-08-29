@@ -10,6 +10,8 @@ import subprocess
 import tarfile
 import zipfile
 
+import winsign.sign
+
 from scriptworker.utils import makedirs
 
 from signingscript.exceptions import SigningScriptError
@@ -1236,3 +1238,90 @@ def test_langpack_id_raises(json_, raises, mocker):
     with raises:
         id = sign._langpack_id(filename)
         assert id == json_['applications']['gecko']['id']
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('fmt', ('autograph_authenticode', 'autograph_authenticode_stub'))
+async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt):
+    context.config['authenticode_cert'] = os.path.join(TEST_DATA_DIR, 'windows.crt')
+    context.config['authenticode_cross_cert'] = os.path.join(TEST_DATA_DIR, 'windows.crt')
+    context.config['authenticode_url'] = "https://example.com"
+    context.config['authenticode_timestamp_style'] = None
+
+    test_file = os.path.join(tmpdir, "windows.zip")
+    shutil.copyfile(os.path.join(TEST_DATA_DIR, "windows.zip"), test_file)
+
+    async def mocked_autograph(context, from_, fmt):
+        return b''
+
+    def mocked_winsign(infile, outfile, digest_algo, certs, signer, **kwargs):
+        signer('', '')
+        shutil.copyfile(infile, outfile)
+        return True
+
+    mocker.patch.object(winsign.sign, 'sign_file', mocked_winsign)
+    mocker.patch.object(sign, 'sign_hash_with_autograph', mocked_autograph)
+
+    result = await sign.sign_authenticode_zip(context, test_file, fmt)
+    assert result == test_file
+    assert os.path.exists(result)
+
+
+@pytest.mark.asyncio
+async def test_authenticode_sign_zip_nofiles(tmpdir, mocker, context):
+    context.config['authenticode_cert'] = os.path.join(TEST_DATA_DIR, 'windows.crt')
+    context.config['authenticode_url'] = "https://example.com"
+    context.config['authenticode_timestamp_style'] = None
+
+    test_file = os.path.join(tmpdir, "partial1.mar")
+    shutil.copyfile(os.path.join(TEST_DATA_DIR, "partial1.mar"), test_file)
+
+    def mocked_winsign(infile, outfile, *args, **kwargs):
+        shutil.copyfile(infile, outfile)
+        return True
+
+    mocker.patch.object(winsign.sign, 'sign_file', mocked_winsign)
+    with pytest.raises(SigningScriptError):
+        await sign.sign_authenticode_zip(context, test_file, 'autograph_authenticode')
+
+
+@pytest.mark.asyncio
+async def test_authenticode_sign_zip_error(tmpdir, mocker, context):
+    context.config['authenticode_cert'] = os.path.join(TEST_DATA_DIR, 'windows.crt')
+    context.config['authenticode_url'] = "https://example.com"
+    context.config['authenticode_timestamp_style'] = None
+
+    test_file = os.path.join(tmpdir, "windows.zip")
+    shutil.copyfile(os.path.join(TEST_DATA_DIR, "windows.zip"), test_file)
+
+    def mocked_winsign(infile, outfile, *args, **kwargs):
+        return False
+
+    mocker.patch.object(winsign.sign, 'sign_file', mocked_winsign)
+    with pytest.raises(IOError):
+        await sign.sign_authenticode_zip(context, test_file, 'autograph_authenticode')
+
+@pytest.mark.asyncio
+async def test_authenticode_sign_single_file(tmpdir, mocker, context):
+    context.config['authenticode_cert'] = os.path.join(TEST_DATA_DIR, 'windows.crt')
+    context.config['authenticode_cross_cert'] = os.path.join(TEST_DATA_DIR, 'windows.crt')
+    context.config['authenticode_url'] = "https://example.com"
+    context.config['authenticode_timestamp_style'] = None
+
+    await sign._extract_zipfile(context, os.path.join(TEST_DATA_DIR, "windows.zip"), tmp_dir=tmpdir)
+    test_file = os.path.join(tmpdir, "helper.exe")
+
+    async def mocked_autograph(context, from_, fmt):
+        return b''
+
+    def mocked_winsign(infile, outfile, digest_algo, certs, signer, **kwargs):
+        signer('', '')
+        shutil.copyfile(infile, outfile)
+        return True
+
+    mocker.patch.object(winsign.sign, 'sign_file', mocked_winsign)
+    mocker.patch.object(sign, 'sign_hash_with_autograph', mocked_autograph)
+
+    result = await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode")
+    assert result == test_file
+    assert os.path.exists(result)

@@ -18,10 +18,20 @@ import re
 from scriptworker.exceptions import ScriptWorkerException, TaskVerificationError
 from scriptworker.utils import retry_request, get_single_item_from_sequence
 
-from signingscript.sign import get_suitable_signing_servers, sign_gpg, \
-    sign_jar, sign_macapp, sign_signcode, sign_widevine, sign_file, \
-    sign_mar384_with_autograph_hash, sign_gpg_with_autograph, \
-    sign_omnija, sign_langpack
+from signingscript.sign import (
+    get_suitable_signing_servers,
+    sign_gpg,
+    sign_jar,
+    sign_macapp,
+    sign_signcode,
+    sign_widevine,
+    sign_file,
+    sign_mar384_with_autograph_hash,
+    sign_gpg_with_autograph,
+    sign_omnija,
+    sign_langpack,
+    sign_authenticode_zip,
+)
 from signingscript.exceptions import SigningServerError
 from signingscript.utils import is_autograph_signing_format
 
@@ -46,6 +56,8 @@ FORMAT_TO_SIGNING_FUNCTION = frozendict({
     "autograph_widevine": sign_widevine,
     "autograph_omnija": sign_omnija,
     "autograph_langpack": sign_langpack,
+    "autograph_authenticode": sign_authenticode_zip,
+    "autograph_authenticode_stub": sign_authenticode_zip,
     "default": sign_file,
 })
 

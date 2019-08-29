@@ -41,6 +41,8 @@ try:
 except ImportError:
     widevine = None
 
+import winsign.sign
+from winsign.crypto import load_pem_certs
 
 sys.path.append(  # append the mozbuild vendor
     os.path.abspath(
@@ -1317,3 +1319,93 @@ async def merge_omnija_files(orig, signed, to):
             preloads = jarlog[:jarlog.index(orig_jarreader.last_preloaded) + 1]
             to_writer.preload(preloads)
     return True
+
+
+# sign_authenticode_file {{{1
+async def sign_authenticode_file(context, orig_path, fmt):
+    """Sign a file in-place with authenticode, using autograph as a backend.
+
+    Args:
+        context (Context): the signing context
+        orig_path (str): the source file to sign
+        fmt (str): the format to sign with
+
+    Returns:
+        True on success, False otherwise
+
+    """
+    def signer(digest, digest_algo):
+        thread_loop = asyncio.new_event_loop()
+        return thread_loop.run_until_complete(
+            sign_hash_with_autograph(context, digest, fmt)
+        )
+
+    def sign_file():
+        infile = orig_path
+        outfile = orig_path + "-new"
+        digest_algo = "sha1"
+        certs = load_pem_certs(open(context.config["authenticode_cert"], "rb").read())
+        url = context.config["authenticode_url"]
+        timestamp_style = context.config["authenticode_timestamp_style"]
+        if fmt.endswith("authenticode_stub"):
+            crosscert = context.config["authenticode_cross_cert"]
+        else:
+            crosscert = None
+
+        if not winsign.sign.sign_file(
+            infile,
+            outfile,
+            digest_algo,
+            certs,
+            signer,
+            url=url,
+            crosscert=crosscert,
+            timestamp_style=timestamp_style,
+        ):
+            raise IOError(f"Couldn't sign {orig_path}")
+        os.rename(outfile, infile)
+
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, sign_file)
+
+
+# sign_authenticode_zip {{{1
+async def sign_authenticode_zip(context, orig_path, fmt):
+    """Sign a zipfile with authenticode, using autograph as a backend.
+
+    Extract the zip and only sign unsigned files that don't match certain
+    patterns (see `_should_sign_windows`). Then recreate the zip.
+
+    Args:
+        context (Context): the signing context
+        orig_path (str): the source file to sign
+        fmt (str): the format to sign with
+
+    Returns:
+        str: the path to the signed zip
+
+    """
+    file_base, file_extension = os.path.splitext(orig_path)
+    # This will get cleaned up when we nuke `work_dir`. Clean up at that point
+    # rather than immediately after `sign_signcode`, to optimize task runtime
+    # speed over disk space.
+    tmp_dir = None
+    # Extract the zipfile
+    if file_extension == ".zip":
+        tmp_dir = tempfile.mkdtemp(prefix="zip", dir=context.config["work_dir"])
+        files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
+    else:
+        files = [orig_path]
+    files_to_sign = [file for file in files if _should_sign_windows(file)]
+    if not files_to_sign:
+        raise SigningScriptError(
+            "Did not find any files to sign, all files: {}".format(files)
+        )
+
+    # Sign the appropriate inner files
+    tasks = [sign_authenticode_file(context, file_, fmt) for file_ in files_to_sign]
+    await asyncio.gather(*tasks)
+    if file_extension == ".zip":
+        # Recreate the zipfile
+        await _create_zipfile(context, orig_path, files, tmp_dir=tmp_dir)
+    return orig_path

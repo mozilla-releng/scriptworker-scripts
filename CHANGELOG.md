@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [12.0.0] - 2019-08-28
+### Added
+- Support for authenticode signing
+
 ## [11.1.0] - 2019-08-07
 ### Added
 - Support for langpack signing
