@@ -29,9 +29,9 @@ aiohttp==3.5.4 \
     --hash=sha256:d4392defd4648badaa42b3e101080ae3313e8f4787cb517efd3f5b8157eaefd6 \
     --hash=sha256:e1c3c582ee11af7f63a34a46f0448fca58e59889396ffdae1f482085061a2889 \
     # via scriptworker, taskcluster
-arrow==0.14.4 \
-    --hash=sha256:157dee94b557ffe9a2e13e05669bf48820064cb37d416f547f59baa0d25301d4 \
-    --hash=sha256:47f37968afeaefd0ba3fe4d0c70dc830985f9ab11beeb381d4fc0e8f8151d3d6 \
+arrow==0.14.6 \
+    --hash=sha256:8c53fad4e723a56c02d8df75fd7a879800148d6e51df4713f91502e70a65e1be \
+    --hash=sha256:9f1503d359011a74cd41169652f0eb0232822f58c67c414229f4174a15ae71f9 \
     # via scriptworker
 asn1crypto==0.24.0 \
     --hash=sha256:2f1adbb7546ed199e3c90ef23ec95c5cf3585bac7d11fb7eb562a3fe89c64e87 \
@@ -238,9 +238,9 @@ requests==2.22.0 \
     --hash=sha256:9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31
 requests_unixsocket==0.1.5 \
     --hash=sha256:a91bc0138f61fb3396de6358fa81e2cd069a150ade5111f869df01d8bc9d294c
-scriptworker==25.0.0 \
-    --hash=sha256:1846a6c21e24f7ef215cb57e7ded2408943f446a218600572fdfe321b99a40bd \
-    --hash=sha256:7f1c82ef4bea1ae304e114d864e6a402231a5f9ee6762d8435ff39165dfc7e37
+scriptworker==26.0.2 \
+    --hash=sha256:7f026147f17ce13194d1fe69af243ea1bcb4dc54852cc594e5256dc3417ab8db \
+    --hash=sha256:819ed87aeb53fbd906501a22d2ca77d2ea7b276bd08169d245a1e1b5c51f86d5
 simplejson==3.8.2 \
     --hash=sha256:057952d5a964737425faca7153e497daee126c88cee424f8331bf8f931430880 \
     --hash=sha256:08b59bcb98c1d7b8d2a5efd275afa18225a82f58bedde4dfec5410e884e0fbbf \
@@ -270,10 +270,10 @@ taskcluster-urls==11.0.0 \
     --hash=sha256:2aceab7cf5b1948bc197f2e5e50c371aa48181ccd490b8bada00f1e3baf0c5cc \
     --hash=sha256:74bd2110b5daaebcec5e1d287bf137b61cb8cf6b2d8f5f2b74183e32bc4e7c87 \
     # via taskcluster
-taskcluster==16.0.0 \
-    --hash=sha256:2846eb270a9c563ff2e0fbfc69999bbcc4b9e33979206d5433fd1eeba11f6785 \
-    --hash=sha256:8ac7b25c28138b4c1b01614e272f5558ff2af79d4e01430c32ca407838923467 \
-    --hash=sha256:f2ae5cd1f89f6ca3ab869b71b35158e762decc904f5bf483a4ea4843f75a7ef5 \
+taskcluster==16.2.0 \
+    --hash=sha256:8242d215a03036c4c5ed3b6b3eed8324e09588c778347405bd7475274a159396 \
+    --hash=sha256:826953853e606a80f078250f2459de49f6b75bde89745184c1e5d4e012993e9e \
+    --hash=sha256:c382b8edd78443e9c2c756c62bdec38a59833d6cf34313e430e044e1e3a25da9 \
     # via scriptworker
 uritemplate==3.0.0 \
     --hash=sha256:01c69f4fe8ed503b2951bef85d996a9d22434d2431584b5b107b2981ff416fbd \
