@@ -1,31 +1,30 @@
 {
     "work_dir": "/absolute/path/to/work_dir",
-
     "products": [{
         "product_names": ["aurora", "beta", "release"],
         "digest_algorithm": "SHA1",
-        "use_scope_for_channel": true,
+        "override_channel_model": "choose_google_app_with_scope",
         "apps": {
             "aurora": {
                 "package_names": ["org.mozilla.fennec_aurora"],
-                "google_play_track": "beta",
+                "certificate_alias": "nightly",
+                "default_track": "beta",
                 "service_account": "firefox-aurora@iam.gserviceaccount.com",
-                "google_credentials_file": "/firefox-nightly.p12",
-                "certificate_alias": "nightly"
+                "credentials_file": "/firefox-nightly.p12"
             },
             "beta": {
                 "package_names": ["org.mozilla.firefox_beta"],
-                "google_play_track": "production",
+                "certificate_alias": "release",
+                "default_track": "production",
                 "service_account": "firefox-beta@iam.gserviceaccount.com",
-                "google_credentials_file": "/firefox.p12",
-                "certificate_alias": "release"
+                "credentials_file": "/firefox.p12"
             },
             "release": {
                 "package_names": ["org.mozilla.firefox"],
-                "google_play_track": "production",
+                "certificate_alias": "release",
+                "default_track": "production",
                 "service_account": "firefox-production@iam.gserviceaccount.com",
-                "google_credentials_file": "/firefox.p12",
-                "certificate_alias": "release"
+                "credentials_file": "/firefox.p12"
             }
         }
     },{
@@ -33,11 +32,11 @@
         "digest_algorithm": "SHA-256",
         "skip_check_ordered_version_codes": true,
         "skip_checks_fennec": true,
-        "map_channels_to_tracks": true,
-        "single_app_config": {
+        "override_channel_model": "single_google_app",
+        "app": {
             "package_names": ["org.mozilla.klar", "org.mozilla.focus"],
             "service_account": "focus@iam.gserviceaccount.com",
-            "google_credentials_file": "/focus.p12",
+            "credentials_file": "/focus.p12",
             "certificate_alias": "focus"
         }
     },{
@@ -49,24 +48,42 @@
         "apps": {
             "nightly": {
                 "package_names": ["org.mozilla.fenix.nightly"],
-                "google_play_track": "beta",
-                "service_account": "fenix-nightly@iam.gserviceaccount.com",
-                "google_credentials_file": "/fenix-nightly.p12",
-                "certificate_alias": "fenix-nightly"
+                "certificate_alias": "fenix-nightly",
+                "google": {
+                    "default_track": "beta",
+                    "service_account": "fenix-nightly@iam.gserviceaccount.com",
+                    "credentials_file": "/fenix-nightly.p12"
+                },
+                "amazon": {
+                    "client_id": "amzn1.application-oa2-client.fenix",
+                    "client_secret": "123456"
+                }
             },
             "beta": {
                 "package_names": ["org.mozilla.fenix.beta"],
-                "google_play_track": "production",
-                "service_account": "fenix-beta@iam.gserviceaccount.com",
-                "google_credentials_file": "/fenix-beta.p12",
-                "certificate_alias": "fenix-beta"
+                "certificate_alias": "fenix-beta",
+                "google": {
+                    "default_track": "production",
+                    "service_account": "fenix-beta@iam.gserviceaccount.com",
+                    "credentials_file": "/fenix-beta.p12"
+                },
+                "amazon": {
+                    "client_id": "amzn1.application-oa2-client.fenix",
+                    "client_secret": "123456"
+                }
             },
             "release": {
                 "package_names": ["org.mozilla.fenix"],
-                "google_play_track": "production",
-                "service_account": "fenix-production@iam.gserviceaccount.com",
-                "google_credentials_file": "/fenix-production.p12",
-                "certificate_alias": "fenix-production"
+                "certificate_alias": "fenix-production",
+                "google": {
+                    "default_track": "production",
+                    "service_account": "fenix-production@iam.gserviceaccount.com",
+                    "credentials_file": "/fenix-production.p12"
+                },
+                "amazon": {
+                    "client_id": "amzn1.application-oa2-client.fenix",
+                    "client_secret": "123456"
+                }
             }
         }
     }],

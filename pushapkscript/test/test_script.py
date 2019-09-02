@@ -8,10 +8,9 @@ import os
 from scriptworker import client, artifacts
 from unittest.mock import MagicMock, patch
 
-from pushapkscript import googleplay, jarsigner, task, manifest
+from pushapkscript import publish, jarsigner, task, manifest
 from pushapkscript.exceptions import ConfigValidationError
-from pushapkscript.script import async_main, get_default_config, main, _log_warning_forewords, _get_product_config, \
-    _get_publish_config
+from pushapkscript.script import async_main, get_default_config, main, _log_warning_forewords, _get_product_config
 from pushapkscript.test.helpers.mock_file import mock_open
 
 
@@ -37,7 +36,15 @@ async def test_async_main(monkeypatch, android_product):
     monkeypatch.setattr(task, 'extract_android_product_from_scopes', lambda _: android_product)
     monkeypatch.setattr(pushapkscript.script, '_get_product_config', lambda _, __: {
         'apps': {
-            android_product: {}
+            android_product: {
+                'package_names': [android_product],
+                'certificate_alias': android_product,
+                'google': {
+                    'default_track': 'beta',
+                    'service_account': android_product,
+                    'credentials_file': '{}.p12'.format(android_product),
+                }
+            }
         }
     })
 
@@ -54,7 +61,7 @@ async def test_async_main(monkeypatch, android_product):
     def assert_google_play_call(_, __, ___, all_apks_files, ____):
         assert sorted([file.name for file in all_apks_files]) == ['/some/path/to/another.apk', '/some/path/to/one.apk', '/some/path/to/yet_another.apk']
 
-    monkeypatch.setattr(googleplay, 'publish_to_googleplay', assert_google_play_call)
+    monkeypatch.setattr(publish, 'publish', assert_google_play_call)
 
     with patch('pushapkscript.script.open', new=mock_open):
         await async_main(context)
@@ -92,135 +99,6 @@ def test_get_product_config():
     assert _get_product_config(context, 'fenix') == {'product_names': ['fenix'], 'foo': 'bar'}
 
 
-def test_get_publish_config_fennec():
-    aurora_config = {
-        'use_scope_for_channel': True,
-        'apps': {
-            'aurora': {
-                'google_play_track': 'beta',
-                'certificate_alias': 'aurora'
-            }
-        }
-    }
-    assert _get_publish_config(aurora_config, {}, 'aurora') == {
-        'certificate_alias': 'aurora',
-        'google_play_track': 'beta',
-    }
-
-
-def test_get_publish_config_fennec_track_override():
-    aurora_config = {
-        'use_scope_for_channel': True,
-        'apps': {
-            'aurora': {
-                'google_play_track': 'beta',
-                'certificate_alias': 'aurora'
-            }
-        }
-    }
-    assert _get_publish_config(aurora_config, {'google_play_track': 'internal_qa'}, 'aurora') == {
-        'certificate_alias': 'aurora',
-        'google_play_track': 'internal_qa',
-    }
-
-
-def test_get_publish_config_fennec_rollout():
-    aurora_config = {
-        'use_scope_for_channel': True,
-        'apps': {
-            'aurora': {
-                'google_play_track': 'beta',
-                'certificate_alias': 'aurora'
-            }
-        }
-    }
-    assert _get_publish_config(aurora_config, {'rollout_percentage': 10}, 'aurora') == {
-        'certificate_alias': 'aurora',
-        'google_play_track': 'beta',
-        'rollout_percentage': 10,
-    }
-
-
-def test_get_publish_config_focus():
-    focus_config = {
-        'map_channels_to_tracks': True,
-        'single_app_config': {
-            'certificate_alias': 'focus'
-        }
-    }
-    focus_payload = {'channel': 'beta'}
-    assert _get_publish_config(focus_config, focus_payload, 'focus') == {
-        'certificate_alias': 'focus',
-        'google_play_track': 'beta',
-    }
-
-
-def test_get_publish_config_focus_rollout():
-    focus_config = {
-        'map_channels_to_tracks': True,
-        'single_app_config': {
-            'certificate_alias': 'focus'
-        }
-    }
-    focus_payload = {
-        'channel': 'rollout',
-        'rollout_percentage': 10
-    }
-    assert _get_publish_config(focus_config, focus_payload, 'focus') == {
-        'certificate_alias': 'focus',
-        'google_play_track': 'production',
-        'rollout_percentage': 10,
-    }
-
-
-def test_get_publish_config_fenix():
-    fenix_config = {
-        'apps': {
-            'production': {
-                'certificate_alias': 'fenix',
-                'google_play_track': 'production',
-            }
-        }
-    }
-    fenix_payload = {'channel': 'production'}
-    assert _get_publish_config(fenix_config, fenix_payload, 'focus') == {
-        'certificate_alias': 'fenix',
-        'google_play_track': 'production',
-    }
-
-
-def test_get_publish_config_fenix_rollout():
-    fenix_config = {
-        'apps': {
-            'production': {
-                'certificate_alias': 'fenix',
-                'google_play_track': 'production',
-            }
-        }
-    }
-    fenix_payload = {
-        'channel': 'production',
-        'rollout_percentage': 10,
-    }
-    assert _get_publish_config(fenix_config, fenix_payload, 'focus') == {
-        'certificate_alias': 'fenix',
-        'google_play_track': 'production',
-        'rollout_percentage': 10,
-    }
-
-
-def test_invalid_map_to_tracks_with_scope_as_channel():
-    invalid_config = {
-        'map_channels_to_tracks': True,
-        'use_scope_for_channel': True,
-        'single_app_config': {
-            'certificate_alias': 'invalid',
-        }
-    }
-    with pytest.raises(ValueError):
-        _get_publish_config(invalid_config, {'google_play_track': 'rollout'}, 'scope-name')
-
-
 @pytest.mark.parametrize('is_allowed_to_push, should_commit_transaction, expected', (
     (True, True, 'You will publish APKs to Google Play. This action is irreversible,\
 if no error is detected either by this script or by Google Play.'),
@@ -229,7 +107,7 @@ if no error is detected either by this script or by Google Play.'),
     (False, True, 'This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked.'),
 ))
 def test_log_warning_forewords(caplog,  monkeypatch, is_allowed_to_push, should_commit_transaction, expected):
-    monkeypatch.setattr(googleplay, 'should_commit_transaction', lambda _: should_commit_transaction)
+    monkeypatch.setattr(publish, 'should_commit_transaction', lambda _: should_commit_transaction)
     _log_warning_forewords(is_allowed_to_push, MagicMock())
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == 'WARNING'
