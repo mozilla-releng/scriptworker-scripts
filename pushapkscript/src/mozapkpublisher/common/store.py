@@ -1,17 +1,3 @@
-""" store.py
-
-    The way to get the API access is to
-      1) login in in the Google play admin
-      2) Settings
-      3) API Access
-      4) go in the Google Developers Console
-      5) Create "New client ID"
-         or download the p12 key (it should remain
-         super private)
-      6) Move the file in this directory with the name
-         'key.p12' or use the --credentials option
-"""
-
 from contextlib import contextmanager
 
 import httplib2
@@ -28,6 +14,9 @@ from mozapkpublisher.common.exceptions import WrongArgumentGiven
 import requests
 
 logger = logging.getLogger(__name__)
+
+
+BASE_AMAZON_URL = 'https://developer.amazon.com/api/appstore/v1'
 
 
 def add_general_google_play_arguments(parser):
@@ -80,8 +69,7 @@ class AmazonStoreEdit:
         self._package_name = package_name
 
     def _http(self, expected_status, method, endpoint, **kwargs):
-        url = f'https://developer.amazon.com/api/appstore/v1/' \
-              f'applications/{self._package_name}/edits/{self._edit_id}' + endpoint
+        url = f'{BASE_AMAZON_URL}/applications/{self._package_name}/edits/{self._edit_id}' + endpoint
 
         return http(expected_status, method, url, auth=self._auth, **kwargs)
 
@@ -136,8 +124,7 @@ class AmazonStoreEdit:
             })
             auth = AmazonAuth(response.json()['access_token'])
 
-            response = http(200, 'post', 'https://developer.amazon.com/api/appstore/v1/'
-                                         'applications/{}/edits'.format(package_name), auth=auth)
+            response = http(200, 'post', f'{BASE_AMAZON_URL}/applications/{package_name}/edits', auth=auth)
             edit_id = response.json()['id']
             edit = AmazonStoreEdit(auth, edit_id, package_name)
         else:

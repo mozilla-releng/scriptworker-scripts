@@ -59,7 +59,7 @@ def push_apk(
     if target_store == "google" and track is None:
         # The Google store allows multiple stability "tracks" to exist for a single app, so it
         # requires you to disambiguate which track you'd like to publish to.
-        raise ValueError('When "target_store" is "google", the track must be provided')
+        raise WrongArgumentGiven('When "target_store" is "google", the track must be provided')
     if target_store == "amazon":
         # The Amazon app doesn't have a stability "tracks" tool like Google. It _does_ have a
         # "Live App Testing" mechanism, but you have to use the website to use it (the API
@@ -69,9 +69,9 @@ def push_apk(
         # the [Amazon] Appstore currently does not support."
         # https://developer.amazon.com/docs/app-submission-api/migrate.html
         if track is not None:
-            raise ValueError('Tracks are not supported on Amazon')
+            raise WrongArgumentGiven('Tracks are not supported on Amazon')
         if rollout_percentage is not None:
-            raise ValueError('Rollout percentage is not supported on Amazon')
+            raise WrongArgumentGiven('Rollout percentage is not supported on Amazon')
 
     # We want to tune down some logs, even when push_apk() isn't called from the command line
     main_logging.init()
