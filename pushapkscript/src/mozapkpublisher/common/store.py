@@ -234,19 +234,15 @@ class GooglePlayEdit:
             raise
 
     def _update_track(self, track, version_codes, rollout_percentage=None):
-        body = {
-            u'releases': [{
-                u'status': 'completed',
-                u'versionCodes': sorted(version_codes),
-            }],
-        }
-
         if track == 'rollout' and rollout_percentage is None:
-            raise WrongArgumentGiven(
-                "When using track='rollout', rollout percentage must be provided too")
+            raise WrongArgumentGiven("To perform a rollout, you must provide the target track "
+                                     "(probably 'production') and a rollout_percentage")
         if rollout_percentage is not None:
-            if track != 'rollout':
-                raise WrongArgumentGiven("When using rollout-percentage, track must be set to rollout")
+            if track == 'rollout':
+                logger.warn(
+                    "track='rollout' is deprecated, assuming you meant 'production'. To avoid "
+                    "this message, specify the target track to roll out to (probably 'production'")
+                track = 'production'
             if rollout_percentage < 0 or rollout_percentage > 100:
                 raise WrongArgumentGiven(
                     'rollout percentage must be between 0 and 100. Value given: {}'.format(
