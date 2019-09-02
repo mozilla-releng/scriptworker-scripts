@@ -177,16 +177,48 @@ def edit_resource_mock():
     return edit_resource
 
 
-def test_google_invalid_rollout_percentage():
-    with GooglePlayEdit.transaction(None, None, 'org.mozilla.fenix', contact_server=False, commit=False) as edit:
+def test_google_rollout_without_rollout_percentage():
+    # Note: specifying "track='rollout'" (even with a valid percentage) is currently deprecated
+    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False, commit=False) as edit:
         with pytest.raises(WrongArgumentGiven):
             edit._update_track('rollout', [1], None)
 
-        with pytest.raises(WrongArgumentGiven):
-            edit._update_track('alpha', [1], 50)
 
-        with pytest.raises(WrongArgumentGiven):
-            edit._update_track('rollout', [1], 9001)
+@patch.object(store, '_create_google_edit_resource')
+def test_google_valid_rollout_percentage_with_track_rollout(create_edit_resource):
+    mock_edits_resource = MagicMock()
+    create_edit_resource.return_value = mock_edits_resource
+    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False, commit=False) as edit:
+        edit._update_track('rollout', [1], 50)
+
+    raw_tracks_update = mock_edits_resource.tracks().method_calls[0][2]
+    assert raw_tracks_update['track'] == 'production'
+    assert raw_tracks_update['body'] == {
+        'releases': [{
+            'status': 'inProgress',
+            'userFraction': 0.5,
+            'versionCodes': [1]
+        }]
+    }
+
+
+@patch.object(store, '_create_google_edit_resource')
+def test_google_valid_rollout_percentage_with_real_track(create_edit_resource):
+    mock_edits_resource = MagicMock()
+    create_edit_resource.return_value = mock_edits_resource
+    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
+                                    commit=False) as edit:
+        edit._update_track('beta', [1, 2], 20)
+
+    raw_tracks_update = mock_edits_resource.tracks().method_calls[0][2]
+    assert raw_tracks_update['track'] == 'beta'
+    assert raw_tracks_update['body'] == {
+        'releases': [{
+            'status': 'inProgress',
+            'userFraction': 0.2,
+            'versionCodes': [1, 2]
+        }]
+    }
 
 
 @patch.object(store, '_create_google_edit_resource')
