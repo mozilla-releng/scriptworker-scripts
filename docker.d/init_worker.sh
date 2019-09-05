@@ -3,11 +3,11 @@ set -e
 
 case $ENV in
   dev|fake-prod)
-    export API_ROOT_V2="http://10.8.9.239"
+    export API_ROOT_V2="https://api.shipit.staging.mozilla-releng.net"
     export TASKCLUSTER_SCOPE="project:releng:ship-it:server:staging"
     ;;
   prod)
-    export API_ROOT_V2="http://shipitapi-prod-shipitapi-app-1"
+    export API_ROOT_V2="https://shipit-api.mozilla-releng.net"
     export TASKCLUSTER_SCOPE="project:releng:ship-it:server:production"
     ;;
   *)
