@@ -12,6 +12,7 @@ from unittest.mock import create_autospec, MagicMock
 from tempfile import NamedTemporaryFile
 
 from mozapkpublisher.common import store
+from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.push_apk import (
     push_apk,
     main,
@@ -87,17 +88,17 @@ def patch_store_transaction(monkeypatch_, patch_target):
 
 
 def test_google_no_track():
-    with pytest.raises(ValueError):
+    with pytest.raises(WrongArgumentGiven):
         push_apk(APKS, 'google', SERVICE_ACCOUNT, credentials, [])
 
 
 def test_amazon_with_track():
-    with pytest.raises(ValueError):
+    with pytest.raises(WrongArgumentGiven):
         push_apk(APKS, 'amazon', CLIENT_ID, CLIENT_SECRET, [], 'alpha')
 
 
 def test_amazon_with_rollout():
-    with pytest.raises(ValueError):
+    with pytest.raises(WrongArgumentGiven):
         push_apk(APKS, 'amazon', CLIENT_ID, CLIENT_SECRET, [], rollout_percentage=50)
 
 
