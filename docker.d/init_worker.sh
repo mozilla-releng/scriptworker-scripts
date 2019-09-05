@@ -26,6 +26,7 @@ export HG_SHARE_BASE_DIR=/tmp/share_base
 export SSH_KEY_PATH=$CONFIG_DIR/ssh_key_$SSH_USER
 
 echo $SSH_KEY | base64 -d > $SSH_KEY_PATH
+chmod 400 $SSH_KEY_PATH
 
 mkdir /app/.ssh
 chmod 700 /app/.ssh
