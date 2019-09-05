@@ -85,6 +85,7 @@ def test_amazon_transaction_contact_and_commit():
     with patch.object(store, 'http') as mock_http:
         mock_http.side_effect = [
             Mock(status_code=200, json=lambda: {'access_token': 'token'}),
+            Mock(status_code=200, text='{}'),
             Mock(status_code=200, json=lambda: {'id': 'edit_id'}),
             Mock(status_code=200, headers={'ETag': 'edit_etag'}),
             Mock(status_code=200),
@@ -110,6 +111,7 @@ def test_amazon_transaction_contact_no_commit():
     with patch.object(store, 'http') as mock_http:
         mock_http.side_effect = [
             Mock(status_code=200, json=lambda: {'access_token': 'token'}),
+            Mock(status_code=200, text='{}'),
             Mock(status_code=200, json=lambda: {'id': 'edit_id'}),
             Mock(status_code=200),
             Mock(status_code=200, headers={'ETag': 'edit_etag'}),
@@ -129,10 +131,24 @@ def test_amazon_transaction_contact_no_commit():
                                   auth=ANY)
 
 
+def test_amazon_transaction_existing_upcoming_version():
+    with patch.object(store, 'http') as mock_http:
+        mock_http.side_effect = [
+            Mock(status_code=200, json=lambda: {'access_token': 'token'}),
+            Mock(status_code=200, text='{"id": "...", "status": "IN_PROGRESS"}'),
+        ]
+
+    with pytest.raises(RuntimeError):
+        with AmazonStoreEdit.transaction('client id', 'client secret', 'dummy_package_name',
+                                         contact_server=True, commit=True):
+            pass
+
+
 def test_amazon_transaction_cancel_on_exception():
     with patch.object(store, 'http') as mock_http:
         mock_http.side_effect = [
             Mock(status_code=200, json=lambda: {'access_token': 'token'}),
+            Mock(status_code=200, text='{}'),
             Mock(status_code=200, json=lambda: {'id': 'edit_id'}),
             Mock(status_code=200, headers={'ETag': 'edit_etag'}),
             Mock(status_code=204),

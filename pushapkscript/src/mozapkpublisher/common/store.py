@@ -124,6 +124,15 @@ class AmazonStoreEdit:
             })
             auth = AmazonAuth(response.json()['access_token'])
 
+            response = http(200, 'get', f'{BASE_AMAZON_URL}/applications/{package_name}/edits', auth=auth)
+            if response.text != '{}':
+                # Only one "upcoming version" is allowed at a time. We could automatically delete
+                # the existing one and create a new one, but that could cause loss of data (e.g.:
+                # if someone is manually creating a release)
+                raise RuntimeError(f'The app "{package_name}" already has an "upcoming '
+                                   f'version". Please submit or delete that upcoming '
+                                   f'version from the Amazon Developer Console.')
+
             response = http(200, 'post', f'{BASE_AMAZON_URL}/applications/{package_name}/edits', auth=auth)
             edit_id = response.json()['id']
             edit = AmazonStoreEdit(auth, edit_id, package_name)
