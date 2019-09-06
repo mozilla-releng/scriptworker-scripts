@@ -9,6 +9,7 @@
 import sys
 import os
 
+
 def get_build_entries(root_path):
     """ Iterates through the root_path, creating a list for each file and
         directory. Excludes any file paths ending with channel-prefs.js.
@@ -17,18 +18,20 @@ def get_build_entries(root_path):
     rel_dir_path_set = set()
     for root, dirs, files in os.walk(root_path):
         for file_name in files:
-            parent_dir_rel_path = root[len(root_path)+1:]
+            parent_dir_rel_path = root[len(root_path) + 1 :]
             rel_path_file = os.path.join(parent_dir_rel_path, file_name)
             rel_path_file = rel_path_file.replace("\\", "/")
-            if not (rel_path_file.endswith("channel-prefs.js") or
-                    rel_path_file.endswith("update-settings.ini") or
-                    rel_path_file.find("distribution/") != -1):
+            if not (
+                rel_path_file.endswith("channel-prefs.js")
+                or rel_path_file.endswith("update-settings.ini")
+                or rel_path_file.find("distribution/") != -1
+            ):
                 rel_file_path_set.add(rel_path_file)
 
         for dir_name in dirs:
-            parent_dir_rel_path = root[len(root_path)+1:]
+            parent_dir_rel_path = root[len(root_path) + 1 :]
             rel_path_dir = os.path.join(parent_dir_rel_path, dir_name)
-            rel_path_dir = rel_path_dir.replace("\\", "/")+"/"
+            rel_path_dir = rel_path_dir.replace("\\", "/") + "/"
             if rel_path_dir.find("distribution/") == -1:
                 rel_dir_path_set.add(rel_path_dir)
 
@@ -39,6 +42,7 @@ def get_build_entries(root_path):
 
     return rel_file_path_list, rel_dir_path_list
 
+
 def generate_precomplete(root_path):
     """ Creates the precomplete file containing the remove and rmdir
         application update instructions. The given directory is used
@@ -47,21 +51,22 @@ def generate_precomplete(root_path):
     rel_path_precomplete = "precomplete"
     # If inside a Mac bundle use the root of the bundle for the path.
     if os.path.basename(root_path) == "Resources":
-        root_path = os.path.abspath(os.path.join(root_path, '../../'))
+        root_path = os.path.abspath(os.path.join(root_path, "../../"))
         rel_path_precomplete = "Contents/Resources/precomplete"
 
-    precomplete_file_path = os.path.join(root_path,rel_path_precomplete)
+    precomplete_file_path = os.path.join(root_path, rel_path_precomplete)
     # Open the file so it exists before building the list of files and open it
     # in binary mode to prevent OS specific line endings.
     precomplete_file = open(precomplete_file_path, "wb")
     rel_file_path_list, rel_dir_path_list = get_build_entries(root_path)
     for rel_file_path in rel_file_path_list:
-        precomplete_file.write('remove "{}"\n'.format(rel_file_path).encode('utf-8'))
+        precomplete_file.write('remove "{}"\n'.format(rel_file_path).encode("utf-8"))
 
     for rel_dir_path in rel_dir_path_list:
-        precomplete_file.write('rmdir "{}"\n'.format(rel_dir_path).encode('utf-8'))
+        precomplete_file.write('rmdir "{}"\n'.format(rel_dir_path).encode("utf-8"))
 
     precomplete_file.close()
+
 
 if __name__ == "__main__":
     generate_precomplete(os.getcwd())

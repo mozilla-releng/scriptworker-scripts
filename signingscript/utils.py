@@ -14,8 +14,9 @@ from signingscript.exceptions import FailedSubprocess, SigningServerError
 log = logging.getLogger(__name__)
 
 
-SigningServer = namedtuple("SigningServer", ["server", "user", "password",
-                                             "formats", "server_type"])
+SigningServer = namedtuple(
+    "SigningServer", ["server", "user", "password", "formats", "server_type"]
+)
 
 
 def mkdir(path):
@@ -46,7 +47,7 @@ def get_hash(path, hash_type="sha512"):
     # I'd love to make this async, but evidently file i/o is always ready
     h = hashlib.new(hash_type)
     with open(path, "rb") as f:
-        for chunk in iter(functools.partial(f.read, 4096), b''):
+        for chunk in iter(functools.partial(f.read, 4096), b""):
             h.update(chunk)
     return h.hexdigest()
 
@@ -75,7 +76,7 @@ def load_signing_server_config(context):
         dict of lists: keyed by signing cert type, value is a list of SigningServer instances
 
     """
-    path = context.config['signing_server_config']
+    path = context.config["signing_server_config"]
     log.info("Loading signing server config from {}".format(path))
     with open(path) as f:
         raw_cfg = json.load(f)
@@ -144,9 +145,9 @@ async def execute_subprocess(command, log_level=logging.INFO, **kwargs):
         FailedSubprocess: on failure
 
     """
-    message = 'Running "{}"'.format(' '.join(command))
-    if 'cwd' in kwargs:
-        message += " in {}".format(kwargs['cwd'])
+    message = 'Running "{}"'.format(" ".join(command))
+    if "cwd" in kwargs:
+        message += " in {}".format(kwargs["cwd"])
     log.info(message)
     subprocess = await asyncio.create_subprocess_exec(
         *command, stdout=PIPE, stderr=STDOUT, **kwargs
@@ -157,7 +158,7 @@ async def execute_subprocess(command, log_level=logging.INFO, **kwargs):
     log.info("exitcode {}".format(exitcode))
 
     if exitcode != 0:
-        raise FailedSubprocess('Command `{}` failed'.format(' '.join(command)))
+        raise FailedSubprocess("Command `{}` failed".format(" ".join(command)))
 
 
 def is_autograph_signing_format(format_):
@@ -167,7 +168,7 @@ def is_autograph_signing_format(format_):
         format_ (str): the format to check
 
     """
-    return format_ and format_.startswith('autograph_')
+    return format_ and format_.startswith("autograph_")
 
 
 def is_apk_autograph_signing_format(format_):
@@ -178,7 +179,9 @@ def is_apk_autograph_signing_format(format_):
 
     """
     # TODO Remove autograph_focus once format is migrated
-    return format_ and format_.startswith('autograph_apk_') or format_ == 'autograph_focus'
+    return (
+        format_ and format_.startswith("autograph_apk_") or format_ == "autograph_focus"
+    )
 
 
 def is_sha1_apk_autograph_signing_format(format_):
@@ -189,7 +192,7 @@ def is_sha1_apk_autograph_signing_format(format_):
 
     """
     # this list could grow if we wanted to filter out other custom signatures
-    return is_apk_autograph_signing_format(format_) and format_.endswith('_sha1')
+    return is_apk_autograph_signing_format(format_) and format_.endswith("_sha1")
 
 
 def split_autograph_format(format_):
@@ -202,7 +205,7 @@ def split_autograph_format(format_):
         format_, keyid: the plain signing format to use, and optional keyid
 
     """
-    if ':' in format_:
-        return format_.split(':', 1)
+    if ":" in format_:
+        return format_.split(":", 1)
     else:
         return format_, None

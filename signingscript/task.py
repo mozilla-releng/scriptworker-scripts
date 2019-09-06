@@ -37,29 +37,31 @@ from signingscript.utils import is_autograph_signing_format
 
 log = logging.getLogger(__name__)
 
-FORMAT_TO_SIGNING_FUNCTION = frozendict({
-    # TODO: Remove the next item (in favor of the regex one), once Focus is migrated
-    "autograph_focus": sign_jar,
-    "autograph_apk_.+": sign_jar,
-    "autograph_hash_only_mar384(:\\w+)?": sign_mar384_with_autograph_hash,
-    "autograph_stage_mar384(:\\w+)?": sign_mar384_with_autograph_hash,
-    "gpg": sign_gpg,
-    "autograph_gpg": sign_gpg_with_autograph,
-    "jar": sign_jar,
-    "focus-jar": sign_jar,
-    "macapp": sign_macapp,
-    "osslsigncode": sign_signcode,
-    "sha2signcode": sign_signcode,
-    # sha2signcodestub uses a generic sign_file
-    "signcode": sign_signcode,
-    "widevine": sign_widevine,
-    "autograph_widevine": sign_widevine,
-    "autograph_omnija": sign_omnija,
-    "autograph_langpack": sign_langpack,
-    "autograph_authenticode": sign_authenticode_zip,
-    "autograph_authenticode_stub": sign_authenticode_zip,
-    "default": sign_file,
-})
+FORMAT_TO_SIGNING_FUNCTION = frozendict(
+    {
+        # TODO: Remove the next item (in favor of the regex one), once Focus is migrated
+        "autograph_focus": sign_jar,
+        "autograph_apk_.+": sign_jar,
+        "autograph_hash_only_mar384(:\\w+)?": sign_mar384_with_autograph_hash,
+        "autograph_stage_mar384(:\\w+)?": sign_mar384_with_autograph_hash,
+        "gpg": sign_gpg,
+        "autograph_gpg": sign_gpg_with_autograph,
+        "jar": sign_jar,
+        "focus-jar": sign_jar,
+        "macapp": sign_macapp,
+        "osslsigncode": sign_signcode,
+        "sha2signcode": sign_signcode,
+        # sha2signcodestub uses a generic sign_file
+        "signcode": sign_signcode,
+        "widevine": sign_widevine,
+        "autograph_widevine": sign_widevine,
+        "autograph_omnija": sign_omnija,
+        "autograph_langpack": sign_langpack,
+        "autograph_authenticode": sign_authenticode_zip,
+        "autograph_authenticode_stub": sign_authenticode_zip,
+        "default": sign_file,
+    }
+)
 
 
 # task_cert_type {{{1
@@ -78,15 +80,16 @@ def task_cert_type(context):
     """
     prefixes = _get_cert_prefixes(context)
     scopes = _extract_scopes_from_unique_prefix(
-        scopes=context.task['scopes'],
-        prefixes=prefixes
+        scopes=context.task["scopes"], prefixes=prefixes
     )
     return get_single_item_from_sequence(
         scopes,
-        condition=lambda _: True,     # scopes must just contain 1 single item
+        condition=lambda _: True,  # scopes must just contain 1 single item
         ErrorClass=TaskVerificationError,
-        no_item_error_message='No scope starting with any of these prefixes {} found'.format(prefixes),
-        too_many_item_error_message='More than one scope found',
+        no_item_error_message="No scope starting with any of these prefixes {} found".format(
+            prefixes
+        ),
+        too_many_item_error_message="More than one scope found",
     )
 
 
@@ -102,33 +105,29 @@ def task_signing_formats(context):
 
     """
     formats = set()
-    for u in context.task.get('payload', {}).get('upstreamArtifacts', []):
-        formats.update(u['formats'])
+    for u in context.task.get("payload", {}).get("upstreamArtifacts", []):
+        formats.update(u["formats"])
     return formats
 
 
 def _extract_scopes_from_unique_prefix(scopes, prefixes):
     scopes = [
-         scope
-         for scope in scopes
-         for prefix in prefixes
-         if scope.startswith(prefix)
+        scope for scope in scopes for prefix in prefixes if scope.startswith(prefix)
     ]
     _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes)
     return scopes
 
 
 def _get_cert_prefixes(context):
-    return _get_scope_prefixes(context, 'cert')
+    return _get_scope_prefixes(context, "cert")
 
 
 def _get_scope_prefixes(context, sub_namespace):
-    prefixes = context.config['taskcluster_scope_prefixes']
+    prefixes = context.config["taskcluster_scope_prefixes"]
     prefixes = [
-        prefix if prefix.endswith(':') else '{}:'.format(prefix)
-        for prefix in prefixes
+        prefix if prefix.endswith(":") else "{}:".format(prefix) for prefix in prefixes
     ]
-    return ['{}{}:'.format(prefix, sub_namespace) for prefix in prefixes]
+    return ["{}{}:".format(prefix, sub_namespace) for prefix in prefixes]
 
 
 def _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes):
@@ -137,8 +136,8 @@ def _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes):
             break
     else:
         raise TaskVerificationError(
-            'Scopes must exist and all have the same prefix. '
-            'Given scopes: {}. Allowed prefixes: {}'.format(scopes, prefixes)
+            "Scopes must exist and all have the same prefix. "
+            "Given scopes: {}. Allowed prefixes: {}".format(scopes, prefixes)
         )
 
 
@@ -159,12 +158,13 @@ async def get_token(context, output_file, cert_type, signing_formats):
     """
     token = None
     data = {
-        "slave_ip": context.config['my_ip'],
+        "slave_ip": context.config["my_ip"],
         "duration": context.config["token_duration_seconds"],
     }
     signing_servers = get_suitable_signing_servers(
-        context.signing_servers, cert_type,
-        [fmt for fmt in signing_formats if not is_autograph_signing_format(fmt)]
+        context.signing_servers,
+        cert_type,
+        [fmt for fmt in signing_formats if not is_autograph_signing_format(fmt)],
     )
     random.shuffle(signing_servers)
     for s in signing_servers:
@@ -172,15 +172,24 @@ async def get_token(context, output_file, cert_type, signing_formats):
         url = "https://{}/token".format(s.server)
         auth = aiohttp.BasicAuth(s.user, password=s.password)
         try:
-            token = await retry_request(context, url, method='post', data=data,
-                                        auth=auth, return_type='text')
+            token = await retry_request(
+                context, url, method="post", data=data, auth=auth, return_type="text"
+            )
             if token:
                 break
-        except (ScriptWorkerException, aiohttp.ClientError, asyncio.TimeoutError) as exc:
-            log.warning("Error retrieving token: {}\nTrying the next server.".format(str(exc)))
+        except (
+            ScriptWorkerException,
+            aiohttp.ClientError,
+            asyncio.TimeoutError,
+        ) as exc:
+            log.warning(
+                "Error retrieving token: {}\nTrying the next server.".format(str(exc))
+            )
             continue
     else:
-        raise SigningServerError("Cannot retrieve signing token from any signing server.")
+        raise SigningServerError(
+            "Cannot retrieve signing token from any signing server."
+        )
     with open(output_file, "w") as fh:
         print(token, file=fh, end="")
 
@@ -221,7 +230,9 @@ def _get_signing_function_from_format(format):
     except ValueError:
         # Regex may catch several candidate. If so, we fall back to the exact match.
         # If nothing matches, then we fall back to default
-        return FORMAT_TO_SIGNING_FUNCTION.get(format, FORMAT_TO_SIGNING_FUNCTION['default'])
+        return FORMAT_TO_SIGNING_FUNCTION.get(
+            format, FORMAT_TO_SIGNING_FUNCTION["default"]
+        )
 
 
 # _sort_formats {{{1
@@ -240,9 +251,14 @@ def _sort_formats(formats):
     """
     # Widevine formats must be after other formats other than macapp; GPG must
     # be last.
-    for fmt in ("widevine", "autograph_widevine", "autograph_omnija",
-                "macapp", "gpg", "autograph_gpg",
-                ):
+    for fmt in (
+        "widevine",
+        "autograph_widevine",
+        "autograph_omnija",
+        "macapp",
+        "gpg",
+        "autograph_gpg",
+    ):
         if fmt in formats:
             formats.remove(fmt)
             formats.append(fmt)
@@ -270,17 +286,16 @@ def build_filelist_dict(context):
     """
     filelist_dict = {}
     messages = []
-    for artifact_dict in context.task['payload']['upstreamArtifacts']:
-        for path in artifact_dict['paths']:
+    for artifact_dict in context.task["payload"]["upstreamArtifacts"]:
+        for path in artifact_dict["paths"]:
             full_path = os.path.join(
-                context.config['work_dir'], 'cot', artifact_dict['taskId'],
-                path
+                context.config["work_dir"], "cot", artifact_dict["taskId"], path
             )
             if not os.path.exists(full_path):
                 messages.append("{} doesn't exist!".format(full_path))
             filelist_dict[path] = {
                 "full_path": full_path,
-                "formats": _sort_formats(artifact_dict['formats']),
+                "formats": _sort_formats(artifact_dict["formats"]),
             }
     if messages:
         raise TaskVerificationError(messages)
