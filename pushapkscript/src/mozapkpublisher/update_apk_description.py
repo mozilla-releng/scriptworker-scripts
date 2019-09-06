@@ -10,11 +10,11 @@ from mozapkpublisher.common.store import GooglePlayEdit
 logger = logging.getLogger(__name__)
 
 
-def update_apk_description(package_name, force_locale, commit, service_account, google_play_credentials_file,
+def update_apk_description(package_name, force_locale, dry_run, service_account, google_play_credentials_file,
                            contact_google_play):
     with GooglePlayEdit.transaction(service_account, google_play_credentials_file.name,
                                     package_name, contact_server=contact_google_play,
-                                    commit=commit) as edit:
+                                    dry_run=dry_run) as edit:
         moz_locales = [force_locale] if force_locale else None
         l10n_strings = store_l10n.get_translations_per_google_play_locale_code(package_name, moz_locales)
         create_or_update_listings(edit, l10n_strings)
@@ -49,7 +49,7 @@ def main():
                         help='The Google play name of the app', required=True)
     parser.add_argument('--force-locale', help='Force to a specific locale (instead of all)')
     config = parser.parse_args()
-    update_apk_description(config.package_name, config.force_locale, config.commit, config.service_account,
+    update_apk_description(config.package_name, config.force_locale, not config.commit, config.service_account,
                            config.google_play_credentials_filename, config.contact_google_play)
 
 

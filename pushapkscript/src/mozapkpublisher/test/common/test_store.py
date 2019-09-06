@@ -1,7 +1,7 @@
 import argparse
 import json
 
-from mock import ANY, patch, Mock
+from mock import ANY, patch, Mock, call
 import pytest
 import random
 
@@ -55,10 +55,10 @@ def test_edit_http(mock_http):
 
 @patch.object(store, 'http')
 def test_amazon_do_not_contact_server(http_mock):
-    with AmazonStoreEdit.transaction('client id', 'client secret', 'package.name', contact_server=False, commit=True) as edit:
+    with AmazonStoreEdit.transaction('client id', 'client secret', 'package.name', contact_server=False, dry_run=False) as edit:
         edit.update_app(('apk', None))
 
-    with AmazonStoreEdit.transaction('client id', 'client secret', 'package.name', contact_server=False, commit=False) as edit:
+    with AmazonStoreEdit.transaction('client id', 'client secret', 'package.name', contact_server=False, dry_run=True) as edit:
         edit.update_app(('apk', None))
 
     http_mock.assert_not_called()
@@ -81,7 +81,7 @@ def test_amazon_update_app():
         mock_http.assert_any_call(200, 'post', '/apks/upload', data='apk', headers={'Content-Type': 'application/octet-stream'})
 
 
-def test_amazon_transaction_contact_and_commit():
+def test_amazon_transaction_contact_and_keep():
     with patch.object(store, 'http') as mock_http:
         mock_http.side_effect = [
             Mock(status_code=200, json=lambda: {'access_token': 'token'}),
@@ -90,7 +90,7 @@ def test_amazon_transaction_contact_and_commit():
             Mock(status_code=200, headers={'ETag': 'edit_etag'}),
             Mock(status_code=200),
         ]
-        with AmazonStoreEdit.transaction('client id', 'client secret', 'dummy_package_name', contact_server=True, commit=True):
+        with AmazonStoreEdit.transaction('client id', 'client secret', 'dummy_package_name', contact_server=True, dry_run=False):
             pass
 
         mock_http.assert_any_call(200, 'post', 'https://api.amazon.com/auth/o2/token', data={
@@ -100,14 +100,13 @@ def test_amazon_transaction_contact_and_commit():
             'scope': ANY
         })
 
-        mock_http.assert_any_call(200, 'post', 'https://developer.amazon.com/api/appstore/v1/'
-                                               'applications/dummy_package_name/edits/edit_id/'
-                                               'commit',
+        assert call(200, 'post', 'https://developer.amazon.com/api/appstore/v1/applications/'
+                                 'dummy_package_name/edits/edit_id/commit',
                                   headers={'If-Match': 'edit_etag'},
-                                  auth=ANY)
+                                  auth=ANY) not in mock_http.call_args_list
 
 
-def test_amazon_transaction_contact_no_commit():
+def test_amazon_transaction_contact_dry_run():
     with patch.object(store, 'http') as mock_http:
         mock_http.side_effect = [
             Mock(status_code=200, json=lambda: {'access_token': 'token'}),
@@ -118,7 +117,7 @@ def test_amazon_transaction_contact_no_commit():
             Mock(status_code=204),
         ]
         with AmazonStoreEdit.transaction('client id', 'client secret', 'dummy_package_name',
-                                         contact_server=True, commit=False):
+                                         contact_server=True, dry_run=True):
             pass
 
         mock_http.assert_any_call(200, 'post', 'https://developer.amazon.com/api/appstore/v1/'
@@ -140,7 +139,7 @@ def test_amazon_transaction_existing_upcoming_version():
 
     with pytest.raises(RuntimeError):
         with AmazonStoreEdit.transaction('client id', 'client secret', 'dummy_package_name',
-                                         contact_server=True, commit=True):
+                                         contact_server=True, dry_run=False):
             pass
 
 
@@ -155,7 +154,7 @@ def test_amazon_transaction_cancel_on_exception():
         ]
         with pytest.raises(RuntimeError):
             with AmazonStoreEdit.transaction('client id', 'client secret', 'dummy_package_name',
-                                             contact_server=True, commit=False):
+                                             contact_server=True, dry_run=True):
                 raise RuntimeError('oops')
 
         mock_http.assert_any_call(204, 'delete', 'https://developer.amazon.com/api/appstore/v1/'
@@ -165,7 +164,7 @@ def test_amazon_transaction_cancel_on_exception():
 
 
 def test_amazon_transaction_do_not_contact():
-    with AmazonStoreEdit.transaction(None, None, 'dummy_package_name', contact_server=False, commit=False) as edit:
+    with AmazonStoreEdit.transaction(None, None, 'dummy_package_name', contact_server=False, dry_run=True) as edit:
         assert isinstance(edit, MockAmazonStoreEdit)
 
 
@@ -195,7 +194,7 @@ def edit_resource_mock():
 
 def test_google_rollout_without_rollout_percentage():
     # Note: specifying "track='rollout'" (even with a valid percentage) is currently deprecated
-    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False, commit=False) as edit:
+    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False, dry_run=True) as edit:
         with pytest.raises(WrongArgumentGiven):
             edit._update_track('rollout', [1], None)
 
@@ -204,7 +203,7 @@ def test_google_rollout_without_rollout_percentage():
 def test_google_valid_rollout_percentage_with_track_rollout(create_edit_resource):
     mock_edits_resource = MagicMock()
     create_edit_resource.return_value = mock_edits_resource
-    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False, commit=False) as edit:
+    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False, dry_run=True) as edit:
         edit._update_track('rollout', [1], 50)
 
     raw_tracks_update = mock_edits_resource.tracks().method_calls[0][2]
@@ -223,7 +222,7 @@ def test_google_valid_rollout_percentage_with_real_track(create_edit_resource):
     mock_edits_resource = MagicMock()
     create_edit_resource.return_value = mock_edits_resource
     with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
-                                    commit=False) as edit:
+                                    dry_run=True) as edit:
         edit._update_track('beta', [1, 2], 20)
 
     raw_tracks_update = mock_edits_resource.tracks().method_calls[0][2]
@@ -242,7 +241,7 @@ def test_google_play_edit_commit_transaction(create_edit_resource):
     mock_edits_resource = MagicMock()
     create_edit_resource.return_value = mock_edits_resource
     with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
-                                    commit=True) as _:
+                                    dry_run=False) as _:
         pass
 
     mock_edits_resource.commit.assert_called_with(editId=ANY, packageName='dummy_package_name')
@@ -253,7 +252,7 @@ def test_google_play_edit_no_commit_transaction(create_edit_resource):
     mock_edits_resource = MagicMock()
     create_edit_resource.return_value = mock_edits_resource
     with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
-                                    commit=False) as _:
+                                    dry_run=True) as _:
         pass
 
     mock_edits_resource.commit.assert_not_called()

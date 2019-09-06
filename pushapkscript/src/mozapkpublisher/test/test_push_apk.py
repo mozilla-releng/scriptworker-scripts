@@ -80,7 +80,7 @@ def patch_store_transaction(monkeypatch_, patch_target):
     mock_edit = create_autospec(patch_target)
 
     @contextmanager
-    def fake_transaction(_, __, ___, *, contact_server, commit):
+    def fake_transaction(_, __, ___, *, contact_server, dry_run):
         yield mock_edit
 
     monkeypatch_.setattr(patch_target, 'transaction', fake_transaction)
@@ -205,7 +205,7 @@ def test_main_google(monkeypatch):
             ['org.mozilla.fennec_aurora'],
             'alpha',
             None,
-            False,
+            True,
             True,
             False,
             False,
@@ -237,7 +237,7 @@ def test_main_amazon(monkeypatch):
             ['org.mozilla.fennec_aurora'],
             None,
             None,
-            False,
+            True,
             True,
             False,
             False,

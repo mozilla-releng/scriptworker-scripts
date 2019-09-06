@@ -97,12 +97,6 @@ class AmazonStoreEdit:
 
             self._http(200, 'put', f'/listings/{locale}', headers={'If-Match': etag}, json=listing)
 
-    def commit(self):
-        response = self._http(200, 'get', '')
-        etag = response.headers['ETag']
-
-        self._http(200, 'post', '/commit', headers={'If-Match': etag})
-
     def validate(self):
         self._http(200, 'post', '/validate')
 
@@ -114,7 +108,7 @@ class AmazonStoreEdit:
 
     @staticmethod
     @contextmanager
-    def transaction(client_id, client_secret, package_name, *, contact_server, commit):
+    def transaction(client_id, client_secret, package_name, *, contact_server, dry_run):
         if contact_server:
             response = http(200, 'post', 'https://api.amazon.com/auth/o2/token', data={
                 'client_id': client_id,
@@ -143,13 +137,9 @@ class AmazonStoreEdit:
 
         try:
             yield edit
-            if commit:
-                edit.commit()
-                logger.info('Changes committed')
-            else:
-                logger.warning('Edit not committed, since `commit` was `False`. Validating and '
-                               'cancelling the edit...')
-                edit.validate()
+            edit.validate()
+            if dry_run:
+                logger.warning('`try_run` was `True`. Cancelling the edit...')
                 edit.cancel()
         except BaseException:
             logger.warning('An error was encountered, cancelling the edit...')
@@ -159,9 +149,6 @@ class AmazonStoreEdit:
 
 class MockAmazonStoreEdit:
     def update_app(self, apks):
-        pass
-
-    def commit(self):
         pass
 
     def validate(self):
@@ -289,17 +276,17 @@ class GooglePlayEdit:
 
     @staticmethod
     @contextmanager
-    def transaction(service_account, credentials_file_name, package_name, *, contact_server, commit):
+    def transaction(service_account, credentials_file_name, package_name, *, contact_server, dry_run):
         edit_resource = _create_google_edit_resource(contact_server, service_account, credentials_file_name)
         edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
         google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
         yield google_play
-        if commit:
+        if not dry_run:
             edit_resource.commit(editId=edit_id, packageName=package_name).execute()
             logger.info('Changes committed')
             logger.debug('edit_id "{}" for "{}" has been committed'.format(edit_id, package_name))
         else:
-            logger.warning('Transaction not committed, since `commit` was `False`')
+            logger.warning('Transaction not committed, since `dry_run` was `True`')
 
 
 def _create_google_edit_resource(contact_google_play, service_account, credentials_file_name):

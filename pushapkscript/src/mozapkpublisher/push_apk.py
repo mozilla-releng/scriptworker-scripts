@@ -25,7 +25,7 @@ def push_apk(
     expected_package_names,
     track=None,
     rollout_percentage=None,
-    commit=True,
+    dry_run=True,
     contact_server=True,
     skip_check_ordered_version_codes=False,
     skip_check_multiple_locales=False,
@@ -47,7 +47,7 @@ def push_apk(
         rollout_percentage (int): percentage of users to roll out this update to. Must be a number
             in (0-100]. This option is only valid if `target_store` is "google" and
             `track` is set to "rollout"
-        commit (bool): `False` to do a dry-run
+        dry_run (bool): `True` to do a dry-run
         contact_server (bool): `False` to avoid communicating with the Google Play server or Amazon
             Store server. Useful if you're using mock credentials.
         skip_checks_fennec (bool): skip Fennec-specific checks
@@ -100,7 +100,7 @@ def push_apk(
     for package_name, extracted_apks in apks_by_package_name.items():
         store = _STORE_PER_TARGET_PLATFORM[target_store]
         with store.transaction(username, secret, package_name, contact_server=contact_server,
-                               commit=commit) as edit:
+                               dry_run=dry_run) as edit:
             edit.update_app(extracted_apks, **update_app_kwargs)
 
 
@@ -130,8 +130,14 @@ def main():
         default=None,
         help='The percentage of user who will get the update. Specify only if track is rollout'
     )
+    google_parser.add_argument('--commit', action='store_false', dest='dry_run',
+                               help='Commit new release on Google Play. This action cannot be '
+                                    'reverted')
 
-    subparsers.add_parser('amazon')
+    amazon_parser = subparsers.add_parser('amazon')
+    amazon_parser.add_argument('--keep', action='store_false', dest='dry_run',
+                               help='Keep "upcoming version" on Amazon to be submitted or '
+                                    'cancelled on the Amazon Developer Web UI.')
 
     parser.add_argument('--username', required=True,
                         help='Either the amazon client id or the google service account')
@@ -142,8 +148,6 @@ def main():
                         help='''Prevent any request to reach the APK server. Use this option if
 you want to run the script without any valid credentials nor valid APKs. --service-account and
 --credentials must still be provided (you can just fill them with random string and file).''')
-    parser.add_argument('--commit', action='store_true', help="Commit changes onto APK server. "
-                                                              "This action cannot be reverted.")
     add_apk_checks_arguments(parser)
     config = parser.parse_args()
 
@@ -163,7 +167,7 @@ you want to run the script without any valid credentials nor valid APKs. --servi
             config.expected_package_names,
             track,
             rollout_percentage,
-            config.commit,
+            config.dry_run,
             config.contact_server,
             config.skip_check_ordered_version_codes,
             config.skip_check_multiple_locales,
