@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [12.1.0] - 2019-09-05
+### Changed
+- For authenticode signing, skip files that are already signed
+
 ## [12.0.0] - 2019-08-28
 ### Added
 - Support for authenticode signing

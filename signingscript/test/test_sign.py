@@ -1418,7 +1418,12 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt):
         shutil.copyfile(infile, outfile)
         return True
 
+    def mocked_issigned(filename):
+        if filename.endswith("signed.exe"):
+            return True
+
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
+    mocker.patch.object(winsign.sign, "is_signed", mocked_issigned)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
 
     result = await sign.sign_authenticode_zip(context, test_file, fmt)

@@ -1369,6 +1369,10 @@ async def sign_authenticode_file(context, orig_path, fmt):
     """
     loop = asyncio.get_event_loop()
 
+    if winsign.sign.is_signed(orig_path):
+        log.info("%s is already signed", orig_path)
+        return True
+
     def signer(digest, digest_algo):
         thread_loop = asyncio.new_event_loop()
         return thread_loop.run_until_complete(
