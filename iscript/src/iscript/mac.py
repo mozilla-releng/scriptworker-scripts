@@ -992,7 +992,7 @@ async def staple_notarization(all_paths, path_attr="app_path"):
             asyncio.ensure_future(
                 retry_async(
                     run_command,
-                    args=[["xcrun", "stapler", "staple", "-v", path]],
+                    args=[["xcrun", "stapler", "staple", path]],
                     kwargs={
                         "cwd": cwd,
                         "exception": IScriptError,
