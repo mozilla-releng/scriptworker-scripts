@@ -1089,7 +1089,6 @@ async def create_pkg_files(config, key_config, all_paths):
                     semaphore,
                     run_command(
                         [
-                            "sudo",
                             "pkgbuild",
                             "--keychain",
                             key_config["signing_keychain"],

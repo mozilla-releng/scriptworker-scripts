@@ -881,7 +881,7 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises):
     """
 
     async def fake_run_command(cmd, **kwargs):
-        assert cmd[0:2] == ["sudo", "pkgbuild"]
+        assert cmd[0:1] == ["pkgbuild"]
         if raises:
             raise IScriptError("foo")
 
