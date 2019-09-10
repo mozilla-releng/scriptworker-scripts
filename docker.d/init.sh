@@ -22,7 +22,11 @@ case $ENV in
     export WORKER_SUFFIX=
     ;;
   fake-prod)
-    export TRUST_LEVEL=t
+    export TRUST_LEVEL=1
+    # special case for signing, using -t- instead
+    if [ $PROJECT_NAME = "signing" ]; then
+        export TRUST_LEVEL=t
+    fi
     export WORKER_SUFFIX=
     ;;
   dev)
