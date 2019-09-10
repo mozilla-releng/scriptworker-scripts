@@ -5,11 +5,10 @@ import pytest
 
 from scriptworker.context import Context
 from signingscript.exceptions import FailedSubprocess, SigningServerError
-from signingscript.test import read_file, tmpdir
+from conftest import read_file
 import signingscript.utils as utils
-from . import PUB_KEY_PATH
+from conftest import PUB_KEY_PATH
 
-assert tmpdir  # silence flake8
 
 ID_RSA_PUB_HASH = (
     "226658906e46b26ef195c468f94e2be983b6c53f370dff0d8e725832f"

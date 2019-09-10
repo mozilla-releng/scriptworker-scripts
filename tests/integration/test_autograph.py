@@ -13,11 +13,7 @@ from signingscript.sign import sign_file_with_autograph
 from signingscript.utils import SigningServer
 
 from signingscript.script import async_main
-from signingscript.test import context
-from signingscript.test.integration import skip_when_no_autograph_server
-
-
-assert context  # silence flake8
+from conftest import skip_when_no_autograph_server
 
 
 log = logging.getLogger(__name__)

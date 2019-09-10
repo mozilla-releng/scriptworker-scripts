@@ -8,10 +8,11 @@ RUN apt-get update \
  && apt-get clean \
  && ln -s /app/docker.d/healthcheck /bin/healthcheck
 
+COPY . /app
+RUN chown -R app:app /app
+
 USER app
 WORKDIR /app
-
-COPY . /app
 
 RUN python -m venv /app \
  && ./bin/pip install -r requirements/base.txt \

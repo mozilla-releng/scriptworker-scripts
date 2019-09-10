@@ -2,6 +2,7 @@ import os
 import pytest
 import tempfile
 from contextlib import contextmanager
+from distutils.util import strtobool
 
 from scriptworker.context import Context
 
@@ -15,7 +16,7 @@ def read_file(path):
         return fh.read()
 
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SERVER_CONFIG_PATH = os.path.join(
     os.path.dirname(__file__), "example_server_config.json"
 )
@@ -31,12 +32,6 @@ def noop_sync(*args, **kwargs):
 
 async def noop_async(*args, **kwargs):
     pass
-
-
-@pytest.yield_fixture(scope="function")
-def tmpdir():
-    with tempfile.TemporaryDirectory() as tmp:
-        yield tmp
 
 
 @pytest.yield_fixture(scope="function")
@@ -68,3 +63,10 @@ def context(tmpdir):
 @contextmanager
 def does_not_raise():
     yield
+
+
+def skip_when_no_autograph_server(function):
+    return pytest.mark.skipif(
+        not strtobool(os.environ.get("AUTOGRAPH_INTEGRATION", "false")),
+        reason="Tests requiring an Autograph server are skipped",
+    )(function)

@@ -3,18 +3,12 @@ import os
 import pytest
 
 from scriptworker.client import validate_task_schema
-from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
 
 from signingscript.exceptions import SigningServerError
-from signingscript.script import get_default_config
-from signingscript.utils import load_signing_server_config, mkdir
+from signingscript.utils import mkdir
 import signingscript.task as stask
-from signingscript.test import noop_sync, tmpdir, BASE_DIR, context
-
-assert tmpdir  # silence flake8
-assert context  # silence flake8
-
+from conftest import noop_sync, BASE_DIR
 
 # helper constants, fixtures, functions {{{1
 SERVER_CONFIG_PATH = os.path.join(BASE_DIR, "example_server_config.json")

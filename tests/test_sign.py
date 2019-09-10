@@ -18,25 +18,21 @@ from signingscript.exceptions import SigningScriptError
 from signingscript.utils import get_hash, SigningServer
 import signingscript.sign as sign
 import signingscript.utils as utils
-from signingscript.test import (
+from conftest import (
     noop_sync,
     noop_async,
-    tmpdir,
     die,
     BASE_DIR,
     TEST_DATA_DIR,
-    context,
     DEFAULT_SCOPE_PREFIX,
     SERVER_CONFIG_PATH,
     does_not_raise,
 )
 
-assert tmpdir  # silence flake8
-assert context  # silence flake8
-
-
 # helper constants, fixtures, functions {{{1
 TEST_CERT_TYPE = "{}cert:dep-signing".format(DEFAULT_SCOPE_PREFIX)
+
+INSTALL_DIR = os.path.dirname(sign.__file__)
 
 
 @pytest.fixture(scope="function")
@@ -344,14 +340,14 @@ async def test_sign_file_with_autograph_raises_http_error(
             "dep-signing",
             None,
             False,
-            os.path.join(BASE_DIR, "signingscript/data", "autograph_stage.pem"),
+            os.path.join(INSTALL_DIR, "data", "autograph_stage.pem"),
         ),
         (
             "autograph_hash_only_mar384",
             "release-signing",
             None,
             False,
-            os.path.join(BASE_DIR, "signingscript/data", "release_primary.pem"),
+            os.path.join(INSTALL_DIR, "data", "release_primary.pem"),
         ),
         ("autograph_hash_only_mar384", "unknown_cert_type", None, True, None),
         ("unknown_format", "dep", None, True, None),
@@ -360,7 +356,7 @@ async def test_sign_file_with_autograph_raises_http_error(
             "release-signing",
             "firefox_20190321_rel",
             False,
-            os.path.join(BASE_DIR, "signingscript/data", "firefox_20190321_rel.pem"),
+            os.path.join(INSTALL_DIR, "data", "firefox_20190321_rel.pem"),
         ),
         (
             "autograph_hash_only_mar384",
@@ -940,7 +936,7 @@ async def test_bad_extract_zipfile(context, mocker):
 @pytest.mark.asyncio
 async def test_zipfile_append_write(context):
     top_dir = os.path.dirname(os.path.dirname(__file__))
-    rel_files = ["test/test_script.py", "test/test_sign.py"]
+    rel_files = ["tests/test_script.py", "tests/test_sign.py"]
     abs_files = [os.path.join(top_dir, f) for f in rel_files]
     full_rel_files = ["a", "b", "c/", "c/d", "c/e/", "c/e/f"] + rel_files
     to = os.path.join(context.config["work_dir"], "test.zip")
@@ -1017,7 +1013,7 @@ async def test_bad_extract_tarfile(context, mocker):
 @pytest.mark.asyncio
 async def test_tarfile_append_write(context):
     top_dir = os.path.dirname(os.path.dirname(__file__))
-    rel_files = ["test/test_script.py", "test/test_sign.py"]
+    rel_files = ["tests/test_script.py", "tests/test_sign.py"]
     abs_files = [os.path.join(top_dir, f) for f in rel_files]
     to = os.path.join(context.config["work_dir"], "test.tar.bz2")
 

@@ -20,7 +20,7 @@ install:
     - travis_retry pip install tox
     - sudo apt-get install zipalign default-jdk-headless
 script:
-    - docker run --name autograph -d -p 5500:5500 -v $(pwd)/signingscript/test/data/:/data/ mozilla/autograph:2.5.0 /go/bin/autograph -c /data/autograph_server_test_config.yaml
+    - docker run --name autograph -d -p 5500:5500 -v $(pwd)/tests/data/:/data/ mozilla/autograph:2.5.0 /go/bin/autograph -c /data/autograph_server_test_config.yaml
     - tox
 after_script:
     - docker stop autograph
