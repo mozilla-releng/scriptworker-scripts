@@ -6,7 +6,16 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
-[6.0.0] = (2019-07-04)
+[6.0.2] = (2019-09-12)
+----------------------
+
+Changed
+~~~~~~~
+
+- Sleep less between retries and increase the number of attempts (`#68 <https://github.com/mozilla-releng/balrogscript/issues/68>`_)
+
+
+[6.0.1] = (2019-07-04)
 ----------------------
 Changed
 ~~~~~~~
