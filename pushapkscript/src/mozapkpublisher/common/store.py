@@ -17,6 +17,11 @@ logger = logging.getLogger(__name__)
 
 
 BASE_AMAZON_URL = 'https://developer.amazon.com/api/appstore/v1'
+AMAZON_RECENT_CHANGES = {
+    'en-US': 'Bug fixes and technical improvements.',
+    'de-DE': 'Fehlerkorrekturen und Technische Verbesserungen.',
+    'fr-FR': 'Correction de bugs et amélioration des techniques.',
+}
 
 
 def add_general_google_play_arguments(parser):
@@ -93,7 +98,7 @@ class AmazonStoreEdit:
             response = self._http(200, 'get', f'/listings/{locale}')
             etag = response.headers['ETag']
             listing = response.json()
-            listing['recentChanges'] = '✔'
+            listing['recentChanges'] = AMAZON_RECENT_CHANGES.get(locale, '✔')
 
             self._http(200, 'put', f'/listings/{locale}', headers={'If-Match': etag}, json=listing)
 

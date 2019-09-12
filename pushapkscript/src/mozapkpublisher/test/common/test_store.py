@@ -81,6 +81,26 @@ def test_amazon_update_app():
         mock_http.assert_any_call(200, 'post', '/apks/upload', data='apk', headers={'Content-Type': 'application/octet-stream'})
 
 
+def test_amazon_release_notes():
+    edit = AmazonStoreEdit(None, None, 'dummy_package_name')
+    with patch.object(edit, '_http') as mock_http:
+        mock_http.side_effect = [
+            Mock(json=lambda: [{'id': 'apk_id'}]),
+            Mock(headers={'ETag': 'apk etag'}),
+            None,
+            None,
+            Mock(json=lambda: {'listings': {'sv-SE': {}, 'fr-FR': {}}}),
+            Mock(headers={'ETag': 'listing etag'}, json=lambda: {}),
+            None,
+            Mock(headers={'ETag': 'listing etag'}, json=lambda: {}),
+            None,
+        ]
+        edit.update_app([('apk', None)])
+
+        mock_http.assert_any_call(200, 'put', '/listings/fr-FR', headers={'If-Match': 'listing etag'}, json={'recentChanges': 'Correction de bugs et amélioration des techniques.'})
+        mock_http.assert_any_call(200, 'put', '/listings/sv-SE', headers={'If-Match': 'listing etag'}, json={'recentChanges': '✔'})
+
+
 def test_amazon_transaction_contact_and_keep():
     with patch.object(store, 'http') as mock_http:
         mock_http.side_effect = [
