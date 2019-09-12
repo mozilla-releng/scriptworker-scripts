@@ -6,6 +6,20 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.5.7] = (2019-09-12)
+----------------------
+
+Fixed
+~~~~~
+
+- Fixed `arrow.get` calls for arrow 0.15.x
+
+Removed
+~~~~~~~
+
+- Templates of Firefox and Fennec nightly, Fennec candidates as well as all maven world since they switched to in-tree manifests declarative artifacts. (`#1567124 <https://bugzilla.mozilla.org/show_bug.cgi?id=1567124>`_)
+
+
 [8.5.6] = (2019-08-15)
 ----------------------
 

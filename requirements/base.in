@@ -1,5 +1,4 @@
-# pin arror to 0.14.4, because 0.15.0 doesn't like the 2018/04/2018-04-09-15-30-00 format
-arrow==0.14.4
+arrow<0.16
 Jinja2
 boto3
 mozilla-version

@@ -123,10 +123,18 @@ def generate_beetmover_template_args(context):
     if is_maven_action(context.action):
         return _generate_beetmover_template_args_maven(task, release_props)
 
+    upload_date = task['payload']['upload_date']
+    args = []
+    try:
+        upload_date = float(upload_date)
+    except ValueError:
+        upload_date = upload_date.split('/')[-1]
+        args.append('YYYY-MM-DD-HH-mm-ss')
+
     tmpl_args = {
         # payload['upload_date'] is a timestamp defined by params['pushdate']
         # in mach taskgraph
-        "upload_date": arrow.get(task['payload']['upload_date']).format('YYYY/MM/YYYY-MM-DD-HH-mm-ss'),
+        "upload_date": arrow.get(upload_date, *args).format('YYYY/MM/YYYY-MM-DD-HH-mm-ss'),
         "version": release_props["appVersion"],
         "branch": release_props["branch"],
         "product": release_props["appName"],
