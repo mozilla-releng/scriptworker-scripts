@@ -21,7 +21,7 @@ async def async_main(context):
     contact_server = not bool(context.config.get('do_not_contact_server'))
 
     logging.getLogger('oauth2client').setLevel(logging.WARNING)
-    _log_warning_forewords(contact_server, context.task['payload'])
+    _log_warning_forewords(contact_server, publish_config['dry_run'], publish_config['target_store'])
 
     log.info('Verifying upstream artifacts...')
     artifacts_per_task_id, failed_artifacts_per_task_id = artifacts.get_upstream_artifacts_full_paths_per_task_id(context)
@@ -41,7 +41,7 @@ async def async_main(context):
     log.info('Delegating publication to mozapkpublisher...')
     with contextlib.ExitStack() as stack:
         files = [stack.enter_context(open(apk_file_name)) for apk_file_name in all_apks_paths]
-        publish.publish(context.task['payload'], product_config, publish_config, files, contact_server)
+        publish.publish(product_config, publish_config, files, contact_server)
 
     log.info('Done!')
 
@@ -66,13 +66,18 @@ def _get_product_config(context, android_product):
     return matching_products[0]
 
 
-def _log_warning_forewords(contact_google_play, task_payload):
-    if contact_google_play:
-        if publish.should_commit_transaction(task_payload):
-            log.warning('You will publish APKs to Google Play. This action is irreversible,\
+def _log_warning_forewords(contact_server, dry_run, target_store):
+    if contact_server:
+        if target_store == 'amazon':
+            log.warning('You will create a new "Upcoming Release" on Amazon. This release '
+                        'will not be deployed until someone manually submits it on the '
+                        'Amazon web console.')
+        elif target_store == 'google':
+            if not dry_run:
+                log.warning('You will publish APKs to Google Play. This action is irreversible,\
 if no error is detected either by this script or by Google Play.')
-        else:
-            log.warning('APKs will be submitted to Google Play, but no change will not be committed.')
+            else:
+                log.warning('APKs will be submitted, but no change will not be committed.')
     else:
         log.warning('This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked.')
 

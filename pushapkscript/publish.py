@@ -5,7 +5,7 @@ from mozapkpublisher.push_apk import push_apk
 log = logging.getLogger(__name__)
 
 
-def publish(payload, product_config, publish_config, apk_files, contact_server):
+def publish(product_config, publish_config, apk_files, contact_server):
     push_apk(
         apks=apk_files,
         target_store=publish_config['target_store'],
@@ -14,7 +14,7 @@ def publish(payload, product_config, publish_config, apk_files, contact_server):
         expected_package_names=publish_config['package_names'],
         track=publish_config.get('google_track'),
         rollout_percentage=publish_config.get('google_rollout_percentage'),
-        commit=should_commit_transaction(payload),
+        dry_run=publish_config['dry_run'],
         # Only allowed to connect to store server if the configuration of the pushapkscript
         # instance allows it
         contact_server=contact_server,
@@ -23,9 +23,3 @@ def publish(payload, product_config, publish_config, apk_files, contact_server):
         skip_check_same_locales=bool(product_config.get('skip_check_same_locales')),
         skip_checks_fennec=bool(product_config.get('skip_checks_fennec')),
     )
-
-
-def should_commit_transaction(task_payload):
-    # Don't commit anything by default. Committed APKs can't be unpublished,
-    # unless you push a newer set of APKs.
-    return task_payload.get('commit', False)

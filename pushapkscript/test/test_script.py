@@ -58,7 +58,7 @@ async def test_async_main(monkeypatch, android_product):
         }
     }
 
-    def assert_google_play_call(_, __, ___, all_apks_files, ____):
+    def assert_google_play_call(_, __, all_apks_files, ___):
         assert sorted([file.name for file in all_apks_files]) == ['/some/path/to/another.apk', '/some/path/to/one.apk', '/some/path/to/yet_another.apk']
 
     monkeypatch.setattr(publish, 'publish', assert_google_play_call)
@@ -99,16 +99,16 @@ def test_get_product_config():
     assert _get_product_config(context, 'fenix') == {'product_names': ['fenix'], 'foo': 'bar'}
 
 
-@pytest.mark.parametrize('is_allowed_to_push, should_commit_transaction, expected', (
-    (True, True, 'You will publish APKs to Google Play. This action is irreversible,\
+@pytest.mark.parametrize('is_allowed_to_push, dry_run, target_store, expected', (
+    (True, False, 'google', 'You will publish APKs to Google Play. This action is irreversible,\
 if no error is detected either by this script or by Google Play.'),
-    (True, False, 'APKs will be submitted to Google Play, but no change will not be committed.'),
-    (False, False, 'This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked.'),
-    (False, True, 'This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked.'),
+    (True, True, 'google', 'APKs will be submitted, but no change will not be committed.'),
+    (False, True, 'google', 'This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked.'),
+    (False, False, 'google', 'This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked.'),
+    (True, False, 'amazon', 'You will create a new "Upcoming Release" on Amazon. This release will not be deployed until someone manually submits it on the Amazon web console.')
 ))
-def test_log_warning_forewords(caplog,  monkeypatch, is_allowed_to_push, should_commit_transaction, expected):
-    monkeypatch.setattr(publish, 'should_commit_transaction', lambda _: should_commit_transaction)
-    _log_warning_forewords(is_allowed_to_push, MagicMock())
+def test_log_warning_forewords(caplog,  monkeypatch, is_allowed_to_push, dry_run, target_store, expected):
+    _log_warning_forewords(is_allowed_to_push, dry_run, target_store)
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == 'WARNING'
     assert expected in caplog.text

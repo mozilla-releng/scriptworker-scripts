@@ -1,7 +1,6 @@
 import pytest
 
-from pushapkscript.publish_config import get_publish_config
-
+from pushapkscript.publish_config import get_publish_config, _google_should_do_dry_run
 
 AURORA_CONFIG = {
     'override_channel_model': 'choose_google_app_with_scope',
@@ -62,6 +61,7 @@ ANY_STORE_CONFIG = {
 def test_get_publish_config_fennec():
     assert get_publish_config(AURORA_CONFIG, {}, 'aurora') == {
         'target_store': 'google',
+        'dry_run': True,
         'certificate_alias': 'aurora',
         'google_track': 'beta',
         'google_rollout_percentage': None,
@@ -74,6 +74,7 @@ def test_get_publish_config_fennec():
 def test_get_publish_config_fennec_track_override():
     assert get_publish_config(AURORA_CONFIG, {'google_play_track': 'internal_qa'}, 'aurora') == {
         'target_store': 'google',
+        'dry_run': True,
         'certificate_alias': 'aurora',
         'google_track': 'internal_qa',
         'google_rollout_percentage': None,
@@ -86,6 +87,7 @@ def test_get_publish_config_fennec_track_override():
 def test_get_publish_config_fennec_rollout():
     assert get_publish_config(AURORA_CONFIG, {'rollout_percentage': 10}, 'aurora') == {
         'target_store': 'google',
+        'dry_run': True,
         'certificate_alias': 'aurora',
         'google_track': 'beta',
         'google_rollout_percentage': 10,
@@ -99,6 +101,7 @@ def test_get_publish_config_focus():
     payload = {'channel': 'beta'}
     assert get_publish_config(FOCUS_CONFIG, payload, 'focus') == {
         'target_store': 'google',
+        'dry_run': True,
         'certificate_alias': 'focus',
         'google_track': 'beta',
         'google_rollout_percentage': None,
@@ -115,6 +118,7 @@ def test_get_publish_config_focus_rollout():
     }
     assert get_publish_config(FOCUS_CONFIG, payload, 'focus') == {
         'target_store': 'google',
+        'dry_run': True,
         'certificate_alias': 'focus',
         'google_track': 'production',
         'google_rollout_percentage': 10,
@@ -128,6 +132,7 @@ def test_get_publish_config_fenix():
     payload = {'channel': 'production'}
     assert get_publish_config(FENIX_CONFIG, payload, 'fenix') == {
         'target_store': 'google',
+        'dry_run': True,
         'certificate_alias': 'fenix',
         'google_track': 'internal',
         'google_rollout_percentage': None,
@@ -144,6 +149,7 @@ def test_get_publish_config_fenix_rollout():
     }
     assert get_publish_config(FENIX_CONFIG, payload, 'fenix') == {
         'target_store': 'google',
+        'dry_run': True,
         'certificate_alias': 'fenix',
         'google_track': 'internal',
         'google_rollout_percentage': 10,
@@ -168,6 +174,7 @@ def test_target_google():
     }
     assert get_publish_config(ANY_STORE_CONFIG, payload, 'flex') == {
         'target_store': 'google',
+        'dry_run': True,
         'certificate_alias': 'flex',
         'google_track': 'internal',
         'google_rollout_percentage': None,
@@ -184,6 +191,7 @@ def test_target_amazon():
     }
     assert get_publish_config(ANY_STORE_CONFIG, payload, 'flex') == {
         'target_store': 'amazon',
+        'dry_run': False,
         'certificate_alias': 'flex',
         'username': 'flex_client',
         'secret': 'flex_secret',
@@ -240,3 +248,18 @@ def test_incorrect_target():
     }
     with pytest.raises(ValueError):
         get_publish_config(amazon_only_config, payload, 'amazon')
+
+
+def test_google_should_do_dry_run():
+    task_payload = {
+        'commit': True
+    }
+    assert _google_should_do_dry_run(task_payload) is False
+
+    task_payload = {
+        'commit': False
+    }
+    assert _google_should_do_dry_run(task_payload) is True
+
+    task_payload = {}
+    assert _google_should_do_dry_run(task_payload) is True
