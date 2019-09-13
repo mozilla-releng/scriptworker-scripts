@@ -26,7 +26,7 @@ def _get_single_google_app_publish_config(product_config, task):
     return {
         'target_store': 'google',
         'dry_run': _google_should_do_dry_run(task),
-        'certificate_alias': publish_config['certificate_alias'],
+        'certificate_alias': publish_config.get('certificate_alias'),
         'username': publish_config['service_account'],
         'secret': publish_config['credentials_file'],
         'package_names': publish_config['package_names'],
@@ -43,7 +43,7 @@ def _get_google_app_by_scope_publish_config(product_config, task, scope_product)
     return {
         'target_store': 'google',
         'dry_run': _google_should_do_dry_run(task),
-        'certificate_alias': publish_config['certificate_alias'],
+        'certificate_alias': publish_config.get('certificate_alias'),
         'username': publish_config['service_account'],
         'secret': publish_config['credentials_file'],
         'package_names': publish_config['package_names'],
@@ -82,7 +82,7 @@ def _get_channel_publish_config(product_config, task):
         return {
             'target_store': 'amazon',
             'dry_run': False,
-            'certificate_alias': publish_config['certificate_alias'],
+            'certificate_alias': publish_config.get('certificate_alias'),
             'username': store_config['client_id'],
             'secret': store_config['client_secret'],
             'package_names': publish_config['package_names'],
@@ -95,7 +95,7 @@ def _get_channel_publish_config(product_config, task):
         return {
             'target_store': 'google',
             'dry_run': _google_should_do_dry_run(task),
-            'certificate_alias': publish_config['certificate_alias'],
+            'certificate_alias': publish_config.get('certificate_alias'),
             'username': store_config['service_account'],
             'secret': store_config['credentials_file'],
             'package_names': publish_config['package_names'],
