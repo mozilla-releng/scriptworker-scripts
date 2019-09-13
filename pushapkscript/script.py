@@ -33,10 +33,14 @@ async def async_main(context):
         if artifact.endswith('.apk')
     ]
 
-    log.info('Verifying APKs\' signatures...')
-    for apk_path in all_apks_paths:
-        jarsigner.verify(context, publish_config, apk_path)
-        manifest.verify(product_config, apk_path)
+    if not publish_config.get('skip_check_signature', True):
+        log.info('Verifying APKs\' signatures...')
+        for apk_path in all_apks_paths:
+            jarsigner.verify(context, publish_config, apk_path)
+            manifest.verify(product_config, apk_path)
+    else:
+        log.info('This product is configured with "skip_check_signature", so the signing of the '
+                 'APK will not be verified.')
 
     log.info('Delegating publication to mozapkpublisher...')
     with contextlib.ExitStack() as stack:

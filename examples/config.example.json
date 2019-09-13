@@ -86,6 +86,21 @@
                 }
             }
         }
+    },{
+        "product_names": ["firefox-tv"],
+        "skip_check_multiple_locales": true,
+        "skip_check_same_locales": true,
+        "skip_checks_fennec": true,
+        "skip_check_signature": true,
+        "apps": {
+            "production": {
+                "package_names": ["org.mozilla.video.firefox"],
+                "amazon": {
+                    "client_id": "amzn1.application-oa2-client.firefox-tv",
+                    "client_secret": "123456"
+                }
+            }
+        }
     }],
 
     "jarsigner_binary": "jarsigner",

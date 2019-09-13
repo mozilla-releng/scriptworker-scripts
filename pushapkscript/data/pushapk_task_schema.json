@@ -50,6 +50,9 @@
                     "minItems": 1,
                     "uniqueItems": true
                 },
+                "target_store": {
+                  "type": "string"
+                },
                 "certificate_alias": {
                   "type": "string"
                 },

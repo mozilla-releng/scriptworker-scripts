@@ -67,6 +67,25 @@ async def test_async_main(monkeypatch, android_product):
         await async_main(context)
 
 
+@pytest.mark.asyncio
+async def test_async_main_no_signature_verify(monkeypatch):
+    context = MagicMock()
+    context.task['channel'] = 'release'
+
+    # avoid running unrelated-to-this-test code
+    monkeypatch.setattr(pushapkscript.script.task, 'extract_android_product_from_scopes', lambda _: 'firefox-tv')
+    monkeypatch.setattr(pushapkscript.script, 'get_publish_config', lambda _, __, ___: {'dry_run': True, 'target_store': 'amazon'})
+    monkeypatch.setattr(pushapkscript.script.publish, 'publish', lambda _, __, ___, ____: None)
+
+    # set up "skip_check_signature
+    monkeypatch.setattr(pushapkscript.script, '_get_product_config', lambda _, __: {'skip_check_signature': True})
+
+    with patch.object(pushapkscript.script, 'jarsigner') as mock_jarsigner:
+        with patch('pushapkscript.script.open', new=mock_open):
+            await async_main(context)
+        mock_jarsigner.assert_not_called()
+
+
 def test_get_product_config_validation():
     context = Context()
     context.config = {}
