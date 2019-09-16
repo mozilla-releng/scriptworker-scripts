@@ -244,9 +244,9 @@ s3transfer==0.2.1 \
     --hash=sha256:6efc926738a3cd576c2a79725fed9afde92378aa5c6a957e3af010cb019fac9d \
     --hash=sha256:b780f2411b824cb541dbcd2c713d0cb61c7d1bcadae204cdddda2b35cef493ba \
     # via boto3
-scriptworker==26.0.3 \
-    --hash=sha256:9c3820c19ba1b6417958da4ef5fbba51cc224d4769625427e8176b7da5e378c3 \
-    --hash=sha256:cfdd1c303dc858ac8e86759275ebcefcd3a395e978f7b6080ea3fd7441305799
+scriptworker==26.0.4 \
+    --hash=sha256:2373f1359bf18c2de80ea453dbb9cd5b20940428cd31fd6420e24f7daa5b7a75 \
+    --hash=sha256:36e1e2f39838fc0ec4df79c2ad50cc2aebb061aeb0116c8e8eb72f9fbbeb68ab
 six==1.12.0 \
     --hash=sha256:3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c \
     --hash=sha256:d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73 \
