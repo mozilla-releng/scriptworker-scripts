@@ -208,9 +208,9 @@ requests==2.22.0 \
     --hash=sha256:11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4 \
     --hash=sha256:9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31 \
     # via github3.py, requests-hawk, signtool, taskcluster, winsign
-scriptworker==26.0.3 \
-    --hash=sha256:9c3820c19ba1b6417958da4ef5fbba51cc224d4769625427e8176b7da5e378c3 \
-    --hash=sha256:cfdd1c303dc858ac8e86759275ebcefcd3a395e978f7b6080ea3fd7441305799
+scriptworker==26.0.4 \
+    --hash=sha256:2373f1359bf18c2de80ea453dbb9cd5b20940428cd31fd6420e24f7daa5b7a75 \
+    --hash=sha256:36e1e2f39838fc0ec4df79c2ad50cc2aebb061aeb0116c8e8eb72f9fbbeb68ab
 signtool==4.0.1 \
     --hash=sha256:adb317a003e23c57eb6cb8a363c383be42d631374a182ea24b61cafaa443cab1 \
     --hash=sha256:fc63b9e8192a80cea919f98e13a90c33692bcfbd65047d8a819fde334936ecc8
