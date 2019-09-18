@@ -19,7 +19,7 @@ bouncer_config:
 
       'COT_PRODUCT == "firefox" && ENV == "prod"':
         project:releng:bouncer:server:production:
-          api_root: 'https://bounceradmin.mozilla.com/api'
+          api_root: 'https://admin-bouncer.prod.mozaws.net/api'
           timeout_in_seconds: 60
           username: { "$eval": "BOUNCER_USERNAME" }
           password: { "$eval": "BOUNCER_PASSWORD" }
@@ -43,7 +43,7 @@ bouncer_config:
 
       'COT_PRODUCT == "thunderbird" && ENV == "prod"':
         project:comm:thunderbird:releng:bouncer:server:production:
-          api_root: 'https://bounceradmin.mozilla.com/api'
+          api_root: 'https://admin-bouncer.prod.mozaws.net/api'
           timeout_in_seconds: 60
           username: { "$eval": "BOUNCER_USERNAME" }
           password: { "$eval": "BOUNCER_PASSWORD" }
