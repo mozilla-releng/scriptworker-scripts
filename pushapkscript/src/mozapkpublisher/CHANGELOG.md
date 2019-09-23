@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 * Focus and Klar were sent in the same transaction, which cannot happen.
+* False positive exception about multiple architectures
 
 ### Removed
 * `update_apk_description.py`: https://l10n.mozilla-community.org/stores_l10n/ is now retired making the script useless.

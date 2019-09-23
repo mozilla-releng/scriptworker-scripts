@@ -44,7 +44,7 @@ def _create_apk_with_locale_content(temp_dir, manifest_content):
 
 
 def _create_apk_with_architecture_content(temp_dir, architecture=None):
-    random_file_in_lib = os.path.join(temp_dir, 'libmozglue.so')
+    random_file_in_lib = os.path.join(temp_dir, 'some_random_file')
     with open(random_file_in_lib, 'w'):
         pass
 
@@ -52,6 +52,9 @@ def _create_apk_with_architecture_content(temp_dir, architecture=None):
     with ZipFile(apk_path, 'a') as apk_zip:
         if architecture is not None:
             apk_zip.write(random_file_in_lib, 'lib/{}/libmozglue.so'.format(architecture))
+
+        # Add content which was previously been detected as "architectures"
+        apk_zip.write(random_file_in_lib, 'assets/extensions/webcompat/lib/about_compat_broker.js')
 
     return apk_path
 
