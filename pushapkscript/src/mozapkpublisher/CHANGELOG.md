@@ -4,6 +4,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [6.0.0] - TBD
 
+### Added
+* Push to Amazon support
+
 ### Fixed
 * Focus and Klar were sent in the same transaction, which cannot happen.
 
