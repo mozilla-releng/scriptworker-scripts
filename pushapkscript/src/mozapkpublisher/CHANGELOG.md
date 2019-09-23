@@ -4,6 +4,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [6.0.0] - TBD
 
+### Fixed
+* Focus and Klar were sent in the same transaction, which cannot happen.
+
 ### Removed
 * `update_apk_description.py`: https://l10n.mozilla-community.org/stores_l10n/ is now retired making the script useless.
 * `get_l10n_strings.py`: Automation hasn't used this script since [Bug 1560876](https://bugzilla.mozilla.org/show_bug.cgi?id=1560876). Moreover, like `update_apk_description.py`, this script doesn't work anymore.

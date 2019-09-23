@@ -71,7 +71,7 @@ def push_apk(
     for (package_name, apks_metadata) in split_apk_metadata.items():
         with googleplay.edit(service_account, google_play_credentials_file.name, package_name,
                              contact_google_play=contact_google_play, commit=commit) as edit:
-            for path, metadata in apks_metadata_per_paths.items():
+            for path in apks_metadata.keys():
                 edit.upload_apk(path)
 
             all_version_codes = _get_ordered_version_codes(apks_metadata_per_paths)
