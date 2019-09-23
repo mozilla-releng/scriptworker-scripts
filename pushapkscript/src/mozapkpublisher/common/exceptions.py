@@ -41,17 +41,3 @@ class BadApk(LoggedError):
 
 class BadSetOfApks(LoggedError):
     pass
-
-
-class NoTranslationGiven(LoggedError):
-    def __init__(self, given_translations):
-        super(NoTranslationGiven, self).__init__(
-            msg='"{}" doesn\'t contain any item to work with'.format(given_translations)
-        )
-
-
-class TranslationMissingData(LoggedError):
-    def __init__(self, locale_name, additional_message):
-        super(TranslationMissingData, self).__init__(
-            msg='Locale "{}" misses some data: {}'.format(locale_name, additional_message)
-        )
