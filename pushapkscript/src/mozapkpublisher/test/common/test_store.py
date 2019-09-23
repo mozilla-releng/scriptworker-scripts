@@ -55,10 +55,12 @@ def test_edit_http(mock_http):
 
 @patch.object(store, 'http')
 def test_amazon_do_not_contact_server(http_mock):
-    with AmazonStoreEdit.transaction('client id', 'client secret', 'package.name', contact_server=False, dry_run=False) as edit:
+    with AmazonStoreEdit.transaction('client id', 'client secret', 'package.name',
+                                     contact_server=False, dry_run=False) as edit:
         edit.update_app(('apk', None))
 
-    with AmazonStoreEdit.transaction('client id', 'client secret', 'package.name', contact_server=False, dry_run=True) as edit:
+    with AmazonStoreEdit.transaction('client id', 'client secret', 'package.name',
+                                     contact_server=False, dry_run=True) as edit:
         edit.update_app(('apk', None))
 
     http_mock.assert_not_called()
@@ -78,7 +80,8 @@ def test_amazon_update_app():
         ]
 
         edit.update_app([('apk', None)])
-        mock_http.assert_any_call(200, 'post', '/apks/upload', data='apk', headers={'Content-Type': 'application/octet-stream'})
+        mock_http.assert_any_call(200, 'post', '/apks/upload', data='apk',
+                                  headers={'Content-Type': 'application/octet-stream'})
 
 
 def test_amazon_release_notes():
@@ -97,8 +100,16 @@ def test_amazon_release_notes():
         ]
         edit.update_app([('apk', None)])
 
-        mock_http.assert_any_call(200, 'put', '/listings/fr-FR', headers={'If-Match': 'listing etag'}, json={'recentChanges': 'Correction de bugs et amélioration des techniques.'})
-        mock_http.assert_any_call(200, 'put', '/listings/sv-SE', headers={'If-Match': 'listing etag'}, json={'recentChanges': '✔'})
+        mock_http.assert_any_call(
+            200,
+            'put',
+            '/listings/fr-FR',
+            headers={'If-Match': 'listing etag'},
+            json={'recentChanges': 'Correction de bugs et amélioration des techniques.'}
+        )
+        mock_http.assert_any_call(200, 'put', '/listings/sv-SE',
+                                  headers={'If-Match': 'listing etag'},
+                                  json={'recentChanges': '✔'})
 
 
 def test_amazon_transaction_contact_and_keep():
@@ -110,7 +121,8 @@ def test_amazon_transaction_contact_and_keep():
             Mock(status_code=200, headers={'ETag': 'edit_etag'}),
             Mock(status_code=200),
         ]
-        with AmazonStoreEdit.transaction('client id', 'client secret', 'dummy_package_name', contact_server=True, dry_run=False):
+        with AmazonStoreEdit.transaction('client id', 'client secret', 'dummy_package_name',
+                                         contact_server=True, dry_run=False):
             pass
 
         mock_http.assert_any_call(200, 'post', 'https://api.amazon.com/auth/o2/token', data={
@@ -122,8 +134,8 @@ def test_amazon_transaction_contact_and_keep():
 
         assert call(200, 'post', 'https://developer.amazon.com/api/appstore/v1/applications/'
                                  'dummy_package_name/edits/edit_id/commit',
-                                  headers={'If-Match': 'edit_etag'},
-                                  auth=ANY) not in mock_http.call_args_list
+                    headers={'If-Match': 'edit_etag'},
+                    auth=ANY) not in mock_http.call_args_list
 
 
 def test_amazon_transaction_contact_dry_run():
@@ -184,14 +196,16 @@ def test_amazon_transaction_cancel_on_exception():
 
 
 def test_amazon_transaction_do_not_contact():
-    with AmazonStoreEdit.transaction(None, None, 'dummy_package_name', contact_server=False, dry_run=True) as edit:
+    with AmazonStoreEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
+                                     dry_run=True) as edit:
         assert isinstance(edit, MockAmazonStoreEdit)
 
 
 def test_google_edit_resource_for_options_contact(monkeypatch):
     service_mock = MagicMock()
     service_mock.edits.return_value = 'edit resource'
-    monkeypatch.setattr(store.ServiceAccountCredentials, 'from_p12_keyfile', lambda *args, **kwargs: MagicMock())
+    monkeypatch.setattr(store.ServiceAccountCredentials, 'from_p12_keyfile',
+                        lambda *args, **kwargs: MagicMock())
     monkeypatch.setattr(store, 'build', lambda *args, **kwargs: service_mock)
     edit_resource = _create_google_edit_resource(True, 'account', 'credentials_filename')
     assert edit_resource == 'edit resource'
@@ -214,7 +228,8 @@ def edit_resource_mock():
 
 def test_google_rollout_without_rollout_percentage():
     # Note: specifying "track='rollout'" (even with a valid percentage) is currently deprecated
-    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False, dry_run=True) as edit:
+    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
+                                    dry_run=True) as edit:
         with pytest.raises(WrongArgumentGiven):
             edit._update_track('rollout', [1], None)
 
@@ -223,7 +238,8 @@ def test_google_rollout_without_rollout_percentage():
 def test_google_valid_rollout_percentage_with_track_rollout(create_edit_resource):
     mock_edits_resource = MagicMock()
     create_edit_resource.return_value = mock_edits_resource
-    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False, dry_run=True) as edit:
+    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
+                                    dry_run=True) as edit:
         edit._update_track('rollout', [1], 50)
 
     raw_tracks_update = mock_edits_resource.tracks().method_calls[0][2]
@@ -362,7 +378,8 @@ def test_google_upload_apk_errors_out(edit_resource_mock, http_status_code):
     ('apkNotificationMessageKeyUpgradeVersionConflict', does_not_raise()),
     ('someRandomReason', pytest.raises(HttpError)),
 ))
-def test_google_upload_apk_does_not_error_out_when_apk_is_already_published(edit_resource_mock, reason, expectation):
+def test_google_upload_apk_does_not_error_out_when_apk_is_already_published(edit_resource_mock,
+                                                                            reason, expectation):
     content = {
         'error': {
             'errors': [{
@@ -420,7 +437,8 @@ def test_google_update_track(edit_resource_mock):
 
 
 @pytest.mark.parametrize('invalid_percentage', (-1, 101))
-def test_google_update_track_should_refuse_wrong_percentage(edit_resource_mock, invalid_percentage):
+def test_google_update_track_should_refuse_wrong_percentage(edit_resource_mock,
+                                                            invalid_percentage):
     google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
 
     with pytest.raises(WrongArgumentGiven):
