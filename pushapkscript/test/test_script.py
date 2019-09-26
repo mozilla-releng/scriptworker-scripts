@@ -124,7 +124,8 @@ if no error is detected either by this script or by Google Play.'),
     (True, True, 'google', 'APKs will be submitted, but no change will not be committed.'),
     (False, True, 'google', 'This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked.'),
     (False, False, 'google', 'This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked.'),
-    (True, False, 'amazon', 'You will create a new "Upcoming Release" on Amazon. This release will not be deployed until someone manually submits it on the Amazon web console.')
+    (True, False, 'amazon', 'You will create a new "Upcoming Release" on Amazon. This release will not '
+                            'be deployed until someone manually submits it on the Amazon web console.')
 ))
 def test_log_warning_forewords(caplog,  monkeypatch, is_allowed_to_push, dry_run, target_store, expected):
     _log_warning_forewords(is_allowed_to_push, dry_run, target_store)
