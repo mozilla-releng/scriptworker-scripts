@@ -3,58 +3,78 @@
 import argparse
 import logging
 
-from mozapkpublisher.common import googleplay, main_logging
+from mozapkpublisher.common import main_logging
 from mozapkpublisher.common.apk import add_apk_checks_arguments, extract_and_check_apks_metadata
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
+from mozapkpublisher.common.store import AmazonStoreEdit, GooglePlayEdit
 
 logger = logging.getLogger(__name__)
 
 
+_STORE_PER_TARGET_PLATFORM = {
+    'amazon': AmazonStoreEdit,
+    'google': GooglePlayEdit,
+}
+
+
 def push_apk(
     apks,
-    service_account,
-    google_play_credentials_file,
-    track,
+    target_store,
+    username,
+    secret,
     expected_package_names,
+    track=None,
     rollout_percentage=None,
-    commit=True,
-    contact_google_play=True,
+    dry_run=True,
+    contact_server=True,
     skip_check_ordered_version_codes=False,
     skip_check_multiple_locales=False,
     skip_check_same_locales=False,
     skip_checks_fennec=False,
 ):
     """
-
     Args:
         apks: list of APK files
-        service_account: Google Play service account
-        google_play_credentials_file: Credentials file to authenticate to Google Play
-        track (str): Google Play track to deploy to (e.g.: "nightly"). If "rollout" is chosen, the parameter
-            `rollout_percentage` must be specified as well
-        expected_package_names (list of str): defines what the expected package name must be.
-        rollout_percentage (int): percentage of users to roll out this update to. Must be a number between [0-100].
-            This option is only valid if `track` is set to "rollout"
-        commit (bool): `False` to do a dry-run
-        contact_google_play (bool): `False` to avoid communicating with Google Play. Useful if you're using mock
-            credentials.
+        target_store (str): either "google" or "amazon", affects what other parameters will need
+            to be provided to this function
+        username (str): Google Play service account or Amazon Store client ID
+        secret (str): Filename of Google Play Credentials file or contents of Amazon Store
+            client secret
+        expected_package_names (list of str): defines what the expected package names must be.
+        track (str): (only when `target_store` is "google") Google Play track to deploy
+            to (e.g.: "nightly"). If "rollout" is chosen, the parameter `rollout_percentage` must
+            be specified as well
+        rollout_percentage (int): percentage of users to roll out this update to. Must be a number
+            in (0-100]. This option is only valid if `target_store` is "google" and
+            `track` is set to "rollout"
+        dry_run (bool): `True` to do a dry-run
+        contact_server (bool): `False` to avoid communicating with the Google Play server or Amazon
+            Store server. Useful if you're using mock credentials.
         skip_checks_fennec (bool): skip Fennec-specific checks
         skip_check_same_locales (bool): skip check to ensure all APKs have the same locales
         skip_check_multiple_locales (bool): skip check to ensure all APKs have more than one locale
         skip_check_ordered_version_codes (bool): skip check to ensure that ensures all APKs have different version codes
             and that the x86 version code > the arm version code
-
     """
+    if target_store == "google" and track is None:
+        # The Google store allows multiple stability "tracks" to exist for a single app, so it
+        # requires you to disambiguate which track you'd like to publish to.
+        raise WrongArgumentGiven('When "target_store" is "google", the track must be provided')
+    if target_store == "amazon":
+        # The Amazon app doesn't have a stability "tracks" tool like Google. It _does_ have a
+        # "Live App Testing" mechanism, but you have to use the website to use it (the API
+        # doesn't support it). So, it's always the "production" app that's updated, and there's
+        # no need to specify "track"
+        # Source:  "Play Store API supports additional resources (such as testers and tracks) that
+        # the [Amazon] Appstore currently does not support."
+        # https://developer.amazon.com/docs/app-submission-api/migrate.html
+        if track is not None:
+            raise WrongArgumentGiven('Tracks are not supported on Amazon')
+        if rollout_percentage is not None:
+            raise WrongArgumentGiven('Rollout percentage is not supported on Amazon')
+
     # We want to tune down some logs, even when push_apk() isn't called from the command line
     main_logging.init()
-
-    if track == 'rollout' and rollout_percentage is None:
-        raise WrongArgumentGiven("To perform a rollout, you must provide the target track "
-                                 "(probably 'production') and a rollout_percentage")
-    if rollout_percentage is not None and track == 'rollout':
-        logger.warn("track='rollout' is deprecated, assuming you meant 'production'. To avoid "
-                    "message, specify the target track to roll out to (probably 'production'")
-        track = 'production'
 
     apks_metadata_per_paths = extract_and_check_apks_metadata(
         apks,
@@ -65,47 +85,44 @@ def push_apk(
         skip_check_ordered_version_codes,
     )
 
-    # Each distinct product must be uploaded in different Google Play transaction, so we split them
+    update_app_kwargs = {
+        kwarg_name: kwarg_value
+        for kwarg_name, kwarg_value in (
+            ('track', track),
+            ('rollout_percentage', rollout_percentage)
+        )
+        if kwarg_value
+    }
+
+    # Each distinct product must be uploaded in different "edit"/transaction, so we split them
     # by package name here.
-    split_apk_metadata = _split_apk_metadata_per_package_name(apks_metadata_per_paths)
-    for (package_name, apks_metadata) in split_apk_metadata.items():
-        with googleplay.edit(service_account, google_play_credentials_file.name, package_name,
-                             contact_google_play=contact_google_play, commit=commit) as edit:
-            for path in apks_metadata.keys():
-                edit.upload_apk(path)
-
-            all_version_codes = _get_ordered_version_codes(apks_metadata_per_paths)
-            edit.update_track(track, all_version_codes, rollout_percentage)
+    apks_by_package_name = _apks_by_package_name(apks_metadata_per_paths)
+    for package_name, extracted_apks in apks_by_package_name.items():
+        store = _STORE_PER_TARGET_PLATFORM[target_store]
+        with store.transaction(username, secret, package_name, contact_server=contact_server,
+                               dry_run=dry_run) as edit:
+            edit.update_app(extracted_apks, **update_app_kwargs)
 
 
-def _split_apk_metadata_per_package_name(apks_metadata_per_paths):
-    split_apk_metadata = {}
-    for (apk_path, metadata) in apks_metadata_per_paths.items():
+def _apks_by_package_name(apks_metadata):
+    apk_package_names = {}
+    for (apk, metadata) in apks_metadata.items():
         package_name = metadata['package_name']
-        if package_name not in split_apk_metadata:
-            split_apk_metadata[package_name] = {}
-        split_apk_metadata[package_name].update({apk_path: metadata})
+        if package_name not in apk_package_names:
+            apk_package_names[package_name] = []
+        apk_package_names[package_name].append((apk, metadata))
 
-    return split_apk_metadata
-
-
-def _get_ordered_version_codes(apks):
-    return sorted([apk['version_code'] for apk in apks.values()])
+    return apk_package_names
 
 
 def main():
     parser = argparse.ArgumentParser(description='Upload APKs on the Google Play Store.')
 
-    googleplay.add_general_google_play_arguments(parser)
-    add_apk_checks_arguments(parser)
+    subparsers = parser.add_subparsers(dest='target_store', title='Target Store')
 
-    parser.add_argument(
-        '--track',
-        action='store',
-        required=True,
-        help='Track on which to upload'
-    )
-    parser.add_argument(
+    google_parser = subparsers.add_parser('google')
+    google_parser.add_argument('track', help='Track on which to upload')
+    google_parser.add_argument(
         '--rollout-percentage',
         type=int,
         choices=range(0, 101),
@@ -113,19 +130,45 @@ def main():
         default=None,
         help='The percentage of user who will get the update. Specify only if track is rollout'
     )
+    google_parser.add_argument('--commit', action='store_false', dest='dry_run',
+                               help='Commit new release on Google Play. This action cannot be '
+                                    'reverted')
 
+    amazon_parser = subparsers.add_parser('amazon')
+    amazon_parser.add_argument('--keep', action='store_false', dest='dry_run',
+                               help='Keep "upcoming version" on Amazon to be submitted or '
+                                    'cancelled on the Amazon Developer Web UI.')
+
+    parser.add_argument('--username', required=True,
+                        help='Either the amazon client id or the google service account')
+    parser.add_argument('--secret', required=True,
+                        help='Either the amazon client secret or the file that contains '
+                             'google credentials')
+    parser.add_argument('--do-not-contact-server', action='store_false', dest='contact_server',
+                        help='''Prevent any request to reach the APK server. Use this option if
+you want to run the script without any valid credentials nor valid APKs. --service-account and
+--credentials must still be provided (you can just fill them with random string and file).''')
+    add_apk_checks_arguments(parser)
     config = parser.parse_args()
+
+    if config.target_store == 'google':
+        track = config.track
+        rollout_percentage = config.rollout_percentage
+    else:
+        track = None
+        rollout_percentage = None
 
     try:
         push_apk(
             config.apks,
-            config.service_account,
-            config.google_play_credentials_file,
-            config.track,
+            config.target_store,
+            config.username,
+            config.secret,
             config.expected_package_names,
-            config.rollout_percentage,
-            config.commit,
-            config.contact_google_play,
+            track,
+            rollout_percentage,
+            config.dry_run,
+            config.contact_server,
             config.skip_check_ordered_version_codes,
             config.skip_check_multiple_locales,
             config.skip_check_same_locales,

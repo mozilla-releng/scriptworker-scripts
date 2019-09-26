@@ -93,7 +93,7 @@ def test_extract_metadata(monkeypatch):
 
     with TemporaryDirectory() as temp_dir:
         apk_file = _create_apk_with_all_metadata(temp_dir)
-        assert extract_metadata(apk_file, True) == {
+        assert extract_metadata(apk_file, True, True, True) == {
             'api_level': 16,
             'architecture': 'x86',
             'firefox_build_id': '20171112125738',

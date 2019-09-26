@@ -26,7 +26,8 @@ _OMNI_JA_LOCATION = 'assets/omni.ja'
 _CHROME_MANIFEST_LOCATION = 'chrome/chrome.manifest'
 
 
-def extract_metadata(original_apk_path, extract_firefox_metadata):
+def extract_metadata(original_apk_path, extract_architecture_metadata, extract_locale_metadata,
+                     extract_firefox_metadata):
     logger.info('Extracting metadata from a copy of "{}"...'.format(original_apk_path))
     metadata = {}
 
@@ -42,8 +43,11 @@ def extract_metadata(original_apk_path, extract_firefox_metadata):
         metadata['version_code'] = androguard_apk.get_androidversion_code()
 
         with ZipFile(apk_copy.name) as apk_zip:
-            metadata['architecture'] = _extract_architecture(apk_zip, original_apk_path)
-            metadata['locales'] = _extract_locales(apk_zip)
+            if extract_architecture_metadata:
+                metadata['architecture'] = _extract_architecture(apk_zip, original_apk_path)
+
+            if extract_locale_metadata:
+                metadata['locales'] = _extract_locales(apk_zip)
 
             if extract_firefox_metadata:
                 metadata['firefox_version'] = _extract_firefox_version(apk_zip)

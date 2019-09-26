@@ -7,7 +7,7 @@ from unittest.mock import create_autospec
 import pytest
 
 from mozapkpublisher import check_rollout
-from mozapkpublisher.common import googleplay
+from mozapkpublisher.common import store
 
 
 def set_up_mocks(_requests_mock, tracks):
@@ -21,7 +21,7 @@ def set_up_mocks(_requests_mock, tracks):
     _requests_mock.head('https://archive.mozilla.org/pub/mobile/releases/{}/SHA512SUMS'.format('62.0'),
                         status_code=404)
 
-    google_play_mock = create_autospec(googleplay.GooglePlayEdit)
+    google_play_mock = create_autospec(store.GooglePlayEdit)
     google_play_mock.get_track_status.return_value = tracks
     return google_play_mock
 
