@@ -6,3 +6,4 @@ taskcluster
 requests_hawk>=1.0.0
 mohawk>=0.3.4
 winsign>=1.1.0
+macholib>=1.11

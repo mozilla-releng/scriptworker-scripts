@@ -18,9 +18,16 @@ export ZIPALIGN_PATH=/usr/bin/zipalign
 
 export PASSWORDS_PATH=$CONFIG_DIR/passwords.json
 export SIGNTOOL_PATH="/app/bin/signtool"
-export SSL_CERT_PATH="/app/signingscript/data/host.cert"
+export SSL_CERT_PATH="/app/src/signingscript/data/host.cert"
 export GPG_PUBKEY_PATH=$CONFIG_DIR/gpg_pubkey
 export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
+export AUTHENTICODE_TIMESTAMP_STYLE=null
+export AUTHENTICODE_CERT_PATH=/app/src/signingscript/data/authenticode_dep.crt
+export AUTHENTICODE_CROSS_CERT_PATH=/app/src/signingscript/data/authenticode_stub.crt
+if [ "$ENV" == "prod" ]; then
+  export AUTHENTICODE_TIMESTAMP_STYLE=old
+  export AUTHENTICODE_CERT_PATH=/app/src/signingscript/data/authenticode_prod.crt
+fi
 
 echo $GPG_PUBKEY | base64 -d > $GPG_PUBKEY_PATH
 
@@ -43,6 +50,11 @@ esac
 
 case $ENV in
   dev)
+    test $AUTOGRAPH_AUTHENTICODE_PASSWORD
+    test $AUTOGRAPH_AUTHENTICODE_USERNAME
+    test $AUTHENTICODE_CERT_PATH
+    test $AUTHENTICODE_CROSS_CERT_PATH
+    test $AUTHENTICODE_TIMESTAMP_STYLE
     test $AUTOGRAPH_FENNEC_PASSWORD
     test $AUTOGRAPH_FENNEC_USERNAME
     test $AUTOGRAPH_GPG_PASSWORD
@@ -57,12 +69,15 @@ case $ENV in
     test $AUTOGRAPH_OMNIJA_USERNAME
     test $AUTOGRAPH_WIDEVINE_PASSWORD
     test $AUTOGRAPH_WIDEVINE_USERNAME
-    test $SIGNING_SERVER_PASSWORD
-    test $SIGNING_SERVER_USERNAME
     ;;
   fake-prod)
     case $COT_PRODUCT in
       firefox|thunderbird)
+        test $AUTOGRAPH_AUTHENTICODE_PASSWORD
+        test $AUTOGRAPH_AUTHENTICODE_USERNAME
+        test $AUTHENTICODE_CERT_PATH
+        test $AUTHENTICODE_CROSS_CERT_PATH
+        test $AUTHENTICODE_TIMESTAMP_STYLE
         test $AUTOGRAPH_FENNEC_PASSWORD
         test $AUTOGRAPH_FENNEC_USERNAME
         test $AUTOGRAPH_GPG_PASSWORD
@@ -77,8 +92,6 @@ case $ENV in
         test $AUTOGRAPH_OMNIJA_USERNAME
         test $AUTOGRAPH_WIDEVINE_PASSWORD
         test $AUTOGRAPH_WIDEVINE_USERNAME
-        test $SIGNING_SERVER_PASSWORD
-        test $SIGNING_SERVER_USERNAME
         ;;
       mobile)
         test $AUTOGRAPH_FENIX_PASSWORD
@@ -99,6 +112,11 @@ case $ENV in
   prod)
     case $COT_PRODUCT in
       firefox|thunderbird)
+        test $AUTOGRAPH_AUTHENTICODE_PASSWORD
+        test $AUTOGRAPH_AUTHENTICODE_USERNAME
+        test $AUTHENTICODE_CERT_PATH
+        test $AUTHENTICODE_CROSS_CERT_PATH
+        test $AUTHENTICODE_TIMESTAMP_STYLE
         test $AUTOGRAPH_FENNEC_NIGHTLY_PASSWORD
         test $AUTOGRAPH_FENNEC_NIGHTLY_USERNAME
         test $AUTOGRAPH_FENNEC_RELEASE_PASSWORD
@@ -117,10 +135,6 @@ case $ENV in
         test $AUTOGRAPH_OMNIJA_USERNAME
         test $AUTOGRAPH_WIDEVINE_PASSWORD
         test $AUTOGRAPH_WIDEVINE_USERNAME
-        test $SIGNING_SERVER_NIGHTLY_PASSWORD
-        test $SIGNING_SERVER_NIGHTLY_USERNAME
-        test $SIGNING_SERVER_RELEASE_PASSWORD
-        test $SIGNING_SERVER_RELEASE_USERNAME
         ;;
       mobile)
         test $AUTOGRAPH_FENIX_BETA_PASSWORD
