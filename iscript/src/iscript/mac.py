@@ -282,6 +282,7 @@ async def sign_app(key_config, app_path, entitlements_path):
             # Deal with inner .app's above, not here.
             if top_dir[app_path_len:].count(".app") > 0:
                 log.debug("Skipping %s because it's part of an inner app.", abs_file)
+                continue
             # app_executable gets signed with the outer package.
             if file_ == app_executable:
                 log.debug("Skipping %s because it's the main executable.", abs_file)
