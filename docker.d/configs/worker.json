@@ -71,7 +71,7 @@
           "skip_check_multiple_locales": true,
           "skip_check_same_locales": true,
           "skip_checks_fennec": true,
-          "map_channels_to_tracks": true,
+          "override_channel_model": "single_google_app",
           "single_app_config": {
             "service_account": {
               "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FOCUS"
@@ -92,7 +92,7 @@
           "skip_check_multiple_locales": true,
           "skip_check_same_locales": true,
           "skip_checks_fennec": true,
-          "map_channels_to_tracks": true,
+          "override_channel_model": "single_google_app",
           "single_app_config": {
             "service_account": {
               "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER"
@@ -114,7 +114,7 @@
           "skip_check_multiple_locales": true,
           "skip_check_same_locales": true,
           "skip_checks_fennec": true,
-          "map_channels_to_tracks": true,
+          "override_channel_model": "single_google_app",
           "single_app_config": {
             "package_names": [
               "org.mozilla.fenix",
@@ -135,7 +135,7 @@
           "skip_check_multiple_locales": true,
           "skip_check_same_locales": true,
           "skip_checks_fennec": true,
-          "map_channels_to_tracks": true,
+          "override_channel_model": "single_google_app",
           "single_app_config": {
             "package_names": [
               "org.mozilla.focus",
@@ -154,7 +154,7 @@
           "skip_check_multiple_locales": true,
           "skip_check_same_locales": true,
           "skip_checks_fennec": true,
-          "map_channels_to_tracks": true,
+          "override_channel_model": "single_google_app",
           "single_app_config": {
             "package_names": [
               "org.mozilla.reference.browser"

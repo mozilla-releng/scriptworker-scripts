@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [5.0.0] - 2019-09-26
+
+### Added
+* Pushing APKs to amazon is now supported
+
+### Changes
+* Config structure changed significantly, see `examples/config.example.json`
+
 ## [4.0.0] - 2019-08-14
 
 ### Adds
