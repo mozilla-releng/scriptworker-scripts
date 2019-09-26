@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [6.1.0] - 2019-09-26
+## [6.1.0] - upcoming
 
 ### Added
 * Push to Amazon support
