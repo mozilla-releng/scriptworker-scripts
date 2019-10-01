@@ -284,6 +284,7 @@ class NightlySubmitterBase(object):
             if source_data == latest_data:
                 log.warning("Latest data didn't change, skipping update")
                 return
+            log.debug(f"Submitting latest update with data version {latest_data_version}")
             latest.update_build(
                 product=productName,
                 hashFunction=hashFunction, buildData=json.dumps(source_data),
