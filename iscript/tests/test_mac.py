@@ -408,9 +408,9 @@ async def test_create_all_notarization_zipfiles(mocker, tmpdir, raises):
 
     if raises:
         with pytest.raises(IScriptError):
-            await mac.create_all_notarization_zipfiles(all_paths)
+            await mac.create_all_notarization_zipfiles(all_paths, ["app_path"])
     else:
-        await mac.create_all_notarization_zipfiles(all_paths)
+        await mac.create_all_notarization_zipfiles(all_paths, ["app_path"])
 
 
 # create_one_notarization_zipfile {{{1
@@ -881,7 +881,7 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises):
     """
 
     async def fake_run_command(cmd, **kwargs):
-        assert cmd[0:2] == ["sudo", "pkgbuild"]
+        assert cmd[0:1] == ["pkgbuild"]
         if raises:
             raise IScriptError("foo")
 

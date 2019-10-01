@@ -282,6 +282,7 @@ async def sign_app(key_config, app_path, entitlements_path):
             # Deal with inner .app's above, not here.
             if top_dir[app_path_len:].count(".app") > 0:
                 log.debug("Skipping %s because it's part of an inner app.", abs_file)
+                continue
             # app_executable gets signed with the outer package.
             if file_ == app_executable:
                 log.debug("Skipping %s because it's the main executable.", abs_file)
@@ -569,30 +570,34 @@ async def extract_all_apps(config, all_paths):
 
 
 # create_all_notarization_zipfiles {{{1
-async def create_all_notarization_zipfiles(all_paths, path_attr="app_path"):
+async def create_all_notarization_zipfiles(all_paths, path_attrs):
     """Create notarization zipfiles for all the apps.
 
     Args:
         all_paths (list): list of ``App`` objects
+        path_attrs (list): list of path attributes to zip
 
     Raises:
         IScriptError: on failure
 
     """
     futures = []
-    required_attrs = ["parent_dir", path_attr]
+    required_attrs = ["parent_dir"] + path_attrs
     # zip up apps
     for app in all_paths:
         app.check_required_attrs(required_attrs)
         parent_base_name = os.path.basename(app.parent_dir)
-        cwd = os.path.dirname(getattr(app, path_attr))
-        path = os.path.basename(getattr(app, path_attr))
-        app.zip_path = f"{app.parent_dir}-{path_attr}{parent_base_name}.zip"
-        # ditto -c -k --norsrc --keepParent "${BUNDLE}" ${OUTPUT_ZIP_FILE}
+        app.zip_path = f"{app.parent_dir}-upload{parent_base_name}.zip"
+        paths = [
+            os.path.relpath(getattr(app, this_attr), app.parent_dir)
+            for this_attr in path_attrs
+        ]
         futures.append(
             asyncio.ensure_future(
                 run_command(
-                    ["zip", "-r", app.zip_path, path], cwd=cwd, exception=IScriptError
+                    ["zip", "-r", app.zip_path] + paths,
+                    cwd=app.parent_dir,
+                    exception=IScriptError,
                 )
             )
         )
@@ -988,7 +993,7 @@ async def staple_notarization(all_paths, path_attr="app_path"):
             asyncio.ensure_future(
                 retry_async(
                     run_command,
-                    args=[["xcrun", "stapler", "staple", "-v", path]],
+                    args=[["xcrun", "stapler", "staple", path]],
                     kwargs={
                         "cwd": cwd,
                         "exception": IScriptError,
@@ -1042,7 +1047,11 @@ async def tar_apps(config, all_paths):
                         _get_tar_create_options(app.target_tar_path),
                         app.target_tar_path,
                     ]
-                    + [f for f in os.listdir(cwd) if f != "[]"],
+                    + [
+                        f
+                        for f in os.listdir(cwd)
+                        if f != "[]" and not f.endswith(".pkg")
+                    ],
                     cwd=cwd,
                     env=env,
                     exception=IScriptError,
@@ -1081,7 +1090,6 @@ async def create_pkg_files(config, key_config, all_paths):
                     semaphore,
                     run_command(
                         [
-                            "sudo",
                             "pkgbuild",
                             "--keychain",
                             key_config["signing_keychain"],
@@ -1173,6 +1181,8 @@ async def notarize_behavior(config, task):
     if langpack_apps:
         await sign_langpacks(config, key_config, langpack_apps)
         all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
+
+    # app
     await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
@@ -1180,9 +1190,19 @@ async def notarize_behavior(config, task):
     await update_keychain_search_path(config, key_config["signing_keychain"])
     await sign_all_apps(config, key_config, entitlements_path, all_paths)
 
+    # pkg
+    # Unlock keychain again in case it's locked since previous unlock
+    await unlock_keychain(
+        key_config["signing_keychain"], key_config["keychain_password"]
+    )
+    await update_keychain_search_path(config, key_config["signing_keychain"])
+    await create_pkg_files(config, key_config, all_paths)
+
     log.info("Notarizing")
     if key_config["notarize_type"] == "multi_account":
-        await create_all_notarization_zipfiles(all_paths, path_attr="app_path")
+        await create_all_notarization_zipfiles(
+            all_paths, path_attrs=["app_path", "pkg_path"]
+        )
         poll_uuids = await wrap_notarization_with_sudo(
             config, key_config, all_paths, path_attr="zip_path"
         )
@@ -1193,16 +1213,13 @@ async def notarize_behavior(config, task):
         poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
 
     await poll_all_notarization_status(key_config, poll_uuids)
+
+    # app
     await staple_notarization(all_paths, path_attr="app_path")
     await tar_apps(config, all_paths)
 
     # pkg
-    # Unlock keychain again in case it's locked since previous unlock
-    await unlock_keychain(
-        key_config["signing_keychain"], key_config["keychain_password"]
-    )
-    await update_keychain_search_path(config, key_config["signing_keychain"])
-    await create_pkg_files(config, key_config, all_paths)
+    await staple_notarization(all_paths, path_attr="pkg_path")
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing and notarizing apps.")
