@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[6.0.3] = (2019-10-01)
+----------------------
+
+Changed
+~~~~~~~
+
+- Sleep and jitter slightly more to decrease chances of blob-update conflicts. (`#1585321 <https://github.com/mozilla-releng/balrogscript/issues/1585321>`_)
+
+
 [6.0.2] = (2019-09-12)
 ----------------------
 
