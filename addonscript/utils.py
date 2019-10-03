@@ -71,7 +71,7 @@ async def amo_download(context, url, file):
         async with resp as r:
             log.debug('amo_download() for URL "{}" returned HTTP status code: {}'.format(url, r.status))
             r.raise_for_status()
-            log.debug('Writting content at URL "{}" to file "{}"'.format(url, file.name))
+            log.debug('Writing content at URL "{}" to file "{}"'.format(url, file.name))
             file.write(await r.read())
 
 
