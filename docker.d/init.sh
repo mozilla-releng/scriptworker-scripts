@@ -106,7 +106,7 @@ export WORKER_ID_PREFIX="${WORKER_TYPE}-"
 # ensure configuration folder exists we can write to it
 #
 mkdir -p -m 700 $CONFIG_DIR
-echo $ED25519_PRIVKEY | base64 -d > $ED25519_PRIVKEY_PATH
+echo $ED25519_PRIVKEY > $ED25519_PRIVKEY_PATH
 chmod 600 $ED25519_PRIVKEY_PATH
 
 #
