@@ -52,13 +52,13 @@ tasks:
 
   in:
     $flatten:
-      $map: 'PROJECTS'
+      $map: { "$eval": "PROJECTS" }
       each(x):
         $let:
           project_name: { "$eval": "x[0]" }
           project_path: { "$eval": "x[1]" }
           python_version: { "$eval": "x[2]" }
-          should_build_docker_image: { "$eval": "x[1]" }
+          build_docker_image: { "$eval": "x[1]" }
         in:
           $match:
 
@@ -88,4 +88,3 @@ tasks:
                 description: 'Code linting and unit tests for ${project_name} on python ${python_version[0]}.${python_version[1]}'
                 owner: '${OWNER}'
                 source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
-
