@@ -12,10 +12,6 @@ USER app
 WORKDIR /app
 
 COPY . /app
-COPY ../docker.d/init.sh /app/docker.d/init.sh
-COPY ../docker.d/scriptworker.yml /app/docker.d/scriptworker.yml
-COPY ../docker.d/healthcheck /app/docker.d/healthcheck
-COPY ../docker.d/pre-stop.sh /app/docker.d/pre-stop.sh
 
 RUN python -m venv /app \
  && ./bin/pip install -r requirements/base.txt \
