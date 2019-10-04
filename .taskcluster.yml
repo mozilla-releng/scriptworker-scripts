@@ -6,6 +6,19 @@ policy:
   pullRequests: public
 tasks:
   $let:
+    # -------------------------------------------------------------------------
+    # -- This is where you add new projects -----------------------------------
+    # -------------------------------------------------------------------------
+    PROJECTS:
+      # [ <PROJECT NAME>, <PROJECT PATH>,         <PYTHON VERSION>, <BUILD DOCKER IMAGE>]
+      - ['client',        '/scriptworker_client', '36',             false]
+      - ['client',        '/scriptworker_client', '37',             true]
+      - ['iscript',       '/iscript',             '36',             false]
+      - ['iscript',       '/iscript',             '37',             true]
+      - ['treescript',    '/treescript',          '36',             false]
+      - ['treescript',    '/treescript',          '37',             true]
+    # -------------------------------------------------------------------------
+
     HEAD_REV:
       $if: 'tasks_for == "github-pull-request"'
       then: '${event.pull_request.head.sha}'
@@ -20,23 +33,59 @@ tasks:
       else: '${event.repository.html_url}'
 
     OWNER: '${event.sender.login}@users.noreply.github.com'
+
+    PUSH_DOCKER_IMAGE:
+      $if: 'tasks_for == "github-pull-request"'
+      then: '0'
+      else:
+        $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev", "refs/heads/production"]'
+        then: '1'
+        else: '0'
+
+    DOCKER_TAG:
+      $if: 'tasks_for == "github-pull-request"'
+      then: 'pull-request'
+      else:
+        $if: 'tasks_for == "github-push" && event.ref[0:11] == "refs/heads/"'
+        then: '${event.ref[11:]}'
+        else: 'unknown'
+
   in:
-    - schedulerId: taskcluster-github
-      created: {$fromNow: ''}
-      deadline: {$fromNow: '4 hours'}
-      provisionerId: aws-provisioner-v1
-      workerType: github-worker
-      retries: 5
-      payload:
-        maxRunTime: 600
-        image: python:3.7-slim
-        command:
-          - /bin/bash
-          - --login
-          - -cx
-          - exit 0
-      metadata:
-        owner: '${OWNER}'
-        source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
-        name: 'noop'
-        description: 'noop'
+    $flatten:
+      $map: 'PROJECTS'
+      each(x):
+        $let:
+          project_name: { "$eval": "x[0]" }
+          project_path: { "$eval": "x[1]" }
+          python_version: { "$eval": "x[2]" }
+          should_build_docker_image: { "$eval": "x[1]" }
+        in:
+          $match:
+
+            # Run code linting and unit tests for each project 
+            'true':
+              taskId: '${as_slugid(project_name + python_version)}'
+              provisionerId: 'aws-provisioner-v1'
+              workerType: 'github-worker'
+              created: {$fromNow: ''}
+              deadline: {$fromNow: '4 hours'}
+              payload:
+                maxRunTime: 3600
+                image: 'python:${python_version[0]}.${python_version[1]}'
+                command:
+                  - sh
+                  - -lxce
+                  - >-
+                    cd /tmp &&
+                    wget ${REPO_URL}/archive/${HEAD_REV}.tar.gz &&
+                    tar zxf ${HEAD_REV}.tar.gz &&
+                    mv scriptworker-scripts-${HEAD_REV} /src &&
+                    cd /src &&
+                    pip install tox &&
+                    tox -e ${project_name}-py${python_version}
+              metadata:
+                name: 'tox -e ${project_name}-py${python_version} (on ${DOCKER_TAG})'
+                description: 'Code linting and unit tests for ${project_name} on python ${python_version[0]}.${python_version[1]}'
+                owner: '${OWNER}'
+                source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
+
