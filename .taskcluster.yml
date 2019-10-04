@@ -108,13 +108,14 @@ tasks:
                 image: 'docker:1.6.2'
                 env:
 
-                  GIT_HEAD_REV: '${HEAD_REV}'
-                  PUSH_DOCKER_IMAGE: '${PUSH_DOCKER_IMAGE}'
-                  REPO_URL: '${REPO_URL}'
                   DOCKERHUB_EMAIL: 'release+dockerhub+services@mozilla.com'
                   DOCKERHUB_USER: 'mozillarelengservices'
                   DOCKER_REPO: '${dockerhub_repo}'
+                  DOCKER_TAG: '${DOCKER_TAG}'
+                  GIT_HEAD_REV: '${HEAD_REV}'
                   PROJECT_NAME: '${project_name}'
+                  PUSH_DOCKER_IMAGE: '${PUSH_DOCKER_IMAGE}'
+                  REPO_URL: '${REPO_URL}'
                   SECRET_URL: 'http://taskcluster/secrets/v1/secret/project/releng/scriptworker-scripts/deploy'
                 command:
                   - sh
