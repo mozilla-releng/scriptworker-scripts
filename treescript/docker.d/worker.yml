@@ -1,0 +1,9 @@
+work_dir: { "$eval": "WORK_DIR" }
+artifact_dir: { "$eval": "ARTIFACTS_DIR" }
+verbose: { "$eval": "VERBOSE == 'true'" }
+taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
+hg: 'hg'
+hg_share_base_dir: { "$eval": "HG_SHARE_BASE_DIR" }
+upstream_repo: 'https://hg.mozilla.org/mozilla-unified'
+hg_ssh_user: { "$eval": "SSH_USER" }
+hg_ssh_keyfile: { "$eval": "SSH_KEY_PATH" }
