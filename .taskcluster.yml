@@ -11,11 +11,11 @@ tasks:
     # -------------------------------------------------------------------------
     PROJECTS:
       # [ <PROJECT NAME>, <PYTHON VERSION>, <DOCKERHUB REPO>]
-      - ['client',        '36',             '']
-      - ['client',        '37',             '']
-      - ['iscript',       '36',             '']
-      - ['iscript',       '37',             '']
-      - ['treescript',    '36',             '']
+      #- ['client',        '36',             '']
+      #- ['client',        '37',             '']
+      #- ['iscript',       '36',             '']
+      #- ['iscript',       '37',             '']
+      #- ['treescript',    '36',             '']
       - ['treescript',    '37',             'mozilla/releng-treescript']
     # -------------------------------------------------------------------------
 
