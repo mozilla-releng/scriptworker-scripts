@@ -115,7 +115,7 @@ tasks:
                   DOCKERHUB_USER: 'mozillarelengservices'
                   DOCKER_REPO: '${dockerhub_repo}'
                   PROJECT_NAME: '${project_name}'
-                  SECRET_URL: 'http://taskcluster/secrets/v1/secret/project/releng/${project_name}/deploy'
+                  SECRET_URL: 'http://taskcluster/secrets/v1/secret/project/releng/scriptworker-scripts/deploy'
                 command:
                   - sh
                   - -lxce
@@ -139,7 +139,7 @@ tasks:
                 $if: 'PUSH_DOCKER_IMAGE == "0"'
                 then: []
                 else:
-                  - 'secrets:get:project/releng/${project_name}/deploy'
+                  - 'secrets:get:project/releng/scriptworker-scripts/deploy'
               metadata:
                 $let:
                   description:
