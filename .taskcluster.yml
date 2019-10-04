@@ -144,8 +144,8 @@ tasks:
                 $let:
                   description:
                     $if: 'PUSH_DOCKER_IMAGE == "0"'
-                    then: 'build docker image (${docker_tag})'
-                    else: 'build and push docker image (${docker_tag})'
+                    then: 'build docker image (${DOCKER_TAG})'
+                    else: 'build and push docker image (${DOCKER_TAG})'
                 in:
                   name: '${description}'
                   description: '${description}'
