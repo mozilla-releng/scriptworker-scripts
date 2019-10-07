@@ -1,0 +1,33 @@
+[
+    {
+        "branch": "mozilla-release",
+        "tc_release": true,
+        "appName": "Firefox",
+        "appVersion": "58.0",
+        "completeInfo": [
+            {
+                "url": "https://archive.mozilla.org/pub/firefox/candidates/58.0b23-candidates/build2/update/linux-x86_64/en-US/firefox-58.0b23.complete.mar",
+                "size": 50495358,
+                "hash": "7b55d81958e3872f6158145e65af9ccce5dc82a7ef815c43dd6f9a3f7fc50817a6979efef04600331cc72c284ce75d0b734961345d8cbd8c82755de3c9e3f253"
+            }
+        ],
+        "partialInfo": [
+            {
+                "previousBuildNumber": "1",
+                "url": "https://archive.mozilla.org/pub/firefox/candidates/58.0b23-candidates/build2/update/linux-x86_64/en-US/firefox-58.0b6-58.0b23.partial.mar",
+                "size": 36577580,
+                "hash": "b295c33cec1dd2c0ac5c0296ca1a7b20de50f94a246d8704423d5f073867fa06121e40b26ef95303d2766ceb81d9b3493ccd4065d5834fae32d1d60386a18cdc",
+                "from_buildid": 20171123161455,
+                "previousVersion": "58.0b6"
+            }
+        ],
+        "buildid": "20180107063222",
+        "url_replacements": [],
+        "platform": "linux64",
+        "version": "48.0",
+        "hashType": "sha512",
+        "extVersion": "58.0",
+        "locale": "en-US",
+        "build_number": 2
+    }
+]
