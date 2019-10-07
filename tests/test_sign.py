@@ -1463,6 +1463,32 @@ async def test_authenticode_sign_zip_error(tmpdir, mocker, context):
 
 
 @pytest.mark.asyncio
+async def test_authenticode_sign_authenticode_error(tmpdir, mocker, context, caplog):
+    context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_url"] = "https://example.com"
+    context.config["authenticode_timestamp_style"] = None
+
+    test_file = os.path.join(tmpdir, "windows.zip")
+    shutil.copyfile(os.path.join(TEST_DATA_DIR, "windows.zip"), test_file)
+
+    def mocked_authenticode_sign(infile, outfile, *args, **kwargs):
+        raise Exception("BAD!")
+
+    def mocked_winsign(infile, outfile, digest_algo, certs, signer, **kwargs):
+        signer("", "")
+        shutil.copyfile(infile, outfile)
+        return True
+
+    mocker.patch.object(sign, "sign_hash_with_autograph", mocked_authenticode_sign)
+    mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
+
+    with pytest.raises(Exception):
+        await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode")
+
+    assert "BAD!" in caplog.text
+
+
+@pytest.mark.asyncio
 async def test_authenticode_sign_single_file(tmpdir, mocker, context):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_cross_cert"] = os.path.join(

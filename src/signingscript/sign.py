@@ -1375,9 +1375,13 @@ async def sign_authenticode_file(context, orig_path, fmt):
 
     def signer(digest, digest_algo):
         thread_loop = asyncio.new_event_loop()
-        return thread_loop.run_until_complete(
-            sign_hash_with_autograph(context, digest, fmt)
-        )
+        try:
+            return thread_loop.run_until_complete(
+                sign_hash_with_autograph(context, digest, fmt)
+            )
+        except Exception:
+            log.exception("Error signing authenticode hash with autograph")
+            raise
 
     def sign_file():
         infile = orig_path
