@@ -1,9 +1,18 @@
 #!/bin/bash
-set -e
+set -o errexit -o pipefail
+
+test_var_set() {
+  local varname=$1
+
+  if [[ -z "${!varname}" ]]; then
+    echo "error: ${varname} is not set"
+    exit 1
+  fi
+}
 
 # == START: this is what we need to configure ==
-test $AUTH0_CLIENT_ID
-test $AUTH0_CLIENT_SECRET
+test_var_set 'AUTH0_CLIENT_ID'
+test_var_set 'AUTH0_CLIENT_SECRET'
 # == END:   this is what we need to configure ==
 
 case $ENV in
