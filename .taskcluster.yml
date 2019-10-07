@@ -59,7 +59,7 @@ tasks:
               else: '0'
 
         in:
-          $if: 'event.ref in ["refs/heads/master","refs/heads/dev","refs/heads/production","refs/heads/dev-${project_name}","refs/heads/production-${project_name}"]'
+          $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/master","refs/heads/dev","refs/heads/production","refs/heads/dev-${project_name}","refs/heads/production-${project_name}"]'
           then:
             $match:
               # Run code linting and unit tests for each project 
