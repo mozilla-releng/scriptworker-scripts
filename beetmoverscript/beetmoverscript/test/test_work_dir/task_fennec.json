@@ -1,0 +1,84 @@
+{
+    "provisionerId": "meh",
+    "workerType": "workertype",
+    "schedulerId": "task-graph-scheduler",
+    "taskGroupId": "some",
+    "routes": [],
+    "retries": 5,
+    "created": "2015-05-08T16:15:58.903Z",
+    "deadline": "2015-05-08T18:15:59.010Z",
+    "expires": "2016-05-08T18:15:59.010Z",
+    "dependencies": ["cFC6H787QsukqzpZtB6o_w", "VejpTPYdRVun-vGkcBVLow"],
+    "scopes": [
+        "project:releng:beetmover:bucket:nightly",
+        "project:releng:beetmover:action:push-to-nightly"
+    ],
+    "payload": {
+        "upload_date": 1472747174,
+        "upstreamArtifacts": [
+        {
+            "locale": "en-US",
+            "paths": [
+                "public/build/en-US/target.common.tests.tar.gz",
+                "public/build/en-US/target.cppunittest.tests.tar.gz",
+                "public/build/en-US/target.crashreporter-symbols.zip",
+                "public/build/en-US/target.json",
+                "public/build/en-US/target.mochitest.tests.tar.gz",
+                "public/build/en-US/target.mozinfo.json",
+                "public/build/en-US/target.reftest.tests.tar.gz",
+                "public/build/en-US/target.talos.tests.tar.gz",
+                "public/build/en-US/target.awsy.tests.tar.gz",
+                "public/build/en-US/target.test_packages.json",
+                "public/build/en-US/target.txt",
+                "public/build/en-US/target.web-platform.tests.tar.gz",
+                "public/build/en-US/target.xpcshell.tests.tar.gz",
+                "public/build/en-US/target_info.txt",
+                "public/build/en-US/mozharness.zip",
+                "public/build/en-US/robocop.apk",
+                "public/build/en-US/target.jsshell.zip"
+              ],
+              "taskId": "cFC6H787QsukqzpZtB6o_w",
+              "taskType": "build"
+            },
+            {
+              "locale": "en-US",
+              "paths": [
+                "public/build/en-US/target.apk"
+              ],
+              "taskId": "VejpTPYdRVun-vGkcBVLow",
+              "taskType": "signing"
+            },
+            {
+              "locale": "multi",
+              "paths": [
+                "public/build/target.common.tests.zip",
+                "public/build/target.cppunittest.tests.zip",
+                "public/build/target.json",
+                "public/build/target.mochitest.tests.zip",
+                "public/build/target.mozinfo.json",
+                "public/build/target.reftest.tests.zip",
+                "public/build/target.talos.tests.zip",
+                "public/build/target.awsy.tests.zip",
+                "public/build/target.test_packages.json",
+                "public/build/target.txt",
+                "public/build/target.web-platform.tests.tar.gz",
+                "public/build/target.xpcshell.tests.zip",
+                "public/build/target_info.txt",
+                "public/build/mozharness.zip",
+                "public/build/robocop.apk",
+                "public/build/target.jsshell.zip"
+              ],
+              "taskId": "cFC6H787QsukqzpZtB6o_w",
+              "taskType": "build"
+            },
+            {
+              "locale": "multi",
+              "paths": [
+                "public/build/target.apk"
+              ],
+              "taskId": "VejpTPYdRVun-vGkcBVLow",
+              "taskType": "signing"
+            }
+      ]
+    }
+}

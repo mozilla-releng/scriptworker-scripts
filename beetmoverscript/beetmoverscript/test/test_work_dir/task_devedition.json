@@ -1,0 +1,35 @@
+{
+    "provisionerId": "meh",
+    "workerType": "workertype",
+    "schedulerId": "task-graph-scheduler",
+    "taskGroupId": "some",
+    "routes": [],
+    "retries": 5,
+    "created": "2015-05-08T16:15:58.903Z",
+    "deadline": "2015-05-08T18:15:59.010Z",
+    "expires": "2016-05-08T18:15:59.010Z",
+    "dependencies": ["eSzfNqMZT_mSiQQXu8hyqg"],
+    "scopes": [
+        "project:releng:beetmover:bucket:dep",
+        "project:releng:beetmover:action:push-to-candidates"
+    ],
+    "payload": {
+        "upload_date": 1472747174,
+        "upstreamArtifacts": [
+        {
+          "paths": [
+            "public/build/target.txt",
+            "public/build/target.mozinfo.json",
+            "public/build/target_info.txt",
+            "public/build/target.test_packages.json"
+          ],
+          "taskId": "eSzfNqMZT_mSiQQXu8hyqg",
+          "locale": "en-US",
+          "taskType": "build"
+        }
+      ]
+    },
+    "metadata": {
+	"name": "beetmover-repackage-de-linux-devedition-nightly/opt"
+    }
+}

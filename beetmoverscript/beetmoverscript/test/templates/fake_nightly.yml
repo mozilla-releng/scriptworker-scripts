@@ -1,0 +1,49 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps Fake Nightly artifacts to pretty names for the en-US and multi locale"
+    owner: "release@mozilla.com"
+
+s3_bucket_path: pub/mobile/nightly/
+
+mapping:
+{% for locale in ['multi', 'en-US'] %}
+  {{ locale }}:
+
+  {% set locale_prefix = 'en-US/' if locale == 'en-US' else '' %}
+    target_info.txt:
+      s3_key: fake-{{ version }}.{{ locale }}.target_info.txt
+      destinations:
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target_info.txt
+        - latest-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target_info.txt
+      update_balrog_manifest: true
+    target.txt:
+      s3_key: fake-{{ version }}.{{ locale }}.target.txt
+      destinations:
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.txt
+        - latest-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.txt
+      from_buildid: 19991231235959
+      update_balrog_manifest: true
+    target.mozinfo.json:
+      s3_key: fake-{{ version }}.{{ locale }}.target.mozinfo.json
+      destinations:
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.mozinfo.json
+        - latest-{{ branch }}-fake/{{ locale_prefix  }}fake-{{ version }}.{{ locale }}.target.mozinfo.json
+      update_balrog_manifest: {format: mozinfo}
+    target.test_packages.json:
+      s3_key: fake-{{ version }}.{{ locale }}.target.test_packages.json
+      destinations:
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.test_packages.json
+        - latest-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.test_packages.json
+    buildhub.json:
+      s3_key: fake-{{ version }}.{{ locale }}.buildhub.json
+      destinations:
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.buildhub.json
+        - latest-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.buildhub.json
+    target.apk:
+      s3_key: fake-{{ version }}.{{ locale }}.target.apk
+      destinations:
+        - {{ upload_date }}-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.apk
+        - latest-{{ branch }}-fake/{{ locale_prefix }}fake-{{ version }}.{{ locale }}.target.apk
+
+{% endfor %}

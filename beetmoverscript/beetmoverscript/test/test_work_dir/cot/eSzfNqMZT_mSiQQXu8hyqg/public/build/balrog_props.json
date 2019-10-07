@@ -1,0 +1,10 @@
+{
+    "properties": {
+        "appName": "Fake",
+        "appVersion": "99.0a1",
+        "branch": "mozilla-central",
+        "stage_platform": "android-api-15",
+        "buildid": "20990205110000",
+        "hashType": "sha512"
+    }
+}

@@ -1,0 +1,14 @@
+---
+metadata:
+    name: "Beet Mover Manifest for Partner repacks"
+    description: "Maps Firefox artifacts to pretty names for partner repacks"
+    owner: "release@mozilla.com"
+
+mapping:
+  {{ 'en-US' }}:
+    target.tar.bz2: firefox-{{ version }}.tar.bz2
+    target.tar.bz2.asc: firefox-{{ version }}.tar.bz2.asc
+    target.installer.exe: Firefox Setup {{ version }}.exe
+    target.installer.exe.asc: Firefox Setup {{ version }}.exe.asc
+    target.dmg: Firefox {{ version }}.dmg
+    target.dmg.asc: Firefox {{ version }}.dmg.asc

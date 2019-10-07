@@ -1,0 +1,165 @@
+work_dir: { "$eval": "WORK_DIR" }
+artifact_dir: { "$eval": "ARTIFACTS_DIR" }
+aiohttp_max_connections: 10
+checksums_digests:
+  - 'sha512'
+  - 'sha256'
+blobs_needing_prettynaming_contents:
+  - 'target.test_packages.json'
+taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
+verbose: { "$eval": "VERBOSE == 'true'" }
+zip_max_file_size_in_mb: 300
+bucket_config:
+  $merge:
+    $match:
+      'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
+        dep:
+          credentials:
+            id: { "$eval": "DEP_ID" }
+            key: { "$eval": "DEP_KEY" }
+          buckets:
+            devedition: 'net-mozaws-stage-delivery-archive'
+            firefox:    'net-mozaws-stage-delivery-firefox'
+            fennec:     'net-mozaws-stage-delivery-archive'
+            mobile:     'net-mozaws-stage-delivery-archive'
+          url_prefix: 'https://ftp.stage.mozaws.net'
+        dep-partner:
+          credentials:
+            id: { "$eval": "DEP_PARTNER_ID" }
+            key: { "$eval": "DEP_PARTNER_KEY" }
+          buckets:
+            firefox: 'mozilla-releng-dep-partner'
+        maven-staging:
+          credentials:
+            id: { "$eval": "MAVEN_ID" }
+            key: { "$eval": "MAVEN_KEY" }
+          buckets:
+            geckoview: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
+        dummy: {}
+      'COT_PRODUCT == "firefox" && ENV == "prod"':
+        nightly:
+          credentials:
+            id: { "$eval": "NIGHTLY_ID" }
+            key: { "$eval": "NIGHTLY_KEY" }
+          buckets:
+            devedition: 'net-mozaws-prod-delivery-archive'
+            firefox:    'net-mozaws-prod-delivery-firefox'
+            fennec:     'net-mozaws-prod-delivery-archive'
+            mobile:     'net-mozaws-prod-delivery-archive'
+          url_prefix: 'https://archive.mozilla.org'
+        release:
+          credentials:
+            id: { "$eval": "RELEASE_ID" }
+            key: { "$eval": "RELEASE_KEY" }
+          buckets:
+            devedition: 'net-mozaws-prod-delivery-archive'
+            firefox:    'net-mozaws-prod-delivery-firefox'
+            fennec:     'net-mozaws-prod-delivery-archive'
+            mobile:      'net-mozaws-prod-delivery-archive'
+          url_prefix: 'https://archive.mozilla.org'
+        partner:
+          credentials:
+            id: { "$eval": "PARTNER_ID" }
+            key: { "$eval": "PARTNER_KEY" }
+          buckets:
+            firefox: 'fxpartners-distros'
+        dep:
+          credentials:
+            id: { "$eval": "DEP_ID" }
+            key: { "$eval": "DEP_KEY" }
+          buckets:
+            devedition: 'net-mozaws-stage-delivery-archive'
+            firefox:    'net-mozaws-stage-delivery-firefox'
+            fennec:     'net-mozaws-stage-delivery-archive'
+            mobile:     'net-mozaws-stage-delivery-archive'
+          url_prefix: 'https://ftp.stage.mozaws.net'
+        dep-partner:
+          credentials:
+            id: { "$eval": "DEP_PARTNER_ID" }
+            key: { "$eval": "DEP_PARTNER_KEY" }
+          buckets:
+            firefox: 'mozilla-releng-dep-partner'
+        maven-production:
+          credentials:
+            id: { "$eval": "MAVEN_ID" }
+            key: { "$eval": "MAVEN_KEY" }
+          buckets:
+            geckoview: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
+        dummy: {}
+      'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
+        dep:
+          credentials:
+            id: { "$eval": "DEP_ID" }
+            key: { "$eval": "DEP_KEY" }
+          buckets:
+            thunderbird: 'net-mozaws-stage-delivery-archive'
+          url_prefix: 'https://ftp.stage.mozaws.net'
+        dummy: {}
+      'COT_PRODUCT == "thunderbird" && ENV == "prod"':
+        nightly:
+          credentials:
+            id: { "$eval": "NIGHTLY_ID" }
+            key: { "$eval": "NIGHTLY_KEY" }
+          buckets:
+            thunderbird: 'net-mozaws-prod-delivery-archive'
+          url_prefix: 'https://archive.mozilla.org'
+        release:
+          credentials:
+            id: { "$eval": "RELEASE_ID" }
+            key: { "$eval": "RELEASE_KEY" }
+          buckets:
+            thunderbird: 'net-mozaws-prod-delivery-archive'
+          url_prefix: 'https://archive.mozilla.org'
+        dep:
+          credentials:
+            id: { "$eval": "DEP_ID" }
+            key: { "$eval": "DEP_KEY" }
+          buckets:
+            thunderbird: 'net-mozaws-stage-delivery-archive'
+          url_prefix: 'https://ftp.stage.mozaws.net'
+        dummy: {}
+      'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
+        maven-staging:
+          credentials:
+            id: { "$eval": "MAVEN_ID" }
+            key: { "$eval": "MAVEN_KEY" }
+          buckets:
+            components: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
+        maven-snapshot-staging:
+          credentials:
+            id: { "$eval": "MAVEN_SNAPSHOT_ID" }
+            key: { "$eval": "MAVEN_SNAPSHOT_KEY" }
+          buckets:
+            snapshot_components: 'maven-snapshots-s3-upload-bucket-knc0jfluv2kn'
+        dummy: {}
+      'COT_PRODUCT == "mobile" && ENV == "prod"':
+        maven-production:
+          credentials:
+            id: { "$eval": "MAVEN_ID" }
+            key: { "$eval": "MAVEN_KEY" }
+          buckets:
+            components: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
+        maven-snapshot-production:
+          credentials:
+            id: { "$eval": "MAVEN_SNAPSHOT_ID" }
+            key: { "$eval": "MAVEN_SNAPSHOT_KEY" }
+          buckets:
+            snapshot_components: 'maven-snapshots-s3-upload-bucket-d4zm9oo354qe'
+        dummy: {}
+      'COT_PRODUCT == "application-services" && (ENV == "dev" || ENV == "fake-prod")':
+        maven-staging:
+          credentials:
+            id: { "$eval": "MAVEN_ID" }
+            key: { "$eval": "MAVEN_KEY" }
+          buckets:
+            appservices: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
+        dummy: {}
+      'COT_PRODUCT == "application-services" && ENV == "prod"':
+        maven-production:
+          credentials:
+            id: { "$eval": "MAVEN_ID" }
+            key: { "$eval": "MAVEN_KEY" }
+          buckets:
+            appservices: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
+        dummy: {}
+
