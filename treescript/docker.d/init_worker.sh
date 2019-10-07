@@ -1,14 +1,23 @@
 #!/bin/bash
-set -e
+set -o errexit -o pipefail
+
+test_var_set() {
+  local varname=$1
+
+  if [[ -z "${!varname}" ]]; then
+    echo "error: ${varname} is not set"
+    exit 1
+  fi
+}
 
 #
 # Check that all required variables exist
 #
-test $CONFIG_DIR
-test $COT_PRODUCT
-test $PROJECT_NAME
-test $SSH_KEY
-test $SSH_USER
+test_var_set 'CONFIG_DIR'
+test_var_set 'COT_PRODUCT'
+test_var_set 'PROJECT_NAME'
+test_var_set 'SSH_KEY'
+test_var_set 'SSH_USER'
 
 case $COT_PRODUCT in
   firefox)
