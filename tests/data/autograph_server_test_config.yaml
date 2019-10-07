@@ -2,6 +2,15 @@ server:
     listen: "0.0.0.0:5500"
     # cache 500k nonces to protect from authorization replay attacks
     noncecachesize: 10
+    idletimeout: 60s
+    readtimeout: 60s
+    writetimeout: 60s
+
+# When the DB or HSM is enabled use these timeouts for the
+# /__heartbeat__ handler
+heartbeat:
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 # The keys below are testing keys that do not grant any power
 signers:
