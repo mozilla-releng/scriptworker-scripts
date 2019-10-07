@@ -57,107 +57,96 @@ tasks:
               $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev","refs/heads/production","refs/heads/dev-${project_name}","refs/heads/production-${project_name}"]'
               then: '1'
               else: '0'
-          build_docker_image:
-            $if: 'tasks_for == "github-pull-request"'
-            then: '1'
-            else:
-              $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/master","refs/heads/dev","refs/heads/production","refs/heads/dev-${project_name}","refs/heads/production-${project_name}"]'
-              then: '1'
-              else: '0'
-
         in:
-          $if: 'build_docker_image == "1"':
-          then:
-            $match:
-              # Run code linting and unit tests for each project 
-              'true':
-                taskId: '${as_slugid(project_name + python_version)}'
-                provisionerId: 'aws-provisioner-v1'
-                workerType: 'github-worker'
-                created: { $fromNow: '' }
-                deadline: { $fromNow: '4 hours' }
-                payload:
-                  maxRunTime: 3600
-                  image: 'python:${python_version[0]}.${python_version[1]}'
-                  command:
-                    - sh
-                    - -lxce
-                    - >-
-                      cd /tmp &&
-                      wget ${REPO_URL}/archive/${HEAD_REV}.tar.gz &&
-                      tar zxf ${HEAD_REV}.tar.gz &&
-                      mv scriptworker-scripts-${HEAD_REV} /src &&
-                      cd /src &&
-                      pip install tox &&
-                      tox -e ${project_name}-py${python_version}
-                metadata:
-                  name: '${project_name}-py${python_version}: Run tox [on ${DOCKER_TAG}]'
-                  description: 'Code linting and unit tests for ${project_name} on python ${python_version[0]}.${python_version[1]}'
+          $match:
+            # Run code linting and unit tests for each project 
+            'true':
+              taskId: '${as_slugid(project_name + python_version)}'
+              provisionerId: 'aws-provisioner-v1'
+              workerType: 'github-worker'
+              created: { $fromNow: '' }
+              deadline: { $fromNow: '4 hours' }
+              payload:
+                maxRunTime: 3600
+                image: 'python:${python_version[0]}.${python_version[1]}'
+                command:
+                  - sh
+                  - -lxce
+                  - >-
+                    cd /tmp &&
+                    wget ${REPO_URL}/archive/${HEAD_REV}.tar.gz &&
+                    tar zxf ${HEAD_REV}.tar.gz &&
+                    mv scriptworker-scripts-${HEAD_REV} /src &&
+                    cd /src &&
+                    pip install tox &&
+                    tox -e ${project_name}-py${python_version}
+              metadata:
+                name: '${project_name}-py${python_version}: Run tox [on ${DOCKER_TAG}]'
+                description: 'Code linting and unit tests for ${project_name} on python ${python_version[0]}.${python_version[1]}'
+                owner: '${OWNER}'
+                source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
+            # Build docker image and (optionally) push to docker hub
+            'dockerhub_repo != ""':
+              taskId: '${as_slugid(project_name + "docker_build_and_push")}'
+              dependencies:
+                - '${as_slugid(project_name + python_version)}'
+              provisionerId: 'aws-provisioner-v1'
+              workerType: 'github-worker'
+              created: { $fromNow: '' }
+              deadline: { $fromNow: '24 hours' }
+              payload:
+                features:
+                  dind: true
+                  taskclusterProxy: true
+                maxRunTime: 3600
+                # we need to run really old docker version because taskcluster is using
+                # really old version in their setup
+                # image: docker:stable
+                image: 'docker:1.6.2'
+                env:
+
+                  DOCKERHUB_EMAIL: 'release+dockerhub+services@mozilla.com'
+                  DOCKERHUB_USER: 'mozillarelengservices'
+                  DOCKER_REPO: '${dockerhub_repo}'
+                  DOCKER_TAG: '${DOCKER_TAG}'
+                  GIT_HEAD_REV: '${HEAD_REV}'
+                  PROJECT_NAME: '${project_name}'
+                  PUSH_DOCKER_IMAGE: '${push_docker_image}'
+                  REPO_URL: '${REPO_URL}'
+                  SECRET_URL: 'http://taskcluster/secrets/v1/secret/project/releng/scriptworker-scripts/deploy'
+                command:
+                  - sh
+                  - -lxce
+                  - >-
+                    cd /tmp &&
+                    wget ${REPO_URL}/archive/${HEAD_REV}.tar.gz &&
+                    tar zxf ${HEAD_REV}.tar.gz &&
+                    mv scriptworker-scripts-${HEAD_REV} /src &&
+                    cd /src/${project_name} &&
+                    cp ../docker.d/* docker.d/ &&
+                    ./docker.d/generate_version_json.sh &&
+                    ./docker.d/build_image.sh /tmp/image.tar &&
+                    if [ "$push_docker_image" == "1" ]; then
+                      ./docker.d/push_image.sh
+                    fi
+                artifacts:
+                  public/image.tar:
+                    expires: {$fromNow: '8 weeks'}
+                    path: '/tmp/image.tar'
+                    type: 'file'
+              scopes:
+                $if: 'push_docker_image == "0"'
+                then: []
+                else:
+                  - 'secrets:get:project/releng/scriptworker-scripts/deploy'
+              metadata:
+                $let:
+                  description:
+                    $if: 'push_docker_image == "0"'
+                    then: '${project_name}-py${python_version}: build docker image [on ${DOCKER_TAG}]'
+                    else: '${project_name}-py${python_version}: build and push docker image [on ${DOCKER_TAG}]'
+                in:
+                  name: '${description}'
+                  description: '${description}'
                   owner: '${OWNER}'
                   source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
-              # Build docker image and (optionally) push to docker hub
-              'dockerhub_repo != ""':
-                taskId: '${as_slugid(project_name + "docker_build_and_push")}'
-                dependencies:
-                  - '${as_slugid(project_name + python_version)}'
-                provisionerId: 'aws-provisioner-v1'
-                workerType: 'github-worker'
-                created: { $fromNow: '' }
-                deadline: { $fromNow: '24 hours' }
-                payload:
-                  features:
-                    dind: true
-                    taskclusterProxy: true
-                  maxRunTime: 3600
-                  # we need to run really old docker version because taskcluster is using
-                  # really old version in their setup
-                  # image: docker:stable
-                  image: 'docker:1.6.2'
-                  env:
-
-                    DOCKERHUB_EMAIL: 'release+dockerhub+services@mozilla.com'
-                    DOCKERHUB_USER: 'mozillarelengservices'
-                    DOCKER_REPO: '${dockerhub_repo}'
-                    DOCKER_TAG: '${DOCKER_TAG}'
-                    GIT_HEAD_REV: '${HEAD_REV}'
-                    PROJECT_NAME: '${project_name}'
-                    PUSH_DOCKER_IMAGE: '${push_docker_image}'
-                    REPO_URL: '${REPO_URL}'
-                    SECRET_URL: 'http://taskcluster/secrets/v1/secret/project/releng/scriptworker-scripts/deploy'
-                  command:
-                    - sh
-                    - -lxce
-                    - >-
-                      cd /tmp &&
-                      wget ${REPO_URL}/archive/${HEAD_REV}.tar.gz &&
-                      tar zxf ${HEAD_REV}.tar.gz &&
-                      mv scriptworker-scripts-${HEAD_REV} /src &&
-                      cd /src/${project_name} &&
-                      cp ../docker.d/* docker.d/ &&
-                      ./docker.d/generate_version_json.sh &&
-                      ./docker.d/build_image.sh /tmp/image.tar &&
-                      if [ "$push_docker_image" == "1" ]; then
-                        ./docker.d/push_image.sh
-                      fi
-                  artifacts:
-                    public/image.tar:
-                      expires: {$fromNow: '8 weeks'}
-                      path: '/tmp/image.tar'
-                      type: 'file'
-                scopes:
-                  $if: 'push_docker_image == "0"'
-                  then: []
-                  else:
-                    - 'secrets:get:project/releng/scriptworker-scripts/deploy'
-                metadata:
-                  $let:
-                    description:
-                      $if: 'push_docker_image == "0"'
-                      then: '${project_name}-py${python_version}: build docker image [on ${DOCKER_TAG}]'
-                      else: '${project_name}-py${python_version}: build and push docker image [on ${DOCKER_TAG}]'
-                  in:
-                    name: '${description}'
-                    description: '${description}'
-                    owner: '${OWNER}'
-                    source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
-          else: []
