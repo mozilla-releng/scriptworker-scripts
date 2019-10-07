@@ -1,0 +1,9 @@
+balrogclient>=0.2.0
+idna
+ipaddress
+mar
+pyasn1
+python-dateutil
+redo
+requests
+scriptworker

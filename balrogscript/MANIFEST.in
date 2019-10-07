@@ -1,0 +1,15 @@
+recursive-include balrogscript/test *
+recursive-include balrogscript/data *
+recursive-include docker *
+
+include .coveragerc
+include LICENSE
+include README.rst
+include config_example.json
+include version.json
+include version.txt
+include tox.ini
+graft requirements
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]

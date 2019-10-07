@@ -1,0 +1,11 @@
+{
+    "dependencies": ["blah"],
+    "scopes": ["project:releng:balrog:server:nightly"],
+    "payload": {
+        "upstreamArtifacts": [{
+            "paths": ["public/manifest.json"],
+            "taskId": "upstream-task-id",
+            "taskType": "baz"
+        }]
+    }
+}

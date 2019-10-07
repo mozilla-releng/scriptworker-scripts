@@ -17,6 +17,8 @@ tasks:
       - ['iscript',         '37',             '']
       - ['treescript',      '36',             '']
       - ['treescript',      '37',             ''] # mozilla/releng-treescript'] # until we figure out how to install it
+      - ['balrogscript',    '36',             '']
+      - ['balrogscript',    '37',             'mozilla/releng-balrogscript']
       - ['beetmoverscript', '36',             '']
       - ['beetmoverscript', '37',             'mozilla/releng-beetmoverscript']
     # -------------------------------------------------------------------------

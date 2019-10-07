@@ -1,0 +1,10 @@
+-r base.in
+
+coverage
+flake8
+lockfile
+minimock
+mock
+pytest
+pytest-cov
+pytest-mock
