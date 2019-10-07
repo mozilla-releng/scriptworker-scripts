@@ -1,0 +1,27 @@
+[tool.towncrier]
+package = "balrogscript"
+package_dir = "."
+filename = "CHANGELOG.rst"
+issue_format = "`#{issue} <https://github.com/mozilla-releng/balrogscript/issues/{issue}>`_"
+title_format = "[{version}] = ({project_date})"
+underlines = "-~\""
+
+[[tool.towncrier.type]]
+directory = "added"
+name = "Added"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "removed"
+name = "Removed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "changed"
+name = "Changed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "fixed"
+name = "Fixed"
+showcontent = true
