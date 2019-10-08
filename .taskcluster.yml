@@ -68,6 +68,24 @@ tasks:
               else: '0'
         in:
           $match:
+            # testing task
+            'true':
+              taskId: '${as_slugid(project_name + python_version + "test")}'
+              provisionerId: built-in
+              workerType: succeed  # or fail
+              payload: {}
+              metadata:
+                name:
+                  $let:
+                    test_task_number:
+                      $if: 'dockerhub_repo != ""'
+                      then: '${i+1}.0'
+                      else: '${i+1}'
+                  in:
+                    '${test_task_number}. testing ${project_name}-py${python_version}'
+                description: '${event}'
+                owner: '${OWNER}'
+                source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
             # Run code linting and unit tests for each project 
             'run_tests == "1"':
               taskId: '${as_slugid(project_name + python_version)}'
