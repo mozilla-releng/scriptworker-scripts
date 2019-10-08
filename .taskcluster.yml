@@ -52,10 +52,6 @@ tasks:
           project_name: { "$eval": "x[0]" }
           python_version: { "$eval": "x[1]" }
           dockerhub_repo: { "$eval": "x[2]" }
-          test_task_number:
-            $if: 'push_docker_image == "1"'
-            then: '${i}.1'
-            else: '${i}'
           push_docker_image:
             $if: 'tasks_for == "github-pull-request"'
             then: '0'
@@ -63,6 +59,10 @@ tasks:
               $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev","refs/heads/production","refs/heads/dev-${project_name}","refs/heads/production-${project_name}"]'
               then: '1'
               else: '0'
+          test_task_number:
+            $if: 'push_docker_image == "1"'
+            then: '${i}.1'
+            else: '${i}'
         in:
           $match:
             # Run code linting and unit tests for each project 
