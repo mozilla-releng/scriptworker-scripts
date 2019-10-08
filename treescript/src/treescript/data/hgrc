@@ -1,6 +1,0 @@
-[ui]
-username = Mozilla Releng Treescript <release+treescript@mozilla.org>
-merge = internal:merge
-
-[hostsecurity]
-hg.mozilla.org:fingerprints = sha256:17:38:aa:92:0b:84:3e:aa:8e:52:52:e9:4c:2f:98:a9:0e:bf:6c:3e:e9:15:ff:0a:29:80:f7:06:02:5b:e8:48
