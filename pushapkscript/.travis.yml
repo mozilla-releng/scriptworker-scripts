@@ -1,0 +1,39 @@
+sudo: required  # Needed to install a recent version of OpenJDK as well as Python 3.7
+dist: xenial
+language: python
+
+matrix:
+  fast_finish: true
+  include:
+    - python: 3.6 # Python 3.6 + Java 7
+      env:
+        TOXENV=py36
+        JAVA=7
+      before_install:
+        - wget https://raw.githubusercontent.com/michaelklishin/jdk_switcher/7e512921ba5a6e93ce304683f099e3c0525330b1/jdk_switcher.sh
+        - source ./jdk_switcher.sh
+        - jdk_switcher use openjdk7
+    - python: 3.7 # Python 3.7 + Java 8
+      env:
+        TOXENV=py37
+        JAVA=8
+      before_install:
+        - wget https://raw.githubusercontent.com/michaelklishin/jdk_switcher/7e512921ba5a6e93ce304683f099e3c0525330b1/jdk_switcher.sh
+        - source ./jdk_switcher.sh
+        - jdk_switcher use openjdk8
+        # Travis' xenial image hard-codes "openjdk11" into the path - if we want Java 8, we need to
+        # manually insert it into the beginning of the path
+        - export PATH="/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH"
+    - python: 3.7 # Python 3.7 + Java 11
+      env:
+        TOXENV=py37
+        JAVA=11
+
+install:
+    - travis_retry pip install tox
+script:
+    - java -version
+    - tox -e "$TOXENV"
+
+after_success:
+    - tox -e coveralls

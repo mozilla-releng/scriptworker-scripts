@@ -1,0 +1,73 @@
+{
+  "provisionerId": "scriptworker-prov-v1",
+  "workerType": "pushapk-v1",
+  "schedulerId": "gecko-level-3",
+  "taskGroupId": "G-H1aNY1TZCU00yH6Mv6vQ",
+  "dependencies": [
+    "QQVsXWMyT6it4by6rXEtUA",
+    "RhL0nsI_TsOg_djT69fNQw",
+    "NzsogFgjQZiRvE0bRJ1Z8A"
+  ],
+  "requires": "all-completed",
+  "routes": [
+    "tc-treeherder.v2.mozilla-aurora.f26e2606488b9e01e63bdb8670d22bb8da77b4d2.-1",
+    "tc-treeherder-stage.v2.mozilla-aurora.f26e2606488b9e01e63bdb8670d22bb8da77b4d2.-1"
+  ],
+  "priority": "normal",
+  "retries": 5,
+  "created": "2017-04-03T07:50:07.046Z",
+  "deadline": "2017-04-08T07:50:07.046Z",
+  "expires": "2018-04-03T07:50:07.046Z",
+  "scopes": [
+    "project:releng:googleplay:aurora"
+  ],
+  "payload": {
+    "upstreamArtifacts": [
+      {
+        "paths": [
+          "public/build/target.apk"
+        ],
+        "taskId": "QQVsXWMyT6it4by6rXEtUA",
+        "taskType": "signing"
+      },
+      {
+        "paths": [
+          "public/build/target.apk"
+        ],
+        "taskId": "NzsogFgjQZiRvE0bRJ1Z8A",
+        "taskType": "signing"
+      }
+    ],
+    "google_play_track": "alpha",
+    "certificate_alias": "firefox-alpha",
+    "commit": false
+  },
+  "metadata": {
+    "owner": "nobody@mozilla.org",
+    "source": "https://hg.mozilla.org/releases/mozilla-aurora/file/f26e2606488b9e01e63bdb8670d22bb8da77b4d2/taskcluster/ci/push-apk",
+    "description": "Publishes APK onto Google Play Store ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-aurora&revision=f26e2606488b9e01e63bdb8670d22bb8da77b4d2))",
+    "name": "push-apk/opt"
+  },
+  "tags": {
+    "createdForUser": "nobody@mozilla.org"
+  },
+  "extra": {
+    "treeherderEnv": [
+      "production",
+      "staging"
+    ],
+    "treeherder": {
+      "jobKind": "other",
+      "groupSymbol": "pub",
+      "collection": {
+        "opt": true
+      },
+      "machine": {
+        "platform": "Android"
+      },
+      "groupName": "APK publishing",
+      "tier": 2,
+      "symbol": "gp"
+    }
+  }
+}

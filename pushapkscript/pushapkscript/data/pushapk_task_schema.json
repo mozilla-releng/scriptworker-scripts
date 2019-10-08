@@ -1,0 +1,79 @@
+{
+    "title": "Taskcluster PushAPK task minimal schema",
+    "type": "object",
+    "properties": {
+        "dependencies": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "scopes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "payload": {
+            "type": "object",
+            "properties": {
+                "upstreamArtifacts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "taskType": {
+                                "type": "string"
+                            },
+                            "taskId": {
+                                "type": "string"
+                            },
+                            "paths": {
+                                "type": "array",
+                                "minItems": 1,
+                                "uniqueItems": true,
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "optional": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": ["taskId", "taskType", "paths"],
+                        "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                },
+                "target_store": {
+                  "type": "string"
+                },
+                "certificate_alias": {
+                  "type": "string"
+                },
+                "google_play_track": {
+                  "type": "string"
+                },
+                "channel": {
+                  "type": "string"
+                },
+                "rollout_percentage": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "commit": {
+                  "type": "boolean"
+                }
+            },
+            "required": ["upstreamArtifacts"],
+            "additionalProperties": false
+        }
+    },
+    "required": ["dependencies", "scopes", "payload"]
+}
