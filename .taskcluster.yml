@@ -52,6 +52,13 @@ tasks:
           project_name: { "$eval": "x[0]" }
           python_version: { "$eval": "x[1]" }
           dockerhub_repo: { "$eval": "x[2]" }
+          run_tests:
+            $if: 'tasks_for == "github-pull-request"'
+            then: '1'
+            else:
+              $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev","refs/heads/production","refs/heads/dev-${project_name}","refs/heads/production-${project_name}"]'
+              then: '1'
+              else: '0'
           push_docker_image:
             $if: 'tasks_for == "github-pull-request"'
             then: '0'
@@ -62,7 +69,7 @@ tasks:
         in:
           $match:
             # Run code linting and unit tests for each project 
-            'true':
+            'run_tests == "1"':
               taskId: '${as_slugid(project_name + python_version)}'
               provisionerId: 'aws-provisioner-v1'
               workerType: 'github-worker'
@@ -95,7 +102,7 @@ tasks:
                 owner: '${OWNER}'
                 source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
             # Build docker image and (optionally) push to docker hub
-            'dockerhub_repo != ""':
+            'run_tests == "1" && dockerhub_repo != ""':
               taskId: '${as_slugid(project_name + "docker_build_and_push")}'
               dependencies:
                 - '${as_slugid(project_name + python_version)}'
