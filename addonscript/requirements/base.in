@@ -1,0 +1,5 @@
+# pyup: ignore file
+aiohttp>3
+async-timeout
+python-jose
+scriptworker
