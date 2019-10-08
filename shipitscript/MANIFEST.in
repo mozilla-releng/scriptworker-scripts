@@ -1,0 +1,19 @@
+recursive-include shipitscript/data *
+recursive-include examples *
+
+include LICENSE
+include README.md
+include version.txt
+graft requirements
+prune docker.d
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+
+include *.md
+include *.yml
+include .coveragerc
+include Dockerfile
+include tox.ini
+exclude .dockerignore
+exclude .isort.cfg
