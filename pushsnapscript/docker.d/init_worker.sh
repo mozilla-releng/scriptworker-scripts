@@ -1,13 +1,22 @@
 #!/bin/bash
-set -e
+set -o errexit -o pipefail
+
+test_var_set() {
+  local varname=$1
+
+  if [[ -z "${!varname}" ]]; then
+    echo "error: ${varname} is not set"
+    exit 1
+  fi
+}
 
 case $ENV in
   dev|fake-prod)
     ;;
   prod)
-    test $MACAROON_BETA
-    test $MACAROON_CANDIDATE
-    test $MACAROON_ESR
+    test_var_set 'MACAROON_BETA'
+    test_var_set 'MACAROON_CANDIDATE'
+    test_var_set 'MACAROON_ESR'
     export MACAROON_BETA_PATH=$CONFIG_DIR/beta_macaroon.cfg
     export MACAROON_CANDIDATE_PATH=$CONFIG_DIR/candidate_macaroon.cfg
     export MACAROON_ESR_PATH=$CONFIG_DIR/esr_macaroon.cfg

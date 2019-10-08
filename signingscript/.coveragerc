@@ -1,3 +1,0 @@
-[run]
-branch = True
-omit = tests/*,src/signingscript/createprecomplete.py,src/signingscript/vendored/*

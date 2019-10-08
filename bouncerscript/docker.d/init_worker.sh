@@ -1,15 +1,24 @@
 #!/bin/bash
-set -e
+set -o errexit -o pipefail
+
+test_var_set() {
+  local varname=$1
+
+  if [[ -z "${!varname}" ]]; then
+    echo "error: ${varname} is not set"
+    exit 1
+  fi
+}
 
 #
 # Check that all required variables exist
 #
-test $COT_PRODUCT
-test $PROJECT_NAME
-test $BOUNCER_USERNAME
-test $BOUNCER_PASSWORD
-test $BOUNCER_USERNAME_NAZGUL
-test $BOUNCER_PASSWORD_NAZGUL
+test_var_set 'COT_PRODUCT'
+test_var_set 'PROJECT_NAME'
+test_var_set 'BOUNCER_USERNAME'
+test_var_set 'BOUNCER_PASSWORD'
+test_var_set 'BOUNCER_USERNAME_NAZGUL'
+test_var_set 'BOUNCER_PASSWORD_NAZGUL'
 
 case $COT_PRODUCT in
   firefox)

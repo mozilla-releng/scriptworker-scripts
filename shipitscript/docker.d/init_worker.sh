@@ -1,5 +1,14 @@
 #!/bin/bash
-set -e
+set -o errexit -o pipefail
+
+test_var_set() {
+  local varname=$1
+
+  if [[ -z "${!varname}" ]]; then
+    echo "error: ${varname} is not set"
+    exit 1
+  fi
+}
 
 case $ENV in
   dev|fake-prod)

@@ -1,5 +1,14 @@
 #!/bin/bash
-set -e
+set -o errexit -o pipefail
+
+test_var_set() {
+  local varname=$1
+
+  if [[ -z "${!varname}" ]]; then
+    echo "error: ${varname} is not set"
+    exit 1
+  fi
+}
 
 export JARSIGNER_KEY_STORE="/app/mozilla-android-keystore"
 rm -f "$JARSIGNER_KEY_STORE"
@@ -32,19 +41,19 @@ case $COT_PRODUCT in
   firefox)
     case $ENV in
       dev|fake-prod)
-        test $GOOGLE_CREDENTIALS_FIREFOX_DEP
+        test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_DEP'
         export GOOGLE_CREDENTIALS_FIREFOX_DEP_PATH=$CONFIG_DIR/dep.p12
         echo $GOOGLE_CREDENTIALS_FIREFOX_DEP | base64 -d > $GOOGLE_CREDENTIALS_FIREFOX_DEP_PATH
 
         import_cert dep $CERT_DIR/dep.pem
         ;;
       prod)
-        test $GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE
-        test $GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_BETA
-        test $GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_AURORA
-        test $GOOGLE_CREDENTIALS_FIREFOX_RELEASE
-        test $GOOGLE_CREDENTIALS_FIREFOX_BETA
-        test $GOOGLE_CREDENTIALS_FIREFOX_AURORA
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_BETA'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_AURORA'
+        test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_RELEASE'
+        test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_BETA'
+        test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_AURORA'
 
         export GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH=$CONFIG_DIR/release.p12
         export GOOGLE_CREDENTIALS_FIREFOX_BETA_PATH=$CONFIG_DIR/beta.p12
@@ -77,16 +86,16 @@ case $COT_PRODUCT in
 
         ;;
       prod)
-        test $GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_NIGHTLY
-        test $GOOGLE_CREDENTIALS_FENIX_NIGHTLY
-        test $GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_BETA
-        test $GOOGLE_CREDENTIALS_FENIX_BETA
-        test $GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_PROD
-        test $GOOGLE_CREDENTIALS_FENIX_PROD
-        test $GOOGLE_PLAY_SERVICE_ACCOUNT_FOCUS
-        test $GOOGLE_CREDENTIALS_FOCUS
-        test $GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER
-        test $GOOGLE_CREDENTIALS_REFERENCE_BROWSER
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_NIGHTLY'
+        test_var_set 'GOOGLE_CREDENTIALS_FENIX_NIGHTLY'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_BETA'
+        test_var_set 'GOOGLE_CREDENTIALS_FENIX_BETA'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_PROD'
+        test_var_set 'GOOGLE_CREDENTIALS_FENIX_PROD'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FOCUS'
+        test_var_set 'GOOGLE_CREDENTIALS_FOCUS'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER'
+        test_var_set 'GOOGLE_CREDENTIALS_REFERENCE_BROWSER'
 
         export GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH=$CONFIG_DIR/fenix_nightly.p12
         export GOOGLE_CREDENTIALS_FENIX_BETA_PATH=$CONFIG_DIR/fenix_beta.p12

@@ -15,12 +15,24 @@ tasks:
       - ['client',          '37',             '']
       - ['iscript',         '36',             '']
       - ['iscript',         '37',             '']
-      - ['treescript',      '36',             '']
-      - ['treescript',      '37',             ''] # mozilla/releng-treescript'] # until we figure out how to install it
+      - ['addonscript',     '36',             '']
+      - ['addonscript',     '37',             'mozilla/releng-addonscript']
       - ['balrogscript',    '36',             '']
       - ['balrogscript',    '37',             'mozilla/releng-balrogscript']
       - ['beetmoverscript', '36',             '']
       - ['beetmoverscript', '37',             'mozilla/releng-beetmoverscript']
+      - ['bouncerscript',   '36',             '']
+      - ['bouncerscript',   '37',             'mozilla/releng-bouncerscript']
+      - ['pushapkscript',   '36',             '']
+      - ['pushapkscript',   '37',             'mozilla/releng-pushapkscript']
+      - ['pushsnapscript',  '36',             '']
+      - ['pushsnapscript',  '37',             'mozilla/releng-pushsnapscript']
+      - ['shipitscript',    '36',             '']
+      - ['shipitscript',    '37',             'mozilla/releng-shipitscript']
+      - ['signingscript',   '36',             '']
+      - ['signingscript',   '37',             'mozilla/releng-signingscript']
+      - ['treescript',      '36',             '']
+      - ['treescript',      '37',             ''] # mozilla/releng-treescript'] # until we figure out how to install it
     # -------------------------------------------------------------------------
 
     HEAD_REV:
@@ -144,7 +156,7 @@ tasks:
                     cp ../docker.d/* docker.d/ &&
                     ./docker.d/generate_version_json.sh &&
                     ./docker.d/build_image.sh /tmp/image.tar &&
-                    if [ "$push_docker_image" == "1" ]; then
+                    if [ "$PUSH_DOCKER_IMAGE" == "1" ]; then
                       ./docker.d/push_image.sh
                     fi
                 artifacts:

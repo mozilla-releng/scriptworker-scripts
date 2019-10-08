@@ -1,9 +1,18 @@
 #!/bin/bash
-set -e
+set -o errexit -o pipefail
+
+test_var_set() {
+  local varname=$1
+
+  if [[ -z "${!varname}" ]]; then
+    echo "error: ${varname} is not set"
+    exit 1
+  fi
+}
 
 # == START: this is what we need to configure ==
-test $JWT_USER
-test $JWT_SECRET
+test_var_set 'JWT_USER'
+test_var_set 'JWT_SECRET'
 # == END:   this is what we need to configure ==
 
 case $ENV in
