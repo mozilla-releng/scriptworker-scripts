@@ -74,6 +74,8 @@ tasks:
               provisionerId: built-in
               workerType: succeed  # or fail
               payload: {}
+              created: { $fromNow: '' }
+              deadline: { $fromNow: '4 hours' }
               metadata:
                 name:
                   $let:
