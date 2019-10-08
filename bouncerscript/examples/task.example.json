@@ -1,0 +1,110 @@
+{
+    "created": "2017-12-08T23:11:06.726Z",
+    "deadline": "2017-12-09T23:11:06.726Z",
+    "dependencies": ["decision task"],
+    "expires": "2018-12-08T23:11:06.726Z",
+    "extra": {
+        "index": {
+            "rank": 0
+        },
+        "notify": {
+            "email": {
+                "subject": "${status.state}: ...."
+            }
+        },
+        "parent": ""
+    },
+    "metadata": {
+        "description": "release bouncer submission job",
+        "name": "release-bouncer-sub-firefox",
+        "owner": "xquan@mozilla.com",
+        "source": "....."
+    },
+    "payload": {
+        "locales": [
+            "ach",
+            "af",
+            "wo",
+            "xh",
+            "zh-CN",
+            "zh-TW"
+        ],
+        "submission_entries": {
+            "Firefox-60.0b1": {
+                "options": {
+                    "add_locales": true,
+                    "ssl_only": false
+                },
+                "paths_per_bouncer_platform": {
+                    "linux": "/firefox/releases/60.0b1/linux-i686/:lang/firefox-60.0b1.tar.bz2",
+                    "linux64": "/firefox/releases/60.0b1/linux-x86_64/:lang/firefox-60.0b1.tar.bz2",
+                    "osx": "/firefox/releases/60.0b1/mac/:lang/Firefox%2060.0b1.dmg",
+                    "win": "/firefox/releases/60.0b1/win32/:lang/Firefox%20Setup%2060.0b1.exe",
+                    "win64": "/firefox/releases/60.0b1/win64/:lang/Firefox%20Setup%2060.0b1.exe"
+                }
+            },
+            "Firefox-60.0b1-Complete": {
+                "options": {
+                    "add_locales": true,
+                    "ssl_only": false
+                },
+                "paths_per_bouncer_platform": {
+                    "linux": "/firefox/releases/60.0b1/updates/linux-i686/:lang/firefox-60.0b1.complete.mar",
+                    "linux64": "/firefox/releases/60.0b1/updates/linux-x86_64/:lang/firefox-60.0b1.complete.mar",
+                    "osx": "/firefox/releases/60.0b1/updates/mac/:lang/firefox-60.0b1.complete.mar",
+                    "win": "/firefox/releases/60.0b1/updates/win32/:lang/firefox-60.0b1.complete.mar",
+                    "win64": "/firefox/releases/60.0b1/updates/win64/:lang/firefox-60.0b1.complete.mar"
+                }
+            },
+            "Firefox-60.0b1-Partial-None": {
+                "options": {
+                    "add_locales": true,
+                    "ssl_only": false
+                },
+                "paths_per_bouncer_platform": {
+                    "linux": "/firefox/releases/60.0b1/updates/linux-i686/:lang/firefox-None-60.0b1.partial.mar",
+                    "linux64": "/firefox/releases/60.0b1/updates/linux-x86_64/:lang/firefox-None-60.0b1.partial.mar",
+                    "osx": "/firefox/releases/60.0b1/updates/mac/:lang/firefox-None-60.0b1.partial.mar",
+                    "win": "/firefox/releases/60.0b1/updates/win32/:lang/firefox-None-60.0b1.partial.mar",
+                    "win64": "/firefox/releases/60.0b1/updates/win64/:lang/firefox-None-60.0b1.partial.mar"
+                }
+            },
+            "Firefox-60.0b1-SSL": {
+                "options": {
+                    "add_locales": true,
+                    "ssl_only": true
+                },
+                "paths_per_bouncer_platform": {
+                    "linux": "/firefox/releases/60.0b1/linux-i686/:lang/firefox-60.0b1.tar.bz2",
+                    "linux64": "/firefox/releases/60.0b1/linux-x86_64/:lang/firefox-60.0b1.tar.bz2",
+                    "osx": "/firefox/releases/60.0b1/mac/:lang/Firefox%2060.0b1.dmg",
+                    "win": "/firefox/releases/60.0b1/win32/:lang/Firefox%20Setup%2060.0b1.exe",
+                    "win64": "/firefox/releases/60.0b1/win64/:lang/Firefox%20Setup%2060.0b1.exe"
+                }
+            },
+            "Firefox-60.0b1-stub": {
+                "options": {
+                    "add_locales": true,
+                    "ssl_only": true
+                },
+                "paths_per_bouncer_platform": {
+                    "win": "/firefox/releases/60.0b1/win32/:lang/Firefox%20Installer.exe",
+                    "win64": "/firefox/releases/60.0b1/win64/:lang/Firefox%20Installer.exe"
+                }
+            }
+        }
+    },
+    "priority": "very-low",
+    "provisionerId": "scriptworker-prov-v1",
+    "workerType": "bouncer-dev",
+    "routes": [],
+    "scopes": [
+        "project:releng:bouncer:server:staging",
+        "project:releng:bouncer:action:submission"
+    ],
+    "tags": {
+        "createdForUser": "...",
+        "kind": "release-bouncer-sub",
+        "label": "release-bouncer-sub-firefox"
+    }
+}

@@ -1,0 +1,46 @@
+{
+    "title": "Taskcluster Bouncer submission task minimal schema",
+    "type": "object",
+    "properties": {
+        "dependencies": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "scopes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "payload": {
+            "type": "object",
+            "properties": {
+                "locales": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "submission_entries": {
+                    "type": "object",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            },
+            "required": ["locales", "submission_entries"],
+            "additionalProperties": false
+        }
+    },
+    "required": ["dependencies", "scopes", "payload"]
+}
