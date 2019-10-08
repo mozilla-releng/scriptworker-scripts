@@ -94,8 +94,8 @@ tasks:
                   $let:
                     test_task_number:
                       $if: 'dockerhub_repo != ""'
-                      then: '${i}.1'
-                      else: '${i}'
+                      then: '${i+1}.1'
+                      else: '${i+1}'
                   in:
                     '${test_task_number}. ${project_name}-py${python_version}: Run tox [on ${DOCKER_TAG}]'
                 description: 'Code linting and unit tests for ${project_name} on python ${python_version[0]}.${python_version[1]}'
@@ -162,7 +162,7 @@ tasks:
                     then: '${project_name}-py${python_version}: build docker image [on ${DOCKER_TAG}]'
                     else: '${project_name}-py${python_version}: build and push docker image [on ${DOCKER_TAG}]'
                 in:
-                  name: '${i}.2. ${description}'
+                  name: '${i+1}.2. ${description}'
                   description: '${description}'
                   owner: '${OWNER}'
                   source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
