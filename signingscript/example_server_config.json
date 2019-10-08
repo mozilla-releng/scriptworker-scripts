@@ -1,0 +1,6 @@
+{
+    "project:releng:signing:cert:dep-signing": [
+        ["127.0.0.1:9110", "user", "pass", ["gpg", "sha2signcode"], "signing_server"],
+        ["https://127.0.0.1:9110", "hawk_user", "hawk_secret", ["autograph_marsha384"], "autograph"]
+    ]
+}
