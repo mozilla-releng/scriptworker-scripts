@@ -11,8 +11,8 @@ tasks:
     # -------------------------------------------------------------------------
     PROJECTS:
       $let:
-        setup_pushapkscript: 'apt-get install -y default-jdk &&'
-        setup_pushsnapscript: 'apt-get install -y libsodium-dev && truncate -s 0 /etc/os-release &&'
+        setup_pushapkscript:  'apt-get update && apt-get install -y default-jdk &&'
+        setup_pushsnapscript: 'apt-get update && apt-get install -y libsodium-dev && truncate -s 0 /etc/os-release &&'
       in:
         # [ <PROJECT NAME>,   <PYTHON VERSION>, <SETUP COMMAND>,           <DOCKERHUB REPO>]
         - ['client',          '36',             '',                        '']
