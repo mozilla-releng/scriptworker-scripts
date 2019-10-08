@@ -1,0 +1,60 @@
+{
+    "work_dir": "work_dir",
+    "artifact_dir": "artifact_dir",
+    "verbose": true,
+    "aiohttp_max_connections": 10,
+    "checksums_digests": ["sha512", "sha256"],
+    "blobs_needing_prettynaming_contents": [
+        "target.test_packages.json"
+    ],
+
+    "taskcluster_scope_prefix": "project:releng:beetmover:",
+    "bucket_config": {
+        "nightly": {
+            "credentials": {
+                "id": "dummy",
+                "key": "dummy"
+            },
+            "buckets": {
+                "firefox": "mozilla-releng-firefox-nightly-bucket",
+                "fennec": "mozilla-releng-mobile-nightly-bucket"
+            },
+            "url_prefix": "https://archive.mozilla.org"
+        },
+        "release": {
+            "credentials": {
+                "id": "dummy",
+                "key": "dummy"
+            },
+            "buckets": {
+                "firefox": "mozilla-releng-firefox-release-bucket",
+                "fennec": "mozilla-releng-mobile-release-bucket",
+                "devedition": "mozilla-releng-mobile-release-bucket"
+            },
+            "url_prefix": "https://archive.mozilla.org"
+        },
+        "dep": {
+            "credentials": {
+                "id": "dummy",
+                "key": "dummy"
+            },
+            "buckets": {
+                "firefox": "mozilla-releng-firefox-dep-bucket",
+                "fennec": "mozilla-releng-mobile-dep-bucket",
+                "devedition": "mozilla-releng-mobile-dep-bucket"
+            },
+            "url_prefix": "http://ftp.stage.mozaws.net"
+        },
+        "partner": {
+            "credentials": {
+                "id": "dummy",
+                "key": "dummy"
+            },
+            "buckets": {
+                "firefox": "mozilla-releng-private-firefox-bucket"
+            }
+        }
+    },
+
+    "zip_max_file_size_in_mb": 100
+}

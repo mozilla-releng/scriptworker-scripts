@@ -10,15 +10,17 @@ tasks:
     # -- This is where you add new projects -----------------------------------
     # -------------------------------------------------------------------------
     PROJECTS:
-      # [ <PROJECT NAME>, <PYTHON VERSION>, <DOCKERHUB REPO>]
-      - ['client',        '36',             '']
-      - ['client',        '37',             '']
-      - ['iscript',       '36',             '']
-      - ['iscript',       '37',             '']
-      - ['treescript',    '36',             '']
-      - ['treescript',    '37',             '']
-      - ['balrogscript',  '36',             '']
-      - ['balrogscript',  '37',             'mozilla/releng-balrogscript']
+      # [ <PROJECT NAME>,   <PYTHON VERSION>, <DOCKERHUB REPO>]
+      - ['client',          '36',             '']
+      - ['client',          '37',             '']
+      - ['iscript',         '36',             '']
+      - ['iscript',         '37',             '']
+      - ['treescript',      '36',             '']
+      - ['treescript',      '37',             ''] # mozilla/releng-treescript'] # until we figure out how to install it
+      - ['balrogscript',    '36',             '']
+      - ['balrogscript',    '37',             'mozilla/releng-balrogscript']
+      - ['beetmoverscript', '36',             '']
+      - ['beetmoverscript', '37',             'mozilla/releng-beetmoverscript']
     # -------------------------------------------------------------------------
 
     HEAD_REV:

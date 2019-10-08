@@ -1,0 +1,10 @@
+{
+    "gtest": [
+        "en-US/target.txt",
+        "en-US/target.mozinfo.json"
+    ],
+    "talos": [
+        "fake-99.0a1.en-US.target_info.txt",
+        "fake-99.0a1.en-US.target.mozinfo.json"
+    ]
+}
