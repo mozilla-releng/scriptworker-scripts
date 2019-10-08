@@ -89,8 +89,8 @@ tasks:
                       $if: 'push_docker_image == "1"'
                       then: '${i}.1'
                       else: '${i}'
-                    in:
-                      '${test_task_number}. ${project_name}-py${python_version}: Run tox [on ${DOCKER_TAG}]'
+                  in:
+                    '${test_task_number}. ${project_name}-py${python_version}: Run tox [on ${DOCKER_TAG}]'
                 description: 'Code linting and unit tests for ${project_name} on python ${python_version[0]}.${python_version[1]}'
                 owner: '${OWNER}'
                 source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
