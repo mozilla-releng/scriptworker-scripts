@@ -63,32 +63,11 @@ tasks:
             $if: 'tasks_for == "github-pull-request"'
             then: '0'
             else:
-              $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev","refs/heads/production","refs/heads/dev-${project_name}","refs/heads/production-${project_name}"]'
+              $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev","refs/heads/production","refs/heads/dev-" + x[0]],"refs/heads/production-" + x[0]]'
               then: '1'
               else: '0'
         in:
           $match:
-            # testing task
-            'true':
-              taskId: '${as_slugid(project_name + python_version + "test")}'
-              provisionerId: built-in
-              workerType: succeed  # or fail
-              payload: {}
-              created: { $fromNow: '' }
-              deadline: { $fromNow: '4 hours' }
-              metadata:
-                name:
-                  $let:
-                    test_task_number:
-                      $if: 'dockerhub_repo != ""'
-                      then: '${i+1}.0'
-                      else: '${i+1}'
-                  in:
-                    '${test_task_number}. testing ${project_name}-py${python_version}'
-                description:
-                  $eval: 'run_tests + " | " + tasks_for + " | " + str(event.ref)'
-                owner: '${OWNER}'
-                source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
             # Run code linting and unit tests for each project 
             'run_tests == "1"':
               taskId: '${as_slugid(project_name + python_version)}'
