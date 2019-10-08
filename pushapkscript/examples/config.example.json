@@ -1,0 +1,113 @@
+{
+    "work_dir": "/absolute/path/to/work_dir",
+    "products": [{
+        "product_names": ["aurora", "beta", "release"],
+        "digest_algorithm": "SHA1",
+        "override_channel_model": "choose_google_app_with_scope",
+        "apps": {
+            "aurora": {
+                "package_names": ["org.mozilla.fennec_aurora"],
+                "certificate_alias": "nightly",
+                "default_track": "beta",
+                "service_account": "firefox-aurora@iam.gserviceaccount.com",
+                "credentials_file": "/firefox-nightly.p12"
+            },
+            "beta": {
+                "package_names": ["org.mozilla.firefox_beta"],
+                "certificate_alias": "release",
+                "default_track": "production",
+                "service_account": "firefox-beta@iam.gserviceaccount.com",
+                "credentials_file": "/firefox.p12"
+            },
+            "release": {
+                "package_names": ["org.mozilla.firefox"],
+                "certificate_alias": "release",
+                "default_track": "production",
+                "service_account": "firefox-production@iam.gserviceaccount.com",
+                "credentials_file": "/firefox.p12"
+            }
+        }
+    },{
+        "product_names": ["focus"],
+        "digest_algorithm": "SHA-256",
+        "skip_check_ordered_version_codes": true,
+        "skip_checks_fennec": true,
+        "override_channel_model": "single_google_app",
+        "app": {
+            "package_names": ["org.mozilla.klar", "org.mozilla.focus"],
+            "service_account": "focus@iam.gserviceaccount.com",
+            "credentials_file": "/focus.p12",
+            "certificate_alias": "focus"
+        }
+    },{
+        "product_names": ["fenix"],
+        "digest_algorithm": "SHA-256",
+        "skip_check_multiple_locales": true,
+        "skip_check_same_locales": true,
+        "skip_checks_fennec": true,
+        "apps": {
+            "nightly": {
+                "package_names": ["org.mozilla.fenix.nightly"],
+                "certificate_alias": "fenix-nightly",
+                "google": {
+                    "default_track": "beta",
+                    "service_account": "fenix-nightly@iam.gserviceaccount.com",
+                    "credentials_file": "/fenix-nightly.p12"
+                },
+                "amazon": {
+                    "client_id": "amzn1.application-oa2-client.fenix",
+                    "client_secret": "123456"
+                }
+            },
+            "beta": {
+                "package_names": ["org.mozilla.fenix.beta"],
+                "certificate_alias": "fenix-beta",
+                "google": {
+                    "default_track": "production",
+                    "service_account": "fenix-beta@iam.gserviceaccount.com",
+                    "credentials_file": "/fenix-beta.p12"
+                },
+                "amazon": {
+                    "client_id": "amzn1.application-oa2-client.fenix",
+                    "client_secret": "123456"
+                }
+            },
+            "release": {
+                "package_names": ["org.mozilla.fenix"],
+                "certificate_alias": "fenix-production",
+                "google": {
+                    "default_track": "production",
+                    "service_account": "fenix-production@iam.gserviceaccount.com",
+                    "credentials_file": "/fenix-production.p12"
+                },
+                "amazon": {
+                    "client_id": "amzn1.application-oa2-client.fenix",
+                    "client_secret": "123456"
+                }
+            }
+        }
+    },{
+        "product_names": ["firefox-tv"],
+        "skip_check_multiple_locales": true,
+        "skip_check_same_locales": true,
+        "skip_checks_fennec": true,
+        "skip_check_signature": true,
+        "apps": {
+            "production": {
+                "package_names": ["org.mozilla.video.firefox"],
+                "amazon": {
+                    "client_id": "amzn1.application-oa2-client.firefox-tv",
+                    "client_secret": "123456"
+                }
+            }
+        }
+    }],
+
+    "jarsigner_binary": "jarsigner",
+    "jarsigner_key_store": "/absolute/path/to/keystore",
+
+    "taskcluster_scope_prefixes": ["project:releng:googleplay:"],
+
+    "do_not_contact_google_play": true,
+    "verbose": true
+}

@@ -10,17 +10,32 @@ tasks:
     # -- This is where you add new projects -----------------------------------
     # -------------------------------------------------------------------------
     PROJECTS:
-      # [ <PROJECT NAME>,   <PYTHON VERSION>, <DOCKERHUB REPO>]
-      - ['client',          '36',             '']
-      - ['client',          '37',             '']
-      - ['iscript',         '36',             '']
-      - ['iscript',         '37',             '']
-      - ['treescript',      '36',             '']
-      - ['treescript',      '37',             ''] # mozilla/releng-treescript'] # until we figure out how to install it
-      - ['balrogscript',    '36',             '']
-      - ['balrogscript',    '37',             'mozilla/releng-balrogscript']
-      - ['beetmoverscript', '36',             '']
-      - ['beetmoverscript', '37',             'mozilla/releng-beetmoverscript']
+      $let:
+        setup_pushapkscript:  'apt-get update && apt-get install -y default-jdk &&'
+        setup_pushsnapscript: 'apt-get update && apt-get install -y libsodium-dev && truncate -s 0 /etc/os-release &&'
+      in:
+        # [ <PROJECT NAME>,   <PYTHON VERSION>, <SETUP COMMAND>,           <DOCKERHUB REPO>]
+        - ['client',          '36',             '',                        '']
+        - ['client',          '37',             '',                        '']
+        - ['iscript',         '36',             '',                        '']
+        - ['iscript',         '37',             '',                        '']
+        - ['addonscript',     '36',             '',                        '']
+        - ['addonscript',     '37',             '',                        'mozilla/releng-addonscript']
+        - ['balrogscript',    '36',             '',                        '']
+        - ['balrogscript',    '37',             '',                        'mozilla/releng-balrogscript']
+        - ['beetmoverscript', '36',             '',                        '']
+        - ['beetmoverscript', '37',             '',                        'mozilla/releng-beetmoverscript']
+        - ['bouncerscript',   '36',             '',                        '']
+        - ['bouncerscript',   '37',             '',                        'mozilla/releng-bouncerscript']
+        - ['pushapkscript',   '36',             '${setup_pushapkscript}',  '']
+        - ['pushapkscript',   '37',             '${setup_pushapkscript}',  'mozilla/releng-pushapkscript']
+        - ['pushsnapscript',  '36',             '${setup_pushsnapscript}', '']
+        - ['pushsnapscript',  '37',             '${setup_pushsnapscript}', 'mozilla/releng-pushsnapscript']
+        - ['shipitscript',    '37',             '',                        'mozilla/releng-shipitscript']
+        - ['signingscript',   '36',             '',                        '']
+        - ['signingscript',   '37',             '',                        'mozilla/releng-signingscript']
+        - ['treescript',      '36',             '',                        '']
+        - ['treescript',      '37',             '',                        'mozilla/releng-treescript']
     # -------------------------------------------------------------------------
 
     HEAD_REV:
@@ -53,7 +68,8 @@ tasks:
         $let:
           project_name: { "$eval": "x[0]" }
           python_version: { "$eval": "x[1]" }
-          dockerhub_repo: { "$eval": "x[2]" }
+          setup_command: { "$eval": "x[2]" }
+          dockerhub_repo: { "$eval": "x[3]" }
           run_tests:
             $if: 'tasks_for == "github-pull-request"'
             then: '1'
@@ -68,6 +84,10 @@ tasks:
               $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev","refs/heads/production","refs/heads/dev-" + x[0],"refs/heads/production-" + x[0]]'
               then: '1'
               else: '0'
+          number_prefix:
+            $if: 'i + 1 < 10'
+            then: '0'
+            else: ''
         in:
           $match:
             # Run code linting and unit tests for each project 
@@ -88,7 +108,7 @@ tasks:
                     wget ${REPO_URL}/archive/${HEAD_REV}.tar.gz &&
                     tar zxf ${HEAD_REV}.tar.gz &&
                     mv scriptworker-scripts-${HEAD_REV} /src &&
-                    cd /src &&
+                    cd /src && ${setup_command}
                     pip install tox &&
                     tox -e ${project_name}-py${python_version}
               metadata:
@@ -99,7 +119,7 @@ tasks:
                       then: '${i+1}.1'
                       else: '${i+1}'
                   in:
-                    '${test_task_number}. ${project_name}-py${python_version}: Run tox [on ${DOCKER_TAG}]'
+                    '${number_prefix}${test_task_number}. ${project_name}-py${python_version}: Run tox [on ${DOCKER_TAG}]'
                 description: 'Code linting and unit tests for ${project_name} on python ${python_version[0]}.${python_version[1]}'
                 owner: '${OWNER}'
                 source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
@@ -144,7 +164,7 @@ tasks:
                     cp ../docker.d/* docker.d/ &&
                     ./docker.d/generate_version_json.sh &&
                     ./docker.d/build_image.sh /tmp/image.tar &&
-                    if [ "$push_docker_image" == "1" ]; then
+                    if [ "$PUSH_DOCKER_IMAGE" == "1" ]; then
                       ./docker.d/push_image.sh
                     fi
                 artifacts:
@@ -164,7 +184,7 @@ tasks:
                     then: '${project_name}-py${python_version}: build docker image [on ${DOCKER_TAG}]'
                     else: '${project_name}-py${python_version}: build and push docker image [on ${DOCKER_TAG}]'
                 in:
-                  name: '${i+1}.2. ${description}'
+                  name: '${number_prefix}${i+1}.2. ${description}'
                   description: '${description}'
                   owner: '${OWNER}'
                   source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'

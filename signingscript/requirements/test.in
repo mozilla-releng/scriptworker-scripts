@@ -1,0 +1,13 @@
+-r base.in
+
+mock
+pytest
+pytest-asyncio>=0.6.0
+pytest-cov
+pytest-mock
+
+flake8
+flake8_docstrings
+black
+pydocstyle~=3.0
+pip-compile-multi

@@ -1,0 +1,71 @@
+{
+  "provisionerId": "scriptworker-prov-v1",
+  "workerType": "shipit-dev",
+  "schedulerId": "gecko-level-3",
+  "taskGroupId": "IKw4rShNS4CUJ2X0mx2zOg",
+  "dependencies": [
+    "LeSCxQ8ZRa2TZjJu-K7Gmw",
+    "M_J7I9sCR7Cu9IhTTZRgCQ",
+    "R83N_gbzT_KLpBPMaC20WQ"
+  ],
+  "requires": "all-completed",
+  "routes": [
+    "index.releases.v1.maple.latest.devedition.latest.mark_as_shipped",
+    "index.releases.v1.maple.85d8ba6a8e46ad79f7a7945445fab87c6bdd0ad2.devedition.59_0b4.build1.mark_as_shipped"
+  ],
+  "priority": "very-low",
+  "retries": 5,
+  "created": "2018-01-30T14:25:17.052Z",
+  "deadline": "2018-01-31T14:25:17.052Z",
+  "expires": "2019-01-30T14:25:17.052Z",
+  "scopes": [
+    "project:releng:ship-it:staging"
+  ],
+  "payload": {
+    "release_name": "Devedition-59.0b4-build1"
+  },
+  "metadata": {
+    "owner": "jlorenzo@mozilla.com",
+    "source": "https://hg.mozilla.org/projects/maple/file/85d8ba6a8e46ad79f7a7945445fab87c6bdd0ad2/taskcluster/ci/release-mark-as-shipped",
+    "description": "mark release as shipped in Ship-It",
+    "name": "release-mark-as-shipped-devedition"
+  },
+  "tags": {
+    "createdForUser": "jlorenzo@mozilla.com",
+    "kind": "release-mark-as-shipped",
+    "label": "release-mark-as-shipped-devedition"
+  },
+  "extra": {
+    "index": {
+      "rank": 0
+    },
+    "parent": "IKw4rShNS4CUJ2X0mx2zOg",
+    "notifications": {
+      "task-failed": {
+        "message": "FAILED: [devedition 59.0b4 build1/maple] release-mark-as-shipped-devedition task",
+        "subject": "FAILED: [devedition 59.0b4 build1/maple] release-mark-as-shipped-devedition task",
+        "emails": [
+          "release+tcstaging@mozilla.com"
+        ],
+        "plugins": [
+          "ses"
+        ]
+      },
+      "task-completed": {
+        "message": "COMPLETED: [devedition 59.0b4 build1/maple] release-mark-as-shipped-devedition task",
+        "subject": "COMPLETED: [devedition 59.0b4 build1/maple] release-mark-as-shipped-devedition task",
+        "plugins": []
+      },
+      "task-exception": {
+        "message": "EXCEPTION: [devedition 59.0b4 build1/maple] release-mark-as-shipped-devedition task",
+        "subject": "EXCEPTION: [devedition 59.0b4 build1/maple] release-mark-as-shipped-devedition task",
+        "emails": [
+          "release+tcstaging@mozilla.com"
+        ],
+        "plugins": [
+          "ses"
+        ]
+      }
+    }
+  }
+}

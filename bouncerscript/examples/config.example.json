@@ -1,0 +1,19 @@
+{
+        "work_dir": "some/work/dir/",
+        "verbose": true,
+        "taskcluster_scope_prefix": "project:releng:bouncer:",
+        "bouncer_config": {
+            "project:releng:bouncer:server:staging": {
+                "api_root": "some-root",
+                "timeout_in_seconds": 60,
+                "username": "some-username",
+                "password": "some-password"
+            },
+            "project:releng:bouncer:server:production": {
+                "api_root": "some-production-root",
+                "timeout_in_seconds": 60,
+                "username": "some-production-username",
+                "password": "some-production-password"
+            }
+      }
+}

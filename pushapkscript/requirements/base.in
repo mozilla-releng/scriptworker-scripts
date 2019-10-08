@@ -1,0 +1,8 @@
+# For the production/loaners environments, package versions are pinpointed in puppet
+# https://hg.mozilla.org/build/puppet/file/tip/modules/pushapk_scriptworker/manifests/init.pp .
+# Please refer to this list if you encounter version incompatiblities locally.
+google-api-python-client
+mozapkpublisher>=4,<5
+oauth2client
+pyOpenSSL
+scriptworker

@@ -1,0 +1,19 @@
+{
+        "work_dir": "bouncerscript/test/test_work_dir",
+        "verbose": true,
+        "taskcluster_scope_prefix": "project:releng:bouncer:",
+        "bouncer_config": {
+            "project:releng:bouncer:server:staging": {
+                "api_root": "some-root",
+                "timeout_in_seconds": 60,
+                "username": "some-username",
+                "password": "some-password"
+            }
+      },
+
+      "schema_files": {
+            "submission": "bouncerscript/data/bouncer_submission_task_schema.json",
+            "aliases": "bouncerscript/data/bouncer_aliases_task_schema.json",
+            "locations": "bouncerscript/data/bouncer_locations_task_schema.json"
+      }
+}

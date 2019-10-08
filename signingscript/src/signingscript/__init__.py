@@ -1,0 +1,1 @@
+"""Signingscript for scriptworker."""
