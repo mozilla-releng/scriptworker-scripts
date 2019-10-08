@@ -56,7 +56,7 @@ tasks:
             $if: 'tasks_for == "github-pull-request"'
             then: '1'
             else:
-              $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev","refs/heads/production","refs/heads/dev-${project_name}","refs/heads/production-${project_name}"]'
+              $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev","refs/heads/production","refs/heads/dev-" + project_name,"refs/heads/production-" + project_name]'
               then: '1'
               else: '0'
           push_docker_image:
