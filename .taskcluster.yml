@@ -85,7 +85,8 @@ tasks:
                       else: '${i+1}'
                   in:
                     '${test_task_number}. testing ${project_name}-py${python_version}'
-                description: { "$eval": "run_tests + " " + tasks_for + " " + str(event.ref)" }
+                description:
+                  $eval: 'run_tests + " | " + tasks_for + " | " + str(event.ref)'
                 owner: '${OWNER}'
                 source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
             # Run code linting and unit tests for each project 
