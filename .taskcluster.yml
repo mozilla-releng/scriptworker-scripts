@@ -86,7 +86,7 @@ tasks:
                 name:
                   $let:
                     test_task_number:
-                      $if: 'push_docker_image == "1"'
+                      $if: 'dockerhub_repo != ""'
                       then: '${i}.1'
                       else: '${i}'
                   in:
