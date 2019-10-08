@@ -59,10 +59,6 @@ tasks:
               $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev","refs/heads/production","refs/heads/dev-${project_name}","refs/heads/production-${project_name}"]'
               then: '1'
               else: '0'
-          test_task_number:
-            $if: 'push_docker_image == "1"'
-            then: '${i}.1'
-            else: '${i}'
         in:
           $match:
             # Run code linting and unit tests for each project 
@@ -87,7 +83,14 @@ tasks:
                     pip install tox &&
                     tox -e ${project_name}-py${python_version}
               metadata:
-                name: '${test_task_number}. ${project_name}-py${python_version}: Run tox [on ${DOCKER_TAG}]'
+                name:
+                  $let:
+                    test_task_number:
+                      $if: 'push_docker_image == "1"'
+                      then: '${i}.1'
+                      else: '${i}'
+                    in:
+                      '${test_task_number}. ${project_name}-py${python_version}: Run tox [on ${DOCKER_TAG}]'
                 description: 'Code linting and unit tests for ${project_name} on python ${python_version[0]}.${python_version[1]}'
                 owner: '${OWNER}'
                 source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
