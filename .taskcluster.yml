@@ -190,8 +190,8 @@ tasks:
                 $let:
                   description:
                     $if: 'push_docker_image == "0"'
-                    then: '${project_name}-py${python_version}: build docker image [on ${DOCKER_TAG}]'
-                    else: '${project_name}-py${python_version}: build and push docker image [on ${DOCKER_TAG}]'
+                    then: '${project_name}-py${python_version}: build docker image [on ${BRANCH_NAME}]'
+                    else: '${project_name}-py${python_version}: build and push docker image [on ${BRANCH_NAME}]'
                 in:
                   name: '${number_prefix}${i+1}.2. ${description}'
                   description: '${description}'
