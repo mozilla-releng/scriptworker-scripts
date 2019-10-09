@@ -963,12 +963,9 @@ async def test_zipfile_append_write(context):
 )
 async def test_get_tarfile_files(path, compression):
     assert sorted(await sign._get_tarfile_files(path, compression)) == [
-        ".",
         "./a",
         "./b",
-        "./c",
         "./c/d",
-        "./c/e",
         "./c/e/f",
     ]
 

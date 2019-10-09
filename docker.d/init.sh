@@ -40,6 +40,10 @@ case $ENV in
     ;;
   dev)
     export TRUST_LEVEL=1
+    # special case for signing, using -t- instead
+    if [ $PROJECT_NAME = "signing" ]; then
+        export TRUST_LEVEL=t
+    fi
     export WORKER_SUFFIX="-dev"
     ;;
   *)

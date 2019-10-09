@@ -887,8 +887,8 @@ def _get_tarfile_compression(compression):
 async def _get_tarfile_files(from_, compression):
     compression = _get_tarfile_compression(compression)
     with tarfile.open(from_, mode="r:{}".format(compression)) as t:
-        files = t.getnames()
-        return files
+        files = t.getmembers()
+        return [f.name for f in files if f.isfile()]
 
 
 # _extract_tarfile {{{1
