@@ -9,6 +9,8 @@ import json
 import logging
 import os
 import re
+import resource
+import time
 
 # TODO: Use aiohttp for this.
 import requests
@@ -18,6 +20,8 @@ import sys
 import tarfile
 import tempfile
 import zipfile
+
+from functools import wraps
 
 from requests_hawk import HawkAuth
 from mardor.reader import MarReader
@@ -98,6 +102,55 @@ _DEFAULT_MAR_VERIFY_KEYS = {
 LANGPACK_RE = re.compile(
     r"^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|devedition).mozilla.org$"
 )
+
+
+def get_rss():
+    """Return the maximum resident set size for this process."""
+    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+
+
+def time_async_function(f):
+    """Time an async function."""
+    # comment to keep black/flake8 happy together
+    @wraps(f)
+    async def wrapped(*args, **kwargs):
+        start = time.time()
+        start_rss = get_rss()
+        try:
+            return await f(*args, **kwargs)
+        finally:
+            rss = get_rss()
+            log.debug(
+                "%s took %.2fs; RSS:%s (%+d)",
+                f.__name__,
+                time.time() - start,
+                rss,
+                rss - start_rss,
+            )
+
+    return wrapped
+
+
+def time_function(f):
+    """Time a sync function."""
+    # comment to keep black/flake8 happy together
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        start = time.time()
+        start_rss = get_rss()
+        try:
+            return f(*args, **kwargs)
+        finally:
+            rss = get_rss()
+            log.debug(
+                "%s took %.2fs; RSS:%s (%+d)",
+                f.__name__,
+                time.time() - start,
+                rss,
+                rss - start_rss,
+            )
+
+    return wrapped
 
 
 # get_suitable_signing_servers {{{1
@@ -331,6 +384,7 @@ async def sign_langpack(context, orig_path, fmt):
 
 
 # sign_widevine {{{1
+@time_async_function
 async def sign_widevine(context, orig_path, fmt):
     """Call the appropriate helper function to do widevine signing.
 
@@ -363,6 +417,7 @@ async def sign_widevine(context, orig_path, fmt):
 
 
 # sign_widevine_zip {{{1
+@time_async_function
 async def sign_widevine_zip(context, orig_path, fmt):
     """Sign the internals of a zipfile with the widevine key.
 
@@ -421,6 +476,7 @@ async def sign_widevine_zip(context, orig_path, fmt):
 
 
 # sign_widevine_tar {{{1
+@time_async_function
 async def sign_widevine_tar(context, orig_path, fmt):
     """Sign the internals of a tarfile with the widevine key.
 
@@ -493,6 +549,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
 
 
 # sign_omnija {{{1
+@time_async_function
 async def sign_omnija(context, orig_path, fmt):
     """Call the appropriate helper function to do omnija signing.
 
@@ -564,6 +621,7 @@ async def sign_omnija_zip(context, orig_path, fmt):
 
 
 # sign_omnija_tar {{{1
+@time_async_function
 async def sign_omnija_tar(context, orig_path, fmt):
     """Sign the internals of a tarfile with the omnija key for all omni.ja files.
 
@@ -766,6 +824,7 @@ def remove_extra_files(top_dir, file_list):
 
 
 # zip_align_apk {{{1
+@time_async_function
 async def zip_align_apk(context, abs_to):
     """Optimize APK for better run-time performance.
 
@@ -795,6 +854,7 @@ async def zip_align_apk(context, abs_to):
 
 
 # _convert_dmg_to_tar_gz {{{1
+@time_async_function
 async def _convert_dmg_to_tar_gz(context, from_):
     """Explode a dmg and tar up its contents. Return the relative tarball path."""
     work_dir = context.config["work_dir"]
@@ -827,6 +887,7 @@ async def _convert_dmg_to_tar_gz(context, from_):
 
 
 # _get_zipfile_files {{{1
+@time_async_function
 async def _get_zipfile_files(from_):
     with zipfile.ZipFile(from_, mode="r") as z:
         files = z.namelist()
@@ -834,6 +895,7 @@ async def _get_zipfile_files(from_):
 
 
 # _extract_zipfile {{{1
+@time_async_function
 async def _extract_zipfile(context, from_, files=None, tmp_dir=None):
     work_dir = context.config["work_dir"]
     tmp_dir = tmp_dir or os.path.join(work_dir, "unzipped")
@@ -859,6 +921,7 @@ async def _extract_zipfile(context, from_, files=None, tmp_dir=None):
 
 
 # _create_zipfile {{{1
+@time_async_function
 async def _create_zipfile(context, to, files, tmp_dir=None, mode="w"):
     work_dir = context.config["work_dir"]
     tmp_dir = tmp_dir or os.path.join(work_dir, "unzipped")
@@ -884,6 +947,7 @@ def _get_tarfile_compression(compression):
 
 
 # _get_tarfile_files {{{1
+@time_async_function
 async def _get_tarfile_files(from_, compression):
     compression = _get_tarfile_compression(compression)
     with tarfile.open(from_, mode="r:{}".format(compression)) as t:
@@ -892,6 +956,7 @@ async def _get_tarfile_files(from_, compression):
 
 
 # _extract_tarfile {{{1
+@time_async_function
 async def _extract_tarfile(context, from_, compression, tmp_dir=None):
     work_dir = context.config["work_dir"]
     tmp_dir = tmp_dir or os.path.join(work_dir, "untarred")
@@ -921,6 +986,7 @@ def _owner_filter(tarinfo_obj):
 
 
 # _create_tarfile {{{1
+@time_async_function
 async def _create_tarfile(context, to, files, compression, tmp_dir=None):
     work_dir = context.config["work_dir"]
     tmp_dir = tmp_dir or os.path.join(work_dir, "untarred")
@@ -936,6 +1002,7 @@ async def _create_tarfile(context, to, files, compression, tmp_dir=None):
         raise SigningScriptError(e)
 
 
+@time_async_function
 async def call_autograph(url, user, password, request_json):
     """Call autograph and return the json response."""
     auth = HawkAuth(id=user, key=password)
@@ -948,6 +1015,7 @@ async def call_autograph(url, user, password, request_json):
         return r.json()
 
 
+@time_function
 def make_signing_req(input_bytes, server, fmt, keyid=None, extension_id=None):
     """Make a signing request object to pass to autograph."""
     base64_input = base64.b64encode(input_bytes).decode("ascii")
@@ -976,6 +1044,7 @@ def make_signing_req(input_bytes, server, fmt, keyid=None, extension_id=None):
     return [sign_req]
 
 
+@time_async_function
 async def sign_with_autograph(
     server, input_bytes, fmt, autograph_method, keyid=None, extension_id=None
 ):
@@ -1003,7 +1072,14 @@ async def sign_with_autograph(
 
     sign_req = make_signing_req(input_bytes, server, fmt, keyid, extension_id)
 
-    log.debug("signing data with format %s with %s", fmt, autograph_method)
+    rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    log.debug(
+        "signing %d bytes of data with format %s with %s; RSS:%s",
+        len(input_bytes),
+        fmt,
+        autograph_method,
+        rss,
+    )
 
     url = f"{server.server}/sign/{autograph_method}"
 
@@ -1020,6 +1096,7 @@ async def sign_with_autograph(
         return sign_resp[0]["signature"]
 
 
+@time_async_function
 async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=None):
     """Signs file with autograph and writes the results to a file.
 
@@ -1058,6 +1135,7 @@ async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=No
     return to
 
 
+@time_async_function
 async def sign_gpg_with_autograph(context, from_, fmt):
     """Signs file with autograph and writes the results to a file.
 
@@ -1089,6 +1167,7 @@ async def sign_gpg_with_autograph(context, from_, fmt):
     return [from_, to]
 
 
+@time_async_function
 async def sign_hash_with_autograph(context, hash_, fmt, keyid=None):
     """Signs hash with autograph and returns the result.
 
@@ -1176,6 +1255,7 @@ def verify_mar_signature(cert_type, fmt, mar, keyid=None):
         raise SigningScriptError(e)
 
 
+@time_async_function
 async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
     """Signs a hash with autograph, injects it into the file, and writes the result to arg `to` or `from_` if `to` is None.
 
@@ -1241,6 +1321,7 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
     return to
 
 
+@time_async_function
 async def sign_widevine_with_autograph(context, from_, blessed, to=None):
     """Create a widevine signature using autograph as a backend.
 
@@ -1278,6 +1359,7 @@ async def sign_widevine_with_autograph(context, from_, blessed, to=None):
     return to
 
 
+@time_async_function
 async def sign_omnija_with_autograph(context, from_):
     """Sign the omnija file specified using autograph.
 
@@ -1318,6 +1400,7 @@ async def sign_omnija_with_autograph(context, from_):
     return from_
 
 
+@time_async_function
 async def merge_omnija_files(orig, signed, to):
     """Merge multiple omnijar files together.
 
@@ -1355,6 +1438,7 @@ async def merge_omnija_files(orig, signed, to):
 
 
 # sign_authenticode_file {{{1
+@time_async_function
 async def sign_authenticode_file(context, orig_path, fmt):
     """Sign a file in-place with authenticode, using autograph as a backend.
 
@@ -1412,6 +1496,7 @@ async def sign_authenticode_file(context, orig_path, fmt):
 
 
 # sign_authenticode_zip {{{1
+@time_async_function
 async def sign_authenticode_zip(context, orig_path, fmt):
     """Sign a zipfile with authenticode, using autograph as a backend.
 
