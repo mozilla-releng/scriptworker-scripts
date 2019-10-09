@@ -212,7 +212,11 @@ async def sign(context, path, signing_formats):
     # Loop through the formats and sign one by one.
     for fmt in signing_formats:
         signing_func = _get_signing_function_from_format(fmt)
-        log.info("sign(): Signing {} with {}...".format(output, fmt))
+        try:
+            size = os.path.getsize(output)
+        except OSError:
+            size = "??"
+        log.info("sign(): Signing %s bytes in %s with %s...", size, output, fmt)
         output = await signing_func(context, output, fmt)
     # We want to return a list
     if not isinstance(output, (tuple, list)):
