@@ -15,7 +15,6 @@ USER app
 WORKDIR /app
 
 RUN python -m venv /app \
- && sed -i -e "s@ | base64 -d@@g" /app/docker.d/init.sh \
  && ./bin/pip install -r requirements/base.txt \
  && ./bin/pip install -e . \
  && ./bin/pip install https://github.com/rail/configloader/archive/8719e33f6ba65e79e188355efabbcf6c9e1f1780.tar.gz
