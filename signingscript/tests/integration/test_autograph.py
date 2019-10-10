@@ -7,6 +7,8 @@ import subprocess
 import shutil
 import zipfile
 
+import aiohttp
+
 from mardor.cli import do_verify
 from scriptworker.utils import makedirs
 from signingscript.sign import sign_file_with_autograph
@@ -305,20 +307,23 @@ async def test_integration_autograph_custom_digest_algorithm(
     shutil.copy(original_file_path, tmpdir)
     apk_path = os.path.join(tmpdir, file_name)
 
-    context.signing_servers = {
-        "project:releng:signing:cert:dep-signing": [
-            SigningServer(
-                *[
-                    "http://localhost:5500",
-                    "bob",
-                    "1234567890abcdefghijklmnopqrstuvwxyz1234567890abcd",
-                    [format],
-                    "autograph",
-                ]
-            )
-        ]
-    }
-    context.task = _craft_task([file_name], signing_format=format)
+    async with aiohttp.ClientSession()as session:
+        context.session = session
 
-    await sign_file_with_autograph(context, apk_path, format)
-    assert _extract_apk_signature_algorithm(apk_path) == expected_algorithm
+        context.signing_servers = {
+            "project:releng:signing:cert:dep-signing": [
+                SigningServer(
+                    *[
+                        "http://localhost:5500",
+                        "bob",
+                        "1234567890abcdefghijklmnopqrstuvwxyz1234567890abcd",
+                        [format],
+                        "autograph",
+                    ]
+                )
+            ]
+        }
+        context.task = _craft_task([file_name], signing_format=format)
+
+        await sign_file_with_autograph(context, apk_path, format)
+        assert _extract_apk_signature_algorithm(apk_path) == expected_algorithm

@@ -66,6 +66,8 @@ async def async_main(context):
                 all_signing_formats,
             )
 
+    async with aiohttp.ClientSession() as session:
+        context.session = session
         filelist_dict = build_filelist_dict(context)
         for path, path_dict in filelist_dict.items():
             copy_to_dir(path_dict["full_path"], context.config["work_dir"], target=path)
