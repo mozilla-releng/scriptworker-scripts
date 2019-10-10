@@ -1,4 +1,4 @@
-#!/bin/bas
+#!/bin/bash
 set -o errexit -o pipefail
 
 test_var_set() {
