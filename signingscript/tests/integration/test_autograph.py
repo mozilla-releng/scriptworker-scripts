@@ -307,7 +307,7 @@ async def test_integration_autograph_custom_digest_algorithm(
     shutil.copy(original_file_path, tmpdir)
     apk_path = os.path.join(tmpdir, file_name)
 
-    async with aiohttp.ClientSession()as session:
+    async with aiohttp.ClientSession() as session:
         context.session = session
 
         context.signing_servers = {

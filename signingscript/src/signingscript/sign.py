@@ -1080,7 +1080,9 @@ async def call_autograph(session, url, user, password, request_body, content_has
     )
     log.debug("Autograph response: %s", resp.status)
     resp.raise_for_status()
-    # TODO: Write this out to temporary file?
+    # TODO: Write this out to temporary file. The responses can be large,
+    # especially in the case of APK/omnija signing where the entire file is
+    # being sent and returned.
     return await resp.json()
 
 
