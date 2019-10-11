@@ -1196,8 +1196,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
 
 # geckodriver_behavior {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("use_langpack", (False, True))
-async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
+async def test_geckodriver_behavior(mocker, tmpdir):
     """Mock ``geckodriver_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1233,19 +1232,9 @@ async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
             ]
         }
     }
-    if use_langpack:
-        mocker.patch.object(mac, "sign_langpacks", new=noop_async)
-        task["payload"]["upstreamArtifacts"].append(
-            {
-                "taskId": "task3",
-                "formats": ["autograph_langpack"],
-                "paths": ["public/build3/target.langpack.xpi"],
-            }
-        )
 
     async def fake_extract(_, all_paths):
         for app in all_paths:
-            assert "autograph_langpack" not in app.formats
             app.parent_dir = f"{work_dir}/0"
             makedirs(app.parent_dir)
             touch(f"{app.parent_dir}/geckodriver")

@@ -214,20 +214,6 @@ async def sign_geckodriver(config, key_config, all_paths):
             },
             retry_exceptions=(IScriptError,),
         )
-        env = deepcopy(os.environ)
-        # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
-        env["COPYFILE_DISABLE"] = "1"
-        await run_command(
-            [
-                "tar",
-                _get_tar_create_options(app.target_tar_path),
-                app.target_tar_path,
-                file_,
-            ],
-            cwd=app.parent_dir,
-            env=env,
-            exception=IScriptError,
-        )
 
 
 # sign_app {{{1
@@ -1308,17 +1294,47 @@ async def geckodriver_behavior(config, task):
 
     """
     key_config = get_key_config(config, task, base_key="mac_config")
+    work_dir = config["work_dir"]
 
     all_paths = get_app_paths(config, task)
-    langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
-    if langpack_apps:
-        await sign_langpacks(config, key_config, langpack_apps)
-        all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
     await extract_all_apps(config, all_paths)
     await unlock_keychain(
         key_config["signing_keychain"], key_config["keychain_password"]
     )
     await update_keychain_search_path(config, key_config["signing_keychain"])
     await sign_geckodriver(config, key_config, all_paths)
+
+    # notarize
+    if key_config["notarize_type"] == "multi_account":
+        await create_all_notarization_zipfiles(
+            all_paths, path_attrs=["orig_path"]
+        )
+        poll_uuids = await wrap_notarization_with_sudo(
+            config, key_config, all_paths, path_attr="zip_path"
+        )
+    else:
+        zip_path = await create_one_notarization_zipfile(
+            work_dir, all_paths, path_attr="orig_path"
+        )
+        poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
+    await poll_all_notarization_status(key_config, poll_uuids)
+    await staple_notarization(all_paths, path_attr="orig_path")
+
+    # tar up
+    env = deepcopy(os.environ)
+    # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
+    env["COPYFILE_DISABLE"] = "1"
+    for app in all_paths:
+        await run_command(
+            [
+                "tar",
+                _get_tar_create_options(app.target_tar_path),
+                app.target_tar_path,
+                "geckodriver",
+            ],
+            cwd=app.parent_dir,
+            env=env,
+            exception=IScriptError,
+        )
 
     log.info("Done signing geckodriver.")
