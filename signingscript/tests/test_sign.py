@@ -430,7 +430,7 @@ async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
         headers=mocker.ANY,
         data=mocker.ANY,
     )
-    assert json.loads(mocked_session.post.call_args[1]["data"]) == [
+    assert json.load(mocked_session.post.call_args[1]["data"]) == [
         {"input": "YjY0bWFyaGFzaA=="}
     ]
 
@@ -547,7 +547,7 @@ async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(
         headers=mocker.ANY,
         data=mocker.ANY,
     )
-    assert json.loads(mocked_session.post.call_args[1]["data"]) == [
+    assert json.load(mocked_session.post.call_args[1]["data"]) == [
         {"input": "YjY0bWFyaGFzaA=="}
     ]
 
@@ -1003,23 +1003,21 @@ async def test_tarfile_append_write(context):
 
 
 def test_signreq_task_keyid():
-    input_bytes = b"hello world"
     fmt = "autograph_hash_only_mar384"
-    req = sign.make_signing_req(input_bytes, fmt, "newkeyid")
+    req = sign.make_signing_req(None, fmt, "newkeyid")
 
     assert req["keyid"] == "newkeyid"
-    assert req["input"] == "aGVsbG8gd29ybGQ="
+    assert req["input"] is None
 
 
 def test_signreq_task_omnija():
-    input_bytes = b"hello world"
     fmt = "autograph_omnija"
     req = sign.make_signing_req(
-        input_bytes, fmt, "newkeyid", extension_id="omni.ja@mozilla.org"
+        None, fmt, "newkeyid", extension_id="omni.ja@mozilla.org"
     )
 
     assert req["keyid"] == "newkeyid"
-    assert req["input"] == "aGVsbG8gd29ybGQ="
+    assert req["input"] is None
     assert req["options"]["id"] == "omni.ja@mozilla.org"
     assert isinstance(req["options"]["cose_algorithms"], type([]))
     assert len(req["options"]["cose_algorithms"]) == 1
@@ -1028,14 +1026,13 @@ def test_signreq_task_omnija():
 
 
 def test_signreq_task_langpack():
-    input_bytes = b"hello world"
     fmt = "autograph_langpack"
     req = sign.make_signing_req(
-        input_bytes, fmt, "newkeyid", extension_id="langpack-en-CA@firefox.mozilla.org"
+        None, fmt, "newkeyid", extension_id="langpack-en-CA@firefox.mozilla.org"
     )
 
     assert req["keyid"] == "newkeyid"
-    assert req["input"] == "aGVsbG8gd29ybGQ="
+    assert req["input"] is None
     assert req["options"]["id"] == "langpack-en-CA@firefox.mozilla.org"
     assert isinstance(req["options"]["cose_algorithms"], type([]))
     assert len(req["options"]["cose_algorithms"]) == 1

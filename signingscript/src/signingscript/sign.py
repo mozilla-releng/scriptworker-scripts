@@ -20,6 +20,7 @@ import tarfile
 import tempfile
 import zipfile
 
+from io import BytesIO
 from functools import wraps
 
 import mohawk
@@ -1036,14 +1037,11 @@ def get_hawk_content_hash(request_body, content_type):
     h.update(b"hawk.1.payload\n")
     h.update(content_type.encode("utf8"))
     h.update(b"\n")
-    if hasattr(request_body, "read"):
-        while True:
-            block = request_body.read(1024)
-            if not block:
-                break
-            h.update(block)
-    else:
-        h.update(request_body)
+    while True:
+        block = request_body.read(1024)
+        if not block:
+            break
+        h.update(block)
     h.update(b"\n")
     return b64encode(h.digest())
 
@@ -1070,8 +1068,7 @@ async def call_autograph(session, url, user, password, request_body, content_has
 
     auth_header = get_hawk_header(url, user, password, content_type, content_hash)
 
-    if hasattr(request_body, "seek"):
-        request_body.seek(0)
+    request_body.seek(0)
 
     resp = await session.post(
         url,
@@ -1092,12 +1089,9 @@ def b64encode(input_bytes):
 
 
 @time_function
-def make_signing_req(input_, fmt, keyid=None, extension_id=None):
+def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
     """Make a signing request object to pass to autograph."""
-    if hasattr(input_, "read"):
-        sign_req = {"input": input_}
-    else:
-        sign_req = {"input": b64encode(input_)}
+    sign_req = {"input": input_file}
 
     if keyid:
         sign_req["keyid"] = keyid
@@ -1124,14 +1118,14 @@ def make_signing_req(input_, fmt, keyid=None, extension_id=None):
 
 @time_async_function
 async def sign_with_autograph(
-    session, server, input_, fmt, autograph_method, keyid=None, extension_id=None
+    session, server, input_file, fmt, autograph_method, keyid=None, extension_id=None
 ):
     """Signs data with autograph and returns the result.
 
     Args:
         session (aiohttp.ClientSession): client session object
         server (url): the server to connect to sign
-        input_ (bytes or file object): the source data to sign
+        input_file (file object): the source data to sign
         fmt (str): the format to sign with
         autograph_method (str): which autograph method to use to sign. must be
                                 one of 'file', 'hash', or 'data'
@@ -1149,18 +1143,15 @@ async def sign_with_autograph(
     if autograph_method not in {"file", "hash", "data"}:
         raise SigningScriptError(f"Unsupported autograph method: {autograph_method}")
 
-    sign_req = make_signing_req(input_, fmt, keyid, extension_id)
+    sign_req = make_signing_req(input_file, fmt, keyid, extension_id)
 
     content_type = "application/json"
 
-    if hasattr(sign_req["input"], "read"):
-        request_json = tempfile.TemporaryFile("w+b")
-        write_signing_req_to_disk(request_json, sign_req)
-        req_size = request_json.tell()
-        request_json.seek(0)
-    else:
-        request_json = json.dumps([sign_req], separators=",:").encode("utf8")
-        req_size = len(request_json)
+    request_json = tempfile.TemporaryFile("w+b")
+    write_signing_req_to_disk(request_json, sign_req)
+    req_size = request_json.tell()
+    request_json.seek(0)
+
     content_hash = get_hawk_content_hash(request_json, content_type)
 
     url = f"{server.server}/sign/{autograph_method}"
@@ -1276,8 +1267,9 @@ async def sign_hash_with_autograph(context, hash_, fmt, keyid=None):
         context.signing_servers, cert_type, [fmt], raise_on_empty_list=True
     )
     s = servers[0]
+    input_file = BytesIO(hash_)
     signature = base64.b64decode(
-        await sign_with_autograph(context.session, s, hash_, fmt, "hash", keyid)
+        await sign_with_autograph(context.session, s, input_file, fmt, "hash", keyid)
     )
     return signature
 
