@@ -201,9 +201,9 @@ async def sign_geckodriver(config, key_config, all_paths):
             app.orig_path.split(app.artifact_prefix)[1],
         )
         file_ = "geckodriver"
-        path = os.path.join(app.parent_dir, file_)
-        if not os.path.exists(path):
-            raise IScriptError(f"No such file {path}!")
+        app.app_path = os.path.join(app.parent_dir, file_)
+        if not os.path.exists(app.app_path):
+            raise IScriptError(f"No such file {app.app_path}!")
         await retry_async(
             run_command,
             args=[sign_command + [file_]],
@@ -1306,17 +1306,17 @@ async def geckodriver_behavior(config, task):
 
     # notarize
     if key_config["notarize_type"] == "multi_account":
-        await create_all_notarization_zipfiles(all_paths, path_attrs=["orig_path"])
+        await create_all_notarization_zipfiles(all_paths, path_attrs=["app_path"])
         poll_uuids = await wrap_notarization_with_sudo(
             config, key_config, all_paths, path_attr="zip_path"
         )
     else:
         zip_path = await create_one_notarization_zipfile(
-            work_dir, all_paths, path_attr="orig_path"
+            work_dir, all_paths, path_attr="app_path"
         )
         poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
     await poll_all_notarization_status(key_config, poll_uuids)
-    await staple_notarization(all_paths, path_attr="orig_path")
+    await staple_notarization(all_paths, path_attr="app_path")
 
     # tar up
     env = deepcopy(os.environ)
