@@ -1195,8 +1195,11 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
 
 
 # geckodriver_behavior {{{1
+@pytest.mark.parametrize(
+    "notarize_type", ("multi_account", "single_account", "single_zip")
+)
 @pytest.mark.asyncio
-async def test_geckodriver_behavior(mocker, tmpdir):
+async def test_geckodriver_behavior(mocker, tmpdir, notarize_type):
     """Mock ``geckodriver_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1207,7 +1210,7 @@ async def test_geckodriver_behavior(mocker, tmpdir):
         "local_notarization_accounts": ["acct0", "acct1", "acct2"],
         "mac_config": {
             "dep": {
-                "notarize_type": "single_zip",
+                "notarize_type": notarize_type,
                 "signing_keychain": "keychain_path",
                 "base_bundle_id": "org.test",
                 "identity": "id",
@@ -1242,5 +1245,8 @@ async def test_geckodriver_behavior(mocker, tmpdir):
     mocker.patch.object(mac, "extract_all_apps", new=fake_extract)
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
+    mocker.patch.object(mac, "poll_notarization_uuid", new=noop_async)
+    mocker.patch.object(mac, "get_notarization_status_from_log", return_value=None)
+    mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
     await mac.geckodriver_behavior(config, task)

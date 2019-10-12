@@ -1306,9 +1306,7 @@ async def geckodriver_behavior(config, task):
 
     # notarize
     if key_config["notarize_type"] == "multi_account":
-        await create_all_notarization_zipfiles(
-            all_paths, path_attrs=["orig_path"]
-        )
+        await create_all_notarization_zipfiles(all_paths, path_attrs=["orig_path"])
         poll_uuids = await wrap_notarization_with_sudo(
             config, key_config, all_paths, path_attr="zip_path"
         )
