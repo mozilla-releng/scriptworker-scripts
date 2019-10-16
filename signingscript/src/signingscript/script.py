@@ -33,8 +33,6 @@ async def async_main(context):
     """
     connector = _craft_aiohttp_connector(context)
 
-    # Create a session for talking to the legacy signing servers in order to
-    # generate a signing token
     async with aiohttp.ClientSession(connector=connector) as session:
         context.session = session
         work_dir = context.config["work_dir"]
@@ -68,9 +66,6 @@ async def async_main(context):
                 all_signing_formats,
             )
 
-    # Create a new session to talk to autograph
-    async with aiohttp.ClientSession() as session:
-        context.session = session
         filelist_dict = build_filelist_dict(context)
         for path, path_dict in filelist_dict.items():
             copy_to_dir(path_dict["full_path"], context.config["work_dir"], target=path)

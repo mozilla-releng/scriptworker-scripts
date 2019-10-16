@@ -2,11 +2,6 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [12.2.0] - 2019-10-11
-### Changed
-- Use aiohttp for autograph calls
-- Use temporary files for storing http request body for calls to autograph
-
 ## [12.1.0] - 2019-09-05
 ### Changed
 - For authenticode signing, skip files that are already signed

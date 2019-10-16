@@ -11,8 +11,9 @@ import os
 import re
 import resource
 import time
-import hashlib
 
+# TODO: Use aiohttp for this.
+import requests
 import shutil
 import subprocess
 import sys
@@ -20,10 +21,9 @@ import tarfile
 import tempfile
 import zipfile
 
-from io import BytesIO
 from functools import wraps
 
-import mohawk
+from requests_hawk import HawkAuth
 from mardor.reader import MarReader
 from mardor.writer import add_signature_block
 
@@ -40,17 +40,14 @@ from signingscript import utils
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
 
-import winsign.sign
-from winsign.crypto import load_pem_certs
-
-log = logging.getLogger(__name__)
-
 try:
     # NB. The widevine module needs to be deployed separately
     import widevine
 except ImportError:
-    log.exception("Could not import widevine")
     widevine = None
+
+import winsign.sign
+from winsign.crypto import load_pem_certs
 
 sys.path.append(  # append the mozbuild vendor
     os.path.abspath(
@@ -61,6 +58,9 @@ sys.path.append(  # append the mozbuild vendor
 )
 
 from mozpack import mozjar  # noqa: E402
+
+
+log = logging.getLogger(__name__)
 
 _ZIP_ALIGNMENT = (
     "4"
@@ -1002,96 +1002,24 @@ async def _create_tarfile(context, to, files, compression, tmp_dir=None):
         raise SigningScriptError(e)
 
 
-def write_signing_req_to_disk(fp, signing_req):
-    """Write signing_req to fp.
-
-    Does proper base64 and json encoding.
-    Tries not to hold onto a lot of memory.
-    """
-    fp.write(b"[{")
-    for k, v in signing_req.items():
-        fp.write(json.dumps(k).encode("utf8"))
-        fp.write(b":")
-        if hasattr(v, "read"):
-            # Make sure we're always reading from the beginning of the file
-            # Sometimes we have to retry the request
-            v.seek(0)
-            fp.write(b'"')
-            while True:
-                block = v.read(1020)
-                if not block:
-                    break
-                e = b64encode(block).encode("utf8")
-                fp.write(e)
-            fp.write(b'"')
-        else:
-            fp.write(json.dumps(v).encode("utf8"))
-        fp.write(b",")
-    fp.seek(-1, 1)
-    fp.write(b"}]")
-
-
-def get_hawk_content_hash(request_body, content_type):
-    """Generate the content hash of the given request."""
-    h = hashlib.new("sha256")
-    h.update(b"hawk.1.payload\n")
-    h.update(content_type.encode("utf8"))
-    h.update(b"\n")
-    while True:
-        block = request_body.read(1024)
-        if not block:
-            break
-        h.update(block)
-    h.update(b"\n")
-    return b64encode(h.digest())
-
-
-def get_hawk_header(url, user, password, content_type, content_hash):
-    """Create a HAWK Authentication header."""
-    r = mohawk.base.Resource(
-        credentials={"id": user, "key": password, "algorithm": "sha256"},
-        url=url,
-        method="POST",
-        content_type=content_type,
-    )
-    r._content_hash = content_hash
-    mac = mohawk.util.calculate_mac("header", r, r.content_hash)
-    a = mohawk.base.HawkAuthority()
-    auth_header = a._make_header(r, mac)
-    return auth_header
-
-
 @time_async_function
-async def call_autograph(session, url, user, password, request_body, content_hash):
+async def call_autograph(url, user, password, request_json):
     """Call autograph and return the json response."""
-    content_type = "application/json"
-
-    auth_header = get_hawk_header(url, user, password, content_type, content_hash)
-
-    request_body.seek(0)
-
-    resp = await session.post(
-        url,
-        data=request_body,
-        headers={"Authorization": auth_header, "Content-Type": content_type},
-    )
-    log.debug("Autograph response: %s", resp.status)
-    resp.raise_for_status()
-    # TODO: Write this out to temporary file. The responses can be large,
-    # especially in the case of APK/omnija signing where the entire file is
-    # being sent and returned.
-    return await resp.json()
-
-
-def b64encode(input_bytes):
-    """Return a base64 encoded string."""
-    return base64.b64encode(input_bytes).decode("ascii")
+    auth = HawkAuth(id=user, key=password)
+    with requests.Session() as session:
+        r = session.post(url, json=request_json, auth=auth)
+        log.debug(
+            "Autograph response: %s", r.text[:120] if len(r.text) >= 120 else r.text
+        )
+        r.raise_for_status()
+        return r.json()
 
 
 @time_function
-def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
+def make_signing_req(input_bytes, server, fmt, keyid=None, extension_id=None):
     """Make a signing request object to pass to autograph."""
-    sign_req = {"input": input_file}
+    base64_input = base64.b64encode(input_bytes).decode("ascii")
+    sign_req = {"input": base64_input}
 
     if keyid:
         sign_req["keyid"] = keyid
@@ -1113,19 +1041,18 @@ def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
         sign_req["options"]["cose_algorithms"] = ["ES256"]
         sign_req["options"]["pkcs7_digest"] = "SHA256"
 
-    return sign_req
+    return [sign_req]
 
 
 @time_async_function
 async def sign_with_autograph(
-    session, server, input_file, fmt, autograph_method, keyid=None, extension_id=None
+    server, input_bytes, fmt, autograph_method, keyid=None, extension_id=None
 ):
     """Signs data with autograph and returns the result.
 
     Args:
-        session (aiohttp.ClientSession): client session object
-        server (url): the server to connect to sign
-        input_file (file object): the source data to sign
+        server (SigningServer): the server to connect to sign
+        input_bytes (bytes): the source data to sign
         fmt (str): the format to sign with
         autograph_method (str): which autograph method to use to sign. must be
                                 one of 'file', 'hash', or 'data'
@@ -1133,7 +1060,7 @@ async def sign_with_autograph(
         extension_id (str): which id to send to autograph for the extension (optional)
 
     Raises:
-        aiohttp.ClientError: on failure
+        Requests.RequestException: on failure
         SigningScriptError: when no suitable signing server is found for fmt
 
     Returns:
@@ -1143,24 +1070,22 @@ async def sign_with_autograph(
     if autograph_method not in {"file", "hash", "data"}:
         raise SigningScriptError(f"Unsupported autograph method: {autograph_method}")
 
-    sign_req = make_signing_req(input_file, fmt, keyid, extension_id)
+    sign_req = make_signing_req(input_bytes, server, fmt, keyid, extension_id)
 
-    content_type = "application/json"
-
-    request_json = tempfile.TemporaryFile("w+b")
-    write_signing_req_to_disk(request_json, sign_req)
-    req_size = request_json.tell()
-    request_json.seek(0)
-
-    content_hash = get_hawk_content_hash(request_json, content_type)
+    rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    log.debug(
+        "signing %d bytes of data with format %s with %s; RSS:%s",
+        len(input_bytes),
+        fmt,
+        autograph_method,
+        rss,
+    )
 
     url = f"{server.server}/sign/{autograph_method}"
 
-    rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    log.debug("signing %d bytes of data with %s; RSS:%s", req_size, url, rss)
     sign_resp = await retry_async(
         call_autograph,
-        args=(session, url, server.user, server.password, request_json, content_hash),
+        args=(url, server.user, server.password, sign_req),
         attempts=3,
         sleeptime_kwargs={"delay_factor": 2.0},
     )
@@ -1184,7 +1109,7 @@ async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=No
         extension_id (str, optional): the extension id to use when signing.
 
     Raises:
-        aiohttp.ClientError: on failure
+        Requests.RequestException: on failure
         SigningScriptError: when no suitable signing server is found for fmt
 
     Returns:
@@ -1199,10 +1124,10 @@ async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=No
     )
     s = servers[0]
     to = to or from_
-    input_file = open(from_, "rb")
+    input_bytes = open(from_, "rb").read()
     signed_bytes = base64.b64decode(
         await sign_with_autograph(
-            context.session, s, input_file, fmt, "file", extension_id=extension_id
+            s, input_bytes, fmt, "file", extension_id=extension_id
         )
     )
     with open(to, "wb") as fout:
@@ -1220,7 +1145,7 @@ async def sign_gpg_with_autograph(context, from_, fmt):
         fmt (str): the format to sign with
 
     Raises:
-        aiohttp.ClientError: on failure
+        Requests.RequestException: on failure
         SigningScriptError: when no suitable signing server is found for fmt
 
     Returns:
@@ -1235,8 +1160,8 @@ async def sign_gpg_with_autograph(context, from_, fmt):
     )
     s = servers[0]
     to = f"{from_}.asc"
-    input_file = open(from_, "rb")
-    signature = await sign_with_autograph(context.session, s, input_file, fmt, "data")
+    input_bytes = open(from_, "rb").read()
+    signature = await sign_with_autograph(s, input_bytes, fmt, "data")
     with open(to, "w") as fout:
         fout.write(signature)
     return [from_, to]
@@ -1253,7 +1178,7 @@ async def sign_hash_with_autograph(context, hash_, fmt, keyid=None):
         keyid (str): which key to use on autograph (optional)
 
     Raises:
-        aiohttp.ClientError: on failure
+        Requests.RequestException: on failure
         SigningScriptError: when no suitable signing server is found for fmt
 
     Returns:
@@ -1267,9 +1192,8 @@ async def sign_hash_with_autograph(context, hash_, fmt, keyid=None):
         context.signing_servers, cert_type, [fmt], raise_on_empty_list=True
     )
     s = servers[0]
-    input_file = BytesIO(hash_)
     signature = base64.b64decode(
-        await sign_with_autograph(context.session, s, input_file, fmt, "hash", keyid)
+        await sign_with_autograph(s, hash_, fmt, "hash", keyid)
     )
     return signature
 
@@ -1343,7 +1267,7 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
             `from_`. Defaults to None.
 
     Raises:
-        aiohttp.ClientError: on failure
+        Requests.RequestException: on failure
         SigningScriptError: when no suitable signing server is found for fmt
 
     Returns:
@@ -1410,7 +1334,7 @@ async def sign_widevine_with_autograph(context, from_, blessed, to=None):
             `{from_}.sig`. Defaults to None.
 
     Raises:
-        aiohttp.ClientError: on failure
+        Requests.RequestException: on failure
         SigningScriptError: when no suitable signing server is found for fmt
 
     Returns:
@@ -1448,7 +1372,7 @@ async def sign_omnija_with_autograph(context, from_):
         from_ (str): the source file to sign (overwrites)
 
     Raises:
-        aiohttp.ClientError: on failure
+        Requests.RequestException: on failure
         SigningScriptError: when no suitable signing server is found for fmt
 
     Returns:
@@ -1534,11 +1458,11 @@ async def sign_authenticode_file(context, orig_path, fmt):
         return True
 
     def signer(digest, digest_algo):
+        thread_loop = asyncio.new_event_loop()
         try:
-            f = asyncio.run_coroutine_threadsafe(
-                sign_hash_with_autograph(context, digest, fmt), loop
+            return thread_loop.run_until_complete(
+                sign_hash_with_autograph(context, digest, fmt)
             )
-            return f.result()
         except Exception:
             log.exception("Error signing authenticode hash with autograph")
             raise
