@@ -1,3 +1,4 @@
+import aiohttp
 import asyncio
 import base64
 from contextlib import contextmanager
@@ -9,6 +10,10 @@ import shutil
 import subprocess
 import tarfile
 import zipfile
+import json
+import re
+
+from unittest import mock
 
 import winsign.sign
 
@@ -35,33 +40,6 @@ TEST_CERT_TYPE = "{}cert:dep-signing".format(DEFAULT_SCOPE_PREFIX)
 INSTALL_DIR = os.path.dirname(sign.__file__)
 
 
-@pytest.fixture(scope="function")
-def task_defn():
-    return {
-        "provisionerId": "meh",
-        "workerType": "workertype",
-        "schedulerId": "task-graph-scheduler",
-        "taskGroupId": "some",
-        "routes": [],
-        "retries": 5,
-        "created": "2015-05-08T16:15:58.903Z",
-        "deadline": "2015-05-08T18:15:59.010Z",
-        "expires": "2016-05-08T18:15:59.010Z",
-        "dependencies": ["VALID_TASK_ID"],
-        "scopes": ["signing"],
-        "payload": {
-            "upstreamArtifacts": [
-                {
-                    "taskType": "build",
-                    "taskId": "VALID_TASK_ID",
-                    "formats": ["gpg"],
-                    "paths": ["public/build/firefox-52.0a1.en-US.win64.installer.exe"],
-                }
-            ]
-        },
-    }
-
-
 @contextmanager
 def context_die(*args, **kwargs):
     raise SigningScriptError("dying")
@@ -75,6 +53,26 @@ def is_tarfile(archive):
     except tarfile.ReadError:
         return False
     return True
+
+
+class MockedSession:
+    def __init__(self, signed_file=None, signature=None, exception=None):
+        self.signed_file = signed_file
+        self.exception = exception
+        self.signature = signature
+        self.post = mock.MagicMock(wraps=self.post)
+
+    async def post(self, *args, **kwargs):
+        resp = mock.MagicMock()
+        resp.status = 200
+        resp.json.return_value = asyncio.Future()
+        if self.signed_file:
+            resp.json.return_value.set_result([{"signed_file": self.signed_file}])
+        if self.signature:
+            resp.json.return_value.set_result([{"signature": self.signature}])
+        if self.exception:
+            resp.json.side_effect = self.exception
+        return resp
 
 
 async def assert_file_permissions(archive):
@@ -230,13 +228,8 @@ async def test_sign_file_with_autograph(context, mocker, to, expected, format, o
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
     mocker.patch("builtins.open", open_mock, create=True)
 
-    session_mock = mocker.MagicMock()
-    session_mock.post.return_value.json.return_value = [{"signed_file": "bW96aWxsYQ=="}]
-
-    Session_mock = mocker.Mock()
-    Session_mock.return_value.__enter__ = mocker.Mock(return_value=session_mock)
-    Session_mock.return_value.__exit__ = mocker.Mock()
-    mocker.patch("signingscript.sign.requests.Session", Session_mock, create=True)
+    mocked_session = MockedSession(signed_file="bW96aWxsYQ==")
+    mocker.patch.object(context, "session", new=mocked_session)
 
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     context.signing_servers = {
@@ -259,9 +252,14 @@ async def test_sign_file_with_autograph(context, mocker, to, expected, format, o
     kwargs = {"input": "MHhkZWFkYmVlZg=="}
     if options:
         kwargs["options"] = options
-    session_mock.post.assert_called_with(
-        "https://autograph-hsm.dev.mozaws.net/sign/file", auth=mocker.ANY, json=[kwargs]
+    mocked_session.post.assert_called_with(
+        "https://autograph-hsm.dev.mozaws.net/sign/file",
+        headers=mocker.ANY,
+        data=mocker.ANY,
     )
+    data = mocked_session.post.call_args[1]["data"]
+    data.seek(0)
+    assert json.load(data) == [kwargs]
 
 
 @pytest.mark.asyncio
@@ -294,18 +292,10 @@ async def test_sign_file_with_autograph_raises_http_error(
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
     mocker.patch("builtins.open", open_mock, create=True)
 
-    session_mock = mocker.MagicMock()
-    post_mock_response = session_mock.post.return_value
-    post_mock_response.raise_for_status.side_effect = (
-        sign.requests.exceptions.RequestException
+    mocked_session = MockedSession(
+        signed_file="bW96aWxsYQ==", exception=aiohttp.ClientError
     )
-    post_mock_response.json.return_value = [{"signed_file": "bW96aWxsYQ=="}]
-
-    @contextmanager
-    def session_context():
-        yield session_mock
-
-    mocker.patch("signingscript.sign.requests.Session", session_context)
+    mocker.patch.object(context, "session", new=mocked_session)
 
     async def fake_retry_async(func, args=(), attempts=5, sleeptime_kwargs=None):
         await func(*args)
@@ -326,7 +316,7 @@ async def test_sign_file_with_autograph_raises_http_error(
             )
         ]
     }
-    with pytest.raises(sign.requests.exceptions.RequestException):
+    with pytest.raises(aiohttp.ClientError):
         await sign.sign_file_with_autograph(context, "from", "autograph_mar", to=to)
     open_mock.assert_called()
 
@@ -397,15 +387,8 @@ async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
     mocker.patch("builtins.open", open_mock, create=True)
 
-    session_mock = mocker.MagicMock()
-    session_mock.post.return_value.json.return_value = [
-        {"signature": base64.b64encode(b"0" * 512)}
-    ]
-
-    Session_mock = mocker.Mock()
-    Session_mock.return_value.__enter__ = mocker.Mock(return_value=session_mock)
-    Session_mock.return_value.__exit__ = mocker.Mock()
-    mocker.patch("signingscript.sign.requests.Session", Session_mock, create=True)
+    mocked_session = MockedSession(signature=base64.b64encode(b"0" * 512))
+    mocker.patch.object(context, "session", new=mocked_session)
 
     add_signature_mock = mocker.Mock()
     mocker.patch(
@@ -442,11 +425,14 @@ async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
     add_signature_mock.assert_called()
     MarReader_mock.assert_called()
     m_mock.calculate_hashes.assert_called()
-    session_mock.post.assert_called_with(
+    mocked_session.post.assert_called_with(
         "https://autograph-hsm.dev.mozaws.net/sign/hash",
-        auth=mocker.ANY,
-        json=[{"input": "YjY0bWFyaGFzaA=="}],
+        headers=mocker.ANY,
+        data=mocker.ANY,
     )
+    assert json.load(mocked_session.post.call_args[1]["data"]) == [
+        {"input": "YjY0bWFyaGFzaA=="}
+    ]
 
 
 @pytest.mark.asyncio
@@ -471,10 +457,10 @@ async def test_sign_mar384_with_autograph_hash_keyid(context, mocker):
     mar_reader.calculate_hashes.return_value = [[None, b"b64marhash"]]
     mocker.patch("signingscript.sign.verify_mar_signature")
 
-    f = asyncio.Future()
-    f.set_result(b"#" * 512)
-    ag = mocker.patch("signingscript.sign.sign_hash_with_autograph")
-    ag.return_value = f
+    async def fake_sign_hash(context, h, fmt, keyid):
+        return b"#" * 512
+    fake_sign_hash = mock.MagicMock(wraps=fake_sign_hash)
+    mocker.patch("signingscript.sign.sign_hash_with_autograph", fake_sign_hash)
 
     assert (
         await sign.sign_mar384_with_autograph_hash(
@@ -482,7 +468,7 @@ async def test_sign_mar384_with_autograph_hash_keyid(context, mocker):
         )
         == "from"
     )
-    assert ag.called_with(keyid="keyid1")
+    fake_sign_hash.assert_called_with(mocker.ANY, mocker.ANY, "autograph_hash_only_mar384", "keyid1")
 
 
 @pytest.mark.asyncio
@@ -517,15 +503,8 @@ async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
     mocker.patch("builtins.open", open_mock, create=True)
 
-    session_mock = mocker.MagicMock()
-    session_mock.post.return_value.json.return_value = [
-        {"signature": base64.b64encode(b"0")}
-    ]
-
-    Session_mock = mocker.Mock()
-    Session_mock.return_value.__enter__ = mocker.Mock(return_value=session_mock)
-    Session_mock.return_value.__exit__ = mocker.Mock()
-    mocker.patch("signingscript.sign.requests.Session", Session_mock, create=True)
+    mocked_session = MockedSession(signature=base64.b64encode(b"0"))
+    mocker.patch.object(context, "session", new=mocked_session)
 
     add_signature_mock = mocker.Mock()
     mocker.patch(
@@ -563,11 +542,14 @@ async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(
     add_signature_mock.assert_called()
     MarReader_mock.assert_called()
     m_mock.calculate_hashes.assert_called()
-    session_mock.post.assert_called_with(
+    mocked_session.post.assert_called_with(
         "https://autograph-hsm.dev.mozaws.net/sign/hash",
-        auth=mocker.ANY,
-        json=[{"input": "YjY0bWFyaGFzaA=="}],
+        headers=mocker.ANY,
+        data=mocker.ANY,
     )
+    assert json.load(mocked_session.post.call_args[1]["data"]) == [
+        {"input": "YjY0bWFyaGFzaA=="}
+    ]
 
 
 # sign_gpg {{{1
@@ -1021,63 +1003,47 @@ async def test_tarfile_append_write(context):
 
 
 def test_signreq_task_keyid():
-    input_bytes = b"hello world"
     fmt = "autograph_hash_only_mar384"
-    s = SigningServer(
-        "https://autograph-hsm.dev.mozaws.net", "alice", "bob", [fmt], "autograph"
-    )
-    req = sign.make_signing_req(input_bytes, s, fmt, "newkeyid")
+    req = sign.make_signing_req(None, fmt, "newkeyid")
 
-    assert req[0]["keyid"] == "newkeyid"
-    assert req[0]["input"] == "aGVsbG8gd29ybGQ="
+    assert req["keyid"] == "newkeyid"
+    assert req["input"] is None
 
 
 def test_signreq_task_omnija():
-    input_bytes = b"hello world"
     fmt = "autograph_omnija"
-    s = SigningServer(
-        "https://autograph-hsm.dev.mozaws.net", "alice", "bob", [fmt], "autograph"
-    )
     req = sign.make_signing_req(
-        input_bytes, s, fmt, "newkeyid", extension_id="omni.ja@mozilla.org"
+        None, fmt, "newkeyid", extension_id="omni.ja@mozilla.org"
     )
 
-    assert req[0]["keyid"] == "newkeyid"
-    assert req[0]["input"] == "aGVsbG8gd29ybGQ="
-    assert req[0]["options"]["id"] == "omni.ja@mozilla.org"
-    assert isinstance(req[0]["options"]["cose_algorithms"], type([]))
-    assert len(req[0]["options"]["cose_algorithms"]) == 1
-    assert req[0]["options"]["cose_algorithms"][0] == "ES256"
-    assert req[0]["options"]["pkcs7_digest"] == "SHA256"
+    assert req["keyid"] == "newkeyid"
+    assert req["input"] is None
+    assert req["options"]["id"] == "omni.ja@mozilla.org"
+    assert isinstance(req["options"]["cose_algorithms"], type([]))
+    assert len(req["options"]["cose_algorithms"]) == 1
+    assert req["options"]["cose_algorithms"][0] == "ES256"
+    assert req["options"]["pkcs7_digest"] == "SHA256"
 
 
 def test_signreq_task_langpack():
-    input_bytes = b"hello world"
     fmt = "autograph_langpack"
-    s = SigningServer(
-        "https://autograph-hsm.dev.mozaws.net", "alice", "bob", [fmt], "autograph"
-    )
     req = sign.make_signing_req(
-        input_bytes,
-        s,
-        fmt,
-        "newkeyid",
-        extension_id="langpack-en-CA@firefox.mozilla.org",
+        None, fmt, "newkeyid", extension_id="langpack-en-CA@firefox.mozilla.org"
     )
 
-    assert req[0]["keyid"] == "newkeyid"
-    assert req[0]["input"] == "aGVsbG8gd29ybGQ="
-    assert req[0]["options"]["id"] == "langpack-en-CA@firefox.mozilla.org"
-    assert isinstance(req[0]["options"]["cose_algorithms"], type([]))
-    assert len(req[0]["options"]["cose_algorithms"]) == 1
-    assert req[0]["options"]["cose_algorithms"][0] == "ES256"
-    assert req[0]["options"]["pkcs7_digest"] == "SHA256"
+    assert req["keyid"] == "newkeyid"
+    assert req["input"] is None
+    assert req["options"]["id"] == "langpack-en-CA@firefox.mozilla.org"
+    assert isinstance(req["options"]["cose_algorithms"], type([]))
+    assert len(req["options"]["cose_algorithms"]) == 1
+    assert req["options"]["cose_algorithms"][0] == "ES256"
+    assert req["options"]["pkcs7_digest"] == "SHA256"
 
 
 @pytest.mark.asyncio
 async def test_bad_autograph_method():
     with pytest.raises(SigningScriptError):
-        await sign.sign_with_autograph(None, None, None, "badformat")
+        await sign.sign_with_autograph(None, None, None, None, "badformat")
 
 
 @pytest.mark.asyncio
@@ -1406,8 +1372,8 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt):
     async def mocked_autograph(context, from_, fmt):
         return b""
 
-    def mocked_winsign(infile, outfile, digest_algo, certs, signer, **kwargs):
-        signer("", "")
+    async def mocked_winsign(infile, outfile, digest_algo, certs, signer, **kwargs):
+        await signer("", "")
         shutil.copyfile(infile, outfile)
         return True
 
@@ -1416,7 +1382,7 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt):
             return True
 
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
-    mocker.patch.object(winsign.sign, "is_signed", mocked_issigned)
+    mocker.patch.object(winsign.osslsigncode, "is_signed", mocked_issigned)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
 
     result = await sign.sign_authenticode_zip(context, test_file, fmt)
@@ -1433,7 +1399,7 @@ async def test_authenticode_sign_zip_nofiles(tmpdir, mocker, context):
     test_file = os.path.join(tmpdir, "partial1.mar")
     shutil.copyfile(os.path.join(TEST_DATA_DIR, "partial1.mar"), test_file)
 
-    def mocked_winsign(infile, outfile, *args, **kwargs):
+    async def mocked_winsign(infile, outfile, *args, **kwargs):
         shutil.copyfile(infile, outfile)
         return True
 
@@ -1451,7 +1417,7 @@ async def test_authenticode_sign_zip_error(tmpdir, mocker, context):
     test_file = os.path.join(tmpdir, "windows.zip")
     shutil.copyfile(os.path.join(TEST_DATA_DIR, "windows.zip"), test_file)
 
-    def mocked_winsign(infile, outfile, *args, **kwargs):
+    async def mocked_winsign(infile, outfile, *args, **kwargs):
         return False
 
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
@@ -1460,7 +1426,9 @@ async def test_authenticode_sign_zip_error(tmpdir, mocker, context):
 
 
 @pytest.mark.asyncio
-async def test_authenticode_sign_authenticode_error(tmpdir, mocker, context, caplog):
+async def test_authenticode_sign_authenticode_permanent_error(
+    tmpdir, mocker, context, caplog
+):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
@@ -1468,11 +1436,11 @@ async def test_authenticode_sign_authenticode_error(tmpdir, mocker, context, cap
     test_file = os.path.join(tmpdir, "windows.zip")
     shutil.copyfile(os.path.join(TEST_DATA_DIR, "windows.zip"), test_file)
 
-    def mocked_authenticode_sign(infile, outfile, *args, **kwargs):
+    async def mocked_authenticode_sign(infile, outfile, *args, **kwargs):
         raise Exception("BAD!")
 
-    def mocked_winsign(infile, outfile, digest_algo, certs, signer, **kwargs):
-        signer("", "")
+    async def mocked_winsign(infile, outfile, digest_algo, certs, signer, **kwargs):
+        await signer("", "")
         shutil.copyfile(infile, outfile)
         return True
 
@@ -1483,6 +1451,53 @@ async def test_authenticode_sign_authenticode_error(tmpdir, mocker, context, cap
         await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode")
 
     assert "BAD!" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_authenticode_sign_gpg_temporary_error(tmpdir, mocker, context, caplog):
+    context.task = {}
+    context.task["scopes"] = ["project:releng:signing:cert:dep-signing"]
+    context.signing_servers = {
+        "project:releng:signing:cert:dep-signing": [
+            SigningServer(
+                *[
+                    "https://autograph-hsm.dev.mozaws.net",
+                    "alice",
+                    "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
+                    ["autograph_gpg"],
+                    "autograph",
+                ]
+            )
+        ]
+    }
+    mocked_session = MockedSession(signature="GPG SIGNATURE HERE")
+    mocked_session.count = 0
+    real_post = mocked_session.post
+
+    async def flaky_post(self, *args, **kwargs):
+        self.count += 1
+        if self.count < 2:
+            raise Exception("BAD!")
+        return await real_post(*args, **kwargs)
+
+    mocked_session.post = flaky_post.__get__(mocked_session, MockedSession)
+    mocked_session.post = mock.MagicMock(wraps=mocked_session.post)
+
+    mocker.patch.object(context, "session", new=mocked_session)
+
+    test_file = tmpdir / "file.txt"
+    test_file.write(b"hello world")
+
+    await sign.sign_gpg_with_autograph(context, test_file, "autograph_gpg")
+    hashes = []
+    for call in mocked_session.post.call_args_list:
+        auth = call[1]["headers"]["Authorization"]
+        h = re.search(r"hash=\"(\S+)\",", auth)
+        if h:
+            hashes.append(h[1])
+    assert len(hashes) == 2
+    # Make sure that the hash of our request is always the same
+    assert all(h == hashes[0] for h in hashes)
 
 
 @pytest.mark.asyncio
@@ -1502,8 +1517,8 @@ async def test_authenticode_sign_single_file(tmpdir, mocker, context):
     async def mocked_autograph(context, from_, fmt):
         return b""
 
-    def mocked_winsign(infile, outfile, digest_algo, certs, signer, **kwargs):
-        signer("", "")
+    async def mocked_winsign(infile, outfile, digest_algo, certs, signer, **kwargs):
+        await signer("", "")
         shutil.copyfile(infile, outfile)
         return True
 

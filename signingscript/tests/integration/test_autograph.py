@@ -7,9 +7,11 @@ import subprocess
 import shutil
 import zipfile
 
+import aiohttp
+
 from mardor.cli import do_verify
 from scriptworker.utils import makedirs
-from signingscript.sign import sign_file_with_autograph
+from signingscript.sign import sign_file_with_autograph, sign_authenticode_zip
 from signingscript.utils import SigningServer
 
 from signingscript.script import async_main
@@ -42,6 +44,13 @@ DEFAULT_SERVER_CONFIG = {
             "alice",
             "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn",
             ["autograph_hash_only_mar384"],
+            "autograph",
+        ],
+        [
+            "http://localhost:5500",
+            "charlie",
+            "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn",
+            ["autograph_authenticode"],
             "autograph",
         ],
     ]
@@ -305,20 +314,49 @@ async def test_integration_autograph_custom_digest_algorithm(
     shutil.copy(original_file_path, tmpdir)
     apk_path = os.path.join(tmpdir, file_name)
 
+    async with aiohttp.ClientSession() as session:
+        context.session = session
+
+        context.signing_servers = {
+            "project:releng:signing:cert:dep-signing": [
+                SigningServer(
+                    *[
+                        "http://localhost:5500",
+                        "bob",
+                        "1234567890abcdefghijklmnopqrstuvwxyz1234567890abcd",
+                        [format],
+                        "autograph",
+                    ]
+                )
+            ]
+        }
+        context.task = _craft_task([file_name], signing_format=format)
+
+        await sign_file_with_autograph(context, apk_path, format)
+        assert _extract_apk_signature_algorithm(apk_path) == expected_algorithm
+
+
+@pytest.mark.asyncio
+@skip_when_no_autograph_server
+async def test_integration_autograph_authenticode(context, tmpdir):
+    context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_timestamp_style"] = None
+    context.config["authenticode_url"] = "https://example.com"
     context.signing_servers = {
         "project:releng:signing:cert:dep-signing": [
             SigningServer(
                 *[
                     "http://localhost:5500",
-                    "bob",
-                    "1234567890abcdefghijklmnopqrstuvwxyz1234567890abcd",
-                    [format],
+                    "charlie",
+                    "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn",
+                    ["autograph_authenticode"],
                     "autograph",
                 ]
             )
         ]
     }
-    context.task = _craft_task([file_name], signing_format=format)
+    context.config["signing_server_config"] = _write_server_config(tmpdir)
+    _copy_files_to_work_dir("windows.zip", context)
+    context.task = _craft_task(["windows.zip"], signing_format="autograph_authenticode")
 
-    await sign_file_with_autograph(context, apk_path, format)
-    assert _extract_apk_signature_algorithm(apk_path) == expected_algorithm
+    await async_main(context)
