@@ -26,6 +26,7 @@ from signingscript.sign import (
     sign_omnija,
     sign_langpack,
     sign_authenticode_zip,
+    sign_xpi,
 )
 
 log = logging.getLogger(__name__)
@@ -48,6 +49,8 @@ FORMAT_TO_SIGNING_FUNCTION = frozendict(
         "autograph_langpack": sign_langpack,
         "autograph_authenticode": sign_authenticode_zip,
         "autograph_authenticode_stub": sign_authenticode_zip,
+        "extension_rsa.*": sign_xpi,
+        "systemaddon_rsa_.+": sign_xpi,
         "default": sign_file,
     }
 )

@@ -1075,7 +1075,7 @@ async def sign_with_autograph(
 
 
 @time_async_function
-async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=None):
+async def sign_file_with_autograph(context, from_, fmt, to=None, keyid=None, extension_id=None):
     """Signs file with autograph and writes the results to a file.
 
     Args:
@@ -1102,7 +1102,7 @@ async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=No
     input_file = open(from_, "rb")
     signed_bytes = base64.b64decode(
         await sign_with_autograph(
-            context.session, a, input_file, fmt, "file", extension_id=extension_id
+            context.session, a, input_file, fmt, "file", keyid=keyid, extension_id=extension_id
         )
     )
     with open(to, "wb") as fout:
