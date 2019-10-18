@@ -13,7 +13,7 @@ test_var_set() {
 export JARSIGNER_KEY_STORE="/app/mozilla-android-keystore"
 rm -f "$JARSIGNER_KEY_STORE"
 # Generate a temporary password
-JARSIGNER_KEY_STORE_PASSWORD=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w30 | head -n1)
+JARSIGNER_KEY_STORE_PASSWORD=$(openssl rand -hex 30)
 CERT_DIR=/app/files
 
 function import_cert() {
