@@ -24,7 +24,6 @@ from signingscript.sign import (
     sign_mar384_with_autograph_hash,
     sign_gpg_with_autograph,
     sign_omnija,
-    sign_langpack,
     sign_authenticode_zip,
     sign_xpi,
 )
@@ -46,7 +45,7 @@ FORMAT_TO_SIGNING_FUNCTION = frozendict(
         "widevine": sign_widevine,
         "autograph_widevine": sign_widevine,
         "autograph_omnija": sign_omnija,
-        "autograph_langpack": sign_langpack,
+        "autograph_langpack": sign_xpi,
         "autograph_authenticode": sign_authenticode_zip,
         "autograph_authenticode_stub": sign_authenticode_zip,
         "extension_rsa.*": sign_xpi,
