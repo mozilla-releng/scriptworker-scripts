@@ -600,8 +600,17 @@ def _extension_id(filename, fmt):
     Side effect of additionally verifying langpack manifests.
     """
     xpi = zipfile.ZipFile(filename, "r")
-    with xpi.open("manifest.json", "r") as f:
-        manifest = json.load(f)
+    manifest = {}
+    for manifest_name in ("manifest.json", "webextension/manifest.json"):
+        try:
+            with xpi.open(manifest_name, "r") as f:
+                manifest = json.load(f)
+                break
+        except KeyError:
+            log.debug(
+                "{} doesn't exist in {}...".format(manifest_name, filename)
+            )
+            continue
     if not manifest.get("applications", {}).get("gecko", {}).get("id"):
         raise SigningScriptError("{} is not a valid xpi".format(filename))
     if "langpack" in fmt and not (
