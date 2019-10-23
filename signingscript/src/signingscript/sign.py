@@ -402,7 +402,6 @@ async def sign_widevine(context, orig_path, fmt):
     """
     file_base, file_extension = os.path.splitext(orig_path)
     cert_type = task.task_cert_type(context)
-    is_autograph = utils.is_autograph_signing_format(fmt)
     keyid = utils.get_widevine_keyid(cert_type)
     # Convert dmg to tarball
     if file_extension == ".dmg":
