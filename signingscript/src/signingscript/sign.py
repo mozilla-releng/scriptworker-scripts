@@ -286,7 +286,7 @@ async def sign_xpi(context, orig_path, fmt):
     """
     file_base, file_extension = os.path.splitext(orig_path)
 
-    if file_extension != ".xpi":
+    if file_extension not in (".xpi", ".zip"):
         raise SigningScriptError("Expected a .xpi")
 
     ext_id = _extension_id(orig_path, fmt)
@@ -617,6 +617,7 @@ def _extension_id(filename, fmt):
         "languages" in manifest
         and "langpack_id" in manifest
         and LANGPACK_RE.match(manifest["applications"]["gecko"]["id"])
+        and filename.endswith(".xpi")
     ):
         raise SigningScriptError("{} is not a valid langpack".format(filename))
     return manifest["applications"]["gecko"]["id"]

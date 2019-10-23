@@ -527,7 +527,7 @@ async def test_sign_macapp(context, mocker, filename, expected):
 @pytest.mark.parametrize(
     "filename,id,raises",
     (
-        ("foo.zip", "foo-id@firefox.mozilla.org", pytest.raises(SigningScriptError)),
+        ("foo.blah", "foo-id@firefox.mozilla.org", pytest.raises(SigningScriptError)),
         ("/path/to/foo.xpi", "foo-id@firefox.mozilla.org", does_not_raise()),
         ("foo.xpi", "foo-id@devedition.mozilla.org", does_not_raise()),
     ),
