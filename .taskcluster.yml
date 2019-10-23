@@ -32,8 +32,8 @@ tasks:
         - ['pushsnapscript',  '36',             '${setup_pushsnapscript}', '']
         - ['pushsnapscript',  '37',             '${setup_pushsnapscript}', 'mozilla/releng-pushsnapscript']
         - ['shipitscript',    '37',             '',                        'mozilla/releng-shipitscript']
-        - ['signingscript',   '36',             '',                        '']
         - ['signingscript',   '37',             '',                        'mozilla/releng-signingscript']
+        - ['signingscript',   '38',             '',                        '']
         - ['treescript',      '36',             '',                        '']
         - ['treescript',      '37',             '',                        'mozilla/releng-treescript']
     # -------------------------------------------------------------------------
