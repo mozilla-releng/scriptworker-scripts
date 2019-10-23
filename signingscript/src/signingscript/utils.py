@@ -9,7 +9,11 @@ import os
 from shutil import copyfile
 from collections import namedtuple
 
-from signingscript.exceptions import FailedSubprocess, SigningServerError
+from signingscript.exceptions import (
+    FailedSubprocess,
+    SigningScriptError,
+    SigningServerError,
+)
 
 log = logging.getLogger(__name__)
 
@@ -209,3 +213,25 @@ def split_autograph_format(format_):
         return format_.split(":", 1)
     else:
         return format_, None
+
+
+def get_widevine_keyid(cert_type):
+    """Get the keyid for the autograph widevine signer.
+
+    Args:
+        cert_type (str): the cert type
+
+    Raises:
+        SigningScriptError: on unknown cert_type
+
+    Returns:
+        str: the keyid to use
+
+    """
+    cert_type = cert_type.split(":")[-1]
+    if cert_type == "dep-signing":
+        return "widevine_dep1_genericrsa"
+    elif cert_type in ("nightly-signing", "release-signing"):
+        return "widevine_rel1_genericrsa"
+    else:
+        raise SigningScriptError("Unknown cert_type {}!".format(cert_type))

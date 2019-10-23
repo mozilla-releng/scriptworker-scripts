@@ -17,6 +17,7 @@ from scriptworker.utils import makedirs
 from signingscript.exceptions import SigningScriptError
 from signingscript.utils import get_hash, SigningServer
 import signingscript.sign as sign
+import signingscript.task as task
 import signingscript.utils as utils
 from conftest import (
     noop_sync,
@@ -733,6 +734,8 @@ async def test_sign_widevine(
     mocker.patch.object(sign, "_create_tarfile", new=noop_async)
     mocker.patch.object(sign, "_create_zipfile", new=noop_async)
     mocker.patch.object(sign, "_run_generate_precomplete", new=noop_sync)
+    mocker.patch.object(task, "task_cert_type", new=noop_sync)
+    mocker.patch.object(utils, "get_widevine_keyid", new=noop_sync)
     mocker.patch.object(os.path, "isfile", new=fake_isfile)
 
     if raises:
@@ -1097,7 +1100,7 @@ async def test_widevine_autograph(context, mocker, tmp_path, blessed):
     wv.generate_widevine_signature.return_value = b"sigwidevinesig"
     called_format = None
 
-    async def fake_sign_hash(context, h, fmt):
+    async def fake_sign_hash(context, h, fmt, keyid=None):
         nonlocal called_format
         called_format = fmt
         return b"sigautographsig"

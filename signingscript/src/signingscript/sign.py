@@ -401,6 +401,9 @@ async def sign_widevine(context, orig_path, fmt):
 
     """
     file_base, file_extension = os.path.splitext(orig_path)
+    cert_type = task.task_cert_type(context)
+    is_autograph = utils.is_autograph_signing_format(fmt)
+    keyid = utils.get_widevine_keyid(cert_type)
     # Convert dmg to tarball
     if file_extension == ".dmg":
         await _convert_dmg_to_tar_gz(context, orig_path)
@@ -412,13 +415,13 @@ async def sign_widevine(context, orig_path, fmt):
     }
     for ext, signing_func in ext_to_fn.items():
         if orig_path.endswith(ext):
-            return await signing_func(context, orig_path, fmt)
+            return await signing_func(context, orig_path, fmt, keyid)
     raise SigningScriptError("Unknown widevine file format for {}".format(orig_path))
 
 
 # sign_widevine_zip {{{1
 @time_async_function
-async def sign_widevine_zip(context, orig_path, fmt):
+async def sign_widevine_zip(context, orig_path, fmt, keyid):
     """Sign the internals of a zipfile with the widevine key.
 
     Extract the files to sign (see `_WIDEVINE_BLESSED_FILENAMES` and
@@ -430,6 +433,7 @@ async def sign_widevine_zip(context, orig_path, fmt):
         context (Context): the signing context
         orig_path (str): the source file to sign
         fmt (str): the format to sign with
+        keyid (str): the keyid to sign with
 
     Returns:
         str: the path to the signed archive
@@ -457,7 +461,7 @@ async def sign_widevine_zip(context, orig_path, fmt):
                 tasks.append(
                     asyncio.ensure_future(
                         sign_widevine_with_autograph(
-                            context, from_, "blessed" in fmt, to=to
+                            context, from_, "blessed" in fmt, to=to, keyid=keyid
                         )
                     )
                 )
@@ -477,7 +481,7 @@ async def sign_widevine_zip(context, orig_path, fmt):
 
 # sign_widevine_tar {{{1
 @time_async_function
-async def sign_widevine_tar(context, orig_path, fmt):
+async def sign_widevine_tar(context, orig_path, fmt, keyid):
     """Sign the internals of a tarfile with the widevine key.
 
     Extract the entire tarball, but only sign a handful of files (see
@@ -492,6 +496,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
         context (Context): the signing context
         orig_path (str): the source file to sign
         fmt (str): the format to sign with
+        keyid (str): the keyid to sign with
 
     Returns:
         str: the path to the signed archive
@@ -528,7 +533,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
                 tasks.append(
                     asyncio.ensure_future(
                         sign_widevine_with_autograph(
-                            context, from_, "blessed" in fmt, to=to
+                            context, from_, "blessed" in fmt, to=to, keyid=keyid
                         )
                     )
                 )
@@ -1322,7 +1327,7 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
 
 
 @time_async_function
-async def sign_widevine_with_autograph(context, from_, blessed, to=None):
+async def sign_widevine_with_autograph(context, from_, blessed, to=None, keyid=None):
     """Create a widevine signature using autograph as a backend.
 
     Args:
@@ -1350,7 +1355,7 @@ async def sign_widevine_with_autograph(context, from_, blessed, to=None):
 
     h = widevine.generate_widevine_hash(from_, flags)
 
-    signature = await sign_hash_with_autograph(context, h, fmt)
+    signature = await sign_hash_with_autograph(context, h, fmt, keyid=keyid)
 
     with open(to, "wb") as fout:
         certificate = open(context.config["widevine_cert"], "rb").read()

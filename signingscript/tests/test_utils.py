@@ -4,7 +4,7 @@ import os
 import pytest
 
 from scriptworker.context import Context
-from signingscript.exceptions import FailedSubprocess, SigningServerError
+from signingscript.exceptions import FailedSubprocess, SigningServerError, SigningScriptError
 from conftest import read_file
 import signingscript.utils as utils
 from conftest import PUB_KEY_PATH
@@ -160,3 +160,21 @@ async def test_execute_subprocess(exit_code):
 )
 def test_is_sha1_apk_autograph_signing_format(format, expected):
     assert utils.is_sha1_apk_autograph_signing_format(format) == expected
+
+
+# get_widevine_keyid {{{1
+@pytest.mark.parametrize(
+    "cert_type,expected,raises",
+    (
+        ("foo:bar:dep-signing", "widevine_dep1_genericrsa", False),
+        ("foo:bar:nightly-signing", "widevine_rel1_genericrsa", False),
+        ("release-signing", "widevine_rel1_genericrsa", False),
+        ("foo:bar:unknown", None, SigningScriptError),
+    ),
+)
+def test_get_widevine_keyid(cert_type, expected, raises):
+    if raises:
+        with pytest.raises(raises):
+            utils.get_widevine_keyid(cert_type)
+    else:
+        assert utils.get_widevine_keyid(cert_type) == expected
