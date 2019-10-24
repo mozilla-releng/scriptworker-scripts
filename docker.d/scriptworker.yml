@@ -1,3 +1,4 @@
+taskcluster_root_url: { "$eval": "TASKCLUSTER_ROOT_URL" }
 provisioner_id: { "$eval": "PROVISIONER_ID" }
 worker_group: { "$eval": "WORKER_GROUP" }
 worker_type: { "$eval": "WORKER_TYPE" }

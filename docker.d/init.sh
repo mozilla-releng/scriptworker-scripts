@@ -16,6 +16,7 @@ test_var_set() {
 test_var_set 'PROJECT_NAME'
 test_var_set 'ENV'
 test_var_set 'COT_PRODUCT'
+test_var_set 'TASKCLUSTER_ROOT_URL'
 test_var_set 'TASKCLUSTER_CLIENT_ID'
 test_var_set 'TASKCLUSTER_ACCESS_TOKEN'
 if [ "$ENV" == "prod" ]; then
