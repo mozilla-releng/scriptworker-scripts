@@ -6,6 +6,7 @@
     ["https://127.0.0.2", "hawk_user", "hawk_secret", ["autograph_marsha384"]]
   ],
   "project:releng:signing:cert:dep-signing": [
-    ["https://127.0.0.3", "hawk_user", "hawk_secret", ["autograph_marsha384"]]
+    ["https://127.0.0.3", "hawk_user", "hawk_secret", ["autograph_marsha384"]],
+    ["https://127.0.0.3", "hawk_user", "hawk_secret", ["autograph_authenticode"], "keyid"]
   ]
 }

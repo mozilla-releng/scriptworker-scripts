@@ -2,12 +2,11 @@
     "signing_server_config": "server_config.json",
     "work_dir": "/tmp/work_dir",
     "artifact_dir": "/tmp/artifact_dir",
-    "signtool": "signtool",
     "ssl_cert": "host.cert",
     "taskcluster_scope_prefixes": ["project:releng:signing:"],
     "token_duration_seconds": 1200,
     "verbose": true,
     "dmg": "dmg",
     "hfsplus": "hfsplus",
-    "zipalign": "zipalign",
+    "zipalign": "zipalign"
 }

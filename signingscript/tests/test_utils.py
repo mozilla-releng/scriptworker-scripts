@@ -69,6 +69,7 @@ def test_load_autograph_configs():
     assert cfg["dep"][0].client_id == "hawk_user"
     assert cfg["notdep"][0].access_key == "hawk_secret"
     assert cfg["notdep"][0].formats == ["autograph_marsha384"]
+    assert cfg["project:releng:signing:cert:dep-signing"][1].key_id == "keyid"
 
 
 # log_output {{{1

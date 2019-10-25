@@ -26,7 +26,6 @@ export HFSPLUS_PATH=/app/files/hfsplus
 export ZIPALIGN_PATH=/usr/bin/zipalign
 
 export PASSWORDS_PATH=$CONFIG_DIR/passwords.json
-export SIGNTOOL_PATH="/app/bin/signtool"
 export SSL_CERT_PATH="/app/src/signingscript/data/host.cert"
 export GPG_PUBKEY_PATH=$CONFIG_DIR/gpg_pubkey
 export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
