@@ -103,6 +103,41 @@ async def helper_archive(context, filename, create_fn, extract_fn, *args):
         assert hash1 == hash2
 
 
+# get_autograph_config {{{1
+@pytest.mark.parametrize(
+    "formats,expected",
+    (
+        (
+            ["autograph_marsha384"],
+            utils.Autograph(*[
+                "https://127.0.0.3",
+                "hawk_user",
+                "hawk_secret",
+                ["autograph_marsha384"],
+            ])
+        ),
+        (["invalid"], None),
+    ),
+)
+def test_get_autograph_config(context, formats, expected):
+    assert (
+        sign.get_autograph_config(
+            context.autograph_configs, TEST_CERT_TYPE, formats
+        )
+        == expected
+    )
+
+
+def test_get_autograph_config_raises_signingscript_error(context):
+    with pytest.raises(SigningScriptError):
+        sign.get_autograph_config(
+            context.autograph_configs,
+            TEST_CERT_TYPE,
+            signing_formats=["invalid"],
+            raise_on_empty=True,
+        )
+
+
 # sign_file {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize("to,expected", ((None, "from"), ("to", "to")))
