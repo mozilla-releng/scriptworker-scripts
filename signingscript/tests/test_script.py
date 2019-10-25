@@ -19,7 +19,7 @@ SSL_CERT = os.path.join(BASE_DIR, "src", "signingscript", "data", "host.cert")
 
 # async_main {{{1
 async def async_main_helper(
-    tmpdir, mocker, formats, extra_config={}, server_type="signing_server"
+    tmpdir, mocker, formats, extra_config={}
 ):
     def fake_filelist_dict(*args, **kwargs):
         return {"path1": {"full_path": "full_path1", "formats": formats}}
@@ -27,12 +27,13 @@ async def async_main_helper(
     async def fake_sign(_, val, *args):
         return [val]
 
+    mocker.patch.object(script, "load_autograph_configs", new=noop_sync)
     mocker.patch.object(script, "task_cert_type", new=noop_sync)
     mocker.patch.object(script, "task_signing_formats", return_value=formats)
     mocker.patch.object(script, "build_filelist_dict", new=fake_filelist_dict)
     mocker.patch.object(script, "sign", new=fake_sign)
     context = mock.MagicMock()
-    context.config = {"work_dir": tmpdir, "ssl_cert": None, "artifact_dir": tmpdir}
+    context.config = {"work_dir": tmpdir, "ssl_cert": None, "artifact_dir": tmpdir, "autograph_configs": {}}
     context.config.update(extra_config)
     await script.async_main(context)
 
@@ -83,7 +84,7 @@ async def test_async_main_multiple_formats(tmpdir, mocker):
 async def test_async_main_autograph(tmpdir, mocker):
     formats = ["autograph_mar"]
     mocker.patch.object(script, "copy_to_dir", new=noop_sync)
-    await async_main_helper(tmpdir, mocker, formats, {}, "autograph")
+    await async_main_helper(tmpdir, mocker, formats, {})
 
 
 def test_get_default_config():
