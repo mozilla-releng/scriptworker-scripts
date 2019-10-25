@@ -1,14 +1,11 @@
 {
   "dep": [
-    ["server1:9000", "user1", "pass1", ["f1", "f2"], "signing_server"],
-    ["server2:8000", "user2", "pass2", ["f2", "f3"], "signing_server"],
-    ["https://127.0.0.1:9110", "hawk_user", "hawk_secret", ["autograph_marsha384"], "autograph"]
+    ["https://127.0.0.1", "hawk_user", "hawk_secret", ["autograph_marsha384"]]
   ],
   "notdep": [
-    ["server1:9100", "user1", "pass1", ["f1", "f2"], "signing_server"],
-    ["server2:8100", "user2", "pass2", ["f2", "f3"], "signing_server"]
+    ["https://127.0.0.2", "hawk_user", "hawk_secret", ["autograph_marsha384"]]
   ],
   "project:releng:signing:cert:dep-signing": [
-    ["127.0.0.1:9110", "user", "pass", ["gpg", "sha2signcode"], "signing_server"]
+    ["https://127.0.0.3", "hawk_user", "hawk_secret", ["autograph_marsha384"]]
   ]
 }

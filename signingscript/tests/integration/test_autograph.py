@@ -12,7 +12,6 @@ import aiohttp
 from mardor.cli import do_verify
 from scriptworker.utils import makedirs
 from signingscript.sign import sign_file_with_autograph, sign_authenticode_zip
-from signingscript.utils import SigningServer
 
 from signingscript.script import async_main
 from conftest import skip_when_no_autograph_server
@@ -61,10 +60,7 @@ DEFAULT_CONFIG = {
     "work_dir": "work_dir",
     "artifact_dir": "artifact_dir",
     "schema_file": os.path.join(DATA_DIR, "signing_task_schema.json"),
-    "signtool": "signtool",
-    "ssl_cert": os.path.join(DATA_DIR, "host.cert"),
     "taskcluster_scope_prefixes": ["project:releng:signing:"],
-    "token_duration_seconds": 1200,
     "verbose": True,
     "dmg": "dmg",
     "hfsplus": "hfsplus",

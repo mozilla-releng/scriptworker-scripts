@@ -153,80 +153,41 @@ def time_function(f):
     return wrapped
 
 
-# get_suitable_signing_servers {{{1
-def get_suitable_signing_servers(
-    signing_servers, cert_type, signing_formats, raise_on_empty_list=False
+# get_autograph_config {{{1
+def get_autograph_config(
+    autograph_configs, cert_type, signing_formats, raise_on_empty=False
 ):
-    """Get the list of signing servers for given `signing_formats` and `cert_type`.
+    """Get the autograph config for given `signing_formats` and `cert_type`.
 
     Args:
-        signing_servers (dict of lists of lists): the contents of
-            `signing_server_config`.
+        autograph_configs (dict of lists of lists): the contents of
+            `autograph_configs`.
         cert_type (str): the certificate type - essentially signing level,
             separating release vs nightly vs dep.
         signing_formats (list): the signing formats the server needs to support
-        raise_on_empty_list (bool): flag to raise errors. Optional. Defaults to False.
+        raise_on_empty (bool): flag to raise errors. Optional. Defaults to False.
 
     Raises:
-        FailedSubprocess: on subprocess error while signing.
         SigningScriptError: when no suitable signing server is found
 
     Returns:
-        list of lists: the list of signing servers.
+        An Autograph object
 
     """
-    if cert_type not in signing_servers:
-        suitable_signing_servers = []
-    else:
-        suitable_signing_servers = [
-            s
-            for s in signing_servers[cert_type]
-            if set(signing_formats) & set(s.formats)
-        ]
+    for a in autograph_configs.get(cert_type, []):
+        if a and (set(a.formats) & set(signing_formats)):
+            return a
 
-    if raise_on_empty_list and not suitable_signing_servers:
+    if raise_on_empty:
         raise SigningScriptError(
-            f"No signing servers found with cert type {cert_type} and formats {signing_formats}"
+            f"No autograph config found with cert type {cert_type} and formats {signing_formats}"
         )
-    else:
-        return suitable_signing_servers
-
-
-# build_signtool_cmd {{{1
-def build_signtool_cmd(context, from_, fmt, to=None, servers=None):
-    """Generate a signtool command to run.
-
-    Args:
-        context (Context): the signing context
-        from_ (str): the source file to sign
-        fmt (str): the format to sign with
-        to (str, optional): the target path to sign to. If None, overwrite
-            `from_`. Defaults to None.
-
-    Returns:
-        list: the signtool command to run.
-
-    """
-    to = to or from_
-    work_dir = context.config["work_dir"]
-    token = os.path.join(work_dir, "token")
-    nonce = os.path.join(work_dir, "nonce")
-    cert_type = task.task_cert_type(context)
-    ssl_cert = context.config["ssl_cert"]
-    signtool = context.config["signtool"]
-    if not isinstance(signtool, (list, tuple)):
-        signtool = [signtool]
-    cmd = signtool + ["-n", nonce, "-t", token, "-c", ssl_cert]
-    for s in get_suitable_signing_servers(context.signing_servers, cert_type, [fmt]):
-        cmd.extend(["-H", s.server])
-    cmd.extend(["-f", fmt])
-    cmd.extend(["-o", to, from_])
-    return cmd
+    return None
 
 
 # sign_file {{{1
 async def sign_file(context, from_, fmt, to=None):
-    """Send the file to signtool or autograph to be signed.
+    """Send the file to autograph to be signed.
 
     Args:
         context (Context): the signing context
@@ -242,15 +203,10 @@ async def sign_file(context, from_, fmt, to=None):
         str: the path to the signed file
 
     """
-    if utils.is_autograph_signing_format(fmt):
-        log.info(
-            "sign_file(): signing %s with %s... using autograph /sign/file", from_, fmt
-        )
-        await sign_file_with_autograph(context, from_, fmt, to=to)
-    else:
-        log.info("sign_file(): signing %s with %s... using signing server", from_, fmt)
-        cmd = build_signtool_cmd(context, from_, fmt, to=to)
-        await utils.execute_subprocess(cmd)
+    log.info(
+        "sign_file(): signing %s with %s... using autograph /sign/file", from_, fmt
+    )
+    await sign_file_with_autograph(context, from_, fmt, to=to)
     return to or from_
 
 
@@ -442,7 +398,6 @@ async def sign_widevine_zip(context, orig_path, fmt):
     # Get file list
     all_files = await _get_zipfile_files(orig_path)
     files_to_sign = _get_widevine_signing_files(all_files)
-    is_autograph = utils.is_autograph_signing_format(fmt)
     log.debug("Widevine files to sign: %s", files_to_sign)
     if files_to_sign:
         # Extract all files so we can create `precomplete` with the full
@@ -453,18 +408,13 @@ async def sign_widevine_zip(context, orig_path, fmt):
         for from_, fmt in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
             to = f"{from_}.sig"
-            if is_autograph:
-                tasks.append(
-                    asyncio.ensure_future(
-                        sign_widevine_with_autograph(
-                            context, from_, "blessed" in fmt, to=to
-                        )
+            tasks.append(
+                asyncio.ensure_future(
+                    sign_widevine_with_autograph(
+                        context, from_, "blessed" in fmt, to=to
                     )
                 )
-            else:
-                tasks.append(
-                    asyncio.ensure_future(sign_file(context, from_, fmt, to=to))
-                )
+            )
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(tmp_dir, all_files)
@@ -505,7 +455,6 @@ async def sign_widevine_tar(context, orig_path, fmt):
     # Get file list
     all_files = await _get_tarfile_files(orig_path, compression)
     files_to_sign = _get_widevine_signing_files(all_files)
-    is_autograph = utils.is_autograph_signing_format(fmt)
     log.debug("Widevine files to sign: %s", files_to_sign)
     if files_to_sign:
         # Extract all files so we can create `precomplete` with the full
@@ -524,18 +473,13 @@ async def sign_widevine_tar(context, orig_path, fmt):
             to = _get_mac_sigpath(from_)
             log.debug("Adding %s to the sigfile paths...", to)
             makedirs(os.path.dirname(to))
-            if is_autograph:
-                tasks.append(
-                    asyncio.ensure_future(
-                        sign_widevine_with_autograph(
-                            context, from_, "blessed" in fmt, to=to
-                        )
+            tasks.append(
+                asyncio.ensure_future(
+                    sign_widevine_with_autograph(
+                        context, from_, "blessed" in fmt, to=to
                     )
                 )
-            else:
-                tasks.append(
-                    asyncio.ensure_future(sign_file(context, from_, fmt, to=to))
-                )
+            )
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(tmp_dir, all_files)
@@ -1137,7 +1081,7 @@ async def sign_with_autograph(
 
     Args:
         session (aiohttp.ClientSession): client session object
-        server (url): the server to connect to sign
+        server (Autograph): the server to connect to sign
         input_file (file object): the source data to sign
         fmt (str): the format to sign with
         autograph_method (str): which autograph method to use to sign. must be
@@ -1158,11 +1102,11 @@ async def sign_with_autograph(
 
     sign_req = make_signing_req(input_file, fmt, keyid, extension_id)
 
-    url = f"{server.server}/sign/{autograph_method}"
+    url = f"{server.url}/sign/{autograph_method}"
 
     sign_resp = await retry_async(
         call_autograph,
-        args=(session, url, server.user, server.password, sign_req),
+        args=(session, url, server.client_id, server.access_key, sign_req),
         attempts=3,
         sleeptime_kwargs={"delay_factor": 2.0},
     )
@@ -1193,18 +1137,15 @@ async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=No
         str: the path to the signed file
 
     """
-    if not utils.is_autograph_signing_format(fmt):
-        raise SigningScriptError(f"Not an autograph format: {fmt}")
     cert_type = task.task_cert_type(context)
-    servers = get_suitable_signing_servers(
-        context.signing_servers, cert_type, [fmt], raise_on_empty_list=True
+    a = get_autograph_config(
+        context.autograph_configs, cert_type, [fmt], raise_on_empty=True
     )
-    s = servers[0]
     to = to or from_
     input_file = open(from_, "rb")
     signed_bytes = base64.b64decode(
         await sign_with_autograph(
-            context.session, s, input_file, fmt, "file", extension_id=extension_id
+            context.session, a, input_file, fmt, "file", extension_id=extension_id
         )
     )
     with open(to, "wb") as fout:
@@ -1229,16 +1170,13 @@ async def sign_gpg_with_autograph(context, from_, fmt):
         list: the path to the signed file, and sig.
 
     """
-    if not utils.is_autograph_signing_format(fmt):
-        raise SigningScriptError(f"Not an autograph format: {fmt}")
     cert_type = task.task_cert_type(context)
-    servers = get_suitable_signing_servers(
-        context.signing_servers, cert_type, [fmt], raise_on_empty_list=True
+    a = get_autograph_config(
+        context.autograph_configs, cert_type, [fmt], raise_on_empty=True
     )
-    s = servers[0]
     to = f"{from_}.asc"
     input_file = open(from_, "rb")
-    signature = await sign_with_autograph(context.session, s, input_file, fmt, "data")
+    signature = await sign_with_autograph(context.session, a, input_file, fmt, "data")
     with open(to, "w") as fout:
         fout.write(signature)
     return [from_, to]
@@ -1262,16 +1200,13 @@ async def sign_hash_with_autograph(context, hash_, fmt, keyid=None):
         bytes: the signature
 
     """
-    if not utils.is_autograph_signing_format(fmt):
-        raise SigningScriptError(f"Not an autograph format: {fmt}")
     cert_type = task.task_cert_type(context)
-    servers = get_suitable_signing_servers(
-        context.signing_servers, cert_type, [fmt], raise_on_empty_list=True
+    a = get_autograph_config(
+        context.autograph_configs, cert_type, [fmt], raise_on_empty=True
     )
-    s = servers[0]
     input_file = BytesIO(hash_)
     signature = base64.b64decode(
-        await sign_with_autograph(context.session, s, input_file, fmt, "hash", keyid)
+        await sign_with_autograph(context.session, a, input_file, fmt, "hash", keyid)
     )
     return signature
 
@@ -1356,8 +1291,8 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
     # Get any key id that the task may have specified
     fmt, keyid = utils.split_autograph_format(fmt)
     # Call to check that we have a server available
-    get_suitable_signing_servers(
-        context.signing_servers, cert_type, [fmt], raise_on_empty_list=True
+    get_autograph_config(
+        context.autograph_configs, cert_type, [fmt], raise_on_empty=True
     )
 
     hash_algo, expected_signature_length = "sha384", 512

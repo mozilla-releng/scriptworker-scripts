@@ -27,10 +27,8 @@ async def async_main_helper(
     async def fake_sign(_, val, *args):
         return [val]
 
-    mocker.patch.object(script, "load_signing_server_config", new=noop_sync)
     mocker.patch.object(script, "task_cert_type", new=noop_sync)
     mocker.patch.object(script, "task_signing_formats", return_value=formats)
-    mocker.patch.object(script, "get_token", new=noop_async)
     mocker.patch.object(script, "build_filelist_dict", new=fake_filelist_dict)
     mocker.patch.object(script, "sign", new=fake_sign)
     context = mock.MagicMock()
@@ -86,18 +84,6 @@ async def test_async_main_autograph(tmpdir, mocker):
     formats = ["autograph_mar"]
     mocker.patch.object(script, "copy_to_dir", new=noop_sync)
     await async_main_helper(tmpdir, mocker, formats, {}, "autograph")
-
-
-@pytest.mark.asyncio
-async def test_craft_aiohttp_connector():
-    context = Context()
-    context.config = {}
-    connector = script._craft_aiohttp_connector(context)
-    assert connector._ssl is None
-
-    context.config["ssl_cert"] = SSL_CERT
-    connector = script._craft_aiohttp_connector(context)
-    assert connector._ssl
 
 
 def test_get_default_config():
