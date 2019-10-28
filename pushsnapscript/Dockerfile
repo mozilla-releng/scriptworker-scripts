@@ -6,6 +6,7 @@ RUN groupadd --gid 10001 app && \
 RUN apt-get update \
  && apt-get install -y libsodium-dev \
  && apt-get install -y squashfs-tools \
+ && apt-get install -y xdelta3 \
  && apt-get clean \
  # XXX Avoid snapcraft from loading useless libs when running on Ubuntu
  && truncate -s 0 /etc/os-release \
