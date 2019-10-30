@@ -1272,13 +1272,16 @@ async def merge_omnija_files(orig, signed, to):
 
 # sign_authenticode_file {{{1
 @time_async_function
-async def sign_authenticode_file(context, orig_path, fmt):
+async def sign_authenticode_file(context, orig_path, fmt, comment=None):
     """Sign a file in-place with authenticode, using autograph as a backend.
 
     Args:
         context (Context): the signing context
         orig_path (str): the source file to sign
         fmt (str): the format to sign with
+        comment (str): The authenticode comment to sign with, if present.
+                       currently only used for msi files.
+                       (Defaults to None)
 
     Returns:
         True on success, False otherwise
@@ -1306,7 +1309,23 @@ async def sign_authenticode_file(context, orig_path, fmt):
     else:
         crosscert = None
 
-    if not await winsign.sign.sign_file(infile, outfile, digest_algo, certs, signer, url=url, crosscert=crosscert, timestamp_style=timestamp_style):
+    if comment and orig_path.endswith('.msi'):
+        log.info(f"Using comment '{comment}' to sign {orig_path}")
+    elif comment:
+        log.info("Not using specified comment to sign {orig_path}, not yet implemented.")
+        comment = None
+
+    if not await winsign.sign.sign_file(
+        infile,
+        outfile,
+        digest_algo,
+        certs,
+        signer,
+        url=url,
+        comment=comment,
+        crosscert=crosscert,
+        timestamp_style=timestamp_style,
+    ):
         raise IOError(f"Couldn't sign {orig_path}")
     os.rename(outfile, infile)
 
@@ -1315,7 +1334,7 @@ async def sign_authenticode_file(context, orig_path, fmt):
 
 # sign_authenticode_zip {{{1
 @time_async_function
-async def sign_authenticode_zip(context, orig_path, fmt):
+async def sign_authenticode_zip(context, orig_path, fmt, comment=None):
     """Sign a zipfile with authenticode, using autograph as a backend.
 
     Extract the zip and only sign unsigned files that don't match certain
@@ -1325,6 +1344,9 @@ async def sign_authenticode_zip(context, orig_path, fmt):
         context (Context): the signing context
         orig_path (str): the source file to sign
         fmt (str): the format to sign with
+        comment (str): The authenticode comment to sign with, if present.
+                       currently only used for msi files.
+                       (Defaults to None)
 
     Returns:
         str: the path to the signed zip
@@ -1346,7 +1368,8 @@ async def sign_authenticode_zip(context, orig_path, fmt):
         raise SigningScriptError("Did not find any files to sign, all files: {}".format(files))
 
     # Sign the appropriate inner files
-    tasks = [sign_authenticode_file(context, file_, fmt) for file_ in files_to_sign]
+    tasks = [sign_authenticode_file(context, file_, fmt, comment=comment)
+             for file_ in files_to_sign]
     done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
     [f.result() for f in done]
     if file_extension == ".zip":

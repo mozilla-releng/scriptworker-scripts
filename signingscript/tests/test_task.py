@@ -37,6 +37,34 @@ def task_defn():
     }
 
 
+@pytest.fixture(scope="function")
+def task_defn_authenticode_comment():
+    return {
+        "provisionerId": "meh",
+        "workerType": "workertype",
+        "schedulerId": "task-graph-scheduler",
+        "taskGroupId": "some",
+        "routes": [],
+        "retries": 5,
+        "created": "2015-05-08T16:15:58.903Z",
+        "deadline": "2015-05-08T18:15:59.010Z",
+        "expires": "2016-05-08T18:15:59.010Z",
+        "dependencies": ["VALID_TASK_ID"],
+        "scopes": ["signing"],
+        "payload": {
+            "upstreamArtifacts": [
+                {
+                    "taskType": "build",
+                    "taskId": "VALID_TASK_ID",
+                    "formats": ["gpg"],
+                    "paths": ["public/build/firefox-52.0a1.en-US.win64.installer.exe"],
+                    "authenticode_comment": "Foo Installer",
+                }
+            ],
+        },
+    }
+
+
 # task_cert_type {{{1
 def test_task_cert_type(context):
     context.task = {"scopes": [TEST_CERT_TYPE]}
@@ -91,12 +119,25 @@ def test_no_error_is_reported_when_no_missing_url(context, task_defn):
 
 # sign {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("format,filename,post_files", (("gpg", "filename", ["filename", "filename.asc"]), ("sha2signcode", "file.zip", ["file.zip"])))
-async def test_sign(context, mocker, format, filename, post_files):
-    async def fake_gpg(_, path, *kwargs):
+@pytest.mark.parametrize(
+    "format,filename,post_files,expect_comment",
+    (
+        ("gpg", "filename", ["filename", "filename.asc"], False),
+        ("sha2signcode", "file.zip", ["file.zip"], False),
+        ("autograph_authenticode", "file.msi", ["file.msi"], True)
+    ),
+)
+async def test_sign(context, mocker, format, filename, post_files, expect_comment):
+    async def fake_gpg(_, path, *args, **kwargs):
+        assert "comment" not in kwargs
         return [path, "{}.asc".format(path)]
 
-    async def fake_other(_, path, *kwargs):
+    async def fake_other(_, path, *args, **kwargs):
+        if expect_comment:
+            assert "comment" in kwargs
+            assert kwargs['comment'] == "Some authenticode comment"
+        else:
+            assert "comment" not in kwargs
         return path
 
     fake_format_to = {"gpg": fake_gpg, "default": fake_other}
@@ -105,7 +146,7 @@ async def test_sign(context, mocker, format, filename, post_files):
         assert new_files == post_files
 
     mocker.patch.object(stask, "FORMAT_TO_SIGNING_FUNCTION", new=fake_format_to)
-    await stask.sign(context, filename, [format])
+    await stask.sign(context, filename, [format], comment="Some authenticode comment")
 
 
 @pytest.mark.parametrize(
@@ -147,4 +188,102 @@ def test_build_filelist_dict(context, task_defn):
     with open(full_path, "w") as fh:
         fh.write("foo")
 
+    assert stask.build_filelist_dict(context) == expected
+
+
+def test_build_filelist_dict_comment_one_path(context, task_defn_authenticode_comment):
+    full_path = os.path.join(
+        context.config["work_dir"],
+        "cot",
+        "VALID_TASK_ID",
+        "public/build/firefox-52.0a1.en-US.win64.installer.msi",
+    )
+    expected = {
+        "public/build/firefox-52.0a1.en-US.win64.installer.msi": {
+            "full_path": full_path,
+            "formats": ["autograph_authenticode"],
+            "comment": "Foo Installer",
+        }
+    }
+    context.task = task_defn_authenticode_comment
+
+    # first, format is wrong...
+    with pytest.raises(TaskVerificationError) as error:
+        stask.build_filelist_dict(context)
+    assert 'without an authenticode' in str(error.value)
+
+    # coerce to authenticode
+    context.task['payload']['upstreamArtifacts'][0]['formats'] = ['autograph_authenticode']
+
+    # Still raises due to no msi
+    with pytest.raises(TaskVerificationError) as error:
+        stask.build_filelist_dict(context)
+    assert 'outside of msi' in str(error.value)
+
+    # coerce to msi
+    context.task['payload']['upstreamArtifacts'][0]['paths'] = [
+        "public/build/firefox-52.0a1.en-US.win64.installer.msi",
+    ]
+
+    # the file is missing...
+    with pytest.raises(TaskVerificationError):
+        stask.build_filelist_dict(context)
+
+    mkdir(os.path.dirname(full_path))
+    with open(full_path, "w") as fh:
+        fh.write("foo")
+
+    # Now ok
+    assert stask.build_filelist_dict(context) == expected
+
+
+def test_build_filelist_dict_comment_expanded_path(context, task_defn_authenticode_comment):
+    full_path = os.path.join(
+        context.config["work_dir"],
+        "cot",
+        "VALID_TASK_ID",
+        "public/build/firefox-52.0a1.en-US.win64.installer",
+    )
+    mkdir(os.path.dirname(f"{full_path}.msi"))
+    with open(f"{full_path}.msi", "w") as fh:
+        fh.write("foo")
+    mkdir(os.path.dirname(f"{full_path}.2.msi"))
+    with open(f"{full_path}.2.msi", "w") as fh:
+        fh.write("foo")
+    mkdir(os.path.dirname(f"{full_path}.exe"))
+    with open(f"{full_path}.exe", "w") as fh:
+        fh.write("foo")
+    expected = {
+        "public/build/firefox-52.0a1.en-US.win64.installer.msi": {
+            "full_path": f"{full_path}.msi",
+            "formats": ["autograph_authenticode"],
+            "comment": "Foo Installer",
+        },
+        "public/build/firefox-52.0a1.en-US.win64.installer.2.msi": {
+            "full_path": f"{full_path}.2.msi",
+            "formats": ["autograph_authenticode"],
+        },
+        "public/build/firefox-52.0a1.en-US.win64.installer.exe": {
+            "full_path": f"{full_path}.exe",
+            "formats": ["autograph_authenticode"],
+        }
+    }
+
+    context.task = task_defn_authenticode_comment
+    # coerce to authenticode
+    context.task['payload']['upstreamArtifacts'][0]['formats'] = ['autograph_authenticode']
+    # add msi
+    context.task['payload']['upstreamArtifacts'][0]['paths'].append(
+        "public/build/firefox-52.0a1.en-US.win64.installer.msi",
+    )
+    # Add a second msi without an authenticode comment
+    context.task['payload']['upstreamArtifacts'][0]['paths'].append(
+        "public/build/firefox-52.0a1.en-US.win64.installer.2.msi",
+    )
+    # Use expanded form
+    context.task['payload']['upstreamArtifacts'][0]["authenticode_comment"] = {
+        "public/build/firefox-52.0a1.en-US.win64.installer.msi": "Foo Installer",
+    }
+
+    # Now ok
     assert stask.build_filelist_dict(context) == expected
