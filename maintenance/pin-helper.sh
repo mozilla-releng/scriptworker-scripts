@@ -5,7 +5,22 @@ SUFFIX=${SUFFIX:-txt}
 pip install --upgrade pip
 pip install pip-compile-multi
 
-for dir in scriptworker_client iscript treescript ; do
+apt-get update
+apt-get install -y libsodium-dev
+
+for dir in \
+	addonscript \
+	balrogscript \
+	beetmoverscript \
+	bouncerscript \
+	iscript \
+	pushapkscript \
+	pushsnapscript \
+	scriptworker_client \
+	shipitscript \
+	signingscript \
+	treescript \
+	; do
     pushd $dir
     pip-compile-multi -g base -g test -o "$SUFFIX"
     popd
