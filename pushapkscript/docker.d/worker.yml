@@ -1,7 +1,7 @@
 work_dir: { "$eval": "WORK_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 jarsigner_key_store: { "$eval": "JARSIGNER_KEY_STORE" }
-do_not_contact_google_play: { "$eval": "ENV != 'prod'" }
+do_not_contact_server: { "$eval": "ENV != 'prod'" }
 taskcluster_scope_prefixes:
   $if: 'COT_PRODUCT == "mobile"'
   then:
@@ -16,40 +16,40 @@ products:
       'COT_PRODUCT == "firefox" && ENV == "prod"':
         - product_names: [ "beta", "aurora", "release" ]
           digest_algorithm: SHA1
-          use_scope_for_channel: true
+          override_channel_model: 'choose_google_app_with_scope'
           apps:
             release:
-              google_play_track: production
+              default_track: production
               service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE" }
               package_names:
                 - "org.mozilla.firefox"
-              google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH" }
+              credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH" }
               certificate_alias: release
             beta:
-              google_play_track: production
+              default_track: production
               service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_BETA" }
               package_names:
                 - "org.mozilla.firefox_beta"
-              google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_BETA_PATH" }
+              credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_BETA_PATH" }
               certificate_alias: release
             aurora:
-              google_play_track: beta
+              default_track: beta
               service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_AURORA" }
               package_names:
                 - "org.mozilla.fennec_aurora"
-              google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_AURORA_PATH" }
+              credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_AURORA_PATH" }
               certificate_alias: nightly
 
       'COT_PRODUCT == "firefox" && ENV != "prod"':
         - product_names: [ "dep" ]
           digest_algorithm: SHA1
-          use_scope_for_channel: true
+          override_channel_model: 'choose_google_app_with_scope'
           apps:
             dep:
               service_account: dummy
               package_names:
                 - "org.mozilla.fennec_aurora"
-              google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_DEP_PATH" }
+              credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_DEP_PATH" }
               certificate_alias: dep
 
       'COT_PRODUCT == "mobile" && ENV == "prod"':
@@ -61,21 +61,21 @@ products:
           apps:
             nightly:
               package_names: [ "org.mozilla.fenix.nightly" ]
-              google_play_track: 'beta'
+              default_track: 'beta'
               service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_NIGHTLY" }
-              google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH" }
+              credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH" }
               certificate_alias: 'fenix-nightly'
             beta:
               package_names: [ "org.mozilla.fenix.beta" ]
-              google_play_track: 'internal'
+              default_track: 'internal'
               service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_BETA" }
-              google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_BETA_PATH"}
+              credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_BETA_PATH"}
               certificate_alias: "fenix-beta"
             production:
               package_names: [ "org.mozilla.fenix" ]
-              google_play_track: 'internal'
+              default_track: 'internal'
               service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_PROD" }
-              google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_PROD_PATH" }
+              credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_PROD_PATH" }
               certificate_alias: 'fenix-production'
         - product_names: [ "focus" ]
           digest_algorithm: 'SHA-256'
@@ -86,7 +86,7 @@ products:
           override_channel_model: "single_google_app"
           single_app_config:
             service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FOCUS" }
-            google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_PATH" }
+            credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_PATH" }
             package_names:
               - 'org.mozilla.focus'
               - 'org.mozilla.klar'
@@ -99,7 +99,7 @@ products:
           override_channel_model: "single_google_app"
           single_app_config:
             service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER" }
-            google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH" }
+            credentials_file: { "$eval": "GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH" }
             package_names:
               - "org.mozilla.reference.browser"
             certificate_alias: "reference-browser"
@@ -117,7 +117,7 @@ products:
               - "org.mozilla.fenix.beta"
               - "org.mozilla.fenix.nightly"
             service_account: "dummy"
-            google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
+            credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
             certificate_alias: "fenix"
         - product_names: [ "focus" ]
           digest_algorithm: "SHA-256"
@@ -131,7 +131,7 @@ products:
               - "org.mozilla.focus"
               - "org.mozilla.klar"
             service_account: "dummy"
-            google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
+            credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
             certificate_alias: "focus"
         - product_names: [ "reference-browser" ]
           digest_algorithm: "SHA-256"
@@ -143,5 +143,5 @@ products:
             package_names:
               - "org.mozilla.reference.browser"
             service_account: "dummy"
-            google_credentials_file: { "$eval": "GOOGLE_CREDENTIALS_REFERENCE_BROWSER_DEP_PATH" }
+            credentials_file: { "$eval": "GOOGLE_CREDENTIALS_REFERENCE_BROWSER_DEP_PATH" }
             certificate_alias: "reference-browser"
