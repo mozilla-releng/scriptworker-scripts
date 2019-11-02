@@ -926,7 +926,7 @@ async def poll_notarization_uuid(
                 "exception": IScriptError,
             },
             retry_exceptions=(IScriptError,),
-            attempts=10,
+            attempts=20,
             sleeptime_kwargs={"delay_factor": 30.0, "max_delay": 300},
         )
         status = get_notarization_status_from_log(log_path)
@@ -1001,7 +1001,7 @@ async def staple_notarization(all_paths, path_attr="app_path"):
                         "log_level": logging.DEBUG,
                     },
                     retry_exceptions=(IScriptError,),
-                    attempts=10,
+                    attempts=20,
                     sleeptime_kwargs={"delay_factor": 30.0, "max_delay": 300},
                 )
             )
