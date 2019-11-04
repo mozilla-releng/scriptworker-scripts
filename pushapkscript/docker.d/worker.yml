@@ -114,7 +114,6 @@ products:
           skip_checks_fennec: true
           skip_check_signature: true
           skip_check_ordered_version_codes: true
-          override_channel_model: "single_google_app"
           apps:
             production:
               package_names:
