@@ -72,7 +72,7 @@ products:
               package_names: [ "org.mozilla.fenix.beta" ]
               certificate_alias: "fenix-beta"
               google:
-                default_track: 'internal'
+                default_track: 'beta-closed'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_BETA" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_BETA_PATH"}
             production:
