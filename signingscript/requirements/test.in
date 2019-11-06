@@ -9,5 +9,4 @@ pytest-mock
 flake8
 flake8_docstrings
 black
-pydocstyle~=3.0
 pip-compile-multi
