@@ -70,15 +70,8 @@ async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions)
             await script.async_main(context)
     else:
         await script.async_main(context)
-"""
 
-# get_default_config {{{1
-def test_get_default_config():
-    parent_dir = os.path.dirname(os.getcwd())
-    c = script.get_default_config()
-    assert c['work_dir'] == os.path.join(parent_dir, 'work_dir')
 
-"""
 # do_actions {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
