@@ -84,6 +84,13 @@ tasks:
               $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev","refs/heads/production","refs/heads/dev-" + x[0],"refs/heads/production-" + x[0]]'
               then: '1'
               else: '0'
+          worker_level:
+            $if: 'tasks_for == "github-pull-request"'
+            then: 't'
+            else:
+              $if: 'tasks_for == "github-push" && event.ref in ["refs/heads/dev","refs/heads/production","refs/heads/dev-" + x[0],"refs/heads/production-" + x[0]]'
+              then: '3'
+              else: 't'
           number_prefix:
             $if: 'i + 1 < 10'
             then: '0'
@@ -103,8 +110,8 @@ tasks:
             # Run code linting and unit tests for each project
             'run_tests == "1"':
               taskId: '${as_slugid(project_name + python_version)}'
-              provisionerId: 'aws-provisioner-v1'
-              workerType: 'github-worker'
+              provisionerId: 'releng-t'
+              workerType: 'linux'
               created: { $fromNow: '' }
               deadline: { $fromNow: '4 hours' }
               payload:
@@ -138,8 +145,8 @@ tasks:
               taskId: '${as_slugid(project_name + "docker_build_and_push")}'
               dependencies:
                 - '${as_slugid(project_name + python_version)}'
-              provisionerId: 'aws-provisioner-v1'
-              workerType: 'github-worker'
+              provisionerId: 'releng-${worker_level}'
+              workerType: 'linux'
               created: { $fromNow: '' }
               deadline: { $fromNow: '24 hours' }
               payload:
