@@ -7,7 +7,7 @@ from .release import (
     buildbot2updatePlatforms, buildbot2bouncer, buildbot2ftp,
     getPrettyVersion,
 )
-from balrogclient import Release, SingleLocale, Rule, ScheduledRuleChange
+from balrogclient import Release, SingleLocale, Rule, ScheduledRuleChange, ReleaseState
 from .util import recursive_update
 from redo import retry
 import logging
@@ -473,3 +473,20 @@ class ReleaseScheduler(object):
             ScheduledRuleChange(
                 api_root=self.api_root, auth0_secrets=self.auth0_secrets,
                 rule_id=rule_id).add_scheduled_rule_change(**data)
+
+
+class ReleaseStateUpdater(object):
+    def __init__(self, api_root, auth0_secrets=None, dummy=False, suffix=""):
+        self.api_root = api_root
+        self.auth0_secrets = auth0_secrets
+        self.suffix = suffix
+        if dummy:
+            self.suffix += "-dummy"
+
+    def run(self, productName, version, build_number):
+        name = get_release_blob_name(
+            productName, version, build_number, self.suffix)
+        ReleaseState(
+            name,
+            api_root=self.api_root,
+            auth0_secrets=self.auth0_secrets).set_readonly()

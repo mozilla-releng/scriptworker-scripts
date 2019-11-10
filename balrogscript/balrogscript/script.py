@@ -21,6 +21,7 @@ from .submitter.cli import (
     ReleaseScheduler,
     ReleaseCreatorV9,
     ReleasePusher,
+    ReleaseStateUpdater,
 )
 
 
@@ -184,6 +185,26 @@ def submit_toplevel(task, config, auth0_secrets):
     ))
 
 
+# set_readonly {{{1
+def create_state_updater(**kwargs):
+    return ReleaseStateUpdater(**kwargs)
+
+
+def set_readonly(task, config, auth0_secrets):
+    state_updater = create_state_updater(
+        api_root=config['api_root'],
+        auth0_secrets=auth0_secrets,
+        dummy=config['dummy'],
+        suffix=task['payload'].get('blob_suffix', ''),
+    )
+    args = [
+        task['payload']['product'].capitalize(),
+        task['payload']['version'],
+        task['payload']['build_number'],
+    ]
+    retry(lambda: state_updater.run(*args))
+
+
 # usage {{{1
 def usage():
     print("Usage: {} CONFIG_FILE".format(sys.argv[0]), file=sys.stderr)
@@ -238,7 +259,8 @@ def setup_config(config_path):
         'schema_files': {
             'submit-locale': os.path.join(data_dir, 'balrog_submit-locale_schema.json'),
             'submit-toplevel': os.path.join(data_dir, 'balrog_submit-toplevel_schema.json'),
-            'schedule': os.path.join(data_dir, 'balrog_schedule_schema.json')
+            'schedule': os.path.join(data_dir, 'balrog_schedule_schema.json'),
+            'set-readonly': os.path.join(data_dir, 'balrog_set-readonly_schema.json'),
         },
     }
     config.update(load_config(config_path))
@@ -262,6 +284,8 @@ def main(config_path=None):
         submit_toplevel(task, config, auth0_secrets)
     elif action == 'schedule':
         schedule(task, config, auth0_secrets)
+    elif action == 'set-readonly':
+        set_readonly(task, config, auth0_secrets)
     else:
         submit_locale(task, config, auth0_secrets)
 
