@@ -119,8 +119,8 @@ products:
               package_names:
                 - "org.mozilla.tv.firefox"
               amazon:
-                client_id: 'dummy'
-                client_secret: 'dummy'
+                client_id: { "$eval": "AMAZON_CLIENT_ID" }
+                client_secret: { "$eval": "AMAZON_CLIENT_SECRET" }
       'COT_PRODUCT == "mobile" && ENV == "fake-prod"':
         - product_names: [ "fenix" ]
           digest_algorithm: "SHA-256"
