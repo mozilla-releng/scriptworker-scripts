@@ -45,10 +45,10 @@ case $COT_PRODUCT in
   thunderbird)
     case $ENV in
       dev|fake-prod)
-        export AUTH0_AUDIENCE="balrog-stage"
+        export AUTH0_AUDIENCE="balrog-cloudops-stage"
         ;;
       prod)
-        export AUTH0_AUDIENCE="balrog-prod"
+        export AUTH0_AUDIENCE="balrog-production"
         ;;
       *)
         exit 1
