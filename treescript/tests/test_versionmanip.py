@@ -59,7 +59,7 @@ def test_get_version(repo_context):
     assert ver == repo_context.xtest_version
 
 
-@pytest.mark.parametrize("new_version", ("87.0", "87.0b3"))
+@pytest.mark.parametrize("new_version", ("68.0", "68.0b3"))
 def test_replace_ver_in_file(repo_context, new_version):
     filepath = "config/milestone.txt"
     old_ver = repo_context.xtest_version
@@ -69,7 +69,7 @@ def test_replace_ver_in_file(repo_context, new_version):
     assert new_version == vmanip.get_version(filepath, repo_context.repo)
 
 
-@pytest.mark.parametrize("new_version", ("87.0", "87.0b3"))
+@pytest.mark.parametrize("new_version", ("68.0", "68.0b3"))
 def test_replace_ver_in_file_invalid_old_ver(repo_context, new_version):
     filepath = os.path.join(repo_context.repo, "config", "milestone.txt")
     old_ver = "45.0"
@@ -182,7 +182,7 @@ async def test_bump_version_DONTBUILD_false(mocker, repo_context, new_version):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version", ("87.0", "87.0b3", "123.2.0esr"))
+@pytest.mark.parametrize("new_version", ("68.0", "68.0b3", "68.9.10esr"))
 async def test_bump_version_invalid_file(mocker, repo_context, new_version):
     called_args = []
 
@@ -208,7 +208,7 @@ async def test_bump_version_invalid_file(mocker, repo_context, new_version):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version", ("87.0", "87.0b3", "123.2.0esr"))
+@pytest.mark.parametrize("new_version", ("68.0", "68.0b3", "68.9.10esr"))
 async def test_bump_version_missing_file(mocker, repo_context, new_version):
     called_args = []
 
