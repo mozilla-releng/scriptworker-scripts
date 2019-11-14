@@ -81,7 +81,7 @@ The config json looks like this (comments are not valid json, but I'm inserting 
 
     {
       // path to the password json you created above
-      "signing_server_config": "/src/signing/signingscript/example_server_config.json",
+      "autograph_configs": "/src/signing/signingscript/example_server_config.json",
 
       // the work directory path.  task.json will live here, as well as downloaded binaries
       // this should be an absolute path.
@@ -97,12 +97,6 @@ The config json looks like this (comments are not valid json, but I'm inserting 
 
       // how many seconds should the signing token be valid for?
       "token_duration_seconds": 1200,
-
-      // the path to the docker-signing-server fake_ca cert that you generated above.
-      "ssl_cert": "/src/signing/docker-signing-server/fake_ca/ca.crt",
-
-      // the path to signtool in your virtualenv that you created above
-      "signtool": "/src/signing/venv3/bin/signtool",
 
       // enable debug logging
       "verbose": true,

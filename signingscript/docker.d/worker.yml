@@ -3,7 +3,6 @@ artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 my_ip: { "$eval": "PUBLIC_IP" }
 autograph_configs: { "$eval": "PASSWORDS_PATH"}
-ssl_cert: { "$eval": "SSL_CERT_PATH" }
 taskcluster_scope_prefixes:
   $flatten:
     $match:

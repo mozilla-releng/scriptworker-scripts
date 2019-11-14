@@ -14,7 +14,6 @@ from unittest.mock import MagicMock
 
 # helper constants, fixtures, functions {{{1
 EXAMPLE_CONFIG = os.path.join(BASE_DIR, "config_example.json")
-SSL_CERT = os.path.join(BASE_DIR, "src", "signingscript", "data", "host.cert")
 
 
 # async_main {{{1
@@ -33,7 +32,7 @@ async def async_main_helper(
     mocker.patch.object(script, "build_filelist_dict", new=fake_filelist_dict)
     mocker.patch.object(script, "sign", new=fake_sign)
     context = mock.MagicMock()
-    context.config = {"work_dir": tmpdir, "ssl_cert": None, "artifact_dir": tmpdir, "autograph_configs": {}}
+    context.config = {"work_dir": tmpdir, "artifact_dir": tmpdir, "autograph_configs": {}}
     context.config.update(extra_config)
     await script.async_main(context)
 
