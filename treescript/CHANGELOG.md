@@ -2,6 +2,20 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.0] - 2019-11-xx
+### Added
+- added l10n bumper support
+- added `treestatus_base_url` config
+- added mypy check
+- added black check
+
+### Changed
+- use `scriptworker_client` instead of `scriptworker.client`
+- moved src into `src/treescript` and tests into `tests/`
+
+### Fixed
+- fixed version bumping on relbranches
+
 ## [1.2.1] - 2019-07-08
 
 ### Changed
