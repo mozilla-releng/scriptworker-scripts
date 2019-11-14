@@ -16,6 +16,8 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Autograph:
+    """Autograph configuration object."""
+
     url: str
     client_id: str
     access_key: str
@@ -71,7 +73,7 @@ def load_json(path):
 
 
 def load_autograph_configs(filename):
-    """Loads autograph configuration from `filename`
+    """Load the autograph configuration from `filename`.
 
     Args:
         filename (str): config file

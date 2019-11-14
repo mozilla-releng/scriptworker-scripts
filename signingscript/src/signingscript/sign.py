@@ -62,9 +62,7 @@ sys.path.append(  # append the mozbuild vendor
 
 from mozpack import mozjar  # noqa: E402
 
-_ZIP_ALIGNMENT = (
-    "4"
-)  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
+_ZIP_ALIGNMENT = "4"  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
 
 # Blessed files call the other widevine files.
 _WIDEVINE_BLESSED_FILENAMES = (

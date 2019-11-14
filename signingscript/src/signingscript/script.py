@@ -3,19 +3,10 @@
 import aiohttp
 import logging
 import os
-import ssl
 
 import scriptworker.client
-from signingscript.task import (
-    build_filelist_dict,
-    sign,
-    task_cert_type,
-    task_signing_formats,
-)
-from signingscript.utils import (
-    copy_to_dir,
-    load_autograph_configs,
-)
+from signingscript.task import build_filelist_dict, sign, task_signing_formats
+from signingscript.utils import copy_to_dir, load_autograph_configs
 
 
 log = logging.getLogger(__name__)
@@ -48,7 +39,9 @@ async def async_main(context):
                 )
 
         context.session = session
-        context.autograph_configs = load_autograph_configs(context.config["autograph_configs"])
+        context.autograph_configs = load_autograph_configs(
+            context.config["autograph_configs"]
+        )
         work_dir = context.config["work_dir"]
         filelist_dict = build_filelist_dict(context)
         for path, path_dict in filelist_dict.items():

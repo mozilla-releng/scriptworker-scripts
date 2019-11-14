@@ -7,19 +7,15 @@ Attributes:
         function.
 
 """
-import aiohttp
-import asyncio
 from frozendict import frozendict
 import logging
 import os
-import random
 import re
 
-from scriptworker.exceptions import ScriptWorkerException, TaskVerificationError
-from scriptworker.utils import retry_request, get_single_item_from_sequence
+from scriptworker.exceptions import TaskVerificationError
+from scriptworker.utils import get_single_item_from_sequence
 
 from signingscript.sign import (
-    get_autograph_config,
     sign_gpg,
     sign_jar,
     sign_macapp,
@@ -32,7 +28,6 @@ from signingscript.sign import (
     sign_langpack,
     sign_authenticode_zip,
 )
-from signingscript.exceptions import SigningServerError
 
 log = logging.getLogger(__name__)
 
