@@ -2,7 +2,7 @@ work_dir: { "$eval": "WORK_DIR" }
 artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 my_ip: { "$eval": "PUBLIC_IP" }
-signing_server_config: { "$eval": "PASSWORDS_PATH"}
+autograph_configs: { "$eval": "PASSWORDS_PATH"}
 ssl_cert: { "$eval": "SSL_CERT_PATH" }
 taskcluster_scope_prefixes:
   $flatten:
