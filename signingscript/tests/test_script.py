@@ -28,7 +28,7 @@ async def async_main_helper(
         return [val]
 
     mocker.patch.object(script, "load_autograph_configs", new=noop_sync)
-    mocker.patch.object(script, "task_cert_type", new=noop_sync)
+    #mocker.patch.object(script, "task_cert_type", new=noop_sync)
     mocker.patch.object(script, "task_signing_formats", return_value=formats)
     mocker.patch.object(script, "build_filelist_dict", new=fake_filelist_dict)
     mocker.patch.object(script, "sign", new=fake_sign)
