@@ -13,6 +13,7 @@ for dir in \
     balrogscript \
     beetmoverscript \
     bouncerscript \
+    configloader \
     iscript \
     pushapkscript \
     pushsnapscript \
