@@ -146,6 +146,8 @@ case $ENV in
         test_var_set 'AUTOGRAPH_WIDEVINE_USERNAME'
         ;;
       mobile)
+        test_var_set 'AUTOGRAPH_FENNEC_RELEASE_PASSWORD'
+        test_var_set 'AUTOGRAPH_FENNEC_RELEASE_USERNAME'
         test_var_set 'AUTOGRAPH_FENIX_BETA_PASSWORD'
         test_var_set 'AUTOGRAPH_FENIX_BETA_USERNAME'
         test_var_set 'AUTOGRAPH_FENIX_NIGHTLY_PASSWORD'
