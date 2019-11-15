@@ -97,83 +97,6 @@ def supported_hg():
     )
 
 
-if os.name == "nt":
-    import ctypes
-
-    # Get a reference to the DeleteFileW function
-    # DeleteFileW accepts filenames encoded as a null terminated sequence of
-    # wide chars (UTF-16). Python's ctypes.c_wchar_p correctly encodes unicode
-    # strings to null terminated UTF-16 strings.
-    # However, we receive (byte) strings from mercurial. When these are passed
-    # to DeleteFileW via the c_wchar_p type, they are implicitly decoded via
-    # the 'mbcs' encoding on windows.
-    kernel32 = ctypes.windll.kernel32
-    DeleteFile = kernel32.DeleteFileW
-    DeleteFile.argtypes = [ctypes.c_wchar_p]
-    DeleteFile.restype = ctypes.c_bool
-
-    def unlinklong(fn):
-        normalized_path = "\\\\?\\" + os.path.normpath(fn)
-        if not DeleteFile(normalized_path):
-            raise OSError(errno.EPERM, "couldn't remove long path", fn)
-
-
-# Not needed on other platforms, but is handy for testing
-else:
-
-    def unlinklong(fn):
-        os.unlink(fn)
-
-
-def unlinkwrapper(unlinkorig, fn, ui):
-    """Calls unlink_long if original unlink function fails."""
-    try:
-        ui.debug(b"calling unlink_orig %s\n" % fn)
-        return unlinkorig(fn)
-    except WindowsError as e:
-        # Windows error 3 corresponds to ERROR_PATH_NOT_FOUND
-        # only handle this case; re-raise the exception for other kinds of
-        # failures.
-        if e.winerror != 3:
-            raise
-        ui.debug(
-            b"caught WindowsError ERROR_PATH_NOT_FOUND; "
-            b"calling unlink_long %s\n" % fn
-        )
-        return unlinklong(fn)
-
-
-@contextlib.contextmanager
-def wrapunlink(ui):
-    """Context manager that temporarily monkeypatches unlink functions."""
-    purgemod = extensions.find(b"purge")
-    to_wrap = [(purgemod.util, b"unlink")]
-
-    # Pass along the ui object to the unlink_wrapper so we can get logging out
-    # of it.
-    wrapped = functools.partial(unlinkwrapper, ui=ui)
-
-    # Wrap the original function(s) with our unlink wrapper.
-    originals = {}
-    for mod, func in to_wrap:
-        ui.debug(b"wrapping %s %s\n" % (mod, func))
-        originals[mod, func] = extensions.wrapfunction(mod, func, wrapped)
-
-    try:
-        yield
-    finally:
-        # Restore the originals.
-        for mod, func in to_wrap:
-            ui.debug(b"restoring %s %s\n" % (mod, func))
-            setattr(mod, func, originals[mod, func])
-
-
-def purgewrapper(orig, ui, *args, **kwargs):
-    """Runs original purge() command with unlink monkeypatched."""
-    with wrapunlink(ui):
-        return orig(ui, *args, **kwargs)
-
-
 def peerlookup(remote, v):
     # TRACKING hg46 4.6 added commandexecutor API.
     if util.safehasattr(remote, "commandexecutor"):
@@ -916,6 +839,3 @@ def extsetup(ui):
             extensions.find(ext)
         except KeyError:
             extensions.load(ui, ext, None)
-
-    purgemod = extensions.find(b"purge")
-    extensions.wrapcommand(purgemod.cmdtable, b"purge", purgewrapper)
