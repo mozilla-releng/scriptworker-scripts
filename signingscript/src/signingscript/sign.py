@@ -269,47 +269,6 @@ async def sign_macapp(context, from_, fmt):
     return from_
 
 
-# sign_signcode {{{1
-async def sign_signcode(context, orig_path, fmt):
-    """Sign a zipfile with authenticode.
-
-    Extract the zip and only sign unsigned files that don't match certain
-    patterns (see `_should_sign_windows`). Then recreate the zip.
-
-    Args:
-        context (Context): the signing context
-        orig_path (str): the source file to sign
-        fmt (str): the format to sign with
-
-    Returns:
-        str: the path to the signed zip
-
-    """
-    file_base, file_extension = os.path.splitext(orig_path)
-    # This will get cleaned up when we nuke `work_dir`. Clean up at that point
-    # rather than immediately after `sign_signcode`, to optimize task runtime
-    # speed over disk space.
-    tmp_dir = None
-    # Extract the zipfile
-    if file_extension == ".zip":
-        tmp_dir = tempfile.mkdtemp(prefix="zip", dir=context.config["work_dir"])
-        files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
-    else:
-        files = [orig_path]
-    files_to_sign = [file for file in files if _should_sign_windows(file)]
-    if not files_to_sign:
-        raise SigningScriptError(
-            "Did not find any files to sign, all files: {}".format(files)
-        )
-    # Sign the appropriate inner files
-    for from_ in files_to_sign:
-        await sign_file(context, from_, fmt)
-    if file_extension == ".zip":
-        # Recreate the zipfile
-        await _create_zipfile(context, orig_path, files, tmp_dir=tmp_dir)
-    return orig_path
-
-
 # sign_langpack {{{1
 async def sign_langpack(context, orig_path, fmt):
     """Sign language packs with autograph.

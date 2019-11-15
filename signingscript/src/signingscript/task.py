@@ -19,7 +19,6 @@ from signingscript.sign import (
     sign_gpg,
     sign_jar,
     sign_macapp,
-    sign_signcode,
     sign_widevine,
     sign_file,
     sign_mar384_with_autograph_hash,
@@ -43,10 +42,6 @@ FORMAT_TO_SIGNING_FUNCTION = frozendict(
         "jar": sign_jar,
         "focus-jar": sign_jar,
         "macapp": sign_macapp,
-        "osslsigncode": sign_signcode,
-        "sha2signcode": sign_signcode,
-        # sha2signcodestub uses a generic sign_file
-        "signcode": sign_signcode,
         "widevine": sign_widevine,
         "autograph_widevine": sign_widevine,
         "autograph_omnija": sign_omnija,
