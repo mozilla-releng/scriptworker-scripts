@@ -17,10 +17,28 @@ from treescript.task import DONTBUILD_MSG
 
 
 # constants, helpers, fixtures {{{1
-ROBUSTCHECKOUT_FILE = os.path.abspath(
-    os.path.join(
-        os.path.dirname(__file__), "..", "src", "treescript", "py2", "robustcheckout.py"
-    )
+ROBUSTCHECKOUT_FILES = (
+    os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "build",
+            "lib",
+            "treescript",
+            "py2",
+            "robustcheckout.py",
+        )
+    ),
+    os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "src",
+            "treescript",
+            "py2",
+            "robustcheckout.py",
+        )
+    ),
 )
 UNEXPECTED_ENV_KEYS = (
     "HG HGPROF CDPATH GREP_OPTIONS http_proxy no_proxy "
@@ -67,18 +85,24 @@ def config(tmpdir):
 )
 def test_build_hg_cmd(config, hg, args):
     config["hg"] = hg
-    assert mercurial.build_hg_command(config, *args) == [
-        "hg",
-        "--config",
-        "extensions.robustcheckout={}".format(ROBUSTCHECKOUT_FILE),
-        "--config",
-        "extensions.purge=",
-        "--config",
-        "extensions.mq=",
-        "blah",
-        "blah",
-        "--baz",
-    ]
+    valid_paths = []
+    # allow for different install types
+    for path in ROBUSTCHECKOUT_FILES:
+        valid_paths.append(
+            [
+                "hg",
+                "--config",
+                "extensions.robustcheckout={}".format(path),
+                "--config",
+                "extensions.purge=",
+                "--config",
+                "extensions.mq=",
+                "blah",
+                "blah",
+                "--baz",
+            ]
+        )
+    assert mercurial.build_hg_command(config, *args) in valid_paths
 
 
 @pytest.mark.parametrize(
