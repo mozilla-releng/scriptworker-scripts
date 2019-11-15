@@ -85,8 +85,7 @@
                             }
                         },
                         "required": ["path", "name", "platform_configs", "version_path"]
-                    },
-                    "required": ["next_version", "files"]
+                    }
                 },
                 "branch": {
                     "type": "string"
