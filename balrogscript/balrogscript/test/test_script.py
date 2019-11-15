@@ -18,6 +18,7 @@ from balrogscript.submitter.cli import (
     ReleasePusher,
     ReleaseScheduler,
     ReleaseSubmitterV9,
+    ReleaseStateUpdater,
 )  # noqa: E402
 
 logging.basicConfig()
@@ -428,6 +429,36 @@ def test_load_config():
     assert bscript.load_config(config_path)['verbose']
     with pytest.raises(SystemExit):
         bscript.load_config(os.path.join(BASE_DIR, "nonexistent.path"))
+
+
+def test_create_state_updater(config):
+    assert isinstance(
+        bscript.create_state_updater(api_root=config['api_root']),
+        ReleaseStateUpdater
+    )
+
+
+def test_set_readonly(config, mocker):
+    task = {
+        'payload': {
+            'product': 'foo',
+            'version': '42.0.24',
+            'build_number': 1,
+        }
+    }
+
+    expected = ['Foo', '42.0.24', 1]
+    real = []
+
+    def fake_run(*args):
+        real.extend(args)
+
+    m = mock.MagicMock()
+    m.run = fake_run
+    mocker.patch.object(bscript, "create_state_updater", return_value=m)
+
+    bscript.set_readonly(task, config, None)
+    assert real == expected
 
 
 # setup_config {{{1
