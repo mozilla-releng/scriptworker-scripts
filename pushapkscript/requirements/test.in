@@ -2,6 +2,7 @@
 
 coverage>=4.2b1
 flake8
+json-e
 pytest
 pytest-cov
 pytest-asyncio
