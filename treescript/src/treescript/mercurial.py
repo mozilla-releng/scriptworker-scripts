@@ -48,8 +48,6 @@ def build_hg_command(config, *args):
         "extensions.robustcheckout={}".format(ROBUSTCHECKOUT_PATH),
         "--config",
         "extensions.purge=",
-        "--config",
-        "extensions.mq=",
     ]
     return hg + [*robustcheckout_args, *args]
 

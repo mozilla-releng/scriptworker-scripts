@@ -95,8 +95,6 @@ def test_build_hg_cmd(config, hg, args):
                 "extensions.robustcheckout={}".format(path),
                 "--config",
                 "extensions.purge=",
-                "--config",
-                "extensions.mq=",
                 "blah",
                 "blah",
                 "--baz",
