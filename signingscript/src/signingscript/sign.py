@@ -1312,7 +1312,7 @@ async def sign_authenticode_file(context, orig_path, fmt, comment=None):
     if comment and orig_path.endswith('.msi'):
         log.info(f"Using comment '{comment}' to sign {orig_path}")
     elif comment:
-        log.info("Not using specified comment to sign {orig_path}, not yet implemented.")
+        log.info(f"Not using specified comment to sign {orig_path}, not yet implemented.")
         comment = None
 
     if not await winsign.sign.sign_file(
