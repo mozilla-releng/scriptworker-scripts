@@ -95,7 +95,7 @@ def submit_locale(task, config, auth0_secrets):
             # Get release metadata from manifest
             submitter, release = create_locale_submitter(e, suffix, auth0_secrets, config)
             # Connect to balrog and submit the metadata
-            retry(lambda: submitter.run(**release), jitter=5, sleeptime=10, max_sleeptime=30, attempts=12)
+            retry(lambda: submitter.run(**release), jitter=5, sleeptime=10, max_sleeptime=30, attempts=10)
 
 
 # schedule {{{1
