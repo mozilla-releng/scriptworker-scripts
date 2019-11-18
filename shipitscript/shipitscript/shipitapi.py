@@ -134,12 +134,14 @@ class Release_V2(object):
     def get_most_recent_shipped_revision(self, product, channel, headers={}):
         pass
 
-    def create_new_release(self, product, repo, channel, release_name, version, revision, headers={}):
+    def create_new_release(
+        self, product, repo, channel, release_name, version, revision, headers={}
+    ):
         if self.releases_are_disabled(product, channel):
             return
         pass
 
-    def trigger_release_phase(self, product, channel, release_name, headers={}):
+    def trigger_release_phase(self, product, channel, release_name, phase, headers={}):
         """Trigger a push phase for a specific release"""
         if self.releases_are_disabled(product, channel):
             return

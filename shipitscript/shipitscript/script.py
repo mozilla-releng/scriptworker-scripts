@@ -6,13 +6,13 @@ import os
 
 from scriptworker import client
 
-from shipitscript.utils import get_buildnum_from_version
 from shipitscript import ship_actions
 from shipitscript.task import (
     get_ship_it_instance_config_from_scope,
     get_task_action,
     validate_task_schema,
 )
+from shipitscript.utils import get_buildnum_from_version
 
 log = logging.getLogger(__name__)
 
@@ -40,26 +40,37 @@ def mark_as_shipped_action(context):
 def create_new_release_action(context):
     """Determine if there is a shippable release and create it if so in Shipit """
     payload = context.task['payload']
-    # TODO determine product, channel, repo, phase from payload
-    product = None
-    channel = None
-    repo = None
-    phase = None  # release phase we want to trigger
+    shipit_config = context.ship_it_instance_config
+    # TODO actually include these in the payload from taskgraph
+    product = payload["product"]
+    channel = payload["channel"]
+    repo = payload["repo"]
+    phase = payload["phase"]  # release phase we want to trigger
 
-    log.info('Determining most recent shipped revision and next version / buildnum to release')
-    last_shipped_revision = ship_actions.get_most_recent_shipped_revision(product, channel)
-    next_version = ship_actions.get_next_release_version(product, channel)
+    log.info(
+        'Determining most recent shipped revision and next version / buildnum to release'
+    )
+    last_shipped_revision = ship_actions.get_most_recent_shipped_revision(
+        product, channel, shipit_config
+    )
+    next_version = ship_actions.get_next_release_version(
+        product, channel, shipit_config
+    )
     log.info('Ensuring next version is a new version and not a buildnum increment')
     if get_buildnum_from_version(next_version) != 1:
         # TODO quit early, mark task as green though
         pass
     log.info('Determining most recent shippable revision')
-    shippable_revision = ship_actions.get_shippable_revision(repo, last_shipped_revision)
+    shippable_revision = ship_actions.get_shippable_revision(
+        repo, last_shipped_revision
+    )
     if not shippable_revision:
         # TODO quit early, mark task as green though
         pass
     log.info('create a new release')
-    release = ship_actions.create_new_release(product, repo, channel, next_version, shippable_revision)
+    ship_actions.create_new_release(
+        product, repo, channel, next_version, shippable_revision, phase, shipit_config
+    )
 
 
 # ACTION_MAP {{{1
