@@ -10,6 +10,34 @@ from shipitscript.utils import (
 log = logging.getLogger(__name__)
 
 
+def are_releases_disabled(product, channel):
+    pass
+
+
+def get_most_recent_shipped_revision(product, channel):
+    pass
+
+
+def get_next_release_version(product, channel):
+    pass
+
+
+def get_shippable_revision(repo):
+    pass
+
+
+def get_buildnum_from_version(next_version):
+    pass
+
+
+def create_new_release(product, repo, next_version, shippable_revision):
+    pass
+
+
+def trigger_release_phase(release):
+    pass
+
+
 def mark_as_shipped_v2(ship_it_instance_config, release_name):
     """Function to make a simple call to Ship-it API v2 to change a release
     status to 'shipped'
