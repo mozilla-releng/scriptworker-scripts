@@ -2,6 +2,7 @@ work_dir: { "$eval": "WORK_DIR" }
 artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
+treestatus_base_url: https://treestatus.mozilla-releng.net
 hg: 'hg'
 hg_share_base_dir: { "$eval": "HG_SHARE_BASE_DIR" }
 upstream_repo: 'https://hg.mozilla.org/mozilla-unified'
