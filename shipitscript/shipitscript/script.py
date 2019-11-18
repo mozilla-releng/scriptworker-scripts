@@ -65,7 +65,7 @@ def create_new_release_action(context):
 # ACTION_MAP {{{1
 ACTION_MAP = {
     'mark-as-shipped': mark_as_shipped_action,
-    'create-new-release': create_new_release,
+    'create-new-release': create_new_release_action,
 }
 
 
