@@ -16,6 +16,7 @@ taskcluster_scope_prefixes:
         - 'project:mobile:android-components:releng:signing:'
         - 'project:mobile:fenix:releng:signing:'
         - 'project:mobile:reference-browser:releng:signing:'
+        - 'project:mobile:firefox-tv:releng:signing:'
       'COT_PRODUCT == "application-services"':
         - 'project:mozilla:application-services:releng:signing'
 signtool: { "$eval": "SIGNTOOL_PATH" }
