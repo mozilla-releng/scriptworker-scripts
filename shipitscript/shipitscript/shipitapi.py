@@ -140,6 +140,13 @@ class Release_V2(object):
         pass
 
     def trigger_release_phase(self, product, channel, release_name, headers={}):
+        """Trigger a push phase for a specific release"""
         if self.releases_are_disabled(product, channel):
             return
-        pass
+
+        self._request(
+            api_endpoint='/releases/{}/{}'.format(release_name, phase),
+            method='PUT',
+            data=None,
+            headers=headers,
+        )
