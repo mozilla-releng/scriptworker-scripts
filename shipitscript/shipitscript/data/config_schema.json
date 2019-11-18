@@ -1,0 +1,45 @@
+{
+    "title": "shipitscript config schema",
+    "type": "object",
+    "required": [
+        "mark_as_shipped_schema_file",
+        "taskcluster_scope_prefix",
+        "shipit_instance"
+    ],
+    "properties": {
+        "mark_as_shipped_schema_file": {
+            "type": "string"
+        },
+        "taskcluster_scope_prefix": {
+            "type": "string"
+        },
+        "shipit_instance": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "scope",
+                "api_root_v2",
+                "timeout_in_seconds",
+                "taskcluster_client_id",
+                "taskcluster_access_token"
+            ],
+            "properties": {
+                "scope": {
+                    "type": "string"
+                },
+                "api_root_v2": {
+                    "type": "string"
+                },
+                "timeout_in_seconds": {
+                    "type": "number"
+                },
+                "taskcluster_client_id": {
+                    "type": "string"
+                },
+                "taskcluster_access_token": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

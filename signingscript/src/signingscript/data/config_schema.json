@@ -1,0 +1,58 @@
+{
+    "title": "signingscript config schema",
+    "type": "object",
+    "required": [
+        "taskcluster_scope_prefixes",
+        "my_ip",
+        "autograph_configs"
+    ],
+    "properties": {
+        "taskcluster_scope_prefixes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "my_ip": {
+            "type": "string"
+        },
+        "autograph_configs": {
+            "type": "string"
+        },
+        "signtool": {
+            "type": "string"
+        },
+        "token_duration_seconds": {
+            "type": "number"
+        },
+        "dmg": {
+            "type": "string"
+        },
+        "hfsplus": {
+            "type": "string"
+        },
+        "zipalign": {
+            "type": "string"
+        },
+        "gpg_pubkey": {
+            "type": "string"
+        },
+        "widevine_cert": {
+            "type": "string"
+        },
+        "authenticode_cert": {
+            "type": "string"
+        },
+        "authenticode_cross_cert": {
+            "type": "string"
+        },
+        "authenticode_timestamp_style": {
+            "type": "string"
+        },
+        "authenticode_url": {
+            "type": "string"
+        }
+    }
+}
