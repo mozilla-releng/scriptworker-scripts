@@ -6,6 +6,7 @@ import os
 
 from scriptworker import client
 
+from shipitscript.utils import get_buildnum_from_version
 from shipitscript import ship_actions
 from shipitscript.task import (
     get_ship_it_instance_config_from_scope,
@@ -36,7 +37,7 @@ def mark_as_shipped_action(context):
     ship_actions.mark_as_shipped_v2(context.ship_it_instance_config, release_name)
 
 
-def create_new_release(context):
+def create_new_release_action(context):
     """Determine if there is a shippable release and create it if so in Shipit """
     payload = context.task['payload']
     # TODO determine product, channel, repo, phase from payload
@@ -45,23 +46,20 @@ def create_new_release(context):
     repo = None
     phase = None  # release phase we want to trigger
 
-    log.info('Determining if shipit has automatic releases disabled')
-    are_releases_disabled(product, channel)
-    log.info('Determining most recent shipped revision and next version and buildnum to release')
-    last_shipped_revision = get_most_recent_shipped_revision(product, channel)
-    next_version = get_next_release_version(product, channel)
+    log.info('Determining most recent shipped revision and next version / buildnum to release')
+    last_shipped_revision = ship_actions.get_most_recent_shipped_revision(product, channel)
+    next_version = ship_actions.get_next_release_version(product, channel)
     log.info('Ensuring next version is a new version and not a buildnum increment')
     if get_buildnum_from_version(next_version) != 1:
         # TODO quit early, mark task as green though
         pass
     log.info('Determining most recent shippable revision')
-    shippable_revision = get_shippable_revision(repo)
+    shippable_revision = ship_actions.get_shippable_revision(repo, last_shipped_revision)
     if not shippable_revision:
         # TODO quit early, mark task as green though
         pass
     log.info('create a new release')
-    release = create_new_release(product, repo, next_version, shippable_revision)
-    trigger_release_phase(release)
+    release = ship_actions.create_new_release(product, repo, channel, next_version, shippable_revision)
 
 
 # ACTION_MAP {{{1
