@@ -7,7 +7,7 @@ test $TASKCLUSTER_ROOT_URL
 test $REPO_URL
 test $PROJECT_NAME
 
-cat > ${PROJECT_NAME}/version.json <<EOF
+cat > version.json <<EOF
 {
     "commit": "${GIT_HEAD_REV}",
     "version": "$(cat ${PROJECT_NAME}/version.txt)",
@@ -16,4 +16,4 @@ cat > ${PROJECT_NAME}/version.json <<EOF
 }
 EOF
 
-cat ${PROJECT_NAME}/version.json
+cat version.json
