@@ -11,13 +11,6 @@ from shipitscript.task import (
     get_ship_it_instance_config_from_scope,
     get_task_action,
     validate_task_schema,
-    are_releases_disabled,
-    get_most_recent_shipped_revision,
-    get_next_release_version,
-    get_shippable_revision,
-    get_buildnum_from_version,
-    create_new_release,
-    trigger_release_phase,
 )
 
 log = logging.getLogger(__name__)
