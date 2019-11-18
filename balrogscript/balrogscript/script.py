@@ -95,7 +95,10 @@ def submit_locale(task, config, auth0_secrets):
             # Get release metadata from manifest
             submitter, release = create_locale_submitter(e, suffix, auth0_secrets, config)
             # Connect to balrog and submit the metadata
-            retry(lambda: submitter.run(**release), jitter=5, sleeptime=10, max_sleeptime=30, attempts=12)
+            # Going back to the original number of attempts so that we avoid sleeping too much in between
+            # retries to get Out-of-memory in the GCP workers. Until we figure out what's bumping the spike
+            # in memory usage from 130 -> ~400 Mb, let's keep this as it was, historically
+            retry(lambda: submitter.run(**release), jitter=5, sleeptime=10, max_sleeptime=30, attempts=10)
 
 
 # schedule {{{1
