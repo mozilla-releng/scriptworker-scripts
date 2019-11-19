@@ -65,12 +65,12 @@ def create_new_release_action(context):
     should_build = ship_actions.should_ship_revision(
         repo, last_shipped_revision, current_revision,
     )
-    if not shippable_revision:
+    if not should_build:
         # TODO quit early, mark task as green though
         pass
     log.info('create a new release')
     ship_actions.create_new_release(
-        product, repo, channel, next_version, shippable_revision, phase, shipit_config
+        product, repo, channel, next_version, current_revision, phase, shipit_config
     )
 
 
