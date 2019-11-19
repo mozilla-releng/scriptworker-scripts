@@ -12,9 +12,9 @@ import aiohttp
 from mardor.cli import do_verify
 from scriptworker.utils import makedirs
 from signingscript.sign import sign_file_with_autograph, sign_authenticode_zip
-from signingscript.utils import SigningServer
 
 from signingscript.script import async_main
+from signingscript.utils import Autograph
 from conftest import skip_when_no_autograph_server
 
 
@@ -30,28 +30,24 @@ DEFAULT_SERVER_CONFIG = {
             "alice",
             "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn",
             ["autograph_mar384"],
-            "autograph",
         ],
         [
             "http://localhost:5500",
             "bob",
             "1234567890abcdefghijklmnopqrstuvwxyz1234567890abcd",
             ["autograph_focus"],
-            "autograph",
         ],
         [
             "http://localhost:5500",
             "alice",
             "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn",
             ["autograph_hash_only_mar384"],
-            "autograph",
         ],
         [
             "http://localhost:5500",
             "charlie",
             "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn",
             ["autograph_authenticode"],
-            "autograph",
         ],
     ]
 }
@@ -61,10 +57,7 @@ DEFAULT_CONFIG = {
     "work_dir": "work_dir",
     "artifact_dir": "artifact_dir",
     "schema_file": os.path.join(DATA_DIR, "signing_task_schema.json"),
-    "signtool": "signtool",
-    "ssl_cert": os.path.join(DATA_DIR, "host.cert"),
     "taskcluster_scope_prefixes": ["project:releng:signing:"],
-    "token_duration_seconds": 1200,
     "verbose": True,
     "dmg": "dmg",
     "hfsplus": "hfsplus",
@@ -145,7 +138,7 @@ async def test_integration_autograph_mar_sign_file(context, tmpdir):
     for file_name in file_names:
         _copy_files_to_work_dir(file_name, context)
 
-    context.config["signing_server_config"] = _write_server_config(tmpdir)
+    context.config["autograph_configs"] = _write_server_config(tmpdir)
     context.task = _craft_task(file_names, signing_format="autograph_mar384")
 
     await async_main(context)
@@ -169,7 +162,7 @@ async def test_integration_autograph_mar_sign_hash(context, tmpdir, mocker):
         _copy_files_to_work_dir(file_name, context)
 
     mocker.patch("signingscript.sign.verify_mar_signature", new=lambda *args: None)
-    context.config["signing_server_config"] = _write_server_config(tmpdir)
+    context.config["autograph_configs"] = _write_server_config(tmpdir)
     context.task = _craft_task(file_names, signing_format="autograph_hash_only_mar384")
 
     await async_main(context)
@@ -251,7 +244,7 @@ async def test_integration_autograph_focus(context, tmpdir):
         os.path.join(copied_file_folder, file_name)
     )
 
-    context.config["signing_server_config"] = _write_server_config(tmpdir)
+    context.config["autograph_configs"] = _write_server_config(tmpdir)
     context.task = _craft_task([file_name], signing_format="autograph_focus")
 
     keystore_path = os.path.join(tmpdir, "keystore")
@@ -317,15 +310,14 @@ async def test_integration_autograph_custom_digest_algorithm(
     async with aiohttp.ClientSession() as session:
         context.session = session
 
-        context.signing_servers = {
+        context.autograph_configs = {
             "project:releng:signing:cert:dep-signing": [
-                SigningServer(
+                Autograph(
                     *[
                         "http://localhost:5500",
                         "bob",
                         "1234567890abcdefghijklmnopqrstuvwxyz1234567890abcd",
                         [format],
-                        "autograph",
                     ]
                 )
             ]
@@ -342,20 +334,19 @@ async def test_integration_autograph_authenticode(context, tmpdir):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_timestamp_style"] = None
     context.config["authenticode_url"] = "https://example.com"
-    context.signing_servers = {
+    context.autograph_configs = {
         "project:releng:signing:cert:dep-signing": [
-            SigningServer(
+            Autograph(
                 *[
                     "http://localhost:5500",
                     "charlie",
                     "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn",
                     ["autograph_authenticode"],
-                    "autograph",
                 ]
             )
         ]
     }
-    context.config["signing_server_config"] = _write_server_config(tmpdir)
+    context.config["autograph_configs"] = _write_server_config(tmpdir)
     _copy_files_to_work_dir("windows.zip", context)
     context.task = _craft_task(["windows.zip"], signing_format="autograph_authenticode")
 

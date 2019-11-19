@@ -1,7 +1,6 @@
 arrow
 mar>=3.0.0
 scriptworker
-signtool>=3.1.6
 taskcluster
 mohawk>=1.0.0
 winsign~=2.0

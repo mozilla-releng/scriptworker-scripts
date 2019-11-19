@@ -3,21 +3,10 @@
 import aiohttp
 import logging
 import os
-import ssl
 
 import scriptworker.client
-from signingscript.task import (
-    build_filelist_dict,
-    get_token,
-    sign,
-    task_cert_type,
-    task_signing_formats,
-)
-from signingscript.utils import (
-    copy_to_dir,
-    is_autograph_signing_format,
-    load_signing_server_config,
-)
+from signingscript.task import build_filelist_dict, sign, task_signing_formats
+from signingscript.utils import copy_to_dir, load_autograph_configs
 
 
 log = logging.getLogger(__name__)
@@ -31,15 +20,7 @@ async def async_main(context):
         context (Context): the signing context.
 
     """
-    connector = _craft_aiohttp_connector(context)
-
-    # Create a session for talking to the legacy signing servers in order to
-    # generate a signing token
-    async with aiohttp.ClientSession(connector=connector) as session:
-        context.session = session
-        work_dir = context.config["work_dir"]
-        context.signing_servers = load_signing_server_config(context)
-
+    async with aiohttp.ClientSession() as session:
         all_signing_formats = task_signing_formats(context)
         if "gpg" in all_signing_formats or "autograph_gpg" in all_signing_formats:
             if not context.config.get("gpg_pubkey"):
@@ -57,20 +38,11 @@ async def async_main(context):
                     "Widevine format is enabled, but widevine_cert is not defined"
                 )
 
-        if not all(
-            is_autograph_signing_format(format_) for format_ in all_signing_formats
-        ):
-            log.info("getting signingserver token")
-            await get_token(
-                context,
-                os.path.join(work_dir, "token"),
-                task_cert_type(context),
-                all_signing_formats,
-            )
-
-    # Create a new session to talk to autograph
-    async with aiohttp.ClientSession() as session:
         context.session = session
+        context.autograph_configs = load_autograph_configs(
+            context.config["autograph_configs"]
+        )
+        work_dir = context.config["work_dir"]
         filelist_dict = build_filelist_dict(context)
         for path, path_dict in filelist_dict.items():
             copy_to_dir(path_dict["full_path"], context.config["work_dir"], target=path)
@@ -94,14 +66,6 @@ async def async_main(context):
     log.info("Done!")
 
 
-def _craft_aiohttp_connector(context):
-    kwargs = {}
-    if context.config.get("ssl_cert"):
-        sslcontext = ssl.create_default_context(cafile=context.config["ssl_cert"])
-        kwargs["ssl"] = sslcontext
-    return aiohttp.TCPConnector(**kwargs)
-
-
 def get_default_config(base_dir=None):
     """Create the default config to work from.
 
@@ -115,13 +79,9 @@ def get_default_config(base_dir=None):
     """
     base_dir = base_dir or os.path.dirname(os.getcwd())
     default_config = {
-        "signing_server_config": "server_config.json",
         "work_dir": os.path.join(base_dir, "work_dir"),
         "artifact_dir": os.path.join(base_dir, "/src/signing/artifact_dir"),
         "my_ip": "127.0.0.1",
-        "token_duration_seconds": 20 * 60,
-        "ssl_cert": None,
-        "signtool": "signtool",
         "schema_file": os.path.join(
             os.path.dirname(__file__), "data", "signing_task_schema.json"
         ),
