@@ -8,7 +8,6 @@ install_requires = [
     "arrow",
     "mar",
     "scriptworker",
-    "signtool",
     "taskcluster",
     "mohawk",
     "winsign",

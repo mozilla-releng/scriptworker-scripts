@@ -115,29 +115,6 @@ def test_no_error_is_reported_when_no_missing_url(context, task_defn):
     validate_task_schema(context)
 
 
-# get_token {{{1
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "exc,contents", ((ScriptWorkerTaskException, "token"), (None, ""), (None, "token"))
-)
-async def test_get_token(mocker, tmpdir, exc, contents, context):
-    async def test_token(*args, **kwargs):
-        if exc:
-            raise exc("Expected exception")
-        return contents
-
-    output_file = os.path.join(tmpdir, "foo")
-    mocker.patch.object(aiohttp, "BasicAuth", new=noop_sync)
-    mocker.patch.object(stask, "retry_request", new=test_token)
-    if exc or not contents:
-        with pytest.raises(SigningServerError):
-            await stask.get_token(context, output_file, TEST_CERT_TYPE, ["gpg"])
-    else:
-        await stask.get_token(context, output_file, TEST_CERT_TYPE, ["gpg"])
-        with open(output_file, "r") as fh:
-            assert fh.read().rstrip() == contents
-
-
 # sign {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -173,9 +150,6 @@ async def test_sign(context, mocker, format, filename, post_files):
         ("jar", stask.sign_jar),
         ("focus-jar", stask.sign_jar),
         ("macapp", stask.sign_macapp),
-        ("osslsigncode", stask.sign_signcode),
-        ("sha2signcode", stask.sign_signcode),
-        ("signcode", stask.sign_signcode),
         ("widevine", stask.sign_widevine),
         ("widevine_blessed", stask.sign_widevine),
         ("default", stask.sign_file),
