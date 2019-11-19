@@ -1,6 +1,5 @@
 from enum import Enum, auto, unique
 import requests
-import sys
 
 
 URL = 'https://hg.mozilla.org/{repo}/json-pushes'
