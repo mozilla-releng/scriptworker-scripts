@@ -101,6 +101,3 @@ def skip_version_bump(push):
             return Importance.UNIMPORTANT
     # Anything else may still be important
     return Importance.MAYBE
-
-
-main()
