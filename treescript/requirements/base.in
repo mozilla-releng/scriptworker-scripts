@@ -1,2 +1,2 @@
 mozilla-version
-scriptworker
+scriptworker  # required for docker, even if treescript doesn't import it
