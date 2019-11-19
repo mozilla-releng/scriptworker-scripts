@@ -46,6 +46,7 @@ def create_new_release_action(context):
     channel = payload["channel"]
     repo = payload["repo"]
     phase = payload["phase"]  # release phase we want to trigger
+    current_revision = payload["current_revision"]  # Rev that cron triggered on
 
     log.info(
         'Determining most recent shipped revision and next version / buildnum to release'
@@ -61,8 +62,8 @@ def create_new_release_action(context):
         # TODO quit early, mark task as green though
         pass
     log.info('Determining most recent shippable revision')
-    shippable_revision = ship_actions.get_shippable_revision(
-        repo, last_shipped_revision
+    should_build = ship_actions.should_ship_revision(
+        repo, last_shipped_revision, current_revision,
     )
     if not shippable_revision:
         # TODO quit early, mark task as green though
