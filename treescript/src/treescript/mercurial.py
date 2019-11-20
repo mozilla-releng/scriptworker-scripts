@@ -353,6 +353,7 @@ async def log_outgoing(config, task, repo_path):
         dest_repo,
         repo_path=repo_path,
         return_output=True,
+        expected_exit_codes=(0, 1),
     )
     if output:
         path = os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff")
