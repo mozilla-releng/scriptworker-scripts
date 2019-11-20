@@ -290,14 +290,14 @@ async def do_tagging(config, task, repo_path):
         FailedSubprocess: if the tag attempt doesn't succeed.
 
     Returns:
-        bool: True if there are any changes.
+        int: the number of tags created.
 
     """
     tag_info = get_tag_info(task)
     desired_tags = await check_tags(config, tag_info, repo_path)
     if not desired_tags:
         log.info("No unique tags to add; skipping tagging.")
-        return
+        return 0
     desired_rev = tag_info["revision"]
     dontbuild = get_dontbuild(task)
     dest_repo = get_source_repo(task)
@@ -324,10 +324,19 @@ async def do_tagging(config, task, repo_path):
         *desired_tags,
         repo_path=repo_path,
     )
-    return True
+    return 1
 
 
 # log_outgoing {{{1
+def _count_outgoing(output):
+    """Count the number of outgoing hg changesets from `hg outgoing`"""
+    count = 0
+    for line in output.splitlines():
+        if line.startswith("changeset: "):
+            count += 1
+    return count
+
+
 async def log_outgoing(config, task, repo_path):
     """Run `hg out` against the current revision in the repository.
 
@@ -341,9 +350,13 @@ async def log_outgoing(config, task, repo_path):
     Raises:
         FailedSubprocess: on failure
 
+    Returns:
+        int: the number of outgoing changesets
+
     """
     dest_repo = get_source_repo(task)
     log.info("outgoing changesets..")
+    num_changesets = 0
     output = await run_hg_command(
         config,
         "out",
@@ -360,6 +373,8 @@ async def log_outgoing(config, task, repo_path):
         makedirs(os.path.dirname(path))
         with open(path, "w") as fh:
             fh.write(output)
+        num_changesets = _count_outgoing(output)
+    return num_changesets
 
 
 # strip_outgoing {{{1

@@ -37,23 +37,28 @@ async def do_actions(config, task, actions, repo_path):
 
     """
     await checkout_repo(config, task, repo_path)
-    changes = []
+    num_changes = 0
     for action in actions:
         if action in ["tagging", "tag"]:
-            changes.append(await do_tagging(config, task, repo_path))
+            num_changes += await do_tagging(config, task, repo_path)
         elif "version_bump" == action:
-            changes.append(await bump_version(config, task, repo_path))
+            num_changes += await bump_version(config, task, repo_path)
         elif "l10n_bump" == action:
-            changes.append(await l10n_bump(config, task, repo_path))
+            num_changes += await l10n_bump(config, task, repo_path)
         elif "push" == action:
             pass  # handled after log_outgoing
         else:
             raise NotImplementedError("Unexpected action")
-    await log_outgoing(config, task, repo_path)
+    num_outgoing = await log_outgoing(config, task, repo_path)
+    if num_outgoing != num_changes:
+        raise TreeScriptError(
+            "Outgoing changesets don't match number of expected changesets!"
+            " {} vs {}".format(num_outgoing, num_changes)
+        )
     if is_dry_run(task):
         log.info("Not pushing changes, dry_run was forced")
     elif "push" in actions:
-        if any(changes):
+        if changes:
             await push(config, task, repo_path)
         else:
             log.info("No changes; skipping push.")
