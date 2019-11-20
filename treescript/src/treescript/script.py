@@ -58,7 +58,7 @@ async def do_actions(config, task, actions, repo_path):
     if is_dry_run(task):
         log.info("Not pushing changes, dry_run was forced")
     elif "push" in actions:
-        if changes:
+        if num_changes:
             await push(config, task, repo_path)
         else:
             log.info("No changes; skipping push.")

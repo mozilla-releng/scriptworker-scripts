@@ -331,7 +331,13 @@ async def do_tagging(config, task, repo_path):
 
 # log_outgoing {{{1
 def _count_outgoing(output):
-    """Count the number of outgoing hg changesets from `hg outgoing`"""
+    """Count the number of outgoing hg changesets from `hg outgoing`.
+
+    There's a possibility of over-counting, if someone starts their commit
+    message line with `changeset: `, but since we currently know all of our
+    expected commit messages, we shouldn't have any false positives here.
+
+    """
     count = 0
     for line in output.splitlines():
         if line.startswith("changeset: "):
