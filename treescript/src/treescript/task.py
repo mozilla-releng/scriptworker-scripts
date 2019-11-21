@@ -66,7 +66,7 @@ def get_short_source_repo(task):
 
 
 # get_branch {{{1
-def get_branch(task):
+def get_branch(task, default=None):
     """Get the optional branch from the task payload.
 
     This is largely for relbranch support in mercurial.
@@ -79,7 +79,7 @@ def get_branch(task):
         str: the branch specified in the task
 
     """
-    return task.get("payload", {}).get("branch")
+    return task.get("payload", {}).get("branch", default)
 
 
 # get_tag_info {{{1
