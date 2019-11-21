@@ -95,6 +95,8 @@ def test_build_hg_cmd(config, hg, args):
                 "extensions.robustcheckout={}".format(path),
                 "--config",
                 "extensions.purge=",
+                "--config",
+                "extensions.strip=",
                 "blah",
                 "blah",
                 "--baz",
@@ -366,6 +368,27 @@ async def test_do_tagging_no_tags(config, task, mocker):
 
 
 # log_outgoing {{{1
+@pytest.mark.parametrize(
+    "output, expected",
+    (
+        ("", 0),
+        (
+            """
+blah
+changeset: x
+blah
+blah
+changeset: 9
+blah
+    """,
+            2,
+        ),
+    ),
+)
+def test_count_outgoing(output, expected):
+    assert mercurial._count_outgoing(output) == expected
+
+
 @pytest.mark.parametrize("output", ("hg output!", None))
 @pytest.mark.asyncio
 async def test_log_outgoing(config, task, mocker, output):

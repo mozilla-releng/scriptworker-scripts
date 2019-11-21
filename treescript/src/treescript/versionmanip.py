@@ -93,12 +93,13 @@ async def bump_version(config, task, repo_path):
                                if the file is not in the target repository.
 
     Returns:
-        bool: True if there are changes.
+        int: the number of commits created.
 
     """
     bump_info = get_version_bump_info(task)
     files = bump_info["files"]
     changed = False
+    num_commits = 0
 
     for file_ in files:
         abs_file = os.path.join(repo_path, file_)
@@ -148,7 +149,8 @@ async def bump_version(config, task, repo_path):
         if dontbuild:
             commit_msg += DONTBUILD_MSG
         await run_hg_command(config, "commit", "-m", commit_msg, repo_path=repo_path)
-    return changed
+        num_commits += 1
+    return num_commits
 
 
 def replace_ver_in_file(file_, curr_version, new_version):
