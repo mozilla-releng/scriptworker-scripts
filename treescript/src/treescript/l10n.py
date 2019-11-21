@@ -232,7 +232,7 @@ async def l10n_bump(config, task, repo_path):
     ignore_closed_tree = get_ignore_closed_tree(task)
     l10n_bump_info = get_l10n_bump_info(task)
     revision_info = None
-    changes = False
+    changes = 0
 
     if not ignore_closed_tree:
         if not await check_treestatus(config, task):
@@ -260,5 +260,5 @@ async def l10n_bump(config, task, repo_path):
             ignore_closed_tree=ignore_closed_tree,
         )
         await run_hg_command(config, "commit", "-m", message, repo_path=repo_path)
-        changes = True
+        changes += 1
     return changes
