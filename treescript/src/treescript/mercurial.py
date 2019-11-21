@@ -382,7 +382,7 @@ async def strip_outgoing(config, task, repo_path):
         exception=None,
         expected_exit_codes=(0, 255),
     )
-    await run_hg_command(config, "up", "-C", repo_path=repo_path)
+    await run_hg_command(config, "up", "-C", "-r", ".", repo_path=repo_path)
     await run_hg_command(config, "purge", "--all", repo_path=repo_path)
 
 
