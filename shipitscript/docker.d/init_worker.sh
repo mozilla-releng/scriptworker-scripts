@@ -36,4 +36,4 @@ case $COT_PRODUCT in
     ;;
 esac
 
-export MARK_AS_SHIPPED_SCHEMA_FILE="/app/shipitscript/data/mark_as_shipped_task_schema.json"
+export MARK_AS_SHIPPED_SCHEMA_FILE="/app/shipitscript/shipitscript/data/mark_as_shipped_task_schema.json"

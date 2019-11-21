@@ -7,16 +7,22 @@ import json
 import logging
 import os
 from shutil import copyfile
-from collections import namedtuple
+from dataclasses import dataclass
 
 from signingscript.exceptions import FailedSubprocess, SigningServerError
 
 log = logging.getLogger(__name__)
 
 
-SigningServer = namedtuple(
-    "SigningServer", ["server", "user", "password", "formats", "server_type"]
-)
+@dataclass
+class Autograph:
+    """Autograph configuration object."""
+
+    url: str
+    client_id: str
+    access_key: str
+    formats: set
+    key_id: str = None
 
 
 def mkdir(path):
@@ -66,25 +72,24 @@ def load_json(path):
         return json.load(fh)
 
 
-def load_signing_server_config(context):
-    """Build a specialized signing server config from the `signing_server_config`.
+def load_autograph_configs(filename):
+    """Load the autograph configuration from `filename`.
 
     Args:
-        context (Context): the signing context
+        filename (str): config file
 
     Returns:
-        dict of lists: keyed by signing cert type, value is a list of SigningServer instances
+        dict of Autograph objects: keyed by signing cert type
 
     """
-    path = context.config["signing_server_config"]
-    log.info("Loading signing server config from {}".format(path))
-    with open(path) as f:
+    log.info("Loading autograph config from %s", filename)
+    with open(filename) as f:
         raw_cfg = json.load(f)
 
     cfg = {}
-    for signing_type, server_data in raw_cfg.items():
-        cfg[signing_type] = [SigningServer(*s) for s in server_data]
-    log.info("Signing server config loaded from {}".format(path))
+    for cert_type, autograph_config in raw_cfg.items():
+        cfg[cert_type] = [Autograph(*s) for s in autograph_config]
+    log.info("Autograph config loaded from %s", filename)
     return cfg
 
 
@@ -159,16 +164,6 @@ async def execute_subprocess(command, log_level=logging.INFO, **kwargs):
 
     if exitcode != 0:
         raise FailedSubprocess("Command `{}` failed".format(" ".join(command)))
-
-
-def is_autograph_signing_format(format_):
-    """Return bool of whether a signing format is for autograph.
-
-    Args:
-        format_ (str): the format to check
-
-    """
-    return format_ and format_.startswith("autograph_")
 
 
 def is_apk_autograph_signing_format(format_):

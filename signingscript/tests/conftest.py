@@ -8,7 +8,7 @@ from scriptworker.context import Context
 
 from signingscript.exceptions import SigningScriptError
 from signingscript.script import get_default_config
-from signingscript.utils import load_signing_server_config, mkdir
+from signingscript.utils import mkdir, load_autograph_configs
 
 
 def read_file(path):
@@ -50,11 +50,11 @@ def die(*args, **kwargs):
 def context(tmpdir):
     context = Context()
     context.config = get_default_config()
-    context.config["signing_server_config"] = SERVER_CONFIG_PATH
+    context.config["autograph_configs"] = SERVER_CONFIG_PATH
     context.config["work_dir"] = os.path.join(tmpdir, "work")
     context.config["artifact_dir"] = os.path.join(tmpdir, "artifact")
     context.config["taskcluster_scope_prefixes"] = [DEFAULT_SCOPE_PREFIX]
-    context.signing_servers = load_signing_server_config(context)
+    context.autograph_configs = load_autograph_configs(SERVER_CONFIG_PATH)
     mkdir(context.config["work_dir"])
     mkdir(context.config["artifact_dir"])
     yield context
