@@ -202,7 +202,6 @@ async def checkout_repo(config, task, repo_path):
         branch,
         exception=CheckoutError,
     )
-    await strip_outgoing(config, task, repo_path)
 
 
 # do_tagging {{{1
