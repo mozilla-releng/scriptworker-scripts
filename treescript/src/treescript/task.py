@@ -21,10 +21,10 @@ def _sort_actions(actions):
 
 
 # get_source_repo {{{1
-def get_source_repo(task):
+def get_metadata_source_repo(task):
     """Get the source repo from the task metadata.
 
-    Assumes task['metadata']['source'] exists and is a link to a mercurial file on
+    Assumes `task['metadata']['source']` exists and is a link to a mercurial file on
     hg.mozilla.org (over https)
 
     Args:
@@ -50,6 +50,27 @@ def get_source_repo(task):
     return parts[0]
 
 
+def get_source_repo(task):
+    """Get the source repo from the task payload, falling back to the metadata.
+
+    First looks for `task['payload']['source_repo']`, then falls back to
+    ``get_metadata_source_repo``.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        str: url, including https scheme, to mercurial repository of the source repo.
+
+    Raises:
+        TaskVerificationError: on unexpected input.
+
+    """
+    if task["payload"].get("source_repo"):
+        return task["payload"]["source_repo"]
+    return get_metadata_source_repo(task)
+
+
 def get_short_source_repo(task):
     """Get the name of the source repo, e.g. mozilla-central.
 
@@ -63,6 +84,27 @@ def get_short_source_repo(task):
     source_repo = get_source_repo(task)
     parts = source_repo.split("/")
     return parts[-1]
+
+
+def get_target_repo(task):
+    """Get the target repo from the task payload, falling back to the metadata.
+
+    First looks for `task['payload']['target_repo']`, then falls back to
+    ``get_metadata_source_repo``.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        str: url, including https scheme, to mercurial repository of the target repo.
+
+    Raises:
+        TaskVerificationError: on unexpected input.
+
+    """
+    if task["payload"].get("target_repo"):
+        return task["payload"]["target_repo"]
+    return get_metadata_source_repo(task)
 
 
 # get_branch {{{1

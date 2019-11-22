@@ -90,6 +90,12 @@
                 "branch": {
                     "type": "string"
                 },
+                "source_repo": {
+                    "type": "string"
+                },
+                "target_repo": {
+                    "type": "string"
+                },
                 "dry_run": {
                     "type": "boolean"
                 },
