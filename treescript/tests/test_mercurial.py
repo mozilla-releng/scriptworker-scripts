@@ -416,6 +416,22 @@ async def test_log_outgoing(config, task, mocker, output):
             assert fh.read().rstrip() == output
 
 
+# strip_outgoing {{{1
+@pytest.mark.asyncio
+async def test_strip_outgoing(config, task, mocker):
+    called_args = []
+
+    async def run_command(config, *arguments, repo_path=None, **kwargs):
+        called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
+
+    mocker.patch.object(mercurial, "run_hg_command", new=run_command)
+    await mercurial.strip_outgoing(config, task, config["work_dir"])
+
+    assert len(called_args) == 3
+    assert "repo_path" in called_args[0][1]
+    assert is_slice_in_list(("strip", "--no-backup", "outgoing()"), called_args[0][0])
+
+
 # push {{{1
 @pytest.mark.asyncio
 async def test_push(config, task, mocker, tmpdir):

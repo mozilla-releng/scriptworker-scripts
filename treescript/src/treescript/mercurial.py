@@ -7,11 +7,11 @@ import tempfile
 from scriptworker_client.utils import run_command, makedirs, load_json_or_yaml
 from treescript.exceptions import CheckoutError, FailedSubprocess, PushError
 from treescript.task import (
+    DONTBUILD_MSG,
     get_branch,
+    get_dontbuild,
     get_source_repo,
     get_tag_info,
-    get_dontbuild,
-    DONTBUILD_MSG,
 )
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
@@ -186,13 +186,13 @@ async def checkout_repo(config, task, repo_path):
     """
     share_base = config["hg_share_base_dir"]
     upstream_repo = config["upstream_repo"]
-    dest_repo = get_source_repo(task)
+    source_repo = get_source_repo(task)
     # branch default is used to pull tip of the repo at checkout time
     branch = get_branch(task, "default")
     await run_hg_command(
         config,
         "robustcheckout",
-        dest_repo,
+        source_repo,
         repo_path,
         "--sharebase",
         share_base,
@@ -295,17 +295,17 @@ async def do_tagging(config, task, repo_path):
         return 0
     desired_rev = tag_info["revision"]
     dontbuild = get_dontbuild(task)
-    dest_repo = get_source_repo(task)
+    source_repo = get_source_repo(task)
     commit_msg = TAG_MSG.format(revision=desired_rev, tags=", ".join(desired_tags))
     if dontbuild:
         commit_msg += DONTBUILD_MSG
     log.info(
         "Pulling {revision} from {repo} explicitly.".format(
-            revision=desired_rev, repo=dest_repo
+            revision=desired_rev, repo=source_repo
         )
     )
     await run_hg_command(
-        config, "pull", "-r", desired_rev, dest_repo, repo_path=repo_path
+        config, "pull", "-r", desired_rev, source_repo, repo_path=repo_path
     )
     log.info(commit_msg)
     await run_hg_command(
@@ -355,7 +355,7 @@ async def log_outgoing(config, task, repo_path):
         int: the number of outgoing changesets
 
     """
-    dest_repo = get_source_repo(task)
+    source_repo = get_source_repo(task)
     log.info("outgoing changesets..")
     num_changesets = 0
     output = await run_hg_command(
@@ -364,7 +364,7 @@ async def log_outgoing(config, task, repo_path):
         "-vp",
         "-r",
         ".",
-        dest_repo,
+        source_repo,
         repo_path=repo_path,
         return_output=True,
         expected_exit_codes=(0, 1),
@@ -382,8 +382,7 @@ async def log_outgoing(config, task, repo_path):
 async def strip_outgoing(config, task, repo_path):
     """Strip all unpushed outgoing revisions and purge the changes.
 
-    This is something we should do at the beginning of tasks, as well as
-    on failed pushes.
+    This is something we should do on failed pushes.
 
     Args:
         config (dict): the running config
@@ -422,8 +421,8 @@ async def push(config, task, repo_path):
         PushError: on failure
 
     """
-    dest_repo = get_source_repo(task)
-    dest_repo_ssh = dest_repo.replace("https://", "ssh://")
+    source_repo = get_source_repo(task)
+    source_repo_ssh = source_repo.replace("https://", "ssh://")
     ssh_username = config.get("hg_ssh_user")
     ssh_key = config.get("hg_ssh_keyfile")
     ssh_opt = []
@@ -433,7 +432,7 @@ async def push(config, task, repo_path):
             ssh_opt[1] += " -l %s" % ssh_username
         if ssh_key:
             ssh_opt[1] += " -i %s" % ssh_key
-    log.info("Pushing local changes to {}".format(dest_repo_ssh))
+    log.info("Pushing local changes to {}".format(source_repo_ssh))
     try:
         await run_hg_command(
             config,
@@ -442,7 +441,7 @@ async def push(config, task, repo_path):
             "-r",
             ".",
             "-v",
-            dest_repo_ssh,
+            source_repo_ssh,
             repo_path=repo_path,
             exception=PushError,
         )
