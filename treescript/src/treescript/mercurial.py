@@ -12,7 +12,6 @@ from treescript.task import (
     get_dontbuild,
     get_source_repo,
     get_tag_info,
-    get_target_repo,
 )
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
@@ -356,7 +355,7 @@ async def log_outgoing(config, task, repo_path):
         int: the number of outgoing changesets
 
     """
-    target_repo = get_target_repo(task)
+    source_repo = get_source_repo(task)
     log.info("outgoing changesets..")
     num_changesets = 0
     output = await run_hg_command(
@@ -365,7 +364,7 @@ async def log_outgoing(config, task, repo_path):
         "-vp",
         "-r",
         ".",
-        target_repo,
+        source_repo,
         repo_path=repo_path,
         return_output=True,
         expected_exit_codes=(0, 1),
@@ -422,8 +421,8 @@ async def push(config, task, repo_path):
         PushError: on failure
 
     """
-    target_repo = get_target_repo(task)
-    target_repo_ssh = target_repo.replace("https://", "ssh://")
+    source_repo = get_source_repo(task)
+    source_repo_ssh = source_repo.replace("https://", "ssh://")
     ssh_username = config.get("hg_ssh_user")
     ssh_key = config.get("hg_ssh_keyfile")
     ssh_opt = []
@@ -433,7 +432,7 @@ async def push(config, task, repo_path):
             ssh_opt[1] += " -l %s" % ssh_username
         if ssh_key:
             ssh_opt[1] += " -i %s" % ssh_key
-    log.info("Pushing local changes to {}".format(target_repo_ssh))
+    log.info("Pushing local changes to {}".format(source_repo_ssh))
     try:
         await run_hg_command(
             config,
@@ -442,7 +441,7 @@ async def push(config, task, repo_path):
             "-r",
             ".",
             "-v",
-            target_repo_ssh,
+            source_repo_ssh,
             repo_path=repo_path,
             exception=PushError,
         )

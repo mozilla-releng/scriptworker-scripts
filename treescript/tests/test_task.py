@@ -122,7 +122,6 @@ def test_get_metadata_source_repo(task_defn, source_repo):
         source_repo
     )
     assert source_repo == ttask.get_source_repo(task_defn)
-    assert source_repo == ttask.get_target_repo(task_defn)
 
 
 def test_get_source_repo_no_source(task_defn):
@@ -147,12 +146,9 @@ def test_get_short_source_repo(task_defn):
         "https://hg.mozilla.org/projects/mozilla-test-bed",
     ),
 )
-def test_get_source_and_target_repo(task_defn, source_repo):
+def test_get_payload_source_repo(task_defn, source_repo):
     task_defn["payload"]["source_repo"] = source_repo
     assert source_repo == ttask.get_source_repo(task_defn)
-    task_defn["payload"].pop("source_repo")
-    task_defn["payload"]["target_repo"] = source_repo
-    assert source_repo == ttask.get_target_repo(task_defn)
 
 
 @pytest.mark.parametrize("branch", ("foo", None))

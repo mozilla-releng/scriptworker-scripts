@@ -86,27 +86,6 @@ def get_short_source_repo(task):
     return parts[-1]
 
 
-def get_target_repo(task):
-    """Get the target repo from the task payload, falling back to the metadata.
-
-    First looks for `task['payload']['target_repo']`, then falls back to
-    ``get_metadata_source_repo``.
-
-    Args:
-        task: the task definition.
-
-    Returns:
-        str: url, including https scheme, to mercurial repository of the target repo.
-
-    Raises:
-        TaskVerificationError: on unexpected input.
-
-    """
-    if task["payload"].get("target_repo"):
-        return task["payload"]["target_repo"]
-    return get_metadata_source_repo(task)
-
-
 # get_branch {{{1
 def get_branch(task, default=None):
     """Get the optional branch from the task payload.

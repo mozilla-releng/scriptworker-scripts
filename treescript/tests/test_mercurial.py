@@ -400,8 +400,8 @@ async def test_log_outgoing(config, task, mocker, output):
             return output
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
-    mocked_target_repo = mocker.patch.object(mercurial, "get_target_repo")
-    mocked_target_repo.return_value = "https://hg.mozilla.org/treescript-test"
+    mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
+    mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
     await mercurial.log_outgoing(config, task, config["work_dir"])
 
     assert len(called_args) == 1
@@ -441,8 +441,8 @@ async def test_push(config, task, mocker, tmpdir):
         called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
-    mocked_target_repo = mocker.patch.object(mercurial, "get_target_repo")
-    mocked_target_repo.return_value = "https://hg.mozilla.org/treescript-test"
+    mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
+    mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
     await mercurial.push(config, task, tmpdir)
 
     assert len(called_args) == 1
@@ -473,8 +473,8 @@ async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
     print()
     config.update(options)
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
-    mocked_target_repo = mocker.patch.object(mercurial, "get_target_repo")
-    mocked_target_repo.return_value = "https://hg.mozilla.org/treescript-test"
+    mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
+    mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
     await mercurial.push(config, task, tmpdir)
 
     assert len(called_args) == 1
