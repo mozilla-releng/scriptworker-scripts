@@ -48,6 +48,8 @@ def build_hg_command(config, *args):
         "extensions.robustcheckout={}".format(ROBUSTCHECKOUT_PATH),
         "--config",
         "extensions.purge=",
+        "--config",
+        "extensions.strip=",
     ]
     return hg + [*robustcheckout_args, *args]
 
@@ -185,8 +187,8 @@ async def checkout_repo(config, task, repo_path):
     share_base = config["hg_share_base_dir"]
     upstream_repo = config["upstream_repo"]
     dest_repo = get_source_repo(task)
-    branch = get_branch(task)
     # branch default is used to pull tip of the repo at checkout time
+    branch = get_branch(task, "default")
     await run_hg_command(
         config,
         "robustcheckout",
@@ -197,16 +199,9 @@ async def checkout_repo(config, task, repo_path):
         "--upstream",
         upstream_repo,
         "--branch",
-        "default",
+        branch,
         exception=CheckoutError,
     )
-    await strip_outgoing(config, task, repo_path)
-    if branch:
-        log.info("Pulling %s from %s explicitly.", branch, dest_repo)
-        await run_hg_command(
-            config, "pull", "-b", branch, dest_repo, repo_path=repo_path
-        )
-        await run_hg_command(config, "update", "-r", branch, repo_path=repo_path)
 
 
 # do_tagging {{{1
@@ -290,14 +285,14 @@ async def do_tagging(config, task, repo_path):
         FailedSubprocess: if the tag attempt doesn't succeed.
 
     Returns:
-        bool: True if there are any changes.
+        int: the number of tags created.
 
     """
     tag_info = get_tag_info(task)
     desired_tags = await check_tags(config, tag_info, repo_path)
     if not desired_tags:
         log.info("No unique tags to add; skipping tagging.")
-        return
+        return 0
     desired_rev = tag_info["revision"]
     dontbuild = get_dontbuild(task)
     dest_repo = get_source_repo(task)
@@ -324,10 +319,25 @@ async def do_tagging(config, task, repo_path):
         *desired_tags,
         repo_path=repo_path,
     )
-    return True
+    return 1
 
 
 # log_outgoing {{{1
+def _count_outgoing(output):
+    """Count the number of outgoing hg changesets from `hg outgoing`.
+
+    There's a possibility of over-counting, if someone starts their commit
+    message line with `changeset: `, but since we currently know all of our
+    expected commit messages, we shouldn't have any false positives here.
+
+    """
+    count = 0
+    for line in output.splitlines():
+        if line.startswith("changeset: "):
+            count += 1
+    return count
+
+
 async def log_outgoing(config, task, repo_path):
     """Run `hg out` against the current revision in the repository.
 
@@ -341,9 +351,13 @@ async def log_outgoing(config, task, repo_path):
     Raises:
         FailedSubprocess: on failure
 
+    Returns:
+        int: the number of outgoing changesets
+
     """
     dest_repo = get_source_repo(task)
     log.info("outgoing changesets..")
+    num_changesets = 0
     output = await run_hg_command(
         config,
         "out",
@@ -353,12 +367,15 @@ async def log_outgoing(config, task, repo_path):
         dest_repo,
         repo_path=repo_path,
         return_output=True,
+        expected_exit_codes=(0, 1),
     )
     if output:
         path = os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff")
         makedirs(os.path.dirname(path))
         with open(path, "w") as fh:
             fh.write(output)
+        num_changesets = _count_outgoing(output)
+    return num_changesets
 
 
 # strip_outgoing {{{1
@@ -388,7 +405,7 @@ async def strip_outgoing(config, task, repo_path):
         exception=None,
         expected_exit_codes=(0, 255),
     )
-    await run_hg_command(config, "up", "-C", repo_path=repo_path)
+    await run_hg_command(config, "up", "-C", "-r", ".", repo_path=repo_path)
     await run_hg_command(config, "purge", "--all", repo_path=repo_path)
 
 

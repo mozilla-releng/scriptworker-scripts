@@ -330,7 +330,7 @@ async def test_get_revision_info(mocker):
                 "one": {"revision": "onerev", "platforms": ["platform"]},
                 "two": {"revision": "tworev", "platforms": ["platform"]},
             },
-            False,
+            0,
         ),
         (
             False,
@@ -346,7 +346,7 @@ async def test_get_revision_info(mocker):
                 "one": {"revision": "newonerev", "platforms": ["platform"]},
                 "two": {"revision": "newtworev", "platforms": ["platform"]},
             },
-            True,
+            2,
         ),
     ),
 )
