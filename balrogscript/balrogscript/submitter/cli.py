@@ -476,16 +476,14 @@ class ReleaseScheduler(object):
 
 
 class ReleaseStateUpdater(object):
-    def __init__(self, api_root, auth0_secrets=None, dummy=False, suffix=""):
+    def __init__(self, api_root, auth0_secrets=None, dummy=False):
         self.api_root = api_root
         self.auth0_secrets = auth0_secrets
-        self.suffix = suffix
         if dummy:
             self.suffix += "-dummy"
 
     def run(self, productName, version, build_number):
-        name = get_release_blob_name(
-            productName, version, build_number, self.suffix)
+        name = get_release_blob_name(productName, version, build_number)
         ReleaseState(
             name,
             api_root=self.api_root,

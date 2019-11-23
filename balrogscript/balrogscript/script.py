@@ -198,7 +198,6 @@ def set_readonly(task, config, auth0_secrets):
         api_root=config['api_root'],
         auth0_secrets=auth0_secrets,
         dummy=config['dummy'],
-        suffix=task['payload'].get('blob_suffix', ''),
     )
     args = [
         task['payload']['product'].capitalize(),
