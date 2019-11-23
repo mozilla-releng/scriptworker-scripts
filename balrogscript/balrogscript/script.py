@@ -197,7 +197,6 @@ def set_readonly(task, config, auth0_secrets):
     state_updater = create_state_updater(
         api_root=config['api_root'],
         auth0_secrets=auth0_secrets,
-        dummy=config['dummy'],
     )
     args = [
         task['payload']['product'].capitalize(),
