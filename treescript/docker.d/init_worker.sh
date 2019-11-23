@@ -19,12 +19,15 @@ test_var_set 'PROJECT_NAME'
 test_var_set 'SSH_KEY'
 test_var_set 'SSH_USER'
 
+export UPSTREAM_REPO="https://hg.mozilla.org/mozilla-unified"
+
 case $COT_PRODUCT in
   firefox)
     export TASKCLUSTER_SCOPE_PREFIX="project:releng:${PROJECT_NAME}script:"
     ;;
   thunderbird)
     export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:${PROJECT_NAME}script:"
+    export UPSTREAM_REPO="https://hg.mozilla.org/comm-central"
     ;;
   *)
     exit 1

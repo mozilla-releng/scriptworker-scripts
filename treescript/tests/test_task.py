@@ -117,7 +117,7 @@ def test_get_source_repo_raises(task_defn, source_url, raises):
         "https://hg.mozilla.org/projects/mozilla-test-bed",
     ),
 )
-def test_get_source_repo(task_defn, source_repo):
+def test_get_metadata_source_repo(task_defn, source_repo):
     task_defn["metadata"]["source"] = "{}/file/default/taskcluster/ci/foobar".format(
         source_repo
     )
@@ -135,6 +135,20 @@ def test_get_source_repo_no_source(task_defn):
 
 def test_get_short_source_repo(task_defn):
     assert ttask.get_short_source_repo(task_defn) == "mozilla-test-source"
+
+
+@pytest.mark.parametrize(
+    "source_repo",
+    (
+        "https://hg.mozilla.org/mozilla-central",
+        "https://hg.mozilla.org/releases/mozilla-release",
+        "https://hg.mozilla.org/releases/mozilla-esr120",
+        "https://hg.mozilla.org/projects/mozilla-test-bed",
+    ),
+)
+def test_get_payload_source_repo(task_defn, source_repo):
+    task_defn["payload"]["source_repo"] = source_repo
+    assert source_repo == ttask.get_source_repo(task_defn)
 
 
 @pytest.mark.parametrize("branch", ("foo", None))
