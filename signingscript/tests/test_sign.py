@@ -1175,6 +1175,12 @@ def test_extension_id():
     assert sign._extension_id(filename, "autograph_langpack") == "langpack-en-CA@firefox.mozilla.org"
 
 
+def test_extension_id_missing_manifest():
+    filename = os.path.join(TEST_DATA_DIR, "test.zip")
+    with pytest.raises(SigningScriptError):
+        sign._extension_id(filename, "autograph_langpack")
+
+
 @pytest.mark.parametrize(
     "json_,raises",
     (

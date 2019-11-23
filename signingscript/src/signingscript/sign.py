@@ -610,7 +610,6 @@ def _extension_id(filename, fmt):
             log.debug(
                 "{} doesn't exist in {}...".format(manifest_name, filename)
             )
-            continue
     if not manifest.get("applications", {}).get("gecko", {}).get("id"):
         raise SigningScriptError("{} is not a valid xpi".format(filename))
     if "langpack" in fmt and not (
