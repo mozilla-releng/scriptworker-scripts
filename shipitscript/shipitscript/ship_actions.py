@@ -44,6 +44,7 @@ def get_next_release_version(product, channel, shipit_config):
 def start_new_release(
     self,
     product,
+    repo,
     channel,
     release_name,
     version,

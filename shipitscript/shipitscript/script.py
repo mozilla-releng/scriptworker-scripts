@@ -38,7 +38,7 @@ def mark_as_shipped_action(context):
 
 
 def create_new_release_action(context):
-    """Determine if there is a shippable release and create it if so in Shipit """
+    """Determine if there is a shippable release and create it if so in Shipit"""
     payload = context.task['payload']
     shipit_config = context.ship_it_instance_config
     # TODO actually include these in the payload from taskgraph
@@ -68,7 +68,7 @@ def create_new_release_action(context):
         # TODO quit early, mark task as green though
         pass
     log.info('create a new release')
-    ship_actions.create_new_release(
+    ship_actions.start_new_release(
         product, repo, channel, next_version, shippable_revision, phase, shipit_config
     )
 
