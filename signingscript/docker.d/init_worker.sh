@@ -168,6 +168,8 @@ case $ENV in
       mpd001)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_EV_PASSWORD'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_EV_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
