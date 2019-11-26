@@ -18,6 +18,10 @@ taskcluster_scope_prefixes:
         - 'project:mobile:firefox-tv:releng:signing:'
       'COT_PRODUCT == "application-services"':
         - 'project:mozilla:application-services:releng:signing:'
+      'COT_PRODUCT == "xpi"':
+        - 'project:xpi:releng:signing:'
+      'COT_PRODUCT == "mpd001"':
+        - 'project:mpd001:releng:signing:'
 token_duration_seconds: 7200
 dmg: { "$eval": "DMG_PATH" }
 hfsplus: { "$eval": "HFSPLUS_PATH" }
