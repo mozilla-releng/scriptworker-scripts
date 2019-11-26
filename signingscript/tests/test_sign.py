@@ -523,6 +523,16 @@ async def test_sign_macapp(context, mocker, filename, expected):
 
 
 # sign_xpi {{{1
+@pytest.mark.parametrize("fmt, is_xpi", (
+    ("foo_omnija", True),
+    ("langpack_foo", True),
+    ("privileged_webextension", True),
+    ("unknown", False),
+))
+def test_is_xpi_format(fmt, is_xpi):
+    assert sign._is_xpi_format(fmt) is is_xpi
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "filename,id,raises",
@@ -535,7 +545,10 @@ async def test_sign_macapp(context, mocker, filename, expected):
 async def test_sign_xpi(context, mocker, filename, id, raises):
     async def mocked_signer(ctx, fname, fmt, extension_id=None):
         assert extension_id == id
+    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
 
+    mocker.patch.object(sign, "get_autograph_config")
+    mocker.patch.object(sign, "_extension_id", return_value=id)
     mocker.patch.object(sign, "_extension_id", return_value=id)
     mocker.patch.object(sign, "sign_file_with_autograph", new=mocked_signer)
     with raises:

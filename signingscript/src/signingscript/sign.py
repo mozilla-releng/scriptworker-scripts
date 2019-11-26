@@ -284,7 +284,12 @@ async def sign_xpi(context, orig_path, fmt):
         str: the path to the signed xpi
 
     """
+    cert_type = task.task_cert_type(context)
     file_base, file_extension = os.path.splitext(orig_path)
+
+    a = get_autograph_config(
+        context.autograph_configs, cert_type, [fmt], raise_on_empty=True
+    )
 
     if file_extension not in (".xpi", ".zip"):
         raise SigningScriptError("Expected a .xpi")
@@ -1012,8 +1017,9 @@ def b64encode(input_bytes):
 def _is_xpi_format(fmt):
     if "omnija" in fmt or "langpack" in fmt:
         return True
-    if "systemaddon" in fmt or "extension_rsa" in fmt:
+    if fmt in ("privileged_webextension", "system_addon"):
         return True
+    return False
 
 
 @time_function
@@ -1071,6 +1077,7 @@ async def sign_with_autograph(
     if autograph_method not in {"file", "hash", "data"}:
         raise SigningScriptError(f"Unsupported autograph method: {autograph_method}")
 
+    keyid = keyid or server.key_id
     sign_req = make_signing_req(input_file, fmt, keyid, extension_id)
 
     url = f"{server.url}/sign/{autograph_method}"
@@ -1089,7 +1096,7 @@ async def sign_with_autograph(
 
 
 @time_async_function
-async def sign_file_with_autograph(context, from_, fmt, to=None, keyid=None, extension_id=None):
+async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=None):
     """Signs file with autograph and writes the results to a file.
 
     Args:
@@ -1116,7 +1123,7 @@ async def sign_file_with_autograph(context, from_, fmt, to=None, keyid=None, ext
     input_file = open(from_, "rb")
     signed_bytes = base64.b64decode(
         await sign_with_autograph(
-            context.session, a, input_file, fmt, "file", keyid=keyid, extension_id=extension_id
+            context.session, a, input_file, fmt, "file", extension_id=extension_id
         )
     )
     with open(to, "wb") as fout:
