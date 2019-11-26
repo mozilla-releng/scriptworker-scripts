@@ -1,7 +1,5 @@
 aiohttp
 arrow
-attrs
-macholib
-pexpect
-requests-hawk
+async_timeout
+frozendict
 taskcluster
