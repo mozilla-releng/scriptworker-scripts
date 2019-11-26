@@ -26,6 +26,7 @@ apps:
     - /shipitscript
     - /signingscript
     - /treescript
+    - /notarization_poller
 tools:
   schema: https://raw.githubusercontent.com/mozilla-releng/releng-dirschemas/master/python-tool.yaml
   projects:
