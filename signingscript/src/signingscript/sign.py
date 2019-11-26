@@ -292,8 +292,6 @@ async def sign_xpi(context, orig_path, fmt):
     ext_id = _extension_id(orig_path, fmt)
     log.info("Identified {} as extension id: {}".format(orig_path, id))
     kwargs = {'extension_id': ext_id}
-    if 'langpack' not in fmt:
-        kwargs['keyid'] = fmt
     # Sign the appropriate inner files
     await sign_file_with_autograph(context, orig_path, fmt, **kwargs)
     return orig_path

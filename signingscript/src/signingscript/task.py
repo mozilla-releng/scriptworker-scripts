@@ -48,8 +48,8 @@ FORMAT_TO_SIGNING_FUNCTION = frozendict(
         "autograph_langpack": sign_xpi,
         "autograph_authenticode": sign_authenticode_zip,
         "autograph_authenticode_stub": sign_authenticode_zip,
-        "extension_rsa.*": sign_xpi,
-        "systemaddon_rsa_.+": sign_xpi,
+        "privileged_webextension": sign_xpi,
+        "system_addon": sign_xpi,
         "default": sign_file,
     }
 )
