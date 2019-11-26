@@ -1,6 +1,6 @@
 from enum import Enum, auto, unique
-import requests
 
+import requests
 
 URL = 'https://hg.mozilla.org/{repo}/json-pushes'
 
@@ -24,11 +24,7 @@ def should_build(repo, old_rev, curr_rev):
     # TODO redo
     resp = requests.get(
         URL.format(repo=repo),
-        params={
-            'full': '1',
-            'fromchange': old_rev,
-            'tochange': curr_rev,
-        }
+        params={'full': '1', 'fromchange': old_rev, 'tochange': curr_rev},
     )
     pushlog = resp.json()
     reversed_pushes = [pushlog[k] for k in sorted(pushlog.keys(), reverse=True)]

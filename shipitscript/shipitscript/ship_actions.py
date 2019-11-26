@@ -31,8 +31,7 @@ def get_shipit_api_instance(shipit_config):
 
 
 def should_ship_revision(repo, last_shipped_revision, current_revision):
-    return pushlog_scan.should_build(
-        repo, last_shipped_revision, current_revision)
+    return pushlog_scan.should_build(repo, last_shipped_revision, current_revision)
 
 
 def get_most_recent_shipped_revision(product, channel, shipit_config):
