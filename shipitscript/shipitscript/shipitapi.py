@@ -34,8 +34,7 @@ class Release_V2(object):
 
     @staticmethod
     def _get_taskcluster_headers(
-       request_url, method, content, taskcluster_client_id,
-       taskcluster_access_token
+        request_url, method, content, taskcluster_client_id, taskcluster_access_token
     ):
         hawk = mohawk.Sender(
             {
@@ -112,18 +111,14 @@ class Release_V2(object):
     def get_releases(self, product, branch, status, version='', headers={}):
         """Method to map over the GET /releases List releases API in Ship-it"""
         resp = None
-        most_recent_params = {
-            'product': product,
-            'branch': branch,
-            'status': status
-        }
+        most_recent_params = {'product': product, 'branch': branch, 'status': status}
         if version:
             most_recent_params['version'] = version
 
         try:
             resp = self._request(
                 api_endpoint=f'/releases?{urllib.parse.urlencode(most_recent_params)}',
-                headers=headers
+                headers=headers,
             )
             return resp.json()
         except Exception:
@@ -168,9 +163,7 @@ class Release_V2(object):
         """
         resp = None
         try:
-            resp = self._request(
-                api_endpoint='/disabled-products', headers=headers
-            )
+            resp = self._request(api_endpoint='/disabled-products', headers=headers)
 
             return resp.json()
         except Exception:
@@ -185,20 +178,19 @@ class Release_V2(object):
     ):
         """Method to map over the POST /releases/ API in Ship-it"""
         resp = None
-        data = json.dumps({
-            'product': product,
-            'branch': branch,
-            'version': version,
-            'build_number': build_number,
-            'revision': revision,
-            'partial_updates': 'auto',
-        })
+        data = json.dumps(
+            {
+                'product': product,
+                'branch': branch,
+                'version': version,
+                'build_number': build_number,
+                'revision': revision,
+                'partial_updates': 'auto',
+            }
+        )
         try:
             resp = self._request(
-                api_endpoint='/releases',
-                method='POST',
-                data=data,
-                headers=headers,
+                api_endpoint='/releases', method='POST', data=data, headers=headers,
             )
             return resp.json()
         except Exception:
@@ -224,7 +216,10 @@ class Release_V2(object):
                 headers=headers,
             )
         except Exception:
-            log.error(f'Caught error while triggering {phase} for {release_name}', exc_info=True)
+            log.error(
+                f'Caught error while triggering {phase} for {release_name}',
+                exc_info=True,
+            )
             if resp:
                 log.error(resp.content)
                 log.error(f'Response code: {resp.status_code}')
