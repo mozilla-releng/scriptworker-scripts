@@ -40,29 +40,34 @@ def create_new_release_action(context):
     """Determine if there is a shippable release and create it if so in Shipit"""
     payload = context.task['payload']
     shipit_config = context.ship_it_instance_config
-    # TODO actually include these in the payload from taskgraph
-    product = 'firefox'
-    branch = 'releases/mozilla-beta'
-    repo = payload["repo"]
-    phase = payload["phase"]  # release phase we want to trigger
+
+    product = payload['product']
+    branch = payload['branch']
+    repo = payload['repo']
+    phase = payload['phase']
+    version = payload['version']
 
     log.info(
         'Determining most recent shipped revision and next version / buildnum to release'
     )
     last_shipped_revision = ship_actions.get_most_recent_shipped_revision(
-        product, branch, shipit_config
+        shipit_config, product, branch,
     )
-    import pdb; pdb.set_trace()
+    if not last_shipped_revision:
+        log.info("No valid most recent shipped revisison found, silent exit ...")
+        return
+
     log.info('Determining most recent shippable revision')
     shippable_revision = ship_actions.get_shippable_revision(
         repo, last_shipped_revision
     )
     if not shippable_revision:
-        # TODO quit early, mark task as green though
-        pass
-    log.info('create a new release')
+        log.info("No valid shippable revisison found, silent exit ...")
+        return
+
+    log.info('Starting a new release in Ship-it ...')
     ship_actions.start_new_release(
-        product, repo, channel, next_version, shippable_revision, phase, shipit_config
+        shipit_config, product, branch, version, shippable_revision, phase,
     )
 
 

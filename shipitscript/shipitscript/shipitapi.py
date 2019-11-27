@@ -105,7 +105,7 @@ class Release_V2(object):
             log.error('Caught error while getting release', exc_info=True)
             if resp:
                 log.error(resp.content)
-                log.error('Response code: %d', resp.status_code)
+                log.error(f'Response code: {resp.status_code}')
             raise
 
     def get_shipped_releases(self, product, branch, headers={}):
@@ -176,13 +176,13 @@ class Release_V2(object):
             log.error('Caught error while getting releases', exc_info=True)
             if resp:
                 log.error(resp.content)
-                log.error('Response code: %d', resp.status_code)
+                log.error(f'Response code: {resp.status_code}')
             raise
 
     def update_status(self, name, status, rebuild_product_details=True, headers={}):
         """Update release status"""
         data = json.dumps({'status': status})
-        res = self._request(
+        resp = self._request(
             api_endpoint='/releases/{}'.format(name),
             method='PATCH',
             data=data,
@@ -195,32 +195,64 @@ class Release_V2(object):
                 data='{}',
                 headers=headers,
             )
-        return res
+        return resp
 
-    def releases_are_disabled(self, product, channel, headers={}):
-        pass
+    def get_disabled_products(self, headers={}):
+        resp = None
+        try:
+            resp = self._request(
+                api_endpoint='/disabled-products', headers=headers
+            )
 
-    def get_next_release_version(self, product, channel, headers={}):
-        pass
-
-    def get_most_recent_shipped_revision(self, product, channel, headers={}):
-        pass
+            return resp.json()
+        except Exception:
+            log.error('Caught error while getting disabled-products', exc_info=True)
+            if resp:
+                log.error(resp.content)
+                log.error(f'Response code: {resp.status_code}')
+            raise
 
     def create_new_release(
-        self, product, repo, channel, release_name, version, revision, headers={}
+        self, product, branch, version, revision, headers={}
     ):
-        if self.releases_are_disabled(product, channel):
-            return
-        pass
+        resp = None
+        data = json.dumps({
+            'product': product,
+            'branch': branch,
+            'version': version,
+            'build_number': 1, # automation always starts only buildnumer 1
+            'revision': revision,
+        })
+        import pdb; pdb.set_trace()
+        try:
+            resp = self._request(
+                api_endpoint='/releases',
+                method='POST',
+                data=data,
+                headers=headers,
+            )
+            import pdb; pdb.set_trace()
+            return resp.json()
+        except Exception:
+            log.error('Caught error while creating the release', exc_info=True)
+            if resp:
+                log.error(resp.content)
+                log.error(f'Response code: {resp.status_code}')
+            raise
 
-    def trigger_release_phase(self, product, channel, release_name, phase, headers={}):
+    def trigger_release_phase(self, release_name, phase, headers={}):
         """Trigger a push phase for a specific release"""
-        if self.releases_are_disabled(product, channel):
-            return
-
-        self._request(
-            api_endpoint='/releases/{}/{}'.format(release_name, phase),
-            method='PUT',
-            data=None,
-            headers=headers,
-        )
+        resp = None
+        try:
+            resp = self._request(
+                api_endpoint=f'/releases/{release_name}/{phase}',
+                method='PUT',
+                data=None,
+                headers=headers,
+            )
+        except Exception:
+            log.error(f'Caught error while triggering {phase} for {release_name}', exc_info=True)
+            if resp:
+                log.error(resp.content)
+                log.error(f'Response code: {resp.status_code}')
+            raise

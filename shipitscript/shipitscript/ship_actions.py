@@ -30,11 +30,15 @@ def get_shipit_api_instance(shipit_config):
 
 
 def get_shippable_revision(repo, last_shipped_revision):
-    pass
+    # TODO: remove this before official PR
+    return 'tip'
 
 
-def get_most_recent_shipped_revision(product, branch, shipit_config):
+def get_most_recent_shipped_revision(shipit_config, product, branch):
     release_api, headers = get_shipit_api_instance(shipit_config)
+
+    # TODO: remove this line
+    return '0e2269bc3fc9d2a6bd771a2067506477f086ac80'
 
     log.info('Call Ship-it to retrieve all releases matching criteria ...')
     all_releases = release_api.get_shipped_releases(product, branch, headers=headers)
@@ -53,28 +57,41 @@ def get_most_recent_shipped_revision(product, branch, shipit_config):
         return
 
 
-def start_new_release(
-    self,
-    product,
-    repo,
-    channel,
-    release_name,
-    version,
-    revision,
-    phase,
-    shipit_config,
-    headers={},
-):
+def releases_are_disabled(shipit_config, product, branch):
+    # TODO: remove this line
+    return False
     release_api, headers = get_shipit_api_instance(shipit_config)
-    release_name = ""
 
+    log.info('Call Ship-it to check for disabled products across branches')
+    disabled_products = release_api.get_disabled_products(headers=headers)
+
+    if product in disabled_products:
+        if branch in disabled_products[product]:
+            log.info(f'Product {product} and {branch} are currently disabled')
+            return True
+
+    log.info(f'Product {product} and {branch} is enabled. Continuing ...')
+    return False
+
+
+def start_new_release(shipit_config, product,  branch, version, revision, phase):
+    # safeguard to avoid creating releases if they have been put on hold in the UI
+    if releases_are_disabled(shipit_config, product, branch):
+        return
+
+    release_api, headers = get_shipit_api_instance(shipit_config)
     log.info('creating a new release...')
-    release_api.create_new_release(
-        product, channel, release_name, version, revision, headers=headers
+    release_details = release_api.create_new_release(
+        product, branch, version, revision, headers=headers
     )
-    release_api.trigger_release_phase(
-        product, channel, release_name, phase, headers=headers
-    )
+    # TODO: does `name` exist in release_details?
+    release_name = release_details['name']
+
+    # avoid race conditions in between creating the release and triggering the
+    # specific `phase`
+    if releases_are_disabled(shipit_config, product, branch):
+        return
+    release_api.trigger_release_phase(release_name, phase, headers=headers)
 
 
 def mark_as_shipped_v2(shipit_config, release_name):
