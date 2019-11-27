@@ -32,11 +32,14 @@ def get_shipit_api_instance(shipit_config):
 def get_shippable_revision(repo, last_shipped_revision):
     pass
 
+
 def get_most_recent_shipped_revision(shipit_config, product, branch):
     release_api, headers = get_shipit_api_instance(shipit_config)
 
     log.info('Call Ship-it to retrieve all releases matching criteria ...')
-    all_releases = release_api.get_releases(product, branch, status='shipped', headers=headers)
+    all_releases = release_api.get_releases(
+            product, branch, status='shipped', headers=headers
+    )
     # XXX: Ship-it API already sorts the releases based on their version so the
     # tail of the list is the most recent  version we have shipped based on
     # https://github.com/mozilla-releng/shipit/blob/master/api/src/shipit_api/api.py#L131
@@ -81,13 +84,15 @@ def releases_are_disabled(shipit_config, product, branch):
     return False
 
 
-def start_new_release(shipit_config, product,  branch, version, revision, phase):
+def start_new_release(
+        shipit_config, product,  branch, version, revision, phase
+):
     # compute the build_number for the to-be-created release
     build_number = calculate_build_number(
         shipit_config, product, branch, version
     )
 
-    # safeguard to avoid creating releases if they have been put on hold in the UI
+    # safeguard to avoid creating releases if they have been disabled from UI
     if releases_are_disabled(shipit_config, product, branch):
         return
 
@@ -115,4 +120,5 @@ def mark_as_shipped_v2(shipit_config, release_name):
 
     log.info('Marking the release as shipped...')
     release_api.update_status(release_name, status='shipped', headers=headers)
-    check_release_has_values_v2(release_api, release_name, headers, status='shipped')
+    check_release_has_values_v2(release_api, release_name,
+                                headers, status='shipped')

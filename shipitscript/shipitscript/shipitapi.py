@@ -11,8 +11,8 @@ log = logging.getLogger(__name__)
 
 
 class Release_V2(object):
-    """A class that knows how to make requests to a Ship It v2 server, including
-    generating hawk headers.
+    """A class that knows how to make requests to a Ship It v2 server,
+    including generating hawk headers.
     """
 
     def __init__(
@@ -34,7 +34,8 @@ class Release_V2(object):
 
     @staticmethod
     def _get_taskcluster_headers(
-        request_url, method, content, taskcluster_client_id, taskcluster_access_token
+       request_url, method, content, taskcluster_client_id,
+       taskcluster_access_token
     ):
         hawk = mohawk.Sender(
             {
@@ -109,57 +110,7 @@ class Release_V2(object):
             raise
 
     def get_releases(self, product, branch, status, version='', headers={}):
-        """Method to map over the GET /releases List releases API in Ship-it
-
-        Parameters:
-            * product
-            * branch
-
-        Returns a list of objects describing the releases:
-        [
-	  {
-	    "allow_phase_skipping": false,
-	    "branch": "releases/mozilla-beta",
-	    "build_number": 1,
-	    "completed": "2019-02-19T16:44:51.756118Z",
-	    "created": "2019-02-18T16:57:47.612283Z",
-	    "name": "Firefox-66.0b9-build1",
-	    "phases": [
-	      {
-		"actionTaskId": "Z3xdvohqSImzFpx1wmIwGg",
-		"completed": "2019-02-18T16:59:33.753914Z",
-		"created": "2019-02-18T16:57:47.616646Z",
-		"name": "promote_firefox",
-		"skipped": false,
-		"submitted": true
-	      },
-	      {
-		"actionTaskId": "EOh-CPdgQfKTiMDqKRD3DQ",
-		"completed": "2019-02-18T21:29:25.381553Z",
-		"created": "2019-02-18T16:57:47.619101Z",
-		"name": "push_firefox",
-		"skipped": false,
-		"submitted": true
-	      },
-	      {
-		"actionTaskId": "eB7BsOEBQnOkPWKvLEkG7g",
-		"completed": "2019-02-19T16:44:51.756118Z",
-		"created": "2019-02-18T16:57:47.620507Z",
-		"name": "ship_firefox",
-		"skipped": false,
-		"submitted": true
-	      }
-	    ],
-	    "product": "firefox",
-	    "project": "mozilla-beta",
-	    "release_eta": "",
-	    "revision": "bce0092f646c52d0402531a5b5a860905dfe7ad8",
-	    "status": "shipped",
-	    "version": "66.0b9"
-	  },
-          ...
-        ]
-        """
+        """Method to map over the GET /releases List releases API in Ship-it"""
         resp = None
         most_recent_params = {
             'product': product,
@@ -204,17 +155,17 @@ class Release_V2(object):
         """Method to map over the GET /disabled-products/ API in Ship-it
 
         Returns which products are disabled for which branches
-	{
-	  "devedition": [
-	    "releases/mozilla-beta",
-	    "projects/maple"
-	  ],
-	  "firefox": [
-	    "projects/maple",
-	    "try"
-	  ]
-	}
-	"""
+        {
+          "devedition": [
+            "releases/mozilla-beta",
+            "projects/maple"
+          ],
+          "firefox": [
+            "projects/maple",
+            "try"
+          ]
+        }
+        """
         resp = None
         try:
             resp = self._request(
@@ -232,49 +183,7 @@ class Release_V2(object):
     def create_new_release(
         self, product, branch, version, build_number, revision, headers={}
     ):
-        """Method to map over the POST /releases/ API in Ship-it
-
-        Parameters:
-            * product
-            * branch
-            * version
-            * build_number
-            * revision
-
-        Returns a object describing the recently added release, e.g.:
-	{
-	     'allow_phase_skipping': True,
-	     'branch': 'try',
-	     'build_number': 1,
-	     'completed': '',
-	     'created': '2019-11-27T17:46:37.055973Z',
-	     'name': 'Firefox-72.0b23-build1',
-	     'phases': [{'actionTaskId': '',
-			 'completed': '',
-			 'created': '2019-11-27T17:46:37.068984Z',
-			 'name': 'promote_firefox',
-			 'skipped': False,
-			 'submitted': False},
-			{'actionTaskId': '',
-			 'completed': '',
-			 'created': '2019-11-27T17:46:37.079871Z',
-			 'name': 'push_firefox',
-			 'skipped': False,
-			 'submitted': False},
-			{'actionTaskId': '',
-			 'completed': '',
-			 'created': '2019-11-27T17:46:37.090516Z',
-			 'name': 'ship_firefox',
-			 'skipped': False,
-			 'submitted': False}],
-	     'product': 'firefox',
-	     'project': 'try',
-	     'release_eta': '',
-	     'revision': '8e07f73ad9bb2e6b501f5118b98948c466c2cf8d',
-	     'status': 'scheduled',
-	     'version': '72.0b23'
- 	}
-	"""
+        """Method to map over the POST /releases/ API in Ship-it"""
         resp = None
         data = json.dumps({
             'product': product,
