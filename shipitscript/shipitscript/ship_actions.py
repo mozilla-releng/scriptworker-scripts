@@ -30,15 +30,10 @@ def get_shipit_api_instance(shipit_config):
 
 
 def get_shippable_revision(repo, last_shipped_revision):
-    # TODO: remove this before official PR
-    return '8e07f73ad9bb2e6b501f5118b98948c466c2cf8d'
-
+    pass
 
 def get_most_recent_shipped_revision(shipit_config, product, branch):
     release_api, headers = get_shipit_api_instance(shipit_config)
-
-    # TODO: remove this line
-    return '0e2269bc3fc9d2a6bd771a2067506477f086ac80'
 
     log.info('Call Ship-it to retrieve all releases matching criteria ...')
     all_releases = release_api.get_shipped_releases(product, branch, headers=headers)
@@ -58,8 +53,6 @@ def get_most_recent_shipped_revision(shipit_config, product, branch):
 
 
 def releases_are_disabled(shipit_config, product, branch):
-    # TODO: remove this line
-    return False
     release_api, headers = get_shipit_api_instance(shipit_config)
 
     log.info('Call Ship-it to check for disabled products across branches')
