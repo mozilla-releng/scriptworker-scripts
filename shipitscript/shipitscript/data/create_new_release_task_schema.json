@@ -24,7 +24,7 @@
                 "product": {
                   "type": "string"
                 },
-                "channel": {
+                "branch": {
                   "type": "string"
                 },
                 "repo": {
@@ -32,9 +32,12 @@
                 },
                 "phase": {
                   "type": "string"
+                },
+                "version": {
+                  "type": "string"
                 }
             },
-            "required": ["product", "channel", "repo", "phase"],
+            "required": ["product", "branch", "repo", "phase", "version"],
             "additionalProperties": false
         }
     },

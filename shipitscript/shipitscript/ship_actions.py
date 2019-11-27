@@ -31,7 +31,7 @@ def get_shipit_api_instance(shipit_config):
 
 def get_shippable_revision(repo, last_shipped_revision):
     # TODO: remove this before official PR
-    return 'tip'
+    return '8e07f73ad9bb2e6b501f5118b98948c466c2cf8d'
 
 
 def get_most_recent_shipped_revision(shipit_config, product, branch):
@@ -84,13 +84,15 @@ def start_new_release(shipit_config, product,  branch, version, revision, phase)
     release_details = release_api.create_new_release(
         product, branch, version, revision, headers=headers
     )
-    # TODO: does `name` exist in release_details?
+
+    # grab the release name from the Ship-it response
     release_name = release_details['name']
 
     # avoid race conditions in between creating the release and triggering the
     # specific `phase`
     if releases_are_disabled(shipit_config, product, branch):
         return
+    import pdb; pdb.set_trace()
     release_api.trigger_release_phase(release_name, phase, headers=headers)
 
 

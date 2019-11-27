@@ -198,6 +198,20 @@ class Release_V2(object):
         return resp
 
     def get_disabled_products(self, headers={}):
+        """Method to map over the GET /disabled-products/ API in Ship-it
+
+        Returns which products are disabled for which branches
+	{
+	  "devedition": [
+	    "releases/mozilla-beta",
+	    "projects/maple"
+	  ],
+	  "firefox": [
+	    "projects/maple",
+	    "try"
+	  ]
+	}
+	"""
         resp = None
         try:
             resp = self._request(
@@ -215,6 +229,48 @@ class Release_V2(object):
     def create_new_release(
         self, product, branch, version, revision, headers={}
     ):
+        """Method to map over the POST /releases/ API in Ship-it
+
+        Parameters:
+            * product
+            * branch
+            * version
+            * revision
+
+        Returns a object describing the recently added release, e.g.:
+	{
+	     'allow_phase_skipping': True,
+	     'branch': 'try',
+	     'build_number': 1,
+	     'completed': '',
+	     'created': '2019-11-27T17:46:37.055973Z',
+	     'name': 'Firefox-72.0b23-build1',
+	     'phases': [{'actionTaskId': '',
+			 'completed': '',
+			 'created': '2019-11-27T17:46:37.068984Z',
+			 'name': 'promote_firefox',
+			 'skipped': False,
+			 'submitted': False},
+			{'actionTaskId': '',
+			 'completed': '',
+			 'created': '2019-11-27T17:46:37.079871Z',
+			 'name': 'push_firefox',
+			 'skipped': False,
+			 'submitted': False},
+			{'actionTaskId': '',
+			 'completed': '',
+			 'created': '2019-11-27T17:46:37.090516Z',
+			 'name': 'ship_firefox',
+			 'skipped': False,
+			 'submitted': False}],
+	     'product': 'firefox',
+	     'project': 'try',
+	     'release_eta': '',
+	     'revision': '8e07f73ad9bb2e6b501f5118b98948c466c2cf8d',
+	     'status': 'scheduled',
+	     'version': '72.0b23'
+ 	}
+	"""
         resp = None
         data = json.dumps({
             'product': product,
@@ -223,7 +279,6 @@ class Release_V2(object):
             'build_number': 1, # automation always starts only buildnumer 1
             'revision': revision,
         })
-        import pdb; pdb.set_trace()
         try:
             resp = self._request(
                 api_endpoint='/releases',
@@ -231,7 +286,6 @@ class Release_V2(object):
                 data=data,
                 headers=headers,
             )
-            import pdb; pdb.set_trace()
             return resp.json()
         except Exception:
             log.error('Caught error while creating the release', exc_info=True)
@@ -241,7 +295,12 @@ class Release_V2(object):
             raise
 
     def trigger_release_phase(self, release_name, phase, headers={}):
-        """Trigger a push phase for a specific release"""
+        """Method to map over the PUT /releases/{name}/{phase} API in Ship-it
+
+        Parameters:
+            * release_name
+            * phase
+        """
         resp = None
         try:
             resp = self._request(
