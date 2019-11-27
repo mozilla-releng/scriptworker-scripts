@@ -33,21 +33,24 @@ def get_shippable_revision(repo, last_shipped_revision):
     pass
 
 
-def get_most_recent_shipped_revision(product, channel, shipit_config):
+def get_most_recent_shipped_revision(product, branch, shipit_config):
     release_api, headers = get_shipit_api_instance(shipit_config)
 
     log.info('Call Ship-it to retrieve all releases matching criteria ...')
-    # TODO add proper parameters here
-    all_releases = release_api.get_releases(headers=headers)
+    all_releases = release_api.get_shipped_releases(product, branch, headers=headers)
     # XXX: Ship-it API already sorts the releases based on their version so the
     # tail of the list is the most recent  version we have shipped based on
     # https://github.com/mozilla-releng/shipit/blob/master/api/src/shipit_api/api.py#L131
-    most_recent_release = all_releases[-1]
-    return most_recent_release['revision']
-
-
-def get_next_release_version(product, channel, shipit_config):
-    release_api, headers = get_shipit_api_instance(shipit_config)
+    try:
+        most_recent_release = all_releases[-1]
+        return most_recent_release['revision']
+    except IndexError:
+        # return None should the list is empty
+        log.error('The list of releases is empty')
+        return
+    except KeyError:
+        log.error('No `revision` key present in the most recent release')
+        return
 
 
 def start_new_release(

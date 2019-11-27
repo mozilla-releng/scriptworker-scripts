@@ -108,16 +108,12 @@ class Release_V2(object):
                 log.error('Response code: %d', resp.status_code)
             raise
 
-    # TODO add proper parameters here
-    def get_releases(self, headers={}):
+    def get_shipped_releases(self, product, branch, headers={}):
         """Method to map over the GET /releases List releases API in Ship-it
 
         Parameters:
             * product
             * branch
-            * version
-            * build_number
-            * status
 
         Returns a list of objects describing the releases:
         [
@@ -165,15 +161,14 @@ class Release_V2(object):
         ]
         """
         resp = None
-        params = {
-            'product': 'firefox', # TODO
-            'branch': 'releases/mozilla-beta', # TODO
-            'status': 'shipped' # TODO
+        most_recent_params = {
+            'product': product,
+            'branch': branch,
+            'status': 'shipped'
         }
-        encoded_params = urllib.parse.urlencode(params)
         try:
             resp = self._request(
-                api_endpoint=f'/releases?{encoded_params}',
+                api_endpoint=f'/releases?{urllib.parse.urlencode(most_recent_params)}',
                 headers=headers
             )
             return resp.json()
