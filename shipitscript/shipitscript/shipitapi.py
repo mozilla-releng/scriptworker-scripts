@@ -108,7 +108,7 @@ class Release_V2(object):
                 log.error(f'Response code: {resp.status_code}')
             raise
 
-    def get_shipped_releases(self, product, branch, headers={}):
+    def get_releases(self, product, branch, status, version='', headers={}):
         """Method to map over the GET /releases List releases API in Ship-it
 
         Parameters:
@@ -164,8 +164,11 @@ class Release_V2(object):
         most_recent_params = {
             'product': product,
             'branch': branch,
-            'status': 'shipped'
+            'status': status
         }
+        if version:
+            most_recent_params['version'] = version
+
         try:
             resp = self._request(
                 api_endpoint=f'/releases?{urllib.parse.urlencode(most_recent_params)}',
@@ -227,7 +230,7 @@ class Release_V2(object):
             raise
 
     def create_new_release(
-        self, product, branch, version, revision, headers={}
+        self, product, branch, version, build_number, revision, headers={}
     ):
         """Method to map over the POST /releases/ API in Ship-it
 
@@ -235,6 +238,7 @@ class Release_V2(object):
             * product
             * branch
             * version
+            * build_number
             * revision
 
         Returns a object describing the recently added release, e.g.:
@@ -276,8 +280,9 @@ class Release_V2(object):
             'product': product,
             'branch': branch,
             'version': version,
-            'build_number': 1, # automation always starts only buildnumer 1
+            'build_number': build_number,
             'revision': revision,
+            'partial_updates': 'auto',
         })
         try:
             resp = self._request(

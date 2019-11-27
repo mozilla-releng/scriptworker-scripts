@@ -36,7 +36,7 @@ def get_most_recent_shipped_revision(shipit_config, product, branch):
     release_api, headers = get_shipit_api_instance(shipit_config)
 
     log.info('Call Ship-it to retrieve all releases matching criteria ...')
-    all_releases = release_api.get_shipped_releases(product, branch, headers=headers)
+    all_releases = release_api.get_releases(product, branch, status='shipped', headers=headers)
     # XXX: Ship-it API already sorts the releases based on their version so the
     # tail of the list is the most recent  version we have shipped based on
     # https://github.com/mozilla-releng/shipit/blob/master/api/src/shipit_api/api.py#L131
@@ -50,6 +50,20 @@ def get_most_recent_shipped_revision(shipit_config, product, branch):
     except KeyError:
         log.error('No `revision` key present in the most recent release')
         return
+
+
+def calculate_build_number(shipit_config, product, branch, version):
+    release_api, headers = get_shipit_api_instance(shipit_config)
+
+    log.info('Call Ship-it to retrieve all releases matching criteria ...')
+    all_releases = release_api.get_releases(
+            product, branch, status='shipped,aborted,scheduled',
+            version=version, headers=headers
+    )
+
+    build_numbers = [r['build_number'] for r in all_releases]
+    last_build_number = max(build_numbers) or int(0)
+    return last_build_number + 1
 
 
 def releases_are_disabled(shipit_config, product, branch):
@@ -68,6 +82,11 @@ def releases_are_disabled(shipit_config, product, branch):
 
 
 def start_new_release(shipit_config, product,  branch, version, revision, phase):
+    # compute the build_number for the to-be-created release
+    build_number = calculate_build_number(
+        shipit_config, product, branch, version
+    )
+
     # safeguard to avoid creating releases if they have been put on hold in the UI
     if releases_are_disabled(shipit_config, product, branch):
         return
@@ -75,7 +94,7 @@ def start_new_release(shipit_config, product,  branch, version, revision, phase)
     release_api, headers = get_shipit_api_instance(shipit_config)
     log.info('creating a new release...')
     release_details = release_api.create_new_release(
-        product, branch, version, revision, headers=headers
+        product, branch, version, build_number, revision, headers=headers
     )
 
     # grab the release name from the Ship-it response
