@@ -85,7 +85,6 @@ def start_new_release(shipit_config, product,  branch, version, revision, phase)
     # specific `phase`
     if releases_are_disabled(shipit_config, product, branch):
         return
-    import pdb; pdb.set_trace()
     release_api.trigger_release_phase(release_name, phase, headers=headers)
 
 
