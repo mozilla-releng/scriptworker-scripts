@@ -1,5 +1,6 @@
 import json
 import logging
+import urllib
 
 import certifi
 import mohawk
@@ -102,6 +103,82 @@ class Release_V2(object):
             return json.loads(resp.content)
         except Exception:
             log.error('Caught error while getting release', exc_info=True)
+            if resp:
+                log.error(resp.content)
+                log.error('Response code: %d', resp.status_code)
+            raise
+
+    # TODO add proper parameters here
+    def get_releases(self, headers={}):
+        """Method to map over the GET /releases List releases API in Ship-it
+
+        Parameters:
+            * product
+            * branch
+            * version
+            * build_number
+            * status
+
+        Returns a list of objects describing the releases:
+        [
+	  {
+	    "allow_phase_skipping": false,
+	    "branch": "releases/mozilla-beta",
+	    "build_number": 1,
+	    "completed": "2019-02-19T16:44:51.756118Z",
+	    "created": "2019-02-18T16:57:47.612283Z",
+	    "name": "Firefox-66.0b9-build1",
+	    "phases": [
+	      {
+		"actionTaskId": "Z3xdvohqSImzFpx1wmIwGg",
+		"completed": "2019-02-18T16:59:33.753914Z",
+		"created": "2019-02-18T16:57:47.616646Z",
+		"name": "promote_firefox",
+		"skipped": false,
+		"submitted": true
+	      },
+	      {
+		"actionTaskId": "EOh-CPdgQfKTiMDqKRD3DQ",
+		"completed": "2019-02-18T21:29:25.381553Z",
+		"created": "2019-02-18T16:57:47.619101Z",
+		"name": "push_firefox",
+		"skipped": false,
+		"submitted": true
+	      },
+	      {
+		"actionTaskId": "eB7BsOEBQnOkPWKvLEkG7g",
+		"completed": "2019-02-19T16:44:51.756118Z",
+		"created": "2019-02-18T16:57:47.620507Z",
+		"name": "ship_firefox",
+		"skipped": false,
+		"submitted": true
+	      }
+	    ],
+	    "product": "firefox",
+	    "project": "mozilla-beta",
+	    "release_eta": "",
+	    "revision": "bce0092f646c52d0402531a5b5a860905dfe7ad8",
+	    "status": "shipped",
+	    "version": "66.0b9"
+	  },
+          ...
+        ]
+        """
+        resp = None
+        params = {
+            'product': 'firefox', # TODO
+            'branch': 'releases/mozilla-beta', # TODO
+            'status': 'shipped' # TODO
+        }
+        encoded_params = urllib.parse.urlencode(params)
+        try:
+            resp = self._request(
+                api_endpoint=f'/releases?{encoded_params}',
+                headers=headers
+            )
+            return resp.json()
+        except Exception:
+            log.error('Caught error while getting releases', exc_info=True)
             if resp:
                 log.error(resp.content)
                 log.error('Response code: %d', resp.status_code)
