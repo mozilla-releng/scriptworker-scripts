@@ -1,8 +1,7 @@
-from enum import Enum, auto, unique
 import logging
+from enum import Enum, auto, unique
 
 import requests
-
 
 log = logging.getLogger(__name__)
 
