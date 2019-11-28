@@ -8,6 +8,7 @@ log = logging.getLogger(__name__)
 
 URL = 'https://hg.mozilla.org/{branch}/json-pushes'
 
+
 @unique
 class Importance(Enum):
     MAYBE = auto()
@@ -68,7 +69,10 @@ def is_l10n_bump(push):
     """
     L10n bumps are important.
     """
-    if push['changesets'][-1]['author'] == 'L10n Bumper Bot <release+l10nbumper@mozilla.com>':
+    if (
+        push['changesets'][-1]['author']
+        == 'L10n Bumper Bot <release+l10nbumper@mozilla.com>'
+    ):
         # This is the bumper bot, so important
         return Importance.IMPORTANT
     return Importance.MAYBE
@@ -90,7 +94,11 @@ def skip_version_bump(push):
     """
     Do not treat version bumps as important to determine if we should build.
     """
-    if push['changesets'][-1]['author'] == 'Mozilla Releng Treescript <release+treescript@mozilla.org>':
+    cset = push['changesets'][-1]
+    if (
+        push['changesets'][-1]['author']
+        == 'Mozilla Releng Treescript <release+treescript@mozilla.org>'
+    ):
         if 'Automatic version bump' in cset['desc']:
             # This is a version bump
             return Importance.UNIMPORTANT
