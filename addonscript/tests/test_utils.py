@@ -13,9 +13,6 @@ from jose.constants import ALGORITHMS
 from scriptworker.context import Context
 
 import addonscript.utils as utils
-from addonscript.test import tmpdir
-
-assert tmpdir  # silence flake8
 
 # helper constants, fixtures, functions {{{1
 # EXAMPLE_CONFIG = os.path.join(BASE_DIR, 'config_example.json')
