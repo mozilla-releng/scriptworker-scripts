@@ -98,6 +98,7 @@ def skip_test_only(push):
     cset = push['changesets'][-1]
     if 'a=test-only' in cset['desc'] or 'a=testonly' in cset['desc']:
         return Importance.UNIMPORTANT
+    return Importance.MAYBE
 
 
 @push_check
