@@ -19,18 +19,13 @@ def generate_JWT(context):
     4 minutes (AMO supports a max of 5)
     """
     amo_instance = get_amo_instance_config_from_scope(context)
-    user = amo_instance['jwt_user']
-    secret = amo_instance['jwt_secret']
+    user = amo_instance["jwt_user"]
+    secret = amo_instance["jwt_secret"]
     jti = str(uuid4())
     iat = int(time.time())
-    exp = iat + 60*4  # AMO has a 5 minute max, so set this to 4 minutes after issued
-    payload = {
-        'iss': user,
-        'jti': jti,
-        'iat': iat,
-        'exp': exp,
-    }
-    token_str = jws.sign(payload, secret, algorithm='HS256')
+    exp = iat + 60 * 4  # AMO has a 5 minute max, so set this to 4 minutes after issued
+    payload = {"iss": user, "jti": jti, "iat": iat, "exp": exp}
+    token_str = jws.sign(payload, secret, algorithm="HS256")
     return token_str
 
 
@@ -42,11 +37,7 @@ async def amo_get(context, url):
     """
     log.debug('Calling amo_get() with URL "{}"'.format(url))
     async with timeout(30):
-        resp = context.session.get(
-            url, headers={
-                'Authorization': 'JWT {}'.format(generate_JWT(context)),
-                },
-            )
+        resp = context.session.get(url, headers={"Authorization": "JWT {}".format(generate_JWT(context))})
         async with resp as r:
             log.debug('amo_get() for URL "{}" returned HTTP status code: {}'.format(url, r.status))
             r.raise_for_status()
@@ -63,11 +54,7 @@ async def amo_download(context, url, file):
     """
     log.debug('Calling amo_download() with URL "{}"'.format(url))
     async with timeout(60):
-        resp = context.session.get(
-            url, headers={
-                'Authorization': 'JWT {}'.format(generate_JWT(context)),
-                },
-            )
+        resp = context.session.get(url, headers={"Authorization": "JWT {}".format(generate_JWT(context))})
         async with resp as r:
             log.debug('amo_download() for URL "{}" returned HTTP status code: {}'.format(url, r.status))
             r.raise_for_status()
@@ -84,12 +71,7 @@ async def amo_put(context, url, data):
     """
     log.debug('Calling amo_put() with URL "{}"'.format(url))
     async with timeout(270):  # 4 minutes, 30 sec.
-        resp = context.session.put(
-            url, headers={
-                'Authorization': 'JWT {}'.format(generate_JWT(context)),
-                },
-            data=data,
-            )
+        resp = context.session.put(url, headers={"Authorization": "JWT {}".format(generate_JWT(context))}, data=data)
         async with resp as r:
             log.debug('amo_put() for URL "{}" returned HTTP status code: {}'.format(url, r.status))
             r.raise_for_status()
@@ -105,7 +87,7 @@ def get_api_url(context, path, **kwargs):
     Calls str.format() on the path with arguments in kwargs.
     """
     amo_instance = get_amo_instance_config_from_scope(context)
-    server = amo_instance['amo_server']
-    if '{' in path:
+    server = amo_instance["amo_server"]
+    if "{" in path:
         path = path.format(**kwargs)
     return "{}/{}".format(server, path)
