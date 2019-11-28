@@ -27,9 +27,6 @@
                 "branch": {
                   "type": "string"
                 },
-                "repo": {
-                  "type": "string"
-                },
                 "phase": {
                   "type": "string"
                 },
@@ -37,7 +34,7 @@
                   "type": "string"
                 }
             },
-            "required": ["product", "branch", "repo", "phase", "version"],
+            "required": ["product", "branch", "phase", "version"],
             "additionalProperties": false
         }
     },

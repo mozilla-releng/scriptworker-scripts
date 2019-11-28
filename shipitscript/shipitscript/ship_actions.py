@@ -29,7 +29,7 @@ def get_shipit_api_instance(shipit_config):
     return release_api, headers
 
 
-def get_shippable_revision(repo, last_shipped_revision):
+def get_shippable_revision(last_shipped_revision):
     pass
 
 

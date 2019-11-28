@@ -43,7 +43,6 @@ def create_new_release_action(context):
 
     product = payload['product']
     branch = payload['branch']
-    repo = payload['repo']
     phase = payload['phase']
     version = payload['version']
 
@@ -58,9 +57,7 @@ def create_new_release_action(context):
         return
 
     log.info('Determining most recent shippable revision')
-    shippable_revision = ship_actions.get_shippable_revision(
-        repo, last_shipped_revision
-    )
+    shippable_revision = ship_actions.get_shippable_revision(last_shipped_revision)
     if not shippable_revision:
         log.info("No valid shippable revisison found, silent exit ...")
         return
