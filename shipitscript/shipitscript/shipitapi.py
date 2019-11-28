@@ -1,5 +1,6 @@
 import json
 import logging
+import urllib
 
 import certifi
 import mohawk
@@ -10,8 +11,8 @@ log = logging.getLogger(__name__)
 
 
 class Release_V2(object):
-    """A class that knows how to make requests to a Ship It v2 server, including
-    generating hawk headers.
+    """A class that knows how to make requests to a Ship It v2 server,
+    including generating hawk headers.
     """
 
     def __init__(
@@ -104,13 +105,33 @@ class Release_V2(object):
             log.error('Caught error while getting release', exc_info=True)
             if resp:
                 log.error(resp.content)
-                log.error('Response code: %d', resp.status_code)
+                log.error(f'Response code: {resp.status_code}')
+            raise
+
+    def get_releases(self, product, branch, status, version='', headers={}):
+        """Method to map over the GET /releases List releases API in Ship-it"""
+        resp = None
+        params = {'product': product, 'branch': branch, 'status': status}
+        if version:
+            params['version'] = version
+
+        try:
+            resp = self._request(
+                api_endpoint=f'/releases?{urllib.parse.urlencode(params)}',
+                headers=headers,
+            )
+            return resp.json()
+        except Exception:
+            log.error('Caught error while getting releases', exc_info=True)
+            if resp:
+                log.error(resp.content)
+                log.error(f'Response code: {resp.status_code}')
             raise
 
     def update_status(self, name, status, rebuild_product_details=True, headers={}):
         """Update release status"""
         data = json.dumps({'status': status})
-        res = self._request(
+        resp = self._request(
             api_endpoint='/releases/{}'.format(name),
             method='PATCH',
             data=data,
@@ -123,4 +144,83 @@ class Release_V2(object):
                 data='{}',
                 headers=headers,
             )
-        return res
+        return resp
+
+    def get_disabled_products(self, headers={}):
+        """Method to map over the GET /disabled-products/ API in Ship-it
+
+        Returns which products are disabled for which branches
+        {
+          "devedition": [
+            "releases/mozilla-beta",
+            "projects/maple"
+          ],
+          "firefox": [
+            "projects/maple",
+            "try"
+          ]
+        }
+        """
+        resp = None
+        try:
+            resp = self._request(api_endpoint='/disabled-products', headers=headers)
+
+            return resp.json()
+        except Exception:
+            log.error('Caught error while getting disabled-products', exc_info=True)
+            if resp:
+                log.error(resp.content)
+                log.error(f'Response code: {resp.status_code}')
+            raise
+
+    def create_new_release(
+        self, product, branch, version, build_number, revision, headers={}
+    ):
+        """Method to map over the POST /releases/ API in Ship-it"""
+        resp = None
+        data = json.dumps(
+            {
+                'product': product,
+                'branch': branch,
+                'version': version,
+                'build_number': build_number,
+                'revision': revision,
+                'partial_updates': 'auto',
+            }
+        )
+        try:
+            resp = self._request(
+                api_endpoint='/releases', method='POST', data=data, headers=headers,
+            )
+            return resp.json()
+        except Exception:
+            log.error('Caught error while creating the release', exc_info=True)
+            if resp:
+                log.error(resp.content)
+                log.error(f'Response code: {resp.status_code}')
+            raise
+
+    def trigger_release_phase(self, release_name, phase, headers={}):
+        """Method to map over the PUT /releases/{name}/{phase} API in Ship-it
+
+        Parameters:
+            * release_name
+            * phase
+        """
+        resp = None
+        try:
+            resp = self._request(
+                api_endpoint=f'/releases/{release_name}/{phase}',
+                method='PUT',
+                data=None,
+                headers=headers,
+            )
+        except Exception:
+            log.error(
+                f'Caught error while triggering {phase} for {release_name}',
+                exc_info=True,
+            )
+            if resp:
+                log.error(resp.content)
+                log.error(f'Response code: {resp.status_code}')
+            raise

@@ -79,7 +79,8 @@ export ARTIFACT_UPLOAD_TIMEOUT=1200
 export CONFIG_DIR=/app/configs
 export CONFIG_LOADER=/app/bin/configloader
 export ED25519_PRIVKEY_PATH=$CONFIG_DIR/ed25519_privkey
-export GITHUB_OAUTH_TOKEN=
+# if this variable exists, we should use it. Default to None otherwise
+export GITHUB_OAUTH_TOKEN=$GITHUB_OAUTH_TOKEN
 export LOGS_DIR=/app/logs
 export PROVISIONER_ID=scriptworker-k8s
 export SCRIPTWORKER=/app/bin/scriptworker

@@ -104,9 +104,9 @@ pyflakes==2.1.1 \
     --hash=sha256:17dbeb2e3f4d772725c777fabc446d5634d1038f234e77343108ce445ea69ce0 \
     --hash=sha256:d976835886f8c5b31d47970ed689944a0262b5f3afa00a5a7b4dc81e5449f8a2 \
     # via flake8
-pyparsing==2.4.4 \
-    --hash=sha256:4acadc9a2b96c19fe00932a38ca63e601180c39a189a696abce1eaab641447e1 \
-    --hash=sha256:61b5ed888beab19ddccab3478910e2076a6b5a0295dffc43021890e136edf764 \
+pyparsing==2.4.5 \
+    --hash=sha256:20f995ecd72f2a1f4bf6b072b63b22e2eb457836601e76d6e5dfcd75436acc1f \
+    --hash=sha256:4ca62001be367f01bd3e92ecbb79070272a9d4964dce6a48a82ff0b8bc7e683a \
     # via packaging
 pytest-asyncio==0.10.0 \
     --hash=sha256:9fac5100fd716cbecf6ef89233e8590a4ad61d729d1732e0a96b84182df1daaf \
@@ -114,27 +114,27 @@ pytest-asyncio==0.10.0 \
 pytest-cov==2.8.1 \
     --hash=sha256:cc6742d8bac45070217169f5f72ceee1e0e55b0221f54bcf24845972d3a47f2b \
     --hash=sha256:cdbdef4f870408ebdbfeb44e63e07eb18bb4619fae852f6e760645fa36172626
-pytest-mock==1.11.2 \
-    --hash=sha256:b3514caac35fe3f05555923eabd9546abce11571cc2ddf7d8615959d04f2c89e \
-    --hash=sha256:ea502c3891599c26243a3a847ccf0b1d20556678c528f86c98e3cd6d40c5cf11
-pytest==5.2.2 \
-    --hash=sha256:27abc3fef618a01bebb1f0d6d303d2816a99aa87a5968ebc32fe971be91eb1e6 \
-    --hash=sha256:58cee9e09242937e136dbb3dab466116ba20d6b7828c7620f23947f37eb4dae4
+pytest-mock==1.12.0 \
+    --hash=sha256:ba8c0c38fdccee77d4666373e95cc115954863ede741b8505088fa1fc1a87c6c \
+    --hash=sha256:fff6cbd15a05f104062aa778e1ded35927d3d29bb1164218b140678fb368e32b
+pytest==5.2.4 \
+    --hash=sha256:8e256fe71eb74e14a4d20a5987bb5e1488f0511ee800680aaedc62b9358714e8 \
+    --hash=sha256:ff0090819f669aaa0284d0f4aad1a6d9d67a6efdc6dd4eb4ac56b704f890a0d6
 snowballstemmer==2.0.0 \
     --hash=sha256:209f257d7533fdb3cb73bdbd24f436239ca3b2fa67d56f6ff88e86be08cc5ef0 \
     --hash=sha256:df3bac3df4c2c01363f3dd2cfa78cce2840a79b9f1c2d2de9ce8d31683992f52 \
     # via pydocstyle
-testfixtures==6.10.1 \
-    --hash=sha256:18f5ea13a40a3b3a9184b785d2abfbaabd2a24dace9158962cd6334bf08b7e70 \
-    --hash=sha256:abbca7ed381d34a77699c6cb68be67919a1e7f5cf8728b57396145417fa34110 \
+testfixtures==6.10.2 \
+    --hash=sha256:319b28475749d45819b8f8192707673f80880e4dc4da04eca7de43144502fe17 \
+    --hash=sha256:c0eb9d20ce3b53e0cf543da7c46c263cc9792f13223def8b26edb6180ecdc895 \
     # via flake8-isort
 toml==0.10.0 \
     --hash=sha256:229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c \
     --hash=sha256:235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e \
     # via tox
-tox==3.14.0 \
-    --hash=sha256:0bc216b6a2e6afe764476b4a07edf2c1dab99ed82bb146a1130b2e828f5bff5e \
-    --hash=sha256:c4f6b319c20ba4913dbfe71ebfd14ff95d1853c4231493608182f66e566ecfe1
+tox==3.14.1 \
+    --hash=sha256:1d1368ac86e8332f79e2bcef9fefe2b077469f08449eadf0183759b34f3b2070 \
+    --hash=sha256:bcfa3e40abc1e9b70607b56adfd976fe7dc8286ad56aab44e3151daca7d2d0d0
 virtualenv==16.7.7 \
     --hash=sha256:11cb4608930d5fd3afb545ecf8db83fa50e1f96fc4fca80c94b07d2c83146589 \
     --hash=sha256:d257bb3773e48cac60e475a19b608996c73f4d333b3ba2e4e57d5ac6134e0136 \

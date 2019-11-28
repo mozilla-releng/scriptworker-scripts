@@ -3,5 +3,25 @@
 set -e
 set -x
 
-docker run -t -v $PWD:/src -w /src python:3.7 "maintenance/pin-helper.sh"
-docker run -t -v $PWD:/src -e SUFFIX=py38.txt -w /src python:3.8 "maintenance/pin-helper.sh"
+if [ $# -gt 0 ]; then
+    DIRS="$@"
+else
+    DIRS="
+        addonscript
+        balrogscript
+        beetmoverscript
+        bouncerscript
+        iscript
+        pushapkscript
+        pushsnapscript
+        scriptworker_client
+        shipitscript
+        signingscript
+        treescript
+    "
+fi
+
+for dir in $DIRS; do
+    docker run -t -v $PWD:/src -w /src python:3.7 maintenance/pin-helper.sh "$dir"
+    docker run -t -v $PWD:/src -e SUFFIX=py38.txt -w /src python:3.8 maintenance/pin-helper.sh "$dir"
+done

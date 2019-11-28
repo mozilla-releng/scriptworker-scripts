@@ -21,21 +21,19 @@ test_var_set 'PROJECT_NAME'
 test_var_set 'PUBLIC_IP'
 test_var_set 'TEMPLATE_DIR'
 
-export DMG_PATH=/app/files/dmg
-export HFSPLUS_PATH=/app/files/hfsplus
+export DMG_PATH=/app/signingscript/files/dmg
+export HFSPLUS_PATH=/app/signingscript/files/hfsplus
 export ZIPALIGN_PATH=/usr/bin/zipalign
 
 export PASSWORDS_PATH=$CONFIG_DIR/passwords.json
-export SIGNTOOL_PATH="/app/bin/signtool"
-export SSL_CERT_PATH="/app/src/signingscript/data/host.cert"
 export GPG_PUBKEY_PATH=$CONFIG_DIR/gpg_pubkey
 export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
 export AUTHENTICODE_TIMESTAMP_STYLE=null
-export AUTHENTICODE_CERT_PATH=/app/src/signingscript/data/authenticode_dep.crt
-export AUTHENTICODE_CROSS_CERT_PATH=/app/src/signingscript/data/authenticode_stub.crt
+export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_dep.crt
+export AUTHENTICODE_CROSS_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_stub.crt
 if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_TIMESTAMP_STYLE=old
-  export AUTHENTICODE_CERT_PATH=/app/src/signingscript/data/authenticode_prod.crt
+  export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_prod.crt
 fi
 
 echo $GPG_PUBKEY | base64 -d > $GPG_PUBKEY_PATH
@@ -146,6 +144,10 @@ case $ENV in
         test_var_set 'AUTOGRAPH_WIDEVINE_USERNAME'
         ;;
       mobile)
+        test_var_set 'AUTOGRAPH_FENNEC_RELEASE_PASSWORD'
+        test_var_set 'AUTOGRAPH_FENNEC_RELEASE_USERNAME'
+        test_var_set 'AUTOGRAPH_FIREFOX_TV_USERNAME'
+        test_var_set 'AUTOGRAPH_FIREFOX_TV_PASSWORD'
         test_var_set 'AUTOGRAPH_FENIX_BETA_PASSWORD'
         test_var_set 'AUTOGRAPH_FENIX_BETA_USERNAME'
         test_var_set 'AUTOGRAPH_FENIX_NIGHTLY_PASSWORD'

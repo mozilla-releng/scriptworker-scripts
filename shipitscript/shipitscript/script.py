@@ -3,6 +3,7 @@
 """
 import logging
 import os
+import sys
 
 from scriptworker import client
 
@@ -36,8 +37,43 @@ def mark_as_shipped_action(context):
     ship_actions.mark_as_shipped_v2(context.ship_it_instance_config, release_name)
 
 
+def create_new_release_action(context):
+    """Determine if there is a shippable release and create it if so in Shipit"""
+    payload = context.task['payload']
+    shipit_config = context.ship_it_instance_config
+
+    product = payload['product']
+    branch = payload['branch']
+    phase = payload['phase']
+    version = payload['version']
+
+    log.info(
+        'Determining most recent shipped revision and next version / buildnum to release'
+    )
+    last_shipped_revision = ship_actions.get_most_recent_shipped_revision(
+        shipit_config, product, branch,
+    )
+    if not last_shipped_revision:
+        log.error("Something is broken under the sun if no shipped revision")
+        sys.exit(1)
+
+    log.info('Determining most recent shippable revision')
+    shippable_revision = ship_actions.get_shippable_revision(last_shipped_revision)
+    if not shippable_revision:
+        log.info("No valid shippable revisison found, silent exit ...")
+        return
+
+    log.info('Starting a new release in Ship-it ...')
+    ship_actions.start_new_release(
+        shipit_config, product, branch, version, shippable_revision, phase,
+    )
+
+
 # ACTION_MAP {{{1
-ACTION_MAP = {'mark-as-shipped': mark_as_shipped_action}
+ACTION_MAP = {
+    'mark-as-shipped': mark_as_shipped_action,
+    'create-new-release': create_new_release_action,
+}
 
 
 def get_default_config():
@@ -50,6 +86,9 @@ def get_default_config():
         'verbose': False,
         'mark_as_shipped_schema_file': os.path.join(
             data_dir, 'mark_as_shipped_task_schema.json'
+        ),
+        'create_new_release_schema_file': os.path.join(
+            data_dir, 'create_new_release_task_schema.json'
         ),
     }
 

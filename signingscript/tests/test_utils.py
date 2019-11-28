@@ -60,17 +60,16 @@ def test_load_json_from_file(tmpdir):
     assert utils.load_json(output_file) == json_object
 
 
-# load_signing_server_config {{{1
-def test_load_signing_server_config():
+# load_autograph_configs {{{1
+def test_load_autograph_configs():
     context = Context()
-    context.config = {"signing_server_config": SERVER_CONFIG_PATH}
-    cfg = utils.load_signing_server_config(context)
-    assert cfg["dep"][0].server == "server1:9000"
-    assert cfg["dep"][1].user == "user2"
-    assert cfg["dep"][1].server_type == "signing_server"
-    assert cfg["dep"][2].server_type == "autograph"
-    assert cfg["notdep"][0].password == "pass1"
-    assert cfg["notdep"][1].formats == ["f2", "f3"]
+    context.config = {"autograph_configs": SERVER_CONFIG_PATH}
+    cfg = utils.load_autograph_configs(SERVER_CONFIG_PATH)
+    assert cfg["dep"][0].url == "https://127.0.0.1"
+    assert cfg["dep"][0].client_id == "hawk_user"
+    assert cfg["notdep"][0].access_key == "hawk_secret"
+    assert cfg["notdep"][0].formats == ["autograph_marsha384"]
+    assert cfg["project:releng:signing:cert:dep-signing"][1].key_id == "keyid"
 
 
 # log_output {{{1

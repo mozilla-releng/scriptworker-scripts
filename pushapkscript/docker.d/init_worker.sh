@@ -14,7 +14,7 @@ export JARSIGNER_KEY_STORE="/app/mozilla-android-keystore"
 rm -f "$JARSIGNER_KEY_STORE"
 # Generate a temporary password
 JARSIGNER_KEY_STORE_PASSWORD=$(openssl rand -hex 30)
-CERT_DIR=/app/files
+CERT_DIR=/app/pushapkscript/files
 
 function import_cert() {
         JARSIGNER_KEY_STORE_NAME=$1
@@ -96,6 +96,8 @@ case $COT_PRODUCT in
         test_var_set 'GOOGLE_CREDENTIALS_FOCUS'
         test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER'
         test_var_set 'GOOGLE_CREDENTIALS_REFERENCE_BROWSER'
+        test_var_set 'AMAZON_CLIENT_ID'
+        test_var_set 'AMAZON_CLIENT_SECRET'
 
         export GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH=$CONFIG_DIR/fenix_nightly.p12
         export GOOGLE_CREDENTIALS_FENIX_BETA_PATH=$CONFIG_DIR/fenix_beta.p12
