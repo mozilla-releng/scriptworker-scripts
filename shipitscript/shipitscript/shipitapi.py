@@ -111,13 +111,13 @@ class Release_V2(object):
     def get_releases(self, product, branch, status, version='', headers={}):
         """Method to map over the GET /releases List releases API in Ship-it"""
         resp = None
-        most_recent_params = {'product': product, 'branch': branch, 'status': status}
+        params = {'product': product, 'branch': branch, 'status': status}
         if version:
-            most_recent_params['version'] = version
+            params['version'] = version
 
         try:
             resp = self._request(
-                api_endpoint=f'/releases?{urllib.parse.urlencode(most_recent_params)}',
+                api_endpoint=f'/releases?{urllib.parse.urlencode(params)}',
                 headers=headers,
             )
             return resp.json()

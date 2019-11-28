@@ -59,7 +59,7 @@ def calculate_build_number(shipit_config, product, branch, version):
     release_api, headers = get_shipit_api_instance(shipit_config)
 
     log.info('Call Ship-it to retrieve all releases matching criteria ...')
-    all_releases = release_api.get_releases(
+    all_builds = release_api.get_releases(
         product,
         branch,
         status='shipped,aborted,scheduled',
@@ -67,7 +67,7 @@ def calculate_build_number(shipit_config, product, branch, version):
         headers=headers,
     )
 
-    build_numbers = [r['build_number'] for r in all_releases]
+    build_numbers = [r['build_number'] for r in all_builds]
     last_build_number = max(build_numbers) or int(0)
     return last_build_number + 1
 
@@ -78,22 +78,16 @@ def releases_are_disabled(shipit_config, product, branch):
     log.info('Call Ship-it to check for disabled products across branches')
     disabled_products = release_api.get_disabled_products(headers=headers)
 
-    if product in disabled_products:
-        if branch in disabled_products[product]:
-            log.info(f'Product {product} and {branch} are currently disabled')
-            return True
-
-    log.info(f'Product {product} and {branch} is enabled. Continuing ...')
-    return False
+    return branch in disabled_products.get(product, [])
 
 
 def start_new_release(shipit_config, product, branch, version, revision, phase):
-    # compute the build_number for the to-be-created release
-    build_number = calculate_build_number(shipit_config, product, branch, version)
-
     # safeguard to avoid creating releases if they have been disabled from UI
     if releases_are_disabled(shipit_config, product, branch):
         return
+
+    # compute the build_number for the to-be-created release
+    build_number = calculate_build_number(shipit_config, product, branch, version)
 
     release_api, headers = get_shipit_api_instance(shipit_config)
     log.info('creating a new release...')
@@ -101,11 +95,12 @@ def start_new_release(shipit_config, product, branch, version, revision, phase):
         product, branch, version, build_number, revision, headers=headers
     )
 
-    # grab the release name from the Ship-it response
+    # grab the release name from the Ship-it create-release response
     release_name = release_details['name']
 
-    # avoid race conditions in between creating the release and triggering the
-    # specific `phase`
+    # minimize the possiblity of a  race condition in between creating the
+    # release and triggering the specific `phase`. This is still possbile, but
+    # we're calling this just before the API call to minimize the time-window
     if releases_are_disabled(shipit_config, product, branch):
         return
     release_api.trigger_release_phase(release_name, phase, headers=headers)

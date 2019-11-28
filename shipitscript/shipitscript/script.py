@@ -3,6 +3,7 @@
 """
 import logging
 import os
+import sys
 
 from scriptworker import client
 
@@ -53,8 +54,8 @@ def create_new_release_action(context):
         shipit_config, product, branch,
     )
     if not last_shipped_revision:
-        log.info("No valid most recent shipped revisison found, silent exit ...")
-        return
+        log.error("Something is broken under the sun if no shipped revision")
+        sys.exit(1)
 
     log.info('Determining most recent shippable revision')
     shippable_revision = ship_actions.get_shippable_revision(last_shipped_revision)
