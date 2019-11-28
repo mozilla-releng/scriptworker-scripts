@@ -54,13 +54,25 @@ def is_push_important(push):
     for check in _push_checks:
         isimportant = check(push)
         if not isimportant == Importance.MAYBE:
-            log.info(f'{push} found as MAYBE in {check}')
             return isimportant
     # We reached the end of our checks and
     # we did not explicitly detect important
     # nor unimportant.
     # ...Our default is important
+    log.info(
+        f'Could not tell the importance of the {push} hence defaulting to important'
+    )
     return Importance.IMPORTANT
+
+
+@push_check
+def skip_dontbuild(push):
+    """
+    Commits that contain the DONTBUILD syntax in their message"
+    """
+    if 'DONTBUILD' in push['changesets'][-1]['desc']:
+        return Importance.UNIMPORTANT
+    return Importance.MAYBE
 
 
 @push_check
