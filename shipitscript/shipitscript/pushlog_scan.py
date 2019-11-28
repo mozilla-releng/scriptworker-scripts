@@ -20,11 +20,11 @@ def push_check(func):
     return func
 
 
-def should_build(repo, old_rev, curr_rev):
+def should_build(repo, old_rev, cron_rev):
     # TODO redo
     resp = requests.get(
         URL.format(repo=repo),
-        params={'full': '1', 'fromchange': old_rev, 'tochange': curr_rev},
+        params={'full': '1', 'fromchange': old_rev, 'tochange': cron_rev},
     )
     pushlog = resp.json()
     reversed_pushes = [pushlog[k] for k in sorted(pushlog.keys(), reverse=True)]
