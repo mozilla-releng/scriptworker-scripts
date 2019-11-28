@@ -8,9 +8,6 @@ from scriptworker.context import Context
 
 import addonscript.api as api
 from addonscript.exceptions import AMOConflictError, FatalSignatureError, SignatureError
-from addonscript.test import tmpdir
-
-assert tmpdir  # silence flake8
 
 
 @pytest.fixture(scope='function')
