@@ -41,15 +41,13 @@ def create_new_release_action(context):
     """Determine if there is a shippable release and create it if so in Shipit"""
     payload = context.task['payload']
     shipit_config = context.ship_it_instance_config
-
     product = payload['product']
     branch = payload['branch']
     phase = payload['phase']
     version = payload['version']
+    cron_revision = payload['cron_revision']  # rev that cron triggered on
 
-    log.info(
-        'Determining most recent shipped revision and next version / buildnum to release'
-    )
+    log.info('Determining most recent shipped revision based off we released')
     last_shipped_revision = ship_actions.get_most_recent_shipped_revision(
         shipit_config, product, branch,
     )
@@ -58,7 +56,9 @@ def create_new_release_action(context):
         sys.exit(1)
 
     log.info('Determining most recent shippable revision')
-    shippable_revision = ship_actions.get_shippable_revision(last_shipped_revision)
+    shippable_revision = ship_actions.get_shippable_revision(
+        branch, last_shipped_revision, cron_revision,
+    )
     if not shippable_revision:
         log.info("No valid shippable revisison found, silent exit ...")
         return

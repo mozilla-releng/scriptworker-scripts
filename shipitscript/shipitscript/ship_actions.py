@@ -1,5 +1,6 @@
 import logging
 
+from shipitscript import pushlog_scan
 from shipitscript.shipitapi import Release_V2
 from shipitscript.utils import (
     check_release_has_values_v2,
@@ -29,8 +30,10 @@ def get_shipit_api_instance(shipit_config):
     return release_api, headers
 
 
-def get_shippable_revision(last_shipped_revision):
-    pass
+def get_shippable_revision(branch, last_shipped_revision, cron_revision):
+    return pushlog_scan.get_shippable_revision_build(
+        branch, last_shipped_revision, cron_revision
+    )
 
 
 def get_most_recent_shipped_revision(shipit_config, product, branch):
