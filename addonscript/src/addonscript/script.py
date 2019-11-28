@@ -22,31 +22,28 @@ def _craft_aiohttp_connector(context):
 def get_default_config(base_dir=None):
     base_dir = base_dir or os.path.dirname(os.getcwd())
     default_config = {
-        'work_dir': os.path.join(base_dir, 'work_dir'),
-        'artifact_dir': os.path.join(base_dir, 'artifact_dir'),
-        'schema_file': os.path.join(os.path.dirname(__file__), 'data', 'addonscript_task_schema.json'),
+        "work_dir": os.path.join(base_dir, "work_dir"),
+        "artifact_dir": os.path.join(base_dir, "artifact_dir"),
+        "schema_file": os.path.join(os.path.dirname(__file__), "data", "addonscript_task_schema.json"),
     }
     return default_config
 
 
 async def sign_addon(context, locale):
     try:
-        upload_data = await retry_async(
-            do_upload, args=(context, locale),
-            retry_exceptions=tuple([ClientError, asyncio.TimeoutError]))
+        upload_data = await retry_async(do_upload, args=(context, locale), retry_exceptions=tuple([ClientError, asyncio.TimeoutError]))
     except AMOConflictError as exc:
         log.info(exc.message)
-        upload_data = {'pk': None}
+        upload_data = {"pk": None}
 
     signed_addon_url = await retry_async(
-        get_signed_addon_url, args=(context, locale, upload_data['pk']),
+        get_signed_addon_url,
+        args=(context, locale, upload_data["pk"]),
         attempts=10,  # 10 attempts with default backoff yield around 10 minutes of time
-                      # Most addons will be signed in less than that.
+        # Most addons will be signed in less than that.
         retry_exceptions=tuple([ClientError, asyncio.TimeoutError, SignatureError]),
     )
-    destination = os.path.join(
-        context.config['artifact_dir'], 'public/build/', locale, 'target.langpack.xpi',
-    )
+    destination = os.path.join(context.config["artifact_dir"], "public/build/", locale, "target.langpack.xpi")
     os.makedirs(os.path.dirname(destination))
     await retry_async(get_signed_xpi, args=(context, signed_addon_url, destination))
 
@@ -56,12 +53,10 @@ def build_locales_context(context):
     for f in build_filelist(context):
         current_info = get_langpack_info(context, f)
         langpack_info.append(current_info)
-    context.locales = {locale_info['locale']: {
-                            'unsigned': locale_info['unsigned'],
-                            'version': locale_info['version'],
-                            'id': locale_info['id'],
-                        }
-                       for locale_info in langpack_info}
+    context.locales = {
+        locale_info["locale"]: {"unsigned": locale_info["unsigned"], "version": locale_info["version"], "id": locale_info["id"]}
+        for locale_info in langpack_info
+    }
 
 
 async def async_main(context):
@@ -76,8 +71,7 @@ async def async_main(context):
 
 
 def main(config_path=None):
-    return scriptworker.client.sync_main(async_main, config_path=config_path,
-                                         default_config=get_default_config())
+    return scriptworker.client.sync_main(async_main, config_path=config_path, default_config=get_default_config())
 
 
-__name__ == '__main__' and main()
+__name__ == "__main__" and main()

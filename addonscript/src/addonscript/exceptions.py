@@ -12,7 +12,7 @@ class SignatureError(ScriptWorkerException):
 
     """
 
-    exit_code = STATUSES['intermittent-task']
+    exit_code = STATUSES["intermittent-task"]
 
 
 class FatalSignatureError(ScriptWorkerTaskException):
