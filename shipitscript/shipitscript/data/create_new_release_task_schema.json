@@ -32,9 +32,12 @@
                 },
                 "version": {
                   "type": "string"
+                },
+                "cron_revision": {
+                  "type": "string"
                 }
             },
-            "required": ["product", "branch", "phase", "version"],
+            "required": ["product", "branch", "phase", "version", "cron_revision"],
             "additionalProperties": false
         }
     },

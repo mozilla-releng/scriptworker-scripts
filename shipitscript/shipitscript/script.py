@@ -56,16 +56,16 @@ def create_new_release_action(context):
         sys.exit(1)
 
     log.info('Determining most recent shippable revision')
-    should_build = ship_actions.should_ship_revision(
+    shippable_revision = ship_actions.get_shippable_revision(
         branch, last_shipped_revision, cron_revision,
     )
-    if not should_build:
+    if not shippable_revision:
         log.info("No valid shippable revisison found, silent exit ...")
         return
 
     log.info('Starting a new release in Ship-it ...')
     ship_actions.start_new_release(
-        shipit_config, product, branch, version, cron_revision, phase,
+        shipit_config, product, branch, version, shippable_revision, phase,
     )
 
 
