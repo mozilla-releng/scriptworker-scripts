@@ -54,6 +54,7 @@ def create_new_release_action(context):
     if not last_shipped_revision:
         log.error("Something is broken under the sun if no shipped revision")
         sys.exit(1)
+    log.info('Last shipped revision is {last_shipped_revision}')
 
     log.info('Determining most recent shippable revision')
     shippable_revision = ship_actions.get_shippable_revision(
@@ -62,6 +63,7 @@ def create_new_release_action(context):
     if not shippable_revision:
         log.info("No valid shippable revisison found, silent exit ...")
         return
+    log.info('The shippable revision found is {shippable_revision}')
 
     log.info('Starting a new release in Ship-it ...')
     ship_actions.start_new_release(
