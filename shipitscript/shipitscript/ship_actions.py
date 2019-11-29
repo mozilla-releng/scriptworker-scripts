@@ -93,7 +93,7 @@ def start_new_release(shipit_config, product, branch, version, revision, phase):
     # compute the build_number for the to-be-created release
     build_number = calculate_build_number(shipit_config, product, branch, version)
     if build_number != 1:
-        log.info('Something is fishy in Ship-it. We may have a zombie build in Ship-it')
+        log.info('Something is fishy in Ship-it, buildno returned is {build_number}.')
         sys.exit(1)
 
     release_api, headers = get_shipit_api_instance(shipit_config)
