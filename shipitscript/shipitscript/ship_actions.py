@@ -72,8 +72,9 @@ def calculate_build_number(shipit_config, product, branch, version):
     )
 
     build_numbers = [r['build_number'] for r in all_builds]
-    last_build_number = max(build_numbers) or int(0)
-    return last_build_number + 1
+    if not build_numbers:
+        return 1
+    return max(build_numbers) + 1
 
 
 def releases_are_disabled(shipit_config, product, branch):
