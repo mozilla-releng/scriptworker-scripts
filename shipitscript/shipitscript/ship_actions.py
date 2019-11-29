@@ -40,7 +40,7 @@ def get_shippable_revision(branch, last_shipped_revision, cron_revision):
 def get_most_recent_shipped_revision(shipit_config, product, branch):
     release_api, headers = get_shipit_api_instance(shipit_config)
 
-    log.info('Call Ship-it to retrieve all releases matching criteria ...')
+    log.info('Call Ship-it to retrieve all releases matching criteria')
     all_releases = release_api.get_releases(
         product, branch, status='shipped', headers=headers
     )
@@ -73,7 +73,10 @@ def calculate_build_number(shipit_config, product, branch, version):
 
     build_numbers = [r['build_number'] for r in all_builds]
     if not build_numbers:
+        log.info('No other valid build numbers found, returning 1')
         return 1
+
+    log.info('Choosing the max build_number in the findings and bumping it')
     return max(build_numbers) + 1
 
 
@@ -89,6 +92,7 @@ def releases_are_disabled(shipit_config, product, branch):
 def start_new_release(shipit_config, product, branch, version, revision, phase):
     # safeguard to avoid creating releases if they have been disabled from UI
     if releases_are_disabled(shipit_config, product, branch):
+        log.info('Releases are disabled. Silently exit ...')
         return
 
     # compute the build_number for the to-be-created release
@@ -110,6 +114,7 @@ def start_new_release(shipit_config, product, branch, version, revision, phase):
     # release and triggering the specific `phase`. This is still possbile, but
     # we're calling this just before the API call to minimize the time-window
     if releases_are_disabled(shipit_config, product, branch):
+        log.info('Releases are disabled. Silently exit ...')
         return
     release_api.trigger_release_phase(release_name, phase, headers=headers)
 

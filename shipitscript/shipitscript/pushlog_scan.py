@@ -60,7 +60,8 @@ def is_push_important(push):
     # nor unimportant.
     # ...Our default is important
     log.info(
-        f'Could not tell the importance of the {push} hence defaulting to important'
+        f"Could not tell the importance of the "
+        "{push['changesets'][-1]['node']} hence defaulting to important"
     )
     return Importance.IMPORTANT
 
