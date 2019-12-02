@@ -269,8 +269,8 @@ async def sign_macapp(context, from_, fmt):
     return from_
 
 
-# sign_langpack {{{1
-async def sign_langpack(context, orig_path, fmt):
+# sign_xpi {{{1
+async def sign_xpi(context, orig_path, fmt):
     """Sign language packs with autograph.
 
     This validates both the file extension and the language pack ID is sane.
@@ -284,15 +284,17 @@ async def sign_langpack(context, orig_path, fmt):
         str: the path to the signed xpi
 
     """
+    cert_type = task.task_cert_type(context)
     file_base, file_extension = os.path.splitext(orig_path)
 
-    if not file_extension == ".xpi":
+    if file_extension not in (".xpi", ".zip"):
         raise SigningScriptError("Expected a .xpi")
 
-    id = _langpack_id(orig_path)
+    ext_id = _extension_id(orig_path, fmt)
     log.info("Identified {} as extension id: {}".format(orig_path, id))
+    kwargs = {'extension_id': ext_id}
     # Sign the appropriate inner files
-    await sign_file_with_autograph(context, orig_path, fmt, extension_id=id)
+    await sign_file_with_autograph(context, orig_path, fmt, **kwargs)
     return orig_path
 
 
@@ -591,26 +593,32 @@ def _should_sign_windows(filename):
     return False
 
 
-def _langpack_id(filename):
+def _extension_id(filename, fmt):
     """Return a list of id's for the langpacks.
 
-    Side Affect of checking if filenames are actually langpacks.
+    Side effect of additionally verifying langpack manifests.
     """
-    langpack = zipfile.ZipFile(filename, "r")
-    id = None
-    with langpack.open("manifest.json", "r") as f:
-        manifest = json.load(f)
-        if not (
-            "languages" in manifest
-            and "langpack_id" in manifest
-            and "applications" in manifest
-            and "gecko" in manifest["applications"]
-            and "id" in manifest["applications"]["gecko"]
-            and LANGPACK_RE.match(manifest["applications"]["gecko"]["id"])
-        ):
-            raise SigningScriptError("{} is not a valid langpack".format(filename))
-        id = manifest["applications"]["gecko"]["id"]
-    return id
+    xpi = zipfile.ZipFile(filename, "r")
+    manifest = {}
+    for manifest_name in ("manifest.json", "webextension/manifest.json"):
+        try:
+            with xpi.open(manifest_name, "r") as f:
+                manifest = json.load(f)
+                break
+        except KeyError:
+            log.debug(
+                "{} doesn't exist in {}...".format(manifest_name, filename)
+            )
+    if not manifest.get("applications", {}).get("gecko", {}).get("id"):
+        raise SigningScriptError("{} is not a valid xpi".format(filename))
+    if "langpack" in fmt and not (
+        "languages" in manifest
+        and "langpack_id" in manifest
+        and LANGPACK_RE.match(manifest["applications"]["gecko"]["id"])
+        and filename.endswith(".xpi")
+    ):
+        raise SigningScriptError("{} is not a valid langpack".format(filename))
+    return manifest["applications"]["gecko"]["id"]
 
 
 # _get_mac_sigpath {{{1
@@ -1002,6 +1010,14 @@ def b64encode(input_bytes):
     return base64.b64encode(input_bytes).decode("ascii")
 
 
+def _is_xpi_format(fmt):
+    if "omnija" in fmt or "langpack" in fmt:
+        return True
+    if fmt in ("privileged_webextension", "system_addon"):
+        return True
+    return False
+
+
 @time_function
 def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
     """Make a signing request object to pass to autograph."""
@@ -1020,7 +1036,7 @@ def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
             # https://github.com/mozilla-services/autograph/pull/166/files
             sign_req["options"]["pkcs7_digest"] = "SHA1"
 
-    if "omnija" in fmt or "langpack" in fmt:
+    if _is_xpi_format(fmt):
         sign_req.setdefault("options", {})
         # https://bugzilla.mozilla.org/show_bug.cgi?id=1533818#c9
         sign_req["options"]["id"] = extension_id
@@ -1057,6 +1073,7 @@ async def sign_with_autograph(
     if autograph_method not in {"file", "hash", "data"}:
         raise SigningScriptError(f"Unsupported autograph method: {autograph_method}")
 
+    keyid = keyid or server.key_id
     sign_req = make_signing_req(input_file, fmt, keyid, extension_id)
 
     url = f"{server.url}/sign/{autograph_method}"
