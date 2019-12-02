@@ -54,6 +54,9 @@ def test_task_cert_type_error(context):
     context.task = {"scopes": [TEST_CERT_TYPE, "project:releng:signing:cert:notdep"]}
     with pytest.raises(ScriptWorkerTaskException):
         stask.task_cert_type(context)
+    context.task = None
+    with pytest.raises(TaskVerificationError):
+        stask.task_cert_type(context)
 
 
 # task_signing_formats {{{1
