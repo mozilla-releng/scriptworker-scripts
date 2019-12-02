@@ -287,10 +287,6 @@ async def sign_xpi(context, orig_path, fmt):
     cert_type = task.task_cert_type(context)
     file_base, file_extension = os.path.splitext(orig_path)
 
-    a = get_autograph_config(
-        context.autograph_configs, cert_type, [fmt], raise_on_empty=True
-    )
-
     if file_extension not in (".xpi", ".zip"):
         raise SigningScriptError("Expected a .xpi")
 
