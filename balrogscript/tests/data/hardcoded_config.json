@@ -41,5 +41,5 @@
         }
     },
     "verbose": true,
-    "work_dir": "balrogscript/test/test_work_dir"
+    "work_dir": "tests/test_work_dir"
 }

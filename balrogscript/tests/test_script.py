@@ -7,8 +7,6 @@ import os
 import sys
 
 import balrogscript.script as bscript
-from balrogscript.test import (nightly_manifest, config, nightly_config,
-                               release_manifest, release_config)
 from balrogscript.task import (get_task, validate_task_schema, get_task_server)
 from balrogscript.script import setup_logging, main, setup_config
 
@@ -22,12 +20,6 @@ from balrogscript.submitter.cli import (
 )  # noqa: E402
 
 logging.basicConfig()
-
-assert nightly_config  # silence pyflakes
-assert release_config  # silence pyflakes
-assert config  # silence pyflakes
-assert nightly_manifest  # silence pyflakes
-assert release_manifest  # silence pyflakes
 
 BASE_DIR = os.path.dirname(__file__)
 
@@ -470,7 +462,7 @@ def test_invalid_args():
             assert e.type == SystemExit
             assert e.value.code == 2
 
-    args = ['balrogscript', 'balrogscript/test/data/hardcoded_config.json']
+    args = ['balrogscript', 'tests/data/hardcoded_config.json']
     with mock.patch.object(sys, 'argv', args):
         config = setup_config(None)
         assert config['artifact_dir'] == 'balrogscript/data/balrog_task_schema.json'

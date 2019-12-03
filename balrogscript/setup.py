@@ -16,11 +16,12 @@ setup(
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
     url="https://github.com/mozilla-releng/balrogscript",
-    packages=find_packages(),
+    packages=find_packages("src"),
     package_data={
         "balrogscript": ["data/*"],
         "": ["version.json"],
     },
+    package_dir={"": "src"},
     include_package_data=True,
     zip_safe=False,
     entry_points={
