@@ -1,29 +1,15 @@
 #!/usr/bin/env python
 """Balrog script"""
-from copy import deepcopy
 import json
 import logging
 import os
 import sys
+from copy import deepcopy
 
 from redo import retry  # noqa: E402
 
-from balrogscript.task import (
-    get_manifest,
-    get_task,
-    get_task_action,
-    get_task_server,
-    get_upstream_artifacts,
-    validate_task_schema,
-)
-from .submitter.cli import (
-    NightlySubmitterV4, ReleaseSubmitterV9,
-    ReleaseScheduler,
-    ReleaseCreatorV9,
-    ReleasePusher,
-    ReleaseStateUpdater,
-)
-
+from .submitter.cli import NightlySubmitterV4, ReleaseCreatorV9, ReleasePusher, ReleaseScheduler, ReleaseStateUpdater, ReleaseSubmitterV9
+from .task import get_manifest, get_task, get_task_action, get_task_server, get_upstream_artifacts, validate_task_schema
 
 log = logging.getLogger(__name__)
 
@@ -34,48 +20,45 @@ def create_locale_submitter(e, extra_suffix, auth0_secrets, config):
         log.info("Taskcluster Release style Balrog submission")
 
         submitter = ReleaseSubmitterV9(
-            api_root=config['api_root'], auth0_secrets=auth0_secrets,
-            dummy=config['dummy'],
-            suffix=e.get('blob_suffix', '') + extra_suffix,
+            api_root=config["api_root"], auth0_secrets=auth0_secrets, dummy=config["dummy"], suffix=e.get("blob_suffix", "") + extra_suffix
         )
 
         data = {
-            'platform': e['platform'],
-            'productName': e['appName'],
-            'appVersion': e['appVersion'],
-            'version': e['version'],
-            'build_number': e['build_number'],
-            'locale': e['locale'],
-            'hashFunction': e['hashType'],
-            'extVersion': e['extVersion'],
-            'buildID': e['buildid'],
-            'completeInfo': e['completeInfo'],
+            "platform": e["platform"],
+            "productName": e["appName"],
+            "appVersion": e["appVersion"],
+            "version": e["version"],
+            "build_number": e["build_number"],
+            "locale": e["locale"],
+            "hashFunction": e["hashType"],
+            "extVersion": e["extVersion"],
+            "buildID": e["buildid"],
+            "completeInfo": e["completeInfo"],
         }
-        if 'partialInfo' in e:
-            data['partialInfo'] = e['partialInfo']
+        if "partialInfo" in e:
+            data["partialInfo"] = e["partialInfo"]
         return submitter, data
 
     elif "tc_nightly" in e:
         log.info("Taskcluster Nightly style Balrog submission")
 
-        submitter = NightlySubmitterV4(api_root=config['api_root'],
-                                       auth0_secrets=auth0_secrets,
-                                       dummy=config['dummy'],
-                                       url_replacements=e.get('url_replacements', []))
+        submitter = NightlySubmitterV4(
+            api_root=config["api_root"], auth0_secrets=auth0_secrets, dummy=config["dummy"], url_replacements=e.get("url_replacements", [])
+        )
 
         data = {
-            'platform': e["platform"],
-            'buildID': e["buildid"],
-            'productName': e["appName"],
-            'branch': e["branch"],
-            'appVersion': e["appVersion"],
-            'locale': e["locale"],
-            'hashFunction': e['hashType'],
-            'extVersion': e["extVersion"],
-            'completeInfo': e['completeInfo'],
+            "platform": e["platform"],
+            "buildID": e["buildid"],
+            "productName": e["appName"],
+            "branch": e["branch"],
+            "appVersion": e["appVersion"],
+            "locale": e["locale"],
+            "hashFunction": e["hashType"],
+            "extVersion": e["extVersion"],
+            "completeInfo": e["completeInfo"],
         }
-        if 'partialInfo' in e:
-            data['partialInfo'] = e['partialInfo']
+        if "partialInfo" in e:
+            data["partialInfo"] = e["partialInfo"]
         return submitter, data
     else:
         raise RuntimeError("Unknown Balrog submission style. Check manifest.json")
@@ -89,7 +72,7 @@ def submit_locale(task, config, auth0_secrets):
     # Read the manifest from disk
     manifest = get_manifest(config, upstream_artifacts)
 
-    suffixes = task['payload'].get('suffixes', [''])
+    suffixes = task["payload"].get("suffixes", [""])
 
     for e in manifest:
         for suffix in suffixes:
@@ -109,18 +92,13 @@ def create_scheduler(**kwargs):
 
 def schedule(task, config, auth0_secrets):
     """Schedule a release to ship on balrog channel(s)"""
-    scheduler = create_scheduler(
-        api_root=config['api_root'],
-        auth0_secrets=auth0_secrets,
-        dummy=config['dummy'],
-        suffix=task['payload'].get('blob_suffix', ''),
-    )
+    scheduler = create_scheduler(api_root=config["api_root"], auth0_secrets=auth0_secrets, dummy=config["dummy"], suffix=task["payload"].get("blob_suffix", ""))
     args = [
-        task['payload']['product'].capitalize(),
-        task['payload']['version'],
-        task['payload']['build_number'],
-        task['payload']['publish_rules'],
-        task['payload']['release_eta'] or None,  # Send None if release_eta is ''
+        task["payload"]["product"].capitalize(),
+        task["payload"]["version"],
+        task["payload"]["build_number"],
+        task["payload"]["publish_rules"],
+        task["payload"]["release_eta"] or None,  # Send None if release_eta is ''
     ]
     # XXX optionally append background_rate if/when we want to support it
 
@@ -141,51 +119,50 @@ def create_pusher(**kwargs):
 def submit_toplevel(task, config, auth0_secrets):
     """Push a top-level release blob to balrog."""
     partials = {}
-    if task['payload'].get('partial_versions'):
-        for v in task['payload']['partial_versions'].split(','):
+    if task["payload"].get("partial_versions"):
+        for v in task["payload"]["partial_versions"].split(","):
             v = v.strip()  # we have whitespace after the comma
             version, build_number = v.split("build")
             partials[version] = {"buildNumber": build_number}
 
-    suffixes = list(task['payload'].get('update_line', {}).keys()) or ['']
+    suffixes = list(task["payload"].get("update_line", {}).keys()) or [""]
 
     for suffix in suffixes:
         creator = create_creator(
-            api_root=config['api_root'],
+            api_root=config["api_root"],
             auth0_secrets=auth0_secrets,
-            dummy=config['dummy'],
-            suffix=task['payload'].get('blob_suffix', '') + suffix,
-            complete_mar_filename_pattern=task['payload'].get('complete_mar_filename_pattern'),
-            complete_mar_bouncer_product_pattern=task['payload'].get('complete_mar_bouncer_product_pattern'),
+            dummy=config["dummy"],
+            suffix=task["payload"].get("blob_suffix", "") + suffix,
+            complete_mar_filename_pattern=task["payload"].get("complete_mar_filename_pattern"),
+            complete_mar_bouncer_product_pattern=task["payload"].get("complete_mar_bouncer_product_pattern"),
         )
 
-        retry(lambda: creator.run(
-            appVersion=task['payload']['app_version'],
-            productName=task['payload']['product'].capitalize(),
-            version=task['payload']['version'],
-            buildNumber=task['payload']['build_number'],
-            updateChannels=task['payload']['channel_names'],
-            ftpServer=task['payload']['archive_domain'],
-            bouncerServer=task['payload']['download_domain'],
-            enUSPlatforms=task['payload']['platforms'],
-            hashFunction='sha512',
-            partialUpdates=partials,
-            requiresMirrors=task['payload']['require_mirrors'],
-            updateLine=task['payload'].get('update_line', {}).get(suffix),
-        ))
+        retry(
+            lambda: creator.run(
+                appVersion=task["payload"]["app_version"],
+                productName=task["payload"]["product"].capitalize(),
+                version=task["payload"]["version"],
+                buildNumber=task["payload"]["build_number"],
+                updateChannels=task["payload"]["channel_names"],
+                ftpServer=task["payload"]["archive_domain"],
+                bouncerServer=task["payload"]["download_domain"],
+                enUSPlatforms=task["payload"]["platforms"],
+                hashFunction="sha512",
+                partialUpdates=partials,
+                requiresMirrors=task["payload"]["require_mirrors"],
+                updateLine=task["payload"].get("update_line", {}).get(suffix),
+            )
+        )
 
-    pusher = create_pusher(
-        api_root=config['api_root'],
-        auth0_secrets=auth0_secrets,
-        dummy=config['dummy'],
-        suffix=task['payload'].get('blob_suffix', ''),
+    pusher = create_pusher(api_root=config["api_root"], auth0_secrets=auth0_secrets, dummy=config["dummy"], suffix=task["payload"].get("blob_suffix", ""))
+    retry(
+        lambda: pusher.run(
+            productName=task["payload"]["product"].capitalize(),
+            version=task["payload"]["version"],
+            build_number=task["payload"]["build_number"],
+            rule_ids=task["payload"]["rules_to_update"],
+        )
     )
-    retry(lambda: pusher.run(
-        productName=task['payload']['product'].capitalize(),
-        version=task['payload']['version'],
-        build_number=task['payload']['build_number'],
-        rule_ids=task['payload']['rules_to_update'],
-    ))
 
 
 # set_readonly {{{1
@@ -194,15 +171,8 @@ def create_state_updater(**kwargs):
 
 
 def set_readonly(task, config, auth0_secrets):
-    state_updater = create_state_updater(
-        api_root=config['api_root'],
-        auth0_secrets=auth0_secrets,
-    )
-    args = [
-        task['payload']['product'].capitalize(),
-        task['payload']['version'],
-        task['payload']['build_number'],
-    ]
+    state_updater = create_state_updater(api_root=config["api_root"], auth0_secrets=auth0_secrets)
+    args = [task["payload"]["product"].capitalize(), task["payload"]["version"], task["payload"]["build_number"]]
     retry(lambda: state_updater.run(*args))
 
 
@@ -218,22 +188,21 @@ def setup_logging(verbose=False):
     if verbose:
         log_level = logging.DEBUG
 
-    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
-                        level=log_level)
+    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=log_level)
 
 
 # update_config {{{1
-def update_config(config, server='default'):
+def update_config(config, server="default"):
     config = deepcopy(config)
 
-    config['api_root'] = config['server_config'][server]['api_root']
+    config["api_root"] = config["server_config"][server]["api_root"]
     auth0_secrets = dict(
-        domain=config['server_config'][server]['auth0_domain'],
-        client_id=config['server_config'][server]['auth0_client_id'],
-        client_secret=config['server_config'][server]['auth0_client_secret'],
-        audience=config['server_config'][server]['auth0_audience'],
+        domain=config["server_config"][server]["auth0_domain"],
+        client_id=config["server_config"][server]["auth0_client_id"],
+        client_secret=config["server_config"][server]["auth0_client_secret"],
+        audience=config["server_config"][server]["auth0_audience"],
     )
-    del(config['server_config'])
+    del config["server_config"]
     return auth0_secrets, config
 
 
@@ -255,14 +224,14 @@ def setup_config(config_path):
             usage()
         config_path = sys.argv[1]
 
-    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    data_dir = os.path.join(os.path.dirname(__file__), "data")
     config = {
-        'schema_files': {
-            'submit-locale': os.path.join(data_dir, 'balrog_submit-locale_schema.json'),
-            'submit-toplevel': os.path.join(data_dir, 'balrog_submit-toplevel_schema.json'),
-            'schedule': os.path.join(data_dir, 'balrog_schedule_schema.json'),
-            'set-readonly': os.path.join(data_dir, 'balrog_set-readonly_schema.json'),
-        },
+        "schema_files": {
+            "submit-locale": os.path.join(data_dir, "balrog_submit-locale_schema.json"),
+            "submit-toplevel": os.path.join(data_dir, "balrog_submit-toplevel_schema.json"),
+            "schedule": os.path.join(data_dir, "balrog_schedule_schema.json"),
+            "set-readonly": os.path.join(data_dir, "balrog_set-readonly_schema.json"),
+        }
     }
     config.update(load_config(config_path))
     return config
@@ -272,7 +241,7 @@ def setup_config(config_path):
 def main(config_path=None):
     # TODO use scriptworker's sync_main(...)
     config = setup_config(config_path)
-    setup_logging(config['verbose'])
+    setup_logging(config["verbose"])
 
     task = get_task(config)
     action = get_task_action(task, config)
@@ -281,14 +250,14 @@ def main(config_path=None):
     server = get_task_server(task, config)
     auth0_secrets, config = update_config(config, server)
 
-    if action == 'submit-toplevel':
+    if action == "submit-toplevel":
         submit_toplevel(task, config, auth0_secrets)
-    elif action == 'schedule':
+    elif action == "schedule":
         schedule(task, config, auth0_secrets)
-    elif action == 'set-readonly':
+    elif action == "set-readonly":
         set_readonly(task, config, auth0_secrets)
     else:
         submit_locale(task, config, auth0_secrets)
 
 
-__name__ == '__main__' and main()
+__name__ == "__main__" and main()
