@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from balrogscript.test import config, nightly_config, release_config
 from balrogscript.task import (
     get_manifest,
     get_task,
@@ -9,10 +8,6 @@ from balrogscript.task import (
     get_task_server,
     get_upstream_artifacts,
 )
-
-assert nightly_config  # silence pyflakes
-assert release_config  # silece pyflakes
-assert config  # silence pyflakes
 
 
 @pytest.mark.parametrize("scopes,expected,raises", ((
