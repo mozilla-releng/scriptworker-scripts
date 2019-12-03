@@ -1,3 +1,29 @@
+[tool.black]
+line-length = 160
+target-version = ["py37", "py38"]
+include = '\.(wsgi|pyi?)$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | \.cache
+  | \.cache_py3
+  | _build
+  | buck-out
+  | build
+  | dist
+  | ui
+)/
+'''
+
+[tool.isort]
+line_length = 160
+known_first_party = 'balrogscript'
+
 [tool.towncrier]
 package = "balrogscript"
 package_dir = "."
