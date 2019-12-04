@@ -4,9 +4,6 @@ import tempfile
 
 from scriptworker.exceptions import TaskVerificationError
 
-from beetmoverscript.test import (context, get_fake_valid_task,
-                                  get_fake_checksums_manifest,
-                                  get_test_jinja_env)
 import beetmoverscript.utils as butils
 from beetmoverscript.utils import (generate_beetmover_manifest, get_hash,
                                    write_json, generate_beetmover_template_args,
@@ -24,9 +21,7 @@ from beetmoverscript.constants import (
     BUILDHUB_ARTIFACT
 )
 
-
-assert context  # silence pyflakes
-
+from . import get_fake_valid_task, get_fake_checksums_manifest, get_test_jinja_env
 
 # get_hash {{{1
 def test_get_hash():
