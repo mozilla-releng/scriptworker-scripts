@@ -95,6 +95,9 @@ def test_get_default_config():
         'mark_as_shipped_schema_file': os.path.join(
             data_dir, 'mark_as_shipped_task_schema.json'
         ),
+        'create_new_release_schema_file': os.path.join(
+            data_dir, 'create_new_release_task_schema.json'
+        ),
     }
 
 

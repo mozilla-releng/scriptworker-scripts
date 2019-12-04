@@ -3,6 +3,7 @@
 """
 import logging
 import os
+import sys
 
 from scriptworker import client
 
@@ -12,7 +13,6 @@ from shipitscript.task import (
     get_task_action,
     validate_task_schema,
 )
-from shipitscript.utils import get_buildnum_from_version
 
 log = logging.getLogger(__name__)
 
@@ -38,38 +38,36 @@ def mark_as_shipped_action(context):
 
 
 def create_new_release_action(context):
-    """Determine if there is a shippable release and create it if so in Shipit """
+    """Determine if there is a shippable release and create it if so in Shipit"""
     payload = context.task['payload']
     shipit_config = context.ship_it_instance_config
-    # TODO actually include these in the payload from taskgraph
-    product = payload["product"]
-    channel = payload["channel"]
-    repo = payload["repo"]
-    phase = payload["phase"]  # release phase we want to trigger
+    product = payload['product']
+    branch = payload['branch']
+    phase = payload['phase']
+    version = payload['version']
+    cron_revision = payload['cron_revision']  # rev that cron triggered on
 
-    log.info(
-        'Determining most recent shipped revision and next version / buildnum to release'
-    )
+    log.info('Determining most recent shipped revision based off we released')
     last_shipped_revision = ship_actions.get_most_recent_shipped_revision(
-        product, channel, shipit_config
+        shipit_config, product, branch,
     )
-    next_version = ship_actions.get_next_release_version(
-        product, channel, shipit_config
-    )
-    log.info('Ensuring next version is a new version and not a buildnum increment')
-    if get_buildnum_from_version(next_version) != 1:
-        # TODO quit early, mark task as green though
-        pass
+    if not last_shipped_revision:
+        log.error("Something is broken under the sun if no shipped revision")
+        sys.exit(1)
+    log.info(f'Last shipped revision is {last_shipped_revision}')
+
     log.info('Determining most recent shippable revision')
     shippable_revision = ship_actions.get_shippable_revision(
-        repo, last_shipped_revision
+        branch, last_shipped_revision, cron_revision,
     )
     if not shippable_revision:
-        # TODO quit early, mark task as green though
-        pass
-    log.info('create a new release')
-    ship_actions.create_new_release(
-        product, repo, channel, next_version, shippable_revision, phase, shipit_config
+        log.info("No valid shippable revisison found, silent exit ...")
+        return
+    log.info(f'The shippable revision found is {shippable_revision}')
+
+    log.info('Starting a new release in Ship-it ...')
+    ship_actions.start_new_release(
+        shipit_config, product, branch, version, shippable_revision, phase,
     )
 
 
@@ -90,6 +88,9 @@ def get_default_config():
         'verbose': False,
         'mark_as_shipped_schema_file': os.path.join(
             data_dir, 'mark_as_shipped_task_schema.json'
+        ),
+        'create_new_release_schema_file': os.path.join(
+            data_dir, 'create_new_release_task_schema.json'
         ),
     }
 

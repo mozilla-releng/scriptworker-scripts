@@ -66,7 +66,3 @@ def check_release_has_values_v2(release_api, release_name, headers, **kwargs):
             raise ScriptWorkerTaskException(err_msg)
 
     log.info("All release fields have been correctly updated in Ship-it!")
-
-
-def get_buildnum_from_version(next_version):
-    pass

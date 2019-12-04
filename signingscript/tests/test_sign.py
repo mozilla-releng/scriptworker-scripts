@@ -522,24 +522,37 @@ async def test_sign_macapp(context, mocker, filename, expected):
     assert await sign.sign_macapp(context, filename, "blah") == expected
 
 
-# sign_langpack {{{1
+# sign_xpi {{{1
+@pytest.mark.parametrize("fmt, is_xpi", (
+    ("foo_omnija", True),
+    ("langpack_foo", True),
+    ("privileged_webextension", True),
+    ("unknown", False),
+))
+def test_is_xpi_format(fmt, is_xpi):
+    assert sign._is_xpi_format(fmt) is is_xpi
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "filename,id,raises",
     (
-        ("foo.zip", "foo-id@firefox.mozilla.org", pytest.raises(SigningScriptError)),
+        ("foo.blah", "foo-id@firefox.mozilla.org", pytest.raises(SigningScriptError)),
         ("/path/to/foo.xpi", "foo-id@firefox.mozilla.org", does_not_raise()),
         ("foo.xpi", "foo-id@devedition.mozilla.org", does_not_raise()),
     ),
 )
-async def test_sign_langpack(context, mocker, filename, id, raises):
+async def test_sign_xpi(context, mocker, filename, id, raises):
     async def mocked_signer(ctx, fname, fmt, extension_id=None):
         assert extension_id == id
+    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
 
-    mocker.patch.object(sign, "_langpack_id", return_value=id)
+    mocker.patch.object(sign, "get_autograph_config")
+    mocker.patch.object(sign, "_extension_id", return_value=id)
+    mocker.patch.object(sign, "_extension_id", return_value=id)
     mocker.patch.object(sign, "sign_file_with_autograph", new=mocked_signer)
     with raises:
-        assert await sign.sign_langpack(context, filename, "blah") == filename
+        assert await sign.sign_xpi(context, filename, "autograph_langpack") == filename
 
 
 # sign_widevine {{{1
@@ -950,17 +963,17 @@ def test_signreq_task_langpack():
 @pytest.mark.asyncio
 async def test_bad_autograph_method():
     with pytest.raises(SigningScriptError):
-        await sign.sign_with_autograph(None, None, None, None, "badformat")
+        await sign.sign_with_autograph(None, None, None, None, "gpg")
 
 
 @pytest.mark.asyncio
 async def test_bad_autograph_format(context):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     with pytest.raises(SigningScriptError):
-        await sign.sign_file_with_autograph(context, "", "badformat")
+        await sign.sign_file_with_autograph(context, "", "gpg")
 
     with pytest.raises(SigningScriptError):
-        await sign.sign_hash_with_autograph(context, "", "badformat")
+        await sign.sign_hash_with_autograph(context, "", "gpg")
 
 
 @pytest.mark.asyncio
@@ -1170,9 +1183,15 @@ def test_langpack_id_regex():
     assert sign.LANGPACK_RE.match("invalid-langpack-id@example.com") is None
 
 
-def test_langpack_id():
+def test_extension_id():
     filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
-    assert sign._langpack_id(filename) == "langpack-en-CA@firefox.mozilla.org"
+    assert sign._extension_id(filename, "autograph_langpack") == "langpack-en-CA@firefox.mozilla.org"
+
+
+def test_extension_id_missing_manifest():
+    filename = os.path.join(TEST_DATA_DIR, "test.zip")
+    with pytest.raises(SigningScriptError):
+        sign._extension_id(filename, "autograph_langpack")
 
 
 @pytest.mark.parametrize(
@@ -1244,7 +1263,7 @@ def test_langpack_id():
         ),
     ),
 )
-def test_langpack_id_raises(json_, raises, mocker):
+def test_extension_id_raises(json_, raises, mocker):
     filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
 
     def load_manifest(*args, **kwargs):
@@ -1255,7 +1274,7 @@ def test_langpack_id_raises(json_, raises, mocker):
 
     mocker.patch.object(sign.json, "load", load_manifest)
     with raises:
-        id = sign._langpack_id(filename)
+        id = sign._extension_id(filename, "autograph_langpack")
         assert id == json_["applications"]["gecko"]["id"]
 
 
