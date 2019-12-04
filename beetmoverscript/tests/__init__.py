@@ -1,4 +1,5 @@
 import jinja2
+
 from beetmoverscript.utils import load_json
 
 
@@ -12,15 +13,15 @@ async def noop_async(*args, **kwargs):
 
 def get_fake_valid_config():
     config = {
-        'release_schema_file': 'src/beetmoverscript/data/release_beetmover_task_schema.json',
-        'schema_file': 'src/beetmoverscript/data/beetmover_task_schema.json',
-        'maven_schema_file': 'src/beetmoverscript/data/maven_beetmover_task_schema.json',
+        "release_schema_file": "src/beetmoverscript/data/release_beetmover_task_schema.json",
+        "schema_file": "src/beetmoverscript/data/beetmover_task_schema.json",
+        "maven_schema_file": "src/beetmoverscript/data/maven_beetmover_task_schema.json",
     }
     config.update(load_json(path="tests/fake_config.json"))
     return config
 
 
-def get_fake_valid_task(taskjson='task.json'):
+def get_fake_valid_task(taskjson="task.json"):
     return load_json(path="tests/test_work_dir/{}".format(taskjson))
 
 
@@ -32,5 +33,4 @@ def get_fake_checksums_manifest():
 
 
 def get_test_jinja_env():
-    return jinja2.Environment(loader=jinja2.PackageLoader("tests"),
-                              undefined=jinja2.StrictUndefined)
+    return jinja2.Environment(loader=jinja2.PackageLoader("tests"), undefined=jinja2.StrictUndefined)
