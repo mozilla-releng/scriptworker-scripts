@@ -59,6 +59,7 @@ def return_false_sync(*args):
 
 def get_fake_valid_config():
     data_dir = os.path.join(os.path.dirname(bouncerscript.__file__), 'data')
+    print(data_dir)
     config = {
         'schema_files': {
             'submission': os.path.join(data_dir, 'bouncer_submission_task_schema.json'),
@@ -66,12 +67,12 @@ def get_fake_valid_config():
             'locations': os.path.join(data_dir, 'bouncer_locations_task_schema.json'),
         }
     }
-    config.update(load_json(path="bouncerscript/test/fake_config.json"))
+    config.update(load_json(path="tests/fake_config.json"))
     return config
 
 
 def get_fake_valid_task(jobtype):
-    return load_json(path="bouncerscript/test/test_work_dir/task_{}.json".format(jobtype))
+    return load_json(path="tests/test_work_dir/task_{}.json".format(jobtype))
 
 
 @pytest.yield_fixture(scope='function')

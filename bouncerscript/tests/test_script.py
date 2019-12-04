@@ -6,12 +6,6 @@ import bouncerscript.script as bscript
 from bouncerscript.script import (
     main, bouncer_submission, bouncer_aliases, async_main, bouncer_locations
 )
-from bouncerscript.test import (
-    submission_context, noop_async, aliases_context, return_true_sync,
-    toggled_boolean_async, return_empty_list_async,
-    locations_context, return_true_async, return_false_async, counted,
-    noop_sync, raise_sync
-)
 from scriptworker.test import (
     fake_session,
 )
@@ -19,6 +13,12 @@ from scriptworker.exceptions import (
     ScriptWorkerTaskException, TaskVerificationError
 )
 
+from . import (
+    submission_context, noop_async, aliases_context, return_true_sync,
+    toggled_boolean_async, return_empty_list_async,
+    locations_context, return_true_async, return_false_async, counted,
+    noop_sync, raise_sync
+)
 
 assert fake_session  # silence flake8
 assert submission_context  # silence flake8
@@ -32,11 +32,11 @@ def test_main(submission_context, fake_session):
         raise ScriptWorkerTaskException("This is wrong, the answer is 42")
 
     with mock.patch('bouncerscript.script.async_main', new=noop_async):
-        main(config_path='bouncerscript/test/fake_config.json')
+        main(config_path='tests/fake_config.json')
 
     with mock.patch('bouncerscript.script.async_main', new=fake_async_main_with_exception):
         try:
-            main(config_path='bouncerscript/test/fake_config.json')
+            main(config_path='tests/fake_config.json')
         except SystemExit as exc:
             assert exc.code == 1
 

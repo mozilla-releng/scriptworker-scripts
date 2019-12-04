@@ -1,5 +1,5 @@
 {
-        "work_dir": "bouncerscript/test/test_work_dir",
+        "work_dir": "tests/test_work_dir",
         "verbose": true,
         "taskcluster_scope_prefix": "project:releng:bouncer:",
         "bouncer_config": {
@@ -12,8 +12,8 @@
       },
 
       "schema_files": {
-            "submission": "bouncerscript/data/bouncer_submission_task_schema.json",
-            "aliases": "bouncerscript/data/bouncer_aliases_task_schema.json",
-            "locations": "bouncerscript/data/bouncer_locations_task_schema.json"
+            "submission": "src/bouncerscript/data/bouncer_submission_task_schema.json",
+            "aliases": "src/bouncerscript/data/bouncer_aliases_task_schema.json",
+            "locations": "src/bouncerscript/data/bouncer_locations_task_schema.json"
       }
 }

@@ -14,8 +14,8 @@ from bouncerscript.task import (
     check_location_path_matches_destination, check_versions_are_successive,
     check_version_matches_nightly_regex
 )
-from bouncerscript.test import submission_context as context
-from bouncerscript.test import aliases_context, locations_context
+from . import submission_context as context
+from . import aliases_context, locations_context
 
 
 assert context  # silence pyflakes
