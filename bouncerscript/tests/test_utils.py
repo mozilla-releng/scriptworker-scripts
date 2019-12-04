@@ -16,8 +16,8 @@ from bouncerscript.utils import (
     get_nightly_version, get_version_bumped_path
 )
 from bouncerscript.task import get_task_action, get_task_server
-from bouncerscript.test import submission_context as context
-from bouncerscript.test import (
+from . import submission_context as context
+from . import (
     noop_async, fake_ClientError_throwing_session,
     fake_TimeoutError_throwing_session, load_json
 )
