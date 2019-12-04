@@ -29,19 +29,15 @@ from beetmoverscript.constants import (
     PARTNER_REPACK_PUBLIC_REGEXES,
 )
 from beetmoverscript.task import get_upstream_artifacts, get_release_props
-from beetmoverscript.test import (
-    context, get_fake_valid_config, get_fake_valid_task,
-    noop_async, noop_sync, get_test_jinja_env,
-)
 from beetmoverscript.utils import generate_beetmover_manifest, is_promotion_action
 from scriptworker.context import Context
 from scriptworker.exceptions import (ScriptWorkerRetryException,
                                      ScriptWorkerTaskException)
 from scriptworker.test import fake_session, fake_session_500
 
-assert context  # silence flake8
+from . import get_fake_valid_config, get_fake_valid_task, noop_async, noop_sync, get_test_jinja_env
+
 assert fake_session, fake_session_500  # silence flake8
-assert noop_async  # silence flake8
 
 
 # push_to_partner {{{1
@@ -319,7 +315,7 @@ async def test_put_success(fake_session):
     context.session = fake_session
     response = await put(
         context, url=URL('https://foo.com/packages/fake.package'), headers={},
-        abs_filename='beetmoverscript/test/fake_artifact.json', session=fake_session
+        abs_filename='tests/fake_artifact.json', session=fake_session
     )
     assert response.status == 200
     assert response.resp == [b'asdf', b'asdf']
@@ -333,7 +329,7 @@ async def test_put_failure(fake_session_500):
     with pytest.raises(ScriptWorkerRetryException):
         await put(
             context, url=URL('https://foo.com/packages/fake.package'), headers={},
-            abs_filename='beetmoverscript/test/fake_artifact.json', session=fake_session_500
+            abs_filename='tests/fake_artifact.json', session=fake_session_500
         )
 
 
@@ -429,22 +425,22 @@ async def test_move_beets(task_filename, partials, mocker):
 
     expected_sources = [
         os.path.abspath(
-            'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.mozinfo.json'
+            'tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.mozinfo.json'
         ),
         os.path.abspath(
-            'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt',
+            'tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt',
         ),
         os.path.abspath(
-            'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target_info.txt'
+            'tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target_info.txt'
         ),
         os.path.abspath(
-            'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.test_packages.json'
+            'tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.test_packages.json'
         ),
         os.path.abspath(
-            'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/buildhub.json'
+            'tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/buildhub.json'
         ),
         os.path.abspath(
-            'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.apk'
+            'tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.apk'
         )
     ]
     expected_destinations = [
@@ -607,7 +603,7 @@ async def test_move_beet(update_manifest, action):
     context.release_props = context.task['payload']['releaseProperties']
     locale = "sample-locale"
 
-    target_source = 'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt'
+    target_source = 'tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt'
     pretty_name = 'fake-99.0a1.en-US.target.txt'
     target_destinations = (
         'pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
@@ -616,7 +612,7 @@ async def test_move_beet(update_manifest, action):
     expected_upload_args = [
         ('pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt',
          'pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt'),
-        'beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt'
+        'tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt'
     ]
     expected_balrog_manifest = {
         'hash': '73b91c3625d70e9ba1992f119bdfd3fba85041e6f804a985a18efe06ebb1d4147fb044ac06b28773130b4887dd8b5b3bc63958e1bd74003077d8bc2a3909416b',
@@ -786,10 +782,10 @@ def test_main(fake_session):
         raise ScriptWorkerTaskException("This is wrong, the answer is 42")
 
     with mock.patch('beetmoverscript.script.async_main', new=fake_async_main):
-        main(config_path='beetmoverscript/test/fake_config.json')
+        main(config_path='tests/fake_config.json')
 
     with mock.patch('beetmoverscript.script.async_main', new=fake_async_main_with_exception):
         try:
-            main(config_path='beetmoverscript/test/fake_config.json')
+            main(config_path='tests/fake_config.json')
         except SystemExit as exc:
             assert exc.code == 1

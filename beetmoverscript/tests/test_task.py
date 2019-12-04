@@ -2,9 +2,9 @@ import json
 import os
 import pytest
 import tempfile
-from beetmoverscript.test import (
-    context, get_fake_valid_task, get_fake_valid_config, get_fake_checksums_manifest
-)
+from scriptworker.context import Context
+from scriptworker.exceptions import ScriptWorkerTaskException
+
 from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
     get_upstream_artifacts, get_upstream_artifacts_with_zip_extract_param,
@@ -12,10 +12,8 @@ from beetmoverscript.task import (
     validate_bucket_paths, get_release_props, is_custom_checksums_task,
     get_taskId_from_full_path, get_schema_key_by_action
 )
-from scriptworker.context import Context
-from scriptworker.exceptions import ScriptWorkerTaskException
 
-assert context  # silence pyflakes
+from . import get_fake_valid_task, get_fake_valid_config, get_fake_checksums_manifest
 
 
 # get_schema_key_by_action {{{1
