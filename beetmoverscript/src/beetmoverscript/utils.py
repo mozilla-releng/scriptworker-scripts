@@ -1,29 +1,32 @@
-import arrow
-from copy import deepcopy
 import hashlib
-import jinja2
 import json
 import logging
 import os
 import pprint
 import re
-import yaml
+from copy import deepcopy
 
-from mozilla_version.maven import MavenVersion
+import arrow
+import jinja2
+import yaml
 from mozilla_version.gecko import FirefoxVersion
+from mozilla_version.maven import MavenVersion
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.constants import (
     HASH_BLOCK_SIZE,
-    RELEASE_ACTIONS, PROMOTION_ACTIONS, MAVEN_ACTIONS, PRODUCT_TO_PATH,
-    NORMALIZED_FILENAME_PLATFORMS, PARTNER_REPACK_ACTIONS,
+    MAVEN_ACTIONS,
+    NORMALIZED_FILENAME_PLATFORMS,
+    PARTNER_REPACK_ACTIONS,
+    PRODUCT_TO_PATH,
+    PROMOTION_ACTIONS,
+    RELEASE_ACTIONS,
 )
 
 log = logging.getLogger(__name__)
 
 
-JINJA_ENV = jinja2.Environment(loader=jinja2.PackageLoader("beetmoverscript"),
-                               undefined=jinja2.StrictUndefined)
+JINJA_ENV = jinja2.Environment(loader=jinja2.PackageLoader("beetmoverscript"), undefined=jinja2.StrictUndefined)
 
 
 def get_hash(filepath, hash_type="sha512"):
@@ -94,14 +97,14 @@ def is_partner_private_task(context):
     """Function to return boolean if we're considering a public partner task.
     Does that by checking the action type and presence of a flag in payload
     """
-    return (is_partner_action(context.action) and 'partner' in context.bucket)
+    return is_partner_action(context.action) and "partner" in context.bucket
 
 
 def is_partner_public_task(context):
     """Function to return boolean if we're considering a private partner task.
     Does that by checking the action type and absence of a flag in payload
     """
-    return (is_partner_action(context.action) and 'partner' not in context.bucket)
+    return is_partner_action(context.action) and "partner" not in context.bucket
 
 
 def get_product_name(appName, platform):
@@ -123,18 +126,18 @@ def generate_beetmover_template_args(context):
     if is_maven_action(context.action):
         return _generate_beetmover_template_args_maven(task, release_props)
 
-    upload_date = task['payload']['upload_date']
+    upload_date = task["payload"]["upload_date"]
     args = []
     try:
         upload_date = float(upload_date)
     except ValueError:
-        upload_date = upload_date.split('/')[-1]
-        args.append('YYYY-MM-DD-HH-mm-ss')
+        upload_date = upload_date.split("/")[-1]
+        args.append("YYYY-MM-DD-HH-mm-ss")
 
     tmpl_args = {
         # payload['upload_date'] is a timestamp defined by params['pushdate']
         # in mach taskgraph
-        "upload_date": arrow.get(upload_date, *args).format('YYYY/MM/YYYY-MM-DD-HH-mm-ss'),
+        "upload_date": arrow.get(upload_date, *args).format("YYYY/MM/YYYY-MM-DD-HH-mm-ss"),
         "version": release_props["appVersion"],
         "branch": release_props["branch"],
         "product": release_props["appName"],
@@ -142,39 +145,32 @@ def generate_beetmover_template_args(context):
         "platform": release_props["platform"],
         "buildid": release_props["buildid"],
         "partials": get_partials_props(task),
-        "filename_platform": NORMALIZED_FILENAME_PLATFORMS.get(release_props["stage_platform"],
-                                                               release_props["stage_platform"]),
+        "filename_platform": NORMALIZED_FILENAME_PLATFORMS.get(release_props["stage_platform"], release_props["stage_platform"]),
     }
 
-    if (is_promotion_action(context.action) or
-        is_release_action(context.action) or
-            is_partner_action(context.action)):
-        tmpl_args["build_number"] = task['payload']['build_number']
-        tmpl_args["version"] = task['payload']['version']
+    if is_promotion_action(context.action) or is_release_action(context.action) or is_partner_action(context.action):
+        tmpl_args["build_number"] = task["payload"]["build_number"]
+        tmpl_args["version"] = task["payload"]["version"]
 
     # e.g. action = 'push-to-candidates' or 'push-to-nightly'
-    tmpl_bucket = context.action.split('-')[-1]
+    tmpl_bucket = context.action.split("-")[-1]
 
-    locales_in_upstream_artifacts = [
-        upstream_artifact['locale']
-        for upstream_artifact in task['payload']['upstreamArtifacts']
-        if 'locale' in upstream_artifact
-    ]
+    locales_in_upstream_artifacts = [upstream_artifact["locale"] for upstream_artifact in task["payload"]["upstreamArtifacts"] if "locale" in upstream_artifact]
     uniques_locales_in_upstream_artifacts = sorted(list(set(locales_in_upstream_artifacts)))
 
-    if 'locale' in task['payload'] and uniques_locales_in_upstream_artifacts:
-        _check_locale_consistency(task['payload']['locale'], uniques_locales_in_upstream_artifacts)
-        tmpl_args['locales'] = uniques_locales_in_upstream_artifacts
+    if "locale" in task["payload"] and uniques_locales_in_upstream_artifacts:
+        _check_locale_consistency(task["payload"]["locale"], uniques_locales_in_upstream_artifacts)
+        tmpl_args["locales"] = uniques_locales_in_upstream_artifacts
     elif uniques_locales_in_upstream_artifacts:
-        tmpl_args['locales'] = uniques_locales_in_upstream_artifacts
-    elif 'locale' in task['payload']:
-        tmpl_args['locales'] = [task['payload']['locale']]
+        tmpl_args["locales"] = uniques_locales_in_upstream_artifacts
+    elif "locale" in task["payload"]:
+        tmpl_args["locales"] = [task["payload"]["locale"]]
 
-    product_name = get_product_name(
-        release_props["appName"].lower(), release_props["stage_platform"])
-    if tmpl_args.get('locales') and (
-            # we only apply the repacks template if not english or android "multi" locale
-            set(tmpl_args.get('locales')).isdisjoint({'en-US', 'multi'})):
+    product_name = get_product_name(release_props["appName"].lower(), release_props["stage_platform"])
+    if tmpl_args.get("locales") and (
+        # we only apply the repacks template if not english or android "multi" locale
+        set(tmpl_args.get("locales")).isdisjoint({"en-US", "multi"})
+    ):
         tmpl_args["template_key"] = "%s_%s_repacks" % (product_name, tmpl_bucket)
     else:
         tmpl_args["template_key"] = "%s_%s" % (product_name, tmpl_bucket)
@@ -183,42 +179,31 @@ def generate_beetmover_template_args(context):
 
 
 def _generate_beetmover_template_args_maven(task, release_props):
-    tmpl_args = {
-        'artifact_id': task['payload']['artifact_id'],
-        'template_key': 'maven_{}'.format(release_props['appName']),
-    }
+    tmpl_args = {"artifact_id": task["payload"]["artifact_id"], "template_key": "maven_{}".format(release_props["appName"])}
 
     # Geckoview follows the FirefoxVersion pattern
-    if release_props.get('appName') == 'geckoview':
-        payload_version = FirefoxVersion.parse(task['payload']['version'])
+    if release_props.get("appName") == "geckoview":
+        payload_version = FirefoxVersion.parse(task["payload"]["version"])
         # Change version number to major.minor.buildId because that's what the build task produces
-        version = [
-            payload_version.major_number,
-            payload_version.minor_number,
-            release_props['buildid'],
-        ]
+        version = [payload_version.major_number, payload_version.minor_number, release_props["buildid"]]
     else:
-        payload_version = MavenVersion.parse(task['payload']['version'])
-        version = [
-            payload_version.major_number,
-            payload_version.minor_number,
-            payload_version.patch_number,
-        ]
+        payload_version = MavenVersion.parse(task["payload"]["version"])
+        version = [payload_version.major_number, payload_version.minor_number, payload_version.patch_number]
 
     if any(number is None for number in version):
-        raise TaskVerificationError('At least one digit is undefined. Got: {}'.format(version))
-    tmpl_args['version'] = '.'.join(str(n) for n in version)
+        raise TaskVerificationError("At least one digit is undefined. Got: {}".format(version))
+    tmpl_args["version"] = ".".join(str(n) for n in version)
 
     # XXX: some appservices maven.zip files have a different structure,
     # encompassing only `pom` and `jar` files. We toggle that behavior in the
     # mapping by using this flag
-    tmpl_args['is_jar'] = task['payload'].get('is_jar')
+    tmpl_args["is_jar"] = task["payload"].get("is_jar")
 
     if isinstance(payload_version, MavenVersion) and payload_version.is_snapshot:
-        tmpl_args['snapshot_version'] = payload_version
-        tmpl_args['date_timestamp'] = "{{date_timestamp}}"
-        tmpl_args['clock_timestamp'] = "{{clock_timestamp}}"
-        tmpl_args['build_number'] = "{{build_number}}"
+        tmpl_args["snapshot_version"] = payload_version
+        tmpl_args["date_timestamp"] = "{{date_timestamp}}"
+        tmpl_args["clock_timestamp"] = "{{clock_timestamp}}"
+        tmpl_args["build_number"] = "{{build_number}}"
 
     return tmpl_args
 
@@ -227,14 +212,18 @@ def _check_locale_consistency(locale_in_payload, uniques_locales_in_upstream_art
     if len(uniques_locales_in_upstream_artifacts) > 1:
         raise TaskVerificationError(
             '`task.payload.locale` is defined ("{}") but too many locales set in \
-`task.payload.upstreamArtifacts` ({})'.format(locale_in_payload, uniques_locales_in_upstream_artifacts)
+`task.payload.upstreamArtifacts` ({})'.format(
+                locale_in_payload, uniques_locales_in_upstream_artifacts
+            )
         )
     elif len(uniques_locales_in_upstream_artifacts) == 1:
         locale_in_upstream_artifacts = uniques_locales_in_upstream_artifacts[0]
         if locale_in_payload != locale_in_upstream_artifacts:
             raise TaskVerificationError(
                 '`task.payload.locale` ("{}") does not match the one set in \
-`task.payload.upstreamArtifacts` ("{}")'.format(locale_in_payload, locale_in_upstream_artifacts)
+`task.payload.upstreamArtifacts` ("{}")'.format(
+                    locale_in_payload, locale_in_upstream_artifacts
+                )
             )
 
 
@@ -245,11 +234,11 @@ def generate_beetmover_manifest(context):
     """
     tmpl_args = generate_beetmover_template_args(context)
 
-    tmpl_name = '{}.yml'.format(tmpl_args["template_key"])
+    tmpl_name = "{}.yml".format(tmpl_args["template_key"])
     jinja_env = JINJA_ENV
     tmpl = jinja_env.get_template(tmpl_name)
 
-    log.info('generating manifest from: {}'.format(tmpl.filename))
+    log.info("generating manifest from: {}".format(tmpl.filename))
 
     manifest = yaml.safe_load(tmpl.render(**tmpl_args))
 
@@ -262,8 +251,8 @@ def generate_beetmover_manifest(context):
 def get_partials_props(task):
     """Examine contents of task.json (stored in context.task) and extract
     partials mapping data from the 'extra' field"""
-    partials = task.get('extra', {}).get('partials', {})
-    return {p['artifact_name']: p for p in partials}
+    partials = task.get("extra", {}).get("partials", {})
+    return {p["artifact_name"]: p for p in partials}
 
 
 def alter_unpretty_contents(context, blobs, mappings):
@@ -280,9 +269,9 @@ def alter_unpretty_contents(context, blobs, mappings):
             for package, tests in contents.items():
                 new_tests = []
                 for artifact in tests:
-                    pretty_dict = mappings['mapping'][locale].get(artifact)
+                    pretty_dict = mappings["mapping"][locale].get(artifact)
                     if pretty_dict:
-                        new_tests.append(pretty_dict['s3_key'])
+                        new_tests.append(pretty_dict["s3_key"])
                     else:
                         new_tests.append(artifact)
                 if new_tests != tests:
@@ -293,9 +282,7 @@ def alter_unpretty_contents(context, blobs, mappings):
 
 
 def get_candidates_prefix(product, version, build_number):
-    return "{}candidates/{}-candidates/build{}/".format(
-        PRODUCT_TO_PATH[product], version, str(build_number)
-    )
+    return "{}candidates/{}-candidates/build{}/".format(PRODUCT_TO_PATH[product], version, str(build_number))
 
 
 def get_releases_prefix(product, version):
@@ -303,7 +290,7 @@ def get_releases_prefix(product, version):
 
 
 def get_partner_candidates_prefix(prefix, partner):
-    return '{}partner-repacks/{}/v1/'.format(prefix,  partner)
+    return "{}partner-repacks/{}/v1/".format(prefix, partner)
 
 
 def get_partner_releases_prefix(product, version, partner):
@@ -325,20 +312,20 @@ def get_partner_match(keyname, candidates_prefix, partners):
 
 
 def get_creds(context):
-    return context.config['bucket_config'][context.bucket]['credentials']
+    return context.config["bucket_config"][context.bucket]["credentials"]
 
 
 def get_bucket_name(context, product):
-    return context.config['bucket_config'][context.bucket]['buckets'][product]
+    return context.config["bucket_config"][context.bucket]["buckets"][product]
 
 
 def get_bucket_url_prefix(context):
-    return context.config['bucket_config'][context.bucket]['url_prefix']
+    return context.config["bucket_config"][context.bucket]["url_prefix"]
 
 
 def validated_task_id(task_id):
     """Validate the format of a taskcluster taskId."""
-    pattern = r'^[A-Za-z0-9_-]{8}[Q-T][A-Za-z0-9_-][CGKOSWaeimquy26-][A-Za-z0-9_-]{10}[AQgw]$'
+    pattern = r"^[A-Za-z0-9_-]{8}[Q-T][A-Za-z0-9_-][CGKOSWaeimquy26-][A-Za-z0-9_-]{10}[AQgw]$"
     if re.fullmatch(pattern, task_id):
         return task_id
     raise ValueError("No valid taskId found.")
@@ -356,9 +343,9 @@ def exists_or_endswith(filename, basenames):
 def extract_full_artifact_map_path(artifact_map, basepath, locale):
     """Find the artifact map entry from the given path."""
     for entry in artifact_map:
-        if entry['locale'] != locale:
+        if entry["locale"] != locale:
             continue
-        for path in entry['paths']:
+        for path in entry["paths"]:
             if path.endswith(basepath):
                 return path
 
@@ -366,9 +353,9 @@ def extract_full_artifact_map_path(artifact_map, basepath, locale):
 def extract_file_config_from_artifact_map(artifact_map, path, task_id, locale):
     """Return matching artifact map config."""
     for entry in artifact_map:
-        if entry['taskId'] != task_id or entry['locale'] != locale:
+        if entry["taskId"] != task_id or entry["locale"] != locale:
             continue
-        if not entry['paths'].get(path):
+        if not entry["paths"].get(path):
             continue
-        return entry['paths'][path]
-    raise TaskVerificationError('No artifact map entry for {}/{} {}'.format(task_id, locale, path))
+        return entry["paths"][path]
+    raise TaskVerificationError("No artifact map entry for {}/{} {}".format(task_id, locale, path))
