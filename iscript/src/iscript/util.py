@@ -11,11 +11,7 @@ from iscript.exceptions import IScriptError
 
 log = logging.getLogger(__name__)
 
-_CERT_TYPE_TO_KEY_CONFIG = {
-    "dep-signing": "dep",
-    "nightly-signing": "nightly",
-    "release-signing": "release",
-}
+_CERT_TYPE_TO_KEY_CONFIG = {"dep-signing": "dep", "nightly-signing": "nightly", "release-signing": "release"}
 
 
 def task_cert_type(config, task):
