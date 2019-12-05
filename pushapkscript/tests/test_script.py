@@ -11,7 +11,8 @@ from unittest.mock import MagicMock, patch
 from pushapkscript import publish, jarsigner, task, manifest
 from pushapkscript.exceptions import ConfigValidationError
 from pushapkscript.script import async_main, get_default_config, main, _log_warning_forewords, _get_product_config
-from pushapkscript.test.helpers.mock_file import mock_open
+
+from .helpers.mock_file import mock_open
 
 
 @pytest.mark.asyncio

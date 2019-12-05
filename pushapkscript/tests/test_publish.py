@@ -3,7 +3,8 @@ import unittest
 from unittest.mock import patch
 
 from pushapkscript.publish import publish
-from pushapkscript.test.helpers.mock_file import mock_open, MockFile
+
+from .helpers.mock_file import mock_open, MockFile
 
 
 # TODO: refactor to pytest instead of unittest

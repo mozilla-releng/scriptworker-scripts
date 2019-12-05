@@ -7,8 +7,8 @@ from scriptworker.context import Context
 from scriptworker.exceptions import TaskVerificationError
 
 from pushapkscript.task import extract_android_product_from_scopes
-from pushapkscript.test.helpers.task_generator import TaskGenerator
 
+from .helpers.task_generator import TaskGenerator
 
 @pytest.fixture
 def context():
