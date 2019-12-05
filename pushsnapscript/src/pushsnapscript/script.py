@@ -25,15 +25,15 @@ async def async_main(context):
 
 def _log_warning_forewords(config, channel):
     if not task.is_allowed_to_push_to_snap_store(config, channel):
-        log.warning('You do not have the rights to reach Snap store. *All* requests will be mocked.')
+        log.warning("You do not have the rights to reach Snap store. *All* requests will be mocked.")
 
 
 def get_default_config(base_dir=None):
     base_dir = base_dir or os.path.dirname(os.getcwd())
     default_config = {
-        'work_dir': os.path.join(base_dir, 'work_dir'),
-        'schema_file': os.path.join(os.path.dirname(__file__), 'data', 'push_snap_task_schema.json'),
-        'verbose': False,
+        "work_dir": os.path.join(base_dir, "work_dir"),
+        "schema_file": os.path.join(os.path.dirname(__file__), "data", "push_snap_task_schema.json"),
+        "verbose": False,
     }
     return default_config
 
@@ -42,4 +42,4 @@ def main(config_path=None):
     return client.sync_main(async_main, config_path=config_path, default_config=get_default_config())
 
 
-__name__ == '__main__' and main()
+__name__ == "__main__" and main()
