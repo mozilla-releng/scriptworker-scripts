@@ -19,7 +19,9 @@ setup(
     author='Mozilla Release Engineering',
     author_email='release+python@mozilla.com',
     url='https://github.com/mozilla-releng/pushsnapscript',
-    packages=find_packages(),
+    packages=find_packages("src"),
+    package_data={"pushsnapscript": ["data/*"]},
+    package_dir={"": "src"},
     include_package_data=True,
     zip_safe=False,
     entry_points={
