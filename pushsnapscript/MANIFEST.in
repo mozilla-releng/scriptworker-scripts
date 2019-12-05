@@ -2,6 +2,8 @@ recursive-include examples *
 
 include LICENSE
 include README.md
+include pyproject.toml
+include setup.py
 include version.txt
 graft requirements
 
@@ -9,3 +11,4 @@ recursive-include src *
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+recursive-exclude tests *
