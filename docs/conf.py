@@ -35,6 +35,12 @@ templates_path = ['_templates']
 # You can specify multiple suffix as a list of string:
 source_suffix = ['.rst', '.md']
 
+
+# repo conf.py file overrides Read the Doc's default conf.py.
+# by default, Sphinx expects the master doc to be `contents` so we're
+# overriding that
+master_doc = 'index'
+
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
