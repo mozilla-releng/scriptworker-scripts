@@ -7,8 +7,8 @@ import shipitscript.ship_actions
 from shipitscript.script import main
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
-project_dir = os.path.join(this_dir, '..', '..', '..')
-project_data_dir = os.path.join(project_dir, 'shipitscript', 'data')
+project_dir = os.path.dirname(shipitscript.__file__)
+project_data_dir = os.path.join(project_dir, 'data')
 
 
 MARK_AS_SHIPPED_TASK_DEFINITION_TEMPLATE = '''{{

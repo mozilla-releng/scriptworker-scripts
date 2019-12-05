@@ -3,13 +3,15 @@ import os
 import pytest
 from scriptworker.context import Context
 
+import shipitscript
+
 
 @pytest.fixture
 def context():
     context = Context()
     context.config = {
         'mark_as_shipped_schema_file': os.path.join(
-            os.getcwd(), 'shipitscript', 'data', 'mark_as_shipped_task_schema.json'
+            os.path.dirname(shipitscript.__file__), 'data', 'mark_as_shipped_task_schema.json'
         )
     }
     context.config['shipit_instance'] = {

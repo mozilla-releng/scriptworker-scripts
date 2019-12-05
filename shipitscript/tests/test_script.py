@@ -7,9 +7,6 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 
 import shipitscript
 from shipitscript import script, ship_actions
-from shipitscript.test import context
-
-assert context  # silence pyflakes
 
 
 @pytest.mark.parametrize(
