@@ -10,13 +10,14 @@
    :caption: Table of Contents:
    :maxdepth: 3
 
-   scriptworkers-autoscaling
+   scriptworkers-FAQ
+   scriptworkers-dockerization
    scriptworkers-ci
    scriptworkers-dev
-   scriptworkers-dockerization
-   scriptworkers-k8s
    scriptworkers-production
    scriptworkers-secrets
+   scriptworkers-k8s
+   scriptworkers-autoscaling
    scriptworkers-troubleshooting
    README
 

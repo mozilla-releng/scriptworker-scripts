@@ -3,7 +3,7 @@
 The scriptworkers are hosted in Google Compute Cloud (GCP) using Kubernetes.
 The deployment process is managed by the CloudOps team.
 
-Make sure you have access to the GCP console for the
+If you want to debug the GCP workers in the console, make sure you have access to the GCP console for the
 [production](https://console.cloud.google.com/kubernetes/workload?organizationId=442341870013&project=moz-fx-relengworker-prod-a67d&workload_list_tablesize=50)
 and
 [nonprod](https://console.cloud.google.com/kubernetes/workload?project=moz-fx-relengwor-nonprod-4a87&organizationId=442341870013&workload_list_tablesize=50)

@@ -1,7 +1,7 @@
 # Secrets
 
 All secrets are generated from by the CloudOps deployment process, see [example
-template](https://github.com/mozilla-services/cloudops-infra/blob/master/projects/relengworker/k8s/charts/beetmover/templates/secret.yaml)
+template](https://github.com/mozilla-services/cloudops-infra/blob/master/projects/relengworker/k8s/charts/beetmover/templates/secret.yaml).
 
 All secrets are passed to the replicas via environment variables and replaced
 in the configs using JSON-e or saved to files. In latter case please encode the
@@ -18,6 +18,4 @@ mySecret1: 'supersecretthing'
 mySecret1: 'supersecretthing'
 ```
 
-The secrets can be passed using Firefox Send. Protect the file with a password
-and limit it to 1 download only, then pass the URL to a person from the
-CluodOps team.
+For secrets transferring, please consult [this mana](https://mana.mozilla.org/wiki/display/SVCOPS/Sharing+a+secret+with+a+coworker) page.
