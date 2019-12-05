@@ -10,6 +10,7 @@
    :caption: Table of Contents:
    :maxdepth: 3
 
+   scriptworkers-FAQ
    scriptworkers-dockerization
    scriptworkers-ci
    scriptworkers-dev

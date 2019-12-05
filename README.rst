@@ -3,8 +3,27 @@ Scriptworker-scripts Readme
 ===========================
 
 This is the official mono repo containing all the scriptworker \*scripts.
-As to November 2019, we have migrated all the workers, across all trees, to K8s and GCP.
-Tagging along, we have also migrated all the individual scripts under the same roof.
+As to November 2019, we have migrated all the workers, across all trees, to Kubernetes and Google Compute Cloud.
+Tagging along, we have also migrated all the individual scripts under the same roof in order
+to single source the shared configurations.
+
+In a nutshell, we now user Docker-based scriptworkers scripts that perform various pieces of our automation.
+In order for deploying, we **no longer** rely on `hiera` or `puppet` but on Docker and SOPS.
+
+The comprehensive list of workers that we have available is listed below. They are
+split in two large environments within the GCP: `releng-nonprod` and `releng-prod`.
+
+The former holds all the `dev` workers. These are handy to use before submitting
+a PR or deployment to production in order to test things out. The environment
+holds rules for netflows as well in order to access the dev instances of our
+external resources.
+
+The latter, `releng-prod` withhold two sets of workers. The `level-3` workers
+which are the production ones. We use these workers to ship the real, production-ready
+releases, across our differenct products (Firefox, Thunderbird, Firefox for mobile related suite, etc).
+In the same environment we also have the `level-1` workers which are used for
+staging releases. They co-exist here so that they are closer to production
+as possible.
 
 ============================
 Overview of existing workers
@@ -141,5 +160,5 @@ Update python dependencies
 ::
 
   # from scriptworker-scripts/ ; this will run docker for py37 and py38
-  # for all *scripts
-  maintenance/pin.sh
+  # for all *scripts to update all the dependencies via `pip-compile-multi`
+  $ maintenance/pin.sh
