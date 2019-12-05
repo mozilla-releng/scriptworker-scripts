@@ -1,12 +1,9 @@
-import aiohttp
-import asyncio
-import bouncerscript
 import json
 import os
-import pytest
 
-from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerTaskException
+
+import bouncerscript
 
 
 def noop_sync(*args, **kwargs):
@@ -37,6 +34,7 @@ def counted(f):
     def wrapped(*args, **kwargs):
         wrapped.calls += 1
         return f(*args, **kwargs)
+
     wrapped.calls = 0
     return wrapped
 
@@ -58,13 +56,12 @@ def return_false_sync(*args):
 
 
 def get_fake_valid_config():
-    data_dir = os.path.join(os.path.dirname(bouncerscript.__file__), 'data')
-    print(data_dir)
+    data_dir = os.path.join(os.path.dirname(bouncerscript.__file__), "data")
     config = {
-        'schema_files': {
-            'submission': os.path.join(data_dir, 'bouncer_submission_task_schema.json'),
-            'aliases': os.path.join(data_dir, 'bouncer_aliases_task_schema.json'),
-            'locations': os.path.join(data_dir, 'bouncer_locations_task_schema.json'),
+        "schema_files": {
+            "submission": os.path.join(data_dir, "bouncer_submission_task_schema.json"),
+            "aliases": os.path.join(data_dir, "bouncer_aliases_task_schema.json"),
+            "locations": os.path.join(data_dir, "bouncer_locations_task_schema.json"),
         }
     }
     config.update(load_json(path="tests/fake_config.json"))
@@ -73,58 +70,6 @@ def get_fake_valid_config():
 
 def get_fake_valid_task(jobtype):
     return load_json(path="tests/test_work_dir/task_{}.json".format(jobtype))
-
-
-@pytest.yield_fixture(scope='function')
-def submission_context():
-    context = Context()
-    context.task = get_fake_valid_task("submission")
-    context.config = get_fake_valid_config()
-
-    yield context
-
-
-@pytest.yield_fixture(scope='function')
-def aliases_context():
-    context = Context()
-    context.task = get_fake_valid_task("aliases")
-    context.config = get_fake_valid_config()
-    context.server = 'project:releng:bouncer:server:production'
-
-    yield context
-
-
-@pytest.yield_fixture(scope='function')
-def locations_context():
-    context = Context()
-    context.task = get_fake_valid_task("locations")
-    context.config = get_fake_valid_config()
-
-    yield context
-
-
-@pytest.fixture(scope='function')
-def fake_ClientError_throwing_session():
-    @asyncio.coroutine
-    def _fake_request(method, url, *args, **kwargs):
-        raise aiohttp.ClientError
-
-    loop = asyncio.get_event_loop()
-    session = aiohttp.ClientSession(loop=loop)
-    session._request = _fake_request
-    return session
-
-
-@pytest.fixture(scope='function')
-def fake_TimeoutError_throwing_session():
-    @asyncio.coroutine
-    def _fake_request(method, url, *args, **kwargs):
-        raise aiohttp.ServerTimeoutError
-
-    loop = asyncio.get_event_loop()
-    session = aiohttp.ClientSession(loop=loop)
-    session._request = _fake_request
-    return session
 
 
 def load_json(path):
