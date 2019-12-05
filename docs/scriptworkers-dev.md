@@ -2,8 +2,8 @@
 
 In case you want to test your changes before pushing to production or
 submitting a PR, you can "force push" your changes to the `dev-{script}` (e.g. `dev-beetmoverscript` or `dev-signingscript`)
-should you'd like to update only one worker, or the `dev` branch and it
-will be deployed to all `dev` workers from the
+should you'd like to update only one worker, or the `dev` branch to be deployed
+to all `dev` workers from the
 [nonprod](https://console.cloud.google.com/kubernetes/workload?project=moz-fx-relengwor-nonprod-4a87&organizationId=442341870013&workload_list_tablesize=50)
 Kubernetes cluster.
 

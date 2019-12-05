@@ -27,4 +27,6 @@ directory. Some important config variables are below:
 
 After a change is merged to the `master` branch, it's immediately deployed to
 the dev GCP cluster. In order to deploy the changes to production, you need to
-merge from `master` to the `production` branch.
+merge from `master` to the `production` branch. Moreover, in order for the change
+to have effect in the desired scriptworker(s), a new image for the latter needs
+to be pushed out to Docker.
