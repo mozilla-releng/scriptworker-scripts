@@ -4,24 +4,33 @@
 import logging
 import os
 
+from scriptworker import client
+from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
+
 from bouncerscript.task import (
-    get_task_action, get_task_server, validate_task_schema,
-    check_product_names_match_aliases, check_locations_match,
-    check_path_matches_destination, check_aliases_match,
-    check_product_names_match_nightly_locations,
+    check_aliases_match,
     check_location_path_matches_destination,
-    check_versions_are_successive, check_version_matches_nightly_regex
+    check_locations_match,
+    check_path_matches_destination,
+    check_product_names_match_aliases,
+    check_product_names_match_nightly_locations,
+    check_version_matches_nightly_regex,
+    check_versions_are_successive,
+    get_task_action,
+    get_task_server,
+    validate_task_schema,
 )
 from bouncerscript.utils import (
-    api_add_location, api_add_product, api_update_alias, does_product_exist,
-    get_locations_info, get_nightly_version, get_version_bumped_path,
-    api_modify_location, does_location_path_exist,
+    api_add_location,
+    api_add_product,
+    api_modify_location,
+    api_update_alias,
+    does_location_path_exist,
+    does_product_exist,
+    get_locations_info,
+    get_nightly_version,
+    get_version_bumped_path,
 )
-from scriptworker import client
-from scriptworker.exceptions import (
-    TaskVerificationError, ScriptWorkerTaskException
-)
-
 
 log = logging.getLogger(__name__)
 
@@ -36,12 +45,7 @@ async def bouncer_submission(context):
             log.warning('Product "{}" already exists. Skipping...'.format(product_name))
         else:
             log.info('Adding product "{}"...'.format(product_name))
-            await api_add_product(
-                context,
-                product_name=product_name,
-                add_locales=pr_config["options"]["add_locales"],
-                ssl_only=pr_config["options"]["ssl_only"]
-            )
+            await api_add_product(context, product_name=product_name, add_locales=pr_config["options"]["add_locales"], ssl_only=pr_config["options"]["ssl_only"])
             log.info("Sanity check to ensure product has been successfully added...")
             if not await does_product_exist(context, product_name):
                 raise ScriptWorkerTaskException("Bouncer entries are corrupt")
@@ -60,7 +64,7 @@ async def bouncer_submission(context):
 
         log.info("Sanity check to ensure locations have been successfully added...")
         locations_info = await get_locations_info(context, product_name)
-        locations_paths = [i['path'] for i in locations_info]
+        locations_paths = [i["path"] for i in locations_info]
         check_locations_match(locations_paths, pr_config["paths_per_bouncer_platform"])
         log.info("All entries look good, bouncer has been correctly updated!")
 
@@ -109,9 +113,8 @@ async def bouncer_locations(context):
 
         locations_info = await get_locations_info(context, product_name)
         for entry in locations_info:
-            platform, path = entry['os'], entry['path']
-            log.info("Sanity check product {} platform {}, path {} before bumping"
-                     " its version ...".format(product_name, platform, path))
+            platform, path = entry["os"], entry["path"]
+            log.info("Sanity check product {} platform {}, path {} before bumping" " its version ...".format(product_name, platform, path))
 
             check_location_path_matches_destination(product_name, path)
             current_version = get_nightly_version(product_name, path)
@@ -130,24 +133,18 @@ async def bouncer_locations(context):
         for product_name in bouncer_products:
             locations_info = await get_locations_info(context, product_name)
             for entry in locations_info:
-                platform, path = entry['os'], entry['path']
-                log.info("Sanity check product {} platform {}, path {} after bumping its "
-                         "version ...".format(product_name, platform, path))
+                platform, path = entry["os"], entry["path"]
+                log.info("Sanity check product {} platform {}, path {} after bumping its " "version ...".format(product_name, platform, path))
                 check_location_path_matches_destination(product_name, path)
 
                 log.info("Sanity checking to make sure the bump was successful...")
                 if payload_version not in path:
-                    err_msg = ("Couldn't find in-tree version {} in the updated "
-                               "bouncer path {}".format(payload_version, path))
+                    err_msg = "Couldn't find in-tree version {} in the updated " "bouncer path {}".format(payload_version, path)
                     raise ScriptWorkerTaskException(err_msg)
         log.info("All bumped bouncer products look good!")
 
 
-action_map = {
-    'submission': bouncer_submission,
-    'aliases': bouncer_aliases,
-    'locations': bouncer_locations,
-}
+action_map = {"submission": bouncer_submission, "aliases": bouncer_aliases, "locations": bouncer_locations}
 
 
 async def async_main(context):
@@ -166,16 +163,16 @@ async def async_main(context):
 
 
 def main(config_path=None):
-    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    data_dir = os.path.join(os.path.dirname(__file__), "data")
     default_config = {
-        'schema_files': {
-            'submission': os.path.join(data_dir, 'bouncer_submission_task_schema.json'),
-            'aliases': os.path.join(data_dir, 'bouncer_aliases_task_schema.json'),
-            'locations': os.path.join(data_dir, 'bouncer_locations_task_schema.json'),
+        "schema_files": {
+            "submission": os.path.join(data_dir, "bouncer_submission_task_schema.json"),
+            "aliases": os.path.join(data_dir, "bouncer_aliases_task_schema.json"),
+            "locations": os.path.join(data_dir, "bouncer_locations_task_schema.json"),
         }
     }
 
     client.sync_main(async_main, config_path=config_path, default_config=default_config, should_validate_task=False)
 
 
-__name__ == '__main__' and main()
+__name__ == "__main__" and main()
