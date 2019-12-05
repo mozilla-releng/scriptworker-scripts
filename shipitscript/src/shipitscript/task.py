@@ -7,36 +7,29 @@ from scriptworker.utils import get_single_item_from_sequence
 log = logging.getLogger(__name__)
 
 # SCHEMA_MAP {{{1
-SCHEMA_MAP = {
-    'mark-as-shipped': 'mark_as_shipped_schema_file',
-    'create-new-release': 'create_new_release_schema_file',
-}
+SCHEMA_MAP = {"mark-as-shipped": "mark_as_shipped_schema_file", "create-new-release": "create_new_release_schema_file"}
 
 
 def _get_scope(context, suffix):
     scope_root = context.config["taskcluster_scope_prefix"] + suffix
 
     return get_single_item_from_sequence(
-        context.task['scopes'],
+        context.task["scopes"],
         condition=lambda scope: scope.startswith(scope_root),
         ErrorClass=TaskVerificationError,
-        no_item_error_message='No valid scope found. Task must have a scope that starts with "{}"'.format(
-            scope_root
-        ),
-        too_many_item_error_message='More than one valid scope given',
+        no_item_error_message='No valid scope found. Task must have a scope that starts with "{}"'.format(scope_root),
+        too_many_item_error_message="More than one valid scope given",
     )
 
 
 def get_ship_it_instance_config_from_scope(context):
     scope = _get_scope(context, "server")
-    configured_instance = context.config['shipit_instance']
+    configured_instance = context.config["shipit_instance"]
 
-    if configured_instance.get('scope') == scope:
+    if configured_instance.get("scope") == scope:
         return configured_instance
 
-    raise TaskVerificationError(
-        'This worker is not configured to handle scope "{}"'.format(scope)
-    )
+    raise TaskVerificationError('This worker is not configured to handle scope "{}"'.format(scope))
 
 
 def validate_task_schema(context):
