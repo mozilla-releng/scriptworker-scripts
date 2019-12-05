@@ -6,13 +6,15 @@ import subprocess
 import tempfile
 import unittest
 
+import pushapkscript
 from pushapkscript.script import main
-from pushapkscript.test.helpers.mock_file import mock_open, MockFile
-from pushapkscript.test.helpers.task_generator import TaskGenerator
+
+from ..helpers.mock_file import mock_open, MockFile
+from ..helpers.task_generator import TaskGenerator
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
-project_dir = os.path.join(this_dir, '..', '..', '..')
-project_data_dir = os.path.join(project_dir, 'pushapkscript', 'data')
+project_dir = os.path.dirname(pushapkscript.__file__)
+project_data_dir = os.path.join(project_dir, 'data')
 test_data_dir = os.path.join(this_dir, '..', 'data')
 
 
