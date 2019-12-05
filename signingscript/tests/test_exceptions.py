@@ -1,7 +1,7 @@
 import pytest
-
 from scriptworker.exceptions import ScriptWorkerTaskException
-from signingscript.exceptions import SigningServerError, FailedSubprocess
+
+from signingscript.exceptions import FailedSubprocess, SigningServerError
 
 
 @pytest.mark.parametrize("exc", (SigningServerError, FailedSubprocess))

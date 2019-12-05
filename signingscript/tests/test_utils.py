@@ -1,23 +1,17 @@
 import json
-import mock
 import os
+
+import mock
 import pytest
-
 from scriptworker.context import Context
-from signingscript.exceptions import FailedSubprocess, SigningServerError
-from conftest import read_file
+
 import signingscript.utils as utils
-from conftest import PUB_KEY_PATH
+from conftest import PUB_KEY_PATH, read_file
+from signingscript.exceptions import FailedSubprocess, SigningServerError
 
+ID_RSA_PUB_HASH = "226658906e46b26ef195c468f94e2be983b6c53f370dff0d8e725832f" + "4645933de4755690a3438760afe8790a91938100b75b5d63e76ebd00920adc8d2a8857e"
 
-ID_RSA_PUB_HASH = (
-    "226658906e46b26ef195c468f94e2be983b6c53f370dff0d8e725832f"
-    + "4645933de4755690a3438760afe8790a91938100b75b5d63e76ebd00920adc8d2a8857e"
-)
-
-SERVER_CONFIG_PATH = os.path.join(
-    os.path.dirname(__file__), "example_server_config.json"
-)
+SERVER_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "example_server_config.json")
 
 
 # mkdir {{{1
@@ -108,12 +102,7 @@ async def test_log_output(tmpdir, mocker):
     (
         (SERVER_CONFIG_PATH, None, os.path.basename(SERVER_CONFIG_PATH), None),
         (SERVER_CONFIG_PATH, "foo", "foo", None),
-        (
-            os.path.join(os.path.dirname(__file__), "nonexistent_file"),
-            None,
-            None,
-            SigningServerError,
-        ),
+        (os.path.join(os.path.dirname(__file__), "nonexistent_file"), None, None, SigningServerError),
     ),
 )
 def test_copy_to_dir(tmpdir, source, target, expected, exc):
@@ -129,10 +118,7 @@ def test_copy_to_dir(tmpdir, source, target, expected, exc):
 
 
 def test_copy_to_dir_no_copy():
-    assert (
-        utils.copy_to_dir(SERVER_CONFIG_PATH, os.path.dirname(SERVER_CONFIG_PATH))
-        is None
-    )
+    assert utils.copy_to_dir(SERVER_CONFIG_PATH, os.path.dirname(SERVER_CONFIG_PATH)) is None
 
 
 # execute_subprocess {{{1
@@ -149,13 +135,7 @@ async def test_execute_subprocess(exit_code):
 
 # is_sha1_apk_autograph_signing_format {{{1
 @pytest.mark.parametrize(
-    "format,expected",
-    (
-        ("autograph_apk_sha1", True),
-        ("autograph_apk_not_sha1_but_sha384", False),
-        ("foobar_sha1", False),
-        ("foobar_sha384", False),
-    ),
+    "format,expected", (("autograph_apk_sha1", True), ("autograph_apk_not_sha1_but_sha384", False), ("foobar_sha1", False), ("foobar_sha384", False))
 )
 def test_is_sha1_apk_autograph_signing_format(format, expected):
     assert utils.is_sha1_apk_autograph_signing_format(format) == expected

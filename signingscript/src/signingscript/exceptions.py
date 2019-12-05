@@ -1,6 +1,6 @@
 """Signingscript exceptions."""
-from scriptworker.exceptions import ScriptWorkerTaskException
 from scriptworker.constants import STATUSES
+from scriptworker.exceptions import ScriptWorkerTaskException
 
 
 class SigningServerError(ScriptWorkerTaskException):
@@ -13,9 +13,7 @@ class SigningServerError(ScriptWorkerTaskException):
             msg (str): the reason for throwing an exception.
 
         """
-        super(SigningServerError, self).__init__(
-            msg, exit_code=STATUSES["internal-error"]
-        )
+        super(SigningServerError, self).__init__(msg, exit_code=STATUSES["internal-error"])
 
 
 class SigningScriptError(ScriptWorkerTaskException):
@@ -28,9 +26,7 @@ class SigningScriptError(ScriptWorkerTaskException):
             msg (str): the reason for throwing an exception.
 
         """
-        super(SigningScriptError, self).__init__(
-            msg, exit_code=STATUSES["internal-error"]
-        )
+        super(SigningScriptError, self).__init__(msg, exit_code=STATUSES["internal-error"])
 
 
 class FailedSubprocess(ScriptWorkerTaskException):
@@ -43,6 +39,4 @@ class FailedSubprocess(ScriptWorkerTaskException):
             msg (str): the reason for throwing an exception.
 
         """
-        super(FailedSubprocess, self).__init__(
-            msg, exit_code=STATUSES["internal-error"]
-        )
+        super(FailedSubprocess, self).__init__(msg, exit_code=STATUSES["internal-error"])
