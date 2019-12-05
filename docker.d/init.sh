@@ -64,6 +64,12 @@ case $COT_PRODUCT in
   application-services)
     export TRUST_DOMAIN=appservices
     ;;
+  xpi)
+    export TRUST_DOMAIN=xpi
+    ;;
+  mpd001)
+    export TRUST_DOMAIN=mpd001
+    ;;
   *)
     exit 1
     ;;
