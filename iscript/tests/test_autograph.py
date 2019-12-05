@@ -1,16 +1,16 @@
 import base64
-from contextlib import contextmanager
-from hashlib import sha256
 import os
 import os.path
-import pytest
 import shutil
+from contextlib import contextmanager
+from hashlib import sha256
 
-from scriptworker_client.utils import makedirs
+import pytest
 
+import iscript.autograph as autograph
 from iscript.exceptions import IScriptError
 from iscript.mac import App
-import iscript.autograph as autograph
+from scriptworker_client.utils import makedirs
 
 # helper constants, fixtures, functions {{{1
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -44,16 +44,8 @@ def noop_sync(*args, **kwargs):
 
 # sign_file_with_autograph {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "to,expected,format,options",
-    (
-        (None, "from", "autograph_widevine", None),
-        ("to", "to", "autograph_widevine", None),
-    ),
-)
-async def test_sign_file_with_autograph(
-    key_config, mocker, to, expected, format, options
-):
+@pytest.mark.parametrize("to,expected,format,options", ((None, "from", "autograph_widevine", None), ("to", "to", "autograph_widevine", None)))
+async def test_sign_file_with_autograph(key_config, mocker, to, expected, format, options):
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
     mocker.patch("builtins.open", open_mock, create=True)
 
@@ -65,32 +57,23 @@ async def test_sign_file_with_autograph(
     Session_mock.return_value.__exit__ = mocker.Mock()
     mocker.patch("iscript.autograph.requests.Session", Session_mock, create=True)
 
-    assert (
-        await autograph.sign_file_with_autograph(key_config, "from", format, to=to)
-        == expected
-    )
+    assert await autograph.sign_file_with_autograph(key_config, "from", format, to=to) == expected
     open_mock.assert_called()
     kwargs = {"input": "MHhkZWFkYmVlZg=="}
     if options:
         kwargs["options"] = options
-    session_mock.post.assert_called_with(
-        "https://autograph-hsm.dev.mozaws.net/sign/file", auth=mocker.ANY, json=[kwargs]
-    )
+    session_mock.post.assert_called_with("https://autograph-hsm.dev.mozaws.net/sign/file", auth=mocker.ANY, json=[kwargs])
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("to,expected", ((None, "from"), ("to", "to")))
-async def test_sign_file_with_autograph_raises_http_error(
-    key_config, mocker, to, expected
-):
+async def test_sign_file_with_autograph_raises_http_error(key_config, mocker, to, expected):
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
     mocker.patch("builtins.open", open_mock, create=True)
 
     session_mock = mocker.MagicMock()
     post_mock_response = session_mock.post.return_value
-    post_mock_response.raise_for_status.side_effect = (
-        autograph.requests.exceptions.RequestException
-    )
+    post_mock_response.raise_for_status.side_effect = autograph.requests.exceptions.RequestException
     post_mock_response.json.return_value = [{"signed_file": "bW96aWxsYQ=="}]
 
     @contextmanager
@@ -105,9 +88,7 @@ async def test_sign_file_with_autograph_raises_http_error(
     mocker.patch.object(autograph, "retry_async", new=fake_retry_async)
 
     with pytest.raises(autograph.requests.exceptions.RequestException):
-        await autograph.sign_file_with_autograph(
-            key_config, "from", "autograph_widevine", to=to
-        )
+        await autograph.sign_file_with_autograph(key_config, "from", "autograph_widevine", to=to)
     open_mock.assert_called()
 
 
@@ -118,16 +99,7 @@ async def test_sign_file_with_autograph_raises_http_error(
     (
         ("foo.tar.gz", "widevine", True, None),
         ("foo.zip", "widevine_blessed", True, None),
-        (
-            "foo.dmg",
-            "widevine",
-            True,
-            [
-                "foo.app/Contents/MacOS/firefox",
-                "foo.app/Contents/MacOS/bar.app/Contents/MacOS/plugin-container",
-                "foo.app/ignore",
-            ],
-        ),
+        ("foo.dmg", "widevine", True, ["foo.app/Contents/MacOS/firefox", "foo.app/Contents/MacOS/bar.app/Contents/MacOS/plugin-container", "foo.app/ignore"]),
         ("foo.zip", "widevine", False, None),
         ("foo.dmg", "widevine", False, None),
         ("foo.tar.bz2", "widevine", False, None),
@@ -136,17 +108,9 @@ async def test_sign_file_with_autograph_raises_http_error(
         ("foo.tar.bz2", "autograph_widevine", True, None),
     ),
 )
-async def test_sign_widevine_dir(
-    key_config, mocker, filename, fmt, should_sign, orig_files, tmp_path
-):
+async def test_sign_widevine_dir(key_config, mocker, filename, fmt, should_sign, orig_files, tmp_path):
     if should_sign:
-        files = orig_files or [
-            "isdir/firefox",
-            "firefox/firefox",
-            "y/plugin-container",
-            "z/blah",
-            "ignore",
-        ]
+        files = orig_files or ["isdir/firefox", "firefox/firefox", "y/plugin-container", "z/blah", "ignore"]
     else:
         files = orig_files or ["z/blah", "ignore"]
 
@@ -187,19 +151,8 @@ async def test_sign_widevine_dir(
     (
         (["firefox.dll", "XUL.so", "firefox.bin", "blah"], {}),
         (
-            (
-                "firefox",
-                "blah/XUL",
-                "foo/bar/libclearkey.dylib",
-                "baz/plugin-container",
-                "ignore",
-            ),
-            {
-                "firefox": "widevine",
-                "blah/XUL": "widevine",
-                "foo/bar/libclearkey.dylib": "widevine",
-                "baz/plugin-container": "widevine_blessed",
-            },
+            ("firefox", "blah/XUL", "foo/bar/libclearkey.dylib", "baz/plugin-container", "ignore"),
+            {"firefox": "widevine", "blah/XUL": "widevine", "foo/bar/libclearkey.dylib": "widevine", "baz/plugin-container": "widevine_blessed"},
         ),
         (
             # Test for existing signature files
@@ -268,38 +221,18 @@ def test_remove_extra_files(tmp_path):
     "input_bytes, fmt, extension_id, keyid, expected",
     (
         (b"asdf", "widevine", None, None, [{"input": "YXNkZg=="}]),
-        (
-            b"asdf",
-            "autograph_widevine",
-            None,
-            "key1",
-            [{"input": "YXNkZg==", "keyid": "key1"}],
-        ),
+        (b"asdf", "autograph_widevine", None, "key1", [{"input": "YXNkZg==", "keyid": "key1"}]),
         (
             b"asdf",
             "autograph_omnija",
             "omni.ja@mozilla.org",
             None,
-            [
-                {
-                    "input": "YXNkZg==",
-                    "options": {
-                        "id": "omni.ja@mozilla.org",
-                        "cose_algorithms": ["ES256"],
-                        "pkcs7_digest": "SHA256",
-                    },
-                }
-            ],
+            [{"input": "YXNkZg==", "options": {"id": "omni.ja@mozilla.org", "cose_algorithms": ["ES256"], "pkcs7_digest": "SHA256"}}],
         ),
     ),
 )
 def test_make_signing_req(input_bytes, fmt, extension_id, keyid, expected):
-    assert (
-        autograph.make_signing_req(
-            input_bytes, fmt, keyid=keyid, extension_id=extension_id
-        )
-        == expected
-    )
+    assert autograph.make_signing_req(input_bytes, fmt, keyid=keyid, extension_id=extension_id) == expected
 
 
 @pytest.mark.asyncio
@@ -325,9 +258,7 @@ async def test_widevine_autograph(mocker, tmp_path, blessed, key_config):
     key_config["widevine_cert"] = cert
 
     to = tmp_path / "signed.sig"
-    to = await autograph.sign_widevine_with_autograph(
-        key_config, "from", blessed, to=to
-    )
+    to = await autograph.sign_widevine_with_autograph(key_config, "from", blessed, to=to)
 
     assert b"sigwidevinesig" == to.read_bytes()
 
@@ -350,13 +281,7 @@ async def test_no_widevine(mocker, tmp_path):
     (
         (["firefox.dll", "XUL.so", "firefox.bin", "blah"], {}),
         (
-            (
-                "firefox",
-                "blah/omni.ja",
-                "foo/bar/libclearkey.dylib",
-                "baz/omni.ja",
-                "ignore",
-            ),
+            ("firefox", "blah/omni.ja", "foo/bar/libclearkey.dylib", "baz/omni.ja", "ignore"),
             {"blah/omni.ja": "autograph_omnija", "baz/omni.ja": "autograph_omnija"},
         ),
     ),
@@ -366,9 +291,7 @@ def test_get_omnija_signing_files(filenames, expected):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "orig", ("no_preload_unsigned_omni.ja", "preload_unsigned_omni.ja")
-)
+@pytest.mark.parametrize("orig", ("no_preload_unsigned_omni.ja", "preload_unsigned_omni.ja"))
 async def test_omnija_same(mocker, tmpdir, orig):
     copy_from = os.path.join(tmpdir, "omni.ja")
     shutil.copyfile(os.path.join(TEST_DATA_DIR, orig), copy_from)
@@ -391,16 +314,8 @@ async def test_omnija_same(mocker, tmpdir, orig):
 @pytest.mark.parametrize(
     "orig,signed,sha256_expected",
     (
-        (
-            "no_preload_unsigned_omni.ja",
-            "no_preload_signed_omni.ja",
-            "851890c7eac926ad1dfd1fc4b7bf96e57b519d87806f1055fe108d493e753f98",
-        ),
-        (
-            "preload_unsigned_omni.ja",
-            "preload_signed_omni.ja",
-            "d619ab6c25b31950540847b520d0791625ab4ca31ee4f58d02409c784f9206cd",
-        ),
+        ("no_preload_unsigned_omni.ja", "no_preload_signed_omni.ja", "851890c7eac926ad1dfd1fc4b7bf96e57b519d87806f1055fe108d493e753f98"),
+        ("preload_unsigned_omni.ja", "preload_signed_omni.ja", "d619ab6c25b31950540847b520d0791625ab4ca31ee4f58d02409c784f9206cd"),
     ),
 )
 async def test_omnija_sign(tmpdir, mocker, orig, signed, sha256_expected):
@@ -422,30 +337,21 @@ async def test_omnija_sign(tmpdir, mocker, orig, signed, sha256_expected):
 
 def test_langpack_id_regex():
     assert autograph.LANGPACK_RE.match("langpack-en-CA@firefox.mozilla.org") is not None
-    assert (
-        autograph.LANGPACK_RE.match("langpack-ja-JP-mac@devedition.mozilla.org")
-        is not None
-    )
+    assert autograph.LANGPACK_RE.match("langpack-ja-JP-mac@devedition.mozilla.org") is not None
     assert autograph.LANGPACK_RE.match("invalid-langpack-id@example.com") is None
 
 
 def test_langpack_id():
     filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
-    langpack_app = App(
-        orig_path=filename, formats=["autograph_langpack"], artifact_prefix="public/"
-    )
+    langpack_app = App(orig_path=filename, formats=["autograph_langpack"], artifact_prefix="public/")
     assert autograph.langpack_id(langpack_app) == "langpack-en-CA@firefox.mozilla.org"
 
 
 def test_langpack_id():
     filename = os.path.join(TEST_DATA_DIR, "en-CA.exe")
-    langpack_app = App(
-        orig_path=filename, formats=["autograph_langpack"], artifact_prefix="public/"
-    )
+    langpack_app = App(orig_path=filename, formats=["autograph_langpack"], artifact_prefix="public/")
     with pytest.raises(IScriptError):
-        assert (
-            autograph.langpack_id(langpack_app) == "langpack-en-CA@firefox.mozilla.org"
-        )
+        assert autograph.langpack_id(langpack_app) == "langpack-en-CA@firefox.mozilla.org"
 
 
 @pytest.mark.parametrize(
@@ -454,74 +360,20 @@ def test_langpack_id():
         ({}, pytest.raises(IScriptError)),
         ({"languages": {}}, pytest.raises(IScriptError)),
         ({"languages": {}, "langpack_id": "en-CA"}, pytest.raises(IScriptError)),
-        (
-            {"languages": {}, "langpack_id": "en-CA", "applications": {}},
-            pytest.raises(IScriptError),
-        ),
-        (
-            {"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {}}},
-            pytest.raises(IScriptError),
-        ),
-        (
-            {"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {}}},
-            pytest.raises(IScriptError),
-        ),
-        (
-            {
-                "languages": {},
-                "langpack_id": "en-CA",
-                "applications": {"gecko": {"id": ""}},
-            },
-            pytest.raises(IScriptError),
-        ),
-        (
-            {
-                "languages": {},
-                "langpack_id": "en-CA",
-                "applications": {"gecko": {"id": "invalid-langpack-id@example.com"}},
-            },
-            pytest.raises(IScriptError),
-        ),
-        (
-            {
-                "languages": {},
-                "langpack_id": "en-CA",
-                "applications": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}},
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                "languages": {},
-                "langpack_id": "en-CA",
-                "applications": {"gecko": {"id": "langpack-de@devedition.mozilla.org"}},
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                "languages": {},
-                "langpack_id": "en-CA",
-                "applications": {
-                    "gecko": {"id": "langpack-ja-JP-mac@devedition.mozilla.org"}
-                },
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                "langpack_id": "en-CA",
-                "applications": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}},
-            },
-            pytest.raises(IScriptError),
-        ),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {}}, pytest.raises(IScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {}}}, pytest.raises(IScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {}}}, pytest.raises(IScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": ""}}}, pytest.raises(IScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": "invalid-langpack-id@example.com"}}}, pytest.raises(IScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}}}, does_not_raise()),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-de@devedition.mozilla.org"}}}, does_not_raise()),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-ja-JP-mac@devedition.mozilla.org"}}}, does_not_raise()),
+        ({"langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}}}, pytest.raises(IScriptError)),
     ),
 )
 def test_langpack_id_raises(json_, raises, mocker):
     filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
-    langpack_app = App(
-        orig_path=filename, formats=["autograph_langpck"], artifact_prefix="public/"
-    )
+    langpack_app = App(orig_path=filename, formats=["autograph_langpck"], artifact_prefix="public/")
 
     def load_manifest(*args, **kwargs):
         return json_
@@ -539,11 +391,7 @@ def test_langpack_id_raises(json_, raises, mocker):
 async def test_langpack_sign(key_config, mocker, tmp_path):
     mock_ever_called = [False]
     filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
-    langpack_app = App(
-        orig_path=filename,
-        formats=["autograph_langpack"],
-        artifact_prefix=TEST_DATA_DIR,
-    )
+    langpack_app = App(orig_path=filename, formats=["autograph_langpack"], artifact_prefix=TEST_DATA_DIR)
     config = {"artifact_dir": tmp_path / "artifacts"}
 
     async def mocked_call_autograph(url, user, password, request_json):
@@ -556,16 +404,11 @@ async def test_langpack_sign(key_config, mocker, tmp_path):
         assert request_json[0]["options"]["id"] == "langpack-en-CA@firefox.mozilla.org"
         return [{"signed_file": base64.b64encode(open(filename, "rb").read())}]
 
-    mock_obj = mocker.patch.object(
-        autograph, "call_autograph", new=mocked_call_autograph
-    )
+    mock_obj = mocker.patch.object(autograph, "call_autograph", new=mocked_call_autograph)
 
     await autograph.sign_langpacks(config, key_config, [langpack_app])
     expected_hash = "7f4292927b4a26589ee912918de941f498e58ce100041ec3565a82da57a42eab"
-    assert (
-        sha256(open(langpack_app.target_tar_path, "rb").read()).hexdigest()
-        == expected_hash
-    )
+    assert sha256(open(langpack_app.target_tar_path, "rb").read()).hexdigest() == expected_hash
     assert mock_ever_called[0]
 
 
@@ -573,18 +416,14 @@ async def test_langpack_sign(key_config, mocker, tmp_path):
 async def test_langpack_sign_wrong_format(key_config, mocker, tmp_path):
     mock_ever_called = [False]
     filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
-    langpack_app = App(
-        orig_path=filename, formats=["invalid"], artifact_prefix=TEST_DATA_DIR
-    )
+    langpack_app = App(orig_path=filename, formats=["invalid"], artifact_prefix=TEST_DATA_DIR)
     config = {"artifact_dir": tmp_path / "artifacts"}
 
     async def mocked_call_autograph(url, user, password, request_json):
         mock_ever_called[0] = True
         return [{"signed_file": base64.b64encode(open(filename, "rb").read())}]
 
-    mock_obj = mocker.patch.object(
-        autograph, "call_autograph", new=mocked_call_autograph
-    )
+    mock_obj = mocker.patch.object(autograph, "call_autograph", new=mocked_call_autograph)
 
     with pytest.raises(IScriptError):
         await autograph.sign_langpacks(config, key_config, [langpack_app])
