@@ -8,10 +8,10 @@ from shipitscript.script import main
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.dirname(shipitscript.__file__)
-project_data_dir = os.path.join(project_dir, 'data')
+project_data_dir = os.path.join(project_dir, "data")
 
 
-MARK_AS_SHIPPED_TASK_DEFINITION_TEMPLATE = '''{{
+MARK_AS_SHIPPED_TASK_DEFINITION_TEMPLATE = """{{
     "provisionerId": "some-provisioner-id",
     "workerType": "some-worker-type",
     "schedulerId": "some-scheduler-id",
@@ -29,9 +29,9 @@ MARK_AS_SHIPPED_TASK_DEFINITION_TEMPLATE = '''{{
     "payload": {{
         "release_name": "{release_name}"
     }}
-}}'''
+}}"""
 
-CONFIG_TEMPLATE = '''{{
+CONFIG_TEMPLATE = """{{
     "work_dir": "{work_dir}",
     "mark_as_shipped_schema_file": "{project_data_dir}/mark_as_shipped_task_schema.json",
     "verbose": true,
@@ -44,45 +44,34 @@ CONFIG_TEMPLATE = '''{{
         "timeout_in_seconds": 1
     }},
     "taskcluster_scope_prefix": "project:releng:ship-it:"
-}}'''
+}}"""
 
 
 def test_main_mark_release_as_shipped_v2(monkeypatch):
     ReleaseClassMock = MagicMock()
     release_instance_mock = MagicMock()
-    release_info = {'status': 'shipped'}
-    attrs = {'getRelease.return_value': release_info}
+    release_info = {"status": "shipped"}
+    attrs = {"getRelease.return_value": release_info}
     release_instance_mock.configure_mock(**attrs)
     ReleaseClassMock.side_effect = lambda *args, **kwargs: release_instance_mock
-    monkeypatch.setattr(shipitscript.ship_actions, 'Release_V2', ReleaseClassMock)
+    monkeypatch.setattr(shipitscript.ship_actions, "Release_V2", ReleaseClassMock)
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        work_dir = os.path.join(temp_dir, 'work')
+        work_dir = os.path.join(temp_dir, "work")
         os.makedirs(work_dir)
-        config_path = os.path.join(temp_dir, 'config.json')
-        config_v2 = json.loads(
-            CONFIG_TEMPLATE.format(work_dir=work_dir, project_data_dir=project_data_dir)
-        )
-        with open(config_path, 'w') as config_file:
+        config_path = os.path.join(temp_dir, "config.json")
+        config_v2 = json.loads(CONFIG_TEMPLATE.format(work_dir=work_dir, project_data_dir=project_data_dir))
+        with open(config_path, "w") as config_file:
             json.dump(config_v2, config_file)
 
-        with open(os.path.join(work_dir, 'task.json'), 'w') as task_file:
-            task_file.write(
-                MARK_AS_SHIPPED_TASK_DEFINITION_TEMPLATE.format(
-                    release_name='Firefox-59.0b1-build1'
-                )
-            )
+        with open(os.path.join(work_dir, "task.json"), "w") as task_file:
+            task_file.write(MARK_AS_SHIPPED_TASK_DEFINITION_TEMPLATE.format(release_name="Firefox-59.0b1-build1"))
 
         main(config_path=config_path)
 
     ReleaseClassMock.assert_called_with(
-        api_root='http://some.ship-it.tld/api/root-v2',
-        taskcluster_access_token='some-token',
-        taskcluster_client_id='some-id',
-        timeout=1,
+        api_root="http://some.ship-it.tld/api/root-v2", taskcluster_access_token="some-token", taskcluster_client_id="some-id", timeout=1
     )
     release_instance_mock.update_status.assert_called_with(
-        'Firefox-59.0b1-build1',
-        status='shipped',
-        headers={'X-Forwarded-Proto': 'https', 'X-Forwarded-Port': '80'},
+        "Firefox-59.0b1-build1", status="shipped", headers={"X-Forwarded-Proto": "https", "X-Forwarded-Port": "80"}
     )
