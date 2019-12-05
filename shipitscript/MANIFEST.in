@@ -1,5 +1,4 @@
-recursive-include shipitscript/data *
-recursive-include examples *
+recursive-include src *
 
 include LICENSE
 include README.md
@@ -9,6 +8,7 @@ prune docker.d
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+recursive-exclude tests *
 
 include *.md
 include *.yml

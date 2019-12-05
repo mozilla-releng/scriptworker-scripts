@@ -9,9 +9,6 @@ from shipitscript.task import (
     get_task_action,
     validate_task_schema,
 )
-from shipitscript.test import context
-
-assert context  # silence pyflakes
 
 
 @pytest.mark.parametrize(
