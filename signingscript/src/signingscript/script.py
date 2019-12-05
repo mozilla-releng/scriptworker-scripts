@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """Signing script."""
-import aiohttp
 import logging
 import os
 
+import aiohttp
 import scriptworker.client
+
 from signingscript.task import build_filelist_dict, sign, task_signing_formats
 from signingscript.utils import copy_to_dir, load_autograph_configs
-
 
 log = logging.getLogger(__name__)
 
@@ -26,43 +26,25 @@ async def async_main(context):
             if not context.config.get("gpg_pubkey"):
                 raise Exception("GPG format is enabled but gpg_pubkey is not defined")
             if not os.path.exists(context.config["gpg_pubkey"]):
-                raise Exception(
-                    "gpg_pubkey ({}) doesn't exist!".format(
-                        context.config["gpg_pubkey"]
-                    )
-                )
+                raise Exception("gpg_pubkey ({}) doesn't exist!".format(context.config["gpg_pubkey"]))
 
         if "autograph_widevine" in all_signing_formats:
             if not context.config.get("widevine_cert"):
-                raise Exception(
-                    "Widevine format is enabled, but widevine_cert is not defined"
-                )
+                raise Exception("Widevine format is enabled, but widevine_cert is not defined")
 
         context.session = session
-        context.autograph_configs = load_autograph_configs(
-            context.config["autograph_configs"]
-        )
+        context.autograph_configs = load_autograph_configs(context.config["autograph_configs"])
         work_dir = context.config["work_dir"]
         filelist_dict = build_filelist_dict(context)
         for path, path_dict in filelist_dict.items():
             copy_to_dir(path_dict["full_path"], context.config["work_dir"], target=path)
             log.info("signing %s", path)
-            output_files = await sign(
-                context, os.path.join(work_dir, path), path_dict["formats"]
-            )
+            output_files = await sign(context, os.path.join(work_dir, path), path_dict["formats"])
             for source in output_files:
                 source = os.path.relpath(source, work_dir)
-                copy_to_dir(
-                    os.path.join(work_dir, source),
-                    context.config["artifact_dir"],
-                    target=source,
-                )
+                copy_to_dir(os.path.join(work_dir, source), context.config["artifact_dir"], target=source)
             if "gpg" in path_dict["formats"] or "autograph_gpg" in path_dict["formats"]:
-                copy_to_dir(
-                    context.config["gpg_pubkey"],
-                    context.config["artifact_dir"],
-                    target="public/build/KEY",
-                )
+                copy_to_dir(context.config["gpg_pubkey"], context.config["artifact_dir"], target="public/build/KEY")
     log.info("Done!")
 
 
@@ -82,9 +64,7 @@ def get_default_config(base_dir=None):
         "work_dir": os.path.join(base_dir, "work_dir"),
         "artifact_dir": os.path.join(base_dir, "/src/signing/artifact_dir"),
         "my_ip": "127.0.0.1",
-        "schema_file": os.path.join(
-            os.path.dirname(__file__), "data", "signing_task_schema.json"
-        ),
+        "schema_file": os.path.join(os.path.dirname(__file__), "data", "signing_task_schema.json"),
         "verbose": True,
         "zipalign": "zipalign",
         "dmg": "dmg",
@@ -99,9 +79,7 @@ def main():
     """Start signing script."""
     mohawk_log = logging.getLogger("mohawk")
     mohawk_log.setLevel(logging.INFO)
-    return scriptworker.client.sync_main(
-        async_main, default_config=get_default_config()
-    )
+    return scriptworker.client.sync_main(async_main, default_config=get_default_config())
 
 
 __name__ == "__main__" and main()

@@ -1,18 +1,11 @@
 import os
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "version.txt")) as f:
     version = f.read().rstrip()
 
-install_requires = [
-    "arrow",
-    "mar",
-    "scriptworker",
-    "taskcluster",
-    "mohawk",
-    "winsign",
-    "macholib",
-]
+install_requires = ["arrow", "mar", "scriptworker", "taskcluster", "mohawk", "winsign", "macholib"]
 
 setup(
     name="signingscript",
