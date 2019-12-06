@@ -186,12 +186,3 @@ INSTALLER_ARTIFACTS = (
     'target.dmg',
     'target.apk',
 )
-
-# Since bug 1522581, we ship zip files that contains all dependencies. At this time, zip files were
-# between 150 and 160MB. We doubled it to have enough room to grow
-DEFAULT_ZIP_MAX_FILE_SIZE_IN_MB = 300
-# Zip archive can theoretically have a better compression ratio, like when there's a big amount
-# of redundancy (e.g.: files full of zeros). Let beetmover only deal with regular cases. Edge cases
-# are considered too suspicious, so we bail out on them.
-ZIP_MAX_COMPRESSION_RATIO = 10
-SNAPSHOT_TIMESTAMP_REGEX = r'\d{8}\.\d{6}-\d{1}'

@@ -139,29 +139,6 @@ def get_upstream_artifacts(context, preserve_full_paths=False):
     return artifacts
 
 
-def get_upstream_artifacts_with_zip_extract_param(context):
-    # XXX A dict comprehension isn't used because upstream_definition would be erased if the same
-    # taskId is present twice in upstreamArtifacts
-    upstream_artifacts_per_task_id = {}
-
-    for artifact_definition in context.task['payload']['upstreamArtifacts']:
-        task_id = artifact_definition['taskId']
-        upstream_definitions = upstream_artifacts_per_task_id.get(task_id, [])
-
-        new_upstream_definition = {
-            'paths': [
-                scriptworker_artifacts.get_and_check_single_upstream_artifact_full_path(context, task_id, path)
-                for path in artifact_definition['paths']
-            ],
-            'zip_extract': artifact_definition.get('zipExtract', False),
-        }
-
-        upstream_definitions.append(new_upstream_definition)
-        upstream_artifacts_per_task_id[task_id] = upstream_definitions
-
-    return upstream_artifacts_per_task_id
-
-
 def get_release_props(context, platform_mapping=STAGE_PLATFORM_MAP):
     """determined via parsing the Nightly build job's payload and
     expanded the properties with props beetmover knows about."""

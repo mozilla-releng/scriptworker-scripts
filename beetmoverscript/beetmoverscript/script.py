@@ -1,35 +1,39 @@
 #!/usr/bin/env python
 """Beetmover script
 """
-import aiohttp
 import asyncio
-import boto3
-from botocore.exceptions import ClientError
 import logging
 from multiprocessing.pool import ThreadPool
 import os
-import re
-from redo import retry
-import sys
 import mimetypes
+import re
+import sys
+
+import aiohttp
+import boto3
+from botocore.exceptions import ClientError
+from redo import retry
 
 from scriptworker import client
-from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
+from scriptworker.exceptions import (
+        ScriptWorkerTaskException, ScriptWorkerRetryException
+)
 from scriptworker.utils import retry_async, raise_future_exceptions
 
-from beetmoverscript import task, zip, maven_utils
+from beetmoverscript import task
 
 from beetmoverscript.constants import (
     MIME_MAP, RELEASE_BRANCHES, CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE,
     NORMALIZED_BALROG_PLATFORMS, PARTNER_REPACK_PUBLIC_PREFIX_TMPL,
-    PARTNER_REPACK_PRIVATE_REGEXES, PARTNER_REPACK_PUBLIC_REGEXES, BUILDHUB_ARTIFACT,
-    INSTALLER_ARTIFACTS, DEFAULT_ZIP_MAX_FILE_SIZE_IN_MB
+    PARTNER_REPACK_PRIVATE_REGEXES, PARTNER_REPACK_PUBLIC_REGEXES,
+    BUILDHUB_ARTIFACT, INSTALLER_ARTIFACTS
 )
 from beetmoverscript.task import (
     validate_task_schema, add_balrog_manifest_to_artifacts,
     get_upstream_artifacts, get_release_props,
-    add_checksums_to_artifacts, get_task_bucket, get_task_action, validate_bucket_paths,
-    get_updated_buildhub_artifact, get_taskId_from_full_path
+    add_checksums_to_artifacts, get_task_bucket, get_task_action,
+    validate_bucket_paths, get_updated_buildhub_artifact,
+    get_taskId_from_full_path
 )
 from beetmoverscript.utils import (
     get_hash, generate_beetmover_manifest,
@@ -175,70 +179,14 @@ async def push_to_releases(context):
 
 
 async def push_to_maven(context):
-    """Push artifacts to locations expected by maven clients (like mvn or gradle)"""
+    """Push artifacts to maven locations expected by clients such as mvn/gradle)"""
     context.release_props = get_release_props(context)
     context.checksums = dict()  # Needed by downstream calls
     context.raw_balrog_manifest = dict()    # Needed by downstream calls
 
-    # XXX this is needed in order to avoid the need to land the in-tree
-    # corresponding patches across all trees altogether. Similarly for github
-    # projects. This allows us a gradual rollout of this across all projects
-    is_zip_archive = any([d.get('zipExtract') for d in context.task['payload']['upstreamArtifacts']])
-    if context.task['payload'].get('artifactMap'):
-        if is_zip_archive:
-            artifacts_to_beetmove = task.get_upstream_artifacts_with_zip_extract_param(context)
-            context.artifacts_to_beetmove = _extract_and_check_maven_artifacts_to_beetmove(
-                artifacts_to_beetmove,
-                context.config.get('zip_max_file_size_in_mb', DEFAULT_ZIP_MAX_FILE_SIZE_IN_MB),
-                artifact_map=context.task['payload'].get('artifactMap')
-            )
-            await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task['payload']['artifactMap'])
-        else:
-            # overwrite artifacts_to_beetmove with the declarative artifacts ones
-            context.artifacts_to_beetmove = task.get_upstream_artifacts(context, preserve_full_paths=True)
-            await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task['payload']['artifactMap'])
-    else:
-        # TODO: remove this once we're done with migrating from maven.zip
-        artifacts_to_beetmove = task.get_upstream_artifacts_with_zip_extract_param(context)
-        mapping_manifest = generate_beetmover_manifest(context)
-        validate_bucket_paths(context.bucket, mapping_manifest['s3_bucket_path'])
-
-        context.artifacts_to_beetmove = _extract_and_check_maven_artifacts_to_beetmove(
-            artifacts_to_beetmove,
-            context.config.get('zip_max_file_size_in_mb', DEFAULT_ZIP_MAX_FILE_SIZE_IN_MB),
-            mapping_manifest=mapping_manifest
-        )
-
-        await move_beets(context, context.artifacts_to_beetmove, manifest=mapping_manifest)
-
-
-def _extract_and_check_maven_artifacts_to_beetmove(artifacts, zip_max_file_size_in_mb, mapping_manifest=None, artifact_map=None):
-    expected_files = maven_utils.get_maven_expected_files_per_archive_per_task_id(
-        artifacts, mapping_manifest=mapping_manifest, artifact_map=artifact_map
-    )
-
-    extracted_paths_per_archive = zip.check_and_extract_zip_archives(
-        artifacts, expected_files, zip_max_file_size_in_mb, mapping_manifest
-    )
-
-    number_of_extracted_archives = len(extracted_paths_per_archive)
-    if number_of_extracted_archives == 0:
-        raise ScriptWorkerTaskException('No archive extracted')
-    elif number_of_extracted_archives > 1:
-        raise NotImplementedError('More than 1 archive extracted. Only 1 is supported at once')
-    extracted_paths_per_relative_path = list(extracted_paths_per_archive.values())[0]
-
-    if artifact_map:
-        return {
-            'en-US': extracted_paths_per_relative_path
-        }
-    else:
-        return {
-            'en-US': {
-                os.path.basename(path_in_archive): full_path
-                for path_in_archive, full_path in extracted_paths_per_relative_path.items()
-            }
-        }
+    # overwrite artifacts_to_beetmove with the declarative artifacts ones
+    context.artifacts_to_beetmove = task.get_upstream_artifacts(context, preserve_full_paths=True)
+    await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task['payload']['artifactMap'])
 
 
 # copy_beets {{{1
