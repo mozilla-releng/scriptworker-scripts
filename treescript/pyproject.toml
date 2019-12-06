@@ -19,6 +19,7 @@ exclude = '''
   | ui
   | vendored
   | py2
+  | src/treescript/py2/robustcheckout\.py$
 )/
 '''
 
