@@ -1,17 +1,13 @@
-from contextlib import contextmanager
 import os
-import pytest
+from contextlib import contextmanager
 
-from mozilla_version.gecko import (
-    FennecVersion,
-    FirefoxVersion,
-    GeckoVersion,
-    ThunderbirdVersion,
-)
-from treescript.task import DONTBUILD_MSG
+import pytest
+from mozilla_version.gecko import FennecVersion, FirefoxVersion, GeckoVersion, ThunderbirdVersion
+
+import treescript.versionmanip as vmanip
 from treescript.exceptions import TaskVerificationError, TreeScriptError
 from treescript.script import get_default_config
-import treescript.versionmanip as vmanip
+from treescript.task import DONTBUILD_MSG
 
 
 def is_slice_in_list(s, l):
@@ -33,9 +29,7 @@ def config(tmpdir):
     yield config_
 
 
-@pytest.fixture(
-    scope="function", params=("52.5.0", "52.0b3", "# foobar\n52.0a1", "60.1.3esr")
-)
+@pytest.fixture(scope="function", params=("52.5.0", "52.0b3", "# foobar\n52.0a1", "60.1.3esr"))
 def repo_context(tmpdir, config, request, mocker):
     context = mocker.MagicMock()
     context.repo = os.path.join(tmpdir, "repo")
@@ -43,9 +37,7 @@ def repo_context(tmpdir, config, request, mocker):
     context.config = config
     context.xtest_version = request.param
     if "\n" in request.param:
-        context.xtest_version = [
-            l for l in request.param.splitlines() if not l.startswith("#")
-        ][0]
+        context.xtest_version = [l for l in request.param.splitlines() if not l.startswith("#")][0]
     os.mkdir(context.repo)
     os.mkdir(os.path.join(context.repo, "config"))
     version_file = os.path.join(context.repo, "config", "milestone.txt")
@@ -63,9 +55,7 @@ def test_get_version(repo_context):
 def test_replace_ver_in_file(repo_context, new_version):
     filepath = "config/milestone.txt"
     old_ver = repo_context.xtest_version
-    vmanip.replace_ver_in_file(
-        os.path.join(repo_context.repo, filepath), old_ver, new_version
-    )
+    vmanip.replace_ver_in_file(os.path.join(repo_context.repo, filepath), old_ver, new_version)
     assert new_version == vmanip.get_version(filepath, repo_context.repo)
 
 
@@ -85,26 +75,10 @@ def test_replace_ver_in_file_invalid_old_ver(repo_context, new_version):
         ("mail/config/version.txt", does_not_raise(), ThunderbirdVersion),
         ("mail/config/version_display.txt", does_not_raise(), ThunderbirdVersion),
         ("config/milestone.txt", does_not_raise(), GeckoVersion),
-        (
-            "mobile/android/config/version-files/beta/version.txt",
-            does_not_raise(),
-            FennecVersion,
-        ),
-        (
-            "mobile/android/config/version-files/beta/version_display.txt",
-            does_not_raise(),
-            FennecVersion,
-        ),
-        (
-            "mobile/android/config/version-files/release/version.txt",
-            does_not_raise(),
-            FennecVersion,
-        ),
-        (
-            "mobile/android/config/version-files/release/version_display.txt",
-            does_not_raise(),
-            FennecVersion,
-        ),
+        ("mobile/android/config/version-files/beta/version.txt", does_not_raise(), FennecVersion),
+        ("mobile/android/config/version-files/beta/version_display.txt", does_not_raise(), FennecVersion),
+        ("mobile/android/config/version-files/release/version.txt", does_not_raise(), FennecVersion),
+        ("mobile/android/config/version-files/release/version_display.txt", does_not_raise(), FennecVersion),
         ("some/random/file.txt", pytest.raises(TreeScriptError), None),
     ),
 )
@@ -114,9 +88,7 @@ def test_find_what_version_parser_to_use(file, expectation, expected_result):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "new_version, should_append_esr", (("68.0", True), ("68.0b3", False))
-)
+@pytest.mark.parametrize("new_version, should_append_esr", (("68.0", True), ("68.0b3", False)))
 async def test_bump_version(mocker, repo_context, new_version, should_append_esr):
     called_args = []
 
@@ -189,21 +161,14 @@ async def test_bump_version_invalid_file(mocker, repo_context, new_version):
     async def run_command(context, *arguments, repo_path=None):
         called_args.append([tuple([context]) + arguments, {"repo_path": repo_path}])
 
-    relative_files = [
-        os.path.join("config", "invalid_file.txt"),
-        os.path.join("config", "milestone.txt"),
-    ]
+    relative_files = [os.path.join("config", "invalid_file.txt"), os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
     mocker.patch.object(vmanip, "run_hg_command", new=run_command)
     with pytest.raises(TaskVerificationError):
-        await vmanip.bump_version(
-            repo_context.config, repo_context.task, repo_context.repo
-        )
-    assert repo_context.xtest_version == vmanip.get_version(
-        relative_files[1], repo_context.repo
-    )
+        await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
+    assert repo_context.xtest_version == vmanip.get_version(relative_files[1], repo_context.repo)
     assert len(called_args) == 0
 
 
@@ -216,21 +181,14 @@ async def test_bump_version_missing_file(mocker, repo_context, new_version):
         called_args.append([tuple([context]) + arguments, {"repo_path": repo_path}])
 
     # Test only creates config/milestone.txt
-    relative_files = [
-        os.path.join("browser", "config", "version_display.txt"),
-        os.path.join("config", "milestone.txt"),
-    ]
+    relative_files = [os.path.join("browser", "config", "version_display.txt"), os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
     mocker.patch.object(vmanip, "run_hg_command", new=run_command)
     with pytest.raises(TaskVerificationError):
-        await vmanip.bump_version(
-            repo_context.config, repo_context.task, repo_context.repo
-        )
-    assert repo_context.xtest_version == vmanip.get_version(
-        relative_files[1], repo_context.repo
-    )
+        await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
+    assert repo_context.xtest_version == vmanip.get_version(relative_files[1], repo_context.repo)
     assert len(called_args) == 0
 
 
@@ -248,17 +206,12 @@ async def test_bump_version_smaller_version(mocker, repo_context, new_version):
     mocked_bump_info.return_value = bump_info
     mocker.patch.object(vmanip, "run_hg_command", new=run_command)
     await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
-    assert repo_context.xtest_version == vmanip.get_version(
-        relative_files[0], repo_context.repo
-    )
+    assert repo_context.xtest_version == vmanip.get_version(relative_files[0], repo_context.repo)
     assert len(called_args) == 0
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "new_version,expect_version",
-    (("60.2.0", "60.2.0esr"), ("68.0.1", "68.0.1esr"), ("68.9.10esr", "68.9.10esr")),
-)
+@pytest.mark.parametrize("new_version,expect_version", (("60.2.0", "60.2.0esr"), ("68.0.1", "68.0.1esr"), ("68.9.10esr", "68.9.10esr")))
 async def test_bump_version_esr(mocker, repo_context, new_version, expect_version):
     if not repo_context.xtest_version.endswith("esr"):
         # XXX pytest.skip raised exceptions here for some reason.
@@ -282,12 +235,8 @@ async def test_bump_version_esr(mocker, repo_context, new_version, expect_versio
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "new_version,expect_esr_version", (("60.0", "60.0esr"), ("68.0.1", "68.0.1esr"))
-)
-async def test_bump_version_esr_dont_bump_non_esr(
-    mocker, config, tmpdir, new_version, expect_esr_version
-):
+@pytest.mark.parametrize("new_version,expect_esr_version", (("60.0", "60.0esr"), ("68.0.1", "68.0.1esr")))
+async def test_bump_version_esr_dont_bump_non_esr(mocker, config, tmpdir, new_version, expect_esr_version):
     version = "52.0.1"
     repo = os.path.join(tmpdir, "repo")
     os.mkdir(repo)
@@ -305,10 +254,7 @@ async def test_bump_version_esr_dont_bump_non_esr(
     async def run_command(context, *arguments, repo_path=None):
         called_args.append([tuple([context]) + arguments, {"repo_path": repo_path}])
 
-    relative_files = [
-        os.path.join("browser", "config", "version_display.txt"),
-        os.path.join("config", "milestone.txt"),
-    ]
+    relative_files = [os.path.join("browser", "config", "version_display.txt"), os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
@@ -332,7 +278,5 @@ async def test_bump_version_same_version(mocker, repo_context):
     mocked_bump_info.return_value = bump_info
     mocker.patch.object(vmanip, "run_hg_command", new=run_command)
     await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
-    assert repo_context.xtest_version == vmanip.get_version(
-        relative_files[0], repo_context.repo
-    )
+    assert repo_context.xtest_version == vmanip.get_version(relative_files[0], repo_context.repo)
     assert len(called_args) == 0
