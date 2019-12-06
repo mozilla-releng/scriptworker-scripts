@@ -1,12 +1,11 @@
 import os
+
 import pytest
 
+import treescript.task as ttask
 from scriptworker_client.client import verify_task_schema
 from scriptworker_client.exceptions import TaskVerificationError
-
 from treescript.script import get_default_config
-import treescript.task as ttask
-
 
 TEST_ACTION_TAG = "project:releng:treescript:action:tagging"
 TEST_ACTION_BUMP = "project:releng:treescript:action:version_bump"
@@ -31,18 +30,10 @@ def task_defn():
         "scopes": ["tagging"],
         "payload": {
             "upstreamArtifacts": [
-                {
-                    "taskType": "build",
-                    "taskId": "VALID_TASK_ID",
-                    "formats": ["gpg"],
-                    "paths": ["public/build/firefox-52.0a1.en-US.win64.installer.exe"],
-                }
+                {"taskType": "build", "taskId": "VALID_TASK_ID", "formats": ["gpg"], "paths": ["public/build/firefox-52.0a1.en-US.win64.installer.exe"]}
             ]
         },
-        "metadata": {
-            "source": "https://hg.mozilla.org/releases/mozilla-test-source"
-            "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"
-        },
+        "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source" "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
     }
 
 
@@ -88,18 +79,9 @@ def test_no_error_is_reported_when_no_missing_url(config, task_defn):
 @pytest.mark.parametrize(
     "source_url,raises",
     (
-        (
-            "https://bitbucket.org/mozilla/mozilla-central/file/foobar",
-            TaskVerificationError,
-        ),
-        (
-            "http://hg.mozilla.org/releases/mozilla-test-source/file/default/taskcluster/ci/foobar",
-            TaskVerificationError,
-        ),
-        (
-            "https://hg.mozilla.org/releases/mozilla-test-source/raw-file/default/taskcluster/ci/foobar",
-            TaskVerificationError,
-        ),
+        ("https://bitbucket.org/mozilla/mozilla-central/file/foobar", TaskVerificationError),
+        ("http://hg.mozilla.org/releases/mozilla-test-source/file/default/taskcluster/ci/foobar", TaskVerificationError),
+        ("https://hg.mozilla.org/releases/mozilla-test-source/raw-file/default/taskcluster/ci/foobar", TaskVerificationError),
     ),
 )
 def test_get_source_repo_raises(task_defn, source_url, raises):
@@ -118,9 +100,7 @@ def test_get_source_repo_raises(task_defn, source_url, raises):
     ),
 )
 def test_get_metadata_source_repo(task_defn, source_repo):
-    task_defn["metadata"]["source"] = "{}/file/default/taskcluster/ci/foobar".format(
-        source_repo
-    )
+    task_defn["metadata"]["source"] = "{}/file/default/taskcluster/ci/foobar".format(source_repo)
     assert source_repo == ttask.get_source_repo(task_defn)
 
 
@@ -159,11 +139,7 @@ def test_get_branch(task_defn, branch):
 
 
 @pytest.mark.parametrize(
-    "tag_info",
-    (
-        {"revision": "deadbeef", "tags": ["FIREFOX_54.0b3_RELEASE", "BOB"]},
-        {"revision": "beef0001", "tags": ["FIREFOX_59.0b3_RELEASE", "FRED"]},
-    ),
+    "tag_info", ({"revision": "deadbeef", "tags": ["FIREFOX_54.0b3_RELEASE", "BOB"]}, {"revision": "beef0001", "tags": ["FIREFOX_59.0b3_RELEASE", "FRED"]})
 )
 def test_tag_info(task_defn, tag_info):
     task_defn["payload"]["tag_info"] = tag_info
@@ -180,10 +156,7 @@ def test_tag_missing_tag_info(task_defn):
     "bump_info",
     (
         {"next_version": "1.2.4", "files": ["browser/config/version.txt"]},
-        {
-            "next_version": "98.0.1b3",
-            "files": ["config/milestone.txt", "browser/config/version_display.txt"],
-        },
+        {"next_version": "98.0.1b3", "files": ["config/milestone.txt", "browser/config/version_display.txt"]},
     ),
 )
 def test_bump_info(task_defn, bump_info):
@@ -206,12 +179,7 @@ def test_bump_missing_bump_info(task_defn):
                 "name": "Fennec l10n changesets",
                 "version_path": "mobile/android/config/version-files/beta/version.txt",
                 "revision_url": "https://l10n.mozilla.org/shipping/l10n-changesets?av=fennec%(MAJOR_VERSION)s",
-                "platform_configs": [
-                    {
-                        "platforms": ["android-multilocale"],
-                        "path": "mobile/android/locales/maemo-locales",
-                    }
-                ],
+                "platform_configs": [{"platforms": ["android-multilocale"], "path": "mobile/android/locales/maemo-locales"}],
             }
         ],
         [
@@ -285,9 +253,7 @@ def test_get_ignore_closed_tree(task_defn, closed_tree):
 
 
 # task_task_action_types {{{1
-@pytest.mark.parametrize(
-    "actions", (["tag"], ["version_bump"], ["tag", "version_bump", "push"])
-)
+@pytest.mark.parametrize("actions", (["tag"], ["version_bump"], ["tag", "version_bump", "push"]))
 def test_task_action_types_actions(actions):
     task = {"payload": {"actions": actions}}
     assert actions == ttask.task_action_types(SCRIPT_CONFIG, task)
@@ -295,20 +261,14 @@ def test_task_action_types_actions(actions):
 
 @pytest.mark.parametrize(
     "actions,scopes",
-    (
-        (["tagging"], [TEST_ACTION_TAG]),
-        (["version_bump"], [TEST_ACTION_BUMP]),
-        (["tagging", "version_bump"], [TEST_ACTION_BUMP, TEST_ACTION_TAG]),
-    ),
+    ((["tagging"], [TEST_ACTION_TAG]), (["version_bump"], [TEST_ACTION_BUMP]), (["tagging", "version_bump"], [TEST_ACTION_BUMP, TEST_ACTION_TAG])),
 )
 def test_task_action_types_valid_scopes(actions, scopes):
     task = {"scopes": scopes}
     assert actions == ttask.task_action_types(SCRIPT_CONFIG, task)
 
 
-@pytest.mark.parametrize(
-    "scopes", ([TEST_ACTION_INVALID], [TEST_ACTION_TAG, TEST_ACTION_INVALID])
-)
+@pytest.mark.parametrize("scopes", ([TEST_ACTION_INVALID], [TEST_ACTION_TAG, TEST_ACTION_INVALID]))
 def test_task_action_types_invalid_action(scopes):
     task = {"scopes": scopes}
     with pytest.raises(TaskVerificationError):
@@ -322,9 +282,7 @@ def test_task_action_types_missing_action(scopes):
         ttask.task_action_types(SCRIPT_CONFIG, task)
 
 
-@pytest.mark.parametrize(
-    "task", ({"payload": {}}, {"payload": {"dry_run": False}}, {"scopes": ["foo"]})
-)
+@pytest.mark.parametrize("task", ({"payload": {}}, {"payload": {"dry_run": False}}, {"scopes": ["foo"]}))
 def test_is_dry_run(task):
     assert False is ttask.is_dry_run(task)
 

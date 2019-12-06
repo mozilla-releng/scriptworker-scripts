@@ -14,14 +14,7 @@ from scriptworker_client.aio import download_file, retry_async
 from scriptworker_client.exceptions import DownloadError
 from scriptworker_client.utils import load_json_or_yaml
 from treescript.mercurial import run_hg_command
-from treescript.task import (
-    CLOSED_TREE_MSG,
-    DONTBUILD_MSG,
-    get_dontbuild,
-    get_ignore_closed_tree,
-    get_l10n_bump_info,
-    get_short_source_repo,
-)
+from treescript.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_l10n_bump_info, get_short_source_repo
 from treescript.versionmanip import get_version
 
 log = logging.getLogger(__name__)
@@ -161,16 +154,11 @@ async def check_treestatus(config, task):
     tree = get_short_source_repo(task)
     url = "%s/trees/%s" % (config["treestatus_base_url"], tree)
     path = os.path.join(config["work_dir"], "treestatus.json")
-    await retry_async(
-        download_file, args=(url, path), retry_exceptions=(DownloadError,)
-    )
+    await retry_async(download_file, args=(url, path), retry_exceptions=(DownloadError,))
 
     treestatus = load_json_or_yaml(path, is_path=True)
     if treestatus["result"]["status"] != "closed":
-        log.info(
-            "treestatus is %s - assuming we can land",
-            repr(treestatus["result"]["status"]),
-        )
+        log.info("treestatus is %s - assuming we can land", repr(treestatus["result"]["status"]))
         return True
     return False
 
@@ -188,16 +176,11 @@ async def get_revision_info(bump_config, repo_path):
 
     """
     version = get_version(bump_config["version_path"], repo_path)
-    repl_dict = {
-        "MAJOR_VERSION": version.major_number,
-        "COMBINED_MAJOR_VERSION": version.major_number + version.minor_number,
-    }
+    repl_dict = {"MAJOR_VERSION": version.major_number, "COMBINED_MAJOR_VERSION": version.major_number + version.minor_number}
     url = bump_config["revision_url"] % repl_dict
     with tempfile.NamedTemporaryFile() as fp:
         path = fp.name
-        await retry_async(
-            download_file, args=(url, path), retry_exceptions=(DownloadError,)
-        )
+        await retry_async(download_file, args=(url, path), retry_exceptions=(DownloadError,))
         with open(path, "r") as fh:
             revision_info = fh.read()
     log.info("Got %s", revision_info)
@@ -247,18 +230,9 @@ async def l10n_bump(config, task, repo_path):
         if old_contents == new_contents:
             continue
         with open(path, "w") as fh:
-            fh.write(
-                json.dumps(
-                    new_contents, sort_keys=True, indent=4, separators=(",", ": ")
-                )
-            )
+            fh.write(json.dumps(new_contents, sort_keys=True, indent=4, separators=(",", ": ")))
         locale_map = build_locale_map(old_contents, new_contents)
-        message = build_commit_message(
-            bump_config["name"],
-            locale_map,
-            dontbuild=dontbuild,
-            ignore_closed_tree=ignore_closed_tree,
-        )
+        message = build_commit_message(bump_config["name"], locale_map, dontbuild=dontbuild, ignore_closed_tree=ignore_closed_tree)
         await run_hg_command(config, "commit", "-m", message, repo_path=repo_path)
         changes += 1
     return changes

@@ -9,9 +9,7 @@ import os
 
 ROBUSTCHKOUT_SHA_512 = "29f9ddf3a7fc86ef4ded8fce4f2759e17da580e71e77c87857bcab346db5bfa7adb0cba74a09954fe9ffdba33b5c27a8a2c07f84ff1713d7700118c234223f49"
 
-ROBUSTCHECKOUT_FILE = os.path.join(
-    os.path.dirname(__file__), "..", "src", "treescript", "py2", "robustcheckout.py"
-)
+ROBUSTCHECKOUT_FILE = os.path.join(os.path.dirname(__file__), "..", "src", "treescript", "py2", "robustcheckout.py")
 
 
 def test_robustcheckout_sha():

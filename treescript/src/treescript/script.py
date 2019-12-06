@@ -6,18 +6,10 @@ import os
 from scriptworker_client.aio import retry_async
 from scriptworker_client.client import sync_main
 from treescript.exceptions import CheckoutError, PushError, TreeScriptError
-from treescript.mercurial import (
-    log_mercurial_version,
-    validate_robustcheckout_works,
-    checkout_repo,
-    do_tagging,
-    log_outgoing,
-    strip_outgoing,
-    push,
-)
-from treescript.task import task_action_types, is_dry_run
-from treescript.versionmanip import bump_version
 from treescript.l10n import l10n_bump
+from treescript.mercurial import checkout_repo, do_tagging, log_mercurial_version, log_outgoing, push, strip_outgoing, validate_robustcheckout_works
+from treescript.task import is_dry_run, task_action_types
+from treescript.versionmanip import bump_version
 
 log = logging.getLogger(__name__)
 
@@ -51,10 +43,7 @@ async def do_actions(config, task, actions, repo_path):
             raise NotImplementedError("Unexpected action")
     num_outgoing = await log_outgoing(config, task, repo_path)
     if num_outgoing != num_changes:
-        raise TreeScriptError(
-            "Outgoing changesets don't match number of expected changesets!"
-            " {} vs {}".format(num_outgoing, num_changes)
-        )
+        raise TreeScriptError("Outgoing changesets don't match number of expected changesets!" " {} vs {}".format(num_outgoing, num_changes))
     if is_dry_run(task):
         log.info("Not pushing changes, dry_run was forced")
     elif "push" in actions:
@@ -82,11 +71,7 @@ async def async_main(config, task):
     await log_mercurial_version(config)
     if not await validate_robustcheckout_works(config):
         raise TreeScriptError("Robustcheckout can't run on our version of hg, aborting")
-    await retry_async(
-        do_actions,
-        args=(config, task, actions_to_perform, repo_path),
-        retry_exceptions=(CheckoutError, PushError),
-    )
+    await retry_async(do_actions, args=(config, task, actions_to_perform, repo_path), retry_exceptions=(CheckoutError, PushError))
     log.info("Done!")
 
 
@@ -106,9 +91,7 @@ def get_default_config(base_dir=None):
     default_config = {
         "work_dir": os.path.join(base_dir, "work_dir"),
         "hg": "hg",
-        "schema_file": os.path.join(
-            os.path.dirname(__file__), "data", "treescript_task_schema.json"
-        ),
+        "schema_file": os.path.join(os.path.dirname(__file__), "data", "treescript_task_schema.json"),
     }
     return default_config
 
