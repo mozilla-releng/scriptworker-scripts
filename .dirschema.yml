@@ -1,0 +1,28 @@
+repos:
+  schema: https://raw.githubusercontent.com/mozilla-releng/releng-dirschemas/master/repo.yaml
+  projects:
+    - /
+docker-compose:
+  schema: https://raw.githubusercontent.com/mozilla-releng/releng-dirschemas/master/docker-compose.yaml
+  projects:
+    - /addonscript
+    - /balrogscript
+    - /beetmoverscript
+    - /bouncerscript
+    - /pushapkscript
+    - /pushsnapscript
+    - /shipitscript
+    - /signingscript
+    - /treescript
+apps:
+  schema: https://raw.githubusercontent.com/mozilla-releng/releng-dirschemas/master/python-app.yaml
+  projects:
+    - /addonscript
+    - /balrogscript
+    - /beetmoverscript
+    - /bouncerscript
+    - /pushapkscript
+    - /pushsnapscript
+    - /shipitscript
+    - /signingscript
+    - /treescript
