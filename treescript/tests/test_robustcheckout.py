@@ -7,7 +7,7 @@ We use a vendored copy, tests here are merely about integration with our tooling
 import hashlib
 import os
 
-ROBUSTCHKOUT_SHA_512 = "29f9ddf3a7fc86ef4ded8fce4f2759e17da580e71e77c87857bcab346db5bfa7adb0cba74a09954fe9ffdba33b5c27a8a2c07f84ff1713d7700118c234223f49"
+ROBUSTCHKOUT_SHA_512 = "93da691b777abaa4e8f8db9eb130daf081412709db3ffa05aba80bb05d7e17b0157db824ead65f4af73b48951e1030a95706b8aabe1eed06483c0ed9239d8592"
 
 ROBUSTCHECKOUT_FILE = os.path.join(os.path.dirname(__file__), "..", "src", "treescript", "py2", "robustcheckout.py")
 
