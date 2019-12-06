@@ -76,9 +76,6 @@
                                 "items": {
                                     "type": "string"
                                 }
-                            },
-                            "zipExtract": {
-                                "type": "boolean"
                             }
                         },
                         "required": ["taskId", "taskType", "paths"]
