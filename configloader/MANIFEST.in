@@ -1,0 +1,5 @@
+include version.txt
+graft requirements
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]

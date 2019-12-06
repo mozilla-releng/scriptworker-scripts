@@ -17,6 +17,8 @@ tasks:
         # [ <PROJECT NAME>,   <PYTHON VERSION>, <SETUP COMMAND>,           <DOCKERHUB REPO>]
         - ['client',          '37',             '',                        '']
         - ['client',          '38',             '',                        '']
+        - ['configloader',    '37',             '',                        '']
+        - ['configloader',    '38',             '',                        '']
         - ['iscript',         '37',             '',                        '']
         - ['iscript',         '38',             '',                        '']
         - ['addonscript',     '37',             '',                        'mozilla/releng-addonscript']
