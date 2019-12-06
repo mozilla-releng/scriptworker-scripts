@@ -7,33 +7,26 @@ Attributes:
         function.
 
 """
-import aiohttp
-import asyncio
 from frozendict import frozendict
 import logging
 import os
-import random
 import re
 
-from scriptworker.exceptions import ScriptWorkerException, TaskVerificationError
-from scriptworker.utils import retry_request, get_single_item_from_sequence
+from scriptworker.exceptions import TaskVerificationError
+from scriptworker.utils import get_single_item_from_sequence
 
 from signingscript.sign import (
-    get_suitable_signing_servers,
     sign_gpg,
     sign_jar,
     sign_macapp,
-    sign_signcode,
     sign_widevine,
     sign_file,
     sign_mar384_with_autograph_hash,
     sign_gpg_with_autograph,
     sign_omnija,
-    sign_langpack,
     sign_authenticode_zip,
+    sign_xpi,
 )
-from signingscript.exceptions import SigningServerError
-from signingscript.utils import is_autograph_signing_format
 
 log = logging.getLogger(__name__)
 
@@ -49,16 +42,14 @@ FORMAT_TO_SIGNING_FUNCTION = frozendict(
         "jar": sign_jar,
         "focus-jar": sign_jar,
         "macapp": sign_macapp,
-        "osslsigncode": sign_signcode,
-        "sha2signcode": sign_signcode,
-        # sha2signcodestub uses a generic sign_file
-        "signcode": sign_signcode,
         "widevine": sign_widevine,
         "autograph_widevine": sign_widevine,
         "autograph_omnija": sign_omnija,
-        "autograph_langpack": sign_langpack,
+        "autograph_langpack": sign_xpi,
         "autograph_authenticode": sign_authenticode_zip,
         "autograph_authenticode_stub": sign_authenticode_zip,
+        "privileged_webextension": sign_xpi,
+        "system_addon": sign_xpi,
         "default": sign_file,
     }
 )
@@ -78,6 +69,9 @@ def task_cert_type(context):
         str: the cert type.
 
     """
+    if not context.task or not context.task["scopes"]:
+        raise TaskVerificationError("No scopes found")
+
     prefixes = _get_cert_prefixes(context)
     scopes = _extract_scopes_from_unique_prefix(
         scopes=context.task["scopes"], prefixes=prefixes
@@ -139,59 +133,6 @@ def _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes):
             "Scopes must exist and all have the same prefix. "
             "Given scopes: {}. Allowed prefixes: {}".format(scopes, prefixes)
         )
-
-
-# get_token {{{1
-async def get_token(context, output_file, cert_type, signing_formats):
-    """Retrieve a token from the signingserver tied to my ip.
-
-    Args:
-        context (Context): the signing context
-        output_file (str): the path to write the token to.
-        cert_type (str): the cert type used to find an appropriate signing server
-        signing_formats (list): the signing formats used to find an appropriate
-            signing server
-
-    Raises:
-        SigningServerError: on failure
-
-    """
-    token = None
-    data = {
-        "slave_ip": context.config["my_ip"],
-        "duration": context.config["token_duration_seconds"],
-    }
-    signing_servers = get_suitable_signing_servers(
-        context.signing_servers,
-        cert_type,
-        [fmt for fmt in signing_formats if not is_autograph_signing_format(fmt)],
-    )
-    random.shuffle(signing_servers)
-    for s in signing_servers:
-        log.info("getting token from %s", s.server)
-        url = "https://{}/token".format(s.server)
-        auth = aiohttp.BasicAuth(s.user, password=s.password)
-        try:
-            token = await retry_request(
-                context, url, method="post", data=data, auth=auth, return_type="text"
-            )
-            if token:
-                break
-        except (
-            ScriptWorkerException,
-            aiohttp.ClientError,
-            asyncio.TimeoutError,
-        ) as exc:
-            log.warning(
-                "Error retrieving token: {}\nTrying the next server.".format(str(exc))
-            )
-            continue
-    else:
-        raise SigningServerError(
-            "Cannot retrieve signing token from any signing server."
-        )
-    with open(output_file, "w") as fh:
-        print(token, file=fh, end="")
 
 
 # sign {{{1

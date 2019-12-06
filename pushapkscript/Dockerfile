@@ -14,9 +14,12 @@ WORKDIR /app
 COPY . /app
 
 RUN python -m venv /app \
- && ./bin/pip install -r requirements/base.txt \
- && ./bin/pip install -e . \
- && ./bin/pip install -r /app/docker.d/configloader/requirements/base.txt \
- && ./bin/pip install /app/docker.d/configloader
+ && cd pushapkscript \
+ && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install . \
+ && cd /app/configloader \
+ && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install . \
+ && cd /app
 
 CMD ["/app/docker.d/init.sh"]

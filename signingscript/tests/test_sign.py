@@ -20,7 +20,7 @@ import winsign.sign
 from scriptworker.utils import makedirs
 
 from signingscript.exceptions import SigningScriptError
-from signingscript.utils import get_hash, SigningServer
+from signingscript.utils import get_hash
 import signingscript.sign as sign
 import signingscript.utils as utils
 from conftest import (
@@ -103,87 +103,39 @@ async def helper_archive(context, filename, create_fn, extract_fn, *args):
         assert hash1 == hash2
 
 
-# get_suitable_signing_servers {{{1
+# get_autograph_config {{{1
 @pytest.mark.parametrize(
     "formats,expected",
     (
         (
-            ["gpg"],
-            [
-                [
-                    "127.0.0.1:9110",
-                    "user",
-                    "pass",
-                    ["gpg", "sha2signcode"],
-                    "signing_server",
-                ]
-            ],
+            ["autograph_marsha384"],
+            utils.Autograph(*[
+                "https://127.0.0.3",
+                "hawk_user",
+                "hawk_secret",
+                ["autograph_marsha384"],
+            ])
         ),
-        (["invalid"], []),
+        (["invalid"], None),
     ),
 )
-def test_get_suitable_signing_servers(context, formats, expected):
-    expected_servers = []
-    for info in expected:
-        expected_servers.append(SigningServer(*info))
-
+def test_get_autograph_config(context, formats, expected):
     assert (
-        sign.get_suitable_signing_servers(
-            context.signing_servers, TEST_CERT_TYPE, formats
+        sign.get_autograph_config(
+            context.autograph_configs, TEST_CERT_TYPE, formats
         )
-        == expected_servers
+        == expected
     )
 
 
-def test_get_suitable_signing_servers_raises_signingscript_error(context):
+def test_get_autograph_config_raises_signingscript_error(context):
     with pytest.raises(SigningScriptError):
-        sign.get_suitable_signing_servers(
-            context.signing_servers,
+        sign.get_autograph_config(
+            context.autograph_configs,
             TEST_CERT_TYPE,
             signing_formats=["invalid"],
-            raise_on_empty_list=True,
+            raise_on_empty=True,
         )
-
-
-# build_signtool_cmd {{{1
-@pytest.mark.parametrize(
-    "signtool,from_,to,fmt",
-    (
-        ("signtool", "blah", "blah", "gpg"),
-        (["signtool"], "blah", "blah", "sha2signcode"),
-    ),
-)
-def test_build_signtool_cmd(context, signtool, from_, to, fmt):
-    context.config["signtool"] = signtool
-    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    context.config["ssl_cert"] = "cert"
-    work_dir = context.config["work_dir"]
-    assert sign.build_signtool_cmd(context, from_, fmt, to=to) == [
-        "signtool",
-        "-n",
-        os.path.join(work_dir, "nonce"),
-        "-t",
-        os.path.join(work_dir, "token"),
-        "-c",
-        "cert",
-        "-H",
-        "127.0.0.1:9110",
-        "-f",
-        fmt,
-        "-o",
-        to,
-        from_,
-    ]
-
-
-# sign_file {{{1
-@pytest.mark.asyncio
-@pytest.mark.parametrize("to,expected", ((None, "from"), ("to", "to")))
-async def test_sign_file_cert_signing_server(context, mocker, to, expected):
-    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    mocker.patch.object(sign, "build_signtool_cmd", new=noop_sync)
-    mocker.patch.object(utils, "execute_subprocess", new=noop_async)
-    assert await sign.sign_file(context, "from", "blah", to=to) == expected
 
 
 # sign_file {{{1
@@ -191,18 +143,15 @@ async def test_sign_file_cert_signing_server(context, mocker, to, expected):
 @pytest.mark.parametrize("to,expected", ((None, "from"), ("to", "to")))
 async def test_sign_file_autograph(context, mocker, to, expected):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    context.signing_servers = {
-        "project:releng:signing:cert:dep-signing": [
-            SigningServer(
-                *[
-                    "https://autograph-hsm.dev.mozaws.net",
-                    "alice",
-                    "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                    ["autograph_mar"],
-                    "autograph",
-                ]
-            )
-        ]
+    context.autograph_configs = {
+        "project:releng:signing:cert:dep-signing": [utils.Autograph(
+            *[
+                "https://autograph-hsm.dev.mozaws.net",
+                "alice",
+                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
+                ["autograph_mar"],
+            ]
+        )]
     }
     mocker.patch.object(sign, "sign_file_with_autograph", new=noop_async)
 
@@ -232,18 +181,15 @@ async def test_sign_file_with_autograph(context, mocker, to, expected, format, o
     mocker.patch.object(context, "session", new=mocked_session)
 
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    context.signing_servers = {
-        "project:releng:signing:cert:dep-signing": [
-            SigningServer(
-                *[
-                    "https://autograph-hsm.dev.mozaws.net",
-                    "alice",
-                    "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                    [format],
-                    "autograph",
-                ]
-            )
-        ]
+    context.autograph_configs = {
+        "project:releng:signing:cert:dep-signing": [utils.Autograph(
+            *[
+                "https://autograph-hsm.dev.mozaws.net",
+                "alice",
+                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
+                [format],
+            ]
+        )]
     }
     assert (
         await sign.sign_file_with_autograph(context, "from", format, to=to) == expected
@@ -268,7 +214,7 @@ async def test_sign_file_with_autograph_invalid_format_errors(
     context, mocker, to, expected
 ):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    context.signing_servers = {}
+    context.autograph_configs = {}
     with pytest.raises(SigningScriptError):
         await sign.sign_file_with_autograph(context, "from", "mar", to=to)
 
@@ -279,7 +225,7 @@ async def test_sign_file_with_autograph_no_suitable_servers_errors(
     context, mocker, to, expected
 ):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    context.signing_servers = {}
+    context.autograph_configs = {}
     with pytest.raises(SigningScriptError):
         await sign.sign_file_with_autograph(context, "from", "autograph_mar", to=to)
 
@@ -303,18 +249,15 @@ async def test_sign_file_with_autograph_raises_http_error(
     mocker.patch.object(sign, "retry_async", new=fake_retry_async)
 
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    context.signing_servers = {
-        "project:releng:signing:cert:dep-signing": [
-            SigningServer(
-                *[
-                    "https://autograph-hsm.dev.mozaws.net",
-                    "alice",
-                    "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                    ["autograph_mar"],
-                    "autograph",
-                ]
-            )
-        ]
+    context.autograph_configs = {
+        "project:releng:signing:cert:dep-signing": [utils.Autograph(
+            *[
+                "https://autograph-hsm.dev.mozaws.net",
+                "alice",
+                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
+                ["autograph_mar"],
+            ]
+        )]
     }
     with pytest.raises(aiohttp.ClientError):
         await sign.sign_file_with_autograph(context, "from", "autograph_mar", to=to)
@@ -404,16 +347,13 @@ async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
     mocker.patch("signingscript.sign.verify_mar_signature")
 
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    context.signing_servers = {
-        "project:releng:signing:cert:dep-signing": [
-            SigningServer(
-                "https://autograph-hsm.dev.mozaws.net",
-                "alice",
-                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                ["autograph_hash_only_mar384"],
-                "autograph",
-            )
-        ]
+    context.autograph_configs = {
+        "project:releng:signing:cert:dep-signing": [utils.Autograph(
+            "https://autograph-hsm.dev.mozaws.net",
+            "alice",
+            "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
+            ["autograph_hash_only_mar384"],
+        )]
     }
     assert (
         await sign.sign_mar384_with_autograph_hash(
@@ -438,16 +378,14 @@ async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
 @pytest.mark.asyncio
 async def test_sign_mar384_with_autograph_hash_keyid(context, mocker):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    context.signing_servers = {
-        "project:releng:signing:cert:dep-signing": [
-            SigningServer(
-                "https://autograph-hsm.dev.mozaws.net",
-                "alice",
-                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                ["autograph_hash_only_mar384"],
-                "autograph",
-            )
-        ]
+    context.autograph_configs = {
+        "project:releng:signing:cert:dep-signing": [utils.Autograph(
+            "https://autograph-hsm.dev.mozaws.net",
+            "alice",
+            "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
+            ["autograph_hash_only_mar384"],
+            "autograph",
+        )]
     }
 
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
@@ -459,6 +397,7 @@ async def test_sign_mar384_with_autograph_hash_keyid(context, mocker):
 
     async def fake_sign_hash(context, h, fmt, keyid):
         return b"#" * 512
+
     fake_sign_hash = mock.MagicMock(wraps=fake_sign_hash)
     mocker.patch("signingscript.sign.sign_hash_with_autograph", fake_sign_hash)
 
@@ -468,7 +407,9 @@ async def test_sign_mar384_with_autograph_hash_keyid(context, mocker):
         )
         == "from"
     )
-    fake_sign_hash.assert_called_with(mocker.ANY, mocker.ANY, "autograph_hash_only_mar384", "keyid1")
+    fake_sign_hash.assert_called_with(
+        mocker.ANY, mocker.ANY, "autograph_hash_only_mar384", "keyid1"
+    )
 
 
 @pytest.mark.asyncio
@@ -477,7 +418,7 @@ async def test_sign_mar384_with_autograph_hash_invalid_format_errors(
     context, mocker, to, expected
 ):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    context.signing_servers = {}
+    context.autograph_configs = {}
     with pytest.raises(SigningScriptError):
         await sign.sign_mar384_with_autograph_hash(context, "from", "mar", to=to)
 
@@ -488,7 +429,7 @@ async def test_sign_mar384_with_autograph_hash_no_suitable_servers_errors(
     context, mocker, to, expected
 ):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    context.signing_servers = {}
+    context.autograph_configs = {}
     with pytest.raises(SigningScriptError):
         await sign.sign_mar384_with_autograph_hash(
             context, "from", "autograph_hash_only_mar384", to=to
@@ -519,16 +460,13 @@ async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(
     mocker.patch("signingscript.sign.MarReader", MarReader_mock, create=True)
 
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    context.signing_servers = {
-        "project:releng:signing:cert:dep-signing": [
-            SigningServer(
-                "https://autograph-hsm.dev.mozaws.net",
-                "alice",
-                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                ["autograph_hash_only_mar384"],
-                "autograph",
-            )
-        ]
+    context.autograph_configs = {
+        "project:releng:signing:cert:dep-signing": [utils.Autograph(
+            "https://autograph-hsm.dev.mozaws.net",
+            "alice",
+            "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
+            ["autograph_hash_only_mar384"],
+        )]
     }
     with pytest.raises(SigningScriptError):
         assert (
@@ -584,55 +522,37 @@ async def test_sign_macapp(context, mocker, filename, expected):
     assert await sign.sign_macapp(context, filename, "blah") == expected
 
 
-# sign_langpack {{{1
+# sign_xpi {{{1
+@pytest.mark.parametrize("fmt, is_xpi", (
+    ("foo_omnija", True),
+    ("langpack_foo", True),
+    ("privileged_webextension", True),
+    ("unknown", False),
+))
+def test_is_xpi_format(fmt, is_xpi):
+    assert sign._is_xpi_format(fmt) is is_xpi
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "filename,id,raises",
     (
-        ("foo.zip", "foo-id@firefox.mozilla.org", pytest.raises(SigningScriptError)),
+        ("foo.blah", "foo-id@firefox.mozilla.org", pytest.raises(SigningScriptError)),
         ("/path/to/foo.xpi", "foo-id@firefox.mozilla.org", does_not_raise()),
         ("foo.xpi", "foo-id@devedition.mozilla.org", does_not_raise()),
     ),
 )
-async def test_sign_langpack(context, mocker, filename, id, raises):
+async def test_sign_xpi(context, mocker, filename, id, raises):
     async def mocked_signer(ctx, fname, fmt, extension_id=None):
         assert extension_id == id
+    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
 
-    mocker.patch.object(sign, "_langpack_id", return_value=id)
+    mocker.patch.object(sign, "get_autograph_config")
+    mocker.patch.object(sign, "_extension_id", return_value=id)
+    mocker.patch.object(sign, "_extension_id", return_value=id)
     mocker.patch.object(sign, "sign_file_with_autograph", new=mocked_signer)
     with raises:
-        assert await sign.sign_langpack(context, filename, "blah") == filename
-
-
-# sign_signcode {{{1
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "filename,fmt,raises",
-    (
-        ("foo.msi", "sha2signcode", False),
-        ("setup.exe", "osslsigncode", False),
-        ("foo.zip", "signcode", False),
-        ("raises.invalid.extension", "sha2signcode", True),
-    ),
-)
-async def test_sign_signcode(context, mocker, filename, fmt, raises):
-    files = ["x/foo.dll", "y/msvcblah.dll", "z/setup.exe", "ignore"]
-
-    async def fake_unzip(_, f, **kwargs):
-        assert f.endswith(".zip")
-        return files
-
-    async def fake_sign(_, filename, *args):
-        assert os.path.basename(filename) in ("foo.dll", "setup.exe", "foo.msi")
-
-    mocker.patch.object(sign, "_extract_zipfile", new=fake_unzip)
-    mocker.patch.object(sign, "sign_file", new=fake_sign)
-    mocker.patch.object(sign, "_create_zipfile", new=noop_async)
-    if raises:
-        with pytest.raises(SigningScriptError):
-            await sign.sign_signcode(context, filename, fmt)
-    else:
-        await sign.sign_signcode(context, filename, fmt)
+        assert await sign.sign_xpi(context, filename, "autograph_langpack") == filename
 
 
 # sign_widevine {{{1
@@ -1043,16 +963,17 @@ def test_signreq_task_langpack():
 @pytest.mark.asyncio
 async def test_bad_autograph_method():
     with pytest.raises(SigningScriptError):
-        await sign.sign_with_autograph(None, None, None, None, "badformat")
+        await sign.sign_with_autograph(None, None, None, None, "gpg")
 
 
 @pytest.mark.asyncio
 async def test_bad_autograph_format(context):
+    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     with pytest.raises(SigningScriptError):
-        await sign.sign_file_with_autograph(context, "", "badformat")
+        await sign.sign_file_with_autograph(context, "", "gpg")
 
     with pytest.raises(SigningScriptError):
-        await sign.sign_hash_with_autograph(context, "", "badformat")
+        await sign.sign_hash_with_autograph(context, "", "gpg")
 
 
 @pytest.mark.asyncio
@@ -1099,16 +1020,13 @@ async def test_gpg_autograph(context, mocker, tmp_path):
     tmp.write_text("hello world")
 
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
-    context.signing_servers = {
-        "project:releng:signing:cert:dep-signing": [
-            SigningServer(
-                "https://autograph-hsm.dev.mozaws.net",
-                "alice",
-                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                ["autograph_gpg"],
-                "autograph",
-            )
-        ]
+    context.autograph_configs = {
+        "project:releng:signing:cert:dep-signing": [utils.Autograph(
+            "https://autograph-hsm.dev.mozaws.net",
+            "alice",
+            "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
+            ["autograph_gpg"],
+        )]
     }
 
     mocked_sign = mocker.patch.object(sign, "sign_with_autograph")
@@ -1265,9 +1183,15 @@ def test_langpack_id_regex():
     assert sign.LANGPACK_RE.match("invalid-langpack-id@example.com") is None
 
 
-def test_langpack_id():
+def test_extension_id():
     filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
-    assert sign._langpack_id(filename) == "langpack-en-CA@firefox.mozilla.org"
+    assert sign._extension_id(filename, "autograph_langpack") == "langpack-en-CA@firefox.mozilla.org"
+
+
+def test_extension_id_missing_manifest():
+    filename = os.path.join(TEST_DATA_DIR, "test.zip")
+    with pytest.raises(SigningScriptError):
+        sign._extension_id(filename, "autograph_langpack")
 
 
 @pytest.mark.parametrize(
@@ -1339,7 +1263,7 @@ def test_langpack_id():
         ),
     ),
 )
-def test_langpack_id_raises(json_, raises, mocker):
+def test_extension_id_raises(json_, raises, mocker):
     filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
 
     def load_manifest(*args, **kwargs):
@@ -1350,7 +1274,7 @@ def test_langpack_id_raises(json_, raises, mocker):
 
     mocker.patch.object(sign.json, "load", load_manifest)
     with raises:
-        id = sign._langpack_id(filename)
+        id = sign._extension_id(filename, "autograph_langpack")
         assert id == json_["applications"]["gecko"]["id"]
 
 
@@ -1457,18 +1381,15 @@ async def test_authenticode_sign_authenticode_permanent_error(
 async def test_authenticode_sign_gpg_temporary_error(tmpdir, mocker, context, caplog):
     context.task = {}
     context.task["scopes"] = ["project:releng:signing:cert:dep-signing"]
-    context.signing_servers = {
-        "project:releng:signing:cert:dep-signing": [
-            SigningServer(
-                *[
-                    "https://autograph-hsm.dev.mozaws.net",
-                    "alice",
-                    "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                    ["autograph_gpg"],
-                    "autograph",
-                ]
-            )
-        ]
+    context.autograph_configs = {
+        "project:releng:signing:cert:dep-signing": [utils.Autograph(
+            *[
+                "https://autograph-hsm.dev.mozaws.net",
+                "alice",
+                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
+                ["autograph_gpg"],
+            ]
+        )]
     }
     mocked_session = MockedSession(signature="GPG SIGNATURE HERE")
     mocked_session.count = 0

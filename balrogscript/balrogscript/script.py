@@ -21,6 +21,7 @@ from .submitter.cli import (
     ReleaseScheduler,
     ReleaseCreatorV9,
     ReleasePusher,
+    ReleaseStateUpdater,
 )
 
 
@@ -95,7 +96,10 @@ def submit_locale(task, config, auth0_secrets):
             # Get release metadata from manifest
             submitter, release = create_locale_submitter(e, suffix, auth0_secrets, config)
             # Connect to balrog and submit the metadata
-            retry(lambda: submitter.run(**release), jitter=5, sleeptime=10, max_sleeptime=30, attempts=20)
+            # Going back to the original number of attempts so that we avoid sleeping too much in between
+            # retries to get Out-of-memory in the GCP workers. Until we figure out what's bumping the spike
+            # in memory usage from 130 -> ~400 Mb, let's keep this as it was, historically
+            retry(lambda: submitter.run(**release), jitter=5, sleeptime=10, max_sleeptime=30, attempts=10)
 
 
 # schedule {{{1
@@ -184,6 +188,24 @@ def submit_toplevel(task, config, auth0_secrets):
     ))
 
 
+# set_readonly {{{1
+def create_state_updater(**kwargs):
+    return ReleaseStateUpdater(**kwargs)
+
+
+def set_readonly(task, config, auth0_secrets):
+    state_updater = create_state_updater(
+        api_root=config['api_root'],
+        auth0_secrets=auth0_secrets,
+    )
+    args = [
+        task['payload']['product'].capitalize(),
+        task['payload']['version'],
+        task['payload']['build_number'],
+    ]
+    retry(lambda: state_updater.run(*args))
+
+
 # usage {{{1
 def usage():
     print("Usage: {} CONFIG_FILE".format(sys.argv[0]), file=sys.stderr)
@@ -238,7 +260,8 @@ def setup_config(config_path):
         'schema_files': {
             'submit-locale': os.path.join(data_dir, 'balrog_submit-locale_schema.json'),
             'submit-toplevel': os.path.join(data_dir, 'balrog_submit-toplevel_schema.json'),
-            'schedule': os.path.join(data_dir, 'balrog_schedule_schema.json')
+            'schedule': os.path.join(data_dir, 'balrog_schedule_schema.json'),
+            'set-readonly': os.path.join(data_dir, 'balrog_set-readonly_schema.json'),
         },
     }
     config.update(load_config(config_path))
@@ -262,6 +285,8 @@ def main(config_path=None):
         submit_toplevel(task, config, auth0_secrets)
     elif action == 'schedule':
         schedule(task, config, auth0_secrets)
+    elif action == 'set-readonly':
+        set_readonly(task, config, auth0_secrets)
     else:
         submit_locale(task, config, auth0_secrets)
 

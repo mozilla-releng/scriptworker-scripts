@@ -1,3 +1,2 @@
 mozilla-version
-scriptworker !=13.0
-taskcluster
+scriptworker  # required for docker, even if treescript doesn't import it

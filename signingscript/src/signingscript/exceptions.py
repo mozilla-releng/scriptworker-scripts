@@ -11,6 +11,7 @@ class SigningServerError(ScriptWorkerTaskException):
 
         Args:
             msg (str): the reason for throwing an exception.
+
         """
         super(SigningServerError, self).__init__(
             msg, exit_code=STATUSES["internal-error"]
@@ -25,6 +26,7 @@ class SigningScriptError(ScriptWorkerTaskException):
 
         Args:
             msg (str): the reason for throwing an exception.
+
         """
         super(SigningScriptError, self).__init__(
             msg, exit_code=STATUSES["internal-error"]
@@ -39,6 +41,7 @@ class FailedSubprocess(ScriptWorkerTaskException):
 
         Args:
             msg (str): the reason for throwing an exception.
+
         """
         super(FailedSubprocess, self).__init__(
             msg, exit_code=STATUSES["internal-error"]
