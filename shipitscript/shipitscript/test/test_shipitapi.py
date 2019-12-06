@@ -72,8 +72,12 @@ def test_release_v2_class(mocker):
     api_call_count += 1
 
     # test that update call correct URL
+    headers = {'X-Test': 'yes'}
     ret = release.update_status(
-        release_name, status='success test', rebuild_product_details=False
+        release_name,
+        status='success test',
+        rebuild_product_details=False,
+        headers=headers,
     )
     ret_json = json.loads(ret)
     assert ret_json['test'] is True
@@ -88,6 +92,8 @@ def test_release_v2_class(mocker):
     )
     api_call_count += 1
     assert release.session.request.call_count == api_call_count
+    # make sure we don't modify the passed headers dictionary in the methods
+    assert headers == {'X-Test': 'yes'}
 
     # test that update triggers product details
     ret = release.update_status(
