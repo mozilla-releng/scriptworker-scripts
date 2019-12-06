@@ -54,6 +54,7 @@ class Release_V2(object):
 
     def _request(self, api_endpoint, data=None, method='GET', headers={}):
         url = '{}{}'.format(self.api_root, api_endpoint)
+        headers = headers.copy()
         if method.upper() not in ('GET', 'HEAD'):
             headers.update(
                 self._get_taskcluster_headers(
