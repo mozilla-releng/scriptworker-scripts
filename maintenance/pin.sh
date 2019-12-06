@@ -11,6 +11,7 @@ else
         balrogscript
         beetmoverscript
         bouncerscript
+        configloader
         iscript
         pushapkscript
         pushsnapscript
