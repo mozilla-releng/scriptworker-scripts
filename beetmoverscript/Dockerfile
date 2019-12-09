@@ -14,9 +14,10 @@ RUN python -m venv /app \
  && cd beetmoverscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
+ && python -m venv /app/configloader \
  && cd /app/configloader \
- && /app/bin/pip install -r requirements/base.txt \
- && /app/bin/pip install . \
+ && /app/configloader/bin/pip install -r requirements/base.txt \
+ && /app/configloader/bin/pip install . \
  && cd /app
 
 CMD ["/app/docker.d/init.sh"]
