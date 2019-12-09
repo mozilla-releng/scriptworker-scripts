@@ -13,11 +13,6 @@ import aiohttp
 import boto3
 from botocore.exceptions import ClientError
 from redo import retry
-
-import aiohttp
-import boto3
-from botocore.exceptions import ClientError
-from redo import retry
 from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
 from scriptworker.utils import retry_async, raise_future_exceptions
