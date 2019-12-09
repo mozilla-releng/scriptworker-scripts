@@ -83,7 +83,7 @@ esac
 export ARTIFACTS_DIR=/app/artifacts
 export ARTIFACT_UPLOAD_TIMEOUT=1200
 export CONFIG_DIR=/app/configs
-export CONFIG_LOADER=/app/configloader/bin/configloader
+export CONFIG_LOADER=/app/configloader_venv/bin/configloader
 export ED25519_PRIVKEY_PATH=$CONFIG_DIR/ed25519_privkey
 # if this variable exists, we should use it. Default to None otherwise
 export GITHUB_OAUTH_TOKEN=$GITHUB_OAUTH_TOKEN
