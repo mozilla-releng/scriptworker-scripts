@@ -23,7 +23,6 @@ RUN python -m venv /app \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
  && cd /app/configloader \
- && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
  && cd /app
 
