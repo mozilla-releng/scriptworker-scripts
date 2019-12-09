@@ -5,7 +5,6 @@ import asyncio
 import logging
 import mimetypes
 import os
-import mimetypes
 import re
 import sys
 from multiprocessing.pool import ThreadPool
