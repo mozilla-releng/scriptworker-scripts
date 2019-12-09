@@ -19,14 +19,10 @@ import boto3
 from botocore.exceptions import ClientError
 from redo import retry
 from scriptworker import client
-from scriptworker.exceptions import (
-        ScriptWorkerTaskException, ScriptWorkerRetryException
-)
+from scriptworker.exceptions import ScriptWorkerTaskException, ScriptWorkerRetryException
 from scriptworker.utils import retry_async, raise_future_exceptions
 
 from beetmoverscript import task
-
-from beetmoverscript import maven_utils, task, zip
 from beetmoverscript.constants import (
     BUILDHUB_ARTIFACT,
     CACHE_CONTROL_MAXAGE,
@@ -209,7 +205,7 @@ async def push_to_maven(context):
 
     # overwrite artifacts_to_beetmove with the declarative artifacts ones
     context.artifacts_to_beetmove = task.get_upstream_artifacts(context, preserve_full_paths=True)
-    await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task['payload']['artifactMap'])
+    await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task["payload"]["artifactMap"])
 
 
 # copy_beets {{{1
