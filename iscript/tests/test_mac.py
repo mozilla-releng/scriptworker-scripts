@@ -2,21 +2,18 @@
 # coding=utf-8
 """Test iscript.mac
 """
-import arrow
 import asyncio
-from functools import partial
-import mock
 import os
-import pexpect
 import plistlib
+from functools import partial
+
+import arrow
+import mock
+import pexpect
 import pytest
+
 import iscript.mac as mac
-from iscript.exceptions import (
-    InvalidNotarization,
-    IScriptError,
-    TimeoutError,
-    UnknownAppDir,
-)
+from iscript.exceptions import InvalidNotarization, IScriptError, TimeoutError, UnknownAppDir
 from scriptworker_client.utils import makedirs
 
 
@@ -53,12 +50,7 @@ def test_app():
 
 # tar helpers {{{1
 @pytest.mark.parametrize(
-    "path, expected, raises",
-    (
-        ("foo/bar/target.tar.gz", "czf", False),
-        ("foo/bar/target.tar.bz2", "cjf", False),
-        ("foo/bar/target.tar.xz", None, True),
-    ),
+    "path, expected, raises", (("foo/bar/target.tar.gz", "czf", False), ("foo/bar/target.tar.bz2", "cjf", False), ("foo/bar/target.tar.xz", None, True))
 )
 def test_get_tar_create_options(path, expected, raises):
     if raises:
@@ -70,11 +62,7 @@ def test_get_tar_create_options(path, expected, raises):
 
 @pytest.mark.parametrize(
     "path, expected, raises",
-    (
-        ("foo/bar/target.tar.gz", "foo/bar/target.pkg", False),
-        ("foo/bar/target.tar.bz2", "foo/bar/target.pkg", False),
-        ("foo/bar/target.tar.xz", None, True),
-    ),
+    (("foo/bar/target.tar.gz", "foo/bar/target.pkg", False), ("foo/bar/target.tar.bz2", "foo/bar/target.pkg", False), ("foo/bar/target.tar.xz", None, True)),
 )
 def test_get_pkg_name_from_tarball(path, expected, raises):
     if raises:
@@ -101,11 +89,7 @@ def test_app_path_and_name(mocker):
         mac.App(parent_dir="foo/3", app_path="foo/4/4.app", app_name="4.app"),
     ]
     mocker.patch.object(mac, "get_app_dir", new=fake_get_app_dir)
-    expected = [
-        ["foo/1/1.app", "1.app"],
-        ["foo/2/2.app", "2.app"],
-        ["foo/4/4.app", "4.app"],
-    ]
+    expected = [["foo/1/1.app", "1.app"], ["foo/2/2.app", "2.app"], ["foo/4/4.app", "4.app"]]
     for app in all_paths:
         mac.set_app_path_and_name(app)
         assert [app.app_path, app.app_name] == expected.pop(0)
@@ -116,9 +100,7 @@ def test_get_bundle_executable(mocker):
     """``get_bundle_executable`` returns the CFBundleExecutable.
 
     """
-    mocker.patch.object(
-        plistlib, "readPlist", return_value={"CFBundleExecutable": "main"}
-    )
+    mocker.patch.object(plistlib, "readPlist", return_value={"CFBundleExecutable": "main"})
     assert mac.get_bundle_executable("foo") == "main"
 
 
@@ -149,19 +131,13 @@ async def test_sign_geckodriver(exists, mocker, tmpdir):
 
 
 # sign_app {{{1
-@pytest.mark.parametrize(
-    "sign_with_entitlements,has_clearkey", ((True, True), (False, False))
-)
+@pytest.mark.parametrize("sign_with_entitlements,has_clearkey", ((True, True), (False, False)))
 @pytest.mark.asyncio
 async def test_sign_app(mocker, tmpdir, sign_with_entitlements, has_clearkey):
     """Render ``sign_app`` noop and verify we have complete code coverage.
 
     """
-    key_config = {
-        "identity": "id",
-        "signing_keychain": "keychain",
-        "sign_with_entitlements": sign_with_entitlements,
-    }
+    key_config = {"identity": "id", "signing_keychain": "keychain", "sign_with_entitlements": sign_with_entitlements}
     entitlements_path = os.path.join(tmpdir, "entitlements")
     app_path = os.path.join(tmpdir, "foo.app")
 
@@ -257,15 +233,7 @@ async def test_unlock_keychain_failure(mocker):
 
 
 # get_app_dir {{{1
-@pytest.mark.parametrize(
-    "apps, raises",
-    (
-        ([], True),
-        (["foo.app"], False),
-        (["foo.notanapp"], True),
-        (["one.app", "two.app"], True),
-    ),
-)
+@pytest.mark.parametrize("apps, raises", (([], True), (["foo.app"], False), (["foo.notanapp"], True), (["one.app", "two.app"], True)))
 def test_get_app_dir(tmpdir, apps, raises):
     """``get_app_dir`` returns the single ``.app`` dir in ``parent_dir``, and
     raises ``UnknownAppDir`` if there is greater or fewer than one ``.app``.
@@ -283,12 +251,7 @@ def test_get_app_dir(tmpdir, apps, raises):
 
 # get_app_paths {{{1
 @pytest.mark.parametrize(
-    "path, expected, raises",
-    (
-        ("public/build/foo", "public/", False),
-        ("releng/partner/bar", "releng/partner/", False),
-        ("unknown/prefix/baz", None, True),
-    ),
+    "path, expected, raises", (("public/build/foo", "public/", False), ("releng/partner/bar", "releng/partner/", False), ("unknown/prefix/baz", None, True))
 )
 def test_get_artifact_prefix(path, expected, raises):
     """``_get_artifact_prefix`` returns the known prefix of the artifact path,
@@ -312,11 +275,7 @@ def test_get_app_paths():
         "payload": {
             "upstreamArtifacts": [
                 {"paths": ["public/foo"], "taskId": "task1", "formats": ["macapp"]},
-                {
-                    "paths": ["public/bar", "public/baz"],
-                    "taskId": "task2",
-                    "formats": ["macapp"],
-                },
+                {"paths": ["public/bar", "public/baz"], "taskId": "task2", "formats": ["macapp"]},
             ]
         }
     }
@@ -325,28 +284,14 @@ def test_get_app_paths():
     for app in apps:
         assert isinstance(app, mac.App)
         paths.append(app.orig_path)
-    assert paths == [
-        "work/cot/task1/public/foo",
-        "work/cot/task2/public/bar",
-        "work/cot/task2/public/baz",
-    ]
+    assert paths == ["work/cot/task1/public/foo", "work/cot/task2/public/bar", "work/cot/task2/public/baz"]
 
 
 # extract_all_apps {{{1
 @pytest.mark.parametrize(
     "suffix, command, raises",
     (
-        (
-            "dmg",
-            os.path.join(
-                os.path.dirname(os.path.dirname(__file__)),
-                "src",
-                "iscript",
-                "data",
-                "unpack-diskimage",
-            ),
-            False,
-        ),
+        ("dmg", os.path.join(os.path.dirname(os.path.dirname(__file__)), "src", "iscript", "data", "unpack-diskimage"), False),
         ("tar.gz", "tar", False),
         ("tar.bz2", "tar", False),
         ("unknown_ext", None, True),
@@ -402,9 +347,7 @@ async def test_create_all_notarization_zipfiles(mocker, tmpdir, raises):
         parent_dir = os.path.join(work_dir, str(i))
         app_name = "fx {}.app".format(str(i))
         app_path = os.path.join(parent_dir, app_name)
-        all_paths.append(
-            mac.App(parent_dir=parent_dir, app_name=app_name, app_path=app_path)
-        )
+        all_paths.append(mac.App(parent_dir=parent_dir, app_name=app_name, app_path=app_path))
 
     if raises:
         with pytest.raises(IScriptError):
@@ -424,23 +367,14 @@ async def test_create_one_notarization_zipfile(mocker, tmpdir, raises):
     work_dir = str(tmpdir)
 
     async def fake_run_command(*args, **kwargs):
-        assert args[0] == [
-            "zip",
-            "-r",
-            os.path.join(work_dir, "app_path.zip"),
-            "0/0.app",
-            "1/1.app",
-            "2/2.app",
-        ]
+        assert args[0] == ["zip", "-r", os.path.join(work_dir, "app_path.zip"), "0/0.app", "1/1.app", "2/2.app"]
         if raises:
             raise IScriptError("foo")
 
     mocker.patch.object(mac, "run_command", new=fake_run_command)
     all_paths = []
     for i in range(3):
-        all_paths.append(
-            mac.App(app_path=os.path.join(work_dir, str(i), "{}.app".format(i)))
-        )
+        all_paths.append(mac.App(app_path=os.path.join(work_dir, str(i), "{}.app".format(i))))
     if raises:
         with pytest.raises(IScriptError):
             await mac.create_one_notarization_zipfile(work_dir, all_paths)
@@ -455,11 +389,7 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
     """``sign_all_apps`` calls ``sign`` and raises on failure.
 
     """
-    key_config = {
-        "x": "y",
-        "signing_keychain": "keychain",
-        "keychain_password": "password",
-    }
+    key_config = {"x": "y", "signing_keychain": "keychain", "keychain_password": "password"}
     config = {}
     entitlements_path = "fake_entitlements_path"
     work_dir = str(tmpdir)
@@ -468,9 +398,7 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
     for i in range(3):
         app_path = "{}.app".format(str(i))
         app_paths.append(app_path)
-        all_paths.append(
-            mac.App(parent_dir=os.path.join(work_dir, str(i)), app_path=app_path)
-        )
+        all_paths.append(mac.App(parent_dir=os.path.join(work_dir, str(i)), app_path=app_path))
 
     async def fake_sign(arg1, arg2, arg3):
         assert arg1 == key_config
@@ -537,13 +465,7 @@ def test_get_uuid_from_log(tmpdir, uuid, raises):
 
 # get_notarization_status_from_log {{{1
 @pytest.mark.parametrize(
-    "has_log, status, expected",
-    (
-        (True, "invalid", "invalid"),
-        (True, "success", "success"),
-        (True, "unknown", None),
-        (False, None, None),
-    ),
+    "has_log, status, expected", ((True, "invalid", "invalid"), (True, "success", "success"), (True, "unknown", None), (False, None, None))
 )
 def test_get_notarization_status_from_log(tmpdir, has_log, status, expected):
     """``get_notarization_status_from_log`` finds a valid status in the log
@@ -605,27 +527,17 @@ async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
     for i in range(8):
         parent_dir = os.path.join(work_dir, str(i))
         notarization_log_path = f"{parent_dir}-notarization.log"
-        all_paths.append(
-            mac.App(
-                parent_dir=parent_dir,
-                zip_path=os.path.join(parent_dir, "{}.zip".format(i)),
-            )
-        )
+        all_paths.append(mac.App(parent_dir=parent_dir, zip_path=os.path.join(parent_dir, "{}.zip".format(i))))
         expected[notarization_log_path] = notarization_log_path
 
     mocker.patch.object(mac, "retry_async", new=fake_retry_async)
-    mocker.patch.object(
-        mac, "raise_future_exceptions", new=fake_raise_future_exceptions
-    )
+    mocker.patch.object(mac, "raise_future_exceptions", new=fake_raise_future_exceptions)
     mocker.patch.object(mac, "get_uuid_from_log", new=fake_get_uuid_from_log)
     if raises:
         with pytest.raises(IScriptError):
             await mac.wrap_notarization_with_sudo(config, key_config, all_paths)
     else:
-        assert (
-            await mac.wrap_notarization_with_sudo(config, key_config, all_paths)
-            == expected
-        )
+        assert await mac.wrap_notarization_with_sudo(config, key_config, all_paths) == expected
 
 
 # notarize_no_sudo {{{1
@@ -681,10 +593,7 @@ async def test_notarize_no_sudo(mocker, tmpdir, raises):
         ([None, "success"], None),
         ([None], IScriptError),
         (["invalid"], InvalidNotarization),
-        (
-            [None, None, None, None, None, None, None, None, None, None, None],
-            TimeoutError,
-        ),
+        ([None, None, None, None, None, None, None, None, None, None, None], TimeoutError),
     ),
 )
 @pytest.mark.asyncio
@@ -714,33 +623,17 @@ async def test_poll_notarization_uuid(mocker, tmpdir, statuses, exception):
         return status
 
     mocker.patch.object(mac, "retry_async", new=fake_retry_async)
-    mocker.patch.object(
-        mac,
-        "get_notarization_status_from_log",
-        new=fake_get_notarization_status_from_log,
-    )
+    mocker.patch.object(mac, "get_notarization_status_from_log", new=fake_get_notarization_status_from_log)
     if exception:
         with pytest.raises(exception):
-            await mac.poll_notarization_uuid(
-                "uuid", "user", pw, 0.5, "/dev/null", sleep_time=0.1
-            )
+            await mac.poll_notarization_uuid("uuid", "user", pw, 0.5, "/dev/null", sleep_time=0.1)
     else:
-        assert (
-            await mac.poll_notarization_uuid(
-                "uuid", "user", pw, 1, "/dev/null", sleep_time=0.1
-            )
-            is None
-        )
+        assert await mac.poll_notarization_uuid("uuid", "user", pw, 1, "/dev/null", sleep_time=0.1) is None
 
 
 # poll_all_notarization_status {{{1
 @pytest.mark.parametrize(
-    "poll_uuids, raises",
-    (
-        ({"uuid": "log_path"}, True),
-        ({"uuid": "log_path"}, False),
-        ({"uuid1": "log_path1", "uuid2": "log_path2"}, False),
-    ),
+    "poll_uuids, raises", (({"uuid": "log_path"}, True), ({"uuid": "log_path"}, False), ({"uuid1": "log_path1", "uuid2": "log_path2"}, False))
 )
 @pytest.mark.asyncio
 async def test_poll_all_notarization_status(mocker, tmpdir, poll_uuids, raises):
@@ -762,9 +655,7 @@ async def test_poll_all_notarization_status(mocker, tmpdir, poll_uuids, raises):
         "notarization_poll_timeout": 1,
     }
 
-    mocker.patch.object(
-        mac, "raise_future_exceptions", new=fake_raise_future_exceptions
-    )
+    mocker.patch.object(mac, "raise_future_exceptions", new=fake_raise_future_exceptions)
     mocker.patch.object(mac, "poll_notarization_uuid", new=noop_async)
     if raises:
         with pytest.raises(IScriptError):
@@ -793,9 +684,7 @@ async def test_staple_notarization(mocker, raises):
         parent_dir = str(i)
         app_name = f"{i}.app"
         app_path = os.path.join(parent_dir, app_name)
-        all_paths.append(
-            mac.App(parent_dir=parent_dir, app_name=app_name, app_path=app_path)
-        )
+        all_paths.append(mac.App(parent_dir=parent_dir, app_name=app_name, app_path=app_path))
     mocker.patch.object(mac, "retry_async", new=fake_retry_async)
     if raises:
         with pytest.raises(IScriptError):
@@ -805,10 +694,7 @@ async def test_staple_notarization(mocker, raises):
 
 
 # tar_apps {{{1
-@pytest.mark.parametrize(
-    "raises, artifact_prefix",
-    ((True, "public/"), (False, "public/"), (False, "releng/partner/")),
-)
+@pytest.mark.parametrize("raises, artifact_prefix", ((True, "public/"), (False, "public/"), (False, "releng/partner/")))
 @pytest.mark.asyncio
 async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
     """``tar_apps`` runs tar concurrently for each ``App``, creating the
@@ -832,9 +718,7 @@ async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
         # touch parent_dir/app_name
         with open(os.path.join(parent_dir, app_name), "w") as fh:
             fh.write("foo")
-        orig_path = os.path.join(
-            work_dir, "cot", "foo", artifact_prefix, "build", str(i), f"{i}.tar.gz"
-        )
+        orig_path = os.path.join(work_dir, "cot", "foo", artifact_prefix, "build", str(i), f"{i}.tar.gz")
         # overload pkg_path to track i
         all_paths.append(
             mac.App(
@@ -846,19 +730,10 @@ async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
                 pkg_path=str(i),
             )
         )
-        expected.append(
-            os.path.join(
-                config["artifact_dir"],
-                artifact_prefix,
-                "build",
-                "{}/{}.tar.gz".format(i, i),
-            )
-        )
+        expected.append(os.path.join(config["artifact_dir"], artifact_prefix, "build", "{}/{}.tar.gz".format(i, i)))
 
     mocker.patch.object(mac, "run_command", new=noop_async)
-    mocker.patch.object(
-        mac, "raise_future_exceptions", new=fake_raise_future_exceptions
-    )
+    mocker.patch.object(mac, "raise_future_exceptions", new=fake_raise_future_exceptions)
     if raises:
         with pytest.raises(IScriptError):
             await mac.tar_apps(config, all_paths)
@@ -870,9 +745,7 @@ async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
 
 
 # create_pkg_files {{{1
-@pytest.mark.parametrize(
-    "pkg_cert_id, raises", ((None, True), (None, False), ("pkg.cert", False))
-)
+@pytest.mark.parametrize("pkg_cert_id, raises", ((None, True), (None, False), ("pkg.cert", False)))
 @pytest.mark.asyncio
 async def test_create_pkg_files(mocker, pkg_cert_id, raises):
     """``create_pkg_files`` runs pkgbuild concurrently for each ``App``, and
@@ -889,11 +762,7 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises):
     config = {"concurrency_limit": 2}
     all_paths = []
     for i in range(3):
-        all_paths.append(
-            mac.App(
-                app_path="foo/{}/{}.app".format(i, i), parent_dir="foo/{}".format(i)
-            )
-        )
+        all_paths.append(mac.App(app_path="foo/{}/{}.app".format(i, i), parent_dir="foo/{}".format(i)))
     mocker.patch.object(mac, "run_command", new=fake_run_command)
     if raises:
         with pytest.raises(IScriptError):
@@ -920,13 +789,9 @@ async def test_copy_pkgs_to_artifact_dir(tmpdir, artifact_prefix):
         app = mac.App(
             pkg_path=os.path.join(work_dir, str(i), "target.pkg".format(i)),
             artifact_prefix=artifact_prefix,
-            orig_path=os.path.join(
-                work_dir, f"cot/taskId/{artifact_prefix}build/{i}/target-{i}.tar.gz"
-            ),
+            orig_path=os.path.join(work_dir, f"cot/taskId/{artifact_prefix}build/{i}/target-{i}.tar.gz"),
         )
-        expected_path = os.path.join(
-            artifact_dir, f"{artifact_prefix}build/{i}/target-{i}.pkg"
-        )
+        expected_path = os.path.join(artifact_dir, f"{artifact_prefix}build/{i}/target-{i}.pkg")
         expected_paths.append(expected_path)
         makedirs(os.path.dirname(app.pkg_path))
         with open(app.pkg_path, "w") as fh:
@@ -945,16 +810,10 @@ async def test_copy_pkgs_to_artifact_dir(tmpdir, artifact_prefix):
 # download_entitlements_file {{{1
 @pytest.mark.parametrize(
     "url, use_entitlements, raises, expected",
-    (
-        ("foo", True, False, "work/browser.entitlements.txt"),
-        ("foo", False, False, None),
-        (None, True, KeyError, None),
-    ),
+    (("foo", True, False, "work/browser.entitlements.txt"), ("foo", False, False, None), (None, True, KeyError, None)),
 )
 @pytest.mark.asyncio
-async def test_download_entitlements_file(
-    url, use_entitlements, raises, expected, mocker
-):
+async def test_download_entitlements_file(url, use_entitlements, raises, expected, mocker):
     """``download_entitlements_file`` downloads the specified entitlements-url
     and returns the path. If no entitlements-url is specified, it returns
     ``None``.
@@ -970,9 +829,7 @@ async def test_download_entitlements_file(
         with pytest.raises(raises):
             await mac.download_entitlements_file(config, key_config, task)
     else:
-        assert (
-            await mac.download_entitlements_file(config, key_config, task) == expected
-        )
+        assert await mac.download_entitlements_file(config, key_config, task) == expected
 
 
 # sign_behavior {{{1
@@ -1007,39 +864,20 @@ async def test_sign_behavior(mocker, tmpdir, use_langpack):
     task = {
         "payload": {
             "upstreamArtifacts": [
-                {
-                    "taskId": "task1",
-                    "formats": ["macapp"],
-                    "paths": [
-                        "public/build/1/target.tar.gz",
-                        "public/build/2/target.tar.gz",
-                    ],
-                },
-                {
-                    "taskId": "task2",
-                    "paths": ["public/build/3/target.tar.gz"],
-                    "formats": ["macapp"],
-                },
+                {"taskId": "task1", "formats": ["macapp"], "paths": ["public/build/1/target.tar.gz", "public/build/2/target.tar.gz"]},
+                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"], "formats": ["macapp"]},
             ]
         }
     }
     if use_langpack:
         mocker.patch.object(mac, "sign_langpacks", new=noop_async)
-        task["payload"]["upstreamArtifacts"].append(
-            {
-                "taskId": "task3",
-                "formats": ["autograph_langpack"],
-                "paths": ["public/build3/target.langpack.xpi"],
-            }
-        )
+        task["payload"]["upstreamArtifacts"].append({"taskId": "task3", "formats": ["autograph_langpack"], "paths": ["public/build3/target.langpack.xpi"]})
 
     mocker.patch.object(os, "listdir", return_value=[])
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
-    mocker.patch.object(
-        mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
-    )
+    mocker.patch.object(mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app"))
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
     mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     await mac.sign_behavior(config, task)
@@ -1080,36 +918,21 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir, use_langpack):
                 {
                     "taskId": "task1",
                     "formats": ["macapp", "autograph_widevine", "autograph_omnija"],
-                    "paths": [
-                        "public/build/1/target.tar.gz",
-                        "public/build/2/target.tar.gz",
-                    ],
+                    "paths": ["public/build/1/target.tar.gz", "public/build/2/target.tar.gz"],
                 },
-                {
-                    "taskId": "task2",
-                    "paths": ["public/build/3/target.tar.gz"],
-                    "formats": ["macapp", "widevine", "omnija"],
-                },
+                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"], "formats": ["macapp", "widevine", "omnija"]},
             ]
         }
     }
     if use_langpack:
         mocker.patch.object(mac, "sign_langpacks", new=noop_async)
-        task["payload"]["upstreamArtifacts"].append(
-            {
-                "taskId": "task3",
-                "formats": ["autograph_langpack"],
-                "paths": ["public/build3/target.langpack.xpi"],
-            }
-        )
+        task["payload"]["upstreamArtifacts"].append({"taskId": "task3", "formats": ["autograph_langpack"], "paths": ["public/build3/target.langpack.xpi"]})
 
     mocker.patch.object(os, "listdir", return_value=[])
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
-    mocker.patch.object(
-        mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
-    )
+    mocker.patch.object(mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app"))
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
     mocker.patch.object(mac, "sign_omnija_with_autograph", new=noop_async)
@@ -1118,10 +941,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir, use_langpack):
 
 
 # notarize_behavior {{{1
-@pytest.mark.parametrize(
-    "notarize_type,use_langpack",
-    zip(("multi_account", "single_account", "single_zip"), (False, True)),
-)
+@pytest.mark.parametrize("notarize_type,use_langpack", zip(("multi_account", "single_account", "single_zip"), (False, True)))
 @pytest.mark.asyncio
 async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
     """Mock ``notarize_behavior`` for full line coverage."""
@@ -1152,40 +972,21 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
     task = {
         "payload": {
             "upstreamArtifacts": [
-                {
-                    "taskId": "task1",
-                    "formats": ["macapp", "widevine"],
-                    "paths": [
-                        "public/build/1/target.tar.gz",
-                        "public/build/2/target.tar.gz",
-                    ],
-                },
-                {
-                    "taskId": "task2",
-                    "paths": ["public/build/3/target.tar.gz"],
-                    "formats": ["macapp", "widevine"],
-                },
+                {"taskId": "task1", "formats": ["macapp", "widevine"], "paths": ["public/build/1/target.tar.gz", "public/build/2/target.tar.gz"]},
+                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"], "formats": ["macapp", "widevine"]},
             ]
         }
     }
     if use_langpack:
         mocker.patch.object(mac, "sign_langpacks", new=noop_async)
-        task["payload"]["upstreamArtifacts"].append(
-            {
-                "taskId": "task3",
-                "formats": ["autograph_langpack"],
-                "paths": ["public/build3/target.langpack.xpi"],
-            }
-        )
+        task["payload"]["upstreamArtifacts"].append({"taskId": "task3", "formats": ["autograph_langpack"], "paths": ["public/build3/target.langpack.xpi"]})
 
     mocker.patch.object(os, "listdir", return_value=[])
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
     mocker.patch.object(mac, "poll_notarization_uuid", new=noop_async)
-    mocker.patch.object(
-        mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app")
-    )
+    mocker.patch.object(mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app"))
     mocker.patch.object(mac, "get_notarization_status_from_log", return_value=None)
     mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
@@ -1222,26 +1023,10 @@ async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
         },
     }
 
-    task = {
-        "payload": {
-            "upstreamArtifacts": [
-                {
-                    "taskId": "task1",
-                    "formats": ["mac_geckodriver"],
-                    "paths": ["public/build/1/geckodriver.tar.gz"],
-                }
-            ]
-        }
-    }
+    task = {"payload": {"upstreamArtifacts": [{"taskId": "task1", "formats": ["mac_geckodriver"], "paths": ["public/build/1/geckodriver.tar.gz"]}]}}
     if use_langpack:
         mocker.patch.object(mac, "sign_langpacks", new=noop_async)
-        task["payload"]["upstreamArtifacts"].append(
-            {
-                "taskId": "task3",
-                "formats": ["autograph_langpack"],
-                "paths": ["public/build3/target.langpack.xpi"],
-            }
-        )
+        task["payload"]["upstreamArtifacts"].append({"taskId": "task3", "formats": ["autograph_langpack"], "paths": ["public/build3/target.langpack.xpi"]})
 
     async def fake_extract(_, all_paths):
         for app in all_paths:

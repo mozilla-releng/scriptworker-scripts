@@ -1,8 +1,9 @@
 import os
+
 import pytest
 
-from scriptworker_client.utils import makedirs
 import treescript.l10n as l10n
+from scriptworker_client.utils import makedirs
 
 
 async def noop_async(*args, **kwargs):
@@ -19,19 +20,10 @@ def test_build_locale_map():
     my_rev = "my_revision"
     my_dict = {"platforms": my_platforms, "revision": my_rev}
     old_contents = {
-        "existing_different_rev": {
-            "revision": "different_rev",
-            "platforms": my_platforms,
-        },
+        "existing_different_rev": {"revision": "different_rev", "platforms": my_platforms},
         "duplicate": my_dict,
-        "existing_different_platforms": {
-            "revision": my_rev,
-            "platforms": ["different", "platforms"],
-        },
-        "existing_different_both": {
-            "revision": "different_rev",
-            "platforms": ["different", "platforms"],
-        },
+        "existing_different_platforms": {"revision": my_rev, "platforms": ["different", "platforms"]},
+        "existing_different_both": {"revision": "different_rev", "platforms": ["different", "platforms"]},
         "old": {"revision": "different_rev", "platforms": my_platforms},
     }
     new_contents = {
@@ -71,28 +63,16 @@ five
             ],
             {
                 "platform_configs": [
-                    {
-                        "platforms": ["android-api-16", "android"],
-                        "path": "mobile/android/locales/all-locales",
-                    },
-                    {
-                        "platforms": ["android-multilocale"],
-                        "path": "mobile/android/locales/maemo-locales",
-                    },
+                    {"platforms": ["android-api-16", "android"], "path": "mobile/android/locales/all-locales"},
+                    {"platforms": ["android-multilocale"], "path": "mobile/android/locales/maemo-locales"},
                 ]
             },
             {
-                "one": {
-                    "platforms": ["android", "android-api-16", "android-multilocale"]
-                },
+                "one": {"platforms": ["android", "android-api-16", "android-multilocale"]},
                 "two": {"platforms": ["android", "android-api-16"]},
-                "three": {
-                    "platforms": ["android", "android-api-16", "android-multilocale"]
-                },
+                "three": {"platforms": ["android", "android-api-16", "android-multilocale"]},
                 "four": {"platforms": ["android", "android-api-16"]},
-                "five": {
-                    "platforms": ["android", "android-api-16", "android-multilocale"]
-                },
+                "five": {"platforms": ["android", "android-api-16", "android-multilocale"]},
                 "six": {"platforms": ["android", "android-api-16"]},
             },
         ),
@@ -106,69 +86,20 @@ ja-JP-mac b
 """
             ],
             {
-                "ignore_config": {
-                    "ja": ["macosx64", "macosx64-devedition"],
-                    "ja-JP-mac": [
-                        "linux",
-                        "linux-devedition",
-                        "linux64",
-                        "linux64-devedition",
-                    ],
-                },
+                "ignore_config": {"ja": ["macosx64", "macosx64-devedition"], "ja-JP-mac": ["linux", "linux-devedition", "linux64", "linux64-devedition"]},
                 "platform_configs": [
                     {
-                        "platforms": [
-                            "linux",
-                            "linux-devedition",
-                            "linux64",
-                            "linux64-devedition",
-                            "macosx64",
-                            "macosx64-devedition",
-                        ],
+                        "platforms": ["linux", "linux-devedition", "linux64", "linux64-devedition", "macosx64", "macosx64-devedition"],
                         "path": "browser/locales/shipped-locales",
                         "format": "shipped-locales",
                     }
                 ],
             },
             {
-                "one": {
-                    "platforms": [
-                        "linux",
-                        "linux-devedition",
-                        "linux64",
-                        "linux64-devedition",
-                        "macosx64",
-                        "macosx64-devedition",
-                    ]
-                },
-                "two": {
-                    "platforms": [
-                        "linux",
-                        "linux-devedition",
-                        "linux64",
-                        "linux64-devedition",
-                        "macosx64",
-                        "macosx64-devedition",
-                    ]
-                },
-                "three": {
-                    "platforms": [
-                        "linux",
-                        "linux-devedition",
-                        "linux64",
-                        "linux64-devedition",
-                        "macosx64",
-                        "macosx64-devedition",
-                    ]
-                },
-                "ja": {
-                    "platforms": [
-                        "linux",
-                        "linux-devedition",
-                        "linux64",
-                        "linux64-devedition",
-                    ]
-                },
+                "one": {"platforms": ["linux", "linux-devedition", "linux64", "linux64-devedition", "macosx64", "macosx64-devedition"]},
+                "two": {"platforms": ["linux", "linux-devedition", "linux64", "linux64-devedition", "macosx64", "macosx64-devedition"]},
+                "three": {"platforms": ["linux", "linux-devedition", "linux64", "linux64-devedition", "macosx64", "macosx64-devedition"]},
+                "ja": {"platforms": ["linux", "linux-devedition", "linux64", "linux64-devedition"]},
                 "ja-JP-mac": {"platforms": ["macosx64", "macosx64-devedition"]},
             },
         ),
@@ -220,11 +151,7 @@ def test_build_revision_dict(mocker, revision_info, expected):
     every locale in the platform_dict.
 
     """
-    platform_dict = {
-        "one": {"platforms": ["platform"]},
-        "two": {"platforms": ["platform"]},
-        "three": {"platforms": ["platform"]},
-    }
+    platform_dict = {"one": {"platforms": ["platform"]}, "two": {"platforms": ["platform"]}, "three": {"platforms": ["platform"]}}
 
     def build_platform_dict(*args):
         return platform_dict
@@ -234,60 +161,27 @@ def test_build_revision_dict(mocker, revision_info, expected):
 
 
 # build_commit_message {{{1
-@pytest.mark.parametrize(
-    "dontbuild, ignore_closed_tree", ((True, True), (False, False))
-)
+@pytest.mark.parametrize("dontbuild, ignore_closed_tree", ((True, True), (False, False)))
 def test_build_commit_message(dontbuild, ignore_closed_tree):
     """build_commit_message adds the correct approval strings and a comment
     including the changes landed.
     """
-    locale_map = {
-        "a": "arev",
-        "b": "brev",
-        "c": "crev",
-        "old": "removed",
-        "p": ["platform"],
-    }
-    expected = [
-        "no bug - Bumping foo r=release a=l10n-bump",
-        "",
-        "a -> arev",
-        "b -> brev",
-        "c -> crev",
-        "old -> removed",
-        "p -> ['platform']",
-    ]
+    locale_map = {"a": "arev", "b": "brev", "c": "crev", "old": "removed", "p": ["platform"]}
+    expected = ["no bug - Bumping foo r=release a=l10n-bump", "", "a -> arev", "b -> brev", "c -> crev", "old -> removed", "p -> ['platform']"]
     if dontbuild:
         expected[0] += l10n.DONTBUILD_MSG
     if ignore_closed_tree:
         expected[0] += l10n.CLOSED_TREE_MSG
-    assert (
-        l10n.build_commit_message(
-            "foo",
-            locale_map,
-            dontbuild=dontbuild,
-            ignore_closed_tree=ignore_closed_tree,
-        ).splitlines()
-        == expected
-    )
+    assert l10n.build_commit_message("foo", locale_map, dontbuild=dontbuild, ignore_closed_tree=ignore_closed_tree).splitlines() == expected
 
 
 # check_treestatus {{{1
-@pytest.mark.parametrize(
-    "status, expected", (("open", True), ("closed", False), ("approval required", True))
-)
+@pytest.mark.parametrize("status, expected", (("open", True), ("closed", False), ("approval required", True)))
 @pytest.mark.asyncio
 async def test_check_treestatus(status, mocker, expected):
     """check_treestatus returns False for a closed tree, and True otherwise."""
     config = {"treestatus_base_url": "url", "work_dir": "foo"}
-    treestatus = {
-        "result": {
-            "message_of_the_day": "",
-            "reason": "",
-            "status": status,
-            "tree": "mozilla-central",
-        }
-    }
+    treestatus = {"result": {"message_of_the_day": "", "reason": "", "status": status, "tree": "mozilla-central"}}
     mocker.patch.object(l10n, "download_file", new=noop_async)
     mocker.patch.object(l10n, "get_short_source_repo", return_value="tree")
     mocker.patch.object(l10n, "load_json_or_yaml", return_value=treestatus)
@@ -322,44 +216,21 @@ async def test_get_revision_info(mocker):
         (
             True,
             [{"name": "x", "path": "x"}],
-            {
-                "one": {"revision": "onerev", "platforms": ["platform"]},
-                "two": {"revision": "tworev", "platforms": ["platform"]},
-            },
-            {
-                "one": {"revision": "onerev", "platforms": ["platform"]},
-                "two": {"revision": "tworev", "platforms": ["platform"]},
-            },
+            {"one": {"revision": "onerev", "platforms": ["platform"]}, "two": {"revision": "tworev", "platforms": ["platform"]}},
+            {"one": {"revision": "onerev", "platforms": ["platform"]}, "two": {"revision": "tworev", "platforms": ["platform"]}},
             0,
         ),
         (
             False,
-            [
-                {"name": "x", "path": "x", "revision_url": "x"},
-                {"name": "y", "path": "y"},
-            ],
-            {
-                "one": {"revision": "oldonerev", "platforms": ["platform"]},
-                "two": {"revision": "oldtworev", "platforms": ["platform"]},
-            },
-            {
-                "one": {"revision": "newonerev", "platforms": ["platform"]},
-                "two": {"revision": "newtworev", "platforms": ["platform"]},
-            },
+            [{"name": "x", "path": "x", "revision_url": "x"}, {"name": "y", "path": "y"}],
+            {"one": {"revision": "oldonerev", "platforms": ["platform"]}, "two": {"revision": "oldtworev", "platforms": ["platform"]}},
+            {"one": {"revision": "newonerev", "platforms": ["platform"]}, "two": {"revision": "newtworev", "platforms": ["platform"]}},
             2,
         ),
     ),
 )
 @pytest.mark.asyncio
-async def test_l10n_bump(
-    mocker,
-    ignore_closed_tree,
-    l10n_bump_info,
-    tmpdir,
-    old_contents,
-    new_contents,
-    changes,
-):
+async def test_l10n_bump(mocker, ignore_closed_tree, l10n_bump_info, tmpdir, old_contents, new_contents, changes):
     """l10n_bump flow coverage."""
     calls = []
 

@@ -6,8 +6,8 @@
 # longer present in a complete update. The current working directory is used for
 # the location to enumerate and to create the precomplete file.
 
-import sys
 import os
+import sys
 
 
 def get_build_entries(root_path):
@@ -21,11 +21,7 @@ def get_build_entries(root_path):
             parent_dir_rel_path = root[len(root_path) + 1 :]
             rel_path_file = os.path.join(parent_dir_rel_path, file_name)
             rel_path_file = rel_path_file.replace("\\", "/")
-            if not (
-                rel_path_file.endswith("channel-prefs.js")
-                or rel_path_file.endswith("update-settings.ini")
-                or rel_path_file.find("distribution/") != -1
-            ):
+            if not (rel_path_file.endswith("channel-prefs.js") or rel_path_file.endswith("update-settings.ini") or rel_path_file.find("distribution/") != -1):
                 rel_file_path_set.add(rel_path_file)
 
         for dir_name in dirs:

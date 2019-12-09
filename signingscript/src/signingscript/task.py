@@ -7,24 +7,24 @@ Attributes:
         function.
 
 """
-from frozendict import frozendict
 import logging
 import os
 import re
 
+from frozendict import frozendict
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
 from signingscript.sign import (
+    sign_authenticode_zip,
+    sign_file,
     sign_gpg,
+    sign_gpg_with_autograph,
     sign_jar,
     sign_macapp,
-    sign_widevine,
-    sign_file,
     sign_mar384_with_autograph_hash,
-    sign_gpg_with_autograph,
     sign_omnija,
-    sign_authenticode_zip,
+    sign_widevine,
     sign_xpi,
 )
 
@@ -73,16 +73,12 @@ def task_cert_type(context):
         raise TaskVerificationError("No scopes found")
 
     prefixes = _get_cert_prefixes(context)
-    scopes = _extract_scopes_from_unique_prefix(
-        scopes=context.task["scopes"], prefixes=prefixes
-    )
+    scopes = _extract_scopes_from_unique_prefix(scopes=context.task["scopes"], prefixes=prefixes)
     return get_single_item_from_sequence(
         scopes,
         condition=lambda _: True,  # scopes must just contain 1 single item
         ErrorClass=TaskVerificationError,
-        no_item_error_message="No scope starting with any of these prefixes {} found".format(
-            prefixes
-        ),
+        no_item_error_message="No scope starting with any of these prefixes {} found".format(prefixes),
         too_many_item_error_message="More than one scope found",
     )
 
@@ -105,9 +101,7 @@ def task_signing_formats(context):
 
 
 def _extract_scopes_from_unique_prefix(scopes, prefixes):
-    scopes = [
-        scope for scope in scopes for prefix in prefixes if scope.startswith(prefix)
-    ]
+    scopes = [scope for scope in scopes for prefix in prefixes if scope.startswith(prefix)]
     _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes)
     return scopes
 
@@ -118,9 +112,7 @@ def _get_cert_prefixes(context):
 
 def _get_scope_prefixes(context, sub_namespace):
     prefixes = context.config["taskcluster_scope_prefixes"]
-    prefixes = [
-        prefix if prefix.endswith(":") else "{}:".format(prefix) for prefix in prefixes
-    ]
+    prefixes = [prefix if prefix.endswith(":") else "{}:".format(prefix) for prefix in prefixes]
     return ["{}{}:".format(prefix, sub_namespace) for prefix in prefixes]
 
 
@@ -129,10 +121,7 @@ def _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes):
         if all(scope.startswith(prefix) for scope in scopes):
             break
     else:
-        raise TaskVerificationError(
-            "Scopes must exist and all have the same prefix. "
-            "Given scopes: {}. Allowed prefixes: {}".format(scopes, prefixes)
-        )
+        raise TaskVerificationError("Scopes must exist and all have the same prefix. " "Given scopes: {}. Allowed prefixes: {}".format(scopes, prefixes))
 
 
 # sign {{{1
@@ -167,17 +156,12 @@ async def sign(context, path, signing_formats):
 
 def _get_signing_function_from_format(format):
     try:
-        _, signing_function = get_single_item_from_sequence(
-            FORMAT_TO_SIGNING_FUNCTION.items(),
-            condition=lambda item: re.match(item[0], format) is not None,
-        )
+        _, signing_function = get_single_item_from_sequence(FORMAT_TO_SIGNING_FUNCTION.items(), condition=lambda item: re.match(item[0], format) is not None)
         return signing_function
     except ValueError:
         # Regex may catch several candidate. If so, we fall back to the exact match.
         # If nothing matches, then we fall back to default
-        return FORMAT_TO_SIGNING_FUNCTION.get(
-            format, FORMAT_TO_SIGNING_FUNCTION["default"]
-        )
+        return FORMAT_TO_SIGNING_FUNCTION.get(format, FORMAT_TO_SIGNING_FUNCTION["default"])
 
 
 # _sort_formats {{{1
@@ -196,14 +180,7 @@ def _sort_formats(formats):
     """
     # Widevine formats must be after other formats other than macapp; GPG must
     # be last.
-    for fmt in (
-        "widevine",
-        "autograph_widevine",
-        "autograph_omnija",
-        "macapp",
-        "gpg",
-        "autograph_gpg",
-    ):
+    for fmt in ("widevine", "autograph_widevine", "autograph_omnija", "macapp", "gpg", "autograph_gpg"):
         if fmt in formats:
             formats.remove(fmt)
             formats.append(fmt)
@@ -233,15 +210,10 @@ def build_filelist_dict(context):
     messages = []
     for artifact_dict in context.task["payload"]["upstreamArtifacts"]:
         for path in artifact_dict["paths"]:
-            full_path = os.path.join(
-                context.config["work_dir"], "cot", artifact_dict["taskId"], path
-            )
+            full_path = os.path.join(context.config["work_dir"], "cot", artifact_dict["taskId"], path)
             if not os.path.exists(full_path):
                 messages.append("{} doesn't exist!".format(full_path))
-            filelist_dict[path] = {
-                "full_path": full_path,
-                "formats": _sort_formats(artifact_dict["formats"]),
-            }
+            filelist_dict[path] = {"full_path": full_path, "formats": _sort_formats(artifact_dict["formats"])}
     if messages:
         raise TaskVerificationError(messages)
     return filelist_dict

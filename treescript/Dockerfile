@@ -20,7 +20,9 @@ RUN python -m venv /app \
  && cd /app/treescript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
- && cd /app \
- && ./bin/pip install https://github.com/rail/configloader/archive/8719e33f6ba65e79e188355efabbcf6c9e1f1780.tar.gz
+ && cd /app/configloader \
+ && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install . \
+ && cd /app
 
 CMD ["/app/docker.d/init.sh"]

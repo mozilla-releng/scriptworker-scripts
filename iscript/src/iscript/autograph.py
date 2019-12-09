@@ -6,16 +6,17 @@ import difflib
 import glob
 import json
 import logging
-from mozpack import mozjar
 import os
 import re
-import requests
 import tempfile
 import zipfile
 
+import requests
+from requests_hawk import HawkAuth
+
 from iscript.createprecomplete import generate_precomplete
 from iscript.exceptions import IScriptError
-from requests_hawk import HawkAuth
+from mozpack import mozjar
 from scriptworker_client.aio import raise_future_exceptions, retry_async
 from scriptworker_client.utils import makedirs, rm
 
@@ -50,9 +51,7 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
     "libclearkey.so",
 )
 # Langpacks expect the following re to match for addon id
-LANGPACK_RE = re.compile(
-    r"^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|devedition).mozilla.org$"
-)
+LANGPACK_RE = re.compile(r"^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|devedition).mozilla.org$")
 
 
 # sign_widevine_dir {{{1
@@ -89,13 +88,7 @@ async def sign_widevine_dir(config, key_config, app_dir):
             to = _get_mac_sigpath(from_)
             log.debug("Adding %s to the sigfile paths...", to)
             makedirs(os.path.dirname(to))
-            tasks.append(
-                asyncio.ensure_future(
-                    sign_widevine_with_autograph(
-                        key_config, from_, "blessed" in fmt, to=to
-                    )
-                )
-            )
+            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(key_config, from_, "blessed" in fmt, to=to)))
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(app_dir, all_files)
@@ -154,9 +147,7 @@ def _run_generate_precomplete(config, app_dir):
         after = fh.readlines()
     # Create diff file
     makedirs(os.path.join(config["artifact_dir"], "public", "logs"))
-    diff_path = os.path.join(
-        config["artifact_dir"], "public", "logs", "precomplete.diff"
-    )
+    diff_path = os.path.join(config["artifact_dir"], "public", "logs", "precomplete.diff")
     with open(diff_path, "w") as fh:
         for line in difflib.ndiff(before, after):
             fh.write(line)
@@ -185,10 +176,7 @@ def remove_extra_files(top_dir, file_list):
         list: the list of extra files
 
     """
-    all_files = [
-        os.path.realpath(f)
-        for f in glob.glob(os.path.join(top_dir, "**", "*"), recursive=True)
-    ]
+    all_files = [os.path.realpath(f) for f in glob.glob(os.path.join(top_dir, "**", "*"), recursive=True)]
     good_files = [os.path.realpath(f) for f in file_list]
     extra_files = list(set(all_files) - set(good_files))
     for f in extra_files:
@@ -218,9 +206,7 @@ async def call_autograph(url, user, password, request_json):
     auth = HawkAuth(id=user, key=password)
     with requests.Session() as session:
         r = session.post(url, json=request_json, auth=auth)
-        log.debug(
-            "Autograph response: %s", r.text[:120] if len(r.text) >= 120 else r.text
-        )
+        log.debug("Autograph response: %s", r.text[:120] if len(r.text) >= 120 else r.text)
         r.raise_for_status()
         return r.json()
 
@@ -255,9 +241,7 @@ def make_signing_req(input_bytes, fmt, keyid=None, extension_id=None):
     return [sign_req]
 
 
-async def sign_with_autograph(
-    key_config, input_bytes, fmt, autograph_method, keyid=None, extension_id=None
-):
+async def sign_with_autograph(key_config, input_bytes, fmt, autograph_method, keyid=None, extension_id=None):
     """Signs data with autograph and returns the result.
 
     Args:
@@ -279,9 +263,7 @@ async def sign_with_autograph(
     if autograph_method not in {"file", "hash", "data"}:
         raise IScriptError(f"Unsupported autograph method: {autograph_method}")
 
-    sign_req = make_signing_req(
-        input_bytes, fmt, keyid=keyid, extension_id=extension_id
-    )
+    sign_req = make_signing_req(input_bytes, fmt, keyid=keyid, extension_id=extension_id)
     short_fmt = fmt.replace("autograph_", "")
     url = key_config[f"{short_fmt}_url"]
     user = key_config[f"{short_fmt}_user"]
@@ -291,12 +273,7 @@ async def sign_with_autograph(
 
     url = f"{url}/sign/{autograph_method}"
 
-    sign_resp = await retry_async(
-        call_autograph,
-        args=(url, user, pw, sign_req),
-        attempts=3,
-        sleeptime_kwargs={"delay_factor": 2.0},
-    )
+    sign_resp = await retry_async(call_autograph, args=(url, user, pw, sign_req), attempts=3, sleeptime_kwargs={"delay_factor": 2.0})
 
     if autograph_method == "file":
         return sign_resp[0]["signed_file"]
@@ -324,11 +301,7 @@ async def sign_file_with_autograph(key_config, from_, fmt, to=None, extension_id
     """
     to = to or from_
     input_bytes = open(from_, "rb").read()
-    signed_bytes = base64.b64decode(
-        await sign_with_autograph(
-            key_config, input_bytes, fmt, "file", extension_id=extension_id
-        )
-    )
+    signed_bytes = base64.b64decode(await sign_with_autograph(key_config, input_bytes, fmt, "file", extension_id=extension_id))
     with open(to, "wb") as fout:
         fout.write(signed_bytes)
     return to
@@ -350,9 +323,7 @@ async def sign_hash_with_autograph(key_config, hash_, fmt, keyid=None):
         bytes: the signature
 
     """
-    signature = base64.b64decode(
-        await sign_with_autograph(key_config, hash_, fmt, "hash", keyid)
-    )
+    signature = base64.b64decode(await sign_with_autograph(key_config, hash_, fmt, "hash", keyid))
     return signature
 
 
@@ -397,20 +368,10 @@ async def sign_omnija_with_autograph(config, key_config, app_path):
             all_files.append(os.path.join(top_dir, file_))
     files_to_sign = _get_omnija_signing_files(all_files)
     for from_ in files_to_sign:
-        signed_out = tempfile.mkstemp(
-            prefix="oj_signed", suffix=".ja", dir=config["work_dir"]
-        )[1]
-        merged_out = tempfile.mkstemp(
-            prefix="oj_merged", suffix=".ja", dir=config["work_dir"]
-        )[1]
+        signed_out = tempfile.mkstemp(prefix="oj_signed", suffix=".ja", dir=config["work_dir"])[1]
+        merged_out = tempfile.mkstemp(prefix="oj_merged", suffix=".ja", dir=config["work_dir"])[1]
 
-        await sign_file_with_autograph(
-            key_config,
-            from_,
-            "autograph_omnija",
-            to=signed_out,
-            extension_id="omni.ja@mozilla.org",
-        )
+        await sign_file_with_autograph(key_config, from_, "autograph_omnija", to=signed_out, extension_id="omni.ja@mozilla.org")
         await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
         with open(from_, "wb") as fout:
             with open(merged_out, "rb") as fin:
@@ -438,9 +399,7 @@ async def merge_omnija_files(orig, signed, to):
     orig_jarreader = mozjar.JarReader(orig)
     with mozjar.JarWriter(to, compress=orig_jarreader.compression) as to_writer:
         for origjarfile in orig_jarreader:
-            to_writer.add(
-                origjarfile.filename, origjarfile, compress=origjarfile.compress
-            )
+            to_writer.add(origjarfile.filename, origjarfile, compress=origjarfile.compress)
         # Use ZipFile here because mozjar can't read the signed copies
         signed_zip = zipfile.ZipFile(signed, "r")
         for fname in signed_zip.namelist():
@@ -527,19 +486,9 @@ async def sign_langpacks(config, key_config, all_paths):
         app.check_required_attrs(["orig_path", "formats", "artifact_prefix"])
         if not {"autograph_langpack"} & set(app.formats):
             raise IScriptError(f"{app.formats} does not contain 'autograph_langpack'")
-        app.target_tar_path = "{}/{}{}".format(
-            config["artifact_dir"],
-            app.artifact_prefix,
-            app.orig_path.split(app.artifact_prefix)[1],
-        )
+        app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
 
         id = langpack_id(app)
         log.info("Identified {} as extension id: {}".format(app.orig_path, id))
         makedirs(os.path.dirname(app.target_tar_path))
-        await sign_file_with_autograph(
-            key_config,
-            app.orig_path,
-            "autograph_langpack",
-            to=app.target_tar_path,
-            extension_id=id,
-        )
+        await sign_file_with_autograph(key_config, app.orig_path, "autograph_langpack", to=app.target_tar_path, extension_id=id)

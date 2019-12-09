@@ -1,25 +1,19 @@
-import mock
 import os
-import pytest
-
-import scriptworker.client
-from scriptworker.context import Context
-from conftest import (
-    noop_async,
-    noop_sync,
-    BASE_DIR,
-)
-import signingscript.script as script
 from unittest.mock import MagicMock
+
+import mock
+import pytest
+import scriptworker.client
+
+import signingscript.script as script
+from conftest import BASE_DIR, noop_sync
 
 # helper constants, fixtures, functions {{{1
 EXAMPLE_CONFIG = os.path.join(BASE_DIR, "config_example.json")
 
 
 # async_main {{{1
-async def async_main_helper(
-    tmpdir, mocker, formats, extra_config={}
-):
+async def async_main_helper(tmpdir, mocker, formats, extra_config={}):
     def fake_filelist_dict(*args, **kwargs):
         return {"path1": {"full_path": "full_path1", "formats": formats}}
 
@@ -27,7 +21,7 @@ async def async_main_helper(
         return [val]
 
     mocker.patch.object(script, "load_autograph_configs", new=noop_sync)
-    #mocker.patch.object(script, "task_cert_type", new=noop_sync)
+    # mocker.patch.object(script, "task_cert_type", new=noop_sync)
     mocker.patch.object(script, "task_signing_formats", return_value=formats)
     mocker.patch.object(script, "build_filelist_dict", new=fake_filelist_dict)
     mocker.patch.object(script, "sign", new=fake_sign)
@@ -96,9 +90,7 @@ def test_main(monkeypatch):
     sync_main_mock = MagicMock()
     monkeypatch.setattr(scriptworker.client, "sync_main", sync_main_mock)
     script.main()
-    sync_main_mock.asset_called_once_with(
-        script.async_main, default_config=script.get_default_config()
-    )
+    sync_main_mock.asset_called_once_with(script.async_main, default_config=script.get_default_config())
 
 
 @pytest.mark.asyncio
@@ -106,9 +98,7 @@ async def test_async_main_widevine_no_cert_defined(tmpdir, mocker):
     formats = ["autograph_widevine"]
     with pytest.raises(Exception) as e:
         await async_main_helper(tmpdir, mocker, formats)
-        assert (
-            e.args[0] == "Widevine format is enabled, but widevine_cert is not defined"
-        )
+        assert e.args[0] == "Widevine format is enabled, but widevine_cert is not defined"
 
 
 @pytest.mark.asyncio
