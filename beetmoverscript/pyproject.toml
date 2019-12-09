@@ -1,0 +1,57 @@
+[tool.black]
+line-length = 160
+target-version = ["py37", "py38"]
+include = '\.(wsgi|pyi?)$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | \.cache
+  | \.cache_py3
+  | _build
+  | buck-out
+  | build
+  | dist
+  | ui
+)/
+'''
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 160
+known_first_party = 'beetmoverscript'
+
+[tool.towncrier]
+package = "beetmoverscript"
+package_dir = "."
+filename = "CHANGELOG.rst"
+issue_format = "`#{issue} <https://bugzilla.mozilla.org/show_bug.cgi?id={issue}>`_"
+title_format = "[{version}] = ({project_date})"
+underlines = "-~\""
+
+[[tool.towncrier.type]]
+directory = "added"
+name = "Added"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "removed"
+name = "Removed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "changed"
+name = "Changed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "fixed"
+name = "Fixed"
+showcontent = true
