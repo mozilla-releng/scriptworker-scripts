@@ -25,6 +25,8 @@ In the same environment we also have the `level-1` workers which are used for
 staging releases. They co-exist here so that they are closer to production
 as possible.
 
+Full documentation is available at https://scriptworker-scripts.readthedocs.io/en/latest/index.html.
+
 ============================
 Overview of existing workers
 ============================
