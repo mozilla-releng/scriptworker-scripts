@@ -1,14 +1,14 @@
 import os
-import pytest
 import tempfile
 from contextlib import contextmanager
 from distutils.util import strtobool
 
+import pytest
 from scriptworker.context import Context
 
 from signingscript.exceptions import SigningScriptError
 from signingscript.script import get_default_config
-from signingscript.utils import mkdir, load_autograph_configs
+from signingscript.utils import load_autograph_configs, mkdir
 
 
 def read_file(path):
@@ -17,9 +17,7 @@ def read_file(path):
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-SERVER_CONFIG_PATH = os.path.join(
-    os.path.dirname(__file__), "example_server_config.json"
-)
+SERVER_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "example_server_config.json")
 DEFAULT_SCOPE_PREFIX = "project:releng:signing:"
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 PUB_KEY_PATH = os.path.join(TEST_DATA_DIR, "id_rsa.pub")
@@ -66,7 +64,6 @@ def does_not_raise():
 
 
 def skip_when_no_autograph_server(function):
-    return pytest.mark.skipif(
-        not strtobool(os.environ.get("AUTOGRAPH_INTEGRATION", "false")),
-        reason="Tests requiring an Autograph server are skipped",
-    )(function)
+    return pytest.mark.skipif(not strtobool(os.environ.get("AUTOGRAPH_INTEGRATION", "false")), reason="Tests requiring an Autograph server are skipped")(
+        function
+    )

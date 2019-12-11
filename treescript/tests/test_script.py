@@ -1,14 +1,13 @@
 import json
-import mock
 import os
-import pytest
-
-from scriptworker_client.exceptions import TaskError
 from unittest.mock import MagicMock
 
-from treescript.exceptions import TreeScriptError
-import treescript.script as script
+import mock
+import pytest
 
+import treescript.script as script
+from scriptworker_client.exceptions import TaskError
+from treescript.exceptions import TreeScriptError
 
 # helper constants, fixtures, functions {{{1
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -45,14 +44,7 @@ async def die_async(*args, **kwargs):
 
 # async_main {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "robustcheckout_works,raises,actions",
-    (
-        (False, TaskError, ["some_action"]),
-        (True, None, ["some_action"]),
-        (True, None, None),
-    ),
-)
+@pytest.mark.parametrize("robustcheckout_works,raises,actions", ((False, TaskError, ["some_action"]), (True, None, ["some_action"]), (True, None, None)))
 async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions):
     async def fake_validate_robustcheckout(_):
         return robustcheckout_works
@@ -61,9 +53,7 @@ async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions)
         return actions
 
     mocker.patch.object(script, "task_action_types", new=action_fun)
-    mocker.patch.object(
-        script, "validate_robustcheckout_works", new=fake_validate_robustcheckout
-    )
+    mocker.patch.object(script, "validate_robustcheckout_works", new=fake_validate_robustcheckout)
     mocker.patch.object(script, "log_mercurial_version", new=noop_async)
     mocker.patch.object(script, "checkout_repo", new=noop_async)
     mocker.patch.object(script, "do_actions", new=noop_async)
@@ -274,6 +264,4 @@ def test_main(monkeypatch):
     sync_main_mock = MagicMock()
     monkeypatch.setattr(script, "sync_main", sync_main_mock)
     script.main()
-    sync_main_mock.asset_called_once_with(
-        script.async_main, default_config=script.get_default_config()
-    )
+    sync_main_mock.asset_called_once_with(script.async_main, default_config=script.get_default_config())

@@ -1,0 +1,16 @@
+ARG PYTHON_VERSION
+
+FROM python:${PYTHON_VERSION}
+
+RUN apt-get update && apt-get install -y default-jdk && apt-get clean
+
+WORKDIR /app
+
+COPY MANIFEST.in setup.py tox.ini /app/
+COPY requirements/ /app/requirements/
+
+RUN pip install -r requirements/local.txt
+
+COPY src/ /app/src/
+
+ENTRYPOINT ["/usr/local/bin/tox", "-e"]

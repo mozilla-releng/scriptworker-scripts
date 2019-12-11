@@ -1,10 +1,14 @@
 -r base.in
 
+black
+check-manifest
 coverage
 flake8
+isort
 lockfile
 minimock
 mock
+pip-compile-multi
 pytest
 pytest-cov
 pytest-mock

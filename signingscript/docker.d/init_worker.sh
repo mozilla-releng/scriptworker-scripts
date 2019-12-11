@@ -50,34 +50,17 @@ case $COT_PRODUCT in
     ;;
   application-services)
     ;;
+  xpi)
+    ;;
+  mpd001)
+    ;;
   *)
     exit 1
     ;;
 esac
 
 case $ENV in
-  dev)
-    test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
-    test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
-    test_var_set 'AUTHENTICODE_CERT_PATH'
-    test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
-    test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
-    test_var_set 'AUTOGRAPH_FENNEC_PASSWORD'
-    test_var_set 'AUTOGRAPH_FENNEC_USERNAME'
-    test_var_set 'AUTOGRAPH_GPG_PASSWORD'
-    test_var_set 'AUTOGRAPH_GPG_USERNAME'
-    test_var_set 'AUTOGRAPH_LANGPACK_PASSWORD'
-    test_var_set 'AUTOGRAPH_LANGPACK_USERNAME'
-    test_var_set 'AUTOGRAPH_MAR_PASSWORD'
-    test_var_set 'AUTOGRAPH_MAR_STAGE_PASSWORD'
-    test_var_set 'AUTOGRAPH_MAR_STAGE_USERNAME'
-    test_var_set 'AUTOGRAPH_MAR_USERNAME'
-    test_var_set 'AUTOGRAPH_OMNIJA_PASSWORD'
-    test_var_set 'AUTOGRAPH_OMNIJA_USERNAME'
-    test_var_set 'AUTOGRAPH_WIDEVINE_PASSWORD'
-    test_var_set 'AUTOGRAPH_WIDEVINE_USERNAME'
-    ;;
-  fake-prod)
+  dev|fake-prod)
     case $COT_PRODUCT in
       firefox|thunderbird)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
@@ -113,6 +96,17 @@ case $ENV in
       application-services)
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        ;;
+      xpi)
+        test_var_set 'AUTOGRAPH_XPI_PASSWORD'
+        test_var_set 'AUTOGRAPH_XPI_USERNAME'
+        ;;
+      mpd001)
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
+        test_var_set 'AUTHENTICODE_CERT_PATH'
+        test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
+        test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
         ;;
     esac
     ;;
@@ -166,6 +160,19 @@ case $ENV in
       application-services)
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        ;;
+      xpi)
+        test_var_set 'AUTOGRAPH_XPI_PASSWORD'
+        test_var_set 'AUTOGRAPH_XPI_USERNAME'
+        ;;
+      mpd001)
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_EV_PASSWORD'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_EV_USERNAME'
+        test_var_set 'AUTHENTICODE_CERT_PATH'
+        test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
+        test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
         ;;
     esac
     ;;

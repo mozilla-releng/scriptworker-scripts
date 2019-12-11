@@ -5,43 +5,32 @@ import base64
 import difflib
 import fnmatch
 import glob
+import hashlib
 import json
 import logging
 import os
 import re
 import resource
-import time
-import hashlib
-
 import shutil
 import subprocess
 import sys
 import tarfile
 import tempfile
+import time
 import zipfile
-
-from io import BytesIO
 from functools import wraps
+from io import BytesIO
 
 import mohawk
+import winsign.sign
 from mardor.reader import MarReader
 from mardor.writer import add_signature_block
+from scriptworker.utils import get_single_item_from_sequence, makedirs, raise_future_exceptions, retry_async, rm
+from winsign.crypto import load_pem_certs
 
-from scriptworker.utils import (
-    get_single_item_from_sequence,
-    makedirs,
-    raise_future_exceptions,
-    retry_async,
-    rm,
-)
-
-from signingscript import task
-from signingscript import utils
+from signingscript import task, utils
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
-
-import winsign.sign
-from winsign.crypto import load_pem_certs
 
 log = logging.getLogger(__name__)
 
@@ -52,15 +41,9 @@ except ImportError:
     log.exception("Could not import widevine")
     widevine = None
 
-sys.path.append(  # append the mozbuild vendor
-    os.path.abspath(
-        os.path.join(
-            os.path.realpath(os.path.dirname(__file__)), "vendored", "mozbuild"
-        )
-    )
-)
+sys.path.append(os.path.abspath(os.path.join(os.path.realpath(os.path.dirname(__file__)), "vendored", "mozbuild")))  # append the mozbuild vendor
 
-from mozpack import mozjar  # noqa: E402
+from mozpack import mozjar  # noqa  # isort:skip
 
 _ZIP_ALIGNMENT = "4"  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
 
@@ -89,17 +72,11 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
 # These are the keys used to verify if a keyid isn't specified
 _DEFAULT_MAR_VERIFY_KEYS = {
     "autograph_stage_mar384": {"dep-signing": "autograph_stage.pem"},
-    "autograph_hash_only_mar384": {
-        "release-signing": "release_primary.pem",
-        "nightly-signing": "nightly_aurora_level3_primary.pem",
-        "dep-signing": "dep1.pem",
-    },
+    "autograph_hash_only_mar384": {"release-signing": "release_primary.pem", "nightly-signing": "nightly_aurora_level3_primary.pem", "dep-signing": "dep1.pem"},
 }
 
 # Langpacks expect the following re to match for addon id
-LANGPACK_RE = re.compile(
-    r"^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|devedition).mozilla.org$"
-)
+LANGPACK_RE = re.compile(r"^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|devedition).mozilla.org$")
 
 
 def get_rss():
@@ -118,13 +95,7 @@ def time_async_function(f):
             return await f(*args, **kwargs)
         finally:
             rss = get_rss()
-            log.debug(
-                "%s took %.2fs; RSS:%s (%+d)",
-                f.__name__,
-                time.time() - start,
-                rss,
-                rss - start_rss,
-            )
+            log.debug("%s took %.2fs; RSS:%s (%+d)", f.__name__, time.time() - start, rss, rss - start_rss)
 
     return wrapped
 
@@ -140,21 +111,13 @@ def time_function(f):
             return f(*args, **kwargs)
         finally:
             rss = get_rss()
-            log.debug(
-                "%s took %.2fs; RSS:%s (%+d)",
-                f.__name__,
-                time.time() - start,
-                rss,
-                rss - start_rss,
-            )
+            log.debug("%s took %.2fs; RSS:%s (%+d)", f.__name__, time.time() - start, rss, rss - start_rss)
 
     return wrapped
 
 
 # get_autograph_config {{{1
-def get_autograph_config(
-    autograph_configs, cert_type, signing_formats, raise_on_empty=False
-):
+def get_autograph_config(autograph_configs, cert_type, signing_formats, raise_on_empty=False):
     """Get the autograph config for given `signing_formats` and `cert_type`.
 
     Args:
@@ -177,9 +140,7 @@ def get_autograph_config(
             return a
 
     if raise_on_empty:
-        raise SigningScriptError(
-            f"No autograph config found with cert type {cert_type} and formats {signing_formats}"
-        )
+        raise SigningScriptError(f"No autograph config found with cert type {cert_type} and formats {signing_formats}")
     return None
 
 
@@ -201,9 +162,7 @@ async def sign_file(context, from_, fmt, to=None):
         str: the path to the signed file
 
     """
-    log.info(
-        "sign_file(): signing %s with %s... using autograph /sign/file", from_, fmt
-    )
+    log.info("sign_file(): signing %s with %s... using autograph /sign/file", from_, fmt)
     await sign_file_with_autograph(context, from_, fmt, to=to)
     return to or from_
 
@@ -284,7 +243,6 @@ async def sign_xpi(context, orig_path, fmt):
         str: the path to the signed xpi
 
     """
-    cert_type = task.task_cert_type(context)
     file_base, file_extension = os.path.splitext(orig_path)
 
     if file_extension not in (".xpi", ".zip"):
@@ -292,7 +250,7 @@ async def sign_xpi(context, orig_path, fmt):
 
     ext_id = _extension_id(orig_path, fmt)
     log.info("Identified {} as extension id: {}".format(orig_path, id))
-    kwargs = {'extension_id': ext_id}
+    kwargs = {"extension_id": ext_id}
     # Sign the appropriate inner files
     await sign_file_with_autograph(context, orig_path, fmt, **kwargs)
     return orig_path
@@ -320,11 +278,7 @@ async def sign_widevine(context, orig_path, fmt):
     if file_extension == ".dmg":
         await _convert_dmg_to_tar_gz(context, orig_path)
         orig_path = "{}.tar.gz".format(file_base)
-    ext_to_fn = {
-        ".zip": sign_widevine_zip,
-        ".tar.bz2": sign_widevine_tar,
-        ".tar.gz": sign_widevine_tar,
-    }
+    ext_to_fn = {".zip": sign_widevine_zip, ".tar.bz2": sign_widevine_tar, ".tar.gz": sign_widevine_tar}
     for ext, signing_func in ext_to_fn.items():
         if orig_path.endswith(ext):
             return await signing_func(context, orig_path, fmt)
@@ -367,13 +321,7 @@ async def sign_widevine_zip(context, orig_path, fmt):
         for from_, fmt in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
             to = f"{from_}.sig"
-            tasks.append(
-                asyncio.ensure_future(
-                    sign_widevine_with_autograph(
-                        context, from_, "blessed" in fmt, to=to
-                    )
-                )
-            )
+            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(context, from_, "blessed" in fmt, to=to)))
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(tmp_dir, all_files)
@@ -418,9 +366,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
     if files_to_sign:
         # Extract all files so we can create `precomplete` with the full
         # file list
-        all_files = await _extract_tarfile(
-            context, orig_path, compression, tmp_dir=tmp_dir
-        )
+        all_files = await _extract_tarfile(context, orig_path, compression, tmp_dir=tmp_dir)
         tasks = []
         # Sign the appropriate inner files
         for from_, fmt in files_to_sign.items():
@@ -432,22 +378,14 @@ async def sign_widevine_tar(context, orig_path, fmt):
             to = _get_mac_sigpath(from_)
             log.debug("Adding %s to the sigfile paths...", to)
             makedirs(os.path.dirname(to))
-            tasks.append(
-                asyncio.ensure_future(
-                    sign_widevine_with_autograph(
-                        context, from_, "blessed" in fmt, to=to
-                    )
-                )
-            )
+            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(context, from_, "blessed" in fmt, to=to)))
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(tmp_dir, all_files)
         # Regenerate the `precomplete` file, which is used for cleanup before
         # applying a complete mar.
         _run_generate_precomplete(context, tmp_dir)
-        await _create_tarfile(
-            context, orig_path, all_files, compression, tmp_dir=tmp_dir
-        )
+        await _create_tarfile(context, orig_path, all_files, compression, tmp_dir=tmp_dir)
     return orig_path
 
 
@@ -473,11 +411,7 @@ async def sign_omnija(context, orig_path, fmt):
     if file_extension == ".dmg":
         await _convert_dmg_to_tar_gz(context, orig_path)
         orig_path = "{}.tar.gz".format(file_base)
-    ext_to_fn = {
-        ".zip": sign_omnija_zip,
-        ".tar.bz2": sign_omnija_tar,
-        ".tar.gz": sign_omnija_tar,
-    }
+    ext_to_fn = {".zip": sign_omnija_zip, ".tar.bz2": sign_omnija_tar, ".tar.gz": sign_omnija_tar}
     for ext, signing_func in ext_to_fn.items():
         if orig_path.endswith(ext):
             return await signing_func(context, orig_path, fmt)
@@ -515,9 +449,7 @@ async def sign_omnija_zip(context, orig_path, fmt):
         # Sign the appropriate inner files
         for from_, fmt in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
-            tasks.append(
-                asyncio.ensure_future(sign_omnija_with_autograph(context, from_))
-            )
+            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(context, from_)))
         await raise_future_exceptions(tasks)
         await _create_zipfile(context, orig_path, all_files, mode="w", tmp_dir=tmp_dir)
     return orig_path
@@ -553,9 +485,7 @@ async def sign_omnija_tar(context, orig_path, fmt):
     if files_to_sign:
         # Extract all files so we can create `precomplete` with the full
         # file list
-        all_files = await _extract_tarfile(
-            context, orig_path, compression, tmp_dir=tmp_dir
-        )
+        all_files = await _extract_tarfile(context, orig_path, compression, tmp_dir=tmp_dir)
         tasks = []
         # Sign the appropriate inner files
         for from_, fmt in files_to_sign.items():
@@ -563,13 +493,9 @@ async def sign_omnija_tar(context, orig_path, fmt):
             # Don't try to sign directories
             if not os.path.isfile(from_):
                 continue
-            tasks.append(
-                asyncio.ensure_future(sign_omnija_with_autograph(context, from_))
-            )
+            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(context, from_)))
         await raise_future_exceptions(tasks)
-        await _create_tarfile(
-            context, orig_path, all_files, compression, tmp_dir=tmp_dir
-        )
+        await _create_tarfile(context, orig_path, all_files, compression, tmp_dir=tmp_dir)
     return orig_path
 
 
@@ -577,18 +503,10 @@ async def sign_omnija_tar(context, orig_path, fmt):
 def _should_sign_windows(filename):
     """Return True if filename should be signed."""
     # These should already be signed by Microsoft.
-    _dont_sign = [
-        "D3DCompiler_42.dll",
-        "d3dx9_42.dll",
-        "D3DCompiler_43.dll",
-        "d3dx9_43.dll",
-        "msvc*.dll",
-    ]
+    _dont_sign = ["D3DCompiler_42.dll", "d3dx9_42.dll", "D3DCompiler_43.dll", "d3dx9_43.dll", "msvc*.dll"]
     ext = os.path.splitext(filename)[1]
     b = os.path.basename(filename)
-    if ext in (".dll", ".exe", ".msi", ".bin") and not any(
-        fnmatch.fnmatch(b, p) for p in _dont_sign
-    ):
+    if ext in (".dll", ".exe", ".msi", ".bin") and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
         return True
     return False
 
@@ -606,16 +524,11 @@ def _extension_id(filename, fmt):
                 manifest = json.load(f)
                 break
         except KeyError:
-            log.debug(
-                "{} doesn't exist in {}...".format(manifest_name, filename)
-            )
+            log.debug("{} doesn't exist in {}...".format(manifest_name, filename))
     if not manifest.get("applications", {}).get("gecko", {}).get("id"):
         raise SigningScriptError("{} is not a valid xpi".format(filename))
     if "langpack" in fmt and not (
-        "languages" in manifest
-        and "langpack_id" in manifest
-        and LANGPACK_RE.match(manifest["applications"]["gecko"]["id"])
-        and filename.endswith(".xpi")
+        "languages" in manifest and "langpack_id" in manifest and LANGPACK_RE.match(manifest["applications"]["gecko"]["id"]) and filename.endswith(".xpi")
     ):
         raise SigningScriptError("{} is not a valid langpack".format(filename))
     return manifest["applications"]["gecko"]["id"]
@@ -688,9 +601,7 @@ def _run_generate_precomplete(context, tmp_dir):
     with open(diff_path, "w") as fh:
         for line in difflib.ndiff(before, after):
             fh.write(line)
-    utils.copy_to_dir(
-        diff_path, context.config["artifact_dir"], target="public/logs/precomplete.diff"
-    )
+    utils.copy_to_dir(diff_path, context.config["artifact_dir"], target="public/logs/precomplete.diff")
 
 
 # _ensure_one_precomplete {{{1
@@ -701,9 +612,7 @@ def _ensure_one_precomplete(tmp_dir, adj):
         condition=lambda _: True,
         ErrorClass=SigningScriptError,
         no_item_error_message='No `precomplete` file found in "{}"'.format(tmp_dir),
-        too_many_item_error_message='More than one `precomplete` file {} in "{}"'.format(
-            adj, tmp_dir
-        ),
+        too_many_item_error_message='More than one `precomplete` file {} in "{}"'.format(adj, tmp_dir),
     )
 
 
@@ -719,10 +628,7 @@ def remove_extra_files(top_dir, file_list):
         list: the list of extra files
 
     """
-    all_files = [
-        os.path.realpath(f)
-        for f in glob.glob(os.path.join(top_dir, "**", "*"), recursive=True)
-    ]
+    all_files = [os.path.realpath(f) for f in glob.glob(os.path.join(top_dir, "**", "*"), recursive=True)]
     good_files = [os.path.realpath(f) for f in file_list]
     extra_files = list(set(all_files) - set(good_files))
     for f in extra_files:
@@ -779,16 +685,8 @@ async def _convert_dmg_to_tar_gz(context, from_):
         utils.mkdir(app_dir)
         undmg_cmd = [dmg_executable_location, "extract", abs_from, "tmp.hfs"]
         await utils.execute_subprocess(undmg_cmd, cwd=temp_dir, log_level=logging.DEBUG)
-        hfsplus_cmd = [
-            hfsplus_executable_location,
-            "tmp.hfs",
-            "extractall",
-            "/",
-            app_dir,
-        ]
-        await utils.execute_subprocess(
-            hfsplus_cmd, cwd=temp_dir, log_level=logging.DEBUG
-        )
+        hfsplus_cmd = [hfsplus_executable_location, "tmp.hfs", "extractall", "/", app_dir]
+        await utils.execute_subprocess(hfsplus_cmd, cwd=temp_dir, log_level=logging.DEBUG)
         tar_cmd = ["tar", "czf", abs_to, "."]
         await utils.execute_subprocess(tar_cmd, cwd=app_dir)
 
@@ -808,9 +706,7 @@ async def _get_zipfile_files(from_):
 async def _extract_zipfile(context, from_, files=None, tmp_dir=None):
     work_dir = context.config["work_dir"]
     tmp_dir = tmp_dir or os.path.join(work_dir, "unzipped")
-    log.debug(
-        "Extracting {} from {} to {}...".format(files or "all files", from_, tmp_dir)
-    )
+    log.debug("Extracting {} from {} to {}...".format(files or "all files", from_, tmp_dir))
     try:
         extracted_files = []
         rm(tmp_dir)
@@ -849,9 +745,7 @@ async def _create_zipfile(context, to, files, tmp_dir=None, mode="w"):
 def _get_tarfile_compression(compression):
     compression = compression.lstrip(".")
     if compression not in ("bz2", "gz"):
-        raise SigningScriptError(
-            "{} not a supported tarfile compression format!".format(compression)
-        )
+        raise SigningScriptError("{} not a supported tarfile compression format!".format(compression))
     return compression
 
 
@@ -957,12 +851,7 @@ def get_hawk_content_hash(request_body, content_type):
 
 def get_hawk_header(url, user, password, content_type, content_hash):
     """Create a HAWK Authentication header."""
-    r = mohawk.base.Resource(
-        credentials={"id": user, "key": password, "algorithm": "sha256"},
-        url=url,
-        method="POST",
-        content_type=content_type,
-    )
+    r = mohawk.base.Resource(credentials={"id": user, "key": password, "algorithm": "sha256"}, url=url, method="POST", content_type=content_type)
     r._content_hash = content_hash
     mac = mohawk.util.calculate_mac("header", r, r.content_hash)
     a = mohawk.base.HawkAuthority()
@@ -988,15 +877,7 @@ async def call_autograph(session, url, user, password, sign_req):
     log.debug("req_size: %s", req_size)
     request_body.seek(0)
 
-    resp = await session.post(
-        url,
-        data=request_body,
-        headers={
-            "Authorization": auth_header,
-            "Content-Type": content_type,
-            "Content-Length": str(req_size),
-        },
-    )
+    resp = await session.post(url, data=request_body, headers={"Authorization": auth_header, "Content-Type": content_type, "Content-Length": str(req_size)})
     log.debug("Autograph response: %s", resp.status)
     resp.raise_for_status()
     # TODO: Write this out to temporary file. The responses can be large,
@@ -1047,9 +928,7 @@ def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
 
 
 @time_async_function
-async def sign_with_autograph(
-    session, server, input_file, fmt, autograph_method, keyid=None, extension_id=None
-):
+async def sign_with_autograph(session, server, input_file, fmt, autograph_method, keyid=None, extension_id=None):
     """Signs data with autograph and returns the result.
 
     Args:
@@ -1079,10 +958,7 @@ async def sign_with_autograph(
     url = f"{server.url}/sign/{autograph_method}"
 
     sign_resp = await retry_async(
-        call_autograph,
-        args=(session, url, server.client_id, server.access_key, sign_req),
-        attempts=3,
-        sleeptime_kwargs={"delay_factor": 2.0},
+        call_autograph, args=(session, url, server.client_id, server.access_key, sign_req), attempts=3, sleeptime_kwargs={"delay_factor": 2.0}
     )
 
     if autograph_method == "file":
@@ -1112,16 +988,10 @@ async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=No
 
     """
     cert_type = task.task_cert_type(context)
-    a = get_autograph_config(
-        context.autograph_configs, cert_type, [fmt], raise_on_empty=True
-    )
+    a = get_autograph_config(context.autograph_configs, cert_type, [fmt], raise_on_empty=True)
     to = to or from_
     input_file = open(from_, "rb")
-    signed_bytes = base64.b64decode(
-        await sign_with_autograph(
-            context.session, a, input_file, fmt, "file", extension_id=extension_id
-        )
-    )
+    signed_bytes = base64.b64decode(await sign_with_autograph(context.session, a, input_file, fmt, "file", extension_id=extension_id))
     with open(to, "wb") as fout:
         fout.write(signed_bytes)
     return to
@@ -1145,9 +1015,7 @@ async def sign_gpg_with_autograph(context, from_, fmt):
 
     """
     cert_type = task.task_cert_type(context)
-    a = get_autograph_config(
-        context.autograph_configs, cert_type, [fmt], raise_on_empty=True
-    )
+    a = get_autograph_config(context.autograph_configs, cert_type, [fmt], raise_on_empty=True)
     to = f"{from_}.asc"
     input_file = open(from_, "rb")
     signature = await sign_with_autograph(context.session, a, input_file, fmt, "data")
@@ -1175,13 +1043,9 @@ async def sign_hash_with_autograph(context, hash_, fmt, keyid=None):
 
     """
     cert_type = task.task_cert_type(context)
-    a = get_autograph_config(
-        context.autograph_configs, cert_type, [fmt], raise_on_empty=True
-    )
+    a = get_autograph_config(context.autograph_configs, cert_type, [fmt], raise_on_empty=True)
     input_file = BytesIO(hash_)
-    signature = base64.b64decode(
-        await sign_with_autograph(context.session, a, input_file, fmt, "hash", keyid)
-    )
+    signature = base64.b64decode(await sign_with_autograph(context.session, a, input_file, fmt, "hash", keyid))
     return signature
 
 
@@ -1213,9 +1077,7 @@ def get_mar_verification_key(cert_type, fmt, keyid):
             keyid = os.path.basename(keyid)
             return os.path.join(data_dir, f"{keyid}.pem")
     except KeyError as err:
-        raise SigningScriptError(
-            f"Can't find mar verify key for {fmt}, {cert_type} ({keyid}):\n{err}"
-        )
+        raise SigningScriptError(f"Can't find mar verify key for {fmt}, {cert_type} ({keyid}):\n{err}")
 
 
 def verify_mar_signature(cert_type, fmt, mar, keyid=None):
@@ -1265,9 +1127,7 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
     # Get any key id that the task may have specified
     fmt, keyid = utils.split_autograph_format(fmt)
     # Call to check that we have a server available
-    get_autograph_config(
-        context.autograph_configs, cert_type, [fmt], raise_on_empty=True
-    )
+    get_autograph_config(context.autograph_configs, cert_type, [fmt], raise_on_empty=True)
 
     hash_algo, expected_signature_length = "sha384", 512
 
@@ -1287,9 +1147,7 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
     # Add a signature to the MAR file (TODO: dedup with mardor.cli do_add_signature)
     if len(signature) != expected_signature_length:
         raise SigningScriptError(
-            "signed mar hash signature has invalid length for hash algo {}. Got {} expected {}.".format(
-                hash_algo, len(signature), expected_signature_length
-            )
+            "signed mar hash signature has invalid length for hash algo {}. Got {} expected {}.".format(hash_algo, len(signature), expected_signature_length)
         )
 
     # use the tmp file in case param `to` is `from_` which causes stream errors
@@ -1366,20 +1224,10 @@ async def sign_omnija_with_autograph(context, from_):
         str: the path to the signature file
 
     """
-    signed_out = tempfile.mkstemp(
-        prefix="oj_signed", suffix=".ja", dir=context.config["work_dir"]
-    )[1]
-    merged_out = tempfile.mkstemp(
-        prefix="oj_merged", suffix=".ja", dir=context.config["work_dir"]
-    )[1]
+    signed_out = tempfile.mkstemp(prefix="oj_signed", suffix=".ja", dir=context.config["work_dir"])[1]
+    merged_out = tempfile.mkstemp(prefix="oj_merged", suffix=".ja", dir=context.config["work_dir"])[1]
 
-    await sign_file_with_autograph(
-        context,
-        from_,
-        "autograph_omnija",
-        to=signed_out,
-        extension_id="omni.ja@mozilla.org",
-    )
+    await sign_file_with_autograph(context, from_, "autograph_omnija", to=signed_out, extension_id="omni.ja@mozilla.org")
     await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
     with open(from_, "wb") as fout:
         with open(merged_out, "rb") as fin:
@@ -1409,9 +1257,7 @@ async def merge_omnija_files(orig, signed, to):
     orig_jarreader = mozjar.JarReader(orig)
     with mozjar.JarWriter(to, compress=orig_jarreader.compression) as to_writer:
         for origjarfile in orig_jarreader:
-            to_writer.add(
-                origjarfile.filename, origjarfile, compress=origjarfile.compress
-            )
+            to_writer.add(origjarfile.filename, origjarfile, compress=origjarfile.compress)
         # Use ZipFile here because mozjar can't read the signed copies
         signed_zip = zipfile.ZipFile(signed, "r")
         for fname in signed_zip.namelist():
@@ -1460,16 +1306,7 @@ async def sign_authenticode_file(context, orig_path, fmt):
     else:
         crosscert = None
 
-    if not await winsign.sign.sign_file(
-        infile,
-        outfile,
-        digest_algo,
-        certs,
-        signer,
-        url=url,
-        crosscert=crosscert,
-        timestamp_style=timestamp_style,
-    ):
+    if not await winsign.sign.sign_file(infile, outfile, digest_algo, certs, signer, url=url, crosscert=crosscert, timestamp_style=timestamp_style):
         raise IOError(f"Couldn't sign {orig_path}")
     os.rename(outfile, infile)
 
@@ -1506,9 +1343,7 @@ async def sign_authenticode_zip(context, orig_path, fmt):
         files = [orig_path]
     files_to_sign = [file for file in files if _should_sign_windows(file)]
     if not files_to_sign:
-        raise SigningScriptError(
-            "Did not find any files to sign, all files: {}".format(files)
-        )
+        raise SigningScriptError("Did not find any files to sign, all files: {}".format(files))
 
     # Sign the appropriate inner files
     tasks = [sign_authenticode_file(context, file_, fmt) for file_ in files_to_sign]

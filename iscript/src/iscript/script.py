@@ -3,17 +3,11 @@
 import logging
 import os
 
+from iscript.exceptions import IScriptError
+from iscript.mac import geckodriver_behavior, notarize_behavior, sign_and_pkg_behavior, sign_behavior
+from iscript.util import get_key_config
 from scriptworker_client.client import sync_main
 from scriptworker_client.utils import run_command
-from iscript.exceptions import IScriptError
-from iscript.mac import (
-    geckodriver_behavior,
-    notarize_behavior,
-    sign_behavior,
-    sign_and_pkg_behavior,
-)
-from iscript.util import get_key_config
-
 
 log = logging.getLogger(__name__)
 
@@ -30,16 +24,10 @@ async def async_main(config, task):
     base_key = "mac_config"  # We may support ios_config someday
     key_config = get_key_config(config, task, base_key=base_key)
     behavior = task["payload"].get("behavior", "mac_sign")
-    if (
-        behavior == "mac_notarize"
-        and "mac_notarize" not in key_config["supported_behaviors"]
-        and "mac_sign_and_pkg" in key_config["supported_behaviors"]
-    ):
+    if behavior == "mac_notarize" and "mac_notarize" not in key_config["supported_behaviors"] and "mac_sign_and_pkg" in key_config["supported_behaviors"]:
         behavior = "mac_sign_and_pkg"
     if behavior not in key_config["supported_behaviors"]:
-        raise IScriptError(
-            "Unsupported behavior {} given scopes {}!".format(behavior, task["scopes"])
-        )
+        raise IScriptError("Unsupported behavior {} given scopes {}!".format(behavior, task["scopes"]))
     if behavior == "mac_geckodriver":
         await geckodriver_behavior(config, task)
         return
@@ -72,9 +60,7 @@ def get_default_config(base_dir=None):
     default_config = {
         "work_dir": os.path.join(base_dir, "work"),
         "artifact_dir": os.path.join(base_dir, "artifacts"),
-        "schema_file": os.path.join(
-            os.path.dirname(__file__), "data", "i_task_schema.json"
-        ),
+        "schema_file": os.path.join(os.path.dirname(__file__), "data", "i_task_schema.json"),
         "local_notarization_accounts": [],
     }
     return default_config

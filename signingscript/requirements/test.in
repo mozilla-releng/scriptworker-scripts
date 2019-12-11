@@ -9,4 +9,6 @@ pytest-mock
 flake8
 flake8_docstrings
 black
+check-manifest
+isort
 pip-compile-multi

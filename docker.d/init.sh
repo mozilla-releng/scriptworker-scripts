@@ -64,6 +64,12 @@ case $COT_PRODUCT in
   application-services)
     export TRUST_DOMAIN=appservices
     ;;
+  xpi)
+    export TRUST_DOMAIN=xpi
+    ;;
+  mpd001)
+    export TRUST_DOMAIN=mpd001
+    ;;
   *)
     exit 1
     ;;
@@ -77,7 +83,7 @@ esac
 export ARTIFACTS_DIR=/app/artifacts
 export ARTIFACT_UPLOAD_TIMEOUT=1200
 export CONFIG_DIR=/app/configs
-export CONFIG_LOADER=/app/bin/configloader
+export CONFIG_LOADER=/app/configloader_venv/bin/configloader
 export ED25519_PRIVKEY_PATH=$CONFIG_DIR/ed25519_privkey
 # if this variable exists, we should use it. Default to None otherwise
 export GITHUB_OAUTH_TOKEN=$GITHUB_OAUTH_TOKEN

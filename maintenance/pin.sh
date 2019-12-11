@@ -11,6 +11,7 @@ else
         balrogscript
         beetmoverscript
         bouncerscript
+        configloader
         iscript
         pushapkscript
         pushsnapscript
@@ -21,7 +22,5 @@ else
     "
 fi
 
-for dir in $DIRS; do
-    docker run -t -v $PWD:/src -w /src python:3.7 maintenance/pin-helper.sh "$dir"
-    docker run -t -v $PWD:/src -e SUFFIX=py38.txt -w /src python:3.8 maintenance/pin-helper.sh "$dir"
-done
+docker run -t -v $PWD:/src -w /src python:3.7 maintenance/pin-helper.sh $DIRS
+docker run -t -v $PWD:/src -e SUFFIX=py38.txt -w /src python:3.8 maintenance/pin-helper.sh $DIRS

@@ -1,8 +1,13 @@
 include LICENSE
 include README.rst
+include pyproject.toml
+include setup.py
 include version.txt
-include src/treescript/data/*
-include src/treescript/py2/*
+
+recursive-include src *
+
+exclude tests
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+recursive-exclude tests *

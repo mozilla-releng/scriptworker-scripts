@@ -15,7 +15,10 @@ RUN python -m venv /app \
  && cd balrogscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
- && cd /app \
- && ./bin/pip install https://github.com/rail/configloader/archive/8719e33f6ba65e79e188355efabbcf6c9e1f1780.tar.gz
+ && python -m venv /app/configloader_venv \
+ && cd /app/configloader \
+ && /app/configloader_venv/bin/pip install -r requirements/base.txt \
+ && /app/configloader_venv/bin/pip install . \
+ && cd /app
 
 CMD ["/app/docker.d/init.sh"]

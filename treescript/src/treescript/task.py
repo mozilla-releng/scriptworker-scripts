@@ -41,9 +41,7 @@ def get_metadata_source_repo(task):
     if not source:
         raise TaskVerificationError("No source, how did that happen")
     if not source.startswith("https://hg.mozilla.org/"):
-        raise TaskVerificationError(
-            "Unable to operate on sources not in hg.mozilla.org"
-        )
+        raise TaskVerificationError("Unable to operate on sources not in hg.mozilla.org")
     parts = source.split("/file/")
     if len(parts) < 2:
         raise TaskVerificationError("Source url is in unexpected format")
@@ -141,9 +139,7 @@ def get_version_bump_info(task):
     """
     version_info = task.get("payload", {}).get("version_bump_info")
     if not version_info:
-        raise TaskVerificationError(
-            "Requested version bump but no version_bump_info in payload"
-        )
+        raise TaskVerificationError("Requested version bump but no version_bump_info in payload")
     return version_info
 
 
@@ -163,9 +159,7 @@ def get_l10n_bump_info(task):
     """
     l10n_bump_info = task.get("payload", {}).get("l10n_bump_info")
     if not l10n_bump_info:
-        raise TaskVerificationError(
-            "Requested l10n bump but no l10n_bump_info in payload"
-        )
+        raise TaskVerificationError("Requested l10n bump but no l10n_bump_info in payload")
     return l10n_bump_info
 
 
@@ -215,24 +209,14 @@ def task_action_types(config, task):
     if task.get("payload", {}).get("actions"):
         actions = task["payload"]["actions"]
     else:
-        log.warning(
-            "Scopes-based actions are deprecated! Use task.payload.actions instead."
-        )
-        actions = [
-            s.split(":")[-1]
-            for s in task["scopes"]
-            if s.startswith(config["taskcluster_scope_prefix"] + "action:")
-        ]
+        log.warning("Scopes-based actions are deprecated! Use task.payload.actions instead.")
+        actions = [s.split(":")[-1] for s in task["scopes"] if s.startswith(config["taskcluster_scope_prefix"] + "action:")]
         if len(actions) < 1:
-            raise TaskVerificationError(
-                "Need at least one valid action specified in scopes"
-            )
+            raise TaskVerificationError("Need at least one valid action specified in scopes")
     log.info("Action requests: %s", actions)
     invalid_actions = set(actions) - set(VALID_ACTIONS)
     if len(invalid_actions) > 0:
-        raise TaskVerificationError(
-            "Task specified invalid actions: {}".format(invalid_actions)
-        )
+        raise TaskVerificationError("Task specified invalid actions: {}".format(invalid_actions))
 
     return _sort_actions(actions)
 

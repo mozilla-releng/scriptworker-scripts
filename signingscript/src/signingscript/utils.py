@@ -1,13 +1,13 @@
 """Signingscript general utility functions."""
 import asyncio
-from asyncio.subprocess import PIPE, STDOUT
 import functools
 import hashlib
 import json
 import logging
 import os
-from shutil import copyfile
+from asyncio.subprocess import PIPE, STDOUT
 from dataclasses import dataclass
+from shutil import copyfile
 
 from signingscript.exceptions import FailedSubprocess, SigningServerError
 
@@ -154,9 +154,7 @@ async def execute_subprocess(command, log_level=logging.INFO, **kwargs):
     if "cwd" in kwargs:
         message += " in {}".format(kwargs["cwd"])
     log.info(message)
-    subprocess = await asyncio.create_subprocess_exec(
-        *command, stdout=PIPE, stderr=STDOUT, **kwargs
-    )
+    subprocess = await asyncio.create_subprocess_exec(*command, stdout=PIPE, stderr=STDOUT, **kwargs)
     log.log(log_level, "COMMAND OUTPUT: ")
     await log_output(subprocess.stdout, log_level=log_level)
     exitcode = await subprocess.wait()
@@ -174,9 +172,7 @@ def is_apk_autograph_signing_format(format_):
 
     """
     # TODO Remove autograph_focus once format is migrated
-    return (
-        format_ and format_.startswith("autograph_apk_") or format_ == "autograph_focus"
-    )
+    return format_ and format_.startswith("autograph_apk_") or format_ == "autograph_focus"
 
 
 def is_sha1_apk_autograph_signing_format(format_):
