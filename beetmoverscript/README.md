@@ -6,81 +6,16 @@ Beetmoverscript README
 
 ## deploy a new version to staging
 
-In order to rollout a new version of beetmoverscript for testing, one must roll-out a new version, deploy it within
-puppet internal pypi mirrors and pin the beetmoverworkers to one's environment.
-
-1. Once your PR is ready for testing, make sure to create a new version like `<next-version>.dev0+pr<pr number>` under `beetmoverscript/_version.py`.
-1. Create wheel with `python3 setup.py bdist_wheel` and scp that file under [puppet](http://releng-puppet2.srv.releng.mdc1.mozilla.com/python/packages-3.5/)
-1. Login in [puppet](http://releng-puppet2.srv.releng.mdc1.mozilla.com/) and change directory in your environment (e.g. `/etc/puppet/environments/$whoami`)
-1. Make sure to have the puppet repo up-to-date there
-1. Tweak the `beetmoverscript` version in the module's [requirements.txt](https://github.com/mozilla-releng/build-puppet/blob/master/modules/beetmover_scriptworker/files/requirements.txt#L9) to reflect the new value,
-and also to force all the dev beetmoverworkers to be chained to your environment. Something like this:
-```diff
-diff --git a/manifests/moco-nodes.pp b/manifests/moco-nodes.pp
-index a8357fb..1982cec 100644
---- a/manifests/moco-nodes.pp
-+++ b/manifests/moco-nodes.pp
-@@ -977,7 +977,7 @@ node /^beetmover-dev.*\.srv\.releng\..*\.mozilla\.com$/ {
-     $only_user_ssh       = true
-+    $pin_puppet_server = 'releng-puppet2.srv.releng.mdc1.mozilla.com'
-+    $pin_puppet_env    = 'mtabara'
-     include toplevel::server::beetmoverscriptworker
- }
-
-diff --git a/modules/beetmover_scriptworker/files/requirements.txt b/modules/beetmover_scriptworker/files/requirements.txt
---- a/modules/beetmover_scriptworker/files/requirements.txt
-+++ b/modules/beetmover_scriptworker/files/requirements.txt
-@@ -5,7 +5,7 @@ aiohttp==3.2.1
- arrow==0.12.1
- async_timeout==3.0.0
- attrs==18.1.0
--beetmoverscript==7.2.3
-+beetmoverscript==XXX    # dev version to be tested
- boto3==1.7.22
- botocore==1.10.22
- certifi==2018.4.16
-```
-1. Login to all machines to chain them to your environment and also deploy the newer testing version
-```
-# vpn
-for i in {1..10}; do
-nslookup beetmover-dev$i | grep Name: | sed -e 's/Name:\t//'
-done > /src/ops/hosts/beet-dev
-csshX --hosts /src/ops/hosts/beet-dev
-sudo puppet agent --test  # or unpin or w/e
-```
+In order to test beetmoverscript changes before reaching production or even before
+submitting your PR, please consult the official docs for dev environments within
+[scriptworker-scripts](https://scriptworker-scripts.readthedocs.io/en/latest/scriptworkers-dev.html)
 
 ## deploy a new version to production
 
-1. Once your PR is reviewed and passes the tests, have one of the admins review & merge it
-1. Bump to new version in `version.txt`.
-1. `towncrier --version $(cat version)`
-1. Commit with a "%VERSION%" message
-1. `git tag -s %VERSION%`
-1. `git push`
-1. `git push --tags`
-1. Create wheel with `python3 setup.py bdist_wheel` and scp that file under [puppet](http://releng-puppet2.srv.releng.mdc1.mozilla.com/python/packages-3.5/)
-1. Wait for that file to be synchronized across all puppet instances (emails arrive to confirm that)
-1. Tweak the `beetmoverscript` version in the module's [requirements.txt](https://github.com/mozilla-releng/build-puppet/blob/master/modules/beetmover_scriptworker/files/requirements.txt#L9) to reflect the new value,
-1. Create a PR for your change and get review.
-1. Merge it when approved.
-1. There are currently fifteen prod and ten dev beetmoverworkers. You can wait for the cron job to run puppet to deploy new changes every 30 mins or so. Alternatively, can wait for the puppet masters to sync the change (~5 minutes, see mail again), and force the puppet run by logging-in to each of the machines:
-```
-# vpn
-for i in {1..10}; do
-nslookup beetmoverworker-$i | grep Name: | sed -e 's/Name:\t//'
-done > /src/ops/hosts/beet-prod
-csshX --hosts /src/ops/hosts/beet-prod
-sudo puppet agent --test
-```
+In order to rollout beetmoverscript changes to production please consult the
+official docs within [scriptworker-scripts](https://scriptworker-scripts.readthedocs.io/en/latest/scriptworkers-production.html)
 
-
-
-## install
-
-### locally
-
-#### setup project structure
+## HOWTO - install locally for developing
 
 tl;dr:
 
@@ -299,18 +234,6 @@ workon beetmoverscript  # activate venv
 cd /app/beetmoverworker
 beetmoverscript beetmoverscript/script_config.json  # uses w/e is in work_dir/task.json
 ```
-
-### with scriptworker (via task-creator in taskcluster tools)
-
-start scriptworker
-```
-workon beetmoverscript  # activate venv
-scriptworker /app/beetmoverworker/worker_config.json
-```
-
-create task via that uses same provisioner/worker-type that your scriptworker clientid and config expects:
-
-see https://tools.taskcluster.net/task-creator/ and example here: https://queue.taskcluster.net/v1/task/S-lth0jTThKBjmpt386kUA
 
 ## testing
 
