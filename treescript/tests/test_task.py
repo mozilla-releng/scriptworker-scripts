@@ -158,6 +158,14 @@ def test_get_branch(task_defn, branch):
     assert ttask.get_branch(task_defn) == branch
 
 
+@pytest.mark.parametrize("flavor", ("foo", None))
+def test_get_merge_flavor(task_defn, flavor):
+    if flavor:
+        task_defn["payload"]["merge_info"] = dict()
+        task_defn["payload"]["merge_info"]["flavor"] = flavor
+    assert ttask.get_merge_flavor(task_defn) == flavor
+
+
 @pytest.mark.parametrize(
     "tag_info",
     (

@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 # This list should be sorted in the order the actions should be taken
 # XXX remove `tagging` when we remove scope support for actions
 #     (payload-based actions will use `tag`)
-VALID_ACTIONS = ("tag", "tagging", "version_bump", "l10n_bump", "push")
+VALID_ACTIONS = ("tag", "tagging", "version_bump", "l10n_bump", "push", "merge_day")
 
 DONTBUILD_MSG = " DONTBUILD"
 CLOSED_TREE_MSG = " CLOSED TREE"
@@ -255,3 +255,17 @@ def is_dry_run(task):
     """
     dry_run = task.get("payload", {}).get("dry_run", False)
     return dry_run
+
+
+# get_merge_flavor {{{1
+def get_merge_flavor(task):
+    """Get the type of repo merge to perform.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        str: the ``merge_day -> flavor`` info as passed to the task payload.
+
+    """
+    return task.get("payload", {}).get("merge_info", dict()).get("flavor")
