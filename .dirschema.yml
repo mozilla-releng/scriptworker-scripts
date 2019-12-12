@@ -21,6 +21,7 @@ apps:
     - /balrogscript
     - /beetmoverscript
     - /bouncerscript
+    - /configloader
     - /pushapkscript
     - /pushsnapscript
     - /shipitscript
