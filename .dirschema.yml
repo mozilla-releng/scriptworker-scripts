@@ -21,9 +21,12 @@ apps:
     - /balrogscript
     - /beetmoverscript
     - /bouncerscript
-    - /configloader
     - /pushapkscript
     - /pushsnapscript
     - /shipitscript
     - /signingscript
     - /treescript
+tools:
+  schema: https://raw.githubusercontent.com/mozilla-releng/releng-dirschemas/master/python-tool.yaml
+  projects:
+    - /configloader
