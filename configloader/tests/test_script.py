@@ -8,16 +8,10 @@ from configloader.script import main
 
 
 @pytest.mark.parametrize(
-    'worker_id_prefix, input, env, exit_code, expected',
+    "worker_id_prefix, input, env, exit_code, expected",
     (
         # basic case
-        (
-            "",
-            {"a": "b"},
-            {},
-            0,
-            {"a": "b"},
-        ),
+        ("", {"a": "b"}, {}, 0, {"a": "b"}),
         # prefix
         (
             "workerPrefix",
@@ -27,13 +21,7 @@ from configloader.script import main
             {"a": "b", "worker_id": "workerPrefixabcdef"},
         ),
         # no prefix
-        (
-            "",
-            {"a": "b", "worker_id": "${WORKER_ID}"},
-            {},
-            0,
-            {"a": "b", "worker_id": "abcdef"},
-        ),
+        ("", {"a": "b", "worker_id": "${WORKER_ID}"}, {}, 0, {"a": "b", "worker_id": "abcdef"}),
         # long prefix
         (
             "workerPrefixIsSoLongSoSwHaveToTrimItDown",
@@ -51,13 +39,7 @@ from configloader.script import main
             {"a": "b", "envvar": "replaced"},
         ),
         # fail on missing environment variables
-        (
-            "workerPrefix",
-            {"a": "b", "envvar": "${ENVVAR}"},
-            {},
-            1,
-            {},
-        ),
+        ("workerPrefix", {"a": "b", "envvar": "${ENVVAR}"}, {}, 1, {}),
     ),
 )
 def test_main(monkeypatch, worker_id_prefix, input, env, exit_code, expected):
@@ -71,8 +53,7 @@ def test_main(monkeypatch, worker_id_prefix, input, env, exit_code, expected):
         with monkeypatch.context() as m:
             m.setattr(slugid, "nice", lambda: "abcdef")
             result = runner.invoke(
-                main,
-                ['--worker-id-prefix', worker_id_prefix, "input.yml", "output.json"]
+                main, ["--worker-id-prefix", worker_id_prefix, "input.yml", "output.json"]
             )
             assert result.exit_code == exit_code
             if exit_code == 0:
