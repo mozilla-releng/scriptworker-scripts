@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """iscript mac signing/notarization functions."""
 import asyncio
+import json
 import logging
 import os
 import plistlib
@@ -1029,6 +1030,92 @@ async def notarize_behavior(config, task):
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing and notarizing apps.")
+
+
+# notarize_1_behavior {{{1
+async def notarize_1_behavior(config, task):
+    """Sign and submit all mac apps for notarization.
+
+    This task will not wait for the notarization to finish. Instead, it
+    will upload all signed apps and a uuid manifest.
+
+    Args:
+        config (dict): the running configuration
+        task (dict): the running task
+
+    Raises:
+        IScriptError: on fatal error.
+
+    """
+    work_dir = config["work_dir"]
+
+    key_config = get_key_config(config, task, base_key="mac_config")
+    entitlements_path = await download_entitlements_file(config, key_config, task)
+
+    all_paths = get_app_paths(config, task)
+    langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
+    if langpack_apps:
+        await sign_langpacks(config, key_config, langpack_apps)
+        all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
+
+    # app
+    await extract_all_apps(config, all_paths)
+    await unlock_keychain(key_config["signing_keychain"], key_config["keychain_password"])
+    await update_keychain_search_path(config, key_config["signing_keychain"])
+    await sign_all_apps(config, key_config, entitlements_path, all_paths)
+
+    # pkg
+    # Unlock keychain again in case it's locked since previous unlock
+    await unlock_keychain(key_config["signing_keychain"], key_config["keychain_password"])
+    await update_keychain_search_path(config, key_config["signing_keychain"])
+    await create_pkg_files(config, key_config, all_paths)
+
+    log.info("Submitting for notarization.")
+    if key_config["notarize_type"] == "multi_account":
+        await create_all_notarization_zipfiles(all_paths, path_attrs=["app_path", "pkg_path"])
+        poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths, path_attr="zip_path")
+    else:
+        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, path_attr="app_path")
+        poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
+
+    # create uuid_manifest.json
+    uuids_path = "{}/public/uuid_manifest.json".format(config["artifact_dir"])
+    makedirs(os.path.dirname(uuids_path))
+    with open(uuids_path, "w") as fh:
+        json.dump(sorted(poll_uuids.keys()), fh)
+
+    await tar_apps(config, all_paths)
+    await copy_pkgs_to_artifact_dir(config, all_paths)
+
+    log.info("Done signing apps and submitting them for notarization.")
+
+
+# notarize_3_behavior {{{1
+async def notarize_3_behavior(config, task):
+    """Staple notarization to all mac apps for this task.
+
+    Args:
+        config (dict): the running configuration
+        task (dict): the running task
+
+    Raises:
+        IScriptError: on fatal error.
+
+    """
+    all_paths = get_app_paths(config, task)
+    await extract_all_apps(config, all_paths)
+    for app in all_paths:
+        set_app_path_and_name(app)
+        app.pkg_path = app.app_path.replace(".app", ".pkg")
+        app.pkg_name = os.path.basename(app.pkg_path)
+
+    await staple_notarization(all_paths, path_attr="app_path")
+    await tar_apps(config, all_paths)
+
+    await staple_notarization(all_paths, path_attr="pkg_path")
+    await copy_pkgs_to_artifact_dir(config, all_paths)
+
+    log.info("Done stapling notarization.")
 
 
 # sign_behavior {{{1

@@ -995,6 +995,103 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
     await mac.notarize_behavior(config, task)
 
 
+# notarize_1_behavior {{{1
+@pytest.mark.parametrize("notarize_type,use_langpack", zip(("multi_account", "single_account", "single_zip"), (False, True)))
+@pytest.mark.asyncio
+async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
+    """Mock ``notarize_behavior`` for full line coverage."""
+
+    artifact_dir = os.path.join(str(tmpdir), "artifact")
+    work_dir = os.path.join(str(tmpdir), "work")
+    config = {
+        "artifact_dir": artifact_dir,
+        "work_dir": work_dir,
+        "local_notarization_accounts": ["acct0", "acct1", "acct2"],
+        "mac_config": {
+            "dep": {
+                "notarize_type": notarize_type,
+                "signing_keychain": "keychain_path",
+                "sign_with_entitlements": False,
+                "base_bundle_id": "org.test",
+                "identity": "id",
+                "keychain_password": "keychain_password",
+                "pkg_cert_id": "cert_id",
+                "apple_notarization_account": "apple_account",
+                "apple_notarization_password": "apple_password",
+                "apple_asc_provider": "apple_asc_provider",
+                "notarization_poll_timeout": 2,
+            }
+        },
+    }
+
+    task = {
+        "payload": {
+            "upstreamArtifacts": [
+                {"taskId": "task1", "formats": ["macapp", "widevine"], "paths": ["public/build/1/target.tar.gz", "public/build/2/target.tar.gz"]},
+                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"], "formats": ["macapp", "widevine"]},
+            ]
+        }
+    }
+    if use_langpack:
+        mocker.patch.object(mac, "sign_langpacks", new=noop_async)
+        task["payload"]["upstreamArtifacts"].append({"taskId": "task3", "formats": ["autograph_langpack"], "paths": ["public/build3/target.langpack.xpi"]})
+
+    mocker.patch.object(os, "listdir", return_value=[])
+    mocker.patch.object(mac, "run_command", new=noop_async)
+    mocker.patch.object(mac, "unlock_keychain", new=noop_async)
+    mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
+    mocker.patch.object(mac, "poll_notarization_uuid", new=noop_async)
+    mocker.patch.object(mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app"))
+    mocker.patch.object(mac, "get_notarization_status_from_log", return_value=None)
+    mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
+    mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
+    mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
+    await mac.notarize_1_behavior(config, task)
+
+
+# notarize_3_behavior {{{1
+@pytest.mark.asyncio
+async def test_notarize_3_behavior(mocker, tmpdir):
+    """Mock ``notarize_behavior`` for full line coverage."""
+
+    artifact_dir = os.path.join(str(tmpdir), "artifact")
+    work_dir = os.path.join(str(tmpdir), "work")
+    config = {
+        "artifact_dir": artifact_dir,
+        "work_dir": work_dir,
+        "mac_config": {
+            "dep": {
+                "signing_keychain": "keychain_path",
+                "sign_with_entitlements": False,
+                "base_bundle_id": "org.test",
+                "identity": "id",
+                "keychain_password": "keychain_password",
+                "pkg_cert_id": "cert_id",
+                "apple_notarization_account": "apple_account",
+                "apple_notarization_password": "apple_password",
+                "apple_asc_provider": "apple_asc_provider",
+                "notarization_poll_timeout": 2,
+            }
+        },
+    }
+
+    task = {
+        "payload": {
+            "upstreamArtifacts": [
+                {"taskId": "task1", "formats": ["macapp", "widevine"], "paths": ["public/build/1/target.tar.gz", "public/build/2/target.tar.gz"]},
+                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"], "formats": ["macapp", "widevine"]},
+            ]
+        }
+    }
+
+    mocker.patch.object(mac, "run_command", new=noop_async)
+    mocker.patch.object(mac, "tar_apps", new=noop_async)
+    mocker.patch.object(mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app"))
+    mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
+    await mac.notarize_3_behavior(config, task)
+
+
 # geckodriver_behavior {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize("use_langpack", (False, True))
