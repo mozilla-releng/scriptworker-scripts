@@ -996,7 +996,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
 
 
 # notarize_1_behavior {{{1
-@pytest.mark.parametrize("notarize_type,use_langpack", zip(("multi_account", "single_account", "single_zip"), (False, True)))
+@pytest.mark.parametrize("notarize_type,use_langpack", zip(("multi_account", "single_account","single_zip"), (False, True, False)))
 @pytest.mark.asyncio
 async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
     """Mock ``notarize_behavior`` for full line coverage."""
@@ -1040,9 +1040,7 @@ async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
-    mocker.patch.object(mac, "poll_notarization_uuid", new=noop_async)
     mocker.patch.object(mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app"))
-    mocker.patch.object(mac, "get_notarization_status_from_log", return_value=None)
     mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
     mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
