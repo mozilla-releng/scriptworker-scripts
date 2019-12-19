@@ -2,6 +2,7 @@
 """Scriptworker-client exceptions."""
 
 import builtins
+
 from scriptworker_client.constants import STATUSES
 
 

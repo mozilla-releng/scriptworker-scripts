@@ -203,12 +203,12 @@ async def test_fail_handle_asyncio_loop(mocker):
 
 
 def test_init_config_cli(mocker, tmpdir):
-    """_init_config can get its config from the commandline if not specified.
+    """init_config can get its config from the commandline if not specified.
 
     """
     mocker.patch.object(sys, "argv", new=["x"])
     with pytest.raises(SystemExit):
-        client._init_config()
+        client.init_config()
     path = os.path.join(tmpdir, "foo.json")
     config = {"a": "b"}
     default_config = {"c": "d"}
@@ -217,4 +217,4 @@ def test_init_config_cli(mocker, tmpdir):
     expected = deepcopy(default_config)
     expected.update(config)
     mocker.patch.object(sys, "argv", new=["x", path])
-    assert client._init_config(default_config=default_config) == expected
+    assert client.init_config(default_config=default_config) == expected

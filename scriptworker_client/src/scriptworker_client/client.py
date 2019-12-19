@@ -6,10 +6,12 @@ Attributes:
 
 """
 import asyncio
-import jsonschema
 import logging
 import os
 import sys
+
+import jsonschema
+from frozendict import frozendict
 
 from scriptworker_client.exceptions import ClientError, TaskVerificationError
 from scriptworker_client.utils import load_json_or_yaml
@@ -107,7 +109,7 @@ def sync_main(
         async_main (function): The function to call once everything is set up
         config_path (str, optional): The path to the file to load the config from.
             Loads from ``sys.argv[1]`` if ``None``. Defaults to None.
-        default_config (dict, optional): the default config to use for ``_init_config``.
+        default_config (dict, optional): the default config to use for ``init_config``.
             defaults to None.
         should_verify_task (bool, optional): whether we should verify the task
             schema. Defaults to True.
@@ -116,7 +118,7 @@ def sync_main(
             ``asyncio.get_event_loop``.
 
     """
-    config = _init_config(config_path, default_config)
+    config = init_config(config_path, default_config)
     _init_logging(config)
     task = get_task(config)
     if should_verify_task:
@@ -125,16 +127,40 @@ def sync_main(
     loop.run_until_complete(_handle_asyncio_loop(async_main, config, task))
 
 
-def _init_config(config_path=None, default_config=None):
+def init_config(config_path=None, default_config=None, validator_callback=None):
+    """Initialize the config.
+
+    First, read config overrides from ``config_path``. Apply over
+    ``default_config``. Send to ``validator_config``, then return a frozendict
+    of the config.
+
+    Args:
+        config_path (str, optional): the path to the config file. Defaults to
+            ``sys.argv[1]``.
+        default_config (dict, optional): the config defaults. These are the
+            config values if not overridden in ``config_path``. Defaults to
+            ``{}``.
+        validator_callback (function, optional): a function that takes a single
+            arg (``config``), and raises an exception if invalid. If ``None``,
+            don't validate the config. Defaults to ``None``.
+
+    Raises:
+        Exception: if the config doesn't pass the ``validator_callback``.
+
+    Returns:
+        frozendict: the config.
+
+    """
     if config_path is None:
         if len(sys.argv) != 2:
             _usage()
         config_path = sys.argv[1]
 
-    config = {} if default_config is None else default_config
+    config = {} if default_config is None else dict(default_config)
     config.update(load_json_or_yaml(config_path, file_type="yaml", is_path=True))
+    validator_callback and validator_callback(config)
 
-    return config
+    return frozendict(config)
 
 
 def _usage():
