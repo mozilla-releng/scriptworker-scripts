@@ -44,6 +44,9 @@
                         "next_version": {
                             "type": "string"
                         },
+                        "commit": {
+                            "type": "boolean"
+                        },
                         "files": {
                             "type": "array",
                             "minItems": 1,
@@ -87,6 +90,16 @@
                         "required": ["path", "name", "platform_configs", "version_path"]
                     }
                 },
+                "merge_info": {
+                    "type": "object",
+                    "properties": {
+                        "flavor": {
+                            "type": "string",
+                            "enum": ["central_to_beta", "beta_to_release", "release_to_esr"]
+                        }
+                    },
+                    "required": ["flavor"]
+                },
                 "branch": {
                     "type": "string"
                 },
@@ -108,7 +121,7 @@
                     "uniqueItems": true,
                     "items": {
                         "type": "string",
-                        "enum": ["tag", "version_bump", "l10n_bump", "push"]
+                        "enum": ["tag", "version_bump", "l10n_bump", "merge_day", "push"]
                     }
                 }
             }

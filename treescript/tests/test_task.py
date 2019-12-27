@@ -138,6 +138,14 @@ def test_get_branch(task_defn, branch):
     assert ttask.get_branch(task_defn) == branch
 
 
+@pytest.mark.parametrize("flavor", ("foo", None))
+def test_get_merge_flavor(task_defn, flavor):
+    if flavor:
+        task_defn["payload"]["merge_info"] = dict()
+        task_defn["payload"]["merge_info"]["flavor"] = flavor
+    assert ttask.get_merge_flavor(task_defn) == flavor
+
+
 @pytest.mark.parametrize(
     "tag_info", ({"revision": "deadbeef", "tags": ["FIREFOX_54.0b3_RELEASE", "BOB"]}, {"revision": "beef0001", "tags": ["FIREFOX_59.0b3_RELEASE", "FRED"]})
 )

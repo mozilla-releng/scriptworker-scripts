@@ -75,11 +75,24 @@ def test_get_default_config():
 
 # do_actions {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("push_scope,dry_run,push_expect_called", ((["push"], True, False), (["push"], False, True), ([], False, False), ([], True, False)))
-async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
+@pytest.mark.parametrize(
+    "push_scope,merge_action,dry_run,push_expect_called",
+    (
+        (["push"], [], True, False),
+        (["push"], [], False, True),
+        ([], [], False, False),
+        ([], [], True, False),
+        (["push"], [script.MERGE_ACTION_WORD], True, False),
+        (["push"], [script.MERGE_ACTION_WORD], False, True),
+        ([], [script.MERGE_ACTION_WORD], False, False),
+        ([], [script.MERGE_ACTION_WORD], True, False),
+    ),
+)
+async def test_do_actions(mocker, push_scope, merge_action, dry_run, push_expect_called):
     actions = ["tagging", "version_bump", "l10n_bump"]
+    actions += merge_action
     actions += push_scope
-    called = {"bump": False, "l10n": False, "push": False, "tag": False}
+    called = {"bump": False, "l10n": False, "push": False, "merge": False, "tag": False}
 
     async def mocked_tag(*args, **kwargs):
         called["tag"] = True
@@ -93,6 +106,9 @@ async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
         called["l10n"] = True
         return 1
 
+    async def mocked_perform_merge_actions(*args, **kwargs):
+        called["merge"] = True
+
     async def mocked_push(*args, **kwargs):
         called["push"] = True
         return 1
@@ -105,6 +121,7 @@ async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
     mocker.patch.object(script, "do_tagging", new=mocked_tag)
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
+    mocker.patch.object(script, "perform_merge_actions", new=mocked_perform_merge_actions)
     mocker.patch.object(script, "push", new=mocked_push)
     mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
     mocker.patch.object(script, "is_dry_run", return_value=dry_run)
@@ -112,6 +129,33 @@ async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
     assert called["tag"]
     assert called["bump"]
     assert called["l10n"]
+    if merge_action:
+        assert called["merge"]
+    assert called["push"] is push_expect_called
+
+
+# do_actions {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize("push_scope,dry_run,push_expect_called", ((["push"], True, False), (["push"], False, True), ([], False, False), ([], True, False)))
+async def test_perform_merge_actions(mocker, push_scope, dry_run, push_expect_called):
+    actions = [script.MERGE_ACTION_WORD]
+    actions += push_scope
+    called = {"push": False, "merge": False}
+
+    async def mocked_do_merge(*args, **kwargs):
+        called["merge"] = True
+        return [("https://hg.mozilla.org/treescript-test", ".")]
+
+    async def mocked_push(*args, **kwargs):
+        called["push"] = True
+        return 1
+
+    mocker.patch.object(script, "checkout_repo", new=noop_async)
+    mocker.patch.object(script, "do_merge", new=mocked_do_merge)
+    mocker.patch.object(script, "push", new=mocked_push)
+    mocker.patch.object(script, "is_dry_run", return_value=dry_run)
+    await script.perform_merge_actions({}, {}, actions, "/some/folder/here")
+    assert called["merge"] is True
     assert called["push"] is push_expect_called
 
 

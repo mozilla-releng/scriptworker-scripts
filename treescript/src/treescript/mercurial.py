@@ -222,6 +222,11 @@ async def check_tags(config, tag_info, repo_path):
     return tags
 
 
+async def get_revision(config, repo_path):
+    """Obtain the current revision."""
+    return await run_hg_command(config, "parent", "--template", "{node}", return_output=True, repo_path=repo_path)
+
+
 async def do_tagging(config, task, repo_path):
     """Perform tagging, at ${repo_path}/src.
 
@@ -266,7 +271,7 @@ async def do_tagging(config, task, repo_path):
     return 1
 
 
-# log_outgoing {{{1
+# _count_outgoing {{{1
 def _count_outgoing(output):
     """Count the number of outgoing hg changesets from `hg outgoing`.
 
@@ -282,6 +287,7 @@ def _count_outgoing(output):
     return count
 
 
+# log_outgoing {{{1
 async def log_outgoing(config, task, repo_path):
     """Run `hg out` against the current revision in the repository.
 
@@ -335,7 +341,7 @@ async def strip_outgoing(config, task, repo_path):
 
 
 # push {{{1
-async def push(config, task, repo_path):
+async def push(config, task, repo_path, source_repo=None, revision=None):
     """Run `hg push` against the current source repo.
 
     Args:
@@ -347,7 +353,8 @@ async def push(config, task, repo_path):
         PushError: on failure
 
     """
-    source_repo = get_source_repo(task)
+    if not source_repo:
+        source_repo = get_source_repo(task)
     source_repo_ssh = source_repo.replace("https://", "ssh://")
     ssh_username = config.get("hg_ssh_user")
     ssh_key = config.get("hg_ssh_keyfile")
@@ -360,7 +367,7 @@ async def push(config, task, repo_path):
             ssh_opt[1] += " -i %s" % ssh_key
     log.info("Pushing local changes to {}".format(source_repo_ssh))
     try:
-        await run_hg_command(config, "push", *ssh_opt, "-r", ".", "-v", source_repo_ssh, repo_path=repo_path, exception=PushError)
+        await run_hg_command(config, "push", *ssh_opt, "-r", revision if revision else ".", "-v", source_repo_ssh, repo_path=repo_path, exception=PushError)
     except PushError as exc:
         log.warning("Hit PushError %s", str(exc))
         await strip_outgoing(config, task, repo_path)
