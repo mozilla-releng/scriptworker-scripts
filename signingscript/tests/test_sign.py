@@ -33,6 +33,7 @@ INSTALL_DIR = os.path.dirname(sign.__file__)
 def async_mock_return_value(value):
     """
     Return a value appropriate to assign to `mock.return_value` of an async function.
+
     Python 3.8 added asyncio support to mock, so setting `mock.return_value` to
     a `Future` cause the result of awaiting the result a future, rather than a
     value.

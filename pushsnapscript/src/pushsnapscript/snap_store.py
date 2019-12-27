@@ -5,6 +5,7 @@ from mozilla_version.gecko import GeckoSnapVersion
 from mozilla_version.version import VersionType
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_hash, get_single_item_from_sequence
+
 # XXX Hack to only import a subset of snapcraft. Otherwise snapcraft can't be built on any other
 # distribution than Ubuntu. The prod instance runs CentOS 6. There isn't a package version of
 # snapcraft on that platform either.
