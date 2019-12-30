@@ -12,7 +12,7 @@ def context(tmpdir):
     context = Context()
     context.config = {
         "amo_instances": {
-            "project:releng:addons.mozilla.org:server:dev": {"amo_server": "http://some-amo-it.url", "jwt_user": "some-username", "jwt_secret": "some-secret"},
+            "project:releng:addons.mozilla.org:server:dev": {"amo_server": "http://some-amo-it.url", "jwt_user": "some-username", "jwt_secret": "some-secret"}
         },
         "work_dir": tmpdir,
     }
@@ -33,7 +33,7 @@ async def task_dfn(request):
     for locale in locales:
         i += 1
         payload["upstreamArtifacts"].append(
-            {"paths": ["public/build/{}/target.langpack.xpi".format(locale)], "taskId": "UPSTREAM{}".format(i), "taskType": "build"},
+            {"paths": ["public/build/{}/target.langpack.xpi".format(locale)], "taskId": "UPSTREAM{}".format(i), "taskType": "build"}
         )
     return {
         "provisionerId": "meh",
@@ -114,7 +114,7 @@ def test_get_amo_instance_config_from_scope(context, api_root, scope):
 
 
 @pytest.mark.parametrize(
-    "scope", ("some:random:scope", "project:releng:addons.mozilla.org:server:staging", "project:releng:addons.mozilla.org:server:production"),
+    "scope", ("some:random:scope", "project:releng:addons.mozilla.org:server:staging", "project:releng:addons.mozilla.org:server:production")
 )
 def test_fail_get_amo_instance_config_from_scope(context, scope):
     context.task["scopes"] = [scope]
