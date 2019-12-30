@@ -269,4 +269,4 @@ async def test_l10n_bump_closed_tree(mocker):
     # we're supposed to
     mocker.patch.object(l10n, "get_l10n_bump_info", return_value=[{}])
 
-    await l10n.l10n_bump({}, {}, "")
+    assert await l10n.l10n_bump({}, {}, "") == 0
