@@ -79,6 +79,7 @@ def start_new_release(shipit_config, product, branch, version, revision, phase):
 
     release_api, headers = get_shipit_api_instance(shipit_config)
     log.info("creating a new release...")
+    import pdb; pdb.set_trace()
     release_details = release_api.create_new_release(product, branch, version, build_number, revision, headers=headers)
 
     # grab the release name from the Ship-it create-release response
