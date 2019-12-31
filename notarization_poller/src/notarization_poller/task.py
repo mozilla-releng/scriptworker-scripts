@@ -52,13 +52,14 @@ class Task:
         self.run_id = claim_task["runId"]
         self.claim_task = claim_task
         self.event_loop = event_loop or asyncio.get_event_loop()
-        self.task_dir = os.path.join(config["work_dir"], self.task_id)
+        task_parent_dir = os.path.join(config["work_dir"], self.task_id)
+        self.task_dir = os.path.join(task_parent_dir, self.run_id)
         self.log_path = os.path.join(self.task_dir, "live_backing.log")
         self.poll_log_path = os.path.join(self.task_dir, "polling.log")
-        rm(self.task_dir)
+        rm(task_parent_dir)
         makedirs(self.task_dir)
-        self.reclaim_fut = event_loop.create_task(self.reclaim_task())
         self._reclaim_task = {}
+        self.reclaim_fut = event_loop.create_task(self.reclaim_task())
         self.task_fut = event_loop.create_task(self.run_task())
 
     @property
@@ -71,7 +72,8 @@ class Task:
 
         This is a keepalive.  Without it the task will expire and be re-queued.
 
-        A 409 status means the task has been resolved.
+        A 409 status means the task has been resolved. This generally means the
+        task has expired, reached its deadline, or has been cancelled.
 
         Raises:
             TaskclusterRestFailure: on non-409 status_code from
@@ -85,7 +87,7 @@ class Task:
             try:
                 async with aiohttp.ClientSession() as session:
                     temp_queue = Queue(options={"credentials": self.task_credentials, "rootUrl": self.config["taskcluster_root_url"]}, session=session)
-                    self.reclaim_task = await temp_queue.reclaimTask(self.task_id, self.run_id)
+                    self._reclaim_task = await temp_queue.reclaimTask(self.task_id, self.run_id)
             except taskcluster.exceptions.TaskclusterRestFailure as exc:
                 if exc.status_code == 409:
                     log.warning("Stopping task %s %s after receiving 409 response from reclaim_task: %s %s", self.task_id, self.run_id)

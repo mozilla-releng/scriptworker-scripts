@@ -37,7 +37,7 @@ class NoRunTask(nptask.Task):
 @pytest.fixture(scope="function")
 def claim_task():
     return {
-        "runId": 0,
+        "runId": "0",
         "credentials": {},
         "status": {"taskId": "task_id"},
         "task": {"expires": arrow.get(0).isoformat(), "payload": {"uuid_manifest": "uuid_url"}},
@@ -66,6 +66,7 @@ async def test_reclaim_task(mocker, claim_task, config, event_loop, status_code,
         status = reclaim_status_codes.pop(0)
         if status:
             raise TaskclusterRestFailure("foo", None, status_code=status)
+        return {}
 
     fake_queue = mocker.MagicMock()
     fake_queue.reclaimTask = fake_reclaim_task
