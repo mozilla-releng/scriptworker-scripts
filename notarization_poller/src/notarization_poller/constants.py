@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-"""scriptworker constants.
+"""Notarization poller constants.
 
 Attributes:
-    DEFAULT_CONFIG (frozendict): the default config for scriptworker.  Running configs
-        are validated against this.
+    DEFAULT_CONFIG (frozendict): the default config for notarization poller.
+        Running configs are validated against this.
 
 """
 import os

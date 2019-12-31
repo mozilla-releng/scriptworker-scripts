@@ -5,7 +5,7 @@ from scriptworker_client.constants import STATUSES
 
 
 class WorkerError(Exception):
-    """The base exception in scriptworker.
+    """The base exception in notarization poller.
 
     When raised inside of the run_loop loop, set the taskcluster task
     status to at least ``self.exit_code``.

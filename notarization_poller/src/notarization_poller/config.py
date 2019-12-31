@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Config for scriptworker.
+"""Config for notarization poller.
 
 Attributes:
     DEFAULT_CONFIG (frozendict): the default configuration
@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 def update_logging_config(config, log_name=None, file_name="worker.log"):
     """Update python logging settings from config.
 
-    By default, this sets the ``scriptworker`` log settings, but this will
+    By default, this sets the ``notarization_poller`` log settings, but this will
     change if some other package calls this function or specifies the ``log_name``.
 
     * Use formatting from config settings.
@@ -31,7 +31,7 @@ def update_logging_config(config, log_name=None, file_name="worker.log"):
     Args:
         config (dict): the running config
         log_name (str, optional): the name of the Logger to modify.
-            If None, use the top level module ('scriptworker').
+            If None, use the top level module ('notarization_poller').
             Defaults to None.
 
     """
@@ -59,7 +59,7 @@ def update_logging_config(config, log_name=None, file_name="worker.log"):
         # so we can automatically close/reopen on move.
         handler = logging.handlers.WatchedFileHandler(path)
     else:
-        # Avoid using WatchedFileHandler during scriptworker unittests
+        # Avoid using WatchedFileHandler during notarization poller unittests
         handler = logging.FileHandler(path)
     handler.setFormatter(formatter)
     top_level_logger.addHandler(handler)
@@ -83,7 +83,7 @@ def get_config_from_cmdln(args, desc="Run notarization poller"):
 
     """
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument("config_path", type=str, nargs="?", default="scriptworker.yaml", help="the path to the config file")
+    parser.add_argument("config_path", type=str, nargs="?", default="poller.yaml", help="the path to the config file")
     parsed_args = parser.parse_args(args)
     config = init_config(config_path=parsed_args.config_path, default_config=DEFAULT_CONFIG, validator_callback=_validate_config)
     update_logging_config(config)
