@@ -112,12 +112,20 @@ class Release_V2(object):
                 log.error(f"Response code: {resp.status_code}")
             raise
 
-    def create_new_release(self, product, branch, version, build_number, revision, headers={}):
+    def create_new_release(self, product, product_key, branch, version, build_number, revision, headers={}):
         """Method to map over the POST /releases/ API in Ship-it"""
         resp = None
-        data = json.dumps(
-            {"product": product, "branch": branch, "version": version, "build_number": build_number, "revision": revision, "partial_updates": "auto"}
-        )
+        params = {"product": product, "branch": branch, "version": version, "build_number": build_number, "revision": revision, "partial_updates": "auto"}
+
+        # some products such as Fennec take an additional argument to differentiate
+        # between the flavors
+        if product_key:
+            params.update({"product_key": product_key})
+        # guard the partials parameter to non-Fennec to prevent 400 BAD REQUEST
+        if product == "fennec":
+            del params["partial_updates"]
+        data = json.dumps(params)
+
         try:
             resp = self._request(api_endpoint="/releases", method="POST", data=data, headers=headers)
             return resp.json()
