@@ -7,14 +7,10 @@ from treescript.exceptions import TaskVerificationError
 log = logging.getLogger(__name__)
 
 
-VALID_ACTIONS = ("tag", "version_bump", "l10n_bump", "push")
+VALID_ACTIONS = {"tag", "version_bump", "l10n_bump", "push"}
 
 DONTBUILD_MSG = " DONTBUILD"
 CLOSED_TREE_MSG = " CLOSED TREE"
-
-
-def _sort_actions(actions):
-    return sorted(actions, key=VALID_ACTIONS.index)
 
 
 # get_source_repo {{{1
@@ -203,13 +199,13 @@ def task_action_types(config, task):
         str: the cert type.
 
     """
-    actions = task["payload"].get("actions", [])
+    actions = set(task["payload"].get("actions", []))
     log.info("Action requests: %s", actions)
-    invalid_actions = set(actions) - set(VALID_ACTIONS)
+    invalid_actions = actions - VALID_ACTIONS
     if len(invalid_actions) > 0:
         raise TaskVerificationError("Task specified invalid actions: {}".format(invalid_actions))
 
-    return _sort_actions(actions)
+    return actions
 
 
 # is_dry_run {{{1
