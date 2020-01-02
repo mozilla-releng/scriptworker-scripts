@@ -65,7 +65,7 @@ def releases_are_disabled(shipit_config, product, branch):
     return branch in disabled_products.get(product, [])
 
 
-def start_new_release(shipit_config, product, branch, version, revision, phase):
+def start_new_release(shipit_config, product, product_key, branch, version, revision, phase):
     # safeguard to avoid creating releases if they have been disabled from UI
     if releases_are_disabled(shipit_config, product, branch):
         log.info("Releases are disabled. Silently exit ...")
@@ -79,7 +79,7 @@ def start_new_release(shipit_config, product, branch, version, revision, phase):
 
     release_api, headers = get_shipit_api_instance(shipit_config)
     log.info("creating a new release...")
-    release_details = release_api.create_new_release(product, branch, version, build_number, revision, headers=headers)
+    release_details = release_api.create_new_release(product, product_key, branch, version, build_number, revision, headers=headers)
 
     # grab the release name from the Ship-it create-release response
     release_name = release_details["name"]
