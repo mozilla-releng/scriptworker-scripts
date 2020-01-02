@@ -263,12 +263,22 @@ def test_task_action_types_actions_invalid(actions):
         ttask.task_action_types(SCRIPT_CONFIG, task)
 
 
+@pytest.mark.parametrize("task", ({"payload": {"push": True}}, {"payload": {"dry_run": False, "push": True}}, {"payload": {"actions": ["push"]}}))
+def test_should_push_true(task):
+    actions = ttask.task_action_types(SCRIPT_CONFIG, task)
+    assert True is ttask.should_push(task, actions)
 
-@pytest.mark.parametrize("task", ({"payload": {}}, {"payload": {"dry_run": False}}, {"scopes": ["foo"]}))
-def test_is_dry_run(task):
-    assert False is ttask.is_dry_run(task)
 
-
-def test_is_dry_run_true():
-    task = {"payload": {"dry_run": True}}
-    assert True is ttask.is_dry_run(task)
+@pytest.mark.parametrize(
+    "task",
+    (
+        {"payload": {"dry_run": True}},
+        {"payload": {"dry_run": True, "actions": ["push"]}},
+        {"payload": {"dry_run": True, "push": True}},
+        {"payload": {"push": False, "actions": ["push"]}},
+        {"payload": {}},
+    ),
+)
+def test_should_push_false(task):
+    actions = ttask.task_action_types(SCRIPT_CONFIG, task)
+    assert False is ttask.should_push(task, actions)

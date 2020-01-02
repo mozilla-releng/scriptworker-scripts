@@ -213,7 +213,7 @@ def task_action_types(config, task):
 
 
 # is_dry_run {{{1
-def is_dry_run(task):
+def should_push(task, actions):
     """Extract task force_dry_run feature.
 
     This is meant as a means to do a dry-run even if the task has the push action scope.
@@ -228,5 +228,19 @@ def is_dry_run(task):
         str: the cert type.
 
     """
-    dry_run = task.get("payload", {}).get("dry_run", False)
-    return dry_run
+    dry_run = task["payload"].get("dry_run", False)
+    push = task["payload"].get("push")
+    push_action = "push" in actions
+    if dry_run:
+        log.info("Not pushing changes, dry_run was forced")
+        return False
+    elif push is not None:
+        if not push and push_action:
+            log.warning("Push disabled, but push action provided; ignore push action")
+        return push
+    elif push_action:
+        log.warning("Specifying push as an action is deprecated; task.payload.push instead.")
+        return True
+    else:
+        log.info("Not pushing changes, no push requested")
+        return False
