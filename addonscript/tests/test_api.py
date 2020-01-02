@@ -15,8 +15,8 @@ def context():
     context = Context()
     context.config = {
         "amo_instances": {
-            "project:releng:addons.mozilla.org:server:dev": {"amo_server": "http://some-amo-it.url", "jwt_user": "test-user", "jwt_secret": "secret"},
-        },
+            "project:releng:addons.mozilla.org:server:dev": {"amo_server": "http://some-amo-it.url", "jwt_user": "test-user", "jwt_secret": "secret"}
+        }
     }
     context.task = {"scopes": ["project:releng:addons.mozilla.org:server:dev"]}
     return context
