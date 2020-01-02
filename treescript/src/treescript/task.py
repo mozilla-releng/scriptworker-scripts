@@ -7,10 +7,7 @@ from treescript.exceptions import TaskVerificationError
 log = logging.getLogger(__name__)
 
 
-# This list should be sorted in the order the actions should be taken
-# XXX remove `tagging` when we remove scope support for actions
-#     (payload-based actions will use `tag`)
-VALID_ACTIONS = ("tag", "tagging", "version_bump", "l10n_bump", "push")
+VALID_ACTIONS = ("tag", "version_bump", "l10n_bump", "push")
 
 DONTBUILD_MSG = " DONTBUILD"
 CLOSED_TREE_MSG = " CLOSED TREE"
@@ -206,13 +203,7 @@ def task_action_types(config, task):
         str: the cert type.
 
     """
-    if task.get("payload", {}).get("actions"):
-        actions = task["payload"]["actions"]
-    else:
-        log.warning("Scopes-based actions are deprecated! Use task.payload.actions instead.")
-        actions = [s.split(":")[-1] for s in task["scopes"] if s.startswith(config["taskcluster_scope_prefix"] + "action:")]
-        if len(actions) < 1:
-            raise TaskVerificationError("Need at least one valid action specified in scopes")
+    actions = task["payload"].get("actions", [])
     log.info("Action requests: %s", actions)
     invalid_actions = set(actions) - set(VALID_ACTIONS)
     if len(invalid_actions) > 0:

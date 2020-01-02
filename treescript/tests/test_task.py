@@ -7,10 +7,6 @@ from scriptworker_client.client import verify_task_schema
 from scriptworker_client.exceptions import TaskVerificationError
 from treescript.script import get_default_config
 
-TEST_ACTION_TAG = "project:releng:treescript:action:tagging"
-TEST_ACTION_BUMP = "project:releng:treescript:action:version_bump"
-TEST_ACTION_INVALID = "project:releng:treescript:action:invalid"
-
 SCRIPT_CONFIG = {"taskcluster_scope_prefix": "project:releng:treescript:"}
 
 
@@ -259,27 +255,13 @@ def test_task_action_types_actions(actions):
     assert actions == ttask.task_action_types(SCRIPT_CONFIG, task)
 
 
-@pytest.mark.parametrize(
-    "actions,scopes",
-    ((["tagging"], [TEST_ACTION_TAG]), (["version_bump"], [TEST_ACTION_BUMP]), (["tagging", "version_bump"], [TEST_ACTION_BUMP, TEST_ACTION_TAG])),
-)
-def test_task_action_types_valid_scopes(actions, scopes):
-    task = {"scopes": scopes}
-    assert actions == ttask.task_action_types(SCRIPT_CONFIG, task)
-
-
-@pytest.mark.parametrize("scopes", ([TEST_ACTION_INVALID], [TEST_ACTION_TAG, TEST_ACTION_INVALID]))
-def test_task_action_types_invalid_action(scopes):
-    task = {"scopes": scopes}
+# task_task_action_types {{{1
+@pytest.mark.parametrize("actions", (["tag", "invalid"], ["invaid"]))
+def test_task_action_types_actions_invalid(actions):
+    task = {"payload": {"actions": actions}}
     with pytest.raises(TaskVerificationError):
         ttask.task_action_types(SCRIPT_CONFIG, task)
 
-
-@pytest.mark.parametrize("scopes", ([], ["project:releng:foo:not:for:here"]))
-def test_task_action_types_missing_action(scopes):
-    task = {"scopes": scopes}
-    with pytest.raises(TaskVerificationError):
-        ttask.task_action_types(SCRIPT_CONFIG, task)
 
 
 @pytest.mark.parametrize("task", ({"payload": {}}, {"payload": {"dry_run": False}}, {"scopes": ["foo"]}))
