@@ -10,7 +10,7 @@ from treescript.l10n import l10n_bump
 from treescript.merges import do_merge
 from treescript.mercurial import checkout_repo, do_tagging, log_mercurial_version, log_outgoing, push, strip_outgoing, validate_robustcheckout_works
 from treescript.merges import do_merge
-from treescript.task import is_dry_run, task_action_types
+from treescript.task import is_dry_run, task_action_types, get_source_repo
 from treescript.versionmanip import bump_version
 
 log = logging.getLogger(__name__)
@@ -80,7 +80,7 @@ async def do_actions(config, task, actions, repo_path):
         raise TreeScriptError("Outgoing changesets don't match number of expected changesets!" " {} vs {}".format(num_outgoing, num_changes))
 
     if should_push(task, actions, num_changes):
-        await push(config, task, repo_path)
+        await push(config, task, repo_path, get_source_repo(task))
 
     await strip_outgoing(config, task, repo_path)
 

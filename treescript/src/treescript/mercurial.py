@@ -415,7 +415,7 @@ async def strip_outgoing(config, task, repo_path):
 
 
 # push {{{1
-async def push(config, task, repo_path, source_repo=None, revision=None):
+async def push(config, task, repo_path, target_repo, revision=None):
     """Run `hg push` against the current source repo.
 
     Args:
@@ -427,9 +427,7 @@ async def push(config, task, repo_path, source_repo=None, revision=None):
         PushError: on failure
 
     """
-    if not source_repo:
-        source_repo = get_source_repo(task)
-    source_repo_ssh = source_repo.replace("https://", "ssh://")
+    target_repo_ssh = target_repo.replace("https://", "ssh://")
     ssh_username = config.get("hg_ssh_user")
     ssh_key = config.get("hg_ssh_keyfile")
     ssh_opt = []
@@ -439,9 +437,9 @@ async def push(config, task, repo_path, source_repo=None, revision=None):
             ssh_opt[1] += " -l %s" % ssh_username
         if ssh_key:
             ssh_opt[1] += " -i %s" % ssh_key
-    log.info("Pushing local changes to {}".format(source_repo_ssh))
+    log.info("Pushing local changes to {}".format(target_repo_ssh))
     try:
-        await run_hg_command(config, "push", *ssh_opt, "-r", revision if revision else ".", "-v", source_repo_ssh, repo_path=repo_path, exception=PushError)
+        await run_hg_command(config, "push", *ssh_opt, "-r", revision if revision else ".", "-v", target_repo_ssh, repo_path=repo_path, exception=PushError)
     except PushError as exc:
         log.warning("Hit PushError %s", str(exc))
         await strip_outgoing(config, task, repo_path)
