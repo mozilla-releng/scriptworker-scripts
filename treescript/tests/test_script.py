@@ -88,9 +88,13 @@ def test_get_default_config():
         ([], [script.MERGE_ACTION_WORD], True, False),
     ),
 )
+<<<<<<< HEAD
 async def test_do_actions(
     mocker, push_scope, merge_action, dry_run, push_expect_called
 ):
+=======
+async def test_do_actions(mocker, push_scope, merge_action, dry_run, push_expect_called):
+>>>>>>> 8303ace86392d0364539f66706f3f99ad08f5d50
     actions = ["tagging", "version_bump", "l10n_bump"]
     actions += merge_action
     actions += push_scope
@@ -123,9 +127,13 @@ async def test_do_actions(
     mocker.patch.object(script, "do_tagging", new=mocked_tag)
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
+<<<<<<< HEAD
     mocker.patch.object(
         script, "perform_merge_actions", new=mocked_perform_merge_actions
     )
+=======
+    mocker.patch.object(script, "perform_merge_actions", new=mocked_perform_merge_actions)
+>>>>>>> 8303ace86392d0364539f66706f3f99ad08f5d50
     mocker.patch.object(script, "push", new=mocked_push)
     mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
     mocker.patch.object(script, "is_dry_run", return_value=dry_run)
@@ -140,6 +148,7 @@ async def test_do_actions(
 
 # do_actions {{{1
 @pytest.mark.asyncio
+<<<<<<< HEAD
 @pytest.mark.parametrize(
     "push_scope,dry_run,push_expect_called",
     (
@@ -149,6 +158,9 @@ async def test_do_actions(
         ([], True, False),
     ),
 )
+=======
+@pytest.mark.parametrize("push_scope,dry_run,push_expect_called", ((["push"], True, False), (["push"], False, True), ([], False, False), ([], True, False)))
+>>>>>>> 8303ace86392d0364539f66706f3f99ad08f5d50
 async def test_perform_merge_actions(mocker, push_scope, dry_run, push_expect_called):
     actions = [script.MERGE_ACTION_WORD]
     actions += push_scope

@@ -11,7 +11,7 @@ test_var_set() {
 }
 
 case $COT_PRODUCT in
-  firefox)
+  firefox|mobile)
     export TASKCLUSTER_SCOPE_PREFIX="project:releng:ship-it:"
     ;;
   thunderbird)
@@ -38,5 +38,5 @@ case $ENV in
 esac
 
 
-export MARK_AS_SHIPPED_SCHEMA_FILE="/app/shipitscript/shipitscript/data/mark_as_shipped_task_schema.json"
-export CREATE_NEW_RELEASE_SCHEMA_FILE="/app/shipitscript/shipitscript/data/create_new_release_task_schema.json"
+export MARK_AS_SHIPPED_SCHEMA_FILE="/app/shipitscript/src/shipitscript/data/mark_as_shipped_task_schema.json"
+export CREATE_NEW_RELEASE_SCHEMA_FILE="/app/shipitscript/src/shipitscript/data/create_new_release_task_schema.json"

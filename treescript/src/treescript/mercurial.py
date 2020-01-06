@@ -264,14 +264,7 @@ async def check_tags(config, tag_info, repo_path):
 
 async def get_revision(config, repo_path):
     """Obtain the current revision."""
-    return await run_hg_command(
-        config,
-        "parent",
-        "--template",
-        "{node}",
-        return_output=True,
-        repo_path=repo_path,
-    )
+    return await run_hg_command(config, "parent", "--template", "{node}", return_output=True, repo_path=repo_path)
 
 
 async def do_tagging(config, task, repo_path):
@@ -448,17 +441,7 @@ async def push(config, task, repo_path, source_repo=None, revision=None):
             ssh_opt[1] += " -i %s" % ssh_key
     log.info("Pushing local changes to {}".format(source_repo_ssh))
     try:
-        await run_hg_command(
-            config,
-            "push",
-            *ssh_opt,
-            "-r",
-            revision if revision else ".",
-            "-v",
-            source_repo_ssh,
-            repo_path=repo_path,
-            exception=PushError,
-        )
+        await run_hg_command(config, "push", *ssh_opt, "-r", revision if revision else ".", "-v", source_repo_ssh, repo_path=repo_path, exception=PushError)
     except PushError as exc:
         log.warning("Hit PushError %s", str(exc))
         await strip_outgoing(config, task, repo_path)

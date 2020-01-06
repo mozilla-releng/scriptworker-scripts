@@ -83,19 +83,10 @@ async def bump_version(config, task, repo_path):
     """
     bump_info = get_version_bump_info(task)
 
-    return await do_bump_version(
-        config,
-        repo_path,
-        bump_info["files"],
-        bump_info["next_version"],
-        get_dontbuild(task),
-        commit=True,
-    )
+    return await do_bump_version(config, repo_path, bump_info["files"], bump_info["next_version"], get_dontbuild(task), commit=True)
 
 
-async def do_bump_version(
-    config, repo_path, files, next_version, dontbuild, commit=True
-):
+async def do_bump_version(config, repo_path, files, next_version, dontbuild, commit=True):
     """Perform a version bump.
 
     This function takes its inputs from task by using the ``get_version_bump_info``

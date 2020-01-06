@@ -9,6 +9,7 @@ from treescript.exceptions import CheckoutError, PushError, TreeScriptError
 from treescript.l10n import l10n_bump
 from treescript.merges import do_merge
 from treescript.mercurial import checkout_repo, do_tagging, log_mercurial_version, log_outgoing, push, strip_outgoing, validate_robustcheckout_works
+from treescript.merges import do_merge
 from treescript.task import is_dry_run, task_action_types
 from treescript.versionmanip import bump_version
 
@@ -38,9 +39,7 @@ async def perform_merge_actions(config, task, actions, repo_path):
         log.info("%d branches to push", len(push_activity))
         for source_repo, revision in push_activity:
             print("pushing to", source_repo, revision)
-            await push(
-                config, task, repo_path, source_repo=source_repo, revision=revision
-            )
+            await push(config, task, repo_path, source_repo=source_repo, revision=revision)
 
 
 async def do_actions(config, task, actions, repo_path):

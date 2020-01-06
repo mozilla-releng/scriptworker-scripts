@@ -10,11 +10,7 @@ merge_configs = {
         "copy_files": [],
         "replacements": [
             # File, from, to
-            (
-                f,
-                "ac_add_options --with-branding=browser/branding/nightly",
-                "ac_add_options --enable-official-branding",
-            )
+            (f, "ac_add_options --with-branding=browser/branding/nightly", "ac_add_options --enable-official-branding")
             for f in [
                 "browser/config/mozconfigs/linux32/l10n-mozconfig",
                 "browser/config/mozconfigs/linux64/l10n-mozconfig",
@@ -26,11 +22,7 @@ merge_configs = {
         ]
         + [
             # File, from, to
-            (
-                "build/mozconfig.common",
-                "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}",
-                "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}",
-            ),
+            ("build/mozconfig.common", "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}", "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}"),
             (
                 "build/mozconfig.common",
                 "# Disable enforcing that add-ons are signed by the trusted root",
@@ -39,10 +31,7 @@ merge_configs = {
         ],
         "from_branch": "central",
         "to_branch": "beta",
-        "push_repositories": {
-            "from": "https://hg.mozilla.org/mozilla-central",
-            "to": "https://hg.mozilla.org/releases/mozilla-beta",
-        },
+        "push_repositories": {"from": "https://hg.mozilla.org/mozilla-central", "to": "https://hg.mozilla.org/releases/mozilla-beta"},
         "require_debugsetparents": True,
         "base_tag": "FIREFOX_BETA_{major_version}_BASE",
         "end_tag": "FIREFOX_BETA_{major_version}_END",
@@ -50,21 +39,13 @@ merge_configs = {
     "beta_to_release": {
         "version_files": [],
         "version_suffix": "",
-        "copy_files": [
-            {
-                "src": "browser/config/version.txt",
-                "dst": "browser/config/version_display.txt",
-            }
-        ],
+        "copy_files": [{"src": "browser/config/version.txt", "dst": "browser/config/version_display.txt"}],
         "replacements": [
             # File, from, to
         ],
         "from_branch": "beta",
         "to_branch": "release",
-        "push_repositories": {
-            "from": "https://hg.mozilla.org/releases/mozilla-beta",
-            "to": "https://hg.mozilla.org/releases/mozilla-release",
-        },
+        "push_repositories": {"from": "https://hg.mozilla.org/releases/mozilla-beta", "to": "https://hg.mozilla.org/releases/mozilla-release"},
         "require_debugsetparents": True,
         "base_tag": "FIREFOX_RELEASE_{major_version}_BASE",
         "end_tag": "FIREFOX_RELEASE_{major_version}_END",
@@ -81,11 +62,7 @@ merge_configs = {
                 "# Enable enforcing that add-ons are signed by the trusted root",
                 "# Disable enforcing that add-ons are signed by the trusted root",
             ),
-            (
-                "build/mozconfig.common",
-                "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}",
-                "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}",
-            ),
+            ("build/mozconfig.common", "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}", "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}"),
         ],
         # Pull from ESR repo, since we have already branched it and have landed esr-specific patches on it
         # We will need to manually merge mozilla-release into before runnning this.

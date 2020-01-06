@@ -409,10 +409,7 @@ async def test_strip_outgoing(config, task, mocker):
 
 # push {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "source_repo,revision",
-    ((None, None), ("https://hg.mozilla.org/treescript-test", None), (None, ".")),
-)
+@pytest.mark.parametrize("source_repo,revision", ((None, None), ("https://hg.mozilla.org/treescript-test", None), (None, ".")))
 async def test_push(config, task, mocker, tmpdir, source_repo, revision):
     called_args = []
 

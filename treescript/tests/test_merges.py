@@ -1,12 +1,12 @@
-from contextlib import contextmanager
 import os
+import shutil
+from contextlib import contextmanager
+
 import pytest
 
+import treescript.merges as merges
 from treescript.exceptions import TaskVerificationError
 from treescript.script import get_default_config
-import treescript.merges as merges
-
-import shutil
 
 
 @contextmanager
@@ -16,10 +16,7 @@ def does_not_raise():
 
 @pytest.yield_fixture(scope="function")
 def task():
-    return {
-        "payload": {"merge_info": {"flavor": ""}},
-        "metadata": {"source": "https://hg.mozilla.org/repo-name/file/filename"},
-    }
+    return {"payload": {"merge_info": {"flavor": ""}}, "metadata": {"source": "https://hg.mozilla.org/repo-name/file/filename"}}
 
 
 @pytest.yield_fixture(scope="function")
@@ -57,18 +54,8 @@ def repo_context(tmpdir, config, request, mocker):
     "expectation,filename,from_,to_",
     (
         (does_not_raise(), "config/replaceme.txt", "dummytext", "alsodummytext"),
-        (
-            pytest.raises(ValueError),
-            "config/replaceme.txt",
-            "textnotfound",
-            "alsodummytext",
-        ),
-        (
-            pytest.raises(FileNotFoundError),
-            "config/doesnotexist",
-            "dummytext",
-            "52.5.0",
-        ),
+        (pytest.raises(ValueError), "config/replaceme.txt", "textnotfound", "alsodummytext"),
+        (pytest.raises(FileNotFoundError), "config/doesnotexist", "dummytext", "52.5.0"),
     ),
 )
 def test_replace(repo_context, expectation, filename, from_, to_):
@@ -79,10 +66,7 @@ def test_replace(repo_context, expectation, filename, from_, to_):
             assert f.read() == to_
 
 
-@pytest.mark.parametrize(
-    "break_things,expectation",
-    ((False, does_not_raise()), (True, pytest.raises(FileNotFoundError))),
-)
+@pytest.mark.parametrize("break_things,expectation", ((False, does_not_raise()), (True, pytest.raises(FileNotFoundError))))
 def test_touch_clobber_file(repo_context, break_things, expectation):
     clobber_file = os.path.join(repo_context.repo, "CLOBBER")
 
@@ -100,11 +84,7 @@ def test_touch_clobber_file(repo_context, break_things, expectation):
 @pytest.mark.parametrize(
     "locales,removals,expected",
     (
-        (
-            ["aa", "bb somecomment", "cc", "dd"],
-            [],
-            ["aa", "bb somecomment", "cc", "dd"],
-        ),
+        (["aa", "bb somecomment", "cc", "dd"], [], ["aa", "bb somecomment", "cc", "dd"]),
         (["aa", "bb", "cc", "dd"], ["cc"], ["aa", "bb", "dd"]),
         (["aa", "bb", "cc somecomment", "dd"], ["cc"], ["aa", "bb", "dd"]),
         (["aa", "bb", "cc", "dd"], ["c"], ["aa", "bb", "cc", "dd"]),
@@ -125,35 +105,11 @@ def test_remove_locales(repo_context, locales, removals, expected):
 @pytest.mark.parametrize(
     "merge_config,expected",
     (
+        ({"version_files": ["browser/config/version.txt"]}, [["browser/config/version.txt"]]),
+        ({"version_files_suffix": ["browser/config/version_display.txt"]}, [["browser/config/version_display.txt"]]),
+        ({"copy_files": [{"src": "browser/config/version.txt", "dst": "browser/config/version_display.txt"}]}, "shutil.copyfile"),
         (
-            {"version_files": ["browser/config/version.txt"]},
-            [["browser/config/version.txt"]],
-        ),
-        (
-            {"version_files_suffix": ["browser/config/version_display.txt"]},
-            [["browser/config/version_display.txt"]],
-        ),
-        (
-            {
-                "copy_files": [
-                    {
-                        "src": "browser/config/version.txt",
-                        "dst": "browser/config/version_display.txt",
-                    }
-                ]
-            },
-            "shutil.copyfile",
-        ),
-        (
-            {
-                "replacements": [
-                    (
-                        "build/mozconfig.common",
-                        "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}",
-                        "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}",
-                    )
-                ]
-            },
+            {"replacements": [("build/mozconfig.common", "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}", "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}")]},
             "replace",
         ),
         ({"remove_locales": ["aa", "bb"]}, "remove_locales"),
@@ -196,23 +152,13 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
             "central_to_beta",
             does_not_raise(),
             10,
-            [
-                ("https://hg.mozilla.org/mozilla-central", "some_revision"),
-                ("https://hg.mozilla.org/releases/mozilla-beta", "some_revision"),
-            ],
+            [("https://hg.mozilla.org/mozilla-central", "some_revision"), ("https://hg.mozilla.org/releases/mozilla-beta", "some_revision")],
         ),
-        (
-            "release_to_esr",
-            does_not_raise(),
-            7,
-            None,
-        ),  # No 'end_tag' or 'debugsetparents'
+        ("release_to_esr", does_not_raise(), 7, None),  # No 'end_tag' or 'debugsetparents'
         ("does_not_exist", pytest.raises(TaskVerificationError), 0, None),
     ),
 )
-async def test_do_merge(
-    mocker, config, task, repo_context, flavor, raises, expected_calls, expected_return
-):
+async def test_do_merge(mocker, config, task, repo_context, flavor, raises, expected_calls, expected_return):
 
     called_args = []
     task["payload"]["merge_info"]["flavor"] = flavor
