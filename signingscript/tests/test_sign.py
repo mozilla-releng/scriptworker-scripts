@@ -6,6 +6,7 @@ import os.path
 import re
 import shutil
 import subprocess
+import sys
 import tarfile
 import zipfile
 from contextlib import contextmanager
@@ -27,6 +28,22 @@ from signingscript.utils import get_hash
 TEST_CERT_TYPE = "{}cert:dep-signing".format(DEFAULT_SCOPE_PREFIX)
 
 INSTALL_DIR = os.path.dirname(sign.__file__)
+
+
+def async_mock_return_value(value):
+    """
+    Return a value appropriate to assign to `mock.return_value` of an async function.
+
+    Python 3.8 added asyncio support to mock, so setting `mock.return_value` to
+    a `Future` cause the result of awaiting the result a future, rather than a
+    value.
+    """
+    if sys.version_info >= (3, 8):
+        return value
+    else:
+        future = asyncio.Future()
+        future.set_result(value)
+        return future
 
 
 @contextmanager
@@ -821,8 +838,7 @@ async def test_gpg_autograph(context, mocker, tmp_path):
     }
 
     mocked_sign = mocker.patch.object(sign, "sign_with_autograph")
-    mocked_sign.return_value = asyncio.Future()
-    mocked_sign.return_value.set_result("--- FAKE SIG ---")
+    mocked_sign.return_value = async_mock_return_value("--- FAKE SIG ---")
 
     result = await sign.sign_gpg_with_autograph(context, tmp, "autograph_gpg")
 

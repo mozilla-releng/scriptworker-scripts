@@ -6,7 +6,6 @@ black
 check-manifest
 coverage>=4.2
 flake8
-flake8-commas
 flake8_docstrings
 freezegun
 isort

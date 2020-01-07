@@ -24,6 +24,9 @@
                 "product": {
                   "type": "string"
                 },
+                "product_key": {
+                  "type": "string"
+                },
                 "branch": {
                   "type": "string"
                 },

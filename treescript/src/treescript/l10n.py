@@ -207,20 +207,22 @@ async def l10n_bump(config, task, repo_path):
                                if the file is not in the target repository.
 
     Returns:
-        bool: True if there are any changes.
+        int: non-zero if there are any changes.
 
     """
     log.info("Preparing to bump l10n changesets.")
-    dontbuild = get_dontbuild(task)
+
     ignore_closed_tree = get_ignore_closed_tree(task)
+    if not ignore_closed_tree:
+        if not await check_treestatus(config, task):
+            log.info("Treestatus is closed; skipping l10n bump.")
+            return 0
+
+    dontbuild = get_dontbuild(task)
     l10n_bump_info = get_l10n_bump_info(task)
     revision_info = None
     changes = 0
 
-    if not ignore_closed_tree:
-        if not await check_treestatus(config, task):
-            log.info("Treestatus is closed; skipping l10n bump.")
-            return
     for bump_config in l10n_bump_info:
         if bump_config.get("revision_url"):
             revision_info = await get_revision_info(bump_config, repo_path)

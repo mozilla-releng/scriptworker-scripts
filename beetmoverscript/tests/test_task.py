@@ -15,7 +15,6 @@ from beetmoverscript.task import (
     get_task_bucket,
     get_taskId_from_full_path,
     get_upstream_artifacts,
-    get_upstream_artifacts_with_zip_extract_param,
     is_custom_checksums_task,
     validate_bucket_paths,
     validate_task_schema,
@@ -82,47 +81,6 @@ def test_get_upstream_artifacts(expected, preserve):
 
     artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=preserve)
     assert sorted(list(artifacts_to_beetmove["en-US"])) == sorted(expected)
-
-
-def test_get_upstream_artifacts_with_zip_extract_param(monkeypatch):
-    context = Context()
-    context.config = get_fake_valid_config()
-    context.task = get_fake_valid_task()
-    context.properties = context.task["payload"]["releaseProperties"]
-
-    context.task["payload"]["upstreamArtifacts"] = [
-        {"paths": ["a/non/archive", "another/non/archive"], "taskId": "firstTaskId", "taskType": "someType1", "zipExtract": False},
-        {"paths": ["archive1.zip", "subfolder/archive2.zip"], "taskId": "firstTaskId", "taskType": "someType1", "zipExtract": True},
-        {"paths": ["just/another/regular/file"], "taskId": "secondTaskId", "taskType": "someType2", "zipExtract": False},
-        {"paths": ["archive1.zip"], "taskId": "thirdTaskId", "taskType": "someType3", "zipExtract": True},
-    ]
-
-    def mock_upstream_artifact_full_path(context, task_id, path):
-        # doesn't check whether the file exists on disk
-        return os.path.join(context.config["work_dir"], "cot", task_id, path)
-
-    monkeypatch.setattr("scriptworker.artifacts.get_and_check_single_upstream_artifact_full_path", mock_upstream_artifact_full_path)
-
-    assert get_upstream_artifacts_with_zip_extract_param(context) == {
-        "firstTaskId": [
-            {
-                "paths": [
-                    os.path.join(context.config["work_dir"], "cot", "firstTaskId", "a/non/archive"),
-                    os.path.join(context.config["work_dir"], "cot", "firstTaskId", "another/non/archive"),
-                ],
-                "zip_extract": False,
-            },
-            {
-                "paths": [
-                    os.path.join(context.config["work_dir"], "cot", "firstTaskId", "archive1.zip"),
-                    os.path.join(context.config["work_dir"], "cot", "firstTaskId", "subfolder/archive2.zip"),
-                ],
-                "zip_extract": True,
-            },
-        ],
-        "secondTaskId": [{"paths": [os.path.join(context.config["work_dir"], "cot", "secondTaskId", "just/another/regular/file")], "zip_extract": False}],
-        "thirdTaskId": [{"paths": [os.path.join(context.config["work_dir"], "cot", "thirdTaskId", "archive1.zip")], "zip_extract": True}],
-    }
 
 
 # validate_task {{{1
