@@ -113,29 +113,22 @@ async def do_merge(config, task, repo_path):
     from_branch = merge_configs[flavor].get("from_branch")
     to_branch = merge_configs[flavor].get("to_branch")
 
-    log.info("hg pull %s", repo_path)
     await run_hg_command(config, "pull", repo_path=repo_path)
 
-    log.info("hg up -C %s", from_branch)
     await run_hg_command(config, "up", "-C", from_branch, repo_path=repo_path)
 
     base_from_rev = await get_revision(config, repo_path)
-    log.info("base_from_rev %s", base_from_rev)
 
     base_tag = merge_configs[flavor]["base_tag"].format(major_version=get_version("browser/config/version.txt", repo_path).major_number)
 
     tag_message = f"No bug - tagging {os.path.basename(repo_path)} with {base_tag} a=release DONTBUILD CLOSED TREE"
-    log.info("Tagging: %s", tag_message)
     await run_hg_command(config, "tag", "-m", '"{}"'.format(tag_message), "-r", base_from_rev, "-u", config["hg_ssh_user"], "-f", base_tag, repo_path=repo_path)
 
     # TODO This shouldn't be run on esr, according to old configs.
     # perhaps: hg push -r bookmark("release") esrNN
     # Perform the kludge-merge.
     if merge_configs[flavor].get("require_debugsetparents", False):
-        log.info("hg debugsetparents %s %s(%s)", to_branch, base_from_rev, from_branch)
         await run_hg_command(config, "debugsetparents", to_branch, base_from_rev, repo_path=repo_path)
-
-        log.info("hg commit %s <- %s", to_branch, from_branch)
         await run_hg_command(
             config,
             "commit",
@@ -144,10 +137,8 @@ async def do_merge(config, task, repo_path):
             repo_path=repo_path,
         )
 
-    log.info("hg up -C %s", to_branch)
     await run_hg_command(config, "up", "-C", to_branch, repo_path=repo_path)
 
-    log.info("Adding end tag")
     end_tag = merge_configs[flavor].get("end_tag")  # tag the end of the to repo
     if end_tag:
         to_fx_major_version = get_version("browser/config/version.txt", repo_path).major_number
