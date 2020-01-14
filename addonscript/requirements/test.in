@@ -15,5 +15,5 @@ pytest
 pytest-asyncio
 pytest
 pytest-cov
-pytest-mock
+pytest-mock<1.13
 # pytest-random-order?
