@@ -9,7 +9,7 @@ from scriptworker import artifacts as scriptworker_artifacts
 from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-from beetmoverscript import script, utils
+from beetmoverscript import utils
 from beetmoverscript.constants import CHECKSUMS_CUSTOM_FILE_NAMING, RESTRICTED_BUCKET_PATHS, STAGE_PLATFORM_MAP
 
 log = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ def get_task_bucket(task, script_config):
     return bucket
 
 
-def get_task_action(task, script_config):
+def get_task_action(task, script_config, valid_actions=None):
     """Extract last part of beetmover action scope"""
     actions = [s.split(":")[-1] for s in task["scopes"] if s.startswith(script_config["taskcluster_scope_prefix"] + "action:")]
 
@@ -62,7 +62,7 @@ def get_task_action(task, script_config):
         messages.append("Only one action type can be used")
 
     action = actions[0]
-    if action not in script.action_map:
+    if valid_actions is not None and action not in valid_actions:
         messages.append("Invalid action scope")
 
     if messages:

@@ -571,7 +571,7 @@ async def test_async_main(context, mocker, action, raises, task_filename):
     context.action = action
     context.task = get_fake_valid_task(taskjson=task_filename)
 
-    def fake_action(*args):
+    def fake_action(*args, **kwargs):
         return action
 
     mocker.patch("beetmoverscript.utils.JINJA_ENV", get_test_jinja_env())
