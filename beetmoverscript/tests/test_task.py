@@ -126,7 +126,7 @@ def test_get_task_action(scopes, expected, raises):
     config = {"actions": {"dep": ""}, "taskcluster_scope_prefix": "project:releng:beetmover:"}
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
-            get_task_action(task, config)
+            get_task_action(task, config, valid_actions=["push-to-nightly"])
     else:
         assert expected == get_task_action(task, config)
 
