@@ -7,7 +7,6 @@ import mock
 import pytest
 from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerRetryException, ScriptWorkerTaskException
-from scriptworker.test import fake_session, fake_session_500
 from yarl import URL
 
 import beetmoverscript.script
@@ -32,8 +31,6 @@ from beetmoverscript.task import get_release_props, get_upstream_artifacts
 from beetmoverscript.utils import generate_beetmover_manifest, is_promotion_action
 
 from . import get_fake_valid_config, get_fake_valid_task, get_test_jinja_env, noop_async, noop_sync
-
-assert fake_session, fake_session_500  # silence flake8
 
 
 # push_to_partner {{{1
