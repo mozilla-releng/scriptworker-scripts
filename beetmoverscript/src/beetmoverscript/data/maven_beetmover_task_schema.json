@@ -29,10 +29,10 @@
                     "type": "string"
                 },
                 "next_version" : {
-                     "type" : "string"
+                    "$comment": "ignored"
                 },
                 "appVersion": {
-                    "type": "string"
+                    "$comment": "ignored"
                 },
                 "releaseProperties" : {
                     "type" : "object",
