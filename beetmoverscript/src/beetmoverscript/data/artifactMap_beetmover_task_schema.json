@@ -142,14 +142,6 @@
                 "upstreamArtifacts",
                 "releaseProperties",
                 "artifactMap"
-            ],
-            "optional": [
-                "build_number",
-                "version",
-                "locale",
-                "maxRunTime",
-                "appVersion",
-                "next_version"
             ]
         }
     },
