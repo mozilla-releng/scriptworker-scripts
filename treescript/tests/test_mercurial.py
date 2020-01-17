@@ -20,6 +20,7 @@ from treescript.task import DONTBUILD_MSG
 ROBUSTCHECKOUT_FILES = (
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "build", "lib", "treescript", "py2", "robustcheckout.py")),
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "treescript", "py2", "robustcheckout.py")),
+    os.path.abspath(os.path.join(os.path.dirname(mercurial.__file__), "py2", "robustcheckout.py")),
 )
 UNEXPECTED_ENV_KEYS = "HG HGPROF CDPATH GREP_OPTIONS http_proxy no_proxy " "HGPLAINEXCEPT EDITOR VISUAL PAGER NO_PROXY CHGDEBUG".split()
 
