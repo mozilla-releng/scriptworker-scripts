@@ -75,10 +75,9 @@ def test_get_default_config():
 
 # do_actions {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("push_scope,dry_run,push_expect_called", ((["push"], True, False), (["push"], False, True), ([], False, False), ([], True, False)))
-async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
-    actions = ["tagging", "version_bump", "l10n_bump"]
-    actions += push_scope
+@pytest.mark.parametrize("should_push", (False, True))
+async def test_do_actions(mocker, should_push):
+    actions = ["tag", "version_bump", "l10n_bump"]
     called = {"bump": False, "l10n": False, "push": False, "tag": False}
 
     async def mocked_tag(*args, **kwargs):
@@ -95,7 +94,6 @@ async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
 
     async def mocked_push(*args, **kwargs):
         called["push"] = True
-        return 1
 
     async def mocked_outgoing(*args):
         return 3
@@ -107,12 +105,11 @@ async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
     mocker.patch.object(script, "push", new=mocked_push)
     mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
-    mocker.patch.object(script, "is_dry_run", return_value=dry_run)
-    await script.do_actions({}, {}, actions, "/some/folder/here")
+    await script.do_actions({}, {"payload": {"push": should_push}}, actions, "/some/folder/here")
     assert called["tag"]
     assert called["bump"]
     assert called["l10n"]
-    assert called["push"] is push_expect_called
+    assert called["push"] is should_push
 
 
 @pytest.mark.asyncio
@@ -146,30 +143,7 @@ async def test_do_actions_no_changes(mocker):
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
     mocker.patch.object(script, "push", new=mocked_push)
     mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
-    mocker.patch.object(script, "is_dry_run", return_value=False)
-    await script.do_actions({}, {}, actions, "/some/folder/here")
-    assert not any(called.values())
-
-
-@pytest.mark.asyncio
-async def test_do_actions_unknown(mocker):
-    actions = ["unknown"]
-    called = {"bump": False, "l10n": False, "push": False, "tag": False}
-
-    async def mocked_tag(*args, **kwargs):
-        called["tag"] = True
-        return 1
-
-    async def mocked_bump(*args, **kwargs):
-        called["bump"] = True
-        return 1
-
-    mocker.patch.object(script, "checkout_repo", new=noop_async)
-    mocker.patch.object(script, "do_tagging", new=mocked_tag)
-    mocker.patch.object(script, "bump_version", new=mocked_bump)
-    mocker.patch.object(script, "log_outgoing", new=noop_async)
-    with pytest.raises(NotImplementedError):
-        await script.do_actions({}, {}, actions, "/some/folder/here")
+    await script.do_actions({}, {"payload": {"push": True}}, actions, "/some/folder/here")
     assert not any(called.values())
 
 
@@ -199,9 +173,8 @@ async def test_do_actions_mismatch_change_count(mocker):
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
     mocker.patch.object(script, "push", new=mocked_push)
     mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
-    mocker.patch.object(script, "is_dry_run", return_value=False)
     with pytest.raises(TreeScriptError):
-        await script.do_actions({}, {}, actions, "/some/folder/here")
+        await script.do_actions({}, {"payload": {"push": False}}, actions, "/some/folder/here")
 
 
 def test_main(monkeypatch):

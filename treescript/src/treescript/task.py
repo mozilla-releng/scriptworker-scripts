@@ -7,17 +7,10 @@ from treescript.exceptions import TaskVerificationError
 log = logging.getLogger(__name__)
 
 
-# This list should be sorted in the order the actions should be taken
-# XXX remove `tagging` when we remove scope support for actions
-#     (payload-based actions will use `tag`)
-VALID_ACTIONS = ("tag", "tagging", "version_bump", "l10n_bump", "push")
+VALID_ACTIONS = {"tag", "version_bump", "l10n_bump", "push"}
 
 DONTBUILD_MSG = " DONTBUILD"
 CLOSED_TREE_MSG = " CLOSED TREE"
-
-
-def _sort_actions(actions):
-    return sorted(actions, key=VALID_ACTIONS.index)
 
 
 # get_source_repo {{{1
@@ -193,39 +186,35 @@ def get_ignore_closed_tree(task):
 
 # task_action_types {{{1
 def task_action_types(config, task):
-    """Extract task actions as scope definitions.
+    """Extract task actions from task payload.
 
     Args:
         config (dict): the running config.
         task (dict): the task definition.
 
     Raises:
-        TaskVerificationError: if the number of cert scopes is not 1.
+        TaskVerificationError: if unknown actions are specified.
 
     Returns:
-        str: the cert type.
+        set: the set of specified actions
 
     """
-    if task.get("payload", {}).get("actions"):
-        actions = task["payload"]["actions"]
-    else:
-        log.warning("Scopes-based actions are deprecated! Use task.payload.actions instead.")
-        actions = [s.split(":")[-1] for s in task["scopes"] if s.startswith(config["taskcluster_scope_prefix"] + "action:")]
-        if len(actions) < 1:
-            raise TaskVerificationError("Need at least one valid action specified in scopes")
+    actions = set(task["payload"].get("actions", []))
     log.info("Action requests: %s", actions)
-    invalid_actions = set(actions) - set(VALID_ACTIONS)
+    invalid_actions = actions - VALID_ACTIONS
     if len(invalid_actions) > 0:
         raise TaskVerificationError("Task specified invalid actions: {}".format(invalid_actions))
 
-    return _sort_actions(actions)
+    return actions
 
 
 # is_dry_run {{{1
-def is_dry_run(task):
-    """Extract task force_dry_run feature.
+def should_push(task, actions):
+    """Determine whether this task should push the changes it makes.
 
-    This is meant as a means to do a dry-run even if the task has the push action scope.
+    If `dry_run` is true on the task, there will not be a push.
+    Otherwise, if `push` is specified, that determines if there should be a push.
+    Otherwise, there is a push if the `push` action is specified.
 
     Args:
         task (dict): the task definition.
@@ -234,8 +223,22 @@ def is_dry_run(task):
         TaskVerificationError: if the number of cert scopes is not 1.
 
     Returns:
-        str: the cert type.
+        bool: whether this task should push
 
     """
-    dry_run = task.get("payload", {}).get("dry_run", False)
-    return dry_run
+    dry_run = task["payload"].get("dry_run", False)
+    push = task["payload"].get("push")
+    push_action = "push" in actions
+    if dry_run:
+        log.info("Not pushing changes, dry_run was forced")
+        return False
+    elif push is not None:
+        if not push and push_action:
+            log.warning("Push disabled, but push action provided; ignore push action")
+        return push
+    elif push_action:
+        log.warning("Specifying push as an action is deprecated; task.payload.push instead.")
+        return True
+    else:
+        log.info("Not pushing changes, no push requested")
+        return False
