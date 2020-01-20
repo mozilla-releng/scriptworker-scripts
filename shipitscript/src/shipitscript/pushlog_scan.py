@@ -33,7 +33,8 @@ def get_shippable_revision_build(branch, last_shipped_rev, cron_rev):
     # TODO use redo here to automatically retry
     resp = requests.get(URL.format(branch=branch), params={"full": "1", "fromchange": last_shipped_rev, "tochange": cron_rev})
     pushlog = resp.json()
-    reversed_pushes = [pushlog[k] for k in sorted(pushlog.keys(), reverse=True)]
+    # we strip out all the pushes that contain other branches' commits (e.g. relbranch)
+    reversed_pushes = [pushlog[k] for k in sorted(pushlog.keys(), reverse=True) if pushlog[k]["changesets"][0]["branch"] == "default"]
     for push in reversed_pushes:
         push_importance = is_push_important(push)
         if push_importance == Importance.IMPORTANT:
