@@ -272,7 +272,7 @@ async def async_main(context):
 
         # determine the task bucket and action
         context.bucket = get_task_bucket(context.task, context.config)
-        context.action = get_task_action(context.task, context.config)
+        context.action = get_task_action(context.task, context.config, valid_actions=action_map.keys())
 
         if action_map.get(context.action):
             await action_map[context.action](context)

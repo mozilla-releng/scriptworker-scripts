@@ -15,7 +15,12 @@
                     "uniqueItems": true
                 },
                 "release_eta": {"type": "string"},
-                "blob_suffix": {"type": "string"}
+                "blob_suffix": {"type": "string"},
+                "background_rate": {"type": "number"},
+                "force_fallback_mapping_update": {
+                    "type": "boolean",
+                    "default": "False"
+                }
             },
             "required": ["build_number", "product", "publish_rules", "version"]
         },
