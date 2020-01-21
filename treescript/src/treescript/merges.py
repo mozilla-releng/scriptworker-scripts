@@ -61,25 +61,7 @@ async def apply_rebranding(config, repo_path, merge_config):
     for f, from_, to in merge_config.get("replacements", list()):
         replace(os.path.join(repo_path, f), from_, to)
 
-    if merge_config.get("remove_locales"):
-        log.info("Removing locales")
-        remove_locales(os.path.join(repo_path, "browser/locales/shipped-locales"), merge_config["remove_locales"])
     touch_clobber_file(repo_path)
-
-
-def remove_locales(file_name, removals):
-    """Remove locales from shipped-locales (mozilla-release only)."""
-    with open(file_name) as f:
-        contents = f.readlines()
-    new_contents = ""
-    for line in contents:
-        locale = line.split()[0]
-        if locale not in removals:
-            new_contents += line
-        else:
-            log.info("Removed locale: %s" % locale)
-    with open(file_name, "w") as f:
-        f.write(new_contents)
 
 
 # do_merge {{{1
@@ -117,17 +99,17 @@ async def do_merge(config, task, repo_path):
 
     await run_hg_command(config, "up", "-C", from_branch, repo_path=repo_path)
 
-    base_from_rev = await get_revision(config, repo_path)
+    base_from_rev = await get_revision(config, repo_path, branch=from_branch)
 
     base_tag = merge_configs[flavor]["base_tag"].format(major_version=get_version("browser/config/version.txt", repo_path).major_number)
 
     tag_message = f"No bug - tagging {os.path.basename(repo_path)} with {base_tag} a=release DONTBUILD CLOSED TREE"
-    await run_hg_command(config, "tag", "-m", '"{}"'.format(tag_message), "-r", base_from_rev, "-u", config["hg_ssh_user"], "-f", base_tag, repo_path=repo_path)
+    await run_hg_command(config, "tag", "-m", '"{}"'.format(tag_message), "-r", base_from_rev, "-f", base_tag, repo_path=repo_path)
 
     # TODO This shouldn't be run on esr, according to old configs.
     # perhaps: hg push -r bookmark("release") esrNN
     # Perform the kludge-merge.
-    if merge_configs[flavor].get("require_debugsetparents", False):
+    if merge_configs[flavor].get("merge_old_head", False):
         await run_hg_command(config, "debugsetparents", to_branch, base_from_rev, repo_path=repo_path)
         await run_hg_command(
             config,
@@ -142,9 +124,10 @@ async def do_merge(config, task, repo_path):
     end_tag = merge_configs[flavor].get("end_tag")  # tag the end of the to repo
     if end_tag:
         to_fx_major_version = get_version("browser/config/version.txt", repo_path).major_number
-        base_to_rev = await get_revision(config, repo_path)
+        base_to_rev = await get_revision(config, repo_path, branch=to_branch)
         end_tag = end_tag.format(major_version=to_fx_major_version)
-        await run_hg_command(config, "tag", "-m", end_tag, "-r", base_to_rev, "-u", config["hg_ssh_user"], "-f", end_tag, repo_path=repo_path)
+        tag_message = f"No bug - tagging {os.path.basename(repo_path)} with {end_tag} a=release DONTBUILD CLOSED TREE"
+        await run_hg_command(config, "tag", "-m",f'"{tag_message}"', "-r", base_to_rev, "-f", end_tag, repo_path=repo_path)
 
     await apply_rebranding(config, repo_path, merge_configs[flavor])
 
@@ -157,13 +140,11 @@ async def do_merge(config, task, repo_path):
     await run_hg_command(
         config,
         "commit",
-        "-u",
-        config["hg_ssh_user"],
         "-m",
         "Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release",
         repo_path=repo_path,
     )
-    push_revision_to = await get_revision(config, repo_path)
+    push_revision_to = await get_revision(config, repo_path, branch=to_branch)
 
     # Do we need to perform multiple pushes for the push stage? If so, return
     # what to do.

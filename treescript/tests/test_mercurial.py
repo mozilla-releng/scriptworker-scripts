@@ -361,9 +361,9 @@ async def test_get_revision(config, task, mocker, output):
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
 
-    assert output == await mercurial.get_revision(config, config["work_dir"])
+    assert output == await mercurial.get_revision(config, config["work_dir"], branch="default")
     assert "repo_path" in called_args[0][1]
-    assert is_slice_in_list(("parent", "--template", "{node}"), called_args[0][0])
+    assert is_slice_in_list(("identify", "-r", "default", "--template", "{node}"), called_args[0][0])
 
 
 @pytest.mark.parametrize("output", ("hg output!", None))

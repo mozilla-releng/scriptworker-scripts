@@ -222,9 +222,9 @@ async def check_tags(config, tag_info, repo_path):
     return tags
 
 
-async def get_revision(config, repo_path):
+async def get_revision(config, repo_path, branch):
     """Obtain the current revision."""
-    return await run_hg_command(config, "parent", "--template", "{node}", return_output=True, repo_path=repo_path)
+    return await run_hg_command(config, "identify", "-r", branch, "--template", "{node}", return_output=True, repo_path=repo_path)
 
 
 async def do_tagging(config, task, repo_path):
