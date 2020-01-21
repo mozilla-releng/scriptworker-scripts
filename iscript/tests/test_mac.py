@@ -807,6 +807,37 @@ async def test_copy_pkgs_to_artifact_dir(tmpdir, artifact_prefix):
             assert fh.read() == expected_path
 
 
+# copy_xpis_to_artifact_dir {{{1
+@pytest.mark.parametrize("artifact_prefix", ("public/", "releng/partner/"))
+@pytest.mark.asyncio
+async def test_copy_xpis_to_artifact_dir(tmpdir, artifact_prefix):
+    """``copy_xpis_to_artifact_dir`` creates all needed parent directories and
+    copies xpi artifacts successfully.
+
+    """
+    num_xpis = 3
+    work_dir = os.path.join(str(tmpdir), "work")
+    artifact_dir = os.path.join(str(tmpdir), "artifact")
+    config = {"artifact_dir": artifact_dir, "work_dir": work_dir}
+    all_paths = []
+    expected_paths = []
+    for i in range(num_xpis):
+        app = mac.App(artifact_prefix=artifact_prefix, orig_path=os.path.join(work_dir, f"cot/taskId/{artifact_prefix}build/{i}/target-{i}.xpi"))
+        expected_path = os.path.join(artifact_dir, f"{artifact_prefix}build/{i}/target-{i}.xpi")
+        expected_paths.append(expected_path)
+        makedirs(os.path.dirname(app.orig_path))
+        with open(app.orig_path, "w") as fh:
+            fh.write(expected_path)
+        all_paths.append(app)
+
+    await mac.copy_xpis_to_artifact_dir(config, all_paths)
+    for i in range(num_xpis):
+        expected_path = expected_paths[i]
+        assert os.path.exists(expected_path)
+        with open(expected_path) as fh:
+            assert fh.read() == expected_path
+
+
 # download_entitlements_file {{{1
 @pytest.mark.parametrize(
     "url, use_entitlements, raises, expected",
@@ -996,7 +1027,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
 
 
 # notarize_1_behavior {{{1
-@pytest.mark.parametrize("notarize_type,use_langpack", zip(("multi_account", "single_account","single_zip"), (False, True, False)))
+@pytest.mark.parametrize("notarize_type,use_langpack", zip(("multi_account", "single_account", "single_zip"), (False, True, False)))
 @pytest.mark.asyncio
 async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
     """Mock ``notarize_behavior`` for full line coverage."""
