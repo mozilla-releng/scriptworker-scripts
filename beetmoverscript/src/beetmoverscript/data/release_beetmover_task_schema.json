@@ -62,9 +62,7 @@
                     }
                 }
             },
-            "required": ["product", "build_number", "version"],
-            "optional": ["upstreamArtifacts", "maxRunTime", "partners"]
-
+            "required": ["product", "build_number", "version"]
         }
     },
     "required": ["payload", "dependencies"]

@@ -29,10 +29,10 @@
                     "type": "string"
                 },
                 "next_version": {
-                    "type": "string"
+                    "$comment": "ignored"
                 },
                 "appVersion": {
-                    "type": "string"
+                    "$comment": "ignored"
                 },
                 "releaseProperties": {
                     "type": "object",
@@ -142,14 +142,6 @@
                 "upstreamArtifacts",
                 "releaseProperties",
                 "artifactMap"
-            ],
-            "optional": [
-                "build_number",
-                "version",
-                "locale",
-                "maxRunTime",
-                "appVersion",
-                "next_version"
             ]
         }
     },

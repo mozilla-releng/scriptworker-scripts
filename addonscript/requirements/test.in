@@ -1,7 +1,7 @@
 # pyup: ignore file
 # Specifically for testing
 -r base.in
-aioresponses
+aioresponses==0.6.1
 black
 check-manifest
 coverage>=4.2
@@ -15,5 +15,5 @@ pytest
 pytest-asyncio
 pytest
 pytest-cov
-pytest-mock
+pytest-mock<1.13
 # pytest-random-order?

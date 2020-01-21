@@ -110,8 +110,18 @@ def test_create_scheduler(config):
 def test_schedule(config, mocker):
     auth0_secrets = None
 
-    task = {"payload": {"product": "foo", "version": "99.bottles", "build_number": 7, "publish_rules": [1, 2], "release_eta": None}}
-    expected = ["Foo", "99.bottles", 7, [1, 2], None]
+    task = {
+        "payload": {
+            "product": "foo",
+            "version": "99.bottles",
+            "build_number": 7,
+            "publish_rules": [1, 2],
+            "release_eta": None,
+            "force_fallback_mapping_update": False,
+            "background_rate": None,
+        }
+    }
+    expected = ["Foo", "99.bottles", 7, [1, 2], False, None, None]
     real = []
 
     def fake_scheduler(*args):

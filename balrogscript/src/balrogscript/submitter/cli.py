@@ -372,7 +372,7 @@ class ReleaseScheduler(object):
         if dummy:
             self.suffix = "-dummy"
 
-    def run(self, productName, version, build_number, rule_ids, when=None, backgroundRate=None):
+    def run(self, productName, version, build_number, rule_ids, forceFallbackMappingUpdate=False, when=None, backgroundRate=None):
         name = get_release_blob_name(productName, version, build_number, self.suffix)
 
         if when is not None:
@@ -393,7 +393,8 @@ class ReleaseScheduler(object):
             # would either get the even newer release, or the release that
             # previously wasn't shipped to everyone - which we can't assume is
             # safe.
-            if data["backgroundRate"] == 100:
+            # Alternatively, if we were specifically asked to update the fallback mapping, do it :)
+            if data["backgroundRate"] == 100 or forceFallbackMappingUpdate:
                 data["fallbackMapping"] = data["mapping"]
             data["mapping"] = name
             data["data_verison"] = data_version

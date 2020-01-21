@@ -98,7 +98,9 @@ def schedule(task, config, auth0_secrets):
         task["payload"]["version"],
         task["payload"]["build_number"],
         task["payload"]["publish_rules"],
+        task["payload"].get("force_fallback_mapping_update", False),
         task["payload"]["release_eta"] or None,  # Send None if release_eta is ''
+        task["payload"].get("background_rate"),
     ]
     # XXX optionally append background_rate if/when we want to support it
 

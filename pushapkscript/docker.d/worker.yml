@@ -55,12 +55,19 @@ products:
               certificate_alias: dep
 
       'COT_PRODUCT == "mobile" && ENV == "prod"':
-        - product_names: [ "fenix"]
+        - product_names: [ "fenix" ]
           digest_algorithm: 'SHA-256'
           skip_check_multiple_locales: true
           skip_check_same_locales: true
           skip_checks_fennec: true
           apps:
+            fennec-nightly:
+              package_names: [ "org.mozilla.fennec_aurora" ]
+              certificate_alias: 'fennec-nightly'
+              google:
+                default_track: 'alpha'
+                service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_AURORA" }
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_AURORA_PATH" }
             nightly:
               package_names: [ "org.mozilla.fenix.nightly" ]
               certificate_alias: 'fenix-nightly'
@@ -127,15 +134,35 @@ products:
           skip_check_multiple_locales: true
           skip_check_same_locales: true
           skip_checks_fennec: true
-          override_channel_model: "single_google_app"
-          app:
-            package_names:
-              - "org.mozilla.fenix"
-              - "org.mozilla.fenix.beta"
-              - "org.mozilla.fenix.nightly"
-            service_account: "dummy"
-            credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
-            certificate_alias: "fenix"
+          apps:
+            fennec-nightly:
+              package_names: [ "org.mozilla.fennec_aurora" ]
+              certificate_alias: 'fennec-nightly'
+              google:
+                default_track: 'alpha'
+                service_account: 'dummy'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
+            nightly:
+              package_names: [ "org.mozilla.fenix.nightly" ]
+              certificate_alias: 'fenix-nightly'
+              google:
+                default_track: 'beta'
+                service_account: 'dummy'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
+            beta:
+              package_names: [ "org.mozilla.fenix.beta" ]
+              certificate_alias: "fenix-beta"
+              google:
+                default_track: 'beta-closed'
+                service_account: 'dummy'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
+            production:
+              package_names: [ "org.mozilla.fenix" ]
+              certificate_alias: 'fenix-production'
+              google:
+                default_track: 'internal'
+                service_account: 'dummy'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
         - product_names: [ "focus" ]
           digest_algorithm: "SHA-256"
           skip_check_ordered_version_codes: true
