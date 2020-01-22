@@ -7,9 +7,7 @@ import yaml
 
 
 def load_config(context):
-    path_to_worker_template = os.path.join(
-        os.path.dirname(__file__), "..", "docker.d", "worker.yml"
-    )
+    path_to_worker_template = os.path.join(os.path.dirname(__file__), "..", "docker.d", "worker.yml")
     with open(path_to_worker_template, "r") as file:
         worker_template = yaml.safe_load(file)
 
@@ -17,14 +15,7 @@ def load_config(context):
 
 
 def load_schema():
-    path_to_schema = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "src",
-        "treescript",
-        "data",
-        "config_schema.json",
-    )
+    path_to_schema = os.path.join(os.path.dirname(__file__), "..", "src", "treescript", "data", "config_schema.json")
     with open(path_to_schema, "r") as file:
         return json.load(file)
 
