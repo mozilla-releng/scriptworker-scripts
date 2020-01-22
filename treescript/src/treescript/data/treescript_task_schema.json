@@ -44,9 +44,6 @@
                         "next_version": {
                             "type": "string"
                         },
-                        "commit": {
-                            "type": "boolean"
-                        },
                         "files": {
                             "type": "array",
                             "minItems": 1,
