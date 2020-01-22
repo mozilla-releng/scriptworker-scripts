@@ -1,16 +1,11 @@
 import os
+
 import pytest
 
+import treescript.task as ttask
 from scriptworker_client.client import verify_task_schema
 from scriptworker_client.exceptions import TaskVerificationError
-
 from treescript.script import get_default_config
-import treescript.task as ttask
-
-
-TEST_ACTION_TAG = "project:releng:treescript:action:tagging"
-TEST_ACTION_BUMP = "project:releng:treescript:action:version_bump"
-TEST_ACTION_INVALID = "project:releng:treescript:action:invalid"
 
 SCRIPT_CONFIG = {"taskcluster_scope_prefix": "project:releng:treescript:"}
 
@@ -31,18 +26,10 @@ def task_defn():
         "scopes": ["tagging"],
         "payload": {
             "upstreamArtifacts": [
-                {
-                    "taskType": "build",
-                    "taskId": "VALID_TASK_ID",
-                    "formats": ["gpg"],
-                    "paths": ["public/build/firefox-52.0a1.en-US.win64.installer.exe"],
-                }
+                {"taskType": "build", "taskId": "VALID_TASK_ID", "formats": ["gpg"], "paths": ["public/build/firefox-52.0a1.en-US.win64.installer.exe"]}
             ]
         },
-        "metadata": {
-            "source": "https://hg.mozilla.org/releases/mozilla-test-source"
-            "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"
-        },
+        "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source" "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
     }
 
 
@@ -88,18 +75,9 @@ def test_no_error_is_reported_when_no_missing_url(config, task_defn):
 @pytest.mark.parametrize(
     "source_url,raises",
     (
-        (
-            "https://bitbucket.org/mozilla/mozilla-central/file/foobar",
-            TaskVerificationError,
-        ),
-        (
-            "http://hg.mozilla.org/releases/mozilla-test-source/file/default/taskcluster/ci/foobar",
-            TaskVerificationError,
-        ),
-        (
-            "https://hg.mozilla.org/releases/mozilla-test-source/raw-file/default/taskcluster/ci/foobar",
-            TaskVerificationError,
-        ),
+        ("https://bitbucket.org/mozilla/mozilla-central/file/foobar", TaskVerificationError),
+        ("http://hg.mozilla.org/releases/mozilla-test-source/file/default/taskcluster/ci/foobar", TaskVerificationError),
+        ("https://hg.mozilla.org/releases/mozilla-test-source/raw-file/default/taskcluster/ci/foobar", TaskVerificationError),
     ),
 )
 def test_get_source_repo_raises(task_defn, source_url, raises):
@@ -117,10 +95,8 @@ def test_get_source_repo_raises(task_defn, source_url, raises):
         "https://hg.mozilla.org/projects/mozilla-test-bed",
     ),
 )
-def test_get_source_repo(task_defn, source_repo):
-    task_defn["metadata"]["source"] = "{}/file/default/taskcluster/ci/foobar".format(
-        source_repo
-    )
+def test_get_metadata_source_repo(task_defn, source_repo):
+    task_defn["metadata"]["source"] = "{}/file/default/taskcluster/ci/foobar".format(source_repo)
     assert source_repo == ttask.get_source_repo(task_defn)
 
 
@@ -137,6 +113,20 @@ def test_get_short_source_repo(task_defn):
     assert ttask.get_short_source_repo(task_defn) == "mozilla-test-source"
 
 
+@pytest.mark.parametrize(
+    "source_repo",
+    (
+        "https://hg.mozilla.org/mozilla-central",
+        "https://hg.mozilla.org/releases/mozilla-release",
+        "https://hg.mozilla.org/releases/mozilla-esr120",
+        "https://hg.mozilla.org/projects/mozilla-test-bed",
+    ),
+)
+def test_get_payload_source_repo(task_defn, source_repo):
+    task_defn["payload"]["source_repo"] = source_repo
+    assert source_repo == ttask.get_source_repo(task_defn)
+
+
 @pytest.mark.parametrize("branch", ("foo", None))
 def test_get_branch(task_defn, branch):
     if branch:
@@ -145,11 +135,7 @@ def test_get_branch(task_defn, branch):
 
 
 @pytest.mark.parametrize(
-    "tag_info",
-    (
-        {"revision": "deadbeef", "tags": ["FIREFOX_54.0b3_RELEASE", "BOB"]},
-        {"revision": "beef0001", "tags": ["FIREFOX_59.0b3_RELEASE", "FRED"]},
-    ),
+    "tag_info", ({"revision": "deadbeef", "tags": ["FIREFOX_54.0b3_RELEASE", "BOB"]}, {"revision": "beef0001", "tags": ["FIREFOX_59.0b3_RELEASE", "FRED"]})
 )
 def test_tag_info(task_defn, tag_info):
     task_defn["payload"]["tag_info"] = tag_info
@@ -166,10 +152,7 @@ def test_tag_missing_tag_info(task_defn):
     "bump_info",
     (
         {"next_version": "1.2.4", "files": ["browser/config/version.txt"]},
-        {
-            "next_version": "98.0.1b3",
-            "files": ["config/milestone.txt", "browser/config/version_display.txt"],
-        },
+        {"next_version": "98.0.1b3", "files": ["config/milestone.txt", "browser/config/version_display.txt"]},
     ),
 )
 def test_bump_info(task_defn, bump_info):
@@ -192,12 +175,7 @@ def test_bump_missing_bump_info(task_defn):
                 "name": "Fennec l10n changesets",
                 "version_path": "mobile/android/config/version-files/beta/version.txt",
                 "revision_url": "https://l10n.mozilla.org/shipping/l10n-changesets?av=fennec%(MAJOR_VERSION)s",
-                "platform_configs": [
-                    {
-                        "platforms": ["android-multilocale"],
-                        "path": "mobile/android/locales/maemo-locales",
-                    }
-                ],
+                "platform_configs": [{"platforms": ["android-multilocale"], "path": "mobile/android/locales/maemo-locales"}],
             }
         ],
         [
@@ -271,50 +249,36 @@ def test_get_ignore_closed_tree(task_defn, closed_tree):
 
 
 # task_task_action_types {{{1
-@pytest.mark.parametrize(
-    "actions", (["tag"], ["version_bump"], ["tag", "version_bump", "push"])
-)
+@pytest.mark.parametrize("actions", (["tag"], ["version_bump"], ["tag", "version_bump", "push"]))
 def test_task_action_types_actions(actions):
     task = {"payload": {"actions": actions}}
-    assert actions == ttask.task_action_types(SCRIPT_CONFIG, task)
+    assert set(actions) == ttask.task_action_types(SCRIPT_CONFIG, task)
+
+
+# task_task_action_types {{{1
+@pytest.mark.parametrize("actions", (["tag", "invalid"], ["invaid"]))
+def test_task_action_types_actions_invalid(actions):
+    task = {"payload": {"actions": actions}}
+    with pytest.raises(TaskVerificationError):
+        ttask.task_action_types(SCRIPT_CONFIG, task)
+
+
+@pytest.mark.parametrize("task", ({"payload": {"push": True}}, {"payload": {"dry_run": False, "push": True}}, {"payload": {"actions": ["push"]}}))
+def test_should_push_true(task):
+    actions = ttask.task_action_types(SCRIPT_CONFIG, task)
+    assert True is ttask.should_push(task, actions)
 
 
 @pytest.mark.parametrize(
-    "actions,scopes",
+    "task",
     (
-        (["tagging"], [TEST_ACTION_TAG]),
-        (["version_bump"], [TEST_ACTION_BUMP]),
-        (["tagging", "version_bump"], [TEST_ACTION_BUMP, TEST_ACTION_TAG]),
+        {"payload": {"dry_run": True}},
+        {"payload": {"dry_run": True, "actions": ["push"]}},
+        {"payload": {"dry_run": True, "push": True}},
+        {"payload": {"push": False, "actions": ["push"]}},
+        {"payload": {}},
     ),
 )
-def test_task_action_types_valid_scopes(actions, scopes):
-    task = {"scopes": scopes}
-    assert actions == ttask.task_action_types(SCRIPT_CONFIG, task)
-
-
-@pytest.mark.parametrize(
-    "scopes", ([TEST_ACTION_INVALID], [TEST_ACTION_TAG, TEST_ACTION_INVALID])
-)
-def test_task_action_types_invalid_action(scopes):
-    task = {"scopes": scopes}
-    with pytest.raises(TaskVerificationError):
-        ttask.task_action_types(SCRIPT_CONFIG, task)
-
-
-@pytest.mark.parametrize("scopes", ([], ["project:releng:foo:not:for:here"]))
-def test_task_action_types_missing_action(scopes):
-    task = {"scopes": scopes}
-    with pytest.raises(TaskVerificationError):
-        ttask.task_action_types(SCRIPT_CONFIG, task)
-
-
-@pytest.mark.parametrize(
-    "task", ({"payload": {}}, {"payload": {"dry_run": False}}, {"scopes": ["foo"]})
-)
-def test_is_dry_run(task):
-    assert False is ttask.is_dry_run(task)
-
-
-def test_is_dry_run_true():
-    task = {"payload": {"dry_run": True}}
-    assert True is ttask.is_dry_run(task)
+def test_should_push_false(task):
+    actions = ttask.task_action_types(SCRIPT_CONFIG, task)
+    assert False is ttask.should_push(task, actions)

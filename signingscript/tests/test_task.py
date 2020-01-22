@@ -1,14 +1,12 @@
-import aiohttp
 import os
-import pytest
 
+import pytest
 from scriptworker.client import validate_task_schema
 from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
 
-from signingscript.exceptions import SigningServerError
-from signingscript.utils import mkdir
 import signingscript.task as stask
-from conftest import noop_sync, BASE_DIR
+from conftest import BASE_DIR
+from signingscript.utils import mkdir
 
 # helper constants, fixtures, functions {{{1
 SERVER_CONFIG_PATH = os.path.join(BASE_DIR, "example_server_config.json")
@@ -33,12 +31,7 @@ def task_defn():
         "scopes": ["signing"],
         "payload": {
             "upstreamArtifacts": [
-                {
-                    "taskType": "build",
-                    "taskId": "VALID_TASK_ID",
-                    "formats": ["gpg"],
-                    "paths": ["public/build/firefox-52.0a1.en-US.win64.installer.exe"],
-                }
+                {"taskType": "build", "taskId": "VALID_TASK_ID", "formats": ["gpg"], "paths": ["public/build/firefox-52.0a1.en-US.win64.installer.exe"]}
             ]
         },
     }
@@ -54,49 +47,30 @@ def test_task_cert_type_error(context):
     context.task = {"scopes": [TEST_CERT_TYPE, "project:releng:signing:cert:notdep"]}
     with pytest.raises(ScriptWorkerTaskException):
         stask.task_cert_type(context)
+    context.task = None
+    with pytest.raises(TaskVerificationError):
+        stask.task_cert_type(context)
 
 
 # task_signing_formats {{{1
 def test_task_signing_formats(context):
-    context.task = {
-        "payload": {"upstreamArtifacts": [{"formats": ["mar", "gpg"]}]},
-        "scopes": [TEST_CERT_TYPE],
-    }
+    context.task = {"payload": {"upstreamArtifacts": [{"formats": ["mar", "gpg"]}]}, "scopes": [TEST_CERT_TYPE]}
     assert {"mar", "gpg"} == stask.task_signing_formats(context)
 
 
 def test_task_signing_formats_support_several_projects(context):
-    context.config["taskcluster_scope_prefixes"] = [
-        "project:mobile:focus:releng:signing:",
-        "project:mobile:fenix:releng:signing:",
-    ]
+    context.config["taskcluster_scope_prefixes"] = ["project:mobile:focus:releng:signing:", "project:mobile:fenix:releng:signing:"]
 
-    context.task = {
-        "payload": {"upstreamArtifacts": [{"formats": ["focus-jar"]}]},
-        "scopes": ["project:mobile:focus:releng:signing:cert:dep-signing"],
-    }
+    context.task = {"payload": {"upstreamArtifacts": [{"formats": ["focus-jar"]}]}, "scopes": ["project:mobile:focus:releng:signing:cert:dep-signing"]}
     assert {"focus-jar"} == stask.task_signing_formats(context)
 
-    context.task = {
-        "payload": {"upstreamArtifacts": [{"formats": ["autograph_fenix"]}]},
-        "scopes": ["project:mobile:fenix:releng:signing:cert:dep-signing"],
-    }
+    context.task = {"payload": {"upstreamArtifacts": [{"formats": ["autograph_fenix"]}]}, "scopes": ["project:mobile:fenix:releng:signing:cert:dep-signing"]}
     assert {"autograph_fenix"} == stask.task_signing_formats(context)
 
 
-def test_task_cert_errors_when_2_different_projects_are_signed_in_the_same_task(
-    context
-):
-    context.config["taskcluster_scope_prefixes"] = [
-        "project:mobile:focus:releng:signing:",
-        "project:mobile:fenix:releng:signing:",
-    ]
-    context.task = {
-        "scopes": [
-            "project:mobile:focus:releng:signing:cert:dep-signing",
-            "project:mobile:fenix:releng:signing:cert:dep-signing",
-        ]
-    }
+def test_task_cert_errors_when_2_different_projects_are_signed_in_the_same_task(context):
+    context.config["taskcluster_scope_prefixes"] = ["project:mobile:focus:releng:signing:", "project:mobile:fenix:releng:signing:"]
+    context.task = {"scopes": ["project:mobile:focus:releng:signing:cert:dep-signing", "project:mobile:fenix:releng:signing:cert:dep-signing"]}
     with pytest.raises(TaskVerificationError):
         stask.task_cert_type(context)
 
@@ -117,13 +91,7 @@ def test_no_error_is_reported_when_no_missing_url(context, task_defn):
 
 # sign {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "format,filename,post_files",
-    (
-        ("gpg", "filename", ["filename", "filename.asc"]),
-        ("sha2signcode", "file.zip", ["file.zip"]),
-    ),
-)
+@pytest.mark.parametrize("format,filename,post_files", (("gpg", "filename", ["filename", "filename.asc"]), ("sha2signcode", "file.zip", ["file.zip"])))
 async def test_sign(context, mocker, format, filename, post_files):
     async def fake_gpg(_, path, *kwargs):
         return [path, "{}.asc".format(path)]
@@ -158,10 +126,7 @@ async def test_sign(context, mocker, format, filename, post_files):
         ("autograph_apk_fennec_sha1", stask.sign_jar),
         ("autograph_apk_focus", stask.sign_jar),
         ("autograph_apk_reference_browser", stask.sign_jar),
-        (
-            "autograph_hash_only_mar384:firefox_20190321_dev",
-            stask.sign_mar384_with_autograph_hash,
-        ),
+        ("autograph_hash_only_mar384:firefox_20190321_dev", stask.sign_mar384_with_autograph_hash),
         # Default
         ("autograph_apk_", stask.sign_file),
         ("non-existing-format", stask.sign_file),
@@ -173,18 +138,8 @@ def test_get_signing_function_from_format(format, expected):
 
 # build_filelist_dict {{{1
 def test_build_filelist_dict(context, task_defn):
-    full_path = os.path.join(
-        context.config["work_dir"],
-        "cot",
-        "VALID_TASK_ID",
-        "public/build/firefox-52.0a1.en-US.win64.installer.exe",
-    )
-    expected = {
-        "public/build/firefox-52.0a1.en-US.win64.installer.exe": {
-            "full_path": full_path,
-            "formats": ["gpg"],
-        }
-    }
+    full_path = os.path.join(context.config["work_dir"], "cot", "VALID_TASK_ID", "public/build/firefox-52.0a1.en-US.win64.installer.exe")
+    expected = {"public/build/firefox-52.0a1.en-US.win64.installer.exe": {"full_path": full_path, "formats": ["gpg"]}}
     context.task = task_defn
 
     # first, the file is missing...

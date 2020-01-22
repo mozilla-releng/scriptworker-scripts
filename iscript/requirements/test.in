@@ -1,11 +1,14 @@
 -r base.in
-mypy
-tox
+black
+check-manifest
 coverage
-python-coveralls
 flake8
 flake8_docstrings
+isort
 mock
+mypy
+pip-compile-multi
+python-coveralls
 pytest
 pytest-asyncio
 pytest-black

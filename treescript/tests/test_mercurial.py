@@ -9,49 +9,25 @@ it's expected output is something our script can cope with.
 import os
 
 import pytest
+
 from scriptworker_client.utils import makedirs
 from treescript import mercurial
 from treescript.exceptions import FailedSubprocess, PushError
 from treescript.script import get_default_config
 from treescript.task import DONTBUILD_MSG
 
-
 # constants, helpers, fixtures {{{1
 ROBUSTCHECKOUT_FILES = (
-    os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "build",
-            "lib",
-            "treescript",
-            "py2",
-            "robustcheckout.py",
-        )
-    ),
-    os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "src",
-            "treescript",
-            "py2",
-            "robustcheckout.py",
-        )
-    ),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "build", "lib", "treescript", "py2", "robustcheckout.py")),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "treescript", "py2", "robustcheckout.py")),
+    os.path.abspath(os.path.join(os.path.dirname(mercurial.__file__), "py2", "robustcheckout.py")),
 )
-UNEXPECTED_ENV_KEYS = (
-    "HG HGPROF CDPATH GREP_OPTIONS http_proxy no_proxy "
-    "HGPLAINEXCEPT EDITOR VISUAL PAGER NO_PROXY CHGDEBUG".split()
-)
+UNEXPECTED_ENV_KEYS = "HG HGPROF CDPATH GREP_OPTIONS http_proxy no_proxy " "HGPLAINEXCEPT EDITOR VISUAL PAGER NO_PROXY CHGDEBUG".split()
 
 
 @pytest.yield_fixture(scope="function")
 def task():
-    return {
-        "payload": {},
-        "metadata": {"source": "https://hg.mozilla.org/repo-name/file/filename"},
-    }
+    return {"payload": {}, "metadata": {"source": "https://hg.mozilla.org/repo-name/file/filename"}}
 
 
 async def noop_async(*args, **kwargs):
@@ -80,9 +56,7 @@ def config(tmpdir):
 
 
 # build_hg_cmd {{{1
-@pytest.mark.parametrize(
-    "hg,args", (("hg", ["blah", "blah", "--baz"]), (["hg"], ["blah", "blah", "--baz"]))
-)
+@pytest.mark.parametrize("hg,args", (("hg", ["blah", "blah", "--baz"]), (["hg"], ["blah", "blah", "--baz"])))
 def test_build_hg_cmd(config, hg, args):
     config["hg"] = hg
     valid_paths = []
@@ -95,6 +69,8 @@ def test_build_hg_cmd(config, hg, args):
                 "extensions.robustcheckout={}".format(path),
                 "--config",
                 "extensions.purge=",
+                "--config",
+                "extensions.strip=",
                 "blah",
                 "blah",
                 "--baz",
@@ -208,11 +184,7 @@ async def test_checkout_repo(config, task, mocker, branch):
     """checkout_repo calls the expected commands.
     """
     calls = [
-        (
-            "robustcheckout",
-            "https://hg.mozilla.org/test-repo",
-            os.path.join(config["work_dir"]),
-        ),
+        ("robustcheckout", "https://hg.mozilla.org/test-repo", os.path.join(config["work_dir"])),
         ("strip", "--no-backup", "outgoing()"),
         ("up", "-C"),
         ("purge", "--all"),
@@ -226,9 +198,7 @@ async def test_checkout_repo(config, task, mocker, branch):
         assert is_slice_in_list(calls.pop(0), args)
 
     mocker.patch.object(mercurial, "run_hg_command", new=check_params)
-    mocker.patch.object(
-        mercurial, "get_source_repo"
-    ).return_value = "https://hg.mozilla.org/test-repo"
+    mocker.patch.object(mercurial, "get_source_repo").return_value = "https://hg.mozilla.org/test-repo"
 
     config["hg_share_base_dir"] = "/builds/hg-shared-test"
     config["upstream_repo"] = "https://hg.mozilla.org/mozilla-test-unified"
@@ -270,16 +240,9 @@ async def test_check_tags(config, mocker, tmpdir):
     duplicate tags that are on different revisions.
 
     """
-    existing_tags = {
-        "duplicate_tag": "my_revision",
-        "duplicate_tag_different_revision": "different_revision",
-        "extra_tag": "another_revision",
-    }
+    existing_tags = {"duplicate_tag": "my_revision", "duplicate_tag_different_revision": "different_revision", "extra_tag": "another_revision"}
     expected = ["duplicate_tag_different_revision", "new_tag"]
-    tag_info = {
-        "revision": "my_revision",
-        "tags": ["duplicate_tag", "duplicate_tag_different_revision", "new_tag"],
-    }
+    tag_info = {"revision": "my_revision", "tags": ["duplicate_tag", "duplicate_tag_different_revision", "new_tag"]}
 
     async def get_existing_tags(*args):
         return existing_tags
@@ -366,6 +329,27 @@ async def test_do_tagging_no_tags(config, task, mocker):
 
 
 # log_outgoing {{{1
+@pytest.mark.parametrize(
+    "output, expected",
+    (
+        ("", 0),
+        (
+            """
+blah
+changeset: x
+blah
+blah
+changeset: 9
+blah
+    """,
+            2,
+        ),
+    ),
+)
+def test_count_outgoing(output, expected):
+    assert mercurial._count_outgoing(output) == expected
+
+
 @pytest.mark.parametrize("output", ("hg output!", None))
 @pytest.mark.asyncio
 async def test_log_outgoing(config, task, mocker, output):
@@ -387,10 +371,24 @@ async def test_log_outgoing(config, task, mocker, output):
     assert is_slice_in_list(("-r", "."), called_args[0][0])
     assert "https://hg.mozilla.org/treescript-test" in called_args[0][0]
     if output:
-        with open(
-            os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff"), "r"
-        ) as fh:
+        with open(os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff"), "r") as fh:
             assert fh.read().rstrip() == output
+
+
+# strip_outgoing {{{1
+@pytest.mark.asyncio
+async def test_strip_outgoing(config, task, mocker):
+    called_args = []
+
+    async def run_command(config, *arguments, repo_path=None, **kwargs):
+        called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
+
+    mocker.patch.object(mercurial, "run_hg_command", new=run_command)
+    await mercurial.strip_outgoing(config, task, config["work_dir"])
+
+    assert len(called_args) == 3
+    assert "repo_path" in called_args[0][1]
+    assert is_slice_in_list(("strip", "--no-backup", "outgoing()"), called_args[0][0])
 
 
 # push {{{1
@@ -419,10 +417,7 @@ async def test_push(config, task, mocker, tmpdir):
     (
         ({"hg_ssh_keyfile": "/tmp/ffxbld.rsa"}, "ssh -i /tmp/ffxbld.rsa"),
         ({"hg_ssh_user": "ffxbld"}, "ssh -l ffxbld"),
-        (
-            {"hg_ssh_keyfile": "/tmp/stage.pub", "hg_ssh_user": "stage_ffxbld"},
-            "ssh -l stage_ffxbld -i /tmp/stage.pub",
-        ),
+        ({"hg_ssh_keyfile": "/tmp/stage.pub", "hg_ssh_user": "stage_ffxbld"}, "ssh -l stage_ffxbld -i /tmp/stage.pub"),
     ),
 )
 async def test_push_ssh(config, task, mocker, options, expect, tmpdir):

@@ -1,0 +1,12 @@
+# pyup: ignore file
+# Specifically for testing
+-r base.in
+
+black
+check-manifest
+coverage>=4.2
+flake8
+isort
+pip-compile-multi
+pytest
+pytest-cov

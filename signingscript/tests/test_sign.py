@@ -1,43 +1,49 @@
-import aiohttp
 import asyncio
 import base64
-from contextlib import contextmanager
-from hashlib import sha256
+import json
 import os
 import os.path
-import pytest
+import re
 import shutil
 import subprocess
+import sys
 import tarfile
 import zipfile
-import json
-import re
-
+from contextlib import contextmanager
+from hashlib import sha256
 from unittest import mock
 
+import aiohttp
+import pytest
 import winsign.sign
-
 from scriptworker.utils import makedirs
 
-from signingscript.exceptions import SigningScriptError
-from signingscript.utils import get_hash
 import signingscript.sign as sign
 import signingscript.utils as utils
-from conftest import (
-    noop_sync,
-    noop_async,
-    die,
-    BASE_DIR,
-    TEST_DATA_DIR,
-    DEFAULT_SCOPE_PREFIX,
-    SERVER_CONFIG_PATH,
-    does_not_raise,
-)
+from conftest import BASE_DIR, DEFAULT_SCOPE_PREFIX, SERVER_CONFIG_PATH, TEST_DATA_DIR, die, does_not_raise, noop_async, noop_sync
+from signingscript.exceptions import SigningScriptError
+from signingscript.utils import get_hash
 
 # helper constants, fixtures, functions {{{1
 TEST_CERT_TYPE = "{}cert:dep-signing".format(DEFAULT_SCOPE_PREFIX)
 
 INSTALL_DIR = os.path.dirname(sign.__file__)
+
+
+def async_mock_return_value(value):
+    """
+    Return a value appropriate to assign to `mock.return_value` of an async function.
+
+    Python 3.8 added asyncio support to mock, so setting `mock.return_value` to
+    a `Future` cause the result of awaiting the result a future, rather than a
+    value.
+    """
+    if sys.version_info >= (3, 8):
+        return value
+    else:
+        future = asyncio.Future()
+        future.set_result(value)
+        return future
 
 
 @contextmanager
@@ -87,9 +93,7 @@ async def helper_archive(context, filename, create_fn, extract_fn, *args):
     archive = os.path.join(context.config["work_dir"], filename)
     # Add a directory to tickle the tarfile isfile() call
     files = [__file__, SERVER_CONFIG_PATH]
-    await create_fn(
-        context, archive, [__file__, SERVER_CONFIG_PATH], *args, tmp_dir=BASE_DIR
-    )
+    await create_fn(context, archive, [__file__, SERVER_CONFIG_PATH], *args, tmp_dir=BASE_DIR)
     # Not relevant for zip
     if is_tarfile(archive):
         await assert_file_permissions(archive)
@@ -106,36 +110,15 @@ async def helper_archive(context, filename, create_fn, extract_fn, *args):
 # get_autograph_config {{{1
 @pytest.mark.parametrize(
     "formats,expected",
-    (
-        (
-            ["autograph_marsha384"],
-            utils.Autograph(*[
-                "https://127.0.0.3",
-                "hawk_user",
-                "hawk_secret",
-                ["autograph_marsha384"],
-            ])
-        ),
-        (["invalid"], None),
-    ),
+    ((["autograph_marsha384"], utils.Autograph(*["https://127.0.0.3", "hawk_user", "hawk_secret", ["autograph_marsha384"]])), (["invalid"], None)),
 )
 def test_get_autograph_config(context, formats, expected):
-    assert (
-        sign.get_autograph_config(
-            context.autograph_configs, TEST_CERT_TYPE, formats
-        )
-        == expected
-    )
+    assert sign.get_autograph_config(context.autograph_configs, TEST_CERT_TYPE, formats) == expected
 
 
 def test_get_autograph_config_raises_signingscript_error(context):
     with pytest.raises(SigningScriptError):
-        sign.get_autograph_config(
-            context.autograph_configs,
-            TEST_CERT_TYPE,
-            signing_formats=["invalid"],
-            raise_on_empty=True,
-        )
+        sign.get_autograph_config(context.autograph_configs, TEST_CERT_TYPE, signing_formats=["invalid"], raise_on_empty=True)
 
 
 # sign_file {{{1
@@ -144,14 +127,9 @@ def test_get_autograph_config_raises_signingscript_error(context):
 async def test_sign_file_autograph(context, mocker, to, expected):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     context.autograph_configs = {
-        "project:releng:signing:cert:dep-signing": [utils.Autograph(
-            *[
-                "https://autograph-hsm.dev.mozaws.net",
-                "alice",
-                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                ["autograph_mar"],
-            ]
-        )]
+        "project:releng:signing:cert:dep-signing": [
+            utils.Autograph(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_mar"]])
+        ]
     }
     mocker.patch.object(sign, "sign_file_with_autograph", new=noop_async)
 
@@ -165,12 +143,7 @@ async def test_sign_file_autograph(context, mocker, to, expected):
         (None, "from", "autograph_mar", None),
         ("to", "to", "autograph_mar", None),
         ("to", "to", "autograph_apk_foo", {"zip": "passthrough"}),
-        (
-            "to",
-            "to",
-            "autograph_apk_sha1",
-            {"pkcs7_digest": "SHA1", "zip": "passthrough"},
-        ),
+        ("to", "to", "autograph_apk_sha1", {"pkcs7_digest": "SHA1", "zip": "passthrough"}),
     ),
 )
 async def test_sign_file_with_autograph(context, mocker, to, expected, format, options):
@@ -182,27 +155,16 @@ async def test_sign_file_with_autograph(context, mocker, to, expected, format, o
 
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     context.autograph_configs = {
-        "project:releng:signing:cert:dep-signing": [utils.Autograph(
-            *[
-                "https://autograph-hsm.dev.mozaws.net",
-                "alice",
-                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                [format],
-            ]
-        )]
+        "project:releng:signing:cert:dep-signing": [
+            utils.Autograph(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", [format]])
+        ]
     }
-    assert (
-        await sign.sign_file_with_autograph(context, "from", format, to=to) == expected
-    )
+    assert await sign.sign_file_with_autograph(context, "from", format, to=to) == expected
     open_mock.assert_called()
     kwargs = {"input": "MHhkZWFkYmVlZg=="}
     if options:
         kwargs["options"] = options
-    mocked_session.post.assert_called_with(
-        "https://autograph-hsm.dev.mozaws.net/sign/file",
-        headers=mocker.ANY,
-        data=mocker.ANY,
-    )
+    mocked_session.post.assert_called_with("https://autograph-hsm.dev.mozaws.net/sign/file", headers=mocker.ANY, data=mocker.ANY)
     data = mocked_session.post.call_args[1]["data"]
     data.seek(0)
     assert json.load(data) == [kwargs]
@@ -210,9 +172,7 @@ async def test_sign_file_with_autograph(context, mocker, to, expected, format, o
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("to,expected", ((None, "from"), ("to", "to")))
-async def test_sign_file_with_autograph_invalid_format_errors(
-    context, mocker, to, expected
-):
+async def test_sign_file_with_autograph_invalid_format_errors(context, mocker, to, expected):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     context.autograph_configs = {}
     with pytest.raises(SigningScriptError):
@@ -221,9 +181,7 @@ async def test_sign_file_with_autograph_invalid_format_errors(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("to,expected", ((None, "from"), ("to", "to")))
-async def test_sign_file_with_autograph_no_suitable_servers_errors(
-    context, mocker, to, expected
-):
+async def test_sign_file_with_autograph_no_suitable_servers_errors(context, mocker, to, expected):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     context.autograph_configs = {}
     with pytest.raises(SigningScriptError):
@@ -232,15 +190,11 @@ async def test_sign_file_with_autograph_no_suitable_servers_errors(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("to,expected", ((None, "from"), ("to", "to")))
-async def test_sign_file_with_autograph_raises_http_error(
-    context, mocker, to, expected
-):
+async def test_sign_file_with_autograph_raises_http_error(context, mocker, to, expected):
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
     mocker.patch("builtins.open", open_mock, create=True)
 
-    mocked_session = MockedSession(
-        signed_file="bW96aWxsYQ==", exception=aiohttp.ClientError
-    )
+    mocked_session = MockedSession(signed_file="bW96aWxsYQ==", exception=aiohttp.ClientError)
     mocker.patch.object(context, "session", new=mocked_session)
 
     async def fake_retry_async(func, args=(), attempts=5, sleeptime_kwargs=None):
@@ -250,14 +204,9 @@ async def test_sign_file_with_autograph_raises_http_error(
 
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     context.autograph_configs = {
-        "project:releng:signing:cert:dep-signing": [utils.Autograph(
-            *[
-                "https://autograph-hsm.dev.mozaws.net",
-                "alice",
-                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                ["autograph_mar"],
-            ]
-        )]
+        "project:releng:signing:cert:dep-signing": [
+            utils.Autograph(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_mar"]])
+        ]
     }
     with pytest.raises(aiohttp.ClientError):
         await sign.sign_file_with_autograph(context, "from", "autograph_mar", to=to)
@@ -268,36 +217,12 @@ async def test_sign_file_with_autograph_raises_http_error(
 @pytest.mark.parametrize(
     "format,cert_type,keyid,raises,expected",
     (
-        (
-            "autograph_stage_mar384",
-            "dep-signing",
-            None,
-            False,
-            os.path.join(INSTALL_DIR, "data", "autograph_stage.pem"),
-        ),
-        (
-            "autograph_hash_only_mar384",
-            "release-signing",
-            None,
-            False,
-            os.path.join(INSTALL_DIR, "data", "release_primary.pem"),
-        ),
+        ("autograph_stage_mar384", "dep-signing", None, False, os.path.join(INSTALL_DIR, "data", "autograph_stage.pem")),
+        ("autograph_hash_only_mar384", "release-signing", None, False, os.path.join(INSTALL_DIR, "data", "release_primary.pem")),
         ("autograph_hash_only_mar384", "unknown_cert_type", None, True, None),
         ("unknown_format", "dep", None, True, None),
-        (
-            "autograph_hash_only_mar384",
-            "release-signing",
-            "firefox_20190321_rel",
-            False,
-            os.path.join(INSTALL_DIR, "data", "firefox_20190321_rel.pem"),
-        ),
-        (
-            "autograph_hash_only_mar384",
-            "release-signing",
-            "../firefox_20190321_rel",
-            True,
-            None,
-        ),
+        ("autograph_hash_only_mar384", "release-signing", "firefox_20190321_rel", False, os.path.join(INSTALL_DIR, "data", "firefox_20190321_rel.pem")),
+        ("autograph_hash_only_mar384", "release-signing", "../firefox_20190321_rel", True, None),
     ),
 )
 def test_get_mar_verification_key(format, cert_type, keyid, raises, expected):
@@ -334,9 +259,7 @@ async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
     mocker.patch.object(context, "session", new=mocked_session)
 
     add_signature_mock = mocker.Mock()
-    mocker.patch(
-        "signingscript.sign.add_signature_block", add_signature_mock, create=True
-    )
+    mocker.patch("signingscript.sign.add_signature_block", add_signature_mock, create=True)
 
     m_mock = mocker.MagicMock()
     m_mock.calculate_hashes.return_value = [[None, b"b64marhash"]]
@@ -348,44 +271,34 @@ async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
 
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     context.autograph_configs = {
-        "project:releng:signing:cert:dep-signing": [utils.Autograph(
-            "https://autograph-hsm.dev.mozaws.net",
-            "alice",
-            "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-            ["autograph_hash_only_mar384"],
-        )]
+        "project:releng:signing:cert:dep-signing": [
+            utils.Autograph(
+                "https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_hash_only_mar384"]
+            )
+        ]
     }
-    assert (
-        await sign.sign_mar384_with_autograph_hash(
-            context, "from", "autograph_hash_only_mar384", to=to
-        )
-        == expected
-    )
+    assert await sign.sign_mar384_with_autograph_hash(context, "from", "autograph_hash_only_mar384", to=to) == expected
     open_mock.assert_called()
     add_signature_mock.assert_called()
     MarReader_mock.assert_called()
     m_mock.calculate_hashes.assert_called()
-    mocked_session.post.assert_called_with(
-        "https://autograph-hsm.dev.mozaws.net/sign/hash",
-        headers=mocker.ANY,
-        data=mocker.ANY,
-    )
-    assert json.load(mocked_session.post.call_args[1]["data"]) == [
-        {"input": "YjY0bWFyaGFzaA=="}
-    ]
+    mocked_session.post.assert_called_with("https://autograph-hsm.dev.mozaws.net/sign/hash", headers=mocker.ANY, data=mocker.ANY)
+    assert json.load(mocked_session.post.call_args[1]["data"]) == [{"input": "YjY0bWFyaGFzaA=="}]
 
 
 @pytest.mark.asyncio
 async def test_sign_mar384_with_autograph_hash_keyid(context, mocker):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     context.autograph_configs = {
-        "project:releng:signing:cert:dep-signing": [utils.Autograph(
-            "https://autograph-hsm.dev.mozaws.net",
-            "alice",
-            "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-            ["autograph_hash_only_mar384"],
-            "autograph",
-        )]
+        "project:releng:signing:cert:dep-signing": [
+            utils.Autograph(
+                "https://autograph-hsm.dev.mozaws.net",
+                "alice",
+                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
+                ["autograph_hash_only_mar384"],
+                "autograph",
+            )
+        ]
     }
 
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
@@ -401,22 +314,13 @@ async def test_sign_mar384_with_autograph_hash_keyid(context, mocker):
     fake_sign_hash = mock.MagicMock(wraps=fake_sign_hash)
     mocker.patch("signingscript.sign.sign_hash_with_autograph", fake_sign_hash)
 
-    assert (
-        await sign.sign_mar384_with_autograph_hash(
-            context, "from", "autograph_hash_only_mar384:keyid1"
-        )
-        == "from"
-    )
-    fake_sign_hash.assert_called_with(
-        mocker.ANY, mocker.ANY, "autograph_hash_only_mar384", "keyid1"
-    )
+    assert await sign.sign_mar384_with_autograph_hash(context, "from", "autograph_hash_only_mar384:keyid1") == "from"
+    fake_sign_hash.assert_called_with(mocker.ANY, mocker.ANY, "autograph_hash_only_mar384", "keyid1")
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("to,expected", ((None, "from"), ("to", "to")))
-async def test_sign_mar384_with_autograph_hash_invalid_format_errors(
-    context, mocker, to, expected
-):
+async def test_sign_mar384_with_autograph_hash_invalid_format_errors(context, mocker, to, expected):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     context.autograph_configs = {}
     with pytest.raises(SigningScriptError):
@@ -425,22 +329,16 @@ async def test_sign_mar384_with_autograph_hash_invalid_format_errors(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("to,expected", ((None, "from"), ("to", "to")))
-async def test_sign_mar384_with_autograph_hash_no_suitable_servers_errors(
-    context, mocker, to, expected
-):
+async def test_sign_mar384_with_autograph_hash_no_suitable_servers_errors(context, mocker, to, expected):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     context.autograph_configs = {}
     with pytest.raises(SigningScriptError):
-        await sign.sign_mar384_with_autograph_hash(
-            context, "from", "autograph_hash_only_mar384", to=to
-        )
+        await sign.sign_mar384_with_autograph_hash(context, "from", "autograph_hash_only_mar384", to=to)
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("to,expected", ((None, "from"), ("to", "to")))
-async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(
-    context, mocker, to, expected
-):
+async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(context, mocker, to, expected):
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
     mocker.patch("builtins.open", open_mock, create=True)
 
@@ -448,9 +346,7 @@ async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(
     mocker.patch.object(context, "session", new=mocked_session)
 
     add_signature_mock = mocker.Mock()
-    mocker.patch(
-        "signingscript.sign.add_signature_block", add_signature_mock, create=True
-    )
+    mocker.patch("signingscript.sign.add_signature_block", add_signature_mock, create=True)
 
     m_mock = mocker.MagicMock()
     m_mock.calculate_hashes.return_value = [[None, b"b64marhash"]]
@@ -461,33 +357,21 @@ async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(
 
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     context.autograph_configs = {
-        "project:releng:signing:cert:dep-signing": [utils.Autograph(
-            "https://autograph-hsm.dev.mozaws.net",
-            "alice",
-            "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-            ["autograph_hash_only_mar384"],
-        )]
+        "project:releng:signing:cert:dep-signing": [
+            utils.Autograph(
+                "https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_hash_only_mar384"]
+            )
+        ]
     }
     with pytest.raises(SigningScriptError):
-        assert (
-            await sign.sign_mar384_with_autograph_hash(
-                context, "from", "autograph_hash_only_mar384", to=to
-            )
-            == expected
-        )
+        assert await sign.sign_mar384_with_autograph_hash(context, "from", "autograph_hash_only_mar384", to=to) == expected
 
     open_mock.assert_called()
     add_signature_mock.assert_called()
     MarReader_mock.assert_called()
     m_mock.calculate_hashes.assert_called()
-    mocked_session.post.assert_called_with(
-        "https://autograph-hsm.dev.mozaws.net/sign/hash",
-        headers=mocker.ANY,
-        data=mocker.ANY,
-    )
-    assert json.load(mocked_session.post.call_args[1]["data"]) == [
-        {"input": "YjY0bWFyaGFzaA=="}
-    ]
+    mocked_session.post.assert_called_with("https://autograph-hsm.dev.mozaws.net/sign/hash", headers=mocker.ANY, data=mocker.ANY)
+    assert json.load(mocked_session.post.call_args[1]["data"]) == [{"input": "YjY0bWFyaGFzaA=="}]
 
 
 # sign_gpg {{{1
@@ -513,33 +397,40 @@ async def test_sign_jar(context, mocker):
 
 # sign_macapp {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "filename,expected", (("foo.dmg", "foo.tar.gz"), ("foo.tar.bz2", "foo.tar.bz2"))
-)
+@pytest.mark.parametrize("filename,expected", (("foo.dmg", "foo.tar.gz"), ("foo.tar.bz2", "foo.tar.bz2")))
 async def test_sign_macapp(context, mocker, filename, expected):
     mocker.patch.object(sign, "_convert_dmg_to_tar_gz", new=noop_async)
     mocker.patch.object(sign, "sign_file", new=noop_async)
     assert await sign.sign_macapp(context, filename, "blah") == expected
 
 
-# sign_langpack {{{1
+# sign_xpi {{{1
+@pytest.mark.parametrize("fmt, is_xpi", (("foo_omnija", True), ("langpack_foo", True), ("privileged_webextension", True), ("unknown", False)))
+def test_is_xpi_format(fmt, is_xpi):
+    assert sign._is_xpi_format(fmt) is is_xpi
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "filename,id,raises",
     (
-        ("foo.zip", "foo-id@firefox.mozilla.org", pytest.raises(SigningScriptError)),
+        ("foo.blah", "foo-id@firefox.mozilla.org", pytest.raises(SigningScriptError)),
         ("/path/to/foo.xpi", "foo-id@firefox.mozilla.org", does_not_raise()),
         ("foo.xpi", "foo-id@devedition.mozilla.org", does_not_raise()),
     ),
 )
-async def test_sign_langpack(context, mocker, filename, id, raises):
+async def test_sign_xpi(context, mocker, filename, id, raises):
     async def mocked_signer(ctx, fname, fmt, extension_id=None):
         assert extension_id == id
 
-    mocker.patch.object(sign, "_langpack_id", return_value=id)
+    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
+
+    mocker.patch.object(sign, "get_autograph_config")
+    mocker.patch.object(sign, "_extension_id", return_value=id)
+    mocker.patch.object(sign, "_extension_id", return_value=id)
     mocker.patch.object(sign, "sign_file_with_autograph", new=mocked_signer)
     with raises:
-        assert await sign.sign_langpack(context, filename, "blah") == filename
+        assert await sign.sign_xpi(context, filename, "autograph_langpack") == filename
 
 
 # sign_widevine {{{1
@@ -554,11 +445,7 @@ async def test_sign_langpack(context, mocker, filename, id, raises):
             "widevine",
             False,
             True,
-            [
-                "foo.app/Contents/MacOS/firefox",
-                "foo.app/Contents/MacOS/bar.app/Contents/MacOS/plugin-container",
-                "foo.app/ignore",
-            ],
+            ["foo.app/Contents/MacOS/firefox", "foo.app/Contents/MacOS/bar.app/Contents/MacOS/plugin-container", "foo.app/ignore"],
         ),
         ("foo.unknown", "widevine", True, False, None),
         ("foo.zip", "widevine", False, False, None),
@@ -569,17 +456,9 @@ async def test_sign_langpack(context, mocker, filename, id, raises):
         ("foo.tar.bz2", "autograph_widevine", False, True, None),
     ),
 )
-async def test_sign_widevine(
-    context, mocker, filename, fmt, raises, should_sign, orig_files
-):
+async def test_sign_widevine(context, mocker, filename, fmt, raises, should_sign, orig_files):
     if should_sign:
-        files = orig_files or [
-            "isdir/firefox",
-            "firefox/firefox",
-            "y/plugin-container",
-            "z/blah",
-            "ignore",
-        ]
+        files = orig_files or ["isdir/firefox", "firefox/firefox", "y/plugin-container", "z/blah", "ignore"]
     else:
         files = orig_files or ["z/blah", "ignore"]
 
@@ -633,11 +512,7 @@ async def test_sign_widevine(
 
 # _should_sign_windows {{{1
 @pytest.mark.parametrize(
-    "filenames,expected",
-    (
-        (("firefox", "libclearkey.dylib", "D3DCompiler_42.dll", "msvcblah.dll"), False),
-        (("firefox.dll", "foo.exe"), True),
-    ),
+    "filenames,expected", ((("firefox", "libclearkey.dylib", "D3DCompiler_42.dll", "msvcblah.dll"), False), (("firefox.dll", "foo.exe"), True))
 )
 def test_should_sign_windows(filenames, expected):
     for f in filenames:
@@ -650,19 +525,8 @@ def test_should_sign_windows(filenames, expected):
     (
         (["firefox.dll", "XUL.so", "firefox.bin", "blah"], {}),
         (
-            (
-                "firefox",
-                "blah/XUL",
-                "foo/bar/libclearkey.dylib",
-                "baz/plugin-container",
-                "ignore",
-            ),
-            {
-                "firefox": "widevine",
-                "blah/XUL": "widevine",
-                "foo/bar/libclearkey.dylib": "widevine",
-                "baz/plugin-container": "widevine_blessed",
-            },
+            ("firefox", "blah/XUL", "foo/bar/libclearkey.dylib", "baz/plugin-container", "ignore"),
+            {"firefox": "widevine", "blah/XUL": "widevine", "foo/bar/libclearkey.dylib": "widevine", "baz/plugin-container": "widevine_blessed"},
         ),
         (
             # Test for existing signature files
@@ -744,9 +608,7 @@ async def test_zip_align_apk(context, monkeypatch, is_verbose):
     def shutil_mock(_, destination):
         assert destination == abs_to
 
-    monkeypatch.setattr(
-        "signingscript.utils.execute_subprocess", execute_subprocess_mock
-    )
+    monkeypatch.setattr("signingscript.utils.execute_subprocess", execute_subprocess_mock)
     monkeypatch.setattr("shutil.move", shutil_mock)
 
     await sign.zip_align_apk(context, abs_to)
@@ -771,9 +633,7 @@ async def test_convert_dmg_to_tar_gz(context, monkeypatch, tmpdir):
     def fake_tmpdir():
         yield tmpdir
 
-    monkeypatch.setattr(
-        "signingscript.utils.execute_subprocess", execute_subprocess_mock
-    )
+    monkeypatch.setattr("signingscript.utils.execute_subprocess", execute_subprocess_mock)
     monkeypatch.setattr("tempfile.TemporaryDirectory", fake_tmpdir)
 
     await sign._convert_dmg_to_tar_gz(context, dmg_path)
@@ -782,28 +642,16 @@ async def test_convert_dmg_to_tar_gz(context, monkeypatch, tmpdir):
 # _extract_zipfile _create_zipfile {{{1
 @pytest.mark.asyncio
 async def test_get_zipfile_files():
-    assert sorted(
-        await sign._get_zipfile_files(os.path.join(TEST_DATA_DIR, "test.zip"))
-    ) == ["a", "b", "c/", "c/d", "c/e/", "c/e/f"]
+    assert sorted(await sign._get_zipfile_files(os.path.join(TEST_DATA_DIR, "test.zip"))) == ["a", "b", "c/", "c/d", "c/e/", "c/e/f"]
 
 
 @pytest.mark.asyncio
 async def test_working_zipfile(context):
-    await helper_archive(
-        context, "foo.zip", sign._create_zipfile, sign._extract_zipfile
-    )
+    await helper_archive(context, "foo.zip", sign._create_zipfile, sign._extract_zipfile)
     files = ["c/d", "c/e/f"]
     tmp_dir = os.path.join(context.config["work_dir"], "foo")
     expected = [os.path.join(tmp_dir, f) for f in files]
-    assert (
-        await sign._extract_zipfile(
-            context,
-            os.path.join(TEST_DATA_DIR, "test.zip"),
-            files=files,
-            tmp_dir=tmp_dir,
-        )
-        == expected
-    )
+    assert await sign._extract_zipfile(context, os.path.join(TEST_DATA_DIR, "test.zip"), files=files, tmp_dir=tmp_dir) == expected
     for f in expected:
         assert os.path.exists(f)
 
@@ -843,30 +691,12 @@ async def test_zipfile_append_write(context):
 
 # tarfile {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "path,compression",
-    (
-        (os.path.join(TEST_DATA_DIR, "test.tar.bz2"), "bz2"),
-        (os.path.join(TEST_DATA_DIR, "test.tar.gz"), "gz"),
-    ),
-)
+@pytest.mark.parametrize("path,compression", ((os.path.join(TEST_DATA_DIR, "test.tar.bz2"), "bz2"), (os.path.join(TEST_DATA_DIR, "test.tar.gz"), "gz")))
 async def test_get_tarfile_files(path, compression):
-    assert sorted(await sign._get_tarfile_files(path, compression)) == [
-        "./a",
-        "./b",
-        "./c/d",
-        "./c/e/f",
-    ]
+    assert sorted(await sign._get_tarfile_files(path, compression)) == ["./a", "./b", "./c/d", "./c/e/f"]
 
 
-@pytest.mark.parametrize(
-    "compression,expected,raises",
-    (
-        (".gz", "gz", False),
-        ("bz2", "bz2", False),
-        ("superstrong_compression!!!", None, True),
-    ),
-)
+@pytest.mark.parametrize("compression,expected,raises", ((".gz", "gz", False), ("bz2", "bz2", False), ("superstrong_compression!!!", None, True)))
 def test_get_tarfile_compression(compression, expected, raises):
     if raises:
         with pytest.raises(SigningScriptError):
@@ -877,9 +707,7 @@ def test_get_tarfile_compression(compression, expected, raises):
 
 @pytest.mark.asyncio
 async def test_working_tarfile(context):
-    await helper_archive(
-        context, "foo.tar.gz", sign._create_tarfile, sign._extract_tarfile, "gz"
-    )
+    await helper_archive(context, "foo.tar.gz", sign._create_tarfile, sign._extract_tarfile, "gz")
 
 
 @pytest.mark.asyncio
@@ -919,9 +747,7 @@ def test_signreq_task_keyid():
 
 def test_signreq_task_omnija():
     fmt = "autograph_omnija"
-    req = sign.make_signing_req(
-        None, fmt, "newkeyid", extension_id="omni.ja@mozilla.org"
-    )
+    req = sign.make_signing_req(None, fmt, "newkeyid", extension_id="omni.ja@mozilla.org")
 
     assert req["keyid"] == "newkeyid"
     assert req["input"] is None
@@ -934,9 +760,7 @@ def test_signreq_task_omnija():
 
 def test_signreq_task_langpack():
     fmt = "autograph_langpack"
-    req = sign.make_signing_req(
-        None, fmt, "newkeyid", extension_id="langpack-en-CA@firefox.mozilla.org"
-    )
+    req = sign.make_signing_req(None, fmt, "newkeyid", extension_id="langpack-en-CA@firefox.mozilla.org")
 
     assert req["keyid"] == "newkeyid"
     assert req["input"] is None
@@ -950,17 +774,17 @@ def test_signreq_task_langpack():
 @pytest.mark.asyncio
 async def test_bad_autograph_method():
     with pytest.raises(SigningScriptError):
-        await sign.sign_with_autograph(None, None, None, None, "badformat")
+        await sign.sign_with_autograph(None, None, None, None, "gpg")
 
 
 @pytest.mark.asyncio
 async def test_bad_autograph_format(context):
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     with pytest.raises(SigningScriptError):
-        await sign.sign_file_with_autograph(context, "", "badformat")
+        await sign.sign_file_with_autograph(context, "", "gpg")
 
     with pytest.raises(SigningScriptError):
-        await sign.sign_hash_with_autograph(context, "", "badformat")
+        await sign.sign_hash_with_autograph(context, "", "gpg")
 
 
 @pytest.mark.asyncio
@@ -1008,17 +832,13 @@ async def test_gpg_autograph(context, mocker, tmp_path):
 
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
     context.autograph_configs = {
-        "project:releng:signing:cert:dep-signing": [utils.Autograph(
-            "https://autograph-hsm.dev.mozaws.net",
-            "alice",
-            "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-            ["autograph_gpg"],
-        )]
+        "project:releng:signing:cert:dep-signing": [
+            utils.Autograph("https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_gpg"])
+        ]
     }
 
     mocked_sign = mocker.patch.object(sign, "sign_with_autograph")
-    mocked_sign.return_value = asyncio.Future()
-    mocked_sign.return_value.set_result("--- FAKE SIG ---")
+    mocked_sign.return_value = async_mock_return_value("--- FAKE SIG ---")
 
     result = await sign.sign_gpg_with_autograph(context, tmp, "autograph_gpg")
 
@@ -1044,13 +864,7 @@ async def test_gpg_autograph(context, mocker, tmp_path):
 )
 async def test_sign_omnija(context, mocker, filename, raises, nofiles):
     fmt = "autograph_omnija"
-    files = [
-        "isdir/omni.ja",
-        "firefox/omni.ja",
-        "firefox/browser/omni.ja",
-        "z/blah",
-        "ignore",
-    ]
+    files = ["isdir/omni.ja", "firefox/omni.ja", "firefox/browser/omni.ja", "z/blah", "ignore"]
     if nofiles:
         # Don't have any omni.ja
         files = ["z/blah", "ignore"]
@@ -1094,16 +908,7 @@ async def test_sign_omnija(context, mocker, filename, raises, nofiles):
     "filenames,expected",
     (
         (["firefox.dll", "XUL.so", "firefox.bin", "blah"], {}),
-        (
-            (
-                "firefox",
-                "blah/omni.ja",
-                "foo/bar/libclearkey.dylib",
-                "baz/omni.ja",
-                "ignore",
-            ),
-            {"blah/omni.ja": "omnija", "baz/omni.ja": "omnija"},
-        ),
+        (("firefox", "blah/omni.ja", "foo/bar/libclearkey.dylib", "baz/omni.ja", "ignore"), {"blah/omni.ja": "omnija", "baz/omni.ja": "omnija"}),
     ),
 )
 def test_get_omnija_signing_files(filenames, expected):
@@ -1111,9 +916,7 @@ def test_get_omnija_signing_files(filenames, expected):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "orig", ("no_preload_unsigned_omni.ja", "preload_unsigned_omni.ja")
-)
+@pytest.mark.parametrize("orig", ("no_preload_unsigned_omni.ja", "preload_unsigned_omni.ja"))
 async def test_omnija_same(mocker, tmpdir, orig):
     copy_from = os.path.join(tmpdir, "omni.ja")
     shutil.copyfile(os.path.join(TEST_DATA_DIR, orig), copy_from)
@@ -1136,16 +939,8 @@ async def test_omnija_same(mocker, tmpdir, orig):
 @pytest.mark.parametrize(
     "orig,signed,sha256_expected",
     (
-        (
-            "no_preload_unsigned_omni.ja",
-            "no_preload_signed_omni.ja",
-            "851890c7eac926ad1dfd1fc4b7bf96e57b519d87806f1055fe108d493e753f98",
-        ),
-        (
-            "preload_unsigned_omni.ja",
-            "preload_signed_omni.ja",
-            "d619ab6c25b31950540847b520d0791625ab4ca31ee4f58d02409c784f9206cd",
-        ),
+        ("no_preload_unsigned_omni.ja", "no_preload_signed_omni.ja", "851890c7eac926ad1dfd1fc4b7bf96e57b519d87806f1055fe108d493e753f98"),
+        ("preload_unsigned_omni.ja", "preload_signed_omni.ja", "d619ab6c25b31950540847b520d0791625ab4ca31ee4f58d02409c784f9206cd"),
     ),
 )
 async def test_omnija_sign(tmpdir, mocker, context, orig, signed, sha256_expected):
@@ -1164,15 +959,19 @@ async def test_omnija_sign(tmpdir, mocker, context, orig, signed, sha256_expecte
 
 def test_langpack_id_regex():
     assert sign.LANGPACK_RE.match("langpack-en-CA@firefox.mozilla.org") is not None
-    assert (
-        sign.LANGPACK_RE.match("langpack-ja-JP-mac@devedition.mozilla.org") is not None
-    )
+    assert sign.LANGPACK_RE.match("langpack-ja-JP-mac@devedition.mozilla.org") is not None
     assert sign.LANGPACK_RE.match("invalid-langpack-id@example.com") is None
 
 
-def test_langpack_id():
+def test_extension_id():
     filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
-    assert sign._langpack_id(filename) == "langpack-en-CA@firefox.mozilla.org"
+    assert sign._extension_id(filename, "autograph_langpack") == "langpack-en-CA@firefox.mozilla.org"
+
+
+def test_extension_id_missing_manifest():
+    filename = os.path.join(TEST_DATA_DIR, "test.zip")
+    with pytest.raises(SigningScriptError):
+        sign._extension_id(filename, "autograph_langpack")
 
 
 @pytest.mark.parametrize(
@@ -1181,70 +980,18 @@ def test_langpack_id():
         ({}, pytest.raises(SigningScriptError)),
         ({"languages": {}}, pytest.raises(SigningScriptError)),
         ({"languages": {}, "langpack_id": "en-CA"}, pytest.raises(SigningScriptError)),
-        (
-            {"languages": {}, "langpack_id": "en-CA", "applications": {}},
-            pytest.raises(SigningScriptError),
-        ),
-        (
-            {"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {}}},
-            pytest.raises(SigningScriptError),
-        ),
-        (
-            {"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {}}},
-            pytest.raises(SigningScriptError),
-        ),
-        (
-            {
-                "languages": {},
-                "langpack_id": "en-CA",
-                "applications": {"gecko": {"id": ""}},
-            },
-            pytest.raises(SigningScriptError),
-        ),
-        (
-            {
-                "languages": {},
-                "langpack_id": "en-CA",
-                "applications": {"gecko": {"id": "invalid-langpack-id@example.com"}},
-            },
-            pytest.raises(SigningScriptError),
-        ),
-        (
-            {
-                "languages": {},
-                "langpack_id": "en-CA",
-                "applications": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}},
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                "languages": {},
-                "langpack_id": "en-CA",
-                "applications": {"gecko": {"id": "langpack-de@devedition.mozilla.org"}},
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                "languages": {},
-                "langpack_id": "en-CA",
-                "applications": {
-                    "gecko": {"id": "langpack-ja-JP-mac@devedition.mozilla.org"}
-                },
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                "langpack_id": "en-CA",
-                "applications": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}},
-            },
-            pytest.raises(SigningScriptError),
-        ),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {}}, pytest.raises(SigningScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {}}}, pytest.raises(SigningScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {}}}, pytest.raises(SigningScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": ""}}}, pytest.raises(SigningScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": "invalid-langpack-id@example.com"}}}, pytest.raises(SigningScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}}}, does_not_raise()),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-de@devedition.mozilla.org"}}}, does_not_raise()),
+        ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-ja-JP-mac@devedition.mozilla.org"}}}, does_not_raise()),
+        ({"langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}}}, pytest.raises(SigningScriptError)),
     ),
 )
-def test_langpack_id_raises(json_, raises, mocker):
+def test_extension_id_raises(json_, raises, mocker):
     filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
 
     def load_manifest(*args, **kwargs):
@@ -1255,19 +1002,15 @@ def test_langpack_id_raises(json_, raises, mocker):
 
     mocker.patch.object(sign.json, "load", load_manifest)
     with raises:
-        id = sign._langpack_id(filename)
+        id = sign._extension_id(filename, "autograph_langpack")
         assert id == json_["applications"]["gecko"]["id"]
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "fmt", ("autograph_authenticode", "autograph_authenticode_stub")
-)
+@pytest.mark.parametrize("fmt", ("autograph_authenticode", "autograph_authenticode_stub"))
 async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
-    context.config["authenticode_cross_cert"] = os.path.join(
-        TEST_DATA_DIR, "windows.crt"
-    )
+    context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
 
@@ -1331,9 +1074,7 @@ async def test_authenticode_sign_zip_error(tmpdir, mocker, context):
 
 
 @pytest.mark.asyncio
-async def test_authenticode_sign_authenticode_permanent_error(
-    tmpdir, mocker, context, caplog
-):
+async def test_authenticode_sign_authenticode_permanent_error(tmpdir, mocker, context, caplog):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
@@ -1363,14 +1104,9 @@ async def test_authenticode_sign_gpg_temporary_error(tmpdir, mocker, context, ca
     context.task = {}
     context.task["scopes"] = ["project:releng:signing:cert:dep-signing"]
     context.autograph_configs = {
-        "project:releng:signing:cert:dep-signing": [utils.Autograph(
-            *[
-                "https://autograph-hsm.dev.mozaws.net",
-                "alice",
-                "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                ["autograph_gpg"],
-            ]
-        )]
+        "project:releng:signing:cert:dep-signing": [
+            utils.Autograph(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_gpg"]])
+        ]
     }
     mocked_session = MockedSession(signature="GPG SIGNATURE HERE")
     mocked_session.count = 0
@@ -1405,15 +1141,11 @@ async def test_authenticode_sign_gpg_temporary_error(tmpdir, mocker, context, ca
 @pytest.mark.asyncio
 async def test_authenticode_sign_single_file(tmpdir, mocker, context):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
-    context.config["authenticode_cross_cert"] = os.path.join(
-        TEST_DATA_DIR, "windows.crt"
-    )
+    context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
 
-    await sign._extract_zipfile(
-        context, os.path.join(TEST_DATA_DIR, "windows.zip"), tmp_dir=tmpdir
-    )
+    await sign._extract_zipfile(context, os.path.join(TEST_DATA_DIR, "windows.zip"), tmp_dir=tmpdir)
     test_file = os.path.join(tmpdir, "helper.exe")
 
     async def mocked_autograph(context, from_, fmt):
@@ -1427,8 +1159,6 @@ async def test_authenticode_sign_single_file(tmpdir, mocker, context):
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
 
-    result = await sign.sign_authenticode_zip(
-        context, test_file, "autograph_authenticode"
-    )
+    result = await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode")
     assert result == test_file
     assert os.path.exists(result)

@@ -1,13 +1,13 @@
 import json
-import mock
 import os
-import pytest
-
-from scriptworker_client.exceptions import TaskError
 from unittest.mock import MagicMock
 
-import treescript.script as script
+import mock
+import pytest
 
+import treescript.script as script
+from scriptworker_client.exceptions import TaskError
+from treescript.exceptions import TreeScriptError
 
 # helper constants, fixtures, functions {{{1
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -44,14 +44,7 @@ async def die_async(*args, **kwargs):
 
 # async_main {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "robustcheckout_works,raises,actions",
-    (
-        (False, TaskError, ["some_action"]),
-        (True, None, ["some_action"]),
-        (True, None, None),
-    ),
-)
+@pytest.mark.parametrize("robustcheckout_works,raises,actions", ((False, TaskError, ["some_action"]), (True, None, ["some_action"]), (True, None, None)))
 async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions):
     async def fake_validate_robustcheckout(_):
         return robustcheckout_works
@@ -60,9 +53,7 @@ async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions)
         return actions
 
     mocker.patch.object(script, "task_action_types", new=action_fun)
-    mocker.patch.object(
-        script, "validate_robustcheckout_works", new=fake_validate_robustcheckout
-    )
+    mocker.patch.object(script, "validate_robustcheckout_works", new=fake_validate_robustcheckout)
     mocker.patch.object(script, "log_mercurial_version", new=noop_async)
     mocker.patch.object(script, "checkout_repo", new=noop_async)
     mocker.patch.object(script, "do_actions", new=noop_async)
@@ -84,38 +75,28 @@ def test_get_default_config():
 
 # do_actions {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "push_scope,dry_run,push_expect_called",
-    (
-        (["push"], True, False),
-        (["push"], False, True),
-        ([], False, False),
-        ([], True, False),
-    ),
-)
-async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
-    actions = ["tagging", "version_bump", "l10n_bump"]
-    actions += push_scope
-    called_tag = [False]
-    called_bump = [False]
-    called_l10n = [False]
-    called_push = [False]
+@pytest.mark.parametrize("should_push", (False, True))
+async def test_do_actions(mocker, should_push):
+    actions = ["tag", "version_bump", "l10n_bump"]
+    called = {"bump": False, "l10n": False, "push": False, "tag": False}
 
     async def mocked_tag(*args, **kwargs):
-        called_tag[0] = True
-        return True
+        called["tag"] = True
+        return 1
 
     async def mocked_bump(*args, **kwargs):
-        called_bump[0] = True
-        return True
+        called["bump"] = True
+        return 1
 
     async def mocked_l10n(*args, **kwargs):
-        called_l10n[0] = True
-        return True
+        called["l10n"] = True
+        return 1
 
     async def mocked_push(*args, **kwargs):
-        called_push[0] = True
-        return True
+        called["push"] = True
+
+    async def mocked_outgoing(*args):
+        return 3
 
     mocker.patch.object(script, "checkout_repo", new=noop_async)
     mocker.patch.object(script, "strip_outgoing", new=noop_async)
@@ -123,38 +104,37 @@ async def test_do_actions(mocker, push_scope, dry_run, push_expect_called):
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
     mocker.patch.object(script, "push", new=mocked_push)
-    mocker.patch.object(script, "log_outgoing", new=noop_async)
-    mocker.patch.object(script, "is_dry_run", return_value=dry_run)
-    await script.do_actions({}, {}, actions, "/some/folder/here")
-    assert called_tag[0]
-    assert called_bump[0]
-    assert called_l10n[0]
-    assert called_push[0] is push_expect_called
+    mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
+    await script.do_actions({}, {"payload": {"push": should_push}}, actions, "/some/folder/here")
+    assert called["tag"]
+    assert called["bump"]
+    assert called["l10n"]
+    assert called["push"] is should_push
 
 
 @pytest.mark.asyncio
 async def test_do_actions_no_changes(mocker):
     actions = ["push"]
-    called_tag = [False]
-    called_bump = [False]
-    called_l10n = [False]
-    called_push = [False]
+    called = {"bump": False, "l10n": False, "push": False, "tag": False}
 
     async def mocked_tag(*args, **kwargs):
-        called_tag[0] = True
-        return True
+        called["tag"] = True
+        return 1
 
     async def mocked_bump(*args, **kwargs):
-        called_bump[0] = True
-        return True
+        called["bump"] = True
+        return 1
 
     async def mocked_l10n(*args, **kwargs):
-        called_l10n[0] = True
-        return True
+        called["l10n"] = True
+        return 1
 
     async def mocked_push(*args, **kwargs):
-        called_push[0] = True
-        return True
+        called["push"] = True
+        return 1
+
+    async def mocked_outgoing(*args):
+        return 0
 
     mocker.patch.object(script, "checkout_repo", new=noop_async)
     mocker.patch.object(script, "strip_outgoing", new=noop_async)
@@ -162,41 +142,43 @@ async def test_do_actions_no_changes(mocker):
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
     mocker.patch.object(script, "push", new=mocked_push)
-    mocker.patch.object(script, "log_outgoing", new=noop_async)
-    mocker.patch.object(script, "is_dry_run", return_value=False)
-    await script.do_actions({}, {}, actions, "/some/folder/here")
-    assert not called_tag[0]
-    assert not called_bump[0]
-    assert not called_l10n[0]
-    assert not called_push[0]
+    mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
+    await script.do_actions({}, {"payload": {"push": True}}, actions, "/some/folder/here")
+    assert not any(called.values())
 
 
 @pytest.mark.asyncio
-async def test_do_actions_unknown(mocker):
-    actions = ["unknown"]
-    called_tag = [False]
-    called_bump = [False]
+async def test_do_actions_mismatch_change_count(mocker):
+    actions = ["tag"]
 
     async def mocked_tag(*args, **kwargs):
-        called_tag[0] = True
+        return 1
 
     async def mocked_bump(*args, **kwargs):
-        called_bump[0] = True
+        return 1
+
+    async def mocked_l10n(*args, **kwargs):
+        return 1
+
+    async def mocked_push(*args, **kwargs):
+        return 1
+
+    async def mocked_outgoing(*args):
+        return 14
 
     mocker.patch.object(script, "checkout_repo", new=noop_async)
+    mocker.patch.object(script, "strip_outgoing", new=noop_async)
     mocker.patch.object(script, "do_tagging", new=mocked_tag)
     mocker.patch.object(script, "bump_version", new=mocked_bump)
-    mocker.patch.object(script, "log_outgoing", new=noop_async)
-    with pytest.raises(NotImplementedError):
-        await script.do_actions({}, {}, actions, "/some/folder/here")
-    assert called_tag[0] is False
-    assert called_bump[0] is False
+    mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
+    mocker.patch.object(script, "push", new=mocked_push)
+    mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
+    with pytest.raises(TreeScriptError):
+        await script.do_actions({}, {"payload": {"push": False}}, actions, "/some/folder/here")
 
 
 def test_main(monkeypatch):
     sync_main_mock = MagicMock()
     monkeypatch.setattr(script, "sync_main", sync_main_mock)
     script.main()
-    sync_main_mock.asset_called_once_with(
-        script.async_main, default_config=script.get_default_config()
-    )
+    sync_main_mock.asset_called_once_with(script.async_main, default_config=script.get_default_config())

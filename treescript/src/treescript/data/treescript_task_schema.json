@@ -90,7 +90,13 @@
                 "branch": {
                     "type": "string"
                 },
+                "source_repo": {
+                    "type": "string"
+                },
                 "dry_run": {
+                    "type": "boolean"
+                },
+                "push": {
                     "type": "boolean"
                 },
                 "dontbuild": {

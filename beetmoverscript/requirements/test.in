@@ -1,8 +1,12 @@
 -r base.in
 
+black
+check-manifest
 coverage
 flake8
+isort
 mock
+pip-compile-multi
 pytest
 pytest-asyncio
 pytest-cov

@@ -13,21 +13,13 @@ setup(
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
     url="https://github.com/mozilla-releng/addonscript",
-    packages=find_packages(),
+    packages=find_packages("src"),
     package_data={"addonscript": ["data/*"]},
+    package_dir={"": "src"},
     include_package_data=True,
     zip_safe=False,
-    entry_points={
-        "console_scripts": [
-            "addonscript = addonscript.script:main",
-        ],
-    },
+    entry_points={"console_scripts": ["addonscript = addonscript.script:main"]},
     python_requires=">=3.6",
     license="MPL2",
-    install_requires=[
-        "scriptworker",
-        "python-jose",
-        "aiohttp>3",
-        "async_timeout",
-    ],
+    install_requires=["scriptworker", "python-jose", "aiohttp>3", "async_timeout"],
 )

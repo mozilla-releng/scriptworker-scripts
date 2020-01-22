@@ -1,14 +1,18 @@
-recursive-include beetmoverscript/test *
-recursive-include beetmoverscript/data *
-recursive-include beetmoverscript/templates *
-graft requirements
-
 include .coveragerc
 include LICENSE
 include README.md
 include config_example.json
+include pyproject.toml
+include setup.py
 include version.txt
 include tox.ini
 
+recursive-include src *
+
+exclude docker.d
+exclude tests
+
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+recursive-exclude docker.d *
+recursive-exclude tests *

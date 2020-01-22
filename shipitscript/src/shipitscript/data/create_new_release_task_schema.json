@@ -1,0 +1,48 @@
+{
+    "title": "Taskcluster ShipIt create-new-release task minimal schema",
+    "type": "object",
+    "properties": {
+        "dependencies": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "scopes": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "payload": {
+            "type": "object",
+            "properties": {
+                "product": {
+                  "type": "string"
+                },
+                "product_key": {
+                  "type": "string"
+                },
+                "branch": {
+                  "type": "string"
+                },
+                "phase": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "cron_revision": {
+                  "type": "string"
+                }
+            },
+            "required": ["product", "branch", "phase", "version", "cron_revision"],
+            "additionalProperties": false
+        }
+    },
+    "required": ["dependencies", "scopes", "payload"]
+}

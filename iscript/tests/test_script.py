@@ -3,9 +3,11 @@
 """Test iscript.script
 """
 import os
+
 import pytest
-from iscript.exceptions import IScriptError
+
 import iscript.script as script
+from iscript.exceptions import IScriptError
 
 
 # async_main {{{1
@@ -17,21 +19,14 @@ import iscript.script as script
         ("mac_notarize", ["mac_sign", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),
         ("mac_sign", ["mac_sign"], "mac_sign", False),
         ("mac_sign", ["mac_sign"], "mac_sign", False),
-        (
-            "mac_sign_and_pkg",
-            ["mac_geckodriver", "mac_sign_and_pkg"],
-            "mac_sign_and_pkg",
-            False,
-        ),
+        ("mac_sign_and_pkg", ["mac_geckodriver", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),
         (None, ["mac_sign"], "mac_sign", False),
         ("invalid_behavior", ["mac_sign", "invalid_behavior"], None, True),
         ("mac_notarize", ["mac_sign", "mac_geckodriver"], None, True),
     ),
 )
 @pytest.mark.asyncio
-async def test_async_main(
-    mocker, behavior, supported_behaviors, expected_behavior, raises
-):
+async def test_async_main(mocker, behavior, supported_behaviors, expected_behavior, raises):
     """``async_main`` calls the appropriate function based on behavior
 
     """
