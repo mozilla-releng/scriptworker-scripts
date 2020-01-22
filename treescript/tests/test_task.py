@@ -7,10 +7,6 @@ from scriptworker_client.client import verify_task_schema
 from scriptworker_client.exceptions import TaskVerificationError
 from treescript.script import get_default_config
 
-TEST_ACTION_TAG = "project:releng:treescript:action:tagging"
-TEST_ACTION_BUMP = "project:releng:treescript:action:version_bump"
-TEST_ACTION_INVALID = "project:releng:treescript:action:invalid"
-
 SCRIPT_CONFIG = {"taskcluster_scope_prefix": "project:releng:treescript:"}
 
 
@@ -264,37 +260,33 @@ def test_get_ignore_closed_tree(task_defn, closed_tree):
 @pytest.mark.parametrize("actions", (["tag"], ["version_bump"], ["tag", "version_bump", "push"]))
 def test_task_action_types_actions(actions):
     task = {"payload": {"actions": actions}}
-    assert actions == ttask.task_action_types(SCRIPT_CONFIG, task)
+    assert set(actions) == ttask.task_action_types(SCRIPT_CONFIG, task)
+
+
+# task_task_action_types {{{1
+@pytest.mark.parametrize("actions", (["tag", "invalid"], ["invaid"]))
+def test_task_action_types_actions_invalid(actions):
+    task = {"payload": {"actions": actions}}
+    with pytest.raises(TaskVerificationError):
+        ttask.task_action_types(SCRIPT_CONFIG, task)
+
+
+@pytest.mark.parametrize("task", ({"payload": {"push": True}}, {"payload": {"dry_run": False, "push": True}}, {"payload": {"actions": ["push"]}}))
+def test_should_push_true(task):
+    actions = ttask.task_action_types(SCRIPT_CONFIG, task)
+    assert True is ttask.should_push(task, actions)
 
 
 @pytest.mark.parametrize(
-    "actions,scopes",
-    ((["tagging"], [TEST_ACTION_TAG]), (["version_bump"], [TEST_ACTION_BUMP]), (["tagging", "version_bump"], [TEST_ACTION_BUMP, TEST_ACTION_TAG])),
+    "task",
+    (
+        {"payload": {"dry_run": True}},
+        {"payload": {"dry_run": True, "actions": ["push"]}},
+        {"payload": {"dry_run": True, "push": True}},
+        {"payload": {"push": False, "actions": ["push"]}},
+        {"payload": {}},
+    ),
 )
-def test_task_action_types_valid_scopes(actions, scopes):
-    task = {"scopes": scopes}
-    assert actions == ttask.task_action_types(SCRIPT_CONFIG, task)
-
-
-@pytest.mark.parametrize("scopes", ([TEST_ACTION_INVALID], [TEST_ACTION_TAG, TEST_ACTION_INVALID]))
-def test_task_action_types_invalid_action(scopes):
-    task = {"scopes": scopes}
-    with pytest.raises(TaskVerificationError):
-        ttask.task_action_types(SCRIPT_CONFIG, task)
-
-
-@pytest.mark.parametrize("scopes", ([], ["project:releng:foo:not:for:here"]))
-def test_task_action_types_missing_action(scopes):
-    task = {"scopes": scopes}
-    with pytest.raises(TaskVerificationError):
-        ttask.task_action_types(SCRIPT_CONFIG, task)
-
-
-@pytest.mark.parametrize("task", ({"payload": {}}, {"payload": {"dry_run": False}}, {"scopes": ["foo"]}))
-def test_is_dry_run(task):
-    assert False is ttask.is_dry_run(task)
-
-
-def test_is_dry_run_true():
-    task = {"payload": {"dry_run": True}}
-    assert True is ttask.is_dry_run(task)
+def test_should_push_false(task):
+    actions = ttask.task_action_types(SCRIPT_CONFIG, task)
+    assert False is ttask.should_push(task, actions)

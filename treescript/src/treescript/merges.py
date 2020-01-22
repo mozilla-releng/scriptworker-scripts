@@ -127,7 +127,7 @@ async def do_merge(config, task, repo_path):
         base_to_rev = await get_revision(config, repo_path, branch=to_branch)
         end_tag = end_tag.format(major_version=to_fx_major_version)
         tag_message = f"No bug - tagging {os.path.basename(repo_path)} with {end_tag} a=release DONTBUILD CLOSED TREE"
-        await run_hg_command(config, "tag", "-m",f'"{tag_message}"', "-r", base_to_rev, "-f", end_tag, repo_path=repo_path)
+        await run_hg_command(config, "tag", "-m", f'"{tag_message}"', "-r", base_to_rev, "-f", end_tag, repo_path=repo_path)
 
     await apply_rebranding(config, repo_path, merge_configs[flavor])
 
@@ -137,13 +137,7 @@ async def do_merge(config, task, repo_path):
     with open(path, "w") as fh:
         fh.write(diff_output)
 
-    await run_hg_command(
-        config,
-        "commit",
-        "-m",
-        "Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release",
-        repo_path=repo_path,
-    )
+    await run_hg_command(config, "commit", "-m", "Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release", repo_path=repo_path)
     push_revision_to = await get_revision(config, repo_path, branch=to_branch)
 
     # Do we need to perform multiple pushes for the push stage? If so, return

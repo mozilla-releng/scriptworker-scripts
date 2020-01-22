@@ -109,6 +109,9 @@
                 "dry_run": {
                     "type": "boolean"
                 },
+                "push": {
+                    "type": "boolean"
+                },
                 "dontbuild": {
                     "type": "boolean"
                 },

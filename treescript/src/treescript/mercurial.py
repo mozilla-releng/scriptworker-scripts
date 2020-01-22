@@ -4,7 +4,7 @@ import os
 import sys
 import tempfile
 
-from scriptworker_client.utils import run_command, makedirs, load_json_or_yaml
+from scriptworker_client.utils import load_json_or_yaml, makedirs, run_command
 from treescript.exceptions import CheckoutError, FailedSubprocess, PushError
 from treescript.task import DONTBUILD_MSG, get_branch, get_dontbuild, get_source_repo, get_tag_info
 
@@ -348,10 +348,10 @@ async def push(config, task, repo_path, target_repo, revision=None):
         config (dict): the running config
         task (dict): the running task
         repo_path (str): the source repo path
-
+        target_repo (str): Destination repository url
+        revision (str): A specific revision to push
     Raises:
         PushError: on failure
-
     """
     target_repo_ssh = target_repo.replace("https://", "ssh://")
     ssh_username = config.get("hg_ssh_user")

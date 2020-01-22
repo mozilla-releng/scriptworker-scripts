@@ -7,10 +7,9 @@ from scriptworker_client.aio import retry_async
 from scriptworker_client.client import sync_main
 from treescript.exceptions import CheckoutError, PushError, TreeScriptError
 from treescript.l10n import l10n_bump
-from treescript.merges import do_merge
 from treescript.mercurial import checkout_repo, do_tagging, log_mercurial_version, log_outgoing, push, strip_outgoing, validate_robustcheckout_works
 from treescript.merges import do_merge
-from treescript.task import is_dry_run, task_action_types, get_source_repo
+from treescript.task import get_source_repo, should_push, task_action_types
 from treescript.versionmanip import bump_version
 
 log = logging.getLogger(__name__)
@@ -35,11 +34,11 @@ async def perform_merge_actions(config, task, actions, repo_path):
     log.info("Starting merge day operations")
     push_activity = await do_merge(config, task, repo_path)
 
-    if should_push(task, actions, 0) and push_activity:
+    if should_push(task, actions) and push_activity:
         log.info("%d branches to push", len(push_activity))
-        for source_repo, revision in push_activity:
-            print("pushing to", source_repo, revision)
-            await push(config, task, repo_path, source_repo=source_repo, revision=revision)
+        for target_repo, revision in push_activity:
+            print("pushing to", target_repo, revision)
+            await push(config, task, repo_path, target_repo=target_repo, revision=revision)
 
 
 async def do_actions(config, task, actions, repo_path):
@@ -59,53 +58,25 @@ async def do_actions(config, task, actions, repo_path):
     # caused by different push behaviour, and action return values.
     if MERGE_ACTION_WORD in actions:
         await perform_merge_actions(config, task, actions, repo_path)
+        return
 
     num_changes = 0
-    for action in actions:
-        if action in ["tagging", "tag"]:
-            num_changes += await do_tagging(config, task, repo_path)
-        elif "version_bump" == action:
-            num_changes += await bump_version(config, task, repo_path)
-        elif "l10n_bump" == action:
-            num_changes += await l10n_bump(config, task, repo_path)
-        elif MERGE_ACTION_WORD == action:
-            pass
-        elif "push" == action:
-            pass  # handled after log_outgoing
-        else:
-            raise NotImplementedError("Unexpected action")
+    if "tag" in actions:
+        num_changes += await do_tagging(config, task, repo_path)
+    if "version_bump" in actions:
+        num_changes += await bump_version(config, task, repo_path)
+    if "l10n_bump" in actions:
+        num_changes += await l10n_bump(config, task, repo_path)
 
     num_outgoing = await log_outgoing(config, task, repo_path)
     if num_outgoing != num_changes:
         raise TreeScriptError("Outgoing changesets don't match number of expected changesets!" " {} vs {}".format(num_outgoing, num_changes))
-
-    if should_push(task, actions, num_changes):
-        await push(config, task, repo_path, get_source_repo(task))
-
-    await strip_outgoing(config, task, repo_path)
-
-
-def should_push(task, actions, num_changes):
-    """Decide whether we should push based on task spec.
-
-    Args:
-        task (dict): The running task
-        actions (list): The actions we must perform
-        num_changes (int): The number of commits made, excluding merges.
-
-    Returns:
-        bool
-    """
-    if is_dry_run(task):
-        log.info("Not pushing changes, dry_run was forced")
-    elif "push" in actions:
-        if num_changes or MERGE_ACTION_WORD in actions:
-            return True
+    if should_push(task, actions):
+        if num_changes:
+            await push(config, task, repo_path, target_repo=get_source_repo(task))
         else:
             log.info("No changes; skipping push.")
-    else:
-        log.info("Not pushing changes, lacking scopes")
-    return False
+    await strip_outgoing(config, task, repo_path)
 
 
 # async_main {{{1

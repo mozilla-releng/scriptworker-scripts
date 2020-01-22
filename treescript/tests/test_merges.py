@@ -81,26 +81,6 @@ def test_touch_clobber_file(repo_context, break_things, expectation):
             assert "Merge day clobber" in contents
 
 
-@pytest.mark.parametrize(
-    "locales,removals,expected",
-    (
-        (["aa", "bb somecomment", "cc", "dd"], [], ["aa", "bb somecomment", "cc", "dd"]),
-        (["aa", "bb", "cc", "dd"], ["cc"], ["aa", "bb", "dd"]),
-        (["aa", "bb", "cc somecomment", "dd"], ["cc"], ["aa", "bb", "dd"]),
-        (["aa", "bb", "cc", "dd"], ["c"], ["aa", "bb", "cc", "dd"]),
-    ),
-)
-def test_remove_locales(repo_context, locales, removals, expected):
-    locales_file = os.path.join(repo_context.repo, "dummy_locales")
-    with open(locales_file, "w") as f:
-        f.write("\n".join(locales))
-    merges.remove_locales(locales_file, removals)
-
-    with open(locales_file, "r") as f:
-        contents = [l.strip() for l in f.readlines()]
-        assert contents == expected
-
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "merge_config,expected",
@@ -112,7 +92,6 @@ def test_remove_locales(repo_context, locales, removals, expected):
             {"replacements": [("build/mozconfig.common", "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}", "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}")]},
             "replace",
         ),
-        ({"remove_locales": ["aa", "bb"]}, "remove_locales"),
     ),
 )
 async def test_apply_rebranding(config, repo_context, mocker, merge_config, expected):
@@ -131,13 +110,9 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
     def noop_replace(*arguments, **kwargs):
         called_args.append("replace")
 
-    def noop_remove_locales(*arguments, **kwargs):
-        called_args.append("remove_locales")
-
     mocker.patch.object(merges, "do_bump_version", new=noop_bump_version)
     mocker.patch.object(shutil, "copyfile", new=noop_copyfile)
     mocker.patch.object(merges, "replace", new=noop_replace)
-    mocker.patch.object(merges, "remove_locales", new=noop_remove_locales)
     mocker.patch.object(merges, "touch_clobber_file", new=sync_noop)
 
     await merges.apply_rebranding(config, repo_context.repo, merge_config)

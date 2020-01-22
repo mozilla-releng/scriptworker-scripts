@@ -20,6 +20,7 @@ from treescript.task import DONTBUILD_MSG
 ROBUSTCHECKOUT_FILES = (
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "build", "lib", "treescript", "py2", "robustcheckout.py")),
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "treescript", "py2", "robustcheckout.py")),
+    os.path.abspath(os.path.join(os.path.dirname(mercurial.__file__), "py2", "robustcheckout.py")),
 )
 UNEXPECTED_ENV_KEYS = "HG HGPROF CDPATH GREP_OPTIONS http_proxy no_proxy " "HGPLAINEXCEPT EDITOR VISUAL PAGER NO_PROXY CHGDEBUG".split()
 
@@ -417,9 +418,7 @@ async def test_push(config, task, mocker, tmpdir, source_repo, revision):
         called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
-    mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
-    mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
-    await mercurial.push(config, task, tmpdir, source_repo, revision)
+    await mercurial.push(config, task, tmpdir, "https://hg.mozilla.org/treescript-test", revision)
 
     assert len(called_args) == 1
     assert "repo_path" in called_args[0][1]
@@ -446,9 +445,7 @@ async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
     print()
     config.update(options)
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
-    mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
-    mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
-    await mercurial.push(config, task, tmpdir)
+    await mercurial.push(config, task, tmpdir, "https://hg.mozilla.org/treescript-test")
 
     assert len(called_args) == 1
     assert "repo_path" in called_args[0][1]
@@ -472,5 +469,5 @@ async def test_push_fail(config, task, mocker, tmpdir):
     mocker.patch.object(mercurial, "run_hg_command", new=blow_up)
     mocker.patch.object(mercurial, "strip_outgoing", new=clean_up)
     with pytest.raises(PushError):
-        await mercurial.push(config, task, tmpdir)
+        await mercurial.push(config, task, tmpdir, "https://hg.mozilla.org/treescript-test")
     assert len(called_args) == 1
