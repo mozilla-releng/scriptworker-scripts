@@ -36,5 +36,6 @@ def test_config():
         "HG_SHARE_BASE_DIR": "",
         "SSH_USER": "",
         "SSH_KEY_PATH": "",
+        "UPSTREAM_REPO": "",
     }
     _validate_config(context)

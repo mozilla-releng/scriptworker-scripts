@@ -37,5 +37,6 @@ def test_config():
         "API_ROOT_V2": "",
         "TASKCLUSTER_CLIENT_ID": "",
         "TASKCLUSTER_ACCESS_TOKEN": "",
+        "CREATE_NEW_RELEASE_SCHEMA_FILE": "",
     }
     _validate_config(context)

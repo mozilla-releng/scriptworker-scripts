@@ -61,6 +61,7 @@ def test_mobile_prod():
         "GOOGLE_CREDENTIALS_FENIX_PROD_PATH": "prod",
         "GOOGLE_PLAY_SERVICE_ACCOUNT_FOCUS": "focus",
         "GOOGLE_CREDENTIALS_FOCUS_PATH": "focus",
+        "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_AURORA": "aurora",
         "GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER": "reference-browser",
         "GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH": "reference-browser",
         "AMAZON_CLIENT_ID": "amazon",
