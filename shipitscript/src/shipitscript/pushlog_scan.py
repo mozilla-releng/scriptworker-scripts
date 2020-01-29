@@ -83,18 +83,6 @@ def is_l10n_bump(push):
 
 
 @push_check
-def skip_test_only(push):
-    """
-    Treat a=test-only (or a=testonly) as unimportant if present on the tip of a push.
-    """
-    # get the tip
-    cset = push["changesets"][-1]
-    if "a=test-only" in cset["desc"] or "a=testonly" in cset["desc"]:
-        return Importance.UNIMPORTANT
-    return Importance.MAYBE
-
-
-@push_check
 def skip_version_bump(push):
     """
     Do not treat version bumps as important to determine if we should build.
