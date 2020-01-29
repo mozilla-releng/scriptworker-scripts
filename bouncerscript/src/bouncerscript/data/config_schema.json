@@ -1,0 +1,40 @@
+{
+    "title": "bouncerscript config schema",
+    "type": "object",
+    "required": [
+        "taskcluster_scope_prefix",
+        "bouncer_config"
+    ],
+    "properties": {
+        "taskcluster_scope_prefix": {
+            "type": "string"
+        },
+        "bouncer_config": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "api_root",
+                    "timeout_in_seconds",
+                    "username",
+                    "password"
+                ],
+                "properties": {
+                    "api_root": {
+                        "type": "string"
+                    },
+                    "timeout_in_seconds": {
+                        "type": "number"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -83,7 +83,10 @@ def test_script_can_push_snaps_with_credentials(monkeypatch, channel, expected_r
     task = {
         "dependencies": ["some_snap_build_taskId"],
         "scopes": ["project:releng:snapcraft:firefox:{}".format(channel)],
-        "payload": {"upstreamArtifacts": [{"paths": ["public/build/target.snap"], "taskId": "some_snap_build_taskId", "taskType": "build"}]},
+        "payload": {
+            "channel": channel,
+            "upstreamArtifacts": [{"paths": ["public/build/target.snap"], "taskId": "some_snap_build_taskId", "taskType": "build"}],
+        },
     }
 
     snapcraft_store_client_mock = MagicMock()

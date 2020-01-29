@@ -1,0 +1,32 @@
+{
+    "title": "treescript config schema",
+    "type": "object",
+    "required": [
+        "taskcluster_scope_prefix",
+        "hg",
+        "hg_share_base_dir",
+        "upstream_repo",
+        "hg_ssh_user",
+        "hg_ssh_keyfile"
+    ],
+    "properties": {
+        "taskcluster_scope_prefix": {
+            "type": "string"
+        },
+        "hg": {
+            "type": "string"
+        },
+        "hg_share_base_dir": {
+            "type": "string"
+        },
+        "upstream_repo": {
+            "type": "string"
+        },
+        "hg_ssh_user": {
+            "type": "string"
+        },
+        "hg_ssh_keyfile": {
+            "type": "string"
+        }
+    }
+}

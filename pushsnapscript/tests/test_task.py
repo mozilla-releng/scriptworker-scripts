@@ -4,28 +4,11 @@ from scriptworker.exceptions import TaskVerificationError
 from pushsnapscript.task import get_snap_channel, is_allowed_to_push_to_snap_store
 
 
-@pytest.mark.parametrize(
-    "raises, scopes, expected",
-    (
-        (False, ["project:releng:snapcraft:firefox:candidate"], "candidate"),
-        (False, ["project:releng:snapcraft:firefox:beta"], "beta"),
-        (False, ["project:releng:snapcraft:firefox:esr"], "esr/stable"),
-        (False, ["project:releng:snapcraft:firefox:mock"], "mock"),
-        (False, ["project:releng:snapcraft:firefox:beta", "some:other:scope"], "beta"),
-        (True, ["project:releng:snapcraft:firefox:beta", "project:releng:snapcraft:firefox:beta"], None),
-        (True, ["project:releng:snapcraft:firefox:beta", "project:releng:snapcraft:firefox:candidate"], None),
-        (True, ["project:releng:snapcraft:firefox:edge"], None),
-        (True, ["project:releng:snapcraft:firefox:stable"], None),
-    ),
-)
-def test_old_get_snap_channel(raises, scopes, expected):
-    task = {"scopes": scopes, "payload": {}}
-    config = {"push_to_store": True}
-    if raises:
-        with pytest.raises(TaskVerificationError):
-            get_snap_channel(config, task)
-    else:
-        assert get_snap_channel(config, task) == expected
+def test_get_snap_channel_without_payload_raises():
+    task = {"payload": {}}
+    config = {}
+    with pytest.raises(TaskVerificationError):
+        get_snap_channel(config, task)
 
 
 @pytest.mark.parametrize(
