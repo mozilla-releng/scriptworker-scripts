@@ -103,6 +103,9 @@
                 "source_repo": {
                     "type": "string"
                 },
+                "ssh_user": {
+                    "type": "string"
+                },
                 "dry_run": {
                     "type": "boolean"
                 },

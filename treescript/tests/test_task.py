@@ -290,3 +290,10 @@ def test_should_push_true(task):
 def test_should_push_false(task):
     actions = ttask.task_action_types(SCRIPT_CONFIG, task)
     assert False is ttask.should_push(task, actions)
+
+
+@pytest.mark.parametrize("ssh_user,expected", ((None, "default"), ("merge_user", "merge_user")))
+def test_get_ssh_user(task_defn, ssh_user, expected):
+    if ssh_user:
+        task_defn["payload"]["ssh_user"] = ssh_user
+    assert ttask.get_ssh_user(task_defn) == expected

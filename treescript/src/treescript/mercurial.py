@@ -6,7 +6,7 @@ import tempfile
 
 from scriptworker_client.utils import load_json_or_yaml, makedirs, run_command
 from treescript.exceptions import CheckoutError, FailedSubprocess, PushError
-from treescript.task import DONTBUILD_MSG, get_branch, get_dontbuild, get_source_repo, get_tag_info
+from treescript.task import DONTBUILD_MSG, get_branch, get_dontbuild, get_source_repo, get_ssh_user, get_tag_info
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
 # For environment vars.
@@ -354,8 +354,9 @@ async def push(config, task, repo_path, target_repo, revision=None):
         PushError: on failure
     """
     target_repo_ssh = target_repo.replace("https://", "ssh://")
-    ssh_username = config.get("hg_ssh_user")
-    ssh_key = config.get("hg_ssh_keyfile")
+    ssh_config = config.get("hg_ssh_config", {}).get(get_ssh_user(task), {})
+    ssh_username = ssh_config.get("user")
+    ssh_key = ssh_config.get("keyfile")
     ssh_opt = []
     if ssh_username or ssh_key:
         ssh_opt = ["-e", "ssh"]

@@ -431,9 +431,9 @@ async def test_push(config, task, mocker, tmpdir, source_repo, revision):
 @pytest.mark.parametrize(
     "options,expect",
     (
-        ({"hg_ssh_keyfile": "/tmp/ffxbld.rsa"}, "ssh -i /tmp/ffxbld.rsa"),
-        ({"hg_ssh_user": "ffxbld"}, "ssh -l ffxbld"),
-        ({"hg_ssh_keyfile": "/tmp/stage.pub", "hg_ssh_user": "stage_ffxbld"}, "ssh -l stage_ffxbld -i /tmp/stage.pub"),
+        ({"hg_ssh_config": {"default": {"keyfile": "/tmp/ffxbld.rsa"}}}, "ssh -i /tmp/ffxbld.rsa"),
+        ({"hg_ssh_config": {"default": {"user": "ffxbld"}}}, "ssh -l ffxbld"),
+        ({"hg_ssh_config": {"default": {"user": "ffxbld", "keyfile": "/tmp/stage.pub"}}}, "ssh -l ffxbld -i /tmp/stage.pub"),
     ),
 )
 async def test_push_ssh(config, task, mocker, options, expect, tmpdir):

@@ -257,3 +257,9 @@ def get_merge_flavor(task):
 
     """
     return task.get("payload", {}).get("merge_info", dict()).get("flavor")
+
+
+# get_ssh_user {{{1
+def get_ssh_user(task):
+    """Get the configuration key for the relevant ssh user."""
+    return task.get("payload", {}).get("ssh_user", "default")
