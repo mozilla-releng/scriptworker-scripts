@@ -23,6 +23,8 @@ from iscript.exceptions import IScriptError
         (None, ["mac_sign"], "mac_sign", False),
         ("invalid_behavior", ["mac_sign", "invalid_behavior"], None, True),
         ("mac_notarize", ["mac_sign", "mac_geckodriver"], None, True),
+        ("mac_notarize_part_1", ["mac_notarize_part_1", "mac_geckodriver"], "mac_notarize_part_1", False),
+        ("mac_notarize_part_3", ["mac_notarize_part_3", "mac_geckodriver"], "mac_notarize_part_3", False),
     ),
 )
 @pytest.mark.asyncio
@@ -42,6 +44,12 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
     async def test_notarize(*args, **kwargs):
         calls.setdefault("mac_notarize", []).append([args, kwargs])
 
+    async def test_notarize_1(*args, **kwargs):
+        calls.setdefault("mac_notarize_part_1", []).append([args, kwargs])
+
+    async def test_notarize_3(*args, **kwargs):
+        calls.setdefault("mac_notarize_part_3", []).append([args, kwargs])
+
     async def test_geckodriver(*args, **kwargs):
         calls.setdefault("mac_geckodriver", []).append([args, kwargs])
 
@@ -52,6 +60,8 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
         calls.setdefault("mac_sign_and_pkg", []).append([args, kwargs])
 
     mocker.patch.object(script, "notarize_behavior", new=test_notarize)
+    mocker.patch.object(script, "notarize_1_behavior", new=test_notarize_1)
+    mocker.patch.object(script, "notarize_3_behavior", new=test_notarize_3)
     mocker.patch.object(script, "geckodriver_behavior", new=test_geckodriver)
     mocker.patch.object(script, "sign_behavior", new=test_sign)
     mocker.patch.object(script, "sign_and_pkg_behavior", new=test_sign_and_pkg)
