@@ -1123,6 +1123,8 @@ async def notarize_3_behavior(config, task):
         IScriptError: on fatal error.
 
     """
+    # In notarize_3_behavior, `all_paths` will have separate "apps" for each
+    # artifact (one for a pkg, one for an app, one for a langpack xpi)
     all_paths = get_app_paths(config, task)
     all_xpi_paths = list(filter(lambda app: app.orig_path.endswith(".xpi"), all_paths))
     all_pkg_paths = list(filter(lambda app: app.orig_path.endswith(".pkg"), all_paths))
