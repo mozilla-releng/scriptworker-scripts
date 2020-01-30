@@ -1,0 +1,71 @@
+{
+    "title": "beetmoverscript config schema",
+    "type": "object",
+    "required": [
+        "checksums_digests",
+        "blobs_needing_prettynaming_contents",
+        "taskcluster_scope_prefix",
+        "aiohttp_max_connections",
+        "zip_max_file_size_in_mb",
+        "bucket_config"
+    ],
+    "properties": {
+        "checksums_digests": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "string"
+            }
+        },
+        "blobs_needing_prettynaming_contents": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "string"
+            }
+        },
+        "taskcluster_scope_prefix": {
+            "type": "string"
+        },
+        "aiohttp_max_connections": {
+            "type": "number"
+        },
+        "zip_max_file_size_in_mb": {
+            "type": "number"
+        },
+        "bucket_config": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "credentials": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "id",
+                            "key"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "key": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "buckets": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "url_prefix": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

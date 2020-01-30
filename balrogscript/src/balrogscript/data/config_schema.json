@@ -1,0 +1,59 @@
+{
+    "title": "balrogscript config schema",
+    "type": "object",
+    "required": [
+        "dummy",
+        "disable_certs",
+        "taskcluster_scope_prefix",
+        "server_config"
+    ],
+    "properties": {
+        "dummy": {
+            "type": "boolean"
+        },
+        "disable_certs": {
+            "type": "boolean"
+        },
+        "taskcluster_scope_prefix": {
+            "type": "string"
+        },
+        "server_config": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "required": [
+                    "api_root",
+                    "auth0_domain",
+                    "auth0_client_id",
+                    "auth0_client_secret",
+                    "auth0_audience",
+                    "allowed_channels"
+                ],
+                "properties": {
+                    "api_root": {
+                        "type": "string"
+                    },
+                    "auth0_domain": {
+                        "type": "string"
+                    },
+                    "auth0_client_id": {
+                        "type": "string"
+                    },
+                    "auth0_client_secret": {
+                        "type": "string"
+                    },
+                    "auth0_audience": {
+                        "type": "string"
+                    },
+                    "allowed_channels": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

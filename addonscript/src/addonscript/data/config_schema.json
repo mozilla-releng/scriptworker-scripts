@@ -1,0 +1,32 @@
+{
+    "title": "addonscript config schema",
+    "type": "object",
+    "required": [
+        "amo_instances"
+    ],
+    "properties": {
+        "amo_instances": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "amo_server",
+                    "jwt_user",
+                    "jwt_secret"
+                ],
+                "properties": {
+                    "amo_server": {
+                        "type": "string"
+                    },
+                    "jwt_user": {
+                        "type": "string"
+                    },
+                    "jwt_secret": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}
