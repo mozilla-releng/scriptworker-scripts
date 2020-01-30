@@ -35,10 +35,16 @@ case $COT_PRODUCT in
 esac
 
 export HG_SHARE_BASE_DIR=/tmp/share_base
-export SSH_KEY_PATH=$CONFIG_DIR/ssh_key_$SSH_USER
 
+export SSH_KEY_PATH=$CONFIG_DIR/ssh_key_$SSH_USER
 echo $SSH_KEY | base64 -d > $SSH_KEY_PATH
 chmod 400 $SSH_KEY_PATH
+
+if [ -n "${MERGE_SSH_KEY}" ] && [ -n "${MERGE_SSH_USER}" ]; then
+  export MERGE_SSH_KEY_PATH=$CONFIG_DIR/ssh_key/$MERGE_SSH_USER
+  echo $MERGE_SSH_KEY | base64 -d > $MERGE_SSH_KEY_PATH
+  chmod 400 $MERGE_SSH_KEY_PATH
+fi
 
 mkdir /app/.ssh
 chmod 700 /app/.ssh

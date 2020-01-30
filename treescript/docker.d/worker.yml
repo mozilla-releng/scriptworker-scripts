@@ -6,5 +6,12 @@ treestatus_base_url: https://treestatus.mozilla-releng.net
 hg: 'hg'
 hg_share_base_dir: { "$eval": "HG_SHARE_BASE_DIR" }
 upstream_repo: { "$eval": "UPSTREAM_REPO" }
-hg_ssh_user: { "$eval": "SSH_USER" }
-hg_ssh_keyfile: { "$eval": "SSH_KEY_PATH" }
+hg_ssh_config:
+    $merge:
+    - default:
+        user: { "$eval": "SSH_USER" }
+        keyfile: { "$eval": "SSH_KEY_PATH" }
+    - $if: 'defined("MERGE_SSH_KEY_PATH") && defined("MERGE_SSH_USER")'
+      then: {merge_user:{
+        user: { "$eval": "MERGE_SSH_USER" },
+        keyfile: { "$eval": "MERGE_SSH_KEY_PATH" }}}
