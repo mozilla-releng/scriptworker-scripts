@@ -22,6 +22,8 @@ taskcluster_scope_prefixes:
         - 'project:xpi:releng:signing:'
       'COT_PRODUCT == "mpd001"':
         - 'project:mpd001:releng:signing:'
+      'COT_PRODUCT == "adhoc"':
+        - 'project:adhoc:releng:signing:'
 token_duration_seconds: 7200
 dmg: { "$eval": "DMG_PATH" }
 hfsplus: { "$eval": "HFSPLUS_PATH" }

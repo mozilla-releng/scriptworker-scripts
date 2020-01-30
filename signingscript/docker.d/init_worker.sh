@@ -54,6 +54,8 @@ case $COT_PRODUCT in
     ;;
   mpd001)
     ;;
+  adhoc)
+    ;;
   *)
     exit 1
     ;;
@@ -107,6 +109,12 @@ case $ENV in
         test_var_set 'AUTHENTICODE_CERT_PATH'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
+        ;;
+      adhoc)
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
+        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        test_var_set 'AUTOGRAPH_GPG_USERNAME'
         ;;
     esac
     ;;
