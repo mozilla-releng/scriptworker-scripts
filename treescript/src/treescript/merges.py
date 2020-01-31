@@ -48,12 +48,12 @@ async def apply_rebranding(config, repo_path, merge_config):
         current_version = get_version("browser/config/version.txt", repo_path)
         next_version = f"{current_version.major_number}.{current_version.minor_number}"
 
-        await do_bump_version(config, repo_path, merge_config["version_files"], next_version, dontbuild=True, commit=False)
+        await do_bump_version(config, repo_path, merge_config["version_files"], next_version)
     if merge_config.get("version_files_suffix"):
         current_version = get_version("browser/config/version.txt", repo_path)
         next_version = f"{current_version.major_number}.{current_version.minor_number}{merge_config.get('version_suffix')}"
 
-        await do_bump_version(config, repo_path, merge_config["version_files_suffix"], next_version, dontbuild=True, commit=False)
+        await do_bump_version(config, repo_path, merge_config["version_files_suffix"], next_version)
 
     for f in merge_config.get("copy_files", list()):
         shutil.copyfile(os.path.join(repo_path, f["src"]), os.path.join(repo_path, f["dst"]))

@@ -82,11 +82,19 @@ async def bump_version(config, task, repo_path):
 
     """
     bump_info = get_version_bump_info(task)
+    num_commits = 0
 
-    return await do_bump_version(config, repo_path, bump_info["files"], bump_info["next_version"], get_dontbuild(task), commit=True)
+    changed = await do_bump_version(config, repo_path, bump_info["files"], bump_info["next_version"])
+    if changed:
+        commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
+        if get_dontbuild(task):
+            commit_msg += DONTBUILD_MSG
+        await run_hg_command(config, "commit", "-m", commit_msg, repo_path=repo_path)
+        num_commits += 1
+    return num_commits
 
 
-async def do_bump_version(config, repo_path, files, next_version, dontbuild, commit=True):
+async def do_bump_version(config, repo_path, files, next_version):
     """Perform a version bump.
 
     This function takes its inputs from task by using the ``get_version_bump_info``
@@ -109,7 +117,6 @@ async def do_bump_version(config, repo_path, files, next_version, dontbuild, com
 
     """
     changed = False
-    num_commits = 0
     saved_next_version = next_version
 
     for file_ in files:
@@ -147,13 +154,7 @@ async def do_bump_version(config, repo_path, files, next_version, dontbuild, com
             changed = True
             replace_ver_in_file(abs_file, curr_version, next_version)
 
-    if changed and commit:
-        commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
-        if dontbuild:
-            commit_msg += DONTBUILD_MSG
-        await run_hg_command(config, "commit", "-m", commit_msg, repo_path=repo_path)
-        num_commits += 1
-    return num_commits
+    return changed
 
 
 def replace_ver_in_file(file_, curr_version, new_version):
