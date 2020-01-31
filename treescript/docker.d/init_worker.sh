@@ -44,6 +44,9 @@ if [ -n "${SSH_MERGE_KEY}" ] && [ -n "${SSH_MERGE_USER}" ]; then
   export SSH_MERGE_KEY_PATH=$CONFIG_DIR/ssh_key/$SSH_MERGE_USER
   echo $SSH_MERGE_KEY | base64 -d > $SSH_MERGE_KEY_PATH
   chmod 400 $SSH_MERGE_KEY_PATH
+else
+  export SSH_MERGE_KEY_PATH=
+  export SSH_MERGE_USER=
 fi
 
 mkdir /app/.ssh

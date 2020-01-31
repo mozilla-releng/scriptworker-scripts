@@ -11,7 +11,7 @@ hg_ssh_config:
     - default:
         user: { "$eval": "SSH_USER" }
         keyfile: { "$eval": "SSH_KEY_PATH" }
-    - $if: 'defined("SSH_MERGE_KEY_PATH") && defined("SSH_MERGE_USER")'
+    - $if: 'SSH_MERGE_KEY_PATH != "" && SSH_MERGE_USER != ""'
       then: {merge_user:{
         user: { "$eval": "SSH_MERGE_USER" },
         keyfile: { "$eval": "SSH_MERGE_KEY_PATH" }}}
