@@ -95,7 +95,7 @@ async def do_merge(config, task, repo_path):
     from_branch = merge_configs[flavor].get("from_branch")
     to_branch = merge_configs[flavor].get("to_branch")
 
-    await run_hg_command(config, "pull", repo_path=repo_path)
+    await run_hg_command(config, "pull", "https://hg.mozilla.org/mozilla-unified", repo_path=repo_path)
 
     await run_hg_command(config, "up", "-C", from_branch, repo_path=repo_path)
 
