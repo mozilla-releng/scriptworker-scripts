@@ -14,8 +14,6 @@ from treescript.versionmanip import bump_version
 
 log = logging.getLogger(__name__)
 
-MERGE_ACTION_WORD = "merge_day"
-
 
 async def perform_merge_actions(config, task, actions, repo_path):
     """Perform merge day related actions.
@@ -56,7 +54,7 @@ async def do_actions(config, task, actions, repo_path):
 
     # Split the action selection up due to complexity in do_actions
     # caused by different push behaviour, and action return values.
-    if MERGE_ACTION_WORD in actions:
+    if "merge_day" in actions:
         await perform_merge_actions(config, task, actions, repo_path)
         return
 

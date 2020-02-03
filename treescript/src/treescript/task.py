@@ -245,21 +245,29 @@ def should_push(task, actions):
         return False
 
 
-# get_merge_flavor {{{1
-def get_merge_flavor(task):
-    """Get the type of repo merge to perform.
-
-    Args:
-        task: the task definition.
-
-    Returns:
-        str: the ``merge_day -> flavor`` info as passed to the task payload.
-
-    """
-    return task.get("payload", {}).get("merge_info", dict()).get("flavor")
-
-
 # get_ssh_user {{{1
 def get_ssh_user(task):
     """Get the configuration key for the relevant ssh user."""
     return task.get("payload", {}).get("ssh_user", "default")
+
+
+# get_merge_config {{{1
+def get_merge_config(task):
+    """Get the payload's merge day configuration.
+
+    Args:
+        task (dict): the running task
+
+    Returns:
+        dict: The merge configuration.
+
+    Raises:
+        TaskVerificationError: on missing configuration. Invalid config
+        is handled by the schema, which doesn't currently match up actions
+        and required payload subsections.
+
+    """
+    try:
+        return task.get("payload", {})["merge_info"]
+    except KeyError:
+        raise TaskVerificationError("Requested merge action with missing merge configuration.")

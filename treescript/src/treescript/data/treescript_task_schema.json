@@ -1,6 +1,146 @@
 {
     "title": "Taskcluster treescript task minimal schema",
     "type": "object",
+    "definitions": {
+        "hg_mozilla_uri": {
+            "type": "string",
+            "format": "uri",
+            "title": "The Mozilla URI Schema",
+            "default": "",
+            "examples": [
+                "https://hg.mozilla.org/mozilla-unified"
+            ],
+            "pattern": "^(https://hg.mozilla.org/.*)$"
+        },
+        "merge_day_payload": {
+            "type": "object",
+            "required": [
+                "version_files",
+                "version_files_suffix",
+                "version_suffix",
+                "copy_files",
+                "replacements",
+                "from_branch",
+                "to_branch",
+                "push_repositories",
+                "merge_old_head",
+                "base_tag",
+                "end_tag"
+            ],
+            "properties": {
+                "version_files": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "examples": [
+                            "browser/config/version.txt",
+                            "config/milestone.txt"
+                        ]
+                    }
+                },
+                "version_files_suffix": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "examples": [
+                            "browser/config/version_display.txt"
+                        ]
+                    }
+                },
+                "version_suffix": {
+                    "type": "string",
+                    "default": "",
+                    "examples": [
+                        "b1"
+                    ],
+                    "pattern": "^(b[0-9]+)$"
+                },
+                "copy_files": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "src",
+                            "dst"
+                        ],
+                        "properties": {
+                            "src": {
+                                "type": "string",
+                                "examples": [
+                                    "browser/config/version.txt"
+                                ]
+                            },
+                            "dst": {
+                                "type": "string",
+                                "examples": [
+                                    "browser/config/version_display.txt"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "replacements": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "examples": [
+                                "browser/config/mozconfigs/linux32/l10n-mozconfig",
+                                "ac_add_options --with-branding=browser/branding/nightly",
+                                "ac_add_options --enable-official-branding"
+                            ]
+                        }
+                    }
+                },
+                "from_branch": {
+                    "type": "string",
+                    "examples": [
+                        "central"
+                    ]
+                },
+                "to_branch": {
+                    "type": "string",
+                    "examples": [
+                        "beta"
+                    ]
+                },
+                "push_repositories": {
+                    "type": "object",
+                    "required": [
+                        "from",
+                        "to"
+                    ],
+                    "properties": {
+                        "from": {
+                            "$ref": "#/definitions/hg_mozilla_uri"
+                        },
+                        "to": {
+                            "$ref": "#/definitions/hg_mozilla_uri"
+                        }
+                    }
+                },
+                "merge_old_head": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "base_tag": {
+                    "type": "string",
+                    "examples": [
+                        "FIREFOX_BETA_{major_version}_BASE"
+                    ],
+                    "pattern": "^(.*{major_version}.*)$"
+                },
+                "end_tag": {
+                    "type": "string",
+                    "examples": [
+                        "FIREFOX_BETA_{major_version}_END"
+                    ],
+                    "pattern": "^(.*{major_version}.*)$"
+                }
+            }
+        }
+    },
     "properties": {
         "dependencies": {
             "type": "array",
@@ -36,7 +176,10 @@
                             "type": "string"
                         }
                     },
-                    "required": ["tags", "revision"]
+                    "required": [
+                        "tags",
+                        "revision"
+                    ]
                 },
                 "version_bump_info": {
                     "type": "object",
@@ -53,7 +196,10 @@
                             }
                         }
                     },
-                    "required": ["next_version", "files"]
+                    "required": [
+                        "next_version",
+                        "files"
+                    ]
                 },
                 "l10n_bump_info": {
                     "type": "array",
@@ -84,18 +230,16 @@
                                 }
                             }
                         },
-                        "required": ["path", "name", "platform_configs", "version_path"]
+                        "required": [
+                            "path",
+                            "name",
+                            "platform_configs",
+                            "version_path"
+                        ]
                     }
                 },
                 "merge_info": {
-                    "type": "object",
-                    "properties": {
-                        "flavor": {
-                            "type": "string",
-                            "enum": ["central_to_beta", "beta_to_release", "release_to_esr"]
-                        }
-                    },
-                    "required": ["flavor"]
+                    "$ref": "#/definitions/merge_day_payload"
                 },
                 "branch": {
                     "type": "string"
@@ -124,11 +268,20 @@
                     "uniqueItems": true,
                     "items": {
                         "type": "string",
-                        "enum": ["tag", "version_bump", "l10n_bump", "merge_day", "push"]
+                        "enum": [
+                            "tag",
+                            "version_bump",
+                            "l10n_bump",
+                            "merge_day",
+                            "push"
+                        ]
                     }
                 }
             }
         }
     },
-    "required": ["scopes", "payload"]
+    "required": [
+        "scopes",
+        "payload"
+    ]
 }

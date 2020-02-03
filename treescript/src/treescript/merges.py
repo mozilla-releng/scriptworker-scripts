@@ -4,10 +4,8 @@ import os
 import shutil
 
 from scriptworker_client.utils import makedirs
-from treescript.exceptions import TaskVerificationError
 from treescript.mercurial import get_revision, run_hg_command
-from treescript.merge_config import merge_configs
-from treescript.task import get_merge_flavor
+from treescript.task import get_merge_config
 from treescript.versionmanip import do_bump_version, get_version
 
 log = logging.getLogger(__name__)
@@ -68,10 +66,7 @@ async def apply_rebranding(config, repo_path, merge_config):
 async def do_merge(config, task, repo_path):
     """Perform a merge day operation.
 
-    This function takes its inputs from task by using the ``get_merge_flavor``
-    function from treescript.task. Using `merge_info` to determine which
-    set of modifications to make. The modifications are stored in the
-    scriptworker to provide version control.
+    This function takes its inputs from task's payload.
 
     Args:
         config (dict): the running config
@@ -79,7 +74,7 @@ async def do_merge(config, task, repo_path):
         repo_path (str): the source directory
 
     Raises:
-        TaskverificationError: if a merge flavor is not recognised..
+        TaskverificationError: from get_merge_config if the payload is invalid.
 
     Returns:
         list: A list of the branches that need pushing, and the corresponding revision.
@@ -87,13 +82,10 @@ async def do_merge(config, task, repo_path):
               not related to the number of commands we've performed, but we do need
               to know which branches to push.
     """
-    flavor = get_merge_flavor(task)
+    merge_config = get_merge_config(task)
 
-    if flavor not in merge_configs:
-        raise TaskVerificationError("Unknown configuration for merge day flavor {}".format(flavor))
-
-    from_branch = merge_configs[flavor].get("from_branch")
-    to_branch = merge_configs[flavor].get("to_branch")
+    from_branch = merge_config.get("from_branch")
+    to_branch = merge_config.get("to_branch")
 
     await run_hg_command(config, "pull", "https://hg.mozilla.org/mozilla-unified", repo_path=repo_path)
 
@@ -101,7 +93,7 @@ async def do_merge(config, task, repo_path):
 
     base_from_rev = await get_revision(config, repo_path, branch=from_branch)
 
-    base_tag = merge_configs[flavor]["base_tag"].format(major_version=get_version("browser/config/version.txt", repo_path).major_number)
+    base_tag = merge_config["base_tag"].format(major_version=get_version("browser/config/version.txt", repo_path).major_number)
 
     tag_message = f"No bug - tagging {os.path.basename(repo_path)} with {base_tag} a=release DONTBUILD CLOSED TREE"
     await run_hg_command(config, "tag", "-m", '"{}"'.format(tag_message), "-r", base_from_rev, "-f", base_tag, repo_path=repo_path)
@@ -109,7 +101,7 @@ async def do_merge(config, task, repo_path):
     # TODO This shouldn't be run on esr, according to old configs.
     # perhaps: hg push -r bookmark("release") esrNN
     # Perform the kludge-merge.
-    if merge_configs[flavor].get("merge_old_head", False):
+    if merge_config.get("merge_old_head", False):
         await run_hg_command(config, "debugsetparents", to_branch, base_from_rev, repo_path=repo_path)
         await run_hg_command(
             config,
@@ -121,7 +113,7 @@ async def do_merge(config, task, repo_path):
 
     await run_hg_command(config, "up", "-C", to_branch, repo_path=repo_path)
 
-    end_tag = merge_configs[flavor].get("end_tag")  # tag the end of the to repo
+    end_tag = merge_config.get("end_tag")  # tag the end of the to repo
     if end_tag:
         to_fx_major_version = get_version("browser/config/version.txt", repo_path).major_number
         base_to_rev = await get_revision(config, repo_path, branch=to_branch)
@@ -129,7 +121,7 @@ async def do_merge(config, task, repo_path):
         tag_message = f"No bug - tagging {os.path.basename(repo_path)} with {end_tag} a=release DONTBUILD CLOSED TREE"
         await run_hg_command(config, "tag", "-m", f'"{tag_message}"', "-r", base_to_rev, "-f", end_tag, repo_path=repo_path)
 
-    await apply_rebranding(config, repo_path, merge_configs[flavor])
+    await apply_rebranding(config, repo_path, merge_config)
 
     diff_output = await run_hg_command(config, "diff", repo_path=repo_path, return_output=True)
     path = os.path.join(config["artifact_dir"], "public", "logs", "{}.diff".format(to_branch))
@@ -142,5 +134,5 @@ async def do_merge(config, task, repo_path):
 
     # Do we need to perform multiple pushes for the push stage? If so, return
     # what to do.
-    if merge_configs[flavor].get("push_repositories"):
-        return [(merge_configs[flavor]["push_repositories"]["from"], base_from_rev), (merge_configs[flavor]["push_repositories"]["to"], push_revision_to)]
+    if merge_config.get("push_repositories"):
+        return [(merge_config["push_repositories"]["from"], base_from_rev), (merge_config["push_repositories"]["to"], push_revision_to)]

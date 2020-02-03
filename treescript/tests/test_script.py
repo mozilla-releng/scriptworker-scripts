@@ -156,7 +156,7 @@ async def test_do_actions(mocker, push_scope, push_payload, dry_run, push_expect
     ),
 )
 async def test_do_actions_merge_tasks(mocker, push_scope, push_payload, dry_run, push_expect_called):
-    actions = [script.MERGE_ACTION_WORD]
+    actions = ["merge_day"]
     actions += push_scope
     called = {"version_bump": False, "l10n_bump": False, "push": False, "merge": False, "tagging": False}
 
@@ -209,7 +209,7 @@ async def test_do_actions_merge_tasks(mocker, push_scope, push_payload, dry_run,
     "push_scope,should_push,push_expect_called", ((["push"], False, False), (["push"], True, True), ([], False, False), ([], False, False))
 )
 async def test_perform_merge_actions(mocker, push_scope, should_push, push_expect_called):
-    actions = [script.MERGE_ACTION_WORD]
+    actions = ["merge_day"]
     actions += push_scope
     called = {"push": False, "merge": False}
 

@@ -16,7 +16,35 @@ def does_not_raise():
 
 @pytest.yield_fixture(scope="function")
 def task():
-    return {"payload": {"merge_info": {"flavor": ""}}, "metadata": {"source": "https://hg.mozilla.org/repo-name/file/filename"}}
+    return {"payload": {}, "metadata": {"source": "https://hg.mozilla.org/repo-name/file/filename"}}
+
+
+@pytest.yield_fixture(scope="function")
+def merge_info():
+    return {
+        "version_files": ["browser/config/version.txt", "config/milestone.txt"],
+        "version_files_suffix": ["browser/config/version_display.txt"],
+        "version_suffix": "b1",
+        "copy_files": [{"src": "browser/config/version.txt", "dst": "browser/config/version_display.txt"}],
+        "replacements": [
+            [
+                "browser/config/mozconfigs/linux32/l10n-mozconfig",
+                "ac_add_options --with-branding=browser/branding/nightly",
+                "ac_add_options --enable-official-branding",
+            ],
+            [
+                "browser/config/mozconfigs/linux64/l10n-mozconfig",
+                "ac_add_options --with-branding=browser/branding/nightly",
+                "ac_add_options --enable-official-branding",
+            ],
+        ],
+        "from_branch": "central",
+        "to_branch": "beta",
+        "push_repositories": {"from": "https://hg.mozilla.org/mozilla-central", "to": "https://hg.mozilla.org/releases/mozilla-beta"},
+        "merge_old_head": True,
+        "base_tag": "FIREFOX_BETA_{major_version}_BASE",
+        "end_tag": "FIREFOX_BETA_{major_version}_END",
+    }
 
 
 @pytest.yield_fixture(scope="function")
@@ -121,22 +149,22 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "flavor,raises,expected_calls,expected_return",
+    "add_merge_info,raises,expected_calls,expected_return",
     (
         (
-            "central_to_beta",
+            True,
             does_not_raise(),
             10,
             [("https://hg.mozilla.org/mozilla-central", "some_revision"), ("https://hg.mozilla.org/releases/mozilla-beta", "some_revision")],
         ),
-        ("release_to_esr", does_not_raise(), 7, None),  # No 'end_tag' or 'debugsetparents'
-        ("does_not_exist", pytest.raises(TaskVerificationError), 0, None),
+        (False, pytest.raises(TaskVerificationError), 0, None),
     ),
 )
-async def test_do_merge(mocker, config, task, repo_context, flavor, raises, expected_calls, expected_return):
+async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merge_info, raises, expected_calls, expected_return):
 
     called_args = []
-    task["payload"]["merge_info"]["flavor"] = flavor
+    if add_merge_info:
+        task["payload"]["merge_info"] = merge_info
 
     async def mocked_run_hg_command(config, *arguments, repo_path=None, **kwargs):
         called_args.append([arguments])

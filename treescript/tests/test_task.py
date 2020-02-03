@@ -134,12 +134,15 @@ def test_get_branch(task_defn, branch):
     assert ttask.get_branch(task_defn) == branch
 
 
-@pytest.mark.parametrize("flavor", ("foo", None))
-def test_get_merge_flavor(task_defn, flavor):
-    if flavor:
-        task_defn["payload"]["merge_info"] = dict()
-        task_defn["payload"]["merge_info"]["flavor"] = flavor
-    assert ttask.get_merge_flavor(task_defn) == flavor
+@pytest.mark.parametrize("config", ({}, {"dummy": 1}))
+def test_get_merge_config(task_defn, config):
+    task_defn["payload"]["merge_info"] = config
+    assert ttask.get_merge_config(task_defn) == config
+
+
+def test_get_merge_config_missing(task_defn):
+    with pytest.raises(TaskVerificationError):
+        ttask.get_merge_config(task_defn)
 
 
 @pytest.mark.parametrize(
