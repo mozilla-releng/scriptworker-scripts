@@ -26,6 +26,7 @@ RUN python -m venv /app \
  && /app/configloader_venv/bin/pip install . \
  && cd /app \
  && hg clone -r d47591074dc0d44a0b9e0838ce790db528cbd534 https://hg.mozilla.org/hgcustom/version-control-tools /app/version-control-tools \
+ && mkdir -p /etc/mercurial/hgrc.d/ \
  && cp /app/treescript/src/treescript/data/hgrc /etc/mercurial/hgrc.d/treescript.rc
 
 COPY docker.d/extensions.rc /etc/mercurial/hgrc.d/extensions.rc
