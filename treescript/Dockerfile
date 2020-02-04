@@ -27,7 +27,7 @@ RUN python -m venv /app \
  && cd /app \
  && hg clone -r d47591074dc0d44a0b9e0838ce790db528cbd534 https://hg.mozilla.org/hgcustom/version-control-tools /app/version-control-tools
 
-COPY /app/treescript/src/treescript/data/hgrc /etc/mercurial/hgrc.d/treescript.rc
-COPY docker.d/extensions.rc /etc/mercurial/hgrc.d/extensions.rc
+COPY treescript/src/treescript/data/hgrc /etc/mercurial/hgrc.d/treescript.rc
+COPY treescript/docker.d/extensions.rc /etc/mercurial/hgrc.d/extensions.rc
 
 CMD ["/app/docker.d/init.sh"]
