@@ -172,7 +172,7 @@ import shipitscript.pushlog_scan as pushlog
                         {
                             "author": "Neil Deakin <neil@mozilla.com>",
                             "branch": "default",
-                            "desc": "Bug 1603020, allow sendMessageToActor to send the message to all descendants, not just process roots, r=mconley, a=jcristau",
+                            "desc": "Bug 1603020, to send the message to all descendants, not just process roots, r=mconley, a=jcristau",
                             "node": "be4754a40d8efa09060e69fb41001e2a16445a09",
                         },
                         {
@@ -184,7 +184,7 @@ import shipitscript.pushlog_scan as pushlog
                         {
                             "author": "Andrea Marchesini <amarchesini@mozilla.com>",
                             "branch": "default",
-                            "desc": "Bug 1608373 - proxy webExtension API should not expose respectBeConservative only to privileged extensions, r=mixedpuppy, a=jcristau",
+                            "desc": "Bug 1608373 - proxy webExtension API should not expose extensions, r=mixedpuppy, a=jcristau",
                             "node": "bcd62affb1c3c64cb6a28ae1964d5e62749fbac3",
                         },
                         {
@@ -314,13 +314,13 @@ import shipitscript.pushlog_scan as pushlog
                         {
                             "author": "Hiroyuki Ikezoe <hikezoe.birchill@mozilla.com>",
                             "branch": "default",
-                            "desc": "Bug 1611561 - Fix the return value of the callback of CallOnAllRemoteChildren in nsFocusManager::ActivateOrDeactivate. r=smaug, a=jcristau",
+                            "desc": "Bug 1611561 - Fix the return value of the in nsFocusManager::ActivateOrDeactivate. r=smaug, a=jcristau",
                             "node": "0ed7855a2e0368849868556ee2c17952bc54bc6a",
                         },
                         {
                             "author": "Jan-Ivar Bruaroey <jib@mozilla.com>",
                             "branch": "default",
-                            "desc": "Bug 1598543 - Use size instead of length. r=dminor, a=jcristau\n\nDifferential Revision: https://phabricator.services.mozilla.com/D58144",
+                            "desc": "Bug 1598543 - Use size instead of length. r=dminor, a=jcristau",
                             "node": "e07c1d22ec2f4b41a5bc1fc3f76f853248d82ff6",
                         },
                         {
@@ -382,7 +382,7 @@ import shipitscript.pushlog_scan as pushlog
                         {
                             "author": "Simon Giesecke <sgiesecke@mozilla.com>",
                             "branch": "default",
-                            "desc": "Bug 1612289 - Remove IDBTransaction.commit from webidl, since its implementation is only a stub. r=emilio,asuth a=jcristau",
+                            "desc": "Bug 1612289 - Remove IDBTransaction.commit implementation is only a stub. r=emilio,asuth a=jcristau",
                             "node": "14ac73797dd828cc30a99df36befbec79069bde4",
                         }
                     ]
@@ -502,13 +502,13 @@ import shipitscript.pushlog_scan as pushlog
                         {
                             "author": "Johann Hofmann <jhofmann@mozilla.com>",
                             "branch": "default",
-                            "desc": "Bug 1591362 - Fix incorrect origin comparison in CacheFileContextEvictor::EvictEntries(). r=baku,mayhemer,michal, a= RyanVM",
+                            "desc": "Bug 1591362 - Fix incorrect origin comparison in r=baku,mayhemer,michal, a= RyanVM",
                             "node": "3e32cd5df849fba770112509514e973da55ee63d",
                         },
                         {
                             "author": "Nihanth Subramanya <nhnt11@gmail.com>",
                             "branch": "default",
-                            "desc": "Bug 1600109 - Implement setup function in head.js to set up prefs and telemetry, and call it in all tests. r=dragana,JuniorHsu, a=RyanVM",
+                            "desc": "Bug 1600109 - Implement setup function in js in all tests. r=dragana,JuniorHsu, a=RyanVM",
                             "node": "80a41f935b680a1bc763abad85443feed5bc3052",
                         },
                         {
@@ -532,13 +532,13 @@ import shipitscript.pushlog_scan as pushlog
                         {
                             "author": "Alex Chronopoulos <achronop@gmail.com>",
                             "branch": "default",
-                            "desc": "Bug 1608118 - Remove direct listeners from the source in ForwardedInputTrack when MediaInput is removed r=padenot, a=RyanVM",
+                            "desc": "Bug 1608118 - Remove direct listeners from the source in MediaInput is removed r=padenot, a=RyanVM",
                             "node": "677842171b3976dfd8cceef0fbd0e67438138df8",
                         },
                         {
                             "author": "Nihanth Subramanya <nhnt11@gmail.com>",
                             "branch": "default",
-                            "desc": "Bug 1608320 - DoH Rollout Extension: Don't show the doorhanger if the user has seen the post-DoH privacy statement. r=dragana, a=RyanVM",
+                            "desc": "Bug 1608320 - DoH Rollout Extension: Don't show the the post-DoH privacy statement. r=dragana, a=RyanVM",
                             "node": "c2bec0f6c3180bc8efb2e5955df97e48ed47b69d",
                         },
                         {
@@ -550,7 +550,7 @@ import shipitscript.pushlog_scan as pushlog
                         {
                             "author": "Nihanth Subramanya <nhnt11@gmail.com>",
                             "branch": "default",
-                            "desc": "Bug 1609037 - DoH Rollout Extension: Wait until a top-level location change to show the doorhanger. r=johannh, a=RyanVM",
+                            "desc": "Bug 1609037 - DoH Rollout Extension: Wait until a top-level location change to shodoorhanger. r=johannh, a=RyanVM",
                             "node": "1766ab40038c5537e360eb6569b91f0bf26a6e4b",
                         },
                         {
@@ -562,7 +562,7 @@ import shipitscript.pushlog_scan as pushlog
                         {
                             "author": "Morgan Reschenberg <mreschenberg@mozilla.com>",
                             "branch": "default",
-                            "desc": "Bug 1610250: Ensure we compare rounded integer values when setting the hidden attribute of the URL bar's zoom button. r=Gijs, a=RyanVM",
+                            "desc": "Bug 1610250: Ensure we compare rounded integer values when setting the hidden bar's zoom button. r=Gijs, a=RyanVM",
                             "node": "ad0b96ec1b63f55f6d30312d2a8c1d6858e31e77",
                         },
                         {
@@ -602,7 +602,7 @@ import shipitscript.pushlog_scan as pushlog
                         {
                             "author": "Morgan Reschenberg <mreschenberg@mozilla.com>",
                             "branch": "default",
-                            "desc": "Bug 1609581: Ensure backplates inherit color from nearest non-transparent frame to correctly color select multiple's. r=emilio, a=RyanVM",
+                            "desc": "Bug 1609581: Ensure backplates inherit color from nearest color select multiple's. r=emilio, a=RyanVM",
                             "node": "de521b37210e82f9ee456af47d6c6ee4c29f7104",
                         },
                         {
@@ -774,19 +774,19 @@ import shipitscript.pushlog_scan as pushlog
                         {
                             "author": "Ryan VanderMeulen <ryanvm@gmail.com>",
                             "branch": "default",
-                            "desc": "Backed out changeset ae3ffb3ccd34 (bug 1604008) to avoid crashes from bug 1608645 being backed out.",
+                            "desc": "Backed out changeset ae3ffb3ccd34 (bug 1604008) to avoidfrom bug 1608645 being backed out.",
                             "node": "6fa1f4dcb6b14ac9a0430a650a3171ac893cc0bf",
                         },
                         {
                             "author": "Michael Froman <mfroman@mozilla.com>",
                             "branch": "default",
-                            "desc": "Bug 1609417 - Don't treat 0 size samples as an error in RemoteDecoderParent::DecodeNextSample. r=jya, a=RyanVM",
+                            "desc": "Bug 1609417 - Don't treat 0 size samples as an error in DecodeNextSample. r=jya, a=RyanVM",
                             "node": "14886e51af43ff8e30d1fc71ff92e8c2ec43b2ef",
                         },
                         {
                             "author": "Tom Ritter <tom@mozilla.com>",
                             "branch": "default",
-                            "desc": "Bug 1609474 - Handle if extensions.webextensions.remote changes during runtime for the purposes of Eval/JS Load Telemetry. r=robwu,ckerschb, a=RyanVM",
+                            "desc": "Bug 1609474 - Handle if extensions.webextensions.remote Eval/JS Load Telemetry. r=robwu,ckerschb, a=RyanVM",
                             "node": "9fb939d53102640167c3e8162e93f0b6535e5252",
                         },
                     ]
@@ -928,13 +928,13 @@ import shipitscript.pushlog_scan as pushlog
                         {
                             "author": "Gijs Kruitbosch <gijskruitbosch@gmail.com>",
                             "branch": "default",
-                            "desc": "Bug 1600919 - work around XUL layout bug by manually measuring wrapping description element in reset profile dialog, r=MattN,zbraniecki a=RyanVM",
+                            "desc": "Bug 1600919 - work around XUL layout bug by manually measuring wrapping dialog, r=MattN,zbraniecki a=RyanVM",
                             "node": "6436bededa92f55671640d4b1a1e8afb3cad9220",
                         },
                         {
                             "author": "Jon Coppeard <jcoppeard@mozilla.com>",
                             "branch": "default",
-                            "desc": "Bug 1291535 - Clear the list of dynamic import requests after cancelling them in ScriptLoader::ParsingComplete as we do for other requests r=bzbarsky a=RyanVM",
+                            "desc": "Bug 1291535 - Clear the list of dynamic import requests after do for other requests r=bzbarsky a=RyanVM",
                             "node": "fa2485dac022dc0ce1f58ab58531fcc94ca7e031",
                         },
                         {
@@ -1230,7 +1230,7 @@ import shipitscript.pushlog_scan as pushlog
                         {
                             "author": "Eitan Isaacson <eitan@monotonous.org>",
                             "branch": "default",
-                            "desc": "Bug 1534287 - Catch exception when sending a11y event when platform a11y is disabled. r=geckoview-reviewers,snorp, a=jcristau",
+                            "desc": "Bug 1534287 - Catch exception when platform a11y is disabled. r=geckoview-reviewers,snorp, a=jcristau",
                             "node": "bfbf484ecbccdf60a2b265e67db3012982a88868",
                         },
                         {
