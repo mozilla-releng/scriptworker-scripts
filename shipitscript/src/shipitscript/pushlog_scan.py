@@ -88,10 +88,17 @@ def skip_test_only(push):
     Treat a=test-only (or a=testonly) as unimportant if present on the tip of a push.
     """
     # get the tip
-    cset = push["changesets"][-1]
-    if "a=test-only" in cset["desc"] or "a=testonly" in cset["desc"]:
-        return Importance.UNIMPORTANT
-    return Importance.MAYBE
+    # XXX: 25 is a number with no specific meaning. It's just a performance break
+    # in case we need to loop through very large pushlogs, such as mergeduty,
+    # in which case we can assume by default that the revision is IMPORTANT
+    if len(push["changesets"]) > 25:
+        return Importance.IMPORTANT
+
+    for commit in push["changesets"]:
+        if "a=test-only" not in commit["desc"] and "a=testonly" not in commit["desc"]:
+            # at least one commit in the push is non-testonly, hence potentially important
+            return Importance.MAYBE
+    return Importance.UNIMPORTANT
 
 
 @push_check
