@@ -98,6 +98,8 @@ async def do_merge(config, task, repo_path):
     tag_message = f"No bug - tagging {os.path.basename(repo_path)} with {base_tag} a=release DONTBUILD CLOSED TREE"
     await run_hg_command(config, "tag", "-m", '"{}"'.format(tag_message), "-r", base_from_rev, "-f", base_tag, repo_path=repo_path)
 
+    tagged_from_rev = await get_revision(config, repo_path, branch=from_branch)
+
     # TODO This shouldn't be run on esr, according to old configs.
     # perhaps: hg push -r bookmark("release") esrNN
     # Perform the kludge-merge.
@@ -135,4 +137,4 @@ async def do_merge(config, task, repo_path):
     # Do we need to perform multiple pushes for the push stage? If so, return
     # what to do.
     if merge_config.get("push_repositories"):
-        return [(merge_config["push_repositories"]["from"], base_from_rev), (merge_config["push_repositories"]["to"], push_revision_to)]
+        return [(merge_config["push_repositories"]["from"], tagged_from_rev), (merge_config["push_repositories"]["to"], push_revision_to)]
