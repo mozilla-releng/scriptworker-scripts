@@ -25,7 +25,7 @@ def merge_info():
         "version_files": ["browser/config/version.txt", "config/milestone.txt"],
         "version_files_suffix": ["browser/config/version_display.txt"],
         "version_suffix": "b1",
-        "copy_files": [{"src": "browser/config/version.txt", "dst": "browser/config/version_display.txt"}],
+        "copy_files": [["browser/config/version.txt", "browser/config/version_display.txt"]],
         "replacements": [
             [
                 "browser/config/mozconfigs/linux32/l10n-mozconfig",
@@ -115,7 +115,7 @@ def test_touch_clobber_file(repo_context, break_things, expectation):
     (
         ({"version_files": ["browser/config/version.txt"]}, [["browser/config/version.txt"]]),
         ({"version_files_suffix": ["browser/config/version_display.txt"]}, [["browser/config/version_display.txt"]]),
-        ({"copy_files": [{"src": "browser/config/version.txt", "dst": "browser/config/version_display.txt"}]}, "shutil.copyfile"),
+        ({"copy_files": [["browser/config/version.txt", "browser/config/version_display.txt"]]}, "shutil.copyfile"),
         (
             {"replacements": [("build/mozconfig.common", "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}", "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}")]},
             "replace",

@@ -54,7 +54,7 @@ async def apply_rebranding(config, repo_path, merge_config):
         await do_bump_version(config, repo_path, merge_config["version_files_suffix"], next_version)
 
     for f in merge_config.get("copy_files", list()):
-        shutil.copyfile(os.path.join(repo_path, f["src"]), os.path.join(repo_path, f["dst"]))
+        shutil.copyfile(os.path.join(repo_path, f[0]), os.path.join(repo_path, f[1]))
 
     for f, from_, to in merge_config.get("replacements", list()):
         replace(os.path.join(repo_path, f), from_, to)
