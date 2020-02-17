@@ -141,8 +141,7 @@ def build_commit_message(name, locale_map, dontbuild=False, ignore_closed_tree=F
 
 # get_treestatus_name {{{1
 def get_treestatus_name(repo):
-    """The Thunderbird names in TreeStatus don't match the repo
-    names, so translate them.
+    """Translate Thunderbird repo names to TreeStatus names.
 
     Args:
         repo (str): the short repository name (eg. mozilla-central, comm-beta)
