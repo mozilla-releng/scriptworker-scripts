@@ -139,6 +139,24 @@ def build_commit_message(name, locale_map, dontbuild=False, ignore_closed_tree=F
     return message
 
 
+# get_treestatus_name {{{1
+def get_treestatus_name(repo):
+    """The Thunderbird names in TreeStatus don't match the repo
+    names, so translate them.
+
+    Args:
+        repo (str): the short repository name (eg. mozilla-central, comm-beta)
+
+    Returns:
+        str: the repository's name in TreeStatus (mozilla-central, comm-beta-thunderbird)
+
+    """
+    if repo.startswith("comm-"):
+        return "{}-thunderbird".format(repo)
+    else:
+        return repo
+
+
 # check_treestatus {{{1
 async def check_treestatus(config, task):
     """Return True if we can land based on treestatus.
@@ -151,8 +169,9 @@ async def check_treestatus(config, task):
         bool: ``True`` if the tree is open.
 
     """
-    tree = get_short_source_repo(task)
-    url = "%s/trees/%s" % (config["treestatus_base_url"], tree)
+    repo = get_short_source_repo(task)
+    treestatus_tree = get_treestatus_name(repo)
+    url = "%s/trees/%s" % (config["treestatus_base_url"], treestatus_tree)
     path = os.path.join(config["work_dir"], "treestatus.json")
     await retry_async(download_file, args=(url, path), retry_exceptions=(DownloadError,))
 
