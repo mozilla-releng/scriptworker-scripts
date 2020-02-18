@@ -22,5 +22,5 @@ else
     "
 fi
 
-docker run -t -v $PWD:/src -w /src python:3.7 maintenance/pin-helper.sh $DIRS
-docker run -t -v $PWD:/src -e SUFFIX=py38.txt -w /src python:3.8 maintenance/pin-helper.sh $DIRS
+docker run -t -v $PWD:/src -w /src python:3.8 maintenance/pin-helper.sh $DIRS
+docker run -t -v $PWD:/src -e SUFFIX=py37.txt -w /src python:3.7 maintenance/pin-helper.sh $DIRS
