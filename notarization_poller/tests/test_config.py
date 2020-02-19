@@ -52,7 +52,7 @@ def test_update_logging_config_not_verbose(config):
     npconfig.update_logging_config(config, log_name=config["log_dir"])
     log = logging.getLogger(config["log_dir"])
     assert log.level == logging.INFO
-    assert len(log.handlers) == 2
+    assert len(log.handlers) == 3
     close_handlers(log_name=config["log_dir"])
 
 

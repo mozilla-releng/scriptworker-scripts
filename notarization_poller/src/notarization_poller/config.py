@@ -13,16 +13,13 @@ import os
 
 from notarization_poller.constants import DEFAULT_CONFIG
 from notarization_poller.exceptions import ConfigError
-from scriptworker_client.client import init_config
+from scriptworker_client.client import _init_logging, init_config
 
 log = logging.getLogger(__name__)
 
 
-def update_logging_config(config, log_name=None, file_name="worker.log"):
+def update_logging_config(config, log_name="", file_name="worker.log"):
     """Update python logging settings from config.
-
-    By default, this sets the ``notarization_poller`` log settings, but this will
-    change if some other package calls this function or specifies the ``log_name``.
 
     * Use formatting from config settings.
     * Log to screen if ``verbose``
@@ -30,12 +27,12 @@ def update_logging_config(config, log_name=None, file_name="worker.log"):
 
     Args:
         config (dict): the running config
-        log_name (str, optional): the name of the Logger to modify.
-            If None, use the top level module ('notarization_poller').
-            Defaults to None.
+        log_name (str, optional): the logger name to use. Primarily for testing.
+            Defaults to ``""``
+        file_name (str, optional): the log file path to use. Defaults to ``"worker.log"``
 
     """
-    log_name = log_name or __name__.split(".")[0]
+    _init_logging(config)
     top_level_logger = logging.getLogger(log_name)
 
     datefmt = config["log_datefmt"]
@@ -44,12 +41,13 @@ def update_logging_config(config, log_name=None, file_name="worker.log"):
 
     if config.get("verbose"):
         top_level_logger.setLevel(logging.DEBUG)
-        if len(top_level_logger.handlers) == 0:
-            handler = logging.StreamHandler()
-            handler.setFormatter(formatter)
-            top_level_logger.addHandler(handler)
     else:
         top_level_logger.setLevel(logging.INFO)
+
+    if len(top_level_logger.handlers) == 0:
+        handler = logging.StreamHandler()
+        handler.setFormatter(formatter)
+        top_level_logger.addHandler(handler)
 
     # Rotating log file
     os.makedirs(config["log_dir"], exist_ok=True)

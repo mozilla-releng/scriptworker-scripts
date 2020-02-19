@@ -15,7 +15,8 @@ import pytest
 import notarization_poller.worker as worker
 from notarization_poller.exceptions import WorkerError
 from notarization_poller.worker import RunTasks
-from scriptworker_client.constants import STATUSES
+
+from . import noop_async
 
 
 # main {{{1
@@ -70,13 +71,23 @@ def test_main_running_sigusr1(mocker, config, event_loop, running):
     run_tasks_cancelled = event_loop.create_future()
 
     class MockRunTasks:
+        is_stopped = False
+
         async def cancel(*args):
             run_tasks_cancelled.set_result(True)
 
         async def invoke(*args):
             os.kill(os.getpid(), signal.SIGUSR1)
+            await asyncio.sleep(0.1)
 
     mrt = MockRunTasks()
+    mrt.running_tasks = []
+    if running:
+        fake_task1 = mocker.MagicMock()
+        fake_task1.main_fut = noop_async()
+        fake_task2 = mocker.MagicMock()
+        fake_task2.main_fut = noop_async()
+        mrt.running_tasks = [fake_task1, fake_task2]
 
     tmp = os.path.join(config["work_dir"], "foo")
     with open(tmp, "w") as fh:
@@ -86,28 +97,25 @@ def test_main_running_sigusr1(mocker, config, event_loop, running):
     worker.main(event_loop=event_loop)
 
     assert not run_tasks_cancelled.done()
+    assert mrt.is_stopped
 
 
 # invoke {{{1
 @pytest.mark.asyncio
 async def test_mocker_invoke(config, mocker):
     task = {"foo": "bar", "credentials": {"a": "b"}, "task": {"task_defn": True}}
-    stop_calls = []
-
     rt = worker.RunTasks(config)
 
     async def claim_work(*args, **kwargs):
         return {"tasks": [deepcopy(task)]}
 
     async def fake_sleep(*args, **kwargs):
+        await asyncio.sleep(0.01)
         await rt.cancel()
-
-    async def fake_stop(status=None):
-        stop_calls.append(status)
 
     fake_task = mocker.MagicMock()
     fake_task.complete = False
-    fake_task.stop = fake_stop
+    fake_task.main_fut = asyncio.ensure_future(noop_async())
 
     mocker.patch.object(worker, "claim_work", new=claim_work)
     mocker.patch.object(worker, "Task", return_value=fake_task)
@@ -115,7 +123,6 @@ async def test_mocker_invoke(config, mocker):
     mocker.patch.object(worker, "sleep", new=fake_sleep)
     await rt.invoke()
     assert rt.is_cancelled
-    assert stop_calls == [STATUSES["worker-shutdown"]]
     assert len(rt.running_tasks) == 1
 
 

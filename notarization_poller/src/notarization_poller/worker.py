@@ -18,6 +18,7 @@ import arrow
 from taskcluster.aio import Queue
 
 from notarization_poller.config import get_config_from_cmdln, update_logging_config
+from notarization_poller.constants import MAX_CLAIM_WORK_TASKS
 from notarization_poller.task import Task, claim_work
 from scriptworker_client.constants import STATUSES
 from scriptworker_client.utils import makedirs, rm
@@ -34,13 +35,14 @@ class RunTasks:
         self.config = config
         self.running_tasks = []
         self.last_claim_work = arrow.get(0)
+        self.is_stopped = False
         self.is_cancelled = False
         self.future = None
 
     async def invoke(self):
         """Claims and processes Taskcluster work."""
-        while not self.is_cancelled:
-            num_tasks_to_claim = self.config["max_concurrent_tasks"] - len(self.running_tasks)
+        while not self.is_cancelled and not self.is_stopped:
+            num_tasks_to_claim = min(self.config["max_concurrent_tasks"] - len(self.running_tasks), MAX_CLAIM_WORK_TASKS)
             if num_tasks_to_claim > 0 and arrow.utcnow().timestamp - self.last_claim_work.timestamp >= self.config["claim_work_interval"]:
                 async with aiohttp.ClientSession() as session:
                     queue = Queue(
@@ -50,14 +52,16 @@ class RunTasks:
                         },
                         session=session,
                     )
-                    new_tasks = await self._run_cancellable(claim_work(self.config, queue, num_tasks=num_tasks_to_claim))
+                    new_tasks = await self._run_cancellable(claim_work(self.config, queue, num_tasks=num_tasks_to_claim)) or {}
                 self.last_claim_work = arrow.utcnow()
                 for claim_task in new_tasks.get("tasks", []):
                     new_task = Task(self.config, claim_task)
+                    new_task.start()
                     self.running_tasks.append(new_task)
             await self.prune_running_tasks()
             sleep_time = self.last_claim_work.timestamp + self.config["claim_work_interval"] - arrow.utcnow().timestamp
             sleep_time > 0 and await self._run_cancellable(sleep(sleep_time))
+        self.running_tasks and await asyncio.wait([task.main_fut for task in self.running_tasks if task.main_fut])
 
     async def prune_running_tasks(self):
         """Prune any complete tasks from ``self.running_tasks``."""
@@ -77,7 +81,9 @@ class RunTasks:
         self.is_cancelled = True
         self.future and self.future.cancel()
         try:
-            await asyncio.wait([asyncio.ensure_future(task.stop(status=status)) for task in self.running_tasks])
+            for task in self.running_tasks:
+                task.task_fut and task.task_fut.cancel()
+            await asyncio.wait([task.main_fut for task in self.running_tasks if task.main_fut])
         except (asyncio.CancelledError, ValueError):
             pass
 
@@ -111,18 +117,16 @@ def main(event_loop=None):
     async def _handle_sigusr1():
         """Stop accepting new tasks."""
         log.info("SIGUSR1 received; no more tasks will be taken")
-        nonlocal done
-        done = True
+        running_tasks.is_stopped = True
 
     event_loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.ensure_future(_handle_sigterm()))
     event_loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.ensure_future(_handle_sigusr1()))
 
-    while not done:
-        try:
-            event_loop.run_until_complete(running_tasks.invoke())
-        except Exception:
-            log.critical("Fatal exception", exc_info=1)
-            raise
-    else:
+    try:
+        event_loop.run_until_complete(running_tasks.invoke())
+    except Exception:
+        log.critical("Fatal exception", exc_info=1)
+        raise
+    finally:
         log.info("Notarization poller stopped at {} UTC".format(arrow.utcnow().format()))
         log.info("Worker FQDN: {}".format(socket.getfqdn()))
