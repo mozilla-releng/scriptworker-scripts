@@ -15,15 +15,35 @@ from asyncio import sleep
 
 import aiohttp
 import arrow
+import taskcluster
 from taskcluster.aio import Queue
 
 from notarization_poller.config import get_config_from_cmdln, update_logging_config
 from notarization_poller.constants import MAX_CLAIM_WORK_TASKS
-from notarization_poller.task import Task, claim_work
+from notarization_poller.task import Task
 from scriptworker_client.constants import STATUSES
 from scriptworker_client.utils import makedirs, rm
 
 log = logging.getLogger(__name__)
+
+
+# claim_work {{{1
+async def claim_work(config, worker_queue, num_tasks=1):
+    """Find and claim the next pending task(s) in the queue, if any.
+
+    Args:
+        config (dict): the running config
+
+    Returns:
+        dict: a dict containing a list of the task definitions of the tasks claimed.
+
+    """
+    log.debug("Calling claimWork for {}/{}...".format(config["worker_group"], config["worker_id"]))
+    payload = {"workerGroup": config["worker_group"], "workerId": config["worker_id"], "tasks": num_tasks}
+    try:
+        return await worker_queue.claimWork(config["provisioner_id"], config["worker_type"], payload)
+    except (taskcluster.exceptions.TaskclusterFailure, aiohttp.ClientError) as exc:
+        log.warning("{} {}".format(exc.__class__, exc))
 
 
 # RunTasks {{{1

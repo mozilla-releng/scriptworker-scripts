@@ -11,12 +11,28 @@ from copy import deepcopy
 
 import arrow
 import pytest
+from taskcluster.exceptions import TaskclusterRestFailure
 
 import notarization_poller.worker as worker
 from notarization_poller.exceptions import WorkerError
 from notarization_poller.worker import RunTasks
 
 from . import noop_async
+
+
+# claim_work {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize("raises", (True, False))
+async def test_claim_work(raises, config, mocker):
+    async def foo(*args):
+        raise TaskclusterRestFailure("foo", None, status_code=4)
+
+    queue = mocker.MagicMock()
+    if raises:
+        queue.claimWork = foo
+    else:
+        queue.claimWork = noop_async
+    assert await worker.claim_work(config, queue) is None
 
 
 # main {{{1

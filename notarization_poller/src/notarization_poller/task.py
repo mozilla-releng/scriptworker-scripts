@@ -164,7 +164,7 @@ class Task:
         try:
             async with aiohttp.ClientSession() as session:
                 temp_queue = Queue(options={"credentials": self.task_credentials, "rootUrl": self.config["taskcluster_root_url"]}, session=session)
-                if self.status == 0:
+                if self.status == STATUSES["success"]:
                     log.info("Reporting task complete...")
                     response = await temp_queue.reportCompleted(*args)
                 elif self.status != 1 and self.status in reversed_statuses:
@@ -229,7 +229,7 @@ class Task:
         self.pending_uuids = list(self.uuids)
         while True:
             self.task_log("pending uuids: %s", self.pending_uuids)
-            for uuid in self.pending_uuids:
+            for uuid in sorted(self.pending_uuids):
                 self.task_log("Polling %s", uuid)
                 base_cmd = list(self.config["xcrun_cmd"]) + ["altool", "--notarization-info", uuid, "-u", username, "--password"]
                 log_cmd = base_cmd + ["********"]
@@ -246,7 +246,7 @@ class Task:
                 self.task_log("Polling response (status %d)", status, worker_log=False)
                 for line in contents.splitlines():
                     self.task_log(" %s", line, worker_log=False)
-                if status == 0:
+                if status == STATUSES["success"]:
                     m = NOTARIZATION_POLL_REGEX.search(contents)
                     if m is not None:
                         if m["status"] == "invalid":
@@ -265,22 +265,3 @@ class Task:
                 break
             else:
                 await asyncio.sleep(self.config["poll_sleep_time"])
-
-
-# claim_work {{{1
-async def claim_work(config, worker_queue, num_tasks=1):
-    """Find and claim the next pending task(s) in the queue, if any.
-
-    Args:
-        config (dict): the running config
-
-    Returns:
-        dict: a dict containing a list of the task definitions of the tasks claimed.
-
-    """
-    log.debug("Calling claimWork for {}/{}...".format(config["worker_group"], config["worker_id"]))
-    payload = {"workerGroup": config["worker_group"], "workerId": config["worker_id"], "tasks": num_tasks}
-    try:
-        return await worker_queue.claimWork(config["provisioner_id"], config["worker_type"], payload)
-    except (taskcluster.exceptions.TaskclusterFailure, aiohttp.ClientError) as exc:
-        log.warning("{} {}".format(exc.__class__, exc))

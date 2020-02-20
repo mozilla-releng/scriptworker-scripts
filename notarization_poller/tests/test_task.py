@@ -298,18 +298,3 @@ LogFileURL: (null)
     else:
         await no_reclaim_task.run_task()
     assert no_reclaim_task.status == expected_status
-
-
-# claim_work {{{1
-@pytest.mark.asyncio
-@pytest.mark.parametrize("raises", (True, False))
-async def test_claim_work(raises, config, mocker):
-    async def foo(*args):
-        raise TaskclusterRestFailure("foo", None, status_code=4)
-
-    queue = mocker.MagicMock()
-    if raises:
-        queue.claimWork = foo
-    else:
-        queue.claimWork = noop_async
-    assert await nptask.claim_work(config, queue) is None
