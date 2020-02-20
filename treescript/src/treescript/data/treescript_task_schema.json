@@ -22,7 +22,8 @@
                 "replacements",
                 "from_branch",
                 "to_branch",
-                "push_repositories",
+                "from_repo",
+                "to_repo",
                 "merge_old_head",
                 "base_tag",
                 "end_tag"
@@ -105,22 +106,19 @@
                         "beta"
                     ]
                 },
-                "push_repositories": {
-                    "type": "object",
-                    "required": [
-                        "from",
-                        "to"
-                    ],
-                    "properties": {
-                        "from": {
-                            "$ref": "#/definitions/hg_mozilla_uri"
-                        },
-                        "to": {
-                            "$ref": "#/definitions/hg_mozilla_uri"
-                        }
-                    }
+                "from_repo": {
+                    "type": "string",
+                    "examples": [
+                        "https://hg.mozilla.org/releases/mozilla-beta"
+                    ]
                 },
-                "merge_old_head": {
+                "to_repo": {
+                    "type": "string",
+                    "examples": [
+                        "https://hg.mozilla.org/releases/mozilla-beta"
+                    ]
+                },
+                        "merge_old_head": {
                     "type": "boolean",
                     "default": false
                 },

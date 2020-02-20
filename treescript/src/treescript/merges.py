@@ -136,5 +136,9 @@ async def do_merge(config, task, repo_path):
 
     # Do we need to perform multiple pushes for the push stage? If so, return
     # what to do.
-    if merge_config.get("push_repositories"):
-        return [(merge_config["push_repositories"]["from"], tagged_from_rev), (merge_config["push_repositories"]["to"], push_revision_to)]
+    desired_pushes = list()
+    if merge_config.get("from_repo"):
+        desired_pushes.append((merge_config["from_repo"], tagged_from_rev))
+    if merge_config.get("to_repo"):
+        desired_pushes.append((merge_config["to_repo"], push_revision_to))
+    return desired_pushes
