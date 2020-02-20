@@ -41,6 +41,7 @@
                 },
                 "version_files_suffix": {
                     "type": "array",
+                    "minItems": 0,
                     "items": {
                         "type": "string",
                         "examples": [
@@ -58,32 +59,26 @@
                 },
                 "copy_files": {
                     "type": "array",
+                    "minItems": 0,
                     "items": {
-                        "type": "object",
-                        "required": [
-                            "src",
-                            "dst"
-                        ],
-                        "properties": {
-                            "src": {
-                                "type": "string",
-                                "examples": [
-                                    "browser/config/version.txt"
-                                ]
-                            },
-                            "dst": {
-                                "type": "string",
-                                "examples": [
-                                    "browser/config/version_display.txt"
-                                ]
-                            }
-                        }
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                            "type": "string"
+                        },
+                        "examples": [
+                            ["browser/config/version.txt", "browser/config/version_display.txt"]
+                        ]
                     }
                 },
                 "replacements": {
                     "type": "array",
+                    "minItems": 0,
                     "items": {
                         "type": "array",
+                        "minItems": 3,
+                        "maxItems": 3,
                         "items": {
                             "type": "string",
                             "examples": [
