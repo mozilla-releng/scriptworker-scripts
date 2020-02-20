@@ -25,8 +25,7 @@
                 "from_repo",
                 "to_repo",
                 "merge_old_head",
-                "base_tag",
-                "end_tag"
+                "base_tag"
             ],
             "properties": {
                 "version_files": {
