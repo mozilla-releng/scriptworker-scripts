@@ -98,7 +98,7 @@ async def do_merge(config, task, repo_path):
     tag_message = f"No bug - tagging {os.path.basename(repo_path)} with {base_tag} a=release DONTBUILD CLOSED TREE"
     await run_hg_command(config, "tag", "-m", '"{}"'.format(tag_message), "-r", base_from_rev, "-f", base_tag, repo_path=repo_path)
 
-    tagged_from_rev = await get_revision(config, repo_path, branch=from_branch)
+    tagged_from_rev = await get_revision(config, repo_path, branch=".")
 
     # TODO This shouldn't be run on esr, according to old configs.
     # perhaps: hg push -r bookmark("release") esrNN
@@ -132,7 +132,7 @@ async def do_merge(config, task, repo_path):
         fh.write(diff_output)
 
     await run_hg_command(config, "commit", "-m", "Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release", repo_path=repo_path)
-    push_revision_to = await get_revision(config, repo_path, branch=to_branch)
+    push_revision_to = await get_revision(config, repo_path, branch=".")
 
     # Do we need to perform multiple pushes for the push stage? If so, return
     # what to do.
