@@ -3,6 +3,8 @@ import logging
 import os
 import shutil
 
+import attr
+
 from scriptworker_client.utils import makedirs
 from treescript.mercurial import get_revision, run_hg_command
 from treescript.task import get_merge_config
@@ -49,7 +51,8 @@ async def apply_rebranding(config, repo_path, merge_config):
         await do_bump_version(config, repo_path, merge_config["version_files"], next_version)
     if merge_config.get("version_files_suffix"):
         current_version = get_version("browser/config/version.txt", repo_path)
-        next_version = f"{current_version.major_number}.{current_version.minor_number}{merge_config.get('version_suffix')}"
+        current_version = attr.evolve(current_version, is_esr=False, beta_number=None, is_nightly=False)
+        next_version = f"{current_version}{merge_config.get('version_suffix')}"
 
         await do_bump_version(config, repo_path, merge_config["version_files_suffix"], next_version)
 
