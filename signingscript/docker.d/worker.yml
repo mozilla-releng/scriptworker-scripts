@@ -11,11 +11,12 @@ taskcluster_scope_prefixes:
       'COT_PRODUCT == "thunderbird"':
         - 'project:comm:thunderbird:releng:signing:'
       'COT_PRODUCT == "mobile"':
-        - 'project:mobile:focus:releng:signing:'
         - 'project:mobile:android-components:releng:signing:'
         - 'project:mobile:fenix:releng:signing:'
-        - 'project:mobile:reference-browser:releng:signing:'
+        - 'project:mobile:fennec-profile-manager:releng:signing:'
         - 'project:mobile:firefox-tv:releng:signing:'
+        - 'project:mobile:focus:releng:signing:'
+        - 'project:mobile:reference-browser:releng:signing:'
       'COT_PRODUCT == "application-services"':
         - 'project:mozilla:application-services:releng:signing:'
       'COT_PRODUCT == "xpi"':
