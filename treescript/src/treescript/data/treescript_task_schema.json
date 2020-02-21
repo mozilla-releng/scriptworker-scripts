@@ -112,7 +112,7 @@
                         "https://hg.mozilla.org/releases/mozilla-beta"
                     ]
                 },
-                        "merge_old_head": {
+                "merge_old_head": {
                     "type": "boolean",
                     "default": false
                 },
