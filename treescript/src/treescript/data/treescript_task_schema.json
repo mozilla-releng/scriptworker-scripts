@@ -79,13 +79,13 @@
                         "minItems": 3,
                         "maxItems": 3,
                         "items": {
-                            "type": "string",
-                            "examples": [
-                                "browser/config/mozconfigs/linux32/l10n-mozconfig",
-                                "ac_add_options --with-branding=browser/branding/nightly",
-                                "ac_add_options --enable-official-branding"
-                            ]
-                        }
+                            "type": "string"
+                        },
+                        "examples": [
+                            ["browser/config/mozconfigs/linux32/l10n-mozconfig",
+                            "ac_add_options --with-branding=browser/branding/nightly",
+                            "ac_add_options --enable-official-branding"]
+                        ]
                     }
                 },
                 "from_branch": {
