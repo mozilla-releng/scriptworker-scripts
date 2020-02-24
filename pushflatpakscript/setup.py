@@ -15,10 +15,10 @@ with open(os.path.join(project_dir, "requirements/base.in")) as f:
 setup(
     name="pushflatpakscript",
     version=version,
-    description="TaskCluster Ship-It Worker",
+    description="TaskCluster Flatpak Worker",
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
-    url="https://github.com/mozilla-releng/pushflatpakscript",
+    url="https://github.com/mozilla-releng/scriptworker-scripts",
     packages=find_packages("src"),
     package_data={"pushflatpakscript": ["data/*"]},
     package_dir={"": "src"},

@@ -1,5 +1,5 @@
 {
-    "title": "Taskcluster PushSnap task minimal schema",
+    "title": "Taskcluster PushFlatpak task minimal schema",
     "type": "object",
     "properties": {
         "dependencies": {

@@ -1,15 +1,19 @@
 {
-    "title": "pushsnapscript config schema",
+    "title": "pushflatpakscript config schema",
     "type": "object",
     "required": [
-        "push_to_store",
-        "macaroons_locations"
+        "push_to_flathub",
+        "token_locations",
+        "flathub_url"
     ],
     "properties": {
-        "push_to_store": {
+        "push_to_flathub": {
             "type": "boolean"
         },
-        "macaroons_locations": {
+        "flathub_url": {
+            "type": "string"
+        },
+        "token_locations": {
             "type": "object",
             "additionalProperties": {
                 "type": "string"

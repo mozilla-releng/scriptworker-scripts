@@ -1,19 +1,19 @@
 from scriptworker.exceptions import TaskVerificationError
 
-SNAP_SCOPES_PREFIX = "project:releng:snapcraft:firefox:"
+FLATPAK_SCOPES_PREFIX = "project:releng:flathub:firefox:"
 
-_CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE = ("beta", "candidate", "esr/stable", "esr/candidate")
-ALLOWED_CHANNELS = ("mock", *_CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE)
+_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB = ("beta", "release")
+ALLOWED_CHANNELS = ("mock", *_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB)
 
 
-def get_snap_channel(config, task):
+def get_flatpak_channel(config, task):
     payload = task["payload"]
     if "channel" not in payload:
         raise TaskVerificationError(f"channel must be defined in the task payload. Given payload: {payload}")
 
     channel = payload["channel"]
-    scope = SNAP_SCOPES_PREFIX + channel.split("/")[0]
-    if config["push_to_store"] and scope not in task["scopes"]:
+    scope = FLATPAK_SCOPES_PREFIX + channel.split("/")[0]
+    if config["push_to_flathub"] and scope not in task["scopes"]:
         raise TaskVerificationError(f"Channel {channel} not allowed, missing scope {scope}")
 
     if channel not in ALLOWED_CHANNELS:
@@ -22,5 +22,5 @@ def get_snap_channel(config, task):
     return channel
 
 
-def is_allowed_to_push_to_snap_store(config, channel):
-    return config["push_to_store"] and channel in _CHANNELS_AUTHORIZED_TO_REACH_SNAP_STORE
+def is_allowed_to_push_to_flatpak_store(config, channel):
+    return config["push_to_flathub"] and channel in _CHANNELS_AUTHORIZED_TO_REACH_FLATHUB
