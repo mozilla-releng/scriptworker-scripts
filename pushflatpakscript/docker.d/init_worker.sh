@@ -10,6 +10,8 @@ test_var_set() {
   fi
 }
 
+test_var_set 'FLATHUB_URL'
+
 case $ENV in
   dev|fake-prod)
     ;;
@@ -30,9 +32,7 @@ case $ENV in
 esac
 
 case $COT_PRODUCT in
-  firefox)
-    export FLATHUB_URL="https://hub.flathub.org"
-  ;;
+  firefox) ;;
   *)
     exit 1
     ;;
