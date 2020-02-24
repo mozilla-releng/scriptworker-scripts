@@ -11,7 +11,7 @@ import os
 import sys
 
 import jsonschema
-from frozendict import frozendict
+from immutabledict import immutabledict
 
 from scriptworker_client.exceptions import ClientError, TaskVerificationError
 from scriptworker_client.utils import load_json_or_yaml
@@ -131,7 +131,7 @@ def init_config(config_path=None, default_config=None, validator_callback=None):
     """Initialize the config.
 
     First, read config overrides from ``config_path``. Apply over
-    ``default_config``. Send to ``validator_config``, then return a frozendict
+    ``default_config``. Send to ``validator_config``, then return a immutabledict
     of the config.
 
     Args:
@@ -148,7 +148,7 @@ def init_config(config_path=None, default_config=None, validator_callback=None):
         Exception: if the config doesn't pass the ``validator_callback``.
 
     Returns:
-        frozendict: the config.
+        immutabledict: the config.
 
     """
     if config_path is None:
@@ -160,7 +160,7 @@ def init_config(config_path=None, default_config=None, validator_callback=None):
     config.update(load_json_or_yaml(config_path, file_type="yaml", is_path=True))
     validator_callback and validator_callback(config)
 
-    return frozendict(config)
+    return immutabledict(config)
 
 
 def _usage():

@@ -2,13 +2,13 @@
 # coding=utf-8
 """Test notarization_poller.constants
 """
-from frozendict import frozendict
+from immutabledict import immutabledict
 
 import notarization_poller.constants as constants
 
 
 def test_get_reversed_statuses():
-    assert constants.get_reversed_statuses() == frozendict(
+    assert constants.get_reversed_statuses() == immutabledict(
         {
             0: "success",
             1: "failure",

@@ -237,9 +237,9 @@ requests==2.23.0 \
 requests_unixsocket==0.1.5 \
     --hash=sha256:a91bc0138f61fb3396de6358fa81e2cd069a150ade5111f869df01d8bc9d294c \
     # via -r requirements/base.in (line 16)
-scriptworker==31.1.0 \
-    --hash=sha256:0785ef8a390033a1d6ba3b658bc1d81242a841eb1f82e34a14c9430569f3b3f6 \
-    --hash=sha256:df9bc5c19a5ec39f008db05ddd3698f7df3ca77ffb1c574ba034b0d423df3811 \
+scriptworker==32.0.0 \
+    --hash=sha256:5bc3e5ee4ab6a0436c4579329c2109b5f739ba5a5d39f1f4850ae9e6823c06be \
+    --hash=sha256:bf681f2d0c76ef58d40ce8d7626614a7be9e19b727bb70d9a4e5b68037093e3d \
     # via -r requirements/base.in (line 1)
 simplejson==3.8.2 \
     --hash=sha256:057952d5a964737425faca7153e497daee126c88cee424f8331bf8f931430880 \

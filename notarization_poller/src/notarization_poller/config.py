@@ -2,7 +2,7 @@
 """Config for notarization poller.
 
 Attributes:
-    DEFAULT_CONFIG (frozendict): the default configuration
+    DEFAULT_CONFIG (immutabledict): the default configuration
     log (logging.Logger): the log object for the module.
 
 """
@@ -77,7 +77,7 @@ def get_config_from_cmdln(args, desc="Run notarization poller"):
         args (list): the commandline args. Generally ``sys.argv[1:]``
 
     Returns:
-        frozendict: the config
+        immutabledict: the config
 
     """
     parser = argparse.ArgumentParser(description=desc)

@@ -2,19 +2,19 @@
 """Notarization poller constants.
 
 Attributes:
-    DEFAULT_CONFIG (frozendict): the default config for notarization poller.
+    DEFAULT_CONFIG (immutabledict): the default config for notarization poller.
         Running configs are validated against this.
 
 """
 import os
 
-from frozendict import frozendict
+from immutabledict import immutabledict
 
 from scriptworker_client.constants import STATUSES
 
 MAX_CLAIM_WORK_TASKS = 32
 
-DEFAULT_CONFIG = frozendict(
+DEFAULT_CONFIG = immutabledict(
     {
         "log_datefmt": "%Y-%m-%dT%H:%M:%S",
         "task_log_datefmt": "YYYY-MM-DDTHH:mm:ss",
@@ -52,4 +52,4 @@ def get_reversed_statuses():
     """
     _rev = {v: k for k, v in STATUSES.items()}
     _rev.update({-11: "intermittent-task", -15: "intermittent-task"})
-    return frozendict(_rev)
+    return immutabledict(_rev)

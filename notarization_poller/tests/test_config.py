@@ -8,7 +8,7 @@ import os
 from copy import deepcopy
 
 import pytest
-from frozendict import frozendict
+from immutabledict import immutabledict
 
 import notarization_poller.config as npconfig
 from notarization_poller.constants import DEFAULT_CONFIG
@@ -76,7 +76,7 @@ def test_get_config_from_cmdln():
     c = deepcopy(dict(DEFAULT_CONFIG))
     with open(path) as fh:
         c.update(json.load(fh))
-    expected_config = frozendict(c)
+    expected_config = immutabledict(c)
 
     config = npconfig.get_config_from_cmdln([path])
     assert config == expected_config
