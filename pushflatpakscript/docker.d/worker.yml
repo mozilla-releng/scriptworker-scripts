@@ -1,11 +1,12 @@
 work_dir: { "$eval": "WORK_DIR" }
 artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
-push_to_store: { "$eval": "ENV == 'prod'" }
-macaroons_locations:
+push_to_flathub: { "$eval": "ENV == 'prod'" }
+flathub_url: { "$eval": "FLATHUB_URL" }
+token_locations:
   $if: 'ENV == "prod"'
   then:
-    beta: { "$eval": "MACAROON_BETA_PATH" }
-    candidate: { "$eval": "MACAROON_CANDIDATE_PATH" }
-    esr: { "$eval": "MACAROON_ESR_PATH" }
+    beta: { "$eval": "REPO_TOKEN_BETA" }
+    release: { "$eval": "REPO_TOKEN_RELEASE" }
+    esr: { "$eval": "REPO_TOKEN_ESR" }
   else: {}

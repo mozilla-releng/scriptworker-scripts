@@ -13,7 +13,10 @@ pip install --upgrade pip
 pip install pip-compile-multi
 
 apt-get update
-apt-get install -y libsodium-dev
+apt-get install -y \
+    gir1.2-ostree-1.0 \
+    libgirepository1.0-dev \
+    libsodium-dev
 
 for dir in $DIRS; do
     pushd $dir

@@ -14,15 +14,15 @@ case $ENV in
   dev|fake-prod)
     ;;
   prod)
-    test_var_set 'MACAROON_BETA'
-    test_var_set 'MACAROON_CANDIDATE'
-    test_var_set 'MACAROON_ESR'
-    export MACAROON_BETA_PATH=$CONFIG_DIR/beta_macaroon.cfg
-    export MACAROON_CANDIDATE_PATH=$CONFIG_DIR/candidate_macaroon.cfg
-    export MACAROON_ESR_PATH=$CONFIG_DIR/esr_macaroon.cfg
-    echo $MACAROON_BETA | base64 -d > $MACAROON_BETA_PATH
-    echo $MACAROON_CANDIDATE | base64 -d > $MACAROON_CANDIDATE_PATH
-    echo $MACAROON_ESR | base64 -d > $MACAROON_ESR_PATH
+    test_var_set 'REPO_TOKEN_BETA'
+    test_var_set 'REPO_TOKEN_RELEASE'
+    test_var_set 'REPO_TOKEN_ESR'
+    export REPO_TOKEN_BETA_PATH=$CONFIG_DIR/beta_token.txt
+    export REPO_TOKEN_RELEASE_PATH=$CONFIG_DIR/release_token.txt
+    export REPO_TOKEN_ESR_PATH=$CONFIG_DIR/esr_token.txt
+    echo $REPO_TOKEN_BETA | base64 -d > $REPO_TOKEN_BETA_PATH
+    echo $REPO_TOKEN_RELEASE | base64 -d > $REPO_TOKEN_RELEASE_PATH
+    echo $REPO_TOKEN_ESR | base64 -d > $REPO_TOKEN_ESR_PATH
     ;;
   *)
     exit 1
@@ -30,7 +30,9 @@ case $ENV in
 esac
 
 case $COT_PRODUCT in
-  firefox) ;;
+  firefox)
+    export FLATHUB_URL="https://hub.flathub.org"
+  ;;
   *)
     exit 1
     ;;

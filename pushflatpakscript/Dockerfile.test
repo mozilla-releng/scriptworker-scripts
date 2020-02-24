@@ -2,7 +2,8 @@ ARG PYTHON_VERSION
 
 FROM python:${PYTHON_VERSION}
 
-RUN apt-get update && apt-get install -y libsodium-dev && truncate -s 0 /etc/os-release
+RUN apt-get update \
+ && apt-get install -y gir1.2-ostree-1.0 libgirepository1.0-dev
 
 WORKDIR /app
 

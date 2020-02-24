@@ -3,14 +3,9 @@ FROM python:3.8
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
 
-# TODO: amend the snap Dockerfile to encompass flatpak script deps
 RUN apt-get update \
- && apt-get install -y libsodium-dev \
- && apt-get install -y squashfs-tools \
- && apt-get install -y xdelta3 \
+ && apt-get install -y gir1.2-ostree-1.0 libgirepository1.0-dev \
  && apt-get clean \
- # XXX Avoid snapcraft from loading useless libs when running on Ubuntu
- && truncate -s 0 /etc/os-release \
  && ln -s /app/docker.d/healthcheck /bin/healthcheck
 
 USER app
