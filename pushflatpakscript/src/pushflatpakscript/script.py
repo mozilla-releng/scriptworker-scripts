@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-""" Push Snap Script main script
+""" Push Flatpak Script main script
 """
 import logging
 import os
 
 from scriptworker import client
 
-from pushsnapscript import artifacts, snap_store, task
+from pushflatpakscript import task, artifacts, flathub
 
 log = logging.getLogger(__name__)
 
@@ -14,25 +14,25 @@ log = logging.getLogger(__name__)
 async def async_main(context):
     context.task = client.get_task(context.config)
 
-    # TODO Sanity checks on the file
-    snap_file_path = artifacts.get_snap_file_path(context)
-    channel = task.get_snap_channel(context.config, context.task)
+    channel = task.get_flatpak_channel(context.config, context.task)
+    flatpak_file_path = artifacts.get_flatpak_file_path(context)
 
     _log_warning_forewords(context.config, channel)
+    # good until here
 
-    snap_store.push(context, snap_file_path, channel)
+    flathub.push(context, flatpak_file_path, channel)
 
 
 def _log_warning_forewords(config, channel):
-    if not task.is_allowed_to_push_to_snap_store(config, channel):
-        log.warning("You do not have the rights to reach Snap store. *All* requests will be mocked.")
+    if not task.is_allowed_to_push_to_flatpak_store(config, channel):
+        log.warning("You do not have the rights to reach Flathub. *All* requests will be mocked.")
 
 
 def get_default_config(base_dir=None):
     base_dir = base_dir or os.path.dirname(os.getcwd())
     default_config = {
         "work_dir": os.path.join(base_dir, "work_dir"),
-        "schema_file": os.path.join(os.path.dirname(__file__), "data", "push_snap_task_schema.json"),
+        "schema_file": os.path.join(os.path.dirname(__file__), "data", "push_flatpak_task_schema.json"),
         "verbose": False,
     }
     return default_config
