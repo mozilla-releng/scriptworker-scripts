@@ -22,5 +22,5 @@ def get_flatpak_channel(config, task):
     return channel
 
 
-def is_allowed_to_push_to_flatpak_store(config, channel):
+def is_allowed_to_push_to_flathub(config, channel):
     return config["push_to_flathub"] and channel in _CHANNELS_AUTHORIZED_TO_REACH_FLATHUB

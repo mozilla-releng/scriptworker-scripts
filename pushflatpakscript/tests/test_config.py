@@ -17,7 +17,7 @@ def load_config(context):
 
 
 def load_schema():
-    path_to_schema = os.path.join(os.path.dirname(__file__), "..", "src", "pushsnapscript", "data", "config_schema.json")
+    path_to_schema = os.path.join(os.path.dirname(__file__), "..", "src", "pushflatpakscript", "data", "config_schema.json")
     with open(path_to_schema, "r") as file:
         return json.load(file)
 
@@ -36,5 +36,5 @@ def test_fake_prod():
 
 
 def test_prod():
-    context = {"ENV": "prod", "MACAROON_BETA_PATH": "", "MACAROON_CANDIDATE_PATH": "", "MACAROON_ESR_PATH": ""}
+    context = {"ENV": "prod", "REPO_TOKEN_BETA_PATH": "", "REPO_TOKEN_RELEASE_PATH": "", "REPO_TOKEN_ESR_PATH": ""}
     _validate_config(context)

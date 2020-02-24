@@ -24,7 +24,7 @@ async def async_main(context):
 
 
 def _log_warning_forewords(config, channel):
-    if not task.is_allowed_to_push_to_flatpak_store(config, channel):
+    if not task.is_allowed_to_push_to_flathub(config, channel):
         log.warning("You do not have the rights to reach Flathub. *All* requests will be mocked.")
 
 
