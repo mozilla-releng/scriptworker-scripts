@@ -15,7 +15,7 @@ COPY . /app
 
 RUN python -m venv /app \
  && ./bin/pip install --upgrade pip \
- && cd pushsnapscript \
+ && cd pushflatpakscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \
