@@ -24,4 +24,8 @@ RUN python -m venv /app \
  && /app/configloader_venv/bin/pip install . \
  && cd /app
 
+RUN curl -O /app/bin/flat-manager-client \
+ https://raw.githubusercontent.com/flatpak/flat-manager/a0005a8046a290590ccb53b631b9949ba52fd8cd/flat-manager-client \
+ && chmod 755 /app/bin/flat-manager-client
+
 CMD ["/app/docker.d/init.sh"]
