@@ -23,4 +23,4 @@ def get_flatpak_channel(config, task):
 
 
 def is_allowed_to_push_to_flathub(config, channel):
-    return config["push_to_flathub"] and channel in _CHANNELS_AUTHORIZED_TO_REACH_FLATHUB
+    return "push_to_flathub" in config and config["push_to_flathub"] and channel in _CHANNELS_AUTHORIZED_TO_REACH_FLATHUB
