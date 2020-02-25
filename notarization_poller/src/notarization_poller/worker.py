@@ -63,7 +63,7 @@ class RunTasks:
         """Claims and processes Taskcluster work."""
         while not self.is_cancelled and not self.is_stopped:
             num_tasks_to_claim = min(self.config["max_concurrent_tasks"] - len(self.running_tasks), MAX_CLAIM_WORK_TASKS)
-            if num_tasks_to_claim > 0 and arrow.utcnow().timestamp - self.last_claim_work.timestamp >= self.config["claim_work_interval"]:
+            if num_tasks_to_claim > 0:
                 async with aiohttp.ClientSession() as session:
                     queue = Queue(
                         options={

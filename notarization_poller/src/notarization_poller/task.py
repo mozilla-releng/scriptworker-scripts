@@ -81,7 +81,6 @@ class Task:
             self.task_log(traceback.format_exc(), level=logging.CRITICAL)
         log.info("Stopping task %s %s with status %s", self.task_id, self.run_id, self.status)
         self.reclaim_fut.cancel()
-        self.task_fut.cancel()
         await self.upload_task()
         await self.complete_task()
         rm(self.task_dir)
