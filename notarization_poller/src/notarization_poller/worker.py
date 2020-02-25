@@ -139,7 +139,7 @@ def main(event_loop=None):
         running_tasks.is_stopped = True
 
     event_loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.ensure_future(_handle_sigterm()))
-    event_loop.add_signal_handler(signal.SIGUSR1, _handle_sigusr1())
+    event_loop.add_signal_handler(signal.SIGUSR1, _handle_sigusr1)
 
     try:
         event_loop.run_until_complete(running_tasks.invoke())
