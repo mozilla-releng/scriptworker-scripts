@@ -14,9 +14,9 @@ black==19.10b0 \
     --hash=sha256:1b30e59be925fafc1ee4565e5e08abef6b03fe455102883820fe5ee2e4734e0b \
     --hash=sha256:c2edb73a08e9e0e6f65a0e6af18b059b8b1cdd5bef997d7a0b181df93dc81539 \
     # via pytest-black
-check-manifest==0.40 \
-    --hash=sha256:42de6eaab4ed149e60c9b367ada54f01a3b1e4d6846784f9b9710e770ff5572c \
-    --hash=sha256:78dd077f2c70dbac7cfcc9d12cbd423914e787ea4b5631de45aecd25b524e8e3 \
+check-manifest==0.41 \
+    --hash=sha256:4046b1260e63c139be6441fe8db8d9221f495ff39b81add2a55e5ca35dde7a6a \
+    --hash=sha256:88afe85b751717688f8bc3b63d9543d0d962da98f1f420c554eaeb8d76c571a8 \
     # via -r requirements/test.in (line 2)
 click==7.0 \
     --hash=sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13 \
@@ -70,7 +70,7 @@ flake8==3.7.9 \
 importlib-metadata==1.5.0 \
     --hash=sha256:06f5b3a99029c7134207dd882428a66992a9de2bef7c2b699b5641f9886c3302 \
     --hash=sha256:b97607a1a18a5100839aec1dc26a1ea17ee0d93b20b0f008d80a5a050afb200b \
-    # via pluggy, pytest
+    # via pep517, pluggy, pytest
 isort==4.3.21 \
     --hash=sha256:54da7e92468955c4fceacd0c86bd0ec997b0e1ee80d97f67c35a78b719dccab1 \
     --hash=sha256:6e811fcb295968434526407adb8796944f1988c5b65e8139058f2014cbe100fd \
@@ -95,6 +95,10 @@ pathspec==0.7.0 \
     --hash=sha256:163b0632d4e31cef212976cf57b43d9fd6b0bac6e67c26015d611a647d5e7424 \
     --hash=sha256:562aa70af2e0d434367d9790ad37aed893de47f1693e4201fd1d3dca15d19b96 \
     # via black
+pep517==0.8.1 \
+    --hash=sha256:5ce351f3be71d01bb094d63253854b6139931fcaba8e2f380c02102136c51e40 \
+    --hash=sha256:882e2eeeffe39ccd6be6122d98300df18d80950cb5f449766d64149c94c5614a \
+    # via check-manifest
 pip-compile-multi==1.5.8 \
     --hash=sha256:6c77a2cdae62c28d6c151111e6a38ca9935ef37898f9766100ec2064326d74e9 \
     --hash=sha256:fd92e064e8b187ce919a9b1e22bc7ff41e630bbfba8a9ab0501c260a2580feda \
@@ -193,7 +197,7 @@ snowballstemmer==2.0.0 \
 toml==0.10.0 \
     --hash=sha256:229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c \
     --hash=sha256:235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e \
-    # via black, check-manifest, pytest-black
+    # via black, check-manifest, pep517, pytest-black
 toposort==1.5 \
     --hash=sha256:d80128b83b411d503b0cdb4a8f172998bc1d3b434b6402a349b8ebd734d51a80 \
     --hash=sha256:dba5ae845296e3bf37b042c640870ffebcdeb8cd4df45adaa01d8c5476c557dd \
@@ -228,4 +232,4 @@ wcwidth==0.1.8 \
 zipp==3.0.0 \
     --hash=sha256:12248a63bbdf7548f89cb4c7cda4681e537031eda29c02ea29674bc6854460c2 \
     --hash=sha256:7c0f8e91abc0dc07a5068f315c52cb30c66bfbc581e5b50704c8a2f6ebae794a \
-    # via importlib-metadata
+    # via importlib-metadata, pep517
