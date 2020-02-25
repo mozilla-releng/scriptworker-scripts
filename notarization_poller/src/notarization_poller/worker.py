@@ -118,7 +118,6 @@ def main(event_loop=None):
 
     """
     event_loop = event_loop or asyncio.get_event_loop()
-    done = False
     config = get_config_from_cmdln(sys.argv[1:])
     update_logging_config(config)
 
@@ -130,8 +129,6 @@ def main(event_loop=None):
 
     async def _handle_sigterm():
         log.info("SIGTERM received; shutting down")
-        nonlocal done
-        done = True
         await running_tasks.cancel()
 
     async def _handle_sigusr1():

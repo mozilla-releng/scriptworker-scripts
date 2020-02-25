@@ -76,9 +76,12 @@ class Task:
         except TaskError:
             self.status = STATUSES["malformed-payload"]
             self.task_log(traceback.format_exc(), level=logging.CRITICAL)
+        except asyncio.CancelledError:
+            # We already dealt with self.status in reclaim_task
+            self.task_log(traceback.format_exc(), level=logging.CRITICAL)
         log.info("Stopping task %s %s with status %s", self.task_id, self.run_id, self.status)
-        self.reclaim_fut and self.reclaim_fut.cancel()
-        self.task_fut and self.task_fut.cancel()
+        self.reclaim_fut.cancel()
+        self.task_fut.cancel()
         await self.upload_task()
         await self.complete_task()
         rm(self.task_dir)
