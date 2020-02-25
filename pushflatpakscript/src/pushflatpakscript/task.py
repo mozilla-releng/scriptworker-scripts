@@ -2,7 +2,7 @@ from scriptworker.exceptions import TaskVerificationError
 
 FLATPAK_SCOPES_PREFIX = "project:releng:flathub:firefox:"
 
-_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB = ("beta", "release")
+_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB = ("beta", "stable")
 ALLOWED_CHANNELS = ("mock", *_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB)
 
 

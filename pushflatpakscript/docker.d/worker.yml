@@ -7,6 +7,5 @@ token_locations:
   $if: 'ENV == "prod"'
   then:
     beta: { "$eval": "REPO_TOKEN_BETA" }
-    release: { "$eval": "REPO_TOKEN_RELEASE" }
-    esr: { "$eval": "REPO_TOKEN_ESR" }
+    stable: { "$eval": "REPO_TOKEN_STABLE" }
   else: {}

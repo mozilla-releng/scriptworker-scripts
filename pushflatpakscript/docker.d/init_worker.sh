@@ -17,14 +17,11 @@ case $ENV in
     ;;
   prod)
     test_var_set 'REPO_TOKEN_BETA'
-    test_var_set 'REPO_TOKEN_RELEASE'
-    test_var_set 'REPO_TOKEN_ESR'
+    test_var_set 'REPO_TOKEN_STABLE'
     export REPO_TOKEN_BETA_PATH=$CONFIG_DIR/beta_token.txt
-    export REPO_TOKEN_RELEASE_PATH=$CONFIG_DIR/release_token.txt
-    export REPO_TOKEN_ESR_PATH=$CONFIG_DIR/esr_token.txt
+    export REPO_TOKEN_STABLE_PATH=$CONFIG_DIR/stable_token.txt
     echo $REPO_TOKEN_BETA | base64 -d > $REPO_TOKEN_BETA_PATH
-    echo $REPO_TOKEN_RELEASE | base64 -d > $REPO_TOKEN_RELEASE_PATH
-    echo $REPO_TOKEN_ESR | base64 -d > $REPO_TOKEN_ESR_PATH
+    echo $REPO_TOKEN_STABLE | base64 -d > $REPO_TOKEN_STABLE_PATH
     ;;
   *)
     exit 1

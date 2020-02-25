@@ -4,7 +4,7 @@
   "push_to_flathub": true,
   "flathub_url": "flathub URL location",
   "token_locations": {
-    "release": "/some/token",
+    "stable": "/some/token",
     "beta": "/some/token"
   }
 }
