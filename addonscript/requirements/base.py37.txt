@@ -193,9 +193,9 @@ rsa==4.0 \
     --hash=sha256:14ba45700ff1ec9eeb206a2ce76b32814958a98e372006c8fb76ba820211be66 \
     --hash=sha256:1a836406405730121ae9823e19c6e806c62bbad73f890574fff50efa4122c487 \
     # via python-jose
-scriptworker==31.1.0 \
-    --hash=sha256:0785ef8a390033a1d6ba3b658bc1d81242a841eb1f82e34a14c9430569f3b3f6 \
-    --hash=sha256:df9bc5c19a5ec39f008db05ddd3698f7df3ca77ffb1c574ba034b0d423df3811 \
+scriptworker==32.0.1 \
+    --hash=sha256:49f8da6b554f648d12cb5074fc5398325a7cf750e8de8ca054b5a44bac45fb12 \
+    --hash=sha256:7aa07c3ba4da4b11e303ec73e10a7bcbef41b9c73d227adeafea181177fb1973 \
     # via -r requirements/base.in (line 5)
 six==1.14.0 \
     --hash=sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a \
