@@ -92,8 +92,10 @@ class RunTasks:
     async def _run_cancellable(self, coroutine: typing.Awaitable):
         if not self.is_cancelled:
             self.future = asyncio.ensure_future(coroutine)
-            result = await self.future
-            self.future = None
+            try:
+                result = await self.future
+            finally:
+                self.future = None
             return result
 
     async def cancel(self, status=STATUSES["worker-shutdown"]):
@@ -131,13 +133,13 @@ def main(event_loop=None):
         log.info("SIGTERM received; shutting down")
         await running_tasks.cancel()
 
-    async def _handle_sigusr1():
+    def _handle_sigusr1():
         """Stop accepting new tasks."""
         log.info("SIGUSR1 received; no more tasks will be taken")
         running_tasks.is_stopped = True
 
     event_loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.ensure_future(_handle_sigterm()))
-    event_loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.ensure_future(_handle_sigusr1()))
+    event_loop.add_signal_handler(signal.SIGUSR1, _handle_sigusr1())
 
     try:
         event_loop.run_until_complete(running_tasks.invoke())
