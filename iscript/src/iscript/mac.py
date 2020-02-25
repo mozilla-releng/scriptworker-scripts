@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """iscript mac signing/notarization functions."""
 import asyncio
+import json
 import logging
 import os
 import plistlib
@@ -101,7 +102,7 @@ def _get_tar_create_options(path):
 
 
 def _get_pkg_name_from_tarball(path):
-    for ext in (".tar.gz", ".tar.bz2", ".dmg"):
+    for ext in (".tar.gz", ".tar.bz2", ".dmg", ".pkg"):
         if path.endswith(ext):
             return path.replace(ext, ".pkg")
     raise IScriptError("Unknown tarball suffix in path {}".format(path))
@@ -824,7 +825,7 @@ async def staple_notarization(all_paths, path_attr="app_path"):
     log.info("Stapling apps")
     futures = []
     for app in all_paths:
-        app.check_required_attrs([path_attr, "parent_dir"])
+        app.check_required_attrs([path_attr])
         cwd = os.path.dirname(getattr(app, path_attr))
         path = os.path.basename(getattr(app, path_attr))
         futures.append(
@@ -933,7 +934,7 @@ async def create_pkg_files(config, key_config, all_paths):
 
 # copy_pkgs_to_artifact_dir {{{1
 async def copy_pkgs_to_artifact_dir(config, all_paths):
-    """Copy the files to the artifact directory.
+    """Copy the pkg files to the artifact directory.
 
     Args:
         config (dict): the running config
@@ -949,6 +950,27 @@ async def copy_pkgs_to_artifact_dir(config, all_paths):
         makedirs(os.path.dirname(app.target_pkg_path))
         log.debug("Copying %s to %s", app.pkg_path, app.target_pkg_path)
         copy2(app.pkg_path, app.target_pkg_path)
+
+
+# copy_xpis_to_artifact_dir {{{1
+async def copy_xpis_to_artifact_dir(config, all_paths):
+    """Copy the xpi files to the artifact directory.
+
+    This is specifically for ``notarize_3_behavior``, since ``sign_langpacks``
+    already puts the signed xpis into the ``artifact_dir``.
+
+    Args:
+        config (dict): the running config
+        all_paths (list): the list of App objects to sign pkg for
+
+    """
+    log.info("Copying xpis to the artifact dir")
+    for app in all_paths:
+        app.check_required_attrs(["orig_path", "artifact_prefix"])
+        target_xpi_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
+        makedirs(os.path.dirname(target_xpi_path))
+        log.debug("Copying %s to %s", app.orig_path, target_xpi_path)
+        copy2(app.orig_path, target_xpi_path)
 
 
 # download_entitlements_file {{{1
@@ -1029,6 +1051,102 @@ async def notarize_behavior(config, task):
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing and notarizing apps.")
+
+
+# notarize_1_behavior {{{1
+async def notarize_1_behavior(config, task):
+    """Sign and submit all mac apps for notarization.
+
+    This task will not wait for the notarization to finish. Instead, it
+    will upload all signed apps and a uuid manifest.
+
+    Args:
+        config (dict): the running configuration
+        task (dict): the running task
+
+    Raises:
+        IScriptError: on fatal error.
+
+    """
+    work_dir = config["work_dir"]
+
+    key_config = get_key_config(config, task, base_key="mac_config")
+    entitlements_path = await download_entitlements_file(config, key_config, task)
+
+    all_paths = get_app_paths(config, task)
+    langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
+    if langpack_apps:
+        await sign_langpacks(config, key_config, langpack_apps)
+        all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
+
+    # app
+    await extract_all_apps(config, all_paths)
+    await unlock_keychain(key_config["signing_keychain"], key_config["keychain_password"])
+    await update_keychain_search_path(config, key_config["signing_keychain"])
+    await sign_all_apps(config, key_config, entitlements_path, all_paths)
+
+    # pkg
+    # Unlock keychain again in case it's locked since previous unlock
+    await unlock_keychain(key_config["signing_keychain"], key_config["keychain_password"])
+    await update_keychain_search_path(config, key_config["signing_keychain"])
+    await create_pkg_files(config, key_config, all_paths)
+
+    log.info("Submitting for notarization.")
+    if key_config["notarize_type"] == "multi_account":
+        await create_all_notarization_zipfiles(all_paths, path_attrs=["app_path", "pkg_path"])
+        poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths, path_attr="zip_path")
+    else:
+        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, path_attr="app_path")
+        poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
+
+    # create uuid_manifest.json
+    uuids_path = "{}/public/uuid_manifest.json".format(config["artifact_dir"])
+    makedirs(os.path.dirname(uuids_path))
+    with open(uuids_path, "w") as fh:
+        json.dump(sorted(poll_uuids.keys()), fh)
+
+    await tar_apps(config, all_paths)
+    await copy_pkgs_to_artifact_dir(config, all_paths)
+
+    log.info("Done signing apps and submitting them for notarization.")
+
+
+# notarize_3_behavior {{{1
+async def notarize_3_behavior(config, task):
+    """Staple notarization to all mac apps for this task.
+
+    Args:
+        config (dict): the running configuration
+        task (dict): the running task
+
+    Raises:
+        IScriptError: on fatal error.
+
+    """
+    # In notarize_3_behavior, `all_paths` will have separate "apps" for each
+    # artifact (one for a pkg, one for an app, one for a langpack xpi)
+    all_paths = get_app_paths(config, task)
+    all_xpi_paths = list(filter(lambda app: app.orig_path.endswith(".xpi"), all_paths))
+    all_pkg_paths = list(filter(lambda app: app.orig_path.endswith(".pkg"), all_paths))
+    all_app_paths = list(filterfalse(lambda app: app.orig_path.endswith((".pkg", ".xpi")), all_paths))
+
+    await extract_all_apps(config, all_app_paths)
+    for app in all_app_paths:
+        set_app_path_and_name(app)
+
+    for app in all_pkg_paths:
+        app.pkg_path = app.orig_path
+        app.pkg_name = os.path.basename(app.pkg_path)
+
+    await staple_notarization(all_app_paths, path_attr="app_path")
+    await tar_apps(config, all_app_paths)
+
+    await staple_notarization(all_pkg_paths, path_attr="pkg_path")
+    await copy_pkgs_to_artifact_dir(config, all_pkg_paths)
+
+    await copy_xpis_to_artifact_dir(config, all_xpi_paths)
+
+    log.info("Done stapling notarization.")
 
 
 # sign_behavior {{{1
