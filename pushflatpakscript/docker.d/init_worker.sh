@@ -12,6 +12,8 @@ test_var_set() {
 
 test_var_set 'FLATHUB_URL'
 
+export FLAT_MANAGER_CLIENT=/app/flat_manager_venv/bin/flat-manager-client
+
 case $ENV in
   dev|fake-prod)
     ;;

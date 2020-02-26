@@ -22,10 +22,14 @@ RUN python -m venv /app \
  && cd /app/configloader \
  && /app/configloader_venv/bin/pip install -r requirements/base.txt \
  && /app/configloader_venv/bin/pip install . \
+ && cd /app \
+ && python -m venv /app/flat_manager_venv \
+ && /app/flat_manager_venv/bin/pip install -r requirements/flat-manager.txt \
+ && curl -O /app/flat_manager_venv/bin/flat-manager-client \
+ https://raw.githubusercontent.com/flatpak/flat-manager/a0005a8046a290590ccb53b631b9949ba52fd8cd/flat-manager-client \
+ && chmod 755 /app/flat_manager_venv/bin/flat-manager-client \
+ && sed -e '1i#!/app/flat_manager_venv/bin/python' -e '1d' /app/flat_manager_venv/bin/flat-manager-client \
  && cd /app
 
-RUN curl -O /app/bin/flat-manager-client \
- https://raw.githubusercontent.com/flatpak/flat-manager/a0005a8046a290590ccb53b631b9949ba52fd8cd/flat-manager-client \
- && chmod 755 /app/bin/flat-manager-client
 
 CMD ["/app/docker.d/init.sh"]

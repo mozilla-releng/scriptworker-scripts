@@ -18,13 +18,14 @@ def validate_publish_build_output(context, content):
         )
 
 
-def run_flat_manager_client_process(command, *args):
+def run_flat_manager_client_process(context, command, *args):
     extra_args = [arg for arg in args]
-    process = subprocess.Popen(["/app/bin/flat-manager-client", command] + extra_args, stdout=subprocess.PIPE)
+    flat_manager_client = context.config["flat_manager_client"]
+    process = subprocess.Popen([flat_manager_client, command] + extra_args, stdout=subprocess.PIPE)
     output, err = process.communicate()
     exit_code = process.wait()
 
-    if exit_code is not 0:
+    if exit_code != 0:
         raise RuntimeError("Command returned error: {}".format(exit_code))
 
     return output
@@ -38,16 +39,16 @@ def push(context, flatpak_file_path, channel):
         # We don't raise an error because we still want green tasks on dev instances
         return
 
-    publish_build_output = run_flat_manager_client_process('create', context.config['flathub_url'], channel)
+    publish_build_output = run_flat_manager_client_process(context, 'create', context.config['flathub_url'], channel)
     validate_publish_build_output(publish_build_output)
 
     # TODO: implement zip logic to unarchive the flatpak_file_path
 
     # XXX: `repo` is hardcodede as it's always baked under that form in the flatpak
-    publish_build_output = run_flat_manager_client_process('push', publish_build_output, 'repo')
+    publish_build_output = run_flat_manager_client_process(context, 'push', publish_build_output, 'repo')
 
-    publish_build_output = run_flat_manager_client_process('commit', '--wait', publish_build_output)
+    publish_build_output = run_flat_manager_client_process(context, 'commit', '--wait', publish_build_output)
 
-    publish_build_output = run_flat_manager_client_process('publish', '--wait', publish_build_output)
+    publish_build_output = run_flat_manager_client_process(context, 'publish', '--wait', publish_build_output)
 
-    publish_build_output = run_flat_manager_client_process('purge', publish_build_output)
+    publish_build_output = run_flat_manager_client_process(context, 'purge', publish_build_output)

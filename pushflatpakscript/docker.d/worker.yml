@@ -3,6 +3,7 @@ artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 push_to_flathub: { "$eval": "ENV == 'prod'" }
 flathub_url: { "$eval": "FLATHUB_URL" }
+flat_manager_client: { "$eval": "FLAT_MANAGER_CLIENT" }
 token_locations:
   $if: 'ENV == "prod"'
   then:
