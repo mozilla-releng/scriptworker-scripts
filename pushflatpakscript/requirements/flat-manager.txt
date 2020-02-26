@@ -64,9 +64,9 @@ six==1.14.0 \
     --hash=sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a \
     --hash=sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c \
     # via tenacity
-tenacity==6.0.0 \
-    --hash=sha256:72f397c2bb1887e048726603f3f629ea16f88cb3e61e4ed3c57e98582b8e3571 \
-    --hash=sha256:947e728aedf06e8db665bb7898112e90d17e48cc3f3289784a2b9ccf6e56fabc \
+tenacity==6.1.0 \
+    --hash=sha256:f7bcbf5bb53875cfc38f61f596a88b1c994af32420f120c4409542a683ad613b \
+    --hash=sha256:fb01d8ef2474eed422d8314a566c9e391cccb6e50cf4585022add6cb5cda66c8 \
     # via -r requirements/flat-manager.in (line 3)
 yarl==1.4.2 \
     --hash=sha256:0c2ab325d33f1b824734b3ef51d4d54a54e0e7a23d13b86974507602334c2cce \

@@ -19,8 +19,12 @@ apt-get install -y \
     libsodium-dev
 
 for dir in $DIRS; do
+    ARGS="-g base -g test -g local"
+    if [ $dir = "pushflatpakscript" ]; then
+        ARGS="$ARGS -g flat-manager"
+    fi
     pushd $dir
-    pip-compile-multi -g base -g test -g local -g flat-manager -o "$SUFFIX"
+    pip-compile-multi -o "$SUFFIX" $ARGS
     chmod 644 requirements/*.txt
     popd
 done
