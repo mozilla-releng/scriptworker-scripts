@@ -131,6 +131,12 @@ bucket_config:
             key: { "$eval": "MAVEN_SNAPSHOT_KEY" }
           buckets:
             snapshot_components: 'maven-snapshots-s3-upload-bucket-knc0jfluv2kn'
+        maven-nightly-staging:
+          credentials:
+            id: { "$eval": "MAVEN_NIGHTLY_ID" }
+            key: { "$eval": "MAVEN_NIGHTLY_KEY" }
+          buckets:
+            nightly_components: 'TODO'
         dummy: {}
       'COT_PRODUCT == "mobile" && ENV == "prod"':
         maven-production:
@@ -145,6 +151,12 @@ bucket_config:
             key: { "$eval": "MAVEN_SNAPSHOT_KEY" }
           buckets:
             snapshot_components: 'maven-snapshots-s3-upload-bucket-d4zm9oo354qe'
+        maven-nightly-production:
+          credentials:
+            id: { "$eval": "MAVEN_NIGHTLY_ID" }
+            key: { "$eval": "MAVEN_NIGHTLY_KEY" }
+          buckets:
+            nightly_components: 'TODO'
         dummy: {}
       'COT_PRODUCT == "application-services" && (ENV == "dev" || ENV == "fake-prod")':
         maven-staging:
