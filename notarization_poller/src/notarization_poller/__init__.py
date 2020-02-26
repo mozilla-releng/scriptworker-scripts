@@ -1,0 +1,1 @@
+"""Initialize notarization_poller."""
