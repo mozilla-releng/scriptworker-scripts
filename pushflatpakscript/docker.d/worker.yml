@@ -7,6 +7,6 @@ flat_manager_client: { "$eval": "FLAT_MANAGER_CLIENT" }
 token_locations:
   $if: 'ENV == "prod"'
   then:
-    beta: { "$eval": "REPO_TOKEN_BETA" }
-    stable: { "$eval": "REPO_TOKEN_STABLE" }
+    beta: { "$eval": "REPO_TOKEN_BETA_PATH" }
+    stable: { "$eval": "REPO_TOKEN_STABLE_PATH" }
   else: {}
