@@ -1,0 +1,14 @@
+-r base.in
+check-manifest
+coverage
+flake8
+flake8_docstrings
+isort
+mock
+pip-compile-multi
+pytest
+pytest-asyncio
+pytest-black
+pytest-cov
+pytest-mock
+python-coveralls

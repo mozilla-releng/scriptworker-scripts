@@ -1,0 +1,3 @@
+update: all
+pin: True
+schedule: "every week on wednesday"

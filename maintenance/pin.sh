@@ -13,6 +13,7 @@ else
         bouncerscript
         configloader
         iscript
+        notarization_poller
         pushapkscript
         pushsnapscript
         scriptworker_client
