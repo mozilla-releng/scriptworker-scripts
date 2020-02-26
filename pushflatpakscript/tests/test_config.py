@@ -5,7 +5,13 @@ import jsone
 import jsonschema
 import yaml
 
-COMMON_CONTEXT = {"WORK_DIR": "", "ARTIFACTS_DIR": "", "VERBOSE": "true", "FLATHUB_URL": "https://flat.example", "FLAT_MANAGER_CLIENT": "/app/bin/flat-manager-client"}
+COMMON_CONTEXT = {
+    "WORK_DIR": "",
+    "ARTIFACTS_DIR": "",
+    "VERBOSE": "true",
+    "FLATHUB_URL": "https://flat.example",
+    "FLAT_MANAGER_CLIENT": "/app/bin/flat-manager-client",
+}
 
 
 def load_config(context):
