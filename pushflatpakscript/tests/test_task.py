@@ -11,12 +11,10 @@ def test_get_flatpak_channel_without_payload_raises():
         get_flatpak_channel(config, task)
 
 
-@pytest.mark.parametrize(
-    "raises, channel", ((False, "stable"), (False, "beta"), (False, "mock"), (False, "beta"), (False, "beta"), (True, "bogus"))
-)
+@pytest.mark.parametrize("raises, channel", ((False, "stable"), (False, "beta"), (False, "mock"), (False, "beta"), (False, "beta"), (True, "bogus")))
 def test_get_flatpak_channel_dep(raises, channel):
     task = {"scopes": [], "payload": {"channel": channel}}
-    config = {"push_to_store": False}
+    config = {"push_to_flathub": False}
     if raises:
         with pytest.raises(TaskVerificationError):
             get_flatpak_channel(config, task)
@@ -37,7 +35,7 @@ def test_get_flatpak_channel_dep(raises, channel):
 )
 def test_get_flatpak_channel_prod(raises, scopes, channel):
     task = {"scopes": scopes, "payload": {"channel": channel}}
-    config = {"push_to_store": True}
+    config = {"push_to_flathub": True}
     if raises:
         with pytest.raises(TaskVerificationError):
             get_flatpak_channel(config, task)
@@ -46,16 +44,9 @@ def test_get_flatpak_channel_prod(raises, scopes, channel):
 
 
 @pytest.mark.parametrize(
-    "channel, push_to_store, expected",
-    (
-        ("beta", True, True),
-        ("candidate", True, True),
-        ("beta", False, False),
-        ("candidate", False, False),
-        ("mock", True, False),
-        ("mock", False, False),
-    ),
+    "channel, push_to_flathub, expected",
+    (("beta", True, True), ("candidate", True, True), ("beta", False, False), ("candidate", False, False), ("mock", True, False), ("mock", False, False),),
 )
-def test_is_allowed_to_push_to_flathub(channel, push_to_store, expected):
-    config = {"push_to_store": push_to_store}
+def test_is_allowed_to_push_to_flathub(channel, push_to_flathub, expected):
+    config = {"push_to_flathub": push_to_flathub}
     assert is_allowed_to_push_to_flathub(config, channel) == expected

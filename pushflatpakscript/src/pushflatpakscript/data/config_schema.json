@@ -4,13 +4,17 @@
     "required": [
         "push_to_flathub",
         "token_locations",
-        "flathub_url"
+        "flathub_url",
+        "flat_manager_client"
     ],
     "properties": {
         "push_to_flathub": {
             "type": "boolean"
         },
         "flathub_url": {
+            "type": "string"
+        },
+        "flat_manager_client": {
             "type": "string"
         },
         "token_locations": {
