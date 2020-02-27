@@ -15,7 +15,8 @@ virtualenv3 venv3   # create the virtualenv in ./venv3
 . venv3/bin/activate # activate it
 git clone https://github.com/mozilla-releng/pushsnapscript
 cd pushsnapscript
-pip install pushsnapscript
+pip install -r requirements/base.txt
+python setup.py develop
 ```
 
 ### Configure
@@ -36,7 +37,7 @@ If you aren't running through scriptworker, you need to manually create the dire
 ### task.json
 
 ```sh
-cp examples/task.example.json /path/to/work_dir
+cp examples/task.example.json /path/to/work_dir/task.json
 # edit it with your favorite text editor
 ```
 
