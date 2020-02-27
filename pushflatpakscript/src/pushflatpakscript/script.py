@@ -18,7 +18,6 @@ async def async_main(context):
     flatpak_file_path = artifacts.get_flatpak_file_path(context)
 
     _log_warning_forewords(context.config, channel)
-    # good until here
 
     flathub.push(context, flatpak_file_path, channel)
 

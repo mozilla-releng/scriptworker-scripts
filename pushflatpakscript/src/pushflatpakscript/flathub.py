@@ -1,9 +1,12 @@
 import logging
+import os
 import subprocess
+import tarfile
 
 from scriptworker.exceptions import TaskVerificationError
 
 from pushflatpakscript import task
+from pushflatpakscript.constants import TAR_MAX_SIZE_IN_MB
 
 log = logging.getLogger(__name__)
 
@@ -28,6 +31,88 @@ def run_flat_manager_client_process(context, args):
     return output
 
 
+def _check_file_exists(file_path):
+    if not os.path.exists(file_path):
+        raise TaskVerificationError(f'{file_path} file not found on disk!')
+
+
+def _get_folder_path_for_file(file_path):
+    return os.path.dirname(file_path)
+
+
+def _check_tarball_is_valid(tarball_path):
+    if not tarfile.is_tarfile(tarball_path):
+        raise TaskVerificationError(f'{file_path} is not valid tarball!')
+
+
+def _check_tarball_size(tarball_path):
+    tar_size = os.path.getsize(tarball_path)
+    tar_size_in_mb = tar_size // (1024 * 1024)
+
+    if tar_size_in_mb > TAR_MAX_SIZE_IN_MB:
+        raise TaskVerificationError(
+                f'Tar {tarball_path} is too big. Max accepted size is {TAR_MAX_SIZE_IN_MB}'
+        )
+
+
+def _check_tar_itself(tar_file_path):
+    log.info("Check that flatpak tarball exists")
+    _check_file_exists(tar_file_path)
+
+    log.info("Check that flatpak tarball is a valid archive")
+    _check_tarball_is_valid(tar_file_path)
+
+    log.info("Check that flatpak tarball meets size requirements")
+    _check_tarball_size(tar_file_path)
+
+    log.info("Tarball looks good!")
+
+
+def check_and_extract_tar_archive(context, tar_file_path):
+    """Verify tar archives and extract them.
+
+    This function is enriching the sanity checks that are already done as part
+    of the tar module.
+
+    * check if the tarball exists
+    * check if flatpak tarball is a valid tarball
+    * check if file size meets the requirements
+    * TODO: check each file within the archive to ensure it's fine
+    * TODO: check file in archive meet size requirements
+
+    If any of these conditions is not met, then the function raises and exception
+    and bails out without attempting to extract the files.
+
+    Otherwise, files are extracted in the same folder as the tar archive, under
+    the `repo` subfolder (inherited from the way we package flatpal in the
+    `repackage` job).
+
+    Raises:
+        TaskVerificationError: whenever a tar archive breaks above assumption
+
+    Returns:
+        Location of the deflated flatpak tarball on local disk
+
+    """
+    _check_tar_itself(tar_file_path)
+
+    flatpak_tar_basedir = _get_folder_path_for_file(tar_file_path)
+    flatpak_deflated_dir = 'repo'
+
+    with tarfile.open(tar_file_path) as tar:
+        topdir = tar.getnames()[0]
+        if topdir != "repo":
+            log.warning(f'{tar_file_path} does not have `repo` as topdir')
+            flatpak_deflated_dir = topdir
+        tar.extractall(path=flatpak_tar_basedir)
+
+    # we remove the `tar.gz` as it's not longer needed
+    os.remove(tar_file_path)
+    log.debug(f"Deleted archive from {tar_file_path}")
+
+    return os.path.join(flatpak_tar_basedir, flatpak_deflated_dir)
+
+
 def push(context, flatpak_file_path, channel):
     """ Publishes a flatpak into a given channel.
     """
@@ -38,12 +123,11 @@ def push(context, flatpak_file_path, channel):
 
     token_args = ["--token-file", context.config["token_locations"][channel]]
     publish_build_output = run_flat_manager_client_process(context, token_args + ["create", context.config["flathub_url"], channel])
-    validate_publish_build_output(publish_build_output)
+    validate_publish_build_output(context, publish_build_output)
 
-    # TODO: implement zip logic to unarchive the flatpak_file_path
+    deflated_dir = check_and_extract_tar_archive(context, flatpak_file_path)
 
-    # XXX: `repo` is hardcodede as it's always baked under that form in the flatpak
-    publish_build_output = run_flat_manager_client_process(context, token_args + ["push", publish_build_output, "repo"])
+    publish_build_output = run_flat_manager_client_process(context, token_args + ["push", publish_build_output, deflated_dir])
 
     publish_build_output = run_flat_manager_client_process(context, token_args + ["commit", "--wait", publish_build_output])
 
