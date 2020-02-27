@@ -66,6 +66,8 @@ case $COT_PRODUCT in
     test_var_set 'MAVEN_KEY'
     test_var_set 'MAVEN_SNAPSHOT_ID'
     test_var_set 'MAVEN_SNAPSHOT_KEY'
+    test_var_set 'MAVEN_NIGHTLY_ID'
+    test_var_set 'MAVEN_NIGHTLY_KEY'
     export TASKCLUSTER_SCOPE_PREFIX="project:mobile:android-components:releng:${PROJECT_NAME}:"
     ;;
   application-services)
