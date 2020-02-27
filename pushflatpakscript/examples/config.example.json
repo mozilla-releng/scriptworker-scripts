@@ -3,6 +3,7 @@
   "verbose": true,
   "push_to_flathub": true,
   "flathub_url": "flathub URL location",
+  "flat_manager_client": "local-path-to-flat-manager",
   "token_locations": {
     "stable": "/some/token",
     "beta": "/some/token"
