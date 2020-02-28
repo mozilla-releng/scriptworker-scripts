@@ -2,17 +2,23 @@ scriptworker
 mozilla-version
 
 # XXX Dependencies required by snapcraft._store.push
-# See https://github.com/snapcore/snapcraft/blob/master/requirements.txt
-snapcraft==2.43.1
-click>=6.2
+# snapcraft's setup.py doesn't include all dependencies define in
+# its requirements.txt file.
+# See https://github.com/snapcore/snapcraft/blob/3.10/setup.py#L120
+# and https://github.com/snapcore/snapcraft/blob/3.10/requirements.txt.
+#
+# XXX Snapcraft does not always publish to Pypi and the last version there (3.8)
+# is not Python3.8-compatible. That's why we have to install it from Github directly.
+# Update setup.py if you bump snapcraft.
+https://github.com/snapcore/snapcraft/archive/3.10.tar.gz
+click~=7.0
+mypy-extensions==0.4.3
 progressbar33==2.4
 pyelftools==0.24
 pymacaroons==0.9.2
 python-debian==0.1.28
-pyxdg==0.25
 PyYAML==3.13
-requests>=2,<3
-requests-toolbelt==0.6.0
 requests_unixsocket==0.1.5
+requests-toolbelt==0.8.0
 simplejson==3.8.2
 tabulate==0.7.5
