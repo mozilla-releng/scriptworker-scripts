@@ -134,6 +134,17 @@ def test_get_branch(task_defn, branch):
     assert ttask.get_branch(task_defn) == branch
 
 
+@pytest.mark.parametrize("config", ({}, {"dummy": 1}))
+def test_get_merge_config(task_defn, config):
+    task_defn["payload"]["merge_info"] = config
+    assert ttask.get_merge_config(task_defn) == config
+
+
+def test_get_merge_config_missing(task_defn):
+    with pytest.raises(TaskVerificationError):
+        ttask.get_merge_config(task_defn)
+
+
 @pytest.mark.parametrize(
     "tag_info", ({"revision": "deadbeef", "tags": ["FIREFOX_54.0b3_RELEASE", "BOB"]}, {"revision": "beef0001", "tags": ["FIREFOX_59.0b3_RELEASE", "FRED"]})
 )
@@ -282,3 +293,10 @@ def test_should_push_true(task):
 def test_should_push_false(task):
     actions = ttask.task_action_types(SCRIPT_CONFIG, task)
     assert False is ttask.should_push(task, actions)
+
+
+@pytest.mark.parametrize("ssh_user,expected", ((None, "default"), ("merge_user", "merge_user")))
+def test_get_ssh_user(task_defn, ssh_user, expected):
+    if ssh_user:
+        task_defn["payload"]["ssh_user"] = ssh_user
+    assert ttask.get_ssh_user(task_defn) == expected

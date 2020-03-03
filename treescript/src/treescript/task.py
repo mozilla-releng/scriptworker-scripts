@@ -7,7 +7,8 @@ from treescript.exceptions import TaskVerificationError
 log = logging.getLogger(__name__)
 
 
-VALID_ACTIONS = {"tag", "version_bump", "l10n_bump", "push"}
+# This list should be sorted in the order the actions should be taken
+VALID_ACTIONS = {"tag", "version_bump", "l10n_bump", "push", "merge_day"}
 
 DONTBUILD_MSG = " DONTBUILD"
 CLOSED_TREE_MSG = " CLOSED TREE"
@@ -242,3 +243,31 @@ def should_push(task, actions):
     else:
         log.info("Not pushing changes, no push requested")
         return False
+
+
+# get_ssh_user {{{1
+def get_ssh_user(task):
+    """Get the configuration key for the relevant ssh user."""
+    return task.get("payload", {}).get("ssh_user", "default")
+
+
+# get_merge_config {{{1
+def get_merge_config(task):
+    """Get the payload's merge day configuration.
+
+    Args:
+        task (dict): the running task
+
+    Returns:
+        dict: The merge configuration.
+
+    Raises:
+        TaskVerificationError: on missing configuration. Invalid config
+        is handled by the schema, which doesn't currently match up actions
+        and required payload subsections.
+
+    """
+    try:
+        return task.get("payload", {})["merge_info"]
+    except KeyError:
+        raise TaskVerificationError("Requested merge action with missing merge configuration.")
