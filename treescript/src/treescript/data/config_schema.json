@@ -1,4 +1,17 @@
 {
+    "definitions": {
+        "ssh_user": {
+            "type": "object",
+            "properties": {
+                "user": {
+                    "type": "string"
+                },
+                "keyfile": {
+                    "type": "string"
+                }
+            }
+        }
+    },
     "title": "treescript config schema",
     "type": "object",
     "required": [
@@ -6,8 +19,7 @@
         "hg",
         "hg_share_base_dir",
         "upstream_repo",
-        "hg_ssh_user",
-        "hg_ssh_keyfile"
+        "hg_ssh_config"
     ],
     "properties": {
         "taskcluster_scope_prefix": {
@@ -22,11 +34,12 @@
         "upstream_repo": {
             "type": "string"
         },
-        "hg_ssh_user": {
-            "type": "string"
-        },
-        "hg_ssh_keyfile": {
-            "type": "string"
+        "hg_ssh_config": {
+            "type": "object",
+            "properties": {
+                "default": {"$ref": "#/definitions/ssh_user"}
+            },
+            "additionalProperties": {"$ref": "#/definitions/ssh_user"}
         }
     }
 }

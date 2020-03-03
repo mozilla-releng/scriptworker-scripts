@@ -69,6 +69,35 @@ async def bump_version(config, task, repo_path):
     """Perform a version bump.
 
     This function takes its inputs from task by using the ``get_version_bump_info``
+    function from treescript.task. Using `next_version` and `files`, then
+    calls do_version_bump to perform the work.
+
+    Args:
+        config (dict): the running config
+        task (dict): the running task
+        repo_path (str): the source directory
+
+    Returns:
+        int: the number of commits created.
+
+    """
+    bump_info = get_version_bump_info(task)
+    num_commits = 0
+
+    changed = await do_bump_version(config, repo_path, bump_info["files"], bump_info["next_version"])
+    if changed:
+        commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
+        if get_dontbuild(task):
+            commit_msg += DONTBUILD_MSG
+        await run_hg_command(config, "commit", "-m", commit_msg, repo_path=repo_path)
+        num_commits += 1
+    return num_commits
+
+
+async def do_bump_version(config, repo_path, files, next_version):
+    """Perform a version bump.
+
+    This function takes its inputs from task by using the ``get_version_bump_info``
     function from treescript.task. Using `next_version` and `files`.
 
     This function does nothing (but logs) if the current version and next version
@@ -87,10 +116,8 @@ async def bump_version(config, task, repo_path):
         int: the number of commits created.
 
     """
-    bump_info = get_version_bump_info(task)
-    files = bump_info["files"]
     changed = False
-    num_commits = 0
+    saved_next_version = next_version
 
     for file_ in files:
         abs_file = os.path.join(repo_path, file_)
@@ -101,7 +128,7 @@ async def bump_version(config, task, repo_path):
 
         VersionClass = _find_what_version_parser_to_use(file_)
         curr_version = get_version(file_, repo_path)
-        next_version = VersionClass.parse(bump_info["next_version"])
+        next_version = VersionClass.parse(saved_next_version)
 
         # XXX In the case of ESR, some files (like version.txt) show version numbers without `esr`
         # at the end. next_version is usually provided without `esr` too.
@@ -115,7 +142,7 @@ async def bump_version(config, task, repo_path):
                 next_version.is_beta,
             )
         ):
-            next_version = VersionClass.parse("{}esr".format(bump_info["next_version"]))
+            next_version = VersionClass.parse("{}esr".format(next_version))
 
         if next_version < curr_version:
             log.warning("Version bumping skipped due to conflicting values: " "(next version {} is < current version {})".format(next_version, curr_version))
@@ -127,14 +154,7 @@ async def bump_version(config, task, repo_path):
             changed = True
             replace_ver_in_file(abs_file, curr_version, next_version)
 
-    if changed:
-        dontbuild = get_dontbuild(task)
-        commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
-        if dontbuild:
-            commit_msg += DONTBUILD_MSG
-        await run_hg_command(config, "commit", "-m", commit_msg, repo_path=repo_path)
-        num_commits += 1
-    return num_commits
+    return changed
 
 
 def replace_ver_in_file(file_, curr_version, new_version):
