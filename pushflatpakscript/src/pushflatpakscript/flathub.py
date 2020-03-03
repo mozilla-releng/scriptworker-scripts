@@ -33,7 +33,7 @@ def run_flat_manager_client_process(context, args):
 
 def _check_file_exists(file_path):
     if not os.path.exists(file_path):
-        raise TaskVerificationError(f'{file_path} file not found on disk!')
+        raise TaskVerificationError(f"{file_path} file not found on disk!")
 
 
 def _get_folder_path_for_file(file_path):
@@ -42,7 +42,7 @@ def _get_folder_path_for_file(file_path):
 
 def _check_tarball_is_valid(tarball_path):
     if not tarfile.is_tarfile(tarball_path):
-        raise TaskVerificationError(f'{file_path} is not valid tarball!')
+        raise TaskVerificationError(f"{tarball_path} is not valid tarball!")
 
 
 def _check_tarball_size(tarball_path):
@@ -50,9 +50,7 @@ def _check_tarball_size(tarball_path):
     tar_size_in_mb = tar_size // (1024 * 1024)
 
     if tar_size_in_mb > TAR_MAX_SIZE_IN_MB:
-        raise TaskVerificationError(
-                f'Tar {tarball_path} is too big. Max accepted size is {TAR_MAX_SIZE_IN_MB}'
-        )
+        raise TaskVerificationError(f"Tar {tarball_path} is too big. Max accepted size is {TAR_MAX_SIZE_IN_MB}")
 
 
 def _check_tar_itself(tar_file_path):
@@ -97,12 +95,12 @@ def check_and_extract_tar_archive(context, tar_file_path):
     _check_tar_itself(tar_file_path)
 
     flatpak_tar_basedir = _get_folder_path_for_file(tar_file_path)
-    flatpak_deflated_dir = 'repo'
+    flatpak_deflated_dir = "repo"
 
     with tarfile.open(tar_file_path) as tar:
         topdir = tar.getnames()[0]
         if topdir != "repo":
-            log.warning(f'{tar_file_path} does not have `repo` as topdir')
+            log.warning(f"{tar_file_path} does not have `repo` as topdir")
             flatpak_deflated_dir = topdir
         tar.extractall(path=flatpak_tar_basedir)
 
