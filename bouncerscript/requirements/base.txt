@@ -133,7 +133,7 @@ mohawk==1.1.0 \
 mozilla-version==0.5.0 \
     --hash=sha256:c36dff62d62e098dfde83a010600ac342d00fbaa14a056ea17ed48fe31aa7ef3 \
     --hash=sha256:ed7f7c6804eb46ea27d5f608144769d08b112b1844e18663adbc6b5f87c5ad63 \
-    # via -r requirements/base.in (line 2)
+    # via -r requirements/base.in
 multidict==4.7.5 \
     --hash=sha256:317f96bc0950d249e96d8d29ab556d01dd38888fbe68324f46fd834b430169f1 \
     --hash=sha256:42f56542166040b4474c0c608ed051732033cd821126493cf25b6c276df7dd35 \
@@ -180,10 +180,10 @@ requests==2.23.0 \
     --hash=sha256:43999036bfa82904b6af1d99e4882b560e5e2c68e5c4b0aa03b655f3d7d73fee \
     --hash=sha256:b3f43d496c6daba4493e7c431722aeb7dbc6288f52a6e04e7b6023b0247817e6 \
     # via github3.py, taskcluster
-scriptworker==31.1.0 \
-    --hash=sha256:0785ef8a390033a1d6ba3b658bc1d81242a841eb1f82e34a14c9430569f3b3f6 \
-    --hash=sha256:df9bc5c19a5ec39f008db05ddd3698f7df3ca77ffb1c574ba034b0d423df3811 \
-    # via -r requirements/base.in (line 1)
+scriptworker==32.0.3 \
+    --hash=sha256:a4d428a2c9db1b0dbabb86c0badf850e919ed83ffaba701185370ebe3dd5f7aa \
+    --hash=sha256:d60976a94ba86d0c4b9f23536ce3cb026281c726d00da12b6546a8dd80cb4d1b \
+    # via -r requirements/base.in
 six==1.14.0 \
     --hash=sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a \
     --hash=sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c \
@@ -196,10 +196,10 @@ taskcluster-urls==12.1.0 \
     --hash=sha256:1dc740c32c7beb31e11ed7ccf9da2d47a504acdb3170c8900649433b0fd16fb2 \
     --hash=sha256:4a62c776aeba6d45044789a8845ec4d8521bc1bb6ebfc86d79ee759bcdd4f2f7 \
     # via taskcluster
-taskcluster==25.3.0 \
-    --hash=sha256:7ed49431c68a562cd421dfdb2aa3e3a99e759bffbc208fcfe8eee27e219014e0 \
-    --hash=sha256:9f7ad8de338c894a5b916523b4e1150fb210b821dcd93c1fadf1016cc737844b \
-    --hash=sha256:c1108a9611c540529f08c9c2a15d104fe8853e0fa6b2d97f030e69c0f3460925 \
+taskcluster==25.4.0 \
+    --hash=sha256:017e626ec7211cc250f6c59ac4fbeb3ca7d7ecf0a253eb4f21a694bc5d02ae36 \
+    --hash=sha256:0a8fc965441ab60aafb83bcf2b670afd3f8817b13067561e084b4d2528f1e75c \
+    --hash=sha256:a9d10a794a065ea17a11fa8ee4861e57ea702362f70d00dc97d5a4f685a70d4f \
     # via scriptworker
 uritemplate==3.0.1 \
     --hash=sha256:07620c3f3f8eed1f12600845892b0e036a2420acf513c53f7de0abd911a5894f \

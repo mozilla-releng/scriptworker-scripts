@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 """Async helper functions."""
-import aiohttp
 import asyncio
-import async_timeout
 import fcntl
 import logging
 import os
 import random
 import sys
+
+import aiohttp
+import async_timeout
+
 from scriptworker_client.exceptions import (
     Download404,
     DownloadError,
