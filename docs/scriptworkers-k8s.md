@@ -1,4 +1,4 @@
-# Kuberbnetes
+# Kubernetes
 
 The scriptworkers are hosted in Google Compute Cloud (GCP) using Kubernetes.
 The deployment process is managed by the CloudOps team.
