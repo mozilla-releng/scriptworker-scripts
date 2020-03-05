@@ -84,12 +84,30 @@ def test_thunderbird_prod():
 
 
 def test_mobile_fake_prod():
-    context = {"COT_PRODUCT": "mobile", "ENV": "fake-prod", "MAVEN_ID": "", "MAVEN_KEY": "", "MAVEN_SNAPSHOT_ID": "", "MAVEN_SNAPSHOT_KEY": ""}
+    context = {
+        "COT_PRODUCT": "mobile",
+        "ENV": "fake-prod",
+        "MAVEN_ID": "",
+        "MAVEN_KEY": "",
+        "MAVEN_SNAPSHOT_ID": "",
+        "MAVEN_SNAPSHOT_KEY": "",
+        "MAVEN_NIGHTLY_ID": "",
+        "MAVEN_NIGHTLY_KEY": "",
+    }
     _validate_config(context)
 
 
 def test_mobile_prod():
-    context = {"COT_PRODUCT": "mobile", "ENV": "prod", "MAVEN_ID": "", "MAVEN_KEY": "", "MAVEN_SNAPSHOT_ID": "", "MAVEN_SNAPSHOT_KEY": ""}
+    context = {
+        "COT_PRODUCT": "mobile",
+        "ENV": "prod",
+        "MAVEN_ID": "",
+        "MAVEN_KEY": "",
+        "MAVEN_SNAPSHOT_ID": "",
+        "MAVEN_SNAPSHOT_KEY": "",
+        "MAVEN_NIGHTLY_ID": "",
+        "MAVEN_NIGHTLY_KEY": "",
+    }
     _validate_config(context)
 
 

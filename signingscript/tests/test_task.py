@@ -112,7 +112,7 @@ async def test_sign(context, mocker, format, filename, post_files):
     "format, expected",
     (
         # Hardcoded cases
-        ("autograph_focus", stask.sign_jar),
+        ("autograph_apk_fennec_sha1", stask.sign_jar),
         ("autograph_hash_only_mar384", stask.sign_mar384_with_autograph_hash),
         ("gpg", stask.sign_gpg),
         ("jar", stask.sign_jar),
@@ -122,13 +122,10 @@ async def test_sign(context, mocker, format, filename, post_files):
         ("widevine_blessed", stask.sign_widevine),
         ("default", stask.sign_file),
         # Regex cases
-        ("autograph_apk_fenix", stask.sign_jar),
-        ("autograph_apk_fennec_sha1", stask.sign_jar),
-        ("autograph_apk_focus", stask.sign_jar),
-        ("autograph_apk_reference_browser", stask.sign_jar),
         ("autograph_hash_only_mar384:firefox_20190321_dev", stask.sign_mar384_with_autograph_hash),
         # Default
-        ("autograph_apk_", stask.sign_file),
+        ("autograph_apk", stask.sign_file),
+        ("autograph_focus", stask.sign_file),
         ("non-existing-format", stask.sign_file),
     ),
 )

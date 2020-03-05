@@ -6,7 +6,7 @@ import tempfile
 
 from scriptworker_client.utils import load_json_or_yaml, makedirs, run_command
 from treescript.exceptions import CheckoutError, FailedSubprocess, PushError
-from treescript.task import DONTBUILD_MSG, get_branch, get_dontbuild, get_source_repo, get_tag_info
+from treescript.task import DONTBUILD_MSG, get_branch, get_dontbuild, get_source_repo, get_ssh_user, get_tag_info
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
 # For environment vars.
@@ -222,6 +222,11 @@ async def check_tags(config, tag_info, repo_path):
     return tags
 
 
+async def get_revision(config, repo_path, branch):
+    """Obtain the current revision."""
+    return await run_hg_command(config, "identify", "-r", branch, "--template", "{node}", return_output=True, repo_path=repo_path)
+
+
 async def do_tagging(config, task, repo_path):
     """Perform tagging, at ${repo_path}/src.
 
@@ -266,7 +271,7 @@ async def do_tagging(config, task, repo_path):
     return 1
 
 
-# log_outgoing {{{1
+# _count_outgoing {{{1
 def _count_outgoing(output):
     """Count the number of outgoing hg changesets from `hg outgoing`.
 
@@ -282,6 +287,7 @@ def _count_outgoing(output):
     return count
 
 
+# log_outgoing {{{1
 async def log_outgoing(config, task, repo_path):
     """Run `hg out` against the current revision in the repository.
 
@@ -335,22 +341,22 @@ async def strip_outgoing(config, task, repo_path):
 
 
 # push {{{1
-async def push(config, task, repo_path):
+async def push(config, task, repo_path, target_repo, revision=None):
     """Run `hg push` against the current source repo.
 
     Args:
         config (dict): the running config
         task (dict): the running task
         repo_path (str): the source repo path
-
+        target_repo (str): Destination repository url
+        revision (str): A specific revision to push
     Raises:
         PushError: on failure
-
     """
-    source_repo = get_source_repo(task)
-    source_repo_ssh = source_repo.replace("https://", "ssh://")
-    ssh_username = config.get("hg_ssh_user")
-    ssh_key = config.get("hg_ssh_keyfile")
+    target_repo_ssh = target_repo.replace("https://", "ssh://")
+    ssh_config = config.get("hg_ssh_config", {}).get(get_ssh_user(task), {})
+    ssh_username = ssh_config.get("user")
+    ssh_key = ssh_config.get("keyfile")
     ssh_opt = []
     if ssh_username or ssh_key:
         ssh_opt = ["-e", "ssh"]
@@ -358,9 +364,9 @@ async def push(config, task, repo_path):
             ssh_opt[1] += " -l %s" % ssh_username
         if ssh_key:
             ssh_opt[1] += " -i %s" % ssh_key
-    log.info("Pushing local changes to {}".format(source_repo_ssh))
+    log.info("Pushing local changes to {}".format(target_repo_ssh))
     try:
-        await run_hg_command(config, "push", *ssh_opt, "-r", ".", "-v", source_repo_ssh, repo_path=repo_path, exception=PushError)
+        await run_hg_command(config, "push", *ssh_opt, "-r", revision if revision else ".", "-v", target_repo_ssh, repo_path=repo_path, exception=PushError)
     except PushError as exc:
         log.warning("Hit PushError %s", str(exc))
         await strip_outgoing(config, task, repo_path)

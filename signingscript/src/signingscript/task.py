@@ -2,7 +2,7 @@
 """Signingscript task functions.
 
 Attributes:
-    FORMAT_TO_SIGNING_FUNCTION (frozendict): a mapping between signing format
+    FORMAT_TO_SIGNING_FUNCTION (immutabledict): a mapping between signing format
         and signing function. If not specified, use the `default` signing
         function.
 
@@ -11,7 +11,7 @@ import logging
 import os
 import re
 
-from frozendict import frozendict
+from immutabledict import immutabledict
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
@@ -30,11 +30,11 @@ from signingscript.sign import (
 
 log = logging.getLogger(__name__)
 
-FORMAT_TO_SIGNING_FUNCTION = frozendict(
+FORMAT_TO_SIGNING_FUNCTION = immutabledict(
     {
-        # TODO: Remove the next item (in favor of the regex one), once Focus is migrated
-        "autograph_focus": sign_jar,
-        "autograph_apk_.+": sign_jar,
+        # XXX Bug 1618531 - Fennec is the only remaining APK product where we want to run zipalign
+        # after autograph signed it. Others just default.
+        "autograph_apk_fennec_sha1": sign_jar,
         "autograph_hash_only_mar384(:\\w+)?": sign_mar384_with_autograph_hash,
         "autograph_stage_mar384(:\\w+)?": sign_mar384_with_autograph_hash,
         "gpg": sign_gpg,

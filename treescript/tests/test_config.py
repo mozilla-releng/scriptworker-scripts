@@ -37,5 +37,7 @@ def test_config():
         "SSH_USER": "",
         "SSH_KEY_PATH": "",
         "UPSTREAM_REPO": "",
+        "SSH_MERGE_USER": "",
+        "SSH_MERGE_KEY_PATH": "",
     }
     _validate_config(context)

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 import mock
 import pytest
 
+import treescript.mercurial as mercurial
 import treescript.script as script
 from scriptworker_client.exceptions import TaskError
 from treescript.exceptions import TreeScriptError
@@ -75,22 +76,38 @@ def test_get_default_config():
 
 # do_actions {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("should_push", (False, True))
-async def test_do_actions(mocker, should_push):
+@pytest.mark.parametrize(
+    "push_scope,push_payload,dry_run,push_expect_called",
+    (
+        (["push"], False, False, False),
+        (["push"], False, True, False),
+        (["push"], True, False, True),
+        (["push"], True, True, False),
+        ([], False, False, False),
+        ([], False, True, False),
+        ([], True, False, True),
+        ([], True, True, False),
+    ),
+)
+async def test_do_actions(mocker, push_scope, push_payload, dry_run, push_expect_called):
     actions = ["tag", "version_bump", "l10n_bump"]
-    called = {"bump": False, "l10n": False, "push": False, "tag": False}
+    actions += push_scope
+    called = {"version_bump": False, "l10n_bump": False, "push": False, "merge": False, "tagging": False}
 
     async def mocked_tag(*args, **kwargs):
-        called["tag"] = True
+        called["tagging"] = True
         return 1
 
     async def mocked_bump(*args, **kwargs):
-        called["bump"] = True
+        called["version_bump"] = True
         return 1
 
     async def mocked_l10n(*args, **kwargs):
-        called["l10n"] = True
+        called["l10n_bump"] = True
         return 1
+
+    async def mocked_perform_merge_actions(*args, **kwargs):
+        called["merge"] = True
 
     async def mocked_push(*args, **kwargs):
         called["push"] = True
@@ -99,17 +116,118 @@ async def test_do_actions(mocker, should_push):
         return 3
 
     mocker.patch.object(script, "checkout_repo", new=noop_async)
+    mocker.patch.object(mercurial, "run_hg_command", new=noop_async)
     mocker.patch.object(script, "strip_outgoing", new=noop_async)
     mocker.patch.object(script, "do_tagging", new=mocked_tag)
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
+
+    mocker.patch.object(script, "perform_merge_actions", new=mocked_perform_merge_actions)
+    mocker.patch.object(mercurial, "push", new=mocked_push)
     mocker.patch.object(script, "push", new=mocked_push)
     mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
-    await script.do_actions({}, {"payload": {"push": should_push}}, actions, "/some/folder/here")
-    assert called["tag"]
-    assert called["bump"]
-    assert called["l10n"]
-    assert called["push"] is should_push
+
+    task_defn = {
+        "payload": {"push": push_payload, "dry_run": dry_run},
+        "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source" "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
+    }
+    await script.do_actions({}, task_defn, actions, "/some/folder/here")
+    for action in ["tagging", "version_bump", "l10n_bump"]:
+        if action in actions:
+            assert called[action]
+
+    assert called["push"] is push_expect_called
+    assert called["merge"] is False
+
+
+# do_actions {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "push_scope,push_payload,dry_run,push_expect_called",
+    (
+        (["push"], False, False, False),
+        (["push"], False, True, False),
+        (["push"], True, False, True),
+        (["push"], True, True, False),
+        ([], False, False, False),
+        ([], False, True, False),
+        ([], True, False, True),
+        ([], True, True, False),
+    ),
+)
+async def test_do_actions_merge_tasks(mocker, push_scope, push_payload, dry_run, push_expect_called):
+    actions = ["merge_day"]
+    actions += push_scope
+    called = {"version_bump": False, "l10n_bump": False, "push": False, "merge": False, "tagging": False}
+
+    async def mocked_tag(*args, **kwargs):
+        called["tagging"] = True
+        return 1
+
+    async def mocked_bump(*args, **kwargs):
+        called["version_bump"] = True
+        return 1
+
+    async def mocked_l10n(*args, **kwargs):
+        called["l10n_bump"] = True
+        return 1
+
+    async def mocked_perform_merge_actions(*args, **kwargs):
+        called["merge"] = True
+
+    async def mocked_push(*args, **kwargs):
+        called["push"] = True
+
+    async def mocked_outgoing(*args):
+        return 0
+
+    mocker.patch.object(script, "checkout_repo", new=noop_async)
+    mocker.patch.object(mercurial, "run_hg_command", new=noop_async)
+    mocker.patch.object(script, "strip_outgoing", new=noop_async)
+    mocker.patch.object(script, "do_tagging", new=mocked_tag)
+    mocker.patch.object(script, "bump_version", new=mocked_bump)
+    mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
+
+    mocker.patch.object(script, "perform_merge_actions", new=mocked_perform_merge_actions)
+    mocker.patch.object(mercurial, "push", new=mocked_push)
+    mocker.patch.object(script, "push", new=mocked_push)
+    mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
+
+    task_defn = {
+        "payload": {"push": push_payload, "dry_run": dry_run},
+        "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source" "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
+    }
+    await script.do_actions({}, task_defn, actions, "/some/folder/here")
+    for action in ["tagging", "version_bump", "l10n_bump"]:
+        assert called[action] is False
+    assert called["merge"] is True
+
+
+# do_actions {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "push_scope,should_push,push_expect_called", ((["push"], False, False), (["push"], True, True), ([], False, False), ([], False, False))
+)
+async def test_perform_merge_actions(mocker, push_scope, should_push, push_expect_called):
+    actions = ["merge_day"]
+    actions += push_scope
+    called = {"push": False, "merge": False}
+
+    async def mocked_do_merge(*args, **kwargs):
+        called["merge"] = True
+        return [("https://hg.mozilla.org/treescript-test", ".")]
+
+    async def mocked_push(*args, **kwargs):
+        called["push"] = True
+        return 1
+
+    mocker.patch.object(script, "checkout_repo", new=noop_async)
+    mocker.patch.object(script, "do_merge", new=mocked_do_merge)
+    mocker.patch.object(script, "push", new=mocked_push)
+    mocker.patch.object(script, "should_push", return_value=should_push)
+    await script.perform_merge_actions({}, {}, actions, "/some/folder/here")
+    assert called["merge"] is True
+    assert called["push"] is push_expect_called
 
 
 @pytest.mark.asyncio

@@ -350,6 +350,23 @@ def test_count_outgoing(output, expected):
     assert mercurial._count_outgoing(output) == expected
 
 
+@pytest.mark.parametrize("output", ("somerevision"))
+@pytest.mark.asyncio
+async def test_get_revision(config, task, mocker, output):
+    called_args = []
+
+    async def run_command(config, *arguments, repo_path=None, **kwargs):
+        called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
+        if output:
+            return output
+
+    mocker.patch.object(mercurial, "run_hg_command", new=run_command)
+
+    assert output == await mercurial.get_revision(config, config["work_dir"], branch="default")
+    assert "repo_path" in called_args[0][1]
+    assert is_slice_in_list(("identify", "-r", "default", "--template", "{node}"), called_args[0][0])
+
+
 @pytest.mark.parametrize("output", ("hg output!", None))
 @pytest.mark.asyncio
 async def test_log_outgoing(config, task, mocker, output):
@@ -393,16 +410,15 @@ async def test_strip_outgoing(config, task, mocker):
 
 # push {{{1
 @pytest.mark.asyncio
-async def test_push(config, task, mocker, tmpdir):
+@pytest.mark.parametrize("source_repo,revision", ((None, None), ("https://hg.mozilla.org/treescript-test", None), (None, ".")))
+async def test_push(config, task, mocker, tmpdir, source_repo, revision):
     called_args = []
 
     async def run_command(config, *arguments, repo_path=None, **kwargs):
         called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
 
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
-    mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
-    mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
-    await mercurial.push(config, task, tmpdir)
+    await mercurial.push(config, task, tmpdir, "https://hg.mozilla.org/treescript-test", revision)
 
     assert len(called_args) == 1
     assert "repo_path" in called_args[0][1]
@@ -415,9 +431,9 @@ async def test_push(config, task, mocker, tmpdir):
 @pytest.mark.parametrize(
     "options,expect",
     (
-        ({"hg_ssh_keyfile": "/tmp/ffxbld.rsa"}, "ssh -i /tmp/ffxbld.rsa"),
-        ({"hg_ssh_user": "ffxbld"}, "ssh -l ffxbld"),
-        ({"hg_ssh_keyfile": "/tmp/stage.pub", "hg_ssh_user": "stage_ffxbld"}, "ssh -l stage_ffxbld -i /tmp/stage.pub"),
+        ({"hg_ssh_config": {"default": {"keyfile": "/tmp/ffxbld.rsa"}}}, "ssh -i /tmp/ffxbld.rsa"),
+        ({"hg_ssh_config": {"default": {"user": "ffxbld"}}}, "ssh -l ffxbld"),
+        ({"hg_ssh_config": {"default": {"user": "ffxbld", "keyfile": "/tmp/stage.pub"}}}, "ssh -l ffxbld -i /tmp/stage.pub"),
     ),
 )
 async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
@@ -429,9 +445,7 @@ async def test_push_ssh(config, task, mocker, options, expect, tmpdir):
     print()
     config.update(options)
     mocker.patch.object(mercurial, "run_hg_command", new=run_command)
-    mocked_source_repo = mocker.patch.object(mercurial, "get_source_repo")
-    mocked_source_repo.return_value = "https://hg.mozilla.org/treescript-test"
-    await mercurial.push(config, task, tmpdir)
+    await mercurial.push(config, task, tmpdir, "https://hg.mozilla.org/treescript-test")
 
     assert len(called_args) == 1
     assert "repo_path" in called_args[0][1]
@@ -455,5 +469,5 @@ async def test_push_fail(config, task, mocker, tmpdir):
     mocker.patch.object(mercurial, "run_hg_command", new=blow_up)
     mocker.patch.object(mercurial, "strip_outgoing", new=clean_up)
     with pytest.raises(PushError):
-        await mercurial.push(config, task, tmpdir)
+        await mercurial.push(config, task, tmpdir, "https://hg.mozilla.org/treescript-test")
     assert len(called_args) == 1

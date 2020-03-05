@@ -6,14 +6,16 @@ Attributes:
 
 """
 import asyncio
-from asyncio.subprocess import PIPE
-from contextlib import contextmanager
 import json
 import logging
 import os
 import shutil
 import tempfile
+from asyncio.subprocess import PIPE
+from contextlib import contextmanager
+
 import yaml
+
 from scriptworker_client.exceptions import TaskError
 
 log = logging.getLogger(__name__)

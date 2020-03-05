@@ -1,0 +1,10 @@
+{
+    "taskcluster_access_token": "taskcluster_access_token",
+    "taskcluster_client_id": "taskcluster_client_id",
+    "provisioner_id": "provisioner_id",
+    "worker_group": "worker_group",
+    "worker_type": "worker_type",
+    "worker_id": "worker_id",
+    "notarization_username": "user",
+    "notarization_password": "pass"
+}

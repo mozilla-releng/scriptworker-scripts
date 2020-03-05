@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.8
 
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
@@ -22,6 +22,7 @@ RUN python -m venv /app \
  && cd /app/configloader \
  && /app/configloader_venv/bin/pip install -r requirements/base.txt \
  && /app/configloader_venv/bin/pip install . \
+ && ln -sf /etc/widevine.py $(/app/bin/python -c "import site; print(site.getsitepackages()[0])")/widevine.py \
  && cd /app
 
 CMD ["/app/docker.d/init.sh"]
