@@ -13,19 +13,11 @@ EXAMPLE_CONFIG = os.path.join(BASE_DIR, "config_example.json")
 
 
 # async_main {{{1
-async def async_main_helper(
-    tmpdir, mocker, formats, extra_config={}, server_type="signing_server", use_comment=None
-):
+async def async_main_helper(tmpdir, mocker, formats, extra_config={}, server_type="signing_server", use_comment=None):
     def fake_filelist_dict(*args, **kwargs):
         ret = {"path1": {"full_path": "full_path1", "formats": formats}}
         if use_comment:
-            ret = {
-                "path1": {
-                    "full_path": "full_path1",
-                    "formats": formats,
-                    "comment": "Some authenticode comment"
-                    }
-                }
+            ret = {"path1": {"full_path": "full_path1", "formats": formats, "comment": "Some authenticode comment"}}
         return ret
 
     async def fake_sign(_, val, *args, comment=None):
@@ -96,13 +88,11 @@ async def test_async_main_autograph(tmpdir, mocker):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('use_comment', (True, False))
+@pytest.mark.parametrize("use_comment", (True, False))
 async def test_async_main_autograph_authenticode(tmpdir, mocker, use_comment):
     formats = ["autograph_authenticode"]
     mocker.patch.object(script, "copy_to_dir", new=noop_sync)
-    await async_main_helper(
-        tmpdir, mocker, formats, {}, "autograph", use_comment=use_comment
-        )
+    await async_main_helper(tmpdir, mocker, formats, {}, "autograph", use_comment=use_comment)
 
 
 def test_get_default_config():

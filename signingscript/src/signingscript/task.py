@@ -149,7 +149,7 @@ async def sign(context, path, signing_formats, comment=None):
         log.info("sign(): Signing %s bytes in %s with %s...", size, output, fmt)
         kwargs = {}
         if comment and "authenticode" in fmt:
-            kwargs['comment'] = comment
+            kwargs["comment"] = comment
         output = await signing_func(context, output, fmt, **kwargs)
     # We want to return a list
     if not isinstance(output, (tuple, list)):
@@ -213,15 +213,11 @@ def build_filelist_dict(context):
     filelist_dict = {}
     messages = []
     for artifact_dict in context.task["payload"]["upstreamArtifacts"]:
-        authenticode_comment = artifact_dict.get('authenticode_comment')
-        if authenticode_comment and not any(
-            'authenticode' in fmt for fmt in artifact_dict['formats']
-        ):
+        authenticode_comment = artifact_dict.get("authenticode_comment")
+        if authenticode_comment and not any("authenticode" in fmt for fmt in artifact_dict["formats"]):
             raise TaskVerificationError("Cannot use authenticode_comment without an authenticode format")
 
-        if authenticode_comment and not any(
-            path.endswith('.msi') for path in artifact_dict["paths"]
-        ):
+        if authenticode_comment and not any(path.endswith(".msi") for path in artifact_dict["paths"]):
             # Don't have to think about .zip and such unpacking for the comment
             raise TaskVerificationError("There is no support for authenticode_comment outside of msi's at this time")
         for path in artifact_dict["paths"]:
@@ -229,12 +225,12 @@ def build_filelist_dict(context):
             if not os.path.exists(full_path):
                 messages.append("{} doesn't exist!".format(full_path))
             filelist_dict[path] = {"full_path": full_path, "formats": _sort_formats(artifact_dict["formats"])}
-            if authenticode_comment and 'msi' in path:
+            if authenticode_comment and "msi" in path:
                 if isinstance(authenticode_comment, type({})):
                     if path in authenticode_comment:
                         filelist_dict[path]["comment"] = authenticode_comment[path]
                 else:
-                        filelist_dict[path]["comment"] = authenticode_comment
+                    filelist_dict[path]["comment"] = authenticode_comment
 
     if messages:
         raise TaskVerificationError(messages)

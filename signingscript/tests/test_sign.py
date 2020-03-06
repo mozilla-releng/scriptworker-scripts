@@ -1008,7 +1008,7 @@ def test_extension_id_raises(json_, raises, mocker):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("fmt", ("autograph_authenticode", "autograph_authenticode_stub"))
-@pytest.mark.parametrize('use_comment', (True, False))
+@pytest.mark.parametrize("use_comment", (True, False))
 async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt, use_comment):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
@@ -1025,7 +1025,7 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt, use_comment):
         return b""
 
     async def mocked_winsign(infile, outfile, digest_algo, certs, signer, comment, **kwargs):
-        if infile.endswith('.msi') and use_comment:
+        if infile.endswith(".msi") and use_comment:
             assert comment == "Some authenticode comment"
         else:
             assert comment is None
@@ -1047,15 +1047,11 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt, use_comment):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "fmt", ("autograph_authenticode", "autograph_authenticode_stub")
-)
-@pytest.mark.parametrize('use_comment', (True, False))
+@pytest.mark.parametrize("fmt", ("autograph_authenticode", "autograph_authenticode_stub"))
+@pytest.mark.parametrize("use_comment", (True, False))
 async def test_authenticode_sign_msi(tmpdir, mocker, context, fmt, use_comment):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
-    context.config["authenticode_cross_cert"] = os.path.join(
-        TEST_DATA_DIR, "windows.crt"
-    )
+    context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
     comment = None

@@ -1309,22 +1309,14 @@ async def sign_authenticode_file(context, orig_path, fmt, comment=None):
     else:
         crosscert = None
 
-    if comment and orig_path.endswith('.msi'):
+    if comment and orig_path.endswith(".msi"):
         log.info(f"Using comment '{comment}' to sign {orig_path}")
     elif comment:
         log.info(f"Not using specified comment to sign {orig_path}, not yet implemented.")
         comment = None
 
     if not await winsign.sign.sign_file(
-        infile,
-        outfile,
-        digest_algo,
-        certs,
-        signer,
-        url=url,
-        comment=comment,
-        crosscert=crosscert,
-        timestamp_style=timestamp_style,
+        infile, outfile, digest_algo, certs, signer, url=url, comment=comment, crosscert=crosscert, timestamp_style=timestamp_style,
     ):
         raise IOError(f"Couldn't sign {orig_path}")
     os.rename(outfile, infile)
@@ -1368,8 +1360,7 @@ async def sign_authenticode_zip(context, orig_path, fmt, comment=None):
         raise SigningScriptError("Did not find any files to sign, all files: {}".format(files))
 
     # Sign the appropriate inner files
-    tasks = [sign_authenticode_file(context, file_, fmt, comment=comment)
-             for file_ in files_to_sign]
+    tasks = [sign_authenticode_file(context, file_, fmt, comment=comment) for file_ in files_to_sign]
     done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
     [f.result() for f in done]
     if file_extension == ".zip":

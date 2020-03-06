@@ -39,9 +39,7 @@ async def async_main(context):
         for path, path_dict in filelist_dict.items():
             copy_to_dir(path_dict["full_path"], context.config["work_dir"], target=path)
             log.info("signing %s", path)
-            output_files = await sign(
-                context, os.path.join(work_dir, path), path_dict["formats"], comment=path_dict.get('comment')
-            )
+            output_files = await sign(context, os.path.join(work_dir, path), path_dict["formats"], comment=path_dict.get("comment"))
             for source in output_files:
                 source = os.path.relpath(source, work_dir)
                 copy_to_dir(os.path.join(work_dir, source), context.config["artifact_dir"], target=source)
