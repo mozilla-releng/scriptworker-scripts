@@ -145,7 +145,7 @@ def get_autograph_config(autograph_configs, cert_type, signing_formats, raise_on
 
 
 # sign_file {{{1
-async def sign_file(context, from_, fmt, to=None):
+async def sign_file(context, from_, fmt, to=None, **kwargs):
     """Send the file to autograph to be signed.
 
     Args:
@@ -168,7 +168,7 @@ async def sign_file(context, from_, fmt, to=None):
 
 
 # sign_gpg {{{1
-async def sign_gpg(context, from_, fmt):
+async def sign_gpg(context, from_, fmt, **kwargs):
     """Create a detached armored signature with the gpg key.
 
     Because this function returns a list, gpg must be the final signing format.
@@ -188,7 +188,7 @@ async def sign_gpg(context, from_, fmt):
 
 
 # sign_jar {{{1
-async def sign_jar(context, from_, fmt):
+async def sign_jar(context, from_, fmt, **kwargs):
     """Sign an apk, and zipalign.
 
     Args:
@@ -206,7 +206,7 @@ async def sign_jar(context, from_, fmt):
 
 
 # sign_macapp {{{1
-async def sign_macapp(context, from_, fmt):
+async def sign_macapp(context, from_, fmt, **kwargs):
     """Sign a macapp.
 
     If given a dmg, convert to a tar.gz file first, then sign the internals.
@@ -229,7 +229,7 @@ async def sign_macapp(context, from_, fmt):
 
 
 # sign_xpi {{{1
-async def sign_xpi(context, orig_path, fmt):
+async def sign_xpi(context, orig_path, fmt, **kwargs):
     """Sign language packs with autograph.
 
     This validates both the file extension and the language pack ID is sane.
@@ -258,7 +258,7 @@ async def sign_xpi(context, orig_path, fmt):
 
 # sign_widevine {{{1
 @time_async_function
-async def sign_widevine(context, orig_path, fmt):
+async def sign_widevine(context, orig_path, fmt, **kwargs):
     """Call the appropriate helper function to do widevine signing.
 
     Args:
@@ -391,7 +391,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
 
 # sign_omnija {{{1
 @time_async_function
-async def sign_omnija(context, orig_path, fmt):
+async def sign_omnija(context, orig_path, fmt, **kwargs):
     """Call the appropriate helper function to do omnija signing.
 
     Args:
@@ -998,7 +998,7 @@ async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=No
 
 
 @time_async_function
-async def sign_gpg_with_autograph(context, from_, fmt):
+async def sign_gpg_with_autograph(context, from_, fmt, **kwargs):
     """Signs file with autograph and writes the results to a file.
 
     Args:
@@ -1105,7 +1105,7 @@ def verify_mar_signature(cert_type, fmt, mar, keyid=None):
 
 
 @time_async_function
-async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None):
+async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None, **kwargs):
     """Signs a hash with autograph, injects it into the file, and writes the result to arg `to` or `from_` if `to` is None.
 
     Args:
@@ -1272,7 +1272,7 @@ async def merge_omnija_files(orig, signed, to):
 
 # sign_authenticode_file {{{1
 @time_async_function
-async def sign_authenticode_file(context, orig_path, fmt, comment=None):
+async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_comment=None):
     """Sign a file in-place with authenticode, using autograph as a backend.
 
     Args:
@@ -1309,14 +1309,14 @@ async def sign_authenticode_file(context, orig_path, fmt, comment=None):
     else:
         crosscert = None
 
-    if comment and orig_path.endswith(".msi"):
-        log.info(f"Using comment '{comment}' to sign {orig_path}")
-    elif comment:
+    if authenticode_comment and orig_path.endswith(".msi"):
+        log.info(f"Using comment '{authenticode_comment}' to sign {orig_path}")
+    elif authenticode_comment:
         log.info(f"Not using specified comment to sign {orig_path}, not yet implemented.")
-        comment = None
+        authenticode_comment = None
 
     if not await winsign.sign.sign_file(
-        infile, outfile, digest_algo, certs, signer, url=url, comment=comment, crosscert=crosscert, timestamp_style=timestamp_style,
+        infile, outfile, digest_algo, certs, signer, url=url, comment=authenticode_comment, crosscert=crosscert, timestamp_style=timestamp_style,
     ):
         raise IOError(f"Couldn't sign {orig_path}")
     os.rename(outfile, infile)
@@ -1326,7 +1326,7 @@ async def sign_authenticode_file(context, orig_path, fmt, comment=None):
 
 # sign_authenticode_zip {{{1
 @time_async_function
-async def sign_authenticode_zip(context, orig_path, fmt, comment=None):
+async def sign_authenticode_zip(context, orig_path, fmt, *, authenticode_comment=None, **kwargs):
     """Sign a zipfile with authenticode, using autograph as a backend.
 
     Extract the zip and only sign unsigned files that don't match certain
@@ -1360,7 +1360,7 @@ async def sign_authenticode_zip(context, orig_path, fmt, comment=None):
         raise SigningScriptError("Did not find any files to sign, all files: {}".format(files))
 
     # Sign the appropriate inner files
-    tasks = [sign_authenticode_file(context, file_, fmt, comment=comment) for file_ in files_to_sign]
+    tasks = [sign_authenticode_file(context, file_, fmt, authenticode_comment=authenticode_comment) for file_ in files_to_sign]
     done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
     [f.result() for f in done]
     if file_extension == ".zip":

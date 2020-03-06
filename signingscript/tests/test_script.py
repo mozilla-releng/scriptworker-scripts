@@ -20,11 +20,11 @@ async def async_main_helper(tmpdir, mocker, formats, extra_config={}, server_typ
             ret = {"path1": {"full_path": "full_path1", "formats": formats, "comment": "Some authenticode comment"}}
         return ret
 
-    async def fake_sign(_, val, *args, comment=None):
+    async def fake_sign(_, val, *args, authenticode_comment=None):
         if not use_comment:
-            assert comment is None
+            assert authenticode_comment is None
         else:
-            assert comment == "Some authenticode comment"
+            assert authenticode_comment == "Some authenticode comment"
         return [val]
 
     mocker.patch.object(script, "load_autograph_configs", new=noop_sync)

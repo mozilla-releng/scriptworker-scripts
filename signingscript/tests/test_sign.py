@@ -1024,7 +1024,7 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt, use_comment):
     async def mocked_autograph(context, from_, fmt):
         return b""
 
-    async def mocked_winsign(infile, outfile, digest_algo, certs, signer, comment, **kwargs):
+    async def mocked_winsign(infile, outfile, digest_algo, certs, signer, comment=None, **kwargs):
         if infile.endswith(".msi") and use_comment:
             assert comment == "Some authenticode comment"
         else:
@@ -1041,7 +1041,7 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt, use_comment):
     mocker.patch.object(winsign.osslsigncode, "is_signed", mocked_issigned)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
 
-    result = await sign.sign_authenticode_zip(context, test_file, fmt, comment)
+    result = await sign.sign_authenticode_zip(context, test_file, fmt, authenticode_comment=comment)
     assert result == test_file
     assert os.path.exists(result)
 
@@ -1064,7 +1064,7 @@ async def test_authenticode_sign_msi(tmpdir, mocker, context, fmt, use_comment):
     async def mocked_autograph(context, from_, fmt):
         return b""
 
-    async def mocked_winsign(infile, outfile, digest_algo, certs, signer, comment, **kwargs):
+    async def mocked_winsign(infile, outfile, digest_algo, certs, signer, comment=None, **kwargs):
         if not use_comment:
             assert comment is None
         else:
@@ -1081,7 +1081,7 @@ async def test_authenticode_sign_msi(tmpdir, mocker, context, fmt, use_comment):
     mocker.patch.object(winsign.osslsigncode, "is_signed", mocked_issigned)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
 
-    result = await sign.sign_authenticode_zip(context, test_file, fmt, comment)
+    result = await sign.sign_authenticode_zip(context, test_file, fmt, authenticode_comment=comment)
     assert result == test_file
     assert os.path.exists(result)
 

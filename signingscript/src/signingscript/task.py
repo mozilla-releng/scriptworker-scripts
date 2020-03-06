@@ -125,7 +125,7 @@ def _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes):
 
 
 # sign {{{1
-async def sign(context, path, signing_formats, comment=None):
+async def sign(context, path, signing_formats, **kwargs):
     """Call the appropriate signing function per format, for a single file.
 
     Args:
@@ -147,9 +147,6 @@ async def sign(context, path, signing_formats, comment=None):
         except OSError:
             size = "??"
         log.info("sign(): Signing %s bytes in %s with %s...", size, output, fmt)
-        kwargs = {}
-        if comment and "authenticode" in fmt:
-            kwargs["comment"] = comment
         output = await signing_func(context, output, fmt, **kwargs)
     # We want to return a list
     if not isinstance(output, (tuple, list)):
