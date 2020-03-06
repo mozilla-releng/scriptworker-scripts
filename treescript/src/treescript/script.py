@@ -35,7 +35,7 @@ async def perform_merge_actions(config, task, actions, repo_path):
     if should_push(task, actions) and push_activity:
         log.info("%d branches to push", len(push_activity))
         for target_repo, revision in push_activity:
-            print("pushing to", target_repo, revision)
+            log.info("pushing %s to %s", revision, target_repo)
             await push(config, task, repo_path, target_repo=target_repo, revision=revision)
 
 
