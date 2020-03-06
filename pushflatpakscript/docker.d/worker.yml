@@ -1,7 +1,7 @@
 work_dir: { "$eval": "WORK_DIR" }
 artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
-push_to_flathub: { "$eval": "ENV == 'prod'" }
+push_to_flathub: { "$eval": "ENV == 'dev'" }  # TODO: revert back to `prod` here once try testing is done
 flathub_url: { "$eval": "FLATHUB_URL" }
 flat_manager_client: { "$eval": "FLAT_MANAGER_CLIENT" }
 token_locations:
@@ -9,4 +9,5 @@ token_locations:
   then:
     beta: { "$eval": "REPO_TOKEN_BETA_PATH" }
     stable: { "$eval": "REPO_TOKEN_STABLE_PATH" }
-  else: {}
+    else: # TODO: revert to empty dict here
+    beta: { "$eval": "REPO_TOKEN_BETA_PATH" }

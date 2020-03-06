@@ -13,8 +13,9 @@ def get_flatpak_channel(config, task):
 
     channel = payload["channel"]
     scope = FLATPAK_SCOPES_PREFIX + channel
-    if config["push_to_flathub"] and scope not in task["scopes"]:
-        raise TaskVerificationError(f"Channel {channel} not allowed, missing scope {scope}")
+    # TODO: uncomment this section once try staging is done
+    # if config["push_to_flathub"] and scope not in task["scopes"]:
+        # raise TaskVerificationError(f"Channel {channel} not allowed, missing scope {scope}")
 
     if channel not in ALLOWED_CHANNELS:
         raise TaskVerificationError('Channel "{}" is not allowed. Allowed ones are: {}'.format(channel, ALLOWED_CHANNELS))
