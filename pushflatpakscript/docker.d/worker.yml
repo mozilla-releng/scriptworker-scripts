@@ -9,5 +9,5 @@ token_locations:
   then:
     beta: { "$eval": "REPO_TOKEN_BETA_PATH" }
     stable: { "$eval": "REPO_TOKEN_STABLE_PATH" }
-    else: # TODO: revert to empty dict here
+  else: # TODO: revert to empty dict here
     beta: { "$eval": "REPO_TOKEN_BETA_PATH" }
