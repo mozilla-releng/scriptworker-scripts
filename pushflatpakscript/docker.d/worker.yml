@@ -5,9 +5,7 @@ push_to_flathub: { "$eval": "ENV == 'dev'" }  # TODO: revert back to `prod` here
 flathub_url: { "$eval": "FLATHUB_URL" }
 flat_manager_client: { "$eval": "FLAT_MANAGER_CLIENT" }
 token_locations:
-  $if: 'ENV == "prod"'
+  $if: 'ENV == "dev"'  # TODO: revert to original change here
   then:
     beta: { "$eval": "REPO_TOKEN_BETA_PATH" }
-    stable: { "$eval": "REPO_TOKEN_STABLE_PATH" }
-  else: # TODO: revert to empty dict here
-    beta: { "$eval": "REPO_TOKEN_BETA_PATH" }
+  else: {}
