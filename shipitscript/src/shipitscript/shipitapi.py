@@ -77,12 +77,10 @@ class Release_V2(object):
                 log.error(f"Response code: {resp.status_code}")
             raise
 
-    def update_status(self, name, status, rebuild_product_details=True, headers={}):
+    def update_status(self, name, status, headers={}):
         """Update release status"""
         data = json.dumps({"status": status})
         resp = self._request(api_endpoint="/releases/{}".format(name), method="PATCH", data=data, headers=headers).content
-        if rebuild_product_details:
-            self._request(api_endpoint="/product-details", method="POST", data="{}", headers=headers)
         return resp
 
     def get_disabled_products(self, headers={}):
