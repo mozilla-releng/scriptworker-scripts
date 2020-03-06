@@ -121,7 +121,9 @@ def push(context, flatpak_file_path, channel):
 
     token_args = ["--token-file", context.config["token_locations"][channel]]
     publish_build_output = run_flat_manager_client_process(context, token_args + ["create", context.config["flathub_url"], channel])
-    validate_publish_build_output(context, publish_build_output)
+    log.info(f"Build output is {publish_build_output} and of type {type(publish_build_output)}")
+    # TODO: fix validation here once we know what to expect and uncomment
+    # validate_publish_build_output(context, publish_build_output)
 
     deflated_dir = check_and_extract_tar_archive(context, flatpak_file_path)
 
