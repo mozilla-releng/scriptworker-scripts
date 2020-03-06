@@ -12,7 +12,7 @@ def get_flatpak_channel(config, task):
         raise TaskVerificationError(f"channel must be defined in the task payload. Given payload: {payload}")
 
     channel = payload["channel"]
-    scope = FLATPAK_SCOPES_PREFIX + channel.split("/")[0]
+    scope = FLATPAK_SCOPES_PREFIX + channel
     if config["push_to_flathub"] and scope not in task["scopes"]:
         raise TaskVerificationError(f"Channel {channel} not allowed, missing scope {scope}")
 
