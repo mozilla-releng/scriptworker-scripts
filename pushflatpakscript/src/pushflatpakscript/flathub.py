@@ -111,6 +111,11 @@ def check_and_extract_tar_archive(context, tar_file_path):
     return os.path.join(flatpak_tar_basedir, flatpak_deflated_dir)
 
 
+def sanitize_buildid(bytes_input):
+    """Flathub API returns bytes to we're decoding that to unicode string"""
+    return bytes_input.decode().strip()
+
+
 def push(context, flatpak_file_path, channel):
     """ Publishes a flatpak into a given channel.
     """
@@ -120,17 +125,27 @@ def push(context, flatpak_file_path, channel):
         return
 
     token_args = ["--token-file", context.config["token_locations"][channel]]
+    log.info(f"Grab a flatpak buildid from Flathub ...")
     publish_build_output = run_flat_manager_client_process(context, token_args + ["create", context.config["flathub_url"], channel])
-    log.info(f"Build output is {publish_build_output} and of type {type(publish_build_output)}")
-    # TODO: fix validation here once we know what to expect and uncomment
-    # validate_publish_build_output(context, publish_build_output)
 
+    log.info(f"Sanitize the buildid received from Flathub ...")
+    publish_build_output = sanitize_buildid(publish_build_output)
+    log.info(f"Buildid output is {publish_build_output}")
+
+    log.info(f"Validating the buildid ...")
+    validate_publish_build_output(context, publish_build_output)
+
+    log.info(f"Unpacking the tarball ...")
     deflated_dir = check_and_extract_tar_archive(context, flatpak_file_path)
 
-    publish_build_output = run_flat_manager_client_process(context, token_args + ["push", publish_build_output, deflated_dir])
+    log.info(f"Pushing the flatpak to the associated {publish_build_output}")
+    run_flat_manager_client_process(context, token_args + ["push", publish_build_output, deflated_dir])
 
-    publish_build_output = run_flat_manager_client_process(context, token_args + ["commit", "--wait", publish_build_output])
+    log.info(f"Commit-ing the flatpak to the associated {publish_build_output}")
+    run_flat_manager_client_process(context, token_args + ["commit", "--wait", publish_build_output])
 
-    publish_build_output = run_flat_manager_client_process(context, token_args + ["publish", "--wait", publish_build_output])
+    log.info(f"Publishing the flatpak to the associated {publish_build_output}")
+    run_flat_manager_client_process(context, token_args + ["publish", "--wait", publish_build_output])
 
-    publish_build_output = run_flat_manager_client_process(context, token_args + ["purge", publish_build_output])
+    log.info(f"Cleaning up byt purging {publish_build_output}")
+    run_flat_manager_client_process(context, token_args + ["purge", publish_build_output])
