@@ -107,7 +107,7 @@ async def do_merge(config, task, repo_path):
     # perhaps: hg push -r bookmark("release") esrNN
     # Perform the kludge-merge.
     if merge_config.get("merge_old_head", False):
-        await run_hg_command(config, "debugsetparents", to_branch, base_from_rev, repo_path=repo_path)
+        await run_hg_command(config, "debugsetparents", tagged_from_rev, to_branch, repo_path=repo_path)
         await run_hg_command(
             config,
             "commit",
@@ -115,8 +115,6 @@ async def do_merge(config, task, repo_path):
             "Merge old head via |hg debugsetparents {} {}| CLOSED TREE DONTBUILD a=release".format(to_branch, from_branch),
             repo_path=repo_path,
         )
-
-    await run_hg_command(config, "up", "-C", to_branch, repo_path=repo_path)
 
     end_tag = merge_config.get("end_tag")  # tag the end of the to repo
     if end_tag:

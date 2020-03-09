@@ -155,7 +155,7 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
         (
             True,
             does_not_raise(),
-            10,
+            9,
             [("https://hg.mozilla.org/mozilla-central", "some_revision"), ("https://hg.mozilla.org/releases/mozilla-beta", "some_revision")],
         ),
         (False, pytest.raises(TaskVerificationError), 0, None),
