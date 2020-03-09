@@ -135,7 +135,7 @@ async def do_merge(config, task, repo_path):
             if len(changeset) != 40:
                 continue
             fh.write(f"{line}\n")
-    status_out = await run_hg_command(config, "status", ".hgtags", return_output=True, repo_path=repo_path)
+    status_out = await run_hg_command(config, "status", os.path.join(repo_path, ".hgtags"), return_output=True, repo_path=repo_path)
     if status_out:
         await run_hg_command(config, "commit", "-m", "Preserve old tags after debusetparents. CLOSED TREE DONTBUILD a=release", repo_path=repo_path)
     else:
