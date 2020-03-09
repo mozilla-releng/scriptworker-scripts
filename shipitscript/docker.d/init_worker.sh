@@ -17,6 +17,9 @@ case $COT_PRODUCT in
   thunderbird)
     export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:ship-it:"
     ;;
+  xpi)
+    export TASKCLUSTER_SCOPE_PREFIX="project:xpi:releng:ship-it:"
+    ;;
   *)
     exit 1
     ;;
