@@ -118,7 +118,7 @@ async def do_merge(config, task, repo_path):
 
     # Preserve tags.
     patch_file = os.path.join(os.path.dirname(repo_path), "patch_file")
-    tag_diff = await run_hg_command(config, "diff", "-r", to_branch, ".hgtags", "-U9", return_output=True)
+    tag_diff = await run_hg_command(config, "diff", "-r", to_branch, ".hgtags", "-U9", return_output=True, repo_path=repo_path)
     with open(patch_file, "w") as fh:
         fh.write(tag_diff)
     await run_command(["patch", "-R", "-p1", patch_file], cwd=repo_path)
@@ -135,7 +135,7 @@ async def do_merge(config, task, repo_path):
             if len(changeset) != 40:
                 continue
             fh.write(f"{line}\n")
-    status_out = await run_hg_command(config, "status", ".hgtags", return_output=True)
+    status_out = await run_hg_command(config, "status", ".hgtags", return_output=True, repo_path=repo_path)
     if status_out:
         await run_hg_command(config, "commit", "-m", "Preserve old tags after debusetparents. CLOSED TREE DONTBUILD a=release", repo_path=repo_path)
     else:
