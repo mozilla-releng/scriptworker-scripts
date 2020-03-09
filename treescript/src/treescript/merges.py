@@ -5,7 +5,7 @@ import shutil
 
 import attr
 
-from scriptworker_client.utils import makedirs
+from scriptworker_client.utils import makedirs, run_command
 from treescript.mercurial import get_revision, run_hg_command
 from treescript.task import get_merge_config
 from treescript.versionmanip import do_bump_version, get_version
@@ -115,6 +115,31 @@ async def do_merge(config, task, repo_path):
             "Merge old head via |hg debugsetparents {} {}| CLOSED TREE DONTBUILD a=release".format(tagged_from_rev, to_branch),
             repo_path=repo_path,
         )
+
+    # Preserve tags.
+    patch_file = os.path.join(os.path.dirname(repo_path), "patch_file")
+    tag_diff = await run_hg_command(config, "diff", "-r", to_branch, ".hgtags", "-U9", return_output=True)
+    with open(patch_file, "w") as fh:
+        fh.write(tag_diff)
+    await run_command(["patch", "-R", "-p1", patch_file], cwd=repo_path)
+    os.unlink(patch_file)
+    with open(os.path.join(repo_path, ".hgtags"), "a") as fh:
+        # Skip four header lines
+        for line in tag_diff.splitlines()[4:]:
+            # We only care about additions.
+            if not line.startswith("+"):
+                continue
+            line = line.replace("+", "")
+            changeset, _ = line.split()
+            # Check for bogus changeset
+            if len(changeset) != 40:
+                continue
+            fh.write(f"{line}\n")
+    status_out = await run_hg_command(config, "status", ".hgtags", return_output=True)
+    if status_out:
+        await run_hg_command(config, "commit", "-m", "Preserve old tags after debusetparents. CLOSED TREE DONTBUILD a=release", repo_path=repo_path)
+    else:
+        log.info("No changes to .hgtags, not performing commit.")
 
     end_tag = merge_config.get("end_tag")  # tag the end of the to repo
     if end_tag:
