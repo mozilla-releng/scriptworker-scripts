@@ -34,7 +34,7 @@ on your local machine:
 find the latest image pushed
 * pull that image locally by `docker pull mozilla/releng-$script:production--$timestamp-$hash`
 * use `pass` to define some dummy values replacing the one it'd expect in production (e.g. a file called `local-prod`)
-* run the image locally by doing `docker run -ti $(pass show local-prod | grep -v ^# | grep -v '^$' | sed 's/^/-e /')  image_name`
+* run the image locally by doing `docker run -ti $(pass show local-prod | grep -v ^# | grep -v '^$' | sed 's/^/-e /')  image_name` /bin/bash
 
 where the format of the file is, e.g.
 ```

@@ -15,6 +15,7 @@ else
         iscript
         notarization_poller
         pushapkscript
+        pushflatpakscript
         pushsnapscript
         scriptworker_client
         shipitscript
