@@ -175,10 +175,14 @@ async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merg
     async def mocked_get_revision(*args, **kwargs):
         return "some_revision"
 
+    async def mocked_run_command(*args, **kwargs):
+        pass
+
     async def noop_apply_rebranding(*arguments, **kwargs):
         called_args.append("apply_rebranding")
 
     mocker.patch.object(merges, "run_hg_command", new=mocked_run_hg_command)
+    mocker.patch.object(merges, "run_command", new=mocked_run_command)
     mocker.patch.object(merges, "get_revision", new=mocked_get_revision)
     mocker.patch.object(merges, "apply_rebranding", new=noop_apply_rebranding)
 
