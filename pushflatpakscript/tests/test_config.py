@@ -37,12 +37,10 @@ def _validate_config(context):
 
 
 def test_fake_prod():
-    pass  # TODO: remove this
-    # context = {"ENV": "fake-prod"}
-    # _validate_config(context)
+    context = {"ENV": "fake-prod"}
+    _validate_config(context)
 
 
 def test_prod():
-    pass  # TODO: remove this
-    # context = {"ENV": "prod", "REPO_TOKEN_BETA_PATH": "", "REPO_TOKEN_STABLE_PATH": ""}
-    # _validate_config(context)
+    context = {"ENV": "prod", "REPO_TOKEN_BETA_PATH": "", "REPO_TOKEN_STABLE_PATH": ""}
+    _validate_config(context)

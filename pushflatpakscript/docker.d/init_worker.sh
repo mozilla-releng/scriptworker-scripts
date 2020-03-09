@@ -15,12 +15,7 @@ test_var_set 'FLATHUB_URL'
 export FLAT_MANAGER_CLIENT=/app/flat_manager_venv/bin/flat-manager-client
 
 case $ENV in
-  fake-prod)  # TODO: empty this sequence to null once try testing is done
-    ;;
-  dev)  # TODO: empty this sequence to null once try testing is done
-    test_var_set 'REPO_TOKEN_BETA'
-    export REPO_TOKEN_BETA_PATH=$CONFIG_DIR/beta_token.txt
-    echo $REPO_TOKEN_BETA | base64 -d > $REPO_TOKEN_BETA_PATH
+  dev|fake-prod)
     ;;
   prod)
     test_var_set 'REPO_TOKEN_BETA'

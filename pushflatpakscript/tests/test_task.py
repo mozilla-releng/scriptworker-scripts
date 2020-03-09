@@ -34,14 +34,13 @@ def test_get_flatpak_channel_dep(raises, channel):
     ),
 )
 def test_get_flatpak_channel_prod(raises, scopes, channel):
-    pass  # TODO: revert this
-    # task = {"scopes": scopes, "payload": {"channel": channel}}
-    # config = {"push_to_flathub": True}
-    # if raises:
-    # with pytest.raises(TaskVerificationError):
-    # get_flatpak_channel(config, task)
-    # else:
-    # assert get_flatpak_channel(config, task) == channel
+    task = {"scopes": scopes, "payload": {"channel": channel}}
+    config = {"push_to_flathub": True}
+    if raises:
+        with pytest.raises(TaskVerificationError):
+            get_flatpak_channel(config, task)
+    else:
+        assert get_flatpak_channel(config, task) == channel
 
 
 @pytest.mark.parametrize(
