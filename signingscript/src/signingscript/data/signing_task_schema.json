@@ -48,15 +48,7 @@
                     }
                   },
                   "authenticode_comment": {
-                    "oneOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "object",
-                        "additionalProperties": { "type": "string" }
-                      }
-                    ]
+                    "type": "string"
                   }
                 },
                 "required": ["taskId", "taskType", "paths", "formats"]

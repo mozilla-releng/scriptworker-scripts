@@ -222,12 +222,8 @@ def build_filelist_dict(context):
             if not os.path.exists(full_path):
                 messages.append("{} doesn't exist!".format(full_path))
             filelist_dict[path] = {"full_path": full_path, "formats": _sort_formats(artifact_dict["formats"])}
-            if authenticode_comment and "msi" in path:
-                if isinstance(authenticode_comment, type({})):
-                    if path in authenticode_comment:
-                        filelist_dict[path]["comment"] = authenticode_comment[path]
-                else:
-                    filelist_dict[path]["comment"] = authenticode_comment
+            if authenticode_comment:
+                filelist_dict[path]["comment"] = authenticode_comment
 
     if messages:
         raise TaskVerificationError(messages)
