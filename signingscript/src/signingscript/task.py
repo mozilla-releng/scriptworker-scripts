@@ -125,7 +125,7 @@ def _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes):
 
 
 # sign {{{1
-async def sign(context, path, signing_formats):
+async def sign(context, path, signing_formats, **kwargs):
     """Call the appropriate signing function per format, for a single file.
 
     Args:
@@ -147,7 +147,7 @@ async def sign(context, path, signing_formats):
         except OSError:
             size = "??"
         log.info("sign(): Signing %s bytes in %s with %s...", size, output, fmt)
-        output = await signing_func(context, output, fmt)
+        output = await signing_func(context, output, fmt, **kwargs)
     # We want to return a list
     if not isinstance(output, (tuple, list)):
         output = [output]
@@ -199,7 +199,8 @@ def build_filelist_dict(context):
         context (Context): the signing context
 
     Raises:
-        TaskVerificationError: if the files don't exist on disk
+        TaskVerificationError: if the files don't exist on disk or
+                               if authenticode_comment is used without authenticode or on a non .msi
 
     Returns:
         dict of dicts: the dictionary of relative `path` to a dictionary with
@@ -209,11 +210,21 @@ def build_filelist_dict(context):
     filelist_dict = {}
     messages = []
     for artifact_dict in context.task["payload"]["upstreamArtifacts"]:
+        authenticode_comment = artifact_dict.get("authenticode_comment")
+        if authenticode_comment and not any("authenticode" in fmt for fmt in artifact_dict["formats"]):
+            raise TaskVerificationError("Cannot use authenticode_comment without an authenticode format")
+
+        if authenticode_comment and not any(path.endswith(".msi") for path in artifact_dict["paths"]):
+            # Don't have to think about .zip and such unpacking for the comment
+            raise TaskVerificationError("There is no support for authenticode_comment outside of msi's at this time")
         for path in artifact_dict["paths"]:
             full_path = os.path.join(context.config["work_dir"], "cot", artifact_dict["taskId"], path)
             if not os.path.exists(full_path):
                 messages.append("{} doesn't exist!".format(full_path))
             filelist_dict[path] = {"full_path": full_path, "formats": _sort_formats(artifact_dict["formats"])}
+            if authenticode_comment:
+                filelist_dict[path]["comment"] = authenticode_comment
+
     if messages:
         raise TaskVerificationError(messages)
     return filelist_dict

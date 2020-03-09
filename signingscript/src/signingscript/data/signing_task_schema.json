@@ -46,6 +46,9 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "authenticode_comment": {
+                    "type": "string"
                   }
                 },
                 "required": ["taskId", "taskType", "paths", "formats"]
