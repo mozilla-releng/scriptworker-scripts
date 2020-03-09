@@ -112,7 +112,7 @@ async def do_merge(config, task, repo_path):
             config,
             "commit",
             "-m",
-            "Merge old head via |hg debugsetparents {} {}| CLOSED TREE DONTBUILD a=release".format(to_branch, from_branch),
+            "Merge old head via |hg debugsetparents {} {}| CLOSED TREE DONTBUILD a=release".format(tagged_from_rev, to_branch),
             repo_path=repo_path,
         )
 
