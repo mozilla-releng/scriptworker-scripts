@@ -126,6 +126,34 @@ async def test_run_hg_command_localrepo(mocker, config):
     is_slice_in_list(["-R", "/tmp/localrepo"], called_args[0][0])
 
 
+@pytest.mark.asyncio
+async def test_run_hg_command_return_output(mocker, config):
+    args = ["foobar", "--bar"]
+    called_args = []
+
+    expected_run_output = "some text"
+
+    async def run_command(*arguments, **kwargs):
+        called_args.append([*arguments, kwargs])
+        if "log_path" in kwargs:
+            with open(kwargs["log_path"], "w") as f:
+                f.write(expected_run_output)
+
+    mocker.patch.object(mercurial, "run_command", new=run_command)
+    env_call = mocker.patch.object(mercurial, "build_hg_environment")
+    cmd_call = mocker.patch.object(mercurial, "build_hg_command")
+    env = {"HGPLAIN": 1, "LANG": "C"}
+    env_call.return_value = env
+    cmd_call.return_value = ["hg", *args]
+
+    actual_run_output = await mercurial.run_hg_command(config, *args, return_output=True)
+
+    env_call.assert_called_with()
+    cmd_call.assert_called_with(config, *args)
+    assert len(called_args) == 1
+    assert actual_run_output == expected_run_output
+
+
 # robustcheckout, hg {{{1
 @pytest.mark.asyncio
 async def test_hg_version(config, caplog):

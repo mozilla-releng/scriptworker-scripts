@@ -163,6 +163,7 @@ async def checkout_repo(config, task, repo_path):
     await run_hg_command(
         config, "robustcheckout", source_repo, repo_path, "--sharebase", share_base, "--upstream", upstream_repo, "--branch", branch, exception=CheckoutError
     )
+    await strip_outgoing(config, task, repo_path)
 
 
 # do_tagging {{{1

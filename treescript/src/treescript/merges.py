@@ -120,7 +120,7 @@ async def do_merge(config, task, repo_path):
         tag_diff = await run_hg_command(config, "diff", "-r", to_branch, os.path.join(repo_path, ".hgtags"), "-U9", return_output=True, repo_path=repo_path)
         with open(patch_file, "w") as fh:
             fh.write(tag_diff)
-        await run_command(["patch", "-R", "-p1", patch_file], cwd=repo_path)
+        await run_command(["patch", "-R", "-p1", "-i", patch_file], cwd=repo_path)
         os.unlink(patch_file)
         with open(os.path.join(repo_path, ".hgtags"), "a") as fh:
             # Skip four header lines
@@ -137,8 +137,6 @@ async def do_merge(config, task, repo_path):
         status_out = await run_hg_command(config, "status", os.path.join(repo_path, ".hgtags"), return_output=True, repo_path=repo_path)
         if status_out:
             await run_hg_command(config, "commit", "-m", "Preserve old tags after debusetparents. CLOSED TREE DONTBUILD a=release", repo_path=repo_path)
-        else:
-            log.info("No changes to .hgtags, not performing commit.")
 
     end_tag = merge_config.get("end_tag")  # tag the end of the to repo
     if end_tag:
