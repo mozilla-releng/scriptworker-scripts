@@ -1300,7 +1300,10 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
 
     infile = orig_path
     outfile = orig_path + "-new"
-    digest_algo = "sha1"
+    if "authenticode_ev" in fmt:
+        digest_algo = "sha256"
+    else:
+        digest_algo = "sha1"
     certs = load_pem_certs(open(context.config["authenticode_cert"], "rb").read())
     url = context.config["authenticode_url"]
     timestamp_style = context.config["authenticode_timestamp_style"]
