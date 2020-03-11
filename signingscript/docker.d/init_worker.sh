@@ -53,6 +53,7 @@ case $COT_PRODUCT in
   xpi)
     ;;
   mpd001)
+    export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_mpd_dep.crt
     if [ "$ENV" == "prod" ]; then
       export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_mpd_prod.crt
     fi
