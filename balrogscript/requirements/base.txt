@@ -83,9 +83,9 @@ chardet==3.0.4 \
     --hash=sha256:84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae \
     --hash=sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691 \
     # via aiohttp, requests
-click==7.0 \
-    --hash=sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13 \
-    --hash=sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7 \
+click==7.1.1 \
+    --hash=sha256:8a18b4ea89d8820c5d0c7da8a64b2c324b4dabb695804dbfea19b9be9d88c0cc \
+    --hash=sha256:e345d143d80bf5ee7534056164e5e112ea5e22716bbb1ce727941f4c8b471b9a \
     # via mar
 construct==2.10.56 \
     --hash=sha256:97ba13edcd98546f10f7555af41c8ce7ae9d8221525ec4062c03f9adbf940661 \
@@ -207,9 +207,9 @@ requests==2.23.0 \
     --hash=sha256:43999036bfa82904b6af1d99e4882b560e5e2c68e5c4b0aa03b655f3d7d73fee \
     --hash=sha256:b3f43d496c6daba4493e7c431722aeb7dbc6288f52a6e04e7b6023b0247817e6 \
     # via -r requirements/base.in, balrogclient, github3.py, taskcluster
-scriptworker==32.0.3 \
-    --hash=sha256:a4d428a2c9db1b0dbabb86c0badf850e919ed83ffaba701185370ebe3dd5f7aa \
-    --hash=sha256:d60976a94ba86d0c4b9f23536ce3cb026281c726d00da12b6546a8dd80cb4d1b \
+scriptworker==32.1.0 \
+    --hash=sha256:89019f19c4498754cf27884cfd7dc129053dfc97b47cb2fe5e2f011d1fe6366b \
+    --hash=sha256:d6889301e7371bfc634721fc6c38ae8d28918b6ca148e478a68396e4f99de11c \
     # via -r requirements/base.in
 six==1.14.0 \
     --hash=sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a \
@@ -223,10 +223,10 @@ taskcluster-urls==12.1.0 \
     --hash=sha256:1dc740c32c7beb31e11ed7ccf9da2d47a504acdb3170c8900649433b0fd16fb2 \
     --hash=sha256:4a62c776aeba6d45044789a8845ec4d8521bc1bb6ebfc86d79ee759bcdd4f2f7 \
     # via taskcluster
-taskcluster==25.4.0 \
-    --hash=sha256:017e626ec7211cc250f6c59ac4fbeb3ca7d7ecf0a253eb4f21a694bc5d02ae36 \
-    --hash=sha256:0a8fc965441ab60aafb83bcf2b670afd3f8817b13067561e084b4d2528f1e75c \
-    --hash=sha256:a9d10a794a065ea17a11fa8ee4861e57ea702362f70d00dc97d5a4f685a70d4f \
+taskcluster==27.0.0 \
+    --hash=sha256:2bed90238c8c2c7273624e8c64ce485987ca121588dac6490a23aca91943852e \
+    --hash=sha256:4905b57911aec5cae2f4530e5571080285ec12cfa7367ce01b7a196fbf19749a \
+    --hash=sha256:f79e07b074cd716936b80c2a4583c03be1254376fa36d2ba11932c44cd1af676 \
     # via scriptworker
 uritemplate==3.0.1 \
     --hash=sha256:07620c3f3f8eed1f12600845892b0e036a2420acf513c53f7de0abd911a5894f \

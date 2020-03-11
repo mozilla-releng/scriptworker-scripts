@@ -17,7 +17,7 @@ tox==3.14.5 \
     --hash=sha256:0cbe98369081fa16bd6f1163d3d0b2a62afa29d402ccfad2bd09fb2668be0956 \
     --hash=sha256:676f1e3e7de245ad870f956436b84ea226210587d1f72c8dfb8cd5ac7b6f0e70 \
     # via -r requirements/local.in
-virtualenv==20.0.8 \
-    --hash=sha256:0c04c7e8e0314470b4c2b43740ff68be1c62bb3fdef8309341ff1daea60d49d1 \
-    --hash=sha256:1f0369d068d9761b5c1ed7b44dad1ec124727eb10bc7f4aaefbba0cdca3bd924 \
+virtualenv==20.0.10 \
+    --hash=sha256:10750cac3b5a9e6eed54d0f1f8222c550dc47f84609c95cbc504d44a58a048b8 \
+    --hash=sha256:8512e83f1d90f8e481024d58512ac9c053bf16f54d9138520a0929396820dd78 \
     # via tox

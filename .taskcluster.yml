@@ -13,6 +13,7 @@ tasks:
       $let:
         setup_pushapkscript:  'apt-get update && apt-get install -y default-jdk &&'
         setup_pushsnapscript: 'apt-get update && apt-get install -y libsodium-dev && truncate -s 0 /etc/os-release &&'
+        setup_pushflatpakscript: 'apt-get update && apt-get install -y gir1.2-ostree-1.0 libgirepository1.0-dev &&'
       in:
         # [ <PROJECT NAME>,   <PYTHON VERSION>, <SETUP COMMAND>,           <DOCKERHUB REPO>]
         - ['client',          '37',             '',                        '']
@@ -33,6 +34,8 @@ tasks:
         - ['notarization_poller',    '38',             '',                        '']
         - ['pushapkscript',   '37',             '${setup_pushapkscript}',  '']
         - ['pushapkscript',   '38',             '${setup_pushapkscript}',  'mozilla/releng-pushapkscript']
+        - ['pushflatpakscript',  '37',             '${setup_pushflatpakscript}', '']
+        - ['pushflatpakscript',  '38',             '${setup_pushflatpakscript}', 'mozilla/releng-pushflatpakscript']
         - ['pushsnapscript',  '37',             '${setup_pushsnapscript}', '']
         - ['pushsnapscript',  '38',             '${setup_pushsnapscript}', 'mozilla/releng-pushsnapscript']
         - ['shipitscript',    '37',             '',                        '']

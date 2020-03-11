@@ -103,6 +103,17 @@ mobile-3-pushapk    pushapk-prod-relengworker-firefoxci-mobile-3
 mobile-1-pushapk    pushapk-prod-relengworker-firefoxci-mobile-1
 =================== ============================================
 
+pushflatpakscript
+-----------------
+
+==================== ============================================
+Worker type          Deployment name
+==================== ============================================
+gecko-1-pushflat-dev pushflat-dev-relengworker-firefoxci-gecko-1
+gecko-3-pushflat     pushflat-prod-relengworker-firefoxci-gecko-3
+gecko-1-pushflat     pushflat-prod-relengworker-firefoxci-gecko-1
+==================== ============================================
+
 pushsnapscript
 --------------
 
@@ -142,6 +153,9 @@ comm-3-signing        signing-prod-relengworker-firefoxci-comm-3
 comm-t-signing        signing-prod-relengworker-firefoxci-comm-t
 appservices-3-signing signing-prod-relengworker-firefoxci-applicationservices-3
 appservices-t-signing signing-prod-relengworker-firefoxci-applicationservices-t
+xpi-3-signing         signing-prod-relengworker-firefoxci-xpi-3-1
+xpi-t-signing         signing-prod-relengworker-firefoxci-xpi-t
+xpi-t-signing-dev     signing-dev-relengworker-firefoxci-xpi-t-1
 ===================== =========================================================
 
 treescript

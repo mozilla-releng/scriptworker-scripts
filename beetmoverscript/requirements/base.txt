@@ -35,13 +35,13 @@ attrs==19.3.0 \
     --hash=sha256:08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c \
     --hash=sha256:f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72 \
     # via aiohttp, jsonschema, mozilla-version
-boto3==1.12.14 \
-    --hash=sha256:3b00b93d9548ebc0777f54cbd77c11e2721f7bb873ffb371cf4fa66d06750de7 \
-    --hash=sha256:3d3973502f96faaa534faec083ce4cd51a969f613d740be9e34cb7e42238f59c \
+boto3==1.12.18 \
+    --hash=sha256:5e145fa27b56c6f3db20c20d4e0084e146a400007064af8d46c1b3bfcc779c42 \
+    --hash=sha256:95d2fb21e3f0575f8b599706100c42a5a7ae576671f6f4beea6e42ab0f57166b \
     # via -r requirements/base.in
-botocore==1.15.14 \
-    --hash=sha256:37e713b86bc833587e002610d0b2b5c5c88438617d68189d1b541e20726a43d4 \
-    --hash=sha256:4f889842519f54d007e285637c625a0645ffbe6aaa291b62ba510f3a25948f77 \
+botocore==1.15.18 \
+    --hash=sha256:2f1a54e19531bdf2d953c2db5f76b49c6936565366b2503a528b04cbbf55671a \
+    --hash=sha256:9827c6f3bffb9e316427c276e3f22e5d82b377dd43dcbbbe71ecbd9ac2b959ab \
     # via boto3, s3transfer
 certifi==2019.11.28 \
     --hash=sha256:017c25db2a153ce562900032d5bc68e9f191e44e9a0f762f373977de9df1fbb3 \
@@ -245,9 +245,9 @@ s3transfer==0.3.3 \
     --hash=sha256:2482b4259524933a022d59da830f51bd746db62f047d6eb213f2f8855dcb8a13 \
     --hash=sha256:921a37e2aefc64145e7b73d50c71bb4f26f46e4c9f414dc648c6245ff92cf7db \
     # via boto3
-scriptworker==32.0.3 \
-    --hash=sha256:a4d428a2c9db1b0dbabb86c0badf850e919ed83ffaba701185370ebe3dd5f7aa \
-    --hash=sha256:d60976a94ba86d0c4b9f23536ce3cb026281c726d00da12b6546a8dd80cb4d1b \
+scriptworker==32.1.0 \
+    --hash=sha256:89019f19c4498754cf27884cfd7dc129053dfc97b47cb2fe5e2f011d1fe6366b \
+    --hash=sha256:d6889301e7371bfc634721fc6c38ae8d28918b6ca148e478a68396e4f99de11c \
     # via -r requirements/base.in
 six==1.14.0 \
     --hash=sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a \
@@ -261,10 +261,10 @@ taskcluster-urls==12.1.0 \
     --hash=sha256:1dc740c32c7beb31e11ed7ccf9da2d47a504acdb3170c8900649433b0fd16fb2 \
     --hash=sha256:4a62c776aeba6d45044789a8845ec4d8521bc1bb6ebfc86d79ee759bcdd4f2f7 \
     # via taskcluster
-taskcluster==25.4.0 \
-    --hash=sha256:017e626ec7211cc250f6c59ac4fbeb3ca7d7ecf0a253eb4f21a694bc5d02ae36 \
-    --hash=sha256:0a8fc965441ab60aafb83bcf2b670afd3f8817b13067561e084b4d2528f1e75c \
-    --hash=sha256:a9d10a794a065ea17a11fa8ee4861e57ea702362f70d00dc97d5a4f685a70d4f \
+taskcluster==27.0.0 \
+    --hash=sha256:2bed90238c8c2c7273624e8c64ce485987ca121588dac6490a23aca91943852e \
+    --hash=sha256:4905b57911aec5cae2f4530e5571080285ec12cfa7367ce01b7a196fbf19749a \
+    --hash=sha256:f79e07b074cd716936b80c2a4583c03be1254376fa36d2ba11932c44cd1af676 \
     # via scriptworker
 uritemplate==3.0.1 \
     --hash=sha256:07620c3f3f8eed1f12600845892b0e036a2420acf513c53f7de0abd911a5894f \

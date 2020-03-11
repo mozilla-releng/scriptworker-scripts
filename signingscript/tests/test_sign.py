@@ -1008,11 +1008,15 @@ def test_extension_id_raises(json_, raises, mocker):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("fmt", ("autograph_authenticode", "autograph_authenticode_stub"))
-async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt):
+@pytest.mark.parametrize("use_comment", (True, False))
+async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt, use_comment):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
+    comment = None
+    if use_comment:
+        comment = "Some authenticode comment"
 
     test_file = os.path.join(tmpdir, "windows.zip")
     shutil.copyfile(os.path.join(TEST_DATA_DIR, "windows.zip"), test_file)
@@ -1020,7 +1024,86 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt):
     async def mocked_autograph(context, from_, fmt):
         return b""
 
-    async def mocked_winsign(infile, outfile, digest_algo, certs, signer, **kwargs):
+    async def mocked_winsign(infile, outfile, digest_algo, certs, signer, comment=None, **kwargs):
+        if infile.endswith(".msi") and use_comment:
+            assert comment == "Some authenticode comment"
+        else:
+            assert comment is None
+        await signer("", "")
+        shutil.copyfile(infile, outfile)
+        return True
+
+    def mocked_issigned(filename):
+        if filename.endswith("signed.exe"):
+            return True
+
+    mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
+    mocker.patch.object(winsign.osslsigncode, "is_signed", mocked_issigned)
+    mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
+
+    result = await sign.sign_authenticode_zip(context, test_file, fmt, authenticode_comment=comment)
+    assert result == test_file
+    assert os.path.exists(result)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("fmt", ("autograph_authenticode", "autograph_authenticode_stub"))
+@pytest.mark.parametrize("use_comment", (True, False))
+async def test_authenticode_sign_msi(tmpdir, mocker, context, fmt, use_comment):
+    context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_url"] = "https://example.com"
+    context.config["authenticode_timestamp_style"] = None
+    comment = None
+    if use_comment:
+        comment = "Some authenticode comment"
+
+    test_file = os.path.join(tmpdir, "windows.msi")
+    shutil.copyfile(os.path.join(TEST_DATA_DIR, "windows.zip"), test_file)
+
+    async def mocked_autograph(context, from_, fmt):
+        return b""
+
+    async def mocked_winsign(infile, outfile, digest_algo, certs, signer, comment=None, **kwargs):
+        assert digest_algo == "sha1"
+        if not use_comment:
+            assert comment is None
+        else:
+            assert comment == "Some authenticode comment"
+        await signer("", "")
+        shutil.copyfile(infile, outfile)
+        return True
+
+    def mocked_issigned(filename):
+        if filename.endswith("signed.exe"):
+            return True
+
+    mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
+    mocker.patch.object(winsign.osslsigncode, "is_signed", mocked_issigned)
+    mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
+
+    result = await sign.sign_authenticode_zip(context, test_file, fmt, authenticode_comment=comment)
+    assert result == test_file
+    assert os.path.exists(result)
+
+
+@pytest.mark.asyncio
+async def test_authenticode_ev_sha(tmpdir, mocker, context):
+    context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_url"] = "https://example.com"
+    context.config["authenticode_timestamp_style"] = None
+
+    test_file = os.path.join(tmpdir, "windows.msi")
+    shutil.copyfile(os.path.join(TEST_DATA_DIR, "windows.zip"), test_file)
+
+    fmt = "authenticode_ev"
+
+    async def mocked_autograph(context, from_, fmt):
+        return b""
+
+    async def mocked_winsign(infile, outfile, digest_algo, certs, signer, comment=None, **kwargs):
+        assert digest_algo == "sha256"
         await signer("", "")
         shutil.copyfile(infile, outfile)
         return True
