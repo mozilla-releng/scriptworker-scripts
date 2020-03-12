@@ -70,6 +70,9 @@ case $COT_PRODUCT in
   mpd001)
     export TRUST_DOMAIN=mpd001
     ;;
+  adhoc)
+    export TRUST_DOMAIN=adhoc
+    ;;
   *)
     exit 1
     ;;
