@@ -249,6 +249,7 @@ class GooglePlayEdit:
 
         body = {
             u'releases': [release],
+            u'track': track,
         }
 
         response = self._edit_resource.tracks().update(

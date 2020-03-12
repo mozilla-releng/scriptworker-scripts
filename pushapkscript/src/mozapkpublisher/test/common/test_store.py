@@ -249,7 +249,8 @@ def test_google_valid_rollout_percentage_with_track_rollout(create_edit_resource
             'status': 'inProgress',
             'userFraction': 0.5,
             'versionCodes': [1]
-        }]
+        }],
+        'track': 'production',
     }
 
 
@@ -268,7 +269,8 @@ def test_google_valid_rollout_percentage_with_real_track(create_edit_resource):
             'status': 'inProgress',
             'userFraction': 0.2,
             'versionCodes': [1, 2]
-        }]
+        }],
+        'track': 'beta',
     }
 
 
@@ -417,6 +419,7 @@ def test_google_update_track(edit_resource_mock):
                 'status': 'completed',
                 'versionCodes': ['2015012345', '2015012347'],
             }],
+            'track': 'alpha',
         },
     )
 
@@ -432,6 +435,7 @@ def test_google_update_track(edit_resource_mock):
                 'userFraction': 0.01,
                 'versionCodes': ['2015012345', '2015012347']},
             ],
+            'track': 'production',
         },
     )
 
