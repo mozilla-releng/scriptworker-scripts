@@ -140,9 +140,9 @@ github3.py==1.3.0 \
     --hash=sha256:15a115c18f7bfcf934dfef7ab103844eb9f620c586bad65967708926da47cbda \
     --hash=sha256:50833b5da35546b8cced0e8d7ff4c50a9afc2c8e46cc4d07dc4b66d26467c708 \
     # via scriptworker
-google-api-python-client==1.7.11 \
-    --hash=sha256:3121d55d106ef1a2756e8074239512055bd99eb44da417b3dd680f9a1385adec \
-    --hash=sha256:a8a88174f66d92aed7ebbd73744c2c319b4b1ce828e565f9ec721352d2e2fb8c \
+google-api-python-client==1.7.12 \
+    --hash=sha256:52ee38b5ade3f412a39c7c6c4bdacde73b06512f8b9dadca021021d354aa7fe2 \
+    --hash=sha256:9fd6a7b032b5e59975869a980655f49f27f1ad4dd51bdd3a9392bb2e46ad7409 \
     # via -r requirements/base.in, mozapkpublisher
 google-auth-httplib2==0.0.3 \
     --hash=sha256:098fade613c25b4527b2c08fa42d11f3c2037dda8995d86de0745228e965d445 \
@@ -180,8 +180,8 @@ jedi==0.16.0 \
     --hash=sha256:b4f4052551025c6b0b0b193b29a6ff7bdb74c52450631206c262aef9f7159ad2 \
     --hash=sha256:d5c871cb9360b414f981e7072c52c33258d598305280fef91c6cae34739d65d5 \
     # via ipython
-json-e==4.0.0 \
-    --hash=sha256:c1add008dbfbb4b7c48d30b42e11e26db4883394989e013b603a63b6c59b8530 \
+json-e==4.0.1 \
+    --hash=sha256:7d84242c94c4a475b08e185a265bed810346daf8399a5b5d05b7b19eba774356 \
     # via scriptworker
 jsonschema==3.2.0 \
     --hash=sha256:4e5b3cf8216f577bee9ce139cbe72eca3ea4f292ec60928ff24758ce626cd163 \
@@ -279,9 +279,9 @@ mohawk==1.1.0 \
     --hash=sha256:3ed296a30453d0b724679e0fd41e4e940497f8e461a9a9c3b7f36e43bab0fa09 \
     --hash=sha256:d2a0e3ab10a209cc79e95e28f2dd54bd4a73fd1998ffe27b7ba0f962b6be9723 \
     # via taskcluster
-mozapkpublisher==6.1.0 \
-    --hash=sha256:837edaa54d3f4996ac01ee74cb4749b8f99b2a6f2860e53cd2781bbb8c926914 \
-    --hash=sha256:e0bf9efc6e19fc567beb3d1215ab879f6092da5dc2b9d9afca56e3ea17cfce5d \
+mozapkpublisher==6.1.1 \
+    --hash=sha256:efc5e19ab8f13c65f1f5e583fc3a9bb197d5f2f1fa2c38614ce965bb4262d10a \
+    --hash=sha256:f132e4dea3343b7ca648d5f82b019e46cc0d03bb55fc83ebd3493d94cdf573c8 \
     # via -r requirements/base.in
 mozilla-version==0.5.0 \
     --hash=sha256:c36dff62d62e098dfde83a010600ac342d00fbaa14a056ea17ed48fe31aa7ef3 \
@@ -429,10 +429,10 @@ taskcluster-urls==12.1.0 \
     --hash=sha256:1dc740c32c7beb31e11ed7ccf9da2d47a504acdb3170c8900649433b0fd16fb2 \
     --hash=sha256:4a62c776aeba6d45044789a8845ec4d8521bc1bb6ebfc86d79ee759bcdd4f2f7 \
     # via taskcluster
-taskcluster==27.0.0 \
-    --hash=sha256:2bed90238c8c2c7273624e8c64ce485987ca121588dac6490a23aca91943852e \
-    --hash=sha256:4905b57911aec5cae2f4530e5571080285ec12cfa7367ce01b7a196fbf19749a \
-    --hash=sha256:f79e07b074cd716936b80c2a4583c03be1254376fa36d2ba11932c44cd1af676 \
+taskcluster==27.2.0 \
+    --hash=sha256:4d2796201c54413901a024e38282f3821d790aa8f53bd62a99d9e1c5cacb7e48 \
+    --hash=sha256:7105ba6c918514701bc6290f8a262581b454cb088170e42ef34c1315b313dc26 \
+    --hash=sha256:c43b5eef0e4b5d7a79196de48303c7550b58e65573f84e7cb434ebc80ce3cde8 \
     # via scriptworker
 traitlets==4.3.3 \
     --hash=sha256:70b4c6a1d9019d7b4f6846832288f86998aa3b9207c6821f3578a6a6a467fe44 \
