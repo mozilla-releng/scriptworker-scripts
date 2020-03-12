@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [6.1.1] - 2020-03-12
+
+### Fixed
+* Publication to the Google Play Store: the track is now required in both the URL and the body of the request.
+
 ## [6.1.0] - 2019-09-26
 
 ### Added
