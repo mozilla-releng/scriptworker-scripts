@@ -8,12 +8,12 @@ from pushflatpakscript.artifacts import get_flatpak_file_path
 @pytest.mark.parametrize(
     "raises, returned, expected",
     (
-        (False, ({"taskId": ["/path/to/file.flatpak.tar.gz"]}, {}), "/path/to/file.flatpak.tar.gz"),
-        (False, ({"taskId": ["/path/to/file.flatpak.tar.gz", "/some/other/file.txt"]}, {}), "/path/to/file.flatpak.tar.gz"),
-        (False, ({"taskId": ["/path/to/file.flatpak.tar.gz"], "otherTaskId": "/some/other/file.txt"}, {}), "/path/to/file.flatpak.tar.gz"),
-        (True, ({}, {"taskId": ["/path/to/file.flatpak.tar.gz"]}), None),
+        (False, ({"taskId": ["/path/to/file.flatpak.tar.xz"]}, {}), "/path/to/file.flatpak.tar.xz"),
+        (False, ({"taskId": ["/path/to/file.flatpak.tar.xz", "/some/other/file.txt"]}, {}), "/path/to/file.flatpak.tar.xz"),
+        (False, ({"taskId": ["/path/to/file.flatpak.tar.xz"], "otherTaskId": "/some/other/file.txt"}, {}), "/path/to/file.flatpak.tar.xz"),
+        (True, ({}, {"taskId": ["/path/to/file.flatpak.tar.xz"]}), None),
         (True, ({"taskId": ["/some/other/file.txt"]}, {}), None),
-        (True, ({"taskId": ["/path/to/file.flatpak.tar.gz"], "otherTaskId": ["/some/other/file.flatpak.tar.gz"]}, {}), None),
+        (True, ({"taskId": ["/path/to/file.flatpak.tar.xz"], "otherTaskId": ["/some/other/file.flatpak.tar.xz"]}, {}), None),
     ),
 )
 def test_get_flatpak_file_path(monkeypatch, raises, returned, expected):
