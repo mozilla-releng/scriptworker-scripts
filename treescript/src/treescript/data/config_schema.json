@@ -25,6 +25,9 @@
         "taskcluster_scope_prefix": {
             "type": "string"
         },
+        "use_hgrc": {
+            "type": "boolean"
+        },
         "hg": {
             "type": "string"
         },

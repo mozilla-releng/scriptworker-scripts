@@ -38,7 +38,7 @@ def build_hg_command(config, *args):
 
 
 # build_hg_environment {{{1
-def build_hg_environment():
+def build_hg_environment(config):
     """Generate an environment suitable for running mercurial programatically.
 
     This function sets the hgrc to one provided in the package and ensures
@@ -51,6 +51,8 @@ def build_hg_environment():
 
     """
     env = os.environ.copy()
+    if config.get('use_hgrc', True):
+        env["HGRCPATH"] = HGRCPATH
     env["HGEDITOR"] = '"' + sys.executable + '"' + ' -c "import sys; sys.exit(0)"'
     env["HGMERGE"] = "internal:merge"
     env["HGENCODING"] = "utf-8"
@@ -88,7 +90,7 @@ async def run_hg_command(config, *args, repo_path=None, exception=FailedSubproce
 
     """
     command = build_hg_command(config, *args)
-    env = build_hg_environment()
+    env = build_hg_environment(config)
     return_value = None
     if repo_path:
         command.extend(["-R", repo_path])
