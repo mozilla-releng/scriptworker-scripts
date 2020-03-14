@@ -110,7 +110,8 @@ async def log_mercurial_version(config):
         config (dict): the running config.
 
     """
-    log.info(await run_hg_command(config, "-v", "version", return_output=True))
+    await run_hg_command(config, "-v", "version", return_output=True)
+    await run_hg_command(config, "config", "--debug")
 
 
 # validate_robustcheckout_works {{{1

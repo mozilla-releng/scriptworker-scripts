@@ -6,6 +6,7 @@ it's expected output is something our script can cope with.
 
 """
 
+import logging
 import os
 
 import pytest
@@ -127,17 +128,13 @@ async def test_run_hg_command_localrepo(mocker, config):
 
 # robustcheckout, hg {{{1
 @pytest.mark.asyncio
-async def test_hg_version(config, mocker):
-    logged = []
+async def test_hg_version(config, caplog):
+    caplog.set_level(logging.INFO)
 
-    def info(msg, *args):
-        logged.append(msg % args)
-
-    mocklog = mocker.patch.object(mercurial, "log")
-    mocklog.info = info
     await mercurial.log_mercurial_version(config)
 
-    assert logged[0].startswith("Mercurial Distributed SCM (version")
+    assert "Mercurial Distributed SCM (version" in caplog.text
+    assert "--debug: ui.debug=True"
 
 
 @pytest.mark.asyncio
