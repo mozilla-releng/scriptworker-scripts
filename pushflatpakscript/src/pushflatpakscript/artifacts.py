@@ -10,8 +10,8 @@ def get_flatpak_file_path(context):
 
     return get_single_item_from_sequence(
         all_artifacts,
-        condition=lambda artifact: artifact.endswith(".flatpak.tar.gz"),
+        condition=lambda artifact: artifact.endswith(".flatpak.tar.xz"),
         ErrorClass=TaskVerificationError,
-        no_item_error_message="No upstream artifact is a tar.gz",
+        no_item_error_message="No upstream artifact is a tar.xz",
         too_many_item_error_message="Too many flatpaks detected",
     )
