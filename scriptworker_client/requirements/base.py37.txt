@@ -35,9 +35,9 @@ idna==2.9 \
     --hash=sha256:7588d1c14ae4c77d74036e8c22ff447b26d0fde8f007354fd48a7814db15b7cb \
     --hash=sha256:a068a21ceac8a4d63dbfd964670474107f541babbd2250d61922f029858365fa \
     # via yarl
-immutabledict==0.2.0 \
-    --hash=sha256:43dde3e55dcb539537ae6189fb6b09a1d01e94db304e4506e94ca2d45ec14c47 \
-    --hash=sha256:7881e44098f13dd12d6fec00551d564433cb46776e8b2f3453128f715df4376a \
+immutabledict==1.0.0 \
+    --hash=sha256:a768690210d107d5a479a5edf9e09e70db7cfbe6aee45c82b5799f82b43bf739 \
+    --hash=sha256:ca0fda2e29dce4b1ee50cd27e25ab1ef389454f77d7694dcc8fbe5fc77c87bd5 \
     # via -r requirements/base.in
 importlib-metadata==1.5.0 \
     --hash=sha256:06f5b3a99029c7134207dd882428a66992a9de2bef7c2b699b5641f9886c3302 \
