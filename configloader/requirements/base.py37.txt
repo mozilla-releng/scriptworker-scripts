@@ -9,8 +9,8 @@ click==7.1.1 \
     --hash=sha256:8a18b4ea89d8820c5d0c7da8a64b2c324b4dabb695804dbfea19b9be9d88c0cc \
     --hash=sha256:e345d143d80bf5ee7534056164e5e112ea5e22716bbb1ce727941f4c8b471b9a \
     # via -r requirements/base.in
-json-e==4.0.0 \
-    --hash=sha256:c1add008dbfbb4b7c48d30b42e11e26db4883394989e013b603a63b6c59b8530 \
+json-e==4.0.1 \
+    --hash=sha256:7d84242c94c4a475b08e185a265bed810346daf8399a5b5d05b7b19eba774356 \
     # via -r requirements/base.in
 pyyaml==5.3 \
     --hash=sha256:059b2ee3194d718896c0ad077dd8c043e5e909d9180f387ce42012662a4946d6 \
