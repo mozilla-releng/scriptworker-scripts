@@ -58,6 +58,11 @@ case $COT_PRODUCT in
       export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_mpd_prod.crt
     fi
     ;;
+  adhoc)
+    test_var_set 'WIDEVINE_CERT'
+
+    echo $WIDEVINE_CERT | base64 -d > $WIDEVINE_CERT_PATH
+    ;;
   *)
     exit 1
     ;;
@@ -111,6 +116,12 @@ case $ENV in
         test_var_set 'AUTHENTICODE_CERT_PATH'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
+        ;;
+      adhoc)
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
+        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        test_var_set 'AUTOGRAPH_GPG_USERNAME'
         ;;
     esac
     ;;

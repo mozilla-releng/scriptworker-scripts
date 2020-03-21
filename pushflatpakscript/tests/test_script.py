@@ -14,12 +14,12 @@ async def test_async_main(monkeypatch):
     context = MagicMock()
     context.config = {"push_to_flathub": True}
     monkeypatch.setattr(client, "get_task", lambda _: {})
-    monkeypatch.setattr(artifacts, "get_flatpak_file_path", lambda _: "/some/file.flatpak.tar.gz")
+    monkeypatch.setattr(artifacts, "get_flatpak_file_path", lambda _: "/some/file.flatpak.tar.xz")
     monkeypatch.setattr(task, "get_flatpak_channel", lambda config, channel: "edge")
 
     def assert_push(context_, file_, channel):
         assert context_ == context
-        assert file_ == "/some/file.flatpak.tar.gz"
+        assert file_ == "/some/file.flatpak.tar.xz"
         assert channel == "edge"
         next(function_call_counter)
 

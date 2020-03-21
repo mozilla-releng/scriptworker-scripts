@@ -104,7 +104,7 @@ def check_and_extract_tar_archive(context, tar_file_path):
             flatpak_deflated_dir = topdir
         tar.extractall(path=flatpak_tar_basedir)
 
-    # we remove the `tar.gz` as it's not longer needed
+    # we remove the `tar.xz` as it's not longer needed
     os.remove(tar_file_path)
     log.debug(f"Deleted archive from {tar_file_path}")
 
