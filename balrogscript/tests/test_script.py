@@ -6,9 +6,9 @@ import sys
 
 import mock
 import pytest
+import scriptworker.client
 
 import balrogscript.script as bscript
-from balrogscript.script import main, setup_config, setup_logging
 from balrogscript.submitter.cli import NightlySubmitterV4, ReleaseCreatorV9, ReleasePusher, ReleaseScheduler, ReleaseStateUpdater, ReleaseSubmitterV9
 from balrogscript.task import get_task, get_task_server, validate_task_schema
 
@@ -316,13 +316,6 @@ def test_get_task_server(config, defn):
         get_task_server(defn, config)
 
 
-# setup_logging {{{1
-@pytest.mark.parametrize("verbose", (True, False))
-def test_setup_logging(verbose):
-    setup_logging(verbose=verbose)
-    assert bscript.log.level == logging.NOTSET
-
-
 # load_config {{{1
 def test_load_config():
     config_path = os.path.join(BASE_DIR, "data/hardcoded_config.json")
@@ -357,31 +350,45 @@ def test_invalid_args():
     args = ["only-one-arg"]
     with mock.patch.object(sys, "argv", args):
         with pytest.raises(SystemExit) as e:
-            setup_config(None)
-            assert e.type == SystemExit
-            assert e.value.code == 2
+            scriptworker.client._init_context(None)
+        assert e.type == SystemExit
+        assert e.value.code == 1
 
     args = ["balrogscript", "tests/data/hardcoded_config.json"]
     with mock.patch.object(sys, "argv", args):
-        config = setup_config(None)
-        assert config["artifact_dir"] == "balrogscript/data/balrog_task_schema.json"
+        context = scriptworker.client._init_context(None)
+        assert context.config["artifact_dir"] == "balrogscript/data/balrog_task_schema.json"
 
 
-# main {{{1
-@pytest.mark.parametrize("action", ("submit-locale", "submit-toplevel", "schedule"))
-def test_main_submit_locale(action, mocker):
+def test_get_default_config():
+    c = bscript.get_default_config()
+    assert "schema_files" in c
+
+
+# async_main {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize("action", ("submit-locale", "submit-toplevel", "schedule", "set-readonly"))
+async def test_async_main_submit_locale(action, nightly_config, mocker):
     def fake_get_action(*args):
         return action
 
     def fake_get_manifest(config, upstream_artifacts):
         return []
 
-    config_path = os.path.join(BASE_DIR, "data/hardcoded_config.json")
-
     mocker.patch.object(bscript, "validate_task_schema")
     mocker.patch.object(bscript, "get_task_action", return_value=action)
     mocker.patch.object(bscript, "submit_toplevel")
     mocker.patch.object(bscript, "submit_locale")
     mocker.patch.object(bscript, "schedule")
+    mocker.patch.object(bscript, "set_readonly")
 
-    main(config_path=config_path)
+    context = mock.MagicMock()
+    context.config = nightly_config
+    await bscript.async_main(context)
+
+
+def test_main(monkeypatch, mocker):
+    sync_main_mock = mocker.MagicMock()
+    monkeypatch.setattr(scriptworker.client, "sync_main", sync_main_mock)
+    bscript.main()
+    sync_main_mock.asset_called_once_with(bscript.async_main, default_config=bscript.get_default_config())

@@ -6,6 +6,7 @@ import os
 import sys
 from copy import deepcopy
 
+import scriptworker.client
 from redo import retry  # noqa: E402
 
 from .submitter.cli import NightlySubmitterV4, ReleaseCreatorV9, ReleasePusher, ReleaseScheduler, ReleaseStateUpdater, ReleaseSubmitterV9
@@ -178,21 +179,6 @@ def set_readonly(task, config, auth0_secrets):
     retry(lambda: state_updater.run(*args))
 
 
-# usage {{{1
-def usage():
-    print("Usage: {} CONFIG_FILE".format(sys.argv[0]), file=sys.stderr)
-    sys.exit(2)
-
-
-# setup_logging {{{1
-def setup_logging(verbose=False):
-    log_level = logging.INFO
-    if verbose:
-        log_level = logging.DEBUG
-
-    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=log_level)
-
-
 # update_config {{{1
 def update_config(config, server="default"):
     config = deepcopy(config)
@@ -219,15 +205,20 @@ def load_config(path=None):
     return config
 
 
-# setup_config {{{1
-def setup_config(config_path):
-    if config_path is None:
-        if len(sys.argv) != 2:
-            usage()
-        config_path = sys.argv[1]
+# get_default_config {{{1
+def get_default_config():
+    """Create the default config to work from.
 
+    Args:
+        base_dir (str, optional): the directory above the `work_dir` and `artifact_dir`.
+            If None, use `..`  Defaults to None.
+
+    Returns:
+        dict: the default configuration dict.
+
+    """
     data_dir = os.path.join(os.path.dirname(__file__), "data")
-    config = {
+    default_config = {
         "schema_files": {
             "submit-locale": os.path.join(data_dir, "balrog_submit-locale_schema.json"),
             "submit-toplevel": os.path.join(data_dir, "balrog_submit-toplevel_schema.json"),
@@ -235,31 +226,31 @@ def setup_config(config_path):
             "set-readonly": os.path.join(data_dir, "balrog_set-readonly_schema.json"),
         }
     }
-    config.update(load_config(config_path))
-    return config
+    return default_config
 
 
 # main {{{1
-def main(config_path=None):
+async def async_main(context):
     # TODO use scriptworker's sync_main(...)
-    config = setup_config(config_path)
-    setup_logging(config["verbose"])
+    task = get_task(context.config)
+    action = get_task_action(task, context.config)
+    validate_task_schema(context.config, task, action)
 
-    task = get_task(config)
-    action = get_task_action(task, config)
-    validate_task_schema(config, task, action)
-
-    server = get_task_server(task, config)
-    auth0_secrets, config = update_config(config, server)
+    server = get_task_server(task, context.config)
+    auth0_secrets, config = update_config(context.config, server)
 
     if action == "submit-toplevel":
-        submit_toplevel(task, config, auth0_secrets)
+        submit_toplevel(task, context.config, auth0_secrets)
     elif action == "schedule":
-        schedule(task, config, auth0_secrets)
+        schedule(task, context.config, auth0_secrets)
     elif action == "set-readonly":
-        set_readonly(task, config, auth0_secrets)
+        set_readonly(task, context.config, auth0_secrets)
     else:
-        submit_locale(task, config, auth0_secrets)
+        submit_locale(task, context.config, auth0_secrets)
+
+
+def main():
+    return scriptworker.client.sync_main(async_main, default_config=get_default_config(), should_validate_task=False)
 
 
 __name__ == "__main__" and main()
