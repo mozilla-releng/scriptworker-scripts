@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 # We allow commented lines in this file
 project_dir = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(project_dir, "requirements/base.in")) as f:
-    install_requires = [line.rstrip("\n") for line in f if not line.startswith("#")]
+    install_requires = ["scriptworker_client"] + [line.rstrip("\n") for line in f if not line.startswith("#")]
 
 with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "version.txt")) as f:
     version = f.read().rstrip()

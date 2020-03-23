@@ -12,7 +12,10 @@ WORKDIR /app
 COPY . /app
 
 RUN python -m venv /app \
- && cd balrogscript \
+ && cd /app/scriptworker_client \
+ && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install . \
+ && cd /app/balrogscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \

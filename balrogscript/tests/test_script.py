@@ -6,9 +6,9 @@ import sys
 
 import mock
 import pytest
-import scriptworker.client
 
 import balrogscript.script as bscript
+import scriptworker_client.client
 from balrogscript.submitter.cli import NightlySubmitterV4, ReleaseCreatorV9, ReleasePusher, ReleaseScheduler, ReleaseStateUpdater, ReleaseSubmitterV9
 from balrogscript.task import get_task, get_task_server, validate_task_schema
 
@@ -350,14 +350,14 @@ def test_invalid_args():
     args = ["only-one-arg"]
     with mock.patch.object(sys, "argv", args):
         with pytest.raises(SystemExit) as e:
-            scriptworker.client._init_context(None)
+            scriptworker_client.client.init_config(None)
         assert e.type == SystemExit
         assert e.value.code == 1
 
     args = ["balrogscript", "tests/data/hardcoded_config.json"]
     with mock.patch.object(sys, "argv", args):
-        context = scriptworker.client._init_context(None)
-        assert context.config["artifact_dir"] == "balrogscript/data/balrog_task_schema.json"
+        config = scriptworker_client.client.init_config(None)
+        assert config["artifact_dir"] == "balrogscript/data/balrog_task_schema.json"
 
 
 def test_get_default_config():
@@ -382,13 +382,11 @@ async def test_async_main_submit_locale(action, nightly_config, mocker):
     mocker.patch.object(bscript, "schedule")
     mocker.patch.object(bscript, "set_readonly")
 
-    context = mock.MagicMock()
-    context.config = nightly_config
-    await bscript.async_main(context)
+    await bscript.async_main(nightly_config)
 
 
 def test_main(monkeypatch, mocker):
     sync_main_mock = mocker.MagicMock()
-    monkeypatch.setattr(scriptworker.client, "sync_main", sync_main_mock)
+    monkeypatch.setattr(scriptworker_client.client, "sync_main", sync_main_mock)
     bscript.main()
     sync_main_mock.asset_called_once_with(bscript.async_main, default_config=bscript.get_default_config())

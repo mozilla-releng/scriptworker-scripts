@@ -6,8 +6,9 @@ import os
 import sys
 from copy import deepcopy
 
-import scriptworker.client
 from redo import retry  # noqa: E402
+
+import scriptworker_client.client
 
 from .submitter.cli import NightlySubmitterV4, ReleaseCreatorV9, ReleasePusher, ReleaseScheduler, ReleaseStateUpdater, ReleaseSubmitterV9
 from .task import get_manifest, get_task, get_task_action, get_task_server, get_upstream_artifacts, validate_task_schema
@@ -230,27 +231,27 @@ def get_default_config():
 
 
 # main {{{1
-async def async_main(context):
+async def async_main(config):
     # TODO use scriptworker's sync_main(...)
-    task = get_task(context.config)
-    action = get_task_action(task, context.config)
-    validate_task_schema(context.config, task, action)
+    task = get_task(config)
+    action = get_task_action(task, config)
+    validate_task_schema(config, task, action)
 
-    server = get_task_server(task, context.config)
-    auth0_secrets, config = update_config(context.config, server)
+    server = get_task_server(task, config)
+    auth0_secrets, config = update_config(config, server)
 
     if action == "submit-toplevel":
-        submit_toplevel(task, context.config, auth0_secrets)
+        submit_toplevel(task, config, auth0_secrets)
     elif action == "schedule":
-        schedule(task, context.config, auth0_secrets)
+        schedule(task, config, auth0_secrets)
     elif action == "set-readonly":
-        set_readonly(task, context.config, auth0_secrets)
+        set_readonly(task, config, auth0_secrets)
     else:
-        submit_locale(task, context.config, auth0_secrets)
+        submit_locale(task, config, auth0_secrets)
 
 
 def main():
-    return scriptworker.client.sync_main(async_main, default_config=get_default_config(), should_validate_task=False)
+    return scriptworker_client.client.sync_main(async_main, default_config=get_default_config(), should_verify_task=False)
 
 
 __name__ == "__main__" and main()
