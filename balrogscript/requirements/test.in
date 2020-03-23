@@ -10,5 +10,6 @@ minimock
 mock
 pip-compile-multi
 pytest
+pytest-asyncio>=0.6.0
 pytest-cov
 pytest-mock
