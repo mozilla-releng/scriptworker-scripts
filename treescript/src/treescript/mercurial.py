@@ -51,7 +51,7 @@ def build_hg_environment(config):
 
     """
     env = os.environ.copy()
-    if config.get('use_hgrc', True):
+    if config.get("use_hgrc", True):
         env["HGRCPATH"] = HGRCPATH
     env["HGEDITOR"] = '"' + sys.executable + '"' + ' -c "import sys; sys.exit(0)"'
     env["HGMERGE"] = "internal:merge"
