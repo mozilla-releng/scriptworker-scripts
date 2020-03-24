@@ -12,7 +12,6 @@ from treescript.task import DONTBUILD_MSG, get_branch, get_dontbuild, get_source
 # For environment vars.
 
 HGRCPATH = os.path.join(os.path.dirname(__file__), "data", "hgrc")
-ROBUSTCHECKOUT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "py2", "robustcheckout.py"))
 TAG_MSG = "No bug - Tagging {revision} with {tags} a=release CLOSED TREE"
 
 log = logging.getLogger(__name__)
@@ -35,15 +34,7 @@ def build_hg_command(config, *args):
     hg = config["hg"]
     if not isinstance(hg, (list, tuple)):
         hg = [hg]
-    robustcheckout_args = [
-        "--config",
-        "extensions.robustcheckout={}".format(ROBUSTCHECKOUT_PATH),
-        "--config",
-        "extensions.purge=",
-        "--config",
-        "extensions.strip=",
-    ]
-    return hg + [*robustcheckout_args, *args]
+    return hg + [*args]
 
 
 # build_hg_environment {{{1
@@ -60,7 +51,6 @@ def build_hg_environment():
 
     """
     env = os.environ.copy()
-    env["HGRCPATH"] = HGRCPATH
     env["HGEDITOR"] = '"' + sys.executable + '"' + ' -c "import sys; sys.exit(0)"'
     env["HGMERGE"] = "internal:merge"
     env["HGENCODING"] = "utf-8"
@@ -120,7 +110,8 @@ async def log_mercurial_version(config):
         config (dict): the running config.
 
     """
-    log.info(await run_hg_command(config, "-v", "version", return_output=True))
+    await run_hg_command(config, "-v", "version", return_output=True)
+    await run_hg_command(config, "config", "--debug")
 
 
 # validate_robustcheckout_works {{{1

@@ -19,11 +19,11 @@ exclude = '''
   | ui
   | vendored
 )/
-| ^/src/treescript/py2/robustcheckout\.py$
+| ^/tests/vendored/robustcheckout\.py$
 '''
 
 [tool.isort]
-skip_glob = '**py2**'
+skip_glob = '**vendored**'
 multi_line_output = 3
 include_trailing_comma = true
 force_grid_wrap = 0
