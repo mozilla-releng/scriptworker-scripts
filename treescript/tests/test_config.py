@@ -39,5 +39,6 @@ def test_config():
         "UPSTREAM_REPO": "",
         "SSH_MERGE_USER": "",
         "SSH_MERGE_KEY_PATH": "",
+        "MERGE_DAY_CLOBBER_FILE": "",
     }
     _validate_config(context)

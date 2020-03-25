@@ -20,6 +20,7 @@ test_var_set 'SSH_KEY'
 test_var_set 'SSH_USER'
 
 export UPSTREAM_REPO="https://hg.mozilla.org/mozilla-unified"
+export MERGE_DAY_CLOBBER_FILE="CLOBBER"
 
 case $COT_PRODUCT in
   firefox)
@@ -28,6 +29,7 @@ case $COT_PRODUCT in
   thunderbird)
     export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:${PROJECT_NAME}script:"
     export UPSTREAM_REPO="https://hg.mozilla.org/comm-central"
+    export MERGE_DAY_CLOBBER_FILE=""
     ;;
   *)
     exit 1
