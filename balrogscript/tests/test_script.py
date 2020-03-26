@@ -362,7 +362,7 @@ def test_get_default_config():
 # async_main {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize("action", ("submit-locale", "submit-toplevel", "schedule", "set-readonly"))
-async def test_async_main_submit_locale(action, nightly_config, mocker):
+async def test_async_main_submit_locale(action, nightly_task, nightly_config, mocker):
     def fake_get_action(*args):
         return action
 
@@ -376,8 +376,7 @@ async def test_async_main_submit_locale(action, nightly_config, mocker):
     mocker.patch.object(bscript, "schedule")
     mocker.patch.object(bscript, "set_readonly")
 
-    # XXX create a real task and stop patching `get_task_action`
-    await bscript.async_main(nightly_config, {"scopes": ["project:releng:balrog:server:nightly"]})
+    await bscript.async_main(nightly_config, nightly_task)
 
 
 def test_main(monkeypatch, mocker):
