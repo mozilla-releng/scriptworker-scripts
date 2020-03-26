@@ -4,6 +4,7 @@ import shutil
 import tempfile
 
 import pytest
+from immutabledict import immutabledict
 
 # constants, helpers, and fixtures {{{1
 NIGHTLY_MANIFEST_PATH = os.path.join(os.path.dirname(__file__), "data", "nightly_manifest.json")
@@ -28,46 +29,48 @@ def release_manifest():
 def config():
     tmpdir = tempfile.mkdtemp()
     try:
-        yield {
-            "work_dir": os.path.join(tmpdir, "work_dir"),
-            "artifact_dir": os.path.join(tmpdir, "artifact_dir"),
-            "schema_files": {
-                "submit-locale": "balrogscript/data/balrog_submit-locale_schema.json",
-                "submit-toplevel": "balrogscript/data/balrog_submit-toplevel_schema.json",
-                "schedule": "balrogscript/data/balrog_schedule_schema.json",
-            },
-            "dummy": False,
-            "api_root": "BALROG_API_ROOT",
-            "taskcluster_scope_prefix": "project:releng:balrog:",
-            "server_config": {
-                "nightly": {
-                    "api_root": "BALROG_API_ROOT",
-                    "auth0_domain": "AUTH0_DOMAIN",
-                    "auth0_client_id": "AUTH0_CLIENT_ID",
-                    "auth0_client_secret": "AUTH0_CLIENT_SECRET",
-                    "auth0_audience": "AUTH0_AUDIENCE",
-                    "allowed_channels": ["nightly"],
+        yield immutabledict(
+            {
+                "work_dir": os.path.join(tmpdir, "work_dir"),
+                "artifact_dir": os.path.join(tmpdir, "artifact_dir"),
+                "schema_files": {
+                    "submit-locale": "balrogscript/data/balrog_submit-locale_schema.json",
+                    "submit-toplevel": "balrogscript/data/balrog_submit-toplevel_schema.json",
+                    "schedule": "balrogscript/data/balrog_schedule_schema.json",
                 },
-                "release": {
-                    "api_root": "BALROG_API_ROOT",
-                    "auth0_domain": "AUTH0_DOMAIN",
-                    "auth0_client_id": "AUTH0_CLIENT_ID",
-                    "auth0_client_secret": "AUTH0_CLIENT_SECRET",
-                    "auth0_audience": "AUTH0_AUDIENCE",
-                    "allowed_channels": ["release", "release-localtest", "release-cdntest"],
+                "dummy": False,
+                "api_root": "BALROG_API_ROOT",
+                "taskcluster_scope_prefix": "project:releng:balrog:",
+                "server_config": {
+                    "nightly": {
+                        "api_root": "BALROG_API_ROOT",
+                        "auth0_domain": "AUTH0_DOMAIN",
+                        "auth0_client_id": "AUTH0_CLIENT_ID",
+                        "auth0_client_secret": "AUTH0_CLIENT_SECRET",
+                        "auth0_audience": "AUTH0_AUDIENCE",
+                        "allowed_channels": ["nightly"],
+                    },
+                    "release": {
+                        "api_root": "BALROG_API_ROOT",
+                        "auth0_domain": "AUTH0_DOMAIN",
+                        "auth0_client_id": "AUTH0_CLIENT_ID",
+                        "auth0_client_secret": "AUTH0_CLIENT_SECRET",
+                        "auth0_audience": "AUTH0_AUDIENCE",
+                        "allowed_channels": ["release", "release-localtest", "release-cdntest"],
+                    },
+                    "dep": {
+                        "api_root": "BALROG_API_ROOT",
+                        "auth0_domain": "AUTH0_DOMAIN",
+                        "auth0_client_id": "AUTH0_CLIENT_ID",
+                        "auth0_client_secret": "AUTH0_CLIENT_SECRET",
+                        "auth0_audience": "AUTH0_AUDIENCE",
+                        "allowed_channels": ["nightly", "release", "beta", "etc"],
+                    },
                 },
-                "dep": {
-                    "api_root": "BALROG_API_ROOT",
-                    "auth0_domain": "AUTH0_DOMAIN",
-                    "auth0_client_id": "AUTH0_CLIENT_ID",
-                    "auth0_client_secret": "AUTH0_CLIENT_SECRET",
-                    "auth0_audience": "AUTH0_AUDIENCE",
-                    "allowed_channels": ["nightly", "release", "beta", "etc"],
-                },
-            },
-            "disable_certs": False,
-            "verbose": True,
-        }
+                "disable_certs": False,
+                "verbose": True,
+            }
+        )
     finally:
         shutil.rmtree(tmpdir)
 
