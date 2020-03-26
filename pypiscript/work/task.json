@@ -1,0 +1,13 @@
+{
+    "scopes": ["project:releng:pypi:project:redo"],
+    "dependencies": [],
+    "payload": {
+        "action": "upload",
+        "upstreamArtifacts": [{
+            "taskId": "slug",
+            "taskType": "scriptworker",
+            "paths": ["public/redo-2.0.3-py2.py3-none-any.whl"],
+            "project": "redo"
+        }]
+    }
+}

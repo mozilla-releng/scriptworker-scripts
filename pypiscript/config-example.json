@@ -1,0 +1,4 @@
+{
+	"taskcluster_scope_prefix": "project:releng",
+	"project_config_file": "/Depot/Mozilla/scriptworker-scripts/pypiscript/passwords.yml"
+}
