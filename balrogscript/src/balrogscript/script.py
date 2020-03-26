@@ -4,8 +4,8 @@ import json
 import logging
 import os
 import sys
-from copy import deepcopy
 
+from immutabledict import immutabledict
 from redo import retry  # noqa: E402
 
 import scriptworker_client.client
@@ -182,7 +182,7 @@ def set_readonly(task, config, auth0_secrets):
 
 # update_config {{{1
 def update_config(config, server="default"):
-    config = deepcopy(config)
+    config = dict(config)
 
     config["api_root"] = config["server_config"][server]["api_root"]
     auth0_secrets = dict(
@@ -192,7 +192,7 @@ def update_config(config, server="default"):
         audience=config["server_config"][server]["auth0_audience"],
     )
     del config["server_config"]
-    return auth0_secrets, config
+    return auth0_secrets, immutabledict(config)
 
 
 # load_config {{{1

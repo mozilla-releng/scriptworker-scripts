@@ -10,17 +10,11 @@ import pytest
 import balrogscript.script as bscript
 import scriptworker_client.client
 from balrogscript.submitter.cli import NightlySubmitterV4, ReleaseCreatorV9, ReleasePusher, ReleaseScheduler, ReleaseStateUpdater, ReleaseSubmitterV9
-from balrogscript.task import get_task, get_task_server, validate_task_schema
+from balrogscript.task import get_task_server, validate_task_schema
 
 logging.basicConfig()
 
 BASE_DIR = os.path.dirname(__file__)
-
-
-# get_task {{{1
-def test_get_task_payload(nightly_config):
-    upstream = get_task(nightly_config)["payload"]["upstreamArtifacts"]
-    assert upstream[0]["paths"][0] == "public/manifest.json"
 
 
 # create_locale_submitter {{{1
@@ -88,14 +82,14 @@ def test_create_locale_submitter_nightly_creates_valid_submitter(config, nightly
 
 
 # submit_locale {{{1
-def test_submit_locale(config, nightly_config, nightly_manifest, mocker):
+def test_submit_locale(config, nightly_task, nightly_config, nightly_manifest, mocker):
     auth0_secrets = None
     _, release = bscript.create_locale_submitter(nightly_manifest[0], "", auth0_secrets, config)
 
     def fake_submitter(**kwargs):
         assert kwargs == release
 
-    task = get_task(nightly_config)
+    task = nightly_task
     m = mock.MagicMock()
     m.run = fake_submitter
     mocker.patch.object(bscript, "create_locale_submitter", return_value=(m, release))
@@ -368,7 +362,7 @@ def test_get_default_config():
 # async_main {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize("action", ("submit-locale", "submit-toplevel", "schedule", "set-readonly"))
-async def test_async_main_submit_locale(action, nightly_config, mocker):
+async def test_async_main_submit_locale(action, nightly_task, nightly_config, mocker):
     def fake_get_action(*args):
         return action
 
@@ -382,8 +376,7 @@ async def test_async_main_submit_locale(action, nightly_config, mocker):
     mocker.patch.object(bscript, "schedule")
     mocker.patch.object(bscript, "set_readonly")
 
-    # XXX create a real task and stop patching `get_task_action`
-    await bscript.async_main(nightly_config, {"scopes": ["project:releng:balrog:server:nightly"]})
+    await bscript.async_main(nightly_config, nightly_task)
 
 
 def test_main(monkeypatch, mocker):

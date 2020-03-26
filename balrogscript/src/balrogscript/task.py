@@ -24,15 +24,6 @@ def validate_task_schema(script_config, task_definition, action):
         sys.exit(3)
 
 
-def get_task(script_config):
-    """Extract task definition"""
-    task_file = os.path.join(script_config["work_dir"], "task.json")
-    with open(task_file, "r") as f:
-        task_definition = json.load(f)
-
-    return task_definition
-
-
 def get_task_action(task, script_config):
     """Extract task server from scopes"""
     actions = [s.split(":")[-1] for s in task["scopes"] if s.startswith(script_config["taskcluster_scope_prefix"] + "action:")]
