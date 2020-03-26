@@ -14,6 +14,7 @@ task_max_timeout: 3600
 task_script:
   - { "$eval": "TASK_SCRIPT" }
   - { "$eval": "TASK_CONFIG" }
+  - { "$if": "PASS_WORK_DIR == 'true'", then: "${WORK_DIR}" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 verify_chain_of_trust: { "$eval": "VERIFY_CHAIN_OF_TRUST == 'true'" }
 sign_chain_of_trust: { "$eval": "SIGN_CHAIN_OF_TRUST == 'true'" }
