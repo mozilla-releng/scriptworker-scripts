@@ -231,9 +231,7 @@ def get_default_config():
 
 
 # main {{{1
-async def async_main(config):
-    # TODO use scriptworker's sync_main(...)
-    task = get_task(config)
+async def async_main(config, task):
     action = get_task_action(task, config)
     validate_task_schema(config, task, action)
 
