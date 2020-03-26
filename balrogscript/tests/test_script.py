@@ -382,7 +382,8 @@ async def test_async_main_submit_locale(action, nightly_config, mocker):
     mocker.patch.object(bscript, "schedule")
     mocker.patch.object(bscript, "set_readonly")
 
-    await bscript.async_main(nightly_config)
+    # XXX create a real task and stop patching `get_task_action`
+    await bscript.async_main(nightly_config, {"scopes": ["project:releng:balrog:server:nightly"]})
 
 
 def test_main(monkeypatch, mocker):
