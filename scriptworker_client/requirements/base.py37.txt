@@ -18,7 +18,7 @@ aiohttp==3.6.2 \
     --hash=sha256:65f31b622af739a802ca6fd1a3076fd0ae523f8485c52924a89561ba10c49b48 \
     --hash=sha256:ae55bac364c405caa23a4f2d6cfecc6a0daada500274ffca4a9230e7129eac59 \
     --hash=sha256:b778ce0c909a2653741cb4b1ac7015b5c130ab9c897611df43ae6a58523cb965 \
-    # via -r requirements/base.in
+    # via -r base.in
 async-timeout==3.0.1 \
     --hash=sha256:0c3c816a028d47f659d6ff5c745cb2acf1f966da1fe5c19c77a70282b25f4c5f \
     --hash=sha256:4291ca197d287d274d0b6cb5d6f8f8f82d434ed288f962539ff18cc9012f9ea3 \
@@ -38,15 +38,15 @@ idna==2.9 \
 immutabledict==1.0.0 \
     --hash=sha256:a768690210d107d5a479a5edf9e09e70db7cfbe6aee45c82b5799f82b43bf739 \
     --hash=sha256:ca0fda2e29dce4b1ee50cd27e25ab1ef389454f77d7694dcc8fbe5fc77c87bd5 \
-    # via -r requirements/base.in
-importlib-metadata==1.5.0 \
-    --hash=sha256:06f5b3a99029c7134207dd882428a66992a9de2bef7c2b699b5641f9886c3302 \
-    --hash=sha256:b97607a1a18a5100839aec1dc26a1ea17ee0d93b20b0f008d80a5a050afb200b \
+    # via -r base.in
+importlib-metadata==1.5.1 \
+    --hash=sha256:0095bf45caca7a93685cbb9e5ef49f0ed37f848639df8f4684f07229aa7a8322 \
+    --hash=sha256:dd381cddc02a58a23667ef675164ad70848d82966d3a8fddea96dcfb51064803 \
     # via jsonschema
 jsonschema==3.2.0 \
     --hash=sha256:4e5b3cf8216f577bee9ce139cbe72eca3ea4f292ec60928ff24758ce626cd163 \
     --hash=sha256:c8a85b28d377cc7737e46e2d9f2b4f44ee3c0e1deac6bf46ddefc7187d30797a \
-    # via -r requirements/base.in
+    # via -r base.in
 multidict==4.7.5 \
     --hash=sha256:317f96bc0950d249e96d8d29ab556d01dd38888fbe68324f46fd834b430169f1 \
     --hash=sha256:42f56542166040b4474c0c608ed051732033cd821126493cf25b6c276df7dd35 \
@@ -66,8 +66,8 @@ multidict==4.7.5 \
     --hash=sha256:e439c9a10a95cb32abd708bb8be83b2134fa93790a4fb0535ca36db3dda94d20 \
     --hash=sha256:fc3b4adc2ee8474cb3cd2a155305d5f8eda0a9c91320f83e55748e1fcb68f8e3 \
     # via aiohttp, yarl
-pyrsistent==0.15.7 \
-    --hash=sha256:cdc7b5e3ed77bed61270a47d35434a30617b9becdf2478af76ad2c6ade307280 \
+pyrsistent==0.16.0 \
+    --hash=sha256:28669905fe725965daa16184933676547c5bb40a5153055a8dee2a4bd7933ad3 \
     # via jsonschema
 pyyaml==5.3.1 \
     --hash=sha256:06a0d7ba600ce0b2d2fe2e78453a470b5a6e000a985dd4a4e54e436cc36b0e97 \
@@ -81,7 +81,7 @@ pyyaml==5.3.1 \
     --hash=sha256:b8eac752c5e14d3eca0e6dd9199cd627518cb5ec06add0de9d32baeee6fe645d \
     --hash=sha256:cc8955cfbfc7a115fa81d85284ee61147059a753344bc51098f3ccd69b0d7e0c \
     --hash=sha256:d13155f591e6fcc1ec3b30685d50bf0711574e2c0dfffd7644babf8b5102ca1a \
-    # via -r requirements/base.in
+    # via -r base.in
 six==1.14.0 \
     --hash=sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a \
     --hash=sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c \
