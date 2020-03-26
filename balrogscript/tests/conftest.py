@@ -72,11 +72,22 @@ def config():
         shutil.rmtree(tmpdir)
 
 
+@pytest.fixture(scope="function")
+def nightly_task(config):
+    with open(NIGHTLY_TASK_PATH, "r") as fh:
+        return json.load(fh)
+
+
+@pytest.fixture(scope="function")
+def release_task(config):
+    with open(RELEASE_TASK_PATH, "r") as fh:
+        return json.load(fh)
+
+
 @pytest.yield_fixture(scope="function")
 def nightly_config(config):
     os.makedirs(os.path.join(config["work_dir"], "cot", "upstream-task-id", "public"))
     shutil.copyfile(NIGHTLY_MANIFEST_PATH, os.path.join(config["work_dir"], "cot", "upstream-task-id", "public", "manifest.json"))
-    shutil.copyfile(NIGHTLY_TASK_PATH, os.path.join(config["work_dir"], "task.json"))
     yield config
 
 
@@ -84,5 +95,4 @@ def nightly_config(config):
 def release_config(config):
     os.makedirs(os.path.join(config["work_dir"], "cot", "upstream-task-id", "public"))
     shutil.copyfile(RELEASE_MANIFEST_PATH, os.path.join(config["work_dir"], "cot", "upstream-task-id", "public", "manifest.json"))
-    shutil.copyfile(RELEASE_TASK_PATH, os.path.join(config["work_dir"], "task.json"))
     yield config
