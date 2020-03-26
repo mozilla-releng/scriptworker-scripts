@@ -4,7 +4,6 @@ import json
 import logging
 import os
 import sys
-from copy import deepcopy
 
 from immutabledict import immutabledict
 from redo import retry  # noqa: E402
@@ -183,7 +182,7 @@ def set_readonly(task, config, auth0_secrets):
 
 # update_config {{{1
 def update_config(config, server="default"):
-    config = deepcopy(dict(config))
+    config = dict(config)
 
     config["api_root"] = config["server_config"][server]["api_root"]
     auth0_secrets = dict(
