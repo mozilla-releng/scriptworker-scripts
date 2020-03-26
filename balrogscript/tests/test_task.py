@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from balrogscript.task import get_manifest, get_task_action, get_task_server, get_upstream_artifacts
+from balrogscript.task import get_manifest, get_task_behavior, get_task_server, get_upstream_artifacts
 
 
 @pytest.mark.parametrize(
@@ -89,14 +89,16 @@ def test_release_get_manifest(release_task, release_config):
         ({"scopes": ["project:releng:balrog:action:submit-locale"]}, "submit-locale", False),
         ({"scopes": ["project:releng:balrog:action:submit-toplevel"]}, "submit-toplevel", False),
         ({"scopes": ["project:releng:balrog:action:schedule"]}, "schedule", False),
+        ({"payload": {"behavior": "schedule"}, "scopes": []}, "schedule", False),
+        ({"payload": {"behavior": "submit-locale"}, "scopes": ["project:releng:balrog:action:schedule"]}, None, True),
         ({"scopes": ["project:releng:balrog:action:schedule", "project:releng:balrog:action:submit-locale"]}, None, True),
         ({"scopes": ["project:releng:balrog:action:illegal"]}, None, True),
         ({"scopes": []}, "submit-locale", False),
     ),
 )
-def test_get_task_action(task, expected, raises):
+def test_get_task_behavior(task, expected, raises):
     if raises:
         with pytest.raises(ValueError):
-            get_task_action(task, {"taskcluster_scope_prefix": "project:releng:balrog:"})
+            get_task_behavior(task, {"taskcluster_scope_prefix": "project:releng:balrog:"})
     else:
-        assert get_task_action(task, {"taskcluster_scope_prefix": "project:releng:balrog:"}) == expected
+        assert get_task_behavior(task, {"taskcluster_scope_prefix": "project:releng:balrog:"}) == expected

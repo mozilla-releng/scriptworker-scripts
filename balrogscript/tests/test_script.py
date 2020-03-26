@@ -361,16 +361,10 @@ def test_get_default_config():
 
 # async_main {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("action", ("submit-locale", "submit-toplevel", "schedule", "set-readonly"))
-async def test_async_main_submit_locale(action, nightly_task, nightly_config, mocker):
-    def fake_get_action(*args):
-        return action
-
-    def fake_get_manifest(config, upstream_artifacts):
-        return []
-
+@pytest.mark.parametrize("behavior", ("submit-locale", "submit-toplevel", "schedule", "set-readonly"))
+async def test_async_main_submit_locale(behavior, nightly_task, nightly_config, mocker):
     mocker.patch.object(bscript, "validate_task_schema")
-    mocker.patch.object(bscript, "get_task_action", return_value=action)
+    mocker.patch.object(bscript, "get_task_behavior", return_value=behavior)
     mocker.patch.object(bscript, "submit_toplevel")
     mocker.patch.object(bscript, "submit_locale")
     mocker.patch.object(bscript, "schedule")
