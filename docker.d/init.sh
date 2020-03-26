@@ -74,6 +74,9 @@ case $COT_PRODUCT in
   adhoc)
     export TRUST_DOMAIN=adhoc
     ;;
+  releng)
+    export TRUST_DOMAIN=releng
+    ;;
   *)
     echo "Unknown COT_PRODUCT $COT_PRODUCT"
     exit 1

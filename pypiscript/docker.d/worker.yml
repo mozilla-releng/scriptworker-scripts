@@ -1,0 +1,9 @@
+#artifact_dir: { "$eval": "ARTIFACTS_DIR" }
+project_config_file: "${PASSWORDS_PATH}"
+taskcluster_scope_prefix:
+    $let:
+        value:
+            $match:
+                'COT_PRODUCT == "releng"':
+                    'project:releng'
+    in: '${value[0]}'
