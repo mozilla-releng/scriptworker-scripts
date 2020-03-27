@@ -5,6 +5,7 @@
         "payload": {
             "type": "object",
             "properties": {
+                "behavior": {"type": "string", "enum": ["set-readonly"], "default": "set-readonly"},
                 "build_number": {"type": "number"},
                 "product": {"type": "string"},
                 "version": {"type": "string"},

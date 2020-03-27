@@ -24,21 +24,25 @@ def validate_task_schema(script_config, task_definition, action):
         sys.exit(3)
 
 
-def get_task_action(task, script_config):
-    """Extract task server from scopes"""
-    actions = [s.split(":")[-1] for s in task["scopes"] if s.startswith(script_config["taskcluster_scope_prefix"] + "action:")]
-    if actions:
-        log.info("actions: %s", actions)
-        if len(actions) != 1:
-            raise ValueError("Only one action can be used")
-        action = actions[0]
+def get_task_behavior(task, script_config):
+    """Extract task behavior from payload, fallback on scopes"""
+    behavior = task.get("payload", {}).get("behavior")
+    # Using scopes for which behavior (action) is deprecated in favor of explicit action in payload
+    behaviors = {s.split(":")[-1] for s in task["scopes"] if s.startswith(script_config["taskcluster_scope_prefix"] + "action:")}
+    if behavior:
+        behaviors.add(behavior)
+    if behaviors:
+        log.info("actions: %s", behaviors)
+        if len(behaviors) != 1:
+            raise ValueError("Only one behavior can be used")
+        behavior = behaviors.pop()
     else:
-        action = "submit-locale"
+        behavior = "submit-locale"
 
-    if action not in VALID_ACTIONS:
-        raise ValueError("Invalid action scope")
+    if behavior not in VALID_ACTIONS:
+        raise ValueError("Invalid behavior")
 
-    return action
+    return behavior
 
 
 def get_task_server(task, script_config):
