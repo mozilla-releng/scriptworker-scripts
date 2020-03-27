@@ -232,17 +232,17 @@ def get_default_config():
 
 # main {{{1
 async def async_main(config, task):
-    action = get_task_behavior(task, config)
-    validate_task_schema(config, task, action)
+    behavior = get_task_behavior(task, config)
+    validate_task_schema(config, task, behavior)
 
     server = get_task_server(task, config)
     auth0_secrets, config = update_config(config, server)
 
-    if action == "submit-toplevel":
+    if behavior == "submit-toplevel":
         submit_toplevel(task, config, auth0_secrets)
-    elif action == "schedule":
+    elif behavior == "schedule":
         schedule(task, config, auth0_secrets)
-    elif action == "set-readonly":
+    elif behavior == "set-readonly":
         set_readonly(task, config, auth0_secrets)
     else:
         submit_locale(task, config, auth0_secrets)
