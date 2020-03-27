@@ -68,9 +68,9 @@ def test_build_hg_cmd(config, hg, args):
         {k: "whatever" for k in UNEXPECTED_ENV_KEYS},  # Values to strip from env
     ),
 )
-def test_build_hg_env(config, mocker, my_env):
+def test_build_hg_env(mocker, my_env):
     mocker.patch.dict(mercurial.os.environ, my_env)
-    returned_env = mercurial.build_hg_environment(config)
+    returned_env = mercurial.build_hg_environment()
     assert (set(UNEXPECTED_ENV_KEYS) & set(returned_env.keys())) == set()
     assert returned_env["HGPLAIN"] == "1"
     assert returned_env["LANG"] == "C"
@@ -96,7 +96,7 @@ async def test_run_hg_command(mocker, config, args):
 
     await mercurial.run_hg_command(config, *args)
 
-    env_call.assert_called_with(config)
+    env_call.assert_called_with()
     cmd_call.assert_called_with(config, *args)
     assert called_args[0][0] == ["hg"] + args
     assert called_args[0][1]["env"] == env
@@ -120,7 +120,7 @@ async def test_run_hg_command_localrepo(mocker, config):
 
     await mercurial.run_hg_command(config, *args, repo_path="/tmp/localrepo")
 
-    env_call.assert_called_with(config)
+    env_call.assert_called_with()
     cmd_call.assert_called_with(config, *args)
     assert len(called_args) == 1
     is_slice_in_list(["-R", "/tmp/localrepo"], called_args[0][0])
@@ -148,7 +148,7 @@ async def test_run_hg_command_return_output(mocker, config):
 
     actual_run_output = await mercurial.run_hg_command(config, *args, return_output=True)
 
-    env_call.assert_called_with(config)
+    env_call.assert_called_with()
     cmd_call.assert_called_with(config, *args)
     assert len(called_args) == 1
     assert actual_run_output == expected_run_output

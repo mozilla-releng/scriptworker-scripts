@@ -38,7 +38,7 @@ def build_hg_command(config, *args):
 
 
 # build_hg_environment {{{1
-def build_hg_environment(config):
+def build_hg_environment():
     """Generate an environment suitable for running mercurial programatically.
 
     This function sets the hgrc to one provided in the package and ensures
@@ -51,8 +51,6 @@ def build_hg_environment(config):
 
     """
     env = os.environ.copy()
-    if config.get("use_hgrc", True):
-        env["HGRCPATH"] = HGRCPATH
     env["HGEDITOR"] = '"' + sys.executable + '"' + ' -c "import sys; sys.exit(0)"'
     env["HGMERGE"] = "internal:merge"
     env["HGENCODING"] = "utf-8"
@@ -90,7 +88,7 @@ async def run_hg_command(config, *args, repo_path=None, exception=FailedSubproce
 
     """
     command = build_hg_command(config, *args)
-    env = build_hg_environment(config)
+    env = build_hg_environment()
     return_value = None
     if repo_path:
         command.extend(["-R", repo_path])
@@ -165,7 +163,6 @@ async def checkout_repo(config, task, repo_path):
     await run_hg_command(
         config, "robustcheckout", source_repo, repo_path, "--sharebase", share_base, "--upstream", upstream_repo, "--branch", branch, exception=CheckoutError
     )
-    await strip_outgoing(config, task, repo_path)
 
 
 # do_tagging {{{1

@@ -128,7 +128,7 @@ async def do_merge(config, task, repo_path):
                 # We only care about additions.
                 if not line.startswith("+"):
                     continue
-                line = line.replace("+", "")
+                line = line.lstrip("+")
                 changeset, _ = line.split()
                 # Check for bogus changeset
                 if len(changeset) != 40:

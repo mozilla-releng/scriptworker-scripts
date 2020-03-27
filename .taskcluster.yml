@@ -150,6 +150,8 @@ tasks:
             # Build docker image and (optionally) push to docker hub
             'run_tests == "1" && dockerhub_repo != ""':
               taskId: '${as_slugid(project_name + "docker_build_and_push")}'
+              dependencies:
+                - '${as_slugid(project_name + python_version)}'
               provisionerId: 'releng-${worker_level}'
               workerType: 'linux'
               created: { $fromNow: '' }
