@@ -5,7 +5,7 @@
         "payload": {
             "type": "object",
             "properties": {
-                "behavior": {"type": "string", "enum": ["submit-toplevel"], "default": "submit-toplevel"},
+                "behavior": {"type": "string", "enum": ["v2-submit-toplevel", "submit-toplevel"], "default": "submit-toplevel"},
                 "app_version": {"type": "string"},
                 "archive_domain": {"type": "string"},
                 "build_number": {"type": "number"},

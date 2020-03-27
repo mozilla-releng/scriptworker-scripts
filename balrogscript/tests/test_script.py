@@ -255,7 +255,7 @@ def test_submit_toplevel(task, creator_expected, pusher_expected, nightly_config
 
     mocker.patch.object(bscript, "create_creator", return_value=m)
     mocker.patch.object(bscript, "create_pusher", return_value=m)
-    bscript.submit_toplevel(task, nightly_config, auth0_secrets)
+    bscript.submit_toplevel(task, nightly_config, auth0_secrets, 1)
     assert results[0] == creator_expected
     assert results[1] == pusher_expected
 
@@ -361,7 +361,7 @@ def test_get_default_config():
 
 # async_main {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("behavior", ("submit-locale", "submit-toplevel", "schedule", "set-readonly"))
+@pytest.mark.parametrize("behavior", ("submit-locale", "submit-toplevel", "schedule", "set-readonly", "v2-submit-locale", "v2-submit-toplevel"))
 async def test_async_main_submit_locale(behavior, nightly_task, nightly_config, mocker):
     mocker.patch.object(bscript, "validate_task_schema")
     mocker.patch.object(bscript, "get_task_behavior", return_value=behavior)

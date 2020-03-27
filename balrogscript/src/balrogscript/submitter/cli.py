@@ -7,6 +7,7 @@ from redo import retry
 from requests.exceptions import HTTPError
 
 from .release import buildbot2bouncer, buildbot2ftp, buildbot2updatePlatforms, getPrettyVersion, getProductDetails, makeCandidatesDir
+from .apiv2 import V2Release
 from .util import recursive_update
 
 log = logging.getLogger(__name__)
@@ -107,6 +108,7 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
         from_suffix="",
         complete_mar_filename_pattern=None,
         complete_mar_bouncer_product_pattern=None,
+        backend_version=1,
     ):
         self.api_root = api_root
         self.auth0_secrets = auth0_secrets
@@ -116,6 +118,7 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
             self.suffix += "-dummy"
         self.complete_mar_filename_pattern = complete_mar_filename_pattern or "%s-%s.complete.mar"
         self.complete_mar_bouncer_product_pattern = complete_mar_bouncer_product_pattern or "%s-%s-complete"
+        self.backend_version = backend_version
 
     def generate_data(self, appVersion, productName, version, buildNumber, updateChannels, ftpServer, bouncerServer, enUSPlatforms, updateLine, **updateKwargs):
         details_product = productName.lower()
@@ -147,7 +150,11 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
             appVersion, productName, version, buildNumber, updateChannels, ftpServer, bouncerServer, enUSPlatforms, updateLine, **updateKwargs
         )
         name = get_release_blob_name(productName, version, buildNumber, self.suffix)
-        api = Release(name=name, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
+        if self.backend_version == 2:
+            log.info("Using backend version 2...")
+            api = Release(name=name, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
+        else:
+            api = V2Release(name=name, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
         try:
             current_data, data_version = api.get_data()
         except HTTPError as e:

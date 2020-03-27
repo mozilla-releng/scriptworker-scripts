@@ -120,7 +120,7 @@ def create_pusher(**kwargs):
     return ReleasePusher(**kwargs)
 
 
-def submit_toplevel(task, config, auth0_secrets):
+def submit_toplevel(task, config, auth0_secrets, backend_version):
     """Push a top-level release blob to balrog."""
     partials = {}
     if task["payload"].get("partial_versions"):
@@ -139,6 +139,7 @@ def submit_toplevel(task, config, auth0_secrets):
             suffix=task["payload"].get("blob_suffix", "") + suffix,
             complete_mar_filename_pattern=task["payload"].get("complete_mar_filename_pattern"),
             complete_mar_bouncer_product_pattern=task["payload"].get("complete_mar_bouncer_product_pattern"),
+            backend_version=backend_version,
         )
 
         retry(
@@ -238,14 +239,19 @@ async def async_main(config, task):
     server = get_task_server(task, config)
     auth0_secrets, config = update_config(config, server)
 
+    backend_version = 1
+    if behavior.startswith("v2-"):
+        behavior = behavior[3:]
+        backend_version = 2
+
     if behavior == "submit-toplevel":
-        submit_toplevel(task, config, auth0_secrets)
+        submit_toplevel(task, config, auth0_secrets, backend_version)
     elif behavior == "schedule":
         schedule(task, config, auth0_secrets)
     elif behavior == "set-readonly":
         set_readonly(task, config, auth0_secrets)
     else:
-        submit_locale(task, config, auth0_secrets)
+        submit_locale(task, config, auth0_secrets, backend_version)
 
 
 def main():
