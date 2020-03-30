@@ -248,9 +248,9 @@ typing==3.7.4.1 \
     --hash=sha256:c8cabb5ab8945cd2f54917be357d134db9cc1eb039e59d1606dc1e60cb1d9d36 \
     --hash=sha256:f38d83c5a7a7086543a0f649564d661859c5146a85775ab90c0d2f93ffaa9714 \
     # via pathmatch
-virtualenv==20.0.14 \
-    --hash=sha256:6f4c2882a943d20714076679f8dcc5675e953d6c29bfea3bc5d08bb6cdea5d36 \
-    --hash=sha256:cb1dab893f9e39b3e68d9118c555dcd86526d531c128c3f72e1551939723b72f \
+virtualenv==20.0.15 \
+    --hash=sha256:4e399f48c6b71228bf79f5febd27e3bbb753d9d5905776a86667bc61ab628a25 \
+    --hash=sha256:9e81279f4a9d16d1c0654a127c2c86e5bca2073585341691882c1e66e31ef8a5 \
     # via -r test.in, tox
 wcwidth==0.1.9 \
     --hash=sha256:cafe2186b3c009a04067022ce1dcd79cb38d8d65ee4f4791b8888d6599d1bbe1 \
