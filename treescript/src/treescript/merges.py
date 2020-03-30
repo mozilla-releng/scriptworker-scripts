@@ -113,14 +113,17 @@ async def do_merge(config, task, repo_path):
 
     await run_hg_command(config, "pull", "https://hg.mozilla.org/mozilla-unified", repo_path=repo_path)
 
+    # Used if end_tag is set.
+    await run_hg_command(config, "up", "-C", to_branch, repo_path=repo_path)
+    to_fx_major_version = get_version("browser/config/version.txt", repo_path).major_number
+    base_to_rev = await get_revision(config, repo_path, branch=to_branch)
+
     await run_hg_command(config, "up", "-C", from_branch, repo_path=repo_path)
-
     base_from_rev = await get_revision(config, repo_path, branch=from_branch)
-
     base_tag = merge_config["base_tag"].format(major_version=get_version("browser/config/version.txt", repo_path).major_number)
 
-    tag_message = f"No bug - tagging {os.path.basename(repo_path)} with {base_tag} a=release DONTBUILD CLOSED TREE"
-    await run_hg_command(config, "tag", "-m", '"{}"'.format(tag_message), "-r", base_from_rev, "-f", base_tag, repo_path=repo_path)
+    tag_message = f"No bug - tagging {base_from_rev} with {base_tag} a=release DONTBUILD CLOSED TREE"
+    await run_hg_command(config, "tag", "-m", tag_message, "-r", base_from_rev, "-f", base_tag, repo_path=repo_path)
 
     tagged_from_rev = await get_revision(config, repo_path, branch=".")
 
@@ -140,11 +143,9 @@ async def do_merge(config, task, repo_path):
 
     end_tag = merge_config.get("end_tag")  # tag the end of the to repo
     if end_tag:
-        to_fx_major_version = get_version("browser/config/version.txt", repo_path).major_number
-        base_to_rev = await get_revision(config, repo_path, branch=to_branch)
         end_tag = end_tag.format(major_version=to_fx_major_version)
-        tag_message = f"No bug - tagging {os.path.basename(repo_path)} with {end_tag} a=release DONTBUILD CLOSED TREE"
-        await run_hg_command(config, "tag", "-m", f'"{tag_message}"', "-r", base_to_rev, "-f", end_tag, repo_path=repo_path)
+        tag_message = f"No bug - tagging {end_tag} with {end_tag} a=release DONTBUILD CLOSED TREE"
+        await run_hg_command(config, "tag", "-m", tag_message, "-r", base_to_rev, "-f", end_tag, repo_path=repo_path)
 
     await apply_rebranding(config, repo_path, merge_config)
 
