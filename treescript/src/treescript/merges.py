@@ -136,7 +136,7 @@ async def do_merge(config, task, repo_path):
             config,
             "commit",
             "-m",
-            "Merge old head via |hg debugsetparents {} {}| CLOSED TREE DONTBUILD a=release".format(tagged_from_rev, to_branch),
+            "Merge old head via |hg debugsetparents {} {}| CLOSED TREE DONTBUILD a=release".format(tagged_from_rev, base_to_rev),
             repo_path=repo_path,
         )
         await preserve_tags(config, repo_path, to_branch)
