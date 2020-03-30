@@ -207,9 +207,9 @@ requests==2.23.0 \
     --hash=sha256:43999036bfa82904b6af1d99e4882b560e5e2c68e5c4b0aa03b655f3d7d73fee \
     --hash=sha256:b3f43d496c6daba4493e7c431722aeb7dbc6288f52a6e04e7b6023b0247817e6 \
     # via -r base.in, balrogclient, github3.py, taskcluster
-scriptworker==32.2.1 \
-    --hash=sha256:5bc817a9c39b798b9a6aa0c2807830576c01bafd1aaa4f8a51bf2aa526415b25 \
-    --hash=sha256:ec405238ac4672931a1cdf7b1f6b0c49c93ffa66f0bf49332b5d6399081fd375 \
+scriptworker==33.0.0 \
+    --hash=sha256:a359d5d85312e58e394079e9882b1c9d5947ef0c6eac4596c8d6c5d6599605b8 \
+    --hash=sha256:d1bfd37e8ca2bec0906842c59b19abf22edb9e0a243f7e2d657d08ff2682d233 \
     # via -r base.in
 six==1.14.0 \
     --hash=sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a \
