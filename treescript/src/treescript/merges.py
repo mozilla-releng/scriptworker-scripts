@@ -144,7 +144,7 @@ async def do_merge(config, task, repo_path):
     end_tag = merge_config.get("end_tag")  # tag the end of the to repo
     if end_tag:
         end_tag = end_tag.format(major_version=to_fx_major_version)
-        tag_message = f"No bug - tagging {end_tag} with {end_tag} a=release DONTBUILD CLOSED TREE"
+        tag_message = f"No bug - tagging {base_to_rev} with {end_tag} a=release DONTBUILD CLOSED TREE"
         await run_hg_command(config, "tag", "-m", tag_message, "-r", base_to_rev, "-f", end_tag, repo_path=repo_path)
 
     await apply_rebranding(config, repo_path, merge_config)
