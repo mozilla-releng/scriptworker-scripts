@@ -118,12 +118,15 @@ async def do_merge(config, task, repo_path):
     to_fx_major_version = get_version("browser/config/version.txt", repo_path).major_number
     base_to_rev = await get_revision(config, repo_path, branch=to_branch)
 
-    await run_hg_command(config, "up", "-C", from_branch, repo_path=repo_path)
-    base_from_rev = await get_revision(config, repo_path, branch=from_branch)
-    base_tag = merge_config["base_tag"].format(major_version=get_version("browser/config/version.txt", repo_path).major_number)
+    if from_branch:
+        await run_hg_command(config, "up", "-C", from_branch, repo_path=repo_path)
+        base_from_rev = await get_revision(config, repo_path, branch=from_branch)
 
-    tag_message = f"No bug - tagging {base_from_rev} with {base_tag} a=release DONTBUILD CLOSED TREE"
-    await run_hg_command(config, "tag", "-m", tag_message, "-r", base_from_rev, "-f", base_tag, repo_path=repo_path)
+    base_tag = merge_config.get("base_tag")
+    if base_tag:
+        base_tag = base_tag.format(major_version=get_version("browser/config/version.txt", repo_path).major_number)
+        tag_message = f"No bug - tagging {base_from_rev} with {base_tag} a=release DONTBUILD CLOSED TREE"
+        await run_hg_command(config, "tag", "-m", tag_message, "-r", base_from_rev, "-f", base_tag, repo_path=repo_path)
 
     tagged_from_rev = await get_revision(config, repo_path, branch=".")
 

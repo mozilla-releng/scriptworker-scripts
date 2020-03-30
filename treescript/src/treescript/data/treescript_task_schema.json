@@ -20,12 +20,9 @@
                 "version_suffix",
                 "copy_files",
                 "replacements",
-                "from_branch",
                 "to_branch",
-                "from_repo",
                 "to_repo",
-                "merge_old_head",
-                "base_tag"
+                "merge_old_head"
             ],
             "properties": {
                 "version_files": {
@@ -67,7 +64,10 @@
                             "type": "string"
                         },
                         "examples": [
-                            ["browser/config/version.txt", "browser/config/version_display.txt"]
+                            [
+                                "browser/config/version.txt",
+                                "browser/config/version_display.txt"
+                            ]
                         ]
                     }
                 },
@@ -82,9 +82,11 @@
                             "type": "string"
                         },
                         "examples": [
-                            ["browser/config/mozconfigs/linux32/l10n-mozconfig",
-                            "ac_add_options --with-branding=browser/branding/nightly",
-                            "ac_add_options --enable-official-branding"]
+                            [
+                                "browser/config/mozconfigs/linux32/l10n-mozconfig",
+                                "ac_add_options --with-branding=browser/branding/nightly",
+                                "ac_add_options --enable-official-branding"
+                            ]
                         ]
                     }
                 },
