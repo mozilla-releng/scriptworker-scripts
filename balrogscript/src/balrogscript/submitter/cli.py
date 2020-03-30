@@ -7,7 +7,7 @@ from redo import retry
 from requests.exceptions import HTTPError
 
 from .release import buildbot2bouncer, buildbot2ftp, buildbot2updatePlatforms, getPrettyVersion, getProductDetails, makeCandidatesDir
-from .apiv2 import V2Release
+from ..apiv2 import get_balrog_api
 from .util import recursive_update
 
 log = logging.getLogger(__name__)
@@ -146,28 +146,44 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
     def run(
         self, appVersion, productName, version, buildNumber, updateChannels, ftpServer, bouncerServer, enUSPlatforms, hashFunction, updateLine, **updateKwargs
     ):
-        data = self.generate_data(
+        blob = self.generate_data(
             appVersion, productName, version, buildNumber, updateChannels, ftpServer, bouncerServer, enUSPlatforms, updateLine, **updateKwargs
         )
         name = get_release_blob_name(productName, version, buildNumber, self.suffix)
+
         if self.backend_version == 2:
             log.info("Using backend version 2...")
-            api = Release(name=name, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
+            blob["schema_version"] = self.schemaVersion
+            blob["hashFunction"] = hashFunction
+            blob["name"] = name
+            data = {"product": productName, "blob": blob}
+            headers = {"Accept-Encoding": "application/json",
+                       "Accept": "application/json",
+                       "Content-Type": "application/json",
+                       "Referer": self.api_root}
+            requests_api = get_balrog_api(auth0_secrets=self.auth0_secrets)
+            url = self.api_root + "/v2/" + name
+            logging.debug("Balrog request to {url} via PUT", url)
+            logging.debug("Data sent: %s", json.dumps(data))
+            resp = requests_api.put(url, data=data)
+            resp.raise_for_status()
+            return
         else:
-            api = V2Release(name=name, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
-        try:
-            current_data, data_version = api.get_data()
-        except HTTPError as e:
-            if e.response.status_code == 404:
-                log.warning("Release blob doesn't exist, using empty data...")
-                current_data, data_version = {}, None
-            else:
-                raise
+            log.info("Using legacy backend version...")
+            api = Release(name=name, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
+            try:
+                current_data, data_version = api.get_data()
+            except HTTPError as e:
+                if e.response.status_code == 404:
+                    log.warning("Release blob doesn't exist, using empty data...")
+                    current_data, data_version = {}, None
+                else:
+                    raise
 
-        data = recursive_update(current_data, data)
-        api.update_release(
-            product=productName, hashFunction=hashFunction, releaseData=json.dumps(data), schemaVersion=self.schemaVersion, data_version=data_version
-        )
+            blob = recursive_update(current_data, blob)
+            api.update_release(
+                product=productName, hashFunction=hashFunction, releaseData=json.dumps(blob), schemaVersion=self.schemaVersion, data_version=data_version
+            )
 
 
 class NightlySubmitterBase(object):
