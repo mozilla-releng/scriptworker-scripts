@@ -1,8 +1,7 @@
-## This should live in balrogclient in the balrog repo, placed here to facilitate easy testing
+# This should live in balrogclient in the balrog repo, placed here to facilitate easy testing
 
 import requests
-
-from balrogclient.api import _get_auth0_token, BearerAuth
+from balrogclient.api import BearerAuth, _get_auth0_token
 
 
 def get_balrog_api(auth0_secrets, session=None):

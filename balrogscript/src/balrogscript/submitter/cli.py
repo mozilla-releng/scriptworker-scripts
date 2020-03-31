@@ -1,13 +1,15 @@
 import json
 import logging
+import time
 
 import arrow
+import requests
 from balrogclient import Release, ReleaseState, Rule, ScheduledRuleChange, SingleLocale
 from redo import retry
 from requests.exceptions import HTTPError
 
-from .release import buildbot2bouncer, buildbot2ftp, buildbot2updatePlatforms, getPrettyVersion, getProductDetails, makeCandidatesDir
 from ..apiv2 import get_balrog_api
+from .release import buildbot2bouncer, buildbot2ftp, buildbot2updatePlatforms, getPrettyVersion, getProductDetails, makeCandidatesDir
 from .util import recursive_update
 
 log = logging.getLogger(__name__)
@@ -157,16 +159,22 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
             blob["hashFunction"] = hashFunction
             blob["name"] = name
             data = {"product": productName, "blob": blob}
-            headers = {"Accept-Encoding": "application/json",
-                       "Accept": "application/json",
-                       "Content-Type": "application/json",
-                       "Referer": self.api_root}
+            headers = {"Accept-Encoding": "application/json", "Accept": "application/json", "Content-Type": "application/json", "Referer": self.api_root}
             requests_api = get_balrog_api(auth0_secrets=self.auth0_secrets)
             url = self.api_root + "/v2/" + name
             logging.debug("Balrog request to {url} via PUT", url)
             logging.debug("Data sent: %s", json.dumps(data))
-            resp = requests_api.put(url, data=data)
-            resp.raise_for_status()
+            before = time.time()
+            resp = requests_api.put(url, data=data, headers=headers)
+            try:
+                resp.raise_for_status()
+                return
+            except requests.HTTPError as excp:
+                logging.error("Caught HTTPError: %s", excp.response.content)
+                raise
+            finally:
+                stats = {"timestamp": time.time(), "method": "PUT", "url": url, "status_code": resp.status_code, "elapsed_secs": time.time() - before}
+                logging.debug("REQUEST STATS: %s", json.dumps(stats))
             return
         else:
             log.info("Using legacy backend version...")
