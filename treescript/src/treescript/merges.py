@@ -86,8 +86,8 @@ async def apply_rebranding(config, repo_path, merge_config):
 
     fmt = BashFormatter()
     for f, from_, to in merge_config.get("replacements", list()):
-        from_ = fmt.format(from_, format_options)
-        to = fmt.format(to, format_options)
+        from_ = fmt.format(from_, **format_options)
+        to = fmt.format(to, **format_options)
         replace(os.path.join(repo_path, f), from_, to)
 
     touch_clobber_file(repo_path)
