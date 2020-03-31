@@ -51,7 +51,7 @@
                     "examples": [
                         "b1"
                     ],
-                    "pattern": "^(b[0-9]+|esr|)?$"
+                    "pattern": "^([ab][0-9]+|esr|)?$"
                 },
                 "copy_files": {
                     "type": "array",
