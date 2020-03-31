@@ -5,6 +5,7 @@
         "payload": {
             "type": "object",
             "properties": {
+                "behavior": {"type": "string", "enum": ["schedule"], "default": "schedule"},
                 "build_number": {"type": "number"},
                 "product": {"type": "string"},
                 "publish_rules": {

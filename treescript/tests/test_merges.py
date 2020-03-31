@@ -168,7 +168,7 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
         (
             True,
             does_not_raise(),
-            9,
+            14,
             [("https://hg.mozilla.org/mozilla-central", "some_revision"), ("https://hg.mozilla.org/releases/mozilla-beta", "some_revision")],
         ),
         (False, pytest.raises(TaskVerificationError), 0, None),
@@ -183,7 +183,7 @@ async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merg
     async def mocked_run_hg_command(config, *arguments, repo_path=None, **kwargs):
         called_args.append([arguments])
         if "return_output" in kwargs:
-            return "some output"
+            return "headers\n\n\n\n+invalid_changeset tag\n changeset tag\n+valid_changeset_is_forty_characters_long tag"
 
     async def mocked_get_revision(*args, **kwargs):
         return "some_revision"

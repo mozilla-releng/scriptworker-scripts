@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from balrogscript.task import get_manifest, get_task, get_task_action, get_task_server, get_upstream_artifacts
+from balrogscript.task import get_manifest, get_task_behavior, get_task_server, get_upstream_artifacts
 
 
 @pytest.mark.parametrize(
@@ -13,8 +13,8 @@ from balrogscript.task import get_manifest, get_task, get_task_action, get_task_
         (["project:releng:balrog:server:dep", "project:releng:balrog:action:foo"], "dep", False),
     ),
 )
-def test_get_task_server(nightly_config, scopes, expected, raises):
-    task = get_task(nightly_config)
+def test_get_task_server(nightly_task, nightly_config, scopes, expected, raises):
+    task = nightly_task
     task["scopes"] = scopes
 
     if raises:
@@ -25,9 +25,8 @@ def test_get_task_server(nightly_config, scopes, expected, raises):
 
 
 @pytest.mark.parametrize("expected", ([[{"paths": ["public/manifest.json"], "taskId": "upstream-task-id", "taskType": "baz"}]]))
-def test_get_upstream_artifacts(nightly_config, expected):
-    task = get_task(nightly_config)
-    assert get_upstream_artifacts(task) == expected
+def test_get_upstream_artifacts(nightly_task, nightly_config, expected):
+    assert get_upstream_artifacts(nightly_task) == expected
 
 
 @pytest.mark.parametrize(
@@ -66,17 +65,15 @@ def test_get_upstream_artifacts(nightly_config, expected):
         ]
     ),
 )
-def test_nightly_get_manifest(nightly_config, expected_manifest):
-    task = get_task(nightly_config)
-    upstream_artifacts = get_upstream_artifacts(task)
+def test_nightly_get_manifest(nightly_task, nightly_config, expected_manifest):
+    upstream_artifacts = get_upstream_artifacts(nightly_task)
 
     manifest = get_manifest(nightly_config, upstream_artifacts)
     assert manifest == expected_manifest
 
 
-def test_release_get_manifest(release_config):
-    task = get_task(release_config)
-    upstream_artifacts = get_upstream_artifacts(task)
+def test_release_get_manifest(release_task, release_config):
+    upstream_artifacts = get_upstream_artifacts(release_task)
 
     # munge the path with a fake path
     upstream_artifacts[0]["paths"][0] += "munged_path_entry"
@@ -92,14 +89,16 @@ def test_release_get_manifest(release_config):
         ({"scopes": ["project:releng:balrog:action:submit-locale"]}, "submit-locale", False),
         ({"scopes": ["project:releng:balrog:action:submit-toplevel"]}, "submit-toplevel", False),
         ({"scopes": ["project:releng:balrog:action:schedule"]}, "schedule", False),
+        ({"payload": {"behavior": "schedule"}, "scopes": []}, "schedule", False),
+        ({"payload": {"behavior": "submit-locale"}, "scopes": ["project:releng:balrog:action:schedule"]}, None, True),
         ({"scopes": ["project:releng:balrog:action:schedule", "project:releng:balrog:action:submit-locale"]}, None, True),
         ({"scopes": ["project:releng:balrog:action:illegal"]}, None, True),
         ({"scopes": []}, "submit-locale", False),
     ),
 )
-def test_get_task_action(task, expected, raises):
+def test_get_task_behavior(task, expected, raises):
     if raises:
         with pytest.raises(ValueError):
-            get_task_action(task, {"taskcluster_scope_prefix": "project:releng:balrog:"})
+            get_task_behavior(task, {"taskcluster_scope_prefix": "project:releng:balrog:"})
     else:
-        assert get_task_action(task, {"taskcluster_scope_prefix": "project:releng:balrog:"}) == expected
+        assert get_task_behavior(task, {"taskcluster_scope_prefix": "project:releng:balrog:"}) == expected

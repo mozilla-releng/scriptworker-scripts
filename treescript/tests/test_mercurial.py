@@ -6,6 +6,7 @@ it's expected output is something our script can cope with.
 
 """
 
+import logging
 import os
 
 import pytest
@@ -17,11 +18,6 @@ from treescript.script import get_default_config
 from treescript.task import DONTBUILD_MSG
 
 # constants, helpers, fixtures {{{1
-ROBUSTCHECKOUT_FILES = (
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "build", "lib", "treescript", "py2", "robustcheckout.py")),
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "treescript", "py2", "robustcheckout.py")),
-    os.path.abspath(os.path.join(os.path.dirname(mercurial.__file__), "py2", "robustcheckout.py")),
-)
 UNEXPECTED_ENV_KEYS = "HG HGPROF CDPATH GREP_OPTIONS http_proxy no_proxy " "HGPLAINEXCEPT EDITOR VISUAL PAGER NO_PROXY CHGDEBUG".split()
 
 
@@ -59,24 +55,7 @@ def config(tmpdir):
 @pytest.mark.parametrize("hg,args", (("hg", ["blah", "blah", "--baz"]), (["hg"], ["blah", "blah", "--baz"])))
 def test_build_hg_cmd(config, hg, args):
     config["hg"] = hg
-    valid_paths = []
-    # allow for different install types
-    for path in ROBUSTCHECKOUT_FILES:
-        valid_paths.append(
-            [
-                "hg",
-                "--config",
-                "extensions.robustcheckout={}".format(path),
-                "--config",
-                "extensions.purge=",
-                "--config",
-                "extensions.strip=",
-                "blah",
-                "blah",
-                "--baz",
-            ]
-        )
-    assert mercurial.build_hg_command(config, *args) in valid_paths
+    assert mercurial.build_hg_command(config, *args) == ["hg", "blah", "blah", "--baz"]
 
 
 @pytest.mark.parametrize(
@@ -147,19 +126,43 @@ async def test_run_hg_command_localrepo(mocker, config):
     is_slice_in_list(["-R", "/tmp/localrepo"], called_args[0][0])
 
 
+@pytest.mark.asyncio
+async def test_run_hg_command_return_output(mocker, config):
+    args = ["foobar", "--bar"]
+    called_args = []
+
+    expected_run_output = "some text"
+
+    async def run_command(*arguments, **kwargs):
+        called_args.append([*arguments, kwargs])
+        if "log_path" in kwargs:
+            with open(kwargs["log_path"], "w") as f:
+                f.write(expected_run_output)
+
+    mocker.patch.object(mercurial, "run_command", new=run_command)
+    env_call = mocker.patch.object(mercurial, "build_hg_environment")
+    cmd_call = mocker.patch.object(mercurial, "build_hg_command")
+    env = {"HGPLAIN": 1, "LANG": "C"}
+    env_call.return_value = env
+    cmd_call.return_value = ["hg", *args]
+
+    actual_run_output = await mercurial.run_hg_command(config, *args, return_output=True)
+
+    env_call.assert_called_with()
+    cmd_call.assert_called_with(config, *args)
+    assert len(called_args) == 1
+    assert actual_run_output == expected_run_output
+
+
 # robustcheckout, hg {{{1
 @pytest.mark.asyncio
-async def test_hg_version(config, mocker):
-    logged = []
+async def test_hg_version(config, caplog):
+    caplog.set_level(logging.INFO)
 
-    def info(msg, *args):
-        logged.append(msg % args)
-
-    mocklog = mocker.patch.object(mercurial, "log")
-    mocklog.info = info
     await mercurial.log_mercurial_version(config)
 
-    assert logged[0].startswith("Mercurial Distributed SCM (version")
+    assert "Mercurial Distributed SCM (version" in caplog.text
+    assert "--debug: ui.debug=True"
 
 
 @pytest.mark.asyncio

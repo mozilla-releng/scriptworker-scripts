@@ -1,2 +1,3 @@
 [extensions]
-firefoxtree=/app/version-control-tools
+firefoxtree = /app/version-control-tools/hgext/firefoxtree
+robustcheckout = /app/version-control-tools/hgext/robustcheckout
