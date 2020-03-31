@@ -118,6 +118,11 @@
                     "type": "boolean",
                     "default": false
                 },
+                "incr_major_version": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Control whether the major version number should be incremented"
+                },
                 "base_tag": {
                     "type": "string",
                     "examples": [
