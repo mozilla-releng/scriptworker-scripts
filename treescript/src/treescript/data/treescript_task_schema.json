@@ -20,12 +20,9 @@
                 "version_suffix",
                 "copy_files",
                 "replacements",
-                "from_branch",
                 "to_branch",
-                "from_repo",
                 "to_repo",
-                "merge_old_head",
-                "base_tag"
+                "merge_old_head"
             ],
             "properties": {
                 "version_files": {
@@ -54,7 +51,7 @@
                     "examples": [
                         "b1"
                     ],
-                    "pattern": "^(b[0-9]+|esr|)?$"
+                    "pattern": "^([ab][0-9]+|esr|)?$"
                 },
                 "copy_files": {
                     "type": "array",
@@ -67,7 +64,10 @@
                             "type": "string"
                         },
                         "examples": [
-                            ["browser/config/version.txt", "browser/config/version_display.txt"]
+                            [
+                                "browser/config/version.txt",
+                                "browser/config/version_display.txt"
+                            ]
                         ]
                     }
                 },
@@ -82,9 +82,11 @@
                             "type": "string"
                         },
                         "examples": [
-                            ["browser/config/mozconfigs/linux32/l10n-mozconfig",
-                            "ac_add_options --with-branding=browser/branding/nightly",
-                            "ac_add_options --enable-official-branding"]
+                            [
+                                "browser/config/mozconfigs/linux32/l10n-mozconfig",
+                                "ac_add_options --with-branding=browser/branding/nightly",
+                                "ac_add_options --enable-official-branding"
+                            ]
                         ]
                     }
                 },
@@ -115,6 +117,11 @@
                 "merge_old_head": {
                     "type": "boolean",
                     "default": false
+                },
+                "incr_major_version": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Control whether the major version number should be incremented"
                 },
                 "base_tag": {
                     "type": "string",

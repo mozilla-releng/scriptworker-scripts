@@ -2,6 +2,7 @@
 import logging
 import os
 import shutil
+import string
 
 import attr
 
@@ -11,6 +12,25 @@ from treescript.task import get_merge_config
 from treescript.versionmanip import do_bump_version, get_version
 
 log = logging.getLogger(__name__)
+
+
+class BashFormatter(string.Formatter):
+    """BashFormatter: Safer bash strings.
+
+    Ignore things that are probably bash variables when formatting.
+
+    For example, this will be passed back unchanged:
+    "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}"
+    while still allowing us to have:
+    "Tagging {current_major_version}"
+    """
+
+    def get_value(self, key, args, kwds):
+        """If a value is not found, return the key."""
+        if isinstance(key, str):
+            return kwds.get(key, "{" + key + "}")
+        else:
+            return string.Formatter.get_value(key, args, kwds)
 
 
 def replace(file_name, from_, to_):
@@ -44,22 +64,38 @@ def touch_clobber_file(repo_path):
 async def apply_rebranding(config, repo_path, merge_config):
     """Apply changes to repo required for merge/rebranding."""
     log.info("Rebranding %s to %s", merge_config.get("from_branch"), merge_config.get("to_branch"))
+
+    version = get_version("browser/config/version.txt", repo_path)
+    current_major_version = version.major_number
+    if merge_config.get("incr_major_version", False):
+        version = version.bump("major_number")
+
     if merge_config.get("version_files"):
-        current_version = get_version("browser/config/version.txt", repo_path)
-        next_version = f"{current_version.major_number}.{current_version.minor_number}"
-
+        next_version = f"{version.major_number}.{version.minor_number}"
         await do_bump_version(config, repo_path, merge_config["version_files"], next_version)
-    if merge_config.get("version_files_suffix"):
-        current_version = get_version("browser/config/version.txt", repo_path)
-        current_version = attr.evolve(current_version, is_esr=False, beta_number=None, is_nightly=False)
-        next_version = f"{current_version}{merge_config.get('version_suffix')}"
 
+    if merge_config.get("version_files_suffix"):
+        version = attr.evolve(version, is_esr=False, beta_number=None, is_nightly=False)
+        next_version = f"{version}{merge_config.get('version_suffix')}"
         await do_bump_version(config, repo_path, merge_config["version_files_suffix"], next_version)
 
     for f in merge_config.get("copy_files", list()):
         shutil.copyfile(os.path.join(repo_path, f[0]), os.path.join(repo_path, f[1]))
 
+    format_options = {
+        "current_major_version": current_major_version,
+        "next_major_version": version.major_number,
+        "current_weave_version": current_major_version + 2,
+        "next_weave_version": current_major_version + 3,  # current_weave_version + 1
+    }
+
+    # Cope with bash variables in strings that we don't want to
+    # be formatted in Python. We do this by ignoring {vars} we
+    # aren't given keys for.
+    fmt = BashFormatter()
     for f, from_, to in merge_config.get("replacements", list()):
+        from_ = fmt.format(from_, **format_options)
+        to = fmt.format(to, **format_options)
         replace(os.path.join(repo_path, f), from_, to)
 
     touch_clobber_file(repo_path)
@@ -118,12 +154,15 @@ async def do_merge(config, task, repo_path):
     to_fx_major_version = get_version("browser/config/version.txt", repo_path).major_number
     base_to_rev = await get_revision(config, repo_path, branch=to_branch)
 
-    await run_hg_command(config, "up", "-C", from_branch, repo_path=repo_path)
-    base_from_rev = await get_revision(config, repo_path, branch=from_branch)
-    base_tag = merge_config["base_tag"].format(major_version=get_version("browser/config/version.txt", repo_path).major_number)
+    if from_branch:
+        await run_hg_command(config, "up", "-C", from_branch, repo_path=repo_path)
+        base_from_rev = await get_revision(config, repo_path, branch=from_branch)
 
-    tag_message = f"No bug - tagging {base_from_rev} with {base_tag} a=release DONTBUILD CLOSED TREE"
-    await run_hg_command(config, "tag", "-m", tag_message, "-r", base_from_rev, "-f", base_tag, repo_path=repo_path)
+    base_tag = merge_config.get("base_tag")
+    if base_tag:
+        base_tag = base_tag.format(major_version=get_version("browser/config/version.txt", repo_path).major_number)
+        tag_message = f"No bug - tagging {base_from_rev} with {base_tag} a=release DONTBUILD CLOSED TREE"
+        await run_hg_command(config, "tag", "-m", tag_message, "-r", base_from_rev, "-f", base_tag, repo_path=repo_path)
 
     tagged_from_rev = await get_revision(config, repo_path, branch=".")
 
