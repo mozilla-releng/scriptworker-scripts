@@ -63,7 +63,7 @@ async def apply_rebranding(config, repo_path, merge_config):
     version = get_version("browser/config/version.txt", repo_path)
     current_major_version = version.major_number
     if merge_config.get("incr_major_version", False):
-        version = version.bump("major_version")
+        version = version.bump("major_number")
 
     if merge_config.get("version_files"):
         next_version = f"{version.major_number}.{version.minor_number}"
