@@ -51,9 +51,9 @@ def merge_info():
 @pytest.yield_fixture(scope="function")
 def merge_bump_info():
     return {
-        "version_files": ["browser/config/version.txt", "config/milestone.txt"],
-        "version_files_suffix": ["browser/config/version_display.txt"],
-        "version_suffix": "b1",
+        "version_files": [],
+        "version_files_suffix": ["browser/config/version_display.txt", "browser/config/version.txt", "config/milestone.txt"],
+        "version_suffix": "a1",
         "copy_files": [],
         "replacements": [],
         "to_branch": "central",
@@ -211,7 +211,7 @@ async def test_bump_central(mocker, config, task, repo_context, merge_bump_info)
     called_args = []
 
     async def mocked_run_hg_command(config, *arguments, repo_path=None, **kwargs):
-        called_args.append([arguments])
+        called_args.append(arguments)
         if "return_output" in kwargs:
             return "headers\n\n\n\n+invalid_changeset tag\n changeset tag\n+valid_changeset_is_forty_characters_long tag"
 
@@ -219,7 +219,7 @@ async def test_bump_central(mocker, config, task, repo_context, merge_bump_info)
         return "some_revision"
 
     async def noop_apply_rebranding(*arguments, **kwargs):
-        called_args.append("apply_rebranding")
+        called_args.append(("apply_rebranding"))
 
     mocker.patch.object(merges, "run_hg_command", new=mocked_run_hg_command)
     mocker.patch.object(merges, "get_revision", new=mocked_get_revision)
@@ -227,5 +227,22 @@ async def test_bump_central(mocker, config, task, repo_context, merge_bump_info)
 
     result = await merges.do_merge(config, task, repo_context.repo)
 
-    assert len(called_args) == 6
+    expected_calls = [
+        ("pull", "https://hg.mozilla.org/mozilla-unified"),
+        ("up", "-C", "central"),
+        (
+            "tag",
+            "-m",
+            "No bug - tagging some_revision with FIREFOX_NIGHTLY_52_END a=release DONTBUILD CLOSED TREE",
+            "-r",
+            "some_revision",
+            "-f",
+            "FIREFOX_NIGHTLY_52_END",
+        ),
+        ("diff",),
+        ("apply_rebranding"),
+        ("commit", "-m", "Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release"),
+    ]
+    for expected in expected_calls:
+        assert expected in called_args
     assert result == [("https://hg.mozilla.org/mozilla-central", "some_revision")]
