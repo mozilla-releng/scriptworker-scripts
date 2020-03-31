@@ -119,9 +119,9 @@ immutabledict==1.0.0 \
     --hash=sha256:a768690210d107d5a479a5edf9e09e70db7cfbe6aee45c82b5799f82b43bf739 \
     --hash=sha256:ca0fda2e29dce4b1ee50cd27e25ab1ef389454f77d7694dcc8fbe5fc77c87bd5 \
     # via scriptworker
-importlib-metadata==1.5.1 \
-    --hash=sha256:0095bf45caca7a93685cbb9e5ef49f0ed37f848639df8f4684f07229aa7a8322 \
-    --hash=sha256:dd381cddc02a58a23667ef675164ad70848d82966d3a8fddea96dcfb51064803 \
+importlib-metadata==1.6.0 \
+    --hash=sha256:2a688cbaa90e0cc587f1df48bdc97a6eadccdcd9c35fb3f976a09e3b5016d90f \
+    --hash=sha256:34513a8a0c4962bc66d35b359558fd8a5e10cd472d37aec5f66858addef32c1e \
     # via jsonschema
 json-e==4.0.1 \
     --hash=sha256:7d84242c94c4a475b08e185a265bed810346daf8399a5b5d05b7b19eba774356 \
@@ -243,9 +243,9 @@ requests==2.23.0 \
 requests_unixsocket==0.1.5 \
     --hash=sha256:a91bc0138f61fb3396de6358fa81e2cd069a150ade5111f869df01d8bc9d294c \
     # via -r base.in
-scriptworker==32.2.1 \
-    --hash=sha256:5bc817a9c39b798b9a6aa0c2807830576c01bafd1aaa4f8a51bf2aa526415b25 \
-    --hash=sha256:ec405238ac4672931a1cdf7b1f6b0c49c93ffa66f0bf49332b5d6399081fd375 \
+scriptworker==33.0.1 \
+    --hash=sha256:0d521b340db70414fb57cb75bbf80361a0c626c75e896ca59d6ca9211167ead3 \
+    --hash=sha256:da194ef43e644d7ce4793f0d7f61a8f21477885abfbd5d0a00680e80e303362f \
     # via -r base.in
 simplejson==3.8.2 \
     --hash=sha256:057952d5a964737425faca7153e497daee126c88cee424f8331bf8f931430880 \
