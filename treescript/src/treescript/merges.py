@@ -18,6 +18,11 @@ class BashFormatter(string.Formatter):
     """BashFormatter: Safer bash strings.
 
     Ignore things that are probably bash variables when formatting.
+
+    For example, this will be passed back unchanged:
+    "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}"
+    while still allowing us to have:
+    "Tagging {current_major_version}"
     """
 
     def get_value(self, key, args, kwds):
@@ -84,6 +89,9 @@ async def apply_rebranding(config, repo_path, merge_config):
         "next_weave_version": current_major_version + 3,  # current_weave_version + 1
     }
 
+    # Cope with bash variables in strings that we don't want to
+    # be formatted in Python. We do this by ignoring {vars} we
+    # aren't given keys for.
     fmt = BashFormatter()
     for f, from_, to in merge_config.get("replacements", list()):
         from_ = fmt.format(from_, **format_options)
