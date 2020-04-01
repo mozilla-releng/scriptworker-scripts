@@ -185,9 +185,9 @@ requests==2.23.0 \
     --hash=sha256:43999036bfa82904b6af1d99e4882b560e5e2c68e5c4b0aa03b655f3d7d73fee \
     --hash=sha256:b3f43d496c6daba4493e7c431722aeb7dbc6288f52a6e04e7b6023b0247817e6 \
     # via github3.py, taskcluster
-scriptworker==33.0.1 \
-    --hash=sha256:0d521b340db70414fb57cb75bbf80361a0c626c75e896ca59d6ca9211167ead3 \
-    --hash=sha256:da194ef43e644d7ce4793f0d7f61a8f21477885abfbd5d0a00680e80e303362f \
+scriptworker==33.0.2 \
+    --hash=sha256:f7f09823168d4580959936cfaefaea083a7bc2aa619806d2cf801a74a675123d \
+    --hash=sha256:f85d80db63b163cc5a810ad6336fee5085e92b45fdfe03c1a17fa09ba87e053d \
     # via -r base.in
 six==1.14.0 \
     --hash=sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a \
