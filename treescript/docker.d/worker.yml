@@ -6,6 +6,7 @@ treestatus_base_url: https://treestatus.mozilla-releng.net
 hg: 'hg'
 hg_share_base_dir: { "$eval": "HG_SHARE_BASE_DIR" }
 upstream_repo: { "$eval": "UPSTREAM_REPO" }
+merge_day_clobber_file: { "$eval": "MERGE_DAY_CLOBBER_FILE" }
 hg_ssh_config:
     $merge:
     - default:

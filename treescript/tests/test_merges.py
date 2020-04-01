@@ -69,6 +69,7 @@ def config(tmpdir):
     config_["work_dir"] = os.path.join(tmpdir, "work")
     config_["artifact_dir"] = os.path.join(tmpdir, "artifacts")
     config_["hg_ssh_user"] = "sshuser"
+    config_["merge_day_clobber_file"] = "CLOBBER"
     yield config_
 
 
@@ -83,7 +84,7 @@ def repo_context(tmpdir, config, request, mocker):
     replacement_file = os.path.join(context.repo, "config", "replaceme.txt")
     with open(replacement_file, "w") as f:
         f.write("dummytext")
-    clobber_file = os.path.join(context.repo, "CLOBBER")
+    clobber_file = os.path.join(context.repo, config["merge_day_clobber_file"])
     with open(clobber_file, "w") as f:
         f.write("# A comment\n\nthiswillgetremoved")
 
@@ -110,19 +111,33 @@ def test_replace(repo_context, expectation, filename, from_, to_):
             assert f.read() == to_
 
 
-@pytest.mark.parametrize("break_things,expectation", ((False, does_not_raise()), (True, pytest.raises(FileNotFoundError))))
-def test_touch_clobber_file(repo_context, break_things, expectation):
-    clobber_file = os.path.join(repo_context.repo, "CLOBBER")
+@pytest.mark.parametrize(
+    "config_no_clobber,break_things,expectation",
+    (
+        (False, False, does_not_raise()),
+        (False, True, pytest.raises(FileNotFoundError)),
+        # Test case for a repo that does not have a CLOBBER file
+        (True, False, does_not_raise()),
+    ),
+)
+def test_touch_clobber_file(repo_context, config_no_clobber, break_things, expectation):
+    if config_no_clobber:
+        repo_context.config["merge_day_clobber_file"] = ""
+        os.unlink(os.path.join(repo_context.repo, "CLOBBER"))
+        clobber_file = None
+    else:
+        clobber_file = os.path.join(repo_context.repo, repo_context.config["merge_day_clobber_file"])
 
-    if break_things:
-        os.unlink(clobber_file)
+        if break_things:
+            os.unlink(clobber_file)
 
     with expectation:
-        merges.touch_clobber_file(repo_context.repo)
+        merges.touch_clobber_file(repo_context.config, repo_context.repo)
 
-        with open(clobber_file) as f:
-            contents = f.read()
-            assert "Merge day clobber" in contents
+        if clobber_file:
+            with open(clobber_file) as f:
+                contents = f.read()
+                assert "Merge day clobber" in contents
 
 
 @pytest.mark.asyncio
@@ -146,7 +161,7 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
         called_args.append([arguments[2]])
 
     def sync_noop(*arguments, **kwargs):
-        called_args.append(*arguments)
+        called_args.extend(arguments)
 
     def noop_copyfile(*arguments, **kwargs):
         called_args.append("shutil.copyfile")
