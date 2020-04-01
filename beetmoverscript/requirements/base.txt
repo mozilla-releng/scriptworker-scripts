@@ -35,13 +35,13 @@ attrs==19.3.0 \
     --hash=sha256:08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c \
     --hash=sha256:f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72 \
     # via aiohttp, jsonschema, mozilla-version
-boto3==1.12.32 \
-    --hash=sha256:57398de1b5e074e715c866441e69f90c9468959d5743a021d8aeed04fbaa1078 \
-    --hash=sha256:60ac1124597231ed36a7320547cd0d16a001bb92333ab30ad20514f77e585225 \
+boto3==1.12.33 \
+    --hash=sha256:6f239e3798a1e4d5c9a8093b80c85110d1f872d4f61ea348aa89269b14da186f \
+    --hash=sha256:ad774b0e98d093ae425b85fdb25e5ae70a02ebe036c4222e1b93444699719221 \
     # via -r base.in
-botocore==1.15.32 \
-    --hash=sha256:3ea89601ee452b65084005278bd832be854cfde5166685dcb14b6c8f19d3fc6d \
-    --hash=sha256:a963af564d94107787ff3d2c534e8b7aed7f12e014cdd609f8fcb17bf9d9b19a \
+botocore==1.15.33 \
+    --hash=sha256:078a9731e054f9ee914a8eac77e445de3c1344a00d7eebfee9cae7f40b7f48e8 \
+    --hash=sha256:4240f2fb38c4cccc0fd319e6620a30a1c19b869c1e33ff864eec9cde7965a6ba \
     # via boto3, s3transfer
 certifi==2019.11.28 \
     --hash=sha256:017c25db2a153ce562900032d5bc68e9f191e44e9a0f762f373977de9df1fbb3 \
@@ -245,9 +245,9 @@ s3transfer==0.3.3 \
     --hash=sha256:2482b4259524933a022d59da830f51bd746db62f047d6eb213f2f8855dcb8a13 \
     --hash=sha256:921a37e2aefc64145e7b73d50c71bb4f26f46e4c9f414dc648c6245ff92cf7db \
     # via boto3
-scriptworker==33.0.1 \
-    --hash=sha256:0d521b340db70414fb57cb75bbf80361a0c626c75e896ca59d6ca9211167ead3 \
-    --hash=sha256:da194ef43e644d7ce4793f0d7f61a8f21477885abfbd5d0a00680e80e303362f \
+scriptworker==33.0.2 \
+    --hash=sha256:f7f09823168d4580959936cfaefaea083a7bc2aa619806d2cf801a74a675123d \
+    --hash=sha256:f85d80db63b163cc5a810ad6336fee5085e92b45fdfe03c1a17fa09ba87e053d \
     # via -r base.in
 six==1.14.0 \
     --hash=sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a \

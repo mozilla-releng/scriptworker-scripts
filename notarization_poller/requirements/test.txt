@@ -138,9 +138,9 @@ pytest-cov==2.8.1 \
     --hash=sha256:cc6742d8bac45070217169f5f72ceee1e0e55b0221f54bcf24845972d3a47f2b \
     --hash=sha256:cdbdef4f870408ebdbfeb44e63e07eb18bb4619fae852f6e760645fa36172626 \
     # via -r test.in
-pytest-mock==2.0.0 \
-    --hash=sha256:b35eb281e93aafed138db25c8772b95d3756108b601947f89af503f8c629413f \
-    --hash=sha256:cb67402d87d5f53c579263d37971a164743dc33c159dfb4fb4a86f37c5552307 \
+pytest-mock==3.0.0 \
+    --hash=sha256:98e02534f170e4f37d7e1abdfc5973fd4207aa609582291717f643764e71c925 \
+    --hash=sha256:a4494016753a30231f8519bfd160242a0f3c8fb82ca36e7b6f82a7fb602ac6b8 \
     # via -r test.in
 pytest==5.4.1 \
     --hash=sha256:0e5b30f5cb04e887b91b1ee519fa3d89049595f428c1db76e73bd7f17b09b172 \
