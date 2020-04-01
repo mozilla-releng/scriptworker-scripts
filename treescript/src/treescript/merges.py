@@ -27,7 +27,9 @@ def replace(file_name, from_, to_):
 
 def touch_clobber_file(config, repo_path):
     """Update the clobber file in the root of the repo."""
-    if config["merge_day_clobber_file"]:
+    if not config["merge_day_clobber_file"]:
+        log.info("merge_day_clobber_file not set, skipping clobber file update")
+    else:
         log.info("Touching clobber file")
         clobber_file = os.path.join(repo_path, config["merge_day_clobber_file"])
         with open(clobber_file) as f:
@@ -40,8 +42,6 @@ def touch_clobber_file(config, repo_path):
         new_contents += "Merge day clobber"
         with open(clobber_file, "w") as f:
             f.write(new_contents)
-    else:
-        log.info("merge_day_clobber_file not set, skipping clobber file update")
 
 
 async def apply_rebranding(config, repo_path, merge_config):
