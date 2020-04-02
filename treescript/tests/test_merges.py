@@ -3,6 +3,7 @@ import shutil
 from contextlib import contextmanager
 
 import pytest
+from mozilla_version.gecko import FennecVersion, FirefoxVersion
 
 import treescript.merges as merges
 from treescript.exceptions import TaskVerificationError
@@ -144,8 +145,7 @@ def test_touch_clobber_file(repo_context, config_no_clobber, break_things, expec
 @pytest.mark.parametrize(
     "merge_config,expected",
     (
-        ({"version_files": ["browser/config/version.txt"]}, [["browser/config/version.txt"]]),
-        ({"version_files_suffix": ["browser/config/version_display.txt"]}, [["browser/config/version_display.txt"]]),
+        ({"version_files": [{"filename": "config/milestone.txt", "new_suffix": ""}]}, [["config/milestone.txt"]]),
         ({"copy_files": [["browser/config/version.txt", "browser/config/version_display.txt"]]}, "shutil.copyfile"),
         (
             {"replacements": [("build/mozconfig.common", "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}", "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}")]},
@@ -169,6 +169,10 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
     def noop_replace(*arguments, **kwargs):
         called_args.append("replace")
 
+    def mocked_get_version(path, repo_path):
+        return FirefoxVersion.parse("76.0")
+
+    mocker.patch.object(merges, "get_version", new=mocked_get_version)
     mocker.patch.object(merges, "do_bump_version", new=noop_bump_version)
     mocker.patch.object(shutil, "copyfile", new=noop_copyfile)
     mocker.patch.object(merges, "replace", new=noop_replace)
@@ -176,6 +180,37 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
 
     await merges.apply_rebranding(config, repo_context.repo, merge_config)
     assert called_args[0] == expected
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "version_config,current_version, expected",
+    (
+        # central-to-beta
+        ({"filename": "config/milestone.txt", "new_suffix": ""}, FirefoxVersion.parse("75.0a1"), "75.0"),
+        ({"filename": "browser/config/version_display.txt", "new_suffix": "b1"}, FirefoxVersion.parse("75.0a1"), "75.0b1"),
+        # beta-to-release
+        ({"filename": "browser/config/version_display.txt", "new_suffix": ""}, FirefoxVersion.parse("75.0b9"), "75.0"),
+        # bump_central
+        ({"filename": "config/milestone.txt", "bump_major_number": True}, FirefoxVersion.parse("75.0a1"), "76.0a1"),
+        ({"filename": "config/milestone.txt", "bump_major_number": True}, FirefoxVersion.parse("75.0"), "76.0"),
+        # bump_esr
+        ({"filename": "browser/config/version.txt", "bump_minor_number": True}, FirefoxVersion.parse("68.1.0"), "68.2.0"),
+        ({"filename": "browser/config/version_display.txt", "bump_minor_number": True}, FirefoxVersion.parse("68.1.0esr"), "68.2.0esr"),
+        ({"filename": "mobile/android/config/version-files/beta/version.txt", "bump_minor_number": True}, FennecVersion.parse("68.1"), "68.2"),
+        ({"filename": "mobile/android/config/version-files/beta/version_display.txt", "bump_minor_number": True}, FennecVersion.parse("68.1b9"), "68.2b1"),
+        ({"filename": "mobile/android/config/version-files/nightly/version.txt", "bump_minor_number": True}, FennecVersion.parse("68.1a1"), "68.2a1"),
+        ({"filename": "mobile/android/config/version-files/release/version.txt", "bump_minor_number": True}, FennecVersion.parse("68.6.1"), "68.7.0"),
+    ),
+)
+async def test_create_new_version(config, mocker, version_config, current_version, expected):
+    def mocked_get_version(path, repo_path):
+        return current_version
+
+    mocker.patch.object(merges, "get_version", new=mocked_get_version)
+
+    result = merges.create_new_version(version_config, repo_path="")  # Dummy repo_path, ignored.
+    assert result == expected
 
 
 @pytest.mark.asyncio

@@ -23,6 +23,8 @@ ALLOWED_BUMP_FILES = (
     "mobile/android/config/version-files/beta/version_display.txt",
     "mobile/android/config/version-files/release/version.txt",
     "mobile/android/config/version-files/release/version_display.txt",
+    "mobile/android/config/version-files/nightly/version.txt",
+    "mobile/android/config/version-files/nightly/version_display.txt",
 )
 
 _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
