@@ -16,9 +16,6 @@
             "type": "object",
             "required": [
                 "version_files",
-                "version_files_suffix",
-                "version_suffix",
-                "copy_files",
                 "replacements",
                 "to_branch",
                 "to_repo",
@@ -28,47 +25,28 @@
                 "version_files": {
                     "type": "array",
                     "items": {
-                        "type": "string",
-                        "examples": [
-                            "browser/config/version.txt",
-                            "config/milestone.txt"
-                        ]
-                    }
-                },
-                "version_files_suffix": {
-                    "type": "array",
-                    "minItems": 0,
-                    "items": {
-                        "type": "string",
-                        "examples": [
-                            "browser/config/version_display.txt"
-                        ]
-                    }
-                },
-                "version_suffix": {
-                    "type": "string",
-                    "default": "",
-                    "examples": [
-                        "b1"
-                    ],
-                    "pattern": "^([ab][0-9]+|esr|)?$"
-                },
-                "copy_files": {
-                    "type": "array",
-                    "minItems": 0,
-                    "items": {
-                        "type": "array",
-                        "minItems": 2,
-                        "maxItems": 2,
-                        "items": {
-                            "type": "string"
-                        },
-                        "examples": [
-                            [
-                                "browser/config/version.txt",
-                                "browser/config/version_display.txt"
-                            ]
-                        ]
+                        "type": "object",
+                        "required": [
+                            "filename"
+                        ],
+                        "properties": {
+                            "filename": {
+                                "type": "string",
+                                "description": "Path to filename containing a version."
+                            },
+                            "new_suffix": {
+                                "type": "string",
+                                "description": "Replace the current suffix (b1, a1, esr) with this string. Empty is valid."
+                            },
+                            "version_bump": {
+                                "type": "string",
+                                "enum": [
+                                    "major",
+                                    "minor"
+                                ],
+                                "description": "Increment either the major or minor version number, or neither if empty"
+                            }
+                        }
                     }
                 },
                 "replacements": {

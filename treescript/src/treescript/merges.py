@@ -64,33 +64,54 @@ def touch_clobber_file(config, repo_path):
             f.write(new_contents)
 
 
+def create_new_version(version_config, repo_path):
+    """Create the new version string used in file manipulation.
+
+    Arguments:
+        version_config (dict):
+            {
+                "filename": mandatory path,
+                "new_suffix": string, default is to keep original.
+                "version_bump": string, optional, enum 'major', 'minor'
+            }
+
+    Returns:
+        string: new version string for file contents.
+    """
+    version = get_version(version_config["filename"], repo_path)
+    if version_config.get("version_bump") == "major":
+        version = version.bump("major_number")
+    elif version_config.get("version_bump") == "minor":
+        version = version.bump("minor_number")
+    if "new_suffix" in version_config:  # '' is a valid entry
+        version = attr.evolve(version, is_esr=False, beta_number=None, is_nightly=False)
+        version = f"{version}{version_config['new_suffix']}"
+    else:
+        version = f"{version}"
+    log.info("New version is %s", version)
+    return version
+
+
 async def apply_rebranding(config, repo_path, merge_config):
     """Apply changes to repo required for merge/rebranding."""
     log.info("Rebranding %s to %s", merge_config.get("from_branch"), merge_config.get("to_branch"))
 
+    # Must collect this before any bumping.
     version = get_version("browser/config/version.txt", repo_path)
-    current_major_version = version.major_number
-    if merge_config.get("incr_major_version", False):
-        version = version.bump("major_number")
+    # Used in file replacements, further down.
+    format_options = {
+        "current_major_version": version.major_number,
+        "next_major_version": version.major_number + 1,
+        "current_weave_version": version.major_number + 2,
+        "next_weave_version": version.major_number + 3,  # current_weave_version + 1
+    }
 
     if merge_config.get("version_files"):
-        next_version = f"{version.major_number}.{version.minor_number}"
-        await do_bump_version(config, repo_path, merge_config["version_files"], next_version)
-
-    if merge_config.get("version_files_suffix"):
-        version = attr.evolve(version, is_esr=False, beta_number=None, is_nightly=False)
-        next_version = f"{version}{merge_config.get('version_suffix')}"
-        await do_bump_version(config, repo_path, merge_config["version_files_suffix"], next_version)
+        for version_config in merge_config["version_files"]:
+            await do_bump_version(config, repo_path, [version_config["filename"]], create_new_version(version_config, repo_path))
 
     for f in merge_config.get("copy_files", list()):
         shutil.copyfile(os.path.join(repo_path, f[0]), os.path.join(repo_path, f[1]))
-
-    format_options = {
-        "current_major_version": current_major_version,
-        "next_major_version": version.major_number,
-        "current_weave_version": current_major_version + 2,
-        "next_weave_version": current_major_version + 3,  # current_weave_version + 1
-    }
 
     # Cope with bash variables in strings that we don't want to
     # be formatted in Python. We do this by ignoring {vars} we
