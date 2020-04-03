@@ -192,15 +192,15 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
         # beta-to-release
         ({"filename": "browser/config/version_display.txt", "new_suffix": ""}, FirefoxVersion.parse("75.0b9"), "75.0"),
         # bump_central
-        ({"filename": "config/milestone.txt", "bump_major_number": True}, FirefoxVersion.parse("75.0a1"), "76.0a1"),
-        ({"filename": "config/milestone.txt", "bump_major_number": True}, FirefoxVersion.parse("75.0"), "76.0"),
+        ({"filename": "config/milestone.txt", "version_bump": "major"}, FirefoxVersion.parse("75.0a1"), "76.0a1"),
+        ({"filename": "config/milestone.txt", "version_bump": "major"}, FirefoxVersion.parse("75.0"), "76.0"),
         # bump_esr
-        ({"filename": "browser/config/version.txt", "bump_minor_number": True}, FirefoxVersion.parse("68.1.0"), "68.2.0"),
-        ({"filename": "browser/config/version_display.txt", "bump_minor_number": True}, FirefoxVersion.parse("68.1.0esr"), "68.2.0esr"),
-        ({"filename": "mobile/android/config/version-files/beta/version.txt", "bump_minor_number": True}, FennecVersion.parse("68.1"), "68.2"),
-        ({"filename": "mobile/android/config/version-files/beta/version_display.txt", "bump_minor_number": True}, FennecVersion.parse("68.1b9"), "68.2b1"),
-        ({"filename": "mobile/android/config/version-files/nightly/version.txt", "bump_minor_number": True}, FennecVersion.parse("68.1a1"), "68.2a1"),
-        ({"filename": "mobile/android/config/version-files/release/version.txt", "bump_minor_number": True}, FennecVersion.parse("68.6.1"), "68.7.0"),
+        ({"filename": "browser/config/version.txt", "version_bump": "minor"}, FirefoxVersion.parse("68.1.0"), "68.2.0"),
+        ({"filename": "browser/config/version_display.txt", "version_bump": "minor"}, FirefoxVersion.parse("68.1.0esr"), "68.2.0esr"),
+        ({"filename": "mobile/android/config/version-files/beta/version.txt", "version_bump": "minor"}, FennecVersion.parse("68.1"), "68.2"),
+        ({"filename": "mobile/android/config/version-files/beta/version_display.txt", "version_bump": "minor"}, FennecVersion.parse("68.1b9"), "68.2b1"),
+        ({"filename": "mobile/android/config/version-files/nightly/version.txt", "version_bump": "minor"}, FennecVersion.parse("68.1a1"), "68.2a1"),
+        ({"filename": "mobile/android/config/version-files/release/version.txt", "version_bump": "minor"}, FennecVersion.parse("68.6.1"), "68.7.0"),
     ),
 )
 async def test_create_new_version(config, mocker, version_config, current_version, expected):

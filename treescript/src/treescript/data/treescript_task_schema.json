@@ -38,15 +38,13 @@
                                 "type": "string",
                                 "description": "Replace the current suffix (b1, a1, esr) with this string. Empty is valid."
                             },
-                            "bump_major_number": {
-                                "type": "boolean",
-                                "default": false,
-                                "description": "Increment the major version number"
-                            },
-                            "bump_minor_number": {
-                                "type": "boolean",
-                                "default": false,
-                                "description": "Increment the minor version number"
+                            "version_bump": {
+                                "type": "string",
+                                "enum": [
+                                    "major",
+                                    "minor"
+                                ],
+                                "description": "Increment either the major or minor version number, or neither if empty"
                             }
                         }
                     }

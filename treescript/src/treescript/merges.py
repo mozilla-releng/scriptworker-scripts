@@ -72,17 +72,16 @@ def create_new_version(version_config, repo_path):
             {
                 "filename": mandatory path,
                 "new_suffix": string, default is to keep original.
-                "bump_major_number": bool, optional, default false
-                "bump_minor_number": bool, optional, default false
+                "version_bump": string, optional, enum 'major', 'minor'
             }
 
     Returns:
         string: new version string for file contents.
     """
     version = get_version(version_config["filename"], repo_path)
-    if version_config.get("bump_major_number"):
+    if version_config.get("version_bump") == "major":
         version = version.bump("major_number")
-    if version_config.get("bump_minor_number"):
+    elif version_config.get("version_bump") == "minor":
         version = version.bump("minor_number")
     if "new_suffix" in version_config:  # '' is a valid entry
         version = attr.evolve(version, is_esr=False, beta_number=None, is_nightly=False)
@@ -99,6 +98,13 @@ async def apply_rebranding(config, repo_path, merge_config):
 
     # Must collect this before any bumping.
     version = get_version("browser/config/version.txt", repo_path)
+    # Used in file replacements, further down.
+    format_options = {
+        "current_major_version": version.major_number,
+        "next_major_version": version.major_number + 1,
+        "current_weave_version": version.major_number + 2,
+        "next_weave_version": version.major_number + 3,  # current_weave_version + 1
+    }
 
     if merge_config.get("version_files"):
         for version_config in merge_config["version_files"]:
@@ -106,13 +112,6 @@ async def apply_rebranding(config, repo_path, merge_config):
 
     for f in merge_config.get("copy_files", list()):
         shutil.copyfile(os.path.join(repo_path, f[0]), os.path.join(repo_path, f[1]))
-
-    format_options = {
-        "current_major_version": version.major_number,
-        "next_major_version": version.major_number + 1,
-        "current_weave_version": version.major_number + 2,
-        "next_weave_version": version.major_number + 3,  # current_weave_version + 1
-    }
 
     # Cope with bash variables in strings that we don't want to
     # be formatted in Python. We do this by ignoring {vars} we
