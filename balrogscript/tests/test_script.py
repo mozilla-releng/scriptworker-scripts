@@ -20,32 +20,32 @@ BASE_DIR = os.path.dirname(__file__)
 # create_locale_submitter {{{1
 def test_create_locale_submitter_nightly_style(config, nightly_manifest):
     auth0_secrets = None
-    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], "", auth0_secrets, config)
+    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], "", auth0_secrets, config, backend_version=1)
     assert isinstance(submitter, NightlySubmitterV4)
 
     nightly_manifest[0].pop("partialInfo", None)
-    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], "", auth0_secrets, config)
+    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], "", auth0_secrets, config, backend_version=1)
     assert isinstance(submitter, NightlySubmitterV4)
 
 
 def test_create_locale_submitter_release_style(config, release_manifest):
     auth0_secrets = None
 
-    submitter, release = bscript.create_locale_submitter(release_manifest[0], "", auth0_secrets, config)
+    submitter, release = bscript.create_locale_submitter(release_manifest[0], "", auth0_secrets, config, backend_version=1)
     assert isinstance(submitter, ReleaseSubmitterV9)
 
     release_manifest[0].pop("partialInfo", None)
-    submitter, release = bscript.create_locale_submitter(release_manifest[0], "", auth0_secrets, config)
+    submitter, release = bscript.create_locale_submitter(release_manifest[0], "", auth0_secrets, config, backend_version=1)
     assert isinstance(submitter, ReleaseSubmitterV9)
 
     release_manifest[0].pop("tc_release", None)
     with pytest.raises(RuntimeError):
-        submitter, release = bscript.create_locale_submitter(release_manifest[0], "", auth0_secrets, config)
+        submitter, release = bscript.create_locale_submitter(release_manifest[0], "", auth0_secrets, config, backend_version=1)
 
 
 def test_create_locale_submitter_nightly_metadata(config, nightly_manifest):
     auth0_secrets = None
-    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], "", auth0_secrets, config)
+    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], "", auth0_secrets, config, backend_version=1)
 
     exp = {
         "platform": "android-api-15",
@@ -77,14 +77,14 @@ def test_create_locale_submitter_nightly_metadata(config, nightly_manifest):
 
 def test_create_locale_submitter_nightly_creates_valid_submitter(config, nightly_manifest):
     auth0_secrets = None
-    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], "", auth0_secrets, config)
+    submitter, release = bscript.create_locale_submitter(nightly_manifest[0], "", auth0_secrets, config, backend_version=1)
     lambda: submitter.run(**release)
 
 
 # submit_locale {{{1
 def test_submit_locale(config, nightly_task, nightly_config, nightly_manifest, mocker):
     auth0_secrets = None
-    _, release = bscript.create_locale_submitter(nightly_manifest[0], "", auth0_secrets, config)
+    _, release = bscript.create_locale_submitter(nightly_manifest[0], "", auth0_secrets, config, backend_version=1)
 
     def fake_submitter(**kwargs):
         assert kwargs == release
@@ -93,7 +93,7 @@ def test_submit_locale(config, nightly_task, nightly_config, nightly_manifest, m
     m = mock.MagicMock()
     m.run = fake_submitter
     mocker.patch.object(bscript, "create_locale_submitter", return_value=(m, release))
-    bscript.submit_locale(task, config, auth0_secrets)
+    bscript.submit_locale(task, config, auth0_secrets, backend_version=1)
 
 
 # schedule {{{1

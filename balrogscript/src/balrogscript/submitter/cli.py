@@ -216,10 +216,16 @@ class NightlySubmitterBase(object):
 
     def run(self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs):
         if self.backend_version == 2:
-            return run_backend2(self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs)
-        return run_backend1(self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs)
+            return self.run_backend2(
+                platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=isOSUpdate, **updateKwargs
+            )
+        return self.run_backend1(
+            platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=isOSUpdate, **updateKwargs
+        )
 
-    def run_backend1(self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs):
+    def run_backend1(
+        self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs
+    ):
         assert schemaVersion in (3, 4), "Unhandled schema version %s" % schemaVersion
         log.info("Using legacy backend version...")
         targets = buildbot2updatePlatforms(platform)
@@ -300,7 +306,9 @@ class NightlySubmitterBase(object):
 
         retry(update_latest, sleeptime=2, max_sleeptime=2, attempts=10)
 
-    def run_backend2(self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs):
+    def run_backend2(
+        self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs
+    ):
         log.info("Using backend version 2...")
         requests_api = get_balrog_api(auth0_secrets=self.auth0_secrets)
         headers = {"Accept-Encoding": "application/json", "Accept": "application/json", "Content-Type": "application/json", "Referer": self.api_root}
@@ -326,6 +334,7 @@ class NightlySubmitterBase(object):
         alias = None
         if len(targets) > 1:
             alias = targets[1:]
+            log.debug("alias entry of %s ignored...", json.dumps(alias))
         data = {"buildID": buildID, "appVersion": appVersion, "platformVersion": extVersion, "displayVersion": appVersion}
         if isOSUpdate:
             data["isOSUpdate"] = isOSUpdate
@@ -353,39 +362,24 @@ class NightlySubmitterBase(object):
                 log.warning("Dated data didn't change, skipping update")
                 return
             # explicitly pass data version
-            blob = {
-                "blob": {
-                    "platforms": {
-                        build_target: {
-                            "locales": {
-                                locale: data
-                            }
-                        }
-                    }
-                },
-                "old_data_versions": {
-                    "platforms": {
-                        build_target: {
-                            "locales": {}
-                        }
-                    }
-                }
-            }
-            if existing_release.get('old_data_versions', {}).get('platforms', {}).get(build_target, {}).get('locales', {}).get(locale):
-                blob["old_data_versions"]["platforms"][build_target]['locales'][locale] = existing_release["old_data_versions"]["platforms"][build_target]['locales'][locale]
+            blob = {"blob": {"platforms": {build_target: {"locales": {locale: data}}}}, "old_data_versions": {"platforms": {build_target: {"locales": {}}}}}
+            if existing_release.get("old_data_versions", {}).get("platforms", {}).get(build_target, {}).get("locales", {}).get(locale):
+                blob["old_data_versions"]["platforms"][build_target]["locales"][locale] = existing_release["old_data_versions"]["platforms"][build_target][
+                    "locales"
+                ][locale]
             do_request(url=url, method="post", data=json.dumps(blob))
 
         name = get_nightly_blob_name(productName, branch, build_type, buildID, self.dummy)
         url = self.api_root + "/v2/" + name
         existing_release = do_request(url)
         existing_locale_data = existing_release["blob"].get(build_type, {}).get("locales", {}).get(locale)
-        update_dated(url, existing_release, existing_locale_data)
+        update_data(url, existing_release, existing_locale_data)
 
         name = get_nightly_blob_name(productName, branch, build_type, "latest", self.dummy)
         url = self.api_root + "/v2/" + name
         existing_release = do_request(url)
         existing_locale_data = existing_release["blob"].get(build_type, {}).get("locales", {}).get(locale)
-        update_dated(url, existing_release, existing_locale_data)
+        update_data(url, existing_release, existing_locale_data)
 
 
 class MultipleUpdatesNightlyMixin(object):
@@ -473,23 +467,9 @@ class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
             log.info("Using backend version 2...")
             # XXX Check for existing data_version for this locale
             blob = {
-                "blob": {
-                    "platforms": {
-                        build_target: {
-                            "locales": {
-                                locale: data
-                            }
-                        }
-                    },
-                },
+                "blob": {"platforms": {build_target: {"locales": {locale: data}}}},
                 # XXX old_data_versions here is currently required but shouldn't be
-                "old_data_versions": {
-                    "platforms": {
-                        build_target: {
-                            "locales": {}
-                        }
-                    }
-                }
+                "old_data_versions": {"platforms": {build_target: {"locales": {}}}},
             }
             headers = {"Accept-Encoding": "application/json", "Accept": "application/json", "Content-Type": "application/json", "Referer": self.api_root}
             requests_api = get_balrog_api(auth0_secrets=self.auth0_secrets)

@@ -22,7 +22,10 @@ def create_locale_submitter(e, extra_suffix, auth0_secrets, config, backend_vers
         log.info("Taskcluster Release style Balrog submission")
 
         submitter = ReleaseSubmitterV9(
-            api_root=config["api_root"], auth0_secrets=auth0_secrets, dummy=config["dummy"], suffix=e.get("blob_suffix", "") + extra_suffix,
+            api_root=config["api_root"],
+            auth0_secrets=auth0_secrets,
+            dummy=config["dummy"],
+            suffix=e.get("blob_suffix", "") + extra_suffix,
             backend_version=backend_version,
         )
 
@@ -46,7 +49,10 @@ def create_locale_submitter(e, extra_suffix, auth0_secrets, config, backend_vers
         log.info("Taskcluster Nightly style Balrog submission")
 
         submitter = NightlySubmitterV4(
-            api_root=config["api_root"], auth0_secrets=auth0_secrets, dummy=config["dummy"], url_replacements=e.get("url_replacements", []),
+            api_root=config["api_root"],
+            auth0_secrets=auth0_secrets,
+            dummy=config["dummy"],
+            url_replacements=e.get("url_replacements", []),
             backend_version=backend_version,
         )
 
