@@ -17,12 +17,13 @@ log = logging.getLogger(__name__)
 
 
 # create_locale_submitter {{{1
-def create_locale_submitter(e, extra_suffix, auth0_secrets, config):
+def create_locale_submitter(e, extra_suffix, auth0_secrets, config, backend_version):
     if "tc_release" in e:
         log.info("Taskcluster Release style Balrog submission")
 
         submitter = ReleaseSubmitterV9(
-            api_root=config["api_root"], auth0_secrets=auth0_secrets, dummy=config["dummy"], suffix=e.get("blob_suffix", "") + extra_suffix
+            api_root=config["api_root"], auth0_secrets=auth0_secrets, dummy=config["dummy"], suffix=e.get("blob_suffix", "") + extra_suffix,
+            backend_version=backend_version,
         )
 
         data = {
@@ -45,7 +46,8 @@ def create_locale_submitter(e, extra_suffix, auth0_secrets, config):
         log.info("Taskcluster Nightly style Balrog submission")
 
         submitter = NightlySubmitterV4(
-            api_root=config["api_root"], auth0_secrets=auth0_secrets, dummy=config["dummy"], url_replacements=e.get("url_replacements", [])
+            api_root=config["api_root"], auth0_secrets=auth0_secrets, dummy=config["dummy"], url_replacements=e.get("url_replacements", []),
+            backend_version=backend_version,
         )
 
         data = {
@@ -67,7 +69,7 @@ def create_locale_submitter(e, extra_suffix, auth0_secrets, config):
 
 
 # submit_locale {{{1
-def submit_locale(task, config, auth0_secrets):
+def submit_locale(task, config, auth0_secrets, backend_version):
     """Submit a release blob to balrog."""
     upstream_artifacts = get_upstream_artifacts(task)
 
@@ -79,7 +81,7 @@ def submit_locale(task, config, auth0_secrets):
     for e in manifest:
         for suffix in suffixes:
             # Get release metadata from manifest
-            submitter, release = create_locale_submitter(e, suffix, auth0_secrets, config)
+            submitter, release = create_locale_submitter(e, suffix, auth0_secrets, config, backend_version=backend_version)
             # Connect to balrog and submit the metadata
             # Going back to the original number of attempts so that we avoid sleeping too much in between
             # retries to get Out-of-memory in the GCP workers. Until we figure out what's bumping the spike
@@ -239,6 +241,7 @@ async def async_main(config, task):
     server = get_task_server(task, config)
     auth0_secrets, config = update_config(config, server)
 
+    # Eventually remove backend_version = 1 when not needed.
     backend_version = 1
     if behavior.startswith("v2-"):
         behavior = behavior[3:]

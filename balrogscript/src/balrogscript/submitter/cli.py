@@ -165,7 +165,7 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
             logging.debug("Balrog request to {url} via PUT", url)
             logging.debug("Data sent: %s", json.dumps(data))
             before = time.time()
-            resp = requests_api.put(url, data=data, headers=headers)
+            resp = requests_api.put(url, data=json.dumps(data), headers=headers)
             try:
                 resp.raise_for_status()
                 return
@@ -197,11 +197,12 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
 class NightlySubmitterBase(object):
     build_type = "nightly"
 
-    def __init__(self, api_root, auth0_secrets=None, dummy=False, url_replacements=None):
+    def __init__(self, api_root, auth0_secrets=None, dummy=False, url_replacements=None, backend_version=1):
         self.api_root = api_root
         self.auth0_secrets = auth0_secrets
         self.dummy = dummy
         self.url_replacements = url_replacements
+        self.backend_version = backend_version
 
     def _replace_canocical_url(self, url):
         if self.url_replacements:
@@ -214,7 +215,13 @@ class NightlySubmitterBase(object):
         return url
 
     def run(self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs):
+        if self.backend_version == 2:
+            return run_backend2(self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs)
+        return run_backend1(self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs)
+
+    def run_backend1(self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs):
         assert schemaVersion in (3, 4), "Unhandled schema version %s" % schemaVersion
+        log.info("Using legacy backend version...")
         targets = buildbot2updatePlatforms(platform)
         build_target = targets[0]
         alias = None
@@ -235,6 +242,7 @@ class NightlySubmitterBase(object):
             build_type = self.build_type
 
         name = get_nightly_blob_name(productName, branch, build_type, buildID, self.dummy)
+
         api = SingleLocale(name=name, build_target=build_target, locale=locale, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
 
         # wrap operations into "atomic" functions that can be retried
@@ -291,6 +299,93 @@ class NightlySubmitterBase(object):
             )
 
         retry(update_latest, sleeptime=2, max_sleeptime=2, attempts=10)
+
+    def run_backend2(self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs):
+        log.info("Using backend version 2...")
+        requests_api = get_balrog_api(auth0_secrets=self.auth0_secrets)
+        headers = {"Accept-Encoding": "application/json", "Accept": "application/json", "Content-Type": "application/json", "Referer": self.api_root}
+
+        def do_request(url, method="get", data=None):
+            logging.debug("Balrog request to %s via %s", url, method.upper())
+            logging.debug("Data sent: %s", None)
+            before = time.time()
+            resp = requests_api.request(method=method, url=url, headers=headers, data=data)
+            try:
+                resp.raise_for_status()
+                return json.loads(resp.content)
+                log.info("Data recieved: %s", json.dumps(existing_release))
+            except requests.HTTPError as excp:
+                logging.error("Caught HTTPError: %s", excp.response.content)
+                raise
+            finally:
+                stats = {"timestamp": time.time(), "method": method.upper(), "url": url, "status_code": resp.status_code, "elapsed_secs": time.time() - before}
+                logging.debug("REQUEST STATS: %s", json.dumps(stats))
+
+        targets = buildbot2updatePlatforms(platform)
+        build_target = targets[0]
+        alias = None
+        if len(targets) > 1:
+            alias = targets[1:]
+        data = {"buildID": buildID, "appVersion": appVersion, "platformVersion": extVersion, "displayVersion": appVersion}
+        if isOSUpdate:
+            data["isOSUpdate"] = isOSUpdate
+
+        data.update(self._get_update_data(productName, branch, **updateKwargs))
+
+        if "old-id" in platform:
+            # bug 1366034: support old-id builds
+            # Like 1055305, this is a hack to support two builds with same build target that
+            # require differed't release blobs and rules
+            build_type = "old-id-%s" % self.build_type
+        else:
+            build_type = self.build_type
+
+        # wrap operations into "atomic" functions that can be retried
+        def update_data(url, existing_release, existing_locale_data):
+            # If the  partials are already a subset of the blob and the
+            # complete MAR is the same, skip the submission
+            skip_submission = bool(
+                existing_locale_data
+                and existing_locale_data.get("completes") == data.get("completes")
+                and all(p in existing_locale_data.get("partials", []) for p in data.get("partials", []))
+            )
+            if skip_submission:
+                log.warning("Dated data didn't change, skipping update")
+                return
+            # explicitly pass data version
+            blob = {
+                "blob": {
+                    "platforms": {
+                        build_target: {
+                            "locales": {
+                                locale: data
+                            }
+                        }
+                    }
+                },
+                "old_data_versions": {
+                    "platforms": {
+                        build_target: {
+                            "locales": {}
+                        }
+                    }
+                }
+            }
+            if existing_release.get('old_data_versions', {}).get('platforms', {}).get(build_target, {}).get('locales', {}).get(locale):
+                blob["old_data_versions"]["platforms"][build_target]['locales'][locale] = existing_release["old_data_versions"]["platforms"][build_target]['locales'][locale]
+            do_request(url=url, method="post", data=json.dumps(blob))
+
+        name = get_nightly_blob_name(productName, branch, build_type, buildID, self.dummy)
+        url = self.api_root + "/v2/" + name
+        existing_release = do_request(url)
+        existing_locale_data = existing_release["blob"].get(build_type, {}).get("locales", {}).get(locale)
+        update_dated(url, existing_release, existing_locale_data)
+
+        name = get_nightly_blob_name(productName, branch, build_type, "latest", self.dummy)
+        url = self.api_root + "/v2/" + name
+        existing_release = do_request(url)
+        existing_locale_data = existing_release["blob"].get(build_type, {}).get("locales", {}).get(locale)
+        update_dated(url, existing_release, existing_locale_data)
 
 
 class MultipleUpdatesNightlyMixin(object):
@@ -354,13 +449,14 @@ class MultipleUpdatesReleaseMixin(object):
 
 
 class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
-    def __init__(self, api_root, auth0_secrets=None, dummy=False, suffix="", from_suffix=""):
+    def __init__(self, api_root, auth0_secrets=None, dummy=False, suffix="", from_suffix="", backend_version=1):
         self.api_root = api_root
         self.auth0_secrets = auth0_secrets
         self.suffix = suffix
         if dummy:
             self.suffix += "-dummy"
         self.from_suffix = from_suffix
+        self.backend_version = backend_version
 
     def run(self, platform, productName, appVersion, version, build_number, locale, hashFunction, extVersion, buildID, **updateKwargs):
         targets = buildbot2updatePlatforms(platform)
@@ -373,9 +469,50 @@ class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
 
         data.update(self._get_update_data(productName, version, build_number, **updateKwargs))
 
-        api = SingleLocale(name=name, build_target=build_target, locale=locale, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
-        current_data, data_version = api.get_data()
-        api.update_build(data_version=data_version, product=productName, hashFunction=hashFunction, buildData=json.dumps(data), schemaVersion=9)
+        if self.backend_version == 2:
+            log.info("Using backend version 2...")
+            # XXX Check for existing data_version for this locale
+            blob = {
+                "blob": {
+                    "platforms": {
+                        build_target: {
+                            "locales": {
+                                locale: data
+                            }
+                        }
+                    },
+                },
+                # XXX old_data_versions here is currently required but shouldn't be
+                "old_data_versions": {
+                    "platforms": {
+                        build_target: {
+                            "locales": {}
+                        }
+                    }
+                }
+            }
+            headers = {"Accept-Encoding": "application/json", "Accept": "application/json", "Content-Type": "application/json", "Referer": self.api_root}
+            requests_api = get_balrog_api(auth0_secrets=self.auth0_secrets)
+            url = self.api_root + "/v2/" + name
+            logging.debug("Balrog request to {url} via POST", url)
+            logging.debug("Data sent: %s", json.dumps(blob))
+            before = time.time()
+            resp = requests_api.post(url, data=json.dumps(blob), headers=headers)
+            try:
+                resp.raise_for_status()
+                return
+            except requests.HTTPError as excp:
+                logging.error("Caught HTTPError: %s", excp.response.content)
+                raise
+            finally:
+                stats = {"timestamp": time.time(), "method": "POST", "url": url, "status_code": resp.status_code, "elapsed_secs": time.time() - before}
+                logging.debug("REQUEST STATS: %s", json.dumps(stats))
+            return
+        else:
+            log.info("Using legacy backend version...")
+            api = SingleLocale(name=name, build_target=build_target, locale=locale, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
+            current_data, data_version = api.get_data()
+            api.update_build(data_version=data_version, product=productName, hashFunction=hashFunction, buildData=json.dumps(data), schemaVersion=9)
 
 
 class ReleasePusher(object):
