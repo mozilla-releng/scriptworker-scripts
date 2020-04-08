@@ -595,10 +595,12 @@ def get_uuid_from_log(log_path):
     regex = re.compile(r"RequestUUID = (?P<uuid>[a-zA-Z0-9-]+)")
     try:
         with open(log_path, "r") as fh:
-            for line in fh.readlines():
-                m = regex.search(line)
-                if m:
-                    return m["uuid"]
+            contents = fh.read()
+        log.info(f"{log_path} notarization response:\n{contents}")
+        for line in contents.splitlines():
+            m = regex.search(line)
+            if m:
+                return m["uuid"]
     except OSError as err:
         raise IScriptError("Can't find UUID in {}: {}".format(log_path, err)) from err
     raise IScriptError("Can't find UUID in {}!".format(log_path))
