@@ -13,7 +13,7 @@ import pexpect
 import pytest
 
 import iscript.mac as mac
-from iscript.exceptions import InvalidNotarization, IScriptError, TimeoutError, UnknownAppDir
+from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
 from scriptworker_client.utils import makedirs
 
 
@@ -439,15 +439,21 @@ def test_get_bundle_id(mocker, counter):
 
 # get_uuid_from_log {{{1
 @pytest.mark.parametrize(
-    "uuid, raises",
+    "uuid, raises, extra",
     (
-        ("07307e2c-db26-494c-8630-cfa239d4b86b", False),
-        ("d4d31c49-c075-4ea1-bb7f-150c74f608e1", False),
-        ("d4d31c49-c075-4ea1-bb7f-150c74f608e1", "missing file"),
-        ("%%%%\\\\=", "missing uuid"),
+        ("07307e2c-db26-494c-8630-cfa239d4b86b", False, ""),
+        ("d4d31c49-c075-4ea1-bb7f-150c74f608e1", False, "Blah blah blah\nFoo bar baz"),
+        ("d4d31c49-c075-4ea1-bb7f-150c74f608e1", "missing file", ""),
+        ("%%%%\\\\=", "missing uuid", ""),
+        (
+            "07307e2c-db26-494c-8630-cfa239d4b86b",
+            ThrottledNotarization,
+            'altool[15766:50391190] *** Error: ERROR ITMS-10004: "You have reached your upload limit of 20 software packages per minute. Pause your uploads, then reduce the number of software packages you upload per minute.',
+        ),
+        ("d4d31c49-c075-4ea1-bb7f-150c74f608e1", UnknownNotarizationError, "What the! It looks like you've hit an ERROR of some sort"),
     ),
 )
-def test_get_uuid_from_log(tmpdir, uuid, raises):
+def test_get_uuid_from_log(tmpdir, uuid, raises, extra):
     """``get_uuid_from_log`` returns the correct uuid from the logfile if present.
     It raises if it has problems finding the uuid in the log.
 
@@ -455,9 +461,12 @@ def test_get_uuid_from_log(tmpdir, uuid, raises):
     log_path = os.path.join(str(tmpdir), "log")
     if raises != "missing file":
         with open(log_path, "w") as fh:
-            fh.write("foo\nbar\nbaz\n RequestUUID = {} \nblah\n".format(uuid))
+            fh.write(f"foo\nbar\nbaz\n RequestUUID = {uuid} \n{extra}\nblah\n")
     if raises:
-        with pytest.raises(IScriptError):
+        exception = raises
+        if not isinstance(raises, IScriptError):
+            exception = IScriptError
+        with pytest.raises(exception):
             mac.get_uuid_from_log(log_path)
     else:
         assert mac.get_uuid_from_log(log_path) == uuid

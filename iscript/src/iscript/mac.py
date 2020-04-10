@@ -17,7 +17,7 @@ import attr
 import pexpect
 
 from iscript.autograph import sign_langpacks, sign_omnija_with_autograph, sign_widevine_dir
-from iscript.exceptions import InvalidNotarization, IScriptError, TimeoutError, UnknownAppDir
+from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
 from iscript.util import get_key_config
 from scriptworker_client.aio import download_file, raise_future_exceptions, retry_async, semaphore_wrapper
 from scriptworker_client.exceptions import DownloadError
@@ -587,6 +587,8 @@ def get_uuid_from_log(log_path):
 
     Raises:
         IScriptError: if we can't find the UUID
+        ThrottledNotarization: if there's an ``ERROR ITMS-10004`` in the response
+        UnknownNotarizationError: if there's an unknown ``ERROR`` in the response
 
     Returns:
         str: the uuid
@@ -597,6 +599,13 @@ def get_uuid_from_log(log_path):
         with open(log_path, "r") as fh:
             contents = fh.read()
         log.info(f"{log_path} notarization response:\n{contents}")
+        exception = None
+        if "ERROR ITMS-10004" in contents:
+            exception = ThrottledNotarization
+        elif "ERROR " in contents:
+            exception = UnknownNotarizationError
+        if exception is not None:
+            raise exception(f"Error response from Apple!\n{contents}")
         for line in contents.splitlines():
             m = regex.search(line)
             if m:
@@ -665,6 +674,11 @@ async def wrap_notarization_with_sudo(config, key_config, all_paths, path_attr="
             app.notarization_log_path = f"{app.parent_dir}-notarization.log"
             bundle_id = get_bundle_id(key_config["base_bundle_id"], counter=str(counter))
             zip_path = getattr(app, path_attr)
+            # XXX potentially run the notarization + get_uuid_from_log in a
+            #     helper function per app, so we can retry them individually on
+            #     error. That would also let us record the path per UUID,
+            #     should we need that complexity later.
+            #     Not doing that now, so notarization errors are more visible.
             base_cmdln = " ".join(
                 [
                     "xcrun",
