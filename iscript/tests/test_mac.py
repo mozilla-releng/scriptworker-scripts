@@ -367,14 +367,14 @@ async def test_create_one_notarization_zipfile(mocker, tmpdir, raises):
     work_dir = str(tmpdir)
 
     async def fake_run_command(*args, **kwargs):
-        assert args[0] == ["zip", "-r", os.path.join(work_dir, "app_path.zip"), "0/0.app", "1/1.app", "2/2.app"]
+        assert args[0] == ["zip", "-r", os.path.join(work_dir, "notarization.zip"), "0/0.app", "0/0.pkg", "1/1.app", "1/1.pkg", "2/2.app", "2/2.pkg"]
         if raises:
             raise IScriptError("foo")
 
     mocker.patch.object(mac, "run_command", new=fake_run_command)
     all_paths = []
     for i in range(3):
-        all_paths.append(mac.App(app_path=os.path.join(work_dir, str(i), "{}.app".format(i))))
+        all_paths.append(mac.App(app_path=os.path.join(work_dir, str(i), "{}.app".format(i)), pkg_path=os.path.join(work_dir, str(i), "{}.pkg".format(i))))
     if raises:
         with pytest.raises(IScriptError):
             await mac.create_one_notarization_zipfile(work_dir, all_paths)

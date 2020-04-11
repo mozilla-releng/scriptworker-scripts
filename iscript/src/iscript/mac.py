@@ -491,14 +491,14 @@ async def create_all_notarization_zipfiles(all_paths, path_attrs):
 
 
 # create_one_notarization_zipfile {{{1
-async def create_one_notarization_zipfile(work_dir, all_paths, path_attr="app_path"):
+async def create_one_notarization_zipfile(work_dir, all_paths, path_attrs=("app_path", "pkg_path")):
     """Create a single notarization zipfile for all the apps.
 
     Args:
         work_dir (str): the script work directory
         all_paths (list): list of ``App`` objects
-        path_attr (str, optional): the attribute for the paths we'll be zipping
-            up. Defaults to ``app_path``
+        path_attrs (tuple, optional): the attributes for the paths we'll be zipping
+            up. Defaults to ``("app_path", "pkg_path")``
 
     Raises:
         IScriptError: on failure
@@ -507,12 +507,13 @@ async def create_one_notarization_zipfile(work_dir, all_paths, path_attr="app_pa
         str: the zip path
 
     """
-    required_attrs = [path_attr]
+    required_attrs = path_attrs
     app_paths = []
-    zip_path = os.path.join(work_dir, "{}.zip".format(path_attr))
+    zip_path = os.path.join(work_dir, "notarization.zip")
     for app in all_paths:
         app.check_required_attrs(required_attrs)
-        app_paths.append(os.path.relpath(getattr(app, path_attr), work_dir))
+        for path_attr in path_attrs:
+            app_paths.append(os.path.relpath(getattr(app, path_attr), work_dir))
     await run_command(["zip", "-r", zip_path, *app_paths], cwd=work_dir, exception=IScriptError)
     return zip_path
 
@@ -1053,7 +1054,7 @@ async def notarize_behavior(config, task):
         await create_all_notarization_zipfiles(all_paths, path_attrs=["app_path", "pkg_path"])
         poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths, path_attr="zip_path")
     else:
-        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, path_attr="app_path")
+        zip_path = await create_one_notarization_zipfile(work_dir, all_paths)
         poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
 
     await poll_all_notarization_status(key_config, poll_uuids)
@@ -1112,7 +1113,7 @@ async def notarize_1_behavior(config, task):
         await create_all_notarization_zipfiles(all_paths, path_attrs=["app_path", "pkg_path"])
         poll_uuids = await wrap_notarization_with_sudo(config, key_config, all_paths, path_attr="zip_path")
     else:
-        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, path_attr="app_path")
+        zip_path = await create_one_notarization_zipfile(work_dir, all_paths)
         poll_uuids = await notarize_no_sudo(work_dir, key_config, zip_path)
 
     # create uuid_manifest.json
