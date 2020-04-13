@@ -42,7 +42,7 @@ async def claim_work(config, worker_queue, num_tasks=1):
     payload = {"workerGroup": config["worker_group"], "workerId": config["worker_id"], "tasks": num_tasks}
     try:
         return await worker_queue.claimWork(config["provisioner_id"], config["worker_type"], payload)
-    except (taskcluster.exceptions.TaskclusterFailure, aiohttp.ClientError) as exc:
+    except (taskcluster.exceptions.TaskclusterFailure, aiohttp.ClientError, asyncio.TimeoutError) as exc:
         log.warning("{} {}".format(exc.__class__, exc))
 
 
