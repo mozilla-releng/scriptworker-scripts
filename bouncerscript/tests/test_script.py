@@ -114,7 +114,7 @@ async def test_bouncer_aliases(aliases_context, mocker, scope):
 
     await bouncer_aliases(aliases_context)
 
-    if 'nazgul' in scope:
+    if "nazgul" in scope:
         assert counter_no_op.calls == 0
     else:
         assert counter_no_op.calls == 1
