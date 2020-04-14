@@ -15,7 +15,15 @@ class UnknownAppDir(IScriptError):
 
 
 class InvalidNotarization(IScriptError):
-    """Apple returned an invalid status for notarization."""
+    """Apple returned an invalid status during notarization polling."""
+
+
+class ThrottledNotarization(IScriptError):
+    """Apple returned an error telling us we hit our upload limit."""
+
+
+class UnknownNotarizationError(IScriptError):
+    """Apple returned an unknown error response during notarization submission."""
 
 
 class TimeoutError(IScriptError):
