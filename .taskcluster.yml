@@ -44,6 +44,7 @@ tasks:
         - ['signingscript',   '38',             '',                        'mozilla/releng-signingscript']
         - ['treescript',      '37',             '',                        '']
         - ['treescript',      '38',             '',                        'mozilla/releng-treescript']
+        - ['pypiscript',      '38',             '',                        'mozilla/releng-pypiscript']
     # -------------------------------------------------------------------------
 
     HEAD_REV:
