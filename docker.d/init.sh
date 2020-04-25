@@ -48,6 +48,7 @@ case $ENV in
     export WORKER_SUFFIX="-dev"
     ;;
   *)
+    echo "Unknown ENV $ENV"
     exit 1
     ;;
 esac
@@ -74,6 +75,7 @@ case $COT_PRODUCT in
     export TRUST_DOMAIN=adhoc
     ;;
   *)
+    echo "Unknown COT_PRODUCT $COT_PRODUCT"
     exit 1
     ;;
 esac
