@@ -1,14 +1,13 @@
+import functools
 import json
 import logging
-import time
 
 import arrow
-import requests
 from balrogclient import Release, ReleaseState, Rule, ScheduledRuleChange, SingleLocale
 from redo import retry
 from requests.exceptions import HTTPError
 
-from ..apiv2 import get_balrog_api
+from ..apiv2 import do_balrog_req
 from .release import buildbot2bouncer, buildbot2ftp, buildbot2updatePlatforms, getPrettyVersion, getProductDetails, makeCandidatesDir
 from .util import recursive_update
 
@@ -159,23 +158,8 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
             blob["hashFunction"] = hashFunction
             blob["name"] = name
             data = {"product": productName, "blob": blob}
-            headers = {"Accept-Encoding": "application/json", "Accept": "application/json", "Content-Type": "application/json", "Referer": self.api_root}
-            requests_api = get_balrog_api(auth0_secrets=self.auth0_secrets)
             url = self.api_root + "/v2/" + name
-            logging.debug("Balrog request to {url} via PUT", url)
-            logging.debug("Data sent: %s", json.dumps(data))
-            before = time.time()
-            resp = requests_api.put(url, data=json.dumps(data), headers=headers)
-            try:
-                resp.raise_for_status()
-                return
-            except requests.HTTPError as excp:
-                logging.error("Caught HTTPError: %s", excp.response.content)
-                raise
-            finally:
-                stats = {"timestamp": time.time(), "method": "PUT", "url": url, "status_code": resp.status_code, "elapsed_secs": time.time() - before}
-                logging.debug("REQUEST STATS: %s", json.dumps(stats))
-            return
+            do_balrog_req(url, data, method="put", auth0_secrets=self.auth0_secrets)
         else:
             log.info("Using legacy backend version...")
             api = Release(name=name, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
@@ -310,24 +294,7 @@ class NightlySubmitterBase(object):
         self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs
     ):
         log.info("Using backend version 2...")
-        requests_api = get_balrog_api(auth0_secrets=self.auth0_secrets)
-        headers = {"Accept-Encoding": "application/json", "Accept": "application/json", "Content-Type": "application/json", "Referer": self.api_root}
-
-        def do_request(url, method="get", data=None):
-            logging.debug("Balrog request to %s via %s", url, method.upper())
-            logging.debug("Data sent: %s", None)
-            before = time.time()
-            resp = requests_api.request(method=method, url=url, headers=headers, data=data)
-            try:
-                resp.raise_for_status()
-                return json.loads(resp.content)
-                log.info("Data recieved: %s", json.dumps(existing_release))
-            except requests.HTTPError as excp:
-                logging.error("Caught HTTPError: %s", excp.response.content)
-                raise
-            finally:
-                stats = {"timestamp": time.time(), "method": method.upper(), "url": url, "status_code": resp.status_code, "elapsed_secs": time.time() - before}
-                logging.debug("REQUEST STATS: %s", json.dumps(stats))
+        balrog_api = functools.partial(do_balrog_req, auth0_secrets=self.auth0_secrets)
 
         targets = buildbot2updatePlatforms(platform)
         build_target = targets[0]
@@ -362,24 +329,19 @@ class NightlySubmitterBase(object):
                 log.warning("Dated data didn't change, skipping update")
                 return
             # explicitly pass data version
-            blob = {"blob": {"platforms": {build_target: {"locales": {locale: data}}}}, "old_data_versions": {"platforms": {build_target: {"locales": {}}}}}
+            new_data = {"blob": {"platforms": {build_target: {"locales": {locale: data}}}}, "old_data_versions": {"platforms": {build_target: {"locales": {}}}}}
             if existing_release.get("old_data_versions", {}).get("platforms", {}).get(build_target, {}).get("locales", {}).get(locale):
-                blob["old_data_versions"]["platforms"][build_target]["locales"][locale] = existing_release["old_data_versions"]["platforms"][build_target][
+                new_data["old_data_versions"]["platforms"][build_target]["locales"][locale] = existing_release["old_data_versions"]["platforms"][build_target][
                     "locales"
                 ][locale]
-            do_request(url=url, method="post", data=json.dumps(blob))
+            balrog_api(url=url, method="post", json=new_data)
 
-        name = get_nightly_blob_name(productName, branch, build_type, buildID, self.dummy)
-        url = self.api_root + "/v2/" + name
-        existing_release = do_request(url)
-        existing_locale_data = existing_release["blob"].get(build_type, {}).get("locales", {}).get(locale)
-        update_data(url, existing_release, existing_locale_data)
-
-        name = get_nightly_blob_name(productName, branch, build_type, "latest", self.dummy)
-        url = self.api_root + "/v2/" + name
-        existing_release = do_request(url)
-        existing_locale_data = existing_release["blob"].get(build_type, {}).get("locales", {}).get(locale)
-        update_data(url, existing_release, existing_locale_data)
+        for identifier in (buildID, "latest"):
+            name = get_nightly_blob_name(productName, branch, build_type, identifier, self.dummy)
+            url = self.api_root + "/v2/" + name
+            existing_release = balrog_api(url=url)
+            existing_locale_data = existing_release["blob"].get(build_type, {}).get("locales", {}).get(locale)
+            update_data(url, existing_release, existing_locale_data)
 
 
 class MultipleUpdatesNightlyMixin(object):
@@ -471,23 +433,8 @@ class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
                 # XXX old_data_versions here is currently required but shouldn't be
                 "old_data_versions": {"platforms": {build_target: {"locales": {}}}},
             }
-            headers = {"Accept-Encoding": "application/json", "Accept": "application/json", "Content-Type": "application/json", "Referer": self.api_root}
-            requests_api = get_balrog_api(auth0_secrets=self.auth0_secrets)
             url = self.api_root + "/v2/" + name
-            logging.debug("Balrog request to {url} via POST", url)
-            logging.debug("Data sent: %s", json.dumps(blob))
-            before = time.time()
-            resp = requests_api.post(url, data=json.dumps(blob), headers=headers)
-            try:
-                resp.raise_for_status()
-                return
-            except requests.HTTPError as excp:
-                logging.error("Caught HTTPError: %s", excp.response.content)
-                raise
-            finally:
-                stats = {"timestamp": time.time(), "method": "POST", "url": url, "status_code": resp.status_code, "elapsed_secs": time.time() - before}
-                logging.debug("REQUEST STATS: %s", json.dumps(stats))
-            return
+            do_balrog_req(url=url, method="post", data=blob, auth0_secrets=self.auth0_secrets)
         else:
             log.info("Using legacy backend version...")
             api = SingleLocale(name=name, build_target=build_target, locale=locale, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
