@@ -334,7 +334,7 @@ class NightlySubmitterBase(object):
                 new_data["old_data_versions"]["platforms"][build_target]["locales"][locale] = existing_release["old_data_versions"]["platforms"][build_target][
                     "locales"
                 ][locale]
-            balrog_api(url=url, method="post", json=new_data)
+            balrog_api(url=url, method="post", data=new_data)
 
         for identifier in (buildID, "latest"):
             name = get_nightly_blob_name(productName, branch, build_type, identifier, self.dummy)
