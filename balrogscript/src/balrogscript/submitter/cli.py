@@ -339,7 +339,14 @@ class NightlySubmitterBase(object):
         for identifier in (buildID, "latest"):
             name = get_nightly_blob_name(productName, branch, build_type, identifier, self.dummy)
             url = self.api_root + "/v2/releases/" + name
-            existing_release = balrog_api(url=url)
+            try:
+                existing_release = balrog_api(url=url)
+            except HTTPError as excp:
+                if excp.response.status_code == 404:
+                    log.info("No existing release %s, using empty data", name)
+                    existing_release = {"blob": {}}
+                else:
+                    raise
             existing_locale_data = existing_release["blob"].get(build_type, {}).get("locales", {}).get(locale)
             update_data(url, existing_release, existing_locale_data)
 
