@@ -68,11 +68,15 @@ _BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT = {
     ),
 }
 
-_BOUNCER_PATH_REGEXES_PER_PRODUCT_MSI = {
+_BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT = {
     **_BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT,
     "firefox-nightly-msi-latest-ssl": (r"^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.en-US\." r"(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$"),
     "firefox-nightly-msi-latest-l10n-ssl": (
         r"^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\." r"(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$"
+    ),
+    "firefox-nightly-pkg-latest-ssl": (r"^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.en-US\." r"(?:mac\.pkg))$"),
+    "firefox-nightly-pkg-latest-l10n-ssl": (
+        r"^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\." r"(?:mac\.pkg))$"
     ),
 }
 
@@ -81,7 +85,11 @@ _BOUNCER_PATH_REGEXES_PER_PRODUCT_FENNEC = {
 }
 
 
-BOUNCER_PATH_REGEXES_PER_PRODUCT = [_BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT, _BOUNCER_PATH_REGEXES_PER_PRODUCT_MSI, _BOUNCER_PATH_REGEXES_PER_PRODUCT_FENNEC]
+BOUNCER_PATH_REGEXES_PER_PRODUCT = [
+        _BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT,
+        _BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT,
+        _BOUNCER_PATH_REGEXES_PER_PRODUCT_FENNEC,
+]
 
 # XXX A list of tuple is used because we care about the order:
 # the firefox regex also matches the firefox-rc regex.
