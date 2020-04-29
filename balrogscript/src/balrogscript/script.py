@@ -242,16 +242,16 @@ def get_default_config():
 # main {{{1
 async def async_main(config, task):
     behavior = get_task_behavior(task, config)
-    validate_task_schema(config, task, behavior)
-
-    server = get_task_server(task, config)
-    auth0_secrets, config = update_config(config, server)
-
     # Eventually remove backend_version = 1 when not needed.
     backend_version = 1
     if behavior.startswith("v2-"):
         behavior = behavior[3:]
         backend_version = 2
+
+    validate_task_schema(config, task, behavior)
+
+    server = get_task_server(task, config)
+    auth0_secrets, config = update_config(config, server)
 
     if behavior == "submit-toplevel":
         submit_toplevel(task, config, auth0_secrets, backend_version)
