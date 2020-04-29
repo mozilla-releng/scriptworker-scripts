@@ -158,7 +158,7 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
             blob["hashFunction"] = hashFunction
             blob["name"] = name
             data = {"product": productName, "blob": blob}
-            url = self.api_root + "/v2/" + name
+            url = self.api_root + "/v2/releases/" + name
             do_balrog_req(url, data, method="put", auth0_secrets=self.auth0_secrets)
         else:
             log.info("Using legacy backend version...")
@@ -338,7 +338,7 @@ class NightlySubmitterBase(object):
 
         for identifier in (buildID, "latest"):
             name = get_nightly_blob_name(productName, branch, build_type, identifier, self.dummy)
-            url = self.api_root + "/v2/" + name
+            url = self.api_root + "/v2/releases/" + name
             existing_release = balrog_api(url=url)
             existing_locale_data = existing_release["blob"].get(build_type, {}).get("locales", {}).get(locale)
             update_data(url, existing_release, existing_locale_data)
@@ -433,7 +433,7 @@ class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
                 # XXX old_data_versions here is currently required but shouldn't be
                 "old_data_versions": {"platforms": {build_target: {"locales": {}}}},
             }
-            url = self.api_root + "/v2/" + name
+            url = self.api_root + "/v2/releases/" + name
             do_balrog_req(url=url, method="post", data=blob, auth0_secrets=self.auth0_secrets)
         else:
             log.info("Using legacy backend version...")
