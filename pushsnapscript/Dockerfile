@@ -18,7 +18,6 @@ WORKDIR /app
 COPY . /app
 
 RUN python -m venv /app \
- && ./bin/pip install --upgrade pip \
  && cd pushsnapscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
