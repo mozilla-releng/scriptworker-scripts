@@ -209,6 +209,7 @@ def test_check_locations_match(locations, product_config, raises):
             ("Firefox-65.0b13-msi-SSL", "/firefox/releases/65.0b13/win64/:lang/Firefox%20Setup%2065.0b13.msi", False),
             ("Devedition-65.0b13-msi-SSL", "/devedition/releases/65.0b13/win64/:lang/Firefox%20Setup%2065.0b13.msi", False),
             ("Thunderbird-65.0b13-msi-SSL", "/firefox/releases/65.0b13/win64/:lang/Thunderbird%20Setup%2065.0b13.msi", True),
+            ("Firefox-65.0b13-pkg-SSL", "/firefox/releases/65.0b13/win64/:lang/Firefox%20Setup%2065.0b13.pkg", False),
             ("Firefox-61.0b15", "/firefox/releases/61.0b15/mac/:lang/Firefox%2061.0b15.dmg", False),
             ("Firefox-61.0b15", "/devedition/releases/61.0b15/win64/:lang/Firefox%20Setup%2061.0b15.exe", True),
             ("Firefox-61.0b15-Complete", "/firefox/releases/61.0b15/update/win64/:lang/firefox-61.0b15.complete.mar", False),
