@@ -16,16 +16,20 @@ ALIASES_REGEXES = {
     "firefox-beta-latest": r"^Firefox-\d+\.0b\d+$",
     "firefox-beta-latest-ssl": r"^Firefox-\d+\.0b\d+-SSL$",
     "firefox-beta-msi-latest-ssl": r"^Firefox-\d+\.0b\d+-msi-SSL$",
+    "firefox-beta-pkg-latest-ssl": r"^Firefox-\d+\.0b\d+-pkg-SSL$",
     "firefox-stub": r"^Firefox-\d+\.\d+(\.\d+)?-stub$",
     "firefox-latest": r"^Firefox-\d+\.\d+(\.\d+)?$",
     "firefox-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?-SSL$",
     "firefox-msi-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?-msi-SSL$",
+    "firefox-pkg-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?-pkg-SSL$",
     "firefox-esr-latest": r"^Firefox-\d+\.\d+(\.\d+)?esr$",
     "firefox-esr-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-SSL$",
     "firefox-esr-msi-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-msi-SSL$",
+    "firefox-esr-pkg-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-pkg-SSL$",
     "firefox-esr-next-latest": r"^Firefox-\d+\.\d+(\.\d+)?esr$",
     "firefox-esr-next-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-SSL$",
     "firefox-esr-next-msi-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-msi-SSL$",
+    "firefox-esr-next-pkg-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-pkg-SSL$",
     "firefox-sha1": r"^Firefox-\d+\.\d+(\.\d+)?esr-sha1$",
     "firefox-sha1-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-sha1$",
 }
@@ -42,7 +46,7 @@ PARTNER_ALIASES_REGEX = {
 PRODUCT_TO_DESTINATIONS_REGEXES = {
     "fennec": r"^(/mobile/releases/.*?/(?:android-api-16|android-x86)/\:lang/fennec-.*\:lang\.(?:android-arm|android-i386)\.apk)$",
     "firefox-rc": r"^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$",
-    "firefox": r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi))$",
+    "firefox": r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|pkg))$",
     "devedition": r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi))$",
     "thunderbird": (
         r"^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/" r"(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar|msi))$"
@@ -68,12 +72,14 @@ _BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT = {
     ),
 }
 
-_BOUNCER_PATH_REGEXES_PER_PRODUCT_MSI = {
+_BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT = {
     **_BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT,
     "firefox-nightly-msi-latest-ssl": (r"^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.en-US\." r"(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$"),
     "firefox-nightly-msi-latest-l10n-ssl": (
         r"^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\." r"(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$"
     ),
+    "firefox-nightly-pkg-latest-ssl": (r"^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.en-US\." r"(?:mac\.pkg))$"),
+    "firefox-nightly-pkg-latest-l10n-ssl": (r"^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\." r"(?:mac\.pkg))$"),
 }
 
 _BOUNCER_PATH_REGEXES_PER_PRODUCT_FENNEC = {
@@ -81,7 +87,11 @@ _BOUNCER_PATH_REGEXES_PER_PRODUCT_FENNEC = {
 }
 
 
-BOUNCER_PATH_REGEXES_PER_PRODUCT = [_BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT, _BOUNCER_PATH_REGEXES_PER_PRODUCT_MSI, _BOUNCER_PATH_REGEXES_PER_PRODUCT_FENNEC]
+BOUNCER_PATH_REGEXES_PER_PRODUCT = [
+    _BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT,
+    _BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT,
+    _BOUNCER_PATH_REGEXES_PER_PRODUCT_FENNEC,
+]
 
 # XXX A list of tuple is used because we care about the order:
 # the firefox regex also matches the firefox-rc regex.
