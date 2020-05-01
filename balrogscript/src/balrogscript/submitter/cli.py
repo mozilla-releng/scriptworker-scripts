@@ -303,18 +303,10 @@ class NightlySubmitterBase(object):
             alias = targets[1:]
             log.debug("alias entry of %s ignored...", json.dumps(alias))
         data = {"buildID": buildID, "appVersion": appVersion, "platformVersion": extVersion, "displayVersion": appVersion}
-        if isOSUpdate:
-            data["isOSUpdate"] = isOSUpdate
 
         data.update(self._get_update_data(productName, branch, **updateKwargs))
 
-        if "old-id" in platform:
-            # bug 1366034: support old-id builds
-            # Like 1055305, this is a hack to support two builds with same build target that
-            # require differed't release blobs and rules
-            build_type = "old-id-%s" % self.build_type
-        else:
-            build_type = self.build_type
+        build_type = self.build_type
 
         # wrap operations into "atomic" functions that can be retried
         def update_data(url, existing_release, existing_locale_data):
@@ -428,20 +420,20 @@ class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
         build_target = targets[0]
 
         name = get_release_blob_name(productName, version, build_number, self.suffix)
-        data = {"buildID": buildID, "appVersion": appVersion, "displayVersion": getPrettyVersion(version)}
+        locale_data = {"buildID": buildID, "appVersion": appVersion, "displayVersion": getPrettyVersion(version)}
 
-        data.update(self._get_update_data(productName, version, build_number, **updateKwargs))
+        locale_data.update(self._get_update_data(productName, version, build_number, **updateKwargs))
 
         if self.backend_version == 2:
             log.info("Using backend version 2...")
             # XXX Check for existing data_version for this locale
-            blob = {
-                "blob": {"platforms": {build_target: {"locales": {locale: data}}}},
+            data = {
+                "blob": {"platforms": {build_target: {"locales": {locale: locale_data}}}},
                 # XXX old_data_versions here is currently required but shouldn't be
                 "old_data_versions": {"platforms": {build_target: {"locales": {}}}},
             }
             url = self.api_root + "/v2/releases/" + name
-            do_balrog_req(url=url, method="post", data=blob, auth0_secrets=self.auth0_secrets)
+            do_balrog_req(url=url, method="post", data=data, auth0_secrets=self.auth0_secrets)
         else:
             log.info("Using legacy backend version...")
             api = SingleLocale(name=name, build_target=build_target, locale=locale, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
