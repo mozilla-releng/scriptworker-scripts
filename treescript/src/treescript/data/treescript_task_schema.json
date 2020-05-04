@@ -22,6 +22,14 @@
                 "merge_old_head"
             ],
             "properties": {
+                "fetch_version_from": {
+                    "type": "string",
+                    "description": "File path to query for version information, used in tags.",
+                    "default": "browser/config/version.txt",
+                    "examples": [
+                        "browser/config/version.txt"
+                    ]
+                },
                 "version_files": {
                     "type": "array",
                     "items": {

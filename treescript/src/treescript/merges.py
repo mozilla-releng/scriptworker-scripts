@@ -97,7 +97,7 @@ async def apply_rebranding(config, repo_path, merge_config):
     log.info("Rebranding %s to %s", merge_config.get("from_branch"), merge_config.get("to_branch"))
 
     # Must collect this before any bumping.
-    version = get_version("browser/config/version.txt", repo_path)
+    version = get_version(core_version_file(merge_config), repo_path)
     # Used in file replacements, further down.
     format_options = {
         "current_major_version": version.major_number,
@@ -146,6 +146,14 @@ async def preserve_tags(config, repo_path, to_branch):
         await run_hg_command(config, "commit", "-m", "Preserve old tags after debusetparents. CLOSED TREE DONTBUILD a=release", repo_path=repo_path)
 
 
+def core_version_file(merge_config):
+    """Determine which file to query for the 'main' version.
+
+    In a function to avoid duplication of the default value.
+    """
+    return merge_config.get("fetch_version_from", "browser/config/version.txt")
+
+
 # do_merge {{{1
 async def do_merge(config, task, repo_path):
     """Perform a merge day operation.
@@ -175,7 +183,7 @@ async def do_merge(config, task, repo_path):
 
     # Used if end_tag is set.
     await run_hg_command(config, "up", "-C", to_branch, repo_path=repo_path)
-    to_fx_major_version = get_version("browser/config/version.txt", repo_path).major_number
+    to_fx_major_version = get_version(core_version_file(merge_config), repo_path).major_number
     base_to_rev = await get_revision(config, repo_path, branch=to_branch)
 
     if from_branch:
@@ -184,7 +192,7 @@ async def do_merge(config, task, repo_path):
 
     base_tag = merge_config.get("base_tag")
     if base_tag:
-        base_tag = base_tag.format(major_version=get_version("browser/config/version.txt", repo_path).major_number)
+        base_tag = base_tag.format(major_version=get_version(core_version_file(merge_config), repo_path).major_number)
         tag_message = f"No bug - tagging {base_from_rev} with {base_tag} a=release DONTBUILD CLOSED TREE"
         await run_hg_command(config, "tag", "-m", tag_message, "-r", base_from_rev, "-f", base_tag, repo_path=repo_path)
 
