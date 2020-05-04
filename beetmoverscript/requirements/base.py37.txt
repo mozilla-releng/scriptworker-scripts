@@ -35,13 +35,13 @@ attrs==19.3.0 \
     --hash=sha256:08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c \
     --hash=sha256:f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72 \
     # via aiohttp, jsonschema, mozilla-version
-boto3==1.13.1 \
-    --hash=sha256:6374e39ea66433250ac6e4726623fe59ec32bfd52e5c871140c883ab72b0375c \
-    --hash=sha256:7a2474db6576d7d3f5c3336ec54450e34211d44e2342e501a67e2fae35916e63 \
+boto3==1.13.2 \
+    --hash=sha256:91b34fac764c908f2e9553607fb0f2c56adc6b9df76e1f313dc190af512849c8 \
+    --hash=sha256:fc8511eda662d7b4b10bce55153cf65b89c41d86b65162bc0d15b89547d3d837 \
     # via -r base.in
-botocore==1.16.1 \
-    --hash=sha256:879cedb22baf9446323240f1cf57d4e0e7ba262ba6fde6d3540cf7fdd7ddad34 \
-    --hash=sha256:c6d3dd976c1462a4e0f2dabde09c38de2a641e6b6bb0af505ac8465735796367 \
+botocore==1.16.2 \
+    --hash=sha256:102534a1d98a70bf6ecacf51c3cef2ef09587039aef064ad076bd2e36dd4c441 \
+    --hash=sha256:8ef5b178b76920f6f11169ad69ff30e297044aab4c34d1e92f26221faaa033ed \
     # via boto3, s3transfer
 certifi==2020.4.5.1 \
     --hash=sha256:1d987a998c75633c40847cc966fcf5904906c920a7f17ef374f5aa4282abd304 \
@@ -247,9 +247,9 @@ s3transfer==0.3.3 \
     --hash=sha256:2482b4259524933a022d59da830f51bd746db62f047d6eb213f2f8855dcb8a13 \
     --hash=sha256:921a37e2aefc64145e7b73d50c71bb4f26f46e4c9f414dc648c6245ff92cf7db \
     # via boto3
-scriptworker==34.0.0 \
-    --hash=sha256:4958cbe9934ce89dba50512c1b7dc50947d85b585631b93b250beffc8d97511c \
-    --hash=sha256:7dcaca70d70db5f33ebe7fcdebd2d610dd0041ad39b148a3364acb80ae648972 \
+scriptworker==34.1.0 \
+    --hash=sha256:2d8bf01c249d6f6423366c7d03c20ae5e80a9d7d47fd058b0298a2bca02a7df7 \
+    --hash=sha256:74a2cbbb78d8d3b2d05c44e5be2815a7f2222fe2165df46d3f005d7f59673a7e \
     # via -r base.in
 six==1.14.0 \
     --hash=sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a \
@@ -263,10 +263,10 @@ taskcluster-urls==12.1.0 \
     --hash=sha256:1dc740c32c7beb31e11ed7ccf9da2d47a504acdb3170c8900649433b0fd16fb2 \
     --hash=sha256:4a62c776aeba6d45044789a8845ec4d8521bc1bb6ebfc86d79ee759bcdd4f2f7 \
     # via taskcluster
-taskcluster==29.2.0 \
-    --hash=sha256:7a5755b7442b73628ba7ddd58efd6b2acc9227c2c74e2db7267cd317c579bcd1 \
-    --hash=sha256:910470e6372f4f2f3c0b414d9cd85865894edf738ba24e679956ff9cef2a2ecc \
-    --hash=sha256:c2ddbd22f2206d8e4f9ff499ce2c4e5295bd2d4485e3197fcc467e5fde0c2222 \
+taskcluster==29.3.0 \
+    --hash=sha256:1f75471680f5997f4a4f8c67fec96c6efec49c1f80fca7a10063912eeae894c8 \
+    --hash=sha256:286e171402aa20c79953cce18d4712c952c249352844c1fc42ea5f6cac470bdc \
+    --hash=sha256:919bd01dd99df758a5cb4744eec3846905e0d829cb5ef302cf3179af662bab72 \
     # via scriptworker
 uritemplate==3.0.1 \
     --hash=sha256:07620c3f3f8eed1f12600845892b0e036a2420acf513c53f7de0abd911a5894f \
