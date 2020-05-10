@@ -72,5 +72,6 @@ pub fn scriptworker_main<Config, A, E>(
     // TODO: Statuses
 }
 
-#[cfg(not(test))] // Work around for rust-lang/rust#62127
+#[cfg(not(test))]
+// Work around for rust-lang/rust#62127
 pub use scriptworker_script_macros::main;
