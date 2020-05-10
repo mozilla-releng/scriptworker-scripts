@@ -14,6 +14,7 @@ tasks:
         setup_pushapkscript:  'apt-get update && apt-get install -y default-jdk &&'
         setup_pushsnapscript: 'apt-get update && apt-get install -y libsodium-dev && truncate -s 0 /etc/os-release &&'
         setup_pushflatpakscript: 'apt-get update && apt-get install -y gir1.2-ostree-1.0 libgirepository1.0-dev &&'
+        setup_rust: 'rustup component add clippy rustfmt &&'
       in:
         # [ <PROJECT NAME>,   <PYTHON VERSION>, <SETUP COMMAND>,           <DOCKERHUB REPO>]
         - ['client',          '37',             '',                        '']
@@ -44,6 +45,8 @@ tasks:
         - ['signingscript',   '38',             '',                        'mozilla/releng-signingscript']
         - ['treescript',      '37',             '',                        '']
         - ['treescript',      '38',             '',                        'mozilla/releng-treescript']
+        - ['pypiscript',      '38',             '',                        'mozilla/releng-pypiscript']
+        - ['rust',            'rust',           '${setup_rust}',           '']
     # -------------------------------------------------------------------------
 
     HEAD_REV:
@@ -68,6 +71,8 @@ tasks:
         $if: 'tasks_for == "github-push" && event.ref[0:11] == "refs/heads/"'
         then: '${event.ref[11:]}'
         else: 'unknown'
+
+    rust_version: 1.43
   in:
     $flatten:
       $map: { "$eval": "PROJECTS" }
@@ -115,7 +120,7 @@ tasks:
         in:
           $match:
             # Run code linting and unit tests for each project
-            'run_tests == "1"':
+            'run_tests == "1" && project_name != "rust"':
               taskId: '${as_slugid(project_name + python_version)}'
               provisionerId: 'releng-t'
               workerType: 'linux'
@@ -145,6 +150,37 @@ tasks:
                   in:
                     '${number_prefix}${test_task_number}. ${project_name}-py${python_version}: Run tox [on ${BRANCH_NAME}]'
                 description: 'Code linting and unit tests for ${project_name} on python ${python_version[0]}.${python_version[1]}'
+                owner: '${OWNER}'
+                source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
+            'run_tests == "1" && project_name == "rust"':
+              taskId: '${as_slugid("rust")}'
+              provisionerId: 'releng-t'
+              workerType: 'linux'
+              created: { $fromNow: '' }
+              deadline: { $fromNow: '4 hours' }
+              payload:
+                maxRunTime: 3600
+                image: 'rust:${rust_version}'
+                command:
+                  - sh
+                  - -xce
+                  - >-
+                    cd /tmp &&
+                    wget ${REPO_URL}/archive/${HEAD_REV}.tar.gz &&
+                    tar zxf ${HEAD_REV}.tar.gz &&
+                    mv scriptworker-scripts-${HEAD_REV} /src &&
+                    cd /src && ${setup_command}
+                    cargo test && cargo clippy && cargo fmt -- --check
+              metadata:
+                name:
+                  $let:
+                    test_task_number:
+                      $if: 'dockerhub_repo != ""'
+                      then: '${i+1}.1'
+                      else: '${i+1}'
+                  in:
+                    '${number_prefix}${test_task_number}. ${project_name}: Run rust checks [on ${BRANCH_NAME}]'
+                description: 'Code linting and unit tests for rust code on rust ${rust_version}'
                 owner: '${OWNER}'
                 source: '${REPO_URL}/raw/${HEAD_REV}/.taskcluster.yml'
             # Build docker image and (optionally) push to docker hub

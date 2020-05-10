@@ -74,6 +74,9 @@ case $COT_PRODUCT in
   adhoc)
     export TRUST_DOMAIN=adhoc
     ;;
+  releng)
+    export TRUST_DOMAIN=releng
+    ;;
   *)
     echo "Unknown COT_PRODUCT $COT_PRODUCT"
     exit 1
@@ -114,6 +117,7 @@ export WORK_DIR=/app/workdir
 export WORKER_TYPE="${TRUST_DOMAIN}-${TRUST_LEVEL}-${PROJECT_NAME}${WORKER_SUFFIX}"
 export WORKER_GROUP=${WORKER_TYPE}
 export WORKER_ID_PREFIX="${WORKER_TYPE}-"
+export PASS_WORK_DIR=false
 
 #
 # ensure configuration folder exists we can write to it

@@ -14,6 +14,7 @@ task_max_timeout: 3600
 task_script:
   - { "$eval": "TASK_SCRIPT" }
   - { "$eval": "TASK_CONFIG" }
+  - { "$if": "PASS_WORK_DIR == 'true'", then: "${WORK_DIR}" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 verify_chain_of_trust: { "$eval": "VERIFY_CHAIN_OF_TRUST == 'true'" }
 sign_chain_of_trust: { "$eval": "SIGN_CHAIN_OF_TRUST == 'true'" }
@@ -30,3 +31,39 @@ scriptworker_provisioners:
     - { "$eval": "PROVISIONER_ID" }
     - scriptworker-prov-v1  # keep for mac-v3-signing
 ed25519_private_key_path: { "$eval": "ED25519_PRIVKEY_PATH" }
+
+valid_decision_worker_pools:
+    by-cot-product:
+        releng:
+            - releng-1/linux
+            - releng-3/linux
+valid_docker_image_worker_pools:
+    by-cot-product:
+        releng:
+            - releng-1/linux
+            - releng-3/linux
+trusted_vcs_rules:
+    by-cot-product:
+        releng: []
+valid_tasks_for:
+    by-cot-product:
+        releng:
+            - "github-pull-request"
+            - "github-push"
+            - "github-release"
+official_github_repos_owner:
+    by-cot-product:
+        releng: mozilla-releng
+cot_restricted_scopes:
+    by-cot-product:
+        releng: []
+cot_restricted_trees:
+    by-cot-product:
+        releng: []
+prebuilt_docker_image_task_types:
+    - decision
+    - action
+    - docker-image
+source_env_prefix: RELENG
+
+project_configuration_url: https://hg.mozilla.org/ci/ci-configuration-try/raw-file/65ca84a9c40e1d7764dce2ed8469165191f6764a/projects.yml
