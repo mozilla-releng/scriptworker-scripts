@@ -25,7 +25,7 @@ Supported scope prefixes:
   * **Branch Restrictions**: `all-nightly-tasks`
   
 * `{scope_prefix}:action:push-to-partner`
-  * Tells beetmoverscript to move the corresponding artifacts of partner releases of Firefox to their corresonding private buckets
+  * Tells beetmoverscript to move the corresponding artifacts of partner releases of Firefox to their corresponding private buckets
   * **Conflicts**: with any other `{scope_prefix}:action:*`
   * **Branch Restrictions**: `all-candidates-tasks`
 

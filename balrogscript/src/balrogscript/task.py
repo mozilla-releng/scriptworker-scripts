@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 def validate_task_schema(script_config, task_definition, action):
-    """Perform a schema validation check against taks definition"""
+    """Perform a schema validation check against task definition"""
     schema_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), script_config["schema_files"][action])
     with open(schema_path) as fh:
         schema = json.load(fh)

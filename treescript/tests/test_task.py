@@ -267,7 +267,7 @@ def test_task_action_types_actions(actions):
 
 
 # task_task_action_types {{{1
-@pytest.mark.parametrize("actions", (["tag", "invalid"], ["invaid"]))
+@pytest.mark.parametrize("actions", (["tag", "invalid"], ["invalid"]))
 def test_task_action_types_actions_invalid(actions):
     task = {"payload": {"actions": actions}}
     with pytest.raises(TaskVerificationError):

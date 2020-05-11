@@ -439,7 +439,7 @@ def get_destination_for_partner_repack_path(context, manifest, full_path, locale
     performs several string manipulations.
 
     Input: 'releng/partner/ghost/ghost-var/v1/linux-i686/ro/target.tar.bz2'
-    Possible ouput(s):
+    Possible output(s):
         -> ghost/59.0b20-2/ghost-variant/v1/linux-i686/en-US/firefox-59.0b20.tar.bz2
         -> pub/firefox/candidates/59.0b20-candidates/build2/partner-repacks/ghost/ghost-variant/v1/linux-i686/en-US/firefox-59.0b20.tar.bz2
     """

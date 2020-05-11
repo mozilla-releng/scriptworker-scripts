@@ -33,7 +33,7 @@ def get_ship_it_instance_config_from_scope(context):
 
 
 def validate_task_schema(context):
-    """Perform a schema validation check against taks definition"""
+    """Perform a schema validation check against task definition"""
     action = get_task_action(context)
     schema_key = SCHEMA_MAP.get(action)
     client.validate_task_schema(context, schema_key=schema_key)

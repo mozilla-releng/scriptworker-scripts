@@ -65,7 +65,7 @@ The important entries to edit are the:
 
 Google Play allows a product to have 3 different tracks (`alpha`, `beta`, `production`). Tracks are used by end-users when they want to enroll in a beta-testing program.
 
-However, this feature wasn't out when we started publishing Fennec. This is why Fennec is registred as 3 different product: one for each regular Firefox channel (aurora, beta, release). As a consequence, here's how products/tracks should be used.
+However, this feature wasn't out when we started publishing Fennec. This is why Fennec is registered as 3 different product: one for each regular Firefox channel (aurora, beta, release). As a consequence, here's how products/tracks should be used.
 
 | Product | Brand name              | Track        | Notes |
 | ------- | ----------------------- | ------------ | ----- |
@@ -123,7 +123,7 @@ Sadly, no. The Google Play documentation doesn't mention any server we can plug 
 
 #### How can I avoid to publish to actual users?
 
-There are 3 incremental ways to avoid targetting real users (or the entire user base):
+There are 3 incremental ways to avoid targeting real users (or the entire user base):
 
 ##### 1. Use `"commit": false` in your task definition.
 

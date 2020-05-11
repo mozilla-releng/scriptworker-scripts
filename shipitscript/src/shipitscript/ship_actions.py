@@ -84,7 +84,7 @@ def start_new_release(shipit_config, product, product_key, branch, version, revi
     # grab the release name from the Ship-it create-release response
     release_name = release_details["name"]
 
-    # minimize the possiblity of a  race condition in between creating the
+    # minimize the possibility of a  race condition in between creating the
     # release and triggering the specific `phase`. This is still possbile, but
     # we're calling this just before the API call to minimize the time-window
     if releases_are_disabled(shipit_config, product, branch):

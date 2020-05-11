@@ -39,7 +39,7 @@ def build_hg_command(config, *args):
 
 # build_hg_environment {{{1
 def build_hg_environment():
-    """Generate an environment suitable for running mercurial programatically.
+    """Generate an environment suitable for running mercurial programmatically.
 
     This function sets the hgrc to one provided in the package and ensures
     environment variables which affect HG are defined in a stable way.

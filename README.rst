@@ -20,7 +20,7 @@ external resources.
 
 The latter, `releng-prod` withhold two sets of workers. The `level-3` workers
 which are the production ones. We use these workers to ship the real, production-ready
-releases, across our differenct products (Firefox, Thunderbird, Firefox for mobile related suite, etc).
+releases, across our different products (Firefox, Thunderbird, Firefox for mobile related suite, etc).
 In the same environment we also have the `level-1` workers which are used for
 staging releases. They co-exist here so that they are closer to production
 as possible.

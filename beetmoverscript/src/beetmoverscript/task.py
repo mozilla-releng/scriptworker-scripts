@@ -26,7 +26,7 @@ def get_schema_key_by_action(context):
 
 
 def validate_task_schema(context):
-    """Perform a schema validation check against taks definition"""
+    """Perform a schema validation check against task definition"""
     schema_key = get_schema_key_by_action(context)
     client.validate_task_schema(context, schema_key=schema_key)
 
