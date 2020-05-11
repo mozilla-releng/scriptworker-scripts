@@ -82,7 +82,7 @@ def get_supported_actions(script_config):
 
 
 def validate_task_schema(context):
-    """Perform a schema validation check against taks definition"""
+    """Perform a schema validation check against task definition"""
     action = get_task_action(context.task, context.config)
     schema_key = "schema_files.{}".format(action)
     client.validate_task_schema(context, schema_key=schema_key)

@@ -10,7 +10,7 @@ Create a `config.json`, using `config_example.json` as a guide.
 
 At runtime, the following environment variables can be set to override their corresponding `config.json` values:
 
-Scriptworker Specfic:
+Scriptworker Specific:
 - `TASKCLUSTER_CLIENT_ID`
 - `TASKCLUSTER_ACCESS_TOKEN`
 - `SCRIPTWORKER_WORKER_ID`

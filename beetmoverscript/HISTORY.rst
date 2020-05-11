@@ -236,7 +236,7 @@ Added
 Added
 ~~~~~
 
-- Added suppport for declarative artifacts
+- Added support for declarative artifacts
   (`#1466714 <https://bugzilla.mozilla.org/show_bug.cgi?id=1466714>`_)
 
 [7.10.2] = (2018-11-07)
@@ -254,7 +254,7 @@ Fixed
 Added
 ~~~~~
 
-- Added suppport in Firefox Desktop templates for windows msi installers
+- Added support in Firefox Desktop templates for windows msi installers
   (`#1475512 <https://bugzilla.mozilla.org/show_bug.cgi?id=1475512>`_)
 
 
