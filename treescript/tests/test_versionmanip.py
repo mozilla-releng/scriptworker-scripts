@@ -10,11 +10,11 @@ from treescript.script import get_default_config
 from treescript.task import DONTBUILD_MSG
 
 
-def is_slice_in_list(s, l):
+def is_slice_in_list(myslice, mylist):
     # Credit to https://stackoverflow.com/a/20789412/#answer-20789669
     # With edits by Callek to be py3 and pep8 compat
-    len_s = len(s)  # so we don't recompute length of s on every iteration
-    return any(s == l[i : len_s + i] for i in range(len(l) - len_s + 1))
+    len_s = len(myslice)  # so we don't recompute length of s on every iteration
+    return any(myslice == mylist[i : len_s + i] for i in range(len(mylist) - len_s + 1))
 
 
 @contextmanager
@@ -37,7 +37,7 @@ def repo_context(tmpdir, config, request, mocker):
     context.config = config
     context.xtest_version = request.param
     if "\n" in request.param:
-        context.xtest_version = [l for l in request.param.splitlines() if not l.startswith("#")][0]
+        context.xtest_version = [line for line in request.param.splitlines() if not line.startswith("#")][0]
     os.mkdir(context.repo)
     os.mkdir(os.path.join(context.repo, "config"))
     version_file = os.path.join(context.repo, "config", "milestone.txt")

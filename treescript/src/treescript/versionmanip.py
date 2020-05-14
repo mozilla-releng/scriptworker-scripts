@@ -63,7 +63,7 @@ def get_version(file_, parent_directory=None):
     log.info("Contents:")
     for line in contents.splitlines():
         log.info(" {}".format(line))
-    lines = [l for l in contents.splitlines() if l and not l.startswith("#")]
+    lines = [line for line in contents.splitlines() if line and not line.startswith("#")]
     return VersionClass.parse(lines[-1])
 
 

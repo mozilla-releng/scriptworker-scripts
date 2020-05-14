@@ -34,11 +34,11 @@ async def check_tags(_, tag_info, *args):
     return tag_info["tags"]
 
 
-def is_slice_in_list(s, l):
+def is_slice_in_list(myslice, mylist):
     # Credit to https://stackoverflow.com/a/20789412/#answer-20789669
     # With edits by Callek to be py3 and pep8 compat
-    len_s = len(s)  # so we don't recompute length of s on every iteration
-    return any(s == l[i : len_s + i] for i in range(len(l) - len_s + 1))
+    len_s = len(myslice)  # so we don't recompute length of s on every iteration
+    return any(myslice == mylist[i : len_s + i] for i in range(len(mylist) - len_s + 1))
 
 
 @pytest.yield_fixture(scope="function")
