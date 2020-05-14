@@ -1,13 +1,11 @@
-import functools
 import json
 import logging
 
 import arrow
-from balrogclient import Release, ReleaseState, Rule, ScheduledRuleChange, SingleLocale
+from balrogclient import Release, ReleaseState, Rule, ScheduledRuleChange, SingleLocale, balrog_request, get_balrog_session
 from redo import retry
 from requests.exceptions import HTTPError
 
-from ..apiv2 import do_balrog_req
 from .release import buildbot2bouncer, buildbot2ftp, buildbot2updatePlatforms, getPrettyVersion, getProductDetails, makeCandidatesDir
 from .util import recursive_update
 
@@ -159,7 +157,8 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
             blob["name"] = name
             data = {"product": productName, "blob": blob}
             url = self.api_root + "/v2/releases/" + name
-            do_balrog_req(url, data, method="put", auth0_secrets=self.auth0_secrets)
+            session = get_balrog_session(auth0_secrets=self.auth0_secrets)
+            balrog_request(session, "put", url, json=data)
         else:
             log.info("Using legacy backend version...")
             api = Release(name=name, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
@@ -294,7 +293,7 @@ class NightlySubmitterBase(object):
         self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs
     ):
         log.info("Using backend version 2...")
-        balrog_api = functools.partial(do_balrog_req, auth0_secrets=self.auth0_secrets)
+        session = get_balrog_session(auth0_secrets=self.auth0_secrets)
 
         targets = buildbot2updatePlatforms(platform)
         build_target = targets[0]
@@ -326,13 +325,13 @@ class NightlySubmitterBase(object):
                 new_data["old_data_versions"]["platforms"][build_target]["locales"][locale] = existing_release["old_data_versions"]["platforms"][build_target][
                     "locales"
                 ][locale]
-            balrog_api(url=url, method="post", data=new_data)
+            balrog_request(session, "post", url, json=new_data)
 
         for identifier in (buildID, "latest"):
             name = get_nightly_blob_name(productName, branch, build_type, identifier, self.dummy)
             url = self.api_root + "/v2/releases/" + name
             try:
-                existing_release = balrog_api(url=url)
+                existing_release = balrog_request(session, "get", url)
             except HTTPError as excp:
                 if excp.response.status_code == 404:
                     log.info("No existing release %s, using empty data", name)
@@ -433,7 +432,8 @@ class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
                 "old_data_versions": {"platforms": {build_target: {"locales": {}}}},
             }
             url = self.api_root + "/v2/releases/" + name
-            do_balrog_req(url=url, method="post", data=data, auth0_secrets=self.auth0_secrets)
+            session = get_balrog_session(auth0_secrets=self.auth0_secrets)
+            balrog_request(session, "post", url, json=data)
         else:
             log.info("Using legacy backend version...")
             api = SingleLocale(name=name, build_target=build_target, locale=locale, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
