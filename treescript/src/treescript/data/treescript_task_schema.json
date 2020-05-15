@@ -256,9 +256,11 @@
                         "enum": [
                             "tag",
                             "version_bump",
+                            "git_version_bump",
                             "l10n_bump",
                             "merge_day",
-                            "push"
+                            "push",
+                            "git_push"
                         ]
                     }
                 }

@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 
 # This list should be sorted in the order the actions should be taken
-VALID_ACTIONS = {"tag", "version_bump", "l10n_bump", "push", "merge_day"}
+VALID_ACTIONS = {"tag", "version_bump", "git_version_bump", "l10n_bump", "push", "git_push", "merge_day"}
 
 DONTBUILD_MSG = " DONTBUILD"
 CLOSED_TREE_MSG = " CLOSED TREE"
