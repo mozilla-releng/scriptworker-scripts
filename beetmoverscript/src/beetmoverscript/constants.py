@@ -89,8 +89,6 @@ RESTRICTED_BUCKET_PATHS = {
     "partner": [""],  # all legal
     "maven-production": ["maven2/"],
     "maven-staging": ["maven2/"],
-    "maven-snapshot-staging": ["maven2/"],
-    "maven-snapshot-production": ["maven2/"],
 }
 
 # actions that imply actual releases, hence the need of `build_number` and
