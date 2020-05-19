@@ -125,12 +125,6 @@ bucket_config:
             key: { "$eval": "MAVEN_KEY" }
           buckets:
             components: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
-        maven-snapshot-staging:
-          credentials:
-            id: { "$eval": "MAVEN_SNAPSHOT_ID" }
-            key: { "$eval": "MAVEN_SNAPSHOT_KEY" }
-          buckets:
-            snapshot_components: 'maven-snapshots-s3-upload-bucket-knc0jfluv2kn'
         maven-nightly-staging:
           credentials:
             id: { "$eval": "MAVEN_NIGHTLY_ID" }
@@ -145,12 +139,6 @@ bucket_config:
             key: { "$eval": "MAVEN_KEY" }
           buckets:
             components: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
-        maven-snapshot-production:
-          credentials:
-            id: { "$eval": "MAVEN_SNAPSHOT_ID" }
-            key: { "$eval": "MAVEN_SNAPSHOT_KEY" }
-          buckets:
-            snapshot_components: 'maven-snapshots-s3-upload-bucket-d4zm9oo354qe'
         maven-nightly-production:
           credentials:
             id: { "$eval": "MAVEN_NIGHTLY_ID" }
