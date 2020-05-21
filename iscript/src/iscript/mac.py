@@ -185,6 +185,7 @@ async def sign_geckodriver(config, key_config, all_paths):
         env = deepcopy(os.environ)
         # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
         env["COPYFILE_DISABLE"] = "1"
+        makedirs(os.path.dirname(app.target_tar_path))
         await run_command(
             ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path, file_], cwd=app.parent_dir, env=env, exception=IScriptError
         )
