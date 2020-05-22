@@ -9,7 +9,6 @@ Attributes:
 """
 import logging
 import os
-import re
 
 from immutabledict import immutabledict
 from scriptworker.exceptions import TaskVerificationError
@@ -35,8 +34,8 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         # XXX Bug 1618531 - Fennec is the only remaining APK product where we want to run zipalign
         # after autograph signed it. Others just default.
         "autograph_apk_fennec_sha1": sign_jar,
-        "autograph_hash_only_mar384(:\\w+)?": sign_mar384_with_autograph_hash,
-        "autograph_stage_mar384(:\\w+)?": sign_mar384_with_autograph_hash,
+        "autograph_hash_only_mar384": sign_mar384_with_autograph_hash,
+        "autograph_stage_mar384": sign_mar384_with_autograph_hash,
         "gpg": sign_gpg,
         "autograph_gpg": sign_gpg_with_autograph,
         "jar": sign_jar,
@@ -46,8 +45,8 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "autograph_widevine": sign_widevine,
         "autograph_omnija": sign_omnija,
         "autograph_langpack": sign_xpi,
-        "autograph_authenticode(:\\w+)?": sign_authenticode_zip,
-        "autograph_authenticode_stub(:\\w+)?": sign_authenticode_zip,
+        "autograph_authenticode": sign_authenticode_zip,
+        "autograph_authenticode_stub": sign_authenticode_zip,
         "privileged_webextension": sign_xpi,
         "system_addon": sign_xpi,
         "default": sign_file,
@@ -154,14 +153,8 @@ async def sign(context, path, signing_formats, **kwargs):
     return output
 
 
-def _get_signing_function_from_format(format):
-    try:
-        _, signing_function = get_single_item_from_sequence(FORMAT_TO_SIGNING_FUNCTION.items(), condition=lambda item: re.match(item[0], format) is not None)
-        return signing_function
-    except ValueError:
-        # Regex may catch several candidate. If so, we fall back to the exact match.
-        # If nothing matches, then we fall back to default
-        return FORMAT_TO_SIGNING_FUNCTION.get(format, FORMAT_TO_SIGNING_FUNCTION["default"])
+def _get_signing_function_from_format(fmt):
+    return FORMAT_TO_SIGNING_FUNCTION.get(fmt.split(":")[0], FORMAT_TO_SIGNING_FUNCTION["default"])
 
 
 # _sort_formats {{{1
