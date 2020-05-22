@@ -1291,9 +1291,11 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         log.info("%s is already signed", orig_path)
         return True
 
+    fmt, keyid = utils.split_autograph_format(fmt)
+
     async def signer(digest, digest_algo):
         try:
-            return await sign_hash_with_autograph(context, digest, fmt)
+            return await sign_hash_with_autograph(context, digest, fmt, keyid)
         except Exception:
             log.exception("Error signing authenticode hash with autograph")
             raise
@@ -1304,7 +1306,12 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         digest_algo = "sha256"
     else:
         digest_algo = "sha1"
-    certs = load_pem_certs(open(context.config["authenticode_cert"], "rb").read())
+
+    if keyid:
+        certs = load_pem_certs(open(context.config[f"authenticode_cert_{keyid}"], "rb").read())
+    else:
+        certs = load_pem_certs(open(context.config["authenticode_cert"], "rb").read())
+
     url = context.config["authenticode_url"]
     timestamp_style = context.config["authenticode_timestamp_style"]
     if fmt.endswith("authenticode_stub"):
