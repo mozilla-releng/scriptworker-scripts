@@ -125,17 +125,17 @@ def push(context, flatpak_file_path, channel):
         return
 
     token_args = ["--token-file", context.config["token_locations"][channel]]
-    log.info(f"Grab a flatpak buildid from Flathub ...")
+    log.info("Grab a flatpak buildid from Flathub ...")
     publish_build_output = run_flat_manager_client_process(context, token_args + ["create", context.config["flathub_url"], channel])
 
-    log.info(f"Sanitize the buildid received from Flathub ...")
+    log.info("Sanitize the buildid received from Flathub ...")
     publish_build_output = sanitize_buildid(publish_build_output)
     log.info(f"Buildid output is {publish_build_output}")
 
-    log.info(f"Validating the buildid ...")
+    log.info("Validating the buildid ...")
     validate_publish_build_output(context, publish_build_output)
 
-    log.info(f"Unpacking the tarball ...")
+    log.info("Unpacking the tarball ...")
     deflated_dir = check_and_extract_tar_archive(context, flatpak_file_path)
 
     log.info(f"Pushing the flatpak to the associated {publish_build_output}")

@@ -6,7 +6,7 @@ import os
 
 from scriptworker import client
 
-from pushflatpakscript import task, artifacts, flathub
+from pushflatpakscript import artifacts, flathub, task
 
 log = logging.getLogger(__name__)
 
