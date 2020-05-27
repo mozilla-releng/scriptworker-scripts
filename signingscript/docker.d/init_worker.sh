@@ -34,7 +34,7 @@ export AUTHENTICODE_CERT_PATH_202005=/app/signingscript/src/signingscript/data/a
 export AUTHENTICODE_CROSS_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_stub.crt
 if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_TIMESTAMP_STYLE=old
-  export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_prod.crt
+  export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CERT_PATH_202005=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
 fi
 
