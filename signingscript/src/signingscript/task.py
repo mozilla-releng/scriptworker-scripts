@@ -46,6 +46,7 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "autograph_omnija": sign_omnija,
         "autograph_langpack": sign_xpi,
         "autograph_authenticode": sign_authenticode_zip,
+        "autograph_authenticode_ev": sign_authenticode_zip,
         "autograph_authenticode_stub": sign_authenticode_zip,
         "privileged_webextension": sign_xpi,
         "system_addon": sign_xpi,
