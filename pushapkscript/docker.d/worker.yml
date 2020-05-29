@@ -72,10 +72,18 @@ products:
               package_names: [ "org.mozilla.firefox_beta" ]
               certificate_alias: 'fennec-beta'
               google:
-                # TODO Change to "production" once the Fenix Beta migration is done
+                # TODO Revisit the default track once Fenix is kicked off by shipit
                 default_track: 'alpha'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_BETA" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_BETA_PATH" }
+            fennec-production:
+              package_names: [ "org.mozilla.firefox" ]
+              certificate_alias: 'fennec-production'
+              google:
+                # TODO Revisit the default track once Fenix is kicked off by shipit
+                default_track: 'alpha'
+                service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE" }
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH" }
             nightly:
               package_names: [ "org.mozilla.fenix.nightly" ]
               certificate_alias: 'fenix-nightly'
@@ -153,6 +161,13 @@ products:
             fennec-beta:
               package_names: [ "org.mozilla.firefox_beta" ]
               certificate_alias: 'fennec-beta'
+              google:
+                default_track: 'alpha'
+                service_account: 'dummy'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
+            fennec-production:
+              package_names: [ "org.mozilla.firefox" ]
+              certificate_alias: 'fennec-production'
               google:
                 default_track: 'alpha'
                 service_account: 'dummy'
