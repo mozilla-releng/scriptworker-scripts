@@ -135,8 +135,8 @@ ipaddress==1.0.23 \
     --hash=sha256:6e0f4a39e66cb5bb9a137b00276a2eff74f93b71dcbdad6f10ff7df9d3557fcc \
     --hash=sha256:b7f8e0369580bb4a24d5ba1d7cc29660a4a6987763faf1d8a8046830e020e7e2 \
     # via -r base.in
-json-e==4.0.1 \
-    --hash=sha256:7d84242c94c4a475b08e185a265bed810346daf8399a5b5d05b7b19eba774356 \
+json-e==4.1.0 \
+    --hash=sha256:c229bdf364c4e268494556ea5cc7f9e9aa35c1736971dd0a91bc79c6b574d53c \
     # via scriptworker
 jsonschema==3.2.0 \
     --hash=sha256:4e5b3cf8216f577bee9ce139cbe72eca3ea4f292ec60928ff24758ce626cd163 \
@@ -209,9 +209,9 @@ requests==2.23.0 \
     --hash=sha256:43999036bfa82904b6af1d99e4882b560e5e2c68e5c4b0aa03b655f3d7d73fee \
     --hash=sha256:b3f43d496c6daba4493e7c431722aeb7dbc6288f52a6e04e7b6023b0247817e6 \
     # via -r base.in, balrogclient, github3.py, taskcluster
-scriptworker==34.2.0 \
-    --hash=sha256:4a3cdc0db690fb8fdb2200fd35e9bc0443cbdcebe19b475c68b75a9ffc8f2594 \
-    --hash=sha256:7aaa0563f2a0d5e69915ad38aed3ce590260b6820337e9faba77993075c4b0e9 \
+scriptworker==34.3.0 \
+    --hash=sha256:5b7ffe2507e38443451c00dcf73ceb9161c9d55ff19a25f85b0c2322d0b6faac \
+    --hash=sha256:82b1cb57645ddbd26525c152a9cecda6c79a059d54848495c8f3425cdd5739db \
     # via -r base.in
 six==1.15.0 \
     --hash=sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259 \
@@ -225,10 +225,10 @@ taskcluster-urls==12.1.0 \
     --hash=sha256:1dc740c32c7beb31e11ed7ccf9da2d47a504acdb3170c8900649433b0fd16fb2 \
     --hash=sha256:4a62c776aeba6d45044789a8845ec4d8521bc1bb6ebfc86d79ee759bcdd4f2f7 \
     # via taskcluster
-taskcluster==30.0.1 \
-    --hash=sha256:5e9697b90a00c9a3f1c41588711298dbb0b0ce064c161dd62b70e49e51697652 \
-    --hash=sha256:a6ef9d24a05749707f600abe2f4d9989d662fc6620cec5c8292650c8a747eb65 \
-    --hash=sha256:cb5b7c8e68d5e53b5535e91067544948669500ed995545a35c7cec9d091bb403 \
+taskcluster==30.0.2 \
+    --hash=sha256:0c7f6112dbfc6495f54250c4dba88bcbe71f1700738ce7c854ef1c1074df73a2 \
+    --hash=sha256:14627353c7ed752fd60a318d31199da1d7d950d510a5b3b6d9fe8ec825b7f11b \
+    --hash=sha256:d1b0cb405a5409f308dd3d08a8328784d781b4b4450823026a53f0c985a1de3e \
     # via scriptworker
 uritemplate==3.0.1 \
     --hash=sha256:07620c3f3f8eed1f12600845892b0e036a2420acf513c53f7de0abd911a5894f \
