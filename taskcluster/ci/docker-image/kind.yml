@@ -1,0 +1,41 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.docker_image:transforms
+    - taskgraph.transforms.cached_tasks:transforms
+    - taskgraph.transforms.task:transforms
+
+jobs:
+    k8s-image:
+        definition: k8s-image
+    python38:
+        definition: python
+        args:
+            PYTHON_VERSION: "3.8"
+    python37:
+        definition: python
+        args:
+            PYTHON_VERSION: "3.7"
+    pushapkscript-py38:
+        definition: pushapkscript
+        parent: python38
+    pushapkscript-py37:
+        definition: pushapkscript
+        parent: python37
+    pushsnapscript-py38:
+        definition: pushsnapscript
+        parent: python38
+    pushsnapscript-py37:
+        definition: pushsnapscript
+        parent: python37
+    pushflatpakscript-py38:
+        definition: pushflatpakscript
+        parent: python38
+    pushflatpakscript-py37:
+        definition: pushflatpakscript
+        parent: python37
