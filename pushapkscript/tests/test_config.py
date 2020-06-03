@@ -65,6 +65,8 @@ def test_mobile_prod():
         "GOOGLE_CREDENTIALS_FIREFOX_AURORA_PATH": "aurora",
         "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_BETA": "beta",
         "GOOGLE_CREDENTIALS_FIREFOX_BETA_PATH": "beta",
+        "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE": "release",
+        "GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH": "release",
         "GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER": "reference-browser",
         "GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH": "reference-browser",
         "AMAZON_CLIENT_ID": "amazon",
