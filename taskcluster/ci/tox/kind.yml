@@ -18,6 +18,8 @@ job-defaults:
     description: "{name} tox-py{python_version}"
     label: "tox-{name}-py{python_version}"
     run-on-tasks-for: ["action", "github-pull-request", "github-push"]
+    attributes:
+        code-review: true
     worker-type: b-linux
     worker:
         docker-image: {in-tree: 'python{python_version}'}
