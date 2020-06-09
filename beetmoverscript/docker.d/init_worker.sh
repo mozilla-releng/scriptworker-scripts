@@ -73,6 +73,16 @@ case $COT_PRODUCT in
     test_var_set 'MAVEN_KEY'
     export TASKCLUSTER_SCOPE_PREFIX="project:mozilla:application-services:releng:${PROJECT_NAME}:"
     ;;
+  app-services)
+    test_var_set 'MAVEN_ID'
+    test_var_set 'MAVEN_KEY'
+    export TASKCLUSTER_SCOPE_PREFIX="project:mozilla:app-services:releng:${PROJECT_NAME}:"
+    ;;
+  glean)
+    test_var_set 'MAVEN_ID'
+    test_var_set 'MAVEN_KEY'
+    export TASKCLUSTER_SCOPE_PREFIX="project:mozilla:glean:releng:${PROJECT_NAME}:"
+    ;;
   *)
     exit 1
     ;;
