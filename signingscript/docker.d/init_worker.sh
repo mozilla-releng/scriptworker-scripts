@@ -52,6 +52,10 @@ case $COT_PRODUCT in
     ;;
   application-services)
     ;;
+  app-services)
+    ;;
+  glean)
+    ;;
   xpi)
     ;;
   mpd001)
@@ -106,6 +110,14 @@ case $ENV in
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_USERNAME'
         ;;
       application-services)
+        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        ;;
+      app-services)
+        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        ;;
+      glean)
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         ;;
@@ -181,6 +193,14 @@ case $ENV in
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_USERNAME'
         ;;
       application-services)
+        test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        ;;
+      app-services)
+        test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        ;;
+      glean)
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         ;;

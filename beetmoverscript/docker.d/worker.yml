@@ -162,4 +162,35 @@ bucket_config:
           buckets:
             appservices: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
         dummy: {}
-
+      'COT_PRODUCT == "app-services" && (ENV == "dev" || ENV == "fake-prod")':
+        maven-staging:
+          credentials:
+            id: { "$eval": "MAVEN_ID" }
+            key: { "$eval": "MAVEN_KEY" }
+          buckets:
+            appservices: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
+        dummy: {}
+      'COT_PRODUCT == "app-services" && ENV == "prod"':
+        maven-production:
+          credentials:
+            id: { "$eval": "MAVEN_ID" }
+            key: { "$eval": "MAVEN_KEY" }
+          buckets:
+            appservices: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
+        dummy: {}
+      'COT_PRODUCT == "glean" && (ENV == "dev" || ENV == "fake-prod")':
+        maven-staging:
+          credentials:
+            id: { "$eval": "MAVEN_ID" }
+            key: { "$eval": "MAVEN_KEY" }
+          buckets:
+            telemetry: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
+        dummy: {}
+      'COT_PRODUCT == "glean" && ENV == "prod"':
+        maven-production:
+          credentials:
+            id: { "$eval": "MAVEN_ID" }
+            key: { "$eval": "MAVEN_KEY" }
+          buckets:
+            telemetry: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
+        dummy: {}
