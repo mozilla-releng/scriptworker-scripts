@@ -159,7 +159,7 @@ class TestReleaseCreatorFileUrlsMixin(unittest.TestCase):
                 "release-localtest": {
                     "completes": {"*": "http://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-1.0.complete.mar"},
                     "partials": {
-                        "Firefox-0.5-build2": "http://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-0.5-1.0.partial.mar"
+                        "Firefox-0.5-build2": "http://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-0.5-1.0.partial.mar"  # noqa: E501
                     },
                 },
             }
@@ -182,7 +182,7 @@ class TestReleaseCreatorFileUrlsMixin(unittest.TestCase):
                         "*": "https://ftp.example.org/pub/devedition/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-1.0.complete.mar"
                     },
                     "partials": {
-                        "Devedition-0.5-build2": "https://ftp.example.org/pub/devedition/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-0.5-1.0.partial.mar"
+                        "Devedition-0.5-build2": "https://ftp.example.org/pub/devedition/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-0.5-1.0.partial.mar"  # noqa: E501
                     },
                 },
             }
@@ -205,7 +205,7 @@ class TestReleaseCreatorFileUrlsMixin(unittest.TestCase):
                         "*": "https://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-1.0.complete.mar"
                     },
                     "partials": {
-                        "Firefox-0.5-build2": "https://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-0.5-1.0.partial.mar"
+                        "Firefox-0.5-build2": "https://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-0.5-1.0.partial.mar"  # noqa: E501
                     },
                 },
             }
