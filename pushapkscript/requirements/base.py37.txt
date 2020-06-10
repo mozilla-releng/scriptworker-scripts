@@ -138,13 +138,13 @@ github3.py==1.3.0 \
     --hash=sha256:15a115c18f7bfcf934dfef7ab103844eb9f620c586bad65967708926da47cbda \
     --hash=sha256:50833b5da35546b8cced0e8d7ff4c50a9afc2c8e46cc4d07dc4b66d26467c708 \
     # via scriptworker
-google-api-core==1.19.1 \
-    --hash=sha256:30beef3c1a98789e380e157ed915fc57f8fb53b22c2410b20e9f9aad332741bc \
-    --hash=sha256:6ce7609320449ad8680312395b89396a7d6951032f1886bb1a16534e4ff3867d \
+google-api-core==1.20.0 \
+    --hash=sha256:65ca5396393b3e592c49cba968380b6d2534d9c78b25fedbedea9dd1c6c50249 \
+    --hash=sha256:eec2c302b50e6db0c713fb84b71b8d75cfad5dc6d4dffc78e9f69ba0008f5ede \
     # via google-api-python-client
-google-api-python-client==1.9.1 \
-    --hash=sha256:0dc4389dfe4f94e54c14f69a04ea734641844c8a40dc1f3594a2ea70eb45564a \
-    --hash=sha256:a230710c4a3709e00db6a8633865940d2a00d00da4d998ce91f1d0f18471d859 \
+google-api-python-client==1.9.2 \
+    --hash=sha256:344baad65f82934964557759afeaf209ce9eb1d3f9df321a4e5b9dee35af8eae \
+    --hash=sha256:6b24022c75b38a1b323a74129d09af1131078b7c0d337ac8fa6461d5f8b2b0e9 \
     # via -r base.in, mozapkpublisher
 google-auth-httplib2==0.0.3 \
     --hash=sha256:098fade613c25b4527b2c08fa42d11f3c2037dda8995d86de0745228e965d445 \
@@ -426,9 +426,9 @@ rsa==4.0 \
     --hash=sha256:14ba45700ff1ec9eeb206a2ce76b32814958a98e372006c8fb76ba820211be66 \
     --hash=sha256:1a836406405730121ae9823e19c6e806c62bbad73f890574fff50efa4122c487 \
     # via google-auth, oauth2client
-scriptworker==35.0.0 \
-    --hash=sha256:1592373a877619b7780055e882b47bd3154a711be32353153619a5bf74a11556 \
-    --hash=sha256:8ea592b85d1e63c0ad0e30bcead2904439cd061b098b6227dc79ab385a4b73c7 \
+scriptworker==35.1.0 \
+    --hash=sha256:ad6d9a53cd565a9fd2b1e7643af898c773f2ef0e1d32e09bdb5a9790797d18ba \
+    --hash=sha256:e3b060fd3feaab141c48a89bfe595d35ce0b31b3f937e61a8600500af9e7922c \
     # via -r base.in
 six==1.15.0 \
     --hash=sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259 \
