@@ -34,7 +34,7 @@ class ReleaseCreatorFileUrlsMixin(object):
         protocol = "http"
         if productName.lower() == "devedition":
             protocol = "https"
-        if productName.lower() == "firefox" and all([c.startswith(("aurora", "beta")) for c in updateChannels]):
+        if productName.lower() == "firefox" and all([c.startswith(("beta",)) for c in updateChannels]):
             protocol = "https"
 
         # "*" is for the default set of fileUrls, which generally points at
