@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 
 import arrow
 from balrogclient import Release, ReleaseState, Rule, ScheduledRuleChange, SingleLocale
@@ -34,7 +35,7 @@ class ReleaseCreatorFileUrlsMixin(object):
         protocol = "http"
         if productName.lower() == "devedition":
             protocol = "https"
-        if productName.lower() == "firefox" and all([c.startswith(("beta",)) for c in updateChannels]):
+        if productName.lower() == "firefox" and all(c.startswith(("beta",)) for c in updateChannels):
             protocol = "https"
 
         # "*" is for the default set of fileUrls, which generally points at
@@ -53,6 +54,11 @@ class ReleaseCreatorFileUrlsMixin(object):
             # release being pushed to mirrors. This is a bit of a hack.
             if not requiresMirrors and c in ("beta", "beta-cdntest"):
                 uniqueChannels.append(c)
+
+        # bug 1444406 - drop "*" for the RC-on-beta case where the secondary toplevel job
+        # should not rewrite the complete url to use https (until we're ready to switch release)
+        if productName.lower() == "firefox" and all(c.startswith("beta") for c in updateChannels) and re.match(r"\d+\.0$", version):
+            uniqueChannels = uniqueChannels[1:]
 
         for channel in uniqueChannels:
             data["fileUrls"][channel] = {"completes": {}}

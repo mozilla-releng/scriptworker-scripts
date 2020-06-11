@@ -192,20 +192,51 @@ class TestReleaseCreatorFileUrlsMixin(unittest.TestCase):
     def test_https_beta(self):
         submitter = ReleaseCreatorV9(api_root=None, auth0_secrets=None)
         data = submitter._getFileUrls(
-            "Firefox", "1.0", 1, ["beta-localtest", "beta-cdntest", "beta"], "ftp.example.org", "download.example.org", {"0.5": {"buildNumber": 2}}
+            "Firefox", "1.0b1", 1, ["beta-localtest", "beta-cdntest", "beta"], "ftp.example.org", "download.example.org", {"0.5b1": {"buildNumber": 2}}
         )
         expected = {
             "fileUrls": {
                 "*": {
-                    "completes": {"*": "https://download.example.org/?product=firefox-1.0-complete&os=%OS_BOUNCER%&lang=%LOCALE%"},
-                    "partials": {"Firefox-0.5-build2": "https://download.example.org/?product=firefox-1.0-partial-0.5&os=%OS_BOUNCER%&lang=%LOCALE%"},
+                    "completes": {"*": "https://download.example.org/?product=firefox-1.0b1-complete&os=%OS_BOUNCER%&lang=%LOCALE%"},
+                    "partials": {"Firefox-0.5b1-build2": "https://download.example.org/?product=firefox-1.0b1-partial-0.5b1&os=%OS_BOUNCER%&lang=%LOCALE%"},
+                },
+                "beta-localtest": {
+                    "completes": {
+                        "*": "https://ftp.example.org/pub/firefox/candidates/1.0b1-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-1.0b1.complete.mar"
+                    },
+                    "partials": {
+                        "Firefox-0.5b1-build2": "https://ftp.example.org/pub/firefox/candidates/1.0b1-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-0.5b1-1.0b1.partial.mar"  # noqa: E501
+                    },
+                },
+            }
+        }
+        self.assertDictEqual(data, expected)
+
+    def test_https_RC_on_beta(self):
+        submitter = ReleaseCreatorV9(api_root=None, auth0_secrets=None)
+        data = submitter._getFileUrls(
+            "Firefox", "1.0", 1, ["beta-localtest", "beta-cdntest", "beta"], "ftp.example.org", "download.example.org", {"1.0b1": {"buildNumber": 2}}, False
+        )
+        expected = {
+            "fileUrls": {
+                "beta": {
+                    "completes": {"*": "https://download.example.org/?product=firefox-1.0build1-complete&os=%OS_BOUNCER%&lang=%LOCALE%"},
+                    "partials": {
+                        "Firefox-1.0b1-build2": "https://download.example.org/?product=firefox-1.0build1-partial-1.0b1build2&os=%OS_BOUNCER%&lang=%LOCALE%"
+                    },
+                },
+                "beta-cdntest": {
+                    "completes": {"*": "https://download.example.org/?product=firefox-1.0build1-complete&os=%OS_BOUNCER%&lang=%LOCALE%"},
+                    "partials": {
+                        "Firefox-1.0b1-build2": "https://download.example.org/?product=firefox-1.0build1-partial-1.0b1build2&os=%OS_BOUNCER%&lang=%LOCALE%"
+                    },
                 },
                 "beta-localtest": {
                     "completes": {
                         "*": "https://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-1.0.complete.mar"
                     },
                     "partials": {
-                        "Firefox-0.5-build2": "https://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-0.5-1.0.partial.mar"  # noqa: E501
+                        "Firefox-1.0b1-build2": "https://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-1.0b1-1.0.partial.mar"  # noqa: E501
                     },
                 },
             }
