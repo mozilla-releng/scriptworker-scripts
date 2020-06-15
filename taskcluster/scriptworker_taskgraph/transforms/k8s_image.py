@@ -19,14 +19,14 @@ transforms = TransformSequence()
 def add_dependencies(config, jobs):
     """Add dependencies that match python-version and script-name.
 
-    Also copy the digest-paths attribute, and fail if there are
-    unexpected discrepancies in upstream deps.
+    Also copy the resources attribute, and fail if there are unexpected
+    discrepancies in upstream deps.
 
     """
     for job in jobs:
         attributes = job["attributes"]
         dependencies = job.setdefault("dependencies", {})
-        digest_paths = None
+        resources = None
         for dep_task in config.kind_dependencies_tasks:
             dep_attrs = dep_task.attributes
             dep_kind = dep_task.kind
@@ -39,15 +39,15 @@ def add_dependencies(config, jobs):
                         new_label=dep_task.label,
                     ))
                 dependencies[dep_kind] = dep_task.label
-                if dep_attrs.get("digest-paths"):
-                    if digest_paths and digest_paths != dep_attrs["digest-paths"]:
-                        raise Exception("Conflicting digest_paths: {existing_digest} {new_digest}".format(
-                            existing_digest=digest_paths,
-                            new_digest=dep_attrs["digest-paths"],
+                if dep_attrs.get("resources"):
+                    if resources and resources != dep_attrs["resources"]:
+                        raise Exception("Conflicting resources: {existing_digest} {new_digest}".format(
+                            existing_digest=resources,
+                            new_digest=dep_attrs["resources"],
                         ))
-                    digest_paths = dep_attrs["digest-paths"]
-        if digest_paths:
-            attributes["digest-paths"] = digest_paths
+                    resources = dep_attrs["resources"]
+        if resources:
+            attributes["resources"] = resources
         yield job
 
 

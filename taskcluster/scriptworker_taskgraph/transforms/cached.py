@@ -22,11 +22,11 @@ transforms = TransformSequence()
 BASE_DIR = os.getcwd()
 
 @transforms.add
-def add_digest_paths(config, tasks):
+def add_resources(config, tasks):
     for task in tasks:
-        digest_paths = task.pop("digest-paths", None)
-        if digest_paths:
-            task.setdefault("attributes", {})["digest-paths"] = digest_paths
+        resources = task.pop("resources", None)
+        if resources:
+            task.setdefault("attributes", {})["resources"] = resources
         yield task
 
 
@@ -42,9 +42,9 @@ def build_cache(config, tasks):
             digest_data.append(
                 json.dumps(task.get("attributes", {}).get("digest-extra", {}), indent=2, sort_keys=True)
             )
-            paths = task.get("attributes", {}).get("digest-paths", [])
-            for path in paths:
-                digest_data.append(hash_paths(os.path.join(BASE_DIR, path), ['']))
+            resources = task.get("attributes", {}).get("resources", [])
+            for resource in resources:
+                digest_data.append(hash_paths(os.path.join(BASE_DIR, resource), ['']))
             cache_name = task["label"].replace(":", "-")
             task["cache"] = {
                 "type": "{}.v2".format(repo_name),
