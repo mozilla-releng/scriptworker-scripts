@@ -61,12 +61,14 @@ def set_environment(config, jobs):
         scopes = job.setdefault("scopes", [])
         attributes = job["attributes"]
         env = job["worker"].setdefault("env", {})
-        env["HEAD_REV"] = config.params['head_rev']
-        env["REPO_URL"] = config.params['head_repository']
-        env["PROJECT_NAME"] = project_name
-        env["TASKCLUSTER_ROOT_URL"] = "$TASKCLUSTER_ROOT_URL"
-        env["DOCKER_TAG"] = "unknown"
-        env["DOCKER_REPO"] = job.pop("docker-repo")
+        env.update({
+            "HEAD_REV": config.params['head_rev'],
+            "REPO_URL": config.params['head_repository'],
+            "PROJECT_NAME": project_name,
+            "TASKCLUSTER_ROOT_URL": "$TASKCLUSTER_ROOT_URL",
+            "DOCKER_TAG": "unknown",
+            "DOCKER_REPO": job.pop("docker-repo"),
+        })
         force_push_docker_image = False
         if tasks_for == 'github-pull-request':
             env["DOCKER_TAG"] = "pull-request"
