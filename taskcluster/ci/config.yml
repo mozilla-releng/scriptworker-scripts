@@ -32,10 +32,8 @@ docker:
 
 notify:
     email:
-        # TODO by-project/level
-        - aki+scriptworker-scripts@mozilla.com
-    # TODO by-project/level
-    prefix: "[scriptworker-scripts stage]"
+        - release+scriptworker-scripts@mozilla.com
+    prefix: "[scriptworker-scripts]"
 
 release-promotion:
     flavors:
