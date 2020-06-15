@@ -15,8 +15,7 @@ transforms = TransformSequence()
 
 def _replace_string(obj, repl_dict):
     if isinstance(obj, dict):
-        for k in obj.keys():
-            obj[k] = obj[k].format(**repl_dict)
+        return {k: v.format(**repl_dict) for k, v in obj.items()}
     elif isinstance(obj, list):
         for c in range(0, len(obj)):
             obj[c] = obj[c].format(**repl_dict)
