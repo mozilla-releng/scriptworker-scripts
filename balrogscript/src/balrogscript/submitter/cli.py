@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 
 import arrow
 from balrogclient import Release, ReleaseState, Rule, ScheduledRuleChange, SingleLocale
@@ -30,6 +31,12 @@ class ReleaseCreatorFileUrlsMixin(object):
         file_prefix = productName.lower()
         if file_prefix == "devedition":
             file_prefix = "firefox"
+        # bug 1444406 - eventually we're going to default to https
+        protocol = "http"
+        if productName.lower() == "devedition":
+            protocol = "https"
+        if productName.lower() == "firefox" and all(c.startswith(("beta",)) for c in updateChannels):
+            protocol = "https"
 
         # "*" is for the default set of fileUrls, which generally points at
         # bouncer. It's helpful to have this to reduce duplication between
@@ -48,10 +55,15 @@ class ReleaseCreatorFileUrlsMixin(object):
             if not requiresMirrors and c in ("beta", "beta-cdntest"):
                 uniqueChannels.append(c)
 
+        # bug 1444406 - drop "*" for the RC-on-beta case where the secondary toplevel job
+        # should not rewrite the complete url to use https (until we're ready to switch release)
+        if productName.lower() == "firefox" and all(c.startswith("beta") for c in updateChannels) and re.match(r"\d+\.0$", version):
+            uniqueChannels = uniqueChannels[1:]
+
         for channel in uniqueChannels:
             data["fileUrls"][channel] = {"completes": {}}
             if "localtest" in channel:
-                dir_ = makeCandidatesDir(productName.lower(), version, buildNumber, server=ftpServer, protocol="http")
+                dir_ = makeCandidatesDir(productName.lower(), version, buildNumber, server=ftpServer, protocol=protocol)
                 filename = self.complete_mar_filename_pattern % (file_prefix, version)
                 data["fileUrls"][channel]["completes"]["*"] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)
             else:
@@ -63,7 +75,7 @@ class ReleaseCreatorFileUrlsMixin(object):
                         bouncerProduct = "%s-%s" % (productName.lower(), version)
                     else:
                         bouncerProduct = self.complete_mar_bouncer_product_pattern % (productName.lower(), version)
-                url = "http://%s/?product=%s&os=%%OS_BOUNCER%%&lang=%%LOCALE%%" % (bouncerServer, bouncerProduct)
+                url = "%s://%s/?product=%s&os=%%OS_BOUNCER%%&lang=%%LOCALE%%" % (protocol, bouncerServer, bouncerProduct)
                 data["fileUrls"][channel]["completes"]["*"] = url
 
         if not partialUpdates:
@@ -74,7 +86,7 @@ class ReleaseCreatorFileUrlsMixin(object):
             for previousVersion, previousInfo in partialUpdates.items():
                 from_ = get_release_blob_name(productName, previousVersion, previousInfo["buildNumber"], self.from_suffix)
                 if "localtest" in channel:
-                    dir_ = makeCandidatesDir(productName.lower(), version, buildNumber, server=ftpServer, protocol="http")
+                    dir_ = makeCandidatesDir(productName.lower(), version, buildNumber, server=ftpServer, protocol=protocol)
                     filename = "%s-%s-%s.partial.mar" % (file_prefix, previousVersion, version)
                     data["fileUrls"][channel]["partials"][from_] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)
                 else:
@@ -89,7 +101,7 @@ class ReleaseCreatorFileUrlsMixin(object):
                         )
                     else:
                         bouncerProduct = "%s-%s-partial-%s" % (productName.lower(), version, previousVersion)
-                    url = "http://%s/?product=%s&os=%%OS_BOUNCER%%&lang=%%LOCALE%%" % (bouncerServer, bouncerProduct)
+                    url = "%s://%s/?product=%s&os=%%OS_BOUNCER%%&lang=%%LOCALE%%" % (protocol, bouncerServer, bouncerProduct)
                     data["fileUrls"][channel]["partials"][from_] = url
 
         return data
