@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
+    - tox
     - k8s-image
 
 transforms:
