@@ -47,56 +47,56 @@ job-defaults:
 
 jobs:
     addonscript:
-        digest-directories:
+        digest-paths:
             - addonscript
     balrogscript:
-        digest-directories:
+        digest-paths:
             - balrogscript
             - scriptworker_client
     beetmoverscript:
-        digest-directories:
+        digest-paths:
             - beetmoverscript
     bouncerscript:
-        digest-directories:
+        digest-paths:
             - bouncerscript
     configloader:
-        digest-directories:
+        digest-paths:
             - configloader
     iscript:
-        digest-directories:
+        digest-paths:
             - iscript
             - scriptworker_client
             - vendored/mozbuild
     notarization_poller:
-        digest-directories:
+        digest-paths:
             - notarization_poller
             - scriptworker_client
     pushapkscript:
         worker:
             docker-image: {in-tree: 'pushapkscript-py{python_version}'}
-        digest-directories:
+        digest-paths:
             - pushapkscript
     pushflatpakscript:
         worker:
             docker-image: {in-tree: 'pushflatpakscript-py{python_version}'}
-        digest-directories:
+        digest-paths:
             - pushflatpakscript
     pushsnapscript:
         worker:
             docker-image: {in-tree: 'pushsnapscript-py{python_version}'}
-        digest-directories:
+        digest-paths:
             - pushsnapscript
     scriptworker_client:
-        digest-directories:
+        digest-paths:
             - scriptworker_client
     shipitscript:
-        digest-directories:
+        digest-paths:
             - shipitscript
     signingscript:
-        digest-directories:
+        digest-paths:
             - signingscript
             - vendored/mozbuild
     treescript:
-        digest-directories:
+        digest-paths:
             - treescript
             - scriptworker_client

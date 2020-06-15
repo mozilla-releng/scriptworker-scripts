@@ -19,14 +19,14 @@ transforms = TransformSequence()
 def add_dependencies(config, jobs):
     """Add dependencies that match python-version and script-name.
 
-    Also copy the digest-directories attribute, and fail if there are
+    Also copy the digest-paths attribute, and fail if there are
     unexpected discrepancies in upstream deps.
 
     """
     for job in jobs:
         attributes = job["attributes"]
         dependencies = job.setdefault("dependencies", {})
-        digest_directories = None
+        digest_paths = None
         for dep_task in config.kind_dependencies_tasks:
             dep_attrs = dep_task.attributes
             dep_kind = dep_task.kind
@@ -39,15 +39,15 @@ def add_dependencies(config, jobs):
                         new_label=dep_task.label,
                     ))
                 dependencies[dep_kind] = dep_task.label
-                if dep_attrs.get("digest-directories"):
-                    if digest_directories and digest_directories != dep_attrs["digest-directories"]:
-                        raise Exception("Conflicting digest_directories: {existing_digest} {new_digest}".format(
-                            existing_digest=digest_directories,
-                            new_digest=dep_attrs["digest-directories"],
+                if dep_attrs.get("digest-paths"):
+                    if digest_paths and digest_paths != dep_attrs["digest-paths"]:
+                        raise Exception("Conflicting digest_paths: {existing_digest} {new_digest}".format(
+                            existing_digest=digest_paths,
+                            new_digest=dep_attrs["digest-paths"],
                         ))
-                    digest_directories = dep_attrs["digest-directories"]
-        if digest_directories:
-            attributes["digest-directories"] = digest_directories
+                    digest_paths = dep_attrs["digest-paths"]
+        if digest_paths:
+            attributes["digest-paths"] = digest_paths
         yield job
 
 

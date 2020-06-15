@@ -14,48 +14,19 @@ import subprocess
 
 import taskgraph
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.hash import hash_path
+from taskgraph.util.hash import hash_paths
 from taskgraph.util.memoize import memoize
 
 transforms = TransformSequence()
 
 BASE_DIR = os.getcwd()
 
-# Directory names we ignore, anywhere in the tree
-# We won't recurse into these directories.
-IGNORE_DIRS = (".git", "docs", "maintenance")
-
-# File extensions we ignore, anywhere in the tree
-IGNORE_EXTENSIONS = (".pyc", ".swp")
-
-ADDITIONAL_FILES = tuple([])
-
-
-@memoize
-def list_files(path):
-    files = []
-    for dir_name, subdir_list, file_list in os.walk(path):
-        for dir_ in subdir_list:
-            if dir_ in IGNORE_DIRS:
-                subdir_list.remove(dir_)
-                continue
-        for file_ in file_list:
-            (_, ext) = os.path.splitext(file_)
-            if ext in IGNORE_EXTENSIONS:
-                continue
-            files.append(
-                os.path.relpath(os.path.join(BASE_DIR, dir_name, file_), BASE_DIR)
-            )
-    return set(files)
-
-
 @transforms.add
-def add_digest_directories(config, tasks):
-    # TODO `s,digest-directories,digest-files`, where we check isdir(file) ?
+def add_digest_paths(config, tasks):
     for task in tasks:
-        digest_directories = task.pop("digest-directories", None)
-        if digest_directories:
-            task.setdefault("attributes", {})["digest-directories"] = digest_directories
+        digest_paths = task.pop("digest-paths", None)
+        if digest_paths:
+            task.setdefault("attributes", {})["digest-paths"] = digest_paths
         yield task
 
 
@@ -71,27 +42,14 @@ def build_cache(config, tasks):
             digest_data.append(
                 json.dumps(task.get("attributes", {}).get("digest-extra", {}), indent=2, sort_keys=True)
             )
-            directories = task.get("attributes", {}).get("digest-directories", [])
-            files = set([])
-            for d in directories:
-                directory = os.path.join(BASE_DIR, d)
-                files.update(list_files(directory))
-            # files.update(list_files(os.path.join(BASE_DIR, "taskcluster")))
-            for path in ADDITIONAL_FILES:
-                if os.path.exists(path):
-                    files.update({path})
-            h = hashlib.sha256()
-            for path in sorted(list(files)):
-                h.update(
-                    "{} {}\n".format(
-                        hash_path(os.path.realpath(os.path.join(BASE_DIR, path))), path
-                    )
-                )
+            paths = task.get("attributes", {}).get("digest-paths", [])
+            for path in paths:
+                digest_data.append(hash_paths(os.path.join(BASE_DIR, path), ['']))
             cache_name = task["label"].replace(":", "-")
             task["cache"] = {
                 "type": "{}.v2".format(repo_name),
                 "name": cache_name,
-                "digest-data": [h.hexdigest()],
+                "digest-data": digest_data,
             }
 
         yield task
