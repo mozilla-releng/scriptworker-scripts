@@ -68,8 +68,7 @@ def build_cache(config, tasks):
     for task in tasks:
         if task.get("cache", True) and not taskgraph.fast:
             digest_data = []
-            h = hashlib.sha256()
-            h.update(
+            digest_data.append(
                 json.dumps(task.get("attributes", {}).get("digest-extra", {}), indent=2, sort_keys=True)
             )
             directories = task.get("attributes", {}).get("digest-directories", [])
@@ -81,13 +80,13 @@ def build_cache(config, tasks):
             for path in ADDITIONAL_FILES:
                 if os.path.exists(path):
                     files.update({path})
+            h = hashlib.sha256()
             for path in sorted(list(files)):
                 h.update(
                     "{} {}\n".format(
                         hash_path(os.path.realpath(os.path.join(BASE_DIR, path))), path
                     )
                 )
-            task.setdefault("attributes", {}).setdefault("cached_task", {})
             cache_name = task["label"].replace(":", "-")
             task["cache"] = {
                 "type": "{}.v2".format(repo_name),
