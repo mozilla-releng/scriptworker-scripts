@@ -25,6 +25,15 @@ def _replace_string(obj, repl_dict):
 
 
 @transforms.add
+def set_script_name(config, jobs):
+    for job in jobs:
+        job.setdefault("attributes", {}).update({
+            "script-name": job["name"],
+        })
+        yield job
+
+
+@transforms.add
 def tasks_per_python_version(config, jobs):
     for job in jobs:
         for python_version in job.pop("python-versions"):
@@ -40,7 +49,6 @@ def tasks_per_python_version(config, jobs):
             if task.get('docker-repo'):
                 task['docker-repo'] = _replace_string(task['docker-repo'], repl_dict)
             task.setdefault("attributes", {}).update({
-                "script-name": job["name"],
                 "python-version": python_version,
             })
             yield task
