@@ -45,9 +45,9 @@ def build_cache(config, tasks):
             resources = task.get("attributes", {}).get("resources", [])
             for resource in resources:
                 digest_data.append(hash_paths(os.path.join(BASE_DIR, resource), ['']))
-            cache_name = task["label"].replace(":", "-")
+            cache_name = task["name"].replace(":", "-")
             task["cache"] = {
-                "type": "{}.v2".format(repo_name),
+                "type": "scriptworker-scripts.v1.{}".format(config.kind),
                 "name": cache_name,
                 "digest-data": digest_data,
             }
