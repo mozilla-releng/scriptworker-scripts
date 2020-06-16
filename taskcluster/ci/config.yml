@@ -5,6 +5,7 @@ task-priority: high
 
 taskgraph:
     register: scriptworker_taskgraph:register
+    decision-parameters: 'scriptworker_taskgraph.parameters:get_decision_parameters'
     repositories:
         scriptworker:
             name: "Scriptworker-scripts"
