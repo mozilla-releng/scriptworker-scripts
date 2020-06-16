@@ -24,10 +24,6 @@ job-defaults:
     worker:
         docker-image: {in-tree: 'python{python_version}'}
         max-run-time: 1800
-        artifacts:
-            - type: directory
-              name: public/
-              path: /builds/worker/artifacts/
     python-versions:
         - 38
         - 37
