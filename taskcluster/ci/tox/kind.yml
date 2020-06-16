@@ -17,7 +17,6 @@ transforms:
 
 job-defaults:
     description: "{name} tox-py{python_version}"
-    name: "{name}-py{python_version}"
     run-on-tasks-for: ["action", "github-pull-request", "github-push"]
     attributes:
         code-review: true
@@ -70,17 +69,17 @@ jobs:
             - scriptworker_client
     pushapkscript:
         worker:
-            docker-image: {in-tree: 'pushapkscript-py{python_version}'}
+            docker-image: {in-tree: 'pushapkscript-python{python_version}'}
         resources:
             - pushapkscript
     pushflatpakscript:
         worker:
-            docker-image: {in-tree: 'pushflatpakscript-py{python_version}'}
+            docker-image: {in-tree: 'pushflatpakscript-python{python_version}'}
         resources:
             - pushflatpakscript
     pushsnapscript:
         worker:
-            docker-image: {in-tree: 'pushsnapscript-py{python_version}'}
+            docker-image: {in-tree: 'pushsnapscript-python{python_version}'}
         resources:
             - pushsnapscript
     scriptworker_client:
