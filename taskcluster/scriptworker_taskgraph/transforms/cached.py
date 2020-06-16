@@ -53,3 +53,11 @@ def build_cache(config, tasks):
             }
 
         yield task
+
+
+@transforms.add
+def set_label(config, jobs):
+    """Set the job label, which the `cached_tasks` transform needs"""
+    for job in jobs:
+        job["label"] = "{}-{}".format(config.kind, job.pop("name"))
+        yield job

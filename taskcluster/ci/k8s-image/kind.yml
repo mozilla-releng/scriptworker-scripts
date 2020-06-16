@@ -16,7 +16,7 @@ transforms:
 
 job-defaults:
     description: "{name} k8s image builder py{python_version}"
-    label: "{name}-k8s-image-builder-python{python_version}"
+    name: "{name}-python{python_version}"
     run-on-tasks-for: ["action", "github-pull-request", "github-push"]
     attributes:
         code-review: true

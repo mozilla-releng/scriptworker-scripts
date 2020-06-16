@@ -57,7 +57,6 @@ def tasks_per_python_version(config, jobs):
     fields = [
         "description",
         "docker-repo",
-        "label",
         "run.command",
         "worker.command",
         "worker.docker-image",
@@ -82,4 +81,11 @@ def skip_on_project_specific_branches(config, jobs):
         if config.params['head_ref'].startswith(project_specific_prefixes) and \
                 config.params['head_ref'] not in project_specific_branches:
             continue
+        yield job
+
+
+@transforms.add
+def update_name_with_python_version(config, jobs):
+    for job in jobs:
+        job["name"] = "{}-python{}".format(job["name"], job["attributes"]["python-version"])
         yield job
