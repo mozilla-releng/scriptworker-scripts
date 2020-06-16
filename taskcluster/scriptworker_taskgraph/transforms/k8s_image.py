@@ -63,29 +63,20 @@ def set_environment(config, jobs):
         env = job["worker"].setdefault("env", {})
         env.update({
             "HEAD_REV": config.params['head_rev'],
-            "REPO_URL": config.params['head_repository'],
-            "PROJECT_NAME": project_name,
-            "TASKCLUSTER_ROOT_URL": "$TASKCLUSTER_ROOT_URL",
-            "DOCKER_TAG": "unknown",
             "DOCKER_REPO": job.pop("docker-repo"),
+            "DOCKER_TAG": config.params.get('docker_tag', 'unknown'),
+            "PROJECT_NAME": project_name,
+            "REPO_URL": config.params['head_repository'],
+            "TASKCLUSTER_ROOT_URL": "$TASKCLUSTER_ROOT_URL",
         })
         force_push_docker_image = False
-        if tasks_for == 'github-pull-request':
-            env["DOCKER_TAG"] = "pull-request"
-        elif tasks_for == 'github-push':
-            for ref_name in ("dev", "production"):
-                if config.params['head_ref'] == "refs/heads/{}-{}".format(ref_name, project_name):
-                    env["DOCKER_TAG"] = ref_name
-                    force_push_docker_image = True
-                    break
-            else:
-                if config.params['head_ref'].startswith('refs/heads/'):
-                    env["DOCKER_TAG"] = config.params['head_ref'].replace('refs/heads/', '')
         if env["DOCKER_TAG"] in ("production", "dev") and config.params["level"] == "3":
-            env["SECRET_URL"] = secret_url
-            env["PUSH_DOCKER_IMAGE"] = "1"
-            env["DOCKERHUB_EMAIL"] = config.graph_config["docker"]["email"]
-            env["DOCKERHUB_USER"] = config.graph_config["docker"]["user"]
+            env.update({
+                "SECRET_URL": secret_url,
+                "PUSH_DOCKER_IMAGE": "1",
+                "DOCKERHUB_EMAIL": config.graph_config["docker"]["email"],
+                "DOCKERHUB_USER": config.graph_config["docker"]["user"],
+            })
             scopes.append('secrets:get:project/releng/scriptworker-scripts/deploy')
             if force_push_docker_image:
                 attributes.setdefault("digest-extra", {}).setdefault("force_run", time.time())

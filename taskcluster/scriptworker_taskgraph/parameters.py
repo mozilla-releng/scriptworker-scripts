@@ -13,9 +13,13 @@ from voluptuous import (
     Required,
 )
 
-PROJECT_SPECIFIC_PREFIXES = ("refs/heads/dev-", "refs/heads/production-")
+PROJECT_SPECIFIC_PREFIXES = {
+    "refs/heads/dev-": "dev",
+    "refs/heads/production-": "production",
+}
 
 scriptworker_schema = {
+    Optional('docker_tag'): Any(basestring, None),
     Optional('script_name'): Any(basestring, None),
     Optional('script_revision'): Any(basestring, None),
     Optional('shipping_phase'): Any("build", "promote", None),
@@ -30,6 +34,12 @@ def get_decision_parameters(graph_config, parameters):
     If we're on a production- or dev- branch, detect and set the `script_name`.
 
     """
-    for prefix in PROJECT_SPECIFIC_PREFIXES:
-        if parameters["head_ref"].startswith(prefix):
-            parameters["script_name"] = parameters["head_ref"].replace(prefix, "")
+    if parameters["tasks_for"] == "github-pull-request":
+        parameters["docker_tag" ] = "github-pull-request"
+    elif parameters["head_ref"].startswith("refs/heads/"):
+        for prefix, tag in PROJECT_SPECIFIC_PREFIXES.items():
+            if parameters["head_ref"].startswith(prefix):
+                parameters["script_name"] = parameters["head_ref"].replace(prefix, "")
+                parameters["docker_tag" ] = tag
+        else:
+            parameters["docker_tag"] = parameters["head_ref"].replace("refs/heads/", "")
