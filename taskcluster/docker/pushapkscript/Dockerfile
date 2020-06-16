@@ -4,4 +4,7 @@ FROM $DOCKER_IMAGE_PARENT
 VOLUME /builds/worker/checkouts
 VOLUME /builds/worker/.cache
 
-RUN apt-get update && apt-get install -y default-jdk
+# %include pushapkscript/docker.d/image_setup.sh
+COPY topsrcdir/pushapkscript/docker.d/image_setup.sh /usr/local/bin/
+
+RUN image_setup.sh

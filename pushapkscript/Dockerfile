@@ -3,15 +3,15 @@ FROM python:3.8
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
 
-RUN apt-get update \
- && apt-get install -y default-jdk \
- && apt-get clean \
- && ln -s /app/docker.d/healthcheck /bin/healthcheck
+RUN ln -s /app/docker.d/healthcheck /bin/healthcheck
 
-USER app
 WORKDIR /app
 
 COPY . /app
+
+RUN /app/docker.d/image_setup.sh
+
+USER app
 
 RUN python -m venv /app \
  && cd pushapkscript \
