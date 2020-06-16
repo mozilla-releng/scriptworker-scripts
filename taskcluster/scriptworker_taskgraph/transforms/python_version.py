@@ -13,15 +13,34 @@ from taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 
-def _replace_string(obj, repl_dict):
+def _replace_string(obj, subs):
     if isinstance(obj, dict):
-        return {k: v.format(**repl_dict) for k, v in obj.items()}
+        return {k: v.format(**subs) for k, v in obj.items()}
     elif isinstance(obj, list):
         for c in range(0, len(obj)):
-            obj[c] = obj[c].format(**repl_dict)
+            obj[c] = obj[c].format(**subs)
     else:
-        obj = obj.format(**repl_dict)
+        obj = obj.format(**subs)
     return obj
+
+
+def _resolve_replace_string(item, field, subs):
+    # largely from resolve_keyed_by
+    container, subfield = item, field
+    while '.' in subfield:
+        f, subfield = subfield.split('.', 1)
+        if f not in container:
+            return item
+        container = container[f]
+        if not isinstance(container, dict):
+            return item
+
+    if subfield not in container:
+        return item
+
+    container[subfield] = _replace_string(container[subfield], subs)
+    return item
+
 
 
 @transforms.add
@@ -35,22 +54,21 @@ def set_script_name(config, jobs):
 
 @transforms.add
 def tasks_per_python_version(config, jobs):
+    fields = [
+        "description",
+        "docker-repo",
+        "label",
+        "run.command",
+        "worker.command",
+        "worker.docker-image",
+    ]
     for job in jobs:
         for python_version in job.pop("python-versions"):
             task = deepcopy(job)
-            repl_dict = {"name": job["name"], "python_version": python_version}
-            task["label"] = _replace_string(task["label"], repl_dict)
-            task['worker']['docker-image'] = _replace_string(task['worker']['docker-image'], repl_dict)
-            task['description'] = _replace_string(task['description'], repl_dict)
-            if task.get('run', {}).get('command'):
-                task['run']['command'] = _replace_string(task['run']['command'], repl_dict)
-            if task['worker'].get('command'):
-                task['worker']['command'] = _replace_string(task['worker']['command'], repl_dict)
-            if task.get('docker-repo'):
-                task['docker-repo'] = _replace_string(task['docker-repo'], repl_dict)
-            task.setdefault("attributes", {}).update({
-                "python-version": python_version,
-            })
+            subs = {"name": job["name"], "python_version": python_version}
+            for field in fields:
+                _resolve_replace_string(task, field, subs)
+            task["attributes"]["python-version"] = python_version
             yield task
 
 
