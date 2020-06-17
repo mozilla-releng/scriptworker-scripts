@@ -8,7 +8,6 @@ from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
 
 from bouncerscript.task import (
-    check_aliases_match,
     check_location_path_matches_destination,
     check_locations_match,
     check_path_matches_destination,
