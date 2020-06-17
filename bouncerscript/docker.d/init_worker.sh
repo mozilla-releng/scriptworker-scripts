@@ -17,8 +17,6 @@ test_var_set 'COT_PRODUCT'
 test_var_set 'PROJECT_NAME'
 test_var_set 'BOUNCER_USERNAME'
 test_var_set 'BOUNCER_PASSWORD'
-test_var_set 'BOUNCER_USERNAME_NAZGUL'
-test_var_set 'BOUNCER_PASSWORD_NAZGUL'
 
 case $COT_PRODUCT in
   firefox)
