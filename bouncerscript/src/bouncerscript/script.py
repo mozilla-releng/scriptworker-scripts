@@ -84,11 +84,6 @@ async def bouncer_aliases(context):
         await api_update_alias(context, alias, product_name)
 
     log.info("Sanity check to ensure aliases have been successfully updated...")
-    # XXX: Bug 1609174 - Nazgul has no public interface. Once we've done the
-    # switch, https://download.mozilla.org/ will point to it. For now we disable
-    # this check as there is no public interface to check against
-    if "nazgul" not in context.server:
-        await check_aliases_match(context)
     log.info("All entries look good, bouncer has been correctly updated!")
 
 
