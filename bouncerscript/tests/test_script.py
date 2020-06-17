@@ -88,36 +88,12 @@ async def test_bouncer_submission_creates_locations_even_some_exists(submission_
 
 
 # bouncer_aliases {{{1
-@pytest.mark.parametrize(
-    "scope",
-    (
-        ("project:releng:bouncer:server:production-nazgul"),
-        ("project:releng:bouncer:server:production"),
-        ("project:comm:thunderbird:releng:bouncer:server:production-nazgul"),
-        ("project:comm:thunderbird:releng:bouncer:server:production"),
-        ("project:releng:bouncer:server:staging-nazgul"),
-        ("project:releng:bouncer:server:staging"),
-        ("project:comm:thunderbird:releng:bouncer:server:staging-nazgul"),
-        ("project:comm:thunderbird:releng:bouncer:server:staging"),
-    ),
-)
 @pytest.mark.asyncio
-async def test_bouncer_aliases(aliases_context, mocker, scope):
-    aliases_context.server = scope
-
-    @counted
-    async def counter_no_op(*args, **kwargs):
-        pass
-
+async def test_bouncer_aliases(aliases_context, mocker):
     mocker.patch.object(bscript, "api_update_alias", new=noop_async)
-    mocker.patch.object(bscript, "check_aliases_match", new=counter_no_op)
+    mocker.patch.object(bscript, "check_aliases_match", new=noop_async)
 
     await bouncer_aliases(aliases_context)
-
-    if "nazgul" in scope:
-        assert counter_no_op.calls == 0
-    else:
-        assert counter_no_op.calls == 1
 
 
 @pytest.mark.parametrize(
