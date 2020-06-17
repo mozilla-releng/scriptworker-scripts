@@ -69,8 +69,8 @@ def set_environment(config, jobs):
             "REPO_URL": config.params['head_repository'],
             "TASKCLUSTER_ROOT_URL": "$TASKCLUSTER_ROOT_URL",
         })
-        force_push_docker_image = False
-        if env["DOCKER_TAG"] in ("production", "dev") and config.params["level"] == "3":
+        push_docker_image = config.params.get("push_docker_image")
+        if push_docker_image:
             env.update({
                 "SECRET_URL": secret_url,
                 "PUSH_DOCKER_IMAGE": "1",
@@ -78,7 +78,7 @@ def set_environment(config, jobs):
                 "DOCKERHUB_USER": config.graph_config["docker"]["user"],
             })
             scopes.append('secrets:get:project/releng/scriptworker-scripts/deploy')
-            if force_push_docker_image:
+            if push_docker_image == "force":
                 attributes.setdefault("digest-extra", {}).setdefault("force_run", time.time())
         else:
             env["PUSH_DOCKER_IMAGE"] = "0"

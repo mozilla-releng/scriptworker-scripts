@@ -18,8 +18,11 @@ PROJECT_SPECIFIC_PREFIXES = {
     "refs/heads/production-": "production",
 }
 
+PUSH_TAGS = ("dev", "production")
+
 scriptworker_schema = {
     Optional('docker_tag'): Any(basestring, None),
+    Optional('push_docker_image'): Any(True, "force", False, None),
     Optional('script_name'): Any(basestring, None),
     Optional('script_revision'): Any(basestring, None),
     Optional('shipping_phase'): Any("build", "promote", None),
@@ -38,8 +41,15 @@ def get_decision_parameters(graph_config, parameters):
         parameters["docker_tag" ] = "github-pull-request"
     elif parameters["head_ref"].startswith("refs/heads/"):
         parameters["docker_tag"] = parameters["head_ref"].replace("refs/heads/", "")
+        force_push = False
         for prefix, tag in PROJECT_SPECIFIC_PREFIXES.items():
             if parameters["head_ref"].startswith(prefix):
                 parameters["script_name"] = parameters["head_ref"].replace(prefix, "")
                 parameters["docker_tag" ] = tag
+                force_push = True
                 break
+        if parameters["docker_tag"] in PUSH_TAGS and parameters["level"] == "3":
+            if force_push:
+                parameters["push_docker_image"] = "force"
+            else:
+                parameters["push_docker_image"] = True
