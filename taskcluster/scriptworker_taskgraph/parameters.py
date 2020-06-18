@@ -38,7 +38,7 @@ def get_decision_parameters(graph_config, parameters):
 
     """
     if parameters["tasks_for"] == "github-pull-request":
-        parameters["docker_tag" ] = "github-pull-request"
+        parameters["docker_tag"] = "github-pull-request"
     elif parameters["head_ref"].startswith("refs/heads/"):
         parameters["docker_tag"] = parameters["head_ref"].replace("refs/heads/", "")
         force_push = False
