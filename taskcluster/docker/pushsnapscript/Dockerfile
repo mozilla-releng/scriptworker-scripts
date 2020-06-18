@@ -6,6 +6,5 @@ VOLUME /builds/worker/.cache
 
 # %include pushsnapscript/docker.d/image_setup.sh
 COPY topsrcdir/pushsnapscript/docker.d/image_setup.sh /usr/local/bin/
-RUN chmod a+x /usr/local/bin/image_setup.sh
 
 RUN image_setup.sh
