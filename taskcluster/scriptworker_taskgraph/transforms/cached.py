@@ -32,10 +32,6 @@ def add_resources(config, tasks):
 
 @transforms.add
 def build_cache(config, tasks):
-    repo_name = subprocess.check_output(["git", "remote", "get-url", "origin"]).rstrip()
-    repo_name = repo_name.replace(".git", "").rstrip("/")
-    repo_name = repo_name.split("/")[-1]
-
     for task in tasks:
         if task.get("cache", True) and not taskgraph.fast:
             digest_data = []
