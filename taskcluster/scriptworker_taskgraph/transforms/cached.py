@@ -24,9 +24,15 @@ BASE_DIR = os.getcwd()
 @transforms.add
 def add_resources(config, tasks):
     for task in tasks:
-        resources = task.pop("resources", None)
-        if resources:
-            task.setdefault("attributes", {})["resources"] = resources
+        resources = task.pop("resources", [])
+        attributes = task.setdefault("attributes", {})
+        if attributes.get("resources") is not None and attributes["resources"] != resources:
+            raise Exception(
+                "{} {} task.attributes.resources is already set to {}!".format(
+                    config.kind, task.get("name"), attributes["resources"],
+                )
+            )
+        attributes["resources"] = resources
         yield task
 
 
@@ -38,7 +44,7 @@ def build_cache(config, tasks):
             digest_data.append(
                 json.dumps(task.get("attributes", {}).get("digest-extra", {}), indent=2, sort_keys=True)
             )
-            resources = task.get("attributes", {}).get("resources", [])
+            resources = task["attributes"]["resources"]
             for resource in resources:
                 digest_data.append(hash_paths(os.path.join(BASE_DIR, resource), ['']))
             cache_name = task["name"].replace(":", "-")
