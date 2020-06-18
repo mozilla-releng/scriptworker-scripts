@@ -28,8 +28,8 @@ def add_resources(config, tasks):
         attributes = task.setdefault("attributes", {})
         if attributes.get("resources") is not None and attributes["resources"] != resources:
             raise Exception(
-                "{} {} task.attributes.resources is already set to {}!".format(
-                    config.kind, task.get("name"), attributes["resources"],
+                "setting {} {} task.attributes.resources to {}: it's already set to {}!".format(
+                    config.kind, task.get("name"), resources, attributes["resources"],
                 )
             )
         attributes["resources"] = resources
