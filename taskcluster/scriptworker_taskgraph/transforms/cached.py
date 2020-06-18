@@ -26,12 +26,13 @@ def add_resources(config, tasks):
     for task in tasks:
         resources = task.pop("resources", [])
         attributes = task.setdefault("attributes", {})
-        if attributes.get("resources") is not None and attributes["resources"] != resources:
-            raise Exception(
-                "setting {} {} task.attributes.resources to {}: it's already set to {}!".format(
-                    config.kind, task.get("name"), resources, attributes["resources"],
+        if attributes.get("resources") is not None:
+            if resources and attributes["resources"] != resources:
+                raise Exception(
+                    "setting {} {} task.attributes.resources to {}: it's already set to {}!".format(
+                        config.kind, task.get("name"), resources, attributes["resources"],
+                    )
                 )
-            )
         attributes["resources"] = resources
         yield task
 
