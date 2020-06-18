@@ -8,6 +8,7 @@ RUN ln -s /app/docker.d/healthcheck /bin/healthcheck
 WORKDIR /app
 COPY . /app
 
+# Production image requires extra packages
 RUN /app/docker.d/image_setup.sh libsodium-dev squashfs-tools xdelta3
 
 USER app
