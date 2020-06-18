@@ -1,0 +1,10 @@
+[package]
+name = "pypiscript"
+version = "0.1.0"
+authors = ["Tom Prince <mozilla@hocat.ca>"]
+edition = "2018"
+
+[dependencies]
+serde = "1.0.99"
+serde_derive = "1.0.99"
+scriptworker_script = { path = "../script" }
