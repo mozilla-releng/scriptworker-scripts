@@ -36,8 +36,6 @@ def test_firefox_fake_prod():
         "ENV": "fake-prod",
         "BOUNCER_USERNAME": "",
         "BOUNCER_PASSWORD": "",
-        "BOUNCER_USERNAME_NAZGUL": "",
-        "BOUNCER_PASSWORD_NAZGUL": "",
     }
     _validate_config(context)
 
@@ -48,8 +46,6 @@ def test_firefox_prod():
         "ENV": "prod",
         "BOUNCER_USERNAME": "",
         "BOUNCER_PASSWORD": "",
-        "BOUNCER_USERNAME_NAZGUL": "",
-        "BOUNCER_PASSWORD_NAZGUL": "",
     }
     _validate_config(context)
 
@@ -60,8 +56,6 @@ def test_thunderbird_fake_prod():
         "ENV": "fake-prod",
         "BOUNCER_USERNAME": "",
         "BOUNCER_PASSWORD": "",
-        "BOUNCER_USERNAME_NAZGUL": "",
-        "BOUNCER_PASSWORD_NAZGUL": "",
     }
     _validate_config(context)
 
@@ -72,7 +66,5 @@ def test_thunderbird_prod():
         "ENV": "prod",
         "BOUNCER_USERNAME": "",
         "BOUNCER_PASSWORD": "",
-        "BOUNCER_USERNAME_NAZGUL": "",
-        "BOUNCER_PASSWORD_NAZGUL": "",
     }
     _validate_config(context)
