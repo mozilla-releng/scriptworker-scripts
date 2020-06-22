@@ -20,6 +20,9 @@ case $COT_PRODUCT in
   xpi)
     export TASKCLUSTER_SCOPE_PREFIX="project:xpi:releng:ship-it:"
     ;;
+  adhoc)
+    export TASKCLUSTER_SCOPE_PREFIX="project:adhoc:releng:ship-it:"
+    ;;
   *)
     exit 1
     ;;
