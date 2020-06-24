@@ -5,7 +5,8 @@ test $DOCKERHUB_EMAIL
 test $DOCKERHUB_USER
 test $DOCKER_REPO
 test $DOCKER_TAG
-test $GIT_HEAD_REV
+test $HEAD_REV
+test $HOME
 test $PUSH_DOCKER_IMAGE
 test $SECRET_URL
 test $PROJECT_NAME
@@ -18,12 +19,12 @@ docker tag $DOCKER_REPO:$DOCKER_TAG $DOCKER_REPO:$DOCKER_ARCHIVE_TAG
 
 echo "=== Generating dockercfg ==="
 # docker login stopped working in Taskcluster for some reason
-wget -qO- $SECRET_URL | jq '.secret.docker.dockercfg' > /root/.dockercfg
-chmod 600 /root/.dockercfg
+wget -qO- $SECRET_URL | jq '.secret.docker.dockercfg' > $HOME/.dockercfg
+chmod 600 $HOME/.dockercfg
 
 echo "=== Pushing to docker hub ==="
 docker push $DOCKER_REPO:$DOCKER_TAG
 docker push $DOCKER_REPO:$DOCKER_ARCHIVE_TAG
 
 echo "=== Clean up ==="
-rm -f /root/.dockercfg
+rm -f $HOME/.dockercfg

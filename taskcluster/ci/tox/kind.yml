@@ -1,0 +1,99 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - docker-image
+
+transforms:
+    - scriptworker_taskgraph.transforms.python_version:transforms
+    - scriptworker_taskgraph.transforms.tox:transforms
+    - scriptworker_taskgraph.transforms.cached:transforms
+    - taskgraph.transforms.cached_tasks:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    description: "{name} tox-py{python_version}"
+    name: "{name}-py{python_version}"
+    run-on-tasks-for: ["action", "github-pull-request", "github-push"]
+    attributes:
+        code-review: true
+    worker-type: b-linux
+    worker:
+        docker-image: {in-tree: 'python{python_version}'}
+        max-run-time: 1800
+    python-versions:
+        - 38
+        - 37
+    run:
+        using: run-task
+        cache-dotcache: false
+        checkout:
+            scriptworker: {}
+        # sparse-profile: basestring/none
+        # workdir:
+        cwd: '{checkout}'
+        command:
+            - sh
+            - -lxce
+            - >-
+              tox -e {name}-py{python_version}
+
+jobs:
+    addonscript:
+        resources:
+            - addonscript
+    balrogscript:
+        resources:
+            - balrogscript
+            - scriptworker_client
+    beetmoverscript:
+        resources:
+            - beetmoverscript
+    bouncerscript:
+        resources:
+            - bouncerscript
+    configloader:
+        resources:
+            - configloader
+    iscript:
+        resources:
+            - iscript
+            - scriptworker_client
+            - vendored/mozbuild
+    notarization_poller:
+        resources:
+            - notarization_poller
+            - scriptworker_client
+    pushapkscript:
+        worker:
+            docker-image: {in-tree: 'pushapkscript-py{python_version}'}
+        resources:
+            - pushapkscript
+    pushflatpakscript:
+        worker:
+            docker-image: {in-tree: 'pushflatpakscript-py{python_version}'}
+        resources:
+            - pushflatpakscript
+    pushsnapscript:
+        worker:
+            docker-image: {in-tree: 'pushsnapscript-py{python_version}'}
+        resources:
+            - pushsnapscript
+    scriptworker_client:
+        resources:
+            - scriptworker_client
+    shipitscript:
+        resources:
+            - shipitscript
+    signingscript:
+        resources:
+            - signingscript
+            - vendored/mozbuild
+    treescript:
+        resources:
+            - treescript
+            - scriptworker_client

@@ -1,0 +1,47 @@
+---
+trust-domain: scriptworker
+
+task-priority: high
+
+taskgraph:
+    register: scriptworker_taskgraph:register
+    decision-parameters: 'scriptworker_taskgraph.parameters:get_decision_parameters'
+    repositories:
+        scriptworker:
+            name: "Scriptworker-scripts"
+            project-regex: scriptworker-scripts$
+            default-repository: https://github.com/mozilla-releng/scriptworker-scripts
+            default-ref: master
+            type: git
+
+workers:
+    aliases:
+        b-linux:
+            provisioner: scriptworker-{level}
+            implementation: docker-worker
+            os: linux
+            worker-type: 'b-linux'
+        images:
+            provisioner: scriptworker-{level}
+            implementation: docker-worker
+            os: linux
+            worker-type: 'images'
+
+docker:
+    email: "release+dockerhub+services@mozilla.com"
+    user: mozillarelengservices
+
+notify:
+    email:
+        - release+scriptworker-scripts@mozilla.com
+    prefix: "[scriptworker-scripts]"
+
+release-promotion:
+    flavors:
+        promote:
+            target-tasks-method: promote_scriptworker
+
+private-artifact-prefix: releng/scriptworker
+
+scriptworker:
+    scope-prefix: project:scriptworker:releng
