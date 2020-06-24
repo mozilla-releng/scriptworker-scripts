@@ -16,4 +16,18 @@ def target_tasks_default(full_task_graph, parameters, graph_config):
             return False
         if parameters.get("script_name"):
             return task.attributes.get("script-name") == parameters["script_name"]
+        return True
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+
+
+@_target_task('docker-hub-push')
+def target_tasks_default(full_task_graph, parameters, graph_config):
+    """Filter by `run_on_tasks_for` and `script-name`."""
+
+    def filter(task, parameters):
+        if task.kind != "k8s-image":
+            return False
+        if parameters.get("script_name"):
+            return task.attributes.get("script-name") == parameters["script_name"]
+        return True
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
