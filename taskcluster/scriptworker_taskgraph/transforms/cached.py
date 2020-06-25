@@ -42,9 +42,6 @@ def build_cache(config, tasks):
     for task in tasks:
         if task.get("cache", True) and not taskgraph.fast:
             digest_data = []
-            digest_data.append(
-                json.dumps(task.get("attributes", {}).get("digest-extra", {}), indent=2, sort_keys=True)
-            )
             resources = task["attributes"]["resources"]
             for resource in resources:
                 digest_data.append(hash_paths(os.path.join(BASE_DIR, resource), ['']))

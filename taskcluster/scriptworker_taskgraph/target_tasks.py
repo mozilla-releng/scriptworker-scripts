@@ -4,16 +4,29 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import six
+
 from taskgraph.target_tasks import _target_task, filter_for_tasks_for
+
+
+def filter_for_script(task, parameters):
+    return (
+        parameters.get("script_name") is None or
+        task.attributes.get("script-name") == parameters.get("script_name")
+    )
 
 
 @_target_task('default')
 def target_tasks_default(full_task_graph, parameters, graph_config):
     """Filter by `run_on_tasks_for` and `script-name`."""
+    return [l for l, t in six.iteritems(full_task_graph.tasks)
+            if filter_for_tasks_for(t, parameters)
+            and filter_for_script(t, parameters)]
 
-    def filter(task, parameters):
-        if not filter_for_tasks_for(task, parameters):
-            return False
-        if parameters.get("script_name"):
-            return task.attributes.get("script-name") == parameters["script_name"]
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+
+@_target_task('docker-hub-push')
+def target_tasks_default(full_task_graph, parameters, graph_config):
+    """Filter by kind and `script-name`."""
+    return [l for l, t in six.iteritems(full_task_graph.tasks)
+            if t.kind == "k8s-image"
+            and filter_for_script(t, parameters)]
