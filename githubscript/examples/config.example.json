@@ -1,0 +1,15 @@
+{
+    "work_dir": "/tmp/githubscript/work_dir",
+    "github_projects": {
+        "fenix": {
+          "allowed_actions": ["release"],
+          "github_token": "SOME_TOKEN",
+          "github_owner": "mozilla-mobile",
+          "github_repo_name": "fenix"
+        }
+    },
+    "taskcluster_scope_prefixes": ["project:mobile:fenix:releng:github:"],
+
+    "verbose": true,
+    "contact_github": true
+}

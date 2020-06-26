@@ -58,6 +58,10 @@ jobs:
     configloader:
         resources:
             - configloader
+    githubscript:
+        resources:
+            - githubscript
+            - scriptworker_client
     iscript:
         resources:
             - iscript

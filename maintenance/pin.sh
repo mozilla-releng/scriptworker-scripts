@@ -12,6 +12,7 @@ else
         beetmoverscript
         bouncerscript
         configloader
+        githubscript
         iscript
         notarization_poller
         pushapkscript

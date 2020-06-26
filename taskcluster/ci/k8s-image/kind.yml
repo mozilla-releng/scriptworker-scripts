@@ -47,6 +47,7 @@ jobs:
     balrogscript: {}
     beetmoverscript: {}
     bouncerscript: {}
+    githubscript: {}
     pushapkscript: {}
     pushflatpakscript: {}
     pushsnapscript: {}
