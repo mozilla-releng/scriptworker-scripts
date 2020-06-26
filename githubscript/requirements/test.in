@@ -1,0 +1,11 @@
+-r base.in
+
+black
+check-manifest
+coverage
+flake8
+isort
+pip-compile-multi
+pytest
+pytest-asyncio>=0.6.0
+pytest-cov

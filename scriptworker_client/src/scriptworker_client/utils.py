@@ -6,16 +6,28 @@ Attributes:
 
 """
 import asyncio
+import functools
 import json
 import logging
 import os
+import random
 import shutil
 import tempfile
-from asyncio.subprocess import PIPE
-from contextlib import contextmanager
-
 import yaml
 
+from asyncio.subprocess import PIPE
+from contextlib import contextmanager
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 from scriptworker_client.exceptions import TaskError
 
 log = logging.getLogger(__name__)
@@ -304,3 +316,236 @@ def rm(path):
             shutil.rmtree(path)
         else:
             os.remove(path)
+
+
+def calculate_sleep_time(
+    attempt, delay_factor=5.0, randomization_factor=0.5, max_delay=120
+):
+    """Calculate the sleep time between retries, in seconds.
+
+    Based off of `taskcluster.utils.calculateSleepTime`, but with kwargs instead
+    of constant `delay_factor`/`randomization_factor`/`max_delay`.  The taskcluster
+    function generally slept for less than a second, which didn't always get
+    past server issues.
+    Args:
+        attempt (int): the retry attempt number
+        delay_factor (float, optional): a multiplier for the delay time.  Defaults to 5.
+        randomization_factor (float, optional): a randomization multiplier for the
+            delay time.  Defaults to .5.
+        max_delay (float, optional): the max delay to sleep.  Defaults to 120 (seconds).
+    Returns:
+        float: the time to sleep, in seconds.
+    """
+    if attempt <= 0:
+        return 0
+
+    # We subtract one to get exponents: 1, 2, 3, 4, 5, ..
+    delay = float(2 ** (attempt - 1)) * float(delay_factor)
+    # Apply randomization factor.  Only increase the delay here.
+    delay = delay * (randomization_factor * random.random() + 1)
+    # Always limit with a maximum delay
+    return min(delay, max_delay)
+
+
+# retry_async {{{1
+async def retry_async(
+    func: Callable[..., Awaitable[Any]],
+    attempts: int = 5,
+    sleeptime_callback: Callable[..., Any] = calculate_sleep_time,
+    retry_exceptions: Union[
+        Type[BaseException], Tuple[Type[BaseException], ...]
+    ] = Exception,
+    args: Sequence[Any] = (),
+    kwargs: Optional[Dict[str, Any]] = None,
+    sleeptime_kwargs: Optional[Dict[str, Any]] = None,
+) -> Any:
+    """Retry ``func``, where ``func`` is an awaitable.
+
+    Args:
+        func (function): an awaitable function.
+        attempts (int, optional): the number of attempts to make.  Default is 5.
+        sleeptime_callback (function, optional): the function to use to determine
+            how long to sleep after each attempt.  Defaults to ``calculateSleepTime``.
+        retry_exceptions (list or exception, optional): the exception(s) to retry on.
+            Defaults to ``Exception``.
+        args (list, optional): the args to pass to ``func``.  Defaults to ()
+        kwargs (dict, optional): the kwargs to pass to ``func``.  Defaults to
+            {}.
+        sleeptime_kwargs (dict, optional): the kwargs to pass to ``sleeptime_callback``.
+            If None, use {}.  Defaults to None.
+    Returns:
+        object: the value from a successful ``function`` call
+    Raises:
+        Exception: the exception from a failed ``function`` call, either outside
+            of the retry_exceptions, or one of those if we pass the max
+            ``attempts``.
+    """
+    kwargs = kwargs or {}
+    attempt = 1
+    while True:
+        try:
+            return await func(*args, **kwargs)
+        except retry_exceptions:
+            attempt += 1
+            _check_number_of_attempts(attempt, attempts, func, "retry_async")
+            await asyncio.sleep(
+                _define_sleep_time(
+                    sleeptime_kwargs, sleeptime_callback, attempt, func, "retry_async"
+                )
+            )
+
+
+def _check_number_of_attempts(
+    attempt: int, attempts: int, func: Callable[..., Any], retry_function_name: str
+) -> None:
+    if attempt > attempts:
+        log.warning(
+            "{}: {}: too many retries!".format(retry_function_name, func.__name__)
+        )
+        raise
+
+
+def _define_sleep_time(
+    sleeptime_kwargs: Optional[Dict[str, Any]],
+    sleeptime_callback: Callable[..., int],
+    attempt: int,
+    func: Callable[..., Any],
+    retry_function_name: str,
+) -> float:
+    sleeptime_kwargs = sleeptime_kwargs or {}
+    sleep_time = sleeptime_callback(attempt, **sleeptime_kwargs)
+    log.debug(
+        "{}: {}: sleeping {} seconds before retry".format(
+            retry_function_name, func.__name__, sleep_time
+        )
+    )
+    return sleep_time
+
+
+def retry_async_decorator(
+    retry_exceptions: Union[
+        Type[BaseException], Tuple[Type[BaseException], ...]
+    ] = Exception,
+    sleeptime_kwargs: Optional[Dict[str, Any]] = None,
+) -> Callable[..., Callable[..., Awaitable[Any]]]:
+    """Decorate a function by wrapping ``retry_async`` around.
+
+    Args:
+        retry_exceptions (list or exception, optional): the exception(s) to retry on.
+            Defaults to ``Exception``.
+        sleeptime_kwargs (dict, optional): the kwargs to pass to ``sleeptime_callback``.
+            If None, use {}.  Defaults to None.
+    Returns:
+        function: the decorated function
+    """
+    # Better type hinting here once https://www.python.org/dev/peps/pep-0612/ is implemented
+    def wrap(
+        async_func: Callable[..., Awaitable[Any]]
+    ) -> Callable[..., Awaitable[Any]]:
+        @functools.wraps(async_func)
+        async def wrapped(*args: Any, **kwargs: Any) -> Any:
+            return await retry_async(
+                async_func,
+                retry_exceptions=retry_exceptions,
+                args=args,
+                kwargs=kwargs,
+                sleeptime_kwargs=sleeptime_kwargs,
+            )
+
+        return wrapped
+
+    return wrap
+
+
+def async_wrap(func):
+    """Decorate a sync function to make it async.
+
+    Args:
+        func (function): the sync function to convert.
+    Returns:
+        function: the decorated async function
+    """
+    # From https://dev.to/0xbf/turn-sync-function-to-async-python-tips-58nn
+    @functools.wraps(func)
+    async def run(*args, loop=None, executor=None, **kwargs):
+        if loop is None:
+            loop = asyncio.get_event_loop()
+        pfunc = functools.partial(func, *args, **kwargs)
+        return await loop.run_in_executor(executor, pfunc)
+
+    return run
+
+
+async def raise_future_exceptions(tasks):
+    """Given a list of futures, await them, then raise their exceptions if any.
+
+    Without something like this, a bare::
+        await asyncio.wait(tasks)
+    will swallow exceptions.
+    Args:
+        tasks (list): the list of futures to await and check for exceptions.
+    Returns:
+        list: the list of results from the futures.
+    Raises:
+        Exception: any exceptions in task.exception()
+    """
+    succeeded_results, _ = await _process_future_exceptions(
+        tasks, raise_at_first_error=True
+    )
+    return succeeded_results
+
+
+async def _process_future_exceptions(tasks, raise_at_first_error):
+    succeeded_results = []
+    error_results = []
+
+    if tasks:
+        await asyncio.wait(tasks)
+        for task in tasks:
+            exc = task.exception()
+            if exc:
+                if raise_at_first_error:
+                    raise exc
+                else:
+                    log.warning("Async task failed with error: {}".format(exc))
+                    error_results.append(exc)
+            else:
+                succeeded_results.append(task.result())
+
+    return succeeded_results, error_results
+
+
+def get_single_item_from_sequence(
+    sequence,
+    condition,
+    ErrorClass=ValueError,
+    no_item_error_message="No item matched condition",
+    too_many_item_error_message="Too many items matched condition",
+    append_sequence_to_error_message=True,
+):
+    """Return an item from a python sequence based on the given condition.
+
+    Args:
+        sequence (sequence): The sequence to filter
+        condition: A function that serves to filter items from `sequence`. Function
+            must have one argument (a single item from the sequence) and return a boolean.
+        ErrorClass (Exception): The error type raised in case the item isn't unique
+        no_item_error_message (str): The message raised when no item matched the condtion
+        too_many_item_error_message (str): The message raised when more than one item matched the condition
+        append_sequence_to_error_message (bool): Show or hide what was the tested sequence in the error message.
+            Hiding it may prevent sensitive data (such as password) to be exposed to public logs
+    Returns:
+        The only item in the sequence which matched the condition
+    """
+    filtered_sequence = [item for item in sequence if condition(item)]
+    number_of_items_in_filtered_sequence = len(filtered_sequence)
+    if number_of_items_in_filtered_sequence == 0:
+        error_message = no_item_error_message
+    elif number_of_items_in_filtered_sequence > 1:
+        error_message = too_many_item_error_message
+    else:
+        return filtered_sequence[0]
+
+    if append_sequence_to_error_message:
+        error_message = "{}. Given: {}".format(error_message, sequence)
+    raise ErrorClass(error_message)
