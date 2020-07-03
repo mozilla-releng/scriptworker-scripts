@@ -102,7 +102,7 @@ products:
               package_names: [ "org.mozilla.fenix" ]
               certificate_alias: 'fenix-production'
               google:
-                default_track: 'internal'
+                default_track: 'production'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_PROD" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_PROD_PATH" }
         - product_names: [ "focus" ]
