@@ -14,7 +14,7 @@ test $PROJECT_NAME
 apk -U add jq
 
 echo "=== Re-tagging docker image ==="
-export DOCKER_ARCHIVE_TAG="${DOCKER_TAG}-$(cat ./${PROJECT_NAME}/version.txt)-$(date +%Y%m%d%H%M%S)-${SCRIPTWORKER_HEAD_REV}"
+export DOCKER_ARCHIVE_TAG="${DOCKER_TAG}-$(date +%Y%m%d%H%M%S)-${SCRIPTWORKER_HEAD_REV}"
 docker tag $DOCKER_REPO:$DOCKER_TAG $DOCKER_REPO:$DOCKER_ARCHIVE_TAG
 
 echo "=== Generating dockercfg ==="
