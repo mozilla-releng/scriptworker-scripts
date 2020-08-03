@@ -34,13 +34,7 @@ products:
           skip_check_same_locales: true
           skip_checks_fennec: true
           apps:
-            fennec-nightly:
-              package_names: [ "org.mozilla.fennec_aurora" ]
-              certificate_alias: 'fennec-nightly'
-              google:
-                default_track: 'beta'
-                service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_AURORA" }
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_AURORA_PATH" }
+            # TODO: Rename this product `beta`
             fennec-beta:
               package_names: [ "org.mozilla.firefox_beta" ]
               certificate_alias: 'fennec-beta'
@@ -49,6 +43,7 @@ products:
                 default_track: 'alpha'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_BETA" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_BETA_PATH" }
+            # TODO: Rename this product `release`
             fennec-production:
               package_names: [ "org.mozilla.firefox" ]
               certificate_alias: 'fennec-production'
@@ -57,20 +52,7 @@ products:
                 default_track: 'alpha'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH" }
-            nightly:
-              package_names: [ "org.mozilla.fenix.nightly" ]
-              certificate_alias: 'fenix-nightly'
-              google:
-                default_track: 'beta'
-                service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_NIGHTLY" }
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH" }
-            beta:
-              package_names: [ "org.mozilla.fenix.beta" ]
-              certificate_alias: "fenix-beta"
-              google:
-                default_track: 'beta-closed'
-                service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_BETA" }
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_BETA_PATH"}
+            # TODO: Rename this product `nightly`
             production:
               package_names: [ "org.mozilla.fenix" ]
               certificate_alias: 'fenix-production'
