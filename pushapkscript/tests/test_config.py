@@ -30,20 +30,6 @@ def _validate_config(context):
     jsonschema.validate(config, schema)
 
 
-def test_firefox_prod():
-    context = {
-        "COT_PRODUCT": "firefox",
-        "ENV": "prod",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE": "release",
-        "GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH": "release",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_BETA": "beta",
-        "GOOGLE_CREDENTIALS_FIREFOX_BETA_PATH": "beta",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_AURORA": "aurora",
-        "GOOGLE_CREDENTIALS_FIREFOX_AURORA_PATH": "aurora",
-    }
-    _validate_config(context)
-
-
 def test_firefox_fake_prod():
     context = {"COT_PRODUCT": "firefox", "ENV": "fake-prod", "GOOGLE_CREDENTIALS_FIREFOX_DEP_PATH": "dep"}
     _validate_config(context)

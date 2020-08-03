@@ -14,33 +14,6 @@ taskcluster_scope_prefixes:
 products:
   $flatten:
     $match:
-      'COT_PRODUCT == "firefox" && ENV == "prod"':
-        - product_names: [ "beta", "aurora", "release" ]
-          digest_algorithm: SHA1
-          override_channel_model: 'choose_google_app_with_scope'
-          apps:
-            release:
-              default_track: production
-              service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE" }
-              package_names:
-                - "org.mozilla.firefox"
-              credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH" }
-              certificate_alias: release
-            beta:
-              default_track: production
-              service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_BETA" }
-              package_names:
-                - "org.mozilla.firefox_beta"
-              credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_BETA_PATH" }
-              certificate_alias: release
-            aurora:
-              default_track: beta
-              service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_AURORA" }
-              package_names:
-                - "org.mozilla.fennec_aurora"
-              credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_AURORA_PATH" }
-              certificate_alias: nightly
-
       'COT_PRODUCT == "firefox" && ENV != "prod"':
         - product_names: [ "dep" ]
           digest_algorithm: SHA1
