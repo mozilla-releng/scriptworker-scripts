@@ -62,11 +62,11 @@ def set_environment(config, jobs):
         attributes = job["attributes"]
         env = job["worker"].setdefault("env", {})
         env.update({
-            "HEAD_REV": config.params['head_rev'],
+            "SCRIPTWORKER_HEAD_REV": config.params['head_rev'],
             "DOCKER_REPO": job.pop("docker-repo"),
             "DOCKER_TAG": config.params.get('docker_tag', 'unknown'),
             "PROJECT_NAME": project_name,
-            "REPO_URL": config.params['head_repository'],
+            "SCRIPTWORKER_HEAD_REPOSITORY": config.params['head_repository'],
             "TASKCLUSTER_ROOT_URL": "$TASKCLUSTER_ROOT_URL",
         })
         push_docker_image = config.params.get("push_docker_image")
