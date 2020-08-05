@@ -15,6 +15,7 @@ test_var_set() {
 #
 test_var_set 'PROJECT_NAME'
 test_var_set 'ENV'
+test_var_SET 'K8S_POD_NAME'
 test_var_set 'COT_PRODUCT'
 test_var_set 'TASKCLUSTER_ROOT_URL'
 test_var_set 'TASKCLUSTER_CLIENT_ID'
@@ -119,7 +120,6 @@ fi
 export WORK_DIR=/app/workdir
 export WORKER_TYPE="${TRUST_DOMAIN}-${TRUST_LEVEL}-${PROJECT_NAME}${WORKER_SUFFIX}"
 export WORKER_GROUP=${WORKER_TYPE}
-export WORKER_ID_PREFIX="${WORKER_TYPE}-"
 
 #
 # ensure configuration folder exists we can write to it
@@ -136,7 +136,7 @@ source $(dirname $0)/init_worker.sh
 #
 # create scriptworker and workerscript configuration
 #
-$CONFIG_LOADER --worker-id-prefix=$WORKER_ID_PREFIX $TEMPLATE_DIR/scriptworker.yml $CONFIG_DIR/scriptworker.json
+$CONFIG_LOADER $TEMPLATE_DIR/scriptworker.yml $CONFIG_DIR/scriptworker.json
 $CONFIG_LOADER $TEMPLATE_DIR/worker.yml $CONFIG_DIR/worker.json
 
 
