@@ -10,6 +10,11 @@ github_projects:
           github_owner: mozilla-mobile
           github_repo_name: fenix
       'COT_PRODUCT == "mobile" && ENV == "fake-prod"':
+        # TODO: Remove this entry once end-to-end testing is over
+        fenix:
+          github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_PROD" }
+          github_owner: JohanLorenzo
+          github_repo_name: fenix
         mock:
           github_token: dummy
           github_owner: non-existing-owner
