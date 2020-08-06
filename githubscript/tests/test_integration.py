@@ -38,8 +38,7 @@ def task():
             "gitTag": "v5.2.0",
             "gitRevision": "b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71",
             "isPrerelease": False,
-            "releaseName": "Firefox Preview 5.2",
-            "releaseDescription": "Thanks for trying out Firefox Preview! In 5.2, we have lots of new improvements.",
+            "releaseName": "Firefox 5.2",
             "upstreamArtifacts": [
                 {
                     "paths": ["public/build/arm64-v8a/geckoBeta/target.apk", "public/build/x86_64/geckoBeta/target.apk"],
@@ -64,13 +63,8 @@ def test_main_update_release(monkeypatch, tmp_path, config, task):
     incomplete_release_mock.configure_mock(name="Firefox Preview 5.2")
 
     valid_release_mock = deepcopy(incomplete_release_mock)
-    valid_release_mock = MagicMock(
-        tag_name="v5.2.0",
-        target_commitish="b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71",
-        body="Thanks for trying out Firefox Preview! In 5.2, we have lots of new improvements.",
-        prerelease=False,
-    )
-    valid_release_mock.configure_mock(name="Firefox Preview 5.2")
+    valid_release_mock = MagicMock(tag_name="v5.2.0", target_commitish="b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71", prerelease=False,)
+    valid_release_mock.configure_mock(name="Firefox 5.2")
 
     valid_release_with_assets_mock = deepcopy(valid_release_mock)
     first_asset_mock = MagicMock(content_type="application/vnd.android.package-archive", size=9)
@@ -119,11 +113,6 @@ def test_main_update_release(monkeypatch, tmp_path, config, task):
 
     main(config_path=config_path)
     incomplete_release_mock.edit.assert_called_with(
-        tag_name="v5.2.0",
-        target_commitish="b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71",
-        name="Firefox Preview 5.2",
-        body="Thanks for trying out Firefox Preview! In 5.2, we have lots of new improvements.",
-        draft=False,
-        prerelease=False,
+        tag_name="v5.2.0", target_commitish="b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71", name="Firefox 5.2", draft=False, prerelease=False,
     )
     assert valid_release_mock.upload_asset.call_count == 2
