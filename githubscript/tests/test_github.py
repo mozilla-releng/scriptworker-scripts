@@ -20,7 +20,6 @@ def release_config():
         "github_repo_name": "some_repo",
         "github_token": "some_secret_token",
         "release_name": "SomeProduct v1.0.0",
-        "description": "SomeProduct is finally reaching v1.0.0!",
         "is_prerelease": False,
     }
 
@@ -30,7 +29,6 @@ class _DummyRelease:
     tag_name: str = "v1.0.0"
     target_commitish: str = "somecommithash"
     name: str = "SomeProduct v1.0.0"
-    body: str = "SomeProduct is finally reaching v1.0.0!"
     prerelease: bool = False
 
 
@@ -112,12 +110,7 @@ async def test_create_release(release_config):
     github_repository = MagicMock()
     await github._create_release(github_repository, release_config)
     github_repository.create_release.assert_called_once_with(
-        tag_name="v1.0.0",
-        target_commitish="somecommithash",
-        name="SomeProduct v1.0.0",
-        body="SomeProduct is finally reaching v1.0.0!",
-        draft=False,
-        prerelease=False,
+        tag_name="v1.0.0", target_commitish="somecommithash", name="SomeProduct v1.0.0", draft=False, prerelease=False,
     )
 
 
@@ -126,12 +119,7 @@ async def test_edit_existing_release(release_config):
     existing_release = MagicMock()
     await github._edit_existing_release(existing_release, release_config)
     existing_release.edit.assert_called_once_with(
-        tag_name="v1.0.0",
-        target_commitish="somecommithash",
-        name="SomeProduct v1.0.0",
-        body="SomeProduct is finally reaching v1.0.0!",
-        draft=False,
-        prerelease=False,
+        tag_name="v1.0.0", target_commitish="somecommithash", name="SomeProduct v1.0.0", draft=False, prerelease=False,
     )
 
 
@@ -171,7 +159,6 @@ def test_get_github_release_kwargs(release_config):
         "tag_name": "v1.0.0",
         "target_commitish": "somecommithash",
         "name": "SomeProduct v1.0.0",
-        "body": "SomeProduct is finally reaching v1.0.0!",
         "draft": False,
         "prerelease": False,
     }
@@ -195,7 +182,6 @@ async def test_update_release_if_needed(monkeypatch, release_config, update_rele
         (_DummyRelease(tag_name="v1.0.1"), True),
         (_DummyRelease(target_commitish="anothercommithash"), True),
         (_DummyRelease(name="AnotherProduct v1.0.0"), True),
-        (_DummyRelease(body="SomeProduct is the best!"), True),
         (_DummyRelease(prerelease=True), True),
     ),
 )

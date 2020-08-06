@@ -12,7 +12,6 @@ def get_release_config(product_config, task_payload, config):
     return {
         "artifacts": _get_artifacts(task_payload, config),
         "contact_github": config["contact_github"],
-        "description": task_payload["releaseDescription"],
         "git_revision": task_payload["gitRevision"],
         "git_tag": task_payload["gitTag"],
         "github_owner": product_config["github_owner"],

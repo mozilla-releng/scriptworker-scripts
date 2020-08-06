@@ -23,7 +23,6 @@ def test_release_config(monkeypatch):
     }
 
     task_payload = {
-        "releaseDescription": "SomeProduct is finally reaching v1.0.0!",
         "gitRevision": "somecommithash",
         "gitTag": "v1.0.0",
         "isPrerelease": False,
@@ -35,7 +34,6 @@ def test_release_config(monkeypatch):
             {"content_type": "application/vnd.android.package-archive", "local_path": "/dummy/path/to.apk", "name": "somme_pretty_name.apk", "size": 9000}
         ],
         "contact_github": True,
-        "description": "SomeProduct is finally reaching v1.0.0!",
         "git_revision": "somecommithash",
         "git_tag": "v1.0.0",
         "github_owner": "some_owner",

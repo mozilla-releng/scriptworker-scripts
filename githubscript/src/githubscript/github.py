@@ -96,7 +96,6 @@ def _get_github_release_kwargs(release_config):
         tag_name=release_config["git_tag"],
         target_commitish=release_config["git_revision"],
         name=release_config["release_name"],
-        body=release_config["description"],
         draft=False,
         prerelease=release_config["is_prerelease"],
     )
@@ -117,7 +116,6 @@ def _does_release_need_to_be_updated(existing_release, release_config):
         ("git_tag", "tag_name"),
         ("git_revision", "target_commitish"),
         ("release_name", "name"),
-        ("description", "body"),
         ("is_prerelease", "prerelease"),
     ):
         target_value = release_config[config_field]

@@ -50,7 +50,6 @@
     "gitRevision": "b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71",
     "isPrerelease": false,
     "releaseName": "Firefox Preview 5.2",
-    "releaseDescription": "Thanks for trying out Firefox Preview! In 5.2, we have lots of new improvements:",
     "upstreamArtifacts": [
       {
         "paths": [
