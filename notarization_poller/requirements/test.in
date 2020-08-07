@@ -3,7 +3,7 @@ check-manifest
 coverage
 flake8
 flake8_docstrings
-isort<5
+isort
 mock
 pip-compile-multi
 pytest

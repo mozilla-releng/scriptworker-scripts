@@ -10,5 +10,5 @@ flake8
 flake8_docstrings
 black
 check-manifest
-isort<5
+isort
 pip-compile-multi

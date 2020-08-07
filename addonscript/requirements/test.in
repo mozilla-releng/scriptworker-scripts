@@ -8,7 +8,7 @@ coverage>=4.2
 flake8
 flake8_docstrings
 freezegun
-isort<5
+isort
 mock
 pip-compile-multi
 pytest
