@@ -7,7 +7,7 @@ coverage>=4.2
 flake8
 flake8_docstrings
 json-e
-isort<5
+isort
 mock
 mypy
 pip-compile-multi

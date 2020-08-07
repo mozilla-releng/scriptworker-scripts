@@ -4,7 +4,7 @@ black
 check-manifest
 coverage>=4.2b1
 flake8
-isort<5
+isort
 mock
 pip-compile-multi
 pytest

@@ -4,7 +4,7 @@ black
 check-manifest
 coverage
 flake8
-isort<5
+isort
 lockfile
 minimock
 mock

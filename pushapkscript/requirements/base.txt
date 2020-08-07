@@ -150,9 +150,9 @@ google-auth-httplib2==0.0.4 \
     --hash=sha256:8d092cc60fb16517b12057ec0bba9185a96e3b7169d86ae12eae98e645b7bc39 \
     --hash=sha256:aeaff501738b289717fac1980db9711d77908a6c227f60e4aa1923410b43e2ee \
     # via google-api-python-client
-google-auth==1.20.0 \
-    --hash=sha256:25c97cec5d4f6821f3ab67eb25b264fb00fda8fb9e2f05869bfa93dfcb8b50ee \
-    --hash=sha256:c6e9735a2ee829a75b546702e460489db5cc35567a27fabd70b7c459f11efd58 \
+google-auth==1.20.1 \
+    --hash=sha256:2f34dd810090d0d4c9d5787c4ad7b4413d1fbfb941e13682c7a2298d3b6cdcc8 \
+    --hash=sha256:ce1fb80b5c6d3dd038babcc43e221edeafefc72d983b3dc28b67b996f76f00b9 \
     # via google-api-core, google-api-python-client, google-auth-httplib2
 googleapis-common-protos==1.52.0 \
     --hash=sha256:560716c807117394da12cecb0a54da5a451b5cf9866f1d37e9a5e2329a665351 \
