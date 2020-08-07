@@ -9,12 +9,12 @@ from contextlib import asynccontextmanager
 import aiohttp
 import arrow
 import pytest
+from scriptworker_client.constants import STATUSES
+from scriptworker_client.exceptions import Download404, DownloadError, TaskError
 from taskcluster.exceptions import TaskclusterRestFailure
 
 import notarization_poller.task as nptask
 from notarization_poller.exceptions import RetryError
-from scriptworker_client.constants import STATUSES
-from scriptworker_client.exceptions import Download404, DownloadError, TaskError
 
 from . import noop_async
 

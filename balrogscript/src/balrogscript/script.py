@@ -5,10 +5,9 @@ import logging
 import os
 import sys
 
+import scriptworker_client.client
 from immutabledict import immutabledict
 from redo import retry  # noqa: E402
-
-import scriptworker_client.client
 
 from .submitter.cli import NightlySubmitterV4, ReleaseCreatorV9, ReleasePusher, ReleaseScheduler, ReleaseStateUpdater, ReleaseSubmitterV9
 from .task import get_manifest, get_task_behavior, get_task_server, get_upstream_artifacts, validate_task_schema

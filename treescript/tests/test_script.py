@@ -4,10 +4,10 @@ from unittest.mock import MagicMock
 
 import mock
 import pytest
+from scriptworker_client.exceptions import TaskError
 
 import treescript.mercurial as mercurial
 import treescript.script as script
-from scriptworker_client.exceptions import TaskError
 from treescript.exceptions import TreeScriptError
 
 # helper constants, fixtures, functions {{{1

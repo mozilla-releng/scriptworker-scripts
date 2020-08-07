@@ -1,9 +1,9 @@
 import os
 
 import pytest
+from scriptworker_client.utils import makedirs
 
 import treescript.l10n as l10n
-from scriptworker_client.utils import makedirs
 
 
 async def noop_async(*args, **kwargs):

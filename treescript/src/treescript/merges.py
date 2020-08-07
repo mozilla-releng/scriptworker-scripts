@@ -5,8 +5,8 @@ import shutil
 import string
 
 import attr
-
 from scriptworker_client.utils import makedirs
+
 from treescript.mercurial import get_revision, run_hg_command
 from treescript.task import get_merge_config
 from treescript.versionmanip import do_bump_version, get_version

@@ -16,13 +16,13 @@ from asyncio import sleep
 import aiohttp
 import arrow
 import taskcluster
+from scriptworker_client.constants import STATUSES
+from scriptworker_client.utils import makedirs, rm
 from taskcluster.aio import Queue
 
 from notarization_poller.config import get_config_from_cmdln, update_logging_config
 from notarization_poller.constants import MAX_CLAIM_WORK_TASKS
 from notarization_poller.task import Task
-from scriptworker_client.constants import STATUSES
-from scriptworker_client.utils import makedirs, rm
 
 log = logging.getLogger(__name__)
 

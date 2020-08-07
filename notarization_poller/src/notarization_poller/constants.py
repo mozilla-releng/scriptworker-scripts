@@ -9,7 +9,6 @@ Attributes:
 import os
 
 from immutabledict import immutabledict
-
 from scriptworker_client.constants import STATUSES
 
 MAX_CLAIM_WORK_TASKS = 32

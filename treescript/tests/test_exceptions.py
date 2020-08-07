@@ -1,7 +1,7 @@
 import pytest
+from scriptworker_client.exceptions import TaskError, TaskVerificationError
 
 import treescript.exceptions as exceptions
-from scriptworker_client.exceptions import TaskError, TaskVerificationError
 
 
 @pytest.mark.parametrize(

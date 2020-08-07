@@ -1,6 +1,7 @@
-from glob import glob
 import os
-from setuptools import setup, find_packages
+from glob import glob
+
+from setuptools import find_packages, setup
 
 with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "version.txt")) as f:
     version = f.read().rstrip()

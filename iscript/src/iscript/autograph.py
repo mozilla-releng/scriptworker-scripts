@@ -12,13 +12,13 @@ import tempfile
 import zipfile
 
 import requests
+from mozpack import mozjar
 from requests_hawk import HawkAuth
+from scriptworker_client.aio import raise_future_exceptions, retry_async
+from scriptworker_client.utils import makedirs, rm
 
 from iscript.createprecomplete import generate_precomplete
 from iscript.exceptions import IScriptError
-from mozpack import mozjar
-from scriptworker_client.aio import raise_future_exceptions, retry_async
-from scriptworker_client.utils import makedirs, rm
 
 try:
     # NB. The widevine module needs to be deployed separately

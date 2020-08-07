@@ -6,9 +6,9 @@ import sys
 
 import mock
 import pytest
+import scriptworker_client.client
 
 import balrogscript.script as bscript
-import scriptworker_client.client
 from balrogscript.submitter.cli import NightlySubmitterV4, ReleaseCreatorV9, ReleasePusher, ReleaseScheduler, ReleaseStateUpdater, ReleaseSubmitterV9
 from balrogscript.task import get_task_server, validate_task_schema
 
