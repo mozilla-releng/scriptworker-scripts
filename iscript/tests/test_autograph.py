@@ -6,11 +6,11 @@ from contextlib import contextmanager
 from hashlib import sha256
 
 import pytest
+from scriptworker_client.utils import makedirs
 
 import iscript.autograph as autograph
 from iscript.exceptions import IScriptError
 from iscript.mac import App
-from scriptworker_client.utils import makedirs
 
 # helper constants, fixtures, functions {{{1
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")

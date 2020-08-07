@@ -11,10 +11,10 @@ import arrow
 import mock
 import pexpect
 import pytest
+from scriptworker_client.utils import makedirs
 
 import iscript.mac as mac
 from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
-from scriptworker_client.utils import makedirs
 
 
 # helpers {{{1

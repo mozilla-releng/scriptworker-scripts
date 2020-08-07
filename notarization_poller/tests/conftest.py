@@ -7,9 +7,9 @@ import os
 from copy import deepcopy
 
 import pytest
+from scriptworker_client.utils import makedirs
 
 from notarization_poller.constants import DEFAULT_CONFIG
-from scriptworker_client.utils import makedirs
 
 
 @pytest.fixture(scope="function")

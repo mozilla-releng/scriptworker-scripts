@@ -16,11 +16,11 @@ from unittest import mock
 import aiohttp
 import pytest
 import winsign.sign
+from conftest import BASE_DIR, DEFAULT_SCOPE_PREFIX, SERVER_CONFIG_PATH, TEST_DATA_DIR, die, does_not_raise, noop_async, noop_sync
 from scriptworker.utils import makedirs
 
 import signingscript.sign as sign
 import signingscript.utils as utils
-from conftest import BASE_DIR, DEFAULT_SCOPE_PREFIX, SERVER_CONFIG_PATH, TEST_DATA_DIR, die, does_not_raise, noop_async, noop_sync
 from signingscript.exceptions import SigningScriptError
 from signingscript.utils import get_hash
 

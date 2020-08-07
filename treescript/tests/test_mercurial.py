@@ -10,8 +10,8 @@ import logging
 import os
 
 import pytest
-
 from scriptworker_client.utils import makedirs
+
 from treescript import mercurial
 from treescript.exceptions import FailedSubprocess, PushError
 from treescript.script import get_default_config

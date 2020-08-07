@@ -15,6 +15,7 @@ from copy import deepcopy
 from scriptworker_client.aio import download_file, retry_async, semaphore_wrapper
 from scriptworker_client.exceptions import DownloadError
 from scriptworker_client.utils import load_json_or_yaml
+
 from treescript.mercurial import run_hg_command
 from treescript.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_l10n_bump_info, get_short_source_repo
 from treescript.versionmanip import get_version

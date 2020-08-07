@@ -1,11 +1,11 @@
 import os
 
 import pytest
+from conftest import BASE_DIR
 from scriptworker.client import validate_task_schema
 from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
 
 import signingscript.task as stask
-from conftest import BASE_DIR
 from signingscript.utils import mkdir
 
 # helper constants, fixtures, functions {{{1

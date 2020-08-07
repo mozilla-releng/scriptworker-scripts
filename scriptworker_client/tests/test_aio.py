@@ -2,16 +2,18 @@
 # coding=utf-8
 """Test scriptworker_client.aio
 """
-import aiohttp
 import asyncio
-from datetime import datetime
-import mock
 import os
-import pytest
 import re
 import shutil
 import sys
 import time
+from datetime import datetime
+
+import aiohttp
+import mock
+import pytest
+
 import scriptworker_client.aio as aio
 from scriptworker_client.exceptions import (
     Download404,

@@ -16,6 +16,7 @@ from datetime import datetime
 import aiohttp
 import mock
 import pytest
+
 import scriptworker_client.utils as utils
 from scriptworker_client.exceptions import ClientError, RetryError, TaskError
 

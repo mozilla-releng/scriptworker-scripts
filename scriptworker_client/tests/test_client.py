@@ -2,16 +2,17 @@
 # coding=utf-8
 """Test scriptworker_client.client
 """
-from copy import deepcopy
 import json
 import logging
-import mock
 import os
-import pytest
 import sys
+from copy import deepcopy
+
+import mock
+import pytest
+
 import scriptworker_client.client as client
 from scriptworker_client.exceptions import TaskError, TaskVerificationError
-
 
 # helpers {{{1
 

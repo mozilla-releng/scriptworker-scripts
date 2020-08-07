@@ -1,10 +1,10 @@
 import os
 
 import pytest
-
-import treescript.task as ttask
 from scriptworker_client.client import verify_task_schema
 from scriptworker_client.exceptions import TaskVerificationError
+
+import treescript.task as ttask
 from treescript.script import get_default_config
 
 SCRIPT_CONFIG = {"taskcluster_scope_prefix": "project:releng:treescript:"}
