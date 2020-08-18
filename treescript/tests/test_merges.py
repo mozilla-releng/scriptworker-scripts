@@ -303,3 +303,9 @@ async def test_bump_central(mocker, config, task, repo_context, merge_bump_info)
 )
 def test_core_version_file(merge_config, expected):
     assert merges.core_version_file(merge_config) == expected
+
+
+def test_formatter():
+    fmt = merges.BashFormatter()
+    assert fmt.format("Foo ${bar} {baz}", baz="BAZ") == "Foo ${bar} BAZ"
+    assert fmt.format("Foo ${bar} {}", "BAZ") == "Foo ${bar} BAZ"

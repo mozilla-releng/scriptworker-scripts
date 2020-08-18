@@ -30,7 +30,7 @@ class BashFormatter(string.Formatter):
         if isinstance(key, str):
             return kwds.get(key, "{" + key + "}")
         else:
-            return string.Formatter.get_value(key, args, kwds)
+            return string.Formatter().get_value(key, args, kwds)
 
 
 def replace(file_name, from_, to_):
