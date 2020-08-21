@@ -4,13 +4,15 @@
 Largely from https://hg.mozilla.org/mozilla-central/file/63ef0618ec9a07c438701e0357ef0d37abea0dd8/testing/mozharness/scripts/l10n_bumper.py
 
 """
+import asyncio
 import json
 import logging
 import os
 import pprint
 import tempfile
+from copy import deepcopy
 
-from scriptworker_client.aio import download_file, retry_async
+from scriptworker_client.aio import download_file, retry_async, semaphore_wrapper
 from scriptworker_client.exceptions import DownloadError
 from scriptworker_client.utils import load_json_or_yaml
 
@@ -69,6 +71,8 @@ def build_platform_dict(bump_config, repo_path):
             # locale is 1st word in line in shipped-locales
             if platform_config.get("format") == "shipped-locales":
                 locale = locale.split(" ")[0]
+            if locale in ("en-US",):
+                continue
             existing_platforms = set(platform_dict.get(locale, {}).get("platforms", []))
             platforms = set(platform_config["platforms"])
             ignore_platforms = set(ignore_config.get(locale, []))
@@ -78,26 +82,82 @@ def build_platform_dict(bump_config, repo_path):
     return platform_dict
 
 
+# get_latest_revision {{{1
+async def get_latest_revision(locale, url):
+    """Download the hg pushlog for the latest locale revision.
+
+    Args:
+        locale (str): the locale to query
+        url (str): the [templatized] pushlog url
+
+    Returns:
+        tuple (locale, revision)
+
+    """
+    url = url % {"locale": locale}
+    with tempfile.NamedTemporaryFile() as fp:
+        path = fp.name
+        await retry_async(download_file, args=(url, path), retry_exceptions=(DownloadError,))
+        revision_info = load_json_or_yaml(path, is_path=True)
+    last_push_id = revision_info["lastpushid"]
+    revision = revision_info["pushes"][str(last_push_id)]["changesets"][0]
+    log.info(f"locale {locale} revision {revision}")
+    return (locale, revision)
+
+
 # build_revision_dict {{{1
-def build_revision_dict(l10n_bump_info, revision_info, repo_path):
+async def build_revision_dict(bump_config, repo_path, old_contents, dashboard_revision_info=None):
     """Add l10n revision information to the ``platform_dict``.
 
-    The l10n dashboard contains locale to revision information for each
-    locale. If we have a ``revision_url``, that is the templatized dashboard
-    url we should query for locale to revision information.
+    If we have an ``l10n_repo_url``, use that as a template for the locale
+    repo url. If ``pin`` is set in the ``old_contents`` for that locale, save
+    the previous revision and pin. Otherwise, find the latest revision in the
+    locale repo, and use that.
+
+    The ``l10n_repo_url`` will look something like
+    https://hg.mozilla.org/l10n-central/%(locale)s/json-pushes?version=2&tipsonly=1
+
+    Deprecated: the l10n dashboard contains locale to revision information for
+    each locale. If we have a ``dashboard_revision_url``, that is the
+    templatized dashboard url we should query for locale to revision
+    information.
 
     Otherwise, add a ``default`` revision to each locale in the
     ``platform_dict``.
+
+    Args:
+        bump_config (dict): one of the dictionaries from the
+            payload ``l10n_bump_info``
+        repo_path (str): the path to the repo on disk
+        old_contents (dict): the old contents of the l10n changesets, if any.
+        dashboard_revision_info (string, optional): the contents of the
+            l10n dashboard. Defaults to None.
 
     Returns:
         dict: locale to dictionary of platforms and revision
 
     """
     log.info("Building revision dict...")
-    platform_dict = build_platform_dict(l10n_bump_info, repo_path)
+    platform_dict = build_platform_dict(bump_config, repo_path)
     revision_dict = {}
-    if revision_info:
-        for line in revision_info.splitlines():
+    if bump_config.get("l10n_repo_url"):
+        semaphore = asyncio.Semaphore(5)
+        tasks = []
+        for locale, value in platform_dict.items():
+            if old_contents.get(locale, {}).get("pin"):
+                value["revision"] = old_contents[locale]["revision"]
+                value["pin"] = old_contents[locale]["pin"]
+            else:
+                tasks.append(asyncio.create_task(semaphore_wrapper(semaphore, get_latest_revision(locale, bump_config["l10n_repo_url"]))))
+                value["pin"] = False
+            revision_dict[locale] = value
+        await asyncio.gather(*tasks)
+        for task in tasks:
+            (locale, revision) = task.result()
+            revision_dict[locale]["revision"] = revision
+    elif dashboard_revision_info:
+        # XXX deprecated
+        for line in dashboard_revision_info.splitlines():
             locale, revision = line.split(" ")
             if locale in platform_dict:
                 revision_dict[locale] = platform_dict[locale]
@@ -164,8 +224,11 @@ async def check_treestatus(config, task):
     return False
 
 
+# get_revision_info {{{1
 async def get_revision_info(bump_config, repo_path):
     """Query the l10n changesets from the l10n dashboard.
+
+    Deprecated.
 
     Args:
         bump_config (dict): one of the dictionaries from the payload
@@ -190,13 +253,11 @@ async def get_revision_info(bump_config, repo_path):
 
 # l10n_bump {{{1
 async def l10n_bump(config, task, repo_path):
-    """Perform a version bump.
+    """Perform a l10n revision bump.
 
     This function takes its inputs from task by using the ``get_l10n_bump_info``
-    function from treescript.task. Using `next_version` and `files`.
-
-    This function does nothing (but logs) if the current version and next version
-    match, and nothing if the next_version is actually less than current_version.
+    function from treescript.task. It then calculates the locales, the platforms
+    for each locale, and the locale revision for each locale.
 
     Args:
         config (dict): the running config
@@ -221,15 +282,15 @@ async def l10n_bump(config, task, repo_path):
 
     dontbuild = get_dontbuild(task)
     l10n_bump_info = get_l10n_bump_info(task)
-    revision_info = None
+    dashboard_revision_info = None
     changes = 0
 
     for bump_config in l10n_bump_info:
         if bump_config.get("revision_url"):
-            revision_info = await get_revision_info(bump_config, repo_path)
+            dashboard_revision_info = await get_revision_info(bump_config, repo_path)
         path = os.path.join(repo_path, bump_config["path"])
         old_contents = load_json_or_yaml(path, is_path=True)
-        new_contents = build_revision_dict(bump_config, revision_info, repo_path)
+        new_contents = await build_revision_dict(bump_config, repo_path, deepcopy(old_contents), dashboard_revision_info=dashboard_revision_info)
         if old_contents == new_contents:
             continue
         with open(path, "w") as fh:

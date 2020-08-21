@@ -1,3 +1,4 @@
+import json
 import os
 
 import pytest
@@ -53,6 +54,7 @@ def test_build_locale_map():
 two
 three
 four
+en-US
 five
 six
 """,
@@ -80,6 +82,7 @@ five
             [
                 """one x
 two y
+en-US
 three z
 ja a
 ja-JP-mac b
@@ -119,9 +122,31 @@ def test_build_platform_dict(contents, mocker, bump_config, expected, tmpdir):
     assert l10n.build_platform_dict(bump_config, tmpdir) == expected
 
 
+# get_latest_revision {{{1
+@pytest.mark.asyncio
+async def test_get_latest_revision(mocker):
+    """get_latest_revision downloads and parses the hgpushlog for a locale
+    and returns the (locale, latest_revision).
+
+    """
+    expected = ("LOC", "REV")
+    pushlog = {
+        "lastpushid": "12345",
+        "pushes": {"12344": {}, "12345": {"changesets": ["REV"]}},
+    }
+
+    async def fake_download(url, path):
+        with open(path, "w") as fh:
+            fh.write(json.dumps(pushlog))
+
+    mocker.patch.object(l10n, "download_file", new=fake_download)
+    assert await l10n.get_latest_revision("LOC", "") == expected
+
+
 # build_revision_dict {{{1
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "revision_info, expected",
+    "revision_info, old_contents, expected",
     (
         (
             """one onerev
@@ -129,6 +154,7 @@ two tworev
 three threerev
 extra extrarev
 """,
+            None,
             {
                 "one": {"revision": "onerev", "platforms": ["platform"]},
                 "two": {"revision": "tworev", "platforms": ["platform"]},
@@ -138,6 +164,20 @@ extra extrarev
         (
             None,
             {
+                "one": {"pin": True, "revision": "one_orig_revision"},
+                "two": {"pin": False, "revision": "two_orig_revision"},
+                "three": {"revision": "three_orig_revision"},
+            },
+            {
+                "one": {"pin": True, "revision": "one_orig_revision", "platforms": ["platform"]},
+                "two": {"pin": False, "revision": "two_new_revision", "platforms": ["platform"]},
+                "three": {"pin": False, "revision": "three_new_revision", "platforms": ["platform"]},
+            },
+        ),
+        (
+            None,
+            None,
+            {
                 "one": {"revision": "default", "platforms": ["platform"]},
                 "two": {"revision": "default", "platforms": ["platform"]},
                 "three": {"revision": "default", "platforms": ["platform"]},
@@ -145,19 +185,27 @@ extra extrarev
         ),
     ),
 )
-def test_build_revision_dict(mocker, revision_info, expected):
-    """``build_revision_dict`` adds l10n dashboard revisions, if available,
+async def test_build_revision_dict(mocker, revision_info, old_contents, expected):
+    """``build_revision_dict`` polls hg pushlog for latest revision information,
+    unless pinned; otherwise it adds l10n dashboard revisions, if available,
     to the platform_dict; otherwise it adds a revision of "default" to
     every locale in the platform_dict.
 
     """
     platform_dict = {"one": {"platforms": ["platform"]}, "two": {"platforms": ["platform"]}, "three": {"platforms": ["platform"]}}
+    bump_config = {}
+    if old_contents:
+        bump_config["l10n_repo_url"] = "x"
 
     def build_platform_dict(*args):
         return platform_dict
 
+    async def get_latest_revision(locale, url):
+        return (locale, f"{locale}_new_revision")
+
     mocker.patch.object(l10n, "build_platform_dict", new=build_platform_dict)
-    assert l10n.build_revision_dict({}, revision_info, "") == expected
+    mocker.patch.object(l10n, "get_latest_revision", new=get_latest_revision)
+    assert await l10n.build_revision_dict(bump_config, "", old_contents, dashboard_revision_info=revision_info) == expected
 
 
 # build_commit_message {{{1
@@ -240,13 +288,16 @@ async def test_l10n_bump(mocker, ignore_closed_tree, l10n_bump_info, tmpdir, old
     async def fake_hg(*args, **kwargs):
         calls.append(args)
 
+    async def fake_build_revision_dict(*args, **kwargs):
+        return new_contents
+
     mocker.patch.object(l10n, "get_dontbuild", return_value=False)
     mocker.patch.object(l10n, "get_ignore_closed_tree", return_value=ignore_closed_tree)
     mocker.patch.object(l10n, "check_treestatus", new=check_treestatus)
     mocker.patch.object(l10n, "get_l10n_bump_info", return_value=l10n_bump_info)
     mocker.patch.object(l10n, "load_json_or_yaml", return_value=old_contents)
     mocker.patch.object(l10n, "get_revision_info", new=noop_async)
-    mocker.patch.object(l10n, "build_revision_dict", return_value=new_contents)
+    mocker.patch.object(l10n, "build_revision_dict", new=fake_build_revision_dict)
     mocker.patch.object(l10n, "run_hg_command", new=fake_hg)
 
     assert await l10n.l10n_bump({}, {}, tmpdir) == changes
