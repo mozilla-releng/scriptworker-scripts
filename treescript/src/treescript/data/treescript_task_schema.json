@@ -205,6 +205,9 @@
                             "revision_url": {
                                 "type": "string"
                             },
+                            "l10n_repo_url": {
+                                "type": "string"
+                            },
                             "ignore_config": {
                                 "type": "object"
                             },
