@@ -131,7 +131,7 @@ mohawk==1.1.0 \
 mozilla-version==0.5.2 \
     --hash=sha256:782f81f469b30c3a5a9fb73edfbe1ab9e37a6b3c072ac58c77ec73b6773f2ef7 \
     --hash=sha256:dbf49b2dc666542d83b933ed4db91ecb5b761f0c76bf421c2099c51189465f1e \
-    # via -r base.in
+    # via -r requirements/base.in
 multidict==4.7.6 \
     --hash=sha256:1ece5a3369835c20ed57adadc663400b5525904e53bae59ec854a5d36b39b21a \
     --hash=sha256:275ca32383bc5d1894b6975bb4ca6a7ff16ab76fa622967625baeebcf8079000 \
@@ -182,7 +182,7 @@ requests==2.24.0 \
 scriptworker==35.2.0 \
     --hash=sha256:b890852378763a97a5e1883d9c159d5fe40ee6b66ea0f56d53bfad08822bb042 \
     --hash=sha256:ee1ecb8bba785b4e43779df530517b26bdbc717ae0fbb19cce96a330dd4c0d2d \
-    # via -r base.in
+    # via -r requirements/base.in
 six==1.15.0 \
     --hash=sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259 \
     --hash=sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced \
@@ -229,8 +229,6 @@ yarl==1.5.1 \
     --hash=sha256:f379b7f83f23fe12823085cd6b906edc49df969eb99757f58ff382349a3303c6 \
     # via aiohttp
 
-# The following packages are considered to be unsafe in a requirements file:
-setuptools==49.6.0 \
-    --hash=sha256:46bd862894ed22c2edff033c758c2dc026324788d758e96788e8f7c11f4e9707 \
-    --hash=sha256:4dd5bb0a0a0cff77b46ca5dd3a84857ee48c83e8223886b556613c724994073f \
-    # via jsonschema
+# WARNING: The following packages were not pinned, but pip requires them to be
+# pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.
+# setuptools

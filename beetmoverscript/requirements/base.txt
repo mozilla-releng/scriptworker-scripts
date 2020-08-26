@@ -26,7 +26,7 @@ aiomemoizettl==0.0.3 \
 arrow==0.15.8 \
     --hash=sha256:271b8e05174d48e50324ed0dc5d74796c839c7e579a4f21cf1a7394665f9e94f \
     --hash=sha256:edc31dc051db12c95da9bac0271cd1027b8e36912daf6d4580af53b23e62721a \
-    # via -r base.in, scriptworker
+    # via -r requirements/base.in, scriptworker
 async-timeout==3.0.1 \
     --hash=sha256:0c3c816a028d47f659d6ff5c745cb2acf1f966da1fe5c19c77a70282b25f4c5f \
     --hash=sha256:4291ca197d287d274d0b6cb5d6f8f8f82d434ed288f962539ff18cc9012f9ea3 \
@@ -38,7 +38,7 @@ attrs==20.1.0 \
 boto3==1.14.48 \
     --hash=sha256:34ee7608afa457da7bf4ad42dc53ac967b2f28769ef4ef1a0a41e1b40f35d897 \
     --hash=sha256:997369e68a5091f608897caa0322daca12ee76338371b983b34b98c57c1e1913 \
-    # via -r base.in
+    # via -r requirements/base.in
 botocore==1.17.48 \
     --hash=sha256:0b23b519ec10193d1ead1cbb1469e7ede80789b068b74575b4efb06619e8e457 \
     --hash=sha256:db9cd219d4180e782615179950e16b43d13e2f3fa57f510a43bf4ed5a3a8dacb \
@@ -129,7 +129,7 @@ immutabledict==1.0.0 \
 jinja2==2.11.2 \
     --hash=sha256:89aab215427ef59c34ad58735269eb58b1a5808103067f7bb9d5836c651b3bb0 \
     --hash=sha256:f0a4641d3cf955324a89c04f3d94663aa4d638abe8f733ecd3582848e1c37035 \
-    # via -r base.in
+    # via -r requirements/base.in
 jmespath==0.10.0 \
     --hash=sha256:b85d0567b8666149a93172712e68920734333c0ce7e89b78b3e987f71e5ed4f9 \
     --hash=sha256:cdf6525904cc597730141d61b36f2e4b8ecc257c420fa2f4549bac2c2d0cb72f \
@@ -187,7 +187,7 @@ mohawk==1.1.0 \
 mozilla-version==0.5.2 \
     --hash=sha256:782f81f469b30c3a5a9fb73edfbe1ab9e37a6b3c072ac58c77ec73b6773f2ef7 \
     --hash=sha256:dbf49b2dc666542d83b933ed4db91ecb5b761f0c76bf421c2099c51189465f1e \
-    # via -r base.in
+    # via -r requirements/base.in
 multidict==4.7.6 \
     --hash=sha256:1ece5a3369835c20ed57adadc663400b5525904e53bae59ec854a5d36b39b21a \
     --hash=sha256:275ca32383bc5d1894b6975bb4ca6a7ff16ab76fa622967625baeebcf8079000 \
@@ -234,7 +234,7 @@ pyyaml==5.3.1 \
 redo==2.0.3 \
     --hash=sha256:36784bf8ae766e14f9db0e377ccfa02835d648321d2007b6ae0bf4fd612c0f94 \
     --hash=sha256:71161cb0e928d824092a5f16203939bbc0867ce4c4685db263cf22c3ae7634a8 \
-    # via -r base.in
+    # via -r requirements/base.in
 requests==2.24.0 \
     --hash=sha256:b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b \
     --hash=sha256:fe75cc94a9443b9246fc7049224f75604b113c36acb93f87b80ed42c44cbb898 \
@@ -246,7 +246,7 @@ s3transfer==0.3.3 \
 scriptworker==35.2.0 \
     --hash=sha256:b890852378763a97a5e1883d9c159d5fe40ee6b66ea0f56d53bfad08822bb042 \
     --hash=sha256:ee1ecb8bba785b4e43779df530517b26bdbc717ae0fbb19cce96a330dd4c0d2d \
-    # via -r base.in
+    # via -r requirements/base.in
 six==1.15.0 \
     --hash=sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259 \
     --hash=sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced \
@@ -293,8 +293,6 @@ yarl==1.5.1 \
     --hash=sha256:f379b7f83f23fe12823085cd6b906edc49df969eb99757f58ff382349a3303c6 \
     # via aiohttp
 
-# The following packages are considered to be unsafe in a requirements file:
-setuptools==49.6.0 \
-    --hash=sha256:46bd862894ed22c2edff033c758c2dc026324788d758e96788e8f7c11f4e9707 \
-    --hash=sha256:4dd5bb0a0a0cff77b46ca5dd3a84857ee48c83e8223886b556613c724994073f \
-    # via jsonschema
+# WARNING: The following packages were not pinned, but pip requires them to be
+# pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.
+# setuptools
