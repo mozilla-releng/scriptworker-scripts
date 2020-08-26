@@ -172,7 +172,7 @@ def get_updated_buildhub_artifact(path, installer_artifact, installer_path, cont
 
 
 def get_taskId_from_full_path(full_path_artifact):
-    """ Temporary fix: Extract the taskId from a full path artifact
+    """Temporary fix: Extract the taskId from a full path artifact
     Input: '/src/beetmoverscript/test/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.mozinfo.json'
     Output: 'eSzfNqMZT_mSiQQXu8hyqg'
     """

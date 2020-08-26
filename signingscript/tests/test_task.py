@@ -182,7 +182,12 @@ def test_build_filelist_dict(context, task_defn):
 
 
 def test_build_filelist_dict_comment(context, task_defn_authenticode_comment):
-    full_path = os.path.join(context.config["work_dir"], "cot", "VALID_TASK_ID", "public/build/firefox-52.0a1.en-US.win64.installer.msi",)
+    full_path = os.path.join(
+        context.config["work_dir"],
+        "cot",
+        "VALID_TASK_ID",
+        "public/build/firefox-52.0a1.en-US.win64.installer.msi",
+    )
     expected = {
         "public/build/firefox-52.0a1.en-US.win64.installer.msi": {"full_path": full_path, "formats": ["autograph_authenticode"], "comment": "Foo Installer"}
     }

@@ -8,7 +8,13 @@ import githubscript.script as script
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("action, expectation", (("release", does_not_raise()), ("non-existing", pytest.raises(NotImplementedError)),))
+@pytest.mark.parametrize(
+    "action, expectation",
+    (
+        ("release", does_not_raise()),
+        ("non-existing", pytest.raises(NotImplementedError)),
+    ),
+)
 async def test_async_main(monkeypatch, action, expectation):
     config = {"contact_github": "true", "github_projects": {"myproject": {}}}
     task = {"payload": {}}
@@ -27,7 +33,11 @@ async def test_async_main(monkeypatch, action, expectation):
 
 
 @pytest.mark.parametrize(
-    "contact_github, expected_records, expected_text", ((False, 1, "This githubscript instance is not allowed to talk to Github."), (True, 0, None),),
+    "contact_github, expected_records, expected_text",
+    (
+        (False, 1, "This githubscript instance is not allowed to talk to Github."),
+        (True, 0, None),
+    ),
 )
 def test_warn_contact_github(caplog, monkeypatch, contact_github, expected_records, expected_text):
     script._warn_contact_github(contact_github)

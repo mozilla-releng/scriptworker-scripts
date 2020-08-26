@@ -117,8 +117,7 @@ def sanitize_buildid(bytes_input):
 
 
 def push(context, flatpak_file_path, channel):
-    """ Publishes a flatpak into a given channel.
-    """
+    """Publishes a flatpak into a given channel."""
     if not task.is_allowed_to_push_to_flathub(context.config, channel=channel):
         log.warning("Not allowed to push to Flathub. Skipping push...")
         # We don't raise an error because we still want green tasks on dev instances

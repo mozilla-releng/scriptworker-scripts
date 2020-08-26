@@ -30,7 +30,7 @@ _SNAP_NAME_ON_STORE = "firefox"
 
 
 def push(context, snap_file_path, channel):
-    """ Publishes a snap onto a given channel.
+    """Publishes a snap onto a given channel.
 
     This function performs all the network actions to ensure `snap_file_path` is published on
     `channel`. If `channel` is not whitelisted to contact the Snap Store, then it just early
