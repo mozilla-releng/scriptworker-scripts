@@ -84,9 +84,7 @@ non_text = {
     ),
 )
 def test_load_json_or_yaml(string, is_path, exception, raises, result):
-    """Exercise ``load_json_or_yaml`` various options.
-
-    """
+    """Exercise ``load_json_or_yaml`` various options."""
     if raises:
         with pytest.raises(exception):
             utils.load_json_or_yaml(string, is_path=is_path, exception=exception)
@@ -103,9 +101,7 @@ def test_load_json_or_yaml(string, is_path, exception, raises, result):
     ((None, "cot/taskId/public/foo"), ("work_dir", "work_dir/cot/taskId/public/foo")),
 )
 def test_get_artifact_path(work_dir, expected):
-    """``get_artifact_path`` gives the expected path.
-
-    """
+    """``get_artifact_path`` gives the expected path."""
     assert (
         utils.get_artifact_path("taskId", "public/foo", work_dir=work_dir) == expected
     )
@@ -129,9 +125,7 @@ def test_to_unicode(input, expected):
 # pipe_to_log {{{1
 @pytest.mark.asyncio
 async def test_pipe_to_log(tmpdir):
-    """``pipe_to_log`` writes command output to the log filehandle.
-
-    """
+    """``pipe_to_log`` writes command output to the log filehandle."""
     cmd = r""">&2 echo "foo" && echo "bar" && exit 0"""
     proc = await asyncio.create_subprocess_exec(
         "bash", "-c", cmd, stdout=PIPE, stderr=PIPE, stdin=None
@@ -150,9 +144,7 @@ async def test_pipe_to_log(tmpdir):
 # get_log_filehandle {{{1
 @pytest.mark.parametrize("path", (None, "log"))
 def test_get_log_filehandle(path, tmpdir):
-    """``get_log_filehandle`` gives a writable filehandle.
-
-    """
+    """``get_log_filehandle`` gives a writable filehandle."""
     if path:
         path = os.path.join(tmpdir, path)
     with utils.get_log_filehandle(log_path=path) as log_fh:

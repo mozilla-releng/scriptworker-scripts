@@ -9,8 +9,18 @@ import githubscript.task as gstask
 @pytest.mark.parametrize(
     "config, task, expectation, expected_result",
     (
-        ({"taskcluster_scope_prefixes": ["some:prefix"]}, {"scopes": ["some:prefix:project:someproject"]}, does_not_raise(), "some:prefix:",),
-        ({"taskcluster_scope_prefixes": ["some:prefix:"]}, {"scopes": ["some:prefix:project:someproject"]}, does_not_raise(), "some:prefix:",),
+        (
+            {"taskcluster_scope_prefixes": ["some:prefix"]},
+            {"scopes": ["some:prefix:project:someproject"]},
+            does_not_raise(),
+            "some:prefix:",
+        ),
+        (
+            {"taskcluster_scope_prefixes": ["some:prefix:"]},
+            {"scopes": ["some:prefix:project:someproject"]},
+            does_not_raise(),
+            "some:prefix:",
+        ),
         (
             {"taskcluster_scope_prefixes": ["some:prefix"]},
             {"scopes": ["some:prefix:project:someproject", "some:prefix:action:someaction"]},
@@ -39,9 +49,18 @@ def test_extract_common_scope_prefix(config, task, expectation, expected_result)
 @pytest.mark.parametrize(
     "config, expected_result",
     (
-        ({"taskcluster_scope_prefixes": ["some:prefix:"]}, ["some:prefix:"],),
-        ({"taskcluster_scope_prefixes": ["some:prefix:", "another:prefix"]}, ["some:prefix:", "another:prefix:"],),
-        ({"taskcluster_scope_prefixes": []}, [],),
+        (
+            {"taskcluster_scope_prefixes": ["some:prefix:"]},
+            ["some:prefix:"],
+        ),
+        (
+            {"taskcluster_scope_prefixes": ["some:prefix:", "another:prefix"]},
+            ["some:prefix:", "another:prefix:"],
+        ),
+        (
+            {"taskcluster_scope_prefixes": []},
+            [],
+        ),
     ),
 )
 def test_get_allowed_scope_prefixes(config, expected_result):
@@ -51,10 +70,30 @@ def test_get_allowed_scope_prefixes(config, expected_result):
 @pytest.mark.parametrize(
     "task, prefix, expectation, expected_result",
     (
-        ({"scopes": ["some:prefix:action:someaction"]}, "some:prefix:", does_not_raise(), "someaction",),
-        ({"scopes": []}, "some:prefix:", pytest.raises(TaskVerificationError), None,),
-        ({"scopes": ["some:prefix:action:someaction", "some:prefix:action:anotheraction"]}, "some:prefix:", pytest.raises(TaskVerificationError), None,),
-        ({"scopes": ["some:prefix:action:someaction"]}, "some:prefix:action:", pytest.raises(TaskVerificationError), None,),
+        (
+            {"scopes": ["some:prefix:action:someaction"]},
+            "some:prefix:",
+            does_not_raise(),
+            "someaction",
+        ),
+        (
+            {"scopes": []},
+            "some:prefix:",
+            pytest.raises(TaskVerificationError),
+            None,
+        ),
+        (
+            {"scopes": ["some:prefix:action:someaction", "some:prefix:action:anotheraction"]},
+            "some:prefix:",
+            pytest.raises(TaskVerificationError),
+            None,
+        ),
+        (
+            {"scopes": ["some:prefix:action:someaction"]},
+            "some:prefix:action:",
+            pytest.raises(TaskVerificationError),
+            None,
+        ),
     ),
 )
 def test_get_action(task, prefix, expectation, expected_result):
@@ -65,10 +104,30 @@ def test_get_action(task, prefix, expectation, expected_result):
 @pytest.mark.parametrize(
     "task, prefix, expectation, expected_result",
     (
-        ({"scopes": ["some:prefix:project:someproject"]}, "some:prefix:", does_not_raise(), "someproject",),
-        ({"scopes": []}, "some:prefix:", pytest.raises(TaskVerificationError), None,),
-        ({"scopes": ["some:prefix:project:someproject", "some:prefix:project:anotherproject"]}, "some:prefix:", pytest.raises(TaskVerificationError), None,),
-        ({"scopes": ["some:prefix:project:someproject"]}, "some:prefix:project:", pytest.raises(TaskVerificationError), None,),
+        (
+            {"scopes": ["some:prefix:project:someproject"]},
+            "some:prefix:",
+            does_not_raise(),
+            "someproject",
+        ),
+        (
+            {"scopes": []},
+            "some:prefix:",
+            pytest.raises(TaskVerificationError),
+            None,
+        ),
+        (
+            {"scopes": ["some:prefix:project:someproject", "some:prefix:project:anotherproject"]},
+            "some:prefix:",
+            pytest.raises(TaskVerificationError),
+            None,
+        ),
+        (
+            {"scopes": ["some:prefix:project:someproject"]},
+            "some:prefix:project:",
+            pytest.raises(TaskVerificationError),
+            None,
+        ),
     ),
 )
 def test_get_github_project(task, prefix, expectation, expected_result):
@@ -79,11 +138,36 @@ def test_get_github_project(task, prefix, expectation, expected_result):
 @pytest.mark.parametrize(
     "task, prefix, expectation, expected_result",
     (
-        ({"scopes": ["some:prefix:chunk"]}, "some:prefix:", does_not_raise(), "chunk",),
-        ({"scopes": ["some:bigger:prefix:chunk"]}, "some:bigger:prefix:", does_not_raise(), "chunk",),
-        ({"scopes": ["some:prefix:bigger:chunk"]}, "some:prefix:", does_not_raise(), "bigger:chunk",),
-        ({"scopes": []}, "some:prefix:", pytest.raises(TaskVerificationError), None,),
-        ({"scopes": ["some:prefix:chunk", "some:prefix:anotherchunk"]}, "some:prefix:", pytest.raises(TaskVerificationError), None,),
+        (
+            {"scopes": ["some:prefix:chunk"]},
+            "some:prefix:",
+            does_not_raise(),
+            "chunk",
+        ),
+        (
+            {"scopes": ["some:bigger:prefix:chunk"]},
+            "some:bigger:prefix:",
+            does_not_raise(),
+            "chunk",
+        ),
+        (
+            {"scopes": ["some:prefix:bigger:chunk"]},
+            "some:prefix:",
+            does_not_raise(),
+            "bigger:chunk",
+        ),
+        (
+            {"scopes": []},
+            "some:prefix:",
+            pytest.raises(TaskVerificationError),
+            None,
+        ),
+        (
+            {"scopes": ["some:prefix:chunk", "some:prefix:anotherchunk"]},
+            "some:prefix:",
+            pytest.raises(TaskVerificationError),
+            None,
+        ),
     ),
 )
 def test_extract_last_chunk_of_scope(task, prefix, expectation, expected_result):
@@ -94,9 +178,21 @@ def test_extract_last_chunk_of_scope(task, prefix, expectation, expected_result)
 @pytest.mark.parametrize(
     "project_config, action, expectation",
     (
-        ({"allowed_actions": ["someaction"]}, "someaction", does_not_raise(),),
-        ({"allowed_actions": []}, "someaction", pytest.raises(TaskVerificationError),),
-        ({"allowed_actions": ["anotheraction"]}, "someaction", pytest.raises(TaskVerificationError),),
+        (
+            {"allowed_actions": ["someaction"]},
+            "someaction",
+            does_not_raise(),
+        ),
+        (
+            {"allowed_actions": []},
+            "someaction",
+            pytest.raises(TaskVerificationError),
+        ),
+        (
+            {"allowed_actions": ["anotheraction"]},
+            "someaction",
+            pytest.raises(TaskVerificationError),
+        ),
     ),
 )
 def test_check_action_is_allowed(project_config, action, expectation):

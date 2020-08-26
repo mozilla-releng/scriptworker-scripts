@@ -95,7 +95,12 @@ def test_get_artifacts(monkeypatch):
 @pytest.mark.parametrize(
     "taskcluster_path, artifact_map, expectation, expected_result",
     (
-        ("public/build/target.apk", [{"paths": {"public/build/target.apk": {"destinations": ["Target 1.apk"]}}}], does_not_raise(), "Target 1.apk",),
+        (
+            "public/build/target.apk",
+            [{"paths": {"public/build/target.apk": {"destinations": ["Target 1.apk"]}}}],
+            does_not_raise(),
+            "Target 1.apk",
+        ),
         (
             "public/build/target.apk",
             [
@@ -105,7 +110,12 @@ def test_get_artifacts(monkeypatch):
             does_not_raise(),
             "Target 1.apk",
         ),
-        ("public/build/target.apk", [{"paths": {"public/build/target.apk": {"destinations": []}}}], pytest.raises(TaskVerificationError), None,),
+        (
+            "public/build/target.apk",
+            [{"paths": {"public/build/target.apk": {"destinations": []}}}],
+            pytest.raises(TaskVerificationError),
+            None,
+        ),
         (
             "public/build/target.apk",
             [{"paths": {"public/build/target.apk": {"destinations": ["Target 1.apk", "Another target 1.apk"]}}}],
@@ -121,7 +131,12 @@ def test_get_artifacts(monkeypatch):
             pytest.raises(TaskVerificationError),
             None,
         ),
-        ("public/build/target.apk", [], pytest.raises(TaskVerificationError), None,),
+        (
+            "public/build/target.apk",
+            [],
+            pytest.raises(TaskVerificationError),
+            None,
+        ),
     ),
 )
 def test_find_target_path(taskcluster_path, artifact_map, expectation, expected_result):

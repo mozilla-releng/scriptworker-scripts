@@ -45,7 +45,14 @@ def test_get_flatpak_channel_prod(raises, scopes, channel):
 
 @pytest.mark.parametrize(
     "channel, push_to_flathub, expected",
-    (("beta", True, True), ("stable", True, True), ("beta", False, False), ("stable", False, False), ("mock", True, False), ("mock", False, False),),
+    (
+        ("beta", True, True),
+        ("stable", True, True),
+        ("beta", False, False),
+        ("stable", False, False),
+        ("mock", True, False),
+        ("mock", False, False),
+    ),
 )
 def test_is_allowed_to_push_to_flathub(channel, push_to_flathub, expected):
     config = {"push_to_flathub": push_to_flathub}

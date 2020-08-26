@@ -110,7 +110,11 @@ async def test_create_release(release_config):
     github_repository = MagicMock()
     await github._create_release(github_repository, release_config)
     github_repository.create_release.assert_called_once_with(
-        tag_name="v1.0.0", target_commitish="somecommithash", name="SomeProduct v1.0.0", draft=False, prerelease=False,
+        tag_name="v1.0.0",
+        target_commitish="somecommithash",
+        name="SomeProduct v1.0.0",
+        draft=False,
+        prerelease=False,
     )
 
 
@@ -119,7 +123,11 @@ async def test_edit_existing_release(release_config):
     existing_release = MagicMock()
     await github._edit_existing_release(existing_release, release_config)
     existing_release.edit.assert_called_once_with(
-        tag_name="v1.0.0", target_commitish="somecommithash", name="SomeProduct v1.0.0", draft=False, prerelease=False,
+        tag_name="v1.0.0",
+        target_commitish="somecommithash",
+        name="SomeProduct v1.0.0",
+        draft=False,
+        prerelease=False,
     )
 
 
@@ -150,7 +158,9 @@ async def test_upload_artifact(tmpdir):
     file_handle = mock_open_()
 
     existing_release.upload_asset.assert_called_once_with(
-        content_type="application/vnd.android.package-archive", name="Target 1.apk", asset=file_handle,
+        content_type="application/vnd.android.package-archive",
+        name="Target 1.apk",
+        asset=file_handle,
     )
 
 
@@ -233,10 +243,30 @@ async def test_upload_artifact_if_needed(monkeypatch, artifact_exists, update_ar
 @pytest.mark.parametrize(
     "existing_artifacts, target_artifact, expectation, expected_result",
     (
-        ([_DummyArtifact()], {"name": "Target 1.apk"}, does_not_raise(), _DummyArtifact(),),
-        ([_DummyArtifact(), _DummyArtifact(name="Target 2.apk")], {"name": "Target 2.apk"}, does_not_raise(), _DummyArtifact(name="Target 2.apk"),),
-        ([_DummyArtifact()], {"name": "Target 2.apk"}, pytest.raises(ValueError), None,),
-        ([_DummyArtifact(), _DummyArtifact()], {"name": "Target 1.apk"}, pytest.raises(ValueError), None,),
+        (
+            [_DummyArtifact()],
+            {"name": "Target 1.apk"},
+            does_not_raise(),
+            _DummyArtifact(),
+        ),
+        (
+            [_DummyArtifact(), _DummyArtifact(name="Target 2.apk")],
+            {"name": "Target 2.apk"},
+            does_not_raise(),
+            _DummyArtifact(name="Target 2.apk"),
+        ),
+        (
+            [_DummyArtifact()],
+            {"name": "Target 2.apk"},
+            pytest.raises(ValueError),
+            None,
+        ),
+        (
+            [_DummyArtifact(), _DummyArtifact()],
+            {"name": "Target 1.apk"},
+            pytest.raises(ValueError),
+            None,
+        ),
     ),
 )
 def test_get_existing_artifact(existing_artifacts, target_artifact, expectation, expected_result):
@@ -248,10 +278,30 @@ def test_get_existing_artifact(existing_artifacts, target_artifact, expectation,
 @pytest.mark.parametrize(
     "existing_artifact, target_artifact, artifact_exists, expected_result",
     (
-        (_DummyArtifact(), {"content_type": "application/vnd.android.package-archive", "name": "Target 1.apk", "size": 9000}, True, False,),
-        (_DummyArtifact("text/plain"), {"content_type": "application/vnd.android.package-archive", "name": "Target 1.apk", "size": 9000}, True, True,),
-        (_DummyArtifact(size=1), {"content_type": "application/vnd.android.package-archive", "name": "Target 1.apk", "size": 9000}, True, True,),
-        (_DummyArtifact(), {"content_type": "application/vnd.android.package-archive", "name": "Target 1.apk", "size": 9000}, False, True,),
+        (
+            _DummyArtifact(),
+            {"content_type": "application/vnd.android.package-archive", "name": "Target 1.apk", "size": 9000},
+            True,
+            False,
+        ),
+        (
+            _DummyArtifact("text/plain"),
+            {"content_type": "application/vnd.android.package-archive", "name": "Target 1.apk", "size": 9000},
+            True,
+            True,
+        ),
+        (
+            _DummyArtifact(size=1),
+            {"content_type": "application/vnd.android.package-archive", "name": "Target 1.apk", "size": 9000},
+            True,
+            True,
+        ),
+        (
+            _DummyArtifact(),
+            {"content_type": "application/vnd.android.package-archive", "name": "Target 1.apk", "size": 9000},
+            False,
+            True,
+        ),
     ),
 )
 async def test_does_existing_artifact_need_to_be_reuploaded(monkeypatch, existing_artifact, target_artifact, artifact_exists, expected_result):
@@ -275,7 +325,23 @@ async def test_does_existing_artifact_need_to_be_reuploaded(monkeypatch, existin
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "update_release, update_artifact, expectation",
-    ((False, False, does_not_raise(),), (True, False, pytest.raises(TaskError),), (False, True, pytest.raises(TaskError),)),
+    (
+        (
+            False,
+            False,
+            does_not_raise(),
+        ),
+        (
+            True,
+            False,
+            pytest.raises(TaskError),
+        ),
+        (
+            False,
+            True,
+            pytest.raises(TaskError),
+        ),
+    ),
 )
 async def test_check_final_state_of_release(monkeypatch, update_release, update_artifact, expectation):
     existing_release = MagicMock()

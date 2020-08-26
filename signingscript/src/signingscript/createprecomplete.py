@@ -11,8 +11,8 @@ import sys
 
 
 def get_build_entries(root_path):
-    """ Iterates through the root_path, creating a list for each file and
-        directory. Excludes any file paths ending with channel-prefs.js.
+    """Iterates through the root_path, creating a list for each file and
+    directory. Excludes any file paths ending with channel-prefs.js.
     """
     rel_file_path_set = set()
     rel_dir_path_set = set()
@@ -40,9 +40,9 @@ def get_build_entries(root_path):
 
 
 def generate_precomplete(root_path):
-    """ Creates the precomplete file containing the remove and rmdir
-        application update instructions. The given directory is used
-        for the location to enumerate and to create the precomplete file.
+    """Creates the precomplete file containing the remove and rmdir
+    application update instructions. The given directory is used
+    for the location to enumerate and to create the precomplete file.
     """
     rel_path_precomplete = "precomplete"
     # If inside a Mac bundle use the root of the bundle for the path.
