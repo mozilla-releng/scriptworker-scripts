@@ -76,7 +76,7 @@ chardet==3.0.4 \
 click==7.1.2 \
     --hash=sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a \
     --hash=sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc \
-    # via -r base.in
+    # via -r requirements/base.in
 cryptography==3.0 \
     --hash=sha256:0c608ff4d4adad9e39b5057de43657515c7da1ccb1807c3a27d4cf31fc923b4b \
     --hash=sha256:0cbfed8ea74631fe4de00630f4bb592dad564d57f73150d6f6796a24e76c76cd \
@@ -138,7 +138,7 @@ mohawk==1.1.0 \
 mozilla-version==0.5.2 \
     --hash=sha256:782f81f469b30c3a5a9fb73edfbe1ab9e37a6b3c072ac58c77ec73b6773f2ef7 \
     --hash=sha256:dbf49b2dc666542d83b933ed4db91ecb5b761f0c76bf421c2099c51189465f1e \
-    # via -r base.in
+    # via -r requirements/base.in
 multidict==4.7.6 \
     --hash=sha256:1ece5a3369835c20ed57adadc663400b5525904e53bae59ec854a5d36b39b21a \
     --hash=sha256:275ca32383bc5d1894b6975bb4ca6a7ff16ab76fa622967625baeebcf8079000 \
@@ -161,22 +161,21 @@ multidict==4.7.6 \
 mypy-extensions==0.4.3 \
     --hash=sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d \
     --hash=sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8 \
-    # via -r base.in
+    # via -r requirements/base.in
 progressbar33==2.4 \
-    --hash=sha256:4821ae5a758a6ec59657cb1bd4fe513c3d4717e9fcfd63d650829541bca50d2f \
     --hash=sha256:51fe0d9b3b4023db2f983eeccdfc8c9846b84db8443b9bee002c7f58f4376eff \
-    # via -r base.in
+    # via -r requirements/base.in
 pycparser==2.20 \
     --hash=sha256:2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0 \
     --hash=sha256:7582ad22678f0fcd81102833f60ef8d0e57288b6b5fb00323d101be910e35705 \
     # via cffi
 pyelftools==0.24 \
     --hash=sha256:e9dd97d685a5b96b88a988dabadb88e5a539b64cd7d7927fac9a7368dc4c459c \
-    # via -r base.in
+    # via -r requirements/base.in
 pymacaroons==0.9.2 \
     --hash=sha256:9a3de55308e41abdbc05f6e205c20ed36f928860cce490fa9835231ab9cb3c32 \
     --hash=sha256:dc0a98a8bf30e1c0f9630a9f2fc9d9aae9a2f902ec8b4d68589012c7bd6ada5d \
-    # via -r base.in
+    # via -r requirements/base.in
 pyrsistent==0.16.0 \
     --hash=sha256:28669905fe725965daa16184933676547c5bb40a5153055a8dee2a4bd7933ad3 \
     # via jsonschema
@@ -209,8 +208,7 @@ python-dateutil==2.8.1 \
     # via arrow, github3.py
 python-debian==0.1.28 \
     --hash=sha256:1e4441548598b8dfd2b61bc36db64bfa5a7b93a65ae04641d3e998fe3b702544 \
-    --hash=sha256:404a59739b939b40e690106ec1a6eaece9f463fa59f217c0bfcd1f5fb7ee522c \
-    # via -r base.in
+    # via -r requirements/base.in
 pyxdg==0.26 \
     --hash=sha256:1948ff8e2db02156c0cccd2529b43c0cff56ebaa71f5f021bbd755bc1419190e \
     --hash=sha256:fe2928d3f532ed32b39c32a482b54136fe766d19936afc96c8f00645f9da1a06 \
@@ -227,43 +225,35 @@ pyyaml==3.13 \
     --hash=sha256:d5eef459e30b09f5a098b9cea68bebfeb268697f78d647bd255a085371ac7f3f \
     --hash=sha256:e01d3203230e1786cd91ccfdc8f8454c8069c91bee3962ad93b87a4b2860f537 \
     --hash=sha256:e170a9e6fcfd19021dd29845af83bb79236068bf5fd4df3327c1be18182b2531 \
-    # via -r base.in, scriptworker
+    # via -r requirements/base.in, scriptworker
 requests-toolbelt==0.8.0 \
     --hash=sha256:42c9c170abc2cacb78b8ab23ac957945c7716249206f90874651971a4acff237 \
     --hash=sha256:f6a531936c6fa4c6cfce1b9c10d5c4f498d16528d2a54a22ca00011205a187b5 \
-    # via -r base.in
+    # via -r requirements/base.in
 requests==2.24.0 \
     --hash=sha256:b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b \
     --hash=sha256:fe75cc94a9443b9246fc7049224f75604b113c36acb93f87b80ed42c44cbb898 \
     # via github3.py, requests-toolbelt, requests-unixsocket, snapcraft, taskcluster
 requests_unixsocket==0.1.5 \
     --hash=sha256:a91bc0138f61fb3396de6358fa81e2cd069a150ade5111f869df01d8bc9d294c \
-    # via -r base.in
+    # via -r requirements/base.in
 scriptworker==35.2.0 \
     --hash=sha256:b890852378763a97a5e1883d9c159d5fe40ee6b66ea0f56d53bfad08822bb042 \
     --hash=sha256:ee1ecb8bba785b4e43779df530517b26bdbc717ae0fbb19cce96a330dd4c0d2d \
-    # via -r base.in
+    # via -r requirements/base.in
 simplejson==3.8.2 \
     --hash=sha256:057952d5a964737425faca7153e497daee126c88cee424f8331bf8f931430880 \
-    --hash=sha256:06af729cd24692f329d7fa329b92f43107812ee29821edb0e7c75354f034cd93 \
     --hash=sha256:08b59bcb98c1d7b8d2a5efd275afa18225a82f58bedde4dfec5410e884e0fbbf \
-    --hash=sha256:0e9c19a5cff15dd0f462625bd36008c2cefa989a004f507f49aed7dfa8de709a \
     --hash=sha256:1b7126e3eb3cd4794e9b34837d8eb84ce9a36a2aed2bbed8b42e1ede6f9c89ba \
     --hash=sha256:8793bb83911ea75c0be8806456cfb6242f2e513107115811dc6bc010029fb1b0 \
-    --hash=sha256:8a66052d057871962b20574346a8380f03bff0a2f5c0eedc307d10dd0172aa46 \
     --hash=sha256:99694d33744924958412312113925a9eff918e4c32ec850f1636a7af3a463481 \
-    --hash=sha256:9d7d29f89f85b453a00ed71ba60451051d4598fdc07bff06958449dcca7f3a0d \
-    --hash=sha256:a97dd6d819626dc4371adbc7b6bdf3246fbffaf9346be4d22a7b5e501d7da99a \
-    --hash=sha256:ac2f5c72f6555e37068ecca0148e7c1a87ad2bd14c05f8b2bb7acd84cc42427c \
     --hash=sha256:b2ef4f07f38b9303c8bbf43150722792649676eabfae004922e085c6247a4e1b \
     --hash=sha256:cd769310466f36133cd9155b571c768767f29682deb1639520216ac8a8567774 \
     --hash=sha256:d34db551b129650c5a048170a57b34e6dd8b53439acee5287e2efa2e53c80d33 \
     --hash=sha256:d58439c548433adcda98e695be53e526ba940a4b9c44fb9a05d92cd495cdd47f \
-    --hash=sha256:d7a83ee6cbe2d71e3612a5068b4494078f2f8545b31a1955438f997d779a9be9 \
     --hash=sha256:e054544ecec008a17e81a06a46651a2582dcc63e232f9d3aafe0c3b7d43245f4 \
-    --hash=sha256:e0ec9f3e0204e685e5379b2915eb6d5b7c22a1f04348586854cfcdc9a161e359 \
     --hash=sha256:e3b2fed6fedf3fdce70d10c61dee8779b8bf7e67b5625efee4bff8243b180487 \
-    # via -r base.in
+    # via -r requirements/base.in
 six==1.15.0 \
     --hash=sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259 \
     --hash=sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced \
@@ -272,10 +262,10 @@ slugid==2.0.0 \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c \
     # via taskcluster
-https://github.com/snapcore/snapcraft/archive/3.10.tar.gz --hash=sha256:e3b83834da70be777e435d7429eb8745e00bd22a4f1ad9919df75bcde36c8a1c # via -r base.in
+https://github.com/snapcore/snapcraft/archive/3.10.tar.gz --hash=sha256:e3b83834da70be777e435d7429eb8745e00bd22a4f1ad9919df75bcde36c8a1c # via -r requirements/base.in
 tabulate==0.7.5 \
     --hash=sha256:9071aacbd97a9a915096c1aaf0dc684ac2672904cd876db5904085d6dac9810e \
-    # via -r base.in
+    # via -r requirements/base.in
 taskcluster-urls==13.0.1 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
@@ -314,8 +304,6 @@ yarl==1.5.1 \
     --hash=sha256:f379b7f83f23fe12823085cd6b906edc49df969eb99757f58ff382349a3303c6 \
     # via aiohttp
 
-# The following packages are considered to be unsafe in a requirements file:
-setuptools==49.6.0 \
-    --hash=sha256:46bd862894ed22c2edff033c758c2dc026324788d758e96788e8f7c11f4e9707 \
-    --hash=sha256:4dd5bb0a0a0cff77b46ca5dd3a84857ee48c83e8223886b556613c724994073f \
-    # via jsonschema
+# WARNING: The following packages were not pinned, but pip requires them to be
+# pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.
+# setuptools
