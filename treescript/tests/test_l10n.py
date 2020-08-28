@@ -146,23 +146,9 @@ async def test_get_latest_revision(mocker):
 # build_revision_dict {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "revision_info, old_contents, expected",
+    "old_contents, expected",
     (
         (
-            """one onerev
-two tworev
-three threerev
-extra extrarev
-""",
-            None,
-            {
-                "one": {"revision": "onerev", "platforms": ["platform"]},
-                "two": {"revision": "tworev", "platforms": ["platform"]},
-                "three": {"revision": "threerev", "platforms": ["platform"]},
-            },
-        ),
-        (
-            None,
             {
                 "one": {"pin": True, "revision": "one_orig_revision"},
                 "two": {"pin": False, "revision": "two_orig_revision"},
@@ -176,7 +162,6 @@ extra extrarev
         ),
         (
             None,
-            None,
             {
                 "one": {"revision": "default", "platforms": ["platform"]},
                 "two": {"revision": "default", "platforms": ["platform"]},
@@ -185,7 +170,7 @@ extra extrarev
         ),
     ),
 )
-async def test_build_revision_dict(mocker, revision_info, old_contents, expected):
+async def test_build_revision_dict(mocker, old_contents, expected):
     """``build_revision_dict`` polls hg pushlog for latest revision information,
     unless pinned; otherwise it adds l10n dashboard revisions, if available,
     to the platform_dict; otherwise it adds a revision of "default" to
@@ -205,7 +190,7 @@ async def test_build_revision_dict(mocker, revision_info, old_contents, expected
 
     mocker.patch.object(l10n, "build_platform_dict", new=build_platform_dict)
     mocker.patch.object(l10n, "get_latest_revision", new=get_latest_revision)
-    assert await l10n.build_revision_dict(bump_config, "", old_contents, dashboard_revision_info=revision_info) == expected
+    assert await l10n.build_revision_dict(bump_config, "", old_contents) == expected
 
 
 # build_commit_message {{{1
@@ -236,27 +221,6 @@ async def test_check_treestatus(status, mocker, expected):
     assert await l10n.check_treestatus(config, {}) == expected
 
 
-# get_revision_info {{{1
-@pytest.mark.asyncio
-async def test_get_revision_info(mocker):
-    """get_revision_info downloads l10n changeset information from the
-    l10n dashboard url.
-
-    """
-    expected = "foo bar"
-
-    async def fake_download(url, path):
-        with open(path, "w") as fh:
-            fh.write(expected)
-
-    bump_config = {"revision_url": "foo/{MAJOR_VERSION}", "version_path": ""}
-    version = mocker.MagicMock()
-    version.major_number = "70"
-    mocker.patch.object(l10n, "get_version", return_value=version)
-    mocker.patch.object(l10n, "download_file", new=fake_download)
-    assert await l10n.get_revision_info(bump_config, "")
-
-
 # l10n_bump {{{1
 @pytest.mark.parametrize(
     "ignore_closed_tree, l10n_bump_info, old_contents, new_contents, changes",
@@ -270,7 +234,7 @@ async def test_get_revision_info(mocker):
         ),
         (
             False,
-            [{"name": "x", "path": "x", "revision_url": "x"}, {"name": "y", "path": "y"}],
+            [{"name": "x", "path": "x", "l10n_repo_url": "x"}, {"name": "y", "path": "y"}],
             {"one": {"revision": "oldonerev", "platforms": ["platform"]}, "two": {"revision": "oldtworev", "platforms": ["platform"]}},
             {"one": {"revision": "newonerev", "platforms": ["platform"]}, "two": {"revision": "newtworev", "platforms": ["platform"]}},
             2,
@@ -296,7 +260,7 @@ async def test_l10n_bump(mocker, ignore_closed_tree, l10n_bump_info, tmpdir, old
     mocker.patch.object(l10n, "check_treestatus", new=check_treestatus)
     mocker.patch.object(l10n, "get_l10n_bump_info", return_value=l10n_bump_info)
     mocker.patch.object(l10n, "load_json_or_yaml", return_value=old_contents)
-    mocker.patch.object(l10n, "get_revision_info", new=noop_async)
+    mocker.patch.object(l10n, "get_latest_revision", new=noop_async)
     mocker.patch.object(l10n, "build_revision_dict", new=fake_build_revision_dict)
     mocker.patch.object(l10n, "run_hg_command", new=fake_hg)
 
