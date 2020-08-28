@@ -18,7 +18,6 @@ from scriptworker_client.utils import load_json_or_yaml
 
 from treescript.mercurial import run_hg_command
 from treescript.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_l10n_bump_info, get_short_source_repo
-from treescript.versionmanip import get_version
 
 log = logging.getLogger(__name__)
 
@@ -106,7 +105,7 @@ async def get_latest_revision(locale, url):
 
 
 # build_revision_dict {{{1
-async def build_revision_dict(bump_config, repo_path, old_contents, dashboard_revision_info=None):
+async def build_revision_dict(bump_config, repo_path, old_contents):
     """Add l10n revision information to the ``platform_dict``.
 
     If we have an ``l10n_repo_url``, use that as a template for the locale
@@ -117,11 +116,6 @@ async def build_revision_dict(bump_config, repo_path, old_contents, dashboard_re
     The ``l10n_repo_url`` will look something like
     https://hg.mozilla.org/l10n-central/%(locale)s/json-pushes?version=2&tipsonly=1
 
-    Deprecated: the l10n dashboard contains locale to revision information for
-    each locale. If we have a ``dashboard_revision_url``, that is the
-    templatized dashboard url we should query for locale to revision
-    information.
-
     Otherwise, add a ``default`` revision to each locale in the
     ``platform_dict``.
 
@@ -130,8 +124,6 @@ async def build_revision_dict(bump_config, repo_path, old_contents, dashboard_re
             payload ``l10n_bump_info``
         repo_path (str): the path to the repo on disk
         old_contents (dict): the old contents of the l10n changesets, if any.
-        dashboard_revision_info (string, optional): the contents of the
-            l10n dashboard. Defaults to None.
 
     Returns:
         dict: locale to dictionary of platforms and revision
@@ -155,13 +147,6 @@ async def build_revision_dict(bump_config, repo_path, old_contents, dashboard_re
         for task in tasks:
             (locale, revision) = task.result()
             revision_dict[locale]["revision"] = revision
-    elif dashboard_revision_info:
-        # XXX deprecated
-        for line in dashboard_revision_info.splitlines():
-            locale, revision = line.split(" ")
-            if locale in platform_dict:
-                revision_dict[locale] = platform_dict[locale]
-                revision_dict[locale]["revision"] = revision
     else:
         for k, v in platform_dict.items():
             v["revision"] = "default"
@@ -224,33 +209,6 @@ async def check_treestatus(config, task):
     return False
 
 
-# get_revision_info {{{1
-async def get_revision_info(bump_config, repo_path):
-    """Query the l10n changesets from the l10n dashboard.
-
-    Deprecated.
-
-    Args:
-        bump_config (dict): one of the dictionaries from the payload
-            ``l10n_bump_info``
-        repo_path (str): the path to the source repo
-
-    Returns:
-        str: the contents of the dashboard
-
-    """
-    version = get_version(bump_config["version_path"], repo_path)
-    repl_dict = {"MAJOR_VERSION": version.major_number, "COMBINED_MAJOR_VERSION": version.major_number + version.minor_number}
-    url = bump_config["revision_url"] % repl_dict
-    with tempfile.NamedTemporaryFile() as fp:
-        path = fp.name
-        await retry_async(download_file, args=(url, path), retry_exceptions=(DownloadError,))
-        with open(path, "r") as fh:
-            revision_info = fh.read()
-    log.info("Got %s", revision_info)
-    return revision_info
-
-
 # l10n_bump {{{1
 async def l10n_bump(config, task, repo_path):
     """Perform a l10n revision bump.
@@ -282,15 +240,12 @@ async def l10n_bump(config, task, repo_path):
 
     dontbuild = get_dontbuild(task)
     l10n_bump_info = get_l10n_bump_info(task)
-    dashboard_revision_info = None
     changes = 0
 
     for bump_config in l10n_bump_info:
-        if bump_config.get("revision_url"):
-            dashboard_revision_info = await get_revision_info(bump_config, repo_path)
         path = os.path.join(repo_path, bump_config["path"])
         old_contents = load_json_or_yaml(path, is_path=True)
-        new_contents = await build_revision_dict(bump_config, repo_path, deepcopy(old_contents), dashboard_revision_info=dashboard_revision_info)
+        new_contents = await build_revision_dict(bump_config, repo_path, deepcopy(old_contents))
         if old_contents == new_contents:
             continue
         with open(path, "w") as fh:
