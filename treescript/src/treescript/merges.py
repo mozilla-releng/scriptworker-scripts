@@ -176,10 +176,11 @@ async def do_merge(config, task, repo_path):
     """
     merge_config = get_merge_config(task)
 
+    upstream_repo = config["upstream_repo"]
     from_branch = merge_config.get("from_branch")
     to_branch = merge_config.get("to_branch")
 
-    await run_hg_command(config, "pull", "https://hg.mozilla.org/mozilla-unified", repo_path=repo_path)
+    await run_hg_command(config, "pull", upstream_repo, repo_path=repo_path)
 
     # Used if end_tag is set.
     await run_hg_command(config, "up", "-C", to_branch, repo_path=repo_path)

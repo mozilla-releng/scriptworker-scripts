@@ -71,6 +71,7 @@ def config(tmpdir):
     config_["artifact_dir"] = os.path.join(tmpdir, "artifacts")
     config_["hg_ssh_user"] = "sshuser"
     config_["merge_day_clobber_file"] = "CLOBBER"
+    config_["upstream_repo"] = "https://hg.mozilla.org/repo/fake_upstream"
     yield config_
 
 
@@ -278,7 +279,7 @@ async def test_bump_central(mocker, config, task, repo_context, merge_bump_info)
     result = await merges.do_merge(config, task, repo_context.repo)
 
     expected_calls = [
-        ("pull", "https://hg.mozilla.org/mozilla-unified"),
+        ("pull", "https://hg.mozilla.org/repo/fake_upstream"),
         ("up", "-C", "central"),
         (
             "tag",
