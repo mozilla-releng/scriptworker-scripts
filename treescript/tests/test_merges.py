@@ -297,3 +297,16 @@ async def test_bump_central(mocker, config, task, repo_context, merge_bump_info)
     for expected in expected_calls:
         assert expected in called_args
     assert result == [("https://hg.mozilla.org/mozilla-central", "some_revision")]
+
+
+@pytest.mark.parametrize(
+    "merge_config,expected", (({}, "browser/config/version.txt"), ({"fetch_version_from": "some/other/version.txt"}, "some/other/version.txt"))
+)
+def test_core_version_file(merge_config, expected):
+    assert merges.core_version_file(merge_config) == expected
+
+
+def test_formatter():
+    fmt = merges.BashFormatter()
+    assert fmt.format("Foo ${bar} {baz}", baz="BAZ") == "Foo ${bar} BAZ"
+    assert fmt.format("Foo ${bar} {}", "BAZ") == "Foo ${bar} BAZ"
