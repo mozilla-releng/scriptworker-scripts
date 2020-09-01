@@ -144,7 +144,6 @@ class TestUpdateIdempotency(unittest.TestCase):
 class TestReleaseCreatorFileUrlsMixin(unittest.TestCase):
     maxDiff = None
 
-    # once we've swapped everything to https we can collapse this to devedition and a single Firefox case
     def test_http_default(self):
         submitter = ReleaseCreatorV9(api_root=None, auth0_secrets=None)
         data = submitter._getFileUrls(
@@ -153,13 +152,15 @@ class TestReleaseCreatorFileUrlsMixin(unittest.TestCase):
         expected = {
             "fileUrls": {
                 "*": {
-                    "completes": {"*": "http://download.example.org/?product=firefox-1.0-complete&os=%OS_BOUNCER%&lang=%LOCALE%"},
-                    "partials": {"Firefox-0.5-build2": "http://download.example.org/?product=firefox-1.0-partial-0.5&os=%OS_BOUNCER%&lang=%LOCALE%"},
+                    "completes": {"*": "https://download.example.org/?product=firefox-1.0-complete&os=%OS_BOUNCER%&lang=%LOCALE%"},
+                    "partials": {"Firefox-0.5-build2": "https://download.example.org/?product=firefox-1.0-partial-0.5&os=%OS_BOUNCER%&lang=%LOCALE%"},
                 },
                 "release-localtest": {
-                    "completes": {"*": "http://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-1.0.complete.mar"},
+                    "completes": {
+                        "*": "https://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-1.0.complete.mar"
+                    },
                     "partials": {
-                        "Firefox-0.5-build2": "http://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-0.5-1.0.partial.mar"  # noqa: E501
+                        "Firefox-0.5-build2": "https://ftp.example.org/pub/firefox/candidates/1.0-candidates/build1/update/%OS_FTP%/%LOCALE%/firefox-0.5-1.0.partial.mar"  # noqa: E501
                     },
                 },
             }
@@ -219,6 +220,10 @@ class TestReleaseCreatorFileUrlsMixin(unittest.TestCase):
         )
         expected = {
             "fileUrls": {
+                "*": {
+                    "completes": {"*": "https://download.example.org/?product=firefox-1.0-complete&os=%OS_BOUNCER%&lang=%LOCALE%"},
+                    "partials": {"Firefox-1.0b1-build2": "https://download.example.org/?product=firefox-1.0-partial-1.0b1&os=%OS_BOUNCER%&lang=%LOCALE%"},
+                },
                 "beta": {
                     "completes": {"*": "https://download.example.org/?product=firefox-1.0build1-complete&os=%OS_BOUNCER%&lang=%LOCALE%"},
                     "partials": {
