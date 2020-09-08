@@ -32,9 +32,6 @@ class ReleaseCreatorFileUrlsMixin(object):
             file_prefix = "firefox"
         # bug 1444406 - eventually we're going to default to https
         protocol = "https"
-        # Remove this when Thunderbird is ready to switch to https
-        if productName.lower() == "thunderbird":
-            protocol = "http"
 
         # "*" is for the default set of fileUrls, which generally points at
         # bouncer. It's helpful to have this to reduce duplication between
