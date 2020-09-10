@@ -27,9 +27,9 @@ async-timeout==3.0.1 \
     --hash=sha256:0c3c816a028d47f659d6ff5c745cb2acf1f966da1fe5c19c77a70282b25f4c5f \
     --hash=sha256:4291ca197d287d274d0b6cb5d6f8f8f82d434ed288f962539ff18cc9012f9ea3 \
     # via -r requirements/base.in, aiohttp, taskcluster
-attrs==20.1.0 \
-    --hash=sha256:0ef97238856430dcf9228e07f316aefc17e8939fc8507e18c6501b761ef1a42a \
-    --hash=sha256:2867b7b9f8326499ab5b0e2d12801fa5c98842d2cbd22b35112ae04bf85b4dff \
+attrs==20.2.0 \
+    --hash=sha256:26b54ddbbb9ee1d34d5d3668dd37d6cf74990ab23c828c2888dccdceee395594 \
+    --hash=sha256:fce7fc47dfc976152e82d53ff92fa0407700c21acd20886a13777a0d20e655dc \
     # via aiohttp
 certifi==2020.6.20 \
     --hash=sha256:5930595817496dd21bb8dc35dad090f1c2cd0adfaf21204bf6732ca5d8ee34d3 \
@@ -91,10 +91,10 @@ taskcluster-urls==13.0.1 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
     --hash=sha256:f66dcbd6572a6216ab65949f0fa0b91f2df647918028436c384e6af5cd12ae2b \
     # via taskcluster
-taskcluster==37.0.0 \
-    --hash=sha256:1b32e4e2606e02671634f26a98c934df33bd01ee2a32a7fc19158aaf6ee9dcd4 \
-    --hash=sha256:22b3022e3407bbb16f5b748eada7d1940496214c8504c3d479fae6fa39411479 \
-    --hash=sha256:27d38a95a9f89e26f116e07bcf3a0cc2674f08ce0d63c84561fadce369256ce1 \
+taskcluster==37.1.0 \
+    --hash=sha256:30d7a15544a69fe9161bef5f5facedbb01de384cd9a89dcd16131dbcf8f5ae09 \
+    --hash=sha256:660e9ff10821a39f6ed5e72c99a36ebf3654b1a639aed3b3361eb83ea3a85f9a \
+    --hash=sha256:67332fcb93ab662712a74ade9fcc3fcf30333913f23c53f50fb42974ae262ea0 \
     # via -r requirements/base.in
 urllib3==1.25.10 \
     --hash=sha256:91056c15fa70756691db97756772bb1eb9678fa585d9184f24534b100dc60f4a \
