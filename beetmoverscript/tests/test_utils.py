@@ -262,32 +262,6 @@ def test_beetmover_template_args_maven(product, context, branch, version, artifa
 
 
 @pytest.mark.parametrize(
-    "product, branch, version, artifact_id, expected_version",
-    (("components", "", "1.0.1-SNAPSHOT", "browser-session", "1.0.1"), ("components", "", "0.25.2-SNAPSHOT", "browser-session", "0.25.2")),
-)
-def test_beetmover_template_args_maven_snapshot(product, context, branch, version, artifact_id, expected_version):
-    context.bucket = "maven"
-    context.action = "push-to-maven"
-    context.task["payload"]["version"] = version
-    context.task["payload"]["artifact_id"] = artifact_id
-    context.release_props["branch"] = branch
-    # there's inherited buildid here from the context fixture
-    del context.release_props["buildid"]
-    context.release_props["appName"] = product
-
-    assert generate_beetmover_template_args(context) == {
-        "artifact_id": artifact_id,
-        "template_key": "maven_{}".format(product),
-        "version": expected_version,
-        "snapshot_version": version,
-        "is_jar": None,
-        "date_timestamp": "{{date_timestamp}}",
-        "clock_timestamp": "{{clock_timestamp}}",
-        "build_number": "{{build_number}}",
-    }
-
-
-@pytest.mark.parametrize(
     "locale_in_payload, locales_in_upstream_artifacts, raises",
     (("en-US", [], False), ("en-US", ["en-US"], False), ("ro", ["ro"], False), ("en-US", ["ro"], True), ("en-US", ["en-US", "ro"], True)),
 )

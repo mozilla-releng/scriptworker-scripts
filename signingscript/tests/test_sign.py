@@ -16,11 +16,11 @@ from unittest import mock
 import aiohttp
 import pytest
 import winsign.sign
+from conftest import BASE_DIR, DEFAULT_SCOPE_PREFIX, SERVER_CONFIG_PATH, TEST_DATA_DIR, die, does_not_raise, noop_async, noop_sync
 from scriptworker.utils import makedirs
 
 import signingscript.sign as sign
 import signingscript.utils as utils
-from conftest import BASE_DIR, DEFAULT_SCOPE_PREFIX, SERVER_CONFIG_PATH, TEST_DATA_DIR, die, does_not_raise, noop_async, noop_sync
 from signingscript.exceptions import SigningScriptError
 from signingscript.utils import get_hash
 
@@ -1021,7 +1021,7 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt, use_comment):
     test_file = os.path.join(tmpdir, "windows.zip")
     shutil.copyfile(os.path.join(TEST_DATA_DIR, "windows.zip"), test_file)
 
-    async def mocked_autograph(context, from_, fmt):
+    async def mocked_autograph(context, from_, fmt, keyid):
         return b""
 
     async def mocked_winsign(infile, outfile, digest_algo, certs, signer, comment=None, **kwargs):
@@ -1061,7 +1061,7 @@ async def test_authenticode_sign_msi(tmpdir, mocker, context, fmt, use_comment):
     test_file = os.path.join(tmpdir, "windows.msi")
     shutil.copyfile(os.path.join(TEST_DATA_DIR, "windows.zip"), test_file)
 
-    async def mocked_autograph(context, from_, fmt):
+    async def mocked_autograph(context, from_, fmt, keyid):
         return b""
 
     async def mocked_winsign(infile, outfile, digest_algo, certs, signer, comment=None, **kwargs):
@@ -1099,7 +1099,7 @@ async def test_authenticode_ev_sha(tmpdir, mocker, context):
 
     fmt = "authenticode_ev"
 
-    async def mocked_autograph(context, from_, fmt):
+    async def mocked_autograph(context, from_, fmt, keyid):
         return b""
 
     async def mocked_winsign(infile, outfile, digest_algo, certs, signer, comment=None, **kwargs):
@@ -1231,7 +1231,7 @@ async def test_authenticode_sign_single_file(tmpdir, mocker, context):
     await sign._extract_zipfile(context, os.path.join(TEST_DATA_DIR, "windows.zip"), tmp_dir=tmpdir)
     test_file = os.path.join(tmpdir, "helper.exe")
 
-    async def mocked_autograph(context, from_, fmt):
+    async def mocked_autograph(context, from_, fmt, keyid):
         return b""
 
     async def mocked_winsign(infile, outfile, digest_algo, certs, signer, **kwargs):
@@ -1243,5 +1243,33 @@ async def test_authenticode_sign_single_file(tmpdir, mocker, context):
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
 
     result = await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode")
+    assert result == test_file
+    assert os.path.exists(result)
+
+
+@pytest.mark.asyncio
+async def test_authenticode_sign_keyids(tmpdir, mocker, context):
+    context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_cert_202005"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_url"] = "https://example.com"
+    context.config["authenticode_timestamp_style"] = None
+
+    await sign._extract_zipfile(context, os.path.join(TEST_DATA_DIR, "windows.zip"), tmp_dir=tmpdir)
+    test_file = os.path.join(tmpdir, "helper.exe")
+
+    async def mocked_autograph(context, from_, fmt, keyid):
+        assert keyid == "202005"
+        return keyid
+
+    async def mocked_winsign(infile, outfile, digest_algo, certs, signer, **kwargs):
+        await signer("", "")
+        shutil.copyfile(infile, outfile)
+        return True
+
+    mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
+    mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
+
+    result = await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode:202005")
     assert result == test_file
     assert os.path.exists(result)

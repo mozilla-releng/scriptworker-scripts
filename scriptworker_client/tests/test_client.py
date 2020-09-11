@@ -2,16 +2,17 @@
 # coding=utf-8
 """Test scriptworker_client.client
 """
-from copy import deepcopy
 import json
 import logging
-import mock
 import os
-import pytest
 import sys
+from copy import deepcopy
+
+import mock
+import pytest
+
 import scriptworker_client.client as client
 from scriptworker_client.exceptions import TaskError, TaskVerificationError
-
 
 # helpers {{{1
 
@@ -31,9 +32,7 @@ FAKE_SCHEMA = {
 
 # get_task {{{1
 def test_get_task(tmpdir):
-    """Get the contents of ``work_dir/task.json``.
-
-    """
+    """Get the contents of ``work_dir/task.json``."""
     expected = {"foo": "bar"}
     config = {"work_dir": str(tmpdir)}
     with open(os.path.join(tmpdir, "task.json"), "w") as fh:
@@ -53,9 +52,7 @@ def test_get_task(tmpdir):
     ),
 )
 def test_verify_json_schema(data, schema, raises):
-    """``verify_json_schema`` raises if the data doesn't verify against the schema.
-
-    """
+    """``verify_json_schema`` raises if the data doesn't verify against the schema."""
     if raises:
         with pytest.raises(TaskVerificationError):
             client.verify_json_schema(data, schema)
@@ -65,9 +62,7 @@ def test_verify_json_schema(data, schema, raises):
 
 # verify_task_schema {{{1
 def test_verify_task_schema(tmpdir):
-    """``verify_task_schema`` raises if the task doesn't match the schema.
-
-    """
+    """``verify_task_schema`` raises if the task doesn't match the schema."""
     path = os.path.join(tmpdir, "schema.json")
     with open(path, "w") as fh:
         fh.write(json.dumps(FAKE_SCHEMA))
@@ -84,9 +79,7 @@ def test_verify_task_schema(tmpdir):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("should_verify_task", (True, False))
 async def test_sync_main_runs_fully(tmpdir, should_verify_task):
-    """``sync_main`` runs fully.
-
-    """
+    """``sync_main`` runs fully."""
     work_dir = str(tmpdir)
     config = {
         "work_dir": work_dir,
@@ -137,9 +130,7 @@ async def test_sync_main_runs_fully(tmpdir, should_verify_task):
 
 
 def test_usage(capsys, monkeypatch):
-    """``_usage`` prints the expected error and exits.
-
-    """
+    """``_usage`` prints the expected error and exits."""
     monkeypatch.setattr(sys, "argv", ["my_binary"])
     with pytest.raises(SystemExit):
         client._usage()
@@ -153,9 +144,7 @@ def test_usage(capsys, monkeypatch):
     "is_verbose, log_level", ((True, logging.DEBUG), (False, logging.INFO))
 )
 def test_init_logging(monkeypatch, is_verbose, log_level):
-    """``_init_logging`` sets the logging module format and level.
-
-    """
+    """``_init_logging`` sets the logging module format and level."""
     basic_config_mock = mock.MagicMock()
     config = {"verbose": is_verbose}
 
@@ -170,9 +159,7 @@ def test_init_logging(monkeypatch, is_verbose, log_level):
 
 @pytest.mark.asyncio
 async def test_handle_asyncio_loop():
-    """``_handle_asyncio_loop`` calls ``async_main``.
-
-    """
+    """``_handle_asyncio_loop`` calls ``async_main``."""
     config = {}
 
     async def async_main(*args, **kwargs):
@@ -185,9 +172,7 @@ async def test_handle_asyncio_loop():
 
 @pytest.mark.asyncio
 async def test_fail_handle_asyncio_loop(mocker):
-    """``_handle_asyncio_loop`` exits properly on failure.
-
-    """
+    """``_handle_asyncio_loop`` exits properly on failure."""
     m = mocker.patch.object(client, "log")
 
     async def async_error(*args, **kwargs):
@@ -203,9 +188,7 @@ async def test_fail_handle_asyncio_loop(mocker):
 
 
 def test_init_config_cli(mocker, tmpdir):
-    """init_config can get its config from the commandline if not specified.
-
-    """
+    """init_config can get its config from the commandline if not specified."""
     mocker.patch.object(sys, "argv", new=["x"])
     with pytest.raises(SystemExit):
         client.init_config()

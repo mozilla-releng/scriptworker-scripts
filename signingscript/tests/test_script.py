@@ -4,9 +4,9 @@ from unittest.mock import MagicMock
 import mock
 import pytest
 import scriptworker.client
+from conftest import BASE_DIR, noop_sync
 
 import signingscript.script as script
-from conftest import BASE_DIR, noop_sync
 
 # helper constants, fixtures, functions {{{1
 EXAMPLE_CONFIG = os.path.join(BASE_DIR, "config_example.json")

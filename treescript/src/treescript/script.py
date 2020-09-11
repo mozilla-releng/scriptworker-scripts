@@ -5,6 +5,7 @@ import os
 
 from scriptworker_client.aio import retry_async
 from scriptworker_client.client import sync_main
+
 from treescript.exceptions import CheckoutError, PushError, TreeScriptError
 from treescript.l10n import l10n_bump
 from treescript.mercurial import checkout_repo, do_tagging, log_mercurial_version, log_outgoing, push, strip_outgoing, validate_robustcheckout_works

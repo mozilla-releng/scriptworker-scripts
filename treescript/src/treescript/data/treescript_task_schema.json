@@ -202,7 +202,7 @@
                             "version_path": {
                                 "type": "string"
                             },
-                            "revision_url": {
+                            "l10n_repo_url": {
                                 "type": "string"
                             },
                             "ignore_config": {

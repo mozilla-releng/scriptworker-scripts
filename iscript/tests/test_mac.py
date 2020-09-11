@@ -11,10 +11,10 @@ import arrow
 import mock
 import pexpect
 import pytest
+from scriptworker_client.utils import makedirs
 
 import iscript.mac as mac
 from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
-from scriptworker_client.utils import makedirs
 
 
 # helpers {{{1
@@ -97,9 +97,7 @@ def test_app_path_and_name(mocker):
 
 # get_bundle_executable {{{1
 def test_get_bundle_executable(mocker):
-    """``get_bundle_executable`` returns the CFBundleExecutable.
-
-    """
+    """``get_bundle_executable`` returns the CFBundleExecutable."""
     mocker.patch.object(plistlib, "readPlist", return_value={"CFBundleExecutable": "main"})
     assert mac.get_bundle_executable("foo") == "main"
 
@@ -108,9 +106,7 @@ def test_get_bundle_executable(mocker):
 @pytest.mark.parametrize("exists", (True, False))
 @pytest.mark.asyncio
 async def test_sign_geckodriver(exists, mocker, tmpdir):
-    """Render ``sign_geckodriver`` noop and verify we have complete code coverage.
-
-    """
+    """Render ``sign_geckodriver`` noop and verify we have complete code coverage."""
     key_config = {"identity": "id", "signing_keychain": "keychain"}
     config = {"artifact_dir": os.path.join(tmpdir, "artifacts")}
     app = mac.App(
@@ -134,9 +130,7 @@ async def test_sign_geckodriver(exists, mocker, tmpdir):
 @pytest.mark.parametrize("sign_with_entitlements,has_clearkey", ((True, True), (False, False)))
 @pytest.mark.asyncio
 async def test_sign_app(mocker, tmpdir, sign_with_entitlements, has_clearkey):
-    """Render ``sign_app`` noop and verify we have complete code coverage.
-
-    """
+    """Render ``sign_app`` noop and verify we have complete code coverage."""
     key_config = {"identity": "id", "signing_keychain": "keychain", "sign_with_entitlements": sign_with_entitlements}
     entitlements_path = os.path.join(tmpdir, "entitlements")
     app_path = os.path.join(tmpdir, "foo.app")
@@ -180,9 +174,7 @@ def fake_spawn(val, *args, **kwargs):
 @pytest.mark.parametrize("results", ([1, 0], [0]))
 @pytest.mark.asyncio
 async def test_unlock_keychain_successful(results, mocker):
-    """Mock a successful keychain unlock.
-
-    """
+    """Mock a successful keychain unlock."""
 
     async def fake_expect(*args, **kwargs):
         return results.pop(0)
@@ -197,9 +189,7 @@ async def test_unlock_keychain_successful(results, mocker):
 
 @pytest.mark.asyncio
 async def test_unlock_keychain_timeout(mocker):
-    """``unlock_keychain`` raises a ``TimeoutError`` on pexpect timeout.
-
-    """
+    """``unlock_keychain`` raises a ``TimeoutError`` on pexpect timeout."""
 
     async def fake_expect(*args, **kwargs):
         raise pexpect.exceptions.TIMEOUT("foo")
@@ -215,9 +205,7 @@ async def test_unlock_keychain_timeout(mocker):
 
 @pytest.mark.asyncio
 async def test_unlock_keychain_failure(mocker):
-    """``unlock_keychain`` throws an ``IScriptError`` on non-zero exit status.
-
-    """
+    """``unlock_keychain`` throws an ``IScriptError`` on non-zero exit status."""
     results = [0]
 
     async def fake_expect(*args, **kwargs):
@@ -331,9 +319,7 @@ async def test_extract_all_apps(mocker, tmpdir, suffix, command, raises):
 @pytest.mark.parametrize("raises", (True, False))
 @pytest.mark.asyncio
 async def test_create_all_notarization_zipfiles(mocker, tmpdir, raises):
-    """``create_all_notarization_zipfiles`` calls ``zip -r``, and raises on failure.
-
-    """
+    """``create_all_notarization_zipfiles`` calls ``zip -r``, and raises on failure."""
 
     async def fake_run_command(*args, **kwargs):
         assert args[0][0:2] == ["zip", "-r"]
@@ -386,9 +372,7 @@ async def test_create_one_notarization_zipfile(mocker, tmpdir, raises):
 @pytest.mark.parametrize("raises", (True, False))
 @pytest.mark.asyncio
 async def test_sign_all_apps(mocker, tmpdir, raises):
-    """``sign_all_apps`` calls ``sign`` and raises on failure.
-
-    """
+    """``sign_all_apps`` calls ``sign`` and raises on failure."""
     key_config = {"x": "y", "signing_keychain": "keychain", "keychain_password": "password"}
     config = {}
     entitlements_path = "fake_entitlements_path"
@@ -422,9 +406,7 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
 # get_bundle_id {{{1
 @pytest.mark.parametrize("counter", (None, 3))
 def test_get_bundle_id(mocker, counter):
-    """``get_bundle_id`` returns a unique bundle id
-
-    """
+    """``get_bundle_id`` returns a unique bundle id"""
     now = mock.MagicMock()
     now.timestamp = 51
     now.microsecond = 50

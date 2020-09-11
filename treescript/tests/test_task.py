@@ -1,10 +1,10 @@
 import os
 
 import pytest
-
-import treescript.task as ttask
 from scriptworker_client.client import verify_task_schema
 from scriptworker_client.exceptions import TaskVerificationError
+
+import treescript.task as ttask
 from treescript.script import get_default_config
 
 SCRIPT_CONFIG = {"taskcluster_scope_prefix": "project:releng:treescript:"}
@@ -185,7 +185,7 @@ def test_bump_missing_bump_info(task_defn):
                 "path": "mobile/locales/l10n-changesets.json",
                 "name": "Fennec l10n changesets",
                 "version_path": "mobile/android/config/version-files/beta/version.txt",
-                "revision_url": "https://l10n.mozilla.org/shipping/l10n-changesets?av=fennec%(MAJOR_VERSION)s",
+                "l10n_repo_url": "https://hg.mozilla.org/l10n-central/%(locale)s/json-pushes?version=2&tipsonly=1",
                 "platform_configs": [{"platforms": ["android-multilocale"], "path": "mobile/android/locales/maemo-locales"}],
             }
         ],
@@ -194,7 +194,7 @@ def test_bump_missing_bump_info(task_defn):
                 "path": "browser/locales/l10n-changesets.json",
                 "name": "Firefox l10n changesets",
                 "version_path": "browser/config/version.txt",
-                "revision_url": "https://l10n.mozilla.org/shipping/l10n-changesets?av=fx%(MAJOR_VERSION)s",
+                "l10n_repo_url": "https://hg.mozilla.org/l10n-central/%(locale)s/json-pushes?version=2&tipsonly=1",
                 "ignore_config": {
                     "ja": ["macosx64", "macosx64-devedition"],
                     "ja-JP-mac": [

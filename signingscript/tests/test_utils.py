@@ -3,10 +3,10 @@ import os
 
 import mock
 import pytest
+from conftest import PUB_KEY_PATH, read_file
 from scriptworker.context import Context
 
 import signingscript.utils as utils
-from conftest import PUB_KEY_PATH, read_file
 from signingscript.exceptions import FailedSubprocess, SigningServerError
 
 ID_RSA_PUB_HASH = "226658906e46b26ef195c468f94e2be983b6c53f370dff0d8e725832f" + "4645933de4755690a3438760afe8790a91938100b75b5d63e76ebd00920adc8d2a8857e"

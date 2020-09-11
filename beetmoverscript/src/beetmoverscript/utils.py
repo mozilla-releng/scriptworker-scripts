@@ -199,12 +199,6 @@ def _generate_beetmover_template_args_maven(task, release_props):
     # mapping by using this flag
     tmpl_args["is_jar"] = task["payload"].get("is_jar")
 
-    if isinstance(payload_version, MavenVersion) and payload_version.is_snapshot:
-        tmpl_args["snapshot_version"] = payload_version
-        tmpl_args["date_timestamp"] = "{{date_timestamp}}"
-        tmpl_args["clock_timestamp"] = "{{clock_timestamp}}"
-        tmpl_args["build_number"] = "{{build_number}}"
-
     return tmpl_args
 
 

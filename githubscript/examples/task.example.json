@@ -1,0 +1,99 @@
+{
+  "provisionerId": "scriptworker-k8s",
+  "workerType": "mobile-1-github",
+  "schedulerId": "mobile-level-1",
+  "taskGroupId": "DIP_TN0kRQyfvbflprgXYw",
+  "dependencies": [
+    "OyHu5OYGTFW05iGchdqdSA"
+  ],
+  "requires": "all-completed",
+  "routes": [
+    "tc-treeherder.v2.fenix.b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71.0",
+    "checks"
+  ],
+  "priority": "highest",
+  "retries": 5,
+  "created": "2020-06-16T22:32:06.776Z",
+  "deadline": "2020-06-17T22:32:06.776Z",
+  "expires": "2021-06-16T22:32:06.776Z",
+  "scopes": [
+    "project:mobile:fenix:releng:github:project:fenix",
+    "project:mobile:fenix:releng:github:action:release"
+  ],
+  "payload": {
+    "artifactMap": [{
+      "paths": {
+        "public/build/arm64-v8a/geckoBeta/target.apk": {
+          "destinations": [
+              "firefox_preview_v5.2_arm64.apk"
+          ]
+        },
+        "public/build/armeabi-v7a/geckoBeta/target.apk": {
+          "destinations": [
+              "firefox_preview_v5.2_arm.apk"
+          ]
+        },
+        "public/build/x86/geckoBeta/target.apk": {
+          "destinations": [
+              "firefox_preview_v5.2_x86.apk"
+          ]
+        },
+        "public/build/x86_64/geckoBeta/target.apk": {
+          "destinations": [
+              "firefox_preview_v5.2_x86_64.apk"
+          ]
+        },
+        "taskId": "OyHu5OYGTFW05iGchdqdSA"
+      }
+    }],
+    "gitTag": "v5.2.0",
+    "gitRevision": "b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71",
+    "isPrerelease": false,
+    "releaseName": "Firefox Preview 5.2",
+    "upstreamArtifacts": [
+      {
+        "paths": [
+          "public/build/arm64-v8a/geckoBeta/target.apk",
+          "public/build/armeabi-v7a/geckoBeta/target.apk",
+          "public/build/x86/geckoBeta/target.apk",
+          "public/build/x86_64/geckoBeta/target.apk"
+        ],
+        "taskId": "OyHu5OYGTFW05iGchdqdSA",
+        "taskType": "scriptworker"
+      }
+    ]
+  },
+  "metadata": {
+    "owner": "liuche@users.noreply.github.com",
+    "source": "https://github.com/mozilla-mobile/fenix/blob/b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71/taskcluster/ci/push-apk",
+    "description": "Publish Fenix ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=fenix&revision=b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71))",
+    "name": "push-apk-beta"
+  },
+  "tags": {
+    "os": "scriptworker",
+    "createdForUser": "liuche@users.noreply.github.com",
+    "worker-implementation": "scriptworker",
+    "kind": "push-apk",
+    "label": "push-apk-beta"
+  },
+  "extra": {
+    "index": {
+      "rank": 1592346625
+    },
+    "treeherder": {
+      "jobKind": "build",
+      "groupSymbol": "beta",
+      "collection": {
+        "opt": true
+      },
+      "machine": {
+        "platform": "android-all"
+      },
+      "groupName": "Beta-related tasks",
+      "tier": 1,
+      "symbol": "gp"
+    },
+    "treeherder-platform": "android-all/opt",
+    "parent": "DIP_TN0kRQyfvbflprgXYw"
+  }
+}

@@ -5,8 +5,8 @@ import shutil
 import string
 
 import attr
-
 from scriptworker_client.utils import makedirs
+
 from treescript.mercurial import get_revision, run_hg_command
 from treescript.task import get_merge_config
 from treescript.versionmanip import do_bump_version, get_version
@@ -30,7 +30,7 @@ class BashFormatter(string.Formatter):
         if isinstance(key, str):
             return kwds.get(key, "{" + key + "}")
         else:
-            return string.Formatter.get_value(key, args, kwds)
+            return string.Formatter().get_value(key, args, kwds)
 
 
 def replace(file_name, from_, to_):
@@ -176,10 +176,11 @@ async def do_merge(config, task, repo_path):
     """
     merge_config = get_merge_config(task)
 
+    upstream_repo = config["upstream_repo"]
     from_branch = merge_config.get("from_branch")
     to_branch = merge_config.get("to_branch")
 
-    await run_hg_command(config, "pull", "https://hg.mozilla.org/mozilla-unified", repo_path=repo_path)
+    await run_hg_command(config, "pull", upstream_repo, repo_path=repo_path)
 
     # Used if end_tag is set.
     await run_hg_command(config, "up", "-C", to_branch, repo_path=repo_path)

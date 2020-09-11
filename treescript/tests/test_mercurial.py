@@ -10,8 +10,8 @@ import logging
 import os
 
 import pytest
-
 from scriptworker_client.utils import makedirs
+
 from treescript import mercurial
 from treescript.exceptions import FailedSubprocess, PushError
 from treescript.script import get_default_config
@@ -184,8 +184,7 @@ async def test_validate_robustcheckout_works_doesnt(config, mocker):
 @pytest.mark.parametrize("branch", (None, "foo"))
 @pytest.mark.asyncio
 async def test_checkout_repo(config, task, mocker, branch):
-    """checkout_repo calls the expected commands.
-    """
+    """checkout_repo calls the expected commands."""
     calls = [
         ("robustcheckout", "https://hg.mozilla.org/test-repo", os.path.join(config["work_dir"])),
         ("strip", "--no-backup", "outgoing()"),

@@ -15,13 +15,13 @@ from shutil import copy2
 import arrow
 import attr
 import pexpect
+from scriptworker_client.aio import download_file, raise_future_exceptions, retry_async, semaphore_wrapper
+from scriptworker_client.exceptions import DownloadError
+from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_command
 
 from iscript.autograph import sign_langpacks, sign_omnija_with_autograph, sign_widevine_dir
 from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
 from iscript.util import get_key_config
-from scriptworker_client.aio import download_file, raise_future_exceptions, retry_async, semaphore_wrapper
-from scriptworker_client.exceptions import DownloadError
-from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_command
 
 log = logging.getLogger(__name__)
 
@@ -185,6 +185,7 @@ async def sign_geckodriver(config, key_config, all_paths):
         env = deepcopy(os.environ)
         # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
         env["COPYFILE_DISABLE"] = "1"
+        makedirs(os.path.dirname(app.target_tar_path))
         await run_command(
             ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path, file_], cwd=app.parent_dir, env=env, exception=IScriptError
         )

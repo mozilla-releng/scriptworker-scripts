@@ -19,6 +19,10 @@ taskcluster_scope_prefixes:
         - 'project:mobile:reference-browser:releng:signing:'
       'COT_PRODUCT == "application-services"':
         - 'project:mozilla:application-services:releng:signing:'
+      'COT_PRODUCT == "app-services"':
+        - 'project:mozilla:app-services:releng:signing:'
+      'COT_PRODUCT == "glean"':
+        - 'project:mozilla:glean:releng:signing:'
       'COT_PRODUCT == "xpi"':
         - 'project:xpi:releng:signing:'
       'COT_PRODUCT == "mpd001"':
@@ -32,6 +36,7 @@ zipalign: { "$eval": "ZIPALIGN_PATH" }
 gpg_pubkey: { "$eval": "GPG_PUBKEY_PATH" }
 widevine_cert: { "$eval": "WIDEVINE_CERT_PATH" }
 authenticode_cert: { "$eval": "AUTHENTICODE_CERT_PATH" }
+authenticode_cert_202005: { "$eval": "AUTHENTICODE_CERT_PATH_202005" }
 authenticode_cross_cert: { "$eval": "AUTHENTICODE_CROSS_CERT_PATH" }
 authenticode_timestamp_style: { "$eval": "AUTHENTICODE_TIMESTAMP_STYLE" }
 authenticode_url: "https://mozilla.org"

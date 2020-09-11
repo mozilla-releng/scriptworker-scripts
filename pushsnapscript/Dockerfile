@@ -3,19 +3,15 @@ FROM python:3.8
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
 
-RUN apt-get update \
- && apt-get install -y libsodium-dev \
- && apt-get install -y squashfs-tools \
- && apt-get install -y xdelta3 \
- && apt-get clean \
- # XXX Avoid snapcraft from loading useless libs when running on Ubuntu
- && truncate -s 0 /etc/os-release \
- && ln -s /app/docker.d/healthcheck /bin/healthcheck
+RUN ln -s /app/docker.d/healthcheck /bin/healthcheck
+
+WORKDIR /app
+COPY . /app
+
+# Production image requires extra packages
+RUN /app/docker.d/image_setup.sh libsodium-dev squashfs-tools xdelta3
 
 USER app
-WORKDIR /app
-
-COPY . /app
 
 RUN python -m venv /app \
  && cd pushsnapscript \

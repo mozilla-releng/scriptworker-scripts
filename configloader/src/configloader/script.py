@@ -16,8 +16,8 @@ import yaml
 def main(worker_id_prefix, input, output):
     """Convert JSON/YAML templates into using json-e.
 
-       Accepts JSON or YAML format and outputs using JSON because it is YAML
-       compatible.
+    Accepts JSON or YAML format and outputs using JSON because it is YAML
+    compatible.
     """
     config_template = yaml.safe_load(input)
     context = os.environ.copy()

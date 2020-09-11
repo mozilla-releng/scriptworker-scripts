@@ -8,10 +8,10 @@ import zipfile
 
 import aiohttp
 import pytest
+from conftest import skip_when_no_autograph_server
 from mardor.cli import do_verify
 from scriptworker.utils import makedirs
 
-from conftest import skip_when_no_autograph_server
 from signingscript.script import async_main
 from signingscript.sign import sign_file_with_autograph
 from signingscript.utils import Autograph

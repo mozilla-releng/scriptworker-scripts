@@ -6,20 +6,21 @@
 #    pip-compile-multi
 #
 -r test.py37.txt
-distlib==0.3.0 \
-    --hash=sha256:2e166e231a26b36d6dfe35a48c4464346620f8645ed0ace01ee31822b288de21 \
+distlib==0.3.1 \
+    --hash=sha256:8c09de2c67b3e7deef7184574fc060ab8a793e7adbb183d942c389c8b13c52fb \
+    --hash=sha256:edf6116872c863e1aa9d5bb7cb5e05a022c519a4594dc703843343a9ddd9bff1 \
     # via virtualenv
 filelock==3.0.12 \
     --hash=sha256:18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59 \
     --hash=sha256:929b7d63ec5b7d6b71b0fa5ac14e030b3f70b75747cef1b10da9b879fef15836 \
     # via tox, virtualenv
-tox==3.15.0 \
-    --hash=sha256:8d97bfaf70053ed3db56f57377288621f1bcc7621446d301927d18df93b1c4c3 \
-    --hash=sha256:af09c19478e8fc7ce7555b3d802ddf601b82684b874812c5857f774b8aee1b67 \
-    # via -r local.in
-virtualenv==20.0.20 \
-    --hash=sha256:b4c14d4d73a0c23db267095383c4276ef60e161f94fde0427f2f21a0132dde74 \
-    --hash=sha256:fd0e54dec8ac96c1c7c87daba85f0a59a7c37fe38748e154306ca21c73244637 \
+tox==3.20.0 \
+    --hash=sha256:e6318f404aff16522ff5211c88cab82b39af121735a443674e4e2e65f4e4637b \
+    --hash=sha256:eb629ddc60e8542fd4a1956b2462e3b8771d49f1ff630cecceacaa0fbfb7605a \
+    # via -r requirements/local.in
+virtualenv==20.0.31 \
+    --hash=sha256:43add625c53c596d38f971a465553f6318decc39d98512bc100fa1b1e839c8dc \
+    --hash=sha256:e0305af10299a7fb0d69393d8f04cb2965dda9351140d11ac8db4e5e3970451b \
     # via tox
 
 # WARNING: The following packages were not pinned, but pip requires them to be

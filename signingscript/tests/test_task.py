@@ -1,11 +1,11 @@
 import os
 
 import pytest
+from conftest import BASE_DIR
 from scriptworker.client import validate_task_schema
 from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
 
 import signingscript.task as stask
-from conftest import BASE_DIR
 from signingscript.utils import mkdir
 
 # helper constants, fixtures, functions {{{1
@@ -147,10 +147,13 @@ async def test_sign(context, mocker, format, filename, post_files):
         ("focus-jar", stask.sign_jar),
         ("macapp", stask.sign_macapp),
         ("widevine", stask.sign_widevine),
-        ("widevine_blessed", stask.sign_widevine),
+        ("autograph_authenticode", stask.sign_authenticode_zip),
+        ("autograph_authenticode_stub", stask.sign_authenticode_zip),
         ("default", stask.sign_file),
-        # Regex cases
+        # Key id cases
         ("autograph_hash_only_mar384:firefox_20190321_dev", stask.sign_mar384_with_autograph_hash),
+        ("autograph_authenticode:202005", stask.sign_authenticode_zip),
+        ("autograph_authenticode_stub:202005", stask.sign_authenticode_zip),
         # Default
         ("autograph_apk", stask.sign_file),
         ("autograph_focus", stask.sign_file),
@@ -179,7 +182,12 @@ def test_build_filelist_dict(context, task_defn):
 
 
 def test_build_filelist_dict_comment(context, task_defn_authenticode_comment):
-    full_path = os.path.join(context.config["work_dir"], "cot", "VALID_TASK_ID", "public/build/firefox-52.0a1.en-US.win64.installer.msi",)
+    full_path = os.path.join(
+        context.config["work_dir"],
+        "cot",
+        "VALID_TASK_ID",
+        "public/build/firefox-52.0a1.en-US.win64.installer.msi",
+    )
     expected = {
         "public/build/firefox-52.0a1.en-US.win64.installer.msi": {"full_path": full_path, "formats": ["autograph_authenticode"], "comment": "Foo Installer"}
     }

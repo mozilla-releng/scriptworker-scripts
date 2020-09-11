@@ -2,16 +2,18 @@
 # coding=utf-8
 """Test scriptworker_client.aio
 """
-import aiohttp
 import asyncio
-from datetime import datetime
-import mock
 import os
-import pytest
 import re
 import shutil
 import sys
 import time
+from datetime import datetime
+
+import aiohttp
+import mock
+import pytest
+
 import scriptworker_client.aio as aio
 from scriptworker_client.exceptions import (
     Download404,
@@ -29,25 +31,19 @@ else:
 
 # helpers {{{1
 async def fail(sleep_time=0, exception=TaskError):
-    """Sleep ``sleep_time`` seconds, raise ``exception``.
-
-    """
+    """Sleep ``sleep_time`` seconds, raise ``exception``."""
     await asyncio.sleep(sleep_time)
     raise exception("foo")
 
 
 async def succeed(value, sleep_time=0):
-    """Sleep ``sleep_time`` seconds, return ``value``.
-
-    """
+    """Sleep ``sleep_time`` seconds, return ``value``."""
     await asyncio.sleep(sleep_time)
     return value
 
 
 async def async_time(sleep_time=0):
-    """Sleep ``sleep_time`` seconds, return milliseconds since epoch as an int.
-
-    """
+    """Sleep ``sleep_time`` seconds, return milliseconds since epoch as an int."""
     await asyncio.sleep(sleep_time)
     return int("{}{}".format(int(time.time()), str(datetime.now().microsecond)[0:4]))
 
@@ -100,9 +96,7 @@ class FakeSession:
 
 @asynccontextmanager
 async def GetFakeSession(*args, **kwargs):
-    """Helper class to replace ``aiohttp.ClientSession()``
-
-    """
+    """Helper class to replace ``aiohttp.ClientSession()``"""
     yield FakeSession()
 
 
@@ -139,9 +133,7 @@ async def test_raise_future_exceptions(coroutines, expected, raises, timeout):
 # semaphore_wrapper {{{1
 @pytest.mark.asyncio
 async def test_semaphore_wrapper():
-    """``semaphore_wrapper`` limits concurrency through the passed ``Semaphore``.
-
-    """
+    """``semaphore_wrapper`` limits concurrency through the passed ``Semaphore``."""
     sem = asyncio.Semaphore(2)
     futures = [
         asyncio.ensure_future(aio.semaphore_wrapper(sem, async_time(sleep_time=0.1))),
@@ -331,9 +323,7 @@ async def fake_sleep(*args, **kwargs):
 
 @pytest.mark.asyncio
 async def test_retry_async_fail_first():
-    """``retry_async`` retries if the first attempt fails.
-
-    """
+    """``retry_async`` retries if the first attempt fails."""
     global retry_count
     retry_count["fail_first"] = 0
     status = await aio.retry_async(fail_first, sleeptime_kwargs={"delay_factor": 0})
@@ -343,9 +333,7 @@ async def test_retry_async_fail_first():
 
 @pytest.mark.asyncio
 async def test_retry_async_always_fail():
-    """``retry_async`` gives up if we fail the max number of attempts.
-
-    """
+    """``retry_async`` gives up if we fail the max number of attempts."""
     global retry_count
     retry_count["always_fail"] = 0
     with mock.patch("asyncio.sleep", new=fake_sleep):
@@ -373,9 +361,7 @@ async def test_retry_async_always_fail():
 async def test_request(
     mocker, url, method, return_type, expected, exception, num_attempts
 ):
-    """A request returns the expected value, or raises ``exception`` if not ``None``.
-
-    """
+    """A request returns the expected value, or raises ``exception`` if not ``None``."""
     mocker.patch.object(aiohttp, "ClientSession", new=GetFakeSession)
     mocker.patch.object(asyncio, "sleep", new=noop_async)
 

@@ -11,9 +11,10 @@ import logging
 import logging.handlers
 import os
 
+from scriptworker_client.client import _init_logging, init_config
+
 from notarization_poller.constants import DEFAULT_CONFIG
 from notarization_poller.exceptions import ConfigError
-from scriptworker_client.client import _init_logging, init_config
 
 log = logging.getLogger(__name__)
 

@@ -64,8 +64,6 @@ case $COT_PRODUCT in
   mobile)
     test_var_set 'MAVEN_ID'
     test_var_set 'MAVEN_KEY'
-    test_var_set 'MAVEN_SNAPSHOT_ID'
-    test_var_set 'MAVEN_SNAPSHOT_KEY'
     test_var_set 'MAVEN_NIGHTLY_ID'
     test_var_set 'MAVEN_NIGHTLY_KEY'
     export TASKCLUSTER_SCOPE_PREFIX="project:mobile:android-components:releng:${PROJECT_NAME}:"
@@ -74,6 +72,16 @@ case $COT_PRODUCT in
     test_var_set 'MAVEN_ID'
     test_var_set 'MAVEN_KEY'
     export TASKCLUSTER_SCOPE_PREFIX="project:mozilla:application-services:releng:${PROJECT_NAME}:"
+    ;;
+  app-services)
+    test_var_set 'MAVEN_ID'
+    test_var_set 'MAVEN_KEY'
+    export TASKCLUSTER_SCOPE_PREFIX="project:mozilla:app-services:releng:${PROJECT_NAME}:"
+    ;;
+  glean)
+    test_var_set 'MAVEN_ID'
+    test_var_set 'MAVEN_KEY'
+    export TASKCLUSTER_SCOPE_PREFIX="project:mozilla:glean:releng:${PROJECT_NAME}:"
     ;;
   *)
     exit 1

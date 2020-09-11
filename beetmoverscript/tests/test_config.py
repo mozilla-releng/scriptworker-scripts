@@ -89,8 +89,6 @@ def test_mobile_fake_prod():
         "ENV": "fake-prod",
         "MAVEN_ID": "",
         "MAVEN_KEY": "",
-        "MAVEN_SNAPSHOT_ID": "",
-        "MAVEN_SNAPSHOT_KEY": "",
         "MAVEN_NIGHTLY_ID": "",
         "MAVEN_NIGHTLY_KEY": "",
     }
@@ -103,8 +101,6 @@ def test_mobile_prod():
         "ENV": "prod",
         "MAVEN_ID": "",
         "MAVEN_KEY": "",
-        "MAVEN_SNAPSHOT_ID": "",
-        "MAVEN_SNAPSHOT_KEY": "",
         "MAVEN_NIGHTLY_ID": "",
         "MAVEN_NIGHTLY_KEY": "",
     }

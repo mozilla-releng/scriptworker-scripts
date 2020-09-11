@@ -2,9 +2,10 @@ ARG PYTHON_VERSION
 
 FROM python:${PYTHON_VERSION}
 
-RUN apt-get update && apt-get install -y libsodium-dev && truncate -s 0 /etc/os-release
-
 WORKDIR /app
+
+COPY docker.d/image_setup.sh /app/
+RUN /app/image_setup.sh
 
 COPY MANIFEST.in setup.py tox.ini /app/
 COPY requirements/ /app/requirements/

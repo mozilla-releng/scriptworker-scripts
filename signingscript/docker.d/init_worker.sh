@@ -30,10 +30,12 @@ export GPG_PUBKEY_PATH=$CONFIG_DIR/gpg_pubkey
 export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
 export AUTHENTICODE_TIMESTAMP_STYLE=null
 export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_dep.crt
+export AUTHENTICODE_CERT_PATH_202005=/app/signingscript/src/signingscript/data/authenticode_dep.crt
 export AUTHENTICODE_CROSS_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_stub.crt
 if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_TIMESTAMP_STYLE=old
-  export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_prod.crt
+  export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
+  export AUTHENTICODE_CERT_PATH_202005=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
 fi
 
 echo $GPG_PUBKEY | base64 -d > $GPG_PUBKEY_PATH
@@ -49,6 +51,10 @@ case $COT_PRODUCT in
   mobile)
     ;;
   application-services)
+    ;;
+  app-services)
+    ;;
+  glean)
     ;;
   xpi)
     ;;
@@ -75,6 +81,7 @@ case $ENV in
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
+        test_var_set 'AUTHENTICODE_CERT_PATH_202005'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
         test_var_set 'AUTOGRAPH_FENNEC_PASSWORD'
@@ -103,6 +110,14 @@ case $ENV in
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_USERNAME'
         ;;
       application-services)
+        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        ;;
+      app-services)
+        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        ;;
+      glean)
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         ;;
@@ -135,12 +150,9 @@ case $ENV in
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
+        test_var_set 'AUTHENTICODE_CERT_PATH_202005'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
-        test_var_set 'AUTOGRAPH_FENNEC_NIGHTLY_PASSWORD'
-        test_var_set 'AUTOGRAPH_FENNEC_NIGHTLY_USERNAME'
-        test_var_set 'AUTOGRAPH_FENNEC_RELEASE_PASSWORD'
-        test_var_set 'AUTOGRAPH_FENNEC_RELEASE_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
@@ -157,16 +169,10 @@ case $ENV in
         test_var_set 'AUTOGRAPH_WIDEVINE_USERNAME'
         ;;
       mobile)
-        test_var_set 'AUTOGRAPH_FENNEC_NIGHTLY_PASSWORD'
-        test_var_set 'AUTOGRAPH_FENNEC_NIGHTLY_USERNAME'
         test_var_set 'AUTOGRAPH_FENNEC_RELEASE_PASSWORD'
         test_var_set 'AUTOGRAPH_FENNEC_RELEASE_USERNAME'
         test_var_set 'AUTOGRAPH_FIREFOX_TV_USERNAME'
         test_var_set 'AUTOGRAPH_FIREFOX_TV_PASSWORD'
-        test_var_set 'AUTOGRAPH_FENIX_BETA_PASSWORD'
-        test_var_set 'AUTOGRAPH_FENIX_BETA_USERNAME'
-        test_var_set 'AUTOGRAPH_FENIX_NIGHTLY_PASSWORD'
-        test_var_set 'AUTOGRAPH_FENIX_NIGHTLY_USERNAME'
         test_var_set 'AUTOGRAPH_FENIX_PASSWORD'
         test_var_set 'AUTOGRAPH_FENIX_USERNAME'
         test_var_set 'AUTOGRAPH_FOCUS_PASSWORD'
@@ -177,6 +183,14 @@ case $ENV in
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_USERNAME'
         ;;
       application-services)
+        test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        ;;
+      app-services)
+        test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        ;;
+      glean)
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         ;;

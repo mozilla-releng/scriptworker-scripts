@@ -20,9 +20,7 @@ from iscript.exceptions import IScriptError
     ),
 )
 def test_get_config_key(scopes, base_key, key, raises):
-    """``get_config_key`` returns the correct subconfig.
-
-    """
+    """``get_config_key`` returns the correct subconfig."""
     config = {"taskcluster_scope_prefix": "scope:prefix:", "mac_config": {"dep": {"key": "dep"}, "nightly": {"key": "nightly"}}}
     task = {"scopes": scopes}
     if raises:

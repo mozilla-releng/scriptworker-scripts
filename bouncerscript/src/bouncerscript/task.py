@@ -142,13 +142,13 @@ def check_versions_are_successive(current_version, payload_version, product):
 
     def _successive_sanity(current_identifier, candidate_identifier):
         if current_identifier == candidate_identifier:
-            err_msg = "Identifiers for {} and {} can't be equal at this point " "in the code".format(payload_version, current_version)
+            err_msg = "Identifiers for {} and {} can't be equal at this point in the code".format(payload_version, current_version)
             raise ScriptWorkerTaskException(err_msg)
         elif current_identifier > candidate_identifier:
-            err_msg = "In-tree version {} can't be less than current bouncer " "counterpart".format(payload_version, current_version)
+            err_msg = "In-tree version {} can't be less than current bouncer {} counterpart".format(payload_version, current_version)
             raise ScriptWorkerTaskException(err_msg)
         elif (candidate_identifier - current_identifier) > 1:
-            err_msg = "In-tree version {} can't be greater than current bouncer " "by more than 1 digit".format(payload_version, current_version)
+            err_msg = "In-tree version {} can't be greater than current bouncer {} by more than 1 digit".format(payload_version, current_version)
             raise ScriptWorkerTaskException(err_msg)
 
     # XXX: for Firefox central nightlies we need to handle the major number

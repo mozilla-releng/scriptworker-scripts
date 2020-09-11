@@ -3,15 +3,14 @@ FROM python:3.8
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
 
-RUN apt-get update \
- && apt-get install -y gir1.2-ostree-1.0 libgirepository1.0-dev \
- && apt-get clean \
- && ln -s /app/docker.d/healthcheck /bin/healthcheck
+RUN ln -s /app/docker.d/healthcheck /bin/healthcheck
+
+WORKDIR /app
+COPY . /app
+
+RUN /app/docker.d/image_setup.sh
 
 USER app
-WORKDIR /app
-
-COPY . /app
 
 RUN python -m venv /app \
  && cd pushflatpakscript \

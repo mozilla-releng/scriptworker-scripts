@@ -29,9 +29,7 @@ from iscript.exceptions import IScriptError
 )
 @pytest.mark.asyncio
 async def test_async_main(mocker, behavior, supported_behaviors, expected_behavior, raises):
-    """``async_main`` calls the appropriate function based on behavior
-
-    """
+    """``async_main`` calls the appropriate function based on behavior"""
 
     calls = {}
     config = {"a": "b"}
@@ -76,9 +74,7 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
 
 # get_default_config {{{1
 def test_get_default_config(tmpdir):
-    """``get_default_config`` returns a dict with expected keys/values.
-
-    """
+    """``get_default_config`` returns a dict with expected keys/values."""
     config = script.get_default_config(base_dir=tmpdir)
     assert config["work_dir"] == os.path.join(tmpdir, "work")
     for k in ("artifact_dir", "schema_file"):

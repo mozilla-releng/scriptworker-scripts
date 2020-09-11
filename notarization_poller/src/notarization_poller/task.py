@@ -21,14 +21,14 @@ import arrow
 import async_timeout
 import taskcluster
 import taskcluster.exceptions
-from taskcluster.aio import Queue
-
-from notarization_poller.constants import get_reversed_statuses
-from notarization_poller.exceptions import RetryError
 from scriptworker_client.aio import download_file, retry_async
 from scriptworker_client.constants import STATUSES
 from scriptworker_client.exceptions import Download404, DownloadError, TaskError
 from scriptworker_client.utils import load_json_or_yaml, makedirs, rm, run_command
+from taskcluster.aio import Queue
+
+from notarization_poller.constants import get_reversed_statuses
+from notarization_poller.exceptions import RetryError
 
 log = logging.getLogger(__name__)
 NOTARIZATION_POLL_REGEX = re.compile(r"Status: (?P<status>success|invalid)")

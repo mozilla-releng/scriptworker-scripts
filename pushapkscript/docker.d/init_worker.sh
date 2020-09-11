@@ -48,23 +48,6 @@ case $COT_PRODUCT in
         import_cert dep $CERT_DIR/dep.pem
         ;;
       prod)
-        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE'
-        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_BETA'
-        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_AURORA'
-        test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_RELEASE'
-        test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_BETA'
-        test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_AURORA'
-
-        export GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH=$CONFIG_DIR/release.p12
-        export GOOGLE_CREDENTIALS_FIREFOX_BETA_PATH=$CONFIG_DIR/beta.p12
-        export GOOGLE_CREDENTIALS_FIREFOX_AURORA_PATH=$CONFIG_DIR/aurora.p12
-
-        echo $GOOGLE_CREDENTIALS_FIREFOX_RELEASE | base64 -d >     $GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH
-        echo $GOOGLE_CREDENTIALS_FIREFOX_BETA | base64 -d >        $GOOGLE_CREDENTIALS_FIREFOX_BETA_PATH
-        echo $GOOGLE_CREDENTIALS_FIREFOX_AURORA | base64 -d >      $GOOGLE_CREDENTIALS_FIREFOX_AURORA_PATH
-
-        import_cert nightly $CERT_DIR/nightly.pem
-        import_cert release $CERT_DIR/release.pem
         ;;
       *)
         exit 1
@@ -86,41 +69,34 @@ case $COT_PRODUCT in
 
         ;;
       prod)
-        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_NIGHTLY'
-        test_var_set 'GOOGLE_CREDENTIALS_FENIX_NIGHTLY'
-        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_BETA'
-        test_var_set 'GOOGLE_CREDENTIALS_FENIX_BETA'
         test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_PROD'
         test_var_set 'GOOGLE_CREDENTIALS_FENIX_PROD'
         test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FOCUS'
         test_var_set 'GOOGLE_CREDENTIALS_FOCUS'
         test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER'
         test_var_set 'GOOGLE_CREDENTIALS_REFERENCE_BROWSER'
-        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_AURORA'
-        test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_AURORA'
         test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_BETA'
         test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_BETA'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE'
+        test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_RELEASE'
         test_var_set 'AMAZON_CLIENT_ID'
         test_var_set 'AMAZON_CLIENT_SECRET'
 
-        export GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH=$CONFIG_DIR/fenix_nightly.p12
-        export GOOGLE_CREDENTIALS_FENIX_BETA_PATH=$CONFIG_DIR/fenix_beta.p12
         export GOOGLE_CREDENTIALS_FENIX_PROD_PATH=$CONFIG_DIR/fenix_prod.p12
         export GOOGLE_CREDENTIALS_FOCUS_PATH=$CONFIG_DIR/focus.p12
         export GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH=$CONFIG_DIR/reference_browser.p12
-        export GOOGLE_CREDENTIALS_FIREFOX_AURORA_PATH=$CONFIG_DIR/aurora.p12
         export GOOGLE_CREDENTIALS_FIREFOX_BETA_PATH=$CONFIG_DIR/beta.p12
+        export GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH=$CONFIG_DIR/release.p12
 
-        echo $GOOGLE_CREDENTIALS_FENIX_NIGHTLY | base64 -d >     $GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH
-        echo $GOOGLE_CREDENTIALS_FENIX_BETA | base64 -d >        $GOOGLE_CREDENTIALS_FENIX_BETA_PATH
         echo $GOOGLE_CREDENTIALS_FENIX_PROD | base64 -d >        $GOOGLE_CREDENTIALS_FENIX_PROD_PATH
         echo $GOOGLE_CREDENTIALS_FOCUS | base64 -d >             $GOOGLE_CREDENTIALS_FOCUS_PATH
         echo $GOOGLE_CREDENTIALS_REFERENCE_BROWSER | base64 -d > $GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH
-        echo $GOOGLE_CREDENTIALS_FIREFOX_AURORA | base64 -d >      $GOOGLE_CREDENTIALS_FIREFOX_AURORA_PATH
         echo $GOOGLE_CREDENTIALS_FIREFOX_BETA | base64 -d >      $GOOGLE_CREDENTIALS_FIREFOX_BETA_PATH
+        echo $GOOGLE_CREDENTIALS_FIREFOX_RELEASE | base64 -d >   $GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH
 
         import_cert fennec-nightly $CERT_DIR/nightly.pem
         import_cert fennec-beta $CERT_DIR/release.pem
+        import_cert fennec-production $CERT_DIR/release.pem
         import_cert fenix-nightly $CERT_DIR/fenix_nightly.pem
         import_cert fenix-beta $CERT_DIR/fenix_beta.pem
         import_cert fenix-production $CERT_DIR/fenix_production.pem
