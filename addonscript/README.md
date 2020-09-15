@@ -5,9 +5,10 @@ Addonscript
 
 This is designed to be run from scriptworker, but runs perfectly fine as a standalone script.
 
-
 Docs
 ----
+More details on what this script does can be found in [RelEng docs](http://docs.mozilla-releng.net/en/latest/addons/addons.html).
+
 `README.md` is the master readme, and `README.rst` is generated via
 
     pandoc --from=markdown --to=rst README.md > README.rst
