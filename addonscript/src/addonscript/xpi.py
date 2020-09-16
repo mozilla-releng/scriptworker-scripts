@@ -23,7 +23,7 @@ def get_stripped_version(version):
         raise BadVersionError(f"Can't determine stripped version from `{version}`!")
 
 
-def get_langpack_info(context, path):
+def get_langpack_info(path):
     """Extract locale and version from a langpack .xpi."""
     with ZipFile(path, "r") as langpack_xpi:
         manifest = langpack_xpi.getinfo("manifest.json")

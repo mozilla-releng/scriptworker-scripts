@@ -61,8 +61,8 @@ async def sign_addon(context, locale):
 
 def build_locales_context(context):
     langpack_info = []
-    for f in build_filelist(context):
-        current_info = get_langpack_info(context, f)
+    for file_ in build_filelist(context):
+        current_info = get_langpack_info(file_)
         langpack_info.append(current_info)
     context.locales = {
         locale_info["locale"]: {
