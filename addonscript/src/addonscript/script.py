@@ -4,10 +4,15 @@ import os
 
 import aiohttp
 import scriptworker.client
-from aiohttp.client_exceptions import ClientError
+from aiohttp.client_exceptions import ClientError, ClientResponseError
 from scriptworker.utils import retry_async
 
-from addonscript.api import do_upload, get_signed_addon_url, get_signed_xpi
+from addonscript.api import (
+    add_version,
+    do_upload,
+    get_signed_addon_url,
+    get_signed_xpi,
+)
 from addonscript.exceptions import AMOConflictError, SignatureError
 from addonscript.task import build_filelist
 from addonscript.xpi import get_langpack_info
@@ -59,9 +64,13 @@ def build_locales_context(context):
     for f in build_filelist(context):
         current_info = get_langpack_info(context, f)
         langpack_info.append(current_info)
-    # TODO add min_version
     context.locales = {
-        locale_info["locale"]: {"unsigned": locale_info["unsigned"], "version": locale_info["version"], "id": locale_info["id"]}
+        locale_info["locale"]: {
+            "id": locale_info["id"],
+            "min_version": locale_info["min_version"],
+            "unsigned": locale_info["unsigned"],
+            "version": locale_info["version"],
+        }
         for locale_info in langpack_info
     }
 
@@ -71,7 +80,11 @@ async def async_main(context):
     async with aiohttp.ClientSession(connector=connector) as session:
         context.session = session
         build_locales_context(context)
-        # TODO: add_version once for every min_version
+
+        # ensure the versions exists on AMO before proceeding with uploading langpacks
+        for locale in context.locales:
+            await retry_async(add_version, args=(context, context.locales[locale]["min_version"]), retry_exceptions=tuple([ClientResponseError]))
+
         tasks = []
         for locale in context.locales:
             tasks.append(asyncio.ensure_future(sign_addon(context, locale)))

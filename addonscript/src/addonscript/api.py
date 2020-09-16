@@ -2,7 +2,13 @@
 
 from aiohttp.client_exceptions import ClientResponseError
 
-from addonscript.exceptions import AMOConflictError, FatalSignatureError, SignatureError
+from addonscript.exceptions import (
+    AMOConflictError,
+    AuthFailedError,
+    AuthInsufficientPermissionsError,
+    FatalSignatureError,
+    SignatureError,
+)
 from addonscript.task import get_channel
 from addonscript.utils import amo_download, amo_get, amo_put, get_api_url
 
@@ -12,6 +18,34 @@ UPLOAD_VERSION = "api/v3/addons/{id}/versions/{version}/"
 # https://addons-server.readthedocs.io/en/latest/topics/api/signing.html#checking-the-status-of-your-upload
 UPLOAD_STATUS = "api/v3/addons/{id}/versions/{version}/"
 UPLOAD_STATUS_PK = "api/v3/addons/{id}/versions/{version}/uploads/{upload_pk}/"
+
+
+# https://addons-server.readthedocs.io/en/latest/topics/api/applications.html
+# XXX when we want to support multiple products, we'll need to unhardcode the
+#     `firefox` below
+ADD_VERSION = "api/v4/applications/firefox/{version}/"
+
+
+async def add_version(context, version):
+    """Add a new version to AMO.
+
+    Use the `min_version` here, rather than the string with the buildid etc.
+
+    Raises:
+        BadVersionError: If the XPI's version fails to sanity check against AMO
+
+
+    """
+    url = get_api_url(context, ADD_VERSION, version=version)
+
+    try:
+        await amo_put(context, url, data=None)
+    except ClientResponseError as exc:
+        if exc.status == 401:
+            raise AuthFailedError(f"Addonscript credentials are misconfigured")
+        elif exc.status == 403:
+            raise AuthInsufficientPermissionsError(f"Addonscript creds are missing permissions")
+        raise exc
 
 
 async def do_upload(context, locale):
@@ -39,7 +73,7 @@ async def do_upload(context, locale):
 async def get_signed_addon_url(context, locale, pk):
     """Query AMO to get the location of the signed XPI.
 
-    This function should called within `scriptworker.utils.retry_async()`.
+    This function should be called within `scriptworker.utils.retry_async()`.
 
     Raises:
         SignatureError: If the metadata lacks something or if the server-side Automated validation
