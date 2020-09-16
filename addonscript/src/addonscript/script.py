@@ -30,12 +30,16 @@ def get_default_config(base_dir=None):
 
 
 async def sign_addon(context, locale):
+    """Upload addons to AMO, then poll AMO for signed addons."""
+
+    # upload langpack to AMO for validation/sanity check and signing
     try:
         upload_data = await retry_async(do_upload, args=(context, locale), retry_exceptions=tuple([ClientError, asyncio.TimeoutError]))
     except AMOConflictError as exc:
         log.info(exc.message)
         upload_data = {"pk": None}
 
+    # poll AMO for the the URL that contains the signed langpack
     signed_addon_url = await retry_async(
         get_signed_addon_url,
         args=(context, locale, upload_data["pk"]),
@@ -43,6 +47,8 @@ async def sign_addon(context, locale):
         # Most addons will be signed in less than that.
         retry_exceptions=tuple([ClientError, asyncio.TimeoutError, SignatureError]),
     )
+
+    # make the signed langpack available in task's artifacts for downstream beetmover
     destination = os.path.join(context.config["artifact_dir"], "public/build/", locale, "target.langpack.xpi")
     os.makedirs(os.path.dirname(destination))
     await retry_async(get_signed_xpi, args=(context, signed_addon_url, destination))
@@ -53,6 +59,7 @@ def build_locales_context(context):
     for f in build_filelist(context):
         current_info = get_langpack_info(context, f)
         langpack_info.append(current_info)
+    # TODO add min_version
     context.locales = {
         locale_info["locale"]: {"unsigned": locale_info["unsigned"], "version": locale_info["version"], "id": locale_info["id"]}
         for locale_info in langpack_info
@@ -64,6 +71,7 @@ async def async_main(context):
     async with aiohttp.ClientSession(connector=connector) as session:
         context.session = session
         build_locales_context(context)
+        # TODO: add_version once for every min_version
         tasks = []
         for locale in context.locales:
             tasks.append(asyncio.ensure_future(sign_addon(context, locale)))
