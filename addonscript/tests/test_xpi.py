@@ -1,4 +1,5 @@
 import json
+import os
 import pytest
 from zipfile import ZipFile
 
@@ -7,7 +8,8 @@ import addonscript.xpi as xpi
 
 @pytest.fixture(scope="function")
 def fake_xpi():
-    path = "fake_target.langpack.xpi"
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    path =  f"{current_dir}/fake_target.langpack.xpi"
     with ZipFile(path, "r") as langpack_xpi:
         manifest = langpack_xpi.getinfo("manifest.json")
         with langpack_xpi.open(manifest) as f:
@@ -57,7 +59,8 @@ def test_get_stripped_version(version, expected_version):
 
 
 def test_get_langpack_info(fake_xpi):
-    path = "fake_target.langpack.xpi"
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    path =  f"{current_dir}/fake_target.langpack.xpi"
     langpack = xpi.get_langpack_info(path)
     assert langpack["locale"] == fake_xpi["langpack_id"]
     assert langpack["version"] == fake_xpi["version"]
