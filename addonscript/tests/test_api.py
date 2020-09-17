@@ -8,10 +8,7 @@ from contextlib import contextmanager
 from scriptworker.context import Context
 
 import addonscript.api as api
-from addonscript.exceptions import (
-        AMOConflictError, AuthFailedError, AuthInsufficientPermissionsError,
-        FatalSignatureError, SignatureError
-)
+from addonscript.exceptions import AMOConflictError, AuthFailedError, AuthInsufficientPermissionsError, FatalSignatureError, SignatureError
 
 
 @contextmanager
