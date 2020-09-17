@@ -1,10 +1,10 @@
 import contextlib
 import os
+from contextlib import contextmanager
 
 import aiohttp
 import pytest
 from aioresponses import aioresponses
-from contextlib import contextmanager
 from scriptworker.context import Context
 
 import addonscript.api as api

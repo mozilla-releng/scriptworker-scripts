@@ -1,7 +1,8 @@
 import json
 import os
-import pytest
 from zipfile import ZipFile
+
+import pytest
 
 import addonscript.xpi as xpi
 
