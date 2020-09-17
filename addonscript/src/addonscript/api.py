@@ -2,13 +2,7 @@
 
 from aiohttp.client_exceptions import ClientResponseError
 
-from addonscript.exceptions import (
-    AMOConflictError,
-    AuthFailedError,
-    AuthInsufficientPermissionsError,
-    FatalSignatureError,
-    SignatureError,
-)
+from addonscript.exceptions import AMOConflictError, AuthFailedError, AuthInsufficientPermissionsError, FatalSignatureError, SignatureError
 from addonscript.task import get_channel
 from addonscript.utils import amo_download, amo_get, amo_put, get_api_url
 

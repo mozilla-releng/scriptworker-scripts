@@ -7,12 +7,7 @@ import scriptworker.client
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from scriptworker.utils import retry_async
 
-from addonscript.api import (
-    add_version,
-    do_upload,
-    get_signed_addon_url,
-    get_signed_xpi,
-)
+from addonscript.api import add_version, do_upload, get_signed_addon_url, get_signed_xpi
 from addonscript.exceptions import AMOConflictError, SignatureError
 from addonscript.task import build_filelist
 from addonscript.xpi import get_langpack_info
