@@ -18,22 +18,6 @@ def fake_xpi():
             return json.loads(contents)
 
 
-@pytest.fixture(scope="function")
-def fake_build_xpi():
-    path = "fake_target.langpack.xpi"
-    manifest_payload = {
-        "applications": {"gecko": {"id": "langpack-en-US@firefox.mozilla.org", "strict_max_version": "81.*", "strict_min_version": "81.0"}},
-        "description": "Language pack for Firefox for en-US",
-        "langpack_id": "en-US",
-        "languages": {"en-US": {"version": "20200910193722"}},
-        "manifest_version": 2,
-        "name": "English (US) Language Pack",
-        "version": "81.0buildid20200910180444",
-    }
-
-    # TODO: drop this into a json file, zip it and change to `xpi`
-
-
 @pytest.mark.parametrize(
     "version,expected_version",
     (

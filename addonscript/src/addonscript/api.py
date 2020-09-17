@@ -36,9 +36,9 @@ async def add_version(context, version):
         await amo_put(context, url, data=None)
     except ClientResponseError as exc:
         if exc.status == 401:
-            raise AuthFailedError(f"Addonscript credentials are misconfigured")
+            raise AuthFailedError("Addonscript credentials are misconfigured")
         elif exc.status == 403:
-            raise AuthInsufficientPermissionsError(f"Addonscript creds are missing permissions")
+            raise AuthInsufficientPermissionsError("Addonscript creds are missing permissions")
         raise exc
 
 

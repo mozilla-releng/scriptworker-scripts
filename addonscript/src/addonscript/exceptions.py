@@ -11,7 +11,7 @@ class AuthFailedError(ScriptWorkerTaskException):
 
 
 class AuthInsufficientPermissionsError(ScriptWorkerTaskException):
-    """Fatal error when addonscript credentials don't have enough permissions"""
+    """Fatal error when addonscript credentials don't have enough permissions."""
 
     pass
 

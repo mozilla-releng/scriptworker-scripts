@@ -8,7 +8,7 @@ from addonscript.exceptions import BadVersionError
 
 
 def get_stripped_version(version):
-    """Strip out buildid or other extraneous info from the version
+    """Strip out buildid or other extraneous info from the version.
 
     Args:
         version (string): the full version string from manifest.json
