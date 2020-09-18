@@ -7,7 +7,7 @@ This is designed to be run from scriptworker, but runs perfectly fine as a stand
 
 Docs
 ----
-More details on what this script does can be found in [RelEng docs](http://docs.mozilla-releng.net/en/latest/addons/addons.html).
+More details on what this script does can be found in [RelEng docs](https://moz-releng-docs.readthedocs.io/en/latest/addons/langpacks.html).
 
 `README.md` is the master readme, and `README.rst` is generated via
 
