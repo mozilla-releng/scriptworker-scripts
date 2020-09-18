@@ -26,7 +26,8 @@ async def add_version(context, version):
     Use the `min_version` here, rather than the string with the buildid etc.
 
     Raises:
-        BadVersionError: If the XPI's version fails to sanity check against AMO
+        AuthFailedError: If the automation credentials are misconfigured
+        AuthInsufficientPermissionsError: If the automation credentials are missing permissions
 
 
     """
