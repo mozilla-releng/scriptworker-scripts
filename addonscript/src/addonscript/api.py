@@ -33,13 +33,15 @@ async def add_version(context, version):
     url = get_api_url(context, ADD_VERSION, version=version)
 
     try:
-        await amo_put(context, url, data=None)
+        result = await amo_put(context, url, data=None)
     except ClientResponseError as exc:
         if exc.status == 401:
             raise AuthFailedError("Addonscript credentials are misconfigured")
         elif exc.status == 403:
             raise AuthInsufficientPermissionsError("Addonscript creds are missing permissions")
         raise exc
+
+    return result
 
 
 async def do_upload(context, locale):
