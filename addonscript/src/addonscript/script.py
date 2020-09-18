@@ -77,8 +77,10 @@ async def async_main(context):
         build_locales_context(context)
 
         # ensure the versions exists on AMO before proceeding with uploading langpacks
-        for locale in context.locales:
-            await retry_async(add_version, args=(context, context.locales[locale]["min_version"]), retry_exceptions=tuple([ClientResponseError]))
+        # building a set here since the version is shared among all locales usually
+        versions = {context.locales[locale]["min_version"] for locale in context.locales}
+        for version in versions:
+            await retry_async(add_version, args=(context, version), retry_exceptions=tuple([ClientResponseError]))
 
         tasks = []
         for locale in context.locales:
