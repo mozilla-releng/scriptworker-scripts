@@ -16,12 +16,16 @@ log = logging.getLogger(__name__)
 
 
 # create_locale_submitter {{{1
-def create_locale_submitter(e, extra_suffix, auth0_secrets, config):
+def create_locale_submitter(e, extra_suffix, auth0_secrets, config, backend_version):
     if "tc_release" in e:
         log.info("Taskcluster Release style Balrog submission")
 
         submitter = ReleaseSubmitterV9(
-            api_root=config["api_root"], auth0_secrets=auth0_secrets, dummy=config["dummy"], suffix=e.get("blob_suffix", "") + extra_suffix
+            api_root=config["api_root"],
+            auth0_secrets=auth0_secrets,
+            dummy=config["dummy"],
+            suffix=e.get("blob_suffix", "") + extra_suffix,
+            backend_version=backend_version,
         )
 
         data = {
@@ -44,7 +48,11 @@ def create_locale_submitter(e, extra_suffix, auth0_secrets, config):
         log.info("Taskcluster Nightly style Balrog submission")
 
         submitter = NightlySubmitterV4(
-            api_root=config["api_root"], auth0_secrets=auth0_secrets, dummy=config["dummy"], url_replacements=e.get("url_replacements", [])
+            api_root=config["api_root"],
+            auth0_secrets=auth0_secrets,
+            dummy=config["dummy"],
+            url_replacements=e.get("url_replacements", []),
+            backend_version=backend_version,
         )
 
         data = {
@@ -66,7 +74,7 @@ def create_locale_submitter(e, extra_suffix, auth0_secrets, config):
 
 
 # submit_locale {{{1
-def submit_locale(task, config, auth0_secrets):
+def submit_locale(task, config, auth0_secrets, backend_version):
     """Submit a release blob to balrog."""
     upstream_artifacts = get_upstream_artifacts(task)
 
@@ -78,7 +86,7 @@ def submit_locale(task, config, auth0_secrets):
     for e in manifest:
         for suffix in suffixes:
             # Get release metadata from manifest
-            submitter, release = create_locale_submitter(e, suffix, auth0_secrets, config)
+            submitter, release = create_locale_submitter(e, suffix, auth0_secrets, config, backend_version=backend_version)
             # Connect to balrog and submit the metadata
             # Going back to the original number of attempts so that we avoid sleeping too much in between
             # retries to get Out-of-memory in the GCP workers. Until we figure out what's bumping the spike
@@ -119,7 +127,7 @@ def create_pusher(**kwargs):
     return ReleasePusher(**kwargs)
 
 
-def submit_toplevel(task, config, auth0_secrets):
+def submit_toplevel(task, config, auth0_secrets, backend_version):
     """Push a top-level release blob to balrog."""
     partials = {}
     if task["payload"].get("partial_versions"):
@@ -138,6 +146,7 @@ def submit_toplevel(task, config, auth0_secrets):
             suffix=task["payload"].get("blob_suffix", "") + suffix,
             complete_mar_filename_pattern=task["payload"].get("complete_mar_filename_pattern"),
             complete_mar_bouncer_product_pattern=task["payload"].get("complete_mar_bouncer_product_pattern"),
+            backend_version=backend_version,
         )
 
         retry(
@@ -232,19 +241,25 @@ def get_default_config():
 # main {{{1
 async def async_main(config, task):
     behavior = get_task_behavior(task, config)
+    # Eventually remove backend_version = 1 when not needed.
+    backend_version = 1
+    if behavior.startswith("v2-"):
+        behavior = behavior[3:]
+        backend_version = 2
+
     validate_task_schema(config, task, behavior)
 
     server = get_task_server(task, config)
     auth0_secrets, config = update_config(config, server)
 
     if behavior == "submit-toplevel":
-        submit_toplevel(task, config, auth0_secrets)
+        submit_toplevel(task, config, auth0_secrets, backend_version)
     elif behavior == "schedule":
         schedule(task, config, auth0_secrets)
     elif behavior == "set-readonly":
         set_readonly(task, config, auth0_secrets)
     else:
-        submit_locale(task, config, auth0_secrets)
+        submit_locale(task, config, auth0_secrets, backend_version)
 
 
 def main():

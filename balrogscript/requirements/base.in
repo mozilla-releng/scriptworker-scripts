@@ -1,4 +1,4 @@
-balrogclient>=1.1.0
+balrogclient>=1.2
 idna
 ipaddress
 mar

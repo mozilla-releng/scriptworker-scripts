@@ -13,7 +13,7 @@
         "payload": {
             "type": "object",
             "properties": {
-                "behavior": {"type": "string", "enum": ["submit-locale"], "default": "submit-locale"},
+                "behavior": {"type": "string", "enum": ["v2-submit-locale", "submit-locale"], "default": "submit-locale"},
                 "upstreamArtifacts": {
                     "type": "array",
                     "items": {

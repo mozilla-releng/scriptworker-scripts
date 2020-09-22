@@ -2,7 +2,7 @@ import json
 import logging
 
 import arrow
-from balrogclient import Release, ReleaseState, Rule, ScheduledRuleChange, SingleLocale
+from balrogclient import Release, ReleaseState, Rule, ScheduledRuleChange, SingleLocale, balrog_request, get_balrog_session
 from redo import retry
 from requests.exceptions import HTTPError
 
@@ -109,6 +109,7 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
         from_suffix="",
         complete_mar_filename_pattern=None,
         complete_mar_bouncer_product_pattern=None,
+        backend_version=1,
     ):
         self.api_root = api_root
         self.auth0_secrets = auth0_secrets
@@ -118,6 +119,7 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
             self.suffix += "-dummy"
         self.complete_mar_filename_pattern = complete_mar_filename_pattern or "%s-%s.complete.mar"
         self.complete_mar_bouncer_product_pattern = complete_mar_bouncer_product_pattern or "%s-%s-complete"
+        self.backend_version = backend_version
 
     def generate_data(self, appVersion, productName, version, buildNumber, updateChannels, ftpServer, bouncerServer, enUSPlatforms, updateLine, **updateKwargs):
         details_product = productName.lower()
@@ -145,34 +147,47 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
     def run(
         self, appVersion, productName, version, buildNumber, updateChannels, ftpServer, bouncerServer, enUSPlatforms, hashFunction, updateLine, **updateKwargs
     ):
-        data = self.generate_data(
+        blob = self.generate_data(
             appVersion, productName, version, buildNumber, updateChannels, ftpServer, bouncerServer, enUSPlatforms, updateLine, **updateKwargs
         )
         name = get_release_blob_name(productName, version, buildNumber, self.suffix)
-        api = Release(name=name, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
-        try:
-            current_data, data_version = api.get_data()
-        except HTTPError as e:
-            if e.response.status_code == 404:
-                log.warning("Release blob doesn't exist, using empty data...")
-                current_data, data_version = {}, None
-            else:
-                raise
 
-        data = recursive_update(current_data, data)
-        api.update_release(
-            product=productName, hashFunction=hashFunction, releaseData=json.dumps(data), schemaVersion=self.schemaVersion, data_version=data_version
-        )
+        if self.backend_version == 2:
+            log.info("Using backend version 2...")
+            blob["schema_version"] = self.schemaVersion
+            blob["hashFunction"] = hashFunction
+            blob["name"] = name
+            data = {"product": productName, "blob": blob}
+            url = self.api_root + "/v2/releases/" + name
+            session = get_balrog_session(auth0_secrets=self.auth0_secrets)
+            balrog_request(session, "put", url, json=data)
+        else:
+            log.info("Using legacy backend version...")
+            api = Release(name=name, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
+            try:
+                current_data, data_version = api.get_data()
+            except HTTPError as e:
+                if e.response.status_code == 404:
+                    log.warning("Release blob doesn't exist, using empty data...")
+                    current_data, data_version = {}, None
+                else:
+                    raise
+
+            blob = recursive_update(current_data, blob)
+            api.update_release(
+                product=productName, hashFunction=hashFunction, releaseData=json.dumps(blob), schemaVersion=self.schemaVersion, data_version=data_version
+            )
 
 
 class NightlySubmitterBase(object):
     build_type = "nightly"
 
-    def __init__(self, api_root, auth0_secrets=None, dummy=False, url_replacements=None):
+    def __init__(self, api_root, auth0_secrets=None, dummy=False, url_replacements=None, backend_version=1):
         self.api_root = api_root
         self.auth0_secrets = auth0_secrets
         self.dummy = dummy
         self.url_replacements = url_replacements
+        self.backend_version = backend_version
 
     def _replace_canocical_url(self, url):
         if self.url_replacements:
@@ -185,7 +200,19 @@ class NightlySubmitterBase(object):
         return url
 
     def run(self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs):
+        if self.backend_version == 2:
+            return self.run_backend2(
+                platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=isOSUpdate, **updateKwargs
+            )
+        return self.run_backend1(
+            platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=isOSUpdate, **updateKwargs
+        )
+
+    def run_backend1(
+        self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs
+    ):
         assert schemaVersion in (3, 4), "Unhandled schema version %s" % schemaVersion
+        log.info("Using legacy backend version...")
         targets = buildbot2updatePlatforms(platform)
         build_target = targets[0]
         alias = None
@@ -206,6 +233,7 @@ class NightlySubmitterBase(object):
             build_type = self.build_type
 
         name = get_nightly_blob_name(productName, branch, build_type, buildID, self.dummy)
+
         api = SingleLocale(name=name, build_target=build_target, locale=locale, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
 
         # wrap operations into "atomic" functions that can be retried
@@ -262,6 +290,58 @@ class NightlySubmitterBase(object):
             )
 
         retry(update_latest, sleeptime=2, max_sleeptime=2, attempts=10)
+
+    def run_backend2(
+        self, platform, buildID, productName, branch, appVersion, locale, hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs
+    ):
+        log.info("Using backend version 2...")
+        session = get_balrog_session(auth0_secrets=self.auth0_secrets)
+
+        targets = buildbot2updatePlatforms(platform)
+        build_target = targets[0]
+        alias = None
+        if len(targets) > 1:
+            alias = targets[1:]
+            log.debug("alias entry of %s ignored...", json.dumps(alias))
+        data = {"buildID": buildID, "appVersion": appVersion, "platformVersion": extVersion, "displayVersion": appVersion}
+
+        data.update(self._get_update_data(productName, branch, **updateKwargs))
+
+        build_type = self.build_type
+
+        # wrap operations into "atomic" functions that can be retried
+        def update_data(url, existing_release, existing_locale_data):
+            # If the  partials are already a subset of the blob and the
+            # complete MAR is the same, skip the submission
+            skip_submission = bool(
+                existing_locale_data
+                and existing_locale_data.get("completes") == data.get("completes")
+                and all(p in existing_locale_data.get("partials", []) for p in data.get("partials", []))
+            )
+            if skip_submission:
+                log.warning("Dated data didn't change, skipping update")
+                return
+            # explicitly pass data version
+            new_data = {"blob": {"platforms": {build_target: {"locales": {locale: data}}}}, "old_data_versions": {"platforms": {build_target: {"locales": {}}}}}
+            if existing_release.get("old_data_versions", {}).get("platforms", {}).get(build_target, {}).get("locales", {}).get(locale):
+                new_data["old_data_versions"]["platforms"][build_target]["locales"][locale] = existing_release["old_data_versions"]["platforms"][build_target][
+                    "locales"
+                ][locale]
+            balrog_request(session, "post", url, json=new_data)
+
+        for identifier in (buildID, "latest"):
+            name = get_nightly_blob_name(productName, branch, build_type, identifier, self.dummy)
+            url = self.api_root + "/v2/releases/" + name
+            try:
+                existing_release = balrog_request(session, "get", url)
+            except HTTPError as excp:
+                if excp.response.status_code == 404:
+                    log.info("No existing release %s, using empty data", name)
+                    existing_release = {"blob": {}}
+                else:
+                    raise
+            existing_locale_data = existing_release["blob"].get(build_type, {}).get("locales", {}).get(locale)
+            update_data(url, existing_release, existing_locale_data)
 
 
 class MultipleUpdatesNightlyMixin(object):
@@ -325,13 +405,14 @@ class MultipleUpdatesReleaseMixin(object):
 
 
 class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
-    def __init__(self, api_root, auth0_secrets=None, dummy=False, suffix="", from_suffix=""):
+    def __init__(self, api_root, auth0_secrets=None, dummy=False, suffix="", from_suffix="", backend_version=1):
         self.api_root = api_root
         self.auth0_secrets = auth0_secrets
         self.suffix = suffix
         if dummy:
             self.suffix += "-dummy"
         self.from_suffix = from_suffix
+        self.backend_version = backend_version
 
     def run(self, platform, productName, appVersion, version, build_number, locale, hashFunction, extVersion, buildID, **updateKwargs):
         targets = buildbot2updatePlatforms(platform)
@@ -340,13 +421,26 @@ class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
         build_target = targets[0]
 
         name = get_release_blob_name(productName, version, build_number, self.suffix)
-        data = {"buildID": buildID, "appVersion": appVersion, "displayVersion": getPrettyVersion(version)}
+        locale_data = {"buildID": buildID, "appVersion": appVersion, "displayVersion": getPrettyVersion(version)}
 
-        data.update(self._get_update_data(productName, version, build_number, **updateKwargs))
+        locale_data.update(self._get_update_data(productName, version, build_number, **updateKwargs))
 
-        api = SingleLocale(name=name, build_target=build_target, locale=locale, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
-        current_data, data_version = api.get_data()
-        api.update_build(data_version=data_version, product=productName, hashFunction=hashFunction, buildData=json.dumps(data), schemaVersion=9)
+        if self.backend_version == 2:
+            log.info("Using backend version 2...")
+            # XXX Check for existing data_version for this locale
+            data = {
+                "blob": {"platforms": {build_target: {"locales": {locale: locale_data}}}},
+                # XXX old_data_versions here is currently required but shouldn't be
+                "old_data_versions": {"platforms": {build_target: {"locales": {}}}},
+            }
+            url = self.api_root + "/v2/releases/" + name
+            session = get_balrog_session(auth0_secrets=self.auth0_secrets)
+            balrog_request(session, "post", url, json=data)
+        else:
+            log.info("Using legacy backend version...")
+            api = SingleLocale(name=name, build_target=build_target, locale=locale, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
+            current_data, data_version = api.get_data()
+            api.update_build(data_version=data_version, product=productName, hashFunction=hashFunction, buildData=json.dumps(data), schemaVersion=9)
 
 
 class ReleasePusher(object):
