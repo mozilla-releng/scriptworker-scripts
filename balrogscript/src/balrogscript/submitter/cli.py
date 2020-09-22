@@ -440,7 +440,7 @@ class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
             log.info("Using legacy backend version...")
             api = SingleLocale(name=name, build_target=build_target, locale=locale, auth0_secrets=self.auth0_secrets, api_root=self.api_root)
             current_data, data_version = api.get_data()
-            api.update_build(data_version=data_version, product=productName, hashFunction=hashFunction, buildData=json.dumps(data), schemaVersion=9)
+            api.update_build(data_version=data_version, product=productName, hashFunction=hashFunction, buildData=json.dumps(locale_data), schemaVersion=9)
 
 
 class ReleasePusher(object):
