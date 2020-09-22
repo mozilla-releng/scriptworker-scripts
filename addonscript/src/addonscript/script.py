@@ -4,10 +4,10 @@ import os
 
 import aiohttp
 import scriptworker.client
-from aiohttp.client_exceptions import ClientError
+from aiohttp.client_exceptions import ClientError, ClientResponseError
 from scriptworker.utils import retry_async
 
-from addonscript.api import do_upload, get_signed_addon_url, get_signed_xpi
+from addonscript.api import add_version, do_upload, get_signed_addon_url, get_signed_xpi
 from addonscript.exceptions import AMOConflictError, SignatureError
 from addonscript.task import build_filelist
 from addonscript.xpi import get_langpack_info
@@ -30,12 +30,16 @@ def get_default_config(base_dir=None):
 
 
 async def sign_addon(context, locale):
+    """Upload addons to AMO, then poll AMO for signed addons."""
+
+    # upload langpack to AMO for validation/sanity check and signing
     try:
         upload_data = await retry_async(do_upload, args=(context, locale), retry_exceptions=tuple([ClientError, asyncio.TimeoutError]))
     except AMOConflictError as exc:
         log.info(exc.message)
         upload_data = {"pk": None}
 
+    # poll AMO for the the URL that contains the signed langpack
     signed_addon_url = await retry_async(
         get_signed_addon_url,
         args=(context, locale, upload_data["pk"]),
@@ -43,6 +47,8 @@ async def sign_addon(context, locale):
         # Most addons will be signed in less than that.
         retry_exceptions=tuple([ClientError, asyncio.TimeoutError, SignatureError]),
     )
+
+    # make the signed langpack available in task's artifacts for downstream beetmover
     destination = os.path.join(context.config["artifact_dir"], "public/build/", locale, "target.langpack.xpi")
     os.makedirs(os.path.dirname(destination))
     await retry_async(get_signed_xpi, args=(context, signed_addon_url, destination))
@@ -50,11 +56,16 @@ async def sign_addon(context, locale):
 
 def build_locales_context(context):
     langpack_info = []
-    for f in build_filelist(context):
-        current_info = get_langpack_info(context, f)
+    for file_ in build_filelist(context):
+        current_info = get_langpack_info(file_)
         langpack_info.append(current_info)
     context.locales = {
-        locale_info["locale"]: {"unsigned": locale_info["unsigned"], "version": locale_info["version"], "id": locale_info["id"]}
+        locale_info["locale"]: {
+            "id": locale_info["id"],
+            "min_version": locale_info["min_version"],
+            "unsigned": locale_info["unsigned"],
+            "version": locale_info["version"],
+        }
         for locale_info in langpack_info
     }
 
@@ -64,6 +75,13 @@ async def async_main(context):
     async with aiohttp.ClientSession(connector=connector) as session:
         context.session = session
         build_locales_context(context)
+
+        # ensure the versions exists on AMO before proceeding with uploading langpacks
+        # building a set here since the version is shared among all locales usually
+        versions = {context.locales[locale]["min_version"] for locale in context.locales}
+        for version in versions:
+            await retry_async(add_version, args=(context, version), retry_exceptions=tuple([ClientResponseError]))
+
         tasks = []
         for locale in context.locales:
             tasks.append(asyncio.ensure_future(sign_addon(context, locale)))

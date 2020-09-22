@@ -1,5 +1,6 @@
 import contextlib
 import os
+from contextlib import contextmanager
 
 import aiohttp
 import pytest
@@ -7,7 +8,12 @@ from aioresponses import aioresponses
 from scriptworker.context import Context
 
 import addonscript.api as api
-from addonscript.exceptions import AMOConflictError, FatalSignatureError, SignatureError
+from addonscript.exceptions import AMOConflictError, AuthFailedError, AuthInsufficientPermissionsError, FatalSignatureError, SignatureError
+
+
+@contextmanager
+def does_not_raise():
+    yield
 
 
 @pytest.fixture(scope="function")
@@ -26,6 +32,28 @@ def context():
 async def fake_session(event_loop):
     async with aiohttp.ClientSession() as session:
         return session
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "statuscode,expectation",
+    (
+        (200, does_not_raise()),
+        (201, does_not_raise()),
+        (202, does_not_raise()),
+        (401, pytest.raises(AuthFailedError)),
+        (403, pytest.raises(AuthInsufficientPermissionsError)),
+    ),
+)
+async def test_add_version(fake_session, context, mocker, statuscode, expectation):
+    context.session = fake_session
+    mocked_url = "http://some-amo-it.url/api/v4/applications/firefox/42/"
+
+    with aioresponses() as m:
+        m.put(mocked_url, status=statuscode)
+
+        with expectation:
+            await api.add_version(context, "42")
 
 
 @pytest.mark.asyncio

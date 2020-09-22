@@ -75,7 +75,8 @@ async def amo_put(context, url, data):
         async with resp as r:
             log.debug('amo_put() for URL "{}" returned HTTP status code: {}'.format(url, r.status))
             r.raise_for_status()
-            returned_value = await r.json()
+            # we silence aiohttp in case we have Null returns from AMO API
+            returned_value = await r.json(content_type=None)
             log.debug('amo_put() for URL "{}" returned: {}'.format(url, returned_value))
             return returned_value
 

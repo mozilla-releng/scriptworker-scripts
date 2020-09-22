@@ -2,21 +2,17 @@ work_dir: { "$eval": "WORK_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 contact_github: { "$eval": "ENV == 'prod'" }
 github_projects:
-  $flatten:
-    $match:
-      'COT_PRODUCT == "mobile" && ENV == "prod"':
-        fenix:
-          github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_PROD" }
-          github_owner: mozilla-mobile
-          github_repo_name: fenix
-      'COT_PRODUCT == "mobile" && ENV == "fake-prod"':
-        # TODO: Remove this entry once end-to-end testing is over
-        fenix:
-          github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_PROD" }
-          github_owner: JohanLorenzo
-          github_repo_name: fenix
-        mock:
-          github_token: dummy
-          github_owner: non-existing-owner
-          github_repo_name: non-existing-repo
+  $switch:
+    'COT_PRODUCT == "mobile" && ENV == "prod"':
+      fenix:
+        allowed_actions: ["release"]
+        github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_PROD" }
+        github_owner: mozilla-mobile
+        github_repo_name: fenix
+    'COT_PRODUCT == "mobile" && ENV == "fake-prod"':
+      mock:
+        allowed_actions: ["release"]
+        github_token: dummy
+        github_owner: non-existing-owner
+        github_repo_name: non-existing-repo
 taskcluster_scope_prefixes: ["project:mobile:fenix:releng:github:"]
