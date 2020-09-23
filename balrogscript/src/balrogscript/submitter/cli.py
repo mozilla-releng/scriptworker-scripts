@@ -323,8 +323,8 @@ class NightlySubmitterBase(object):
                 return
             # explicitly pass data version
             new_data = {"blob": {"platforms": {build_target: {"locales": {locale: data}}}}, "old_data_versions": {"platforms": {build_target: {"locales": {}}}}}
-            if existing_release.get("old_data_versions", {}).get("platforms", {}).get(build_target, {}).get("locales", {}).get(locale):
-                new_data["old_data_versions"]["platforms"][build_target]["locales"][locale] = existing_release["old_data_versions"]["platforms"][build_target][
+            if existing_release.get("data_versions", {}).get("platforms", {}).get(build_target, {}).get("locales", {}).get(locale):
+                new_data["old_data_versions"]["platforms"][build_target]["locales"][locale] = existing_release["data_versions"]["platforms"][build_target][
                     "locales"
                 ][locale]
             balrog_request(session, "post", url, json=new_data)
