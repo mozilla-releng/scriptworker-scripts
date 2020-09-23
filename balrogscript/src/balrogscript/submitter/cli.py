@@ -323,8 +323,8 @@ class NightlySubmitterBase(object):
                 return
             # explicitly pass data version
             new_data = {"blob": {"platforms": {build_target: {"locales": {locale: data}}}}, "old_data_versions": {"platforms": {build_target: {"locales": {}}}}}
-            if existing_release.get("old_data_versions", {}).get("platforms", {}).get(build_target, {}).get("locales", {}).get(locale):
-                new_data["old_data_versions"]["platforms"][build_target]["locales"][locale] = existing_release["old_data_versions"]["platforms"][build_target][
+            if existing_release.get("data_versions", {}).get("platforms", {}).get(build_target, {}).get("locales", {}).get(locale):
+                new_data["old_data_versions"]["platforms"][build_target]["locales"][locale] = existing_release["data_versions"]["platforms"][build_target][
                     "locales"
                 ][locale]
             balrog_request(session, "post", url, json=new_data)
@@ -336,7 +336,23 @@ class NightlySubmitterBase(object):
                 existing_release = balrog_request(session, "get", url)
             except HTTPError as excp:
                 if excp.response.status_code == 404:
-                    log.info("No existing release %s, using empty data", name)
+                    log.info("No existing release %s, creating it...", name)
+                    # TODO: we should also submit alias' here.
+                    # not doing so will cause issues with dated blobs if we
+                    # point rules at them
+                    # in reality this isn't a problem 99% of the time so it's
+                    # being ignored for new in favour of expediency
+                    toplevel_data = {
+                        "blob": {
+                            "name": name,
+                            "hashFunction": hashFunction,
+                            "schema_version": 4,
+                        },
+                        "product": productName,
+                    }
+                    # In theory multiple requests can race against each other on this
+                    # but since they're all submitting the same data they'll all get 200s
+                    balrog_request(session, "put", url, json=toplevel_data)
                     existing_release = {"blob": {}}
                 else:
                     raise
