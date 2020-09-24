@@ -113,7 +113,7 @@ def test_mobile_fake_prod():
 
 
 def test_application_services_fake_prod():
-    context = {"COT_PRODUCT": "application-services", "ENV": "fake-prod", "AUTOGRAPH_GPG_USERNAME": "", "AUTOGRAPH_GPG_PASSWORD": ""}
+    context = {"COT_PRODUCT": "app-services", "ENV": "fake-prod", "AUTOGRAPH_GPG_USERNAME": "", "AUTOGRAPH_GPG_PASSWORD": ""}
     _validate_config(context)
 
 
@@ -196,5 +196,5 @@ def test_mobile_prod():
 
 
 def test_application_services_prod():
-    context = {"COT_PRODUCT": "application-services", "ENV": "prod", "AUTOGRAPH_GPG_USERNAME": "", "AUTOGRAPH_GPG_PASSWORD": ""}
+    context = {"COT_PRODUCT": "app-services", "ENV": "prod", "AUTOGRAPH_GPG_USERNAME": "", "AUTOGRAPH_GPG_PASSWORD": ""}
     _validate_config(context)

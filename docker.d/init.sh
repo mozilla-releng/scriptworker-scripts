@@ -62,9 +62,6 @@ case $COT_PRODUCT in
   mobile)
     export TRUST_DOMAIN=mobile
     ;;
-  application-services)
-    export TRUST_DOMAIN=appservices
-    ;;
   app-services)
     export TRUST_DOMAIN=app-services
     ;;
