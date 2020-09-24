@@ -143,22 +143,6 @@ bucket_config:
           buckets:
             nightly_components: 'maven-nightly-s3-upload-bucket-d4zm9oo354qe'
         dummy: {}
-      'COT_PRODUCT == "application-services" && (ENV == "dev" || ENV == "fake-prod")':
-        maven-staging:
-          credentials:
-            id: { "$eval": "MAVEN_ID" }
-            key: { "$eval": "MAVEN_KEY" }
-          buckets:
-            appservices: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
-        dummy: {}
-      'COT_PRODUCT == "application-services" && ENV == "prod"':
-        maven-production:
-          credentials:
-            id: { "$eval": "MAVEN_ID" }
-            key: { "$eval": "MAVEN_KEY" }
-          buckets:
-            appservices: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
-        dummy: {}
       'COT_PRODUCT == "app-services" && (ENV == "dev" || ENV == "fake-prod")':
         maven-staging:
           credentials:

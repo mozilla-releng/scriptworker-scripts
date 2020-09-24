@@ -17,8 +17,6 @@ taskcluster_scope_prefixes:
         - 'project:mobile:firefox-tv:releng:signing:'
         - 'project:mobile:focus:releng:signing:'
         - 'project:mobile:reference-browser:releng:signing:'
-      'COT_PRODUCT == "application-services"':
-        - 'project:mozilla:application-services:releng:signing:'
       'COT_PRODUCT == "app-services"':
         - 'project:mozilla:app-services:releng:signing:'
       'COT_PRODUCT == "glean"':
