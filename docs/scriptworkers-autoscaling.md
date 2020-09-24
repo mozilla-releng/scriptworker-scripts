@@ -17,8 +17,9 @@ directory. Some important config variables are below:
 - `max_replicas` and `min_replicas`: set the max and min amount of replicas
 - `avg_task_duration`: average task duration. Used in calculations and affects
   the amount of replicas we spin up.
-- `sla_seconds`: how many seconds we tolerate waiting until we start a pending
-  task. For example, with 1 running instance, `sla_seconds` set to 240 and
+- `slo_seconds`: (service level objective)
+  how many seconds we tolerate waiting until we start a pending
+  task. For example, with 1 running instance, `slo_seconds` set to 240 and
   `avg_task_duration` set to 60, we don't spin up new instances until we have
   more than 4 pending tasks.
 - `capacity_ratio`: a value between 0 and 1, which tells what portion of the
