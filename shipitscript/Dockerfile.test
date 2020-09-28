@@ -7,7 +7,8 @@ WORKDIR /app
 COPY MANIFEST.in setup.py tox.ini /app/
 COPY requirements/ /app/requirements/
 
-RUN pip install -r requirements/local.txt
+ARG PYTHON_REQ_SUFFIX
+RUN pip install -r requirements/local${PYTHON_REQ_SUFFIX}.txt
 
 COPY src/ /app/src/
 
