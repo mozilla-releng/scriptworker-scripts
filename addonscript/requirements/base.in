@@ -1,5 +1,8 @@
 # pyup: ignore file
 aiohttp>3
 async-timeout
+# TODO: Remove the following line once flake8, jsonschema, pep517, pluggy, pytest,
+# tox, and virtualenv all support importlib-metadata >= 2
+importlib-metadata<2; python_version < '3.8'
 python-jose
 scriptworker
