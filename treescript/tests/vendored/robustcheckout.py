@@ -22,7 +22,6 @@ import socket
 import ssl
 import time
 
-# dummy change to trigger tests
 from mercurial.i18n import _
 from mercurial.node import hex, nullid
 from mercurial import (
