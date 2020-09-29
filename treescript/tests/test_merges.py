@@ -216,22 +216,32 @@ async def test_create_new_version(config, mocker, version_config, current_versio
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "add_merge_info,raises,expected_calls,expected_return",
+    "add_merge_info,raises,expected_calls,l10n_bump,expected_return",
     (
         (
             True,
             does_not_raise(),
             14,
+            False,
             [("https://hg.mozilla.org/mozilla-central", "some_revision"), ("https://hg.mozilla.org/releases/mozilla-beta", "some_revision")],
         ),
-        (False, pytest.raises(TaskVerificationError), 0, None),
+        (
+            True,
+            does_not_raise(),
+            16,
+            True,
+            [("https://hg.mozilla.org/mozilla-central", "some_revision"), ("https://hg.mozilla.org/releases/mozilla-beta", "some_revision")],
+        ),
+        (False, pytest.raises(TaskVerificationError), 0, False, None),
     ),
 )
-async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merge_info, raises, expected_calls, expected_return):
+async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merge_info, raises, expected_calls, l10n_bump, expected_return):
 
     called_args = []
     if add_merge_info:
         task["payload"]["merge_info"] = merge_info
+    if l10n_bump:
+        task["payload"]["l10n_bump_info"] = {"foo": "bar"}
 
     async def mocked_run_hg_command(config, *arguments, repo_path=None, **kwargs):
         called_args.append([arguments])
@@ -241,12 +251,16 @@ async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merg
     async def mocked_get_revision(*args, **kwargs):
         return "some_revision"
 
+    async def noop_l10n_bump(*arguments, **kwargs):
+        called_args.append("l10n_bump")
+
     async def noop_apply_rebranding(*arguments, **kwargs):
         called_args.append("apply_rebranding")
 
     mocker.patch.object(merges, "run_hg_command", new=mocked_run_hg_command)
     mocker.patch.object(merges, "get_revision", new=mocked_get_revision)
     mocker.patch.object(merges, "apply_rebranding", new=noop_apply_rebranding)
+    mocker.patch.object(merges, "l10n_bump", new=noop_l10n_bump)
 
     result = None
     with raises:

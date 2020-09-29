@@ -138,7 +138,7 @@ def get_version_bump_info(task):
 
 
 # get_l10n_bump_info {{{1
-def get_l10n_bump_info(task):
+def get_l10n_bump_info(task, raise_on_empty=True):
     """Get the l10n bump information from the task metadata.
 
     Args:
@@ -152,7 +152,7 @@ def get_l10n_bump_info(task):
 
     """
     l10n_bump_info = task.get("payload", {}).get("l10n_bump_info")
-    if not l10n_bump_info:
+    if not l10n_bump_info and raise_on_empty:
         raise TaskVerificationError("Requested l10n bump but no l10n_bump_info in payload")
     return l10n_bump_info
 
