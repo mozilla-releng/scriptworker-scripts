@@ -9,7 +9,8 @@ COPY requirements/ /app/requirements/
 COPY docker.d/image_setup.sh /app/
 RUN /app/image_setup.sh
 
-RUN pip install -r requirements/local.txt
+ARG PYTHON_REQ_SUFFIX
+RUN pip install -r requirements/local${PYTHON_REQ_SUFFIX}.txt
 
 COPY src/ /app/src/
 
