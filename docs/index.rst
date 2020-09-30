@@ -14,6 +14,7 @@
    scriptworkers-dockerization
    scriptworkers-ci
    scriptworkers-dev
+   scriptworkers-local
    scriptworkers-production
    scriptworkers-secrets
    scriptworkers-k8s
