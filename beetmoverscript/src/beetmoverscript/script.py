@@ -12,9 +12,9 @@ from multiprocessing.pool import ThreadPool
 import aiohttp
 import boto3
 from botocore.exceptions import ClientError
-from redo import retry
-from mozilla_version.maven import MavenVersion
 from mozilla_version.errors import PatternNotMatchedError
+from mozilla_version.maven import MavenVersion
+from redo import retry
 from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerRetryException, ScriptWorkerTaskException
 from scriptworker.utils import raise_future_exceptions, retry_async
