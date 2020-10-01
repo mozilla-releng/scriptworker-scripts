@@ -88,15 +88,18 @@ def check_maven_artifact_map(context):
     version = context.task["payload"]["version"]
     try:
         MavenVersion.parse(version)
-    except PatternNotMatchedError:
-        raise ScriptWorkerTaskException(f"bad version '{version}'")
+    except (ValueError, PatternNotMatchedError) as e:
+        raise ScriptWorkerTaskException(f"Version defined in the payload does not match the pattern of a MavenVersion. Got: {version}") from e
 
     for artifact_dict in context.task["payload"]["artifactMap"]:
         for dest_dict in artifact_dict["paths"].values():
             for dest in dest_dict["destinations"]:
-                dest_file = os.path.basename(dest)
+                dest_folder, dest_file = os.path.split(dest)
+                last_folder = os.path.basename(dest_folder)
+                if version != last_folder:
+                    raise ScriptWorkerTaskException(f"Name of last folder '{last_folder}' in path '{dest_file}' does not match payload version '{version}'")
                 if version not in dest_file:
-                    raise ScriptWorkerTaskException(f"version in artifact doesn't match expected version '{version}'")
+                    raise ScriptWorkerTaskException(f"Cannot find version '{version}' in file name '{dest_file}'. Path under test: {dest}")
 
 
 def generate_checksums_manifest(context):

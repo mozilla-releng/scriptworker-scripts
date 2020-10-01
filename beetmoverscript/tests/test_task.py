@@ -157,13 +157,14 @@ def test_check_maven_artifact_map(context):
     fake_correct_version = "12.3.20200920201111"
     source = "fake_path/fake-artifact-{version}.jar"
 
-    def artifact_map_entry_with_version(version):
+    def artifact_map_entry_with_version(version, folder_version=None):
+        folder_version = folder_version or version
         return {
             "locale": "en-US",
             "paths": {
                 source: {
                     "checksums_path": "",
-                    "destinations": [f"fake/destination/{version}/fake-artifact-{version}.jar"],
+                    "destinations": [f"fake/destination/{folder_version}/fake-artifact-{version}.jar"],
                 }
             },
             "taskId": "fake-task-id",
@@ -186,6 +187,10 @@ def test_check_maven_artifact_map(context):
     check_maven_artifact_map(context)
 
     context.task["payload"]["artifactMap"] = [artifact_map_entry_with_version("a.bad.version")]
+    with pytest.raises(ScriptWorkerTaskException):
+        check_maven_artifact_map(context)
+
+    context.task["payload"]["artifactMap"] = [artifact_map_entry_with_version(fake_correct_version, "a.bad.version")]
     with pytest.raises(ScriptWorkerTaskException):
         check_maven_artifact_map(context)
 
