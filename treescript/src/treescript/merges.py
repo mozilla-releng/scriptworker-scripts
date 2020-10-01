@@ -7,8 +7,9 @@ import string
 import attr
 from scriptworker_client.utils import makedirs
 
+from treescript.l10n import l10n_bump
 from treescript.mercurial import get_revision, run_hg_command
-from treescript.task import get_merge_config
+from treescript.task import get_l10n_bump_info, get_merge_config
 from treescript.versionmanip import do_bump_version, get_version
 
 log = logging.getLogger(__name__)
@@ -219,6 +220,7 @@ async def do_merge(config, task, repo_path):
         tag_message = f"No bug - tagging {base_to_rev} with {end_tag} a=release DONTBUILD CLOSED TREE"
         await run_hg_command(config, "tag", "-m", tag_message, "-r", base_to_rev, "-f", end_tag, repo_path=repo_path)
 
+    await _maybe_bump_l10n(config, task, repo_path)
     await apply_rebranding(config, repo_path, merge_config)
 
     diff_output = await run_hg_command(config, "diff", repo_path=repo_path, return_output=True)
@@ -238,3 +240,13 @@ async def do_merge(config, task, repo_path):
     if merge_config.get("to_repo"):
         desired_pushes.append((merge_config["to_repo"], push_revision_to))
     return desired_pushes
+
+
+async def _maybe_bump_l10n(config, task, repo_path):
+    if get_l10n_bump_info(task, raise_on_empty=False):
+        await l10n_bump(config, task, repo_path)
+        output = await run_hg_command(config, "log", "--patch", "--verbose", "-r", ".", repo_path=repo_path, return_output=True, expected_exit_codes=(0, 1))
+        path = os.path.join(config["artifact_dir"], "public", "logs", "l10n_bump.diff")
+        makedirs(os.path.dirname(path))
+        with open(path, "w") as fh:
+            fh.write(output)

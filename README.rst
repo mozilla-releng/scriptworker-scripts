@@ -31,6 +31,8 @@ Full documentation is available at https://scriptworker-scripts.readthedocs.io/e
 Overview of existing workers
 ============================
 
+Note: this is not a comprehensive list. We have added more scripts, more trust domains, and more pools since this list was compiled.
+
 addonscript
 -----------
 
@@ -170,6 +172,7 @@ gecko-1-tree     tree-prod-relengworker-firefoxci-gecko-1
 comm-3-tree      tree-prod-relengworker-firefoxci-comm-3
 ================ ========================================
 
+==========================
 Update python dependencies
 ==========================
 
