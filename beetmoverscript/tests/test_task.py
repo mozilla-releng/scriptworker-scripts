@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+from contextlib import nullcontext as does_not_raise
 
 import pytest
 from scriptworker.context import Context
@@ -151,47 +152,46 @@ def test_validate_bucket_paths(bucket, path, raises):
         validate_bucket_paths(bucket, path)
 
 
-def test_check_maven_artifact_map(context):
+@pytest.mark.parametrize(
+    "payload_version,filename_version,folder_version,expectation",
+    (
+        (None, None, None, does_not_raise()),
+        ("a.bad.version", None, None, pytest.raises(ScriptWorkerTaskException)),
+        (None, "a.bad.version", None, pytest.raises(ScriptWorkerTaskException)),
+        (None, None, "a.bad.version", pytest.raises(ScriptWorkerTaskException)),
+    ),
+)
+def test_check_maven_artifact_map(context, payload_version, filename_version, folder_version, expectation):
     context.action = "push-to-maven"
 
     fake_correct_version = "12.3.20200920201111"
     source = "fake_path/fake-artifact-{version}.jar"
 
-    def artifact_map_entry_with_version(version, folder_version=None):
-        folder_version = folder_version or version
-        return {
-            "locale": "en-US",
-            "paths": {
-                source: {
-                    "checksums_path": "",
-                    "destinations": [f"fake/destination/{folder_version}/fake-artifact-{version}.jar"],
-                }
-            },
-            "taskId": "fake-task-id",
-        }
+    payload_version = payload_version or fake_correct_version
+    filename_version = filename_version or fake_correct_version
+    folder_version = folder_version or fake_correct_version
+
+    artifact_map_entry = {
+        "locale": "en-US",
+        "paths": {
+            source: {
+                "checksums_path": "",
+                "destinations": [f"fake/destination/{folder_version}/fake-artifact-{filename_version}.jar"],
+            }
+        },
+        "taskId": "fake-task-id",
+    }
 
     context.task = {
         "payload": {
-            "artifactMap": [],
+            "artifactMap": [artifact_map_entry],
             "releaseProperties": {"appName": "nightly_components"},
             "upstreamArtifacts": [{"paths": [source], "taskId": "fake-task-id", "taskType": "build"}],
-            "version": "bad.version",
+            "version": payload_version,
         }
     }
 
-    with pytest.raises(ScriptWorkerTaskException):
-        check_maven_artifact_map(context)
-
-    context.task["payload"]["version"] = fake_correct_version
-    context.task["payload"]["artifactMap"] = [artifact_map_entry_with_version(fake_correct_version)]
-    check_maven_artifact_map(context)
-
-    context.task["payload"]["artifactMap"] = [artifact_map_entry_with_version("a.bad.version")]
-    with pytest.raises(ScriptWorkerTaskException):
-        check_maven_artifact_map(context)
-
-    context.task["payload"]["artifactMap"] = [artifact_map_entry_with_version(fake_correct_version, "a.bad.version")]
-    with pytest.raises(ScriptWorkerTaskException):
+    with expectation:
         check_maven_artifact_map(context)
 
 
