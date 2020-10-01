@@ -8,6 +8,7 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 
 from beetmoverscript.task import (
     add_balrog_manifest_to_artifacts,
+    check_maven_artifact_map,
     generate_checksums_manifest,
     get_release_props,
     get_schema_key_by_action,
@@ -148,6 +149,45 @@ def test_validate_bucket_paths(bucket, path, raises):
             validate_bucket_paths(bucket, path)
     else:
         validate_bucket_paths(bucket, path)
+
+
+def test_check_maven_artifact_map(context):
+    context.action = "push-to-maven"
+
+    fake_correct_version = "12.3.20200920201111"
+    source = "fake_path/fake-artifact-{version}.jar"
+
+    def artifact_map_entry_with_version(version):
+        return {
+            "locale": "en-US",
+            "paths": {
+                source: {
+                    "checksums_path": "",
+                    "destinations": [f"fake/destination/{version}/fake-artifact-{version}.jar"],
+                }
+            },
+            "taskId": "fake-task-id",
+        }
+
+    context.task = {
+        "payload": {
+            "artifactMap": [],
+            "releaseProperties": {"appName": "nightly_components"},
+            "upstreamArtifacts": [{"paths": [source], "taskId": "fake-task-id", "taskType": "build"}],
+            "version": "bad.version",
+        }
+    }
+
+    with pytest.raises(ScriptWorkerTaskException):
+        check_maven_artifact_map(context)
+
+    context.task["payload"]["version"] = fake_correct_version
+    context.task["payload"]["artifactMap"] = [artifact_map_entry_with_version(fake_correct_version)]
+    check_maven_artifact_map(context)
+
+    context.task["payload"]["artifactMap"] = [artifact_map_entry_with_version("a.bad.version")]
+    with pytest.raises(ScriptWorkerTaskException):
+        check_maven_artifact_map(context)
 
 
 # balrog_manifest_to_artifacts {{{1
