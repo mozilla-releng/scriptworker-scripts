@@ -155,21 +155,15 @@ def test_validate_bucket_paths(bucket, path, raises):
 @pytest.mark.parametrize(
     "payload_version,filename_version,folder_version,expectation",
     (
-        (None, None, None, does_not_raise()),
-        ("a.bad.version", None, None, pytest.raises(ScriptWorkerTaskException)),
-        (None, "a.bad.version", None, pytest.raises(ScriptWorkerTaskException)),
-        (None, None, "a.bad.version", pytest.raises(ScriptWorkerTaskException)),
+        ("12.3.20200920201111", "12.3.20200920201111", "12.3.20200920201111", does_not_raise()),
+        ("a.bad.version", "12.3.20200920201111", "12.3.20200920201111", pytest.raises(ScriptWorkerTaskException)),
+        ("12.3.20200920201111", "a.bad.version", "12.3.20200920201111", pytest.raises(ScriptWorkerTaskException)),
+        ("12.3.20200920201111", "12.3.20200920201111", "a.bad.version", pytest.raises(ScriptWorkerTaskException)),
     ),
 )
 def test_check_maven_artifact_map(context, payload_version, filename_version, folder_version, expectation):
     context.action = "push-to-maven"
-
-    fake_correct_version = "12.3.20200920201111"
     source = "fake_path/fake-artifact-{version}.jar"
-
-    payload_version = payload_version or fake_correct_version
-    filename_version = filename_version or fake_correct_version
-    folder_version = folder_version or fake_correct_version
 
     artifact_map_entry = {
         "locale": "en-US",
