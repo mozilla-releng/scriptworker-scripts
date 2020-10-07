@@ -27,7 +27,7 @@ def release_config():
 @dataclass
 class _DummyRelease:
     tag_name: str = "v1.0.0"
-    target_commitish: str = "somecommithash"
+    target_commitish: str = "some/gitbranch"
     name: str = "SomeProduct v1.0.0"
     prerelease: bool = False
 
@@ -85,10 +85,10 @@ async def test_release(
 
 @pytest.mark.asyncio
 async def test_init_github_client(monkeypatch):
-    github_library = MagicMock()
-    monkeypatch.setattr(github, "github3", github_library)
+    github_client = MagicMock()
+    monkeypatch.setattr(github, "GitHub", github_client)
     await github._init_github_client("some_secret_token")
-    github_library.GitHub.assert_called_once_with(token="some_secret_token")
+    github_client.assert_called_once_with(token="some_secret_token")
 
 
 @pytest.mark.asyncio
@@ -124,7 +124,6 @@ async def test_edit_existing_release(release_config):
     await github._edit_existing_release(existing_release, release_config)
     existing_release.edit.assert_called_once_with(
         tag_name="v1.0.0",
-        target_commitish="somecommithash",
         name="SomeProduct v1.0.0",
         draft=False,
         prerelease=False,
@@ -164,14 +163,32 @@ async def test_upload_artifact(tmpdir):
     )
 
 
-def test_get_github_release_kwargs(release_config):
-    assert github._get_github_release_kwargs(release_config) == {
-        "tag_name": "v1.0.0",
-        "target_commitish": "somecommithash",
-        "name": "SomeProduct v1.0.0",
-        "draft": False,
-        "prerelease": False,
-    }
+@pytest.mark.parametrize(
+    "include_target_commitish, expected_result",
+    (
+        (
+            True,
+            {
+                "tag_name": "v1.0.0",
+                "target_commitish": "somecommithash",
+                "name": "SomeProduct v1.0.0",
+                "draft": False,
+                "prerelease": False,
+            },
+        ),
+        (
+            False,
+            {
+                "tag_name": "v1.0.0",
+                "name": "SomeProduct v1.0.0",
+                "draft": False,
+                "prerelease": False,
+            },
+        ),
+    ),
+)
+def test_get_github_release_kwargs(release_config, include_target_commitish, expected_result):
+    assert github._get_github_release_kwargs(release_config, include_target_commitish) == expected_result
 
 
 @pytest.mark.asyncio
@@ -190,9 +207,10 @@ async def test_update_release_if_needed(monkeypatch, release_config, update_rele
     (
         (_DummyRelease(), False),
         (_DummyRelease(tag_name="v1.0.1"), True),
-        (_DummyRelease(target_commitish="anothercommithash"), True),
         (_DummyRelease(name="AnotherProduct v1.0.0"), True),
         (_DummyRelease(prerelease=True), True),
+        # We don't want to update target_commitish otherwise it breaks CoT
+        (_DummyRelease(target_commitish="somegithash"), False),
     ),
 )
 def test_does_release_need_to_be_updated(release_config, existing_release, expected_result):

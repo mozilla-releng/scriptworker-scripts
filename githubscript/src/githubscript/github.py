@@ -1,8 +1,9 @@
 import logging
 from asyncio import ensure_future
 
-import github3
 from aiohttp_retry import RetryClient
+from github3 import GitHub
+from github3.exceptions import NotFoundError, ServerError
 from scriptworker_client.exceptions import TaskError
 from scriptworker_client.utils import async_wrap, get_single_item_from_sequence, raise_future_exceptions, retry_async_decorator
 
@@ -25,7 +26,7 @@ async def release(release_config):
         existing_release = await _get_release_from_tag(github_repository, git_tag)
         log.info(f"Release {release_name} already exists. Making sure it has the latest data...")
         await _update_release_if_needed(existing_release, release_config)
-    except github3.exceptions.NotFoundError:
+    except NotFoundError:
         log.info(f"Release {release_name} does not exist. Creating it...")
         await _create_release(github_repository, release_config)
 
@@ -43,12 +44,12 @@ async def release(release_config):
 # A delay factor of 7.5s means the second round of waiting will occur ~15s after the first one,
 # the third one ~30s and so on.
 _GITHUB_LIBRARY_SLEEP_TIME_KWARGS = {"delay_factor": 7.5}
-github_retry = retry_async_decorator(retry_exceptions=github3.exceptions.ServerError, sleeptime_kwargs=_GITHUB_LIBRARY_SLEEP_TIME_KWARGS)
+github_retry = retry_async_decorator(retry_exceptions=ServerError, sleeptime_kwargs=_GITHUB_LIBRARY_SLEEP_TIME_KWARGS)
 
 
 @github_retry
 async def _init_github_client(token):
-    async_github_constructor = async_wrap(github3.GitHub)
+    async_github_constructor = async_wrap(GitHub)
     return await async_github_constructor(token=token)
 
 
@@ -73,7 +74,9 @@ async def _create_release(github_repository, release_config):
 @github_retry
 async def _edit_existing_release(existing_release, release_config):
     async_edit_release = async_wrap(existing_release.edit)
-    await async_edit_release(**_get_github_release_kwargs(release_config))
+    # XXX We don't include the `target_commitish` because we're likely dealing with a Github release which
+    # likely built off git branches. See comment in _does_release_need_to_be_updated(), for more details.
+    await async_edit_release(**_get_github_release_kwargs(release_config, include_target_commitish=False))
 
 
 @github_retry
@@ -91,14 +94,17 @@ async def _upload_artifact(existing_release, artifact):
         await async_func(content_type=artifact["content_type"], name=artifact["name"], asset=f)
 
 
-def _get_github_release_kwargs(release_config):
-    return dict(
+def _get_github_release_kwargs(release_config, include_target_commitish=True):
+    release_kwargs = dict(
         tag_name=release_config["git_tag"],
-        target_commitish=release_config["git_revision"],
         name=release_config["release_name"],
         draft=False,
         prerelease=release_config["is_prerelease"],
     )
+    if include_target_commitish:
+        release_kwargs["target_commitish"] = release_config["git_revision"]
+
+    return release_kwargs
 
 
 async def _update_release_if_needed(existing_release, release_config):
@@ -113,8 +119,13 @@ async def _update_release_if_needed(existing_release, release_config):
 def _does_release_need_to_be_updated(existing_release, release_config):
     should_release_be_updated = False
     for config_field, github_field in (
+        # XXX `git_revision` and `target_commitish` are ignored because a github release is usually
+        # built off a git branch. Updating `target_commitish` to a revision is indeed more secure,
+        # but breaks Chain of Trust. To be more explicit: Any task that runs after an updated
+        # `target_commitish` won't pass CoT. There is no way to make CoT more flexible because the
+        # Github API doesn't expose both the branch and the commit hash on its Github release
+        # enpoint and event.
         ("git_tag", "tag_name"),
-        ("git_revision", "target_commitish"),
         ("release_name", "name"),
         ("is_prerelease", "prerelease"),
     ):
