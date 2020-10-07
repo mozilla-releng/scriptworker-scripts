@@ -84,7 +84,7 @@ def validate_bucket_paths(bucket, s3_bucket_path):
 
 
 def check_maven_artifact_map(context):
-    """Check that versions in artifact map to be valid Maven versions"""
+    """Check that versions in artifact map are valid Maven versions"""
     version = context.task["payload"]["version"]
     try:
         MavenVersion.parse(version)
