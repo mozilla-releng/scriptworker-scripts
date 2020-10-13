@@ -97,7 +97,7 @@ def check_maven_artifact_map(context):
                 dest_folder, dest_file = os.path.split(dest)
                 last_folder = os.path.basename(dest_folder)
                 if version != last_folder:
-                    raise ScriptWorkerTaskException(f"Name of last folder '{last_folder}' in path '{dest_file}' does not match payload version '{version}'")
+                    raise ScriptWorkerTaskException(f"Name of last folder '{last_folder}' in path '{dest}' does not match payload version '{version}'")
                 if version not in dest_file:
                     raise ScriptWorkerTaskException(f"Cannot find version '{version}' in file name '{dest_file}'. Path under test: {dest}")
 
