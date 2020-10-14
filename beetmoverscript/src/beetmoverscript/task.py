@@ -5,6 +5,8 @@ import urllib.parse
 from copy import deepcopy
 
 import arrow
+from mozilla_version.errors import PatternNotMatchedError
+from mozilla_version.maven import MavenVersion
 from scriptworker import artifacts as scriptworker_artifacts
 from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -79,6 +81,25 @@ def validate_bucket_paths(bucket, s3_bucket_path):
         raise ScriptWorkerTaskException('Unknown bucket "{}"'.format(s3_bucket_path))
     if not any([s3_bucket_path.startswith(p) for p in paths]):
         raise ScriptWorkerTaskException("Forbidden S3 {} destination".format(s3_bucket_path))
+
+
+def check_maven_artifact_map(context):
+    """Check that versions in artifact map are valid Maven versions"""
+    version = context.task["payload"]["version"]
+    try:
+        MavenVersion.parse(version)
+    except (ValueError, PatternNotMatchedError) as e:
+        raise ScriptWorkerTaskException(f"Version defined in the payload does not match the pattern of a MavenVersion. Got: {version}") from e
+
+    for artifact_dict in context.task["payload"]["artifactMap"]:
+        for dest_dict in artifact_dict["paths"].values():
+            for dest in dest_dict["destinations"]:
+                dest_folder, dest_file = os.path.split(dest)
+                last_folder = os.path.basename(dest_folder)
+                if version != last_folder:
+                    raise ScriptWorkerTaskException(f"Name of last folder '{last_folder}' in path '{dest}' does not match payload version '{version}'")
+                if version not in dest_file:
+                    raise ScriptWorkerTaskException(f"Cannot find version '{version}' in file name '{dest_file}'. Path under test: {dest}")
 
 
 def generate_checksums_manifest(context):

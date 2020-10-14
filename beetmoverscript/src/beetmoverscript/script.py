@@ -198,6 +198,8 @@ async def push_to_maven(context):
     context.checksums = dict()  # Needed by downstream calls
     context.raw_balrog_manifest = dict()  # Needed by downstream calls
 
+    task.check_maven_artifact_map(context)
+
     # overwrite artifacts_to_beetmove with the declarative artifacts ones
     context.artifacts_to_beetmove = task.get_upstream_artifacts(context, preserve_full_paths=True)
     await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task["payload"]["artifactMap"])

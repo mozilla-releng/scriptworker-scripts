@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+from contextlib import nullcontext as does_not_raise
 
 import pytest
 from scriptworker.context import Context
@@ -8,6 +9,7 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 
 from beetmoverscript.task import (
     add_balrog_manifest_to_artifacts,
+    check_maven_artifact_map,
     generate_checksums_manifest,
     get_release_props,
     get_schema_key_by_action,
@@ -148,6 +150,43 @@ def test_validate_bucket_paths(bucket, path, raises):
             validate_bucket_paths(bucket, path)
     else:
         validate_bucket_paths(bucket, path)
+
+
+@pytest.mark.parametrize(
+    "payload_version,filename_version,folder_version,expectation",
+    (
+        ("12.3.20200920201111", "12.3.20200920201111", "12.3.20200920201111", does_not_raise()),
+        ("a.bad.version", "12.3.20200920201111", "12.3.20200920201111", pytest.raises(ScriptWorkerTaskException)),
+        ("12.3.20200920201111", "a.bad.version", "12.3.20200920201111", pytest.raises(ScriptWorkerTaskException)),
+        ("12.3.20200920201111", "12.3.20200920201111", "a.bad.version", pytest.raises(ScriptWorkerTaskException)),
+    ),
+)
+def test_check_maven_artifact_map(context, payload_version, filename_version, folder_version, expectation):
+    context.action = "push-to-maven"
+    source = "fake_path/fake-artifact-{version}.jar"
+
+    artifact_map_entry = {
+        "locale": "en-US",
+        "paths": {
+            source: {
+                "checksums_path": "",
+                "destinations": [f"fake/destination/{folder_version}/fake-artifact-{filename_version}.jar"],
+            }
+        },
+        "taskId": "fake-task-id",
+    }
+
+    context.task = {
+        "payload": {
+            "artifactMap": [artifact_map_entry],
+            "releaseProperties": {"appName": "nightly_components"},
+            "upstreamArtifacts": [{"paths": [source], "taskId": "fake-task-id", "taskType": "build"}],
+            "version": payload_version,
+        }
+    }
+
+    with expectation:
+        check_maven_artifact_map(context)
 
 
 # balrog_manifest_to_artifacts {{{1
