@@ -193,7 +193,17 @@ async def push_to_releases(context):
 
 
 async def push_to_maven(context):
-    """Push artifacts to maven locations expected by clients such as mvn/gradle)"""
+    """Push artifacts to maven locations expected by clients such as mvn/gradle)
+
+    XXX: This function handles the transfer of artifacts to the maven.mozilla.org repository.
+    The artifacts being published come from different projects and are all handled here. For
+    example as of Q4 2020, we use this function for beetmover releases coming from
+    Android-Components, Glean, Application-Services but also in-tree GeckoView.
+
+    This large variety of beetmover jobs usually implies complex checks to cover
+    all possible cornercases. For example it needs to handle both MavenVersion for
+    Github projects but also FirefoxVersion for GeckoView in-tree releases.
+    """
     context.release_props = get_release_props(context)
     context.checksums = dict()  # Needed by downstream calls
     context.raw_balrog_manifest = dict()  # Needed by downstream calls
