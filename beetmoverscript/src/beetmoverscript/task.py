@@ -6,6 +6,7 @@ from copy import deepcopy
 
 import arrow
 from mozilla_version.errors import PatternNotMatchedError
+from mozilla_version.gecko import FirefoxVersion
 from mozilla_version.maven import MavenVersion
 from scriptworker import artifacts as scriptworker_artifacts
 from scriptworker import client
@@ -83,14 +84,28 @@ def validate_bucket_paths(bucket, s3_bucket_path):
         raise ScriptWorkerTaskException("Forbidden S3 {} destination".format(s3_bucket_path))
 
 
-def check_maven_artifact_map(context):
-    """Check that versions in artifact map are valid Maven versions"""
+def get_maven_version(context):
+    """Extract and validate a valid Maven version"""
     version = context.task["payload"]["version"]
+    release_props = context.release_props
+    # Version follows the FirefoxVersion pattern for Geckoview < 84.0
+    if release_props.get("appName") == "geckoview":
+        app_version = FirefoxVersion.parse(release_props["appVersion"])
+        if int(app_version.major_number) < 84:
+            # Change version number to major.minor.buildId because that's what the build task produces
+            version = "{}.{}.{}".format(app_version.major_number, app_version.minor_number, release_props["buildid"])
+
+    # Check that version is a valid maven version
     try:
         MavenVersion.parse(version)
     except (ValueError, PatternNotMatchedError) as e:
         raise ScriptWorkerTaskException(f"Version defined in the payload does not match the pattern of a MavenVersion. Got: {version}") from e
 
+    return version
+
+
+def check_maven_artifact_map(context, version):
+    """Check that versions in artifact map are consistent with a given version"""
     for artifact_dict in context.task["payload"]["artifactMap"]:
         for dest_dict in artifact_dict["paths"].values():
             for dest in dest_dict["destinations"]:
