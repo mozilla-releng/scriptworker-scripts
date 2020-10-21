@@ -209,7 +209,7 @@ async def push_to_maven(context):
     context.raw_balrog_manifest = dict()  # Needed by downstream calls
 
     # Version validation
-    version = task.check_maven_version(context)
+    version = task.get_maven_version(context)
     task.check_maven_artifact_map(context, version)
 
     # overwrite artifacts_to_beetmove with the declarative artifacts ones
