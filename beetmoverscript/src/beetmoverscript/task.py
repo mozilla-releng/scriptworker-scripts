@@ -88,7 +88,9 @@ def get_maven_version(context):
     """Extract and validate a valid Maven version"""
     version = context.task["payload"]["version"]
     release_props = context.release_props
-    # Version follows the FirefoxVersion pattern for Geckoview < 84.0
+    # TODO The following 'if' should be removed once GeckoView >= 84 is in mozilla-release.
+    # This is a temporary solution to maintain compatibility while the 'version' field in
+    # GeckoView's payload transitions from FirefoxVersion format to MavenVersion.
     if release_props.get("appName") == "geckoview":
         app_version = FirefoxVersion.parse(release_props["appVersion"])
         if int(app_version.major_number) < 84:
