@@ -11,6 +11,7 @@ from beetmoverscript.task import (
     add_balrog_manifest_to_artifacts,
     check_maven_artifact_map,
     generate_checksums_manifest,
+    get_maven_version,
     get_release_props,
     get_schema_key_by_action,
     get_task_action,
@@ -153,10 +154,34 @@ def test_validate_bucket_paths(bucket, path, raises):
 
 
 @pytest.mark.parametrize(
+    "appName,appVersion,payload_version,buildid,expected,raises",
+    (
+        ("components", None, "63.0.20201013153553", "20201013153553", "63.0.20201013153553", False),
+        ("components", None, "63.0.0-TESTING", "not-important", None, True),
+        ("geckoview", "83.0a1", "83.0a1", "20200920201111", "83.0.20200920201111", False),  # Tests special case
+        ("geckoview", "84.0b2", "84.0.20200920201111", "not-important", "84.0.20200920201111", False),
+        ("geckoview", "83.0a1", "83.0.0-TESTING", "0-TESTING", None, True),
+        ("geckoview", "84.0b2", "84.0.0-TESTING", "0-TESTING", None, True),
+    ),
+)
+def test_get_maven_version(context, appName, appVersion, payload_version, buildid, expected, raises):
+    context.release_props["appName"] = appName
+    if appVersion is not None:
+        context.release_props["appVersion"] = appVersion
+    context.release_props["buildid"] = buildid
+    context.task["payload"]["version"] = payload_version
+
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            get_maven_version(context)
+    else:
+        assert expected == get_maven_version(context)
+
+
+@pytest.mark.parametrize(
     "payload_version,filename_version,folder_version,expectation",
     (
         ("12.3.20200920201111", "12.3.20200920201111", "12.3.20200920201111", does_not_raise()),
-        ("a.bad.version", "12.3.20200920201111", "12.3.20200920201111", pytest.raises(ScriptWorkerTaskException)),
         ("12.3.20200920201111", "a.bad.version", "12.3.20200920201111", pytest.raises(ScriptWorkerTaskException)),
         ("12.3.20200920201111", "12.3.20200920201111", "a.bad.version", pytest.raises(ScriptWorkerTaskException)),
     ),
@@ -186,7 +211,7 @@ def test_check_maven_artifact_map(context, payload_version, filename_version, fo
     }
 
     with expectation:
-        check_maven_artifact_map(context)
+        check_maven_artifact_map(context, payload_version)
 
 
 # balrog_manifest_to_artifacts {{{1
