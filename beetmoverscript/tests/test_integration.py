@@ -144,7 +144,7 @@ def task():
 
 def create_dummy_artifacts_for_task(task, root_path):
     """Create artifacts to upload as specified in the given task."""
-    for artifact_dict in task["payload"]["artifactMap"]:
+    for artifact_dict in task["payload"]["upstreamArtifacts"]:
         task_id = artifact_dict["taskId"]
         for path in artifact_dict["paths"]:
             full_path = root_path / task_id / path
@@ -157,10 +157,26 @@ def create_dummy_artifact(file_path):
         f.write(b"some data")
 
 
+def get_paths_for_task(task):
+    """Generates a dictionary containing the source artifact path for every destination."""
+    paths = {}
+    for artifact_dict in task["payload"]["artifactMap"]:
+        for path, path_dict in artifact_dict["paths"].items():
+            for dest in path_dict["destinations"]:
+                assert dest not in paths
+                paths[dest] = path
+
+    return paths
+
+
 @pytest.fixture
 def boto3_client_mock(monkeypatch):
     client_mock = Mock(spec=beetmoverscript.script.boto3.client("s3"))
-    client_mock.generate_presigned_url.return_value = "presigned_url"
+
+    def fake_generate_presigned_url(ClientMethod, Params=None, *args, **kwargs):
+        return f"presigned_url+{Params['Key']}"
+
+    client_mock.generate_presigned_url = fake_generate_presigned_url
 
     def fake_boto3_client_only_s3(*args, **kwargs):
         assert args[0] == "s3", "A client other than 's3' was requested"
@@ -184,7 +200,7 @@ def aiohttp_session_mock(monkeypatch):
 
     @asynccontextmanager
     async def fake_put(url, data=None, **kwargs):
-        aiohttp_mock_data.setdefault("put", []).append({"url": url, "data": data.read()})
+        aiohttp_mock_data.setdefault("put", []).append({"url": url, "data": data.read(), "source": data.name})
         yield response_mock
 
     session_mock = Mock(spec=beetmoverscript.script.aiohttp.ClientSession)
@@ -216,13 +232,19 @@ def scriptworker_config(tmp_path, config, task):
     return config_path
 
 
-def test_main_android_components_nightly(scriptworker_config, boto3_client_mock, aiohttp_session_mock):
+def test_main_android_components_nightly(scriptworker_config, task, boto3_client_mock, aiohttp_session_mock):
     main(config_path=scriptworker_config)
 
     # Number of artifacts put matches expected
     assert len(aiohttp_session_mock["put"]) == 12
 
-    # url to where artifacts are put is the presigned url
-    assert all(put_call["url"] == "presigned_url" for put_call in aiohttp_session_mock["put"])
-    # The data put matches the data in the files
-    assert all(put_call["data"] == b"some data" for put_call in aiohttp_session_mock["put"])
+    # Check paths
+    expected_paths = get_paths_for_task(task)
+    # Check that the destinations match exactly, and that they have been through signing
+    expected_signed_paths = set(f"presigned_url+{dest}" for dest in expected_paths)
+    assert expected_signed_paths == set(put_call["url"] for put_call in aiohttp_session_mock["put"])
+    # Check that the source matches expected for every destination
+    for put_call in aiohttp_session_mock["put"]:
+        assert put_call["data"] == b"some data"
+        _, unsigned_url = put_call["url"].split("+")
+        assert put_call["source"].endswith(expected_paths[unsigned_url])
