@@ -125,6 +125,8 @@ def test_list_bucket_objects():
 def test_setup_mimetypes():
     non_default_types = ["https://foo.com/fake_artifact.bundle", "http://www.bar.com/fake_checksum.beet"]
 
+    # ensure we start with mimetypes in its initial state
+    mimetypes.init()
     # before we add custom mimetypes
     assert [mimetypes.guess_type(url)[0] for url in non_default_types] == [None, None]
 
