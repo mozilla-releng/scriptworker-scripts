@@ -332,6 +332,17 @@ async def strip_outgoing(config, task, repo_path):
     await run_hg_command(config, "purge", "--all", repo_path=repo_path)
 
 
+async def commit(config, repo_path, commit_msg):
+    """Run `hg commit` against the current source repo.
+
+    Args:
+        config (dict): the running config
+        repo_path (str): the source repo path
+        commit_msg (str): the commit message
+    """
+    await run_hg_command(config, "commit", "-m", commit_msg, repo_path=repo_path)
+
+
 # push {{{1
 async def push(config, task, repo_path, target_repo, revision=None):
     """Run `hg push` against the current source repo.

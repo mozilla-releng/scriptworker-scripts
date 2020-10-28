@@ -7,7 +7,7 @@ import os
 from mozilla_version.gecko import FennecVersion, FirefoxVersion, GeckoVersion, ThunderbirdVersion
 
 from treescript.exceptions import TaskVerificationError, TreeScriptError
-from treescript.mercurial import run_hg_command
+from treescript.mercurial import commit
 from treescript.task import DONTBUILD_MSG, get_dontbuild, get_version_bump_info
 
 log = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ async def bump_version(config, task, repo_path):
         commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
         if get_dontbuild(task):
             commit_msg += DONTBUILD_MSG
-        await run_hg_command(config, "commit", "-m", commit_msg, repo_path=repo_path)
+        await commit(config, repo_path, commit_msg)
         num_commits += 1
     return num_commits
 

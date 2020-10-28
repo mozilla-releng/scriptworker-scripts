@@ -248,6 +248,9 @@ async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merg
         if "return_output" in kwargs:
             return "headers\n\n\n\n+invalid_changeset tag\n changeset tag\n+valid_changeset_is_forty_characters_long tag"
 
+    async def mocked_commit(*arguments, **kwargs):
+        called_args.append("commit")
+
     async def mocked_get_revision(*args, **kwargs):
         return "some_revision"
 
@@ -258,6 +261,7 @@ async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merg
         called_args.append("apply_rebranding")
 
     mocker.patch.object(merges, "run_hg_command", new=mocked_run_hg_command)
+    mocker.patch.object(merges, "commit", new=mocked_commit)
     mocker.patch.object(merges, "get_revision", new=mocked_get_revision)
     mocker.patch.object(merges, "apply_rebranding", new=noop_apply_rebranding)
     mocker.patch.object(merges, "l10n_bump", new=noop_l10n_bump)
@@ -280,6 +284,9 @@ async def test_bump_central(mocker, config, task, repo_context, merge_bump_info)
         if "return_output" in kwargs:
             return "headers\n\n\n\n+invalid_changeset tag\n changeset tag\n+valid_changeset_is_forty_characters_long tag"
 
+    async def mocked_commit(config, repo_path, commit_msg, **kwargs):
+        called_args.append(("commit", commit_msg))
+
     async def mocked_get_revision(*args, **kwargs):
         return "some_revision"
 
@@ -287,6 +294,7 @@ async def test_bump_central(mocker, config, task, repo_context, merge_bump_info)
         called_args.append(("apply_rebranding"))
 
     mocker.patch.object(merges, "run_hg_command", new=mocked_run_hg_command)
+    mocker.patch.object(merges, "commit", new=mocked_commit)
     mocker.patch.object(merges, "get_revision", new=mocked_get_revision)
     mocker.patch.object(merges, "apply_rebranding", new=noop_apply_rebranding)
 
@@ -306,7 +314,7 @@ async def test_bump_central(mocker, config, task, repo_context, merge_bump_info)
         ),
         ("diff",),
         ("apply_rebranding"),
-        ("commit", "-m", "Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release"),
+        ("commit", "Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release"),
     ]
     for expected in expected_calls:
         assert expected in called_args

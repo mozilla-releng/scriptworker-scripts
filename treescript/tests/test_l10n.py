@@ -262,7 +262,7 @@ async def test_l10n_bump(mocker, ignore_closed_tree, l10n_bump_info, tmpdir, old
     mocker.patch.object(l10n, "load_json_or_yaml", return_value=old_contents)
     mocker.patch.object(l10n, "get_latest_revision", new=noop_async)
     mocker.patch.object(l10n, "build_revision_dict", new=fake_build_revision_dict)
-    mocker.patch.object(l10n, "run_hg_command", new=fake_hg)
+    mocker.patch.object(l10n, "commit", new=fake_hg)
 
     assert await l10n.l10n_bump({}, {}, tmpdir) == changes
 

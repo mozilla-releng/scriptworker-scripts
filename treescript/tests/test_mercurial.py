@@ -410,6 +410,21 @@ async def test_strip_outgoing(config, task, mocker):
     assert is_slice_in_list(("strip", "--no-backup", "outgoing()"), called_args[0][0])
 
 
+@pytest.mark.asyncio
+async def test_commit(config, task, mocker):
+    called_args = []
+
+    async def run_command(config, *arguments, repo_path=None, **kwargs):
+        called_args.append([tuple([config]) + arguments, {"repo_path": repo_path}])
+
+    mocker.patch.object(mercurial, "run_hg_command", new=run_command)
+    await mercurial.commit(config, config["work_dir"], "some commit message")
+
+    assert len(called_args) == 1
+    assert "repo_path" in called_args[0][1]
+    assert is_slice_in_list(("commit", "-m", "some commit message"), called_args[0][0])
+
+
 # push {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize("source_repo,revision", ((None, None), ("https://hg.mozilla.org/treescript-test", None), (None, ".")))
