@@ -8,7 +8,7 @@ import attr
 from scriptworker_client.utils import makedirs
 
 from treescript.l10n import l10n_bump
-from treescript.mercurial import get_revision, run_hg_command
+from treescript.mercurial import commit, get_revision, run_hg_command
 from treescript.task import get_l10n_bump_info, get_merge_config
 from treescript.versionmanip import do_bump_version, get_version
 
@@ -144,7 +144,7 @@ async def preserve_tags(config, repo_path, to_branch):
             fh.write(f"{line}\n")
     status_out = await run_hg_command(config, "status", os.path.join(repo_path, ".hgtags"), return_output=True, repo_path=repo_path)
     if status_out:
-        await run_hg_command(config, "commit", "-m", "Preserve old tags after debusetparents. CLOSED TREE DONTBUILD a=release", repo_path=repo_path)
+        await commit(config, repo_path, "Preserve old tags after debusetparents. CLOSED TREE DONTBUILD a=release")
 
 
 def core_version_file(merge_config):
@@ -229,7 +229,7 @@ async def do_merge(config, task, repo_path):
     with open(path, "w") as fh:
         fh.write(diff_output)
 
-    await run_hg_command(config, "commit", "-m", "Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release", repo_path=repo_path)
+    await commit(config, repo_path, "Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release")
     push_revision_to = await get_revision(config, repo_path, branch=".")
 
     # Do we need to perform multiple pushes for the push stage? If so, return
