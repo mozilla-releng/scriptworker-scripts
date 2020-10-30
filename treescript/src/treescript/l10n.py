@@ -16,7 +16,7 @@ from scriptworker_client.aio import download_file, retry_async, semaphore_wrappe
 from scriptworker_client.exceptions import DownloadError
 from scriptworker_client.utils import load_json_or_yaml
 
-from treescript.mercurial import run_hg_command
+from treescript.mercurial import commit
 from treescript.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_l10n_bump_info, get_short_source_repo
 
 log = logging.getLogger(__name__)
@@ -252,6 +252,6 @@ async def l10n_bump(config, task, repo_path):
             fh.write(json.dumps(new_contents, sort_keys=True, indent=4, separators=(",", ": ")))
         locale_map = build_locale_map(old_contents, new_contents)
         message = build_commit_message(bump_config["name"], locale_map, dontbuild=dontbuild, ignore_closed_tree=ignore_closed_tree)
-        await run_hg_command(config, "commit", "-m", message, repo_path=repo_path)
+        await commit(config, repo_path, message)
         changes += 1
     return changes
