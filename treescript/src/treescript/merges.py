@@ -205,13 +205,7 @@ async def do_merge(config, task, repo_path):
     # Perform the kludge-merge.
     if merge_config.get("merge_old_head", False):
         await run_hg_command(config, "debugsetparents", tagged_from_rev, base_to_rev, repo_path=repo_path)
-        await run_hg_command(
-            config,
-            "commit",
-            "-m",
-            "Merge old head via |hg debugsetparents {} {}| CLOSED TREE DONTBUILD a=release".format(tagged_from_rev, base_to_rev),
-            repo_path=repo_path,
-        )
+        await commit(config, repo_path, "Merge old head via |hg debugsetparents {} {}| CLOSED TREE DONTBUILD a=release".format(tagged_from_rev, base_to_rev))
         await preserve_tags(config, repo_path, to_branch)
 
     end_tag = merge_config.get("end_tag")  # tag the end of the to repo
