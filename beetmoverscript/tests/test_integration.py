@@ -15,37 +15,30 @@ def get_test_task(task_name):
     return load_json(f"tests/task_examples/{task_name}.json")
 
 
+_CONFIG_MAP = {
+    "android-components": {
+        "taskcluster_scope_prefix": "project:mobile:android-components:releng:beetmover:",
+        "bucket_config_key": "maven-nightly-staging",
+        "bucket_name": "nightly_components",
+    },
+    "app-services": {
+        "taskcluster_scope_prefix": "project:mozilla:app-services:releng:beetmover:",
+        "bucket_config_key": "maven-production",
+        "bucket_name": "appservices",
+    },
+    "geckoview": {"taskcluster_scope_prefix": "project:releng:beetmover:", "bucket_config_key": "maven-production", "bucket_name": "geckoview"},
+    "glean": {"taskcluster_scope_prefix": "project:mozilla:glean:releng:beetmover:", "bucket_config_key": "maven-production", "bucket_name": "telemetry"},
+}
+
+
 def get_config(config_name):
-    return {"android-components": _config_android_components, "app-services": _config_app_services, "geckoview": _config_geckoview, "glean": _config_glean}[
-        config_name
-    ]()
-
-
-def _config_android_components():
     config = get_fake_valid_config()
-    config["taskcluster_scope_prefix"] = "project:mobile:android-components:releng:beetmover:"
-    config["bucket_config"]["maven-nightly-staging"] = {"buckets": {"nightly_components": "dummy"}, "credentials": {"id": "dummy", "key": "dummy"}}
-    return config
-
-
-def _config_app_services():
-    config = get_fake_valid_config()
-    config["taskcluster_scope_prefix"] = "project:mozilla:app-services:releng:beetmover:"
-    config["bucket_config"]["maven-production"] = {"buckets": {"appservices": "dummy"}, "credentials": {"id": "dummy", "key": "dummy"}}
-    return config
-
-
-def _config_geckoview():
-    config = get_fake_valid_config()
-    config["taskcluster_scope_prefix"] = "project:releng:beetmover:"
-    config["bucket_config"]["maven-production"] = {"buckets": {"geckoview": "dummy"}, "credentials": {"id": "dummy", "key": "dummy"}}
-    return config
-
-
-def _config_glean():
-    config = get_fake_valid_config()
-    config["taskcluster_scope_prefix"] = "project:mozilla:glean:releng:beetmover:"
-    config["bucket_config"]["maven-production"] = {"buckets": {"telemetry": "dummy"}, "credentials": {"id": "dummy", "key": "dummy"}}
+    config_props = _CONFIG_MAP[config_name]
+    config["taskcluster_scope_prefix"] = config_props["taskcluster_scope_prefix"]
+    config["bucket_config"][config_props["bucket_config_key"]] = {
+        "buckets": {config_props["bucket_name"]: "dummy"},
+        "credentials": {"id": "dummy", "key": "dummy"},
+    }
     return config
 
 
