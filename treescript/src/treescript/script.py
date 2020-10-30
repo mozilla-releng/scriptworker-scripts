@@ -8,15 +8,15 @@ from scriptworker_client.client import sync_main
 
 from treescript.exceptions import CheckoutError, PushError, TreeScriptError
 from treescript.l10n import l10n_bump
-from treescript.mercurial import checkout_repo, do_tagging, log_mercurial_version, log_outgoing, push, strip_outgoing, validate_robustcheckout_works
+from treescript.mercurial import log_mercurial_version, validate_robustcheckout_works
 from treescript.merges import do_merge
-from treescript.task import get_source_repo, should_push, task_action_types
+from treescript.task import get_source_repo, get_vcs_module, should_push, task_action_types
 from treescript.versionmanip import bump_version
 
 log = logging.getLogger(__name__)
 
 
-async def perform_merge_actions(config, task, actions, repo_path):
+async def perform_merge_actions(config, task, actions, repo_path, repo_type):
     """Perform merge day related actions.
 
     This has different behaviour to other treescript actions:
@@ -30,6 +30,10 @@ async def perform_merge_actions(config, task, actions, repo_path):
         actions (list): the actions to perform
         repo_path (str): the source directory to use.
     """
+    if repo_type != "hg":
+        raise NotImplementedError("Only mercurial merges are supported. Got repo_type: {}".format(repo_type))
+    vcs = get_vcs_module(repo_type)
+
     log.info("Starting merge day operations")
     push_activity = await do_merge(config, task, repo_path)
 
@@ -37,7 +41,7 @@ async def perform_merge_actions(config, task, actions, repo_path):
         log.info("%d branches to push", len(push_activity))
         for target_repo, revision in push_activity:
             log.info("pushing %s to %s", revision, target_repo)
-            await push(config, task, repo_path, target_repo=target_repo, revision=revision)
+            await vcs.push(config, task, repo_path, target_repo=target_repo, revision=revision)
 
 
 async def do_actions(config, task, actions, repo_path):
@@ -51,31 +55,33 @@ async def do_actions(config, task, actions, repo_path):
         actions (list): the actions to perform
         repo_path (str): the source directory to use.
     """
-    await checkout_repo(config, task, repo_path)
+    repo_type = "hg"  # TODO parametrize when git support is added
+    vcs = get_vcs_module(repo_type)
+    await vcs.checkout_repo(config, task, repo_path)
 
     # Split the action selection up due to complexity in do_actions
     # caused by different push behaviour, and action return values.
     if "merge_day" in actions:
-        await perform_merge_actions(config, task, actions, repo_path)
+        await perform_merge_actions(config, task, actions, repo_path, repo_type)
         return
 
     num_changes = 0
     if "tag" in actions:
-        num_changes += await do_tagging(config, task, repo_path)
+        num_changes += await vcs.do_tagging(config, task, repo_path)
     if "version_bump" in actions:
-        num_changes += await bump_version(config, task, repo_path)
+        num_changes += await bump_version(config, task, repo_path, repo_type)
     if "l10n_bump" in actions:
-        num_changes += await l10n_bump(config, task, repo_path)
+        num_changes += await l10n_bump(config, task, repo_path, repo_type)
 
-    num_outgoing = await log_outgoing(config, task, repo_path)
+    num_outgoing = await vcs.log_outgoing(config, task, repo_path)
     if num_outgoing != num_changes:
         raise TreeScriptError("Outgoing changesets don't match number of expected changesets!" " {} vs {}".format(num_outgoing, num_changes))
     if should_push(task, actions):
         if num_changes:
-            await push(config, task, repo_path, target_repo=get_source_repo(task))
+            await vcs.push(config, task, repo_path, target_repo=get_source_repo(task))
         else:
             log.info("No changes; skipping push.")
-    await strip_outgoing(config, task, repo_path)
+    await vcs.strip_outgoing(config, task, repo_path)
 
 
 # async_main {{{1

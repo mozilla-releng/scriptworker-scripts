@@ -7,8 +7,7 @@ import os
 from mozilla_version.gecko import FennecVersion, FirefoxVersion, GeckoVersion, ThunderbirdVersion
 
 from treescript.exceptions import TaskVerificationError, TreeScriptError
-from treescript.mercurial import commit
-from treescript.task import DONTBUILD_MSG, get_dontbuild, get_version_bump_info
+from treescript.task import DONTBUILD_MSG, get_dontbuild, get_vcs_module, get_version_bump_info
 
 log = logging.getLogger(__name__)
 
@@ -67,7 +66,7 @@ def get_version(file_, parent_directory=None):
     return VersionClass.parse(lines[-1])
 
 
-async def bump_version(config, task, repo_path):
+async def bump_version(config, task, repo_path, repo_type):
     """Perform a version bump.
 
     This function takes its inputs from task by using the ``get_version_bump_info``
@@ -87,11 +86,12 @@ async def bump_version(config, task, repo_path):
     num_commits = 0
 
     changed = await do_bump_version(config, repo_path, bump_info["files"], bump_info["next_version"])
+    vcs = get_vcs_module(repo_type)
     if changed:
         commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
         if get_dontbuild(task):
             commit_msg += DONTBUILD_MSG
-        await commit(config, repo_path, commit_msg)
+        await vcs.commit(config, repo_path, commit_msg)
         num_commits += 1
     return num_commits
 
