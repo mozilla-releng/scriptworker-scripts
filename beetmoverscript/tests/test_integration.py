@@ -16,7 +16,9 @@ def get_test_task(task_name):
 
 
 def get_config(config_name):
-    return {"android-components": _config_android_components(), "geckoview": _config_geckoview()}[config_name]
+    return {"android-components": _config_android_components, "app-services": _config_app_services, "geckoview": _config_geckoview, "glean": _config_glean}[
+        config_name
+    ]()
 
 
 def _config_android_components():
@@ -26,10 +28,24 @@ def _config_android_components():
     return config
 
 
+def _config_app_services():
+    config = get_fake_valid_config()
+    config["taskcluster_scope_prefix"] = "project:mozilla:app-services:releng:beetmover:"
+    config["bucket_config"]["maven-production"] = {"buckets": {"appservices": "dummy"}, "credentials": {"id": "dummy", "key": "dummy"}}
+    return config
+
+
 def _config_geckoview():
     config = get_fake_valid_config()
     config["taskcluster_scope_prefix"] = "project:releng:beetmover:"
     config["bucket_config"]["maven-production"] = {"buckets": {"geckoview": "dummy"}, "credentials": {"id": "dummy", "key": "dummy"}}
+    return config
+
+
+def _config_glean():
+    config = get_fake_valid_config()
+    config["taskcluster_scope_prefix"] = "project:mozilla:glean:releng:beetmover:"
+    config["bucket_config"]["maven-production"] = {"buckets": {"telemetry": "dummy"}, "credentials": {"id": "dummy", "key": "dummy"}}
     return config
 
 
@@ -123,7 +139,13 @@ def prepare_scriptworker_config(path, config, task):
 
 
 @pytest.mark.parametrize(
-    "config_name, task_name, expected_number_of_artifacts", (("android-components", "android_components_nightly", 12), ("geckoview", "geckoview_nightly", 16))
+    "config_name, task_name, expected_number_of_artifacts",
+    (
+        ("android-components", "android_components_nightly", 12),
+        ("geckoview", "geckoview_nightly", 16),
+        ("app-services", "application_services_release", 12),
+        ("glean", "glean_release", 20),
+    ),
 )
 def test_main_push_to_maven(config_name, task_name, expected_number_of_artifacts, tmp_path, boto3_client_mock, aiohttp_session_mock):
     config = get_config(config_name)
