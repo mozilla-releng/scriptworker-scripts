@@ -6,9 +6,14 @@ import mock
 import pytest
 from scriptworker_client.exceptions import TaskError
 
-import treescript.mercurial as mercurial
 import treescript.script as script
 from treescript.exceptions import TreeScriptError
+
+try:
+    from unittest.mock import AsyncMock
+except ImportError:
+    # TODO: Remove this import once py3.7 is not supported anymore
+    from mock import AsyncMock
 
 # helper constants, fixtures, functions {{{1
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -56,7 +61,6 @@ async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions)
     mocker.patch.object(script, "task_action_types", new=action_fun)
     mocker.patch.object(script, "validate_robustcheckout_works", new=fake_validate_robustcheckout)
     mocker.patch.object(script, "log_mercurial_version", new=noop_async)
-    mocker.patch.object(script, "checkout_repo", new=noop_async)
     mocker.patch.object(script, "do_actions", new=noop_async)
     config = mock.MagicMock()
     task = mock.MagicMock()
@@ -92,11 +96,7 @@ def test_get_default_config():
 async def test_do_actions(mocker, push_scope, push_payload, dry_run, push_expect_called):
     actions = ["tag", "version_bump", "l10n_bump"]
     actions += push_scope
-    called = {"version_bump": False, "l10n_bump": False, "push": False, "merge": False, "tagging": False}
-
-    async def mocked_tag(*args, **kwargs):
-        called["tagging"] = True
-        return 1
+    called = {"version_bump": False, "l10n_bump": False, "merge": False}
 
     async def mocked_bump(*args, **kwargs):
         called["version_bump"] = True
@@ -109,60 +109,51 @@ async def test_do_actions(mocker, push_scope, push_payload, dry_run, push_expect
     async def mocked_perform_merge_actions(*args, **kwargs):
         called["merge"] = True
 
-    async def mocked_push(*args, **kwargs):
-        called["push"] = True
+    vcs_mock = AsyncMock()
+    vcs_mock.do_tagging.return_value = 1
+    vcs_mock.log_outgoing.return_value = 3
 
-    async def mocked_outgoing(*args):
-        return 3
-
-    mocker.patch.object(script, "checkout_repo", new=noop_async)
-    mocker.patch.object(mercurial, "run_hg_command", new=noop_async)
-    mocker.patch.object(script, "strip_outgoing", new=noop_async)
-    mocker.patch.object(script, "do_tagging", new=mocked_tag)
+    mocker.patch.object(script, "get_vcs_module", return_value=vcs_mock)
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
-
     mocker.patch.object(script, "perform_merge_actions", new=mocked_perform_merge_actions)
-    mocker.patch.object(mercurial, "push", new=mocked_push)
-    mocker.patch.object(script, "push", new=mocked_push)
-    mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
 
     task_defn = {
         "payload": {"push": push_payload, "dry_run": dry_run},
         "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source" "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
     }
     await script.do_actions({}, task_defn, actions, "/some/folder/here")
-    for action in ["tagging", "version_bump", "l10n_bump"]:
-        if action in actions:
-            assert called[action]
 
-    assert called["push"] is push_expect_called
     assert called["merge"] is False
+    vcs_mock.checkout_repo.assert_called_once()
+    vcs_mock.do_tagging.assert_called_once()
+    vcs_mock.log_outgoing.assert_called_once()
+    vcs_mock.strip_outgoing.assert_called_once()
+    if push_expect_called:
+        vcs_mock.push.assert_called_once()
+    else:
+        vcs_mock.push.assert_not_called()
 
 
 # do_actions {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "push_scope,push_payload,dry_run,push_expect_called",
+    "push_scope,push_payload,dry_run",
     (
-        (["push"], False, False, False),
-        (["push"], False, True, False),
-        (["push"], True, False, True),
-        (["push"], True, True, False),
-        ([], False, False, False),
-        ([], False, True, False),
-        ([], True, False, True),
-        ([], True, True, False),
+        (["push"], False, False),
+        (["push"], False, True),
+        (["push"], True, False),
+        (["push"], True, True),
+        ([], False, False),
+        ([], False, True),
+        ([], True, False),
+        ([], True, True),
     ),
 )
-async def test_do_actions_merge_tasks(mocker, push_scope, push_payload, dry_run, push_expect_called):
+async def test_do_actions_merge_tasks(mocker, push_scope, push_payload, dry_run):
     actions = ["merge_day"]
     actions += push_scope
-    called = {"version_bump": False, "l10n_bump": False, "push": False, "merge": False, "tagging": False}
-
-    async def mocked_tag(*args, **kwargs):
-        called["tagging"] = True
-        return 1
+    called = {"version_bump": False, "l10n_bump": False, "merge": False}
 
     async def mocked_bump(*args, **kwargs):
         called["version_bump"] = True
@@ -175,32 +166,27 @@ async def test_do_actions_merge_tasks(mocker, push_scope, push_payload, dry_run,
     async def mocked_perform_merge_actions(*args, **kwargs):
         called["merge"] = True
 
-    async def mocked_push(*args, **kwargs):
-        called["push"] = True
+    vcs_mock = AsyncMock()
+    vcs_mock.do_tagging.return_value = 1
+    vcs_mock.log_outgoing.return_value = 0
 
-    async def mocked_outgoing(*args):
-        return 0
-
-    mocker.patch.object(script, "checkout_repo", new=noop_async)
-    mocker.patch.object(mercurial, "run_hg_command", new=noop_async)
-    mocker.patch.object(script, "strip_outgoing", new=noop_async)
-    mocker.patch.object(script, "do_tagging", new=mocked_tag)
+    mocker.patch.object(script, "get_vcs_module", return_value=vcs_mock)
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
-
     mocker.patch.object(script, "perform_merge_actions", new=mocked_perform_merge_actions)
-    mocker.patch.object(mercurial, "push", new=mocked_push)
-    mocker.patch.object(script, "push", new=mocked_push)
-    mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
 
     task_defn = {
         "payload": {"push": push_payload, "dry_run": dry_run},
         "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source" "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
     }
     await script.do_actions({}, task_defn, actions, "/some/folder/here")
-    for action in ["tagging", "version_bump", "l10n_bump"]:
+    for action in ["version_bump", "l10n_bump"]:
         assert called[action] is False
     assert called["merge"] is True
+
+    vcs_mock.checkout_repo.assert_called_once()
+    vcs_mock.log_outgoing.assert_not_called()
+    vcs_mock.strip_outgoing.assert_not_called()
 
 
 # do_actions {{{1
@@ -211,33 +197,29 @@ async def test_do_actions_merge_tasks(mocker, push_scope, push_payload, dry_run,
 async def test_perform_merge_actions(mocker, push_scope, should_push, push_expect_called):
     actions = ["merge_day"]
     actions += push_scope
-    called = {"push": False, "merge": False}
+    called = {"merge": False}
 
     async def mocked_do_merge(*args, **kwargs):
         called["merge"] = True
         return [("https://hg.mozilla.org/treescript-test", ".")]
 
-    async def mocked_push(*args, **kwargs):
-        called["push"] = True
-        return 1
+    vcs_mock = AsyncMock()
 
-    mocker.patch.object(script, "checkout_repo", new=noop_async)
+    mocker.patch.object(script, "get_vcs_module", return_value=vcs_mock)
     mocker.patch.object(script, "do_merge", new=mocked_do_merge)
-    mocker.patch.object(script, "push", new=mocked_push)
     mocker.patch.object(script, "should_push", return_value=should_push)
-    await script.perform_merge_actions({}, {}, actions, "/some/folder/here")
+    await script.perform_merge_actions({}, {}, actions, "/some/folder/here", "hg")
     assert called["merge"] is True
-    assert called["push"] is push_expect_called
+    if push_expect_called:
+        vcs_mock.push.assert_called_once()
+    else:
+        vcs_mock.push.assert_not_called()
 
 
 @pytest.mark.asyncio
 async def test_do_actions_no_changes(mocker):
     actions = ["push"]
-    called = {"bump": False, "l10n": False, "push": False, "tag": False}
-
-    async def mocked_tag(*args, **kwargs):
-        called["tag"] = True
-        return 1
+    called = {"bump": False, "l10n": False}
 
     async def mocked_bump(*args, **kwargs):
         called["bump"] = True
@@ -247,30 +229,24 @@ async def test_do_actions_no_changes(mocker):
         called["l10n"] = True
         return 1
 
-    async def mocked_push(*args, **kwargs):
-        called["push"] = True
-        return 1
+    vcs_mock = AsyncMock()
+    vcs_mock.log_outgoing.return_value = 0
 
-    async def mocked_outgoing(*args):
-        return 0
-
-    mocker.patch.object(script, "checkout_repo", new=noop_async)
-    mocker.patch.object(script, "strip_outgoing", new=noop_async)
-    mocker.patch.object(script, "do_tagging", new=mocked_tag)
+    mocker.patch.object(script, "get_vcs_module", return_value=vcs_mock)
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
-    mocker.patch.object(script, "push", new=mocked_push)
-    mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
     await script.do_actions({}, {"payload": {"push": True}}, actions, "/some/folder/here")
     assert not any(called.values())
+    vcs_mock.checkout_repo.assert_called_once()
+    vcs_mock.do_tagging.assert_not_called()
+    vcs_mock.log_outgoing.assert_called_once()
+    vcs_mock.strip_outgoing.assert_called_once()
+    vcs_mock.push.assert_not_called()
 
 
 @pytest.mark.asyncio
 async def test_do_actions_mismatch_change_count(mocker):
     actions = ["tag"]
-
-    async def mocked_tag(*args, **kwargs):
-        return 1
 
     async def mocked_bump(*args, **kwargs):
         return 1
@@ -278,19 +254,12 @@ async def test_do_actions_mismatch_change_count(mocker):
     async def mocked_l10n(*args, **kwargs):
         return 1
 
-    async def mocked_push(*args, **kwargs):
-        return 1
+    vcs_mock = AsyncMock()
+    vcs_mock.log_outgoing.return_value = 14
 
-    async def mocked_outgoing(*args):
-        return 14
-
-    mocker.patch.object(script, "checkout_repo", new=noop_async)
-    mocker.patch.object(script, "strip_outgoing", new=noop_async)
-    mocker.patch.object(script, "do_tagging", new=mocked_tag)
+    mocker.patch.object(script, "get_vcs_module", return_value=vcs_mock)
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
-    mocker.patch.object(script, "push", new=mocked_push)
-    mocker.patch.object(script, "log_outgoing", new=mocked_outgoing)
     with pytest.raises(TreeScriptError):
         await script.do_actions({}, {"payload": {"push": False}}, actions, "/some/folder/here")
 

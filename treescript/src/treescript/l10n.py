@@ -16,8 +16,7 @@ from scriptworker_client.aio import download_file, retry_async, semaphore_wrappe
 from scriptworker_client.exceptions import DownloadError
 from scriptworker_client.utils import load_json_or_yaml
 
-from treescript.mercurial import commit
-from treescript.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_l10n_bump_info, get_short_source_repo
+from treescript.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_l10n_bump_info, get_short_source_repo, get_vcs_module
 
 log = logging.getLogger(__name__)
 
@@ -210,7 +209,7 @@ async def check_treestatus(config, task):
 
 
 # l10n_bump {{{1
-async def l10n_bump(config, task, repo_path):
+async def l10n_bump(config, task, repo_path, repo_type="hg"):
     """Perform a l10n revision bump.
 
     This function takes its inputs from task by using the ``get_l10n_bump_info``
@@ -221,6 +220,7 @@ async def l10n_bump(config, task, repo_path):
         config (dict): the running config
         task (dict): the running task
         repo_path (str): the source directory
+        repo_type (str): the repository type
 
     Raises:
         TaskVerificationError: if a file specified is not allowed, or
@@ -230,6 +230,8 @@ async def l10n_bump(config, task, repo_path):
         int: non-zero if there are any changes.
 
     """
+    vcs = get_vcs_module(repo_type)
+
     log.info("Preparing to bump l10n changesets.")
 
     ignore_closed_tree = get_ignore_closed_tree(task)
@@ -252,6 +254,6 @@ async def l10n_bump(config, task, repo_path):
             fh.write(json.dumps(new_contents, sort_keys=True, indent=4, separators=(",", ": ")))
         locale_map = build_locale_map(old_contents, new_contents)
         message = build_commit_message(bump_config["name"], locale_map, dontbuild=dontbuild, ignore_closed_tree=ignore_closed_tree)
-        await commit(config, repo_path, message)
+        await vcs.commit(config, repo_path, message)
         changes += 1
     return changes

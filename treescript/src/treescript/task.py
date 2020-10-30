@@ -271,3 +271,25 @@ def get_merge_config(task):
         return task.get("payload", {})["merge_info"]
     except KeyError:
         raise TaskVerificationError("Requested merge action with missing merge configuration.")
+
+
+def get_vcs_module(repo_type):
+    """Get the python module that handles VCS operations.
+
+    Args:
+        repo_type (str): the repository type
+
+    Raises:
+        NotImplementedError: if the given repo type is not supported.
+
+    Returns:
+        module: the python module of the corresponding repo_type
+    """
+    if repo_type == "hg":
+        from treescript import mercurial
+
+        vcs = mercurial
+    else:
+        raise NotImplementedError('Unsupported repo type "{}"'.format(repo_type))
+
+    return vcs

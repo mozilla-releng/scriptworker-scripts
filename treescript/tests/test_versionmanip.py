@@ -9,6 +9,12 @@ from treescript.exceptions import TaskVerificationError, TreeScriptError
 from treescript.script import get_default_config
 from treescript.task import DONTBUILD_MSG
 
+try:
+    from unittest.mock import AsyncMock
+except ImportError:
+    # TODO: Remove this import once py3.7 is not supported anymore
+    from mock import AsyncMock
+
 
 def is_slice_in_list(myslice, mylist):
     # Credit to https://stackoverflow.com/a/20789412/#answer-20789669
@@ -90,11 +96,6 @@ def test_find_what_version_parser_to_use(file, expectation, expected_result):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("new_version, should_append_esr", (("68.0", True), ("68.0b3", False)))
 async def test_bump_version(mocker, repo_context, new_version, should_append_esr):
-    called_args = []
-
-    async def mocked_commit(context, repo_path, commit_msg):
-        called_args.append(("commit", commit_msg))
-
     test_version = new_version
     if repo_context.xtest_version.endswith("esr") and should_append_esr:
         test_version = new_version + "esr"
@@ -103,107 +104,88 @@ async def test_bump_version(mocker, repo_context, new_version, should_append_esr
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
-    mocker.patch.object(vmanip, "commit", new=mocked_commit)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
+    vcs_mock = AsyncMock()
+    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
+    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
     assert test_version == vmanip.get_version(relative_files[0], repo_context.repo)
-    assert called_args == [("commit", "Automatic version bump CLOSED TREE NO BUG a=release")]
+    assert vcs_mock.commit.call_args_list[0][0][2] == "Automatic version bump CLOSED TREE NO BUG a=release"
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("new_version", ("68.0", "68.0b3"))
 async def test_bump_version_DONTBUILD_true(mocker, repo_context, new_version):
-    called_args = []
-
-    async def mocked_commit(context, repo_path, commit_msg):
-        called_args.append(("commit", commit_msg))
-
     relative_files = [os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
     mocked_dontbuild = mocker.patch.object(vmanip, "get_dontbuild")
     mocked_dontbuild.return_value = True
-    mocker.patch.object(vmanip, "commit", new=mocked_commit)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
-    commit_msg = called_args[0][1]
+    vcs_mock = AsyncMock()
+    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
+    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
+    commit_msg = vcs_mock.commit.call_args_list[0][0][2]
     assert DONTBUILD_MSG in commit_msg
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("new_version", ("68.0", "68.0b3"))
 async def test_bump_version_DONTBUILD_false(mocker, repo_context, new_version):
-    called_args = []
-
-    async def mocked_commit(context, repo_path, commit_msg):
-        called_args.append(("commit", commit_msg))
-
     relative_files = [os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
     mocked_dontbuild = mocker.patch.object(vmanip, "get_dontbuild")
     mocked_dontbuild.return_value = False
-    mocker.patch.object(vmanip, "commit", new=mocked_commit)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
-    commit_msg = called_args[0][1]
+    vcs_mock = AsyncMock()
+    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
+    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
+    commit_msg = vcs_mock.commit.call_args_list[0][0][2]
     assert DONTBUILD_MSG not in commit_msg
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("new_version", ("68.0", "68.0b3", "68.9.10esr"))
 async def test_bump_version_invalid_file(mocker, repo_context, new_version):
-    called_args = []
-
-    async def mocked_commit(context, repo_path, commit_msg):
-        called_args.append(("commit", commit_msg))
-
     relative_files = [os.path.join("config", "invalid_file.txt"), os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
-    mocker.patch.object(vmanip, "commit", new=mocked_commit)
+    vcs_mock = AsyncMock()
+    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
     with pytest.raises(TaskVerificationError):
-        await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
+        await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
     assert repo_context.xtest_version == vmanip.get_version(relative_files[1], repo_context.repo)
-    assert len(called_args) == 0
+    vcs_mock.commit.assert_not_called()
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("new_version", ("68.0", "68.0b3", "68.9.10esr"))
 async def test_bump_version_missing_file(mocker, repo_context, new_version):
-    called_args = []
-
-    async def mocked_commit(context, repo_path, commit_msg):
-        called_args.append(("commit", commit_msg))
-
     # Test only creates config/milestone.txt
     relative_files = [os.path.join("browser", "config", "version_display.txt"), os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
-    mocker.patch.object(vmanip, "commit", new=mocked_commit)
+    vcs_mock = AsyncMock()
+    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
     with pytest.raises(TaskVerificationError):
-        await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
+        await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
     assert repo_context.xtest_version == vmanip.get_version(relative_files[1], repo_context.repo)
-    assert len(called_args) == 0
+    vcs_mock.commit.assert_not_called()
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("new_version", ("24.0", "31.0b3", "45.0esr"))
 async def test_bump_version_smaller_version(mocker, repo_context, new_version):
-    called_args = []
-
-    async def mocked_commit(context, repo_path, commit_msg):
-        called_args.append(("commit", commit_msg))
-
     relative_files = [os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
-    mocker.patch.object(vmanip, "commit", new=mocked_commit)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
+    vcs_mock = AsyncMock()
+    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
+    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
     assert repo_context.xtest_version == vmanip.get_version(relative_files[0], repo_context.repo)
-    assert len(called_args) == 0
+    vcs_mock.commit.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -213,20 +195,15 @@ async def test_bump_version_esr(mocker, repo_context, new_version, expect_versio
         # XXX pytest.skip raised exceptions here for some reason.
         return
 
-    called_args = []
-
-    async def mocked_commit(context, repo_path, commit_msg):
-        called_args.append(("commit", commit_msg))
-
     relative_files = [os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
-    mocker.patch.object(vmanip, "commit", new=mocked_commit)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
+    vcs_mock = AsyncMock()
+    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
+    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
     assert expect_version == vmanip.get_version(relative_files[0], repo_context.repo)
-    assert len(called_args) == 1
-    assert is_slice_in_list(("commit"), called_args[0][0])
+    vcs_mock.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -244,34 +221,26 @@ async def test_bump_version_esr_dont_bump_non_esr(mocker, config, tmpdir, new_ve
     with open(os.path.join(repo, display_version_file), "w") as f:
         f.write(version + "esr")
 
-    called_args = []
-
-    async def mocked_commit(context, repo_path, commit_msg):
-        called_args.append(("commit", commit_msg))
-
     relative_files = [os.path.join("browser", "config", "version_display.txt"), os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
-    mocker.patch.object(vmanip, "commit", new=mocked_commit)
-    await vmanip.bump_version(config, {}, repo)
+    vcs_mock = AsyncMock()
+    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
+    await vmanip.bump_version(config, {}, repo, repo_type="hg")
     assert expect_esr_version == vmanip.get_version(display_version_file, repo)
     assert new_version == vmanip.get_version(version_file, repo)
-    assert len(called_args) == 1
+    vcs_mock.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_bump_version_same_version(mocker, repo_context):
-    called_args = []
-
-    async def mocked_commit(context, repo_path, commit_msg):
-        called_args.append(("commit", commit_msg))
-
     relative_files = [os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": repo_context.xtest_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
-    mocker.patch.object(vmanip, "commit", new=mocked_commit)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
+    vcs_mock = AsyncMock()
+    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
+    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
     assert repo_context.xtest_version == vmanip.get_version(relative_files[0], repo_context.repo)
-    assert len(called_args) == 0
+    vcs_mock.commit.assert_not_called()

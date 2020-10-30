@@ -1,10 +1,12 @@
 import os
+from contextlib import nullcontext as does_not_raise
 
 import pytest
 from scriptworker_client.client import verify_task_schema
 from scriptworker_client.exceptions import TaskVerificationError
 
 import treescript.task as ttask
+from treescript import mercurial
 from treescript.script import get_default_config
 
 SCRIPT_CONFIG = {"taskcluster_scope_prefix": "project:releng:treescript:"}
@@ -300,3 +302,11 @@ def test_get_ssh_user(task_defn, ssh_user, expected):
     if ssh_user:
         task_defn["payload"]["ssh_user"] = ssh_user
     assert ttask.get_ssh_user(task_defn) == expected
+
+
+@pytest.mark.parametrize(
+    "repo_type, expectation, expected_result", (("hg", does_not_raise(), mercurial), ("non-existing-type", pytest.raises(NotImplementedError), None))
+)
+def test_get_vcs_module(repo_type, expectation, expected_result):
+    with expectation:
+        assert ttask.get_vcs_module(repo_type) == expected_result
