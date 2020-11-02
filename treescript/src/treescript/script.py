@@ -5,6 +5,7 @@ import os
 
 from scriptworker_client.aio import retry_async
 from scriptworker_client.client import sync_main
+from scriptworker_client.github import is_github_url
 
 from treescript.exceptions import CheckoutError, PushError, TreeScriptError
 from treescript.l10n import l10n_bump
@@ -55,7 +56,9 @@ async def do_actions(config, task, actions, repo_path):
         actions (list): the actions to perform
         repo_path (str): the source directory to use.
     """
-    repo_type = "hg"  # TODO parametrize when git support is added
+    source_repo = get_source_repo(task)
+    # mercurial had been the only default choice until git was supported, default to it.
+    repo_type = "git" if is_github_url(source_repo) else "hg"
     vcs = get_vcs_module(repo_type)
     await vcs.checkout_repo(config, task, repo_path)
 

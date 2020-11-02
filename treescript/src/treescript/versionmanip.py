@@ -4,6 +4,7 @@
 import logging
 import os
 
+from mozilla_version.fenix import FenixVersion
 from mozilla_version.gecko import FennecVersion, FirefoxVersion, GeckoVersion, ThunderbirdVersion
 
 from treescript.exceptions import TaskVerificationError, TreeScriptError
@@ -17,13 +18,7 @@ ALLOWED_BUMP_FILES = (
     "browser/config/version_display.txt",
     "config/milestone.txt",
     "mail/config/version.txt",
-    "mail/config/version_display.txt",
-    "mobile/android/config/version-files/beta/version.txt",
-    "mobile/android/config/version-files/beta/version_display.txt",
-    "mobile/android/config/version-files/release/version.txt",
-    "mobile/android/config/version-files/release/version_display.txt",
-    "mobile/android/config/version-files/nightly/version.txt",
-    "mobile/android/config/version-files/nightly/version_display.txt",
+    "version.txt",  # Fenix
 )
 
 _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
@@ -31,6 +26,7 @@ _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
     "config/milestone.txt": GeckoVersion,
     "mobile/android/": FennecVersion,
     "mail/": ThunderbirdVersion,
+    "version.txt": FenixVersion,
 }
 
 
@@ -132,11 +128,16 @@ async def do_bump_version(config, repo_path, files, next_version):
         curr_version = get_version(file_, repo_path)
         next_version = VersionClass.parse(saved_next_version)
 
+        try:
+            is_esr = curr_version.is_esr
+        except AttributeError:  # Fenix does not expose the is_esr attribute
+            is_esr = False
+
         # XXX In the case of ESR, some files (like version.txt) show version numbers without `esr`
         # at the end. next_version is usually provided without `esr` too.
         # That's why we do this late minute replacement and why we reset `next_version` at every
         # cycle of the loop
-        if curr_version.is_esr and not any(
+        if is_esr and not any(
             (
                 next_version.is_esr,  # No need to append esr again
                 # We don't want XX.Ya1esr nor XX.YbNesr

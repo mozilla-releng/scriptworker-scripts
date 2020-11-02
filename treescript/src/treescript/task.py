@@ -34,11 +34,16 @@ def get_metadata_source_repo(task):
     source = task.get("metadata", {}).get("source", None)
     if not source:
         raise TaskVerificationError("No source, how did that happen")
-    if not source.startswith("https://hg.mozilla.org/"):
-        raise TaskVerificationError("Unable to operate on sources not in hg.mozilla.org")
-    parts = source.split("/file/")
+    if source.startswith("https://github.com/"):
+        parts = source.split("/blob/")
+    elif source.startswith("https://hg.mozilla.org/"):
+        parts = source.split("/file/")
+    else:
+        raise TaskVerificationError("Unable to operate on sources not in hg.mozilla.org or github.com")
+
     if len(parts) < 2:
         raise TaskVerificationError("Source url is in unexpected format")
+
     return parts[0]
 
 
@@ -289,6 +294,10 @@ def get_vcs_module(repo_type):
         from treescript import mercurial
 
         vcs = mercurial
+    elif repo_type == "git":
+        from treescript import git
+
+        vcs = git
     else:
         raise NotImplementedError('Unsupported repo type "{}"'.format(repo_type))
 

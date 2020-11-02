@@ -424,6 +424,19 @@ async def test_raise_future_exceptions(exc):
         await utils.raise_future_exceptions(tasks)
 
 
+@pytest.mark.parametrize(
+    "url, expected",
+    (
+        ("https://foo/bar", ["bar"]),
+        ("https://foo/bar/baz", ["bar", "baz"]),
+        ("https://foo/bar/baz?param1=value", ["bar", "baz"]),
+        ("https://foo/bar/baz?param1=value1&param2=value2", ["bar", "baz"]),
+    ),
+)
+def test_get_parts_of_url_path(url, expected):
+    assert utils.get_parts_of_url_path(url) == expected
+
+
 @pytest.mark.asyncio
 async def test_raise_future_exceptions_noop():
     await utils.raise_future_exceptions([])
