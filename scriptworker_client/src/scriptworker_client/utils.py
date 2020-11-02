@@ -28,6 +28,7 @@ from typing import (
     Type,
     Union,
 )
+from urllib.parse import unquote, urlparse
 from scriptworker_client.exceptions import TaskError
 
 log = logging.getLogger(__name__)
@@ -513,6 +514,20 @@ async def _process_future_exceptions(tasks, raise_at_first_error):
                 succeeded_results.append(task.result())
 
     return succeeded_results, error_results
+
+
+def get_parts_of_url_path(url):
+    """Given a url, take out the path part and split it by '/'.
+
+    Args:
+        url (str): the url slice
+    returns
+        list: parts after the domain name of the URL
+    """
+    parsed = urlparse(url)
+    path = unquote(parsed.path).lstrip("/")
+    parts = path.split("/")
+    return parts
 
 
 def get_single_item_from_sequence(
