@@ -1,0 +1,126 @@
+{
+    "dependencies": ["dependency-task-id"],
+    "scopes": [
+	"project:mozilla:app-services:releng:beetmover:bucket:maven-production",
+	"project:mozilla:app-services:releng:beetmover:action:push-to-maven"
+    ],
+    "payload": {
+	"version": "66.0.0",
+	"maxRunTime": 600,
+	"artifactMap": [
+	    {
+		"paths": {
+		    "public/build/fxaclient-66.0.0.aar": {
+			"destinations": [
+			    "maven2/org/mozilla/appservices/fxaclient/66.0.0/fxaclient-66.0.0.aar"
+			],
+			"checksums_path": ""
+		    },
+		    "public/build/fxaclient-66.0.0.pom": {
+			"destinations": [
+			    "maven2/org/mozilla/appservices/fxaclient/66.0.0/fxaclient-66.0.0.pom"
+			],
+			"checksums_path": ""
+		    },
+		    "public/build/fxaclient-66.0.0.aar.md5": {
+			"destinations": [
+			    "maven2/org/mozilla/appservices/fxaclient/66.0.0/fxaclient-66.0.0.aar.md5"
+			],
+			"checksums_path": ""
+		    },
+		    "public/build/fxaclient-66.0.0.pom.md5": {
+			"destinations": [
+			    "maven2/org/mozilla/appservices/fxaclient/66.0.0/fxaclient-66.0.0.pom.md5"
+			],
+			"checksums_path": ""
+		    },
+		    "public/build/fxaclient-66.0.0.aar.sha1": {
+			"destinations": [
+			    "maven2/org/mozilla/appservices/fxaclient/66.0.0/fxaclient-66.0.0.aar.sha1"
+			],
+			"checksums_path": ""
+		    },
+		    "public/build/fxaclient-66.0.0.pom.sha1": {
+			"destinations": [
+			    "maven2/org/mozilla/appservices/fxaclient/66.0.0/fxaclient-66.0.0.pom.sha1"
+			],
+			"checksums_path": ""
+		    },
+		    "public/build/fxaclient-66.0.0-sources.jar": {
+			"destinations": [
+			    "maven2/org/mozilla/appservices/fxaclient/66.0.0/fxaclient-66.0.0-sources.jar"
+			],
+			"checksums_path": ""
+		    },
+		    "public/build/fxaclient-66.0.0-sources.jar.md5": {
+			"destinations": [
+			    "maven2/org/mozilla/appservices/fxaclient/66.0.0/fxaclient-66.0.0-sources.jar.md5"
+			],
+			"checksums_path": ""
+		    },
+		    "public/build/fxaclient-66.0.0-sources.jar.sha1": {
+			"destinations": [
+			    "maven2/org/mozilla/appservices/fxaclient/66.0.0/fxaclient-66.0.0-sources.jar.sha1"
+			],
+			"checksums_path": ""
+		    }
+		},
+		"locale": "en-US",
+		"taskId": "JjLHZCxMSWynMdEZw3_4jg"
+	    },
+	    {
+		"paths": {
+		    "public/build/fxaclient-66.0.0.aar.asc": {
+			"destinations": [
+			    "maven2/org/mozilla/appservices/fxaclient/66.0.0/fxaclient-66.0.0.aar.asc"
+			],
+			"checksums_path": ""
+		    },
+		    "public/build/fxaclient-66.0.0.pom.asc": {
+			"destinations": [
+			    "maven2/org/mozilla/appservices/fxaclient/66.0.0/fxaclient-66.0.0.pom.asc"
+			],
+			"checksums_path": ""
+		    },
+		    "public/build/fxaclient-66.0.0-sources.jar.asc": {
+			"destinations": [
+			    "maven2/org/mozilla/appservices/fxaclient/66.0.0/fxaclient-66.0.0-sources.jar.asc"
+			],
+			"checksums_path": ""
+		    }
+		},
+		"locale": "en-US",
+		"taskId": "INzRHbs3S3C6JCOgO4gawQ"
+	    }
+	],
+	"releaseProperties": {
+	    "appName": "appservices"
+	},
+	"upstreamArtifacts": [
+	    {
+		"paths": [
+		    "public/build/fxaclient-66.0.0.aar",
+		    "public/build/fxaclient-66.0.0.aar.sha1",
+		    "public/build/fxaclient-66.0.0.aar.md5",
+		    "public/build/fxaclient-66.0.0.pom",
+		    "public/build/fxaclient-66.0.0.pom.sha1",
+		    "public/build/fxaclient-66.0.0.pom.md5",
+		    "public/build/fxaclient-66.0.0-sources.jar",
+		    "public/build/fxaclient-66.0.0-sources.jar.sha1",
+		    "public/build/fxaclient-66.0.0-sources.jar.md5"
+		],
+		"taskId": "JjLHZCxMSWynMdEZw3_4jg",
+		"taskType": "build"
+	    },
+	    {
+		"paths": [
+		    "public/build/fxaclient-66.0.0.aar.asc",
+		    "public/build/fxaclient-66.0.0.pom.asc",
+		    "public/build/fxaclient-66.0.0-sources.jar.asc"
+		],
+		"taskId": "INzRHbs3S3C6JCOgO4gawQ",
+		"taskType": "signing"
+	    }
+	]
+    }
+}

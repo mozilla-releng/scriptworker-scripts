@@ -1,0 +1,182 @@
+{
+    "dependencies": ["dependency-task-id"],
+    "scopes": [
+    "project:mozilla:glean:releng:beetmover:bucket:maven-production",
+    "project:mozilla:glean:releng:beetmover:action:push-to-maven"
+  ],
+  "payload": {
+    "version": "32.4.1",
+    "maxRunTime": 600,
+    "artifactMap": [
+      {
+        "paths": {
+          "public/build/glean-32.4.1.aar": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean/32.4.1/glean-32.4.1.aar"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-32.4.1.pom": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean/32.4.1/glean-32.4.1.pom"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-32.4.1.aar.md5": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean/32.4.1/glean-32.4.1.aar.md5"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-32.4.1.pom.md5": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean/32.4.1/glean-32.4.1.pom.md5"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-32.4.1.aar.sha1": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean/32.4.1/glean-32.4.1.aar.sha1"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-32.4.1.pom.sha1": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean/32.4.1/glean-32.4.1.pom.sha1"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-32.4.1-sources.jar": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean/32.4.1/glean-32.4.1-sources.jar"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-32.4.1-sources.jar.md5": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean/32.4.1/glean-32.4.1-sources.jar.md5"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-32.4.1-sources.jar.sha1": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean/32.4.1/glean-32.4.1-sources.jar.sha1"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-forUnitTests-32.4.1.jar": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean-forUnitTests/32.4.1/glean-forUnitTests-32.4.1.jar"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-forUnitTests-32.4.1.pom": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean-forUnitTests/32.4.1/glean-forUnitTests-32.4.1.pom"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-forUnitTests-32.4.1.jar.md5": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean-forUnitTests/32.4.1/glean-forUnitTests-32.4.1.jar.md5"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-forUnitTests-32.4.1.pom.md5": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean-forUnitTests/32.4.1/glean-forUnitTests-32.4.1.pom.md5"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-forUnitTests-32.4.1.jar.sha1": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean-forUnitTests/32.4.1/glean-forUnitTests-32.4.1.jar.sha1"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-forUnitTests-32.4.1.pom.sha1": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean-forUnitTests/32.4.1/glean-forUnitTests-32.4.1.pom.sha1"
+            ],
+            "checksums_path": ""
+          }
+        },
+        "locale": "en-US",
+        "taskId": "E1__QlpvTle9kvK7QGAXfQ"
+      },
+      {
+        "paths": {
+          "public/build/glean-32.4.1.aar.asc": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean/32.4.1/glean-32.4.1.aar.asc"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-32.4.1.pom.asc": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean/32.4.1/glean-32.4.1.pom.asc"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-32.4.1-sources.jar.asc": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean/32.4.1/glean-32.4.1-sources.jar.asc"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-forUnitTests-32.4.1.jar.asc": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean-forUnitTests/32.4.1/glean-forUnitTests-32.4.1.jar.asc"
+            ],
+            "checksums_path": ""
+          },
+          "public/build/glean-forUnitTests-32.4.1.pom.asc": {
+            "destinations": [
+              "maven2/org/mozilla/telemetry/glean-forUnitTests/32.4.1/glean-forUnitTests-32.4.1.pom.asc"
+            ],
+            "checksums_path": ""
+          }
+        },
+        "locale": "en-US",
+        "taskId": "ZuSxSVk-Q5-Sbdiy7PBBmA"
+      }
+    ],
+    "releaseProperties": {
+      "appName": "telemetry"
+    },
+    "upstreamArtifacts": [
+      {
+        "paths": [
+          "public/build/glean-32.4.1.aar",
+          "public/build/glean-32.4.1.aar.sha1",
+          "public/build/glean-32.4.1.aar.md5",
+          "public/build/glean-32.4.1.pom",
+          "public/build/glean-32.4.1.pom.sha1",
+          "public/build/glean-32.4.1.pom.md5",
+          "public/build/glean-32.4.1-sources.jar",
+          "public/build/glean-32.4.1-sources.jar.sha1",
+          "public/build/glean-32.4.1-sources.jar.md5",
+          "public/build/glean-forUnitTests-32.4.1.jar",
+          "public/build/glean-forUnitTests-32.4.1.jar.sha1",
+          "public/build/glean-forUnitTests-32.4.1.jar.md5",
+          "public/build/glean-forUnitTests-32.4.1.pom",
+          "public/build/glean-forUnitTests-32.4.1.pom.sha1",
+          "public/build/glean-forUnitTests-32.4.1.pom.md5"
+        ],
+        "taskId": "E1__QlpvTle9kvK7QGAXfQ",
+        "taskType": "build"
+      },
+      {
+        "paths": [
+          "public/build/glean-32.4.1.aar.asc",
+          "public/build/glean-32.4.1.pom.asc",
+          "public/build/glean-32.4.1-sources.jar.asc",
+          "public/build/glean-forUnitTests-32.4.1.jar.asc",
+          "public/build/glean-forUnitTests-32.4.1.pom.asc"
+        ],
+        "taskId": "ZuSxSVk-Q5-Sbdiy7PBBmA",
+        "taskType": "signing"
+      }
+    ]
+  }
+}
