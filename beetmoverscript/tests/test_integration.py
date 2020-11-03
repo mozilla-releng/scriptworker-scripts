@@ -6,140 +6,40 @@ import pytest
 
 import beetmoverscript.script
 from beetmoverscript.script import main
+from beetmoverscript.utils import load_json
 
 from . import get_fake_valid_config
 
 
-@pytest.fixture
-def config():
+def get_test_task(task_name):
+    return load_json(f"tests/task_examples/{task_name}.json")
+
+
+_CONFIG_MAP = {
+    "android-components": {
+        "taskcluster_scope_prefix": "project:mobile:android-components:releng:beetmover:",
+        "bucket_config_key": "maven-nightly-staging",
+        "bucket_name": "nightly_components",
+    },
+    "app-services": {
+        "taskcluster_scope_prefix": "project:mozilla:app-services:releng:beetmover:",
+        "bucket_config_key": "maven-production",
+        "bucket_name": "appservices",
+    },
+    "geckoview": {"taskcluster_scope_prefix": "project:releng:beetmover:", "bucket_config_key": "maven-production", "bucket_name": "geckoview"},
+    "glean": {"taskcluster_scope_prefix": "project:mozilla:glean:releng:beetmover:", "bucket_config_key": "maven-production", "bucket_name": "telemetry"},
+}
+
+
+def get_config(config_name):
     config = get_fake_valid_config()
-    config["taskcluster_scope_prefix"] = "project:mobile:android-components:releng:beetmover:"
-    config["bucket_config"]["maven-nightly-staging"] = {"buckets": {"nightly_components": "dummy"}, "credentials": {"id": "dummy", "key": "dummy"}}
-    return config
-
-
-@pytest.fixture
-def task():
-    return {
-        "dependencies": ["dependency-task-id"],
-        "scopes": [
-            "project:mobile:android-components:releng:beetmover:action:push-to-maven",
-            "project:mobile:android-components:releng:beetmover:bucket:maven-nightly-staging",
-        ],
-        "payload": {
-            "version": "63.0.20201013153553",
-            "artifactMap": [
-                {"paths": {}, "locale": "en-US", "taskId": "AKjtHrqYQ32EDZ3GNzwXGg"},
-                {
-                    "paths": {
-                        "public/build/browser-awesomebar-63.0.20201013153553.aar.asc": {
-                            "destinations": [
-                                "maven2/org/mozilla/components/browser-awesomebar/63.0.20201013153553/browser-awesomebar-63.0.20201013153553.aar.asc"
-                            ],
-                            "checksums_path": "",
-                        },
-                        "public/build/browser-awesomebar-63.0.20201013153553.pom.asc": {
-                            "destinations": [
-                                "maven2/org/mozilla/components/browser-awesomebar/63.0.20201013153553/browser-awesomebar-63.0.20201013153553.pom.asc"
-                            ],
-                            "checksums_path": "",
-                        },
-                        "public/build/browser-awesomebar-63.0.20201013153553-sources.jar.asc": {
-                            "destinations": [
-                                "maven2/org/mozilla/components/browser-awesomebar/63.0.20201013153553/browser-awesomebar-63.0.20201013153553-sources.jar.asc"
-                            ],
-                            "checksums_path": "",
-                        },
-                    },
-                    "locale": "en-US",
-                    "taskId": "ZYfA8OtXRZuDeF5Xq3ubxg",
-                },
-                {
-                    "paths": {
-                        "public/build/browser-awesomebar-63.0.20201013153553.aar": {
-                            "destinations": ["maven2/org/mozilla/components/browser-awesomebar/63.0.20201013153553/browser-awesomebar-63.0.20201013153553.aar"],
-                            "checksums_path": "",
-                        },
-                        "public/build/browser-awesomebar-63.0.20201013153553.pom": {
-                            "destinations": ["maven2/org/mozilla/components/browser-awesomebar/63.0.20201013153553/browser-awesomebar-63.0.20201013153553.pom"],
-                            "checksums_path": "",
-                        },
-                        "public/build/browser-awesomebar-63.0.20201013153553.aar.md5": {
-                            "destinations": [
-                                "maven2/org/mozilla/components/browser-awesomebar/63.0.20201013153553/browser-awesomebar-63.0.20201013153553.aar.md5"
-                            ],
-                            "checksums_path": "",
-                        },
-                        "public/build/browser-awesomebar-63.0.20201013153553.pom.md5": {
-                            "destinations": [
-                                "maven2/org/mozilla/components/browser-awesomebar/63.0.20201013153553/browser-awesomebar-63.0.20201013153553.pom.md5"
-                            ],
-                            "checksums_path": "",
-                        },
-                        "public/build/browser-awesomebar-63.0.20201013153553.aar.sha1": {
-                            "destinations": [
-                                "maven2/org/mozilla/components/browser-awesomebar/63.0.20201013153553/browser-awesomebar-63.0.20201013153553.aar.sha1"
-                            ],
-                            "checksums_path": "",
-                        },
-                        "public/build/browser-awesomebar-63.0.20201013153553.pom.sha1": {
-                            "destinations": [
-                                "maven2/org/mozilla/components/browser-awesomebar/63.0.20201013153553/browser-awesomebar-63.0.20201013153553.pom.sha1"
-                            ],
-                            "checksums_path": "",
-                        },
-                        "public/build/browser-awesomebar-63.0.20201013153553-sources.jar": {
-                            "destinations": [
-                                "maven2/org/mozilla/components/browser-awesomebar/63.0.20201013153553/browser-awesomebar-63.0.20201013153553-sources.jar"
-                            ],
-                            "checksums_path": "",
-                        },
-                        "public/build/browser-awesomebar-63.0.20201013153553-sources.jar.md5": {
-                            "destinations": [
-                                "maven2/org/mozilla/components/browser-awesomebar/63.0.20201013153553/browser-awesomebar-63.0.20201013153553-sources.jar.md5"
-                            ],
-                            "checksums_path": "",
-                        },
-                        "public/build/browser-awesomebar-63.0.20201013153553-sources.jar.sha1": {
-                            "destinations": [
-                                "maven2/org/mozilla/components/browser-awesomebar/63.0.20201013153553/browser-awesomebar-63.0.20201013153553-sources.jar.sha1"
-                            ],
-                            "checksums_path": "",
-                        },
-                    },
-                    "locale": "en-US",
-                    "taskId": "XGsGR0qdRmaWNE9fW5CmKQ",
-                },
-            ],
-            "releaseProperties": {"appName": "nightly_components"},
-            "upstreamArtifacts": [
-                {
-                    "paths": [
-                        "public/build/browser-awesomebar-63.0.20201013153553-sources.jar.asc",
-                        "public/build/browser-awesomebar-63.0.20201013153553.aar.asc",
-                        "public/build/browser-awesomebar-63.0.20201013153553.pom.asc",
-                    ],
-                    "taskId": "ZYfA8OtXRZuDeF5Xq3ubxg",
-                    "taskType": "signing",
-                },
-                {
-                    "paths": [
-                        "public/build/browser-awesomebar-63.0.20201013153553-sources.jar",
-                        "public/build/browser-awesomebar-63.0.20201013153553-sources.jar.md5",
-                        "public/build/browser-awesomebar-63.0.20201013153553-sources.jar.sha1",
-                        "public/build/browser-awesomebar-63.0.20201013153553.aar",
-                        "public/build/browser-awesomebar-63.0.20201013153553.aar.md5",
-                        "public/build/browser-awesomebar-63.0.20201013153553.aar.sha1",
-                        "public/build/browser-awesomebar-63.0.20201013153553.pom",
-                        "public/build/browser-awesomebar-63.0.20201013153553.pom.md5",
-                        "public/build/browser-awesomebar-63.0.20201013153553.pom.sha1",
-                    ],
-                    "taskId": "XGsGR0qdRmaWNE9fW5CmKQ",
-                    "taskType": "build",
-                },
-            ],
-        },
+    config_props = _CONFIG_MAP[config_name]
+    config["taskcluster_scope_prefix"] = config_props["taskcluster_scope_prefix"]
+    config["bucket_config"][config_props["bucket_config_key"]] = {
+        "buckets": {config_props["bucket_name"]: "dummy"},
+        "credentials": {"id": "dummy", "key": "dummy"},
     }
+    return config
 
 
 def create_dummy_artifacts_for_task(task, root_path):
@@ -214,13 +114,12 @@ def aiohttp_session_mock(monkeypatch):
     return aiohttp_mock_data
 
 
-@pytest.fixture
-def scriptworker_config(tmp_path, config, task):
-    work_dir = tmp_path / "work"
+def prepare_scriptworker_config(path, config, task):
+    work_dir = path / "work"
     work_dir.mkdir()
     config["work_dir"] = str(work_dir)
 
-    config_path = tmp_path / "config.json"
+    config_path = path / "config.json"
     with open(config_path, "w") as config_file:
         json.dump(config, config_file)
 
@@ -232,11 +131,24 @@ def scriptworker_config(tmp_path, config, task):
     return config_path
 
 
-def test_main_android_components_nightly(scriptworker_config, task, boto3_client_mock, aiohttp_session_mock):
+@pytest.mark.parametrize(
+    "config_name, task_name, expected_number_of_artifacts",
+    (
+        ("android-components", "android_components_nightly", 12),
+        ("geckoview", "geckoview_nightly", 16),
+        ("app-services", "application_services_release", 12),
+        ("glean", "glean_release", 20),
+    ),
+)
+def test_main_push_to_maven(config_name, task_name, expected_number_of_artifacts, tmp_path, boto3_client_mock, aiohttp_session_mock):
+    config = get_config(config_name)
+    task = get_test_task(task_name)
+    scriptworker_config = prepare_scriptworker_config(tmp_path, config, task)
+
     main(config_path=scriptworker_config)
 
     # Number of artifacts put matches expected
-    assert len(aiohttp_session_mock["put"]) == 12
+    assert len(aiohttp_session_mock["put"]) == expected_number_of_artifacts
 
     # Check paths
     expected_paths = get_paths_for_task(task)
