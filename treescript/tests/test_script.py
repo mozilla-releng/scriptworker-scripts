@@ -235,7 +235,7 @@ async def test_do_actions_no_changes(mocker):
     mocker.patch.object(script, "get_vcs_module", return_value=vcs_mock)
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
-    await script.do_actions({}, {"payload": {"push": True}}, actions, "/some/folder/here")
+    await script.do_actions({}, {"metadata": {"source": "https://hg.mozilla.org/file/"}, "payload": {"push": True}}, actions, "/some/folder/here")
     assert not any(called.values())
     vcs_mock.checkout_repo.assert_called_once()
     vcs_mock.do_tagging.assert_not_called()
@@ -261,7 +261,7 @@ async def test_do_actions_mismatch_change_count(mocker):
     mocker.patch.object(script, "bump_version", new=mocked_bump)
     mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
     with pytest.raises(TreeScriptError):
-        await script.do_actions({}, {"payload": {"push": False}}, actions, "/some/folder/here")
+        await script.do_actions({}, {"metadata": {"source": "https://hg.mozilla.org/file/"}, "payload": {"push": False}}, actions, "/some/folder/here")
 
 
 def test_main(monkeypatch):

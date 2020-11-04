@@ -8,6 +8,8 @@ hg_share_base_dir: { "$eval": "HG_SHARE_BASE_DIR" }
 upstream_repo: { "$eval": "UPSTREAM_REPO" }
 merge_day_clobber_file: { "$eval": "MERGE_DAY_CLOBBER_FILE" }
 hg_ssh_config:
+  $if: 'COT_PRODUCT == "firefox"'
+  then:
     $merge:
     - default:
         user: { "$eval": "SSH_USER" }
@@ -16,3 +18,14 @@ hg_ssh_config:
       then: {merge_user:{
         user: { "$eval": "SSH_MERGE_USER" },
         keyfile: { "$eval": "SSH_MERGE_KEY_PATH" }}}
+  else: {}
+git_ssh_config:
+  $if: 'COT_PRODUCT == "mobile"'
+  then:
+    default:
+      keyfile: { "$eval": "SSH_KEY_PATH" }
+      emailAddress:
+        $if: 'ENV == "prod"'
+        then: "release+release-automation-bot@mozilla.com"
+        else: "release+release-automation-bot-staging@mozilla.com"
+  else: {}

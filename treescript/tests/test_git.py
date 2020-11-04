@@ -24,6 +24,7 @@ def config(tmpdir):
     config["artifact_dir"] = os.path.join(tmpdir, "artifact")
     makedirs(config["work_dir"])
     makedirs(config["artifact_dir"])
+    config["git_ssh_config"] = {"default": {"emailAddress": "some-author@email.address"}}
     yield config
 
 
@@ -142,8 +143,8 @@ async def test_commit(config, task, mocker):
     repo_mock.git.add.assert_called_once_with(all=True)
     repo_mock.index.commit.assert_called_once_with(
         "some commit message",
-        author=Actor("Mozilla Releng Treescript", "release+treescript@mozilla.org"),
-        committer=Actor("Mozilla Releng Treescript", "release+treescript@mozilla.org"),
+        author=Actor("Mozilla Releng Treescript", "some-author@email.address"),
+        committer=Actor("Mozilla Releng Treescript", "some-author@email.address"),
     )
 
 
