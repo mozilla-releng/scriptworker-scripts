@@ -139,7 +139,9 @@ async def commit(config, repo_path, commit_msg):
     # https://github.com/gitpython-developers/GitPython/issues/375
     repo.git.add(all=True)
 
-    treescript_actor = Actor("Mozilla Releng Treescript", "release+treescript@mozilla.org")
+    ssh_config = config.get("git_ssh_config", {}).get("default", {})
+    email_address = ssh_config["emailAddress"]
+    treescript_actor = Actor("Mozilla Releng Treescript", email_address)
     repo.index.commit(commit_msg, author=treescript_actor, committer=treescript_actor)
 
 
