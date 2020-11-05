@@ -29,7 +29,9 @@ _CONFIG_MAP = {
     },
     "geckoview": {"taskcluster_scope_prefix": "project:releng:beetmover:", "bucket_config_key": "maven-production", "bucket_name": "geckoview"},
     "glean": {"taskcluster_scope_prefix": "project:mozilla:glean:releng:beetmover:", "bucket_config_key": "maven-production", "bucket_name": "telemetry"},
-    "nightly": {"taskcluster_scope_prefix": "project:releng:beetmover:", "bucket_config_key": "nightly", "bucket_name": "firefox"},
+    "firefox-nightly": {"taskcluster_scope_prefix": "project:releng:beetmover:", "bucket_config_key": "nightly", "bucket_name": "firefox"},
+    "firefox-langpacks": {"taskcluster_scope_prefix": "project:releng:beetmover:", "bucket_config_key": "release", "bucket_name": "devedition"},
+    "firefox-generated-screenshots": {"taskcluster_scope_prefix": "project:releng:beetmover:", "bucket_config_key": "release", "bucket_name": "firefox"},
 }
 
 
@@ -171,7 +173,11 @@ def test_main_push_to_maven(config_name, task_name, expected_number_of_artifacts
 
 @pytest.mark.parametrize(
     "config_name, task_name, expected_number_of_artifacts",
-    (("nightly", "firefox_desktop_nightly", 52),),
+    (
+        ("firefox-nightly", "firefox_desktop_nightly", 52),
+        ("firefox-langpacks", "firefox_langpacks_beta", 1),
+        ("firefox-generated-screenshots", "firefox_generated_screenshots_release", 7),
+    ),
 )
 def test_main_push_to_nightly(config_name, task_name, expected_number_of_artifacts, tmp_path, boto3_client_mock, aiohttp_session_mock):
     config = get_config(config_name)
