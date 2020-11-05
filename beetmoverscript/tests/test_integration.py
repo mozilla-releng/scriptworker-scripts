@@ -153,39 +153,12 @@ def prepare_scriptworker_config(path, config, task):
         ("geckoview", "geckoview_nightly", 16),
         ("app-services", "application_services_release", 12),
         ("glean", "glean_release", 20),
-    ),
-)
-def test_main_push_to_maven(config_name, task_name, expected_number_of_artifacts, tmp_path, boto3_client_mock, aiohttp_session_mock):
-    config = get_config(config_name)
-    task = get_test_task(task_name)
-    scriptworker_config = prepare_scriptworker_config(tmp_path, config, task)
-
-    main(config_path=scriptworker_config)
-
-    # Number of artifacts put matches expected
-    assert len(aiohttp_session_mock["put"]) == expected_number_of_artifacts
-
-    # Check paths
-    expected_paths = get_paths_for_task(task)
-    # Check that the destinations match exactly, and that they have been through signing
-    expected_signed_paths = set(f"presigned_url+{dest}" for dest in expected_paths)
-    assert expected_signed_paths == set(put_call["url"] for put_call in aiohttp_session_mock["put"])
-    # Check that the source matches expected for every destination
-    for put_call in aiohttp_session_mock["put"]:
-        assert put_call["data"] == b"some data"
-        _, unsigned_url = put_call["url"].split("+")
-        assert put_call["source"].endswith(expected_paths[unsigned_url])
-
-
-@pytest.mark.parametrize(
-    "config_name, task_name, expected_number_of_artifacts",
-    (
         ("firefox-nightly", "firefox_desktop_nightly", 52),
         ("firefox-langpacks", "firefox_langpacks_beta", 1),
         ("firefox-generated-screenshots", "firefox_generated_screenshots_release", 7),
     ),
 )
-def test_main_push_to_nightly(config_name, task_name, expected_number_of_artifacts, tmp_path, boto3_client_mock, aiohttp_session_mock):
+def test_main_maven_nightly_candidates(config_name, task_name, expected_number_of_artifacts, tmp_path, boto3_client_mock, aiohttp_session_mock):
     config = get_config(config_name)
     task = get_test_task(task_name)
     scriptworker_config = prepare_scriptworker_config(tmp_path, config, task)
@@ -206,3 +179,4 @@ def test_main_push_to_nightly(config_name, task_name, expected_number_of_artifac
             assert put_call["data"] == b"some data"
         _, unsigned_url = put_call["url"].split("+")
         assert put_call["source"].endswith(expected_paths[unsigned_url])
+
