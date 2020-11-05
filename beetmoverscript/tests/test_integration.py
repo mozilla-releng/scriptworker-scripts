@@ -128,6 +128,12 @@ def prepare_scriptworker_config(path, config, task):
     work_dir.mkdir()
     config["work_dir"] = str(work_dir)
 
+    # An artifact dir is needed with a public subdir for push-to-nightly paths
+    artifact_dir = path / "artifact"
+    artifact_dir.mkdir()
+    (artifact_dir / "public").mkdir()
+    config["artifact_dir"] = str(artifact_dir)
+
     config_path = path / "config.json"
     with open(config_path, "w") as config_file:
         json.dump(config, config_file)
