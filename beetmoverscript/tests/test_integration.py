@@ -5,8 +5,9 @@ from unittest.mock import Mock
 import pytest
 
 import beetmoverscript.script
+from beetmoverscript.constants import BUILDHUB_ARTIFACT
 from beetmoverscript.script import main
-from beetmoverscript.utils import load_json
+from beetmoverscript.utils import load_json, write_json
 
 from . import get_fake_valid_config
 
@@ -28,6 +29,7 @@ _CONFIG_MAP = {
     },
     "geckoview": {"taskcluster_scope_prefix": "project:releng:beetmover:", "bucket_config_key": "maven-production", "bucket_name": "geckoview"},
     "glean": {"taskcluster_scope_prefix": "project:mozilla:glean:releng:beetmover:", "bucket_config_key": "maven-production", "bucket_name": "telemetry"},
+    "nightly": {"taskcluster_scope_prefix": "project:releng:beetmover:", "bucket_config_key": "nightly", "bucket_name": "firefox"},
 }
 
 
@@ -38,6 +40,7 @@ def get_config(config_name):
     config["bucket_config"][config_props["bucket_config_key"]] = {
         "buckets": {config_props["bucket_name"]: "dummy"},
         "credentials": {"id": "dummy", "key": "dummy"},
+        "url_prefix": "https://url.prefix",
     }
     return config
 
@@ -53,8 +56,12 @@ def create_dummy_artifacts_for_task(task, root_path):
 
 
 def create_dummy_artifact(file_path):
-    with open(file_path, "wb") as f:
-        f.write(b"some data")
+    if file_path.name == BUILDHUB_ARTIFACT:
+        with open(file_path, "w") as f:
+            write_json(file_path, {"download": {}})
+    else:
+        with open(file_path, "wb") as f:
+            f.write(b"some data")
 
 
 def get_paths_for_task(task):
@@ -158,5 +165,32 @@ def test_main_push_to_maven(config_name, task_name, expected_number_of_artifacts
     # Check that the source matches expected for every destination
     for put_call in aiohttp_session_mock["put"]:
         assert put_call["data"] == b"some data"
+        _, unsigned_url = put_call["url"].split("+")
+        assert put_call["source"].endswith(expected_paths[unsigned_url])
+
+
+@pytest.mark.parametrize(
+    "config_name, task_name, expected_number_of_artifacts",
+    (("nightly", "firefox_desktop_nightly", 52),),
+)
+def test_main_push_to_nightly(config_name, task_name, expected_number_of_artifacts, tmp_path, boto3_client_mock, aiohttp_session_mock):
+    config = get_config(config_name)
+    task = get_test_task(task_name)
+    scriptworker_config = prepare_scriptworker_config(tmp_path, config, task)
+
+    main(config_path=scriptworker_config)
+
+    # Number of artifacts put matches expected
+    assert len(aiohttp_session_mock["put"]) == expected_number_of_artifacts
+
+    # Check paths
+    expected_paths = get_paths_for_task(task)
+    # Check that the destinations match exactly, and that they have been through signing
+    expected_signed_paths = set(f"presigned_url+{dest}" for dest in expected_paths)
+    assert expected_signed_paths == set(put_call["url"] for put_call in aiohttp_session_mock["put"])
+    # Check that the source matches expected for every destination
+    for put_call in aiohttp_session_mock["put"]:
+        if not put_call["url"].endswith(".json"):
+            assert put_call["data"] == b"some data"
         _, unsigned_url = put_call["url"].split("+")
         assert put_call["source"].endswith(expected_paths[unsigned_url])
