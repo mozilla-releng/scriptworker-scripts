@@ -1,0 +1,59 @@
+{
+    "dependencies": ["dependency-task-id"],
+    "scopes": [
+	"project:releng:beetmover:bucket:release",
+	"project:releng:beetmover:action:push-to-candidates"
+    ],
+    "payload": {
+	"version": "83.0b6",
+	"appVersion": "83.0",
+	"maxRunTime": 600,
+	"artifactMap": [
+	    {
+		"paths": {
+		    "public/build/target.langpack.xpi": {
+			"destinations": [
+			    "pub/devedition/candidates/83.0b6-candidates/build1/win64/xpi/en-US.xpi"
+			],
+			"checksums_path": "win64/xpi/en-US.xpi"
+		    }
+		},
+		"locale": "en-US",
+		"taskId": "XBrxp_LQTeirKUU4gAjaag"
+	    }
+	],
+	"upload_date": 1603995829,
+	"build_number": 1,
+	"next_version": "83.0b7",
+	"releaseProperties": {
+	    "branch": "mozilla-beta",
+	    "appName": "Firefox",
+	    "buildid": "20201029182349",
+	    "hashType": "sha512",
+	    "platform": "win64-devedition",
+	    "appVersion": "83.0"
+	},
+	"upstreamArtifacts": [
+	    {
+		"paths": [
+		    "public/build/target.langpack.xpi"
+		],
+		"locale": "en-US",
+		"taskId": "XBrxp_LQTeirKUU4gAjaag",
+		"taskType": "scriptworker"
+	    }
+	]
+    },
+    "metadata": {
+	"name": "release-beetmover-signed-langpacks-win64-devedition/opt",
+	"owner": "ryanvm@gmail.com",
+	"source": "https://hg.mozilla.org/releases/mozilla-beta/file/dcd1bd71910ce9dbb20aee38fa4dd36def652687/taskcluster/ci/release-beetmover-signed-langpacks",
+	"description": "Beetmover submission for platform-independent langpacks en-US in win64-devedition directory ([Treeherder job](https://treeherder.mozilla.org/#/jobs?repo=mozilla-beta&revision=dcd1bd71910ce9dbb20aee38fa4dd36def652687&selectedTaskRun=JErgjPZ8QqiwMxG91lnm8g))"
+    },
+    "tags": {
+	"kind": "release-beetmover-signed-langpacks",
+	"label": "release-beetmover-signed-langpacks-win64-devedition/opt",
+	"retrigger": "false",
+	"createdForUser": "ryanvm@gmail.com"
+    }
+}

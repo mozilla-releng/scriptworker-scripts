@@ -1,0 +1,308 @@
+{
+    "dependencies": ["dependency-task-id"],
+    "scopes": [
+	"project:releng:beetmover:bucket:nightly",
+	"project:releng:beetmover:action:push-to-nightly"
+    ],
+    "payload": {
+	"version": "84.0a1",
+	"appVersion": "84.0a1",
+	"maxRunTime": 600,
+	"artifactMap": [
+	    {
+		"paths": {
+		    "public/build/target.txt": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.txt",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.txt"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.txt"
+		    },
+		    "public/build/target.json": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.json",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.json"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.json"
+		    },
+		    "public/build/host/bin/mar": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/mar-tools/linux/mar",
+			    "pub/firefox/nightly/latest-mozilla-central/mar-tools/linux/mar"
+			],
+			"checksums_path": "mar"
+		    },
+		    "public/build/buildhub.json": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.buildhub.json",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.buildhub.json",
+			    "pub/firefox/nightly/latest-mozilla-central-l10n/firefox-84.0a1.en-US.linux-i686.buildhub.json"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.buildhub.json"
+		    },
+		    "public/build/mozharness.zip": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/mozharness.zip",
+			    "pub/firefox/nightly/latest-mozilla-central/mozharness.zip"
+			],
+			"checksums_path": "mozharness.zip"
+		    },
+		    "public/build/target_info.txt": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686_info.txt",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686_info.txt"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686_info.txt"
+		    },
+		    "public/build/host/bin/mbsdiff": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/mar-tools/linux/mbsdiff",
+			    "pub/firefox/nightly/latest-mozilla-central/mar-tools/linux/mbsdiff"
+			],
+			"checksums_path": "mbsdiff"
+		    },
+		    "public/build/target.jsshell.zip": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/jsshell-linux-i686.zip",
+			    "pub/firefox/nightly/latest-mozilla-central/jsshell-linux-i686.zip"
+			],
+			"checksums_path": "jsshell-linux-i686.zip"
+		    },
+		    "public/build/target.mozinfo.json": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.mozinfo.json",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.mozinfo.json"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.mozinfo.json"
+		    },
+		    "public/build/target.awsy.tests.tar.gz": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.awsy.tests.tar.gz",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.awsy.tests.tar.gz"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.awsy.tests.tar.gz"
+		    },
+		    "public/build/target.talos.tests.tar.gz": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.talos.tests.tar.gz",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.talos.tests.tar.gz"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.talos.tests.tar.gz"
+		    },
+		    "public/build/target.test_packages.json": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.test_packages.json",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.test_packages.json"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.test_packages.json"
+		    },
+		    "public/build/target.common.tests.tar.gz": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.common.tests.tar.gz",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.common.tests.tar.gz"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.common.tests.tar.gz"
+		    },
+		    "public/build/target.reftest.tests.tar.gz": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.reftest.tests.tar.gz",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.reftest.tests.tar.gz"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.reftest.tests.tar.gz"
+		    },
+		    "public/build/target.xpcshell.tests.tar.gz": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.xpcshell.tests.tar.gz",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.xpcshell.tests.tar.gz"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.xpcshell.tests.tar.gz"
+		    },
+		    "public/build/target.mochitest.tests.tar.gz": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.mochitest.tests.tar.gz",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.mochitest.tests.tar.gz"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.mochitest.tests.tar.gz"
+		    },
+		    "public/build/target.cppunittest.tests.tar.gz": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.cppunittest.tests.tar.gz",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.cppunittest.tests.tar.gz"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.cppunittest.tests.tar.gz"
+		    },
+		    "public/build/target.crashreporter-symbols.zip": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.crashreporter-symbols.zip",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.crashreporter-symbols.zip"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.crashreporter-symbols.zip"
+		    },
+		    "public/build/target.web-platform.tests.tar.gz": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.web-platform.tests.tar.gz",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.web-platform.tests.tar.gz"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.web-platform.tests.tar.gz"
+		    }
+		},
+		"locale": "en-US",
+		"taskId": "ARI2zIZcRm6HEfmpB7XNqw"
+	    },
+	    {
+		"paths": {
+		    "public/build/target.complete.mar": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.complete.mar",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.complete.mar",
+			    "pub/firefox/nightly/latest-mozilla-central-l10n/firefox-84.0a1.en-US.linux-i686.complete.mar"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.complete.mar",
+			"update_balrog_manifest": true
+		    }
+		},
+		"locale": "en-US",
+		"taskId": "PcKd-7OOSmSXcCo5RWtkeA"
+	    },
+	    {
+		"paths": {
+		    "public/build/target.tar.bz2": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.tar.bz2",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.tar.bz2",
+			    "pub/firefox/nightly/latest-mozilla-central-l10n/firefox-84.0a1.en-US.linux-i686.tar.bz2"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.tar.bz2"
+		    },
+		    "public/build/target.tar.bz2.asc": {
+			"destinations": [
+			    "pub/firefox/nightly/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-84.0a1.en-US.linux-i686.tar.bz2.asc",
+			    "pub/firefox/nightly/latest-mozilla-central/firefox-84.0a1.en-US.linux-i686.tar.bz2.asc",
+			    "pub/firefox/nightly/latest-mozilla-central-l10n/firefox-84.0a1.en-US.linux-i686.tar.bz2.asc"
+			],
+			"checksums_path": "firefox-84.0a1.en-US.linux-i686.tar.bz2.asc"
+		    }
+		},
+		"locale": "en-US",
+		"taskId": "JFY047GEQUGFq4IuCI_yEA"
+	    },
+	    {
+		"paths": {
+		    "public/build/target.partial-1.mar": {
+			"destinations": [
+			    "pub/firefox/nightly/partials/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-mozilla-central-84.0a1-linux-i686-en-US-20201029155212-20201030034830.partial.mar"
+			],
+			"from_buildid": "20201029155212",
+			"checksums_path": "firefox-mozilla-central-84.0a1-linux-i686-en-US-20201029155212-20201030034830.partial.mar",
+			"update_balrog_manifest": true
+		    },
+		    "public/build/target.partial-2.mar": {
+			"destinations": [
+			    "pub/firefox/nightly/partials/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-mozilla-central-84.0a1-linux-i686-en-US-20201029095639-20201030034830.partial.mar"
+			],
+			"from_buildid": "20201029095639",
+			"checksums_path": "firefox-mozilla-central-84.0a1-linux-i686-en-US-20201029095639-20201030034830.partial.mar",
+			"update_balrog_manifest": true
+		    },
+		    "public/build/target.partial-3.mar": {
+			"destinations": [
+			    "pub/firefox/nightly/partials/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-mozilla-central-84.0a1-linux-i686-en-US-20201028214727-20201030034830.partial.mar"
+			],
+			"from_buildid": "20201028214727",
+			"checksums_path": "firefox-mozilla-central-84.0a1-linux-i686-en-US-20201028214727-20201030034830.partial.mar",
+			"update_balrog_manifest": true
+		    },
+		    "public/build/target.partial-4.mar": {
+			"destinations": [
+			    "pub/firefox/nightly/partials/2020/10/2020-10-30-03-48-30-mozilla-central/firefox-mozilla-central-84.0a1-linux-i686-en-US-20201028092421-20201030034830.partial.mar"
+			],
+			"from_buildid": "20201028092421",
+			"checksums_path": "firefox-mozilla-central-84.0a1-linux-i686-en-US-20201028092421-20201030034830.partial.mar",
+			"update_balrog_manifest": true
+		    }
+		},
+		"locale": "en-US",
+		"taskId": "K3mJW6lqTzKiKpJc0etAAg"
+	    }
+	],
+	"upload_date": 1604029710,
+	"build_number": 1,
+	"next_version": null,
+	"releaseProperties": {
+	    "branch": "mozilla-central",
+	    "appName": "Firefox",
+	    "buildid": "20201030034830",
+	    "hashType": "sha512",
+	    "platform": "linux",
+	    "appVersion": "84.0a1"
+	},
+	"upstreamArtifacts": [
+	    {
+		"paths": [
+		    "public/build/buildhub.json",
+		    "public/build/host/bin/mar",
+		    "public/build/host/bin/mbsdiff",
+		    "public/build/mozharness.zip",
+		    "public/build/target.awsy.tests.tar.gz",
+		    "public/build/target.common.tests.tar.gz",
+		    "public/build/target.cppunittest.tests.tar.gz",
+		    "public/build/target.crashreporter-symbols.zip",
+		    "public/build/target.json",
+		    "public/build/target.jsshell.zip",
+		    "public/build/target.mochitest.tests.tar.gz",
+		    "public/build/target.mozinfo.json",
+		    "public/build/target.reftest.tests.tar.gz",
+		    "public/build/target.talos.tests.tar.gz",
+		    "public/build/target.test_packages.json",
+		    "public/build/target.txt",
+		    "public/build/target.web-platform.tests.tar.gz",
+		    "public/build/target.xpcshell.tests.tar.gz",
+		    "public/build/target_info.txt"
+		],
+		"locale": "en-US",
+		"taskId": "ARI2zIZcRm6HEfmpB7XNqw",
+		"taskType": "build"
+	    },
+	    {
+		"paths": [
+		    "public/build/target.complete.mar"
+		],
+		"locale": "en-US",
+		"taskId": "PcKd-7OOSmSXcCo5RWtkeA",
+		"taskType": "signing"
+	    },
+	    {
+		"paths": [
+		    "public/build/target.tar.bz2",
+		    "public/build/target.tar.bz2.asc"
+		],
+		"locale": "en-US",
+		"taskId": "JFY047GEQUGFq4IuCI_yEA",
+		"taskType": "signing"
+	    },
+	    {
+		"paths": [
+		    "public/build/target.partial-2.mar",
+		    "public/build/target.partial-3.mar",
+		    "public/build/target.partial-1.mar",
+		    "public/build/target.partial-4.mar"
+		],
+		"locale": "en-US",
+		"taskId": "K3mJW6lqTzKiKpJc0etAAg",
+		"taskType": "signing"
+	    }
+	]
+    },
+    "metadata": {
+	"name": "beetmover-repackage-linux-shippable/opt",
+	"owner": "cron@noreply.mozilla.org",
+	"source": "https://hg.mozilla.org/mozilla-central/file/9a7e5873fac52c3fea4e8d9843e0aaf8e9158eb7/taskcluster/ci/beetmover-repackage",
+	"description": "Beetmover submission for locale 'en-US' for build 'linux-shippable/opt' ([Treeherder job](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=9a7e5873fac52c3fea4e8d9843e0aaf8e9158eb7&selectedTaskRun=JD3Pxn_HRj6YxbqEfpKchw))"
+    },
+    "tags": {
+	"kind": "beetmover-repackage",
+	"label": "beetmover-repackage-linux-shippable/opt",
+	"retrigger": "false",
+	"createdForUser": "cron@noreply.mozilla.org"
+    }
+}

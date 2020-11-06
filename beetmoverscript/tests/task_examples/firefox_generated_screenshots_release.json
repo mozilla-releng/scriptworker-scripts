@@ -1,0 +1,114 @@
+{
+    "dependencies": ["dependency-task-id"],
+    "scopes": [
+	"project:releng:beetmover:bucket:release",
+	"project:releng:beetmover:action:push-to-candidates"
+    ],
+    "payload": {
+	"version": "82.0.2",
+	"appVersion": "82.0.2",
+	"maxRunTime": 600,
+	"artifactMap": [
+	    {
+		"paths": {
+		    "public/build/SHA256SUMMARY": {
+			"destinations": [
+			    "pub/firefox/candidates/82.0.2-candidates/build1/SHA256SUMMARY"
+			],
+			"checksums_path": "SHA256SUMMARY"
+		    },
+		    "public/build/SHA512SUMMARY": {
+			"destinations": [
+			    "pub/firefox/candidates/82.0.2-candidates/build1/SHA512SUMMARY"
+			],
+			"checksums_path": "SHA512SUMMARY"
+		    }
+		},
+		"locale": "en-US",
+		"taskId": "c7vpVThDQhGu_GASiehxNg"
+	    },
+	    {
+		"paths": {
+		    "public/build/KEY": {
+			"destinations": [
+			    "pub/firefox/candidates/82.0.2-candidates/build1/KEY"
+			],
+			"checksums_path": "KEY"
+		    },
+		    "public/build/SHA256SUMS": {
+			"destinations": [
+			    "pub/firefox/candidates/82.0.2-candidates/build1/SHA256SUMS"
+			],
+			"checksums_path": "SHA256SUMS"
+		    },
+		    "public/build/SHA512SUMS": {
+			"destinations": [
+			    "pub/firefox/candidates/82.0.2-candidates/build1/SHA512SUMS"
+			],
+			"checksums_path": "SHA512SUMS"
+		    },
+		    "public/build/SHA256SUMS.asc": {
+			"destinations": [
+			    "pub/firefox/candidates/82.0.2-candidates/build1/SHA256SUMS.asc"
+			],
+			"checksums_path": "SHA256SUMS.asc"
+		    },
+		    "public/build/SHA512SUMS.asc": {
+			"destinations": [
+			    "pub/firefox/candidates/82.0.2-candidates/build1/SHA512SUMS.asc"
+			],
+			"checksums_path": "SHA512SUMS.asc"
+		    }
+		},
+		"locale": "en-US",
+		"taskId": "eyWBXkEDTnOsnRFwRNdl3g"
+	    }
+	],
+	"upload_date": 1603824823,
+	"build_number": 1,
+	"next_version": "82.0.3",
+	"releaseProperties": {
+	    "branch": "mozilla-release",
+	    "appName": "Firefox",
+	    "buildid": "20201027185343",
+	    "hashType": "sha512",
+	    "platform": "firefox-release",
+	    "appVersion": "82.0.2"
+	},
+	"upstreamArtifacts": [
+	    {
+		"paths": [
+		    "public/build/KEY",
+		    "public/build/SHA256SUMS",
+		    "public/build/SHA256SUMS.asc",
+		    "public/build/SHA512SUMS",
+		    "public/build/SHA512SUMS.asc"
+		],
+		"locale": "en-US",
+		"taskId": "eyWBXkEDTnOsnRFwRNdl3g",
+		"taskType": "signing"
+	    },
+	    {
+		"paths": [
+		    "public/build/SHA256SUMMARY",
+		    "public/build/SHA512SUMMARY"
+		],
+		"locale": "en-US",
+		"taskId": "c7vpVThDQhGu_GASiehxNg",
+		"taskType": "build"
+	    }
+	]
+    },
+    "metadata": {
+	"name": "release-generate-checksums-firefox-beetmover",
+	"owner": "jcristau@mozilla.com",
+	"source": "https://hg.mozilla.org/releases/mozilla-release/file/690c4477e78a86bf10b1d3e4cf5d9b9cf65ddb4d/taskcluster/ci/release-generate-checksums-beetmover",
+	"description": "Transfer *SUMS and *SUMMARY checksums file to S3. ([Treeherder job](https://treeherder.mozilla.org/#/jobs?repo=mozilla-release&revision=690c4477e78a86bf10b1d3e4cf5d9b9cf65ddb4d&selectedTaskRun=bAGO1prJQESNjKjmFbtaIQ))"
+    },
+    "tags": {
+	"kind": "release-generate-checksums-beetmover",
+	"label": "release-generate-checksums-firefox-beetmover",
+	"retrigger": "false",
+	"createdForUser": "jcristau@mozilla.com"
+    }
+}
