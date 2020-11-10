@@ -48,7 +48,7 @@ def get_config(scope_prefix):
 
 def create_dummy_artifacts_for_task(task, root_path):
     """Create artifacts to upload as specified in the given task."""
-    for artifact_dict in task["payload"]["upstreamArtifacts"]:
+    for artifact_dict in task["payload"].get("upstreamArtifacts", []):
         task_id = artifact_dict["taskId"]
         for path in artifact_dict["paths"]:
             full_path = root_path / task_id / path
@@ -63,6 +63,10 @@ def create_dummy_artifact(file_path):
     else:
         with open(file_path, "wb") as f:
             f.write(b"some data")
+
+
+def get_artifactmap_paths(task):
+    return [path for artifact_dict in task["payload"]["upstreamArtifacts"] for path in artifact_dict["paths"]]
 
 
 def get_paths_for_task(task):
@@ -93,6 +97,32 @@ def boto3_client_mock(monkeypatch):
     monkeypatch.setattr(beetmoverscript.script.boto3, "client", fake_boto3_client_only_s3)
 
     return client_mock
+
+
+@pytest.fixture
+def boto3_resource_mock(monkeypatch):
+    resource_mock = Mock(spec=beetmoverscript.script.boto3.resource("s3"))
+    bucket_mock = Mock()
+
+    def fake_bucket_objects_filter(**kwargs):
+        prefix = kwargs["Prefix"]
+        assert "candidates" in prefix or "releases" in prefix, f"prefix {prefix} should include 'candidates' or 'releases'"
+        if "candidates" in prefix:
+            return [Mock(key=f"{prefix}partner-repacks/mailru/okru/v1/", e_tag="dummy_etag")]
+        elif "releases" in prefix:
+            return []
+
+    bucket_mock.objects.filter = fake_bucket_objects_filter
+
+    resource_mock.Bucket.return_value = bucket_mock
+
+    def fake_boto3_resource_only_s3(*args, **kwargs):
+        assert args[0] == "s3", "A resource other than 's3' was requested"
+        return resource_mock
+
+    monkeypatch.setattr(beetmoverscript.script.boto3, "resource", fake_boto3_resource_only_s3)
+
+    return resource_mock
 
 
 @pytest.fixture
@@ -178,3 +208,45 @@ def test_main_maven_nightly_candidates(task_name, scope_prefix, expected_number_
             assert put_call["data"] == b"some data"
         _, unsigned_url = put_call["url"].split("+")
         assert put_call["source"].endswith(expected_paths[unsigned_url])
+
+
+@pytest.mark.parametrize(
+    "task_name, scope_prefix, expected_number_of_moved_artifacts",
+    (("firefox_eme_free_release", "project:releng:beetmover:", 2),),
+)
+def test_main_push_to_partner(task_name, scope_prefix, expected_number_of_moved_artifacts, tmp_path, boto3_client_mock, aiohttp_session_mock):
+    config = get_config(scope_prefix)
+    task = get_test_task(task_name)
+    scriptworker_config = prepare_scriptworker_config(tmp_path, config, task)
+
+    main(config_path=scriptworker_config)
+
+    # Number of artifacts put matches expected
+    assert len(aiohttp_session_mock["put"]) == expected_number_of_moved_artifacts
+
+    # Check paths. In this case the destinations are not included in the payload and their calculation is more
+    # involved than in other cases, so to keep assertions simple we relax the conditions
+    artifactmap_paths = get_artifactmap_paths(task)
+    assert len(artifactmap_paths) == len(aiohttp_session_mock["put"])
+    # Check that the source matches expected for every destination
+    for put_call in aiohttp_session_mock["put"]:
+        assert put_call["url"].startswith("presigned_url+")
+        if not put_call["url"].endswith(".json"):
+            assert put_call["data"] == b"some data"
+
+
+def test_main_push_to_releases(tmp_path, boto3_client_mock, boto3_resource_mock):
+    task_name = "firefox_release"
+    scope_prefix = "project:releng:beetmover:"
+    config = get_config(scope_prefix)
+    task = get_test_task(task_name)
+    scriptworker_config = prepare_scriptworker_config(tmp_path, config, task)
+
+    main(config_path=scriptworker_config)
+
+    assert boto3_client_mock.copy_object.call_count == 1
+    boto3_client_mock.copy_object.assert_called_with(
+        Bucket="dummy",
+        CopySource={"Bucket": "dummy", "Key": "pub/firefox/candidates/82.0.2-candidates/build1/partner-repacks/mailru/okru/v1/"},
+        Key="pub/firefox/releases/partners/mailru/okru/82.0.2/",
+    )
