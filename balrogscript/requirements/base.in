@@ -1,4 +1,5 @@
 balrogclient>=1.2
+deepmerge
 idna
 # TODO: Remove the following line once flake8, jsonschema, pep517, pluggy, pytest,
 # tox, and virtualenv all support importlib-metadata >= 2

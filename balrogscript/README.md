@@ -6,7 +6,7 @@
 A [scriptworker](https://github.com/mozilla-releng/scriptworker) script for submitting metadata to [balrog](https://wiki.mozilla.org/Balrog).
 
 ## Configuration
-Create a `config.json`, using `config_example.json` as a guide.
+Create a `config.json`, using `config_example.json` as a guide
 
 At runtime, the following environment variables can be set to override their corresponding `config.json` values:
 
