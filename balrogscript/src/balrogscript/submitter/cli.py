@@ -3,6 +3,7 @@ import logging
 
 import arrow
 from balrogclient import Release, ReleaseState, Rule, ScheduledRuleChange, SingleLocale, balrog_request, get_balrog_session
+from deepmerge import always_merger
 from redo import retry
 from requests.exceptions import HTTPError
 
@@ -154,12 +155,21 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
 
         if self.backend_version == 2:
             log.info("Using backend version 2...")
-            blob["schema_version"] = self.schemaVersion
-            blob["hashFunction"] = hashFunction
-            blob["name"] = name
-            data = {"product": productName, "blob": blob}
             url = self.api_root + "/v2/releases/" + name
+            data = {"product": productName, "blob": {}}
             session = get_balrog_session(auth0_secrets=self.auth0_secrets)
+            try:
+                current_data = balrog_request(session, "get", url)
+                if current_data:
+                    data["blob"] = current_data["blob"]
+                    data["old_data_versions"] = current_data["data_versions"]
+            except HTTPError as e:
+                if e.response.status_code != 404:
+                    raise
+            data["blob"] = always_merger.merge(data["blob"], blob)
+            data["blob"]["schema_version"] = self.schemaVersion
+            data["blob"]["hashFunction"] = hashFunction
+            data["blob"]["name"] = name
             balrog_request(session, "put", url, json=data)
         else:
             log.info("Using legacy backend version...")
