@@ -29,7 +29,7 @@ async def checkout_repo(config, task, repo_path):
     """
     source_repo = get_source_repo(task)
     if os.path.exists(repo_path):
-        log.debug("Reusing existing repo_path: {}".format(repo_path))
+        log.info("Reusing existing repo_path: {}".format(repo_path))
         repo = Repo(repo_path)
     else:
         log.info('Cloning source_repo "{}" to repo_path: {}'.format(source_repo, repo_path))
@@ -42,6 +42,7 @@ async def checkout_repo(config, task, repo_path):
     if branch:
         # GitPython cannot simply `git checkout` to right upstream branch. We have to manually
         # create a new branch and manually set the upstream branch
+        log.info('Checking out branch "{}"'.format(branch))
         remote_branches = repo.remotes.origin.fetch()
         remote_branch = get_single_item_from_sequence(
             remote_branches,
@@ -53,6 +54,8 @@ async def checkout_repo(config, task, repo_path):
 
         repo.create_head(branch, remote_branch)
         repo.branches[branch].checkout()
+    else:
+        log.warn("No branch provided in the task payload. Staying on the default one")
 
 
 async def get_existing_tags(config, repo_path):
@@ -87,12 +90,13 @@ async def log_outgoing(config, task, repo_path):
         int: the number of outgoing changesets
 
     """
-    log.info("outgoing changesets..")
+    log.info("Outgoing changesets...")
 
     repo = Repo(repo_path)
     branch = get_branch(task, "master")
 
     upstream_to_local_branch_interval = "{}..{}".format(_get_upstream_branch_name(branch), branch)
+    log.debug("Checking the number of changesets between these 2 references: {}".format(upstream_to_local_branch_interval))
     num_changesets = len(list(repo.iter_commits(upstream_to_local_branch_interval)))
     diff = repo.git.diff(branch)
 
@@ -102,6 +106,7 @@ async def log_outgoing(config, task, repo_path):
         with open(path, "w") as fh:
             fh.write(diff)
 
+    log.info("Found {} new changesets".format(num_changesets))
     return num_changesets
 
 
@@ -118,8 +123,11 @@ async def strip_outgoing(config, task, repo_path):
     """
     repo = Repo(repo_path)
     branch = get_branch(task, "master")
+
+    log.info("Resetting repo state to match upstream's...")
     repo.head.reset(commit=_get_upstream_branch_name(branch), working_tree=True)
     repo.git.clean("-fdx")
+    log.info("Repo state reset.")
 
 
 def _get_upstream_branch_name(branch):
@@ -142,7 +150,9 @@ async def commit(config, repo_path, commit_msg):
     ssh_config = config.get("git_ssh_config", {}).get("default", {})
     email_address = ssh_config["emailAddress"]
     treescript_actor = Actor("Mozilla Releng Treescript", email_address)
+    log.info("Adding every local change and committing them...")
     repo.index.commit(commit_msg, author=treescript_actor, committer=treescript_actor)
+    log.info("Changes committed.")
 
 
 async def push(config, task, repo_path, target_repo):
@@ -159,12 +169,12 @@ async def push(config, task, repo_path, target_repo):
     """
     ssh_config = config.get("git_ssh_config", {}).get(get_ssh_user(task), {})
     ssh_key = ssh_config.get("keyfile")
-    git_ssh_cmd = "ssh -vvv -i {}".format(ssh_key) if ssh_key else "ssh -vvv"
+    git_ssh_cmd = "ssh -i {}".format(ssh_key) if ssh_key else "ssh"
 
     repo = Repo(repo_path)
     target_repo_ssh = extract_github_repo_ssh_url(target_repo)
     repo.remote().set_url(target_repo_ssh, push=True)
-    log.debug("[push] using ssh command: {}".format(git_ssh_cmd))
+    log.debug("Push using ssh command: {}".format(git_ssh_cmd))
     with repo.git.custom_environment(GIT_SSH_COMMAND=git_ssh_cmd):
         log.info("Pushing local changes to {}".format(target_repo_ssh))
         push_results = repo.remote().push(verbose=True)
@@ -174,6 +184,8 @@ async def push(config, task, repo_path, target_repo):
     except PushError:
         await strip_outgoing(config, task, repo_path)
         raise
+
+    log.info("Push done succesfully!")
 
 
 def _check_if_push_successful(push_results):
