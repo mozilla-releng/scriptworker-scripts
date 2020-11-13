@@ -1,0 +1,61 @@
+{
+    "dependencies": ["dependency-task-id"],
+    "scopes": [
+	"project:releng:beetmover:bucket:release",
+	"project:releng:beetmover:action:push-to-partner"
+    ],
+    "payload": {
+	"version": "82.0.2",
+	"appVersion": "82.0.2",
+	"maxRunTime": 600,
+	"upload_date": 1603824823,
+	"build_number": 1,
+	"next_version": "82.0.3",
+	"releaseProperties": {
+	    "branch": "mozilla-release",
+	    "appName": "Firefox",
+	    "buildid": "20201027185343",
+	    "hashType": "sha512",
+	    "platform": "macosx64",
+	    "appVersion": "82.0.2"
+	},
+	"upstreamArtifacts": [
+	    {
+		"paths": [
+		    "releng/partner/mozilla-EME-free/mozilla-EME-free/en-US/target.dmg"
+		],
+		"locale": "mac-EME-free/en-US",
+		"taskId": "OwAN-MBRT62BJInETnsTrw",
+		"taskType": "repackage"
+	    },
+	    {
+		"paths": [
+		    "releng/partner/mozilla-EME-free/mozilla-EME-free/en-US/target.dmg.asc"
+		],
+		"locale": "mac-EME-free/en-US",
+		"taskId": "Ai0NAdgqQMWsHMuAzU5eeg",
+		"taskType": "repackage"
+	    }
+	],
+	"is_partner_repack_public": true
+    },
+    "metadata": {
+	"name": "release-eme-free-repack-beetmover-macosx64-shippable-mozilla-EME-free-mozilla-EME-free-en-US-public",
+	"owner": "jcristau@mozilla.com",
+	"source": "https://hg.mozilla.org/releases/mozilla-release/file/690c4477e78a86bf10b1d3e4cf5d9b9cf65ddb4d/taskcluster/ci/release-eme-free-repack-beetmover",
+	"description": "Beetmover submission for repack_id 'mozilla-EME-free/mozilla-EME-free/en-US' for build 'macosx64-shippable/opt'"
+    },
+    "tags": {
+	"kind": "release-eme-free-repack-beetmover",
+	"label": "release-eme-free-repack-beetmover-macosx64-shippable-mozilla-EME-free-mozilla-EME-free-en-US-public",
+	"retrigger": "false",
+	"createdForUser": "jcristau@mozilla.com"
+    },
+    "extra": {
+	"index": {
+	    "rank": 0
+	},
+	"parent": "Osvr8Wv2SSWHngiOaD1pOA",
+	"repack_id": "mozilla-EME-free/mozilla-EME-free/en-US"
+    }
+}

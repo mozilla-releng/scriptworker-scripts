@@ -1,0 +1,64 @@
+{
+    "dependencies": ["dependency-task-id"],
+    "scopes": [
+	"project:releng:beetmover:bucket:release",
+	"project:releng:beetmover:action:push-to-releases"
+    ],
+    "payload": {
+	"product": "firefox",
+	"version": "82.0.2",
+	"partners": [
+	    "mailru/okru",
+	    "mailru/mailru",
+	    "yandex/yandex-ru",
+	    "yandex/yandex-ru-mz",
+	    "yandex/yandex-drp",
+	    "yandex/yandex-tr",
+	    "yandex/yandex-portals",
+	    "yandex/yandex-ua",
+	    "chipde/cliqz",
+	    "softonic/softonic-009",
+	    "softonic/softonic-005",
+	    "softonic/softonic-010",
+	    "softonic/softonic-004",
+	    "softonic/softonic-008",
+	    "softonic/softonic-011",
+	    "softonic/softonic-006",
+	    "softonic/softonic-012"
+	],
+	"maxRunTime": 600,
+	"build_number": 1
+    },
+    "metadata": {
+	"name": "firefox-push-to-release",
+	"owner": "jcristau@mozilla.com",
+	"source": "https://hg.mozilla.org/releases/mozilla-release/file/690c4477e78a86bf10b1d3e4cf5d9b9cf65ddb4d/taskcluster/ci/release-beetmover-push-to-release",
+	"description": "Beetmover push to release for 'firefox' ([Treeherder job](https://treeherder.mozilla.org/#/jobs?repo=mozilla-release&revision=690c4477e78a86bf10b1d3e4cf5d9b9cf65ddb4d&selectedTaskRun=G40GsqdZQR6k7ZQWnqiheQ))"
+    },
+    "tags": {
+	"kind": "release-beetmover-push-to-release",
+	"label": "firefox-push-to-release",
+	"retrigger": "false",
+	"createdForUser": "jcristau@mozilla.com"
+    },
+    "extra": {
+	"index": {
+	    "rank": 1603824823
+	},
+	"parent": "HWtBCpP3QiCat86RiyiYBw",
+	"treeherder": {
+	    "tier": 1,
+	    "symbol": "BM-C",
+	    "jobKind": "build",
+	    "machine": {
+		"platform": "firefox-release"
+	    },
+	    "groupName": "Release promotion",
+	    "collection": {
+		"opt": true
+	    },
+	    "groupSymbol": "Rel"
+	},
+	"treeherder-platform": "firefox-release/opt"
+    }
+}
