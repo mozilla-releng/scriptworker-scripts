@@ -155,6 +155,24 @@ def core_version_file(merge_config):
     return merge_config.get("fetch_version_from", "browser/config/version.txt")
 
 
+async def pull_branches(config, repo_path, upstream_repo, from_branch, to_branch):
+    """Pull the branches needed for this merge operation.
+
+    If upstream_repo is set (eg. to mozilla-unified) then it provides everything
+    that is needed.
+    When upstream_repo is not set (eg. for comm repositories) then separate
+    pulls are needed to ensure that the revisions that need to be operated on
+    are available locally. The branch names from firefoxtree are used to do this.
+    """
+    if upstream_repo:
+        await run_hg_command(config, "pull", upstream_repo, repo_path=repo_path)
+    else:
+        if to_branch:
+            await run_hg_command(config, "pull", to_branch, repo_path=repo_path)
+        if from_branch:
+            await run_hg_command(config, "pull", from_branch, repo_path=repo_path)
+
+
 # do_merge {{{1
 async def do_merge(config, task, repo_path):
     """Perform a merge day operation.
@@ -181,7 +199,7 @@ async def do_merge(config, task, repo_path):
     from_branch = merge_config.get("from_branch")
     to_branch = merge_config.get("to_branch")
 
-    await run_hg_command(config, "pull", upstream_repo, repo_path=repo_path)
+    await pull_branches(config, repo_path, upstream_repo, from_branch, to_branch)
 
     # Used if end_tag is set.
     await run_hg_command(config, "up", "-C", to_branch, repo_path=repo_path)

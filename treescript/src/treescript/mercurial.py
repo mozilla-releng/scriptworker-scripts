@@ -161,9 +161,10 @@ async def checkout_repo(config, task, repo_path):
     source_repo = get_source_repo(task)
     # branch default is used to pull tip of the repo at checkout time
     branch = get_branch(task, "default")
-    await run_hg_command(
-        config, "robustcheckout", source_repo, repo_path, "--sharebase", share_base, "--upstream", upstream_repo, "--branch", branch, exception=CheckoutError
-    )
+    cmd_args = [config, "robustcheckout", source_repo, repo_path, "--sharebase", share_base, "--branch", branch]
+    if upstream_repo:
+        cmd_args.extend(["--upstream", upstream_repo])
+    await run_hg_command(*cmd_args, exception=CheckoutError)
 
 
 # do_tagging {{{1
