@@ -9,8 +9,6 @@ from copy import deepcopy
 import arrow
 import jinja2
 import yaml
-from mozilla_version.gecko import FirefoxVersion
-from mozilla_version.maven import MavenVersion
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.constants import (
@@ -123,9 +121,6 @@ def generate_beetmover_template_args(context):
     task = context.task
     release_props = context.release_props
 
-    if is_maven_action(context.action):
-        return _generate_beetmover_template_args_maven(task, release_props)
-
     upload_date = task["payload"]["upload_date"]
     args = []
     try:
@@ -174,30 +169,6 @@ def generate_beetmover_template_args(context):
         tmpl_args["template_key"] = "%s_%s_repacks" % (product_name, tmpl_bucket)
     else:
         tmpl_args["template_key"] = "%s_%s" % (product_name, tmpl_bucket)
-
-    return tmpl_args
-
-
-def _generate_beetmover_template_args_maven(task, release_props):
-    tmpl_args = {"artifact_id": task["payload"]["artifact_id"], "template_key": "maven_{}".format(release_props["appName"])}
-
-    # Geckoview follows the FirefoxVersion pattern
-    if release_props.get("appName") == "geckoview":
-        payload_version = FirefoxVersion.parse(task["payload"]["version"])
-        # Change version number to major.minor.buildId because that's what the build task produces
-        version = [payload_version.major_number, payload_version.minor_number, release_props["buildid"]]
-    else:
-        payload_version = MavenVersion.parse(task["payload"]["version"])
-        version = [payload_version.major_number, payload_version.minor_number, payload_version.patch_number]
-
-    if any(number is None for number in version):
-        raise TaskVerificationError("At least one digit is undefined. Got: {}".format(version))
-    tmpl_args["version"] = ".".join(str(n) for n in version)
-
-    # XXX: some appservices maven.zip files have a different structure,
-    # encompassing only `pom` and `jar` files. We toggle that behavior in the
-    # mapping by using this flag
-    tmpl_args["is_jar"] = task["payload"].get("is_jar")
 
     return tmpl_args
 
