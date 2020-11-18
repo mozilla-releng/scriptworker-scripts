@@ -18,6 +18,7 @@ ALLOWED_BUMP_FILES = (
     "browser/config/version_display.txt",
     "config/milestone.txt",
     "mail/config/version.txt",
+    "mail/config/version_display.txt",
     "version.txt",  # Fenix
 )
 
