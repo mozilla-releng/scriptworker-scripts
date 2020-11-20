@@ -179,7 +179,7 @@ async def test_push(config, task, mocker, tmpdir, ssh_key_file, push_return, exp
     with expectation:
         await git.push(config, task, tmpdir, "https://github.com/some-user/some-repo")
         remote_mock.set_url.assert_called_once_with("git@github.com:some-user/some-repo.git", push=True)
-        remote_mock.push.assert_called_once_with(verbose=True)
+        remote_mock.push.assert_called_once_with(verbose=True, set_upstream="origin")
         repo_mock.git.custom_environment.assert_called_once_with(GIT_SSH_COMMAND=expected_ssh_command)
 
 
