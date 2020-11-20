@@ -68,7 +68,7 @@ async def test_checkout_repo(config, task, mocker, repo_subdir, branch, must_clo
         RepoClassMock.assert_called_once_with(repo_path)
 
     if must_checkout_branch:
-        repo_mock.create_head.assert_called_once_with(branch, _FetchInfo("origin/some-branch"))
+        repo_mock.create_head.assert_called_once_with(branch, "origin/some-branch")
         production_branch.checkout.assert_called_once_with()
     else:
         repo_mock.create_head.assert_not_called()
