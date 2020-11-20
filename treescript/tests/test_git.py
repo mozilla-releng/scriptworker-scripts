@@ -68,7 +68,7 @@ async def test_checkout_repo(config, task, mocker, repo_subdir, branch, must_clo
         RepoClassMock.assert_called_once_with(repo_path)
 
     if must_checkout_branch:
-        repo_mock.create_head.assert_called_once_with(branch, _FetchInfo("origin/some-branch"))
+        repo_mock.create_head.assert_called_once_with(branch, "origin/some-branch")
         production_branch.checkout.assert_called_once_with()
     else:
         repo_mock.create_head.assert_not_called()
@@ -112,7 +112,7 @@ async def test_log_outgoing(config, task, mocker, output):
     number_of_changesets = await git.log_outgoing(config, task, config["work_dir"])
 
     assert number_of_changesets == 2
-    repo_mock.iter_commits.assert_called_once_with("master@{u}..master")
+    repo_mock.iter_commits.assert_called_once_with("origin/master..master")
     repo_mock.git.diff.assert_called_once_with("master")
     if output:
         with open(os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff"), "r") as fh:
@@ -127,7 +127,7 @@ async def test_strip_outgoing(config, task, mocker):
     mocker.patch.object(git, "Repo", RepoClassMock)
 
     await git.strip_outgoing(config, task, config["work_dir"])
-    repo_mock.head.reset.assert_called_once_with(commit="master@{u}", working_tree=True)
+    repo_mock.head.reset.assert_called_once_with(commit="origin/master", working_tree=True)
     repo_mock.git.clean.assert_called_once_with("-fdx")
 
 
@@ -179,7 +179,7 @@ async def test_push(config, task, mocker, tmpdir, ssh_key_file, push_return, exp
     with expectation:
         await git.push(config, task, tmpdir, "https://github.com/some-user/some-repo")
         remote_mock.set_url.assert_called_once_with("git@github.com:some-user/some-repo.git", push=True)
-        remote_mock.push.assert_called_once_with(verbose=True)
+        remote_mock.push.assert_called_once_with(verbose=True, set_upstream="origin")
         repo_mock.git.custom_environment.assert_called_once_with(GIT_SSH_COMMAND=expected_ssh_command)
 
 

@@ -44,9 +44,10 @@ async def checkout_repo(config, task, repo_path):
         # create a new branch and manually set the upstream branch
         log.info('Checking out branch "{}"'.format(branch))
         remote_branches = repo.remotes.origin.fetch()
+        remote_branches_names = [fetch_info.name for fetch_info in remote_branches]
         remote_branch = get_single_item_from_sequence(
-            remote_branches,
-            condition=lambda fetch_info: fetch_info.name == "origin/{}".format(branch),
+            remote_branches_names,
+            condition=lambda remote_branch_name: remote_branch_name == _get_upstream_branch_name(branch),
             ErrorClass=TaskVerificationError,
             no_item_error_message="Branch does not exist on remote repo",
             too_many_item_error_message="Too many branches with that name",
@@ -131,7 +132,7 @@ async def strip_outgoing(config, task, repo_path):
 
 
 def _get_upstream_branch_name(branch):
-    return "{}@{{u}}".format(branch)  # E.g.: main@{u}
+    return "origin/{}".format(branch)
 
 
 async def commit(config, repo_path, commit_msg):
@@ -177,7 +178,7 @@ async def push(config, task, repo_path, target_repo):
     log.debug("Push using ssh command: {}".format(git_ssh_cmd))
     with repo.git.custom_environment(GIT_SSH_COMMAND=git_ssh_cmd):
         log.info("Pushing local changes to {}".format(target_repo_ssh))
-        push_results = repo.remote().push(verbose=True)
+        push_results = repo.remote().push(verbose=True, set_upstream="origin")
 
     try:
         _check_if_push_successful(push_results)
