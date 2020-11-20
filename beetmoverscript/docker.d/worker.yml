@@ -1,6 +1,6 @@
 work_dir: { "$eval": "WORK_DIR" }
 artifact_dir: { "$eval": "ARTIFACTS_DIR" }
-aiohttp_max_connections: 10
+aiohttp_max_connections: 5
 checksums_digests:
   - 'sha512'
   - 'sha256'
