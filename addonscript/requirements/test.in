@@ -1,7 +1,7 @@
 # pyup: ignore file
 # Specifically for testing
 -r base.in
-aioresponses==0.6.1
+aioresponses
 black
 check-manifest
 coverage>=4.2
