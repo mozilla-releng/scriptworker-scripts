@@ -112,7 +112,7 @@ async def test_log_outgoing(config, task, mocker, output):
     number_of_changesets = await git.log_outgoing(config, task, config["work_dir"])
 
     assert number_of_changesets == 2
-    repo_mock.iter_commits.assert_called_once_with("master@{u}..master")
+    repo_mock.iter_commits.assert_called_once_with("origin/master..master")
     repo_mock.git.diff.assert_called_once_with("master")
     if output:
         with open(os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff"), "r") as fh:
@@ -127,7 +127,7 @@ async def test_strip_outgoing(config, task, mocker):
     mocker.patch.object(git, "Repo", RepoClassMock)
 
     await git.strip_outgoing(config, task, config["work_dir"])
-    repo_mock.head.reset.assert_called_once_with(commit="master@{u}", working_tree=True)
+    repo_mock.head.reset.assert_called_once_with(commit="origin/master", working_tree=True)
     repo_mock.git.clean.assert_called_once_with("-fdx")
 
 
