@@ -44,9 +44,10 @@ async def checkout_repo(config, task, repo_path):
         # create a new branch and manually set the upstream branch
         log.info('Checking out branch "{}"'.format(branch))
         remote_branches = repo.remotes.origin.fetch()
+        remote_branches_names = [fetch_info.name for fetch_info in remote_branches]
         remote_branch = get_single_item_from_sequence(
-            remote_branches,
-            condition=lambda fetch_info: fetch_info.name == "origin/{}".format(branch),
+            remote_branches_names,
+            condition=lambda remote_branch_name: remote_branch_name == "origin/{}".format(branch),
             ErrorClass=TaskVerificationError,
             no_item_error_message="Branch does not exist on remote repo",
             too_many_item_error_message="Too many branches with that name",
