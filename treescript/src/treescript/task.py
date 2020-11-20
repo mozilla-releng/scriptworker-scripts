@@ -83,11 +83,14 @@ def get_short_source_repo(task):
     return parts[-1]
 
 
+_GIT_REF_HEADS = "refs/heads/"
+
+
 # get_branch {{{1
 def get_branch(task, default=None):
     """Get the optional branch from the task payload.
 
-    This is largely for relbranch support in mercurial.
+    This is to support relbranch in mercurial and regular git branches
 
     Args:
         task (dict): the running task
@@ -97,7 +100,12 @@ def get_branch(task, default=None):
         str: the branch specified in the task
 
     """
-    return task.get("payload", {}).get("branch", default)
+    branch = task.get("payload", {}).get("branch", default)
+    if branch and branch.startswith(_GIT_REF_HEADS):
+        # fmt: off
+        branch = branch[len(_GIT_REF_HEADS):]   # Black and flake8 don't agree on this line
+        # fmt: on
+    return branch
 
 
 # get_tag_info {{{1

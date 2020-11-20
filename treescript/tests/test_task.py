@@ -145,11 +145,18 @@ def test_get_payload_source_repo(task_defn, source_repo):
     assert source_repo == ttask.get_source_repo(task_defn)
 
 
-@pytest.mark.parametrize("branch", ("foo", None))
-def test_get_branch(task_defn, branch):
+@pytest.mark.parametrize(
+    "branch, expected_result",
+    (
+        ("foo", "foo"),
+        ("refs/heads/foo", "foo"),
+        (None, None),
+    ),
+)
+def test_get_branch(task_defn, branch, expected_result):
     if branch:
         task_defn["payload"]["branch"] = branch
-    assert ttask.get_branch(task_defn) == branch
+    assert ttask.get_branch(task_defn) == expected_result
 
 
 @pytest.mark.parametrize("config", ({}, {"dummy": 1}))
