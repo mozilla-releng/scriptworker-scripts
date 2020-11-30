@@ -100,7 +100,7 @@ my_email: "scriptworker@example.com"
     "work_dir": "work_dir",
     "artifact_dir": "artifact_dir",
     "verbose": true,
-    "aiohttp_max_connections": 10,
+    "aiohttp_max_connections": 5,
     "checksums_digests": ["sha512", "sha256"],
     "blobs_needing_prettynaming_contents": [
         "target.test_packages.json"

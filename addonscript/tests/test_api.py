@@ -31,7 +31,7 @@ def context():
 @pytest.fixture(scope="function")
 async def fake_session(event_loop):
     async with aiohttp.ClientSession() as session:
-        return session
+        yield session
 
 
 @pytest.mark.asyncio
