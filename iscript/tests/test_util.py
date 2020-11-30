@@ -8,7 +8,7 @@ import iscript.util as util
 from iscript.exceptions import IScriptError
 
 
-# get_key_config {{{1
+# get_sign_config {{{1
 @pytest.mark.parametrize(
     "scopes, base_key, key, raises",
     (
@@ -25,6 +25,6 @@ def test_get_config_key(scopes, base_key, key, raises):
     task = {"scopes": scopes}
     if raises:
         with pytest.raises(IScriptError):
-            util.get_key_config(config, task, base_key=base_key)
+            util.get_sign_config(config, task, base_key=base_key)
     else:
-        assert util.get_key_config(config, task, base_key=base_key) == config[base_key][key]
+        assert util.get_sign_config(config, task, base_key=base_key) == config[base_key][key]

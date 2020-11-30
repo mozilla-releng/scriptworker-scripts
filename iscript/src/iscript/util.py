@@ -6,7 +6,9 @@ Attributes:
 
 """
 import logging
+from copy import deepcopy
 
+from iscript.constants import PRODUCT_CONFIG
 from iscript.exceptions import IScriptError
 
 log = logging.getLogger(__name__)
@@ -34,11 +36,24 @@ def task_cert_type(config, task):
     return cert_scopes[0].replace(cert_prefix, "")
 
 
-def get_key_config(config, task, base_key="mac_config"):
-    """Sanity check the task scopes and return the appropriate ``key_config``.
+def get_product(task):
+    """Get the product from the task definition.
 
-    The ``key_config`` is, e.g. the ``config.mac_config.dep`` dictionary,
-    for mac dep-signing.
+    Args:
+        task (dict): the running task
+
+    Returns:
+        str: ``task.payload.product``, if set. Defaults to ``firefox``
+
+    """
+    return task["payload"].get("product", "firefox")
+
+
+def get_sign_config(config, task, base_key="mac_config"):
+    """Sanity check the task scopes and return the appropriate ``sign_config``.
+
+    The ``sign_config`` is, e.g. the ``config.mac_config.dep`` dictionary,
+    for mac dep-signing, with product config baked in as well.
 
     Args:
         config (dict): the running config
@@ -50,11 +65,13 @@ def get_key_config(config, task, base_key="mac_config"):
         IScriptError: on failure to verify the scopes.
 
     Returns:
-        dict: the ``key_config``
+        dict: the ``sign_config``
 
     """
     try:
         cert_type = task_cert_type(config, task)
-        return config[base_key][_CERT_TYPE_TO_KEY_CONFIG[cert_type]]
+        sign_config = deepcopy(PRODUCT_CONFIG[base_key][get_product(task)])
+        sign_config.update(config[base_key][_CERT_TYPE_TO_KEY_CONFIG[cert_type]])
+        return sign_config
     except KeyError as exc:
-        raise IScriptError("get_key_config error: {}".format(str(exc))) from exc
+        raise IScriptError("get_sign_config error: {}".format(str(exc))) from exc

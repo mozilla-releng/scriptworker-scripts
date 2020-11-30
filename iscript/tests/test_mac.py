@@ -107,7 +107,7 @@ def test_get_bundle_executable(mocker):
 @pytest.mark.asyncio
 async def test_sign_geckodriver(exists, mocker, tmpdir):
     """Render ``sign_geckodriver`` noop and verify we have complete code coverage."""
-    key_config = {"identity": "id", "signing_keychain": "keychain"}
+    sign_config = {"identity": "id", "signing_keychain": "keychain"}
     config = {"artifact_dir": os.path.join(tmpdir, "artifacts")}
     app = mac.App(
         orig_path=os.path.join(tmpdir, "cot/task1/public/build/geckodriver.tar.gz"),
@@ -120,10 +120,10 @@ async def test_sign_geckodriver(exists, mocker, tmpdir):
         touch(os.path.join(app.parent_dir, "geckodriver"))
     mocker.patch.object(mac, "run_command", new=noop_async)
     if exists:
-        await mac.sign_geckodriver(config, key_config, [app])
+        await mac.sign_geckodriver(config, sign_config, [app])
     else:
         with pytest.raises(IScriptError):
-            await mac.sign_geckodriver(config, key_config, [app])
+            await mac.sign_geckodriver(config, sign_config, [app])
 
 
 # sign_app {{{1
@@ -131,7 +131,7 @@ async def test_sign_geckodriver(exists, mocker, tmpdir):
 @pytest.mark.asyncio
 async def test_sign_app(mocker, tmpdir, sign_with_entitlements, has_clearkey):
     """Render ``sign_app`` noop and verify we have complete code coverage."""
-    key_config = {"identity": "id", "signing_keychain": "keychain", "sign_with_entitlements": sign_with_entitlements}
+    sign_config = {"identity": "id", "signing_keychain": "keychain", "sign_with_entitlements": sign_with_entitlements}
     entitlements_path = os.path.join(tmpdir, "entitlements")
     app_path = os.path.join(tmpdir, "foo.app")
 
@@ -152,7 +152,7 @@ async def test_sign_app(mocker, tmpdir, sign_with_entitlements, has_clearkey):
         touch(os.path.join(dir_, file_))
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="main")
-    await mac.sign_app(key_config, app_path, entitlements_path)
+    await mac.sign_app(sign_config, app_path, entitlements_path)
 
 
 # verify_app_signature {{{1
@@ -160,10 +160,10 @@ async def test_sign_app(mocker, tmpdir, sign_with_entitlements, has_clearkey):
 async def test_verify_app_signature_noop(mocker):
     """``verify_app_signature`` is noop when ``verify_mac_signature`` is False."""
 
-    key_config = {"verify_mac_signature": False}
+    sign_config = {"verify_mac_signature": False}
     # If we actually run_command, raise to show we're doing too much
     mocker.patch.object(mac, "run_command", new=fail_async)
-    await mac.verify_app_signature(key_config, mac.App())
+    await mac.verify_app_signature(sign_config, mac.App())
 
 
 # unlock_keychain {{{1
@@ -373,7 +373,7 @@ async def test_create_one_notarization_zipfile(mocker, tmpdir, raises):
 @pytest.mark.asyncio
 async def test_sign_all_apps(mocker, tmpdir, raises):
     """``sign_all_apps`` calls ``sign`` and raises on failure."""
-    key_config = {"x": "y", "signing_keychain": "keychain", "keychain_password": "password"}
+    sign_config = {"x": "y", "signing_keychain": "keychain", "keychain_password": "password"}
     config = {}
     entitlements_path = "fake_entitlements_path"
     work_dir = str(tmpdir)
@@ -385,7 +385,7 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
         all_paths.append(mac.App(parent_dir=os.path.join(work_dir, str(i)), app_path=app_path))
 
     async def fake_sign(arg1, arg2, arg3):
-        assert arg1 == key_config
+        assert arg1 == sign_config
         assert arg2 in app_paths
         assert arg3 == entitlements_path
         if raises:
@@ -398,9 +398,9 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
     mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.sign_all_apps(config, key_config, entitlements_path, all_paths)
+            await mac.sign_all_apps(config, sign_config, entitlements_path, all_paths)
     else:
-        await mac.sign_all_apps(config, key_config, entitlements_path, all_paths)
+        await mac.sign_all_apps(config, sign_config, entitlements_path, all_paths)
 
 
 # get_bundle_id {{{1
@@ -506,7 +506,7 @@ async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
 
     work_dir = str(tmpdir)
     config = {"local_notarization_accounts": ["acct0", "acct1", "acct2"]}
-    key_config = {
+    sign_config = {
         "base_bundle_id": "org.iscript.test",
         "apple_notarization_account": "test_apple_account",
         "apple_notarization_password": pw,
@@ -526,9 +526,9 @@ async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
     mocker.patch.object(mac, "get_uuid_from_log", new=fake_get_uuid_from_log)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.wrap_notarization_with_sudo(config, key_config, all_paths)
+            await mac.wrap_notarization_with_sudo(config, sign_config, all_paths)
     else:
-        assert await mac.wrap_notarization_with_sudo(config, key_config, all_paths) == expected
+        assert await mac.wrap_notarization_with_sudo(config, sign_config, all_paths) == expected
 
 
 # notarize_no_sudo {{{1
@@ -559,7 +559,7 @@ async def test_notarize_no_sudo(mocker, tmpdir, raises):
     work_dir = str(tmpdir)
     zip_path = os.path.join(work_dir, "zip_path")
     log_path = os.path.join(work_dir, "notarization.log")
-    key_config = {
+    sign_config = {
         "base_bundle_id": "org.iscript.test",
         "apple_notarization_account": "test_apple_account",
         "apple_notarization_password": pw,
@@ -571,9 +571,9 @@ async def test_notarize_no_sudo(mocker, tmpdir, raises):
     mocker.patch.object(mac, "get_uuid_from_log", new=fake_get_uuid_from_log)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.notarize_no_sudo(work_dir, key_config, zip_path)
+            await mac.notarize_no_sudo(work_dir, sign_config, zip_path)
     else:
-        assert await mac.notarize_no_sudo(work_dir, key_config, zip_path) == expected
+        assert await mac.notarize_no_sudo(work_dir, sign_config, zip_path) == expected
 
 
 # poll_notarization_uuid {{{1
@@ -639,7 +639,7 @@ async def test_poll_all_notarization_status(mocker, tmpdir, poll_uuids, raises):
         if raises:
             raise IScriptError("foo")
 
-    key_config = {
+    sign_config = {
         "apple_notarization_account": "test_apple_account",
         "apple_notarization_password": "test_apple_password",
         "apple_asc_provider": "apple_asc_provider",
@@ -650,10 +650,10 @@ async def test_poll_all_notarization_status(mocker, tmpdir, poll_uuids, raises):
     mocker.patch.object(mac, "poll_notarization_uuid", new=noop_async)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.poll_all_notarization_status(key_config, poll_uuids)
+            await mac.poll_all_notarization_status(sign_config, poll_uuids)
 
     else:
-        assert await mac.poll_all_notarization_status(key_config, poll_uuids) is None
+        assert await mac.poll_all_notarization_status(sign_config, poll_uuids) is None
 
 
 # staple_notarization {{{1
@@ -749,7 +749,7 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises):
         if raises:
             raise IScriptError("foo")
 
-    key_config = {"pkg_cert_id": pkg_cert_id, "signing_keychain": "signing.keychain"}
+    sign_config = {"pkg_cert_id": pkg_cert_id, "signing_keychain": "signing.keychain"}
     config = {"concurrency_limit": 2}
     all_paths = []
     for i in range(3):
@@ -757,9 +757,9 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises):
     mocker.patch.object(mac, "run_command", new=fake_run_command)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.create_pkg_files(config, key_config, all_paths)
+            await mac.create_pkg_files(config, sign_config, all_paths)
     else:
-        assert await mac.create_pkg_files(config, key_config, all_paths) is None
+        assert await mac.create_pkg_files(config, sign_config, all_paths) is None
 
 
 # copy_pkgs_to_artifact_dir {{{1
@@ -844,14 +844,14 @@ async def test_download_entitlements_file(url, use_entitlements, raises, expecte
     mocker.patch.object(mac, "retry_async", new=noop_async)
     config = {"work_dir": "work"}
     task = {"payload": {}}
-    key_config = {"sign_with_entitlements": use_entitlements}
+    sign_config = {"sign_with_entitlements": use_entitlements}
     if url:
         task["payload"]["entitlements-url"] = url
     if raises:
         with pytest.raises(raises):
-            await mac.download_entitlements_file(config, key_config, task)
+            await mac.download_entitlements_file(config, sign_config, task)
     else:
-        assert await mac.download_entitlements_file(config, key_config, task) == expected
+        assert await mac.download_entitlements_file(config, sign_config, task) == expected
 
 
 # sign_behavior {{{1
@@ -900,7 +900,7 @@ async def test_sign_behavior(mocker, tmpdir, use_langpack):
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
     mocker.patch.object(mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app"))
-    mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
     mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     await mac.sign_behavior(config, task)
 
@@ -956,7 +956,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir, use_langpack):
     mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
     mocker.patch.object(mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app"))
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
-    mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
     mocker.patch.object(mac, "sign_omnija_with_autograph", new=noop_async)
     mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     await mac.sign_and_pkg_behavior(config, task)
@@ -1012,7 +1012,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
     mocker.patch.object(mac, "get_notarization_status_from_log", return_value=None)
     mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
-    mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
     mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     await mac.notarize_behavior(config, task)
 
@@ -1065,7 +1065,7 @@ async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
     mocker.patch.object(mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app"))
     mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
-    mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
     mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     await mac.notarize_1_behavior(config, task)
 
@@ -1159,5 +1159,5 @@ async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
     mocker.patch.object(mac, "extract_all_apps", new=fake_extract)
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
-    mocker.patch.object(mac, "get_key_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
     await mac.geckodriver_behavior(config, task)

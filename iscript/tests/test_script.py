@@ -37,7 +37,7 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
     if behavior:
         task["payload"]["behavior"] = behavior
     expected = [[(config, task), {}]]
-    key_config = {"supported_behaviors": supported_behaviors}
+    sign_config = {"supported_behaviors": supported_behaviors}
 
     async def test_notarize(*args, **kwargs):
         calls.setdefault("mac_notarize", []).append([args, kwargs])
@@ -63,7 +63,7 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
     mocker.patch.object(script, "geckodriver_behavior", new=test_geckodriver)
     mocker.patch.object(script, "sign_behavior", new=test_sign)
     mocker.patch.object(script, "sign_and_pkg_behavior", new=test_sign_and_pkg)
-    mocker.patch.object(script, "get_key_config", return_value=key_config)
+    mocker.patch.object(script, "get_sign_config", return_value=sign_config)
     if raises:
         with pytest.raises(IScriptError):
             await script.async_main(config, task)
