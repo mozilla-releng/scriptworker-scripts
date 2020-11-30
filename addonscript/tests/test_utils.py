@@ -42,7 +42,7 @@ def payload():
 @pytest.fixture(scope="function")
 async def fake_session(event_loop):
     async with aiohttp.ClientSession() as session:
-        return session
+        yield session
 
 
 @freeze_time("2018-01-19 12:59:59")
