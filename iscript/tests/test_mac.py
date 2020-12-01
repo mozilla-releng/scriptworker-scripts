@@ -107,7 +107,7 @@ def test_get_bundle_executable(mocker):
 @pytest.mark.asyncio
 async def test_sign_geckodriver(exists, mocker, tmpdir):
     """Render ``sign_geckodriver`` noop and verify we have complete code coverage."""
-    sign_config = {"identity": "id", "signing_keychain": "keychain"}
+    sign_config = {"identity": "id", "signing_keychain": "keychain", "designated_requirements": ""}
     config = {"artifact_dir": os.path.join(tmpdir, "artifacts")}
     app = mac.App(
         orig_path=os.path.join(tmpdir, "cot/task1/public/build/geckodriver.tar.gz"),
@@ -127,11 +127,18 @@ async def test_sign_geckodriver(exists, mocker, tmpdir):
 
 
 # sign_app {{{1
-@pytest.mark.parametrize("sign_with_entitlements,has_clearkey", ((True, True), (False, False)))
+@pytest.mark.parametrize("sign_with_entitlements,has_clearkey,skip_dirs", ((True, True, tuple()), (False, False, ("foo.app",))))
 @pytest.mark.asyncio
-async def test_sign_app(mocker, tmpdir, sign_with_entitlements, has_clearkey):
+async def test_sign_app(mocker, tmpdir, sign_with_entitlements, has_clearkey, skip_dirs):
     """Render ``sign_app`` noop and verify we have complete code coverage."""
-    sign_config = {"identity": "id", "signing_keychain": "keychain", "sign_with_entitlements": sign_with_entitlements}
+    sign_config = {
+        "identity": "id",
+        "signing_keychain": "keychain",
+        "sign_with_entitlements": sign_with_entitlements,
+        "designated_requirements": "",
+        "sign_dirs": ("MacOS", "Library"),
+        "skip_dirs": skip_dirs,
+    }
     entitlements_path = os.path.join(tmpdir, "entitlements")
     app_path = os.path.join(tmpdir, "foo.app")
 
@@ -343,17 +350,21 @@ async def test_create_all_notarization_zipfiles(mocker, tmpdir, raises):
 
 
 # create_one_notarization_zipfile {{{1
-@pytest.mark.parametrize("raises", (True, False))
+@pytest.mark.parametrize("raises, zipfile_cmd", ((True, "zip"), (False, "zip"), (False, "ditto"), (True, "unknown_zipfile_cmd")))
 @pytest.mark.asyncio
-async def test_create_one_notarization_zipfile(mocker, tmpdir, raises):
+async def test_create_one_notarization_zipfile(mocker, tmpdir, raises, zipfile_cmd):
     """``create_one_notarization_zipfile`` calls the expected cmdline, and raises on
     failure.
 
     """
     work_dir = str(tmpdir)
+    sign_config = {"zipfile_cmd": zipfile_cmd}
 
     async def fake_run_command(*args, **kwargs):
-        assert args[0] == ["zip", "-r", os.path.join(work_dir, "notarization.zip"), "0/0.app", "0/0.pkg", "1/1.app", "1/1.pkg", "2/2.app", "2/2.pkg"]
+        if zipfile_cmd == "zip":
+            assert args[0] == ["zip", "-r", os.path.join(work_dir, "notarization.zip"), "0/0.app", "0/0.pkg", "1/1.app", "1/1.pkg", "2/2.app", "2/2.pkg"]
+        elif zipfile_cmd == "ditto":
+            assert args[0] == ["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", "0", os.path.join(work_dir, "notarization.zip")]
         if raises:
             raise IScriptError("foo")
 
@@ -363,9 +374,9 @@ async def test_create_one_notarization_zipfile(mocker, tmpdir, raises):
         all_paths.append(mac.App(app_path=os.path.join(work_dir, str(i), "{}.app".format(i)), pkg_path=os.path.join(work_dir, str(i), "{}.pkg".format(i))))
     if raises:
         with pytest.raises(IScriptError):
-            await mac.create_one_notarization_zipfile(work_dir, all_paths)
+            await mac.create_one_notarization_zipfile(work_dir, all_paths, sign_config)
     else:
-        await mac.create_one_notarization_zipfile(work_dir, all_paths)
+        await mac.create_one_notarization_zipfile(work_dir, all_paths, sign_config)
 
 
 # sign_all_apps {{{1
@@ -868,6 +879,7 @@ async def test_sign_behavior(mocker, tmpdir, use_langpack):
         "local_notarization_accounts": ["acct0", "acct1", "acct2"],
         "mac_config": {
             "dep": {
+                "designated_requirements": "",  # put this here bc it's easier
                 "notarize_type": "",
                 "signing_keychain": "keychain_path",
                 "sign_with_entitlements": False,
@@ -919,6 +931,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir, use_langpack):
         "local_notarization_accounts": ["acct0", "acct1", "acct2"],
         "mac_config": {
             "dep": {
+                "designated_requirements": "",  # put this here bc it's easier
                 "notarize_type": "",
                 "signing_keychain": "keychain_path",
                 "sign_with_entitlements": False,
@@ -976,6 +989,8 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
         "local_notarization_accounts": ["acct0", "acct1", "acct2"],
         "mac_config": {
             "dep": {
+                "designated_requirements": "",  # put this here bc it's easier
+                "zipfile_cmd": "zip",  # put this here bc it's easier
                 "notarize_type": notarize_type,
                 "signing_keychain": "keychain_path",
                 "sign_with_entitlements": False,
@@ -1031,6 +1046,8 @@ async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
         "local_notarization_accounts": ["acct0", "acct1", "acct2"],
         "mac_config": {
             "dep": {
+                "designated_requirements": "",  # put this here bc it's easier
+                "zipfile_cmd": "zip",  # put this here bc it's easier
                 "notarize_type": notarize_type,
                 "signing_keychain": "keychain_path",
                 "sign_with_entitlements": False,
@@ -1082,6 +1099,7 @@ async def test_notarize_3_behavior(mocker, tmpdir):
         "work_dir": work_dir,
         "mac_config": {
             "dep": {
+                "designated_requirements": "",  # put this here bc it's easier
                 "signing_keychain": "keychain_path",
                 "sign_with_entitlements": False,
                 "base_bundle_id": "org.test",
@@ -1130,6 +1148,7 @@ async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
         "local_notarization_accounts": ["acct0", "acct1", "acct2"],
         "mac_config": {
             "dep": {
+                "designated_requirements": "",  # put this here bc it's easier
                 "notarize_type": "single_zip",
                 "signing_keychain": "keychain_path",
                 "base_bundle_id": "org.test",
