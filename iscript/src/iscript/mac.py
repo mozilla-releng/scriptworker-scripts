@@ -184,6 +184,25 @@ async def sign_geckodriver(config, sign_config, all_paths):
 
 
 # sign_app {{{1
+async def _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable):
+    """Avoid flake8 complaining about sign_app being too complex."""
+    # Deal with inner .app's in sign_app, not here.
+    if top_dir[app_path_len:].count(".app") > 0:
+        log.debug("Skipping %s because it's part of an inner app.", abs_file)
+        return
+    # app_executable gets signed with the outer package.
+    if file_ == app_executable:
+        log.debug("Skipping %s because it's the main executable.", abs_file)
+        return
+    dir_ = os.path.dirname(abs_file)
+    await retry_async(
+        run_command,
+        args=[sign_command + [file_]],
+        kwargs={"cwd": dir_, "exception": IScriptError, "output_log_on_exception": True},
+        retry_exceptions=(IScriptError,),
+    )
+
+
 async def sign_app(sign_config, app_path, entitlements_path):
     """Sign the .app.
 
@@ -231,21 +250,7 @@ async def sign_app(sign_config, app_path, entitlements_path):
 
         for file_ in files:
             abs_file = os.path.join(top_dir, file_)
-            # Deal with inner .app's above, not here.
-            if top_dir[app_path_len:].count(".app") > 0:
-                log.debug("Skipping %s because it's part of an inner app.", abs_file)
-                continue
-            # app_executable gets signed with the outer package.
-            if file_ == app_executable:
-                log.debug("Skipping %s because it's the main executable.", abs_file)
-                continue
-            dir_ = os.path.dirname(abs_file)
-            await retry_async(
-                run_command,
-                args=[sign_command + [file_]],
-                kwargs={"cwd": dir_, "exception": IScriptError, "output_log_on_exception": True},
-                retry_exceptions=(IScriptError,),
-            )
+            await _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable)
 
     await sign_libclearkey(contents_dir, sign_command, app_path)
 
