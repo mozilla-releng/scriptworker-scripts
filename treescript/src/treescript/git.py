@@ -176,9 +176,10 @@ async def push(config, task, repo_path, target_repo):
     target_repo_ssh = extract_github_repo_ssh_url(target_repo)
     repo.remote().set_url(target_repo_ssh, push=True)
     log.debug("Push using ssh command: {}".format(git_ssh_cmd))
+    branch = get_branch(task, "master")
     with repo.git.custom_environment(GIT_SSH_COMMAND=git_ssh_cmd):
         log.info("Pushing local changes to {}".format(target_repo_ssh))
-        push_results = repo.remote().push(verbose=True, set_upstream=True)
+        push_results = repo.remote().push(branch, verbose=True, set_upstream=True)
 
     try:
         _check_if_push_successful(push_results)
