@@ -350,21 +350,18 @@ async def test_create_all_notarization_zipfiles(mocker, tmpdir, raises):
 
 
 # create_one_notarization_zipfile {{{1
-@pytest.mark.parametrize("raises, zipfile_cmd", ((True, "zip"), (False, "zip"), (False, "ditto"), (True, "unknown_zipfile_cmd")))
+@pytest.mark.parametrize("raises", ((True, "zip"), (False, "zip"), (False, "ditto")))
 @pytest.mark.asyncio
-async def test_create_one_notarization_zipfile(mocker, tmpdir, raises, zipfile_cmd):
+async def test_create_one_notarization_zipfile(mocker, tmpdir, raises):
     """``create_one_notarization_zipfile`` calls the expected cmdline, and raises on
     failure.
 
     """
     work_dir = str(tmpdir)
-    sign_config = {"zipfile_cmd": zipfile_cmd}
+    sign_config = {}
 
     async def fake_run_command(*args, **kwargs):
-        if zipfile_cmd == "zip":
-            assert args[0] == ["zip", "-r", os.path.join(work_dir, "notarization.zip"), "0/0.app", "0/0.pkg", "1/1.app", "1/1.pkg", "2/2.app", "2/2.pkg"]
-        elif zipfile_cmd == "ditto":
-            assert args[0] == ["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", "0", os.path.join(work_dir, "notarization.zip")]
+        assert args[0] == ["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", "0", os.path.join(work_dir, "notarization.zip")]
         if raises:
             raise IScriptError("foo")
 

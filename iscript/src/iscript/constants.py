@@ -12,13 +12,11 @@ MAC_PRODUCT_CONFIG = {
         ),
         "sign_dirs": ("MacOS", "Library"),
         "skip_dirs": tuple(),
-        "zipfile_cmd": "zip",
     },
     "mozillavpn": {
         "designated_requirements": """=designated => certificate leaf[subject.OU] = "%(subject_ou)s" """,
         "sign_dirs": ("MacOS", "Frameworks"),
         "skip_dirs": ("MozillaVPNLoginItem.app",),
-        "zipfile_cmd": "ditto",
     },
 }
 

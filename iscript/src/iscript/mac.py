@@ -516,12 +516,7 @@ async def create_one_notarization_zipfile(work_dir, all_paths, sign_config, path
         app.check_required_attrs(required_attrs)
         for path_attr in path_attrs:
             app_paths.append(os.path.relpath(getattr(app, path_attr), work_dir))
-    if sign_config["zipfile_cmd"] == "zip":
-        await run_command(["zip", "-r", zip_path, *app_paths], cwd=work_dir, exception=IScriptError)
-    elif sign_config["zipfile_cmd"] == "ditto":
-        await run_command(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", "0", zip_path], cwd=work_dir, exception=IScriptError)
-    else:
-        raise IScriptError(f"Unknown zipfile_cmd {sign_config['zipfile_cmd']}!")
+    await run_command(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", "0", zip_path], cwd=work_dir, exception=IScriptError)
     return zip_path
 
 
