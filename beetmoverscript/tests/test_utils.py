@@ -4,7 +4,6 @@ import tempfile
 import pytest
 from scriptworker.exceptions import TaskVerificationError
 
-import beetmoverscript.utils as butils
 from beetmoverscript.constants import BUILDHUB_ARTIFACT, HASH_BLOCK_SIZE, INSTALLER_ARTIFACTS
 from beetmoverscript.utils import (
     _check_locale_consistency,
@@ -260,20 +259,6 @@ def test_is_action_release_or_promotion(action, release, promotion):
 def test_get_partials_props(taskjson, expected):
     partials_props = get_partials_props(get_fake_valid_task(taskjson))
     assert partials_props == expected
-
-
-# alter_unpretty_contents {{{1
-def test_alter_unpretty_contents(context, mocker):
-    context.artifacts_to_beetmove = {"loc1": {"target.test_packages.json": "mobile"}, "loc2": {"target.test_packages.json": "mobile"}}
-
-    mappings = {"mapping": {"loc1": {"bar": {"s3_key": "x"}}, "loc2": {}}}
-
-    def fake_json(*args, **kwargs):
-        return {"mobile": ["bar"]}
-
-    mocker.patch.object(butils, "load_json", new=fake_json)
-    mocker.patch.object(butils, "write_json", new=fake_json)
-    butils.alter_unpretty_contents(context, ["target.test_packages.json"], mappings)
 
 
 # get_candidates_prefix {{{1

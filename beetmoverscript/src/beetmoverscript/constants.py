@@ -61,36 +61,6 @@ HASH_BLOCK_SIZE = 1024 * 1024
 
 RELEASE_BRANCHES = ("mozilla-central", "mozilla-beta", "mozilla-release", "mozilla-esr52" "comm-central", "comm-beta", "comm-esr60")
 
-RESTRICTED_BUCKET_PATHS = {
-    "nightly": ["pub/mobile/nightly", "pub/firefox/nightly", "pub/thunderbird/nightly"],
-    "release": [
-        "pub/devedition/candidates",
-        "pub/devedition/releases",
-        "pub/firefox/candidates",
-        "pub/firefox/releases",
-        "pub/mobile/candidates",
-        "pub/mobile/releases",
-        "pub/thunderbird/candidates",
-        "pub/thunderbird/releases",
-    ],
-    "dep": [
-        "pub/devedition/candidates",
-        "pub/devedition/releases",
-        "pub/firefox/nightly",
-        "pub/firefox/candidates",
-        "pub/firefox/releases",
-        "pub/mobile/nightly",
-        "pub/mobile/candidates",
-        "pub/mobile/releases",
-        "pub/thunderbird/candidates",
-        "pub/thunderbird/releases",
-        "pub/thunderbird/nightly",
-    ],
-    "partner": [""],  # all legal
-    "maven-production": ["maven2/"],
-    "maven-staging": ["maven2/"],
-}
-
 # actions that imply actual releases, hence the need of `build_number` and
 # `version`
 PROMOTION_ACTIONS = ("push-to-candidates",)

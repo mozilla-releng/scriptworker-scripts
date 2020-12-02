@@ -220,32 +220,6 @@ def get_partials_props(task):
     return {p["artifact_name"]: p for p in partials}
 
 
-def alter_unpretty_contents(context, blobs, mappings):
-    """Function to alter any unpretty-name contents from a file specified in script
-    configs."""
-    for blob in blobs:
-        for locale in context.artifacts_to_beetmove:
-            source = context.artifacts_to_beetmove[locale].get(blob)
-            if not source:
-                continue
-
-            contents = load_json(source)
-            pretty_contents = deepcopy(contents)
-            for package, tests in contents.items():
-                new_tests = []
-                for artifact in tests:
-                    pretty_dict = mappings["mapping"][locale].get(artifact)
-                    if pretty_dict:
-                        new_tests.append(pretty_dict["s3_key"])
-                    else:
-                        new_tests.append(artifact)
-                if new_tests != tests:
-                    pretty_contents[package] = new_tests
-
-            if pretty_contents != contents:
-                write_json(source, pretty_contents)
-
-
 def get_candidates_prefix(product, version, build_number):
     return "{}candidates/{}-candidates/build{}/".format(PRODUCT_TO_PATH[product], version, str(build_number))
 
