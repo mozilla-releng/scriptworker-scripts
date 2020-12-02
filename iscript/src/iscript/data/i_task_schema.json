@@ -58,6 +58,10 @@
               "type": "string",
               "enum": ["mac_notarize", "mac_geckodriver", "mac_sign", "mac_sign_and_pkg", "mac_notarize_part_1", "mac_notarize_part_3"]
             },
+            "product": {
+              "type": "string",
+              "enum": ["firefox", "mozillavpn"]
+            },
             "entitlements-url": {
               "type": "string"
             }
