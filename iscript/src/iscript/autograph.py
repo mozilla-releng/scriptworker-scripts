@@ -55,7 +55,7 @@ LANGPACK_RE = re.compile(r"^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|dev
 
 
 # sign_widevine_dir {{{1
-async def sign_widevine_dir(config, key_config, app_dir):
+async def sign_widevine_dir(config, sign_config, app_dir):
     """Sign the internals of a tarfile with the widevine key.
 
     Extract the entire tarball, but only sign a handful of files (see
@@ -68,7 +68,7 @@ async def sign_widevine_dir(config, key_config, app_dir):
 
     Args:
         config (dict): the running config
-        key_config (dict): the config for this signing key
+        sign_config (dict): the config for this signing key
         app_dir (str): the .app directory to sign
 
     Returns:
@@ -88,7 +88,7 @@ async def sign_widevine_dir(config, key_config, app_dir):
             to = _get_mac_sigpath(from_)
             log.debug("Adding %s to the sigfile paths...", to)
             makedirs(os.path.dirname(to))
-            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(key_config, from_, "blessed" in fmt, to=to)))
+            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(sign_config, from_, "blessed" in fmt, to=to)))
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(app_dir, all_files)
@@ -241,11 +241,11 @@ def make_signing_req(input_bytes, fmt, keyid=None, extension_id=None):
     return [sign_req]
 
 
-async def sign_with_autograph(key_config, input_bytes, fmt, autograph_method, keyid=None, extension_id=None):
+async def sign_with_autograph(sign_config, input_bytes, fmt, autograph_method, keyid=None, extension_id=None):
     """Signs data with autograph and returns the result.
 
     Args:
-        key_config (dict): the running config for this key
+        sign_config (dict): the running config for this key
         input_bytes (bytes): the source data to sign
         fmt (str): the format to sign with
         autograph_method (str): which autograph method to use to sign. must be
@@ -265,9 +265,9 @@ async def sign_with_autograph(key_config, input_bytes, fmt, autograph_method, ke
 
     sign_req = make_signing_req(input_bytes, fmt, keyid=keyid, extension_id=extension_id)
     short_fmt = fmt.replace("autograph_", "")
-    url = key_config[f"{short_fmt}_url"]
-    user = key_config[f"{short_fmt}_user"]
-    pw = key_config[f"{short_fmt}_pass"]
+    url = sign_config[f"{short_fmt}_url"]
+    user = sign_config[f"{short_fmt}_user"]
+    pw = sign_config[f"{short_fmt}_pass"]
 
     log.debug("signing data with format %s with %s", fmt, autograph_method)
 
@@ -281,11 +281,11 @@ async def sign_with_autograph(key_config, input_bytes, fmt, autograph_method, ke
         return sign_resp[0]["signature"]
 
 
-async def sign_file_with_autograph(key_config, from_, fmt, to=None, extension_id=None):
+async def sign_file_with_autograph(sign_config, from_, fmt, to=None, extension_id=None):
     """Signs file with autograph and writes the results to a file.
 
     Args:
-        key_config (dict): the running config for this key
+        sign_config (dict): the running config for this key
         from_ (str): the source file to sign
         fmt (str): the format to sign with
         to (str, optional): the target path to sign to. If None, overwrite
@@ -301,17 +301,17 @@ async def sign_file_with_autograph(key_config, from_, fmt, to=None, extension_id
     """
     to = to or from_
     input_bytes = open(from_, "rb").read()
-    signed_bytes = base64.b64decode(await sign_with_autograph(key_config, input_bytes, fmt, "file", extension_id=extension_id))
+    signed_bytes = base64.b64decode(await sign_with_autograph(sign_config, input_bytes, fmt, "file", extension_id=extension_id))
     with open(to, "wb") as fout:
         fout.write(signed_bytes)
     return to
 
 
-async def sign_hash_with_autograph(key_config, hash_, fmt, keyid=None):
+async def sign_hash_with_autograph(sign_config, hash_, fmt, keyid=None):
     """Signs hash with autograph and returns the result.
 
     Args:
-        key_config (dict): the running config for this key
+        sign_config (dict): the running config for this key
         hash_ (bytes): the input hash to sign
         fmt (str): the format to sign with
         keyid (str): which key to use on autograph (optional)
@@ -323,7 +323,7 @@ async def sign_hash_with_autograph(key_config, hash_, fmt, keyid=None):
         bytes: the signature
 
     """
-    signature = base64.b64decode(await sign_with_autograph(key_config, hash_, fmt, "hash", keyid))
+    signature = base64.b64decode(await sign_with_autograph(sign_config, hash_, fmt, "hash", keyid))
     return signature
 
 
@@ -342,7 +342,7 @@ def _get_omnija_signing_files(file_list):
     return files
 
 
-async def sign_omnija_with_autograph(config, key_config, app_path):
+async def sign_omnija_with_autograph(config, sign_config, app_path):
     """Sign the omnija file specified using autograph.
 
     This function overwrites from_
@@ -351,7 +351,7 @@ async def sign_omnija_with_autograph(config, key_config, app_path):
 
     Args:
         config (dict): the running config
-        key_config (dict): the running config for this key
+        sign_config (dict): the running config for this key
         app_path (str): the path to the .app dir
 
     Raises:
@@ -371,7 +371,7 @@ async def sign_omnija_with_autograph(config, key_config, app_path):
         signed_out = tempfile.mkstemp(prefix="oj_signed", suffix=".ja", dir=config["work_dir"])[1]
         merged_out = tempfile.mkstemp(prefix="oj_merged", suffix=".ja", dir=config["work_dir"])[1]
 
-        await sign_file_with_autograph(key_config, from_, "autograph_omnija", to=signed_out, extension_id="omni.ja@mozilla.org")
+        await sign_file_with_autograph(sign_config, from_, "autograph_omnija", to=signed_out, extension_id="omni.ja@mozilla.org")
         await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
         with open(from_, "wb") as fout:
             with open(merged_out, "rb") as fin:
@@ -413,11 +413,11 @@ async def merge_omnija_files(orig, signed, to):
 
 
 # sign_widevine_with_autograph {{{1
-async def sign_widevine_with_autograph(key_config, from_, blessed, to=None):
+async def sign_widevine_with_autograph(sign_config, from_, blessed, to=None):
     """Create a widevine signature using autograph as a backend.
 
     Args:
-        key_config (dict): the running config for this key
+        sign_config (dict): the running config for this key
         from_ (str): the source file to sign
         fmt (str): the format to sign with
         blessed (bool): whether to use blessed signing or not
@@ -440,10 +440,10 @@ async def sign_widevine_with_autograph(key_config, from_, blessed, to=None):
 
     h = widevine.generate_widevine_hash(from_, flags)
 
-    signature = await sign_hash_with_autograph(key_config, h, fmt)
+    signature = await sign_hash_with_autograph(sign_config, h, fmt)
 
     with open(to, "wb") as fout:
-        certificate = open(key_config["widevine_cert"], "rb").read()
+        certificate = open(sign_config["widevine_cert"], "rb").read()
         sig = widevine.generate_widevine_signature(signature, certificate, flags)
         fout.write(sig)
     return to
@@ -475,7 +475,7 @@ def langpack_id(app):
     return id
 
 
-async def sign_langpacks(config, key_config, all_paths):
+async def sign_langpacks(config, sign_config, all_paths):
     """Signs langpacks that are specified in all_paths.
 
     Raises:
@@ -491,4 +491,4 @@ async def sign_langpacks(config, key_config, all_paths):
         id = langpack_id(app)
         log.info("Identified {} as extension id: {}".format(app.orig_path, id))
         makedirs(os.path.dirname(app.target_tar_path))
-        await sign_file_with_autograph(key_config, app.orig_path, "autograph_langpack", to=app.target_tar_path, extension_id=id)
+        await sign_file_with_autograph(sign_config, app.orig_path, "autograph_langpack", to=app.target_tar_path, extension_id=id)

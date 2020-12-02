@@ -22,7 +22,7 @@ def does_not_raise():
 
 
 @pytest.fixture(scope="function")
-def key_config():
+def sign_config():
     return {
         "widevine_url": "https://autograph-hsm.dev.mozaws.net",
         "widevine_user": "widevine_user",
@@ -45,7 +45,7 @@ def noop_sync(*args, **kwargs):
 # sign_file_with_autograph {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize("to,expected,format,options", ((None, "from", "autograph_widevine", None), ("to", "to", "autograph_widevine", None)))
-async def test_sign_file_with_autograph(key_config, mocker, to, expected, format, options):
+async def test_sign_file_with_autograph(sign_config, mocker, to, expected, format, options):
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
     mocker.patch("builtins.open", open_mock, create=True)
 
@@ -57,7 +57,7 @@ async def test_sign_file_with_autograph(key_config, mocker, to, expected, format
     Session_mock.return_value.__exit__ = mocker.Mock()
     mocker.patch("iscript.autograph.requests.Session", Session_mock, create=True)
 
-    assert await autograph.sign_file_with_autograph(key_config, "from", format, to=to) == expected
+    assert await autograph.sign_file_with_autograph(sign_config, "from", format, to=to) == expected
     open_mock.assert_called()
     kwargs = {"input": "MHhkZWFkYmVlZg=="}
     if options:
@@ -67,7 +67,7 @@ async def test_sign_file_with_autograph(key_config, mocker, to, expected, format
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("to,expected", ((None, "from"), ("to", "to")))
-async def test_sign_file_with_autograph_raises_http_error(key_config, mocker, to, expected):
+async def test_sign_file_with_autograph_raises_http_error(sign_config, mocker, to, expected):
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
     mocker.patch("builtins.open", open_mock, create=True)
 
@@ -88,7 +88,7 @@ async def test_sign_file_with_autograph_raises_http_error(key_config, mocker, to
     mocker.patch.object(autograph, "retry_async", new=fake_retry_async)
 
     with pytest.raises(autograph.requests.exceptions.RequestException):
-        await autograph.sign_file_with_autograph(key_config, "from", "autograph_widevine", to=to)
+        await autograph.sign_file_with_autograph(sign_config, "from", "autograph_widevine", to=to)
     open_mock.assert_called()
 
 
@@ -108,7 +108,7 @@ async def test_sign_file_with_autograph_raises_http_error(key_config, mocker, to
         ("foo.tar.bz2", "autograph_widevine", True, None),
     ),
 )
-async def test_sign_widevine_dir(key_config, mocker, filename, fmt, should_sign, orig_files, tmp_path):
+async def test_sign_widevine_dir(sign_config, mocker, filename, fmt, should_sign, orig_files, tmp_path):
     if should_sign:
         files = orig_files or ["isdir/firefox", "firefox/firefox", "y/plugin-container", "z/blah", "ignore"]
     else:
@@ -142,7 +142,7 @@ async def test_sign_widevine_dir(key_config, mocker, filename, fmt, should_sign,
     mocker.patch.object(os.path, "isfile", new=fake_isfile)
     mocker.patch.object(os, "walk", new=fake_walk)
 
-    await autograph.sign_widevine_dir(config, key_config, filename)
+    await autograph.sign_widevine_dir(config, sign_config, filename)
 
 
 # _get_widevine_signing_files {{{1
@@ -243,7 +243,7 @@ async def test_bad_autograph_method():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("blessed", (True, False))
-async def test_widevine_autograph(mocker, tmp_path, blessed, key_config):
+async def test_widevine_autograph(mocker, tmp_path, blessed, sign_config):
     wv = mocker.patch("iscript.autograph.widevine")
     wv.generate_widevine_hash.return_value = b"hashhashash"
     wv.generate_widevine_signature.return_value = b"sigwidevinesig"
@@ -255,10 +255,10 @@ async def test_widevine_autograph(mocker, tmp_path, blessed, key_config):
 
     cert = tmp_path / "widevine.crt"
     cert.write_bytes(b"TMPCERT")
-    key_config["widevine_cert"] = cert
+    sign_config["widevine_cert"] = cert
 
     to = tmp_path / "signed.sig"
-    to = await autograph.sign_widevine_with_autograph(key_config, "from", blessed, to=to)
+    to = await autograph.sign_widevine_with_autograph(sign_config, "from", blessed, to=to)
 
     assert b"sigwidevinesig" == to.read_bytes()
 
@@ -322,15 +322,15 @@ async def test_omnija_sign(tmpdir, mocker, orig, signed, sha256_expected):
     copy_from = os.path.join(tmpdir, "omni.ja")
     shutil.copyfile(os.path.join(TEST_DATA_DIR, orig), copy_from)
     config = {"work_dir": tmpdir}
-    key_config = {}
+    sign_config = {}
 
-    async def mocked_autograph(key_config, from_, fmt, to, extension_id):
+    async def mocked_autograph(sign_config, from_, fmt, to, extension_id):
         assert fmt == "autograph_omnija"
         assert extension_id == "omni.ja@mozilla.org"
         shutil.copyfile(os.path.join(TEST_DATA_DIR, signed), to)
 
     mocker.patch.object(autograph, "sign_file_with_autograph", mocked_autograph)
-    await autograph.sign_omnija_with_autograph(config, key_config, tmpdir)
+    await autograph.sign_omnija_with_autograph(config, sign_config, tmpdir)
     sha256_actual = sha256(open(copy_from, "rb").read()).hexdigest()
     assert sha256_actual == sha256_expected
 
@@ -388,7 +388,7 @@ def test_langpack_id_raises(json_, raises, mocker):
 
 
 @pytest.mark.asyncio
-async def test_langpack_sign(key_config, mocker, tmp_path):
+async def test_langpack_sign(sign_config, mocker, tmp_path):
     mock_ever_called = [False]
     filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
     langpack_app = App(orig_path=filename, formats=["autograph_langpack"], artifact_prefix=TEST_DATA_DIR)
@@ -396,7 +396,7 @@ async def test_langpack_sign(key_config, mocker, tmp_path):
 
     async def mocked_call_autograph(url, user, password, request_json):
         mock_ever_called[0] = True
-        # url/user/pass comes from test key_config
+        # url/user/pass comes from test sign_config
         assert url.startswith("https://autograph-hsm.dev.mozaws.net/langpack")
         assert user == "langpack_user"
         assert password == "langpack_pass"
@@ -406,14 +406,14 @@ async def test_langpack_sign(key_config, mocker, tmp_path):
 
     mock_obj = mocker.patch.object(autograph, "call_autograph", new=mocked_call_autograph)
 
-    await autograph.sign_langpacks(config, key_config, [langpack_app])
+    await autograph.sign_langpacks(config, sign_config, [langpack_app])
     expected_hash = "7f4292927b4a26589ee912918de941f498e58ce100041ec3565a82da57a42eab"
     assert sha256(open(langpack_app.target_tar_path, "rb").read()).hexdigest() == expected_hash
     assert mock_ever_called[0]
 
 
 @pytest.mark.asyncio
-async def test_langpack_sign_wrong_format(key_config, mocker, tmp_path):
+async def test_langpack_sign_wrong_format(sign_config, mocker, tmp_path):
     mock_ever_called = [False]
     filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
     langpack_app = App(orig_path=filename, formats=["invalid"], artifact_prefix=TEST_DATA_DIR)
@@ -426,5 +426,5 @@ async def test_langpack_sign_wrong_format(key_config, mocker, tmp_path):
     mock_obj = mocker.patch.object(autograph, "call_autograph", new=mocked_call_autograph)
 
     with pytest.raises(IScriptError):
-        await autograph.sign_langpacks(config, key_config, [langpack_app])
+        await autograph.sign_langpacks(config, sign_config, [langpack_app])
     assert not mock_ever_called[0]
