@@ -4,7 +4,6 @@ import logging
 import os
 import pprint
 import re
-from copy import deepcopy
 
 import arrow
 import jinja2

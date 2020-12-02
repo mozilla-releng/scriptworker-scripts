@@ -102,9 +102,6 @@ my_email: "scriptworker@example.com"
     "verbose": true,
     "aiohttp_max_connections": 5,
     "checksums_digests": ["sha512", "sha256"],
-    "blobs_needing_prettynaming_contents": [
-        "target.test_packages.json"
-    ],
     "actions": {
         "push-to-nightly": {
             "firefox_nightly": "/path/to/beetmoverscript/beetmoverscript/templates/firefox_nightly.yml",

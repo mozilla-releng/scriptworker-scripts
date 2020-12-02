@@ -3,7 +3,6 @@
     "type": "object",
     "required": [
         "checksums_digests",
-        "blobs_needing_prettynaming_contents",
         "taskcluster_scope_prefix",
         "aiohttp_max_connections",
         "zip_max_file_size_in_mb",
@@ -11,13 +10,6 @@
     ],
     "properties": {
         "checksums_digests": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-                "type": "string"
-            }
-        },
-        "blobs_needing_prettynaming_contents": {
             "type": "array",
             "minItems": 1,
             "items": {
