@@ -39,11 +39,9 @@ from beetmoverscript.task import (
     get_taskId_from_full_path,
     get_updated_buildhub_artifact,
     get_upstream_artifacts,
-    validate_bucket_paths,
     validate_task_schema,
 )
 from beetmoverscript.utils import (
-    alter_unpretty_contents,
     exists_or_endswith,
     extract_file_config_from_artifact_map,
     generate_beetmover_manifest,
@@ -102,24 +100,7 @@ async def push_to_nightly(context):
         context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
         await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task["payload"]["artifactMap"])
     else:
-        # determine artifacts to beetmove
-        context.artifacts_to_beetmove = get_upstream_artifacts(context)
-
-        # generate beetmover mapping manifest
-        mapping_manifest = generate_beetmover_manifest(context)
-
-        # perform another validation check against the bucket path
-        validate_bucket_paths(context.bucket, mapping_manifest["s3_bucket_path"])
-
-        # some files to-be-determined via script configs need to have their
-        # contents pretty named, so doing it here before even beetmoving begins
-        blobs = context.config.get("blobs_needing_prettynaming_contents", [])
-        alter_unpretty_contents(context, blobs, mapping_manifest)
-
-        # for each artifact in manifest
-        #   a. map each upstream artifact to pretty name release bucket format
-        #   b. upload to corresponding S3 location
-        await move_beets(context, context.artifacts_to_beetmove, manifest=mapping_manifest)
+        raise ScriptWorkerTaskException("task payload is missing artifactMap")
 
     #  write balrog_manifest to a file and add it to list of artifacts
     add_balrog_manifest_to_artifacts(context)

@@ -563,7 +563,7 @@ def test_sanity_check_partner_path(path, raises, regexes):
 # async_main {{{1
 @pytest.mark.parametrize(
     "action,raises,task_filename",
-    (("push-to-nightly", False, "task.json"), ("push-to-nightly", False, "task_artifact_map.json"), ("push-to-unknown", True, "task.json")),
+    (("push-to-nightly", False, "task_artifact_map.json"), ("push-to-unknown", True, "task.json")),
 )
 @pytest.mark.asyncio
 async def test_async_main(context, mocker, action, raises, task_filename):
