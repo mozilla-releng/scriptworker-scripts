@@ -4,10 +4,6 @@
     "verbose": true,
     "aiohttp_max_connections": 5,
     "checksums_digests": ["sha512", "sha256"],
-    "blobs_needing_prettynaming_contents": [
-        "target.test_packages.json"
-    ],
-
     "taskcluster_scope_prefix": "project:releng:beetmover:",
     "bucket_config": {
         "nightly": {

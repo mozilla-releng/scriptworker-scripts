@@ -19,7 +19,6 @@ from beetmoverscript.task import (
     get_taskId_from_full_path,
     get_upstream_artifacts,
     is_custom_checksums_task,
-    validate_bucket_paths,
     validate_task_schema,
 )
 
@@ -132,25 +131,6 @@ def test_get_task_action(scopes, expected, raises):
             get_task_action(task, config, valid_actions=["push-to-nightly"])
     else:
         assert expected == get_task_action(task, config)
-
-
-# validate_bucket_paths {{{1
-@pytest.mark.parametrize(
-    "bucket,path,raises",
-    (
-        ("dep", "pub/mobile/nightly", False),
-        ("nightly", "pub/firefox/releases", True),
-        ("maven", "maven2/org/mozilla", True),  # maven alone doesn't exist
-        ("maven-production", "maven2/org/mozilla", False),
-        ("maven-staging", "maven2/org/mozilla", False),
-    ),
-)
-def test_validate_bucket_paths(bucket, path, raises):
-    if raises:
-        with pytest.raises(ScriptWorkerTaskException):
-            validate_bucket_paths(bucket, path)
-    else:
-        validate_bucket_paths(bucket, path)
 
 
 @pytest.mark.parametrize(

@@ -4,13 +4,10 @@ import logging
 import os
 import pprint
 import re
-from copy import deepcopy
 
 import arrow
 import jinja2
 import yaml
-from mozilla_version.gecko import FirefoxVersion
-from mozilla_version.maven import MavenVersion
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.constants import (
@@ -123,9 +120,6 @@ def generate_beetmover_template_args(context):
     task = context.task
     release_props = context.release_props
 
-    if is_maven_action(context.action):
-        return _generate_beetmover_template_args_maven(task, release_props)
-
     upload_date = task["payload"]["upload_date"]
     args = []
     try:
@@ -178,30 +172,6 @@ def generate_beetmover_template_args(context):
     return tmpl_args
 
 
-def _generate_beetmover_template_args_maven(task, release_props):
-    tmpl_args = {"artifact_id": task["payload"]["artifact_id"], "template_key": "maven_{}".format(release_props["appName"])}
-
-    # Geckoview follows the FirefoxVersion pattern
-    if release_props.get("appName") == "geckoview":
-        payload_version = FirefoxVersion.parse(task["payload"]["version"])
-        # Change version number to major.minor.buildId because that's what the build task produces
-        version = [payload_version.major_number, payload_version.minor_number, release_props["buildid"]]
-    else:
-        payload_version = MavenVersion.parse(task["payload"]["version"])
-        version = [payload_version.major_number, payload_version.minor_number, payload_version.patch_number]
-
-    if any(number is None for number in version):
-        raise TaskVerificationError("At least one digit is undefined. Got: {}".format(version))
-    tmpl_args["version"] = ".".join(str(n) for n in version)
-
-    # XXX: some appservices maven.zip files have a different structure,
-    # encompassing only `pom` and `jar` files. We toggle that behavior in the
-    # mapping by using this flag
-    tmpl_args["is_jar"] = task["payload"].get("is_jar")
-
-    return tmpl_args
-
-
 def _check_locale_consistency(locale_in_payload, uniques_locales_in_upstream_artifacts):
     if len(uniques_locales_in_upstream_artifacts) > 1:
         raise TaskVerificationError(
@@ -247,32 +217,6 @@ def get_partials_props(task):
     partials mapping data from the 'extra' field"""
     partials = task.get("extra", {}).get("partials", {})
     return {p["artifact_name"]: p for p in partials}
-
-
-def alter_unpretty_contents(context, blobs, mappings):
-    """Function to alter any unpretty-name contents from a file specified in script
-    configs."""
-    for blob in blobs:
-        for locale in context.artifacts_to_beetmove:
-            source = context.artifacts_to_beetmove[locale].get(blob)
-            if not source:
-                continue
-
-            contents = load_json(source)
-            pretty_contents = deepcopy(contents)
-            for package, tests in contents.items():
-                new_tests = []
-                for artifact in tests:
-                    pretty_dict = mappings["mapping"][locale].get(artifact)
-                    if pretty_dict:
-                        new_tests.append(pretty_dict["s3_key"])
-                    else:
-                        new_tests.append(artifact)
-                if new_tests != tests:
-                    pretty_contents[package] = new_tests
-
-            if pretty_contents != contents:
-                write_json(source, pretty_contents)
 
 
 def get_candidates_prefix(product, version, build_number):

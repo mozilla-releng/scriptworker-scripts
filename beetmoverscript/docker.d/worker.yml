@@ -4,8 +4,6 @@ aiohttp_max_connections: 5
 checksums_digests:
   - 'sha512'
   - 'sha256'
-blobs_needing_prettynaming_contents:
-  - 'target.test_packages.json'
 taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 zip_max_file_size_in_mb: 300

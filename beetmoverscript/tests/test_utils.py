@@ -4,7 +4,6 @@ import tempfile
 import pytest
 from scriptworker.exceptions import TaskVerificationError
 
-import beetmoverscript.utils as butils
 from beetmoverscript.constants import BUILDHUB_ARTIFACT, HASH_BLOCK_SIZE, INSTALLER_ARTIFACTS
 from beetmoverscript.utils import (
     _check_locale_consistency,
@@ -216,51 +215,6 @@ def test_beetmover_template_args_generation_release(context):
     assert template_args == expected_template_args
 
 
-def test_beetmover_template_args_generation_release_is_jar(context):
-    context.bucket = "dep"
-    context.action = "push-to-maven"
-    context.task["payload"]["version"] = "0.26.0"
-    context.task["payload"]["artifact_id"] = "fenix-megazord-forUnitTests"
-    context.task["payload"]["is_jar"] = True
-
-    expected_template_args = {"artifact_id": "fenix-megazord-forUnitTests", "is_jar": True, "template_key": "maven_Fake", "version": "0.26.0"}
-
-    template_args = generate_beetmover_template_args(context)
-    assert template_args == expected_template_args
-
-
-@pytest.mark.parametrize(
-    "product, branch, version, artifact_id, build_id, expected_version, raises",
-    (
-        ("geckoview", "mozilla-central", "63.0a1", "geckoview-nightly-x86", "20181231120000", "63.0.20181231120000", False),
-        ("geckoview", "mozilla-beta", "63.0b2", "geckoview-beta-armeabi-v7a", "20181231120000", "63.0.20181231120000", False),
-        ("geckoview", "mozilla-release", "63.0", "geckoview-arm64-v8a", "20181231120000", "63.0.20181231120000", False),
-        ("components", "", "0.25.1", "browser-session", None, "0.25.1", False),
-        ("components", "", "1.0.0", "browser-session", None, "1.0.0", False),
-        ("components", "", "1.0", "browser-session", None, None, True),
-    ),
-)
-def test_beetmover_template_args_maven(product, context, branch, version, artifact_id, build_id, expected_version, raises):
-    context.bucket = "maven"
-    context.action = "push-to-maven"
-    context.task["payload"]["version"] = version
-    context.task["payload"]["artifact_id"] = artifact_id
-    context.release_props["branch"] = branch
-    context.release_props["buildid"] = build_id
-    context.release_props["appName"] = product
-
-    if not raises:
-        assert generate_beetmover_template_args(context) == {
-            "artifact_id": artifact_id,
-            "template_key": "maven_{}".format(product),
-            "is_jar": None,
-            "version": expected_version,
-        }
-    else:
-        with pytest.raises(TaskVerificationError):
-            generate_beetmover_template_args(context)
-
-
 @pytest.mark.parametrize(
     "locale_in_payload, locales_in_upstream_artifacts, raises",
     (("en-US", [], False), ("en-US", ["en-US"], False), ("ro", ["ro"], False), ("en-US", ["ro"], True), ("en-US", ["en-US", "ro"], True)),
@@ -305,20 +259,6 @@ def test_is_action_release_or_promotion(action, release, promotion):
 def test_get_partials_props(taskjson, expected):
     partials_props = get_partials_props(get_fake_valid_task(taskjson))
     assert partials_props == expected
-
-
-# alter_unpretty_contents {{{1
-def test_alter_unpretty_contents(context, mocker):
-    context.artifacts_to_beetmove = {"loc1": {"target.test_packages.json": "mobile"}, "loc2": {"target.test_packages.json": "mobile"}}
-
-    mappings = {"mapping": {"loc1": {"bar": {"s3_key": "x"}}, "loc2": {}}}
-
-    def fake_json(*args, **kwargs):
-        return {"mobile": ["bar"]}
-
-    mocker.patch.object(butils, "load_json", new=fake_json)
-    mocker.patch.object(butils, "write_json", new=fake_json)
-    butils.alter_unpretty_contents(context, ["target.test_packages.json"], mappings)
 
 
 # get_candidates_prefix {{{1

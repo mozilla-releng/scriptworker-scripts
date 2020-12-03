@@ -13,7 +13,7 @@ from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from beetmoverscript import utils
-from beetmoverscript.constants import CHECKSUMS_CUSTOM_FILE_NAMING, RESTRICTED_BUCKET_PATHS, STAGE_PLATFORM_MAP
+from beetmoverscript.constants import CHECKSUMS_CUSTOM_FILE_NAMING, STAGE_PLATFORM_MAP
 
 log = logging.getLogger(__name__)
 
@@ -72,16 +72,6 @@ def get_task_action(task, script_config, valid_actions=None):
         raise ScriptWorkerTaskException("\n".join(messages))
 
     return action
-
-
-def validate_bucket_paths(bucket, s3_bucket_path):
-    """Double check the S3 bucket path is valid for the given bucket"""
-    try:
-        paths = RESTRICTED_BUCKET_PATHS[bucket]
-    except KeyError:
-        raise ScriptWorkerTaskException('Unknown bucket "{}"'.format(s3_bucket_path))
-    if not any([s3_bucket_path.startswith(p) for p in paths]):
-        raise ScriptWorkerTaskException("Forbidden S3 {} destination".format(s3_bucket_path))
 
 
 def get_maven_version(context):
