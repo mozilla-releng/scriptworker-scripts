@@ -377,7 +377,7 @@ def get_app_dir(parent_dir):
         UnknownAppDir: if there is no single app dir
 
     """
-    apps = glob("{}/*.app*".format(parent_dir)) + glob("{}/*/*.app*".format(parent_dir))
+    apps = glob("{}/*.app*".format(parent_dir)) + glob("{}/*/*.app*".format(parent_dir)) + glob("{}/*.systemextension*".format(parent_dir))
     if len(apps) != 1:
         raise UnknownAppDir("Can't find a single .app in {}: {}".format(parent_dir, apps))
     return apps[0]
@@ -926,7 +926,7 @@ async def create_pkg_files(config, sign_config, all_paths):
     for app in all_paths:
         # call set_app_path_and_name because we may not have called sign_app() earlier
         set_app_path_and_name(app)
-        app.pkg_path = app.app_path.replace(".appex", ".pkg").replace(".app", ".pkg")
+        app.pkg_path = app.app_path.replace(".appex", ".pkg").replace(".app", ".pkg").replace(".systemextension", ".pkg")
         app.pkg_name = os.path.basename(app.pkg_path)
         pkg_opts = []
         if sign_config.get("pkg_cert_id"):
