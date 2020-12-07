@@ -926,7 +926,7 @@ async def create_pkg_files(config, sign_config, all_paths):
     for app in all_paths:
         # call set_app_path_and_name because we may not have called sign_app() earlier
         set_app_path_and_name(app)
-        app.pkg_path = app.app_path.replace(".appex", ".pkg").replace(".app", ".pkg").replace(".systemextension", ".pkg")
+        app.pkg_path = app.app_path.replace(".appex", ".pkg").replace(".app", ".pkg")
         app.pkg_name = os.path.basename(app.pkg_path)
         pkg_opts = []
         if sign_config.get("pkg_cert_id"):
@@ -1037,6 +1037,7 @@ async def notarize_behavior(config, task):
 
     sign_config = get_sign_config(config, task, base_key="mac_config")
     entitlements_path = await download_entitlements_file(config, sign_config, task)
+    path_attrs = ["app_path"]
 
     all_paths = get_app_paths(config, task)
     langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
@@ -1051,17 +1052,19 @@ async def notarize_behavior(config, task):
     await sign_all_apps(config, sign_config, entitlements_path, all_paths)
 
     # pkg
-    # Unlock keychain again in case it's locked since previous unlock
-    await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
-    await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await create_pkg_files(config, sign_config, all_paths)
+    if sign_config["create_pkg"]:
+        path_attrs.append("pkg_path")
+        # Unlock keychain again in case it's locked since previous unlock
+        await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
+        await update_keychain_search_path(config, sign_config["signing_keychain"])
+        await create_pkg_files(config, sign_config, all_paths)
 
     log.info("Notarizing")
     if sign_config["notarize_type"] == "multi_account":
-        await create_all_notarization_zipfiles(all_paths, path_attrs=["app_path", "pkg_path"])
+        await create_all_notarization_zipfiles(all_paths, path_attrs=path_attrs)
         poll_uuids = await wrap_notarization_with_sudo(config, sign_config, all_paths, path_attr="zip_path")
     else:
-        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, sign_config)
+        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, sign_config, path_attrs=path_attrs)
         poll_uuids = await notarize_no_sudo(work_dir, sign_config, zip_path)
 
     await poll_all_notarization_status(sign_config, poll_uuids)
@@ -1071,8 +1074,9 @@ async def notarize_behavior(config, task):
     await tar_apps(config, all_paths)
 
     # pkg
-    await staple_notarization(all_paths, path_attr="pkg_path")
-    await copy_pkgs_to_artifact_dir(config, all_paths)
+    if sign_config["create_pkg"]:
+        await staple_notarization(all_paths, path_attr="pkg_path")
+        await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing and notarizing apps.")
 
@@ -1096,6 +1100,7 @@ async def notarize_1_behavior(config, task):
 
     sign_config = get_sign_config(config, task, base_key="mac_config")
     entitlements_path = await download_entitlements_file(config, sign_config, task)
+    path_attrs = ["app_path"]
 
     all_paths = get_app_paths(config, task)
     langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
@@ -1110,17 +1115,19 @@ async def notarize_1_behavior(config, task):
     await sign_all_apps(config, sign_config, entitlements_path, all_paths)
 
     # pkg
-    # Unlock keychain again in case it's locked since previous unlock
-    await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
-    await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await create_pkg_files(config, sign_config, all_paths)
+    if sign_config["create_pkg"]:
+        path_attrs.append("pkg_path")
+        # Unlock keychain again in case it's locked since previous unlock
+        await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
+        await update_keychain_search_path(config, sign_config["signing_keychain"])
+        await create_pkg_files(config, sign_config, all_paths)
 
     log.info("Submitting for notarization.")
     if sign_config["notarize_type"] == "multi_account":
-        await create_all_notarization_zipfiles(all_paths, path_attrs=["app_path", "pkg_path"])
+        await create_all_notarization_zipfiles(all_paths, path_attrs=path_attrs)
         poll_uuids = await wrap_notarization_with_sudo(config, sign_config, all_paths, path_attr="zip_path")
     else:
-        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, sign_config)
+        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, sign_config, path_attrs)
         poll_uuids = await notarize_no_sudo(work_dir, sign_config, zip_path)
 
     # create uuid_manifest.json
@@ -1147,6 +1154,8 @@ async def notarize_3_behavior(config, task):
         IScriptError: on fatal error.
 
     """
+    sign_config = get_sign_config(config, task, base_key="mac_config")
+
     # In notarize_3_behavior, `all_paths` will have separate "apps" for each
     # artifact (one for a pkg, one for an app, one for a langpack xpi)
     all_paths = get_app_paths(config, task)
@@ -1165,8 +1174,9 @@ async def notarize_3_behavior(config, task):
     await staple_notarization(all_app_paths, path_attr="app_path")
     await tar_apps(config, all_app_paths)
 
-    await staple_notarization(all_pkg_paths, path_attr="pkg_path")
-    await copy_pkgs_to_artifact_dir(config, all_pkg_paths)
+    if sign_config["create_pkg"]:
+        await staple_notarization(all_pkg_paths, path_attr="pkg_path")
+        await copy_pkgs_to_artifact_dir(config, all_pkg_paths)
 
     await copy_xpis_to_artifact_dir(config, all_xpi_paths)
 
