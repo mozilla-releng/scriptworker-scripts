@@ -943,6 +943,7 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir, use_langpack):
                 "apple_notarization_password": "apple_password",
                 "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
+                "create_pkg": True,
             }
         },
     }
@@ -1002,6 +1003,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
                 "apple_notarization_password": "apple_password",
                 "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
+                "create_pkg": True,
             }
         },
     }
@@ -1059,6 +1061,7 @@ async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
                 "apple_notarization_password": "apple_password",
                 "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
+                "create_pkg": True,
             }
         },
     }
@@ -1097,6 +1100,7 @@ async def test_notarize_3_behavior(mocker, tmpdir):
     config = {
         "artifact_dir": artifact_dir,
         "work_dir": work_dir,
+        "taskcluster_scope_prefix": "project:releng:signing:",
         "mac_config": {
             "dep": {
                 "designated_requirements": "",  # put this here bc it's easier
@@ -1110,11 +1114,15 @@ async def test_notarize_3_behavior(mocker, tmpdir):
                 "apple_notarization_password": "apple_password",
                 "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
+                "create_pkg": True,
             }
         },
     }
 
     task = {
+        "scopes": [
+            "project:releng:signing:cert:dep-signing",
+        ],
         "payload": {
             "upstreamArtifacts": [
                 {
@@ -1124,7 +1132,7 @@ async def test_notarize_3_behavior(mocker, tmpdir):
                 },
                 {"taskId": "task2", "paths": ["public/build/3/target.tar.gz", "public/build/3/target.tar.gz"], "formats": []},
             ]
-        }
+        },
     }
 
     mocker.patch.object(mac, "run_command", new=noop_async)
@@ -1159,6 +1167,7 @@ async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
                 "apple_notarization_password": "apple_password",
                 "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
+                "create_pkg": True,
             }
         },
     }
