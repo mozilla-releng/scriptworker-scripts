@@ -20,4 +20,20 @@ github_projects:
         github_token: dummy
         github_owner: non-existing-owner
         github_repo_name: non-existing-repo
+      android-components:
+        allowed_actions: ["release"]
+        github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
+        github_owner: escapewindow
+        github_repo_name: android-components
+    'COT_PRODUCT == "mobile" && ENV == "dev"':
+      mock:
+        allowed_actions: ["release"]
+        github_token: dummy
+        github_owner: non-existing-owner
+        github_repo_name: non-existing-repo
+      android-components:
+        allowed_actions: ["release"]
+        github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
+        github_owner: escapewindow
+        github_repo_name: android-components
 taskcluster_scope_prefixes: ["project:mobile:fenix:releng:github:", "project:mobile:android-components:releng:github:"]

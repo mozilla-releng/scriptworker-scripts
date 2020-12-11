@@ -14,6 +14,7 @@ case $COT_PRODUCT in
   mobile)
     case $ENV in
       dev|fake-prod)
+        test_var_set 'GITHUB_TOKEN_WRITE_ACCESS_STAGING'
         ;;
       prod)
         test_var_set 'GITHUB_TOKEN_WRITE_ACCESS_PROD'
