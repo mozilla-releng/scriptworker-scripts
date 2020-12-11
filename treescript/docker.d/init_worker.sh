@@ -33,7 +33,7 @@ case $COT_PRODUCT in
     test_var_set 'SSH_KEY'
     test_var_set 'SSH_USER'
     export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:${PROJECT_NAME}script:"
-    export UPSTREAM_REPO="https://hg.mozilla.org/comm-central"
+    export UPSTREAM_REPO=""
     export MERGE_DAY_CLOBBER_FILE=""
     ;;
   *)
