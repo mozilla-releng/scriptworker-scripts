@@ -387,6 +387,7 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
     sign_config = {"x": "y", "signing_keychain": "keychain", "keychain_password": "password"}
     config = {}
     entitlements_path = "fake_entitlements_path"
+    fake_provisioning_profile_path = "fake_provisioning_profile_path"
     work_dir = str(tmpdir)
     all_paths = []
     app_paths = []
@@ -395,10 +396,11 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
         app_paths.append(app_path)
         all_paths.append(mac.App(parent_dir=os.path.join(work_dir, str(i)), app_path=app_path))
 
-    async def fake_sign(arg1, arg2, arg3):
+    async def fake_sign(arg1, arg2, arg3, arg4):
         assert arg1 == sign_config
         assert arg2 in app_paths
         assert arg3 == entitlements_path
+        assert arg4 == fake_provisioning_profile_path
         if raises:
             raise IScriptError("foo")
 
@@ -409,9 +411,9 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
     mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.sign_all_apps(config, sign_config, entitlements_path, all_paths)
+            await mac.sign_all_apps(config, sign_config, entitlements_path, all_paths, fake_provisioning_profile_path)
     else:
-        await mac.sign_all_apps(config, sign_config, entitlements_path, all_paths)
+        await mac.sign_all_apps(config, sign_config, entitlements_path, all_paths, fake_provisioning_profile_path)
 
 
 # get_bundle_id {{{1
@@ -863,6 +865,26 @@ async def test_download_entitlements_file(url, use_entitlements, raises, expecte
             await mac.download_entitlements_file(config, sign_config, task)
     else:
         assert await mac.download_entitlements_file(config, sign_config, task) == expected
+
+
+# download_provisioning_profile {{{1
+@pytest.mark.parametrize(
+    "url, expected",
+    (("foo", "work/provisioning.profile"), (None, None)),
+)
+@pytest.mark.asyncio
+async def test_download_provisioning_profile(url, expected, mocker):
+    """``download_provisioning_profile`` downloads the specified
+    provisioning-profile-url and returns the path. If no
+    provisioning-profile-url is specified, it returns ``None``.
+
+    """
+    mocker.patch.object(mac, "retry_async", new=noop_async)
+    config = {"work_dir": "work"}
+    task = {"payload": {}}
+    if url:
+        task["payload"]["provisioning-profile-url"] = url
+    assert await mac.download_provisioning_profile(config, task) == expected
 
 
 # sign_behavior {{{1

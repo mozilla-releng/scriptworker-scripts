@@ -64,6 +64,9 @@
             },
             "entitlements-url": {
               "type": "string"
+            },
+            "provisioning-profile-url": {
+              "type": "string"
             }
           },
           "required": ["upstreamArtifacts"]
