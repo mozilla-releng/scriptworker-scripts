@@ -1,6 +1,7 @@
 import logging
 import mimetypes
 import os
+import shutil
 
 import boto3
 import mock
@@ -213,11 +214,20 @@ async def test_upload_to_s3_raises(context, mocker):
         await beetmoverscript.script.upload_to_s3(context, "foo", "mime.invalid")
 
 
+@pytest.fixture
+def restore_buildhub_file():
+    original_location = "tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/buildhub.json"
+    copy_location = "tests/buildhub_copy.json"
+    shutil.copy(original_location, copy_location)
+    yield
+    shutil.move(copy_location, original_location)
+
+
 # move_beets {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize("task_filename", ("task.json", "task_artifact_map.json"))
 @pytest.mark.parametrize("partials", (False, True))
-async def test_move_beets(task_filename, partials, mocker):
+async def test_move_beets(task_filename, partials, mocker, restore_buildhub_file):
     mocker.patch("beetmoverscript.utils.JINJA_ENV", get_test_jinja_env())
 
     context = Context()

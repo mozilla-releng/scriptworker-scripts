@@ -203,7 +203,7 @@ async def _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, ap
     )
 
 
-async def sign_app(sign_config, app_path, entitlements_path):
+async def sign_app(sign_config, app_path, entitlements_path, provisioning_profile_path=None):
     """Sign the .app.
 
     Largely taken from build-tools' ``dmg_signfile``.
@@ -212,6 +212,8 @@ async def sign_app(sign_config, app_path, entitlements_path):
         sign_config (dict): the running config
         app_path (str): the path to the app to be signed (extracted)
         entitlements_path (str): the path to the entitlements file for signing
+        provisioning_profile_path (str): the path to a provisioning profile to insert
+                                         into the build prior to signing
 
     Raises:
         IScriptError: on error.
@@ -225,12 +227,17 @@ async def sign_app(sign_config, app_path, entitlements_path):
     sign_command = _get_sign_command(identity, keychain, sign_config)
     log.debug(f"sign_app: signing {app_name}")
 
-    if sign_config.get("sign_with_entitlements", False):
-        sign_command.extend(["-o", "runtime", "--entitlements", entitlements_path])
-
     app_executable = get_bundle_executable(app_path)
     app_path_len = len(app_path)
     contents_dir = os.path.join(app_path, "Contents")
+
+    if sign_config.get("sign_with_entitlements", False):
+        sign_command.extend(["-o", "runtime", "--entitlements", entitlements_path])
+
+    if provisioning_profile_path:
+        log.debug("inserting provisioning profile into app")
+        copy2(provisioning_profile_path, os.path.join(contents_dir, "embedded.provisionprofile"))
+
     for top_dir, dirs, files in os.walk(contents_dir):
         for dir_ in dirs:
             abs_dir = os.path.join(top_dir, dir_)
@@ -526,7 +533,7 @@ async def create_one_notarization_zipfile(work_dir, all_paths, sign_config, path
 
 
 # sign_all_apps {{{1
-async def sign_all_apps(config, sign_config, entitlements_path, all_paths):
+async def sign_all_apps(config, sign_config, entitlements_path, all_paths, provisioning_profile_path):
     """Sign all the apps.
 
     Args:
@@ -534,6 +541,8 @@ async def sign_all_apps(config, sign_config, entitlements_path, all_paths):
         sign_config (dict): the config for this signing key
         entitlements_path (str): the path to the entitlements file, used
             for signing
+        provisioning_profile_path (str): the path to a provisioning profile to insert
+                                         into the build prior to signing
         all_paths (list): the list of ``App`` objects
 
     Raises:
@@ -559,7 +568,7 @@ async def sign_all_apps(config, sign_config, entitlements_path, all_paths):
     futures = []
     # sign apps concurrently
     for app in all_paths:
-        futures.append(asyncio.ensure_future(sign_app(sign_config, app.app_path, entitlements_path)))
+        futures.append(asyncio.ensure_future(sign_app(sign_config, app.app_path, entitlements_path, provisioning_profile_path)))
     await raise_future_exceptions(futures)
     # verify signatures
     futures = []
@@ -1009,14 +1018,32 @@ async def download_entitlements_file(config, sign_config, task):
         str: the path to the downloaded entitlments file
         None: if not ``sign_config["sign_with_entitlements"]``
 
-    Raises:
-        KeyError: if the plist doesn't include ``CFBundleIdentifier``
-
     """
     if not sign_config["sign_with_entitlements"]:
         return
     url = task["payload"]["entitlements-url"]
     to = os.path.join(config["work_dir"], "browser.entitlements.txt")
+    await retry_async(download_file, retry_exceptions=(DownloadError, TimeoutError), args=(url, to))
+    return to
+
+
+# download_provisioning_profile {{{1
+async def download_provisioning_profile(config, task):
+    """Download the provisioning profile into the work dir.
+
+    Args:
+        config (dict): the running configuration
+        task (dict): the running task
+
+    Returns:
+        str: the path to the downloaded provisioning profile
+        None: if not ``payload["provisioning-profile-url"]``
+
+    """
+    url = task["payload"].get("provisioning-profile-url")
+    if not url:
+        return None
+    to = os.path.join(config["work_dir"], "provisioning.profile")
     await retry_async(download_file, retry_exceptions=(DownloadError, TimeoutError), args=(url, to))
     return to
 
@@ -1037,6 +1064,7 @@ async def notarize_behavior(config, task):
 
     sign_config = get_sign_config(config, task, base_key="mac_config")
     entitlements_path = await download_entitlements_file(config, sign_config, task)
+    provisioning_profile_path = await download_provisioning_profile(config, task)
     path_attrs = ["app_path"]
 
     all_paths = get_app_paths(config, task)
@@ -1049,7 +1077,7 @@ async def notarize_behavior(config, task):
     await extract_all_apps(config, all_paths)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_all_apps(config, sign_config, entitlements_path, all_paths)
+    await sign_all_apps(config, sign_config, entitlements_path, all_paths, provisioning_profile_path)
 
     # pkg
     if sign_config["create_pkg"]:
@@ -1100,6 +1128,7 @@ async def notarize_1_behavior(config, task):
 
     sign_config = get_sign_config(config, task, base_key="mac_config")
     entitlements_path = await download_entitlements_file(config, sign_config, task)
+    provisioning_profile_path = await download_provisioning_profile(config, task)
     path_attrs = ["app_path"]
 
     all_paths = get_app_paths(config, task)
@@ -1112,7 +1141,7 @@ async def notarize_1_behavior(config, task):
     await extract_all_apps(config, all_paths)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_all_apps(config, sign_config, entitlements_path, all_paths)
+    await sign_all_apps(config, sign_config, entitlements_path, all_paths, provisioning_profile_path)
 
     # pkg
     if sign_config["create_pkg"]:
@@ -1197,6 +1226,7 @@ async def sign_behavior(config, task):
     """
     sign_config = get_sign_config(config, task, base_key="mac_config")
     entitlements_path = await download_entitlements_file(config, sign_config, task)
+    provisioning_profile_path = await download_provisioning_profile(config, task)
 
     all_paths = get_app_paths(config, task)
     all_paths = get_app_paths(config, task)
@@ -1207,7 +1237,7 @@ async def sign_behavior(config, task):
     await extract_all_apps(config, all_paths)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_all_apps(config, sign_config, entitlements_path, all_paths)
+    await sign_all_apps(config, sign_config, entitlements_path, all_paths, provisioning_profile_path)
     await tar_apps(config, all_paths)
     log.info("Done signing apps.")
 
@@ -1226,6 +1256,7 @@ async def sign_and_pkg_behavior(config, task):
     """
     sign_config = get_sign_config(config, task, base_key="mac_config")
     entitlements_path = await download_entitlements_file(config, sign_config, task)
+    provisioning_profile_path = await download_provisioning_profile(config, task)
 
     all_paths = get_app_paths(config, task)
     langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
@@ -1235,7 +1266,7 @@ async def sign_and_pkg_behavior(config, task):
     await extract_all_apps(config, all_paths)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_all_apps(config, sign_config, entitlements_path, all_paths)
+    await sign_all_apps(config, sign_config, entitlements_path, all_paths, provisioning_profile_path)
     await tar_apps(config, all_paths)
 
     # pkg
