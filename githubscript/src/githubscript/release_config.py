@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 def get_release_config(product_config, task_payload, config):
     return {
         "artifacts": _get_artifacts(task_payload, config),
-        "contact_github": config["contact_github"],
+        "contact_github": product_config["contact_github"],
         "git_revision": task_payload["gitRevision"],
         "git_tag": task_payload["gitTag"],
         "github_owner": product_config["github_owner"],
