@@ -20,7 +20,7 @@ async def async_main(config, task):
 
     release_config = get_release_config(project_config, task["payload"], config)
 
-    contact_github = bool(config.get("contact_github"))
+    contact_github = bool(release_config.get("contact_github"))
     _warn_contact_github(contact_github)
 
     action = get_action(task, prefix)

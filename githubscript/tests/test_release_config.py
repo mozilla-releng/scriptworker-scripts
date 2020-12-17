@@ -12,14 +12,13 @@ def test_release_config(monkeypatch):
 
     monkeypatch.setattr(release_config, "_get_artifacts", _dummy_get_artifacts)
 
-    config = {
-        "contact_github": True,
-    }
+    config = {}
 
     product_config = {
         "github_owner": "some_owner",
         "github_repo_name": "some_repo",
         "github_token": "some_secret_token",
+        "contact_github": True,
     }
 
     task_payload = {

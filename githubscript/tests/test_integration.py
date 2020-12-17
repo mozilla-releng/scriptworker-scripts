@@ -14,11 +14,16 @@ from githubscript.script import main
 def config():
     return {
         "github_projects": {
-            "fenix": {"allowed_actions": ["release"], "github_token": "SOME_TOKEN", "github_owner": "mozilla-mobile", "github_repo_name": "fenix"}
+            "fenix": {
+                "allowed_actions": ["release"],
+                "github_token": "SOME_TOKEN",
+                "github_owner": "mozilla-mobile",
+                "github_repo_name": "fenix",
+                "contact_github": True,
+            },
         },
         "taskcluster_scope_prefixes": ["project:mobile:fenix:releng:github:"],
         "verbose": True,
-        "contact_github": True,
     }
 
 
