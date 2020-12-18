@@ -1,7 +1,7 @@
 import logging
 from asyncio import ensure_future
 
-from aiohttp_retry import RetryClient
+from aiohttp_retry import RetryClient, RetryOptions
 from github3 import GitHub
 from github3.exceptions import NotFoundError, ServerError
 from scriptworker_client.exceptions import TaskError
@@ -187,10 +187,11 @@ async def _does_existing_artifact_need_to_be_reuploaded(existing_artifact, targe
     download_url = existing_artifact.browser_download_url
     # XXX A given release may be temporarilly 404 when it just got created
     retry_for_statuses = {404} if retry_on_404 else {}
+    retry_options = RetryOptions(statuses=retry_for_statuses)
     async with RetryClient() as client:
         # XXX We cannot do simple HEAD requests because Github uses AWS and they forbid them.
         # https://github.com/cavaliercoder/grab/issues/43#issuecomment-431076499
-        async with client.get(download_url, retry_for_statuses=retry_for_statuses) as response:
+        async with client.get(download_url, retry_options=retry_options) as response:
             response_status = response.status
             if response_status != 200:
                 log.warning(
