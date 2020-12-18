@@ -21,6 +21,7 @@ MAC_PRODUCT_CONFIG = {
         "skip_dirs": ("MozillaVPNLoginItem.app",),
         "zipfile_cmd": "ditto",
         "create_pkg": False,
+        "no_entitlements_files": ["wg", "wireguard-go"],
     },
 }
 
