@@ -225,14 +225,14 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
     identity = sign_config["identity"]
     keychain = sign_config["signing_keychain"]
     sign_command = _get_sign_command(identity, keychain, sign_config)
+    sign_command.extend(["-o", "runtime"])
+    sign_command_with_entitlements = _get_sign_command(identity, keychain, sign_config)
+    sign_command_with_entitlements.extend(["-o", "runtime", "--entitlements", entitlements_path])
     log.debug(f"sign_app: signing {app_name}")
 
     app_executable = get_bundle_executable(app_path)
     app_path_len = len(app_path)
     contents_dir = os.path.join(app_path, "Contents")
-
-    if sign_config.get("sign_with_entitlements", False):
-        sign_command.extend(["-o", "runtime", "--entitlements", entitlements_path])
 
     if provisioning_profile_path:
         log.debug("inserting provisioning profile into app")
@@ -257,7 +257,10 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
 
         for file_ in files:
             abs_file = os.path.join(top_dir, file_)
-            await _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable)
+            if not sign_config.get("sign_with_entitlements", False) or file_ in sign_config.get("no_entitlements_files", []):
+                await _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable)
+            else:
+                await _do_sign_file(top_dir, abs_file, file_, sign_command_with_entitlements, app_path_len, app_executable)
 
     await sign_libclearkey(contents_dir, sign_command, app_path)
 
