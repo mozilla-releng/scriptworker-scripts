@@ -7,11 +7,11 @@ from addonscript.task import get_channel
 from addonscript.utils import amo_download, amo_get, amo_put, get_api_url
 
 # https://addons-server.readthedocs.io/en/latest/topics/api/signing.html#uploading-a-version
-UPLOAD_VERSION = "api/v3/addons/{id}/versions/{version}/"
+UPLOAD_VERSION = "api/v4/addons/{id}/versions/{version}/"
 
 # https://addons-server.readthedocs.io/en/latest/topics/api/signing.html#checking-the-status-of-your-upload
-UPLOAD_STATUS = "api/v3/addons/{id}/versions/{version}/"
-UPLOAD_STATUS_PK = "api/v3/addons/{id}/versions/{version}/uploads/{upload_pk}/"
+UPLOAD_STATUS = "api/v4/addons/{id}/versions/{version}/"
+UPLOAD_STATUS_PK = "api/v4/addons/{id}/versions/{version}/uploads/{upload_pk}/"
 
 
 # https://addons-server.readthedocs.io/en/latest/topics/api/applications.html
