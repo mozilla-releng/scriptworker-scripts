@@ -955,11 +955,13 @@ async def create_pkg_files(config, sign_config, all_paths):
                             sign_config["signing_keychain"],
                             "--install-location",
                             "/Applications",
+                        ]
+                        + pkg_opts
+                        + [
                             "--component",
                             app.app_path,
                             app.tmp_pkg_path,
-                        ]
-                        + pkg_opts,
+                        ],
                         cwd=app.parent_dir,
                         exception=IScriptError,
                     ),
@@ -977,14 +979,16 @@ async def create_pkg_files(config, sign_config, all_paths):
                     run_command(
                         [
                             "productbuild",
-                            "--synthesize",
                             "--keychain",
                             sign_config["signing_keychain"],
+                        ]
+                        + pkg_opts
+                        + [
+                            "--synthesize",
                             "--package",
                             app.tmp_pkg_path,
                             app.pkg_path,
-                        ]
-                        + pkg_opts,
+                        ],
                         cwd=app.parent_dir,
                         exception=IScriptError,
                     ),
