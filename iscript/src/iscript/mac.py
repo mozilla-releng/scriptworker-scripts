@@ -977,6 +977,7 @@ async def create_pkg_files(config, sign_config, all_paths):
                     run_command(
                         [
                             "productbuild",
+                            "--synthesize",
                             "--keychain",
                             sign_config["signing_keychain"],
                             "--package",
