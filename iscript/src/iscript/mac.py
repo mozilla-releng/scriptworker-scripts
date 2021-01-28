@@ -933,17 +933,18 @@ async def create_pkg_files(config, sign_config, all_paths):
 
     """
     log.info("Creating PKG files")
-    futures = []
+    steps = [[], []]
     semaphore = asyncio.Semaphore(config.get("concurrency_limit", 2))
     for app in all_paths:
         # call set_app_path_and_name because we may not have called sign_app() earlier
         set_app_path_and_name(app)
+        app.tmp_pkg_path = app.app_path.replace(".appex", ".tmp.pkg").replace(".app", ".tmp.pkg")
         app.pkg_path = app.app_path.replace(".appex", ".pkg").replace(".app", ".pkg")
         app.pkg_name = os.path.basename(app.pkg_path)
         pkg_opts = []
         if sign_config.get("pkg_cert_id"):
             pkg_opts = ["--sign", sign_config["pkg_cert_id"]]
-        futures.append(
+        steps[0].append(
             asyncio.ensure_future(
                 semaphore_wrapper(
                     semaphore,
@@ -956,6 +957,27 @@ async def create_pkg_files(config, sign_config, all_paths):
                             "/Applications",
                             "--component",
                             app.app_path,
+                            app.tmp_pkg_path,
+                        ]
+                        + pkg_opts,
+                        cwd=app.parent_dir,
+                        exception=IScriptError,
+                    ),
+                )
+            )
+        )
+        # Bug 1689376 - distribution pkg
+        steps[1].append(
+            asyncio.ensure_future(
+                semaphore_wrapper(
+                    semaphore,
+                    run_command(
+                        [
+                            "productbuild",
+                            "--keychain",
+                            sign_config["signing_keychain"],
+                            "--package",
+                            app.tmp_pkg_path,
                             app.pkg_path,
                         ]
                         + pkg_opts,
@@ -965,7 +987,8 @@ async def create_pkg_files(config, sign_config, all_paths):
                 )
             )
         )
-    await raise_future_exceptions(futures)
+    for current_steps in steps:
+        await raise_future_exceptions(current_steps)
 
 
 # copy_pkgs_to_artifact_dir {{{1
