@@ -984,7 +984,6 @@ async def create_pkg_files(config, sign_config, all_paths):
                         ]
                         + pkg_opts
                         + [
-                            "--synthesize",
                             "--package",
                             app.tmp_pkg_path,
                             app.pkg_path,
