@@ -933,18 +933,18 @@ async def create_pkg_files(config, sign_config, all_paths):
 
     """
     log.info("Creating PKG files")
-    steps = [[], []]
+    futures = []
     semaphore = asyncio.Semaphore(config.get("concurrency_limit", 2))
+    pkg_opts = []
+    if sign_config.get("pkg_cert_id"):
+        pkg_opts = ["--sign", sign_config["pkg_cert_id"]]
     for app in all_paths:
         # call set_app_path_and_name because we may not have called sign_app() earlier
         set_app_path_and_name(app)
         app.tmp_pkg_path = app.app_path.replace(".appex", ".tmp.pkg").replace(".app", ".tmp.pkg")
         app.pkg_path = app.app_path.replace(".appex", ".pkg").replace(".app", ".pkg")
         app.pkg_name = os.path.basename(app.pkg_path)
-        pkg_opts = []
-        if sign_config.get("pkg_cert_id"):
-            pkg_opts = ["--sign", sign_config["pkg_cert_id"]]
-        steps[0].append(
+        futures.append(
             asyncio.ensure_future(
                 semaphore_wrapper(
                     semaphore,
@@ -966,8 +966,11 @@ async def create_pkg_files(config, sign_config, all_paths):
                 )
             )
         )
+    await raise_future_exceptions(futures)
+    futures = []
+    for app in all_paths:
         # Bug 1689376 - distribution pkg
-        steps[1].append(
+        futures.append(
             asyncio.ensure_future(
                 semaphore_wrapper(
                     semaphore,
@@ -987,8 +990,7 @@ async def create_pkg_files(config, sign_config, all_paths):
                 )
             )
         )
-    for current_steps in steps:
-        await raise_future_exceptions(current_steps)
+    await raise_future_exceptions(futures)
 
 
 # copy_pkgs_to_artifact_dir {{{1
