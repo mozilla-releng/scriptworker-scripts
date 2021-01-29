@@ -172,8 +172,9 @@ async def sign_single_files(config, sign_config, all_paths):
 
     for app in all_paths:
         for path in app.single_paths:
-            if not os.path.exists(path):
-                raise IScriptError(f"No such file {path}!")
+            abspath = os.path.join(app.parent_dir, path)
+            if not os.path.exists(abspath):
+                raise IScriptError(f"No such file {abspath}!")
             await retry_async(
                 run_command,
                 args=[sign_command + [path]],
