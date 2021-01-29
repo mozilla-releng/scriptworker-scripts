@@ -1009,6 +1009,7 @@ async def create_pkg_files(config, sign_config, all_paths):
                 )
             )
         )
+    await raise_future_exceptions(futures)
     futures = []
     for app in all_paths:
         # Bug 1689376 - sign distribution pkg
