@@ -7,7 +7,7 @@ from scriptworker_client.client import sync_main
 from scriptworker_client.utils import run_command
 
 from iscript.exceptions import IScriptError
-from iscript.mac import single_file_behavior, notarize_1_behavior, notarize_3_behavior, notarize_behavior, sign_and_pkg_behavior, sign_behavior
+from iscript.mac import notarize_1_behavior, notarize_3_behavior, notarize_behavior, sign_and_pkg_behavior, sign_behavior, single_file_behavior
 from iscript.util import get_sign_config
 
 log = logging.getLogger(__name__)

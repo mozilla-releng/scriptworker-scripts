@@ -49,6 +49,9 @@
                     }
                   }
                 },
+                "singleFileName": {
+                    "type": "string"
+                },
                 "required": ["taskId", "taskType", "paths"]
               },
               "minItems": 1,
@@ -63,9 +66,6 @@
               "enum": ["firefox", "mozillavpn"]
             },
             "entitlements-url": {
-              "type": "string"
-            },
-            "single-file-name": {
               "type": "string"
             },
             "provisioning-profile-url": {

@@ -21,7 +21,7 @@ from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_comma
 
 from iscript.autograph import sign_langpacks, sign_omnija_with_autograph, sign_widevine_dir
 from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
-from iscript.util import get_sign_config, get_single_file_name
+from iscript.util import get_sign_config
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ class App(object):
             ``multi_account`` workflow.
         pkg_path (str): the unsigned .pkg path.
         pkg_name (str): the basename of the .pkg path.
+        single_file_name (str): the filename to sign in the mac_single_file behavior.
         notarization_log_path (str): the path to the logfile for notarization,
             if we use the ``multi_account`` workflow. This is currently
             overwritten each time we poll.
@@ -61,6 +62,7 @@ class App(object):
     zip_path = attr.ib(default="")
     pkg_path = attr.ib(default="")
     pkg_name = attr.ib(default="")
+    single_file_name = attr.ib(default="")
     notarization_log_path = attr.ib(default="")
     target_tar_path = attr.ib(default="")
     target_pkg_path = attr.ib(default="")
@@ -146,7 +148,7 @@ def _get_sign_command(identity, keychain, sign_config):
 
 
 # sign_single_file {{{1
-async def sign_single_file(config, sign_config, all_paths, filename):
+async def sign_single_file(config, sign_config, all_paths):
     """Sign a single file.
 
     Args:
@@ -162,14 +164,14 @@ async def sign_single_file(config, sign_config, all_paths, filename):
     sign_command = _get_sign_command(identity, keychain, sign_config)
 
     for app in all_paths:
-        app.check_required_attrs(["orig_path", "parent_dir", "artifact_prefix"])
+        app.check_required_attrs(["orig_path", "parent_dir", "artifact_prefix", "single_file_name"])
         app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
-        path = os.path.join(app.parent_dir, filename)
+        path = os.path.join(app.parent_dir, app.single_file_name)
         if not os.path.exists(path):
             raise IScriptError(f"No such file {path}!")
         await retry_async(
             run_command,
-            args=[sign_command + [filename]],
+            args=[sign_command + [app.single_file_name]],
             kwargs={"cwd": app.parent_dir, "exception": IScriptError, "output_log_on_exception": True},
             retry_exceptions=(IScriptError,),
         )
@@ -178,7 +180,10 @@ async def sign_single_file(config, sign_config, all_paths, filename):
         env["COPYFILE_DISABLE"] = "1"
         makedirs(os.path.dirname(app.target_tar_path))
         await run_command(
-            ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path, filename], cwd=app.parent_dir, env=env, exception=IScriptError
+            ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path, app.single_file_name],
+            cwd=app.parent_dir,
+            env=env,
+            exception=IScriptError,
         )
 
 
@@ -417,7 +422,11 @@ def get_app_paths(config, task):
     for upstream_artifact_info in task["payload"]["upstreamArtifacts"]:
         for subpath in upstream_artifact_info["paths"]:
             orig_path = get_artifact_path(upstream_artifact_info["taskId"], subpath, work_dir=config["work_dir"])
-            all_paths.append(App(orig_path=orig_path, formats=upstream_artifact_info["formats"], artifact_prefix=_get_artifact_prefix(subpath)))
+            formats = upstream_artifact_info["formats"]
+            app = App(orig_path=orig_path, formats=formats, artifact_prefix=_get_artifact_prefix(subpath))
+            if "mac_geckodriver" in formats or "mac_single_file" in formats:
+                app.single_file_name = upstream_artifact_info.get("singleFileName", "geckodriver")
+            all_paths.append(app)
     return all_paths
 
 
@@ -1293,7 +1302,6 @@ async def single_file_behavior(config, task):
 
     """
     sign_config = get_sign_config(config, task, base_key="mac_config")
-    filename = get_single_file_name(task)
 
     all_paths = get_app_paths(config, task)
     langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
@@ -1303,6 +1311,6 @@ async def single_file_behavior(config, task):
     await extract_all_apps(config, all_paths)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_single_file(config, sign_config, all_paths, filename)
+    await sign_single_file(config, sign_config, all_paths)
 
-    log.info(f"Done signing {filename}.")
+    log.info("Done signing single files.")
