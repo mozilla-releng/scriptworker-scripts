@@ -92,5 +92,6 @@ def expand_globs(globs, parent_dir=None):
     paths = []
     for path_glob in globs:
         path_glob = os.path.join(parent_dir, path_glob)
-        paths.extend(glob.glob(path_glob, recursive=True))
+        for path in glob.glob(path_glob, recursive=True):
+            paths.append(os.path.relpath(path, start=parent_dir))
     return sorted(list(set(paths)))
