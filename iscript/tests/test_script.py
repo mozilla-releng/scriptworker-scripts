@@ -14,17 +14,17 @@ from iscript.exceptions import IScriptError
 @pytest.mark.parametrize(
     "behavior, supported_behaviors, expected_behavior, raises",
     (
-        ("mac_geckodriver", ["mac_sign", "mac_geckodriver"], "mac_geckodriver", False),
+        ("mac_single_file", ["mac_sign", "mac_single_file"], "mac_single_file", False),
         ("mac_notarize", ["mac_sign", "mac_notarize"], "mac_notarize", False),
         ("mac_notarize", ["mac_sign", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),
         ("mac_sign", ["mac_sign"], "mac_sign", False),
         ("mac_sign", ["mac_sign"], "mac_sign", False),
-        ("mac_sign_and_pkg", ["mac_geckodriver", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),
+        ("mac_sign_and_pkg", ["mac_single_file", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),
         (None, ["mac_sign"], "mac_sign", False),
         ("invalid_behavior", ["mac_sign", "invalid_behavior"], None, True),
-        ("mac_notarize", ["mac_sign", "mac_geckodriver"], None, True),
-        ("mac_notarize_part_1", ["mac_notarize_part_1", "mac_geckodriver"], "mac_notarize_part_1", False),
-        ("mac_notarize_part_3", ["mac_notarize_part_3", "mac_geckodriver"], "mac_notarize_part_3", False),
+        ("mac_notarize", ["mac_sign", "mac_single_file"], None, True),
+        ("mac_notarize_part_1", ["mac_notarize_part_1", "mac_single_file"], "mac_notarize_part_1", False),
+        ("mac_notarize_part_3", ["mac_notarize_part_3", "mac_single_file"], "mac_notarize_part_3", False),
     ),
 )
 @pytest.mark.asyncio
@@ -48,8 +48,8 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
     async def test_notarize_3(*args, **kwargs):
         calls.setdefault("mac_notarize_part_3", []).append([args, kwargs])
 
-    async def test_geckodriver(*args, **kwargs):
-        calls.setdefault("mac_geckodriver", []).append([args, kwargs])
+    async def test_single_file(*args, **kwargs):
+        calls.setdefault("mac_single_file", []).append([args, kwargs])
 
     async def test_sign(*args, **kwargs):
         calls.setdefault("mac_sign", []).append([args, kwargs])
@@ -60,7 +60,7 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
     mocker.patch.object(script, "notarize_behavior", new=test_notarize)
     mocker.patch.object(script, "notarize_1_behavior", new=test_notarize_1)
     mocker.patch.object(script, "notarize_3_behavior", new=test_notarize_3)
-    mocker.patch.object(script, "geckodriver_behavior", new=test_geckodriver)
+    mocker.patch.object(script, "single_file_behavior", new=test_single_file)
     mocker.patch.object(script, "sign_behavior", new=test_sign)
     mocker.patch.object(script, "sign_and_pkg_behavior", new=test_sign_and_pkg)
     mocker.patch.object(script, "get_sign_config", return_value=sign_config)
