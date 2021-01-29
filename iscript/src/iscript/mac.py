@@ -145,9 +145,9 @@ def _get_sign_command(identity, keychain, sign_config):
     return ["codesign", "-s", identity, "-fv", "--keychain", keychain, "--requirement", sign_config["designated_requirements"] % {"subject_ou": identity}]
 
 
-# sign_geckodriver {{{1
-async def sign_geckodriver(config, sign_config, all_paths):
-    """Sign geckodriver.
+# sign_single_file {{{1
+async def sign_single_file(config, sign_config, all_paths, filename):
+    """Sign a single file.
 
     Args:
         sign_config (dict): the running config
@@ -164,13 +164,12 @@ async def sign_geckodriver(config, sign_config, all_paths):
     for app in all_paths:
         app.check_required_attrs(["orig_path", "parent_dir", "artifact_prefix"])
         app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
-        file_ = "geckodriver"
-        path = os.path.join(app.parent_dir, file_)
+        path = os.path.join(app.parent_dir, filename)
         if not os.path.exists(path):
             raise IScriptError(f"No such file {path}!")
         await retry_async(
             run_command,
-            args=[sign_command + [file_]],
+            args=[sign_command + [filename]],
             kwargs={"cwd": app.parent_dir, "exception": IScriptError, "output_log_on_exception": True},
             retry_exceptions=(IScriptError,),
         )
@@ -1285,6 +1284,8 @@ async def sign_and_pkg_behavior(config, task):
 async def geckodriver_behavior(config, task):
     """Create and sign the geckodriver file for this task.
 
+    XXX deprecated, let's use single_file_behavior
+
     Args:
         config (dict): the running configuration
         task (dict): the running task
@@ -1303,6 +1304,6 @@ async def geckodriver_behavior(config, task):
     await extract_all_apps(config, all_paths)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_geckodriver(config, sign_config, all_paths)
+    await sign_single_file(config, sign_config, all_paths, "geckodriver")
 
     log.info("Done signing geckodriver.")

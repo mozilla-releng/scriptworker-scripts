@@ -102,11 +102,11 @@ def test_get_bundle_executable(mocker):
     assert mac.get_bundle_executable("foo") == "main"
 
 
-# sign_geckodriver {{{1
+# sign_single_file {{{1
 @pytest.mark.parametrize("exists", (True, False))
 @pytest.mark.asyncio
-async def test_sign_geckodriver(exists, mocker, tmpdir):
-    """Render ``sign_geckodriver`` noop and verify we have complete code coverage."""
+async def test_sign_single_file(exists, mocker, tmpdir):
+    """Render ``sign_single_file`` noop and verify we have complete code coverage."""
     sign_config = {"identity": "id", "signing_keychain": "keychain", "designated_requirements": ""}
     config = {"artifact_dir": os.path.join(tmpdir, "artifacts")}
     app = mac.App(
@@ -120,10 +120,10 @@ async def test_sign_geckodriver(exists, mocker, tmpdir):
         touch(os.path.join(app.parent_dir, "geckodriver"))
     mocker.patch.object(mac, "run_command", new=noop_async)
     if exists:
-        await mac.sign_geckodriver(config, sign_config, [app])
+        await mac.sign_single_file(config, sign_config, [app], "geckodriver")
     else:
         with pytest.raises(IScriptError):
-            await mac.sign_geckodriver(config, sign_config, [app])
+            await mac.sign_single_file(config, sign_config, [app], "geckodriver")
 
 
 # sign_app {{{1
