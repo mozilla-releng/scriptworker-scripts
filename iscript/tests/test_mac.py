@@ -1164,11 +1164,13 @@ async def test_notarize_3_behavior(mocker, tmpdir):
     await mac.notarize_3_behavior(config, task)
 
 
-# geckodriver_behavior {{{1
+# single_file_behavior {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("use_langpack", (False, True))
-async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
-    """Mock ``geckodriver_behavior`` for full line coverage."""
+@pytest.mark.parametrize(
+    "use_langpack,filename,format", ((False, "geckodriver", "mac_geckodriver"), (True, "foo", "mac_single_file"), (False, "geckodriver", "mac_single_file"))
+)
+async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, format):
+    """Mock ``single_file_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
     work_dir = os.path.join(str(tmpdir), "work")
@@ -1194,7 +1196,9 @@ async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
         },
     }
 
-    task = {"payload": {"upstreamArtifacts": [{"taskId": "task1", "formats": ["mac_geckodriver"], "paths": ["public/build/1/geckodriver.tar.gz"]}]}}
+    task = {"payload": {"upstreamArtifacts": [{"taskId": "task1", "formats": [format], "paths": [f"public/build/1/{filename}.tar.gz"]}]}}
+    if format == "mac_single_file":
+        task["payload"]["single-file-name"] = filename
     if use_langpack:
         mocker.patch.object(mac, "sign_langpacks", new=noop_async)
         task["payload"]["upstreamArtifacts"].append({"taskId": "task3", "formats": ["autograph_langpack"], "paths": ["public/build3/target.langpack.xpi"]})
@@ -1203,11 +1207,12 @@ async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
         for app in all_paths:
             assert "autograph_langpack" not in app.formats
             app.parent_dir = f"{work_dir}/0"
-            makedirs(app.parent_dir)
-            touch(f"{app.parent_dir}/geckodriver")
+            touch(f"{app.parent_dir}/{filename}")
+            print(f"touch {app.parent_dir}/{filename}")
+            print(os.path.exists(os.path.join(app.parent_dir, filename)))
 
     mocker.patch.object(mac, "extract_all_apps", new=fake_extract)
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
-    await mac.geckodriver_behavior(config, task)
+    await mac.single_file_behavior(config, task)

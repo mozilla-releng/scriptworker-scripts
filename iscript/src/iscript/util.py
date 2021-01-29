@@ -49,6 +49,19 @@ def get_product(task):
     return task["payload"].get("product", "firefox")
 
 
+def get_single_file_name(task):
+    """Get the single file name from the task definition.
+
+    Args:
+        task (dict): the running task
+
+    Returns:
+        str: ``task.payload.single-file-name``, if set. Defaults to ``geckodriver``
+
+    """
+    return task["payload"].get("single-file-name", "geckodriver")
+
+
 def get_sign_config(config, task, base_key="mac_config"):
     """Sanity check the task scopes and return the appropriate ``sign_config``.
 

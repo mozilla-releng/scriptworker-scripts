@@ -21,7 +21,7 @@ from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_comma
 
 from iscript.autograph import sign_langpacks, sign_omnija_with_autograph, sign_widevine_dir
 from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
-from iscript.util import get_sign_config
+from iscript.util import get_sign_config, get_single_file_name
 
 log = logging.getLogger(__name__)
 
@@ -178,7 +178,7 @@ async def sign_single_file(config, sign_config, all_paths, filename):
         env["COPYFILE_DISABLE"] = "1"
         makedirs(os.path.dirname(app.target_tar_path))
         await run_command(
-            ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path, file_], cwd=app.parent_dir, env=env, exception=IScriptError
+            ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path, filename], cwd=app.parent_dir, env=env, exception=IScriptError
         )
 
 
@@ -1280,11 +1280,9 @@ async def sign_and_pkg_behavior(config, task):
     log.info("Done signing apps and creating pkgs.")
 
 
-# geckodriver {{{1
-async def geckodriver_behavior(config, task):
-    """Create and sign the geckodriver file for this task.
-
-    XXX deprecated, let's use single_file_behavior
+# single_file_behavior {{{1
+async def single_file_behavior(config, task):
+    """Create and sign the single file for this task.
 
     Args:
         config (dict): the running configuration
@@ -1295,6 +1293,7 @@ async def geckodriver_behavior(config, task):
 
     """
     sign_config = get_sign_config(config, task, base_key="mac_config")
+    filename = get_single_file_name(task)
 
     all_paths = get_app_paths(config, task)
     langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
@@ -1304,6 +1303,6 @@ async def geckodriver_behavior(config, task):
     await extract_all_apps(config, all_paths)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_single_file(config, sign_config, all_paths, "geckodriver")
+    await sign_single_file(config, sign_config, all_paths, filename)
 
-    log.info("Done signing geckodriver.")
+    log.info(f"Done signing {filename}.")
