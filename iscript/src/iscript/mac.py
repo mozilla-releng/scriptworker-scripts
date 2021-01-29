@@ -953,13 +953,14 @@ async def create_pkg_files(config, sign_config, all_paths):
     log.info("Creating PKG files")
     futures = []
     semaphore = asyncio.Semaphore(config.get("concurrency_limit", 2))
-    pkg_opts = []
+    cmd_opts = []
     if sign_config.get("pkg_cert_id"):
-        pkg_opts = ["--sign", sign_config["pkg_cert_id"]]
+        cmd_opts = ["--keychain", sign_config["signing_keychain"], "--sign", sign_config["pkg_cert_id"]]
     for app in all_paths:
         # call set_app_path_and_name because we may not have called sign_app() earlier
         set_app_path_and_name(app)
-        app.tmp_pkg_path = app.app_path.replace(".appex", ".tmp.pkg").replace(".app", ".tmp.pkg")
+        app.tmp_pkg_path1 = app.app_path.replace(".appex", ".tmp1.pkg").replace(".app", ".tmp1.pkg")
+        app.tmp_pkg_path2 = app.app_path.replace(".appex", ".tmp2.pkg").replace(".app", ".tmp2.pkg")
         app.pkg_path = app.app_path.replace(".appex", ".pkg").replace(".app", ".pkg")
         app.pkg_name = os.path.basename(app.pkg_path)
         futures.append(
@@ -969,16 +970,14 @@ async def create_pkg_files(config, sign_config, all_paths):
                     run_command(
                         [
                             "pkgbuild",
-                            "--keychain",
-                            sign_config["signing_keychain"],
                             "--install-location",
                             "/Applications",
                         ]
-                        + pkg_opts
+                        + cmd_opts
                         + [
                             "--component",
                             app.app_path,
-                            app.tmp_pkg_path,
+                            app.tmp_pkg_path1,
                         ],
                         cwd=app.parent_dir,
                         exception=IScriptError,
@@ -989,7 +988,7 @@ async def create_pkg_files(config, sign_config, all_paths):
     await raise_future_exceptions(futures)
     futures = []
     for app in all_paths:
-        # Bug 1689376 - distribution pkg
+        # Bug 1689376 - create distribution pkg
         futures.append(
             asyncio.ensure_future(
                 semaphore_wrapper(
@@ -997,13 +996,33 @@ async def create_pkg_files(config, sign_config, all_paths):
                     run_command(
                         [
                             "productbuild",
-                            "--keychain",
-                            sign_config["signing_keychain"],
                         ]
-                        + pkg_opts
+                        + cmd_opts
                         + [
                             "--package",
-                            app.tmp_pkg_path,
+                            app.tmp_pkg_path1,
+                            app.tmp_pkg_path2,
+                        ],
+                        cwd=app.parent_dir,
+                        exception=IScriptError,
+                    ),
+                )
+            )
+        )
+    futures = []
+    for app in all_paths:
+        # Bug 1689376 - sign distribution pkg
+        futures.append(
+            asyncio.ensure_future(
+                semaphore_wrapper(
+                    semaphore,
+                    run_command(
+                        [
+                            "productsign",
+                        ]
+                        + cmd_opts
+                        + [
+                            app.tmp_pkg_path2,
                             app.pkg_path,
                         ],
                         cwd=app.parent_dir,

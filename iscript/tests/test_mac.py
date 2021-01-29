@@ -760,7 +760,7 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises):
     """
 
     async def fake_run_command(cmd, **kwargs):
-        assert cmd[0:1] in (["pkgbuild"], ["productbuild"])
+        assert cmd[0:1] in (["pkgbuild"], ["productbuild"], ["productsign"])
         if raises:
             raise IScriptError("foo")
 
