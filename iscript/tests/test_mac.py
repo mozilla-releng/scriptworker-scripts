@@ -102,18 +102,18 @@ def test_get_bundle_executable(mocker):
     assert mac.get_bundle_executable("foo") == "main"
 
 
-# sign_single_file {{{1
+# sign_single_files {{{1
 @pytest.mark.parametrize("exists", (True, False))
 @pytest.mark.asyncio
-async def test_sign_single_file(exists, mocker, tmpdir):
-    """Render ``sign_single_file`` noop and verify we have complete code coverage."""
+async def test_sign_single_files(exists, mocker, tmpdir):
+    """Render ``sign_single_files`` noop and verify we have complete code coverage."""
     sign_config = {"identity": "id", "signing_keychain": "keychain", "designated_requirements": ""}
     config = {"artifact_dir": os.path.join(tmpdir, "artifacts")}
     app = mac.App(
         orig_path=os.path.join(tmpdir, "cot/task1/public/build/geckodriver.tar.gz"),
         parent_dir=os.path.join(tmpdir, "0"),
         artifact_prefix=os.path.join("public/build"),
-        single_file_name="geckodriver",
+        single_file_globs=["geckodriver"],
     )
 
     makedirs(app.parent_dir)
@@ -121,10 +121,10 @@ async def test_sign_single_file(exists, mocker, tmpdir):
         touch(os.path.join(app.parent_dir, "geckodriver"))
     mocker.patch.object(mac, "run_command", new=noop_async)
     if exists:
-        await mac.sign_single_file(config, sign_config, [app])
+        await mac.sign_single_files(config, sign_config, [app])
     else:
         with pytest.raises(IScriptError):
-            await mac.sign_single_file(config, sign_config, [app])
+            await mac.sign_single_files(config, sign_config, [app])
 
 
 # sign_app {{{1
@@ -1199,7 +1199,7 @@ async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, form
 
     task = {"payload": {"upstreamArtifacts": [{"taskId": "task1", "formats": [format], "paths": [f"public/build/1/{filename}.tar.gz"]}]}}
     if format == "mac_single_file":
-        task["payload"]["upstreamArtifacts"][0]["singleFileName"] = filename
+        task["payload"]["upstreamArtifacts"][0]["singleFileGlobs"] = [filename]
     if use_langpack:
         mocker.patch.object(mac, "sign_langpacks", new=noop_async)
         task["payload"]["upstreamArtifacts"].append({"taskId": "task3", "formats": ["autograph_langpack"], "paths": ["public/build3/target.langpack.xpi"]})

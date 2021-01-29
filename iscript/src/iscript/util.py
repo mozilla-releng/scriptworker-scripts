@@ -5,7 +5,9 @@ Attributes:
     log (logging.Logger): the log object for the module
 
 """
+import glob
 import logging
+import os
 from copy import deepcopy
 
 from iscript.constants import PRODUCT_CONFIG
@@ -75,3 +77,20 @@ def get_sign_config(config, task, base_key="mac_config"):
         return sign_config
     except KeyError as exc:
         raise IScriptError("get_sign_config error: {}".format(str(exc))) from exc
+
+
+def expand_globs(globs, parent_dir=None):
+    """Expand globs in a directory.
+
+    Args:
+        globs (list): a list of glob strings.
+        parent_dir (str, optional): the parent directory to look in. Will default
+            to cwd.
+
+    """
+    parent_dir = parent_dir or os.getcwd()
+    paths = []
+    for path_glob in globs:
+        path_glob = os.path.join(parent_dir, path_glob)
+        paths.extend(glob.glob(path_glob, recursive=True))
+    return sorted(list(set(paths)))

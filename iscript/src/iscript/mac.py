@@ -21,7 +21,7 @@ from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_comma
 
 from iscript.autograph import sign_langpacks, sign_omnija_with_autograph, sign_widevine_dir
 from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
-from iscript.util import get_sign_config
+from iscript.util import expand_globs, get_sign_config
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class App(object):
             ``multi_account`` workflow.
         pkg_path (str): the unsigned .pkg path.
         pkg_name (str): the basename of the .pkg path.
-        single_file_name (str): the filename to sign in the mac_single_file behavior.
+        single_file_globs (list): the globs to sign in the mac_single_file behavior.
         notarization_log_path (str): the path to the logfile for notarization,
             if we use the ``multi_account`` workflow. This is currently
             overwritten each time we poll.
@@ -62,7 +62,7 @@ class App(object):
     zip_path = attr.ib(default="")
     pkg_path = attr.ib(default="")
     pkg_name = attr.ib(default="")
-    single_file_name = attr.ib(default="")
+    single_file_globs = attr.ib(default="")
     notarization_log_path = attr.ib(default="")
     target_tar_path = attr.ib(default="")
     target_pkg_path = attr.ib(default="")
@@ -147,8 +147,8 @@ def _get_sign_command(identity, keychain, sign_config):
     return ["codesign", "-s", identity, "-fv", "--keychain", keychain, "--requirement", sign_config["designated_requirements"] % {"subject_ou": identity}]
 
 
-# sign_single_file {{{1
-async def sign_single_file(config, sign_config, all_paths):
+# sign_single_files {{{1
+async def sign_single_files(config, sign_config, all_paths):
     """Sign a single file.
 
     Args:
@@ -164,23 +164,28 @@ async def sign_single_file(config, sign_config, all_paths):
     sign_command = _get_sign_command(identity, keychain, sign_config)
 
     for app in all_paths:
-        app.check_required_attrs(["orig_path", "parent_dir", "artifact_prefix", "single_file_name"])
+        app.check_required_attrs(["orig_path", "parent_dir", "artifact_prefix", "single_file_globs"])
         app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
-        path = os.path.join(app.parent_dir, app.single_file_name)
-        if not os.path.exists(path):
-            raise IScriptError(f"No such file {path}!")
-        await retry_async(
-            run_command,
-            args=[sign_command + [app.single_file_name]],
-            kwargs={"cwd": app.parent_dir, "exception": IScriptError, "output_log_on_exception": True},
-            retry_exceptions=(IScriptError,),
-        )
+        app.single_paths = expand_globs(app.single_file_globs, parent_dir=app.parent_dir)
+        if not app.single_paths:
+            raise IScriptError(f"Unable to find anything to sign for {app.orig_path}!")
+
+    for app in all_paths:
+        for path in app.single_paths:
+            if not os.path.exists(path):
+                raise IScriptError(f"No such file {path}!")
+            await retry_async(
+                run_command,
+                args=[sign_command + [path]],
+                kwargs={"cwd": app.parent_dir, "exception": IScriptError, "output_log_on_exception": True},
+                retry_exceptions=(IScriptError,),
+            )
         env = deepcopy(os.environ)
         # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
         env["COPYFILE_DISABLE"] = "1"
         makedirs(os.path.dirname(app.target_tar_path))
         await run_command(
-            ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path, app.single_file_name],
+            ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path] + app.single_paths,
             cwd=app.parent_dir,
             env=env,
             exception=IScriptError,
@@ -425,7 +430,7 @@ def get_app_paths(config, task):
             formats = upstream_artifact_info["formats"]
             app = App(orig_path=orig_path, formats=formats, artifact_prefix=_get_artifact_prefix(subpath))
             if "mac_geckodriver" in formats or "mac_single_file" in formats:
-                app.single_file_name = upstream_artifact_info.get("singleFileName", "geckodriver")
+                app.single_file_globs = upstream_artifact_info.get("singleFileGlobs", ["geckodriver"])
             all_paths.append(app)
     return all_paths
 
@@ -1311,6 +1316,6 @@ async def single_file_behavior(config, task):
     await extract_all_apps(config, all_paths)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_single_file(config, sign_config, all_paths)
+    await sign_single_files(config, sign_config, all_paths)
 
     log.info("Done signing single files.")

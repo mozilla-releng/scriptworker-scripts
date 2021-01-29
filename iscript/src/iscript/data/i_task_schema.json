@@ -49,8 +49,12 @@
                     }
                   }
                 },
-                "singleFileName": {
-                    "type": "string"
+                "singleFileGlobs": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "required": ["taskId", "taskType", "paths"]
               },
