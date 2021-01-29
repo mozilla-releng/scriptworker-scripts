@@ -290,6 +290,7 @@ def test_get_app_paths():
         ("dmg", os.path.join(os.path.dirname(os.path.dirname(__file__)), "src", "iscript", "data", "unpack-diskimage"), False),
         ("tar.gz", "tar", False),
         ("tar.bz2", "tar", False),
+        ("zip", "unzip", False),
         ("unknown_ext", None, True),
     ),
 )

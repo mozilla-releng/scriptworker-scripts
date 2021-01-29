@@ -914,8 +914,10 @@ async def tar_apps(config, all_paths):
         app.check_required_attrs(["orig_path", "parent_dir", "app_path", "artifact_prefix"])
         # If we downloaded public/build/locale/target.tar.gz, then write to
         # artifact_dir/public/build/locale/target.tar.gz
-        app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1]).replace(
-            ".dmg", ".tar.gz"
+        app.target_tar_path = (
+            "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
+            .replace(".dmg", ".tar.gz")
+            .replace(".zip", ".tar.gz")
         )
         makedirs(os.path.dirname(app.target_tar_path))
         cwd = os.path.dirname(app.app_path)
