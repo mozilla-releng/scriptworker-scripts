@@ -165,7 +165,9 @@ async def sign_single_files(config, sign_config, all_paths):
 
     for app in all_paths:
         app.check_required_attrs(["orig_path", "parent_dir", "artifact_prefix", "single_file_globs"])
-        app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
+        app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1]).replace(
+            ".zip", ".tar.gz"
+        )
         app.single_paths = expand_globs(app.single_file_globs, parent_dir=app.parent_dir)
         if not app.single_paths:
             raise IScriptError(f"Unable to find anything to sign for {app.orig_path}!")
@@ -914,10 +916,8 @@ async def tar_apps(config, all_paths):
         app.check_required_attrs(["orig_path", "parent_dir", "app_path", "artifact_prefix"])
         # If we downloaded public/build/locale/target.tar.gz, then write to
         # artifact_dir/public/build/locale/target.tar.gz
-        app.target_tar_path = (
-            "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
-            .replace(".dmg", ".tar.gz")
-            .replace(".zip", ".tar.gz")
+        app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1]).replace(
+            ".dmg", ".tar.gz"
         )
         makedirs(os.path.dirname(app.target_tar_path))
         cwd = os.path.dirname(app.app_path)
