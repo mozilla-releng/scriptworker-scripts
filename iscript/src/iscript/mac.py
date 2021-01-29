@@ -26,7 +26,7 @@ from iscript.util import expand_globs, get_sign_config
 log = logging.getLogger(__name__)
 
 
-KNOWN_ARTIFACT_PREFIXES = ("public/", "releng/partner/")
+KNOWN_ARTIFACT_PREFIXES = ("public/", "releng/partner/", "private/openh264/")
 
 
 # App {{{1
