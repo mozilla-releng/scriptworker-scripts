@@ -760,7 +760,7 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises):
     """
 
     async def fake_run_command(cmd, **kwargs):
-        assert cmd[0:1] == ["pkgbuild"]
+        assert cmd[0:1] in (["pkgbuild"], ["productbuild"], ["productsign"])
         if raises:
             raise IScriptError("foo")
 
@@ -1001,9 +1001,9 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir, use_langpack):
 
 
 # notarize_behavior {{{1
-@pytest.mark.parametrize("notarize_type,use_langpack", zip(("multi_account", "single_account", "single_zip"), (False, True)))
+@pytest.mark.parametrize("notarize_type,use_langpack,create_pkg", zip(("multi_account", "single_account", "single_zip"), (False, True), (False, True)))
 @pytest.mark.asyncio
-async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
+async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack, create_pkg):
     """Mock ``notarize_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1027,7 +1027,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
                 "apple_notarization_password": "apple_password",
                 "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
-                "create_pkg": True,
+                "create_pkg": create_pkg,
             }
         },
     }
@@ -1059,9 +1059,11 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
 
 
 # notarize_1_behavior {{{1
-@pytest.mark.parametrize("notarize_type,use_langpack", zip(("multi_account", "single_account", "single_zip"), (False, True, False)))
+@pytest.mark.parametrize(
+    "notarize_type,use_langpack,create_pkg", zip(("multi_account", "single_account", "single_zip"), (False, True, False), (True, False, True))
+)
 @pytest.mark.asyncio
-async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
+async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack, create_pkg):
     """Mock ``notarize_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1085,7 +1087,7 @@ async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
                 "apple_notarization_password": "apple_password",
                 "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
-                "create_pkg": True,
+                "create_pkg": create_pkg,
             }
         },
     }
@@ -1116,7 +1118,8 @@ async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
 
 # notarize_3_behavior {{{1
 @pytest.mark.asyncio
-async def test_notarize_3_behavior(mocker, tmpdir):
+@pytest.mark.parametrize("create_pkg", (True, False))
+async def test_notarize_3_behavior(mocker, tmpdir, create_pkg):
     """Mock ``notarize_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1138,7 +1141,7 @@ async def test_notarize_3_behavior(mocker, tmpdir):
                 "apple_notarization_password": "apple_password",
                 "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
-                "create_pkg": True,
+                "create_pkg": create_pkg,
             }
         },
     }
