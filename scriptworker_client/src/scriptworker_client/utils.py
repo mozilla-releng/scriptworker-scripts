@@ -29,7 +29,7 @@ from typing import (
     Union,
 )
 from urllib.parse import unquote, urlparse
-from scriptworker_client.exceptions import TaskError
+from scriptworker_client.exceptions import ClientError, TaskError
 
 log = logging.getLogger(__name__)
 
@@ -166,6 +166,13 @@ def get_log_filehandle(log_path=None):
 
 
 # run_command {{{1
+def _get_exception_kwargs(exception, exitcode, copy_exit_codes):
+    kwargs = {}
+    if issubclass(exception, ClientError) and exitcode in copy_exit_codes:
+        kwargs["exit_code"] = exitcode
+    return kwargs
+
+
 async def run_command(
     cmd,
     log_path=None,
@@ -175,6 +182,7 @@ async def run_command(
     env=None,
     exception=None,
     expected_exit_codes=(0,),
+    copy_exit_codes=(-11, -15, 245, 241),  # 245 == -11, 241 == -15
     output_log_on_exception=False,
 ):
     """Run a command using ``asyncio.create_subprocess_exec``.
@@ -205,6 +213,9 @@ async def run_command(
         expected_exit_codes (list, optional): the list of exit codes for
             a successful run. Only used if ``exception`` is not ``None``.
             Defaults to ``(0, )``.
+        copy_exit_codes (list, optional): the list of exit codes that we
+            set ``exit_code`` to if ``exception`` is an instance of
+            ``ClientError``. Defaults to ``(-11, -15, 245, 241)``.
         output_log_on_exception (bool, optional): log the output log if we're
             raising an exception.
 
@@ -242,8 +253,14 @@ async def run_command(
             if output_log_on_exception:
                 log_filehandle.seek(0)
                 log_contents = log_filehandle.read()
+            exc_kwargs = _get_exception_kwargs(exception, exitcode, copy_exit_codes)
             raise exception(
-                "%s in %s exited %s!\n%s", log_cmd, cwd, exitcode, log_contents
+                "%s in %s exited %s!\n%s",
+                log_cmd,
+                cwd,
+                exitcode,
+                log_contents,
+                **exc_kwargs,
             )
     log.info("%s in %s exited %d", log_cmd, cwd, exitcode)
     return exitcode
