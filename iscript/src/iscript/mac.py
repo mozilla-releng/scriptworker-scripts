@@ -247,7 +247,6 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
     identity = sign_config["identity"]
     keychain = sign_config["signing_keychain"]
     sign_command = _get_sign_command(identity, keychain, sign_config)
-    sign_command.extend(["-o", "runtime"])
     sign_command_with_entitlements = _get_sign_command(identity, keychain, sign_config)
     sign_command_with_entitlements.extend(["-o", "runtime", "--entitlements", entitlements_path])
     log.debug(f"sign_app: signing {app_name}")
