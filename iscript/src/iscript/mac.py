@@ -165,9 +165,7 @@ async def sign_single_files(config, sign_config, all_paths):
 
     for app in all_paths:
         app.check_required_attrs(["orig_path", "parent_dir", "artifact_prefix", "single_file_globs"])
-        app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1]).replace(
-            ".zip", ".tar.gz"
-        )
+        app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
         app.single_paths = expand_globs(app.single_file_globs, parent_dir=app.parent_dir)
         if not app.single_paths:
             raise IScriptError(f"Unable to find anything to sign for {app.orig_path}!")
@@ -184,15 +182,27 @@ async def sign_single_files(config, sign_config, all_paths):
                 retry_exceptions=(IScriptError,),
             )
         env = deepcopy(os.environ)
-        # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
-        env["COPYFILE_DISABLE"] = "1"
         makedirs(os.path.dirname(app.target_tar_path))
-        await run_command(
-            ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path] + app.single_paths,
-            cwd=app.parent_dir,
-            env=env,
-            exception=IScriptError,
-        )
+        if app.target_tar_path.endswith(".zip"):
+            # Copy the original file to the artifacts dir before adding the
+            # signed files to it. This is an openh264 requirement (bug 1689232)
+            copy2(app.orig_path, app.target_tar_path)
+            await run_command(
+                ["zip", "-f", app.target_tar_path] + app.single_paths,
+                cwd=app.parent_dir,
+                env=env,
+                exception=IScriptError,
+            )
+        else:
+            # Create a new tarball with just the signed files.
+            # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
+            env["COPYFILE_DISABLE"] = "1"
+            await run_command(
+                ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path] + app.single_paths,
+                cwd=app.parent_dir,
+                env=env,
+                exception=IScriptError,
+            )
 
 
 # sign_app {{{1
