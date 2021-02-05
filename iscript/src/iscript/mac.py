@@ -286,12 +286,20 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
     await sign_libclearkey(contents_dir, sign_command, app_path)
 
     # sign bundle
-    await retry_async(
-        run_command,
-        args=[sign_command + [app_name]],
-        kwargs={"cwd": parent_dir, "exception": IScriptError, "output_log_on_exception": True},
-        retry_exceptions=(IScriptError,),
-    )
+    if sign_config.get("sign_with_entitlements", False):
+        await retry_async(
+            run_command,
+            args=[sign_command_with_entitlements + [app_name]],
+            kwargs={"cwd": parent_dir, "exception": IScriptError, "output_log_on_exception": True},
+            retry_exceptions=(IScriptError,),
+        )
+    else:
+        await retry_async(
+            run_command,
+            args=[sign_command + [app_name]],
+            kwargs={"cwd": parent_dir, "exception": IScriptError, "output_log_on_exception": True},
+            retry_exceptions=(IScriptError,),
+        )
 
 
 async def sign_libclearkey(contents_dir, sign_command, app_path):
