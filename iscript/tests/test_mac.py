@@ -709,7 +709,7 @@ async def test_staple_notarization(mocker, raises):
 @pytest.mark.asyncio
 async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
     """``tar_apps`` runs tar concurrently for each ``App``, creating the
-    app ``target_tar_path``s, and raises any exceptions hit along the way.
+    app ``target_bundle_path``s, and raises any exceptions hit along the way.
 
     """
 
@@ -750,7 +750,7 @@ async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
             await mac.tar_apps(config, all_paths)
     else:
         assert await mac.tar_apps(config, all_paths) is None
-        assert [x.target_tar_path for x in all_paths] == expected
+        assert [x.target_bundle_path for x in all_paths] == expected
         for path in expected:
             assert os.path.isdir(os.path.dirname(path))
 
