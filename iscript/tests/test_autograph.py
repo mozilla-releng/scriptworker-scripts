@@ -408,7 +408,7 @@ async def test_langpack_sign(sign_config, mocker, tmp_path):
 
     await autograph.sign_langpacks(config, sign_config, [langpack_app])
     expected_hash = "7f4292927b4a26589ee912918de941f498e58ce100041ec3565a82da57a42eab"
-    assert sha256(open(langpack_app.target_tar_path, "rb").read()).hexdigest() == expected_hash
+    assert sha256(open(langpack_app.target_bundle_path, "rb").read()).hexdigest() == expected_hash
     assert mock_ever_called[0]
 
 

@@ -47,8 +47,8 @@ class App(object):
         notarization_log_path (str): the path to the logfile for notarization,
             if we use the ``multi_account`` workflow. This is currently
             overwritten each time we poll.
-        target_tar_path (str): the path inside of ``artifact_dir`` for the signed
-            and notarized tarball.
+        target_bundle_path (str): the path inside of ``artifact_dir`` for the signed
+            and notarized tarball or zip.
         target_pkg_path (str): the path inside of ``artifact_dir`` for the signed
             and notarized .pkg.
         formats (list): the list of formats to sign with.
@@ -64,7 +64,7 @@ class App(object):
     pkg_name = attr.ib(default="")
     single_file_globs = attr.ib(default="")
     notarization_log_path = attr.ib(default="")
-    target_tar_path = attr.ib(default="")
+    target_bundle_path = attr.ib(default="")
     target_pkg_path = attr.ib(default="")
     formats = attr.ib(default="")
     artifact_prefix = attr.ib(default="")
@@ -165,9 +165,7 @@ async def sign_single_files(config, sign_config, all_paths):
 
     for app in all_paths:
         app.check_required_attrs(["orig_path", "parent_dir", "artifact_prefix", "single_file_globs"])
-        app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1]).replace(
-            ".zip", ".tar.gz"
-        )
+        app.target_bundle_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
         app.single_paths = expand_globs(app.single_file_globs, parent_dir=app.parent_dir)
         if not app.single_paths:
             raise IScriptError(f"Unable to find anything to sign for {app.orig_path}!")
@@ -184,15 +182,27 @@ async def sign_single_files(config, sign_config, all_paths):
                 retry_exceptions=(IScriptError,),
             )
         env = deepcopy(os.environ)
-        # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
-        env["COPYFILE_DISABLE"] = "1"
-        makedirs(os.path.dirname(app.target_tar_path))
-        await run_command(
-            ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path] + app.single_paths,
-            cwd=app.parent_dir,
-            env=env,
-            exception=IScriptError,
-        )
+        makedirs(os.path.dirname(app.target_bundle_path))
+        if app.target_bundle_path.endswith(".zip"):
+            # Copy the original file to the artifacts dir before adding the
+            # signed files to it. This is an openh264 requirement (bug 1689232)
+            copy2(app.orig_path, app.target_bundle_path)
+            await run_command(
+                ["zip", "-f", app.target_bundle_path] + app.single_paths,
+                cwd=app.parent_dir,
+                env=env,
+                exception=IScriptError,
+            )
+        else:
+            # Create a new tarball with just the signed files.
+            # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
+            env["COPYFILE_DISABLE"] = "1"
+            await run_command(
+                ["tar", _get_tar_create_options(app.target_bundle_path), app.target_bundle_path] + app.single_paths,
+                cwd=app.parent_dir,
+                env=env,
+                exception=IScriptError,
+            )
 
 
 # sign_app {{{1
@@ -913,10 +923,10 @@ async def tar_apps(config, all_paths):
         app.check_required_attrs(["orig_path", "parent_dir", "app_path", "artifact_prefix"])
         # If we downloaded public/build/locale/target.tar.gz, then write to
         # artifact_dir/public/build/locale/target.tar.gz
-        app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1]).replace(
+        app.target_bundle_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1]).replace(
             ".dmg", ".tar.gz"
         )
-        makedirs(os.path.dirname(app.target_tar_path))
+        makedirs(os.path.dirname(app.target_bundle_path))
         cwd = os.path.dirname(app.app_path)
         env = deepcopy(os.environ)
         # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
@@ -924,7 +934,7 @@ async def tar_apps(config, all_paths):
         futures.append(
             asyncio.ensure_future(
                 run_command(
-                    ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path]
+                    ["tar", _get_tar_create_options(app.target_bundle_path), app.target_bundle_path]
                     + [f for f in os.listdir(cwd) if f != "[]" and not f.endswith(".pkg")],
                     cwd=cwd,
                     env=env,

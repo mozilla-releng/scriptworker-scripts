@@ -6,6 +6,7 @@ import asyncio
 import os
 import plistlib
 from functools import partial
+from shutil import copy2
 
 import arrow
 import mock
@@ -15,6 +16,8 @@ from scriptworker_client.utils import makedirs
 
 import iscript.mac as mac
 from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
+
+TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 
 # helpers {{{1
@@ -103,20 +106,22 @@ def test_get_bundle_executable(mocker):
 
 
 # sign_single_files {{{1
-@pytest.mark.parametrize("exists", (True, False))
+@pytest.mark.parametrize("exists, filename", ((True, "geckodriver.tar.gz"), (False, "geckodriver.tar.gz"), (True, "openh264.zip")))
 @pytest.mark.asyncio
-async def test_sign_single_files(exists, mocker, tmpdir):
+async def test_sign_single_files(exists, filename, mocker, tmpdir):
     """Render ``sign_single_files`` noop and verify we have complete code coverage."""
     sign_config = {"identity": "id", "signing_keychain": "keychain", "designated_requirements": ""}
     config = {"artifact_dir": os.path.join(tmpdir, "artifacts")}
     app = mac.App(
-        orig_path=os.path.join(tmpdir, "cot/task1/public/build/geckodriver.tar.gz"),
+        orig_path=os.path.join(tmpdir, f"cot/task1/public/build/{filename}"),
         parent_dir=os.path.join(tmpdir, "0"),
         artifact_prefix=os.path.join("public/build"),
         single_file_globs=["geckodriver"],
     )
 
     makedirs(app.parent_dir)
+    makedirs(os.path.dirname(app.orig_path))
+    copy2(os.path.join(TEST_DATA_DIR, "test.zip"), app.orig_path)
     if exists:
         touch(os.path.join(app.parent_dir, "geckodriver"))
     mocker.patch.object(mac, "run_command", new=noop_async)
@@ -704,7 +709,7 @@ async def test_staple_notarization(mocker, raises):
 @pytest.mark.asyncio
 async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
     """``tar_apps`` runs tar concurrently for each ``App``, creating the
-    app ``target_tar_path``s, and raises any exceptions hit along the way.
+    app ``target_bundle_path``s, and raises any exceptions hit along the way.
 
     """
 
@@ -745,7 +750,7 @@ async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
             await mac.tar_apps(config, all_paths)
     else:
         assert await mac.tar_apps(config, all_paths) is None
-        assert [x.target_tar_path for x in all_paths] == expected
+        assert [x.target_bundle_path for x in all_paths] == expected
         for path in expected:
             assert os.path.isdir(os.path.dirname(path))
 
