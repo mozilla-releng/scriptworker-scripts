@@ -282,10 +282,10 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
 
         for file_ in files:
             abs_file = os.path.join(top_dir, file_)
-            if not sign_config.get("sign_with_entitlements", False) or file_ in sign_config.get("no_entitlements_files", []):
-                await _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable)
-            elif file_ in sign_config.get("hardened_runtime_files", []):
+            if file_ in sign_config.get("hardened_runtime_files", []):
                 await _do_sign_file(top_dir, abs_file, file_, sign_command_with_hardened_runtime, app_path_len, app_executable)
+            elif not sign_config.get("sign_with_entitlements", False) or file_ in sign_config.get("no_entitlements_files", []):
+                await _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable)
             else:
                 await _do_sign_file(top_dir, abs_file, file_, sign_command_with_entitlements, app_path_len, app_executable)
 
