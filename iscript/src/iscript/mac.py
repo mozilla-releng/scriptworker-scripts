@@ -143,8 +143,26 @@ def get_bundle_executable(appdir):
 
 
 # _get_sign_command {{{1
-def _get_sign_command(identity, keychain, sign_config):
-    return ["codesign", "-s", identity, "-fv", "--keychain", keychain, "--requirement", sign_config["designated_requirements"] % {"subject_ou": identity}]
+def _get_sign_command(identity, keychain, sign_config, file_=None, entitlements_path=None):
+    sign_command = [
+        "codesign",
+        "-s",
+        identity,
+        "-fv",
+        "--keychain",
+        keychain,
+        "--requirement",
+        sign_config["designated_requirements"] % {"subject_ou": identity},
+    ]
+
+    if file_ and file_ in sign_config.get("hardened_runtime_files", []):
+        sign_command.extend(["-o", "runtime"])
+    elif sign_config.get("sign_with_entitlements", False) and (file_ and file_ not in sign_config.get("no_entitlements_files", [])):
+        if not entitlements_path:
+            raise ValueError("entitlements_path is required when signing with entitlements")
+        sign_command.extend(["-o", "runtime", "--entitlements", entitlements_path])
+
+    return sign_command
 
 
 # sign_single_files {{{1
@@ -246,13 +264,6 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
     await run_command(["xattr", "-cr", app_name], cwd=parent_dir, exception=IScriptError)
     identity = sign_config["identity"]
     keychain = sign_config["signing_keychain"]
-    sign_command = _get_sign_command(identity, keychain, sign_config)
-    # Some files only want -o runtime
-    sign_command_with_hardened_runtime = _get_sign_command(identity, keychain, sign_config)
-    sign_command_with_hardened_runtime.extend(["-o", "runtime"])
-    # However, entitlements imply that it must be passed
-    sign_command_with_entitlements = _get_sign_command(identity, keychain, sign_config)
-    sign_command_with_entitlements.extend(["-o", "runtime", "--entitlements", entitlements_path])
     log.debug(f"sign_app: signing {app_name}")
 
     app_executable = get_bundle_executable(app_path)
@@ -282,30 +293,19 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
 
         for file_ in files:
             abs_file = os.path.join(top_dir, file_)
-            if file_ in sign_config.get("hardened_runtime_files", []):
-                await _do_sign_file(top_dir, abs_file, file_, sign_command_with_hardened_runtime, app_path_len, app_executable)
-            elif not sign_config.get("sign_with_entitlements", False) or file_ in sign_config.get("no_entitlements_files", []):
-                await _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable)
-            else:
-                await _do_sign_file(top_dir, abs_file, file_, sign_command_with_entitlements, app_path_len, app_executable)
+            sign_command = _get_sign_command(identity, keychain, sign_config, file_, entitlements_path)
+            await _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable)
 
-    await sign_libclearkey(contents_dir, sign_command, app_path)
+    await sign_libclearkey(contents_dir, _get_sign_command(identity, keychain, sign_config), app_path)
 
     # sign bundle
-    if sign_config.get("sign_with_entitlements", False):
-        await retry_async(
-            run_command,
-            args=[sign_command_with_entitlements + [app_name]],
-            kwargs={"cwd": parent_dir, "exception": IScriptError, "output_log_on_exception": True},
-            retry_exceptions=(IScriptError,),
-        )
-    else:
-        await retry_async(
-            run_command,
-            args=[sign_command + [app_name]],
-            kwargs={"cwd": parent_dir, "exception": IScriptError, "output_log_on_exception": True},
-            retry_exceptions=(IScriptError,),
-        )
+    sign_command = _get_sign_command(identity, keychain, sign_config, entitlements_path=entitlements_path)
+    await retry_async(
+        run_command,
+        args=[sign_command + [app_name]],
+        kwargs={"cwd": parent_dir, "exception": IScriptError, "output_log_on_exception": True},
+        retry_exceptions=(IScriptError,),
+    )
 
 
 async def sign_libclearkey(contents_dir, sign_command, app_path):
