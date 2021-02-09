@@ -1018,8 +1018,8 @@ async def create_pkg_files(config, sign_config, all_paths):
         )
     await raise_future_exceptions(futures)
     futures = []
-    if sign_config.get("pkg_cert_id"):
-        for app in all_paths:
+    for app in all_paths:
+        if sign_config.get("pkg_cert_id"):
             # Bug 1689376 - sign distribution pkg
             futures.append(
                 asyncio.ensure_future(
@@ -1040,6 +1040,8 @@ async def create_pkg_files(config, sign_config, all_paths):
                     )
                 )
             )
+        else:
+            copy2(app.tmp_pkg_path2, app.pkg_path)
     await raise_future_exceptions(futures)
 
 
