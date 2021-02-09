@@ -25,6 +25,10 @@ async def noop_async(*args, **kwargs):
     pass
 
 
+def noop_sync(*args, **kwargs):
+    pass
+
+
 async def fail_async(*args, **kwargs):
     raise IScriptError("fail_async exception")
 
@@ -775,6 +779,7 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises):
     for i in range(3):
         all_paths.append(mac.App(app_path="foo/{}/{}.app".format(i, i), parent_dir="foo/{}".format(i)))
     mocker.patch.object(mac, "run_command", new=fake_run_command)
+    mocker.patch.object(mac, "copy2", new=noop_sync)
     if raises:
         with pytest.raises(IScriptError):
             await mac.create_pkg_files(config, sign_config, all_paths)
