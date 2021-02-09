@@ -293,7 +293,7 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
 
         for file_ in files:
             abs_file = os.path.join(top_dir, file_)
-            sign_command = _get_sign_command(identity, keychain, sign_config, file_, entitlements_path)
+            sign_command = _get_sign_command(identity, keychain, sign_config, file_=file_, entitlements_path=entitlements_path)
             await _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable)
 
     await sign_libclearkey(contents_dir, _get_sign_command(identity, keychain, sign_config), app_path)
