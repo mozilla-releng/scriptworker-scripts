@@ -155,11 +155,9 @@ def _get_sign_command(identity, keychain, sign_config, file_=None, entitlements_
         sign_config["designated_requirements"] % {"subject_ou": identity},
     ]
 
-    if file_ and file_ in sign_config.get("hardened_runtime_files", []):
+    if file_ and file_ in sign_config.get("hardened_runtime_only_files", []):
         sign_command.extend(["-o", "runtime"])
-    elif sign_config.get("sign_with_entitlements", False) and (file_ and file_ not in sign_config.get("no_entitlements_files", [])):
-        if not entitlements_path:
-            raise ValueError("entitlements_path is required when signing with entitlements")
+    elif sign_config.get("sign_with_entitlements", False) and entitlements_path:
         sign_command.extend(["-o", "runtime", "--entitlements", entitlements_path])
 
     return sign_command
@@ -223,7 +221,6 @@ async def sign_single_files(config, sign_config, all_paths):
             )
 
 
-# sign_app {{{1
 async def _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable):
     """Avoid flake8 complaining about sign_app being too complex."""
     # Deal with inner .app's in sign_app, not here.
@@ -243,6 +240,7 @@ async def _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, ap
     )
 
 
+# sign_app {{{1
 async def sign_app(sign_config, app_path, entitlements_path, provisioning_profile_path=None):
     """Sign the .app.
 
