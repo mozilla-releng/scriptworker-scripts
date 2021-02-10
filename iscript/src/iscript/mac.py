@@ -143,8 +143,24 @@ def get_bundle_executable(appdir):
 
 
 # _get_sign_command {{{1
-def _get_sign_command(identity, keychain, sign_config):
-    return ["codesign", "-s", identity, "-fv", "--keychain", keychain, "--requirement", sign_config["designated_requirements"] % {"subject_ou": identity}]
+def _get_sign_command(identity, keychain, sign_config, file_=None, entitlements_path=None):
+    sign_command = [
+        "codesign",
+        "-s",
+        identity,
+        "-fv",
+        "--keychain",
+        keychain,
+        "--requirement",
+        sign_config["designated_requirements"] % {"subject_ou": identity},
+    ]
+
+    if file_ and file_ in sign_config.get("hardened_runtime_only_files", []):
+        sign_command.extend(["-o", "runtime"])
+    elif sign_config.get("sign_with_entitlements", False) and entitlements_path:
+        sign_command.extend(["-o", "runtime", "--entitlements", entitlements_path])
+
+    return sign_command
 
 
 # sign_single_files {{{1
@@ -205,7 +221,6 @@ async def sign_single_files(config, sign_config, all_paths):
             )
 
 
-# sign_app {{{1
 async def _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable):
     """Avoid flake8 complaining about sign_app being too complex."""
     # Deal with inner .app's in sign_app, not here.
@@ -225,6 +240,7 @@ async def _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, ap
     )
 
 
+# sign_app {{{1
 async def sign_app(sign_config, app_path, entitlements_path, provisioning_profile_path=None):
     """Sign the .app.
 
@@ -246,15 +262,11 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
     await run_command(["xattr", "-cr", app_name], cwd=parent_dir, exception=IScriptError)
     identity = sign_config["identity"]
     keychain = sign_config["signing_keychain"]
-    sign_command = _get_sign_command(identity, keychain, sign_config)
     log.debug(f"sign_app: signing {app_name}")
 
     app_executable = get_bundle_executable(app_path)
     app_path_len = len(app_path)
     contents_dir = os.path.join(app_path, "Contents")
-
-    if sign_config.get("sign_with_entitlements", False):
-        sign_command.extend(["-o", "runtime", "--entitlements", entitlements_path])
 
     if provisioning_profile_path:
         log.debug("inserting provisioning profile into app")
@@ -279,11 +291,13 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
 
         for file_ in files:
             abs_file = os.path.join(top_dir, file_)
+            sign_command = _get_sign_command(identity, keychain, sign_config, file_=file_, entitlements_path=entitlements_path)
             await _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable)
 
-    await sign_libclearkey(contents_dir, sign_command, app_path)
+    await sign_libclearkey(contents_dir, _get_sign_command(identity, keychain, sign_config, entitlements_path=entitlements_path), app_path)
 
     # sign bundle
+    sign_command = _get_sign_command(identity, keychain, sign_config, entitlements_path=entitlements_path)
     await retry_async(
         run_command,
         args=[sign_command + [app_name]],
