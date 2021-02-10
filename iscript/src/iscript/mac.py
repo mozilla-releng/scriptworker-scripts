@@ -1035,26 +1035,29 @@ async def create_pkg_files(config, sign_config, all_paths):
     await raise_future_exceptions(futures)
     futures = []
     for app in all_paths:
-        # Bug 1689376 - sign distribution pkg
-        futures.append(
-            asyncio.ensure_future(
-                semaphore_wrapper(
-                    semaphore,
-                    run_command(
-                        [
-                            "productsign",
-                        ]
-                        + cmd_opts
-                        + [
-                            app.tmp_pkg_path2,
-                            app.pkg_path,
-                        ],
-                        cwd=app.parent_dir,
-                        exception=IScriptError,
-                    ),
+        if sign_config.get("pkg_cert_id"):
+            # Bug 1689376 - sign distribution pkg
+            futures.append(
+                asyncio.ensure_future(
+                    semaphore_wrapper(
+                        semaphore,
+                        run_command(
+                            [
+                                "productsign",
+                            ]
+                            + cmd_opts
+                            + [
+                                app.tmp_pkg_path2,
+                                app.pkg_path,
+                            ],
+                            cwd=app.parent_dir,
+                            exception=IScriptError,
+                        ),
+                    )
                 )
             )
-        )
+        else:
+            copy2(app.tmp_pkg_path2, app.pkg_path)
     await raise_future_exceptions(futures)
 
 
