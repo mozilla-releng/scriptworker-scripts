@@ -3,3 +3,6 @@
 importlib-metadata<2; python_version < '3.8'
 mozilla-version
 scriptworker
+# TODO: Adjust the following line when the FirefoxCI cluster upgrades past
+# version 39.x.x
+taskcluster<40
