@@ -182,7 +182,7 @@ async def run_command(
     env=None,
     exception=None,
     expected_exit_codes=(0,),
-    copy_exit_codes=(-11, -15, 245, 241),  # 245 == -11, 241 == -15
+    copy_exit_codes=(245, 241),  # 245 == -11, 241 == -15
     output_log_on_exception=False,
 ):
     """Run a command using ``asyncio.create_subprocess_exec``.
@@ -215,7 +215,7 @@ async def run_command(
             Defaults to ``(0, )``.
         copy_exit_codes (list, optional): the list of exit codes that we
             set ``exit_code`` to if ``exception`` is an instance of
-            ``ClientError``. Defaults to ``(-11, -15, 245, 241)``.
+            ``ClientError``. Defaults to ``(245, 241)``.
         output_log_on_exception (bool, optional): log the output log if we're
             raising an exception.
 
