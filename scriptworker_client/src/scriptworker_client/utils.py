@@ -182,7 +182,9 @@ async def run_command(
     env=None,
     exception=None,
     expected_exit_codes=(0,),
-    copy_exit_codes=(245, 241),  # 245 == -11, 241 == -15
+    # https://www.gnu.org/software/bash/manual/html_node/Exit-Status.html
+    # Shell exit codes range from 0 to 255. Therefore 245 == -11, 241 == -15
+    copy_exit_codes=(245, 241),
     output_log_on_exception=False,
 ):
     """Run a command using ``asyncio.create_subprocess_exec``.
