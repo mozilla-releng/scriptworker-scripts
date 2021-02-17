@@ -182,7 +182,7 @@ async def run_command(
     env=None,
     exception=None,
     expected_exit_codes=(0,),
-    # https://www.gnu.org/software/bash/manual/html_node/Exit-Status.html
+    # https://stackoverflow.com/questions/18731791/determining-if-a-python-subprocess-segmentation-faults
     # Shell exit codes range from 0 to 255. Therefore 245 == -11, 241 == -15
     copy_exit_codes=(245, 241),
     output_log_on_exception=False,
