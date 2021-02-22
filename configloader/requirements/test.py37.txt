@@ -17,9 +17,9 @@ attrs==20.3.0 \
 black==20.8b1 \
     --hash=sha256:1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea
     # via -r requirements/test.in
-build==0.2.1 \
-    --hash=sha256:be64a48b158cf14ba607977fe394f838879ec8b6c104fa5fa2e2dd666ed99ca8 \
-    --hash=sha256:f4a35cd9a7834ef54bdf2159a25ca42979bdf397f7c52b98884c51127a03a1b8
+build==0.3.0 \
+    --hash=sha256:0eb95b2c8d770d7c4c9b92c68c227c350bbf65f3ec83551ace9097c18cc15fdd \
+    --hash=sha256:75bc5676b1a014fb996dc96914428b197d174364392a46778200d5e115ffe76c
     # via check-manifest
 check-manifest==0.46 \
     --hash=sha256:5895e42a012989bdc51854a02c82c8d6898112a4ab11f2d7878200520b49d428 \
@@ -119,9 +119,9 @@ pep517==0.9.1 \
     --hash=sha256:3985b91ebf576883efe5fa501f42a16de2607684f3797ddba7202b71b7d0da51 \
     --hash=sha256:aeb78601f2d1aa461960b43add204cc7955667687fbcf9cdb5170f00556f117f
     # via build
-pip-compile-multi==2.3.0 \
-    --hash=sha256:7a3c69d54c9b2680c78a38c0162509fc885a2208844f4dd185272dceac1c4ab5 \
-    --hash=sha256:976b11710da9f2f01a73ded0ec9e930adb24fe483ac30015cd1650e804ee266e
+pip-compile-multi==2.3.2 \
+    --hash=sha256:6582ff39f99ab6d815d07317d737eafca57cbf8d043d53098b2ee65e7aa31984 \
+    --hash=sha256:b491bd3d2eccfcab9430e8e0d76a11a2dfd6a2aece5f9a54bd1542f210b360ea
     # via -r requirements/test.in
 pip-tools==5.5.0 \
     --hash=sha256:10841c1e56c234d610d0466447685b9ea4ee4a2c274f858c0ef3c33d9bd0d985 \
