@@ -432,12 +432,12 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
 def test_get_bundle_id(mocker, counter):
     """``get_bundle_id`` returns a unique bundle id"""
     now = mock.MagicMock()
-    now.timestamp = 51
+    now.int_timestamp = 51
     now.microsecond = 50
     mocker.patch.object(arrow, "utcnow", return_value=now)
     base = "org.foo.base"
     expected = base
-    expected = "{}.{}.{}".format(expected, now.timestamp, now.microsecond)
+    expected = "{}.{}.{}".format(expected, now.int_timestamp, now.microsecond)
     if counter:
         expected = "{}.{}".format(expected, counter)
     assert mac.get_bundle_id(base, counter=counter) == expected

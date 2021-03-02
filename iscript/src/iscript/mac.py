@@ -631,7 +631,7 @@ def get_bundle_id(base_bundle_id, counter=None):
 
     """
     now = arrow.utcnow()
-    bundle_id = "{}.{}.{}".format(base_bundle_id, now.timestamp, now.microsecond)
+    bundle_id = "{}.{}.{}".format(base_bundle_id, now.int_timestamp, now.microsecond)
     if counter:
         bundle_id = "{}.{}".format(bundle_id, str(counter))
     return bundle_id
@@ -830,7 +830,7 @@ async def poll_notarization_uuid(uuid, username, password, timeout, log_path, sl
         IScriptError: on unexpected failure
 
     """
-    start = arrow.utcnow().timestamp
+    start = arrow.utcnow().int_timestamp
     timeout_time = start + timeout
     base_cmd = ["xcrun", "altool", "--notarization-info", uuid, "-u", username, "--password"]
     log_cmd = base_cmd + ["********"]
@@ -848,7 +848,7 @@ async def poll_notarization_uuid(uuid, username, password, timeout, log_path, sl
         if status == "invalid":
             raise InvalidNotarization("Invalid notarization for uuid {}!".format(uuid))
         await asyncio.sleep(sleep_time)
-        if arrow.utcnow().timestamp > timeout_time:
+        if arrow.utcnow().int_timestamp > timeout_time:
             raise TimeoutError("Timed out polling for uuid {}!".format(uuid))
 
 
