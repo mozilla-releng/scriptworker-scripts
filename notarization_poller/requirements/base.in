@@ -1,5 +1,5 @@
 aiohttp
-arrow
+arrow>=1.0
 async_timeout
 immutabledict
 # TODO: Remove the following line once flake8, jsonschema, pep517, pluggy, pytest,
