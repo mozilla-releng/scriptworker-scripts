@@ -1,9 +1,5 @@
 # pyup: ignore file
-# TODO: unpin aiohttp and remove chardet when
-#       https://github.com/pnuckowski/aioresponses/issues/183 is resolved and
-#       released.
-aiohttp==3.7.4
-chardet<4.0.0
+aiohttp
 async-timeout
 # TODO: Remove the following line once flake8, jsonschema, pep517, pluggy, pytest,
 # tox, and virtualenv all support importlib-metadata >= 2
