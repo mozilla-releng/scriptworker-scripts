@@ -1314,7 +1314,7 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
 
     url = context.config["authenticode_url"]
     timestamp_style = context.config["authenticode_timestamp_style"]
-    if fmt.endswith("authenticode_stub"):
+    if fmt.endswith(("authenticode_stub", "authenticode_sha2_stub")):
         crosscert = context.config["authenticode_cross_cert"]
     else:
         crosscert = None
