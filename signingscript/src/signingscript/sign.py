@@ -1302,7 +1302,7 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
 
     infile = orig_path
     outfile = orig_path + "-new"
-    if "authenticode_ev" in fmt:
+    if "authenticode_ev" in fmt or "authenticode_sha2" in fmt:
         digest_algo = "sha256"
     else:
         digest_algo = "sha1"
