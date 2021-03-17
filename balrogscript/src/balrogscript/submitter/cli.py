@@ -523,7 +523,7 @@ class ReleaseScheduler(object):
             data["rule_id"] = rule_id
             data["change_type"] = "update"
             # We receive an iso8601 datetime, but what Balrog needs is a to-the-millisecond epoch timestamp
-            data["when"] = when.timestamp * 1000
+            data["when"] = when.int_timestamp * 1000
             if backgroundRate:
                 data["backgroundRate"] = backgroundRate
 
