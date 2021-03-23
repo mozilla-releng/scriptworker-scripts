@@ -3,6 +3,7 @@
 
 import logging
 import os
+from distutils.version import StrictVersion
 
 from mozilla_version.fenix import FenixVersion
 from mozilla_version.gecko import FennecVersion, FirefoxVersion, GeckoVersion, ThunderbirdVersion
@@ -19,14 +20,34 @@ ALLOWED_BUMP_FILES = (
     "config/milestone.txt",
     "mail/config/version.txt",
     "mail/config/version_display.txt",
+    "suite/config/version.txt",
+    "suite/config/version_display.txt",
     "version.txt",  # Fenix
 )
+
+
+class SuiteVersion(StrictVersion):
+    @classmethod
+    def parse(cls, version_string):
+        s = cls()
+        super(SuiteVersion, s).parse(version_string)
+        return s
+
+    def bump(self, field):
+        if field == "minor_number":
+            index = 1
+            ver_parts = list(self.version)
+            ver_parts[index] += 1
+
+            self.version = tuple(ver_parts)
+
 
 _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
     "browser/": FirefoxVersion,
     "config/milestone.txt": GeckoVersion,
     "mobile/android/": FennecVersion,
     "mail/": ThunderbirdVersion,
+    "suite/": SuiteVersion,
     "version.txt": FenixVersion,
 }
 

@@ -80,6 +80,7 @@ def test_replace_ver_in_file_invalid_old_ver(repo_context, new_version):
         ("browser/config/version_display.txt", does_not_raise(), FirefoxVersion),
         ("mail/config/version.txt", does_not_raise(), ThunderbirdVersion),
         ("mail/config/version_display.txt", does_not_raise(), ThunderbirdVersion),
+        ("suite/config/version.txt", does_not_raise(), vmanip.SuiteVersion),
         ("config/milestone.txt", does_not_raise(), GeckoVersion),
         ("mobile/android/config/version-files/beta/version.txt", does_not_raise(), FennecVersion),
         ("mobile/android/config/version-files/beta/version_display.txt", does_not_raise(), FennecVersion),
@@ -244,3 +245,28 @@ async def test_bump_version_same_version(mocker, repo_context):
     await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
     assert repo_context.xtest_version == vmanip.get_version(relative_files[0], repo_context.repo)
     vcs_mock.commit.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("new_version,expect_version",(("2.54a1", "2.54a1"),))
+async def test_bump_suite_minor_version(mocker, config, tmpdir, new_version, expect_version):
+    version = "2.53a1"
+    repo = os.path.join(tmpdir, "repo")
+    os.mkdir(repo)
+    os.makedirs(os.path.join(repo, "suite", "config"))
+    version_file = os.path.join("suite", "config", "version.txt")
+    with open(os.path.join(repo, version_file), "w") as f:
+        f.write(version)
+    display_version_file = os.path.join("suite", "config", "version_display.txt")
+    with open(os.path.join(repo, display_version_file), "w") as f:
+        f.write(version)
+
+    relative_files = [version_file, display_version_file]
+    bump_info = {"files": relative_files, "next_version": new_version}
+    mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
+    mocked_bump_info.return_value = bump_info
+    vcs_mock = AsyncMock()
+    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
+    await vmanip.bump_version(config, {}, repo, repo_type="hg")
+    assert expect_version == vmanip.get_version(relative_files[0], repo)
+    vcs_mock.commit.assert_called_once()
