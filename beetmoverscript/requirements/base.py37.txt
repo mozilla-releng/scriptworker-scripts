@@ -69,13 +69,13 @@ attrs==20.3.0 \
     #   aiohttp
     #   jsonschema
     #   mozilla-version
-boto3==1.17.23 \
-    --hash=sha256:1ca39de26205439832fa740fcc200de85f107b615dae445f869a16b76672e663 \
-    --hash=sha256:d6716f6701aae771f6ff2386a1d641855a99a9fedd64bd25476b83bacdd50c94
+boto3==1.17.35 \
+    --hash=sha256:1e6e06b2f1eee5a76acdde1e7b4f57c93c1bf2905341207d74f2a140ce060cd8 \
+    --hash=sha256:40e84a5f7888924db74a2710dbe48d066b51fe1f5549efaffe90e6efe813f37b
     # via -r requirements/base.in
-botocore==1.20.23 \
-    --hash=sha256:d5ea913331e93cecde25773841397c5d2abbc04f38b1c96c636444e8bb3478f8 \
-    --hash=sha256:f3ae5cae250c3fb200d33abacbee3f0c6513fc6f1d17a851b04a3998de68c829
+botocore==1.20.35 \
+    --hash=sha256:9119ffb231145ffadd55391c9356dcdb18e3de65c3a7c82844634e949f0ca5a0 \
+    --hash=sha256:e34bbb7d7de154c2ff2a73ae0691c601a69c5bda887374c8a6a23072380b07a4
     # via
     #   boto3
     #   s3transfer
@@ -179,8 +179,8 @@ jmespath==0.10.0 \
     # via
     #   boto3
     #   botocore
-json-e==4.3.0 \
-    --hash=sha256:00559fe9451cc059aa4997e801e19f421c7d6393e2a9b37e621cd1031b6d496a
+json-e==4.4.1 \
+    --hash=sha256:7d9f6235f855ce70418b9d6158c043c588c3c3d7d0902972f3fb7c5399997ce9
     # via scriptworker
 jsonschema==3.2.0 \
     --hash=sha256:4e5b3cf8216f577bee9ce139cbe72eca3ea4f292ec60928ff24758ce626cd163 \
@@ -347,9 +347,9 @@ requests==2.25.1 \
     # via
     #   github3.py
     #   taskcluster
-s3transfer==0.3.4 \
-    --hash=sha256:1e28620e5b444652ed752cf87c7e0cb15b0e578972568c6609f0f18212f259ed \
-    --hash=sha256:7fdddb4f22275cf1d32129e21f056337fd2a80b6ccef1664528145b72c49e6d2
+s3transfer==0.3.6 \
+    --hash=sha256:5d48b1fd2232141a9d5fb279709117aaba506cacea7f86f11bc392f06bfa8fc2 \
+    --hash=sha256:c5dadf598762899d8cfaecf68eba649cd25b0ce93b6c954b156aaa3eed160547
     # via boto3
 scriptworker==37.0.2 \
     --hash=sha256:306e5864d95649ab89056274402f5d933ed525e3b98794beb10eb8994edfd947 \
@@ -391,9 +391,9 @@ uritemplate==3.0.1 \
     --hash=sha256:07620c3f3f8eed1f12600845892b0e036a2420acf513c53f7de0abd911a5894f \
     --hash=sha256:5af8ad10cec94f215e3f48112de2022e1d5a37ed427fbd88652fa908f2ab7cae
     # via github3.py
-urllib3==1.26.3 \
-    --hash=sha256:1b465e494e3e0d8939b50680403e3aedaa2bc434b7d5af64dfd3c958d7f5ae80 \
-    --hash=sha256:de3eedaad74a2683334e282005cd8d7f22f4d55fa690a2a1020a416cb0a47e73
+urllib3==1.26.4 \
+    --hash=sha256:2f4da4594db7e1e110a944bb1b551fdf4e6c136ad42e4234131391e21eb5b0df \
+    --hash=sha256:e7b021f7241115872f92f43c6508082facffbd1c048e3c6e2bb9c2a157e28937
     # via
     #   botocore
     #   requests

@@ -11,8 +11,8 @@ click==7.1.2 \
     # via -r requirements/base.in
 importlib-metadata==1.7.0 ; python_version < "3.8"     --hash=sha256:90bb658cdbbf6d1735b6341ce708fc7024a3e14e99ffdc5783edea9f9b077f83     --hash=sha256:dc15b2969b4ce36305c51eebe62d418ac7791e9a157911d58bfb1f9ccd8e2070
     # via -r requirements/base.in
-json-e==4.3.0 \
-    --hash=sha256:00559fe9451cc059aa4997e801e19f421c7d6393e2a9b37e621cd1031b6d496a
+json-e==4.4.1 \
+    --hash=sha256:7d9f6235f855ce70418b9d6158c043c588c3c3d7d0902972f3fb7c5399997ce9
     # via -r requirements/base.in
 pyyaml==5.4.1 \
     --hash=sha256:08682f6b72c722394747bddaf0aa62277e02557c0fd1c42cb853016a38f8dedf \
