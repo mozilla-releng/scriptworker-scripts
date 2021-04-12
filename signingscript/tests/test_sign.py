@@ -1251,6 +1251,7 @@ async def test_authenticode_sign_single_file(tmpdir, mocker, context):
 async def test_authenticode_sign_keyids(tmpdir, mocker, context):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_cert_202005"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_cert_202104"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
@@ -1271,5 +1272,9 @@ async def test_authenticode_sign_keyids(tmpdir, mocker, context):
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
 
     result = await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode:202005")
+    assert result == test_file
+    assert os.path.exists(result)
+
+    result = await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode:202104")
     assert result == test_file
     assert os.path.exists(result)

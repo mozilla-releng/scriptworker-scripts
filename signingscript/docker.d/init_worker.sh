@@ -31,11 +31,13 @@ export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
 export AUTHENTICODE_TIMESTAMP_STYLE=null
 export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_dep.crt
 export AUTHENTICODE_CERT_PATH_202005=/app/signingscript/src/signingscript/data/authenticode_dep.crt
+export AUTHENTICODE_CERT_PATH_202104=/app/signingscript/src/signingscript/data/authenticode_dep.crt
 export AUTHENTICODE_CROSS_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_stub.crt
 if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_TIMESTAMP_STYLE=old
   export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CERT_PATH_202005=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
+  export AUTHENTICODE_CERT_PATH_202104=/app/signingscript/src/signingscript/data/authenticode_prod_202104.crt
 fi
 
 echo $GPG_PUBKEY | base64 -d > $GPG_PUBKEY_PATH
@@ -82,6 +84,7 @@ case $ENV in
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
         test_var_set 'AUTHENTICODE_CERT_PATH_202005'
+        test_var_set 'AUTHENTICODE_CERT_PATH_202104'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
         test_var_set 'AUTOGRAPH_FENNEC_PASSWORD'
@@ -151,6 +154,7 @@ case $ENV in
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
         test_var_set 'AUTHENTICODE_CERT_PATH_202005'
+        test_var_set 'AUTHENTICODE_CERT_PATH_202104'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
