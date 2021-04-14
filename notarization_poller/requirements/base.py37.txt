@@ -77,9 +77,9 @@ idna==2.10 \
     # via
     #   requests
     #   yarl
-immutabledict==1.2.0 \
-    --hash=sha256:1e6bb628eb158d32caf961bed5bb283f9e57201b50f48cd5063175612f0f3efd \
-    --hash=sha256:9ba015dc189af8aac5921248af18a06d76a1d026e362f917a8e9ee29e8de5133
+immutabledict==1.3.0 \
+    --hash=sha256:b52f880323b3e94e763d5a09930587cce68387e497a4ec669ae836c1bd8cdd1e \
+    --hash=sha256:e8dc4d8ba91de43d703c123b9e99f7029901265d3ee0f0a01cf17e3e6981bbf9
     # via -r requirements/base.in
 importlib-metadata==1.7.0 ; python_version < "3.8"     --hash=sha256:90bb658cdbbf6d1735b6341ce708fc7024a3e14e99ffdc5783edea9f9b077f83     --hash=sha256:dc15b2969b4ce36305c51eebe62d418ac7791e9a157911d58bfb1f9ccd8e2070
     # via -r requirements/base.in
