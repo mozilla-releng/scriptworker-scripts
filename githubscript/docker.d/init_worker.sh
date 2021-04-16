@@ -11,7 +11,7 @@ test_var_set() {
 }
 
 case $COT_PRODUCT in
-  mobile)
+  mobile|xpi)
     case $ENV in
       dev|fake-prod)
         test_var_set 'GITHUB_TOKEN_WRITE_ACCESS_STAGING'
