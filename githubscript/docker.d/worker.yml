@@ -68,4 +68,4 @@ taskcluster_scope_prefixes:
     'COT_PRODUCT == "mobile"':
        ["project:mobile:fenix:releng:github:", "project:mobile:android-components:releng:github:"]
     'COT_PRODUCT == "xpi"':
-      ["project:xpi:xpi-manifest:releng:github:"]
+      ["project:xpi:releng:github:"]
