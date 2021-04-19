@@ -1,8 +1,10 @@
 aiohttp
-arrow
+arrow>=1.0
 async_timeout
 immutabledict
 # TODO: Remove the following line once flake8, jsonschema, pep517, pluggy, pytest,
 # tox, and virtualenv all support importlib-metadata >= 2
 importlib-metadata<2; python_version < '3.8'
-taskcluster
+# TODO: Adjust the following line when the FirefoxCI cluster upgrades past
+# version 39.x.x
+taskcluster<40

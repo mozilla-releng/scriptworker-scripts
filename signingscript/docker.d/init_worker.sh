@@ -78,6 +78,8 @@ case $ENV in
       firefox|thunderbird)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
         test_var_set 'AUTHENTICODE_CERT_PATH_202005'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
@@ -129,6 +131,8 @@ case $ENV in
       adhoc)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_PASSWORD'
         test_var_set 'AUTOGRAPH_MAR_STAGE_PASSWORD'
         test_var_set 'AUTOGRAPH_MAR_STAGE_USERNAME'
@@ -143,6 +147,8 @@ case $ENV in
       firefox|thunderbird)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
         test_var_set 'AUTHENTICODE_CERT_PATH_202005'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
@@ -200,6 +206,8 @@ case $ENV in
       adhoc)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_RELEASE_PASSWORD'
         test_var_set 'AUTOGRAPH_MAR_RELEASE_USERNAME'
         ;;

@@ -6,6 +6,7 @@ import asyncio
 import os
 import plistlib
 from functools import partial
+from shutil import copy2
 
 import arrow
 import mock
@@ -16,9 +17,15 @@ from scriptworker_client.utils import makedirs
 import iscript.mac as mac
 from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
 
+TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+
 
 # helpers {{{1
 async def noop_async(*args, **kwargs):
+    pass
+
+
+def noop_sync(*args, **kwargs):
     pass
 
 
@@ -102,28 +109,31 @@ def test_get_bundle_executable(mocker):
     assert mac.get_bundle_executable("foo") == "main"
 
 
-# sign_geckodriver {{{1
-@pytest.mark.parametrize("exists", (True, False))
+# sign_single_files {{{1
+@pytest.mark.parametrize("exists, filename", ((True, "geckodriver.tar.gz"), (False, "geckodriver.tar.gz"), (True, "openh264.zip")))
 @pytest.mark.asyncio
-async def test_sign_geckodriver(exists, mocker, tmpdir):
-    """Render ``sign_geckodriver`` noop and verify we have complete code coverage."""
+async def test_sign_single_files(exists, filename, mocker, tmpdir):
+    """Render ``sign_single_files`` noop and verify we have complete code coverage."""
     sign_config = {"identity": "id", "signing_keychain": "keychain", "designated_requirements": ""}
     config = {"artifact_dir": os.path.join(tmpdir, "artifacts")}
     app = mac.App(
-        orig_path=os.path.join(tmpdir, "cot/task1/public/build/geckodriver.tar.gz"),
+        orig_path=os.path.join(tmpdir, f"cot/task1/public/build/{filename}"),
         parent_dir=os.path.join(tmpdir, "0"),
         artifact_prefix=os.path.join("public/build"),
+        single_file_globs=["geckodriver"],
     )
 
     makedirs(app.parent_dir)
+    makedirs(os.path.dirname(app.orig_path))
+    copy2(os.path.join(TEST_DATA_DIR, "test.zip"), app.orig_path)
     if exists:
         touch(os.path.join(app.parent_dir, "geckodriver"))
     mocker.patch.object(mac, "run_command", new=noop_async)
     if exists:
-        await mac.sign_geckodriver(config, sign_config, [app])
+        await mac.sign_single_files(config, sign_config, [app])
     else:
         with pytest.raises(IScriptError):
-            await mac.sign_geckodriver(config, sign_config, [app])
+            await mac.sign_single_files(config, sign_config, [app])
 
 
 # sign_app {{{1
@@ -289,6 +299,7 @@ def test_get_app_paths():
         ("dmg", os.path.join(os.path.dirname(os.path.dirname(__file__)), "src", "iscript", "data", "unpack-diskimage"), False),
         ("tar.gz", "tar", False),
         ("tar.bz2", "tar", False),
+        ("zip", "unzip", False),
         ("unknown_ext", None, True),
     ),
 )
@@ -421,12 +432,12 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
 def test_get_bundle_id(mocker, counter):
     """``get_bundle_id`` returns a unique bundle id"""
     now = mock.MagicMock()
-    now.timestamp = 51
+    now.int_timestamp = 51
     now.microsecond = 50
     mocker.patch.object(arrow, "utcnow", return_value=now)
     base = "org.foo.base"
     expected = base
-    expected = "{}.{}.{}".format(expected, now.timestamp, now.microsecond)
+    expected = "{}.{}.{}".format(expected, now.int_timestamp, now.microsecond)
     if counter:
         expected = "{}.{}".format(expected, counter)
     assert mac.get_bundle_id(base, counter=counter) == expected
@@ -702,7 +713,7 @@ async def test_staple_notarization(mocker, raises):
 @pytest.mark.asyncio
 async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
     """``tar_apps`` runs tar concurrently for each ``App``, creating the
-    app ``target_tar_path``s, and raises any exceptions hit along the way.
+    app ``target_bundle_path``s, and raises any exceptions hit along the way.
 
     """
 
@@ -743,7 +754,7 @@ async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
             await mac.tar_apps(config, all_paths)
     else:
         assert await mac.tar_apps(config, all_paths) is None
-        assert [x.target_tar_path for x in all_paths] == expected
+        assert [x.target_bundle_path for x in all_paths] == expected
         for path in expected:
             assert os.path.isdir(os.path.dirname(path))
 
@@ -758,7 +769,7 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises):
     """
 
     async def fake_run_command(cmd, **kwargs):
-        assert cmd[0:1] == ["pkgbuild"]
+        assert cmd[0:1] in (["pkgbuild"], ["productbuild"], ["productsign"])
         if raises:
             raise IScriptError("foo")
 
@@ -768,6 +779,7 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises):
     for i in range(3):
         all_paths.append(mac.App(app_path="foo/{}/{}.app".format(i, i), parent_dir="foo/{}".format(i)))
     mocker.patch.object(mac, "run_command", new=fake_run_command)
+    mocker.patch.object(mac, "copy2", new=noop_sync)
     if raises:
         with pytest.raises(IScriptError):
             await mac.create_pkg_files(config, sign_config, all_paths)
@@ -999,9 +1011,9 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir, use_langpack):
 
 
 # notarize_behavior {{{1
-@pytest.mark.parametrize("notarize_type,use_langpack", zip(("multi_account", "single_account", "single_zip"), (False, True)))
+@pytest.mark.parametrize("notarize_type,use_langpack,create_pkg", zip(("multi_account", "single_account", "single_zip"), (False, True), (False, True)))
 @pytest.mark.asyncio
-async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
+async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack, create_pkg):
     """Mock ``notarize_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1025,7 +1037,7 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
                 "apple_notarization_password": "apple_password",
                 "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
-                "create_pkg": True,
+                "create_pkg": create_pkg,
             }
         },
     }
@@ -1057,9 +1069,11 @@ async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack):
 
 
 # notarize_1_behavior {{{1
-@pytest.mark.parametrize("notarize_type,use_langpack", zip(("multi_account", "single_account", "single_zip"), (False, True, False)))
+@pytest.mark.parametrize(
+    "notarize_type,use_langpack,create_pkg", zip(("multi_account", "single_account", "single_zip"), (False, True, False), (True, False, True))
+)
 @pytest.mark.asyncio
-async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
+async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack, create_pkg):
     """Mock ``notarize_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1083,7 +1097,7 @@ async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
                 "apple_notarization_password": "apple_password",
                 "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
-                "create_pkg": True,
+                "create_pkg": create_pkg,
             }
         },
     }
@@ -1114,7 +1128,8 @@ async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack):
 
 # notarize_3_behavior {{{1
 @pytest.mark.asyncio
-async def test_notarize_3_behavior(mocker, tmpdir):
+@pytest.mark.parametrize("create_pkg", (True, False))
+async def test_notarize_3_behavior(mocker, tmpdir, create_pkg):
     """Mock ``notarize_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1136,7 +1151,7 @@ async def test_notarize_3_behavior(mocker, tmpdir):
                 "apple_notarization_password": "apple_password",
                 "apple_asc_provider": "apple_asc_provider",
                 "notarization_poll_timeout": 2,
-                "create_pkg": True,
+                "create_pkg": create_pkg,
             }
         },
     }
@@ -1164,11 +1179,13 @@ async def test_notarize_3_behavior(mocker, tmpdir):
     await mac.notarize_3_behavior(config, task)
 
 
-# geckodriver_behavior {{{1
+# single_file_behavior {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("use_langpack", (False, True))
-async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
-    """Mock ``geckodriver_behavior`` for full line coverage."""
+@pytest.mark.parametrize(
+    "use_langpack,filename,format", ((False, "geckodriver", "mac_geckodriver"), (True, "foo", "mac_single_file"), (False, "geckodriver", "mac_single_file"))
+)
+async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, format):
+    """Mock ``single_file_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
     work_dir = os.path.join(str(tmpdir), "work")
@@ -1194,7 +1211,9 @@ async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
         },
     }
 
-    task = {"payload": {"upstreamArtifacts": [{"taskId": "task1", "formats": ["mac_geckodriver"], "paths": ["public/build/1/geckodriver.tar.gz"]}]}}
+    task = {"payload": {"upstreamArtifacts": [{"taskId": "task1", "formats": [format], "paths": [f"public/build/1/{filename}.tar.gz"]}]}}
+    if format == "mac_single_file":
+        task["payload"]["upstreamArtifacts"][0]["singleFileGlobs"] = [filename]
     if use_langpack:
         mocker.patch.object(mac, "sign_langpacks", new=noop_async)
         task["payload"]["upstreamArtifacts"].append({"taskId": "task3", "formats": ["autograph_langpack"], "paths": ["public/build3/target.langpack.xpi"]})
@@ -1203,11 +1222,12 @@ async def test_geckodriver_behavior(mocker, tmpdir, use_langpack):
         for app in all_paths:
             assert "autograph_langpack" not in app.formats
             app.parent_dir = f"{work_dir}/0"
-            makedirs(app.parent_dir)
-            touch(f"{app.parent_dir}/geckodriver")
+            touch(f"{app.parent_dir}/{filename}")
+            print(f"touch {app.parent_dir}/{filename}")
+            print(os.path.exists(os.path.join(app.parent_dir, filename)))
 
     mocker.patch.object(mac, "extract_all_apps", new=fake_extract)
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
-    await mac.geckodriver_behavior(config, task)
+    await mac.single_file_behavior(config, task)

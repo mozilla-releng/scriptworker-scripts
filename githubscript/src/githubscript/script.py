@@ -3,9 +3,9 @@
 """
 import logging
 import os
-import re
 
 from scriptworker_client.client import sync_main
+from scriptworker_client.exceptions import TaskError
 
 from githubscript.github import release
 from githubscript.release_config import get_release_config
@@ -17,16 +17,21 @@ log = logging.getLogger(__name__)
 async def async_main(config, task):
     prefix = extract_common_scope_prefix(config, task)
     project = get_github_project(task, prefix)
-    # match the project on a regex
-    project = {}
-    # TODO: write a unittest for this
-    for project in config["github_projects"].keys():
-        project_re = re.compile(project)
-        if project_re.match(project):
-            project_config = config["github_projects"][project]
 
-    if project == {}:
-        raise NotImplementedError(f'project "{project}" doesn\'t match regex "{config["github_projects"].keys()}"')
+    # TODO: write a unittest for this
+    projects = config["github_projects"].keys()
+    if project in projects:
+        project_config = config["github_projects"][project]
+    else:
+        project_config = {}
+        for p in projects:
+            if not p.endswith("*"):
+                continue
+            cleaned = p.rstrip("*")
+            if project.startswith(cleaned):
+                if project_config != {}:
+                    raise TaskError(f'project "{project}" matches multiple configs in "{projects}"')
+                project_config = config["github_projects"][p]
 
     release_config = get_release_config(project_config, task["payload"], config)
 

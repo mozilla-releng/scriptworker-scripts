@@ -184,7 +184,7 @@ async def test_fail_handle_asyncio_loop(mocker):
         await client._handle_asyncio_loop(async_error, {}, {})
 
     assert excinfo.value.code == 42
-    m.exception.assert_called_once_with("Failed to run async_main")
+    m.exception.assert_called_once_with("Failed to run async_main; exiting 42")
 
 
 def test_init_config_cli(mocker, tmpdir):

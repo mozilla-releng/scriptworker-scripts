@@ -486,9 +486,9 @@ async def sign_langpacks(config, sign_config, all_paths):
         app.check_required_attrs(["orig_path", "formats", "artifact_prefix"])
         if not {"autograph_langpack"} & set(app.formats):
             raise IScriptError(f"{app.formats} does not contain 'autograph_langpack'")
-        app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
+        app.target_bundle_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
 
         id = langpack_id(app)
         log.info("Identified {} as extension id: {}".format(app.orig_path, id))
-        makedirs(os.path.dirname(app.target_tar_path))
-        await sign_file_with_autograph(sign_config, app.orig_path, "autograph_langpack", to=app.target_tar_path, extension_id=id)
+        makedirs(os.path.dirname(app.target_bundle_path))
+        await sign_file_with_autograph(sign_config, app.orig_path, "autograph_langpack", to=app.target_bundle_path, extension_id=id)
