@@ -168,7 +168,7 @@ def test_get_log_filehandle(path, tmpdir):
             False,
         ),
         (
-            ["bash", "-c", ">&2 echo bar && echo foo && exit 1"],
+            ["bash", "-c", ">&2 echo bar && echo foo && exit 3"],
             1,
             ["foo\nbar\n", "bar\nfoo\n"],
             TaskError,
@@ -177,8 +177,8 @@ def test_get_log_filehandle(path, tmpdir):
             True,
         ),
         (
-            ["bash", "-c", ">&2 echo bar && echo foo && exit 1"],
-            1,
+            ["bash", "-c", ">&2 echo bar && echo foo && exit -11"],
+            245,
             ["foo\nbar\n", "bar\nfoo\n"],
             TaskError,
             True,
@@ -189,7 +189,14 @@ def test_get_log_filehandle(path, tmpdir):
 )
 @pytest.mark.asyncio
 async def test_run_command(
-    command, status, expected_log, exception, output_log, env, raises, tmpdir
+    command,
+    status,
+    expected_log,
+    exception,
+    output_log,
+    env,
+    raises,
+    tmpdir,
 ):
     """``run_command`` runs the expected command, logs its output, and exits
     with its exit status. If ``exception`` is set and we exit non-zero, we
@@ -201,14 +208,18 @@ async def test_run_command(
     log_path = os.path.join(tmpdir, "log")
     if raises:
         with pytest.raises(exception):
-            await utils.run_command(
-                command,
-                log_path=log_path,
-                cwd=tmpdir,
-                env=env,
-                exception=exception,
-                output_log_on_exception=output_log,
-            )
+            try:
+                await utils.run_command(
+                    command,
+                    log_path=log_path,
+                    cwd=tmpdir,
+                    env=env,
+                    exception=exception,
+                    output_log_on_exception=output_log,
+                )
+            except exception as exc:
+                assert exc.exit_code == status
+                raise exc
     else:
         assert (
             await utils.run_command(

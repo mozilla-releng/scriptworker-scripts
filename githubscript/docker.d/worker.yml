@@ -42,22 +42,23 @@ github_projects:
         github_repo_name: staging-android-components
         contact_github: true
     'COT_PRODUCT == "xpi" && ENV == "prod"':
-      xpi-manifest:
+      mozilla-extensions/*:
         allowed_actions: ["release"]
         github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_PROD" }
-        github_owner: mozilla-extensions
-        github_repo_name: xpi-manifest
         contact_github: true
+        allow_github_repo_override: true
     'COT_PRODUCT == "xpi" && ENV == "fake-prod"':
-      staging-xpi-*:
+      mozilla-releng/staging-xpi-*:
         allowed_actions: ["release"]
         github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
         contact_github: true
+        allow_github_repo_override: true
     'COT_PRODUCT == "xpi" && ENV == "dev"':
-      staging-xpi-*:
+      mozilla-releng/staging-xpi-*:
         allowed_actions: ["release"]
         github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
         contact_github: true
+        allow_github_repo_override: true
 
 taskcluster_scope_prefixes:
   $switch:

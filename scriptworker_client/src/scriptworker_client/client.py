@@ -181,5 +181,5 @@ async def _handle_asyncio_loop(async_main, config, task):
     try:
         await async_main(config, task)
     except ClientError as exc:
-        log.exception("Failed to run async_main")
+        log.exception(f"Failed to run async_main; exiting {exc.exit_code}")
         sys.exit(exc.exit_code)

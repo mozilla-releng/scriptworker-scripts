@@ -9,14 +9,31 @@ log = logging.getLogger(__name__)
 
 
 def get_release_config(product_config, task_payload, config):
+    # support repo override for xpi-manifest, but support original workflow for fenix
+    if product_config.get("allow_github_repo_override", False):
+        if not task_payload.get("githubOwner", ""):
+            raise TaskVerificationError("missing githubOwner from task")
+        if not task_payload.get("githubRepoName", ""):
+            raise TaskVerificationError("missing githubRepoName from task")
+
+        owner = task_payload["githubOwner"]
+        repo_name = task_payload["githubRepoName"]
+    else:
+        if not product_config.get("github_owner", ""):
+            raise TaskVerificationError("missing github_owner from config")
+        if not product_config.get("github_repo_name", ""):
+            raise TaskVerificationError("missing github_repo_name from config")
+
+        owner = product_config["github_owner"]
+        repo_name = product_config["github_repo_name"]
+
     return {
         "artifacts": _get_artifacts(task_payload, config),
         "contact_github": product_config["contact_github"],
         "git_revision": task_payload["gitRevision"],
         "git_tag": task_payload["gitTag"],
-        # TODO: add unittests for this, including fallback
-        "github_owner": task_payload["githubOwner"] if "githubOwner" in task_payload else product_config["github_owner"],
-        "github_repo_name": task_payload["githubRepoName"] if "githubRepoName" in task_payload else product_config["github_repo_name"],
+        "github_owner": owner,
+        "github_repo_name": repo_name,
         "github_token": product_config["github_token"],
         "is_prerelease": task_payload["isPrerelease"],
         "release_name": task_payload["releaseName"],

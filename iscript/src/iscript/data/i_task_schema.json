@@ -37,7 +37,7 @@
                     "uniqueItems": true,
                     "items": {
                       "type": "string",
-                      "enum": ["macapp", "widevine", "omnija", "autograph_widevine", "autograph_omnija", "mac_geckodriver", "autograph_langpack"]
+                      "enum": ["macapp", "widevine", "omnija", "autograph_widevine", "autograph_omnija", "mac_geckodriver", "mac_single_file", "autograph_langpack"]
                     }
                   },
                   "paths": {
@@ -49,6 +49,13 @@
                     }
                   }
                 },
+                "singleFileGlobs": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "required": ["taskId", "taskType", "paths"]
               },
               "minItems": 1,
@@ -56,7 +63,7 @@
             },
             "behavior": {
               "type": "string",
-              "enum": ["mac_notarize", "mac_geckodriver", "mac_sign", "mac_sign_and_pkg", "mac_notarize_part_1", "mac_notarize_part_3"]
+              "enum": ["mac_notarize", "mac_geckodriver", "mac_sign", "mac_sign_and_pkg", "mac_notarize_part_1", "mac_notarize_part_3", "mac_single_file"]
             },
             "product": {
               "type": "string",

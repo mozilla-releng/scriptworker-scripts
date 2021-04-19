@@ -85,9 +85,8 @@ def is_l10n_bump(push):
 @push_check
 def skip_test_only(push):
     """
-    Treat a=test-only (or a=testonly) as unimportant if present on the tip of a push.
+    Treat a=test-only (or a=testonly) as unimportant if present on every changeset in a push.
     """
-    # get the tip
     # XXX: 25 is a number with no specific meaning. It's just a performance break
     # in case we need to loop through very large pushlogs, such as mergeduty,
     # in which case we can assume by default that the revision is IMPORTANT
