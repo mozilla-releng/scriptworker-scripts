@@ -3,6 +3,7 @@
 """
 import logging
 import os
+import re
 
 from scriptworker_client.client import sync_main
 
@@ -16,7 +17,16 @@ log = logging.getLogger(__name__)
 async def async_main(config, task):
     prefix = extract_common_scope_prefix(config, task)
     project = get_github_project(task, prefix)
-    project_config = config["github_projects"][project]
+    # match the project on a regex
+    project = {}
+    # TODO: write a unittest for this
+    for project in config["github_projects"].keys():
+        project_re = re.compile(project)
+        if project_re.match(project):
+            project_config = config["github_projects"][project]
+
+    if project == {}:
+        raise NotImplementedError(f'project "{project}" doesn\'t match regex "{config["github_projects"].keys()}"')
 
     release_config = get_release_config(project_config, task["payload"], config)
 

@@ -49,18 +49,14 @@ github_projects:
         github_repo_name: xpi-manifest
         contact_github: true
     'COT_PRODUCT == "xpi" && ENV == "fake-prod"':
-      staging-xpi-manifest:
+      staging-xpi-*:
         allowed_actions: ["release"]
         github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
-        github_owner: mozilla-releng
-        github_repo_name: staging-xpi-manifest
         contact_github: true
     'COT_PRODUCT == "xpi" && ENV == "dev"':
-      staging-xpi-manifest:
+      staging-xpi-*:
         allowed_actions: ["release"]
         github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
-        github_owner: mozilla-releng
-        github_repo_name: staging-xpi-manifest
         contact_github: true
 
 taskcluster_scope_prefixes:

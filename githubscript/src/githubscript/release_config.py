@@ -14,8 +14,9 @@ def get_release_config(product_config, task_payload, config):
         "contact_github": product_config["contact_github"],
         "git_revision": task_payload["gitRevision"],
         "git_tag": task_payload["gitTag"],
-        "github_owner": product_config["github_owner"],
-        "github_repo_name": product_config["github_repo_name"],
+        # TODO: add unittests for this, including fallback
+        "github_owner": task_payload["githubOwner"] if "githubOwner" in task_payload else product_config["github_owner"],
+        "github_repo_name": task_payload["githubRepoName"] if "githubRepoName" in task_payload else product_config["github_repo_name"],
         "github_token": product_config["github_token"],
         "is_prerelease": task_payload["isPrerelease"],
         "release_name": task_payload["releaseName"],
