@@ -21,12 +21,12 @@ from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_comma
 
 from iscript.autograph import sign_langpacks, sign_omnija_with_autograph, sign_widevine_dir
 from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
-from iscript.util import get_sign_config
+from iscript.util import expand_globs, get_sign_config
 
 log = logging.getLogger(__name__)
 
 
-KNOWN_ARTIFACT_PREFIXES = ("public/", "releng/partner/")
+KNOWN_ARTIFACT_PREFIXES = ("public/", "releng/partner/", "private/openh264/")
 
 
 # App {{{1
@@ -43,11 +43,12 @@ class App(object):
             ``multi_account`` workflow.
         pkg_path (str): the unsigned .pkg path.
         pkg_name (str): the basename of the .pkg path.
+        single_file_globs (list): the globs to sign in the mac_single_file behavior.
         notarization_log_path (str): the path to the logfile for notarization,
             if we use the ``multi_account`` workflow. This is currently
             overwritten each time we poll.
-        target_tar_path (str): the path inside of ``artifact_dir`` for the signed
-            and notarized tarball.
+        target_bundle_path (str): the path inside of ``artifact_dir`` for the signed
+            and notarized tarball or zip.
         target_pkg_path (str): the path inside of ``artifact_dir`` for the signed
             and notarized .pkg.
         formats (list): the list of formats to sign with.
@@ -61,8 +62,9 @@ class App(object):
     zip_path = attr.ib(default="")
     pkg_path = attr.ib(default="")
     pkg_name = attr.ib(default="")
+    single_file_globs = attr.ib(default="")
     notarization_log_path = attr.ib(default="")
-    target_tar_path = attr.ib(default="")
+    target_bundle_path = attr.ib(default="")
     target_pkg_path = attr.ib(default="")
     formats = attr.ib(default="")
     artifact_prefix = attr.ib(default="")
@@ -141,13 +143,29 @@ def get_bundle_executable(appdir):
 
 
 # _get_sign_command {{{1
-def _get_sign_command(identity, keychain, sign_config):
-    return ["codesign", "-s", identity, "-fv", "--keychain", keychain, "--requirement", sign_config["designated_requirements"] % {"subject_ou": identity}]
+def _get_sign_command(identity, keychain, sign_config, file_=None, entitlements_path=None):
+    sign_command = [
+        "codesign",
+        "-s",
+        identity,
+        "-fv",
+        "--keychain",
+        keychain,
+        "--requirement",
+        sign_config["designated_requirements"] % {"subject_ou": identity},
+    ]
+
+    if file_ and file_ in sign_config.get("hardened_runtime_only_files", []):
+        sign_command.extend(["-o", "runtime"])
+    elif sign_config.get("sign_with_entitlements", False) and entitlements_path:
+        sign_command.extend(["-o", "runtime", "--entitlements", entitlements_path])
+
+    return sign_command
 
 
-# sign_geckodriver {{{1
-async def sign_geckodriver(config, sign_config, all_paths):
-    """Sign geckodriver.
+# sign_single_files {{{1
+async def sign_single_files(config, sign_config, all_paths):
+    """Sign a single file.
 
     Args:
         sign_config (dict): the running config
@@ -162,28 +180,47 @@ async def sign_geckodriver(config, sign_config, all_paths):
     sign_command = _get_sign_command(identity, keychain, sign_config)
 
     for app in all_paths:
-        app.check_required_attrs(["orig_path", "parent_dir", "artifact_prefix"])
-        app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
-        file_ = "geckodriver"
-        path = os.path.join(app.parent_dir, file_)
-        if not os.path.exists(path):
-            raise IScriptError(f"No such file {path}!")
-        await retry_async(
-            run_command,
-            args=[sign_command + [file_]],
-            kwargs={"cwd": app.parent_dir, "exception": IScriptError, "output_log_on_exception": True},
-            retry_exceptions=(IScriptError,),
-        )
+        app.check_required_attrs(["orig_path", "parent_dir", "artifact_prefix", "single_file_globs"])
+        app.target_bundle_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
+        app.single_paths = expand_globs(app.single_file_globs, parent_dir=app.parent_dir)
+        if not app.single_paths:
+            raise IScriptError(f"Unable to find anything to sign for {app.orig_path}!")
+
+    for app in all_paths:
+        for path in app.single_paths:
+            abspath = os.path.join(app.parent_dir, path)
+            if not os.path.exists(abspath):
+                raise IScriptError(f"No such file {abspath}!")
+            await retry_async(
+                run_command,
+                args=[sign_command + [path]],
+                kwargs={"cwd": app.parent_dir, "exception": IScriptError, "output_log_on_exception": True},
+                retry_exceptions=(IScriptError,),
+            )
         env = deepcopy(os.environ)
-        # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
-        env["COPYFILE_DISABLE"] = "1"
-        makedirs(os.path.dirname(app.target_tar_path))
-        await run_command(
-            ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path, file_], cwd=app.parent_dir, env=env, exception=IScriptError
-        )
+        makedirs(os.path.dirname(app.target_bundle_path))
+        if app.target_bundle_path.endswith(".zip"):
+            # Copy the original file to the artifacts dir before adding the
+            # signed files to it. This is an openh264 requirement (bug 1689232)
+            copy2(app.orig_path, app.target_bundle_path)
+            await run_command(
+                ["zip", "-f", app.target_bundle_path] + app.single_paths,
+                cwd=app.parent_dir,
+                env=env,
+                exception=IScriptError,
+            )
+        else:
+            # Create a new tarball with just the signed files.
+            # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
+            env["COPYFILE_DISABLE"] = "1"
+            await run_command(
+                ["tar", _get_tar_create_options(app.target_bundle_path), app.target_bundle_path] + app.single_paths,
+                cwd=app.parent_dir,
+                env=env,
+                exception=IScriptError,
+            )
 
 
-# sign_app {{{1
 async def _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable):
     """Avoid flake8 complaining about sign_app being too complex."""
     # Deal with inner .app's in sign_app, not here.
@@ -203,6 +240,7 @@ async def _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, ap
     )
 
 
+# sign_app {{{1
 async def sign_app(sign_config, app_path, entitlements_path, provisioning_profile_path=None):
     """Sign the .app.
 
@@ -224,15 +262,11 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
     await run_command(["xattr", "-cr", app_name], cwd=parent_dir, exception=IScriptError)
     identity = sign_config["identity"]
     keychain = sign_config["signing_keychain"]
-    sign_command = _get_sign_command(identity, keychain, sign_config)
     log.debug(f"sign_app: signing {app_name}")
 
     app_executable = get_bundle_executable(app_path)
     app_path_len = len(app_path)
     contents_dir = os.path.join(app_path, "Contents")
-
-    if sign_config.get("sign_with_entitlements", False):
-        sign_command.extend(["-o", "runtime", "--entitlements", entitlements_path])
 
     if provisioning_profile_path:
         log.debug("inserting provisioning profile into app")
@@ -257,11 +291,13 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
 
         for file_ in files:
             abs_file = os.path.join(top_dir, file_)
+            sign_command = _get_sign_command(identity, keychain, sign_config, file_=file_, entitlements_path=entitlements_path)
             await _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable)
 
-    await sign_libclearkey(contents_dir, sign_command, app_path)
+    await sign_libclearkey(contents_dir, _get_sign_command(identity, keychain, sign_config, entitlements_path=entitlements_path), app_path)
 
     # sign bundle
+    sign_command = _get_sign_command(identity, keychain, sign_config, entitlements_path=entitlements_path)
     await retry_async(
         run_command,
         args=[sign_command + [app_name]],
@@ -415,7 +451,11 @@ def get_app_paths(config, task):
     for upstream_artifact_info in task["payload"]["upstreamArtifacts"]:
         for subpath in upstream_artifact_info["paths"]:
             orig_path = get_artifact_path(upstream_artifact_info["taskId"], subpath, work_dir=config["work_dir"])
-            all_paths.append(App(orig_path=orig_path, formats=upstream_artifact_info["formats"], artifact_prefix=_get_artifact_prefix(subpath)))
+            formats = upstream_artifact_info["formats"]
+            app = App(orig_path=orig_path, formats=formats, artifact_prefix=_get_artifact_prefix(subpath))
+            if "mac_geckodriver" in formats or "mac_single_file" in formats:
+                app.single_file_globs = upstream_artifact_info.get("singleFileGlobs", ["geckodriver"])
+            all_paths.append(app)
     return all_paths
 
 
@@ -466,6 +506,8 @@ async def extract_all_apps(config, all_paths):
                     )
                 )
             )
+        elif app.orig_path.endswith(".zip"):
+            futures.append(asyncio.ensure_future(run_command(["unzip", app.orig_path], cwd=app.parent_dir, exception=IScriptError)))
         else:
             raise IScriptError(f"unknown file type {app.orig_path}")
     await raise_future_exceptions(futures)
@@ -589,7 +631,7 @@ def get_bundle_id(base_bundle_id, counter=None):
 
     """
     now = arrow.utcnow()
-    bundle_id = "{}.{}.{}".format(base_bundle_id, now.timestamp, now.microsecond)
+    bundle_id = "{}.{}.{}".format(base_bundle_id, now.int_timestamp, now.microsecond)
     if counter:
         bundle_id = "{}.{}".format(bundle_id, str(counter))
     return bundle_id
@@ -788,7 +830,7 @@ async def poll_notarization_uuid(uuid, username, password, timeout, log_path, sl
         IScriptError: on unexpected failure
 
     """
-    start = arrow.utcnow().timestamp
+    start = arrow.utcnow().int_timestamp
     timeout_time = start + timeout
     base_cmd = ["xcrun", "altool", "--notarization-info", uuid, "-u", username, "--password"]
     log_cmd = base_cmd + ["********"]
@@ -806,7 +848,7 @@ async def poll_notarization_uuid(uuid, username, password, timeout, log_path, sl
         if status == "invalid":
             raise InvalidNotarization("Invalid notarization for uuid {}!".format(uuid))
         await asyncio.sleep(sleep_time)
-        if arrow.utcnow().timestamp > timeout_time:
+        if arrow.utcnow().int_timestamp > timeout_time:
             raise TimeoutError("Timed out polling for uuid {}!".format(uuid))
 
 
@@ -895,10 +937,10 @@ async def tar_apps(config, all_paths):
         app.check_required_attrs(["orig_path", "parent_dir", "app_path", "artifact_prefix"])
         # If we downloaded public/build/locale/target.tar.gz, then write to
         # artifact_dir/public/build/locale/target.tar.gz
-        app.target_tar_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1]).replace(
+        app.target_bundle_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1]).replace(
             ".dmg", ".tar.gz"
         )
-        makedirs(os.path.dirname(app.target_tar_path))
+        makedirs(os.path.dirname(app.target_bundle_path))
         cwd = os.path.dirname(app.app_path)
         env = deepcopy(os.environ)
         # https://superuser.com/questions/61185/why-do-i-get-files-like-foo-in-my-tarball-on-os-x
@@ -906,7 +948,7 @@ async def tar_apps(config, all_paths):
         futures.append(
             asyncio.ensure_future(
                 run_command(
-                    ["tar", _get_tar_create_options(app.target_tar_path), app.target_tar_path]
+                    ["tar", _get_tar_create_options(app.target_bundle_path), app.target_bundle_path]
                     + [f for f in os.listdir(cwd) if f != "[]" and not f.endswith(".pkg")],
                     cwd=cwd,
                     env=env,
@@ -932,14 +974,16 @@ async def create_pkg_files(config, sign_config, all_paths):
     log.info("Creating PKG files")
     futures = []
     semaphore = asyncio.Semaphore(config.get("concurrency_limit", 2))
+    cmd_opts = []
+    if sign_config.get("pkg_cert_id"):
+        cmd_opts = ["--keychain", sign_config["signing_keychain"], "--sign", sign_config["pkg_cert_id"]]
     for app in all_paths:
         # call set_app_path_and_name because we may not have called sign_app() earlier
         set_app_path_and_name(app)
+        app.tmp_pkg_path1 = app.app_path.replace(".appex", ".tmp1.pkg").replace(".app", ".tmp1.pkg")
+        app.tmp_pkg_path2 = app.app_path.replace(".appex", ".tmp2.pkg").replace(".app", ".tmp2.pkg")
         app.pkg_path = app.app_path.replace(".appex", ".pkg").replace(".app", ".pkg")
         app.pkg_name = os.path.basename(app.pkg_path)
-        pkg_opts = []
-        if sign_config.get("pkg_cert_id"):
-            pkg_opts = ["--sign", sign_config["pkg_cert_id"]]
         futures.append(
             asyncio.ensure_future(
                 semaphore_wrapper(
@@ -947,21 +991,71 @@ async def create_pkg_files(config, sign_config, all_paths):
                     run_command(
                         [
                             "pkgbuild",
-                            "--keychain",
-                            sign_config["signing_keychain"],
                             "--install-location",
                             "/Applications",
+                        ]
+                        + cmd_opts
+                        + [
                             "--component",
                             app.app_path,
-                            app.pkg_path,
-                        ]
-                        + pkg_opts,
+                            app.tmp_pkg_path1,
+                        ],
                         cwd=app.parent_dir,
                         exception=IScriptError,
                     ),
                 )
             )
         )
+    await raise_future_exceptions(futures)
+    futures = []
+    for app in all_paths:
+        # Bug 1689376 - create distribution pkg
+        futures.append(
+            asyncio.ensure_future(
+                semaphore_wrapper(
+                    semaphore,
+                    run_command(
+                        [
+                            "productbuild",
+                        ]
+                        + cmd_opts
+                        + [
+                            "--package",
+                            app.tmp_pkg_path1,
+                            app.tmp_pkg_path2,
+                        ],
+                        cwd=app.parent_dir,
+                        exception=IScriptError,
+                    ),
+                )
+            )
+        )
+    await raise_future_exceptions(futures)
+    futures = []
+    for app in all_paths:
+        if sign_config.get("pkg_cert_id"):
+            # Bug 1689376 - sign distribution pkg
+            futures.append(
+                asyncio.ensure_future(
+                    semaphore_wrapper(
+                        semaphore,
+                        run_command(
+                            [
+                                "productsign",
+                            ]
+                            + cmd_opts
+                            + [
+                                app.tmp_pkg_path2,
+                                app.pkg_path,
+                            ],
+                            cwd=app.parent_dir,
+                            exception=IScriptError,
+                        ),
+                    )
+                )
+            )
+        else:
+            copy2(app.tmp_pkg_path2, app.pkg_path)
     await raise_future_exceptions(futures)
 
 
@@ -1278,9 +1372,9 @@ async def sign_and_pkg_behavior(config, task):
     log.info("Done signing apps and creating pkgs.")
 
 
-# geckodriver {{{1
-async def geckodriver_behavior(config, task):
-    """Create and sign the geckodriver file for this task.
+# single_file_behavior {{{1
+async def single_file_behavior(config, task):
+    """Create and sign the single file for this task.
 
     Args:
         config (dict): the running configuration
@@ -1300,6 +1394,6 @@ async def geckodriver_behavior(config, task):
     await extract_all_apps(config, all_paths)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_geckodriver(config, sign_config, all_paths)
+    await sign_single_files(config, sign_config, all_paths)
 
-    log.info("Done signing geckodriver.")
+    log.info("Done signing single files.")

@@ -74,7 +74,7 @@ async def test_do_upload(fake_session, context, tmpdir, mocker, statuscode, rais
     context.locales["en-GB"] = {"id": "langpack-en-GB@firefox.mozilla.org", "version": "59.0buildid20180406102847", "unsigned": upload_file}
     with open(upload_file, "wb") as f:
         f.write(b"foobar")
-    expected_url = "api/v3/addons/{id}/versions/{version}/".format(id="langpack-en-GB@firefox.mozilla.org", version="59.0buildid20180406102847")
+    expected_url = "api/v4/addons/{id}/versions/{version}/".format(id="langpack-en-GB@firefox.mozilla.org", version="59.0buildid20180406102847")
     mocked_url = "{}/{}".format("http://some-amo-it.url", expected_url)
 
     mocker.patch.object(api, "get_channel", return_value="unlisted")
@@ -187,8 +187,8 @@ async def test_get_signed_xpi(fake_session, context, tmpdir):
 @pytest.mark.parametrize(
     "expected_url,pk",
     (
-        ("api/v3/addons/langpack-en-GB@firefox.mozilla.org/versions/59.0buildid20180406102847/uploads/deadbeef/", "deadbeef"),
-        ("api/v3/addons/langpack-en-GB@firefox.mozilla.org/versions/59.0buildid20180406102847/", None),
+        ("api/v4/addons/langpack-en-GB@firefox.mozilla.org/versions/59.0buildid20180406102847/uploads/deadbeef/", "deadbeef"),
+        ("api/v4/addons/langpack-en-GB@firefox.mozilla.org/versions/59.0buildid20180406102847/", None),
     ),
 )
 async def test_get_upload_status(context, fake_session, expected_url, pk):

@@ -79,7 +79,7 @@ class RunTasks:
                     new_task.start()
                     self.running_tasks.append(new_task)
             await self.prune_running_tasks()
-            sleep_time = self.last_claim_work.timestamp + self.config["claim_work_interval"] - arrow.utcnow().timestamp
+            sleep_time = self.last_claim_work.int_timestamp + self.config["claim_work_interval"] - arrow.utcnow().int_timestamp
             sleep_time > 0 and await self._run_cancellable(sleep(sleep_time))
         self.running_tasks and await asyncio.wait([task.main_fut for task in self.running_tasks if task.main_fut])
 
