@@ -5,7 +5,7 @@ import jsone
 import jsonschema
 import yaml
 
-COMMON_CONTEXT = {"WORK_DIR": "", "ARTIFACTS_DIR": "", "VERBOSE": "true", "TASKCLUSTER_SCOPE_PREFIX": ""}
+COMMON_CONTEXT = {"WORK_DIR": "", "ARTIFACTS_DIR": "", "VERBOSE": "true"}
 
 
 def load_config(context):
@@ -108,10 +108,10 @@ def test_mobile_prod():
 
 
 def test_application_services_fake_prod():
-    context = {"COT_PRODUCT": "application-services", "ENV": "fake-prod", "MAVEN_ID": "", "MAVEN_KEY": ""}
+    context = {"COT_PRODUCT": "app-services", "ENV": "fake-prod", "MAVEN_ID": "", "MAVEN_KEY": ""}
     _validate_config(context)
 
 
 def test_application_services_prod():
-    context = {"COT_PRODUCT": "application-services", "ENV": "prod", "MAVEN_ID": "", "MAVEN_KEY": ""}
+    context = {"COT_PRODUCT": "app-services", "ENV": "prod", "MAVEN_ID": "", "MAVEN_KEY": ""}
     _validate_config(context)
