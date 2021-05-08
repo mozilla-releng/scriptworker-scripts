@@ -4,7 +4,20 @@ aiohttp_max_connections: 5
 checksums_digests:
   - 'sha512'
   - 'sha256'
-taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
+taskcluster_scope_prefixes:
+  $flatten:
+    $match:
+      'COT_PRODUCT == "firefox"':
+        - 'project:releng:beetmover:'
+      'COT_PRODUCT == "thunderbird"':
+        - 'project:comm:thunderbird:releng:beetmover:'
+      'COT_PRODUCT == "mobile"':
+        - 'project:mobile:android-components:releng:beetmover:'
+        - 'project:mobile:focus:releng:beetmover:'
+      'COT_PRODUCT == "app-services"':
+        - 'project:mozilla:app-services:releng:beetmover:'
+      'COT_PRODUCT == "glean"':
+        - 'project:mozilla:glean:releng:beetmover:'
 verbose: { "$eval": "VERBOSE == 'true'" }
 zip_max_file_size_in_mb: 300
 bucket_config:

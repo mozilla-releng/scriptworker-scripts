@@ -1,6 +1,6 @@
 {
     "work_dir": "tests/test_work_dir",
-    "taskcluster_scope_prefix": "project:releng:beetmover:",
+    "taskcluster_scope_prefixes": ["project:releng:beetmover:"],
     "artifact_dir": "tests/test_artifact_dir",
     "aiohttp_max_connections": 5,
     "checksums_digests": ["sha512", "sha256"],
