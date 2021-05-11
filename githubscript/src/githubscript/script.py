@@ -18,7 +18,6 @@ async def async_main(config, task):
     prefix = extract_common_scope_prefix(config, task)
     project = get_github_project(task, prefix)
 
-    # TODO: write a unittest for this
     projects = config["github_projects"].keys()
     if project in projects:
         project_config = config["github_projects"][project]
