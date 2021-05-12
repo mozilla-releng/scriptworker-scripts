@@ -14,6 +14,7 @@ taskcluster_scope_prefixes:
       'COT_PRODUCT == "mobile"':
         - 'project:mobile:android-components:releng:beetmover:'
         - 'project:mobile:focus:releng:beetmover:'
+        - 'project:mobile:fenix:releng:beetmover:'
       'COT_PRODUCT == "app-services"':
         - 'project:mozilla:app-services:releng:beetmover:'
       'COT_PRODUCT == "glean"':
