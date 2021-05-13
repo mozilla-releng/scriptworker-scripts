@@ -34,15 +34,20 @@ on your local machine:
 find the latest image pushed
 * pull that image locally by `docker pull mozilla/releng-$script:production--$timestamp-$hash`
 * use `pass` to define some dummy values replacing the one it'd expect in production (e.g. a file called `local-prod`)
-* run the image locally by doing `docker run -ti $(pass show local-prod | grep -v ^# | grep -v '^$' | sed 's/^/-e /')  image_name` /bin/bash
+* run the image locally by doing `docker run -ti $(pass show local-prod | grep -v ^# | grep -v '^$' | sed 's/^/-e /')  image_name /bin/bash`
 
 where the format of the file is, e.g.
 ```
-PROJECT_NAME=pushapk
-ENV=prod
-COT_PRODUCT=firefox
+PROJECT_NAME=beetmover
+ENV=dev
+COT_PRODUCT=mobile
+TASKCLUSTER_ROOT_URL=https://firefox-ci-tc.services.mozilla.com
+TASKCLUSTER_CLIENT_ID=fake-client
+TASKCLUSTER_ACCESS_TOKEN=token
 ...
 ```
+* once docker container started successfuly, run `./docker.d/init.sh` to simulate what the deployment is doing.
+
 
 ### How to I update a secret in the new world?
 

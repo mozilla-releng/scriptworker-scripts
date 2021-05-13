@@ -109,6 +109,26 @@ async def push_to_nightly(context):
     add_checksums_to_artifacts(context)
 
 
+# direct_push_to_releases {{{1
+async def direct_push_to_releases(context):
+    """Mobile releases such as Fenix and Focus are a hybrid. They are neither
+    maven releases, nor classic releases to be pushed into candidates (and
+    then published to mirrors) so they get their own dedicated function.
+    These releases will publish directly into S3 under ~releases folder.
+
+    Push artifacts to a certain location => ~releases
+
+    Determine the list of artifacts to be transferred, generate the
+    mapping manifest, run some data validations, and upload the bits.
+    """
+    context.release_props = get_release_props(context)
+    context.checksums = dict()  # Needed by downstream calls
+    context.raw_balrog_manifest = dict()  # Needed by downstream calls
+
+    context.artifacts_to_beetmove = task.get_upstream_artifacts(context, preserve_full_paths=True)
+    await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task["payload"]["artifactMap"])
+
+
 # push_to_partner {{{1
 async def push_to_partner(context):
     """Push private repack artifacts to a certain location. They can be either
@@ -248,6 +268,7 @@ action_map = {
     # push to candidates is at this point identical to push_to_nightly
     "push-to-candidates": push_to_nightly,
     "push-to-releases": push_to_releases,
+    "direct-push-to-releases": direct_push_to_releases,
     "push-to-maven": push_to_maven,
 }
 
@@ -559,6 +580,7 @@ def main(config_path=None):
         "schema_file": os.path.join(data_dir, "beetmover_task_schema.json"),
         "release_schema_file": os.path.join(data_dir, "release_beetmover_task_schema.json"),
         "maven_schema_file": os.path.join(data_dir, "maven_beetmover_task_schema.json"),
+        "artifactMap_schema_file": os.path.join(data_dir, "artifactMap_beetmover_task_schema.json"),
     }
 
     # There are several task schema. Validation occurs in async_main
