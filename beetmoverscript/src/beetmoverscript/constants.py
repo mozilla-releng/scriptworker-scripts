@@ -67,6 +67,8 @@ PROMOTION_ACTIONS = ("push-to-candidates",)
 
 RELEASE_ACTIONS = ("push-to-releases",)
 
+DIRECT_RELEASE_ACTIONS = ("direct-push-to-releases",)
+
 PARTNER_REPACK_ACTIONS = ("push-to-partner",)
 
 MAVEN_ACTIONS = ("push-to-maven",)

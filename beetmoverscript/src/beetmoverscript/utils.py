@@ -18,6 +18,7 @@ from beetmoverscript.constants import (
     PRODUCT_TO_PATH,
     PROMOTION_ACTIONS,
     RELEASE_ACTIONS,
+    DIRECT_RELEASE_ACTIONS,
 )
 
 log = logging.getLogger(__name__)
@@ -67,6 +68,13 @@ def is_release_action(action):
     nightly release or something else. Does that by checking the action type.
     """
     return action in RELEASE_ACTIONS
+
+
+def is_direct_release_action(action):
+    """Function to return boolean if we're publishing a release as opposed to a
+    promoting to candidates and mirror then.Does that by checking the action type.
+    """
+    return action in DIRECT_RELEASE_ACTIONS
 
 
 def is_promotion_action(action):

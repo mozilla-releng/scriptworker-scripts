@@ -60,10 +60,31 @@ case $COT_PRODUCT in
     esac
     ;;
   mobile)
-    test_var_set 'MAVEN_ID'
-    test_var_set 'MAVEN_KEY'
-    test_var_set 'MAVEN_NIGHTLY_ID'
-    test_var_set 'MAVEN_NIGHTLY_KEY'
+    case $ENV in
+      dev|fake-prod)
+        test_var_set 'MAVEN_ID'
+        test_var_set 'MAVEN_KEY'
+        test_var_set 'MAVEN_NIGHTLY_ID'
+        test_var_set 'MAVEN_NIGHTLY_KEY'
+        test_var_set 'DEP_ID'
+        test_var_set 'DEP_KEY'
+        ;;
+      prod)
+        test_var_set 'MAVEN_ID'
+        test_var_set 'MAVEN_KEY'
+        test_var_set 'MAVEN_NIGHTLY_ID'
+        test_var_set 'MAVEN_NIGHTLY_KEY'
+        test_var_set 'DEP_ID'
+        test_var_set 'DEP_KEY'
+        test_var_set 'NIGHTLY_ID'
+        test_var_set 'NIGHTLY_KEY'
+        test_var_set 'RELEASE_ID'
+        test_var_set 'RELEASE_KEY'
+        ;;
+      *)
+        exit 1
+        ;;
+    esac
     ;;
   app-services)
     test_var_set 'MAVEN_ID'

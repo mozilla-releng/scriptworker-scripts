@@ -24,6 +24,8 @@ def get_schema_key_by_action(context):
         return "release_schema_file"
     elif utils.is_maven_action(action):
         return "maven_schema_file"
+    elif utils.is_direct_release_action(action):
+        return "artifactMap_schema_file"
 
     return "schema_file"
 
