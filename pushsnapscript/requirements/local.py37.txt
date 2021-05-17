@@ -29,13 +29,13 @@ importlib-metadata==1.7.0 ; python_version < "3.8"     --hash=sha256:90bb658cdbb
     #   virtualenv
 https://github.com/snapcore/snapcraft/archive/3.10.tar.gz     --hash=sha256:e3b83834da70be777e435d7429eb8745e00bd22a4f1ad9919df75bcde36c8a1c
     # via -r requirements/base.in
-tox==3.23.0 \
-    --hash=sha256:05a4dbd5e4d3d8269b72b55600f0b0303e2eb47ad5c6fe76d3576f4c58d93661 \
-    --hash=sha256:e007673f3595cede9b17a7c4962389e4305d4a3682a6c5a4159a1453b4f326aa
+tox==3.23.1 \
+    --hash=sha256:307a81ddb82bd463971a273f33e9533a24ed22185f27db8ce3386bff27d324e3 \
+    --hash=sha256:b0b5818049a1c1997599d42012a637a33f24c62ab8187223fdd318fa8522637b
     # via -r requirements/local.in
-virtualenv==20.4.3 \
-    --hash=sha256:49ec4eb4c224c6f7dd81bb6d0a28a09ecae5894f4e593c89b0db0885f565a107 \
-    --hash=sha256:83f95875d382c7abafe06bd2a4cdd1b363e1bb77e02f155ebe8ac082a916b37c
+virtualenv==20.4.6 \
+    --hash=sha256:307a555cf21e1550885c82120eccaf5acedf42978fd362d32ba8410f9593f543 \
+    --hash=sha256:72cf267afc04bf9c86ec932329b7e94db6a0331ae9847576daaa7ca3c86b29a4
     # via tox
 
 # WARNING: The following packages were not pinned, but pip requires them to be
