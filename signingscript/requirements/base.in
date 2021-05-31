@@ -8,5 +8,5 @@ scriptworker
 # version 39.x.x
 taskcluster<40
 mohawk>=1.0.0
-winsign~=2.0
+winsign>=2.1.0
 macholib>=1.11
