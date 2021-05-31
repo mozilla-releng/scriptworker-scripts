@@ -12,7 +12,7 @@ wget ${SCRIPTWORKER_HEAD_REPOSITORY}/archive/${SCRIPTWORKER_HEAD_REV}.tar.gz
 tar zxf ${SCRIPTWORKER_HEAD_REV}.tar.gz
 mv *-${SCRIPTWORKER_HEAD_REV} src
 cd src
-cp ${PROJECT_NAME}/docker.d/* docker.d/
+cp -arv ${PROJECT_NAME}/docker.d/* docker.d/
 cp ${PROJECT_NAME}/Dockerfile .
 sh ./docker.d/generate_version_json.sh
 sh ./docker.d/build_image.sh
