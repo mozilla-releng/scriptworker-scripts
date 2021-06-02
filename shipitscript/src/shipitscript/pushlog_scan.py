@@ -1,5 +1,5 @@
 import logging
-from enum import Enum, auto, unique
+from enum import IntEnum, auto, unique
 
 import requests
 
@@ -9,10 +9,11 @@ URL = "https://hg.mozilla.org/{branch}/json-pushes"
 
 
 @unique
-class Importance(Enum):
+class Importance(IntEnum):
     MAYBE = auto()
-    IMPORTANT = auto()
     UNIMPORTANT = auto()
+    IMPORTANT = auto()
+    SKIP = auto()
 
 
 _push_checks = []
@@ -40,6 +41,9 @@ def get_shippable_revision_build(branch, last_shipped_rev, cron_rev):
         if push_importance == Importance.IMPORTANT:
             # Tell caller that we want to build.
             return push["changesets"][-1]["node"]
+        if push_importance == Importance.SKIP:
+            # Tell caller that we do not want to build.
+            return None
 
 
 def is_push_important(push):
@@ -48,11 +52,11 @@ def is_push_important(push):
 
     See the help on `Importance` for more information.
     """
-    isimportant = Importance.IMPORTANT
+    isimportant = Importance.MAYBE
     for check in _push_checks:
-        isimportant = check(push)
-        if not isimportant == Importance.MAYBE:
-            return isimportant
+        isimportant = max(isimportant, check(push))
+    if not isimportant == Importance.MAYBE:
+        return isimportant
     # We reached the end of our checks and
     # we did not explicitly detect important
     # nor unimportant.
@@ -108,7 +112,7 @@ def skip_version_bump(push):
     cset = push["changesets"][-1]
     if push["changesets"][-1]["author"] == "Mozilla Releng Treescript <release+treescript@mozilla.org>":
         if "Automatic version bump" in cset["desc"]:
-            # This is a version bump
-            return Importance.UNIMPORTANT
+            # This is a version bump; earlier pushes have the wrong version number, so we need to stop looking
+            return Importance.SKIP
     # Anything else may still be important
     return Importance.MAYBE
