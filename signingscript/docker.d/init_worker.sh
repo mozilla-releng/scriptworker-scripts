@@ -102,6 +102,8 @@ case $ENV in
       mobile)
         test_var_set 'AUTOGRAPH_FENIX_PASSWORD'
         test_var_set 'AUTOGRAPH_FENIX_USERNAME'
+        test_var_set 'AUTOGRAPH_FENIX_MOZILLA_ONLINE_PASSWORD'
+        test_var_set 'AUTOGRAPH_FENIX_MOZILLA_ONLINE_USERNAME'
         test_var_set 'AUTOGRAPH_FOCUS_PASSWORD'
         test_var_set 'AUTOGRAPH_FOCUS_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
