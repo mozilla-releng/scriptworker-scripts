@@ -424,7 +424,7 @@ import shipitscript.pushlog_scan as pushlog
                     ]
                 },
             },
-            "14ac73797dd828cc30a99df36befbec79069bde4",
+            None,
         ),
         (
             "releases/mozilla-beta",
