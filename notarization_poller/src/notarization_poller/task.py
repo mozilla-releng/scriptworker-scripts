@@ -62,8 +62,9 @@ class Task:
 
     async def async_start(self):
         """Async start the task."""
+        timeout = self.claim_task["task"]["payload"].get("maxRunTime")
         self.reclaim_fut = self.event_loop.create_task(self.reclaim_task())
-        self.task_fut = self.event_loop.create_task(self.run_task())
+        self.task_fut = self.event_loop.create_task(asyncio.wait_for(self.run_task(), timeout=timeout))
 
         try:
             await self.task_fut
@@ -78,6 +79,9 @@ class Task:
             self.task_log(traceback.format_exc(), level=logging.CRITICAL)
         except asyncio.CancelledError:
             # We already dealt with self.status in reclaim_task
+            self.task_log(traceback.format_exc(), level=logging.CRITICAL)
+        except asyncio.TimeoutError:
+            self.status = STATUSES["resource-unavailable"]
             self.task_log(traceback.format_exc(), level=logging.CRITICAL)
         log.info("Stopping task %s %s with status %s", self.task_id, self.run_id, self.status)
         self.reclaim_fut.cancel()

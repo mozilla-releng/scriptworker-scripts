@@ -69,6 +69,7 @@ async def test_task_credentials(mocker, claim_task, config, event_loop):
         (DownloadError, STATUSES["intermittent-task"]),
         (RetryError, STATUSES["intermittent-task"]),
         (TaskError, STATUSES["malformed-payload"]),
+        (asyncio.TimeoutError, STATUSES["resource-unavailable"]),
     ),
 )
 async def test_async_start(mocker, claim_task, config, event_loop, raises, expected_status):
