@@ -82,7 +82,7 @@ class Task:
             self.task_log(traceback.format_exc(), level=logging.CRITICAL)
         except asyncio.TimeoutError:
             self.status = STATUSES["resource-unavailable"]
-            dependencies = self.claim_task["task"]["dependencies"]
+            dependencies = self.claim_task["task"].get("dependencies", [])
             if len(dependencies) == 1:
                 part1 = " (%s)" % dependencies[0]
             else:
