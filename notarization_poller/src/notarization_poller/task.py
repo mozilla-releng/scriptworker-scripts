@@ -84,7 +84,7 @@ class Task:
             self.status = STATUSES["resource-unavailable"]
             dependencies = self.claim_task["task"].get("dependencies", [])
             if len(dependencies) == 1:
-                part1 = " (%s)" % dependencies[0]
+                part1 = f" ({dependencies[0]})"
             else:
                 # we don't know which task is the right one, avoid giving bad advice
                 part1 = ""
