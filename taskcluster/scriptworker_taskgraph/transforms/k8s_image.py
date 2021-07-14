@@ -5,7 +5,6 @@
 Kubernetes docker image builds.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 from copy import deepcopy
 import time
 
