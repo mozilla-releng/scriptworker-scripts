@@ -5,7 +5,6 @@
 Build the cached_task digest to prevent rerunning tasks if the code hasn't changed.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import hashlib
 import json
@@ -47,7 +46,7 @@ def build_cache(config, tasks):
                 digest_data.append(hash_paths(os.path.join(BASE_DIR, resource), ['']))
             cache_name = task["name"].replace(":", "-")
             task["cache"] = {
-                "type": "scriptworker-scripts.v1.{}".format(config.kind),
+                "type": f"scriptworker-scripts.v1.{config.kind}",
                 "name": cache_name,
                 "digest-data": digest_data,
             }
