@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# %ARG        PYTHON_VERSION
-FROM          python:$PYTHON_VERSION
+ARG  PYTHON_VERSION
+FROM python:$PYTHON_VERSION
 
 # Add worker user
 RUN mkdir /builds && \

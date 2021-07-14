@@ -7,7 +7,7 @@ tasks:
     - $let:
           taskgraph:
               branch: taskgraph
-              revision: ec220e56cf107ea279d7c08706fc370374869550
+              revision: f807e7d4d50000fac74fd1b0845f5a669dc9e247
           trustDomain: scriptworker
       in:
           $if: 'tasks_for in ["github-pull-request", "github-push", "action", "cron"]'
@@ -193,7 +193,7 @@ tasks:
                               chainOfTrust: true
                           # Note: This task is built server side without the context or tooling that
                           # exist in tree so we must hard code the hash
-                          image: mozillareleases/taskgraph:decision-d9fab4448ee5e00b0a29825c3f0609af957279daf102547d715414782710ef06@sha256:79eb469838621168a6364476b96850fc9f2d353686195c010ad078fdcf29568e
+                          image: mozillareleases/taskgraph:decision-e035c4bb24e3a05bcd666518756aa69fac302ed1e73fd39d39cd182fc4470818@sha256:6b0be618c3909d50bd059d2451090f1a8f36d64f0bcddbcc32f1559c5ebbee58
                           maxRunTime: 1800
 
                           command:
@@ -236,6 +236,14 @@ tasks:
                                   type: 'directory'
                                   path: '/builds/worker/artifacts'
                                   expires: {$fromNow: '1 year'}
+                              'public/docker-contexts':
+                                      type: 'directory'
+                                      path: '/builds/worker/checkouts/src/docker-contexts'
+                                      # This needs to be at least the deadline of the
+                                      # decision task + the docker-image task deadlines.
+                                      # It is set to a week to allow for some time for
+                                      # debugging, but they are not useful long-term.
+                                      expires: {$fromNow: '7 day'}
 
                       extra:
                           $merge:
