@@ -21,10 +21,10 @@ PROJECT_SPECIFIC_PREFIXES = {
 PUSH_TAGS = ("dev", "production")
 
 scriptworker_schema = {
-    Optional('docker_tag'): Any(basestring, None),
+    Optional('docker_tag'): Any(str, None),
     Optional('push_docker_image'): Any(True, False, None),
-    Optional('script_name'): Any(basestring, None),
-    Optional('script_revision'): Any(basestring, None),
+    Optional('script_name'): Any(str, None),
+    Optional('script_revision'): Any(str, None),
     Optional('shipping_phase'): Any("build", "promote", None),
 }
 
