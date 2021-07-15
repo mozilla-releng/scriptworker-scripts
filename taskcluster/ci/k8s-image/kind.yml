@@ -22,7 +22,7 @@ job-defaults:
         code-review: true
     worker-type: images
     worker:
-        docker-image: {in-tree: 'k8s-image'}
+        docker-image: mozillareleases/k8s-image:3a46d79c28b31bbfe7d35142b3b1e621d7907ded@sha256:5db40915dd4d34f8fde4aceca3b398e0c954513b57d252bd7d5d2833ae41d2cc
         max-run-time: 3600
         docker-in-docker: true
         taskcluster-proxy: true
