@@ -11,8 +11,8 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 jobs:
-    k8s-image:
-        definition: k8s-image
+    # k8s-image:
+    #     definition: k8s-image
     python38:
         definition: python
         args:
