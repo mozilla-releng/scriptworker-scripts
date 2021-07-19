@@ -258,8 +258,10 @@ async def async_main(config, task):
         schedule(task, config, auth0_secrets)
     elif behavior == "set-readonly":
         set_readonly(task, config, auth0_secrets)
-    else:
+    elif behavior == "submit-locale":
         submit_locale(task, config, auth0_secrets, backend_version)
+    else:
+        raise ValueError(f"Unknown behavior {behavior}.")
 
 
 def main():

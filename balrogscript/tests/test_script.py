@@ -361,8 +361,48 @@ def test_get_default_config():
 
 # async_main {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("behavior", ("submit-locale", "submit-toplevel", "schedule", "set-readonly", "v2-submit-locale", "v2-submit-toplevel"))
-async def test_async_main_submit_locale(behavior, nightly_task, nightly_config, mocker):
+@pytest.mark.parametrize(
+    "behavior, raises",
+    (
+        (
+            "submit-locale",
+            False,
+        ),
+        (
+            "submit-toplevel",
+            False,
+        ),
+        (
+            "schedule",
+            False,
+        ),
+        (
+            "set-readonly",
+            False,
+        ),
+        (
+            "v2-submit-locale",
+            False,
+        ),
+        (
+            "v2-submit-toplevel",
+            False,
+        ),
+        (
+            "update-releases",
+            NotImplementedError,
+        ),
+        (
+            "update-rules",
+            NotImplementedError,
+        ),
+        (
+            "bogus",
+            ValueError,
+        ),
+    ),
+)
+async def test_async_main(behavior, raises, nightly_task, nightly_config, mocker):
     mocker.patch.object(bscript, "validate_task_schema")
     mocker.patch.object(bscript, "get_task_behavior", return_value=behavior)
     mocker.patch.object(bscript, "submit_toplevel")
@@ -370,7 +410,11 @@ async def test_async_main_submit_locale(behavior, nightly_task, nightly_config, 
     mocker.patch.object(bscript, "schedule")
     mocker.patch.object(bscript, "set_readonly")
 
-    await bscript.async_main(nightly_config, nightly_task)
+    if raises:
+        with pytest.raises(raises):
+            await bscript.async_main(nightly_config, nightly_task)
+    else:
+        await bscript.async_main(nightly_config, nightly_task)
 
 
 def test_main(monkeypatch, mocker):
