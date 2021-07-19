@@ -26,6 +26,7 @@ def validate_task_schema(script_config, task_definition, action):
 
 def get_task_behavior(task, script_config):
     """Extract task behavior from payload, fallback on scopes"""
+    # XXX require task["payload"]["behavior"] after esr78 is retired
     behavior = task.get("payload", {}).get("behavior")
     # Using scopes for which behavior (action) is deprecated in favor of explicit action in payload
     behaviors = {s.split(":")[-1] for s in task["scopes"] if s.startswith(script_config["taskcluster_scope_prefix"] + "action:")}
