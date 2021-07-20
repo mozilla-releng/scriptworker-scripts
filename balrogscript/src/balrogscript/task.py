@@ -32,13 +32,9 @@ def get_task_behavior(task, script_config):
     behaviors = {s.split(":")[-1] for s in task["scopes"] if s.startswith(script_config["taskcluster_scope_prefix"] + "action:")}
     if behavior:
         behaviors.add(behavior)
-    if behaviors:
-        log.info("actions: %s", behaviors)
-        if len(behaviors) != 1:
-            raise ValueError("Only one behavior can be used")
-        behavior = behaviors.pop()
-    else:
-        behavior = "submit-locale"
+    if len(behaviors) != 1:
+        raise ValueError(f"Must specify exactly one behavior: {behaviors}")
+    behavior = behaviors.pop()
 
     if behavior not in VALID_ACTIONS:
         raise ValueError("Invalid behavior")
