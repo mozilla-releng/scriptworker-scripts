@@ -259,6 +259,10 @@ async def async_main(config, task):
         set_readonly(task, config, auth0_secrets)
     elif behavior == "submit-locale":
         submit_locale(task, config, auth0_secrets, backend_version)
+    elif behavior == "update-releases":
+        raise NotImplementedError("Update-releases not implemented yet.")
+    elif behavior == "update-rules":
+        raise NotImplementedError("Update-rules not implemented yet.")
     else:
         raise ValueError(f"Unknown behavior {behavior}.")
 
