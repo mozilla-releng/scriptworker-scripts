@@ -241,11 +241,10 @@ def get_default_config():
 # main {{{1
 async def async_main(config, task):
     behavior = get_task_behavior(task, config)
-    # Eventually remove backend_version = 1 when not needed.
-    backend_version = 1
-    if behavior.startswith("v2-"):
-        behavior = behavior[3:]
-        backend_version = 2
+
+    # We're now backend v2 everywhere
+    backend_version = 2
+    behavior = behavior.lstrip("v2-")
 
     validate_task_schema(config, task, behavior)
 
