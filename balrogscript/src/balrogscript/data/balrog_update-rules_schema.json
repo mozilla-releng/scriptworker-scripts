@@ -38,9 +38,26 @@
                     },
                     "minItems": 0,
                     "uniqueItems": true
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "ruleId": {
+                                "type": "string"
+                            },
+                            "mapping": {
+                              "type": "string"
+                            }
+                        },
+                        "required": ["ruleId", "mapping"]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
                 }
             },
-            "required": ["upstreamArtifacts"]
+            "required": ["rules"]
         },
         "scopes": {
             "type": "array",

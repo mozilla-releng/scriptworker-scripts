@@ -9,6 +9,7 @@ import scriptworker_client.client
 from immutabledict import immutabledict
 from redo import retry  # noqa: E402
 
+from .balrog import update_rules
 from .submitter.cli import NightlySubmitterV4, ReleaseCreatorV9, ReleasePusher, ReleaseScheduler, ReleaseStateUpdater, ReleaseSubmitterV9
 from .task import get_manifest, get_task_behavior, get_task_server, get_upstream_artifacts, validate_task_schema
 
@@ -262,7 +263,7 @@ async def async_main(config, task):
     elif behavior == "update-releases":
         raise NotImplementedError("Update-releases not implemented yet.")
     elif behavior == "update-rules":
-        raise NotImplementedError("Update-rules not implemented yet.")
+        update_rules(task["payload"]["rules"], config["api_root"], config["dummy"], auth0_secrets)
     else:
         raise ValueError(f"Unknown behavior {behavior}.")
 
