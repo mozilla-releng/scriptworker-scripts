@@ -47,11 +47,38 @@
                             "ruleId": {
                                 "type": "string"
                             },
+                            "backgroundRate": {
+                              "type": "string"
+                            },
+                            "buildID": {
+                              "type": "string"
+                            },
+                            "buildTarget": {
+                              "type": "string"
+                            },
+                            "channel": {
+                              "type": "string"
+                            },
+                            "comment": {
+                              "type": "string"
+                            },
+                            "distribution": {
+                              "type": "string"
+                            },
                             "mapping": {
+                              "type": "string"
+                            },
+                            "osVersion": {
+                              "type": "string"
+                            },
+                            "priority": {
+                              "type": "string"
+                            },
+                            "version": {
                               "type": "string"
                             }
                         },
-                        "required": ["ruleId", "mapping"]
+                        "required": ["ruleId"]
                     },
                     "minItems": 1,
                     "uniqueItems": true

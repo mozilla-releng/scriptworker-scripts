@@ -362,53 +362,66 @@ def test_get_default_config():
 # async_main {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "behavior, raises",
+    "behavior, payload_override, raises",
     (
         (
             "submit-locale",
+            None,
             False,
         ),
         (
             "submit-toplevel",
+            None,
             False,
         ),
         (
             "schedule",
+            None,
             False,
         ),
         (
             "set-readonly",
+            None,
             False,
         ),
         (
             "v2-submit-locale",
+            None,
             False,
         ),
         (
             "v2-submit-toplevel",
+            None,
             False,
         ),
         (
             "update-releases",
+            None,
             NotImplementedError,
         ),
         (
             "update-rules",
-            NotImplementedError,
+            {"rules": [{"rule_id": "123"}]},
+            False,
         ),
         (
             "bogus",
+            None,
             ValueError,
         ),
     ),
 )
-async def test_async_main(behavior, raises, nightly_task, nightly_config, mocker):
+async def test_async_main(behavior, payload_override, raises, nightly_task, nightly_config, mocker):
     mocker.patch.object(bscript, "validate_task_schema")
     mocker.patch.object(bscript, "get_task_behavior", return_value=behavior)
     mocker.patch.object(bscript, "submit_toplevel")
     mocker.patch.object(bscript, "submit_locale")
     mocker.patch.object(bscript, "schedule")
     mocker.patch.object(bscript, "set_readonly")
+    mocker.patch.object(bscript, "update_rules")
+
+    if payload_override:
+        nightly_task["payload"].update(payload_override)
 
     if raises:
         with pytest.raises(raises):
