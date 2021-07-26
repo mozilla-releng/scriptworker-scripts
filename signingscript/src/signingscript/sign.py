@@ -506,7 +506,7 @@ def _should_sign_windows(filename):
     _dont_sign = ["D3DCompiler_42.dll", "d3dx9_42.dll", "D3DCompiler_43.dll", "d3dx9_43.dll", "msvc*.dll"]
     ext = os.path.splitext(filename)[1]
     b = os.path.basename(filename)
-    if ext in (".dll", ".exe", ".msi", ".bin") and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
+    if ext in (".dll", ".exe", ".msi", ".msix", ".bin") and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
         return True
     return False
 
