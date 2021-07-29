@@ -18,6 +18,14 @@ def get_release_config(product_config, task_payload, config):
 
         owner = task_payload["githubOwner"]
         repo_name = task_payload["githubRepoName"]
+        config_owner = product_config.get("github_owner", "")
+        config_repo = product_config.get("github_repo_name", "")
+        scope = product_config.get("scope_project", "")
+        if scope:
+            if config_owner != owner:
+                raise TaskVerificationError(f'invalid owner "{owner}"" not found in config "{config_owner}" for scope "{scope}"')
+            if product_config.get("github_repo_name", "") != repo_name:
+                raise TaskVerificationError(f'invalid repo_name {repo_name} not found in config "{config_repo}" for scope "{scope}"')
     else:
         if not product_config.get("github_owner", ""):
             raise TaskVerificationError("missing github_owner from config")

@@ -21,6 +21,7 @@ async def async_main(config, task):
     projects = config["github_projects"].keys()
     if project in projects:
         project_config = config["github_projects"][project]
+        project_config.setdefault("scope_project", project)
     else:
         project_config = {}
         for p in projects:
@@ -31,6 +32,7 @@ async def async_main(config, task):
                 if project_config != {}:
                     raise TaskError(f'project "{project}" matches multiple configs in "{projects}"')
                 project_config = config["github_projects"][p]
+                project_config.setdefault("scope_project", p)
 
     release_config = get_release_config(project_config, task["payload"], config)
 
