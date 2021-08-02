@@ -62,9 +62,9 @@ idna==3.2 \
     --hash=sha256:14475042e284991034cb48e06f6851428fb14c4dc953acd9be9a5e95c7b6dd7a \
     --hash=sha256:467fbad99067910785144ce333826c71fb0e63a425657295239737f7ecd125f3
     # via yarl
-immutabledict==2.0.0 \
-    --hash=sha256:107bdd654549710007fcff2b3ebcff27ae83d27f77b27a14f4f0365adf846117 \
-    --hash=sha256:1b3ab650dc9db0df80fc198b9d31bee45062c4774b3dfbf3d2f3e1f6d4929258
+immutabledict==2.1.0 \
+    --hash=sha256:673fb8f30f46d23dd394050b979f5b7f4c5398982b99ebc854fb873e646b967a \
+    --hash=sha256:df82965be169dace24e715a717bbf07df2d68894acbe50029f21a769e4264719
     # via -r requirements/base.in
 jsonschema==3.2.0 \
     --hash=sha256:4e5b3cf8216f577bee9ce139cbe72eca3ea4f292ec60928ff24758ce626cd163 \

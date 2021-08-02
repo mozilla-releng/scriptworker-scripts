@@ -69,9 +69,9 @@ chardet==4.0.0 \
     --hash=sha256:0d6f53a15db4120f2b08c94f11e7d93d2c911ee118b6b30a04ec3ee8310179fa \
     --hash=sha256:f864054d66fd9118f2e67044ac8981a54775ec5b67aed0441892edb553d21da5
     # via aiohttp
-charset-normalizer==2.0.2 \
-    --hash=sha256:3c502a35807c9df35697b0f44b1d65008f83071ff29c69677c7c22573bc5a45a \
-    --hash=sha256:951567c2f7433a70ab63f1be67e5ee05d3925d9423306ecb71a3b272757bcc95
+charset-normalizer==2.0.4 \
+    --hash=sha256:0c8911edd15d19223366a194a513099a302055a962bca2cec0f54b8b63175d8b \
+    --hash=sha256:f23667ebe1084be45f6ae0538e4a5a865206544097e4e8bbcacf42cd02a348f3
     # via requests
 idna==3.2 \
     --hash=sha256:14475042e284991034cb48e06f6851428fb14c4dc953acd9be9a5e95c7b6dd7a \
@@ -79,9 +79,9 @@ idna==3.2 \
     # via
     #   requests
     #   yarl
-immutabledict==2.0.0 \
-    --hash=sha256:107bdd654549710007fcff2b3ebcff27ae83d27f77b27a14f4f0365adf846117 \
-    --hash=sha256:1b3ab650dc9db0df80fc198b9d31bee45062c4774b3dfbf3d2f3e1f6d4929258
+immutabledict==2.1.0 \
+    --hash=sha256:673fb8f30f46d23dd394050b979f5b7f4c5398982b99ebc854fb873e646b967a \
+    --hash=sha256:df82965be169dace24e715a717bbf07df2d68894acbe50029f21a769e4264719
     # via -r requirements/base.in
 mohawk==1.1.0 \
     --hash=sha256:3ed296a30453d0b724679e0fd41e4e940497f8e461a9a9c3b7f36e43bab0fa09 \

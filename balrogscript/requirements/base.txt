@@ -131,9 +131,9 @@ chardet==4.0.0 \
     --hash=sha256:0d6f53a15db4120f2b08c94f11e7d93d2c911ee118b6b30a04ec3ee8310179fa \
     --hash=sha256:f864054d66fd9118f2e67044ac8981a54775ec5b67aed0441892edb553d21da5
     # via aiohttp
-charset-normalizer==2.0.2 \
-    --hash=sha256:3c502a35807c9df35697b0f44b1d65008f83071ff29c69677c7c22573bc5a45a \
-    --hash=sha256:951567c2f7433a70ab63f1be67e5ee05d3925d9423306ecb71a3b272757bcc95
+charset-normalizer==2.0.4 \
+    --hash=sha256:0c8911edd15d19223366a194a513099a302055a962bca2cec0f54b8b63175d8b \
+    --hash=sha256:f23667ebe1084be45f6ae0538e4a5a865206544097e4e8bbcacf42cd02a348f3
     # via requests
 click==8.0.1 \
     --hash=sha256:8c04c11192119b1ef78ea049e0a6f0463e4c48ef00a30160c704337586f3ad7a \
@@ -167,9 +167,9 @@ deprecated==1.2.12 \
     --hash=sha256:08452d69b6b5bc66e8330adde0a4f8642e969b9e1702904d137eeb29c8ffc771 \
     --hash=sha256:6d2de2de7931a968874481ef30208fd4e08da39177d61d3d4ebdf4366e7dbca1
     # via jwcrypto
-dictdiffer==0.8.1 \
-    --hash=sha256:1adec0d67cdf6166bda96ae2934ddb5e54433998ceab63c984574d187cc563d2 \
-    --hash=sha256:d79d9a39e459fe33497c858470ca0d2e93cb96621751de06d631856adfd9c390
+dictdiffer==0.9.0 \
+    --hash=sha256:17bacf5fbfe613ccf1b6d512bd766e6b21fb798822a133aa86098b8ac9997578 \
+    --hash=sha256:442bfc693cfcadaf46674575d2eba1c53b42f5e404218ca2c2ff549f2df56595
     # via scriptworker
 github3.py==2.0.0 \
     --hash=sha256:7e153e5dc559f27e4d15c91571a2d6e1522c9faa4406e188459d9731f0b98875 \
@@ -182,9 +182,9 @@ idna==3.2 \
     #   -r requirements/base.in
     #   requests
     #   yarl
-immutabledict==2.0.0 \
-    --hash=sha256:107bdd654549710007fcff2b3ebcff27ae83d27f77b27a14f4f0365adf846117 \
-    --hash=sha256:1b3ab650dc9db0df80fc198b9d31bee45062c4774b3dfbf3d2f3e1f6d4929258
+immutabledict==2.1.0 \
+    --hash=sha256:673fb8f30f46d23dd394050b979f5b7f4c5398982b99ebc854fb873e646b967a \
+    --hash=sha256:df82965be169dace24e715a717bbf07df2d68894acbe50029f21a769e4264719
     # via scriptworker
 ipaddress==1.0.23 \
     --hash=sha256:6e0f4a39e66cb5bb9a137b00276a2eff74f93b71dcbdad6f10ff7df9d3557fcc \
@@ -197,9 +197,9 @@ jsonschema==3.2.0 \
     --hash=sha256:4e5b3cf8216f577bee9ce139cbe72eca3ea4f292ec60928ff24758ce626cd163 \
     --hash=sha256:c8a85b28d377cc7737e46e2d9f2b4f44ee3c0e1deac6bf46ddefc7187d30797a
     # via scriptworker
-jwcrypto==0.9.1 \
-    --hash=sha256:12976a09895ec0076ce17c49ab7be64d6e63bcd7fd9a773e3fedf8011537a5f6 \
-    --hash=sha256:63531529218ba9869e14ef8c9e7b516865ede3facf9b0ef3d3ba68014da211f9
+jwcrypto==1.0 \
+    --hash=sha256:db93a656d9a7a35dda5a68deb5c9f301f4e60507d8aef1559e0637b9ac497137 \
+    --hash=sha256:f88816eb0a41b8f006af978ced5f171f33782525006cdb055b536a40f4d46ac9
     # via github3.py
 mar==3.1.0 \
     --hash=sha256:1939df482f2d3f6221405da00d6286d77d2dd60d372a0fd37532a8f00544f64f \
@@ -339,7 +339,6 @@ six==1.16.0 \
     --hash=sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254
     # via
     #   jsonschema
-    #   jwcrypto
     #   mohawk
     #   python-dateutil
     #   taskcluster
