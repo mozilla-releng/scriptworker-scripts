@@ -65,6 +65,9 @@
                             "distribution": {
                               "type": "string"
                             },
+                            "existingRule": {
+                              "type": "boolean"
+                            },
                             "mapping": {
                               "type": "string"
                             },
@@ -77,8 +80,7 @@
                             "version": {
                               "type": "string"
                             }
-                        },
-                        "required": ["ruleId"]
+                        }
                     },
                     "minItems": 1,
                     "uniqueItems": true
