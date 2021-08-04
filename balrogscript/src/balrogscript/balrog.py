@@ -11,8 +11,7 @@ log = logging.getLogger(__name__)
 
 
 def update_existing_rule(rule_data, api_root, dummy, auth0_secrets):
-    """Update an existing rule.
-    """
+    """Update an existing rule."""
     # XXX should we pass in the Rule or ScheduledRuleChange object, for clean arch?
     rule_id = rule_data.pop("rule_id")  # XXX better error than a KeyError?
     # XXX scheduled_change support?
@@ -29,20 +28,17 @@ def update_existing_rule(rule_data, api_root, dummy, auth0_secrets):
 
 
 def create_rule(rule_data, api_root, dummy, auth0_secrets):
-    """Create a rule that doesn't exist.
-    """
+    """Create a rule that doesn't exist."""
     raise NotImplementedError("create_rule not written yet")
 
 
 def delete_existing_rule(rule_data, api_root, dummy, auth0_secrets):
-    """
-    """
+    """"""
     raise NotImplementedError("delete_existing_rule not written yet")
 
 
 def update_rules(rules, api_root, dummy, auth0_secrets):
-    """
-    """
+    """"""
     # XXX rules api is only api v1??
     for rule in rules:
         rule_data = deepcopy(rule)
@@ -51,4 +47,3 @@ def update_rules(rules, api_root, dummy, auth0_secrets):
             update_existing_rule(rule_data, api_root, dummy, auth0_secrets)
         else:
             create_rule(rule_data, api_root, dummy, auth0_secrets)
-
