@@ -18,16 +18,19 @@ key_ids:
   - fenix_dep_apk
   - fenix_dep_apk_v3
 
+# Unused as far as we know
 hawk_id: releng_signingscript_fenix_nightly_2020
 key_ids:
   - fenix_nightly_apk
   - fenix_nightly_apk_v3
 
+# Unused as far as we know
 hawk_id: releng_signingscript_fenix_beta_2020
 key_ids:
   - fenix_beta_apk
   - fenix_beta_apk_v3
 
+# Used to sign Fenix Nightly (yes Nightly, not release) - see https://bugzilla.mozilla.org/show_bug.cgi?id=1556428
 hawk_id: releng_signingscript_fenix_release_2020
 key_ids:
   - fenix_release_apk
@@ -38,6 +41,7 @@ key_ids:
   - fennec_dep_apk
   - fennec_dep_apk_v3
 
+# Used to sign Fenix Release & Beta
 hawk_id: releng_signingscript_fennec_rel_2020
 key_ids:
   - fennec_rel_apk
