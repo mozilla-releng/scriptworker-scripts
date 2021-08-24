@@ -5,6 +5,76 @@ Signingscript
 
 This is designed to be run from scriptworker, but runs perfectly fine as a standalone script.
 
+Available Signers & Keys
+------------------------
+
+Last updated: 2021-08-24
+
+This is a best effort list of known signers and their keyids. Ones in active use end up in [https://github.com/mozilla-releng/scriptworker-scripts/blob/master/signingscript/docker.d/passwords.yml](passwords.yml) and the sops repo used to deploy signingscript.
+
+```yaml::
+hawk_id: releng_signingscript_fenix_dep_2020
+key_ids:
+  - fenix_dep_apk
+  - fenix_dep_apk_v3
+
+hawk_id: releng_signingscript_fenix_nightly_2020
+key_ids:
+  - fenix_nightly_apk
+  - fenix_nightly_apk_v3
+
+hawk_id: releng_signingscript_fenix_beta_2020
+key_ids:
+  - fenix_beta_apk
+  - fenix_beta_apk_v3
+
+hawk_id: releng_signingscript_fenix_release_2020
+key_ids:
+  - fenix_release_apk
+  - fenix_release_apk_v3
+
+hawk_id: releng_signingscript_fennec_dep_2020
+key_ids:
+  - fennec_dep_apk
+  - fennec_dep_apk_v3
+
+hawk_id: releng_signingscript_fennec_rel_2020
+key_ids:
+  - fennec_rel_apk
+  - fennec_rel_apk_v3
+
+hawk_id: releng_signingscript_focus_2020
+key_ids:
+  - focus_rel_apk
+  - focus_dep_apk
+  - focus_rel_apk_v3
+  - focus_dep_apk_v3
+
+hawk_id: releng_signingscript_focus_rel_2020
+key_ids:
+  - focus_rel_apk
+  - focus_rel_apk_v3
+
+hawk_id: releng_signingscript_focus_dep_2020
+key_ids:
+  - focus_dep_apk
+  - focus_dep_apk_v3
+
+hawk_id: releng_signingscript_geckoview_reference_browser_dep_2020
+key_ids:
+  - geckoview_reference_browser_dep_apk
+  - geckoview_reference_browser_dep_apk_v3
+
+hawk_id: releng_signingscript_geckoview_reference_browser_rel_2020
+key_ids:
+  - geckoview_reference_browser_rel_apk
+  - geckoview_reference_browser_rel_apk_v3
+
+hawk_id: releng_fenix_china_rel_2021
+key_ids:
+  - fenix_china_rel_apk
+  - fenix_china_rel_apk_v3
+```
 
 Testing
 -------
