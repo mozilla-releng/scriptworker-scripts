@@ -35,15 +35,33 @@ def update_existing_rule(rule_data, api_root, dummy, auth0_secrets):
         update_str = "Updating"
     existing_api_data(rule_obj, f"Rule {rule_id}")
     log.info("%s rule %s with data\n%s", update_str, rule_id, pprint.pformat(rule_data))
-    retry(update_fn, kwargs=rule_data, sleeptime=2, max_sleeptime=2, attempts=10)
+    reply = retry(update_fn, kwargs=rule_data, sleeptime=2, max_sleeptime=2, attempts=10)
+    log.info("Reply: {reply}")
 
 
 def create_rule(rule_data, api_root, dummy, auth0_secrets):
     """Create a rule that doesn't exist."""
-    # XXX Scheduled Change support?
     # XXX any verification here?
     #     only support allowlisted products/channels?
-    raise NotImplementedError("create_rule not written yet")
+    if rule_data.get("rule_id"):
+        raise ValueError(f"Cannot specify rule_id in creation!\n{pprint.pformat(rule_data)}")
+    api = API(api_root=api_root, auth0_secrets=auth0_secrets)
+    if scheduled_change:
+        # XXX sc_rule_body ?
+        api.rule_template = "/scheduled_changes/rules"
+        rule_data["change_type"] = "insert"
+        create_str = "Scheduling creation of"
+    else:
+        api.rule_template = "/rules"
+        create_str = "Creating"
+    api.rule_template_vars = {}
+    api.prerequest_url_template = "/rules"
+    kwargs = {"data": rule_data, "method": "POST"}
+    log.info("%s rule with data\n%s", create_str, pprint.pformat(rule_data))
+    # XXX api.request will try to retrieve the nonexistent rule first.
+    #     verify that this isn't an issue
+    reply = retry(api.request, kwargs=kwargs, sleeptime=2, max_sleeptime=2, attempts=10)
+    log.info("Reply: {reply}")
 
 
 def delete_existing_rule(rule_data, api_root, dummy, auth0_secrets):
@@ -51,25 +69,27 @@ def delete_existing_rule(rule_data, api_root, dummy, auth0_secrets):
     # http://mozilla-balrog.readthedocs.io/en/latest/admin_api.html#delete
     # XXX any verification here?
     #     only support allowlisted products/channels?
+    rule_id = rule_data.pop("rule_id")  # XXX better error than a KeyError?
     scheduled_change = rule_data.pop("scheduledChange", False)
     if scheduled_change:
         # XXX sc_rule_body ?
         rule_obj = ScheduledRuleChange(api_root=api_root, auth0_secrets=auth0_secrets, rule_id=rule_id)
         rule_data["change_type"] = "delete"
-        update_fn = rule_obj.add_scheduled_rule_change
-        update_str = "Scheduling deletion of"
+        delete_fn = rule_obj.add_scheduled_rule_change
+        delete_str = "Scheduling deletion of"
     else:
         rule_obj = Rule(api_root=api_root, auth0_secrets=auth0_secrets, rule_id=rule_id)
         rule_data["method"] = "DELETE"
-        update_fn = rule_obj.request
-        update_str = "Deleting"
+        delete_fn = rule_obj.request
+        delete_str = "Deleting"
     existing_api_data(rule_obj, f"Rule {rule_id}")
-    log.info("%s rule %s with data\n%s",update_str, rule_id, pprint.pformat(rule_data))
-    retry(update_fn, kwargs=rule_data, sleeptime=2, max_sleeptime=2, attempts=10)
+    log.info("%s rule %s with data\n%s", delete_str, rule_id, pprint.pformat(rule_data))
+    reply = retry(delete_fn, kwargs=rule_data, sleeptime=2, max_sleeptime=2, attempts=10)
+    log.info("Reply: {reply}")
 
 
 def update_rules(rules, api_root, dummy, auth0_secrets):
-    """"""
+    """Create, delete, or update all rules specified in the payload."""
     for rule in rules:
         rule_data = deepcopy(rule)
         delete_rule = rule_data.pop("deleteRule", False)
