@@ -71,6 +71,9 @@
                             "existingRule": {
                               "type": "boolean"
                             },
+                            "fallbackMapping": {
+                              "type": "string"
+                            },
                             "mapping": {
                               "type": "string"
                             },
