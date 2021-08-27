@@ -36,7 +36,7 @@ def update_existing_rule(rule_data, api_root, dummy, auth0_secrets):
     existing_api_data(rule_obj, f"Rule {rule_id}")
     log.info("%s rule %s with data\n%s", update_str, rule_id, pprint.pformat(rule_data))
     reply = retry(update_fn, kwargs=rule_data, sleeptime=2, max_sleeptime=2, attempts=10)
-    log.info("Reply: {reply}")
+    log.info("Reply: %s", reply)
 
 
 def create_rule(rule_data, api_root, dummy, auth0_secrets):
@@ -46,6 +46,7 @@ def create_rule(rule_data, api_root, dummy, auth0_secrets):
     if rule_data.get("rule_id"):
         raise ValueError(f"Cannot specify rule_id in creation!\n{pprint.pformat(rule_data)}")
     api = API(api_root=api_root, auth0_secrets=auth0_secrets)
+    scheduled_change = rule_data.pop("scheduledChange", False)
     if scheduled_change:
         # XXX sc_rule_body ?
         api.rule_template = "/scheduled_changes/rules"
@@ -61,7 +62,7 @@ def create_rule(rule_data, api_root, dummy, auth0_secrets):
     # XXX api.request will try to retrieve the nonexistent rule first.
     #     verify that this isn't an issue
     reply = retry(api.request, kwargs=kwargs, sleeptime=2, max_sleeptime=2, attempts=10)
-    log.info("Reply: {reply}")
+    log.info("Reply: %s", reply)
 
 
 def delete_existing_rule(rule_data, api_root, dummy, auth0_secrets):
@@ -85,7 +86,7 @@ def delete_existing_rule(rule_data, api_root, dummy, auth0_secrets):
     existing_api_data(rule_obj, f"Rule {rule_id}")
     log.info("%s rule %s with data\n%s", delete_str, rule_id, pprint.pformat(rule_data))
     reply = retry(delete_fn, kwargs=rule_data, sleeptime=2, max_sleeptime=2, attempts=10)
-    log.info("Reply: {reply}")
+    log.info("Reply: %s", reply)
 
 
 def update_rules(rules, api_root, dummy, auth0_secrets):
