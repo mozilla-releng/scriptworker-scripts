@@ -2,7 +2,7 @@ import logging
 import pprint
 from copy import deepcopy
 
-from balrogclient import API, Rule, ScheduledRuleChange
+from balrogclient.api import API, Rule, ScheduledRuleChange
 from redo import retry
 
 # from requests.exceptions import HTTPError
