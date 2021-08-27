@@ -361,16 +361,73 @@ def test_get_default_config():
 
 # async_main {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("behavior", ("submit-locale", "submit-toplevel", "schedule", "set-readonly", "v2-submit-locale", "v2-submit-toplevel"))
-async def test_async_main_submit_locale(behavior, nightly_task, nightly_config, mocker):
+@pytest.mark.parametrize(
+    "behavior, payload_override, raises",
+    (
+        (
+            "submit-locale",
+            None,
+            False,
+        ),
+        (
+            "submit-toplevel",
+            None,
+            False,
+        ),
+        (
+            "schedule",
+            None,
+            False,
+        ),
+        (
+            "set-readonly",
+            None,
+            False,
+        ),
+        (
+            "v2-submit-locale",
+            None,
+            False,
+        ),
+        (
+            "v2-submit-toplevel",
+            None,
+            False,
+        ),
+        (
+            "update-releases",
+            None,
+            NotImplementedError,
+        ),
+        (
+            "update-rules",
+            {"rules": [{"rule_id": "123"}]},
+            False,
+        ),
+        (
+            "bogus",
+            None,
+            ValueError,
+        ),
+    ),
+)
+async def test_async_main(behavior, payload_override, raises, nightly_task, nightly_config, mocker):
     mocker.patch.object(bscript, "validate_task_schema")
     mocker.patch.object(bscript, "get_task_behavior", return_value=behavior)
     mocker.patch.object(bscript, "submit_toplevel")
     mocker.patch.object(bscript, "submit_locale")
     mocker.patch.object(bscript, "schedule")
     mocker.patch.object(bscript, "set_readonly")
+    mocker.patch.object(bscript, "update_rules")
 
-    await bscript.async_main(nightly_config, nightly_task)
+    if payload_override:
+        nightly_task["payload"].update(payload_override)
+
+    if raises:
+        with pytest.raises(raises):
+            await bscript.async_main(nightly_config, nightly_task)
+    else:
+        await bscript.async_main(nightly_config, nightly_task)
 
 
 def test_main(monkeypatch, mocker):

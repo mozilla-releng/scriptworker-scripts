@@ -93,7 +93,6 @@ def test_release_get_manifest(release_task, release_config):
         ({"payload": {"behavior": "submit-locale"}, "scopes": ["project:releng:balrog:action:schedule"]}, None, True),
         ({"scopes": ["project:releng:balrog:action:schedule", "project:releng:balrog:action:submit-locale"]}, None, True),
         ({"scopes": ["project:releng:balrog:action:illegal"]}, None, True),
-        ({"scopes": []}, "submit-locale", False),
     ),
 )
 def test_get_task_behavior(task, expected, raises):

@@ -9,6 +9,7 @@ import scriptworker_client.client
 from immutabledict import immutabledict
 from redo import retry  # noqa: E402
 
+from .balrog import update_rules
 from .submitter.cli import NightlySubmitterV4, ReleaseCreatorV9, ReleasePusher, ReleaseScheduler, ReleaseStateUpdater, ReleaseSubmitterV9
 from .task import get_manifest, get_task_behavior, get_task_server, get_upstream_artifacts, validate_task_schema
 
@@ -241,11 +242,10 @@ def get_default_config():
 # main {{{1
 async def async_main(config, task):
     behavior = get_task_behavior(task, config)
-    # Eventually remove backend_version = 1 when not needed.
-    backend_version = 1
-    if behavior.startswith("v2-"):
-        behavior = behavior[3:]
-        backend_version = 2
+
+    # We're now backend v2 everywhere
+    backend_version = 2
+    behavior = behavior.lstrip("v2-")
 
     validate_task_schema(config, task, behavior)
 
@@ -258,8 +258,14 @@ async def async_main(config, task):
         schedule(task, config, auth0_secrets)
     elif behavior == "set-readonly":
         set_readonly(task, config, auth0_secrets)
-    else:
+    elif behavior == "submit-locale":
         submit_locale(task, config, auth0_secrets, backend_version)
+    elif behavior == "update-releases":
+        raise NotImplementedError("Update-releases not implemented yet.")
+    elif behavior == "update-rules":
+        update_rules(task["payload"]["rules"], config["api_root"], config["dummy"], auth0_secrets)
+    else:
+        raise ValueError(f"Unknown behavior {behavior}.")
 
 
 def main():
