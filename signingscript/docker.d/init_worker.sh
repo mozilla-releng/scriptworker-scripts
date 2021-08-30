@@ -56,11 +56,7 @@ case $COT_PRODUCT in
     ;;
   xpi)
     ;;
-  mpd001)
-    export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_mpd_dep.crt
-    if [ "$ENV" == "prod" ]; then
-      export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_mpd_prod.crt
-    fi
+  mozillavpn)
     ;;
   adhoc)
     test_var_set 'WIDEVINE_CERT'
@@ -123,7 +119,7 @@ case $ENV in
         test_var_set 'AUTOGRAPH_XPI_PASSWORD'
         test_var_set 'AUTOGRAPH_XPI_USERNAME'
         ;;
-      mpd001)
+      mozillavpn)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
@@ -196,11 +192,9 @@ case $ENV in
         test_var_set 'AUTOGRAPH_XPI_PASSWORD'
         test_var_set 'AUTOGRAPH_XPI_USERNAME'
         ;;
-      mpd001)
+      mozillavpn)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_EV_PASSWORD'
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_EV_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
