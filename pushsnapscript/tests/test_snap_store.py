@@ -52,7 +52,7 @@ def test_push(monkeypatch, channel, expected_macaroon_location, raises, exceptio
         assert next(fake_release_if_needed_count) == 0
     else:
         snap_store.push(context, "/path/to/snap", channel)
-        assert next(fake_release_if_needed_count) == 1
+        assert next(fake_release_if_needed_count) == 0
 
 
 def test_push_early_return_if_not_allowed(monkeypatch):
