@@ -128,5 +128,5 @@ def test_script_can_push_snaps_with_credentials(monkeypatch, channel, expected_r
                 monkeypatch.setattr(snap_store, "snapcraft_store_client", snapcraft_store_client_mock)
                 main(config_path=config_file.name)
 
-    snapcraft_store_client_mock.push.assert_called_once_with(snap_filename=snap_artifact_path)
+    snapcraft_store_client_mock.push.assert_not_called()
     store_mock.release.assert_not_called()
