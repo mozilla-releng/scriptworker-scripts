@@ -65,7 +65,7 @@ def push(context, snap_file_path, channel):
             else:
                 raise
 
-        _release_if_needed(store, channel, snap_file_path)
+        # _release_if_needed(store, channel, snap_file_path)
 
 
 @contextlib.contextmanager
