@@ -65,6 +65,7 @@ def push(context, snap_file_path, channel):
             else:
                 raise
 
+        # Bug 1728330: Let's not push to any channels
         # _release_if_needed(store, channel, snap_file_path)
 
 
