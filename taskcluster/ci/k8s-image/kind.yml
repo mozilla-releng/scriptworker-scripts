@@ -50,7 +50,6 @@ jobs:
     githubscript: {}
     pushapkscript: {}
     pushflatpakscript: {}
-    pushsnapscript: {}
     shipitscript: {}
     signingscript: {}
     treescript: {}
