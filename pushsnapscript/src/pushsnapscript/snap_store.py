@@ -10,7 +10,6 @@ from snapcraft.storeapi import StoreClient
 from snapcraft.storeapi.constants import DEFAULT_SERIES
 from snapcraft.storeapi.errors import StoreReviewError
 
-from pushsnapscript import task
 from pushsnapscript.exceptions import AlreadyLatestError
 
 log = logging.getLogger(__name__)
