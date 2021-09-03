@@ -1,7 +1,7 @@
 # Prefixes
 Supported scope prefixes:
 * `project:releng:bouncer`
-  * Used for Firefox/Fennec/Devedition style bouncer tasks
+  * Used for Firefox/Devedition/Pinebuild style bouncer tasks
 
 * `project:comm:thunderbird:releng:bouncer`
   * Used for Thunderbird style bouncer tasks
