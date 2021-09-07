@@ -41,7 +41,7 @@ async def claim_work(config, worker_queue, num_tasks=1):
     log.debug("Calling claimWork for {}/{}...".format(config["worker_group"], config["worker_id"]))
     payload = {"workerGroup": config["worker_group"], "workerId": config["worker_id"], "tasks": num_tasks}
     try:
-        return await worker_queue.claimWork(config["provisioner_id"], config["worker_type"], payload)
+        return await worker_queue.claimWork(f"{config['provisioner_id']}/{config['worker_type']}", payload)
     except (taskcluster.exceptions.TaskclusterFailure, aiohttp.ClientError, asyncio.TimeoutError) as exc:
         log.warning("{} {}".format(exc.__class__, exc))
 
