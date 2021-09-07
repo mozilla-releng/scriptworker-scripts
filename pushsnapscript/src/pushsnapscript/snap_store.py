@@ -10,6 +10,7 @@ from snapcraft.storeapi import StoreClient
 from snapcraft.storeapi.constants import DEFAULT_SERIES
 from snapcraft.storeapi.errors import StoreReviewError
 
+from pushsnapscript import task
 from pushsnapscript.exceptions import AlreadyLatestError
 
 log = logging.getLogger(__name__)
@@ -47,10 +48,8 @@ def push(context, snap_file_path, channel):
         snap_file_path (str): The full path to the snap file
         channel (str): The Snap Store channel.
     """
-    # Bug 1728330: Let's not push to the store.
-    # We'll disable the pushsnap task in-tree, but for 92 let's disable here.
-    if True:
-        log.warning("Skipping Snap store push...")
+    if not task.is_allowed_to_push_to_snap_store(context.config, channel=channel):
+        log.warning("Not allowed to push to Snap store. Skipping push...")
         # We don't raise an error because we still want green tasks on dev instances
         return
 

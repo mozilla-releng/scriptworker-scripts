@@ -47,11 +47,12 @@ def test_push(monkeypatch, channel, expected_macaroon_location, raises, exceptio
     monkeypatch.setattr(snap_store, "_release_if_needed", fake_release_if_needed)
 
     if bubbles_up_exception:
-        snap_store.push(context, "/path/to/snap", channel)
+        with pytest.raises(snap_store.StoreReviewError):
+            snap_store.push(context, "/path/to/snap", channel)
         assert next(fake_release_if_needed_count) == 0
     else:
         snap_store.push(context, "/path/to/snap", channel)
-        assert next(fake_release_if_needed_count) == 0
+        assert next(fake_release_if_needed_count) == 1
 
 
 def test_push_early_return_if_not_allowed(monkeypatch):
