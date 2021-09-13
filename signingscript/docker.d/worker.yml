@@ -16,6 +16,7 @@ taskcluster_scope_prefixes:
         - 'project:mobile:fennec-profile-manager:releng:signing:'
         - 'project:mobile:firefox-tv:releng:signing:'
         - 'project:mobile:focus:releng:signing:'
+        - 'project:mobile:focus-android:releng:signing:'
         - 'project:mobile:reference-browser:releng:signing:'
       'COT_PRODUCT == "app-services"':
         - 'project:mozilla:app-services:releng:signing:'
