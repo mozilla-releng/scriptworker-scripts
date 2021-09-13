@@ -71,8 +71,8 @@ case $COT_PRODUCT in
   xpi)
     export TRUST_DOMAIN=xpi
     ;;
-  mpd001)
-    export TRUST_DOMAIN=mpd001
+  mozillavpn)
+    export TRUST_DOMAIN=mozillavpn
     ;;
   adhoc)
     export TRUST_DOMAIN=adhoc
