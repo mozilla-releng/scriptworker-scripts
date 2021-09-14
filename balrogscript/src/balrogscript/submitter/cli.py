@@ -29,7 +29,7 @@ class ReleaseCreatorFileUrlsMixin(object):
     def _getFileUrls(self, productName, version, buildNumber, updateChannels, ftpServer, bouncerServer, partialUpdates, requiresMirrors=True):
         data = {"fileUrls": {}}
         file_prefix = productName.lower()
-        if file_prefix == "devedition":
+        if file_prefix in ("devedition", "pinebuild"):
             file_prefix = "firefox"
         # bug 1444406 - eventually we're going to default to https
         protocol = "https"
@@ -124,7 +124,7 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
 
     def generate_data(self, appVersion, productName, version, buildNumber, updateChannels, ftpServer, bouncerServer, enUSPlatforms, updateLine, **updateKwargs):
         details_product = productName.lower()
-        if details_product == "devedition":
+        if details_product in ("devedition", "pinebuild"):
             details_product = "firefox"
         if updateLine is None:
             updateLine = [{"for": {}, "fields": {"detailsURL": getProductDetails(details_product, appVersion), "type": "minor"}}]

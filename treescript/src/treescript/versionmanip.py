@@ -141,6 +141,7 @@ async def do_bump_version(config, repo_path, files, next_version):
         if is_esr and not any(
             (
                 next_version.is_esr,  # No need to append esr again
+                # TODO figure out Pinebuild versions
                 # We don't want XX.Ya1esr nor XX.YbNesr
                 next_version.is_aurora_or_devedition,
                 next_version.is_beta,

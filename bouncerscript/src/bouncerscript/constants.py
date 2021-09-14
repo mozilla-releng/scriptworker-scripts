@@ -12,6 +12,10 @@ ALIASES_REGEXES = {
     "firefox-devedition-latest": r"^Devedition-\d+\.0b\d+$",
     "firefox-devedition-latest-ssl": r"^Devedition-\d+\.0b\d+-SSL$",
     "firefox-devedition-msi-latest-ssl": r"^Devedition-\d+\.0b\d+-msi-SSL$",
+    "firefox-pinebuild-stub": r"^Pinebuild-\d+\.0b\d+-stub$",
+    "firefox-pinebuild-latest": r"^Pinebuild-\d+\.0b\d+$",
+    "firefox-pinebuild-latest-ssl": r"^Pinebuild-\d+\.0b\d+-SSL$",
+    "firefox-pinebuild-msi-latest-ssl": r"^Pinebuild-\d+\.0b\d+-msi-SSL$",
     "firefox-beta-stub": r"^Firefox-\d+\.0b\d+-stub$",
     "firefox-beta-latest": r"^Firefox-\d+\.0b\d+$",
     "firefox-beta-latest-ssl": r"^Firefox-\d+\.0b\d+-SSL$",
@@ -48,6 +52,7 @@ PRODUCT_TO_DESTINATIONS_REGEXES = {
     "firefox-rc": r"^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$",
     "firefox": r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|pkg))$",
     "devedition": r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi))$",
+    "pinebuild": r"^(/pinebuild/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi))$",
     "thunderbird": (
         r"^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/" r"(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar|msi))$"
     ),
@@ -100,6 +105,7 @@ PRODUCT_TO_PRODUCT_ENTRY = [
     ("firefox-rc", r"^Firefox-.*build[0-9]+-.*$"),
     ("firefox", r"^Firefox-.*$"),
     ("devedition", r"^Devedition-.*$"),
+    ("pinebuild", r"^Pinebuild-.*$"),
     ("thunderbird", r"^Thunderbird-.*$"),
 ]
 

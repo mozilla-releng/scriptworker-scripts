@@ -17,6 +17,7 @@ bucket_config:
             key: { "$eval": "DEP_KEY" }
           buckets:
             devedition: 'net-mozaws-stage-delivery-archive'
+            pinebuild:  'net-mozaws-stage-delivery-archive'
             firefox:    'net-mozaws-stage-delivery-firefox'
             fennec:     'net-mozaws-stage-delivery-archive'
             mobile:     'net-mozaws-stage-delivery-archive'
@@ -41,6 +42,7 @@ bucket_config:
             key: { "$eval": "NIGHTLY_KEY" }
           buckets:
             devedition: 'net-mozaws-prod-delivery-archive'
+            pinebuild:  'net-mozaws-prod-delivery-archive'
             firefox:    'net-mozaws-prod-delivery-firefox'
             mobile:     'net-mozaws-prod-delivery-archive'
           url_prefix: 'https://archive.mozilla.org'
@@ -50,6 +52,7 @@ bucket_config:
             key: { "$eval": "RELEASE_KEY" }
           buckets:
             devedition: 'net-mozaws-prod-delivery-archive'
+            pinebuild:  'net-mozaws-prod-delivery-archive'
             firefox:    'net-mozaws-prod-delivery-firefox'
             mobile:      'net-mozaws-prod-delivery-archive'
           url_prefix: 'https://archive.mozilla.org'
@@ -65,6 +68,7 @@ bucket_config:
             key: { "$eval": "DEP_KEY" }
           buckets:
             devedition: 'net-mozaws-stage-delivery-archive'
+            pinebuild:  'net-mozaws-stage-delivery-archive'
             firefox:    'net-mozaws-stage-delivery-firefox'
             mobile:     'net-mozaws-stage-delivery-archive'
           url_prefix: 'https://ftp.stage.mozaws.net'
