@@ -26,20 +26,26 @@ STAGE_PLATFORM_MAP = {
     "linux64": "linux-x86_64",
     "linux64-asan-reporter": "linux-x86_64-asan-reporter",
     "linux64-devedition": "linux-x86_64",
+    "linux64-pinebuild": "linux-x86_64",
     "macosx64": "mac",
     "macosx64-asan-reporter": "mac-asan-reporter",
     "macosx64-devedition": "mac",
+    "macosx64-pinebuild": "mac",
     "win32-devedition": "win32",
     "win64-devedition": "win64",
+    "win64-pinebuild": "win64",
     "win64-aarch64-devedition": "win64-aarch64",
 }
 
 NORMALIZED_BALROG_PLATFORMS = {
     "linux-devedition": "linux",
     "linux64-devedition": "linux64",
+    "linux64-pinebuild": "linux64",
     "macosx64-devedition": "macosx64",
+    "macosx64-pinebuild": "macosx64",
     "win32-devedition": "win32",
     "win64-devedition": "win64",
+    "win64-pinebuild": "win64",
     "win64-aarch64-devedition": "win64-aarch64",
 }
 
@@ -99,6 +105,7 @@ PRODUCT_TO_PATH = {
     "mobile": "pub/mobile/",
     "fennec": "pub/mobile/",
     "devedition": "pub/devedition/",
+    "pinebuild": "pub/pinebuild/",
     "firefox": "pub/firefox/",
     "thunderbird": "pub/thunderbird/",
 }

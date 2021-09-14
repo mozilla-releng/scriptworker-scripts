@@ -113,6 +113,14 @@ def get_product_name(appName, platform):
             return "Devedition"
         else:
             return "devedition"
+    if "pinebuild" in platform:
+        # XXX: this check is helps reuse this function in both
+        # returning the proper templates file but also for the release name in
+        # Balrog manifest that beetmover is uploading upon successful run
+        if appName[0].isupper():
+            return "Pinebuild"
+        else:
+            return "pinebuild"
     return appName
 
 
