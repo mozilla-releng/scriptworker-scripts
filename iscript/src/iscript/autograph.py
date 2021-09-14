@@ -51,7 +51,7 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
     "libclearkey.so",
 )
 # Langpacks expect the following re to match for addon id
-LANGPACK_RE = re.compile(r"^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|devedition).mozilla.org$")
+LANGPACK_RE = re.compile(r"^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|devedition|pinebuild).mozilla.org$")
 
 
 # sign_widevine_dir {{{1
