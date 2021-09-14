@@ -76,7 +76,7 @@ _DEFAULT_MAR_VERIFY_KEYS = {
 }
 
 # Langpacks expect the following re to match for addon id
-LANGPACK_RE = re.compile(r"^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|devedition).mozilla.org$")
+LANGPACK_RE = re.compile(r"^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|devedition|pinebuild).mozilla.org$")
 
 
 def get_rss():
