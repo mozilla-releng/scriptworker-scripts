@@ -155,13 +155,30 @@ products:
           skip_check_same_locales: true
           skip_checks_fennec: true
           override_channel_model: "single_google_app"
-          app:
-            package_names:
-              - "org.mozilla.focus"
-              - "org.mozilla.klar"
-            service_account: "dummy"
-            credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
-            certificate_alias: "focus"
+          apps:
+            release:
+              package_names:
+                - "org.mozilla.focus"
+                - "org.mozilla.klar"
+              certificate_alias: 'focus'
+              google:
+                default_track: 'production'
+                service_account: 'dummy'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
+            nightly:
+              package_names: ["org.mozilla.focus.nightly"]
+              certificate_alias: 'focus'
+              google:
+                default_track: 'alpha'
+                service_account: 'dummy'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
+            beta:
+              package_names: ["org.mozilla.focus.beta"]
+              certificate_alias: 'focus'
+              google:
+                default_track: 'alpha'
+                service_account: 'dummy'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
         - product_names: [ "firefox-tv" ]
           skip_check_multiple_locales: true
           skip_check_same_locales: true
