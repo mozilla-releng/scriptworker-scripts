@@ -5,6 +5,8 @@ do_not_contact_server: { "$eval": "ENV != 'prod'" }
 taskcluster_scope_prefixes:
   $if: 'COT_PRODUCT == "mobile"'
   then:
+    - "project:mobile:focus-android:releng:googleplay:product:"
+      #TODO remove once Focus taskgraph integration is complete
     - "project:mobile:focus:releng:googleplay:product:"
     - "project:mobile:reference-browser:releng:googleplay:product:"
     - "project:mobile:fenix:releng:googleplay:product:"
