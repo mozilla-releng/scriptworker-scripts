@@ -106,8 +106,8 @@ def _get_channel_publish_config(product_config, task):
 def get_publish_config(product_config, task, scope_product):
     override_channel_model = product_config.get("override_channel_model")
     if override_channel_model == "single_google_app":
-        # Focus uses a single Google app and the "tracks" feature to represent different channels,
-        # rather than a separate app-per-channel. So, Focus is configured with "single_google_app"
+        # reference-browser uses a single Google app - with `channel` refering to the google default track -
+        # rather than a separate app-per-channel. So, reference-browser is configured with "single_google_app"
         return _get_single_google_app_publish_config(product_config, task)
 
     elif override_channel_model == "choose_google_app_with_scope":
