@@ -34,6 +34,7 @@ def test_config():
         "VERBOSE": "true",
         "TASKCLUSTER_SCOPE_PREFIX": "",
         "API_ROOT": "",
+        "STAGE_API_ROOT": "",
         "AUTH0_DOMAIN": "",
         "AUTH0_CLIENT_ID": "",
         "AUTH0_CLIENT_SECRET": "",

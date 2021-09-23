@@ -18,9 +18,11 @@ test_var_set 'AUTH0_CLIENT_SECRET'
 case $ENV in
   dev|fake-prod)
     export API_ROOT="https://admin-stage.balrog.nonprod.cloudops.mozgcp.net/api"
+    export STAGE_API_ROOT="https://admin-stage.balrog.nonprod.cloudops.mozgcp.net/api"
     ;;
   prod)
     export API_ROOT="https://aus4-admin.mozilla.org/api"
+    export STAGE_API_ROOT="https://admin-stage.balrog.nonprod.cloudops.mozgcp.net/api"
     ;;
   *)
     exit 1
