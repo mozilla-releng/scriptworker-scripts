@@ -56,7 +56,9 @@ PARTNER_ALIASES_REGEX = {
 PRODUCT_TO_DESTINATIONS_REGEXES = {
     "fennec": r"^(/mobile/releases/.*?/(?:android-api-16|android-x86)/\:lang/fennec-.*\:lang\.(?:android-arm|android-i386)\.apk)$",
     "firefox-rc": r"^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$",
-    "firefox": r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix|pkg))$",
+    "firefox": (
+        r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix|pkg))$"
+    ),
     "devedition": r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix))$",
     "pinebuild": r"^(/pinebuild/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix))$",
     "thunderbird": (
