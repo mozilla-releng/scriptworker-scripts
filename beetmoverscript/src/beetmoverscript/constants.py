@@ -13,6 +13,8 @@ MIME_MAP = {
     ".mar": "application/octet-stream",
     ".md5": "text/plain",
     ".msi": "application/x-msi",
+    # Per https://docs.microsoft.com/en-us/windows/msix/app-installer/web-install-iis
+    ".msix": "application/msix",
     ".pkg": "application/x-newton-compatible-pkg",
     ".pom": "application/xml",
     ".sha1": "text/plain",
