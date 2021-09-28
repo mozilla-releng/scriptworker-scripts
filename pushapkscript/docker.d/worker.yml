@@ -62,7 +62,7 @@ products:
                 default_track: 'production'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_PROD" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_PROD_PATH" }
-        - product_names: [ "focus" ]
+        - product_names: [ "focus", "focus-android" ]
           digest_algorithm: 'SHA-256'
           skip_check_ordered_version_codes: true
           skip_check_multiple_locales: true
@@ -166,7 +166,8 @@ products:
                 default_track: 'internal'
                 service_account: 'dummy'
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
-        - product_names: [ "focus" ]
+        # TODO remove "focus" once release logic is converted to taskgraph
+        - product_names: [ "focus", "focus-android" ]
           digest_algorithm: "SHA-256"
           skip_check_ordered_version_codes: true
           skip_check_multiple_locales: true
