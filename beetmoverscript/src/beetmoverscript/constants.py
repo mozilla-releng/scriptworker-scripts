@@ -12,12 +12,15 @@ MIME_MAP = {
     ".json": "application/json",
     ".mar": "application/octet-stream",
     ".md5": "text/plain",
+    ".module": "application/json",
     ".msi": "application/x-msi",
     # Per https://docs.microsoft.com/en-us/windows/msix/app-installer/web-install-iis
     ".msix": "application/msix",
     ".pkg": "application/x-newton-compatible-pkg",
     ".pom": "application/xml",
     ".sha1": "text/plain",
+    ".sha256": "text/plain",
+    ".sha512": "text/plain",
     ".snap": "application/octet-stream",
     ".xpi": "application/x-xpinstall",
 }
