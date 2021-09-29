@@ -31,7 +31,7 @@ Full documentation is available at https://scriptworker-scripts.readthedocs.io/e
 Overview of existing workers
 ============================
 
-Note: this is not a comprehensive list. We have added more scripts, more trust domains, and more pools since this list was compiled.
+Note: this is not a comprehensive list. We have added more scripts, more trust domains, and more pools since this list was compiled. The authoritative place to look for currently deployed scriptworkers is in https://github.com/mozilla-services/cloudops-infra/blob/master/projects/relengworker/Jenkinsfile, in the `ScriptWorkerTypes` section. Dev scriptworkers can be found in https://github.com/mozilla-services/cloudops-infra/blob/master/projects/relengworker/Jenkinsfile.dev.
 
 addonscript
 -----------
