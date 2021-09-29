@@ -123,18 +123,26 @@ def test_list_bucket_objects():
 
 
 # setup_mimetypes {{{1
-def test_setup_mimetypes():
-    non_default_types = ["https://foo.com/fake_artifact.bundle", "http://www.bar.com/fake_checksum.beet", "http://www.baz.com/fake.msix"]
-
+@pytest.mark.parametrize(
+    "url,expected_type",
+    [
+        ("https://foo.com/fake_artifact.bundle", "application/octet-stream"),
+        ("http://www.bar.com/fake_checksum.beet", "text/plain"),
+        ("http://www.baz.com/fake.msix", "application/msix"),
+        ("geckoview-nightly-omni-x86-94.0.20210928095433.module", "application/json"),
+        ("geckoview-nightly-omni-x86-94.0.20210928095433.pom.sha512", "text/plain"),
+    ],
+)
+def test_setup_mimetypes(url, expected_type):
     # ensure we start with mimetypes in its initial state
     mimetypes.init()
     # before we add custom mimetypes
-    assert [mimetypes.guess_type(url)[0] for url in non_default_types] == [None, None, None]
+    assert mimetypes.guess_type(url)[0] is None
 
     setup_mimetypes()
 
     # after we add custom mimetypes
-    assert [mimetypes.guess_type(url)[0] for url in non_default_types] == ["application/octet-stream", "text/plain", "application/msix"]
+    assert mimetypes.guess_type(url)[0] == expected_type
 
 
 # put {{{1
