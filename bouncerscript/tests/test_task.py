@@ -361,6 +361,19 @@ async def test_check_aliases_match(aliases_context, mocker, entries, provided, r
                 [
                     "firefox-nightly-msi-latest-ssl",
                     "firefox-nightly-msi-latest-l10n-ssl",
+                    "firefox-nightly-pkg-latest-ssl",
+                    "firefox-nightly-pkg-latest-l10n-ssl",
+                    "firefox-nightly-latest",
+                    "firefox-nightly-latest-ssl",
+                    "firefox-nightly-latest-l10n",
+                    "firefox-nightly-latest-l10n-ssl",
+                ],
+                False,
+            ),
+            (
+                [
+                    "firefox-nightly-msi-latest-ssl",
+                    "firefox-nightly-msi-latest-l10n-ssl",
                     "firefox-nightly-msix-latest-ssl",
                     "firefox-nightly-pkg-latest-ssl",
                     "firefox-nightly-pkg-latest-l10n-ssl",
