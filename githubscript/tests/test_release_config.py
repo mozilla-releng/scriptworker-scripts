@@ -6,7 +6,114 @@ from scriptworker_client.exceptions import TaskVerificationError
 import githubscript.release_config as release_config
 
 
-def test_release_config(monkeypatch):
+@pytest.mark.parametrize(
+    "product_config, task_payload, expected_result",
+    (
+        (
+            {
+                "github_owner": "some_owner",
+                "github_repo_name": "some_repo",
+                "github_token": "some_secret_token",
+                "contact_github": True,
+            },
+            {
+                "gitRevision": "somecommithash",
+                "gitTag": "v1.0.0",
+                "isPrerelease": False,
+                "releaseName": "SomeProduct v1.0.0",
+            },
+            {
+                "artifacts": [
+                    {
+                        "content_type": "application/vnd.android.package-archive",
+                        "local_path": "/dummy/path/to.apk",
+                        "name": "somme_pretty_name.apk",
+                        "size": 9000,
+                    },
+                ],
+                "contact_github": True,
+                "git_revision": "somecommithash",
+                "git_tag": "v1.0.0",
+                "github_owner": "some_owner",
+                "github_repo_name": "some_repo",
+                "github_token": "some_secret_token",
+                "is_prerelease": False,
+                "release_name": "SomeProduct v1.0.0",
+            },
+        ),
+        (
+            {
+                "github_owner": "config_owner",
+                "github_repo_name": "config_repo",
+                "allow_github_repo_override": True,
+                "github_token": "some_secret_token",
+                "contact_github": True,
+            },
+            {
+                "githubOwner": "task_owner",
+                "githubRepoName": "task_repo",
+                "gitRevision": "somecommithash",
+                "gitTag": "v1.0.0",
+                "isPrerelease": False,
+                "releaseName": "SomeProduct v1.0.0",
+            },
+            {
+                "artifacts": [
+                    {
+                        "content_type": "application/vnd.android.package-archive",
+                        "local_path": "/dummy/path/to.apk",
+                        "name": "somme_pretty_name.apk",
+                        "size": 9000,
+                    },
+                ],
+                "contact_github": True,
+                "git_revision": "somecommithash",
+                "git_tag": "v1.0.0",
+                "github_owner": "task_owner",
+                "github_repo_name": "task_repo",
+                "github_token": "some_secret_token",
+                "is_prerelease": False,
+                "release_name": "SomeProduct v1.0.0",
+            },
+        ),
+        (
+            {
+                "github_owner": "config_owner",
+                "github_repo_name": "config_repo",
+                "allow_github_repo_override": False,
+                "github_token": "some_secret_token",
+                "contact_github": True,
+            },
+            {
+                "githubOwner": "task_owner",
+                "githubRepoName": "task_repo",
+                "gitRevision": "somecommithash",
+                "gitTag": "v1.0.0",
+                "isPrerelease": False,
+                "releaseName": "SomeProduct v1.0.0",
+            },
+            {
+                "artifacts": [
+                    {
+                        "content_type": "application/vnd.android.package-archive",
+                        "local_path": "/dummy/path/to.apk",
+                        "name": "somme_pretty_name.apk",
+                        "size": 9000,
+                    },
+                ],
+                "github_owner": "config_owner",
+                "github_repo_name": "config_repo",
+                "contact_github": True,
+                "git_revision": "somecommithash",
+                "git_tag": "v1.0.0",
+                "github_token": "some_secret_token",
+                "is_prerelease": False,
+                "release_name": "SomeProduct v1.0.0",
+            },
+        ),
+    ),
+)
+def test_release_config(monkeypatch, product_config, task_payload, expected_result):
     def _dummy_get_artifacts(*args, **kwargs):
         return [{"content_type": "application/vnd.android.package-archive", "local_path": "/dummy/path/to.apk", "name": "somme_pretty_name.apk", "size": 9000}]
 
@@ -14,155 +121,51 @@ def test_release_config(monkeypatch):
 
     config = {}
 
-    product_config = {
-        "github_owner": "some_owner",
-        "github_repo_name": "some_repo",
-        "github_token": "some_secret_token",
-        "contact_github": True,
-    }
-
-    task_payload = {
-        "gitRevision": "somecommithash",
-        "gitTag": "v1.0.0",
-        "isPrerelease": False,
-        "releaseName": "SomeProduct v1.0.0",
-    }
-
-    assert release_config.get_release_config(product_config, task_payload, config) == {
-        "artifacts": [
-            {"content_type": "application/vnd.android.package-archive", "local_path": "/dummy/path/to.apk", "name": "somme_pretty_name.apk", "size": 9000}
-        ],
-        "contact_github": True,
-        "git_revision": "somecommithash",
-        "git_tag": "v1.0.0",
-        "github_owner": "some_owner",
-        "github_repo_name": "some_repo",
-        "github_token": "some_secret_token",
-        "is_prerelease": False,
-        "release_name": "SomeProduct v1.0.0",
-    }
+    assert release_config.get_release_config(product_config, task_payload, config) == expected_result
 
 
-def test_release_config_override(monkeypatch):
+@pytest.mark.parametrize(
+    "product_config, task_payload",
+    (
+        (
+            {
+                "allow_github_repo_override": False,
+                "github_token": "some_secret_token",
+                "contact_github": True,
+            },
+            {
+                "githubOwner": "some_owner",
+                "githubRepoName": "some_repo",
+                "gitRevision": "somecommithash",
+                "gitTag": "v1.0.0",
+                "isPrerelease": False,
+                "releaseName": "SomeProduct v1.0.0",
+            },
+        ),
+        (
+            {
+                "github_owner": "some_owner",
+                "github_repo_name": "some_repo",
+                "allow_github_repo_override": True,
+                "github_token": "some_secret_token",
+                "contact_github": True,
+            },
+            {
+                "gitRevision": "somecommithash",
+                "gitTag": "v1.0.0",
+                "isPrerelease": False,
+                "releaseName": "SomeProduct v1.0.0",
+            },
+        ),
+    ),
+)
+def test_release_config_override_missing_key(monkeypatch, product_config, task_payload):
     def _dummy_get_artifacts(*args, **kwargs):
         return [{"content_type": "application/vnd.android.package-archive", "local_path": "/dummy/path/to.apk", "name": "somme_pretty_name.apk", "size": 9000}]
 
     monkeypatch.setattr(release_config, "_get_artifacts", _dummy_get_artifacts)
 
     config = {}
-
-    product_config = {
-        "github_owner": "config_owner",
-        "github_repo_name": "config_repo",
-        "allow_github_repo_override": True,
-        "github_token": "some_secret_token",
-        "contact_github": True,
-    }
-
-    task_payload = {
-        "githubOwner": "task_owner",
-        "githubRepoName": "task_repo",
-        "gitRevision": "somecommithash",
-        "gitTag": "v1.0.0",
-        "isPrerelease": False,
-        "releaseName": "SomeProduct v1.0.0",
-    }
-
-    assert release_config.get_release_config(product_config, task_payload, config) == {
-        "artifacts": [
-            {"content_type": "application/vnd.android.package-archive", "local_path": "/dummy/path/to.apk", "name": "somme_pretty_name.apk", "size": 9000}
-        ],
-        "contact_github": True,
-        "git_revision": "somecommithash",
-        "git_tag": "v1.0.0",
-        "github_owner": "task_owner",
-        "github_repo_name": "task_repo",
-        "github_token": "some_secret_token",
-        "is_prerelease": False,
-        "release_name": "SomeProduct v1.0.0",
-    }
-
-
-def test_release_config_override_false(monkeypatch):
-    def _dummy_get_artifacts(*args, **kwargs):
-        return [{"content_type": "application/vnd.android.package-archive", "local_path": "/dummy/path/to.apk", "name": "somme_pretty_name.apk", "size": 9000}]
-
-    monkeypatch.setattr(release_config, "_get_artifacts", _dummy_get_artifacts)
-
-    config = {}
-
-    product_config = {
-        "github_owner": "config_owner",
-        "github_repo_name": "config_repo",
-        "allow_github_repo_override": False,
-        "github_token": "some_secret_token",
-        "contact_github": True,
-    }
-
-    task_payload = {
-        "githubOwner": "task_owner",
-        "githubRepoName": "task_repo",
-        "gitRevision": "somecommithash",
-        "gitTag": "v1.0.0",
-        "isPrerelease": False,
-        "releaseName": "SomeProduct v1.0.0",
-    }
-
-    assert release_config.get_release_config(product_config, task_payload, config) == {
-        "artifacts": [
-            {"content_type": "application/vnd.android.package-archive", "local_path": "/dummy/path/to.apk", "name": "somme_pretty_name.apk", "size": 9000}
-        ],
-        "github_owner": "config_owner",
-        "github_repo_name": "config_repo",
-        "contact_github": True,
-        "git_revision": "somecommithash",
-        "git_tag": "v1.0.0",
-        "github_token": "some_secret_token",
-        "is_prerelease": False,
-        "release_name": "SomeProduct v1.0.0",
-    }
-
-
-def test_release_config_override_missing_key(monkeypatch):
-    def _dummy_get_artifacts(*args, **kwargs):
-        return [{"content_type": "application/vnd.android.package-archive", "local_path": "/dummy/path/to.apk", "name": "somme_pretty_name.apk", "size": 9000}]
-
-    monkeypatch.setattr(release_config, "_get_artifacts", _dummy_get_artifacts)
-
-    config = {}
-
-    product_config = {
-        "allow_github_repo_override": False,
-        "github_token": "some_secret_token",
-        "contact_github": True,
-    }
-
-    task_payload = {
-        "githubOwner": "some_owner",
-        "githubRepoName": "some_repo",
-        "gitRevision": "somecommithash",
-        "gitTag": "v1.0.0",
-        "isPrerelease": False,
-        "releaseName": "SomeProduct v1.0.0",
-    }
-
-    with pytest.raises(TaskVerificationError):
-        release_config.get_release_config(product_config, task_payload, config)
-
-    product_config = {
-        "github_owner": "some_owner",
-        "github_repo_name": "some_repo",
-        "allow_github_repo_override": True,
-        "github_token": "some_secret_token",
-        "contact_github": True,
-    }
-
-    task_payload = {
-        "gitRevision": "somecommithash",
-        "gitTag": "v1.0.0",
-        "isPrerelease": False,
-        "releaseName": "SomeProduct v1.0.0",
-    }
 
     with pytest.raises(TaskVerificationError):
         release_config.get_release_config(product_config, task_payload, config)
