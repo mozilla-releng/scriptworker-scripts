@@ -60,7 +60,7 @@ PRODUCT_TO_DESTINATIONS_REGEXES = {
         r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix|pkg))$"
     ),
     "devedition": r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix))$",
-    "pinebuild": r"^(/pinebuild/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix))$",
+    "pinebuild": r"^(/pinebuild/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:pinebuild|Pinebuild).*\.(?:bz2|dmg|exe|mar|msi|msix))$",
     "thunderbird": (
         r"^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/" r"(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar|msi))$"
     ),
