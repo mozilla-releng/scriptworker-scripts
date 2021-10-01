@@ -20,6 +20,7 @@
    scriptworkers-k8s
    scriptworkers-autoscaling
    scriptworkers-troubleshooting
+   scriptworkers-rollback
    README
 
 
