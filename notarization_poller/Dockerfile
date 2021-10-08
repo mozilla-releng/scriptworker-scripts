@@ -1,5 +1,4 @@
-# python:3.7
-FROM python@sha256:b0bc9d64dbb686ab7dd20024acd1f5d4d412b6335e0d2fd569110f055d5ccf8e
+FROM python:3.7@sha256:b0bc9d64dbb686ab7dd20024acd1f5d4d412b6335e0d2fd569110f055d5ccf8e
 
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
