@@ -4,7 +4,8 @@
 
 # We need to run a really old docker version because taskcluster is using a
 # really old version in their setup
-FROM docker:1.6.2
+# docker:1.6.2
+FROM docker@sha256:9089ceab1cf3fe5e23713a7f05732f45cbd773818c57042ae065c3dffaef9b54
 
 RUN apk add --update xz
 RUN mkdir -p /usr/local/bin
