@@ -1,5 +1,5 @@
 # Pinned because newer images have a newer osslsigncode that we don't support
-FROM python:3.8.10
+FROM python:3.9.7
 
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app

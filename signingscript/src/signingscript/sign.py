@@ -1325,16 +1325,12 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         log.info("Not using specified comment to sign %s, not yet implemented for non *.msi files.", orig_path)
         authenticode_comment = None
 
+    log.info(
+        "signing file with timestamp style: '%s', url: '%s', comment: '%s', signer: %s, digest_algo: '%s', certs: %s"
+        % (timestamp_style, url, authenticode_comment, signer, digest_algo, certs)
+    )
     if not await winsign.sign.sign_file(
-        infile,
-        outfile,
-        digest_algo,
-        certs,
-        signer,
-        url=url,
-        comment=authenticode_comment,
-        crosscert=crosscert,
-        timestamp_style=timestamp_style,
+        infile, outfile, digest_algo, certs, signer, url=url, comment=authenticode_comment, crosscert=crosscert, timestamp_style=timestamp_style
     ):
         raise IOError(f"Couldn't sign {orig_path}")
     os.rename(outfile, infile)
