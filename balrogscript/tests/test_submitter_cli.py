@@ -7,11 +7,11 @@ from balrogscript.submitter.cli import NightlySubmitterBase, NightlySubmitterV4,
 
 
 class TestNightlySubmitterBase(unittest.TestCase):
-    def test_replace_canocical_url(self):
+    def test_replace_canonical_url(self):
         url_replacements = [("ftp.mozilla.org", "download.cdn.mozilla.net")]
         submitter = NightlySubmitterBase(api_root=None, auth0_secrets=None, url_replacements=url_replacements)
         self.assertEqual(
-            "http://download.cdn.mozilla.net/pub/mozilla.org/some/file", submitter._replace_canocical_url("http://ftp.mozilla.org/pub/mozilla.org/some/file")
+            "http://download.cdn.mozilla.net/pub/mozilla.org/some/file", submitter._replace_canonical_url("http://ftp.mozilla.org/pub/mozilla.org/some/file")
         )
 
 
