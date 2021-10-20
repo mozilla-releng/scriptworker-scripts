@@ -6,6 +6,6 @@ mar>=3.0.0
 scriptworker
 taskcluster
 mohawk>=1.0.0
-winsign>=2.2.1
+winsign>=2.2.2
 macholib>=1.11
 jsonschema==3.2.0

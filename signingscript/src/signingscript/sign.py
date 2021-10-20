@@ -1307,6 +1307,8 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
     else:
         digest_algo = "sha1"
 
+    cafile = context.config["authenticode_ca"]
+
     if keyid:
         certs = load_pem_certs(open(context.config[f"authenticode_cert_{keyid}"], "rb").read())
     else:
@@ -1330,7 +1332,7 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         % (timestamp_style, url, authenticode_comment, signer, digest_algo, certs)
     )
     if not await winsign.sign.sign_file(
-        infile, outfile, digest_algo, certs, signer, url=url, comment=authenticode_comment, crosscert=crosscert, timestamp_style=timestamp_style
+        infile, outfile, digest_algo, certs, signer, cafile=cafile, url=url, comment=authenticode_comment, crosscert=crosscert, timestamp_style=timestamp_style
     ):
         raise IOError(f"Couldn't sign {orig_path}")
     os.rename(outfile, infile)

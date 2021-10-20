@@ -14,9 +14,9 @@ distlib==0.3.3 \
     --hash=sha256:c8b54e8454e5bf6237cc84c20e8264c3e991e824ef27e8f1e81049867d861e31 \
     --hash=sha256:d982d0751ff6eaaab5e2ec8e691d949ee80eddf01a62eaa96ddb11531fe16b05
     # via virtualenv
-filelock==3.3.0 \
-    --hash=sha256:8c7eab13dc442dc249e95158bcc12dec724465919bdc9831fdbf0660f03d1785 \
-    --hash=sha256:bbc6a0382fe8ec4744ecdf6683a2e07f65eb10ff1aff53fc02a202565446cde0
+filelock==3.3.1 \
+    --hash=sha256:2b5eb3589e7fdda14599e7eb1a50e09b4cc14f34ed98b8ba56d33bfaafcbef2f \
+    --hash=sha256:34a9f35f95c441e7b38209775d6e0337f9a3759f3565f6c5798f19618527c76f
     # via
     #   tox
     #   virtualenv
