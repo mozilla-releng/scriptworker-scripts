@@ -2,9 +2,6 @@
 username = Mozilla Releng Treescript <release+treescript@mozilla.org>
 merge = internal:merge
 
-[hostsecurity]
-hg.mozilla.org:fingerprints = sha256:ff:e7:8d:93:e9:56:3c:c0:19:fc:00:4c:18:b9:86:e5:08:e5:10:f5:e2:ea:48:e8:22:d3:a3:3a:ca:99:c3:4c, sha256:17:38:aa:92:0b:84:3e:aa:8e:52:52:e9:4c:2f:98:a9:0e:bf:6c:3e:e9:15:ff:0a:29:80:f7:06:02:5b:e8:48
-
 [extensions]
 purge =
 strip =
