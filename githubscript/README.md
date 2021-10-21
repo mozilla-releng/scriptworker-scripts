@@ -7,7 +7,7 @@ It's is aimed to be run with [scriptworker](https://github.com/mozilla-releng/sc
 ## Get the code
 
 
-First, you need `python>=3.7.0`.
+First, you need `python>=3.8.0`.
 
 ```sh
 # create the virtualenv in ./venv3

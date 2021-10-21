@@ -1,10 +1,8 @@
 arrow
-# TODO: Remove the following line once flake8, jsonschema, pep517, pluggy, pytest,
-# tox, and virtualenv all support importlib-metadata >= 2
-importlib-metadata<2; python_version < '3.8'
 mar>=3.0.0
 scriptworker
 taskcluster
 mohawk>=1.0.0
 winsign>=2.1.0
 macholib>=1.11
+jsonschema==3.2.0

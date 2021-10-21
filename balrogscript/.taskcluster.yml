@@ -4,7 +4,7 @@ policy:
 tasks:
   $let:
     project_name: 'balrog'
-    python_version: 'py37'
+    python_version: 'py39'
 
     head_rev:
       $if: 'tasks_for == "github-pull-request"'

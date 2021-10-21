@@ -13,29 +13,30 @@ transforms:
 jobs:
     # k8s-image:
     #     definition: k8s-image
+    python39:
+        definition: python
+        args:
+            PYTHON_VERSION: "3.9.7"
     python38:
         definition: python
         args:
             PYTHON_VERSION: "3.8"
-    python37:
-        definition: python
-        args:
-            PYTHON_VERSION: "3.7"
+            PYTHON_REQ_SUFFIX: ".py38"
     pushapkscript-python38:
         definition: pushapkscript
         parent: python38
-    pushapkscript-python37:
+    pushapkscript-python39:
         definition: pushapkscript
-        parent: python37
+        parent: python39
     pushsnapscript-python38:
         definition: pushsnapscript
         parent: python38
-    pushsnapscript-python37:
+    pushsnapscript-python39:
         definition: pushsnapscript
-        parent: python37
+        parent: python39
     pushflatpakscript-python38:
         definition: pushflatpakscript
         parent: python38
-    pushflatpakscript-python37:
+    pushflatpakscript-python39:
         definition: pushflatpakscript
-        parent: python37
+        parent: python39

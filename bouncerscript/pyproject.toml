@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 180
-target-version = ["py37", "py38"]
+target-version = ["py39", "py38"]
 include = '\.(wsgi|pyi?)$'
 exclude = '''
 /(

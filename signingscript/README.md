@@ -99,7 +99,7 @@ Remember the path to `./fake_ca/ca.crt` ; this will be the file that signingscri
 
 ### virtualenv
 
-First, you need `python>=3.6.0`.
+First, you need `python>=3.8.0`.
 
 Next, create a python36 virtualenv, and install signingscript:
 
@@ -281,3 +281,7 @@ To add a new dependency without upgrade, add it to `requirements/base.in` and ru
 For installation always use `.txt` files. For example, command `pip install -Ue . -r requirements/test.txt` will install
 this project in test mode, testing requirements and development tools.
 Another useful command is `pip-sync requirements/test.txt`, it uninstalls packages from your virtualenv that aren't listed in the file.
+
+Alternatively, you can run `pin.sh`:
+
+    ./maintenance/pin.sh iscript
