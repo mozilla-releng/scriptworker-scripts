@@ -25,8 +25,8 @@ job-defaults:
         docker-image: {in-tree: 'python{python_version}'}
         max-run-time: 1800
     python-versions:
+        - 39
         - 38
-        - 37
     run:
         using: run-task
         cache-dotcache: false

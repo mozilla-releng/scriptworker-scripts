@@ -4,6 +4,12 @@ Change Log
 All notable changes to this project will be documented in this file.
 This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
+[12.2.0] - 2021-10-25
+--------------------
+Changed
+~~~~~~~
+- Upgraded test environment to remove python3.7 and add python3.9
+
 [12.2.0] - 2019-10-11
 --------------------
 Changed

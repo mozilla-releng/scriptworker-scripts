@@ -37,7 +37,7 @@ job-defaults:
             - >-
               sh /usr/local/bin/build_and_push.sh
     python-versions:
-        - 38
+        - 39
     deploy-secret-url: http://taskcluster/secrets/v1/secret/project/releng/scriptworker-scripts/deploy
     docker-repo: mozilla/releng-{name}
     # TODO copy image to artifacts
