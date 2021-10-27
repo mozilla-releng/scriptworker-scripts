@@ -204,6 +204,8 @@ case $ENV in
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
+        test_var_set 'AUTOGRAPH_MAR_NIGHTLY_PASSWORD'
+        test_var_set 'AUTOGRAPH_MAR_NIGHTLY_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_RELEASE_PASSWORD'
         test_var_set 'AUTOGRAPH_MAR_RELEASE_USERNAME'
         ;;
