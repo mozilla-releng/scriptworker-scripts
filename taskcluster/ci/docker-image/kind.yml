@@ -31,9 +31,9 @@ jobs:
     pushmsixscript-python38:
         definition: pushmsixscript
         parent: python38
-    pushmsixscript-python37:
+    pushmsixscript-python39:
         definition: pushmsixscript
-        parent: python37
+        parent: python39
     pushsnapscript-python38:
         definition: pushsnapscript
         parent: python38
