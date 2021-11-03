@@ -1,0 +1,5 @@
+{
+  "work_dir": "/some/path",
+  "verbose": true,
+  "push_to_store": false
+}
