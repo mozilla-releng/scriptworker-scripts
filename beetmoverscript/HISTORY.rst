@@ -6,6 +6,15 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
 .. towncrier release notes start
 
+[8.5.7] = (2021-10-25)
+----------------------
+
+Changed
+~~~~~~~
+
+ - upgraded test environment to remove python 3.7 and add python 3.9
+
+
 [8.5.7] = (2019-09-12)
 ----------------------
 

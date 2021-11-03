@@ -28,13 +28,7 @@ balrogscript will look in `$work_dir/task.json` for the task definition to use.
 
 The manifest that we use will be in `$work_dir/cot/$upstream_task_id/$path`, based on the `upstreamArtifacts` in the task payload.
 
-## dephash note
+## Update python dependencies
+The easiest way to do this is to run `pin.sh`:
 
-It looks like dephash is [busted on python 2.7](https://github.com/escapewindow/dephash/issues/5).
-
-To update `requirements-prod.txt`,
-
-```bash
-pip install pip-tools
-pip-compile --generate-hashes requirements-dev.txt -o requirements-prod.txt
-```
+    ./maintenance/pin.sh balrogscript
