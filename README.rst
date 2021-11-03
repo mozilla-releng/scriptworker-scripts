@@ -116,6 +116,17 @@ gecko-3-pushflat     pushflat-prod-relengworker-firefoxci-gecko-3
 gecko-1-pushflat     pushflat-prod-relengworker-firefoxci-gecko-1
 ==================== ============================================
 
+pushmsixscript
+--------------
+
+==================== ============================================
+Worker type          Deployment name
+==================== ============================================
+gecko-1-pushmsix-dev pushmsix-dev-relengworker-firefoxci-gecko-1
+gecko-3-pushmsix     pushmsix-prod-relengworker-firefoxci-gecko-3
+gecko-1-pushmsix     pushmsix-prod-relengworker-firefoxci-gecko-1
+==================== ============================================
+
 pushsnapscript
 --------------
 

@@ -1,0 +1,4 @@
+work_dir: { "$eval": "WORK_DIR" }
+artifact_dir: { "$eval": "ARTIFACTS_DIR" }
+verbose: { "$eval": "VERBOSE == 'true'" }
+push_to_store: { "$eval": "ENV == 'prod'" }

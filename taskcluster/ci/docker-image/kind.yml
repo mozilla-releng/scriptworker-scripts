@@ -28,6 +28,12 @@ jobs:
     pushapkscript-python39:
         definition: pushapkscript
         parent: python39
+    pushmsixscript-python38:
+        definition: pushmsixscript
+        parent: python38
+    pushmsixscript-python37:
+        definition: pushmsixscript
+        parent: python37
     pushsnapscript-python38:
         definition: pushsnapscript
         parent: python38
