@@ -5,7 +5,7 @@
 #
 #    pip-compile-multi
 #
--r test.py37.txt
+-r test.py38.txt
 backports.entry-points-selectable==1.1.0 \
     --hash=sha256:988468260ec1c196dab6ae1149260e2f5472c9110334e5d51adcb77867361f6a \
     --hash=sha256:a6d9a871cde5e15b4c4a53e3d43ba890cc6861ec1332c9c2428c92f977192acc
@@ -18,18 +18,6 @@ filelock==3.3.2 \
     --hash=sha256:7afc856f74fa7006a289fd10fa840e1eebd8bbff6bffb69c26c54a0512ea8cf8 \
     --hash=sha256:bb2a1c717df74c48a2d00ed625e5a66f8572a3a30baacb7657add1d7bac4097b
     # via
-    #   tox
-    #   virtualenv
-importlib-metadata==1.7.0 ; python_version < "3.8"     --hash=sha256:90bb658cdbbf6d1735b6341ce708fc7024a3e14e99ffdc5783edea9f9b077f83     --hash=sha256:dc15b2969b4ce36305c51eebe62d418ac7791e9a157911d58bfb1f9ccd8e2070
-    # via
-    #   -r requirements/base.in
-    #   backports.entry-points-selectable
-    #   build
-    #   flake8
-    #   jsonschema
-    #   pep517
-    #   pluggy
-    #   pytest
     #   tox
     #   virtualenv
 tox==3.24.4 \

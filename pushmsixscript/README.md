@@ -8,7 +8,7 @@ Main script that is aimed to be run with [scriptworker](https://github.com/mozil
 ## Get the code
 
 
-First, you need `python>=3.5.0`.
+First, you need `python>=3.8.0`.
 
 ```sh
 virtualenv3 venv3   # create the virtualenv in ./venv3
