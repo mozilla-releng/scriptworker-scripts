@@ -181,3 +181,29 @@ Update python dependencies
   # from scriptworker-scripts/ ; this will run docker for py38 and py39
   # for all *scripts to update all the dependencies via `pip-compile-multi`
   $ maintenance/pin.sh
+
+==========================
+Testing code changes
+==========================
+
+Each directory is a different tool with different testing needs.
+
+When updating the entire set of tools here are a few steps that could help:
+ * push changes to `dev` branch (if a single tool, use `dev-<tool>`), wait for deployment in #releng-notifications in Slack
+   * `git push --dry-run upstream <my_pr_branch>:dev`
+ * do a staging release of an xpi manifest (covers github script, signingscript, shipitscript)
+   * add a [change like this](https://github.com/mozilla-releng/staging-xpi-manifest/commit/30c851d859674107431625a23492475ee0707673) to `staging-xpi-manifest`
+   * wait for it to be deployed
+   * Go to [ShipIt staging](shipit.staging.mozilla-releng.net/) and create a new `XPI Release`, selecting `staging-xpi-public`
+   * Once started, go to `xpi releases` and build, promote, ship (need signatures for this) - ensure all jobs complete
+   * Make sure to revert changes to any repos
+ * do a try push using `-dev` instances running select jobs (covers winsign, beetmoverscript, balrogscript)
+   * change [taskcluster/ci/config.yml](https://hg.mozilla.org/try/rev/dd822643ebafd3600032ec3bca5ed60bb941f1cd) to edit the staging machine types:
+     * beetmover::staging: '{trust-domain}-1-beetmover' -> '{trust-domain}-1-beetmover-dev'
+     * linux-depsigning::worker-type: '{trust-domain}-t-signing' -> '{trust-domain}-t-signing-dev'
+     * mac-depsigning::worker-type: 'depsigning-mac-v1' -> 'depsigning-mac-v1-dev' (NOTE: we don't test this)
+     * mac-notorization-poller::worker-type: 'mac-notarization-poller' -> 'mac-notarization-poller-dev' (NOTE: we don't test this)
+     * mac-signing::staging: 'depsigning-mac-v1' -> 'depsigning-mac-v1-dev' (NOTE: we don't test this)
+     * tree::staging: '{trust-domain}-1-tree' -> '{trust-domain}-1-tree-dev'
+     * Then run `./mach try fuzzy --full` and select `build-signing`, `release-balrog`, `balrog-en-CA`, `beetmover` jobs.  This will select hundreds of jobs (mostly language repacks), but will get a lot of coverage
+ * For all of these (just 1 language pack), examine the logs to ensure using the `-dev` workers and that there are no red flags (like an error that doesn't cause the job to fail)
