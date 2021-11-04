@@ -1012,6 +1012,7 @@ def test_extension_id_raises(json_, raises, mocker):
 async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt, use_comment):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_ca"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_ca_timestamp"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
@@ -1053,6 +1054,7 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt, use_comment):
 async def test_authenticode_sign_msi(tmpdir, mocker, context, fmt, use_comment):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_ca"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_ca_timestamp"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
@@ -1093,6 +1095,7 @@ async def test_authenticode_sign_msi(tmpdir, mocker, context, fmt, use_comment):
 async def test_authenticode_sign_zip_nofiles(tmpdir, mocker, context):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_ca"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_ca_timestamp"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
 
@@ -1112,6 +1115,7 @@ async def test_authenticode_sign_zip_nofiles(tmpdir, mocker, context):
 async def test_authenticode_sign_zip_error(tmpdir, mocker, context):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_ca"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_ca_timestamp"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
 
@@ -1130,6 +1134,7 @@ async def test_authenticode_sign_zip_error(tmpdir, mocker, context):
 async def test_authenticode_sign_authenticode_permanent_error(tmpdir, mocker, context, caplog):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_ca"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_ca_timestamp"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
 
@@ -1196,6 +1201,7 @@ async def test_authenticode_sign_gpg_temporary_error(tmpdir, mocker, context, ca
 async def test_authenticode_sign_single_file(tmpdir, mocker, context):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_ca"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_ca_timestamp"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
@@ -1224,6 +1230,7 @@ async def test_authenticode_sign_keyids(tmpdir, mocker, context):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_cert_202005"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_ca"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_ca_timestamp"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_cross_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
