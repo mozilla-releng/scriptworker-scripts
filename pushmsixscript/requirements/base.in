@@ -1,14 +1,3 @@
 mozilla-version
 scriptworker
 taskcluster
-
-click~=7.0
-mypy-extensions==0.4.3
-progressbar33==2.4
-pyelftools==0.24
-python-debian==0.1.28
-PyYAML==5.4
-requests_unixsocket==0.2.0
-requests-toolbelt==0.8.0
-simplejson==3.17.5
-tabulate==0.8.9

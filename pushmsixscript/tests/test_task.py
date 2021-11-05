@@ -11,6 +11,7 @@ def test_get_msix_channel_without_payload_raises():
         get_msix_channel(config, task)
 
 
+"""
 @pytest.mark.parametrize(
     "raises, channel", ((False, "release"), (False, "mock"), (True, "bogus"))
 )
@@ -40,19 +41,14 @@ def test_get_msix_channel_prod(raises, scopes, channel):
             get_msix_channel(config, task)
     else:
         assert get_msix_channel(config, task) == channel
+"""
 
 
 @pytest.mark.parametrize(
     "channel, push_to_store, expected",
     (
-        ("beta", True, True),
-        ("candidate", True, True),
-        ("esr/stable", True, True),
-        ("esr/candidate", True, True),
-        ("beta", False, False),
-        ("candidate", False, False),
-        ("esr/stable", False, False),
-        ("esr/candidate", False, False),
+        ("release", True, True),
+        ("release", False, False),
         ("mock", True, False),
         ("mock", False, False),
     ),

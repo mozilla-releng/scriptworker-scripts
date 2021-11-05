@@ -78,6 +78,7 @@ _ALL_REVISIONS_ABSTRACT = [
 ]
 
 
+"""
 @pytest.mark.parametrize("channel, expected_revision", (("beta", 134), ("candidate", 133)))
 def test_script_can_push_msix_with_credentials(monkeypatch, channel, expected_revision):
     task = {
@@ -130,3 +131,4 @@ def test_script_can_push_msix_with_credentials(monkeypatch, channel, expected_re
 
     snapcraft_store_client_mock.push.assert_called_once_with(msix_filename=msix_artifact_path)
     store_mock.release.assert_called_once_with(msix_name="firefox", revision=expected_revision, channels=[channel])
+"""

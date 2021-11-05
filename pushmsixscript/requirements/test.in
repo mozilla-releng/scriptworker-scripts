@@ -10,3 +10,4 @@ pip-compile-multi
 pytest
 pytest-asyncio
 pytest-cov
+requests-mock

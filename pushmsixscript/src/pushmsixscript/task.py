@@ -2,7 +2,7 @@ from scriptworker.exceptions import TaskVerificationError
 
 MSIX_SCOPES_PREFIX = "project:releng:msix:firefox:"
 
-_CHANNELS_AUTHORIZED_TO_REACH_MICROSOFT_STORE = ("beta", "candidate", "esr/stable", "esr/candidate")
+_CHANNELS_AUTHORIZED_TO_REACH_MICROSOFT_STORE = ("release", "release2")
 ALLOWED_CHANNELS = ("mock", *_CHANNELS_AUTHORIZED_TO_REACH_MICROSOFT_STORE)
 
 
