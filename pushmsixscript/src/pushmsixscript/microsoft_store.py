@@ -1,10 +1,22 @@
-import json
 import logging
-import http.client, requests, time
+import time
+
+import requests
 
 from pushmsixscript import task
 
 log = logging.getLogger(__name__)
+
+# When committing a new submission, poll for completion, with
+# this many attempts, waiting this long between attempts.
+COMMIT_POLL_MAX_ATTEMPTS = 10
+COMMIT_POLL_WAIT_SECONDS = 30
+
+# XXX channels
+# XXX request timeouts
+# XXX request retries
+# XXX what is our application_id, might it change? should that be in config?
+# XXX what goes in the submission_json?
 
 
 def push(context, msix_file_path, channel):
@@ -31,118 +43,111 @@ def push(context, msix_file_path, channel):
         return
 
     access_token = _store_session()
-    # _push_to_store(msix_file_path, access_token)
+    if access_token:
+        log.info(access_token)
+        # application_id = ""  # Your application ID
+        # app_submission_request = ""  # Your submission request JSON
+        # _push_to_store(msix_file_path, access_token, application_id, app_submission_request)
+        # _release_if_needed(store, channel, msix_file_path)
 
-    # _release_if_needed(store, channel, msix_file_path)
+
+def _format_url(tail):
+    return "https://manage.devcenter.microsoft.com/v1.0/my/applications/" + tail
 
 
-def _store_session(tenantId, clientId, clientSecret):
+def _log_response(response):
+    log.info(f"response code: {response.status_code}")
+    log.info(f"response headers: {response.headers}")
+    log.info(f"response body: {response.text}")
 
-    tokenResource = "https://manage.devcenter.microsoft.com"
 
-    tokenRequestBody = "grant_type=client_credentials&client_id={0}&client_secret={1}&resource={2}".format(clientId, clientSecret, tokenResource)
+def _store_session(tenant_id, client_id, client_secret):
+    token_resource = "https://manage.devcenter.microsoft.com"
+    url = "https://login.microsoftonline.com/{0}/oauth2/token".format(tenant_id)
+    body = f"grant_type=client_credentials&client_id={client_id}&client_secret={client_secret}&resource={token_resource}"
     headers = {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"}
-    tokenConnection = http.client.HTTPSConnection("login.microsoftonline.com")
-    tokenConnection.request("POST", "/{0}/oauth2/token".format(tenantId), tokenRequestBody, headers=headers)
-
-    tokenResponse = tokenConnection.getresponse()
-    log.info(tokenResponse.status)
-    tokenJson = json.loads(tokenResponse.read().decode())
-    log.info(tokenJson["access_token"])
-
-    tokenConnection.close()
-
-    return tokenJson["access_token"]
+    response = requests.post(url, body, headers=headers)
+    _log_response(response)
+    response.raise_for_status()
+    return response.json().get("access_token")
 
 
-def _push_to_store(msix_file_path, accessToken):
-    applicationId = ""  # Your application ID
-    appSubmissionRequestJson = "";  # Your submission request JSON
-
-    headers = {"Authorization": "Bearer " + accessToken,
-               "Content-type": "application/json",
-               "User-Agent": "Python"}
-
-    conn = http.client.HTTPSConnection("manage.devcenter.microsoft.com")
-
-    _remove_pending_submission(conn, applicationId, headers)
-    (submissionId, fileUploadUrl) = _create_submission(conn, applicationId, headers)
-    # XXX example says "zipFilePath" -- is msix okay?
-    _update_submission(conn, applicationId, submissionId, headers, appSubmissionRequestJson, msix_file_path, fileUploadUrl)
-    _commit_submission(conn, applicationId, submissionId, headers)
-    _wait_for_commit_completion(conn, applicationId, submissionId, headers)
-
-    conn.close()
+def _push_to_store(msix_file_path, access_token, application_id, app_submission_request):
+    headers = {"Authorization": "Bearer " + access_token, "Content-type": "application/json", "User-Agent": "Python"}
+    with requests.Session() as session:
+        _remove_pending_submission(session, application_id, headers)
+        (submission_id, upload_url) = _create_submission(session, application_id, headers)
+        # XXX example says "zipFilePath" -- is msix okay?
+        _update_submission(session, application_id, submission_id, headers, app_submission_request, msix_file_path, upload_url)
+        _commit_submission(session, application_id, submission_id, headers)
+        _wait_for_commit_completion(session, application_id, submission_id, headers)
 
 
-def _wait_for_commit_completion(conn, applicationId, submissionId, headers):
-    # Pull submission status until commit process is completed
-    responseJson = _get_submission_status(conn, applicationId, submissionId, headers)
-    # XXX timeout / max retries?
-    while responseJson["status"] == "CommitStarted":
-        time.sleep(60)
-        responseJson = _get_submission_status(conn, applicationId, submissionId, headers)
-        log.info(responseJson["status"])
-
-
-def _create_submission(conn, applicationId, headers):
-    req = "/v1.0/my/applications/{0}/submissions".format(applicationId)
-    conn.request("POST", req, "", headers)
-    response = conn.getresponse()
-    log.info(response.status)
-    log.info(response.headers["MS-CorrelationId"])  # Log correlation ID
-    responseJson = json.loads(response.read().decode())
-    submissionId = responseJson["id"]
-    fileUploadUrl = responseJson["fileUploadUrl"]
-    log.info(submissionId)
-    log.info(fileUploadUrl)
-    return (submissionId, fileUploadUrl)
-
-
-def _remove_pending_submission(conn, applicationId, headers):
+def _remove_pending_submission(session, application_id, headers):
     # Get application
-    conn.request("GET", "/v1.0/my/applications/{0}".format(applicationId), "", headers)
-    response = conn.getresponse()
-    log.info(response.status)
-    log.info(response.headers["MS-CorrelationId"])  # Log correlation ID
+    url = _format_url(f"{application_id}")
+    response = session.get(url, headers=headers)
+    _log_response(response)
+    response.raise_for_status()
 
     # Delete existing in-progress submission
-    responseJson = json.loads(response.read().decode())
-    if "pendingApplicationSubmission" in responseJson :
-        submissionToRemove = responseJson["pendingApplicationSubmission"]["id"]
-        req = "/v1.0/my/applications/{0}/submissions/{1}".format(applicationId, submissionToRemove)
-        conn.request("DELETE", req, "", headers)
-        response = conn.getresponse()
-        log.info(response.status)
-        log.info(response.headers["MS-CorrelationId"])  # Log correlation ID
-        response.read()
+    response_json = response.json()
+    if "pendingApplicationSubmission" in response_json:
+        submission_to_remove = response_json["pendingApplicationSubmission"]["id"]
+        url = _format_url(f"{application_id}/submissions/{submission_to_remove}")
+        session.delete(url, headers=headers)
+        _log_response(response)
+        response.raise_for_status()
 
 
-def _update_submission(conn, applicationId, submissionId, headers, appSubmissionRequestJson, zipFilePath, fileUploadUrl):
-    req = "/v1.0/my/applications/{0}/submissions/{1}".format(applicationId, submissionId)
-    conn.request("PUT", req, appSubmissionRequestJson, headers)
-    response = conn.getresponse()
-    log.info(response.status)
-    log.info(response.headers["MS-CorrelationId"])  # Log correlation ID
-    response.read()
+def _create_submission(session, application_id, headers):
+    url = _format_url(f"{application_id}/submissions")
+    response = session.post(url, headers=headers)
+    _log_response(response)
+    response.raise_for_status()
+    response_json = response.json()
+    submission_id = response_json.get("id")
+    upload_url = response_json.get("upload_url")
+    return (submission_id, upload_url)
+
+
+def _update_submission(session, application_id, submission_id, headers, app_submission_request, file_path, upload_url):
+    url = _format_url(f"{application_id}/submissions/{submission_id}")
+    response = session.put(url, app_submission_request, headers=headers)
+    _log_response(response)
+    response.raise_for_status()
     # Upload images and packages in a zip file. Note that large file might need to be handled differently
-    with open(zipFilePath, 'rb') as f:
-        response = requests.put(fileUploadUrl.replace("+", "%2B"), f, headers={"x-ms-blob-type": "BlockBlob"})
-        log.info(response.status_code)
+    with open(file_path, "rb") as f:
+        response = requests.put(upload_url.replace("+", "%2B"), f, headers={"x-ms-blob-type": "BlockBlob"})
+        response.raise_for_status()
+        _log_response(response)
 
 
-def _commit_submission(conn, applicationId, submissionId, headers):
-    req = "/v1.0/my/applications/{0}/submissions/{1}/commit".format(applicationId, submissionId)
-    conn.request("POST", req, "", headers)
-    response = conn.getresponse()
-    log.info(response.status)
-    log.info(response.headers["MS-CorrelationId"])  # Log correlation ID
-    log.info(response.read())
-    # XXX verify response?
+def _commit_submission(session, application_id, submission_id, headers):
+    url = _format_url(f"{application_id}/submissions/{submission_id}/commit")
+    response = session.post(url, headers=headers)
+    _log_response(response)
+    response.raise_for_status()
+    # XXX verify response body?
 
 
-def _get_submission_status(conn, applicationId, submissionId, headers):
-    req = "/v1.0/my/applications/{0}/submissions/{1}/status".format(applicationId, submissionId)
-    conn.request("GET", req, "", headers)
-    response = conn.getresponse()
-    return json.loads(response.read().decode())
+def _get_submission_status(session, application_id, submission_id, headers):
+    url = _format_url(f"{application_id}/submissions/{submission_id}/status")
+    response = session.get(url, headers=headers)
+    _log_response(response)
+    response.raise_for_status()
+    return response.json()
+
+
+def _wait_for_commit_completion(session, application_id, submission_id, headers):
+    # Pull submission status until commit process is completed
+    response_json = _get_submission_status(session, application_id, submission_id, headers)
+    attempts = 1
+    while response_json.get("status") == "CommitStarted":
+        if attempts > COMMIT_POLL_MAX_ATTEMPTS:
+            return False
+        attempts += 1
+        time.sleep(COMMIT_POLL_WAIT_SECONDS)
+        response_json = _get_submission_status(session, application_id, submission_id, headers)
+        log.info(response_json.get("status"))
+    return True
