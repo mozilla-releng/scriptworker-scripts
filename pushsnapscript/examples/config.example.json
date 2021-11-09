@@ -1,9 +1,0 @@
-{
-  "work_dir": "/some/work/dir",
-  "verbose": true,
-  "push_to_store": true,
-  "macaroons_locations": {
-    "candidate": "/some/candidate_macaroon.cfg",
-    "beta": "/some/beta_macaroon.cfg"
-  }
-}

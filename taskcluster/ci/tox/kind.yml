@@ -81,11 +81,6 @@ jobs:
             docker-image: {in-tree: 'pushflatpakscript-python{python_version}'}
         resources:
             - pushflatpakscript
-    pushsnapscript:
-        worker:
-            docker-image: {in-tree: 'pushsnapscript-python{python_version}'}
-        resources:
-            - pushsnapscript
     scriptworker_client:
         resources:
             - scriptworker_client
