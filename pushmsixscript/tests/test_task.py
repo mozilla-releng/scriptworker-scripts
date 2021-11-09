@@ -11,10 +11,7 @@ def test_get_msix_channel_without_payload_raises():
         get_msix_channel(config, task)
 
 
-"""
-@pytest.mark.parametrize(
-    "raises, channel", ((False, "release"), (False, "mock"), (True, "bogus"))
-)
+@pytest.mark.parametrize("raises, channel", ((False, "release"), (False, "mock"), (True, "bogus")))
 def test_get_msix_channel_dep(raises, channel):
     task = {"scopes": [], "payload": {"channel": channel}}
     config = {"push_to_store": False}
@@ -30,7 +27,7 @@ def test_get_msix_channel_dep(raises, channel):
     (
         (False, ["project:releng:microsoftstore:release"], "release"),
         (False, ["project:releng:microsoftstore:mock"], "mock"),
-        (True, ["project:releng:microsoftstore:release"], "beta"),
+        (True, ["project:releng:microsoftstore:release"], "bogus"),
     ),
 )
 def test_get_msix_channel_prod(raises, scopes, channel):
@@ -41,7 +38,6 @@ def test_get_msix_channel_prod(raises, scopes, channel):
             get_msix_channel(config, task)
     else:
         assert get_msix_channel(config, task) == channel
-"""
 
 
 @pytest.mark.parametrize(

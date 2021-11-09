@@ -1,12 +1,12 @@
 {
-    "title": "pushsnapscript config schema",
+    "title": "pushmsixscript config schema",
     "type": "object",
     "required": [
-        "push_to_store",
+        "push_to_store"
     ],
     "properties": {
         "push_to_store": {
             "type": "boolean"
-        },
+        }
     }
 }

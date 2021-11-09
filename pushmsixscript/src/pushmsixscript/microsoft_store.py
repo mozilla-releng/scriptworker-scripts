@@ -17,6 +17,7 @@ COMMIT_POLL_WAIT_SECONDS = 30
 # XXX request retries
 # XXX what is our application_id, might it change? should that be in config?
 # XXX what goes in the submission_json?
+# XXX is msix file okay, or does it need to be a zip?
 
 
 def push(context, msix_file_path, channel):
@@ -51,7 +52,7 @@ def push(context, msix_file_path, channel):
         # _release_if_needed(store, channel, msix_file_path)
 
 
-def _format_url(tail):
+def _store_url(tail):
     return "https://manage.devcenter.microsoft.com/v1.0/my/applications/" + tail
 
 
@@ -77,7 +78,6 @@ def _push_to_store(msix_file_path, access_token, application_id, app_submission_
     with requests.Session() as session:
         _remove_pending_submission(session, application_id, headers)
         (submission_id, upload_url) = _create_submission(session, application_id, headers)
-        # XXX example says "zipFilePath" -- is msix okay?
         _update_submission(session, application_id, submission_id, headers, app_submission_request, msix_file_path, upload_url)
         _commit_submission(session, application_id, submission_id, headers)
         _wait_for_commit_completion(session, application_id, submission_id, headers)
@@ -85,7 +85,7 @@ def _push_to_store(msix_file_path, access_token, application_id, app_submission_
 
 def _remove_pending_submission(session, application_id, headers):
     # Get application
-    url = _format_url(f"{application_id}")
+    url = _store_url(f"{application_id}")
     response = session.get(url, headers=headers)
     _log_response(response)
     response.raise_for_status()
@@ -94,14 +94,14 @@ def _remove_pending_submission(session, application_id, headers):
     response_json = response.json()
     if "pendingApplicationSubmission" in response_json:
         submission_to_remove = response_json["pendingApplicationSubmission"]["id"]
-        url = _format_url(f"{application_id}/submissions/{submission_to_remove}")
+        url = _store_url(f"{application_id}/submissions/{submission_to_remove}")
         session.delete(url, headers=headers)
         _log_response(response)
         response.raise_for_status()
 
 
 def _create_submission(session, application_id, headers):
-    url = _format_url(f"{application_id}/submissions")
+    url = _store_url(f"{application_id}/submissions")
     response = session.post(url, headers=headers)
     _log_response(response)
     response.raise_for_status()
@@ -112,7 +112,7 @@ def _create_submission(session, application_id, headers):
 
 
 def _update_submission(session, application_id, submission_id, headers, app_submission_request, file_path, upload_url):
-    url = _format_url(f"{application_id}/submissions/{submission_id}")
+    url = _store_url(f"{application_id}/submissions/{submission_id}")
     response = session.put(url, app_submission_request, headers=headers)
     _log_response(response)
     response.raise_for_status()
@@ -124,7 +124,7 @@ def _update_submission(session, application_id, submission_id, headers, app_subm
 
 
 def _commit_submission(session, application_id, submission_id, headers):
-    url = _format_url(f"{application_id}/submissions/{submission_id}/commit")
+    url = _store_url(f"{application_id}/submissions/{submission_id}/commit")
     response = session.post(url, headers=headers)
     _log_response(response)
     response.raise_for_status()
@@ -132,7 +132,7 @@ def _commit_submission(session, application_id, submission_id, headers):
 
 
 def _get_submission_status(session, application_id, submission_id, headers):
-    url = _format_url(f"{application_id}/submissions/{submission_id}/status")
+    url = _store_url(f"{application_id}/submissions/{submission_id}/status")
     response = session.get(url, headers=headers)
     _log_response(response)
     response.raise_for_status()

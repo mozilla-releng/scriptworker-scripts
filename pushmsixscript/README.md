@@ -1,6 +1,6 @@
-# pushsnapscript
+# pushmsixscript
 
-[![Build Status](https://travis-ci.org/mozilla-releng/pushsnapscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/pushsnapscript) [![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/pushsnapscript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/pushsnapscript?branch=master)
+[![Build Status](https://travis-ci.org/mozilla-releng/pushmsixscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/pushmsixscript) [![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/pushmsixscript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/pushmsixscript?branch=master)
 
 Main script that is aimed to be run with [scriptworker](https://github.com/mozilla-releng/scriptworker) (but runs perfectly fine as a standalone script).
 
@@ -13,8 +13,8 @@ First, you need `python>=3.8.0`.
 ```sh
 virtualenv3 venv3   # create the virtualenv in ./venv3
 . venv3/bin/activate # activate it
-git clone https://github.com/mozilla-releng/pushsnapscript
-cd pushsnapscript
+git clone https://github.com/mozilla-releng/pushmsixscript
+cd pushmsixscript
 pip install -r requirements/base.txt
 python setup.py develop
 ```
@@ -46,15 +46,15 @@ Ordinarily, scriptworker would get the task definition from TaskCluster, and wri
 The important entries to edit are the:
  * `upstreamArtifacts`: point to the file(s) to publish to Google Play
  * `dependencies`: need to match the `taskId`s of the URLs unless you modify the `valid_artifact_*` config items as specified above
- * `scopes`: the first and only scope, `project:releng:snapcraft:*`, tells which channel on Snap store should be updated. For more details about scopes. See `scopes.md`
+ * `scopes`: the first and only scope, `project:releng:microsoftstore:*`, tells which channel on Microsoft store should be updated. For more details about scopes. See `scopes.md`
 
 
 ### run
 
-You're ready to run pushsnapscript!
+You're ready to run pushmsixscript!
 
 ```sh
-pushsnapscript CONFIG_FILE
+pushmsixscript CONFIG_FILE
 ```
 
 
@@ -62,6 +62,6 @@ where `CONFIG_FILE` is the config json you created above.
 
 ### running through scriptworker
 
-Follow the [scriptworker readme](https://github.com/mozilla-releng/scriptworker/blob/master/README.rst) to set up scriptworker, and use `["path/to/pushsnapscript", "path/to/script_config.json"]` as your `task_script`.
+Follow the [scriptworker readme](https://github.com/mozilla-releng/scriptworker/blob/master/README.rst) to set up scriptworker, and use `["path/to/pushmsixscript", "path/to/script_config.json"]` as your `task_script`.
 
-:warning: Make sure your `work_dir` and `artifact_dir` point to the same directories between the scriptworker config and the pushsnapscript config!
+:warning: Make sure your `work_dir` and `artifact_dir` point to the same directories between the scriptworker config and the pushmsixscript config!

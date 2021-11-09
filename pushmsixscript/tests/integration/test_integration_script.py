@@ -1,3 +1,4 @@
+"""
 import json
 import os
 import tempfile
@@ -8,6 +9,7 @@ from scriptworker.utils import makedirs
 
 from pushmsixscript import microsoft_store
 from pushmsixscript.script import main
+"""
 
 _ALL_REVISIONS_ABSTRACT = [
     {
@@ -83,7 +85,7 @@ _ALL_REVISIONS_ABSTRACT = [
 def test_script_can_push_msix_with_credentials(monkeypatch, channel, expected_revision):
     task = {
         "dependencies": ["some_msix_build_taskId"],
-        "scopes": ["project:releng:snapcraft:firefox:{}".format(channel)],
+        "scopes": ["project:releng:microsoftstore:{}".format(channel)],
         "payload": {
             "channel": channel,
             "upstreamArtifacts": [{"paths": ["public/build/target.store.msix"], "taskId": "some_msix_build_taskId", "taskType": "build"}],
@@ -105,30 +107,29 @@ def test_script_can_push_msix_with_credentials(monkeypatch, channel, expected_re
     # monkeypatch.setattr(microsoft_store, "StoreClient", lambda: store_mock)
     monkeypatch.setattr(microsoft_store, "get_hash", lambda *args, **kwargs: "fake_hash_rev{}".format(expected_revision))
 
-    with tempfile.NamedTemporaryFile("w+") as macaroon_beta, tempfile.NamedTemporaryFile("w+") as macaroon_candidate:
-        config = {"push_to_store": True, "macaroons_locations": {"candidate": macaroon_candidate.name, "beta": macaroon_beta.name}}
+    config = {"push_to_store": True}
 
-        with tempfile.TemporaryDirectory() as work_dir:
-            config["work_dir"] = work_dir
+    with tempfile.TemporaryDirectory() as work_dir:
+        config["work_dir"] = work_dir
 
-            with open(os.path.join(work_dir, "task.json"), "w") as task_file:
-                json.dump(task, task_file)
+        with open(os.path.join(work_dir, "task.json"), "w") as task_file:
+            json.dump(task, task_file)
 
-            msix_artifact_dir = os.path.join(work_dir, "cot/some_msix_build_taskId/public/build/")
-            makedirs(msix_artifact_dir)
-            msix_artifact_path = os.path.join(msix_artifact_dir, "target.store.msix")
-            with open(msix_artifact_path, "w") as msix_file:
-                msix_file.write(" ")
+        msix_artifact_dir = os.path.join(work_dir, "cot/some_msix_build_taskId/public/build/")
+        makedirs(msix_artifact_dir)
+        msix_artifact_path = os.path.join(msix_artifact_dir, "target.store.msix")
+        with open(msix_artifact_path, "w") as msix_file:
+            msix_file.write(" ")
 
-            # config_file is not put in the TemporaryDirectory() (like the others), because it usually lives
-            # elsewhere on the filesystem
-            with tempfile.NamedTemporaryFile("w+") as config_file:
-                json.dump(config, config_file)
-                config_file.seek(0)
+        # config_file is not put in the TemporaryDirectory() (like the others), because it usually lives
+        # elsewhere on the filesystem
+        with tempfile.NamedTemporaryFile("w+") as config_file:
+            json.dump(config, config_file)
+            config_file.seek(0)
 
-                monkeypatch.setattr(microsoft_store, "snapcraft_store_client", snapcraft_store_client_mock)
-                main(config_path=config_file.name)
+            monkeypatch.setattr(microsoft_store, "microsoft_store_client", microsoft_store_client_mock)
+            main(config_path=config_file.name)
 
-    snapcraft_store_client_mock.push.assert_called_once_with(msix_filename=msix_artifact_path)
+    microsoft_store_client_mock.push.assert_called_once_with(msix_filename=msix_artifact_path)
     store_mock.release.assert_called_once_with(msix_name="firefox", revision=expected_revision, channels=[channel])
 """
