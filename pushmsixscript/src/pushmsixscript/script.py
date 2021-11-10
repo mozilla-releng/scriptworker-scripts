@@ -4,7 +4,7 @@
 import logging
 import os
 
-from scriptworker import client
+from scriptworker_client import client
 
 from pushmsixscript import artifacts, microsoft_store, task
 

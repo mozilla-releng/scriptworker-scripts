@@ -1,4 +1,4 @@
-from scriptworker.exceptions import TaskVerificationError
+from scriptworker_client.exceptions import TaskVerificationError
 
 
 class AlreadyLatestError(TaskVerificationError):

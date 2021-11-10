@@ -1,5 +1,5 @@
 import pytest
-from scriptworker.exceptions import TaskVerificationError
+from scriptworker_client.exceptions import TaskVerificationError
 
 from pushmsixscript.task import get_msix_channel, is_allowed_to_push_to_microsoft_store
 

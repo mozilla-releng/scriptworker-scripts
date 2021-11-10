@@ -5,7 +5,7 @@ import tempfile
 from unittest.mock import MagicMock
 
 import pytest
-from scriptworker.utils import makedirs
+from scriptworker_client.utils import makedirs
 
 from pushmsixscript import microsoft_store
 from pushmsixscript.script import main

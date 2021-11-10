@@ -1,6 +1,6 @@
 import pytest
 from scriptworker import artifacts
-from scriptworker.exceptions import TaskVerificationError
+from scriptworker_client.exceptions import TaskVerificationError
 
 from pushmsixscript.artifacts import get_msix_file_path
 

@@ -6,9 +6,6 @@ import requests_mock
 
 from pushmsixscript import microsoft_store
 
-# from scriptworker.exceptions import TaskVerificationError
-# from pushmsixscript.exceptions import AlreadyLatestError
-
 
 @pytest.mark.parametrize(
     "status_code, raises",

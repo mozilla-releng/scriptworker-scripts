@@ -1,6 +1,6 @@
 from scriptworker import artifacts
-from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
+from scriptworker_client.exceptions import TaskVerificationError
 
 
 def get_msix_file_path(context):

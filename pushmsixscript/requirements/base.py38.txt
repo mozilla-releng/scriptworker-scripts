@@ -300,9 +300,9 @@ importlib-resources==5.4.0 \
 json-e==4.4.1 \
     --hash=sha256:7d9f6235f855ce70418b9d6158c043c588c3c3d7d0902972f3fb7c5399997ce9
     # via scriptworker
-jsonschema==4.2.0 \
-    --hash=sha256:2b563117f3659a7f433dffe1371c88f52115b79133493f376f15724b9caa7efa \
-    --hash=sha256:e2d3601321ac74d38214e2853300ae740cd07e53d919a15862b8c71f9d840574
+jsonschema==4.2.1 \
+    --hash=sha256:2a0f162822a64d95287990481b45d82f096e99721c86534f48201b64ebca6e8c \
+    --hash=sha256:390713469ae64b8a58698bb3cbc3859abe6925b565a973f87323ef21b09a27a8
     # via scriptworker
 jwcrypto==1.0 \
     --hash=sha256:db93a656d9a7a35dda5a68deb5c9f301f4e60507d8aef1559e0637b9ac497137 \
@@ -392,9 +392,9 @@ multidict==5.2.0 \
     # via
     #   aiohttp
     #   yarl
-pycparser==2.20 \
-    --hash=sha256:2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0 \
-    --hash=sha256:7582ad22678f0fcd81102833f60ef8d0e57288b6b5fb00323d101be910e35705
+pycparser==2.21 \
+    --hash=sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9 \
+    --hash=sha256:e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206
     # via cffi
 pyrsistent==0.18.0 \
     --hash=sha256:097b96f129dd36a8c9e33594e7ebb151b1515eb52cceb08474c10a5479e799f2 \

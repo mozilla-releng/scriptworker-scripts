@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from scriptworker import client
+from scriptworker_client import client
 
 from pushmsixscript import artifacts, microsoft_store, task
 from pushmsixscript.script import _log_warning_forewords, async_main

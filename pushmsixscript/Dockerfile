@@ -14,6 +14,9 @@ RUN /app/docker.d/image_setup.sh libsodium-dev squashfs-tools xdelta3
 USER app
 
 RUN python -m venv /app \
+ && cd /app/scriptworker_client \
+ && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install . \
  && cd pushmsixscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
