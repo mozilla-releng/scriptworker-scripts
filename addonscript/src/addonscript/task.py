@@ -76,7 +76,7 @@ def get_amo_instance_config_from_scope(context):
         }
 
     """
-    scope = _get_scope(context.task)
+    scope = _get_scope(context)
     configured_instances = context.config["amo_instances"]
 
     try:

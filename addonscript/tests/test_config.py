@@ -31,10 +31,10 @@ def _validate_config(context):
 
 
 def test_prod():
-    context = {"ENV": "prod", "AMO_SERVER": "", "JWT_USER": "", "JWT_SECRET": ""}
+    context = {"ENV": "prod", "AMO_SERVER": "", "JWT_USER": "", "JWT_SECRET": "", "TASKCLUSTER_SCOPE_PREFIX": ""}
     _validate_config(context)
 
 
 def test_fake_prod():
-    context = {"ENV": "fake-prod", "AMO_SERVER": "", "JWT_USER": "", "JWT_SECRET": ""}
+    context = {"ENV": "fake-prod", "AMO_SERVER": "", "JWT_USER": "", "JWT_SECRET": "", "TASKCLUSTER_SCOPE_PREFIX": ""}
     _validate_config(context)

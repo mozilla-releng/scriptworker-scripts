@@ -134,7 +134,7 @@ def test_fail_get_amo_instance_config_from_scope(context, scope):
     ),
 )
 def test_get_scope(context, scopes, raises):
-    task_ = {"scopes": scopes}
+    context.task["scopes"] = scopes
 
     if raises:
         with pytest.raises(TaskVerificationError):
