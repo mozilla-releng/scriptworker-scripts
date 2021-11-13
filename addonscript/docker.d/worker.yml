@@ -1,15 +1,17 @@
 work_dir: { "$eval": "WORK_DIR" }
 artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
+taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
 amo_instances:
   $if: 'ENV == "prod"'
   then:
-    project:releng:addons.mozilla.org:server:production:
+    "${TASKCLUSTER_SCOPE_PREFIX}:production":
       amo_server: { "$eval": "AMO_SERVER" }
       jwt_user: { "$eval": "JWT_USER" }
       jwt_secret: { "$eval": "JWT_SECRET" }
   else:
-    project:releng:addons.mozilla.org:server:staging:
+    "${TASKCLUSTER_SCOPE_PREFIX}:staging":
       amo_server: { "$eval": "AMO_SERVER" }
       jwt_user: { "$eval": "JWT_USER" }
       jwt_secret: { "$eval": "JWT_SECRET" }
+

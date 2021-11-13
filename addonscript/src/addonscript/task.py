@@ -5,9 +5,6 @@ import os
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
-# TODO: Make this prefix a param of the instance config, when Thunderbird migrates this task
-_VALID_SCOPES_PREFIX = "project:releng:addons.mozilla.org:server:"
-
 
 def get_channel(task):
     """Get the addon channel information from the task metadata.
@@ -88,11 +85,13 @@ def get_amo_instance_config_from_scope(context):
         raise TaskVerificationError('This worker is not configured to handle scope "{}"'.format(scope))
 
 
-def _get_scope(task):
+def _get_scope(context):
+    scope_root = context.config["taskcluster_scope_prefix"]
+
     return get_single_item_from_sequence(
-        task["scopes"],
-        condition=lambda scope: scope.startswith(_VALID_SCOPES_PREFIX),
+        context.task["scopes"],
+        condition=lambda scope: scope.startswith(scope_root),
         ErrorClass=TaskVerificationError,
-        no_item_error_message='No valid scope found. Task must have a scope that starts with "{}"'.format(_VALID_SCOPES_PREFIX),
+        no_item_error_message='No valid scope found. Task must have a scope that starts with "{}"'.format(scope_root),
         too_many_item_error_message="More than one valid scope given",
     )

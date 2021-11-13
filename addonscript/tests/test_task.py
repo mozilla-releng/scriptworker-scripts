@@ -11,6 +11,7 @@ import addonscript.task as task
 def context(tmpdir):
     context = Context()
     context.config = {
+        "taskcluster_scope_prefix": "project:releng:addons.mozilla.org:server",
         "amo_instances": {
             "project:releng:addons.mozilla.org:server:dev": {"amo_server": "http://some-amo-it.url", "jwt_user": "some-username", "jwt_secret": "some-secret"}
         },
@@ -132,11 +133,11 @@ def test_fail_get_amo_instance_config_from_scope(context, scope):
         (("some:random:scope",), True),
     ),
 )
-def test_get_scope(scopes, raises):
+def test_get_scope(context, scopes, raises):
     task_ = {"scopes": scopes}
 
     if raises:
         with pytest.raises(TaskVerificationError):
-            task._get_scope(task_)
+            task._get_scope(context)
     else:
-        assert task._get_scope(task_) == scopes[0]
+        assert task._get_scope(context) == scopes[0]

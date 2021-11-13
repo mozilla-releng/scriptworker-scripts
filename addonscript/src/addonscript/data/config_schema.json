@@ -5,6 +5,9 @@
         "amo_instances"
     ],
     "properties": {
+        "taskcluster_scope_prefix": {
+            "type": "string"
+        },
         "amo_instances": {
             "type": "object",
             "additionalProperties": {
