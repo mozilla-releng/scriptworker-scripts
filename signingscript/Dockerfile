@@ -1,4 +1,5 @@
-# Pinned because newer images have a newer osslsigncode that we don't support
+# python:3.9.7 docker image contains osslsigncode 2.1.0.
+# if the image changes, verify version of osslsigncode and make sure winsign works as well
 FROM python:3.9.7
 
 RUN groupadd --gid 10001 app && \
