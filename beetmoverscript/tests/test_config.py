@@ -87,6 +87,8 @@ def test_mobile_fake_prod():
     context = {
         "COT_PRODUCT": "mobile",
         "ENV": "fake-prod",
+        "DEP_ID": "",
+        "DEP_KEY": "",
         "MAVEN_ID": "",
         "MAVEN_KEY": "",
         "MAVEN_NIGHTLY_ID": "",
@@ -99,6 +101,12 @@ def test_mobile_prod():
     context = {
         "COT_PRODUCT": "mobile",
         "ENV": "prod",
+        "DEP_ID": "",
+        "DEP_KEY": "",
+        "NIGHTLY_ID": "",
+        "NIGHTLY_KEY": "",
+        "RELEASE_ID": "",
+        "RELEASE_KEY": "",
         "MAVEN_ID": "",
         "MAVEN_KEY": "",
         "MAVEN_NIGHTLY_ID": "",

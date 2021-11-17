@@ -11,6 +11,7 @@ import yaml
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.constants import (
+    DIRECT_RELEASE_ACTIONS,
     HASH_BLOCK_SIZE,
     MAVEN_ACTIONS,
     NORMALIZED_FILENAME_PLATFORMS,
@@ -18,7 +19,6 @@ from beetmoverscript.constants import (
     PRODUCT_TO_PATH,
     PROMOTION_ACTIONS,
     RELEASE_ACTIONS,
-    DIRECT_RELEASE_ACTIONS,
 )
 
 log = logging.getLogger(__name__)
