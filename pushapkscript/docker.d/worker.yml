@@ -60,7 +60,7 @@ products:
                 default_track: 'production'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_PROD" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_PROD_PATH" }
-        - product_names: [ "focus", "focus-android" ]
+        - product_names: ["focus-android" ]
           digest_algorithm: 'SHA-256'
           skip_check_ordered_version_codes: true
           skip_check_multiple_locales: true
