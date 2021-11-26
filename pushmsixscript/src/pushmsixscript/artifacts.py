@@ -12,6 +12,6 @@ def get_msix_file_path(context):
         all_artifacts,
         condition=lambda artifact: artifact.endswith(".store.msix"),
         ErrorClass=TaskVerificationError,
-        no_item_error_message="No upstream artifact is a msix",
-        too_many_item_error_message="Too many msix detected",
+        no_item_error_message="No upstream artifact is a store msix",
+        too_many_item_error_message="Too many msix artifacts found",
     )

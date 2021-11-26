@@ -1,5 +1,17 @@
 {
   "work_dir": "/some/path",
   "verbose": true,
-  "push_to_store": false
+  "push_to_store": false,
+  "request_timeout_seconds": 30,
+  "login_url": "https://login.microsoftonline.com",
+  "token_resource": "https://manage.devcenter.microsoft.com",
+  "store_url": "https://manage.devcenter.microsoft.com/v1.0/my/applications/",
+  "application_ids": {
+    "mock": "",
+    "beta": "",
+    "release": ""
+  }
+  "tenant_id": "",
+  "client_id": "",
+  "client_secret": "",
 }

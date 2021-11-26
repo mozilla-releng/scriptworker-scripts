@@ -1,3 +1,4 @@
+import os
 from unittest.mock import MagicMock
 
 import pytest
@@ -6,6 +7,8 @@ from scriptworker_client import client
 from pushmsixscript import artifacts, microsoft_store, task
 from pushmsixscript.script import _log_warning_forewords, async_main
 
+TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+
 
 @pytest.mark.asyncio
 async def test_async_main(monkeypatch):
@@ -13,13 +16,14 @@ async def test_async_main(monkeypatch):
 
     context = MagicMock()
     context.config = {"push_to_store": True}
+    msix_file_path = os.path.join(TEST_DATA_DIR, "valid-zip-valid-content.msix")
     monkeypatch.setattr(client, "get_task", lambda _: {})
-    monkeypatch.setattr(artifacts, "get_msix_file_path", lambda _: "/some/file.store.msix")
+    monkeypatch.setattr(artifacts, "get_msix_file_path", lambda _: msix_file_path)
     monkeypatch.setattr(task, "get_msix_channel", lambda config, channel: "release")
 
-    def assert_push(context_, file_, channel):
-        assert context_ == context
-        assert file_ == "/some/file.store.msix"
+    def assert_push(config_, file_, channel):
+        assert config_ == context.config
+        assert file_ == msix_file_path
         assert channel == "release"
         next(function_call_counter)
 

@@ -5,7 +5,20 @@ import jsone
 import jsonschema
 import yaml
 
-COMMON_CONTEXT = {"WORK_DIR": "", "ARTIFACTS_DIR": "", "VERBOSE": "true"}
+COMMON_CONTEXT = {
+    "WORK_DIR": "",
+    "ARTIFACTS_DIR": "",
+    "VERBOSE": "true",
+    "REQUEST_TIMEOUT_SECONDS": 30,
+    "LOGIN_URL": "https://fake-login.com/",
+    "TOKEN_RESOURCE": "https://fake-token-resource.com/",
+    "STORE_URL": "https://fake-store.com/",
+    "TENANT_ID": "fake-tenant",
+    "CLIENT_ID": "fake-client",
+    "CLIENT_SECRET": "fake-secret",
+    "BETA_APPLICATION_ID": "fake-beta-app-id",
+    "RELEASE_APPLICATION_ID": "fake-release-app-id",
+}
 
 
 def load_config(context):

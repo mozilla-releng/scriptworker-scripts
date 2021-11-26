@@ -14,7 +14,7 @@ with open(os.path.join(project_dir, "requirements/base.in")) as f:
 setup(
     name="pushmsixscript",
     version=version,
-    description="TaskCluster Ship-It Worker",
+    description="TaskCluster Push msix Worker",
     author="Mozilla Release Engineering",
     author_email="release+python@mozilla.com",
     url="https://github.com/mozilla-releng/pushmsixscript",

@@ -2,7 +2,7 @@ from scriptworker_client.exceptions import TaskVerificationError
 
 MSIX_SCOPES_PREFIX = "project:releng:microsoftstore:"
 
-_CHANNELS_AUTHORIZED_TO_REACH_MICROSOFT_STORE = ("release", "release2")
+_CHANNELS_AUTHORIZED_TO_REACH_MICROSOFT_STORE = ("beta", "release")
 ALLOWED_CHANNELS = ("mock", *_CHANNELS_AUTHORIZED_TO_REACH_MICROSOFT_STORE)
 
 

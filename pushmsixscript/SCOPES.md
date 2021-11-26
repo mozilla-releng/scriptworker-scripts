@@ -10,6 +10,12 @@ Supported scope prefixes:
   * **Branch Restrictions**:
     * `release`
 
+* `{scope_prefix}:beta`
+  * Uploads to the *beta* app.
+  * **Conflicts**: with any other `{scope_prefix}:*`
+  * **Branch Restrictions**:
+    * `beta`
+
 * `{scope_prefix}:mock`
   * Prevents uploads to the microsoft store, useful for staging.
   * **Conflicts**: with any other `{scope_prefix}:*`

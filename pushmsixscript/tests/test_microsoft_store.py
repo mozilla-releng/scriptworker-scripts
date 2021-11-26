@@ -6,6 +6,18 @@ import requests_mock
 
 from pushmsixscript import microsoft_store
 
+CONFIG = {
+    "push_to_store": True,
+    "login_url": "https://fake-login.com",
+    "token_resource": "https://fake-token-resource.com",
+    "store_url": "https://fake-store.com/",
+    "request_timeout_seconds": 30,
+    "tenant_id": "mock-tenant-id",
+    "client_id": "mock-client-id",
+    "client_secret": "mock-client-secret",
+    "application_ids": {"mock": "1234"},
+}
+
 
 @pytest.mark.parametrize(
     "status_code, raises",
@@ -16,21 +28,20 @@ from pushmsixscript import microsoft_store
     ),
 )
 def test_store_session(status_code, raises):
-    tenant_id = "mock-tenant-id"
-    client_id = "mock-client-id"
-    client_secret = "mock-client-secret"
+    login_url = CONFIG["login_url"]
+    tenant_id = CONFIG["tenant_id"]
     headers = {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"}
     expected_access_token = "mock-access-token"
     mocked_response = {"access_token": expected_access_token}
 
     with requests_mock.Mocker() as m:
-        url = "https://login.microsoftonline.com/{0}/oauth2/token".format(tenant_id)
+        url = f"{login_url}/{tenant_id}/oauth2/token"
         m.post(url, headers=headers, json=mocked_response, status_code=status_code)
         if raises:
             with pytest.raises(requests.exceptions.HTTPError):
-                token = microsoft_store._store_session(tenant_id, client_id, client_secret)
+                token = microsoft_store._store_session(CONFIG)
         else:
-            token = microsoft_store._store_session(tenant_id, client_id, client_secret)
+            token = microsoft_store._store_session(CONFIG)
             assert token == expected_access_token
 
 
@@ -45,7 +56,8 @@ def test_store_session(status_code, raises):
 )
 def test_remove_pending_submission(status_code, pending, raises):
     headers = {}
-    application_id = 42
+    channel = "mock"
+    application_id = CONFIG["application_ids"][channel]
     submission_to_remove = 43
     if pending:
         mocked_response = {"pendingApplicationSubmission": {"id": submission_to_remove}}
@@ -53,16 +65,16 @@ def test_remove_pending_submission(status_code, pending, raises):
         mocked_response = {}
     with requests.Session() as session:
         with requests_mock.Mocker() as m:
-            url = microsoft_store._store_url(f"{application_id}")
+            url = microsoft_store._store_url(CONFIG, f"{application_id}")
             m.get(url, headers=headers, json=mocked_response, status_code=status_code)
-            url = microsoft_store._store_url(f"{application_id}/submissions/{submission_to_remove}")
+            url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions/{submission_to_remove}")
             m.delete(url, headers=headers)
 
             if raises:
                 with pytest.raises(requests.exceptions.HTTPError):
-                    microsoft_store._remove_pending_submission(session, application_id, headers)
+                    microsoft_store._remove_pending_submission(CONFIG, channel, session, headers)
             else:
-                microsoft_store._remove_pending_submission(session, application_id, headers)
+                microsoft_store._remove_pending_submission(CONFIG, channel, session, headers)
 
 
 @pytest.mark.parametrize(
@@ -75,19 +87,19 @@ def test_remove_pending_submission(status_code, pending, raises):
 )
 def test_create_submission(status_code, raises):
     headers = {}
-    application_id = 42
+    channel = "mock"
+    application_id = CONFIG["application_ids"][channel]
     mocked_response = {"id": 888, "upload_url": "https://some/url"}
     with requests.Session() as session:
         with requests_mock.Mocker() as m:
-            url = microsoft_store._store_url(f"{application_id}/submissions")
+            url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions")
             m.post(url, headers=headers, json=mocked_response, status_code=status_code)
             if raises:
                 with pytest.raises(requests.exceptions.HTTPError):
-                    (submission_id, upload_url) = microsoft_store._create_submission(session, application_id, headers)
+                    submission_request = microsoft_store._create_submission(CONFIG, channel, session, headers)
             else:
-                (submission_id, upload_url) = microsoft_store._create_submission(session, application_id, headers)
-                assert submission_id == mocked_response["id"]
-                assert upload_url == mocked_response["upload_url"]
+                submission_request = microsoft_store._create_submission(CONFIG, channel, session, headers)
+                assert submission_request == mocked_response
 
 
 @pytest.mark.parametrize(
@@ -102,25 +114,24 @@ def test_create_submission(status_code, raises):
 )
 def test_update_submission(status_code, upload_status_code, raises):
     headers = {}
-    application_id = 42
-    submission_id = 888
-    upload_url = "https://some/url"
-    app_submission_request = {}
+    channel = "mock"
+    application_id = CONFIG["application_ids"][channel]
+    submission_request = {"id": 888, "upload_url": "https://some/url"}
+    submission_id = submission_request["id"]
+    upload_url = submission_request["upload_url"]
     mocked_response = {"status": "OK"}
     with tempfile.NamedTemporaryFile(mode="wb") as f:
         f.write(b"hello there")
         with requests.Session() as session:
             with requests_mock.Mocker() as m:
-                url = microsoft_store._store_url(f"{application_id}/submissions/{submission_id}")
+                url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions/{submission_id}")
                 m.put(url, headers=headers, json=mocked_response, status_code=status_code)
                 m.put(upload_url, headers=headers, json=mocked_response, status_code=upload_status_code)
                 if raises:
                     with pytest.raises(requests.exceptions.HTTPError):
-                        microsoft_store._update_submission(session, application_id, submission_id, headers, app_submission_request, f.name, upload_url)
+                        microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, f.name)
                 else:
-                    microsoft_store._update_submission(session, application_id, submission_id, headers, app_submission_request, f.name, upload_url)
-                    # XXX verify content of file_path uploaded?
-                    # XXX verify submission_request?
+                    microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, f.name)
 
 
 @pytest.mark.parametrize(
@@ -133,18 +144,19 @@ def test_update_submission(status_code, upload_status_code, raises):
 )
 def test_commit_submission(status_code, raises):
     headers = {}
-    application_id = 42
+    channel = "mock"
+    application_id = CONFIG["application_ids"][channel]
     submission_id = 888
     mocked_response = {"status": "OK"}
     with requests.Session() as session:
         with requests_mock.Mocker() as m:
-            url = microsoft_store._store_url(f"{application_id}/submissions/{submission_id}/commit")
+            url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions/{submission_id}/commit")
             m.post(url, headers=headers, json=mocked_response, status_code=status_code)
             if raises:
                 with pytest.raises(requests.exceptions.HTTPError):
-                    microsoft_store._commit_submission(session, application_id, submission_id, headers)
+                    microsoft_store._commit_submission(CONFIG, channel, session, submission_id, headers)
             else:
-                microsoft_store._commit_submission(session, application_id, submission_id, headers)
+                microsoft_store._commit_submission(CONFIG, channel, session, submission_id, headers)
 
 
 @pytest.mark.parametrize(
@@ -158,23 +170,24 @@ def test_commit_submission(status_code, raises):
 )
 def test_get_submission_status(status_code, raises, mocked_response):
     headers = {}
-    application_id = 42
+    channel = "mock"
+    application_id = CONFIG["application_ids"][channel]
     submission_id = 888
     mocked_response = {"id": 888, "upload_url": "https://some/url"}
     with requests.Session() as session:
         with requests_mock.Mocker() as m:
-            url = microsoft_store._store_url(f"{application_id}/submissions/{submission_id}/status")
+            url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions/{submission_id}/status")
             m.get(url, headers=headers, json=mocked_response, status_code=status_code)
             if raises:
                 with pytest.raises(requests.exceptions.HTTPError):
-                    status = microsoft_store._get_submission_status(session, application_id, submission_id, headers)
+                    status = microsoft_store._get_submission_status(CONFIG, channel, session, submission_id, headers)
                 with pytest.raises(requests.exceptions.HTTPError):
-                    microsoft_store._wait_for_commit_completion(session, application_id, submission_id, headers)
+                    microsoft_store._wait_for_commit_completion(CONFIG, channel, session, submission_id, headers)
             else:
-                status = microsoft_store._get_submission_status(session, application_id, submission_id, headers)
+                status = microsoft_store._get_submission_status(CONFIG, channel, session, submission_id, headers)
                 assert status == mocked_response
                 if mocked_response.get("status") != "CommitStarted":
-                    status = microsoft_store._wait_for_commit_completion(session, application_id, submission_id, headers)
+                    status = microsoft_store._wait_for_commit_completion(CONFIG, channel, session, submission_id, headers)
                     assert status
 
 
@@ -189,31 +202,31 @@ def test_get_submission_status(status_code, raises, mocked_response):
 def test_push_to_store(status_code, raises, mocked_response):
     headers = {}
     access_token = "mock-token"
-    application_id = 42
+    channel = "mock"
+    application_id = CONFIG["application_ids"][channel]
     submission_id = 888
-    submission_request = {}
     upload_url = "https://some/url"
     create_mocked_response = {"id": 888, "upload_url": "https://some/url"}
     with tempfile.NamedTemporaryFile(mode="wb") as f:
         f.write(b"hello there")
         with requests_mock.Mocker() as m:
 
-            url = microsoft_store._store_url(f"{application_id}")
+            url = microsoft_store._store_url(CONFIG, f"{application_id}")
             m.get(url, headers=headers, json=mocked_response, status_code=status_code)
-            url = microsoft_store._store_url(f"{application_id}/submissions/{submission_id}")
+            url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions/{submission_id}")
             m.delete(url, headers=headers)
-            url = microsoft_store._store_url(f"{application_id}/submissions")
+            url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions")
             m.post(url, headers=headers, json=create_mocked_response, status_code=status_code)
-            url = microsoft_store._store_url(f"{application_id}/submissions/{submission_id}")
+            url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions/{submission_id}")
             m.put(url, headers=headers, json=mocked_response, status_code=status_code)
             m.put(upload_url, headers=headers, json=mocked_response, status_code=status_code)
-            url = microsoft_store._store_url(f"{application_id}/submissions/{submission_id}/commit")
+            url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions/{submission_id}/commit")
             m.post(url, headers=headers, json=mocked_response, status_code=status_code)
-            url = microsoft_store._store_url(f"{application_id}/submissions/{submission_id}/status")
+            url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions/{submission_id}/status")
             m.get(url, headers=headers, json=mocked_response, status_code=status_code)
 
             if raises:
                 with pytest.raises(requests.exceptions.HTTPError):
-                    microsoft_store._push_to_store(f.name, access_token, application_id, submission_request)
+                    microsoft_store._push_to_store(CONFIG, channel, f.name, access_token)
             else:
-                microsoft_store._push_to_store(f.name, access_token, application_id, submission_request)
+                microsoft_store._push_to_store(CONFIG, channel, f.name, access_token)

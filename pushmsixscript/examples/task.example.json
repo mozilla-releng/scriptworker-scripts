@@ -19,13 +19,13 @@
   "deadline": "2018-03-27T13:33:37.933Z",
   "expires": "2019-03-26T13:33:37.933Z",
   "scopes": [
-    "project:releng:snapcraft:firefox:mock"
+    "project:releng:microsoftstore:mock"
   ],
   "payload": {
     "upstreamArtifacts": [
       {
         "paths": [
-          "public/build/target.msix"
+          "public/build/target.store.msix"
         ],
         "taskId": "GwW8jSmNSTW3M2N1CPD-3Q",
         "taskType": "build"

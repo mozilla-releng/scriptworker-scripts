@@ -43,6 +43,8 @@ def test_get_msix_channel_prod(raises, scopes, channel):
 @pytest.mark.parametrize(
     "channel, push_to_store, expected",
     (
+        ("beta", True, True),
+        ("beta", False, False),
         ("release", True, True),
         ("release", False, False),
         ("mock", True, False),
