@@ -6,8 +6,6 @@ taskcluster_scope_prefixes:
   $if: 'COT_PRODUCT == "mobile"'
   then:
     - "project:mobile:focus-android:releng:googleplay:product:"
-      #TODO remove once Focus taskgraph integration is complete
-    - "project:mobile:focus:releng:googleplay:product:"
     - "project:mobile:reference-browser:releng:googleplay:product:"
     - "project:mobile:fenix:releng:googleplay:product:"
     - "project:mobile:firefox-tv:releng:googleplay:product:"
@@ -62,7 +60,7 @@ products:
                 default_track: 'production'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_PROD" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_PROD_PATH" }
-        - product_names: [ "focus", "focus-android" ]
+        - product_names: ["focus-android" ]
           digest_algorithm: 'SHA-256'
           skip_check_ordered_version_codes: true
           skip_check_multiple_locales: true
@@ -171,8 +169,7 @@ products:
                 default_track: 'internal'
                 service_account: 'dummy'
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
-        # TODO remove "focus" once release logic is converted to taskgraph
-        - product_names: [ "focus", "focus-android" ]
+        - product_names: ["focus-android" ]
           digest_algorithm: "SHA-256"
           skip_check_ordered_version_codes: true
           skip_check_multiple_locales: true
