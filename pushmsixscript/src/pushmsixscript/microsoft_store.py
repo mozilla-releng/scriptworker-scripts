@@ -12,6 +12,8 @@ log = logging.getLogger(__name__)
 # this many attempts, waiting this long between attempts.
 COMMIT_POLL_MAX_ATTEMPTS = 10
 COMMIT_POLL_WAIT_SECONDS = 30
+# Max requests retries
+MAX_RETRIES = 5
 
 
 def push(config, msix_file_path, channel):
@@ -44,7 +46,7 @@ def _store_url(config, tail):
 
 def _log_response(response):
     log.info(f"response code: {response.status_code}")
-    log.info(f"response headers: {response.headers}")
+    # log.info(f"response headers: {response.headers}")
     log.info(f"response body: {response.text}")
 
 
@@ -57,15 +59,17 @@ def _store_session(config):
     url = f"{login_url}/{tenant_id}/oauth2/token"
     body = f"grant_type=client_credentials&client_id={client_id}&client_secret={client_secret}&resource={token_resource}"
     headers = {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"}
-    response = requests.post(url, body, headers=headers, timeout=config["request_timeout_seconds"])
-    _log_response(response)
-    response.raise_for_status()
-    return response.json().get("access_token")
+    with requests.Session() as session:
+        session.mount("https://", requests.adapters.HTTPAdapter(max_retries=MAX_RETRIES))
+        response = session.post(url, body, headers=headers, timeout=config["request_timeout_seconds"])
+        response.raise_for_status()
+        return response.json().get("access_token")
 
 
 def _push_to_store(config, channel, msix_file_path, access_token):
     headers = {"Authorization": f"Bearer {access_token}", "Content-type": "application/json", "User-Agent": "Python"}
     with requests.Session() as session:
+        session.mount("https://", requests.adapters.HTTPAdapter(max_retries=MAX_RETRIES))
         _remove_pending_submission(config, channel, session, headers)
         submission_request = _create_submission(config, channel, session, headers)
         submission_id = submission_request.get("id")

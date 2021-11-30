@@ -27,7 +27,7 @@ cp examples/config.example.json config.json
 # edit it with your favorite text editor
 ```
 
-There are many values to edit. Example values should give you a hint about what to provide. If not, please see [signingscript's README](https://github.com/mozilla-releng/signingscript#config-json) for more details about allowing URLs, or contact the author for other unclear areas.
+There are many values to edit. Example values should give you a hint about what to provide. If not, please see [signingscript's README](https://github.com/mozilla-releng/scriptworker-scripts/tree/master/signingscript#config-json) for more details about allowing URLs, or contact the author for other unclear areas.
 
 #### directories and file naming
 
