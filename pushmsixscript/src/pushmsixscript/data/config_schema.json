@@ -1,0 +1,47 @@
+{
+    "title": "pushmsixscript config schema",
+    "type": "object",
+    "required": [
+        "push_to_store",
+        "request_timeout_seconds",
+        "login_url",
+        "token_resource",
+        "store_url",
+        "application_ids",
+        "tenant_id",
+        "client_id",
+        "client_secret"
+    ],
+    "properties": {
+        "push_to_store": {
+            "type": "boolean"
+        },
+        "request_timeout_seconds": {
+            "type": "number"
+        },
+        "login_url": {
+            "type": "string"
+        },
+        "token_resource": {
+            "type": "string"
+        },
+        "store_url": {
+            "type": "string"
+        },
+        "application_ids": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
+        "tenant_id": {
+            "type": "string"
+        },
+        "client_id": {
+            "type": "string"
+        },
+        "client_secret": {
+            "type": "string"
+        }
+    }
+}

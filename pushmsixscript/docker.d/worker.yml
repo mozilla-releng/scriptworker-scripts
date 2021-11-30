@@ -1,0 +1,17 @@
+work_dir: { "$eval": "WORK_DIR" }
+artifact_dir: { "$eval": "ARTIFACTS_DIR" }
+verbose: { "$eval": "VERBOSE == 'true'" }
+push_to_store: { "$eval": "ENV == 'prod'" }
+request_timeout_seconds: { "$eval": "REQUEST_TIMEOUT_SECONDS" }
+login_url: { "$eval": "LOGIN_URL" }
+token_resource: { "$eval": "TOKEN_RESOURCE" }
+store_url: { "$eval": "STORE_URL" }
+tenant_id: { "$eval": "TENANT_ID" }
+client_id: { "$eval": "CLIENT_ID" }
+client_secret: { "$eval": "CLIENT_SECRET" }
+application_ids:
+  $if: 'ENV == "prod"'
+  then:
+    beta: { "$eval": "BETA_APPLICATION_ID" }
+    release: { "$eval": "RELEASE_APPLICATION_ID" }
+  else: {}

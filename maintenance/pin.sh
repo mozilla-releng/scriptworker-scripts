@@ -17,6 +17,7 @@ else
         notarization_poller
         pushapkscript
         pushflatpakscript
+        pushmsixscript
         scriptworker_client
         shipitscript
         signingscript

@@ -10,6 +10,7 @@ docker-compose:
     - /beetmoverscript
     - /bouncerscript
     - /pushapkscript
+    - /pushmsixscript
     - /shipitscript
     - /signingscript
     - /treescript
@@ -21,6 +22,7 @@ apps:
     - /beetmoverscript
     - /bouncerscript
     - /pushapkscript
+    - /pushmsixscript
     - /shipitscript
     - /signingscript
     - /treescript
