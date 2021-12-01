@@ -583,3 +583,28 @@ def get_single_item_from_sequence(
     if append_sequence_to_error_message:
         error_message = "{}. Given: {}".format(error_message, sequence)
     raise ErrorClass(error_message)
+
+
+# add_enumerable_item_to_dict {{{1
+def add_enumerable_item_to_dict(dict_, key, item):
+    """Add an item to a list contained in a dict.
+
+    For example: If the dict is ``{'some_key': ['an_item']}``, then calling this function
+    will alter the dict to ``{'some_key': ['an_item', 'another_item']}``.
+
+    If the key doesn't exist yet, the function initializes it with a list containing the
+    item.
+
+    List-like items are allowed. In this case, the existing list will be extended.
+
+    Args:
+        dict_ (dict): the dict to modify
+        key (str): the key to add the item to
+        item (whatever): The item to add to the list associated to the key
+
+    """
+    dict_.setdefault(key, [])
+    if isinstance(item, (list, tuple)):
+        dict_[key].extend(item)
+    else:
+        dict_[key].append(item)

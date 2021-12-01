@@ -1,5 +1,5 @@
 import pytest
-from scriptworker import artifacts
+from scriptworker_client import artifacts
 from scriptworker_client.exceptions import TaskVerificationError
 
 from pushmsixscript.artifacts import get_msix_file_path
@@ -17,11 +17,9 @@ from pushmsixscript.artifacts import get_msix_file_path
     ),
 )
 def test_get_msix_file_path(monkeypatch, raises, returned, expected):
-    context = None
-
-    monkeypatch.setattr(artifacts, "get_upstream_artifacts_full_paths_per_task_id", lambda _: returned)
+    monkeypatch.setattr(artifacts, "get_upstream_artifacts_full_paths_per_task_id", lambda c, t: returned)
     if raises:
         with pytest.raises(TaskVerificationError):
-            get_msix_file_path(context)
+            get_msix_file_path({}, {})
     else:
-        assert get_msix_file_path(context) == expected
+        assert get_msix_file_path({}, {}) == expected

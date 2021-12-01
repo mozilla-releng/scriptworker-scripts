@@ -1,5 +1,4 @@
 import os
-from unittest.mock import MagicMock
 
 import pytest
 from scriptworker_client import client
@@ -14,22 +13,21 @@ TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 async def test_async_main(monkeypatch):
     function_call_counter = (n for n in range(0, 2))
 
-    context = MagicMock()
-    context.config = {"push_to_store": True}
+    config = {"push_to_store": True}
     msix_file_path = os.path.join(TEST_DATA_DIR, "valid-zip-valid-content.msix")
     monkeypatch.setattr(client, "get_task", lambda _: {})
-    monkeypatch.setattr(artifacts, "get_msix_file_path", lambda _: msix_file_path)
+    monkeypatch.setattr(artifacts, "get_msix_file_path", lambda c, t: msix_file_path)
     monkeypatch.setattr(task, "get_msix_channel", lambda config, channel: "release")
 
     def assert_push(config_, file_, channel):
-        assert config_ == context.config
+        assert config_ == config
         assert file_ == msix_file_path
         assert channel == "release"
         next(function_call_counter)
 
     monkeypatch.setattr(microsoft_store, "push", assert_push)
 
-    await async_main(context)
+    await async_main(config, {})
 
     assert next(function_call_counter) == 1
 
