@@ -109,8 +109,8 @@ async def push_to_nightly(context):
     add_checksums_to_artifacts(context)
 
 
-# direct_push_to_releases {{{1
-async def direct_push_to_releases(context):
+# direct_push_to_bucket {{{1
+async def direct_push_to_bucket(context):
     """Mobile releases such as Fenix and Focus are a hybrid. They are neither
     maven releases, nor classic releases to be pushed into candidates (and
     then published to mirrors) so they get their own dedicated function.
@@ -268,7 +268,7 @@ action_map = {
     # push to candidates is at this point identical to push_to_nightly
     "push-to-candidates": push_to_nightly,
     "push-to-releases": push_to_releases,
-    "direct-push-to-releases": direct_push_to_releases,
+    "direct-push-to-bucket": direct_push_to_bucket,
     "push-to-maven": push_to_maven,
 }
 

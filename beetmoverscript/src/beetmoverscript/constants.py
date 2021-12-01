@@ -78,7 +78,7 @@ PROMOTION_ACTIONS = ("push-to-candidates",)
 
 RELEASE_ACTIONS = ("push-to-releases",)
 
-DIRECT_RELEASE_ACTIONS = ("direct-push-to-releases",)
+DIRECT_RELEASE_ACTIONS = ("direct-push-to-bucket",)
 
 PARTNER_REPACK_ACTIONS = ("push-to-partner",)
 
