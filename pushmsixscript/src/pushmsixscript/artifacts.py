@@ -1,10 +1,10 @@
-from scriptworker import artifacts
-from scriptworker.utils import get_single_item_from_sequence
+from scriptworker_client import artifacts
 from scriptworker_client.exceptions import TaskVerificationError
+from scriptworker_client.utils import get_single_item_from_sequence
 
 
-def get_msix_file_path(context):
-    artifacts_per_task_id, _ = artifacts.get_upstream_artifacts_full_paths_per_task_id(context)
+def get_msix_file_path(config, task):
+    artifacts_per_task_id, _ = artifacts.get_upstream_artifacts_full_paths_per_task_id(config, task)
 
     all_artifacts = [artifact for artifacts in artifacts_per_task_id.values() for artifact in artifacts]
 
