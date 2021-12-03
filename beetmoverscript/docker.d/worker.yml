@@ -153,6 +153,23 @@ bucket_config:
             fenix: 'net-mozaws-stage-delivery-archive'
             focus: 'net-mozaws-stage-delivery-archive'
           url_prefix: 'https://ftp.stage.mozaws.net'
+        # TODO: nightly and release will only be used while we test prod with dev workers
+        nightly:
+          credentials:
+            id: { "$eval": "DEP_ID" }
+            key: { "$eval": "DEP_KEY" }
+          buckets:
+            fenix: 'net-mozaws-stage-delivery-archive'
+            focus: 'net-mozaws-stage-delivery-archive'
+          url_prefix: 'https://ftp.stage.mozaws.net'
+        release:
+          credentials:
+            id: { "$eval": "DEP_ID" }
+            key: { "$eval": "DEP_KEY" }
+          buckets:
+            fenix: 'net-mozaws-stage-delivery-archive'
+            focus: 'net-mozaws-stage-delivery-archive'
+          url_prefix: 'https://ftp.stage.mozaws.net'
       'COT_PRODUCT == "mobile" && ENV == "prod"':
         maven-production:
           credentials:
@@ -182,14 +199,6 @@ bucket_config:
             fenix: 'net-mozaws-prod-delivery-archive'
             focus: 'net-mozaws-prod-delivery-archive'
           url_prefix: 'https://archive.mozilla.org'
-        dep:
-          credentials:
-            id: { "$eval": "DEP_ID" }
-            key: { "$eval": "DEP_KEY" }
-          buckets:
-            fenix: 'net-mozaws-stage-delivery-archive'
-            focus: 'net-mozaws-stage-delivery-archive'
-          url_prefix: 'https://ftp.stage.mozaws.net'
         dummy: {}
       'COT_PRODUCT == "app-services" && (ENV == "dev" || ENV == "fake-prod")':
         maven-staging:
