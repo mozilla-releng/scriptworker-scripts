@@ -56,6 +56,10 @@ androguard==3.3.5 \
     --hash=sha256:e2d87b7952ccc61d541e8a86b1e5a5eea8a28d90037afe9ab4406cae3e69e115 \
     --hash=sha256:f0655ca3a5add74c550951e79bd0bebbd1c5b239178393d30d8db0bd3202cda2
     # via mozapkpublisher
+appnope==0.1.2 \
+    --hash=sha256:93aa393e9d6c54c5cd570ccadd8edad61ea0c4b9ea7a01409020c9aa019eb442 \
+    --hash=sha256:dd83cd4b5b460958838f6eb3000c660b1f9caf2a5b1de4264e941512f603258a
+    # via ipython
 arrow==1.2.0 \
     --hash=sha256:16fc29bbd9e425e3eb0fef3018297910a0f4568f21116fc31771e2760a50e074 \
     --hash=sha256:8fb7d9d3d4bf90e49e734c22fa077bdd0964135c4b8120de2510575a8d1f620c
@@ -738,9 +742,9 @@ rsa==4.7.2 \
     # via
     #   google-auth
     #   oauth2client
-scriptworker==41.0.0 \
-    --hash=sha256:7470283c4e57ab51b0eb94073916886d49d525af2e37de97fe0620104681bd31 \
-    --hash=sha256:837c045a8f45e7de0ced43f9f65c4197b05316b6882767a556a47b78e5da0692
+scriptworker==42.0.0 \
+    --hash=sha256:2b769e617251d66315ced3fc4136a44fe1b686ded6e41111ee7483e27bfa697d \
+    --hash=sha256:f0d1568a18b54a7f3ae9b87ea24112052b301245345dbf155c90fe15a1f03cc6
     # via -r requirements/base.in
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
