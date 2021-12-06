@@ -34,6 +34,12 @@ github_projects:
         github_owner: mozilla-releng
         github_repo_name: staging-android-components
         contact_github: true
+      staging-focus-android:
+        allowed_actions: ["release"]
+        github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
+        github_owner: mozilla-releng
+        github_repo_name: staging-focus-android
+        contact_github: true
     'COT_PRODUCT == "mobile" && ENV == "dev"':
       mock:
         allowed_actions: ["release"]
