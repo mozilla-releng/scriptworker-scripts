@@ -15,7 +15,7 @@ export LOGIN_URL=https://login.microsoftonline.com
 export TOKEN_RESOURCE=https://manage.devcenter.microsoft.com
 export STORE_URL=https://manage.devcenter.microsoft.com/v1.0/my/applications/
 export MOCK_APPLICATION_ID=MOCK-APP-ID
-export BETA_APPLICATION_ID=BETA-APP-ID
+export BETA_APPLICATION_ID=9NZW26FRNDLN
 export RELEASE_APPLICATION_ID=9NZVDKPMR9RD
 
 case $ENV in
