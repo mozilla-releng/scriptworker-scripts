@@ -4,7 +4,7 @@
     "verbose": true,
     "aiohttp_max_connections": 5,
     "checksums_digests": ["sha512", "sha256"],
-    "taskcluster_scope_prefix": "project:releng:beetmover:",
+    "taskcluster_scope_prefixes": ["project:releng:beetmover:"],
     "bucket_config": {
         "nightly": {
             "credentials": {

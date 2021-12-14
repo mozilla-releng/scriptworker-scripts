@@ -39,7 +39,6 @@ case $COT_PRODUCT in
         exit 1
         ;;
     esac
-    export TASKCLUSTER_SCOPE_PREFIX="project:releng:${PROJECT_NAME}:"
     ;;
   thunderbird)
     case $ENV in
@@ -59,24 +58,41 @@ case $COT_PRODUCT in
         exit 1
         ;;
     esac
-    export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:${PROJECT_NAME}:"
     ;;
   mobile)
-    test_var_set 'MAVEN_ID'
-    test_var_set 'MAVEN_KEY'
-    test_var_set 'MAVEN_NIGHTLY_ID'
-    test_var_set 'MAVEN_NIGHTLY_KEY'
-    export TASKCLUSTER_SCOPE_PREFIX="project:mobile:android-components:releng:${PROJECT_NAME}:"
+    case $ENV in
+      dev|fake-prod)
+        test_var_set 'MAVEN_ID'
+        test_var_set 'MAVEN_KEY'
+        test_var_set 'MAVEN_NIGHTLY_ID'
+        test_var_set 'MAVEN_NIGHTLY_KEY'
+        test_var_set 'DEP_ID'
+        test_var_set 'DEP_KEY'
+        ;;
+      prod)
+        test_var_set 'MAVEN_ID'
+        test_var_set 'MAVEN_KEY'
+        test_var_set 'MAVEN_NIGHTLY_ID'
+        test_var_set 'MAVEN_NIGHTLY_KEY'
+        test_var_set 'DEP_ID'
+        test_var_set 'DEP_KEY'
+        test_var_set 'NIGHTLY_ID'
+        test_var_set 'NIGHTLY_KEY'
+        test_var_set 'RELEASE_ID'
+        test_var_set 'RELEASE_KEY'
+        ;;
+      *)
+        exit 1
+        ;;
+    esac
     ;;
   app-services)
     test_var_set 'MAVEN_ID'
     test_var_set 'MAVEN_KEY'
-    export TASKCLUSTER_SCOPE_PREFIX="project:mozilla:app-services:releng:${PROJECT_NAME}:"
     ;;
   glean)
     test_var_set 'MAVEN_ID'
     test_var_set 'MAVEN_KEY'
-    export TASKCLUSTER_SCOPE_PREFIX="project:mozilla:glean:releng:${PROJECT_NAME}:"
     ;;
   *)
     exit 1

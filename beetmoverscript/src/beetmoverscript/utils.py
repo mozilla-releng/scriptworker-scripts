@@ -11,6 +11,7 @@ import yaml
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.constants import (
+    DIRECT_RELEASE_ACTIONS,
     HASH_BLOCK_SIZE,
     MAVEN_ACTIONS,
     NORMALIZED_FILENAME_PLATFORMS,
@@ -67,6 +68,13 @@ def is_release_action(action):
     nightly release or something else. Does that by checking the action type.
     """
     return action in RELEASE_ACTIONS
+
+
+def is_direct_release_action(action):
+    """Function to return boolean if we're publishing a release as opposed to a
+    promoting to candidates and mirror then.Does that by checking the action type.
+    """
+    return action in DIRECT_RELEASE_ACTIONS
 
 
 def is_promotion_action(action):
