@@ -57,12 +57,7 @@
                         }
                     },
                     "required": [
-                        "appName",
-                        "buildid",
-                        "appVersion",
-                        "hashType",
-                        "platform",
-                        "branch"
+                        "appName"
                     ]
                 },
                 "upstreamArtifacts": {
@@ -71,9 +66,6 @@
                         "type": "object",
                         "properties": {
                             "taskType": {
-                                "type": "string"
-                            },
-                            "locale": {
                                 "type": "string"
                             },
                             "taskId": {
@@ -91,8 +83,7 @@
                         "required": [
                             "taskId",
                             "taskType",
-                            "paths",
-                            "locale"
+                            "paths"
                         ]
                     },
                     "minItems": 1,
@@ -138,7 +129,6 @@
                 }
             },
             "required": [
-                "upload_date",
                 "upstreamArtifacts",
                 "releaseProperties",
                 "artifactMap"

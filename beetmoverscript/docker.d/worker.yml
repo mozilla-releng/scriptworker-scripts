@@ -4,7 +4,21 @@ aiohttp_max_connections: 5
 checksums_digests:
   - 'sha512'
   - 'sha256'
-taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
+taskcluster_scope_prefixes:
+  $flatten:
+    $match:
+      'COT_PRODUCT == "firefox"':
+        - 'project:releng:beetmover:'
+      'COT_PRODUCT == "thunderbird"':
+        - 'project:comm:thunderbird:releng:beetmover:'
+      'COT_PRODUCT == "mobile"':
+        - 'project:mobile:android-components:releng:beetmover:'
+        - 'project:mobile:focus-android:releng:beetmover:'
+        - 'project:mobile:fenix:releng:beetmover:'
+      'COT_PRODUCT == "app-services"':
+        - 'project:mozilla:app-services:releng:beetmover:'
+      'COT_PRODUCT == "glean"':
+        - 'project:mozilla:glean:releng:beetmover:'
 verbose: { "$eval": "VERBOSE == 'true'" }
 zip_max_file_size_in_mb: 300
 bucket_config:
@@ -131,6 +145,31 @@ bucket_config:
           buckets:
             nightly_components: 'maven-nightly-stage-s3-upload-bucket'
         dummy: {}
+        dep:
+          credentials:
+            id: { "$eval": "DEP_ID" }
+            key: { "$eval": "DEP_KEY" }
+          buckets:
+            fenix: 'net-mozaws-stage-delivery-archive'
+            focus: 'net-mozaws-stage-delivery-archive'
+          url_prefix: 'https://ftp.stage.mozaws.net'
+        # TODO: nightly and release will only be used while we test prod with dev workers
+        nightly:
+          credentials:
+            id: { "$eval": "DEP_ID" }
+            key: { "$eval": "DEP_KEY" }
+          buckets:
+            fenix: 'net-mozaws-stage-delivery-archive'
+            focus: 'net-mozaws-stage-delivery-archive'
+          url_prefix: 'https://ftp.stage.mozaws.net'
+        release:
+          credentials:
+            id: { "$eval": "DEP_ID" }
+            key: { "$eval": "DEP_KEY" }
+          buckets:
+            fenix: 'net-mozaws-stage-delivery-archive'
+            focus: 'net-mozaws-stage-delivery-archive'
+          url_prefix: 'https://ftp.stage.mozaws.net'
       'COT_PRODUCT == "mobile" && ENV == "prod"':
         maven-production:
           credentials:
@@ -144,6 +183,22 @@ bucket_config:
             key: { "$eval": "MAVEN_NIGHTLY_KEY" }
           buckets:
             nightly_components: 'maven-nightly-s3-upload-bucket-d4zm9oo354qe'
+        nightly:
+          credentials:
+            id: { "$eval": "NIGHTLY_ID" }
+            key: { "$eval": "NIGHTLY_KEY" }
+          buckets:
+            fenix: 'net-mozaws-prod-delivery-archive'
+            focus: 'net-mozaws-prod-delivery-archive'
+          url_prefix: 'https://archive.mozilla.org'
+        release:
+          credentials:
+            id: { "$eval": "RELEASE_ID" }
+            key: { "$eval": "RELEASE_KEY" }
+          buckets:
+            fenix: 'net-mozaws-prod-delivery-archive'
+            focus: 'net-mozaws-prod-delivery-archive'
+          url_prefix: 'https://archive.mozilla.org'
         dummy: {}
       'COT_PRODUCT == "app-services" && (ENV == "dev" || ENV == "fake-prod")':
         maven-staging:

@@ -20,7 +20,7 @@ def get_config(scope_prefix):
     config = get_fake_valid_config()
     credentials = {"id": "dummy", "key": "dummy"}
     url_prefix = "https://url.prefix"
-    config["taskcluster_scope_prefix"] = scope_prefix
+    config["taskcluster_scope_prefixes"] = [scope_prefix]
     config["bucket_config"] = {
         "maven-nightly-staging": {
             "buckets": {"nightly_components": "dummy"},

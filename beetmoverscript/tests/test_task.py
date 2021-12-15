@@ -106,7 +106,7 @@ def test_validate_task(context):
 )
 def test_get_task_bucket(scopes, expected, raises):
     task = {"scopes": scopes}
-    config = {"bucket_config": {"dep": ""}, "taskcluster_scope_prefix": "project:releng:beetmover:"}
+    config = {"bucket_config": {"dep": ""}, "taskcluster_scope_prefixes": ["project:releng:beetmover:"]}
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
             get_task_bucket(task, config)
@@ -125,7 +125,7 @@ def test_get_task_bucket(scopes, expected, raises):
 )
 def test_get_task_action(scopes, expected, raises):
     task = {"scopes": scopes}
-    config = {"actions": {"dep": ""}, "taskcluster_scope_prefix": "project:releng:beetmover:"}
+    config = {"actions": {"dep": ""}, "taskcluster_scope_prefixes": ["project:releng:beetmover:"]}
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
             get_task_action(task, config, valid_actions=["push-to-nightly"])

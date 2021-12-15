@@ -24,6 +24,8 @@ def get_schema_key_by_action(context):
         return "release_schema_file"
     elif utils.is_maven_action(action):
         return "maven_schema_file"
+    elif utils.is_direct_release_action(action):
+        return "artifactMap_schema_file"
 
     return "schema_file"
 
@@ -34,9 +36,39 @@ def validate_task_schema(context):
     client.validate_task_schema(context, schema_key=schema_key)
 
 
+def _get_bucket_prefixes(script_config):
+    return _get_scope_prefixes(script_config, "bucket")
+
+
+def _get_action_prefixes(script_config):
+    return _get_scope_prefixes(script_config, "action")
+
+
+def _get_scope_prefixes(script_config, sub_namespace):
+    prefixes = script_config["taskcluster_scope_prefixes"]
+    prefixes = [prefix if prefix.endswith(":") else "{}:".format(prefix) for prefix in prefixes]
+    return ["{}{}:".format(prefix, sub_namespace) for prefix in prefixes]
+
+
+def _extract_scopes_from_unique_prefix(scopes, prefixes):
+    scopes = [scope for scope in scopes for prefix in prefixes if scope.startswith(prefix)]
+    _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes)
+    return scopes
+
+
+def _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes):
+    for prefix in prefixes:
+        if all(scope.startswith(prefix) for scope in scopes):
+            break
+    else:
+        raise ScriptWorkerTaskException("Scopes must exist and all have the same prefix. " "Given scopes: {}. Allowed prefixes: {}".format(scopes, prefixes))
+
+
 def get_task_bucket(task, script_config):
     """Extract task bucket from scopes"""
-    buckets = [s.split(":")[-1] for s in task["scopes"] if s.startswith(script_config["taskcluster_scope_prefix"] + "bucket:")]
+    prefixes = _get_bucket_prefixes(script_config)
+    scopes = _extract_scopes_from_unique_prefix(task["scopes"], prefixes=prefixes)
+    buckets = [s.split(":")[-1] for s in scopes for p in prefixes if s.startswith(p)]
     log.info("Buckets: %s", buckets)
     messages = []
     if len(buckets) != 1:
@@ -57,7 +89,9 @@ def get_task_bucket(task, script_config):
 
 def get_task_action(task, script_config, valid_actions=None):
     """Extract last part of beetmover action scope"""
-    actions = [s.split(":")[-1] for s in task["scopes"] if s.startswith(script_config["taskcluster_scope_prefix"] + "action:")]
+    prefixes = _get_action_prefixes(script_config)
+    scopes = _extract_scopes_from_unique_prefix(task["scopes"], prefixes=prefixes)
+    actions = [s.split(":")[-1] for s in scopes for p in prefixes if s.startswith(p)]
 
     log.info("Action types: %s", actions)
     messages = []
