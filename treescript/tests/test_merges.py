@@ -2,6 +2,7 @@ import os
 import shutil
 from contextlib import contextmanager
 
+import hglib
 import pytest
 from mozilla_version.gecko import FennecVersion, FirefoxVersion
 
@@ -23,7 +24,7 @@ def task():
 @pytest.yield_fixture(scope="function")
 def merge_info():
     return {
-        "version_files": ["browser/config/version.txt", "config/milestone.txt"],
+        "version_files": [{"filename": "browser/config/version.txt"}, {"filename": "config/milestone.txt"}],
         "version_files_suffix": ["browser/config/version_display.txt"],
         "version_suffix": "b1",
         "copy_files": [["browser/config/version.txt", "browser/config/version_display.txt"]],
@@ -81,7 +82,7 @@ def repo_context(tmpdir, config, request, mocker):
     context.repo = os.path.join(tmpdir, "repo")
     context.task = {"metadata": {"source": "https://hg.mozilla.org/repo/file/foo"}}
     context.config = config
-    os.mkdir(context.repo)
+    hglib.init(context.repo)
     os.mkdir(os.path.join(context.repo, "config"))
     replacement_file = os.path.join(context.repo, "config", "replaceme.txt")
     with open(replacement_file, "w") as f:
@@ -90,10 +91,35 @@ def repo_context(tmpdir, config, request, mocker):
     with open(clobber_file, "w") as f:
         f.write("# A comment\n\nthiswillgetremoved")
 
+    for platform in ("linux32", "linux64"):
+        mozconfig = os.path.join(context.repo, "browser/config/mozconfigs", platform, "l10n-mozconfig")
+        os.makedirs(os.path.dirname(mozconfig), exist_ok=True)
+        with open(mozconfig, "w") as f:
+            f.write("ac_add_options --with-branding=browser/branding/nightly\n")
+
     version_file = os.path.join(context.repo, "browser/config/version.txt")
-    os.makedirs(os.path.dirname(version_file))
+    milestone_file = os.path.join(context.repo, "config/milestone.txt")
+    with open(version_file, "w") as f:
+        f.write("51.0")
+    with open(milestone_file, "w") as f:
+        f.write("51.0a1")
+    with hglib.open(context.repo) as repo:
+        repo.addremove()
+        repo.commit("init")
+        repo.tag([b"old_central"], message="first tag to make sure .hgtags exists")
+        with open(milestone_file, "w") as f:
+            f.write("51.0")
+        repo.commit("51 becomes beta")
+        repo.tag([b"old_beta"], message="51 beta tag")
+        repo.bookmark(b"beta", inactive=True)
+        repo.update(b".^")
     with open(version_file, "w") as f:
         f.write("52.0")
+    with open(milestone_file, "w") as f:
+        f.write("52.0a1")
+    with hglib.open(context.repo) as repo:
+        repo.commit("version bump")
+        repo.bookmark(b"central", inactive=True)
     yield context
 
 
@@ -243,27 +269,32 @@ async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merg
     if l10n_bump:
         task["payload"]["l10n_bump_info"] = {"foo": "bar"}
 
+    orig_run_hg_command = merges.run_hg_command
+
     async def mocked_run_hg_command(config, *arguments, repo_path=None, **kwargs):
         called_args.append([arguments])
-        if "return_output" in kwargs:
-            return "headers\n\n\n\n+invalid_changeset tag\n changeset tag\n+valid_changeset_is_forty_characters_long tag"
-
-    async def mocked_commit(*arguments, **kwargs):
-        called_args.append("commit")
-
-    async def mocked_get_revision(*args, **kwargs):
-        return "some_revision"
+        if arguments[0] == "pull":
+            return
+        return await orig_run_hg_command(config, *arguments, repo_path=repo_path, **kwargs)
 
     async def noop_l10n_bump(*arguments, **kwargs):
         called_args.append("l10n_bump")
 
-    async def noop_apply_rebranding(*arguments, **kwargs):
+    orig_commit = merges.commit
+
+    async def mocked_commit(*arguments, **kwargs):
+        called_args.append("commit")
+        return await orig_commit(*arguments, **kwargs)
+
+    orig_apply_rebranding = merges.apply_rebranding
+
+    async def mocked_apply_rebranding(*arguments, **kwargs):
         called_args.append("apply_rebranding")
+        return await orig_apply_rebranding(*arguments, **kwargs)
 
     mocker.patch.object(merges, "run_hg_command", new=mocked_run_hg_command)
     mocker.patch.object(merges, "commit", new=mocked_commit)
-    mocker.patch.object(merges, "get_revision", new=mocked_get_revision)
-    mocker.patch.object(merges, "apply_rebranding", new=noop_apply_rebranding)
+    mocker.patch.object(merges, "apply_rebranding", new=mocked_apply_rebranding)
     mocker.patch.object(merges, "l10n_bump", new=noop_l10n_bump)
 
     result = None
@@ -271,6 +302,8 @@ async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merg
         result = await merges.do_merge(config, task, repo_context.repo)
 
     assert len(called_args) == expected_calls
+    if result is not None:
+        result = [(tree, "some_revision") for (tree, rev) in result]
     assert result == expected_return
 
 
