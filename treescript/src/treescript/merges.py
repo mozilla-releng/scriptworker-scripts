@@ -209,6 +209,10 @@ async def do_merge(config, task, repo_path):
     if from_branch:
         await run_hg_command(config, "up", "-C", from_branch, repo_path=repo_path)
         base_from_rev = await get_revision(config, repo_path, branch=from_branch)
+        from_fx_major_version = get_version(core_version_file(merge_config), repo_path).major_number
+        if from_fx_major_version == to_fx_major_version:
+            log.info("Skipping merge: %s and %s versions already match (%s)", from_branch, to_branch, from_fx_major_version)
+            return []
 
     base_tag = merge_config.get("base_tag")
     if base_tag:

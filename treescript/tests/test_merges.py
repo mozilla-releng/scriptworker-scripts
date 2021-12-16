@@ -303,8 +303,19 @@ async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merg
 
     assert len(called_args) == expected_calls
     if result is not None:
+        # update bookmarks so the second merge attempts knows where to start
+        with hglib.open(repo_context.repo) as repo:
+            repo.bookmark(b"central", result[0][1].encode("ascii"), inactive=True)
+            repo.bookmark(b"beta", result[1][1].encode("ascii"), inactive=True)
         result = [(tree, "some_revision") for (tree, rev) in result]
     assert result == expected_return
+
+    # try again, to ensure do_merge is idempotent
+    try:
+        result = await merges.do_merge(config, task, repo_context.repo)
+    except Exception:
+        pass
+    assert not result
 
 
 @pytest.mark.asyncio
