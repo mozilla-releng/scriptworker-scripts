@@ -14,6 +14,25 @@ COMMIT_POLL_MAX_ATTEMPTS = 10
 COMMIT_POLL_WAIT_SECONDS = 30
 # Max requests retries
 MAX_RETRIES = 5
+DEFAULT_LISTINGS = {
+    "en-us": {
+        "baseListing": {
+            "copyrightAndTrademarkInfo": "",
+            "keywords": [],
+            "licenseTerms": "",
+            "privacyPolicy": "",
+            "supportContact": "",
+            "websiteUrl": "",
+            "description": "Description",
+            "features": [],
+            "releaseNotes": "",
+            "images": [],
+            "recommendedHardware": [],
+            "title": "Firefox Nightly",
+        }
+    }
+}
+DEFAULT_ALLOW_TARGET = {"Desktop": True, "Mobile": False, "Holographic": False, "Xbox": False}
 
 
 def push(config, msix_file_path, channel):
@@ -108,8 +127,23 @@ def _update_submission(config, channel, session, submission_request, headers, fi
     # update the in-progress submission, including uploading the new msix file
     application_id = config["application_ids"][channel]
     submission_id = submission_request.get("id")
-    upload_url = submission_request.get("upload_url")
+    upload_url = submission_request.get("fileUploadUrl")
     upload_url = upload_url.replace("+", "%2B")
+    # submission_request is a copy of the submission info used for the
+    # previous successful submission; normally, no content changes are
+    # needed for this new submission. However, when creating the first
+    # submission for a Store application (or if the previous submission
+    # info is lost somehow?), a few defaults may avoid errors. If having
+    # trouble here, consider sorting it out in the Partner Center.
+    if submission_request.get("applicationCategory") == "NotSet":
+        submission_request["applicationCategory"] = "Productivity"
+    if not submission_request.get("listings"):
+        submission_request["listings"] = DEFAULT_LISTINGS
+    if not submission_request.get("allowTargetFutureDeviceFamilies"):
+        submission_request["allowTargetFutureDeviceFamilies"] = DEFAULT_ALLOW_TARGET
+    # The Store expects all-lower-case 'true' and 'false' in the submission request.
+    submission_request = str(submission_request)
+    submission_request = submission_request.replace("True", "true").replace("False", "false")
     url = _store_url(config, f"{application_id}/submissions/{submission_id}")
     response = session.put(url, submission_request, headers=headers)
     _log_response(response)
@@ -119,7 +153,7 @@ def _update_submission(config, channel, session, submission_request, headers, fi
         response = requests.put(upload_url, f, headers=upload_headers, timeout=config["request_timeout_seconds"])
         response.raise_for_status()
         _log_response(response)
-        return response.json()
+        # no response body expected
 
 
 def _commit_submission(config, channel, session, submission_id, headers):

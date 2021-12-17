@@ -70,7 +70,7 @@ def test_script_can_push_msix(monkeypatch, config, channel, raises, requests_cal
     submission_id = 888
     upload_url = "https://some/url"
     session_mocked_response = {"access_token": "mocked-access-token"}
-    create_mocked_response = {"id": 888, "upload_url": "https://some/url"}
+    create_mocked_response = {"id": 888, "fileUploadUrl": "https://some/url"}
     mocked_response = {}
     status_code = 200
     with requests_mock.Mocker() as m:
