@@ -89,7 +89,7 @@ def test_create_submission(status_code, raises):
     headers = {}
     channel = "mock"
     application_id = CONFIG["application_ids"][channel]
-    mocked_response = {"id": 888, "upload_url": "https://some/url"}
+    mocked_response = {"id": 888, "fileUploadUrl": "https://some/url"}
     with requests.Session() as session:
         with requests_mock.Mocker() as m:
             url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions")
@@ -116,9 +116,9 @@ def test_update_submission(status_code, upload_status_code, raises):
     headers = {}
     channel = "mock"
     application_id = CONFIG["application_ids"][channel]
-    submission_request = {"id": 888, "upload_url": "https://some/url"}
+    submission_request = {"id": 888, "fileUploadUrl": "https://some/url"}
     submission_id = submission_request["id"]
-    upload_url = submission_request["upload_url"]
+    upload_url = submission_request["fileUploadUrl"]
     mocked_response = {"status": "OK"}
     with tempfile.NamedTemporaryFile(mode="wb") as f:
         f.write(b"hello there")
@@ -173,7 +173,7 @@ def test_get_submission_status(status_code, raises, mocked_response):
     channel = "mock"
     application_id = CONFIG["application_ids"][channel]
     submission_id = 888
-    mocked_response = {"id": 888, "upload_url": "https://some/url"}
+    mocked_response = {"id": 888, "fileUploadUrl": "https://some/url"}
     with requests.Session() as session:
         with requests_mock.Mocker() as m:
             url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions/{submission_id}/status")
@@ -206,7 +206,7 @@ def test_push_to_store(status_code, raises, mocked_response):
     application_id = CONFIG["application_ids"][channel]
     submission_id = 888
     upload_url = "https://some/url"
-    create_mocked_response = {"id": 888, "upload_url": "https://some/url"}
+    create_mocked_response = {"id": 888, "fileUploadUrl": "https://some/url"}
     with tempfile.NamedTemporaryFile(mode="wb") as f:
         f.write(b"hello there")
         with requests_mock.Mocker() as m:
