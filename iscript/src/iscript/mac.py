@@ -960,12 +960,14 @@ async def tar_apps(config, all_paths):
 
 
 # create_pkg_files {{{1
-async def create_pkg_files(config, sign_config, all_paths):
+async def create_pkg_files(config, sign_config, all_paths, requirements_plist_path=None):
     """Create .pkg installers from the .app files.
 
     Args:
         sign_config (dict): the running config for this key
-        all_paths: (list): the list of App objects to pkg
+        all_paths (list): the list of App objects to pkg
+        requirements_plist_path (str): Path to a ``requirements.plist`` file
+            to pass into productbuild (optional)
 
     Raises:
         IScriptError: on failure
@@ -1009,6 +1011,16 @@ async def create_pkg_files(config, sign_config, all_paths):
     await raise_future_exceptions(futures)
     futures = []
     for app in all_paths:
+        pb_opts = []
+        if requirements_plist_path:
+            pb_opts.extend(["--product", requirements_plist_path])
+        pb_opts.extend(
+            [
+                "--package",
+                app.tmp_pkg_path1,
+                app.tmp_pkg_path2,
+            ]
+        )
         # Bug 1689376 - create distribution pkg
         futures.append(
             asyncio.ensure_future(
@@ -1019,11 +1031,7 @@ async def create_pkg_files(config, sign_config, all_paths):
                             "productbuild",
                         ]
                         + cmd_opts
-                        + [
-                            "--package",
-                            app.tmp_pkg_path1,
-                            app.tmp_pkg_path2,
-                        ],
+                        + pb_opts,
                         cwd=app.parent_dir,
                         exception=IScriptError,
                     ),
@@ -1142,6 +1150,27 @@ async def download_provisioning_profile(config, task):
     return to
 
 
+# download_requirements_plist_file {{{1
+async def download_requirements_plist_file(config, task):
+    """Download the entitlements file into the work dir.
+
+    Args:
+        config (dict): the running configuration
+        task (dict): the running task
+
+    Returns:
+        str: the path to the downloaded requirements.plist file
+        None: if not ``payload["requirements-plist-url"]``
+
+    """
+    url = task["payload"].get("requirements-plist-url")
+    if not url:
+        return
+    to = os.path.join(config["work_dir"], "requirements.plist")
+    await retry_async(download_file, retry_exceptions=(DownloadError, TimeoutError), args=(url, to))
+    return to
+
+
 # notarize_behavior {{{1
 async def notarize_behavior(config, task):
     """Sign and notarize all mac apps for this task.
@@ -1159,6 +1188,8 @@ async def notarize_behavior(config, task):
     sign_config = get_sign_config(config, task, base_key="mac_config")
     entitlements_path = await download_entitlements_file(config, sign_config, task)
     provisioning_profile_path = await download_provisioning_profile(config, task)
+    requirements_plist_path = await download_requirements_plist_file(config, task)
+
     path_attrs = ["app_path"]
 
     all_paths = get_app_paths(config, task)
@@ -1179,7 +1210,7 @@ async def notarize_behavior(config, task):
         # Unlock keychain again in case it's locked since previous unlock
         await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
         await update_keychain_search_path(config, sign_config["signing_keychain"])
-        await create_pkg_files(config, sign_config, all_paths)
+        await create_pkg_files(config, sign_config, all_paths, requirements_plist_path=requirements_plist_path)
 
     log.info("Notarizing")
     if sign_config["notarize_type"] == "multi_account":
@@ -1223,6 +1254,7 @@ async def notarize_1_behavior(config, task):
     sign_config = get_sign_config(config, task, base_key="mac_config")
     entitlements_path = await download_entitlements_file(config, sign_config, task)
     provisioning_profile_path = await download_provisioning_profile(config, task)
+    requirements_plist_path = await download_requirements_plist_file(config, task)
     path_attrs = ["app_path"]
 
     all_paths = get_app_paths(config, task)
@@ -1243,7 +1275,7 @@ async def notarize_1_behavior(config, task):
         # Unlock keychain again in case it's locked since previous unlock
         await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
         await update_keychain_search_path(config, sign_config["signing_keychain"])
-        await create_pkg_files(config, sign_config, all_paths)
+        await create_pkg_files(config, sign_config, all_paths, requirements_plist_path=requirements_plist_path)
 
     log.info("Submitting for notarization.")
     if sign_config["notarize_type"] == "multi_account":
@@ -1351,6 +1383,7 @@ async def sign_and_pkg_behavior(config, task):
     sign_config = get_sign_config(config, task, base_key="mac_config")
     entitlements_path = await download_entitlements_file(config, sign_config, task)
     provisioning_profile_path = await download_provisioning_profile(config, task)
+    requirements_plist_path = await download_requirements_plist_file(config, task)
 
     all_paths = get_app_paths(config, task)
     langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
@@ -1366,7 +1399,7 @@ async def sign_and_pkg_behavior(config, task):
     # pkg
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await create_pkg_files(config, sign_config, all_paths)
+    await create_pkg_files(config, sign_config, all_paths, requirements_plist_path=requirements_plist_path)
     await copy_pkgs_to_artifact_dir(config, all_paths)
 
     log.info("Done signing apps and creating pkgs.")
