@@ -74,6 +74,9 @@
             },
             "provisioning-profile-url": {
               "type": "string"
+            },
+            "requirements-plist-url": {
+              "type": "string"
             }
           },
           "required": ["upstreamArtifacts"]

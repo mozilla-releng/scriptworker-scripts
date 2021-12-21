@@ -760,18 +760,35 @@ async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
 
 
 # create_pkg_files {{{1
-@pytest.mark.parametrize("pkg_cert_id, raises", ((None, True), (None, False), ("pkg.cert", False)))
+@pytest.mark.parametrize(
+    "pkg_cert_id, raises, requirements_path",
+    (
+        (None, True, None),
+        (None, False, None),
+        ("pkg.cert", False, None),
+        (None, False, "requirements.plist"),
+    ),
+)
 @pytest.mark.asyncio
-async def test_create_pkg_files(mocker, pkg_cert_id, raises):
+async def test_create_pkg_files(mocker, pkg_cert_id, raises, requirements_path):
     """``create_pkg_files`` runs pkgbuild concurrently for each ``App``, and
     raises any exceptions hit along the way.
 
     """
 
     async def fake_run_command(cmd, **kwargs):
-        assert cmd[0:1] in (["pkgbuild"], ["productbuild"], ["productsign"])
+        assert cmd[0] in ("pkgbuild", "productbuild", "productsign")
         if raises:
             raise IScriptError("foo")
+
+        if cmd[0] == "productbuild":
+            if requirements_path:
+                assert "--product" in cmd
+                assert requirements_path in cmd
+                assert cmd.index("--product") + 1 == cmd.index(requirements_path)
+            else:
+                assert "--product" not in cmd
+                assert requirements_path not in cmd
 
     sign_config = {"pkg_cert_id": pkg_cert_id, "signing_keychain": "signing.keychain"}
     config = {"concurrency_limit": 2}
@@ -782,9 +799,9 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises):
     mocker.patch.object(mac, "copy2", new=noop_sync)
     if raises:
         with pytest.raises(IScriptError):
-            await mac.create_pkg_files(config, sign_config, all_paths)
+            await mac.create_pkg_files(config, sign_config, all_paths, requirements_plist_path=requirements_path)
     else:
-        assert await mac.create_pkg_files(config, sign_config, all_paths) is None
+        assert await mac.create_pkg_files(config, sign_config, all_paths, requirements_plist_path=requirements_path) is None
 
 
 # copy_pkgs_to_artifact_dir {{{1
@@ -897,6 +914,26 @@ async def test_download_provisioning_profile(url, expected, mocker):
     if url:
         task["payload"]["provisioning-profile-url"] = url
     assert await mac.download_provisioning_profile(config, task) == expected
+
+
+# download_requirements_plist_file {{{1
+@pytest.mark.parametrize(
+    "url, expected",
+    (("foo", "work/requirements.plist"), (None, None)),
+)
+@pytest.mark.asyncio
+async def test_download_requirements_plist_file(url, expected, mocker):
+    """``download_requirements_plist_file`` downloads the specified
+    requirements-plist-url and returns the path. If no
+    requirements-plist-url is specified, it returns ``None``.
+
+    """
+    mocker.patch.object(mac, "retry_async", new=noop_async)
+    config = {"work_dir": "work"}
+    task = {"payload": {}}
+    if url:
+        task["payload"]["requirements-plist-url"] = url
+    assert await mac.download_requirements_plist_file(config, task) == expected
 
 
 # sign_behavior {{{1
