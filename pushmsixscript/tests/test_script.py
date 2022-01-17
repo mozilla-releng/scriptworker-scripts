@@ -16,12 +16,12 @@ async def test_async_main(monkeypatch):
     config = {"push_to_store": True}
     msix_file_path = os.path.join(TEST_DATA_DIR, "valid-zip-valid-content.msix")
     monkeypatch.setattr(client, "get_task", lambda _: {})
-    monkeypatch.setattr(artifacts, "get_msix_file_path", lambda c, t: msix_file_path)
+    monkeypatch.setattr(artifacts, "get_msix_file_paths", lambda c, t: [msix_file_path])
     monkeypatch.setattr(task, "get_msix_channel", lambda config, channel: "release")
 
     def assert_push(config_, file_, channel):
         assert config_ == config
-        assert file_ == msix_file_path
+        assert file_ == [msix_file_path]
         assert channel == "release"
         next(function_call_counter)
 

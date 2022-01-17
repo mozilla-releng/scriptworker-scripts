@@ -49,7 +49,7 @@ from pushmsixscript.script import main
             },
             "release",
             False,
-            7,
+            8,
         ),
     ),
 )
@@ -59,7 +59,9 @@ def test_script_can_push_msix(monkeypatch, config, channel, raises, requests_cal
         "scopes": [f"project:releng:microsoftstore:{channel}"],
         "payload": {
             "channel": channel,
-            "upstreamArtifacts": [{"paths": ["public/build/target.store.msix"], "taskId": "some_msix_build_taskId", "taskType": "build"}],
+            "upstreamArtifacts": [
+                {"paths": ["public/build/target.x86.store.msix", "public/build/target.x64.store.msix"], "taskId": "some_msix_build_taskId", "taskType": "build"}
+            ],
         },
     }
 
@@ -101,9 +103,10 @@ def test_script_can_push_msix(monkeypatch, config, channel, raises, requests_cal
 
             msix_artifact_dir = os.path.join(work_dir, "cot/some_msix_build_taskId/public/build/")
             makedirs(msix_artifact_dir)
-            msix_artifact_path = os.path.join(msix_artifact_dir, "target.store.msix")
-            with open(msix_artifact_path, "w") as msix_file:
-                msix_file.write(" ")
+            for arch in ["x86", "x64"]:
+                msix_artifact_path = os.path.join(msix_artifact_dir, f"target.{arch}.store.msix")
+                with open(msix_artifact_path, "w") as msix_file:
+                    msix_file.write(" ")
 
             # config_file is not put in the TemporaryDirectory() (like the others), because it usually lives
             # elsewhere on the filesystem

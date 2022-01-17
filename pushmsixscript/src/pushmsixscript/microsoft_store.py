@@ -35,16 +35,16 @@ DEFAULT_LISTINGS = {
 DEFAULT_ALLOW_TARGET = {"Desktop": True, "Mobile": False, "Holographic": False, "Xbox": False}
 
 
-def push(config, msix_file_path, channel):
-    """Publishes a msix onto a given channel.
+def push(config, msix_file_paths, channel):
+    """Publishes a group of msix files onto a given channel.
 
-    This function performs all the network actions to ensure `msix_file_path` is published on
+    This function performs all the network actions to ensure `msix_file_paths` are published on
     `channel`. If `channel` is not whitelisted to contact the Microsoft Store, then it early
     returns (this allows staging tasks to not contact the Microsoft Store at all).
 
     Args:
         config (config): the scriptworker configuration.
-        msix_file_path (str): The full path to the msix file to upload.
+        msix_file_paths (list of str): The full paths to the msix files to upload.
         channel (str): The Microsoft Store channel.
     """
     if not task.is_allowed_to_push_to_microsoft_store(config, channel=channel):
@@ -54,7 +54,7 @@ def push(config, msix_file_path, channel):
 
     access_token = _store_session(config)
     if access_token:
-        _push_to_store(config, channel, msix_file_path, access_token)
+        _push_to_store(config, channel, msix_file_paths, access_token)
     else:
         raise TaskVerificationError("unable to push: missing access token")
 
@@ -85,14 +85,14 @@ def _store_session(config):
         return response.json().get("access_token")
 
 
-def _push_to_store(config, channel, msix_file_path, access_token):
+def _push_to_store(config, channel, msix_file_paths, access_token):
     headers = {"Authorization": f"Bearer {access_token}", "Content-type": "application/json", "User-Agent": "Python"}
     with requests.Session() as session:
         session.mount("https://", requests.adapters.HTTPAdapter(max_retries=MAX_RETRIES))
         _remove_pending_submission(config, channel, session, headers)
         submission_request = _create_submission(config, channel, session, headers)
         submission_id = submission_request.get("id")
-        _update_submission(config, channel, session, submission_request, headers, msix_file_path)
+        _update_submission(config, channel, session, submission_request, headers, msix_file_paths)
         _commit_submission(config, channel, session, submission_id, headers)
         _wait_for_commit_completion(config, channel, session, submission_id, headers)
 
@@ -123,7 +123,7 @@ def _create_submission(config, channel, session, headers):
     return response.json()
 
 
-def _update_submission(config, channel, session, submission_request, headers, file_path):
+def _update_submission(config, channel, session, submission_request, headers, file_paths):
     # update the in-progress submission, including uploading the new msix file
     application_id = config["application_ids"][channel]
     submission_id = submission_request.get("id")
@@ -148,12 +148,13 @@ def _update_submission(config, channel, session, submission_request, headers, fi
     response = session.put(url, submission_request, headers=headers)
     _log_response(response)
     response.raise_for_status()
-    with open(file_path, "rb") as f:
-        upload_headers = {"x-ms-blob-type": "BlockBlob"}
-        response = requests.put(upload_url, f, headers=upload_headers, timeout=config["request_timeout_seconds"])
-        response.raise_for_status()
-        _log_response(response)
-        # no response body expected
+    for file_path in file_paths:
+        with open(file_path, "rb") as f:
+            upload_headers = {"x-ms-blob-type": "BlockBlob"}
+            response = requests.put(upload_url, f, headers=upload_headers, timeout=config["request_timeout_seconds"])
+            response.raise_for_status()
+            _log_response(response)
+            # no response body expected
 
 
 def _commit_submission(config, channel, session, submission_id, headers):
