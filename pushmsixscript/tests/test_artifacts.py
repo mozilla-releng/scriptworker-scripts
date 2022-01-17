@@ -11,7 +11,7 @@ from pushmsixscript.artifacts import get_msix_file_paths
         (False, ({"taskId": ["/path/to/file.store.msix"]}, {}), ["/path/to/file.store.msix"]),
         (False, ({"taskId": ["/path/to/file.store.msix", "/some/other/file.txt"]}, {}), ["/path/to/file.store.msix"]),
         (False, ({"taskId": ["/path/to/file.store.msix"], "otherTaskId": "/some/other/file.txt"}, {}), ["/path/to/file.store.msix"]),
-        (True, ({}, {"taskId": ["/path/to/file.store.msix"]}), ["/path/to/file.store.msix"]),
+        (True, ({}, {"taskId": ["/path/to/file.store.msix"]}), None),
         (True, ({"taskId": ["/some/other/file.txt"]}, {}), None),
         (
             False,
