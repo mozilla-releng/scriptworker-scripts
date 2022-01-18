@@ -107,6 +107,7 @@ bucket_config:
           buckets:
             xpi: 'net-mozaws-stage-delivery-archive'
           url_prefix: 'https://ftp.stage.mozaws.net'
+        dummy: {}
       'COT_PRODUCT == "xpi" && ENV == "prod"':
         release:
           credentials:
@@ -115,6 +116,7 @@ bucket_config:
           buckets:
             xpi: 'net-mozaws-prod-delivery-archive'
           url_prefix: 'https://archive.mozilla.org'
+        dummy: {}
       'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
         dep:
           credentials:
