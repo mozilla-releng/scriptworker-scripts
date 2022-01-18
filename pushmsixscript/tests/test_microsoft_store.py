@@ -129,9 +129,9 @@ def test_update_submission(status_code, upload_status_code, raises):
                 m.put(upload_url, headers=headers, json=mocked_response, status_code=upload_status_code)
                 if raises:
                     with pytest.raises(requests.exceptions.HTTPError):
-                        microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, f.name)
+                        microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name])
                 else:
-                    microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, f.name)
+                    microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name])
 
 
 @pytest.mark.parametrize(
@@ -227,6 +227,6 @@ def test_push_to_store(status_code, raises, mocked_response):
 
             if raises:
                 with pytest.raises(requests.exceptions.HTTPError):
-                    microsoft_store._push_to_store(CONFIG, channel, f.name, access_token)
+                    microsoft_store._push_to_store(CONFIG, channel, [f.name], access_token)
             else:
-                microsoft_store._push_to_store(CONFIG, channel, f.name, access_token)
+                microsoft_store._push_to_store(CONFIG, channel, [f.name], access_token)

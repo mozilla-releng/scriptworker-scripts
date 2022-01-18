@@ -1,17 +1,13 @@
 from scriptworker_client import artifacts
 from scriptworker_client.exceptions import TaskVerificationError
-from scriptworker_client.utils import get_single_item_from_sequence
 
 
-def get_msix_file_path(config, task):
+def get_msix_file_paths(config, task):
     artifacts_per_task_id, _ = artifacts.get_upstream_artifacts_full_paths_per_task_id(config, task)
 
     all_artifacts = [artifact for artifacts in artifacts_per_task_id.values() for artifact in artifacts]
 
-    return get_single_item_from_sequence(
-        all_artifacts,
-        condition=lambda artifact: artifact.endswith(".store.msix"),
-        ErrorClass=TaskVerificationError,
-        no_item_error_message="No upstream artifact is a store msix",
-        too_many_item_error_message="Too many msix artifacts found",
-    )
+    filtered_artifacts = [item for item in all_artifacts if item.endswith(".store.msix")]
+    if len(filtered_artifacts) == 0:
+        raise TaskVerificationError("No upstream artifact is a store msix")
+    return filtered_artifacts

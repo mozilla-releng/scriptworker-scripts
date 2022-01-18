@@ -12,14 +12,15 @@ log = logging.getLogger(__name__)
 
 
 async def async_main(config, task_dict):
-    msix_file_path = artifacts.get_msix_file_path(config, task_dict)
-    log.info(f"found msix at {msix_file_path}")
-    manifest.verify_msix(msix_file_path)
+    msix_file_paths = artifacts.get_msix_file_paths(config, task_dict)
+    for msix_file_path in msix_file_paths:
+        log.info(f"found msix at {msix_file_path}")
+        manifest.verify_msix(msix_file_path)
 
     channel = task.get_msix_channel(config, task_dict)
     _log_warning_forewords(config, channel)
 
-    microsoft_store.push(config, msix_file_path, channel)
+    microsoft_store.push(config, msix_file_paths, channel)
 
 
 def _log_warning_forewords(config, channel):
