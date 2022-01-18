@@ -44,6 +44,20 @@ case $COT_PRODUCT in
     esac
     export TASKCLUSTER_SCOPE_PREFIX="project:releng:${PROJECT_NAME}:"
     ;;
+  xpi)
+    case $ENV in
+      dev|fake-prod)
+        export AUTH0_AUDIENCE="balrog-cloudops-stage"
+        ;;
+      prod)
+        export AUTH0_AUDIENCE="balrog-production"
+        ;;
+      *)
+        exit 1
+        ;;
+    esac
+    export TASKCLUSTER_SCOPE_PREFIX="project:releng:${PROJECT_NAME}:"
+    ;;
   thunderbird)
     case $ENV in
       dev|fake-prod)

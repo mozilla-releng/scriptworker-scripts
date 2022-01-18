@@ -99,6 +99,24 @@ bucket_config:
           buckets:
             geckoview: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
         dummy: {}
+      'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
+        dep:
+          credentials:
+            id: { "$eval": "DEP_ID" }
+            key: { "$eval": "DEP_KEY" }
+          buckets:
+            xpi: 'net-mozaws-stage-delivery-archive'
+          url_prefix: 'https://ftp.stage.mozaws.net'
+        dummy: {}
+      'COT_PRODUCT == "xpi" && ENV == "prod"':
+        release:
+          credentials:
+            id: { "$eval": "RELEASE_ID" }
+            key: { "$eval": "RELEASE_KEY" }
+          buckets:
+            xpi: 'net-mozaws-prod-delivery-archive'
+          url_prefix: 'https://archive.mozilla.org'
+        dummy: {}
       'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
         dep:
           credentials:

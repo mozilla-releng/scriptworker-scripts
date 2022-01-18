@@ -40,6 +40,21 @@ case $COT_PRODUCT in
         ;;
     esac
     ;;
+  xpi)
+    case $ENV in
+      dev|fake-prod)
+        test_var_set 'DEP_ID'
+        test_var_set 'DEP_KEY'
+        ;;
+      prod)
+        test_var_set 'RELEASE_ID'
+        test_var_set 'RELEASE_KEY'
+        ;;
+      *)
+        exit 1
+        ;;
+    esac
+    ;;
   thunderbird)
     case $ENV in
       dev|fake-prod)
