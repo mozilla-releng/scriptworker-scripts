@@ -8,6 +8,7 @@ from scriptworker_client.utils import run_command
 
 from iscript.exceptions import IScriptError
 from iscript.mac import notarize_1_behavior, notarize_3_behavior, notarize_behavior, sign_and_pkg_behavior, sign_behavior, single_file_behavior
+from iscript.macvpn import notarize_vpn_behavior
 from iscript.util import get_sign_config
 
 log = logging.getLogger(__name__)
@@ -34,6 +35,9 @@ async def async_main(config, task):
         return
     elif behavior == "mac_notarize":
         await notarize_behavior(config, task)
+        return
+    elif behavior == "mac_notarize_vpn":
+        await notarize_vpn_behavior(config, task)
         return
     elif behavior == "mac_notarize_part_1":
         await notarize_1_behavior(config, task)
