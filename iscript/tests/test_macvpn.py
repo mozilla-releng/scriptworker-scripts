@@ -52,7 +52,6 @@ async def test_notarize_vpn_behavior(mocker):
     mocker.patch.object(macvpn, "extract_all_apps", new=noop_async)
     mocker.patch.object(macvpn, "run_command", new=noop_async)
     mocker.patch.object(macvpn.os, "remove", new=noop_sync)
-    mocker.patch.object(macvpn.os, "remove", new=noop_sync)
     mocker.patch.object(macvpn, "get_sign_config", new=get_sign_config)
     mocker.patch.object(macvpn, "unlock_keychain", new=noop_async)
     mocker.patch.object(macvpn, "update_keychain_search_path", new=noop_async)
