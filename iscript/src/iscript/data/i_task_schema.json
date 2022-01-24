@@ -37,7 +37,16 @@
                     "uniqueItems": true,
                     "items": {
                       "type": "string",
-                      "enum": ["macapp", "widevine", "omnija", "autograph_widevine", "autograph_omnija", "mac_geckodriver", "mac_single_file", "autograph_langpack"]
+                      "enum": [
+                        "macapp",
+                        "widevine",
+                        "omnija",
+                        "autograph_widevine",
+                        "autograph_omnija",
+                        "mac_geckodriver",
+                        "mac_single_file",
+                        "autograph_langpack"
+                      ]
                     }
                   },
                   "paths": {
@@ -56,18 +65,34 @@
                         "type": "string"
                     }
                 },
-                "required": ["taskId", "taskType", "paths"]
+                "required": [
+                  "taskId",
+                  "taskType",
+                  "paths"
+                ]
               },
               "minItems": 1,
               "uniqueItems": true
             },
             "behavior": {
               "type": "string",
-              "enum": ["mac_notarize", "mac_geckodriver", "mac_sign", "mac_sign_and_pkg", "mac_notarize_part_1", "mac_notarize_part_3", "mac_single_file"]
+              "enum": [
+                "mac_notarize",
+                "mac_geckodriver",
+                "mac_sign",
+                "mac_sign_and_pkg",
+                "mac_notarize_part_1",
+                "mac_notarize_part_3",
+                "mac_single_file",
+                "mac_notarize_vpn"
+              ]
             },
             "product": {
               "type": "string",
-              "enum": ["firefox", "mozillavpn"]
+              "enum": [
+                "firefox",
+                "mozillavpn"
+              ]
             },
             "entitlements-url": {
               "type": "string"
@@ -79,8 +104,13 @@
               "type": "string"
             }
           },
-          "required": ["upstreamArtifacts"]
+          "required": [
+            "upstreamArtifacts"
+          ]
         }
     },
-    "required": ["scopes", "payload"]
+    "required": [
+      "scopes",
+      "payload"
+    ]
 }
