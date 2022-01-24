@@ -30,6 +30,7 @@ LOGINITEM_PROVISIONING_PROFILE = "https://hg.mozilla.org/build/braindump/raw-fil
 NATIVEMESSAGING_PROVISIONING_PROFILE = "https://hg.mozilla.org/build/braindump/raw-file/tip/signing-related/FirefoxVPN_Native_Messaging.provisionprofile"
 MOZILLA_VPN_PROVISIONING_PROFILE = "https://hg.mozilla.org/build/braindump/raw-file/tip/signing-related/firefoxvpn_developerid.provisionprofile"
 
+
 async def _create_notarization_zipfile(work_dir, source, dest):
     """Creates a zipfile for notarization
 
@@ -46,7 +47,11 @@ async def _create_notarization_zipfile(work_dir, source, dest):
     Returns:
         str: the zip path
     """
-    await run_command(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", source, dest], cwd=work_dir, exception=IScriptError)
+    await run_command(
+        ["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", source, dest],
+        cwd=work_dir,
+        exception=IScriptError,
+    )
 
 
 async def _sign_app(config, task, sign_config, app, entitlements_url, provisioning_profile_url):
@@ -62,8 +67,8 @@ async def _sign_app(config, task, sign_config, app, entitlements_url, provisioni
 
     """
     # We mock the task for downloading entitlements and provisioning profiles
-    entitlements_path = await download_entitlements_file(config, sign_config, {'payload': {'entitlements-url': entitlements_url}})
-    provisioning_profile_path = await download_provisioning_profile(config, {'payload': {'provisioning-profile-url': provisioning_profile_url}})
+    entitlements_path = await download_entitlements_file(config, sign_config, {"payload": {"entitlements-url": entitlements_url}})
+    provisioning_profile_path = await download_provisioning_profile(config, {"payload": {"provisioning-profile-url": provisioning_profile_url}})
 
     await sign_all_apps(config, sign_config, entitlements_path, [app], provisioning_profile_path)
 
@@ -98,11 +103,8 @@ async def notarize_vpn_behavior(config, task):
     ##############
     # TODO: Decide what to do with the incoming package
     # TODO: Remove when we switch to .tar.gz payloads (1/2)
-    build_zip_path = os.path.join(top_app.parent_dir, 'BUILD.zip')
-    await run_command([
-        "unzip", build_zip_path,
-        "-d", top_app.parent_dir
-    ])
+    build_zip_path = os.path.join(top_app.parent_dir, "BUILD.zip")
+    await run_command(["unzip", build_zip_path, "-d", top_app.parent_dir])
     os.remove(build_zip_path)
 
     top_app.app_path = os.path.join(top_app.parent_dir, "Mozilla VPN.app")
@@ -120,31 +122,37 @@ async def notarize_vpn_behavior(config, task):
     # LoginItems inner app
     loginitems_app = App(
         orig_path=os.path.join(submodule_dir, "LoginItems/MozillaVPNLoginItem.app"),
-        parent_dir=os.path.join(submodule_dir, "LoginItems"), # Using main app as reference
+        parent_dir=os.path.join(submodule_dir, "LoginItems"),  # Using main app as reference
         app_path=os.path.join(submodule_dir, "LoginItems/MozillaVPNLoginItem.app"),
         app_name="MozillaVPNLoginItem.app",
         formats=task["payload"]["upstreamArtifacts"][0]["formats"],
         artifact_prefix="public/",
     )
     await _sign_app(
-        config, task, sign_config, loginitems_app,
+        config,
+        task,
+        sign_config,
+        loginitems_app,
         entitlements_url=task["payload"]["loginitems-entitlements-url"],
-        provisioning_profile_url=LOGINITEM_PROVISIONING_PROFILE
+        provisioning_profile_url=LOGINITEM_PROVISIONING_PROFILE,
     )
 
     # NativeMessaging inner app
     nativemessaging_app = App(
         orig_path=os.path.join(submodule_dir, "NativeMessaging/MozillaVPNNativeMessaging.app"),
-        parent_dir=os.path.join(submodule_dir, "NativeMessaging"), # Using main app as reference
+        parent_dir=os.path.join(submodule_dir, "NativeMessaging"),  # Using main app as reference
         app_path=os.path.join(submodule_dir, "NativeMessaging/MozillaVPNNativeMessaging.app"),
         app_name="MozillaVPNNativeMessaging.app",
         formats=task["payload"]["upstreamArtifacts"][0]["formats"],
         artifact_prefix="public/",
     )
     await _sign_app(
-        config, task, sign_config, nativemessaging_app,
+        config,
+        task,
+        sign_config,
+        nativemessaging_app,
         entitlements_url=task["payload"]["nativemessaging-entitlements-url"],
-        provisioning_profile_url=NATIVEMESSAGING_PROVISIONING_PROFILE
+        provisioning_profile_url=NATIVEMESSAGING_PROVISIONING_PROFILE,
     )
 
     # Main VPN app
@@ -153,9 +161,12 @@ async def notarize_vpn_behavior(config, task):
     top_app.formats = task["payload"]["upstreamArtifacts"][0]["formats"]
 
     await _sign_app(
-        config, task, sign_config, top_app,
+        config,
+        task,
+        sign_config,
+        top_app,
         entitlements_url=task["payload"]["entitlements-url"],
-        provisioning_profile_url=MOZILLA_VPN_PROVISIONING_PROFILE
+        provisioning_profile_url=MOZILLA_VPN_PROVISIONING_PROFILE,
     )
 
     # Create the PKG and sign it
@@ -166,7 +177,7 @@ async def notarize_vpn_behavior(config, task):
 
     # Need to zip the pkg instead
     # zip_path = await create_one_notarization_zipfile(config["work_dir"], [app], sign_config, path_attrs=['app_path'])
-    zip_path = os.path.join(config["work_dir"], 'notarization.zip')
+    zip_path = os.path.join(config["work_dir"], "notarization.zip")
     await _create_notarization_zipfile(config["work_dir"], top_app.pkg_path, zip_path)
 
     poll_uuids = await notarize_no_sudo(config["work_dir"], sign_config, zip_path)
