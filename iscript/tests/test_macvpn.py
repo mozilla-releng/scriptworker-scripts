@@ -7,8 +7,8 @@ import os
 import pytest
 
 import iscript.macvpn as macvpn
-from iscript.mac import App
 from iscript.exceptions import IScriptError
+from iscript.mac import App
 
 
 async def noop_async(*args, **kwargs):
