@@ -10,6 +10,7 @@ import iscript.macvpn as macvpn
 from iscript.mac import App
 from iscript.exceptions import IScriptError
 
+
 async def noop_async(*args, **kwargs):
     pass
 
@@ -39,11 +40,8 @@ async def test_sign_app(mocker):
 
 @pytest.mark.asyncio
 async def test_notarize_vpn_behavior(mocker):
-
     def get_app_paths(config, task):
-        return [App(
-            parent_dir="."
-        )]
+        return [App(parent_dir=".")]
 
     def get_sign_config(*args, **kwargs):
         return {"signing_keychain": None, "keychain_password": None}
@@ -71,8 +69,8 @@ async def test_notarize_vpn_behavior(mocker):
             "upstreamArtifacts": [{"formats": ["mac_behavior"]}],
             "loginitems-entitlements-url": "",
             "nativemessaging-entitlements-url": "",
-            "entitlements-url": ""
-            }
+            "entitlements-url": "",
+        }
     }
     config = {"work_dir": ""}
     await macvpn.notarize_vpn_behavior(config, task)
