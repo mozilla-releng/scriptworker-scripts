@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Mac VPN notarization behavior."""
 
 import logging
 import os
@@ -32,7 +33,7 @@ MOZILLA_VPN_PROVISIONING_PROFILE = "https://hg.mozilla.org/build/braindump/raw-f
 
 
 async def _create_notarization_zipfile(work_dir, source, dest):
-    """Creates a zipfile for notarization
+    """Create a zipfile for notarization.
 
     Keeps parent directory in zip
 
@@ -54,8 +55,8 @@ async def _create_notarization_zipfile(work_dir, source, dest):
     )
 
 
-async def _sign_app(config, task, sign_config, app, entitlements_url, provisioning_profile_url):
-    """Sign an app
+async def _sign_app(config, sign_config, app, entitlements_url, provisioning_profile_url):
+    """Sign an app.
 
     Args:
         config (dict): script config
@@ -76,7 +77,7 @@ async def _sign_app(config, task, sign_config, app, entitlements_url, provisioni
 
 
 async def notarize_vpn_behavior(config, task):
-    """Notarization for mac vpn app.
+    """Notarize vpn app.
 
     Workflow:
     . Sign all inner apps
@@ -91,7 +92,6 @@ async def notarize_vpn_behavior(config, task):
         IScriptError: on fatal error.
 
     """
-
     top_app = get_app_paths(config, task)
     assert len(top_app) == 1
 
@@ -116,7 +116,6 @@ async def notarize_vpn_behavior(config, task):
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
 
-    work_dir = config["work_dir"]
     submodule_dir = os.path.join(top_app.parent_dir, "Mozilla VPN.app", "Contents/Library/")
 
     # LoginItems inner app
@@ -130,7 +129,6 @@ async def notarize_vpn_behavior(config, task):
     )
     await _sign_app(
         config,
-        task,
         sign_config,
         loginitems_app,
         entitlements_url=task["payload"]["loginitems-entitlements-url"],
@@ -162,7 +160,6 @@ async def notarize_vpn_behavior(config, task):
 
     await _sign_app(
         config,
-        task,
         sign_config,
         top_app,
         entitlements_url=task["payload"]["entitlements-url"],
@@ -171,9 +168,6 @@ async def notarize_vpn_behavior(config, task):
 
     # Create the PKG and sign it
     await create_pkg_files(config, sign_config, [top_app])
-
-    # Notarizing only the pkg
-    path_attrs = ["pkg_path"]
 
     # Need to zip the pkg instead
     # zip_path = await create_one_notarization_zipfile(config["work_dir"], [app], sign_config, path_attrs=['app_path'])
@@ -184,10 +178,6 @@ async def notarize_vpn_behavior(config, task):
     await poll_all_notarization_status(sign_config, poll_uuids)
 
     log.info("Done notarizing app")
-
-    # TODO: Do we need to staple in place?
-    # Staple in place
-    # await staple_notarization([top_app], path_attr="app_path")
 
     # TODO: Remove when we switch to .tar.gz payloads (2/2)
     # Fake source so we can create artifact destination path properly
