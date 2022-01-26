@@ -43,9 +43,9 @@ def verify_msix(file_path):
         with zf.open(app_manifest) as f:
             config = configparser.ConfigParser()
             config.read_file(_readline_generator(f))
-            version = config.get("App", "Version")
-            build_id = config.get("App", "BuildId")
-            code_name = config.get("App", "CodeName")
+            version = config.get("App", "Version", fallback="unknown")
+            build_id = config.get("App", "BuildId", fallback="unknown")
+            code_name = config.get("App", "CodeName", fallback="unknown")
             log.info(f"Firefox version: {version}")
             log.info(f"Firefox build id: {build_id}")
             log.info(f"Firefox code name: {code_name}")
