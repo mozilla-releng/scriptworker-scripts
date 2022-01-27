@@ -146,7 +146,6 @@ async def notarize_vpn_behavior(config, task):
     )
     await _sign_app(
         config,
-        task,
         sign_config,
         nativemessaging_app,
         entitlements_url=task["payload"]["nativemessaging-entitlements-url"],

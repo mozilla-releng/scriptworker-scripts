@@ -496,7 +496,7 @@ async def extract_all_apps(config, all_paths):
         rm(app.parent_dir)
         makedirs(app.parent_dir)
         if app.orig_path.endswith((".tar.bz2", ".tar.gz", ".tgz")):
-            futures.append(asyncio.ensure_future(run_command(["tar", "xf", app.orig_path], cwd=app.parent_dir, exception=IScriptError)))
+            futures.append(asyncio.ensure_future(run_command(["tar", "xf", app.orig_path], cwd=app.parent_dir, exception=IScriptError, log_level=logging.DEBUG)))
         elif app.orig_path.endswith(".dmg"):
             unpack_mountpoint = os.path.join("/tmp", f"{config.get('dmg_prefix', 'dmg')}-{counter}-unpack")
             futures.append(
@@ -507,7 +507,7 @@ async def extract_all_apps(config, all_paths):
                 )
             )
         elif app.orig_path.endswith(".zip"):
-            futures.append(asyncio.ensure_future(run_command(["unzip", app.orig_path], cwd=app.parent_dir, exception=IScriptError)))
+            futures.append(asyncio.ensure_future(run_command(["unzip", app.orig_path], cwd=app.parent_dir, exception=IScriptError, log_level=logging.DEBUG)))
         else:
             raise IScriptError(f"unknown file type {app.orig_path}")
     await raise_future_exceptions(futures)
