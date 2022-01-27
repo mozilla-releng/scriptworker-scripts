@@ -19,6 +19,8 @@ taskcluster_scope_prefixes:
         - 'project:mozilla:app-services:releng:beetmover:'
       'COT_PRODUCT == "glean"':
         - 'project:mozilla:glean:releng:beetmover:'
+      'COT_PRODUCT == "xpi"':
+        - 'project:xpi:beetmover:'
 verbose: { "$eval": "VERBOSE == 'true'" }
 zip_max_file_size_in_mb: 300
 bucket_config:
