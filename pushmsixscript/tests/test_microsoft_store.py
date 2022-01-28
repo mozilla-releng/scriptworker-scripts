@@ -3,6 +3,7 @@ import tempfile
 import pytest
 import requests
 import requests_mock
+from scriptworker_client.exceptions import TaskVerificationError
 
 from pushmsixscript import microsoft_store
 
@@ -46,15 +47,15 @@ def test_store_session(status_code, raises):
 
 
 @pytest.mark.parametrize(
-    "status_code, pending, raises",
+    "status_code, pending, raises, exc",
     (
-        (200, True, False),
-        (200, False, False),
-        (404, False, True),
-        (503, False, True),
+        (200, True, True, TaskVerificationError),
+        (200, False, False, None),
+        (404, False, True, requests.exceptions.HTTPError),
+        (503, False, True, requests.exceptions.HTTPError),
     ),
 )
-def test_remove_pending_submission(status_code, pending, raises):
+def test_check_for_pending_submission(status_code, pending, raises, exc):
     headers = {}
     channel = "mock"
     application_id = CONFIG["application_ids"][channel]
@@ -71,10 +72,10 @@ def test_remove_pending_submission(status_code, pending, raises):
             m.delete(url, headers=headers)
 
             if raises:
-                with pytest.raises(requests.exceptions.HTTPError):
-                    microsoft_store._remove_pending_submission(CONFIG, channel, session, headers)
+                with pytest.raises(exc):
+                    microsoft_store._check_for_pending_submission(CONFIG, channel, session, headers)
             else:
-                microsoft_store._remove_pending_submission(CONFIG, channel, session, headers)
+                microsoft_store._check_for_pending_submission(CONFIG, channel, session, headers)
 
 
 @pytest.mark.parametrize(
