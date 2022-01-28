@@ -80,7 +80,7 @@ def _store_session(config):
     headers = {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"}
     with requests.Session() as session:
         session.mount("https://", requests.adapters.HTTPAdapter(max_retries=MAX_RETRIES))
-        response = session.post(url, body, headers=headers, timeout=config["request_timeout_seconds"])
+        response = session.post(url, body, headers=headers, timeout=int(config["request_timeout_seconds"]))
         response.raise_for_status()
         return response.json().get("access_token")
 
@@ -101,14 +101,14 @@ def _remove_pending_submission(config, channel, session, headers):
     # check for pending submission and delete it if anything is found
     application_id = config["application_ids"][channel]
     url = _store_url(config, f"{application_id}")
-    response = session.get(url, headers=headers, timeout=config["request_timeout_seconds"])
+    response = session.get(url, headers=headers, timeout=int(config["request_timeout_seconds"]))
     _log_response(response)
     response.raise_for_status()
     response_json = response.json()
     if "pendingApplicationSubmission" in response_json:
         submission_to_remove = response_json["pendingApplicationSubmission"]["id"]
         url = _store_url(config, f"{application_id}/submissions/{submission_to_remove}")
-        session.delete(url, headers=headers, timeout=config["request_timeout_seconds"])
+        session.delete(url, headers=headers, timeout=int(config["request_timeout_seconds"]))
         _log_response(response)
         response.raise_for_status()
 
@@ -117,7 +117,7 @@ def _create_submission(config, channel, session, headers):
     # create a new in-progress submission, which is a copy of the last published submission
     application_id = config["application_ids"][channel]
     url = _store_url(config, f"{application_id}/submissions")
-    response = session.post(url, headers=headers, timeout=config["request_timeout_seconds"])
+    response = session.post(url, headers=headers, timeout=int(config["request_timeout_seconds"]))
     _log_response(response)
     response.raise_for_status()
     return response.json()
@@ -151,7 +151,7 @@ def _update_submission(config, channel, session, submission_request, headers, fi
     for file_path in file_paths:
         with open(file_path, "rb") as f:
             upload_headers = {"x-ms-blob-type": "BlockBlob"}
-            response = requests.put(upload_url, f, headers=upload_headers, timeout=config["request_timeout_seconds"])
+            response = requests.put(upload_url, f, headers=upload_headers, timeout=int(config["request_timeout_seconds"]))
             response.raise_for_status()
             _log_response(response)
             # no response body expected
@@ -161,7 +161,7 @@ def _commit_submission(config, channel, session, submission_id, headers):
     # finalize submission
     application_id = config["application_ids"][channel]
     url = _store_url(config, f"{application_id}/submissions/{submission_id}/commit")
-    response = session.post(url, headers=headers, timeout=config["request_timeout_seconds"])
+    response = session.post(url, headers=headers, timeout=int(config["request_timeout_seconds"]))
     _log_response(response)
     response.raise_for_status()
     return response.json()
@@ -170,7 +170,7 @@ def _commit_submission(config, channel, session, submission_id, headers):
 def _get_submission_status(config, channel, session, submission_id, headers):
     application_id = config["application_ids"][channel]
     url = _store_url(config, f"{application_id}/submissions/{submission_id}/status")
-    response = session.get(url, headers=headers, timeout=config["request_timeout_seconds"])
+    response = session.get(url, headers=headers, timeout=int(config["request_timeout_seconds"]))
     _log_response(response)
     response.raise_for_status()
     return response.json()
