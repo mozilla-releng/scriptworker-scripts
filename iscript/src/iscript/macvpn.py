@@ -26,11 +26,6 @@ from iscript.util import get_sign_config
 
 log = logging.getLogger(__name__)
 
-# TODO: Move provisioning profiles from braindump
-LOGINITEM_PROVISIONING_PROFILE = "https://hg.mozilla.org/build/braindump/raw-file/tip/signing-related/firefoxvpn_loginitem_developerid.provisionprofile"
-NATIVEMESSAGING_PROVISIONING_PROFILE = "https://hg.mozilla.org/build/braindump/raw-file/tip/signing-related/FirefoxVPN_Native_Messaging.provisionprofile"
-MOZILLA_VPN_PROVISIONING_PROFILE = "https://hg.mozilla.org/build/braindump/raw-file/tip/signing-related/firefoxvpn_developerid.provisionprofile"
-
 
 async def _create_notarization_zipfile(work_dir, source, dest):
     """Create a zipfile for notarization.
@@ -131,8 +126,8 @@ async def notarize_vpn_behavior(config, task):
         config,
         sign_config,
         loginitems_app,
-        entitlements_url=task["payload"]["loginitems-entitlements-url"],
-        provisioning_profile_url=LOGINITEM_PROVISIONING_PROFILE,
+        entitlements_url=task["payload"]["loginItemsEntitlementsUrl"],
+        provisioning_profile_url=task["payload"]["loginItemsProvisioningProfileUrl"],
     )
 
     # NativeMessaging inner app
@@ -148,8 +143,8 @@ async def notarize_vpn_behavior(config, task):
         config,
         sign_config,
         nativemessaging_app,
-        entitlements_url=task["payload"]["nativemessaging-entitlements-url"],
-        provisioning_profile_url=NATIVEMESSAGING_PROVISIONING_PROFILE,
+        entitlements_url=task["payload"]["nativeMessagingEntitlementsUrl"],
+        provisioning_profile_url=task["payload"]["nativeMessagingProvisioningProfileUrl"],
     )
 
     # Main VPN app
@@ -161,8 +156,8 @@ async def notarize_vpn_behavior(config, task):
         config,
         sign_config,
         top_app,
-        entitlements_url=task["payload"]["entitlements-url"],
-        provisioning_profile_url=MOZILLA_VPN_PROVISIONING_PROFILE,
+        entitlements_url=task["payload"]["entitlementsUrl"],
+        provisioning_profile_url=task["payload"]["provisioningProfileUrl"],
     )
 
     # Create the PKG and sign it

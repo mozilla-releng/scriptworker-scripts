@@ -66,9 +66,12 @@ async def test_notarize_vpn_behavior(mocker):
     task = {
         "payload": {
             "upstreamArtifacts": [{"formats": ["mac_behavior"]}],
-            "loginitems-entitlements-url": "",
-            "nativemessaging-entitlements-url": "",
-            "entitlements-url": "",
+            "loginItemsEntitlementsUrl": "http://localhost/notarealurl",
+            "loginItemsProvisioningProfileUrl": "http://localhost/notarealurl",
+            "nativeMessagingEntitlementsUrl": "http://localhost/notarealurl",
+            "nativeMessagingProvisioningProfileUrl": "http://localhost/notarealurl",
+            "entitlementsUrl": "http://localhost/notarealurl",
+            "provisioningProfileUrl": "http://localhost/notarealurl",
         }
     }
     config = {"work_dir": ""}
