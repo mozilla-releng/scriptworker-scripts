@@ -89,7 +89,7 @@ def _push_to_store(config, channel, msix_file_paths, access_token):
     headers = {"Authorization": f"Bearer {access_token}", "Content-type": "application/json", "User-Agent": "Python"}
     with requests.Session() as session:
         session.mount("https://", requests.adapters.HTTPAdapter(max_retries=MAX_RETRIES))
-        _remove_pending_submission(config, channel, session, headers)
+        _check_for_pending_submission(config, channel, session, headers)
         submission_request = _create_submission(config, channel, session, headers)
         submission_id = submission_request.get("id")
         _update_submission(config, channel, session, submission_request, headers, msix_file_paths)
@@ -97,8 +97,11 @@ def _push_to_store(config, channel, msix_file_paths, access_token):
         _wait_for_commit_completion(config, channel, session, submission_id, headers)
 
 
-def _remove_pending_submission(config, channel, session, headers):
-    # check for pending submission and delete it if anything is found
+def _check_for_pending_submission(config, channel, session, headers):
+    # Check for pending submission and abort if found. It is also possible
+    # to delete the pending submission and continue, but that risks removing
+    # submission data (like privacy policy, screenshots) that may have been
+    # recently updated in the pending submission.
     application_id = config["application_ids"][channel]
     url = _store_url(config, f"{application_id}")
     response = session.get(url, headers=headers, timeout=int(config["request_timeout_seconds"]))
@@ -106,11 +109,12 @@ def _remove_pending_submission(config, channel, session, headers):
     response.raise_for_status()
     response_json = response.json()
     if "pendingApplicationSubmission" in response_json:
-        submission_to_remove = response_json["pendingApplicationSubmission"]["id"]
-        url = _store_url(config, f"{application_id}/submissions/{submission_to_remove}")
-        session.delete(url, headers=headers, timeout=int(config["request_timeout_seconds"]))
-        _log_response(response)
-        response.raise_for_status()
+        log.error(
+            "There is a pending submission for this application on "
+            "the Microsoft Store. Wait for the pending submission to "
+            "complete, or delete the pending submission. Then retry this task."
+        )
+        raise TaskVerificationError("push to Store aborted: pending submission found")
 
 
 def _create_submission(config, channel, session, headers):
