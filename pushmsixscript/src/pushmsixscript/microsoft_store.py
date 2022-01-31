@@ -35,7 +35,7 @@ DEFAULT_LISTINGS = {
 DEFAULT_ALLOW_TARGET = {"Desktop": True, "Mobile": False, "Holographic": False, "Xbox": False}
 
 
-def push(config, msix_file_paths, channel):
+def push(config, msix_file_paths, channel, publish_mode=None):
     """Publishes a group of msix files onto a given channel.
 
     This function performs all the network actions to ensure `msix_file_paths` are published on
@@ -45,7 +45,9 @@ def push(config, msix_file_paths, channel):
     Args:
         config (config): the scriptworker configuration.
         msix_file_paths (list of str): The full paths to the msix files to upload.
-        channel (str): The Microsoft Store channel.
+        channel (str): The Microsoft Store channel name: "release", "beta", etc.
+        publish_mode (str): A Store "targetPublishMode" value like "Immediate" or
+            "Manual", or None to use the existing targetPublishMode.
     """
     if not task.is_allowed_to_push_to_microsoft_store(config, channel=channel):
         log.warning("Not allowed to push to Microsoft Store. Skipping push...")
@@ -54,7 +56,7 @@ def push(config, msix_file_paths, channel):
 
     access_token = _store_session(config)
     if access_token:
-        _push_to_store(config, channel, msix_file_paths, access_token)
+        _push_to_store(config, channel, msix_file_paths, publish_mode, access_token)
     else:
         raise TaskVerificationError("unable to push: missing access token")
 
@@ -80,50 +82,54 @@ def _store_session(config):
     headers = {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"}
     with requests.Session() as session:
         session.mount("https://", requests.adapters.HTTPAdapter(max_retries=MAX_RETRIES))
-        response = session.post(url, body, headers=headers, timeout=config["request_timeout_seconds"])
+        response = session.post(url, body, headers=headers, timeout=int(config["request_timeout_seconds"]))
         response.raise_for_status()
         return response.json().get("access_token")
 
 
-def _push_to_store(config, channel, msix_file_paths, access_token):
+def _push_to_store(config, channel, msix_file_paths, publish_mode, access_token):
     headers = {"Authorization": f"Bearer {access_token}", "Content-type": "application/json", "User-Agent": "Python"}
     with requests.Session() as session:
         session.mount("https://", requests.adapters.HTTPAdapter(max_retries=MAX_RETRIES))
-        _remove_pending_submission(config, channel, session, headers)
+        _check_for_pending_submission(config, channel, session, headers)
         submission_request = _create_submission(config, channel, session, headers)
         submission_id = submission_request.get("id")
-        _update_submission(config, channel, session, submission_request, headers, msix_file_paths)
+        _update_submission(config, channel, session, submission_request, headers, msix_file_paths, publish_mode)
         _commit_submission(config, channel, session, submission_id, headers)
         _wait_for_commit_completion(config, channel, session, submission_id, headers)
 
 
-def _remove_pending_submission(config, channel, session, headers):
-    # check for pending submission and delete it if anything is found
+def _check_for_pending_submission(config, channel, session, headers):
+    # Check for pending submission and abort if found. It is also possible
+    # to delete the pending submission and continue, but that risks removing
+    # submission data (like privacy policy, screenshots) that may have been
+    # recently updated in the pending submission.
     application_id = config["application_ids"][channel]
     url = _store_url(config, f"{application_id}")
-    response = session.get(url, headers=headers, timeout=config["request_timeout_seconds"])
+    response = session.get(url, headers=headers, timeout=int(config["request_timeout_seconds"]))
     _log_response(response)
     response.raise_for_status()
     response_json = response.json()
     if "pendingApplicationSubmission" in response_json:
-        submission_to_remove = response_json["pendingApplicationSubmission"]["id"]
-        url = _store_url(config, f"{application_id}/submissions/{submission_to_remove}")
-        session.delete(url, headers=headers, timeout=config["request_timeout_seconds"])
-        _log_response(response)
-        response.raise_for_status()
+        log.error(
+            "There is a pending submission for this application on "
+            "the Microsoft Store. Wait for the pending submission to "
+            "complete, or delete the pending submission. Then retry this task."
+        )
+        raise TaskVerificationError("push to Store aborted: pending submission found")
 
 
 def _create_submission(config, channel, session, headers):
     # create a new in-progress submission, which is a copy of the last published submission
     application_id = config["application_ids"][channel]
     url = _store_url(config, f"{application_id}/submissions")
-    response = session.post(url, headers=headers, timeout=config["request_timeout_seconds"])
+    response = session.post(url, headers=headers, timeout=int(config["request_timeout_seconds"]))
     _log_response(response)
     response.raise_for_status()
     return response.json()
 
 
-def _update_submission(config, channel, session, submission_request, headers, file_paths):
+def _update_submission(config, channel, session, submission_request, headers, file_paths, publish_mode):
     # update the in-progress submission, including uploading the new msix file
     application_id = config["application_ids"][channel]
     submission_id = submission_request.get("id")
@@ -141,6 +147,9 @@ def _update_submission(config, channel, session, submission_request, headers, fi
         submission_request["listings"] = DEFAULT_LISTINGS
     if not submission_request.get("allowTargetFutureDeviceFamilies"):
         submission_request["allowTargetFutureDeviceFamilies"] = DEFAULT_ALLOW_TARGET
+    if publish_mode:
+        submission_request["targetPublishMode"] = publish_mode
+        log.info(f"using targetPublishMode override: {publish_mode}")
     # The Store expects all-lower-case 'true' and 'false' in the submission request.
     submission_request = str(submission_request)
     submission_request = submission_request.replace("True", "true").replace("False", "false")
@@ -151,7 +160,7 @@ def _update_submission(config, channel, session, submission_request, headers, fi
     for file_path in file_paths:
         with open(file_path, "rb") as f:
             upload_headers = {"x-ms-blob-type": "BlockBlob"}
-            response = requests.put(upload_url, f, headers=upload_headers, timeout=config["request_timeout_seconds"])
+            response = requests.put(upload_url, f, headers=upload_headers, timeout=int(config["request_timeout_seconds"]))
             response.raise_for_status()
             _log_response(response)
             # no response body expected
@@ -161,7 +170,7 @@ def _commit_submission(config, channel, session, submission_id, headers):
     # finalize submission
     application_id = config["application_ids"][channel]
     url = _store_url(config, f"{application_id}/submissions/{submission_id}/commit")
-    response = session.post(url, headers=headers, timeout=config["request_timeout_seconds"])
+    response = session.post(url, headers=headers, timeout=int(config["request_timeout_seconds"]))
     _log_response(response)
     response.raise_for_status()
     return response.json()
@@ -170,7 +179,7 @@ def _commit_submission(config, channel, session, submission_id, headers):
 def _get_submission_status(config, channel, session, submission_id, headers):
     application_id = config["application_ids"][channel]
     url = _store_url(config, f"{application_id}/submissions/{submission_id}/status")
-    response = session.get(url, headers=headers, timeout=config["request_timeout_seconds"])
+    response = session.get(url, headers=headers, timeout=int(config["request_timeout_seconds"]))
     _log_response(response)
     response.raise_for_status()
     return response.json()

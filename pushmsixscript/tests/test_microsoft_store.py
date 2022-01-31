@@ -3,6 +3,7 @@ import tempfile
 import pytest
 import requests
 import requests_mock
+from scriptworker_client.exceptions import TaskVerificationError
 
 from pushmsixscript import microsoft_store
 
@@ -46,15 +47,15 @@ def test_store_session(status_code, raises):
 
 
 @pytest.mark.parametrize(
-    "status_code, pending, raises",
+    "status_code, pending, raises, exc",
     (
-        (200, True, False),
-        (200, False, False),
-        (404, False, True),
-        (503, False, True),
+        (200, True, True, TaskVerificationError),
+        (200, False, False, None),
+        (404, False, True, requests.exceptions.HTTPError),
+        (503, False, True, requests.exceptions.HTTPError),
     ),
 )
-def test_remove_pending_submission(status_code, pending, raises):
+def test_check_for_pending_submission(status_code, pending, raises, exc):
     headers = {}
     channel = "mock"
     application_id = CONFIG["application_ids"][channel]
@@ -71,10 +72,10 @@ def test_remove_pending_submission(status_code, pending, raises):
             m.delete(url, headers=headers)
 
             if raises:
-                with pytest.raises(requests.exceptions.HTTPError):
-                    microsoft_store._remove_pending_submission(CONFIG, channel, session, headers)
+                with pytest.raises(exc):
+                    microsoft_store._check_for_pending_submission(CONFIG, channel, session, headers)
             else:
-                microsoft_store._remove_pending_submission(CONFIG, channel, session, headers)
+                microsoft_store._check_for_pending_submission(CONFIG, channel, session, headers)
 
 
 @pytest.mark.parametrize(
@@ -103,16 +104,17 @@ def test_create_submission(status_code, raises):
 
 
 @pytest.mark.parametrize(
-    "status_code, upload_status_code, raises",
+    "status_code, upload_status_code, raises, publish_mode",
     (
-        (200, 200, False),
-        (200, 404, True),
-        (404, 200, True),
-        (404, 405, True),
-        (503, 504, True),
+        (200, 200, False, None),
+        (200, 200, False, "Immediate"),
+        (200, 404, True, None),
+        (404, 200, True, None),
+        (404, 405, True, None),
+        (503, 504, True, None),
     ),
 )
-def test_update_submission(status_code, upload_status_code, raises):
+def test_update_submission(status_code, upload_status_code, raises, publish_mode):
     headers = {}
     channel = "mock"
     application_id = CONFIG["application_ids"][channel]
@@ -129,9 +131,9 @@ def test_update_submission(status_code, upload_status_code, raises):
                 m.put(upload_url, headers=headers, json=mocked_response, status_code=upload_status_code)
                 if raises:
                     with pytest.raises(requests.exceptions.HTTPError):
-                        microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name])
+                        microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name], publish_mode)
                 else:
-                    microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name])
+                    microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name], publish_mode)
 
 
 @pytest.mark.parametrize(
@@ -206,6 +208,7 @@ def test_push_to_store(status_code, raises, mocked_response):
     application_id = CONFIG["application_ids"][channel]
     submission_id = 888
     upload_url = "https://some/url"
+    publish_mode = "Manual"
     create_mocked_response = {"id": 888, "fileUploadUrl": "https://some/url"}
     with tempfile.NamedTemporaryFile(mode="wb") as f:
         f.write(b"hello there")
@@ -227,6 +230,6 @@ def test_push_to_store(status_code, raises, mocked_response):
 
             if raises:
                 with pytest.raises(requests.exceptions.HTTPError):
-                    microsoft_store._push_to_store(CONFIG, channel, [f.name], access_token)
+                    microsoft_store._push_to_store(CONFIG, channel, [f.name], publish_mode, access_token)
             else:
-                microsoft_store._push_to_store(CONFIG, channel, [f.name], access_token)
+                microsoft_store._push_to_store(CONFIG, channel, [f.name], publish_mode, access_token)

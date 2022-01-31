@@ -19,9 +19,9 @@ async def test_async_main(monkeypatch):
     monkeypatch.setattr(artifacts, "get_msix_file_paths", lambda c, t: [msix_file_path])
     monkeypatch.setattr(task, "get_msix_channel", lambda config, channel: "release")
 
-    def assert_push(config_, file_, channel):
+    def assert_push(config_, files_, channel, publish_mode):
         assert config_ == config
-        assert file_ == [msix_file_path]
+        assert files_ == [msix_file_path]
         assert channel == "release"
         next(function_call_counter)
 
