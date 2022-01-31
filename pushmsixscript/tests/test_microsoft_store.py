@@ -104,16 +104,17 @@ def test_create_submission(status_code, raises):
 
 
 @pytest.mark.parametrize(
-    "status_code, upload_status_code, raises",
+    "status_code, upload_status_code, raises, publish_mode",
     (
-        (200, 200, False),
-        (200, 404, True),
-        (404, 200, True),
-        (404, 405, True),
-        (503, 504, True),
+        (200, 200, False, None),
+        (200, 200, False, "Immediate"),
+        (200, 404, True, None),
+        (404, 200, True, None),
+        (404, 405, True, None),
+        (503, 504, True, None),
     ),
 )
-def test_update_submission(status_code, upload_status_code, raises):
+def test_update_submission(status_code, upload_status_code, raises, publish_mode):
     headers = {}
     channel = "mock"
     application_id = CONFIG["application_ids"][channel]
@@ -130,9 +131,9 @@ def test_update_submission(status_code, upload_status_code, raises):
                 m.put(upload_url, headers=headers, json=mocked_response, status_code=upload_status_code)
                 if raises:
                     with pytest.raises(requests.exceptions.HTTPError):
-                        microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name])
+                        microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name], publish_mode)
                 else:
-                    microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name])
+                    microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name], publish_mode)
 
 
 @pytest.mark.parametrize(
@@ -207,6 +208,7 @@ def test_push_to_store(status_code, raises, mocked_response):
     application_id = CONFIG["application_ids"][channel]
     submission_id = 888
     upload_url = "https://some/url"
+    publish_mode = "Manual"
     create_mocked_response = {"id": 888, "fileUploadUrl": "https://some/url"}
     with tempfile.NamedTemporaryFile(mode="wb") as f:
         f.write(b"hello there")
@@ -228,6 +230,6 @@ def test_push_to_store(status_code, raises, mocked_response):
 
             if raises:
                 with pytest.raises(requests.exceptions.HTTPError):
-                    microsoft_store._push_to_store(CONFIG, channel, [f.name], access_token)
+                    microsoft_store._push_to_store(CONFIG, channel, [f.name], publish_mode, access_token)
             else:
-                microsoft_store._push_to_store(CONFIG, channel, [f.name], access_token)
+                microsoft_store._push_to_store(CONFIG, channel, [f.name], publish_mode, access_token)
