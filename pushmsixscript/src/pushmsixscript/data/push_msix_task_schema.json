@@ -50,28 +50,14 @@
                     "minItems": 1,
                     "uniqueItems": true
                 },
-                "target_store": {
-                  "type": "string"
-                },
-                "certificate_alias": {
-                  "type": "string"
-                },
-                "google_play_track": {
-                  "type": "string"
-                },
                 "channel": {
                   "type": "string"
                 },
-                "rollout_percentage": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 100
+                "publishMode": {
+                  "type": "string"
                 },
-                "commit": {
-                  "type": "boolean"
-                }
             },
-            "required": ["upstreamArtifacts"],
+            "required": ["upstreamArtifacts", "channel"],
             "additionalProperties": false
         }
     },

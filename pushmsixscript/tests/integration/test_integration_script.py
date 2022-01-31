@@ -13,7 +13,7 @@ from pushmsixscript.script import main
 
 
 @pytest.mark.parametrize(
-    "config, channel, raises, requests_call_count",
+    "config, channel, publish_mode, raises, requests_call_count",
     (
         (
             {
