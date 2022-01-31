@@ -30,7 +30,7 @@ from pushmsixscript.script import main
                 "client_secret": "mock-client-secret",
             },
             "release",
-            None,
+            "Immediate",
             False,
             0,
         ),
