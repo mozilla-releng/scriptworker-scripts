@@ -30,6 +30,7 @@ from pushmsixscript.script import main
                 "client_secret": "mock-client-secret",
             },
             "release",
+            None,
             False,
             0,
         ),
@@ -48,17 +49,19 @@ from pushmsixscript.script import main
                 "client_secret": "mock-client-secret",
             },
             "release",
+            "Manual",
             False,
             8,
         ),
     ),
 )
-def test_script_can_push_msix(monkeypatch, config, channel, raises, requests_call_count):
+def test_script_can_push_msix(monkeypatch, config, channel, publish_mode, raises, requests_call_count):
     task = {
         "dependencies": ["some_msix_build_taskId"],
         "scopes": [f"project:releng:microsoftstore:{channel}"],
         "payload": {
             "channel": channel,
+            "publishMode": publish_mode,
             "upstreamArtifacts": [
                 {"paths": ["public/build/target.x86.store.msix", "public/build/target.x64.store.msix"], "taskId": "some_msix_build_taskId", "taskType": "build"}
             ],

@@ -35,7 +35,7 @@ DEFAULT_LISTINGS = {
 DEFAULT_ALLOW_TARGET = {"Desktop": True, "Mobile": False, "Holographic": False, "Xbox": False}
 
 
-def push(config, msix_file_paths, channel):
+def push(config, msix_file_paths, channel, publish_mode=None):
     """Publishes a group of msix files onto a given channel.
 
     This function performs all the network actions to ensure `msix_file_paths` are published on
@@ -45,7 +45,9 @@ def push(config, msix_file_paths, channel):
     Args:
         config (config): the scriptworker configuration.
         msix_file_paths (list of str): The full paths to the msix files to upload.
-        channel (str): The Microsoft Store channel.
+        channel (str): The Microsoft Store channel name: "release", "beta", etc.
+        publish_mode (str): A Store "targetPublishMode" value like "Immediate" or
+            "Manual", or None to use the existing targetPublishMode.
     """
     if not task.is_allowed_to_push_to_microsoft_store(config, channel=channel):
         log.warning("Not allowed to push to Microsoft Store. Skipping push...")
@@ -54,7 +56,7 @@ def push(config, msix_file_paths, channel):
 
     access_token = _store_session(config)
     if access_token:
-        _push_to_store(config, channel, msix_file_paths, access_token)
+        _push_to_store(config, channel, msix_file_paths, publish_mode, access_token)
     else:
         raise TaskVerificationError("unable to push: missing access token")
 
@@ -85,14 +87,14 @@ def _store_session(config):
         return response.json().get("access_token")
 
 
-def _push_to_store(config, channel, msix_file_paths, access_token):
+def _push_to_store(config, channel, msix_file_paths, publish_mode, access_token):
     headers = {"Authorization": f"Bearer {access_token}", "Content-type": "application/json", "User-Agent": "Python"}
     with requests.Session() as session:
         session.mount("https://", requests.adapters.HTTPAdapter(max_retries=MAX_RETRIES))
         _check_for_pending_submission(config, channel, session, headers)
         submission_request = _create_submission(config, channel, session, headers)
         submission_id = submission_request.get("id")
-        _update_submission(config, channel, session, submission_request, headers, msix_file_paths)
+        _update_submission(config, channel, session, submission_request, headers, msix_file_paths, publish_mode)
         _commit_submission(config, channel, session, submission_id, headers)
         _wait_for_commit_completion(config, channel, session, submission_id, headers)
 
@@ -127,7 +129,7 @@ def _create_submission(config, channel, session, headers):
     return response.json()
 
 
-def _update_submission(config, channel, session, submission_request, headers, file_paths):
+def _update_submission(config, channel, session, submission_request, headers, file_paths, publish_mode):
     # update the in-progress submission, including uploading the new msix file
     application_id = config["application_ids"][channel]
     submission_id = submission_request.get("id")
@@ -145,6 +147,8 @@ def _update_submission(config, channel, session, submission_request, headers, fi
         submission_request["listings"] = DEFAULT_LISTINGS
     if not submission_request.get("allowTargetFutureDeviceFamilies"):
         submission_request["allowTargetFutureDeviceFamilies"] = DEFAULT_ALLOW_TARGET
+    if publish_mode:
+        submission_request["targetPublishMode"] = publish_mode
     # The Store expects all-lower-case 'true' and 'false' in the submission request.
     submission_request = str(submission_request)
     submission_request = submission_request.replace("True", "true").replace("False", "false")
