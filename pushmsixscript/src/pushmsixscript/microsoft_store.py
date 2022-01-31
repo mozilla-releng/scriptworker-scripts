@@ -149,6 +149,7 @@ def _update_submission(config, channel, session, submission_request, headers, fi
         submission_request["allowTargetFutureDeviceFamilies"] = DEFAULT_ALLOW_TARGET
     if publish_mode:
         submission_request["targetPublishMode"] = publish_mode
+        log.info(f"using targetPublishMode override: {publish_mode}")
     # The Store expects all-lower-case 'true' and 'false' in the submission request.
     submission_request = str(submission_request)
     submission_request = submission_request.replace("True", "true").replace("False", "false")
