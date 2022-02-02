@@ -70,18 +70,21 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisioning_pro
 
     log.info(f"Done signing app {app.app_name}")
 
-
-async def notarize_vpn_behavior(config, task):
+async def vpn_behavior(config, task, notarize=True):
     """Notarize vpn app.
 
     Workflow:
     . Sign all inner apps
     . Sign main app
-    . Notarize main app
+    . Create pkg
+    . Notarize and staple pkg (optional)
+    . Zip pkg
+    . Move zipped app to artifacts
 
     Args:
         config (dict): the running configuration
         task (dict): the running task
+        notarize (bool): if notarization is enabled
 
     Raises:
         IScriptError: on fatal error.
@@ -168,17 +171,19 @@ async def notarize_vpn_behavior(config, task):
     zip_path = os.path.join(config["work_dir"], "notarization.zip")
     await _create_notarization_zipfile(config["work_dir"], top_app.pkg_path, zip_path)
 
-    poll_uuids = await notarize_no_sudo(config["work_dir"], sign_config, zip_path)
-    await poll_all_notarization_status(sign_config, poll_uuids)
-
-    log.info("Done notarizing app")
+    # Notarization step
+    if notarize:
+        poll_uuids = await notarize_no_sudo(config["work_dir"], sign_config, zip_path)
+        await poll_all_notarization_status(sign_config, poll_uuids)
+        log.info("Done notarizing app")
 
     # TODO: Remove when we switch to .tar.gz payloads (2/2)
     # Fake source so we can create artifact destination path properly
     top_app.orig_path = top_app.orig_path.replace(".zip", ".tar.gz")
 
-    # Staple PKG
-    await staple_notarization([top_app], path_attr="pkg_path")
+    # Staple step
+    if notarize:
+        await staple_notarization([top_app], path_attr="pkg_path")
 
     # Move PKG to artifact directory
     await copy_pkgs_to_artifact_dir(config, [top_app])
