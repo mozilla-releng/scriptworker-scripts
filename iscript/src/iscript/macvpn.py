@@ -70,6 +70,7 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisioning_pro
 
     log.info(f"Done signing app {app.app_name}")
 
+
 async def vpn_behavior(config, task, notarize=True):
     """Notarize vpn app.
 
