@@ -14,13 +14,62 @@ from iscript.util import get_sign_config
 log = logging.getLogger(__name__)
 
 
+def check_dep_behavior(task, behavior, supported_behaviors):
+    """Check behavior for dep signing.
+
+    Args:
+        config (dict): the running config
+        task (dict): the running task
+
+    Raises:
+        IScriptError if behavior is unsupported
+
+    Returns:
+        str: the behavior
+    """
+    if behavior == "mac_notarize" and "mac_sign_and_pkg" in supported_behaviors:
+        behavior = "mac_sign_and_pkg"
+    if behavior == "mac_notarize_vpn" and "mac_sign_and_pkg_vpn" in supported_behaviors:
+        behavior = "mac_sign_and_pkg_vpn"
+
+    if behavior not in supported_behaviors:
+        raise IScriptError("Unsupported behavior {} given scopes {}!".format(behavior, task["scopes"]))
+    return behavior
+
+
+def get_behavior_function(behavior):
+    """Map a behavior to a function.
+
+    Args:
+        behavior (str): signing behavior
+
+    Returns:
+        tuple: (func, {args})
+    """
+    functions = {
+        "mac_geckodriver": (single_file_behavior, {}),
+        "mac_single_file": (single_file_behavior, {}),
+        "mac_notarize": (notarize_behavior, {}),
+        "mac_notarize_vpn": (vpn_behavior, {"notarize": True}),
+        "mac_sign_and_pkg_vpn": (vpn_behavior, {"notarize": False}),
+        "mac_notarize_part_1": (notarize_1_behavior, {}),
+        "mac_notarize_part_3": (notarize_3_behavior, {}),
+        "mac_sign": (sign_behavior, {}),
+        # For staging releases; or should we mac_notarize but skip notarization
+        # for dep?
+        "mac_sign_and_pkg": (sign_and_pkg_behavior, {}),
+    }
+    if behavior not in functions:
+        raise IScriptError("iscript behavior {} not implemented!".format(behavior))
+    return functions[behavior]
+
+
 async def async_main(config, task):
     """Sign all the things.
 
     Args:
         config (dict): the running config.
         task (dict): the running task.
-
     """
     await run_command(["hostname"])
     base_key = "mac_config"  # We may support ios_config someday
@@ -28,36 +77,10 @@ async def async_main(config, task):
     behavior = task["payload"].get("behavior", "mac_sign")
 
     # Check for dep behaviors (skips notarization, only signs with dep keys)
-    if behavior not in sign_config["supported_behaviors"]:
-        if behavior == "mac_notarize" and "mac_sign_and_pkg" in sign_config["supported_behaviors"]:
-            behavior = "mac_sign_and_pkg"
-        elif behavior == "mac_notarize_vpn" and "mac_sign_and_pkg_vpn" in sign_config["supported_behaviors"]:
-            behavior = "mac_sign_and_pkg_vpn"
-
-    # Exit early if unsupported behavior
-    if behavior not in sign_config["supported_behaviors"]:
-        raise IScriptError("Unsupported behavior {} given scopes {}!".format(behavior, task["scopes"]))
-
-    if behavior in ("mac_geckodriver", "mac_single_file"):
-        await single_file_behavior(config, task)
-    elif behavior == "mac_notarize":
-        await notarize_behavior(config, task)
-    elif behavior == "mac_notarize_vpn":
-        await vpn_behavior(config, task, notarize=True)
-    elif behavior == "mac_notarize_part_1":
-        await notarize_1_behavior(config, task)
-    elif behavior == "mac_notarize_part_3":
-        await notarize_3_behavior(config, task)
-    elif behavior == "mac_sign":
-        await sign_behavior(config, task)
-    elif behavior == "mac_sign_and_pkg":
-        # For staging releases; or should we mac_notarize but skip notarization
-        # for dep?
-        await sign_and_pkg_behavior(config, task)
-    elif behavior == "mac_sign_and_pkg_vpn":
-        await vpn_behavior(config, task, notarize=False)
-    else:
-        raise IScriptError("Unknown iscript behavior {}!".format(behavior))
+    # Raises if behavior not supported
+    behavior = check_dep_behavior(task, behavior, sign_config["supported_behaviors"])
+    func, args = get_behavior_function(behavior)
+    await func(config, task, **args)
 
 
 def get_default_config(base_dir=None):
