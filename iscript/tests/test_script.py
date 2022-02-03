@@ -47,6 +47,7 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
     sign_config = {"supported_behaviors": supported_behaviors}
 
     original_func = script.get_behavior_function
+
     def test_get_behavior_function(behav):
         async def mocked_behavior(*args, **kwargs):
             calls.setdefault(behav, []).append([args, kwargs])
