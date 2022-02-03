@@ -39,7 +39,7 @@ async def test_sign_app(mocker):
 
 
 @pytest.mark.asyncio
-async def test_notarize_vpn_behavior(mocker):
+async def test_vpn_behavior(mocker):
     def get_app_paths(config, task):
         return [App(parent_dir=".")]
 
@@ -75,4 +75,5 @@ async def test_notarize_vpn_behavior(mocker):
         }
     }
     config = {"work_dir": ""}
-    await macvpn.notarize_vpn_behavior(config, task)
+    await macvpn.vpn_behavior(config, task, notarize=True)
+    await macvpn.vpn_behavior(config, task, notarize=False)
