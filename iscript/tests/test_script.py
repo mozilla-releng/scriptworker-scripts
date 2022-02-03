@@ -16,9 +16,10 @@ from iscript.exceptions import IScriptError
     (
         ("mac_single_file", ["mac_sign", "mac_single_file"], "mac_single_file", False),
         ("mac_notarize", ["mac_sign", "mac_notarize"], "mac_notarize", False),
-        ("mac_notarize_vpn", ["mac_notarize_vpn"], "mac_notarize_vpn", False),
+        ("mac_notarize", ["mac_sign", "mac_notarize", "mac_sign_and_pkg"], "mac_notarize", False),
+        ("mac_notarize_vpn", ["mac_notarize_vpn", "mac_sign_and_pkg_vpn"], "mac_notarize_vpn", False),
+        ("mac_notarize_vpn", ["mac_sign_and_pkg_vpn"], "mac_sign_and_pkg_vpn", False),
         ("mac_notarize", ["mac_sign", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),
-        ("mac_sign", ["mac_sign"], "mac_sign", False),
         ("mac_sign", ["mac_sign"], "mac_sign", False),
         ("mac_sign_and_pkg", ["mac_single_file", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),
         (None, ["mac_sign"], "mac_sign", False),
@@ -38,36 +39,23 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
     if behavior:
         task["payload"]["behavior"] = behavior
     expected = [[(config, task), {}]]
+
+    # Accounts for notarizing True/False
+    if behavior == "mac_notarize_vpn":
+        expected = [[(config, task), {"notarize": "mac_notarize_vpn" in supported_behaviors}]]
+
     sign_config = {"supported_behaviors": supported_behaviors}
 
-    async def test_notarize(*args, **kwargs):
-        calls.setdefault("mac_notarize", []).append([args, kwargs])
+    original_func = script.get_behavior_function
 
-    async def test_notarize_vpn(*args, **kwargs):
-        calls.setdefault("mac_notarize_vpn", []).append([args, kwargs])
+    def test_get_behavior_function(behav):
+        async def mocked_behavior(*args, **kwargs):
+            calls.setdefault(behav, []).append([args, kwargs])
 
-    async def test_notarize_1(*args, **kwargs):
-        calls.setdefault("mac_notarize_part_1", []).append([args, kwargs])
+        _, fargs = original_func(behav)
+        return (mocked_behavior, fargs)
 
-    async def test_notarize_3(*args, **kwargs):
-        calls.setdefault("mac_notarize_part_3", []).append([args, kwargs])
-
-    async def test_single_file(*args, **kwargs):
-        calls.setdefault("mac_single_file", []).append([args, kwargs])
-
-    async def test_sign(*args, **kwargs):
-        calls.setdefault("mac_sign", []).append([args, kwargs])
-
-    async def test_sign_and_pkg(*args, **kwargs):
-        calls.setdefault("mac_sign_and_pkg", []).append([args, kwargs])
-
-    mocker.patch.object(script, "notarize_behavior", new=test_notarize)
-    mocker.patch.object(script, "notarize_vpn_behavior", new=test_notarize_vpn)
-    mocker.patch.object(script, "notarize_1_behavior", new=test_notarize_1)
-    mocker.patch.object(script, "notarize_3_behavior", new=test_notarize_3)
-    mocker.patch.object(script, "single_file_behavior", new=test_single_file)
-    mocker.patch.object(script, "sign_behavior", new=test_sign)
-    mocker.patch.object(script, "sign_and_pkg_behavior", new=test_sign_and_pkg)
+    mocker.patch.object(script, "get_behavior_function", new=test_get_behavior_function)
     mocker.patch.object(script, "get_sign_config", return_value=sign_config)
     if raises:
         with pytest.raises(IScriptError):

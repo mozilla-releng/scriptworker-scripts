@@ -8,10 +8,68 @@ from scriptworker_client.utils import run_command
 
 from iscript.exceptions import IScriptError
 from iscript.mac import notarize_1_behavior, notarize_3_behavior, notarize_behavior, sign_and_pkg_behavior, sign_behavior, single_file_behavior
-from iscript.macvpn import notarize_vpn_behavior
+from iscript.macvpn import vpn_behavior
 from iscript.util import get_sign_config
 
 log = logging.getLogger(__name__)
+
+
+def check_dep_behavior(task, behavior, supported_behaviors):
+    """Check behavior for dep signing.
+
+    Args:
+        config (dict): the running config
+        task (dict): the running task
+
+    Raises:
+        IScriptError if behavior is unsupported
+
+    Returns:
+        str: the behavior
+
+    """
+    # If supported, return behavior
+    if behavior in supported_behaviors:
+        return behavior
+
+    # Check for dep signing
+    if behavior == "mac_notarize" and "mac_sign_and_pkg" in supported_behaviors:
+        behavior = "mac_sign_and_pkg"
+    if behavior == "mac_notarize_vpn" and "mac_sign_and_pkg_vpn" in supported_behaviors:
+        behavior = "mac_sign_and_pkg_vpn"
+
+    # Raise if unsupported
+    if behavior not in supported_behaviors:
+        raise IScriptError("Unsupported behavior {} given scopes {}!".format(behavior, task["scopes"]))
+    return behavior
+
+
+def get_behavior_function(behavior):
+    """Map a behavior to a function.
+
+    Args:
+        behavior (str): signing behavior
+
+    Returns:
+        tuple: (func, {args})
+
+    """
+    functions = {
+        "mac_geckodriver": (single_file_behavior, {}),
+        "mac_single_file": (single_file_behavior, {}),
+        "mac_notarize": (notarize_behavior, {}),
+        "mac_notarize_vpn": (vpn_behavior, {"notarize": True}),
+        "mac_sign_and_pkg_vpn": (vpn_behavior, {"notarize": False}),
+        "mac_notarize_part_1": (notarize_1_behavior, {}),
+        "mac_notarize_part_3": (notarize_3_behavior, {}),
+        "mac_sign": (sign_behavior, {}),
+        # For staging releases; or should we mac_notarize but skip notarization
+        # for dep?
+        "mac_sign_and_pkg": (sign_and_pkg_behavior, {}),
+    }
+    if behavior not in functions:
+        raise IScriptError("iscript behavior {} not implemented!".format(behavior))
+    return functions[behavior]
 
 
 async def async_main(config, task):
@@ -26,34 +84,12 @@ async def async_main(config, task):
     base_key = "mac_config"  # We may support ios_config someday
     sign_config = get_sign_config(config, task, base_key=base_key)
     behavior = task["payload"].get("behavior", "mac_sign")
-    if behavior == "mac_notarize" and "mac_notarize" not in sign_config["supported_behaviors"] and "mac_sign_and_pkg" in sign_config["supported_behaviors"]:
-        behavior = "mac_sign_and_pkg"
-    if behavior not in sign_config["supported_behaviors"]:
-        raise IScriptError("Unsupported behavior {} given scopes {}!".format(behavior, task["scopes"]))
-    if behavior in ("mac_geckodriver", "mac_single_file"):
-        await single_file_behavior(config, task)
-        return
-    elif behavior == "mac_notarize":
-        await notarize_behavior(config, task)
-        return
-    elif behavior == "mac_notarize_vpn":
-        await notarize_vpn_behavior(config, task)
-        return
-    elif behavior == "mac_notarize_part_1":
-        await notarize_1_behavior(config, task)
-        return
-    elif behavior == "mac_notarize_part_3":
-        await notarize_3_behavior(config, task)
-        return
-    elif behavior == "mac_sign":
-        await sign_behavior(config, task)
-        return
-    elif behavior == "mac_sign_and_pkg":
-        # For staging releases; or should we mac_notarize but skip notarization
-        # for dep?
-        await sign_and_pkg_behavior(config, task)
-        return
-    raise IScriptError("Unknown iscript behavior {}!".format(behavior))
+
+    # Check for dep behaviors (skips notarization, only signs with dep keys)
+    # Raises if behavior not supported
+    behavior = check_dep_behavior(task, behavior, sign_config["supported_behaviors"])
+    func, args = get_behavior_function(behavior)
+    await func(config, task, **args)
 
 
 def get_default_config(base_dir=None):

@@ -136,6 +136,20 @@ async def test_sign_single_files(exists, filename, mocker, tmpdir):
             await mac.sign_single_files(config, sign_config, [app])
 
 
+# _get_sign_command{{{1
+@pytest.mark.parametrize(
+    "sign_config,entitlements_path",
+    (
+        ({"designated_requirements": "%s", "hardened_runtime_only_files": "filename"}, None),
+        ({"designated_requirements": "%s", "sign_with_entitlements": True}, "entitlements/path"),
+        ({"designated_requirements": "%s"}, None),
+    ),
+)
+def test_get_sign_command(sign_config, entitlements_path):
+    command = mac._get_sign_command("ident", "keychain_name", sign_config, "filename", entitlements_path=entitlements_path)
+    assert len(command) > 0
+
+
 # sign_app {{{1
 @pytest.mark.parametrize("sign_with_entitlements,has_clearkey,skip_dirs", ((True, True, tuple()), (False, False, ("foo.app",))))
 @pytest.mark.asyncio
@@ -169,7 +183,8 @@ async def test_sign_app(mocker, tmpdir, sign_with_entitlements, has_clearkey, sk
         touch(os.path.join(dir_, file_))
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "get_bundle_executable", return_value="main")
-    await mac.sign_app(sign_config, app_path, entitlements_path)
+    mocker.patch.object(mac, "copy2", new=noop_sync)
+    await mac.sign_app(sign_config, app_path, entitlements_path, "test")
 
 
 # verify_app_signature {{{1
