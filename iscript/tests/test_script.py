@@ -16,7 +16,8 @@ from iscript.exceptions import IScriptError
     (
         ("mac_single_file", ["mac_sign", "mac_single_file"], "mac_single_file", False),
         ("mac_notarize", ["mac_sign", "mac_notarize"], "mac_notarize", False),
-        ("mac_notarize_vpn", ["mac_notarize_vpn"], "mac_notarize_vpn", False),
+        ("mac_notarize", ["mac_sign", "mac_notarize", "mac_sign_and_pkg"], "mac_notarize", False),
+        ("mac_notarize_vpn", ["mac_notarize_vpn", "mac_sign_and_pkg_vpn"], "mac_notarize_vpn", False),
         ("mac_notarize_vpn", ["mac_sign_and_pkg_vpn"], "mac_sign_and_pkg_vpn", False),
         ("mac_notarize", ["mac_sign", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),
         ("mac_sign", ["mac_sign"], "mac_sign", False),
@@ -46,7 +47,6 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
     sign_config = {"supported_behaviors": supported_behaviors}
 
     original_func = script.get_behavior_function
-
     def test_get_behavior_function(behav):
         async def mocked_behavior(*args, **kwargs):
             calls.setdefault(behav, []).append([args, kwargs])

@@ -26,12 +26,19 @@ def check_dep_behavior(task, behavior, supported_behaviors):
 
     Returns:
         str: the behavior
+
     """
+    # If supported, return behavior
+    if behavior in supported_behaviors:
+        return behavior
+
+    # Check for dep signing
     if behavior == "mac_notarize" and "mac_sign_and_pkg" in supported_behaviors:
         behavior = "mac_sign_and_pkg"
     if behavior == "mac_notarize_vpn" and "mac_sign_and_pkg_vpn" in supported_behaviors:
         behavior = "mac_sign_and_pkg_vpn"
 
+    # Raise if unsupported
     if behavior not in supported_behaviors:
         raise IScriptError("Unsupported behavior {} given scopes {}!".format(behavior, task["scopes"]))
     return behavior
@@ -45,6 +52,7 @@ def get_behavior_function(behavior):
 
     Returns:
         tuple: (func, {args})
+
     """
     functions = {
         "mac_geckodriver": (single_file_behavior, {}),
@@ -70,6 +78,7 @@ async def async_main(config, task):
     Args:
         config (dict): the running config.
         task (dict): the running task.
+
     """
     await run_command(["hostname"])
     base_key = "mac_config"  # We may support ios_config someday
