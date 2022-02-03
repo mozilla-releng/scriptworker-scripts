@@ -137,14 +137,18 @@ async def test_sign_single_files(exists, filename, mocker, tmpdir):
 
 
 # _get_sign_command{{{1
-@pytest.mark.parametrize("sign_config,entitlements_path", (
-    ({"designated_requirements": "%s", "hardened_runtime_only_files": "filename"}, None),
-    ({"designated_requirements": "%s", "sign_with_entitlements": True}, "entitlements/path"),
-    ({"designated_requirements": "%s"}, None),
-))
+@pytest.mark.parametrize(
+    "sign_config,entitlements_path",
+    (
+        ({"designated_requirements": "%s", "hardened_runtime_only_files": "filename"}, None),
+        ({"designated_requirements": "%s", "sign_with_entitlements": True}, "entitlements/path"),
+        ({"designated_requirements": "%s"}, None),
+    ),
+)
 def test_get_sign_command(sign_config, entitlements_path):
     command = mac._get_sign_command("ident", "keychain_name", sign_config, "filename", entitlements_path=entitlements_path)
     assert len(command) > 0
+
 
 # sign_app {{{1
 @pytest.mark.parametrize("sign_with_entitlements,has_clearkey,skip_dirs", ((True, True, tuple()), (False, False, ("foo.app",))))
