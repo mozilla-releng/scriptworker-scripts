@@ -66,3 +66,9 @@ files. The general rule of thumb to make this is usually:
     2) cloudops-infra PR merged
     3) scriptworker-scripts deployment to pick-up both changes from above
 
+
+### Why do all other scriptworkers have level 1 and level 3, but signing has level t and level 3?
+
+I believe the intent here was to not cross the streams: if a pool was level `1`, then rolling out changes and possibly breaking things should only affect Try, pull requests, or other non-production trees and tasks. Test pools, which were level `t`, crossed streams: they ran against level 1, 2, and 3 trees, since they don't create artifacts that we publish to users, and because we have limited hardware test pools that we can't split up granularly and still maintain adequately sized pools. Therefore, since dep signing, which would usually be level 1, runs against level 1 and 3 trees (e.g. autoland is level 3, but uses dep signing; central is level 3, but only signs shippable builds with prod signing, and signs all other builds with dep signing), and since bustage of the dep signing pools would result in level 3 trees closing, we gave it a level of `t` instead of `1`.
+
+We have since started scheduling some tasks on level 3 trees against level 1 and 2 pools, rendering the above somewhat moot.
