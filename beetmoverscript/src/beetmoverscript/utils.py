@@ -49,12 +49,12 @@ def get_size(filepath):
 
 def get_addon_name(filepath):
     tmpdir = tempfile.mkdtemp()
-    with zipfile.ZipFile(filepath, 'r') as zf:
+    with zipfile.ZipFile(filepath, "r") as zf:
         zf.extractall(tmpdir)
-    manifest_path = os.path.join(tmpdir, 'manifest.json')
+    manifest_path = os.path.join(tmpdir, "manifest.json")
     with open(manifest_path) as f:
         manifest = json.loads(f.read())
-    name = manifest.get('applications', {}).get('gecko', {}).get('id')
+    name = manifest.get("applications", {}).get("gecko", {}).get("id")
     return name
 
 

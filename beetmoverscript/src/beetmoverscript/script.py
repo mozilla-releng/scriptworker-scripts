@@ -45,6 +45,7 @@ from beetmoverscript.utils import (
     exists_or_endswith,
     extract_file_config_from_artifact_map,
     generate_beetmover_manifest,
+    get_addon_name,
     get_bucket_name,
     get_bucket_url_prefix,
     get_candidates_prefix,
@@ -64,7 +65,6 @@ from beetmoverscript.utils import (
     is_release_action,
     matches_exclude,
     write_json,
-    get_addon_name,
 )
 
 log = logging.getLogger(__name__)
@@ -503,32 +503,28 @@ def get_destination_for_partner_repack_path(context, manifest, full_path, locale
 def generate_system_addons_balrog_manifest(context):
     for entry in context.task["payload"]["artifactMap"]:
         locale = entry["locale"]
-        for path, path_info in entry['paths'].items():
+        for path, path_info in entry["paths"].items():
             destinations = path_info["destinations"]
             artifacts_to_beetmove = context.artifacts_to_beetmove[locale]
             filepath = artifacts_to_beetmove[path]
             addon_name = get_addon_name(filepath)
-            addon_version = "{}-{}".format(
-                context.release_props["appVersion"],
-                context.release_props["buildid"]
-            )
-            addon_url = "{prefix}/{s3_key}".format(
-                prefix=get_bucket_url_prefix(context),
-                s3_key=destinations[0]
-            )
-            checksums_path = path_info['checksums_path']
+            addon_version = "{}-{}".format(context.release_props["appVersion"], context.release_props["buildid"])
+            addon_url = "{prefix}/{s3_key}".format(prefix=get_bucket_url_prefix(context), s3_key=destinations[0])
+            checksums_path = path_info["checksums_path"]
             checksums_info = context.checksums[checksums_path]
             addon_hash_type = context.release_props["hashType"]
             addon_hash = checksums_info[addon_hash_type]
             addon_size = checksums_info["size"]
-            context.balrog_manifest.append({
-                "name": addon_name,
-                "version": addon_version,
-                "url": addon_url,
-                "hashType": addon_hash_type,
-                "hash": addon_hash,
-                "size": addon_size,
-            })
+            context.balrog_manifest.append(
+                {
+                    "name": addon_name,
+                    "version": addon_version,
+                    "url": addon_url,
+                    "hashType": addon_hash_type,
+                    "hash": addon_hash,
+                    "size": addon_size,
+                }
+            )
 
 
 # generate_balrog_info {{{1
