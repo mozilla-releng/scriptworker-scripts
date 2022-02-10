@@ -4,6 +4,8 @@ import logging
 import os
 import pprint
 import re
+import tempfile
+import zipfile
 
 import arrow
 import jinja2
@@ -43,6 +45,17 @@ def get_hash(filepath, hash_type="sha512"):
 def get_size(filepath):
     """Function to return the size of a file based on filename"""
     return os.path.getsize(filepath)
+
+
+def get_addon_name(filepath):
+    tmpdir = tempfile.mkdtemp()
+    with zipfile.ZipFile(filepath, 'r') as zf:
+        zf.extractall(tmpdir)
+    manifest_path = os.path.join(tmpdir, 'manifest.json')
+    with open(manifest_path) as f:
+        manifest = json.loads(f.read())
+    name = manifest.get('applications', {}).get('gecko', {}).get('id')
+    return name
 
 
 def load_json(path):
