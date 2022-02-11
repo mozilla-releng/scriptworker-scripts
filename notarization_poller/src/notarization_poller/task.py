@@ -88,8 +88,12 @@ class Task:
             else:
                 # we don't know which task is the right one, avoid giving bad advice
                 part1 = ""
-            self.task_log("Could not get notarization results back within %ss, you may need to force-rerun the notarization-part-1 task%s",
-                          timeout, part1, level=logging.CRITICAL)
+            self.task_log(
+                "Could not get notarization results back within %ss, you may need to force-rerun the notarization-part-1 task%s",
+                timeout,
+                part1,
+                level=logging.CRITICAL,
+            )
             self.task_log(traceback.format_exc(), level=logging.CRITICAL)
         log.info("Stopping task %s %s with status %s", self.task_id, self.run_id, self.status)
         self.reclaim_fut.cancel()
