@@ -57,6 +57,12 @@ def update_logging_config(config, log_name="", file_name="worker.log"):
         # If we rotate the log file via logrotate.d, let's watch the file
         # so we can automatically close/reopen on move.
         handler = logging.handlers.WatchedFileHandler(path)
+    elif config["log_max_bytes"] and config["log_max_backups"]:
+        handler = logging.handlers.RotatingFileHandler(  # type: ignore
+            filename=path,
+            maxBytes=config["log_max_bytes"],
+            backupCount=config["log_max_backups"],
+        )
     else:
         # Avoid using WatchedFileHandler during notarization poller unittests
         handler = logging.FileHandler(path)
