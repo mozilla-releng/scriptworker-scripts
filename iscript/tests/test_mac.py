@@ -12,6 +12,7 @@ import arrow
 import mock
 import pexpect
 import pytest
+from scriptworker_client.aio import retry_async
 from scriptworker_client.utils import makedirs
 
 import iscript.mac as mac
@@ -805,12 +806,17 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises, requirements_path):
                 assert "--product" not in cmd
                 assert requirements_path not in cmd
 
+    async def fake_retry_async(*args, **kwargs):
+        kwargs["sleeptime_kwargs"] = {"max_delay": 0.5}
+        return retry_async(*args, **kwargs)
+
     sign_config = {"pkg_cert_id": pkg_cert_id, "signing_keychain": "signing.keychain"}
     config = {"concurrency_limit": 2}
     all_paths = []
     for i in range(3):
         all_paths.append(mac.App(app_path="foo/{}/{}.app".format(i, i), parent_dir="foo/{}".format(i)))
     mocker.patch.object(mac, "run_command", new=fake_run_command)
+    mocker.patch.object(mac, "retry_async", new=fake_retry_async)
     mocker.patch.object(mac, "copy2", new=noop_sync)
     if raises:
         with pytest.raises(IScriptError):
