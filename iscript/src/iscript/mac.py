@@ -992,20 +992,22 @@ async def create_pkg_files(config, sign_config, all_paths, requirements_plist_pa
             asyncio.ensure_future(
                 semaphore_wrapper(
                     semaphore,
-                    run_command(
-                        [
-                            "pkgbuild",
-                            "--install-location",
-                            "/Applications",
-                        ]
-                        + cmd_opts
-                        + [
-                            "--component",
-                            app.app_path,
-                            app.tmp_pkg_path1,
-                        ],
-                        cwd=app.parent_dir,
-                        exception=IScriptError,
+                    retry_async(
+                        func=run_command,
+                        kwargs={
+                            "cmd": [
+                                "pkgbuild",
+                                "--install-location",
+                                "/Applications",
+                                *cmd_opts,
+                                "--component",
+                                app.app_path,
+                                app.tmp_pkg_path1,
+                            ],
+                            "cwd": app.parent_dir,
+                            "exception": IScriptError,
+                        },
+                        retry_exceptions=(IScriptError,),
                     ),
                 )
             )
