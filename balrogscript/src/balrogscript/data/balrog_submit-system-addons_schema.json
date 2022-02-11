@@ -1,0 +1,64 @@
+{
+    "title": "submit-system-addons release to balrog",
+    "type": "object",
+    "properties": {
+        "dependencies": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "payload": {
+            "type": "object",
+            "properties": {
+                "upstreamArtifacts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "taskType": {
+                                "type": "string"
+                            },
+                            "taskId": {
+                                "type": "string"
+                            },
+                            "paths": {
+                                "type": "array",
+                                "minItems": 1,
+                                "uniqueItems": true,
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "required": [
+                            "taskId",
+                            "taskType",
+                            "paths"
+                        ]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                }
+            },
+            "required": [
+                "upstreamArtifacts"
+            ]
+        },
+        "scopes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [
+        "payload",
+        "dependencies",
+        "scopes"
+    ]
+}

@@ -538,3 +538,51 @@ class ReleaseStateUpdater(object):
     def run(self, productName, version, build_number):
         name = get_release_blob_name(productName, version, build_number)
         ReleaseState(name, api_root=self.api_root, auth0_secrets=self.auth0_secrets).set_readonly()
+
+
+class SystemAddonsReleaseCreator(object):
+    def __init__(self, api_root, auth0_secrets):
+        self.auth0_secrets = auth0_secrets
+        self.api_root = api_root
+        self.url = "{}/{}".format(self.api_root, "releases")
+
+    def run(self, manifest):
+        release_blob = {
+            "addons": {},
+            "hashFunction": manifest["hashType"],
+            "name": manifest["releaseName"],
+            "product": "SystemAddons",
+            "schema_version": 5000,
+        }
+        for addon in manifest["addons"]:
+            platforms = {
+                "Darwin_x86-gcc3": {"alias": "default"},
+                "Darwin_x86-gcc3-u-i386-x86_64": {"alias": "default"},
+                "Darwin_x86_64-gcc3": {"alias": "default"},
+                "Darwin_x86_64-gcc3-u-i386-x86_64": {"alias": "default"},
+                "Linux_x86-gcc3": {"alias": "default"},
+                "Linux_x86_64-gcc3": {"alias": "default"},
+                "WINNT_x86-msvc": {"alias": "default"},
+                "WINNT_x86-msvc-x64": {"alias": "default"},
+                "WINNT_x86-msvc-x86": {"alias": "default"},
+                "WINNT_x86_64-msvc": {"alias": "default"},
+                "WINNT_x86_64-msvc-x64": {"alias": "default"},
+                "default": {
+                    "fileUrl": addon["url"],
+                    "filesize": addon["size"],
+                    "hashValue": addon["hash"],
+                },
+            }
+            release_blob["addons"][addon["name"]] = {
+                "platforms": platforms,
+                "version": addon["version"],
+            }
+        request_data = {
+            "blob": json.dumps(release_blob),
+            "name": manifest["releaseName"],
+            "product": "SystemAddons",
+        }
+        balrog_session = get_balrog_session(self.auth0_secrets)
+        balrog_request(
+            balrog_session, "POST", self.url, json=request_data, timeout=5, verify=True
+        )
