@@ -70,6 +70,23 @@ def test_watched_log_file(config):
     close_handlers(log_name=config["log_dir"])
 
 
+def test_rotating_log_file(config):
+    # 500 should be enough to ~fill 2 files
+    MAX_SIZE = 500  # bytes
+    config["watch_log_file"] = False
+    config["log_max_bytes"] = MAX_SIZE
+    config["log_max_backups"] = 1
+    config["log_fmt"] = "%(levelname)s - %(message)s"
+    npconfig.update_logging_config(config, log_name=config["log_dir"])
+    path = os.path.join(config["log_dir"], "worker.log")
+    log = logging.getLogger(config["log_dir"])
+    for x in range(30):
+        log.info(f"{x}" * x)
+    assert os.path.getsize(path) < MAX_SIZE
+    assert os.path.getsize(path + ".1") < MAX_SIZE
+    close_handlers(log_name=config["log_dir"])
+
+
 # get_config_from_cmdln {{{1
 def test_get_config_from_cmdln():
     path = os.path.join(os.path.dirname(__file__), "data", "good.json")

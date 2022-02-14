@@ -33,6 +33,8 @@ DEFAULT_CONFIG = immutabledict(
         "worker_id": "...",
         "watch_log_file": False,
         "verbose": False,
+        "log_max_bytes": 0,
+        "log_max_backups": 10,
         "xcrun_cmd": ("xcrun",),
         "notarization_username": "...",
         "notarization_password": "...",
