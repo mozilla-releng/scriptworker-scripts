@@ -9,7 +9,15 @@ import scriptworker_client.client
 from immutabledict import immutabledict
 from redo import retry  # noqa: E402
 
-from .submitter.cli import NightlySubmitterV4, ReleaseCreatorV9, ReleasePusher, ReleaseScheduler, ReleaseStateUpdater, ReleaseSubmitterV9, SystemAddonsReleaseCreator
+from .submitter.cli import (
+    NightlySubmitterV4,
+    ReleaseCreatorV9,
+    ReleasePusher,
+    ReleaseScheduler,
+    ReleaseStateUpdater,
+    ReleaseSubmitterV9,
+    SystemAddonsReleaseCreator,
+)
 from .task import get_manifest, get_task_behavior, get_task_server, get_upstream_artifacts, validate_task_schema
 
 log = logging.getLogger(__name__)
@@ -241,9 +249,7 @@ def get_default_config():
             "submit-toplevel": os.path.join(data_dir, "balrog_submit-toplevel_schema.json"),
             "schedule": os.path.join(data_dir, "balrog_schedule_schema.json"),
             "set-readonly": os.path.join(data_dir, "balrog_set-readonly_schema.json"),
-            "submit-system-addons": os.path.join(
-                data_dir, "balrog_submit-system-addons_schema.json"
-            ),
+            "submit-system-addons": os.path.join(data_dir, "balrog_submit-system-addons_schema.json"),
         }
     }
     return default_config

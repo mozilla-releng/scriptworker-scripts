@@ -583,6 +583,4 @@ class SystemAddonsReleaseCreator(object):
             "product": "SystemAddons",
         }
         balrog_session = get_balrog_session(self.auth0_secrets)
-        balrog_request(
-            balrog_session, "POST", self.url, json=request_data, timeout=5, verify=True
-        )
+        balrog_request(balrog_session, "POST", self.url, json=request_data, timeout=5, verify=True)
