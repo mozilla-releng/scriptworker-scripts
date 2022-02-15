@@ -84,6 +84,23 @@ class App(object):
                 raise IScriptError("Missing {} attr!".format(att))
 
 
+def _retry_run_command_semaphore(semaphore, cmd, cwd, exception=IScriptError):
+    return asyncio.ensure_future(
+        semaphore_wrapper(
+            semaphore,
+            retry_async(
+                func=run_command,
+                kwargs={
+                    "cmd": cmd,
+                    "cwd": cwd,
+                    "exception": exception,
+                },
+                retry_exceptions=(exception,),
+            ),
+        )
+    )
+
+
 # tar helpers {{{1
 def _get_tar_create_options(path):
     base_opts = "c"
@@ -1051,18 +1068,20 @@ async def create_pkg_files(config, sign_config, all_paths, requirements_plist_pa
                 asyncio.ensure_future(
                     semaphore_wrapper(
                         semaphore,
-                        run_command(
-                            [
-                                "productsign",
-                            ]
-                            + cmd_opts
-                            + [
-                                app.tmp_pkg_path2,
-                                app.pkg_path,
-                            ],
-                            cwd=app.parent_dir,
-                            exception=IScriptError,
-                        ),
+                        retry_async(
+                            func=run_command,
+                            kwargs={
+                                "cmd": [
+                                    "productsign",
+                                    *cmd_opts,
+                                    app.tmp_pkg_path2,
+                                    app.pkg_path,
+                                ],
+                                "cwd": app.parent_dir,
+                                "exception": IScriptError,
+                            },
+                            retry_exceptions=(IScriptError,),
+                        )
                     )
                 )
             )

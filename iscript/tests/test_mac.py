@@ -807,7 +807,7 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises, requirements_path):
                 assert requirements_path not in cmd
 
     async def fake_retry_async(*args, **kwargs):
-        kwargs["sleeptime_kwargs"] = {"max_delay": 0.5}
+        kwargs["sleeptime_kwargs"] = {"max_delay": 0.1}
         return retry_async(*args, **kwargs)
 
     sign_config = {"pkg_cert_id": pkg_cert_id, "signing_keychain": "signing.keychain"}
