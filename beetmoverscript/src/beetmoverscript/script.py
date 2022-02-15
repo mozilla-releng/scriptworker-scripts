@@ -45,6 +45,7 @@ from beetmoverscript.utils import (
     exists_or_endswith,
     extract_file_config_from_artifact_map,
     generate_beetmover_manifest,
+    get_addon_data,
     get_bucket_name,
     get_bucket_url_prefix,
     get_candidates_prefix,
@@ -67,6 +68,25 @@ from beetmoverscript.utils import (
 )
 
 log = logging.getLogger(__name__)
+
+
+# push_to_system_addons {{{1
+async def push_to_system_addons(context):
+    """Push artifacts to pub/system-addons
+    Upon successful transfer, generate checksums files and manifests to be
+    consumed downstream by balrogworkers."""
+    context.release_props = get_release_props(context)
+    context.balrog_manifest = list()
+    context.raw_balrog_manifest = dict()
+    context.checksums = dict()
+    if context.task["payload"].get("artifactMap"):
+        context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
+        await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task["payload"]["artifactMap"])
+        generate_system_addons_balrog_manifest(context)
+    else:
+        raise ScriptWorkerTaskException("task payload is missing artifactMap")
+    add_balrog_manifest_to_artifacts(context)
+    add_checksums_to_artifacts(context)
 
 
 # push_to_nightly {{{1
@@ -264,6 +284,7 @@ def list_bucket_objects(context, s3_resource, prefix):
 # action_map {{{1
 action_map = {
     "push-to-partner": push_to_partner,
+    "push-to-system-addons": push_to_system_addons,
     "push-to-nightly": push_to_nightly,
     # push to candidates is at this point identical to push_to_nightly
     "push-to-candidates": push_to_nightly,
@@ -476,6 +497,40 @@ def get_destination_for_partner_repack_path(context, manifest, full_path, locale
         sanity_check_partner_path(locale, {"version": version, "build_number": build_number}, PARTNER_REPACK_PUBLIC_REGEXES)
         prefix = PARTNER_REPACK_PUBLIC_PREFIX_TMPL.format(version=version, build_number=build_number)
         return os.path.join(prefix, pretty_full_path)
+
+
+# generate_system_addons_balrog_manifest {{{1
+def generate_system_addons_balrog_manifest(context):
+    hash_type = context.release_props["hashType"]
+    relase_name = context.release_props["buildid"]
+    context.balrog_manifest = {
+        "hashType": hash_type,
+        "releaseName": relase_name,
+        "addons": [],
+    }
+    for entry in context.task["payload"]["artifactMap"]:
+        locale = entry["locale"]
+        for path, path_info in entry["paths"].items():
+            destinations = path_info["destinations"]
+            artifacts_to_beetmove = context.artifacts_to_beetmove[locale]
+            filepath = artifacts_to_beetmove[path]
+            addon_data = get_addon_data(filepath)
+            addon_name = addon_data["name"]
+            addon_version = addon_data["version"]
+            addon_url = "{prefix}/{s3_key}".format(prefix=get_bucket_url_prefix(context), s3_key=destinations[0])
+            checksums_path = path_info["checksums_path"]
+            checksums_info = context.checksums[checksums_path]
+            addon_hash = checksums_info[hash_type]
+            addon_size = checksums_info["size"]
+            context.balrog_manifest["addons"].append(
+                {
+                    "name": addon_name,
+                    "version": addon_version,
+                    "url": addon_url,
+                    "hash": addon_hash,
+                    "size": addon_size,
+                }
+            )
 
 
 # generate_balrog_info {{{1

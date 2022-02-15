@@ -4,6 +4,9 @@ import logging
 import os
 import pprint
 import re
+import tempfile
+import zipfile
+from xml.etree import ElementTree
 
 import arrow
 import jinja2
@@ -43,6 +46,37 @@ def get_hash(filepath, hash_type="sha512"):
 def get_size(filepath):
     """Function to return the size of a file based on filename"""
     return os.path.getsize(filepath)
+
+
+class BadXPIFile(Exception):
+    def __init__(self, filepath):
+        super().__init__("Error loading XPI data from " + filepath)
+
+
+def get_addon_data(filepath):
+    tmpdir = tempfile.mkdtemp()
+    with zipfile.ZipFile(filepath, "r") as zf:
+        zf.extractall(tmpdir)
+    rdf_path = os.path.join(tmpdir, "install.rdf")
+    manifest_path = os.path.join(tmpdir, "manifest.json")
+    if os.path.exists(rdf_path):
+        rdf = ElementTree.parse(rdf_path)
+        description = rdf.getroot()[0]
+        for child in description:
+            if child.tag.endswith("id"):
+                name = child.text
+            if child.tag.endswith("version"):
+                version = child.text
+    elif os.path.exists(manifest_path):
+        with open(manifest_path) as f:
+            manifest = json.loads(f.read())
+            name = manifest.get("applications", {}).get("gecko", {}).get("id")
+            version = manifest.get("version")
+    else:
+        raise BadXPIFile(filepath)
+    if not name or not version:
+        raise BadXPIFile(filepath)
+    return {"name": name, "version": version}
 
 
 def load_json(path):

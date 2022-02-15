@@ -56,7 +56,7 @@ case $COT_PRODUCT in
         exit 1
         ;;
     esac
-    export TASKCLUSTER_SCOPE_PREFIX="project:releng:${PROJECT_NAME}:"
+    export TASKCLUSTER_SCOPE_PREFIX="project:xpi:balrog:"
     ;;
   thunderbird)
     case $ENV in

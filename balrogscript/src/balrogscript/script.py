@@ -9,7 +9,15 @@ import scriptworker_client.client
 from immutabledict import immutabledict
 from redo import retry  # noqa: E402
 
-from .submitter.cli import NightlySubmitterV4, ReleaseCreatorV9, ReleasePusher, ReleaseScheduler, ReleaseStateUpdater, ReleaseSubmitterV9
+from .submitter.cli import (
+    NightlySubmitterV4,
+    ReleaseCreatorV9,
+    ReleasePusher,
+    ReleaseScheduler,
+    ReleaseStateUpdater,
+    ReleaseSubmitterV9,
+    SystemAddonsReleaseCreator,
+)
 from .task import get_manifest, get_task_behavior, get_task_server, get_upstream_artifacts, validate_task_schema
 
 log = logging.getLogger(__name__)
@@ -71,6 +79,14 @@ def create_locale_submitter(e, extra_suffix, auth0_secrets, config, backend_vers
         return submitter, data
     else:
         raise RuntimeError("Unknown Balrog submission style. Check manifest.json")
+
+
+# submit_system_addons {{{1
+def submit_system_addons(task, config, auth0_secrets):
+    upstream_artifacts = get_upstream_artifacts(task)
+    manifest = get_manifest(config, upstream_artifacts)
+    release_creator = SystemAddonsReleaseCreator(config["api_root"], auth0_secrets)
+    release_creator.run(manifest)
 
 
 # submit_locale {{{1
@@ -233,6 +249,7 @@ def get_default_config():
             "submit-toplevel": os.path.join(data_dir, "balrog_submit-toplevel_schema.json"),
             "schedule": os.path.join(data_dir, "balrog_schedule_schema.json"),
             "set-readonly": os.path.join(data_dir, "balrog_set-readonly_schema.json"),
+            "submit-system-addons": os.path.join(data_dir, "balrog_submit-system-addons_schema.json"),
         }
     }
     return default_config
@@ -254,6 +271,8 @@ async def async_main(config, task):
 
     if behavior == "submit-toplevel":
         submit_toplevel(task, config, auth0_secrets, backend_version)
+    elif behavior == "submit-system-addons":
+        submit_system_addons(task, config, auth0_secrets)
     elif behavior == "schedule":
         schedule(task, config, auth0_secrets)
     elif behavior == "set-readonly":
