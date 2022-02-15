@@ -6,6 +6,7 @@ from balrogclient import Release, ReleaseState, Rule, ScheduledRuleChange, Singl
 from deepmerge import always_merger
 from redo import retry
 from requests.exceptions import HTTPError
+from balrogscript.constants import SYSTEM_ADDONS_PLATFORMS
 
 from .release import buildbot2bouncer, buildbot2ftp, buildbot2updatePlatforms, getPrettyVersion, getProductDetails, makeCandidatesDir
 from .util import recursive_update
@@ -556,21 +557,13 @@ class SystemAddonsReleaseCreator(object):
         }
         for addon in manifest["addons"]:
             platforms = {
-                "Darwin_x86-gcc3": {"alias": "default"},
-                "Darwin_x86-gcc3-u-i386-x86_64": {"alias": "default"},
-                "Darwin_x86_64-gcc3": {"alias": "default"},
-                "Darwin_x86_64-gcc3-u-i386-x86_64": {"alias": "default"},
-                "Linux_x86-gcc3": {"alias": "default"},
-                "Linux_x86_64-gcc3": {"alias": "default"},
-                "WINNT_x86-msvc": {"alias": "default"},
-                "WINNT_x86-msvc-x64": {"alias": "default"},
-                "WINNT_x86-msvc-x86": {"alias": "default"},
-                "WINNT_x86_64-msvc": {"alias": "default"},
-                "WINNT_x86_64-msvc-x64": {"alias": "default"},
-                "default": {
-                    "fileUrl": addon["url"],
-                    "filesize": addon["size"],
-                    "hashValue": addon["hash"],
+                **SYSTEM_ADDONS_PLATFORMS,
+                **{
+                    "default": {
+                        "fileUrl": addon["url"],
+                        "filesize": addon["size"],
+                        "hashValue": addon["hash"],
+                    }
                 },
             }
             release_blob["addons"][addon["name"]] = {
