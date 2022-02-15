@@ -6,6 +6,7 @@ from balrogclient import Release, ReleaseState, Rule, ScheduledRuleChange, Singl
 from deepmerge import always_merger
 from redo import retry
 from requests.exceptions import HTTPError
+
 from balrogscript.constants import SYSTEM_ADDONS_PLATFORMS
 
 from .release import buildbot2bouncer, buildbot2ftp, buildbot2updatePlatforms, getPrettyVersion, getProductDetails, makeCandidatesDir
