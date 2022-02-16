@@ -84,7 +84,7 @@ class App(object):
                 raise IScriptError("Missing {} attr!".format(att))
 
 
-def _retry_run_command_semaphore(semaphore, cmd, cwd, exception=IScriptError):
+def _retry_run_cmd_semaphore(semaphore, cmd, cwd, exception=IScriptError):
     return asyncio.ensure_future(
         semaphore_wrapper(
             semaphore,
@@ -1005,30 +1005,8 @@ async def create_pkg_files(config, sign_config, all_paths, requirements_plist_pa
         app.tmp_pkg_path2 = app.app_path.replace(".appex", ".tmp2.pkg").replace(".app", ".tmp2.pkg")
         app.pkg_path = app.app_path.replace(".appex", ".pkg").replace(".app", ".pkg")
         app.pkg_name = os.path.basename(app.pkg_path)
-        futures.append(
-            asyncio.ensure_future(
-                semaphore_wrapper(
-                    semaphore,
-                    retry_async(
-                        func=run_command,
-                        kwargs={
-                            "cmd": [
-                                "pkgbuild",
-                                "--install-location",
-                                "/Applications",
-                                *cmd_opts,
-                                "--component",
-                                app.app_path,
-                                app.tmp_pkg_path1,
-                            ],
-                            "cwd": app.parent_dir,
-                            "exception": IScriptError,
-                        },
-                        retry_exceptions=(IScriptError,),
-                    ),
-                )
-            )
-        )
+        cmd = ("pkgbuild", "--install-location", "/Applications", *cmd_opts, "--component", app.app_path, app.tmp_pkg_path1)
+        futures.append(_retry_run_cmd_semaphore(semaphore=semaphore, cmd=cmd, cwd=app.parent_dir))
     await raise_future_exceptions(futures)
     futures = []
     for app in all_paths:
@@ -1043,48 +1021,15 @@ async def create_pkg_files(config, sign_config, all_paths, requirements_plist_pa
             ]
         )
         # Bug 1689376 - create distribution pkg
-        futures.append(
-            asyncio.ensure_future(
-                semaphore_wrapper(
-                    semaphore,
-                    run_command(
-                        [
-                            "productbuild",
-                        ]
-                        + cmd_opts
-                        + pb_opts,
-                        cwd=app.parent_dir,
-                        exception=IScriptError,
-                    ),
-                )
-            )
-        )
+        cmd = ("productbuild", *cmd_opts, *pb_opts)
+        futures.append(_retry_run_cmd_semaphore(semaphore=semaphore, cmd=cmd, cwd=app.parent_dir))
     await raise_future_exceptions(futures)
     futures = []
     for app in all_paths:
         if sign_config.get("pkg_cert_id"):
             # Bug 1689376 - sign distribution pkg
-            futures.append(
-                asyncio.ensure_future(
-                    semaphore_wrapper(
-                        semaphore,
-                        retry_async(
-                            func=run_command,
-                            kwargs={
-                                "cmd": [
-                                    "productsign",
-                                    *cmd_opts,
-                                    app.tmp_pkg_path2,
-                                    app.pkg_path,
-                                ],
-                                "cwd": app.parent_dir,
-                                "exception": IScriptError,
-                            },
-                            retry_exceptions=(IScriptError,),
-                        )
-                    )
-                )
-            )
+            cmd = ("productsign", *cmd_opts, app.tmp_pkg_path2, app.pkg_path)
+            futures.append(_retry_run_cmd_semaphore(semaphore=semaphore, cmd=cmd, cwd=app.parent_dir))
         else:
             copy2(app.tmp_pkg_path2, app.pkg_path)
     await raise_future_exceptions(futures)

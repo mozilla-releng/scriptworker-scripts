@@ -777,7 +777,7 @@ async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
 
 # create_pkg_files {{{1
 @pytest.mark.parametrize(
-    "pkg_cert_id, raises, requirements_path",
+    "pkg_cert_id, should_raise, requirements_path",
     (
         (None, True, None),
         (None, False, None),
@@ -786,16 +786,17 @@ async def test_tar_apps(mocker, tmpdir, raises, artifact_prefix):
     ),
 )
 @pytest.mark.asyncio
-async def test_create_pkg_files(mocker, pkg_cert_id, raises, requirements_path):
+async def test_create_pkg_files(mocker, pkg_cert_id, should_raise, requirements_path):
     """``create_pkg_files`` runs pkgbuild concurrently for each ``App``, and
     raises any exceptions hit along the way.
 
     """
 
-    async def fake_run_command(cmd, **kwargs):
+    async def fake_retry_async(**kwargs):
+        cmd = kwargs["kwargs"]["cmd"]
         assert cmd[0] in ("pkgbuild", "productbuild", "productsign")
-        if raises:
-            raise IScriptError("foo")
+        if should_raise:
+            raise kwargs["kwargs"]["exception"]("foo")
 
         if cmd[0] == "productbuild":
             if requirements_path:
@@ -806,19 +807,14 @@ async def test_create_pkg_files(mocker, pkg_cert_id, raises, requirements_path):
                 assert "--product" not in cmd
                 assert requirements_path not in cmd
 
-    async def fake_retry_async(*args, **kwargs):
-        kwargs["sleeptime_kwargs"] = {"max_delay": 0.1}
-        return retry_async(*args, **kwargs)
-
     sign_config = {"pkg_cert_id": pkg_cert_id, "signing_keychain": "signing.keychain"}
     config = {"concurrency_limit": 2}
     all_paths = []
     for i in range(3):
         all_paths.append(mac.App(app_path="foo/{}/{}.app".format(i, i), parent_dir="foo/{}".format(i)))
-    mocker.patch.object(mac, "run_command", new=fake_run_command)
     mocker.patch.object(mac, "retry_async", new=fake_retry_async)
     mocker.patch.object(mac, "copy2", new=noop_sync)
-    if raises:
+    if should_raise:
         with pytest.raises(IScriptError):
             await mac.create_pkg_files(config, sign_config, all_paths, requirements_plist_path=requirements_path)
     else:
