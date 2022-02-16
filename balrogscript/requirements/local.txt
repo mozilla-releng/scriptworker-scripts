@@ -6,27 +6,23 @@
 #    pip-compile-multi
 #
 -r test.txt
-backports.entry-points-selectable==1.1.0 \
-    --hash=sha256:988468260ec1c196dab6ae1149260e2f5472c9110334e5d51adcb77867361f6a \
-    --hash=sha256:a6d9a871cde5e15b4c4a53e3d43ba890cc6861ec1332c9c2428c92f977192acc
+distlib==0.3.4 \
+    --hash=sha256:6564fe0a8f51e734df6333d08b8b94d4ea8ee6b99b5ed50613f731fd4089f34b \
+    --hash=sha256:e4b58818180336dc9c529bfb9a0b58728ffc09ad92027a3f30b7cd91e3458579
     # via virtualenv
-distlib==0.3.3 \
-    --hash=sha256:c8b54e8454e5bf6237cc84c20e8264c3e991e824ef27e8f1e81049867d861e31 \
-    --hash=sha256:d982d0751ff6eaaab5e2ec8e691d949ee80eddf01a62eaa96ddb11531fe16b05
-    # via virtualenv
-filelock==3.3.1 \
-    --hash=sha256:2b5eb3589e7fdda14599e7eb1a50e09b4cc14f34ed98b8ba56d33bfaafcbef2f \
-    --hash=sha256:34a9f35f95c441e7b38209775d6e0337f9a3759f3565f6c5798f19618527c76f
+filelock==3.5.1 \
+    --hash=sha256:7b23620a293cf3e19924e469cb96672dc72b36c26e8f80f85668310117fcbe4e \
+    --hash=sha256:d1eccb164ed020bc84edd9e45bf6cdb177f64749f6b8fe066648832d2e98726d
     # via
     #   tox
     #   virtualenv
-tox==3.24.4 \
-    --hash=sha256:5e274227a53dc9ef856767c21867377ba395992549f02ce55eb549f9fb9a8d10 \
-    --hash=sha256:c30b57fa2477f1fb7c36aa1d83292d5c2336cd0018119e1b1c17340e2c2708ca
+tox==3.24.5 \
+    --hash=sha256:67e0e32c90e278251fea45b696d0fef3879089ccbe979b0c556d35d5a70e2993 \
+    --hash=sha256:be3362472a33094bce26727f5f771ca0facf6dafa217f65875314e9a6600c95c
     # via -r requirements/local.in
-virtualenv==20.8.1 \
-    --hash=sha256:10062e34c204b5e4ec5f62e6ef2473f8ba76513a9a617e873f1f8fb4a519d300 \
-    --hash=sha256:bcc17f0b3a29670dd777d6f0755a4c04f28815395bca279cdcb213b97199a6b8
+virtualenv==20.13.1 \
+    --hash=sha256:45e1d053cad4cd453181ae877c4ffc053546ae99e7dd049b9ff1d9be7491abf7 \
+    --hash=sha256:e0621bcbf4160e4e1030f05065c8834b4e93f4fcc223255db2a823440aca9c14
     # via tox
 
 # WARNING: The following packages were not pinned, but pip requires them to be
