@@ -7,7 +7,7 @@ tasks:
     - $let:
           taskgraph:
               branch: taskgraph
-              revision: f807e7d4d50000fac74fd1b0845f5a669dc9e247
+              revision: 75b9994a6b22c1d47693493aaf7a904aa3092498
           trustDomain: scriptworker
       in:
           $if: 'tasks_for in ["github-pull-request", "github-push", "action", "cron"]'
