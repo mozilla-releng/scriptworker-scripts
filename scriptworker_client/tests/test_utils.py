@@ -48,6 +48,7 @@ async def fake_sleep(*args, **kwargs):
     pass
 
 
+# fmt: off
 # helpers {{{1
 # from https://github.com/SecurityInnovation/PGPy/blob/develop/tests/test_01_types.py
 text = {  # some basic utf-8 test strings - these should all pass             'english': u'The quick brown fox jumped over the lazy dog',
@@ -65,6 +66,7 @@ non_text = {
     "cyrillic": u"грызть гранит науки".encode("iso8859_5"),
     "cp865": u"Mit luftpudefartøj er fyldt med ål".encode("cp865"),
 }
+# fmt: on
 
 
 # load_json_or_yaml {{{1
