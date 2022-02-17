@@ -21,6 +21,13 @@ test_var_set 'TASKCLUSTER_CLIENT_ID'
 test_var_set 'TASKCLUSTER_ACCESS_TOKEN'
 if [ "$ENV" == "prod" ]; then
   test_var_set 'ED25519_PRIVKEY'
+  case $COT_PRODUCT in
+    firefox|thunderbird)
+      ;;
+    *)
+      test_var_set 'GITHUB_OAUTH_TOKEN'
+      ;;
+  esac
 fi
 
 #
