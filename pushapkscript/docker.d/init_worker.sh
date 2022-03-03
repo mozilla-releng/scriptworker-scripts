@@ -108,6 +108,29 @@ case $COT_PRODUCT in
         ;;
     esac
     ;;
+  mozillavpn)
+    case $ENV in
+      dev|fake-prod)
+
+        echo "dummy" > $CONFIG_DIR/fake_cert.p12
+        export GOOGLE_CREDENTIALS_MOZILLAVPN_DEP_PATH=$CONFIG_DIR/fake_cert.p12
+
+        # no dep signing for mozillavpn yet, so no import_cert
+        ;;
+      prod)
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_MOZILLAVPN'
+        test_var_set 'GOOGLE_CREDENTIALS_MOZILLAVPN'
+
+        export GOOGLE_CREDENTIALS_MOZILLAVPN_PATH=$CONFIG_DIR/mozillavpn.p12
+        echo $GOOGLE_CREDENTIALS_MOZILLAVPN | base64 -d > $GOOGLE_CREDENTIALS_MOZILLAVPN_PATH
+
+        import_cert mozillavpn $CERT_DIR/mozillavpn.pem
+        ;;
+      *)
+        exit 1
+        ;;
+    esac
+    ;;
   *)
     exit 1
     ;;
