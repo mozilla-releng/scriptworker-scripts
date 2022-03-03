@@ -229,3 +229,28 @@ products:
             service_account: "dummy"
             credentials_file: { "$eval": "GOOGLE_CREDENTIALS_REFERENCE_BROWSER_DEP_PATH" }
             certificate_alias: "reference-browser"
+      'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
+        - product_names: ["mozillavpn"]
+          digest_algorithm: "SHA-256"
+          skip_check_multiple_locales: true
+          skip_check_same_locales: true
+          skip_checks_fennec: true
+          override_channel_model: "single_google_app"
+          app:
+            package_names:
+              - "org.mozilla.firefox.vpn"
+            service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_MOZILLAVPN" }
+            credentials_file: { "$eval": "GOOGLE_CREDENTIALS_MOZILLAVPN_PATH" }
+            certificate_alias: "mozillavpn"
+      'COT_PRODUCT == "mozillavpn" && ENV != "prod"':
+        - product_names: ["mozillavpn"]
+          digest_algorithm: "SHA-256"
+          skip_check_multiple_locales: true
+          skip_check_same_locales: true
+          skip_checks_fennec: true
+          override_channel_model: "single_google_app"
+          app:
+            package_names:
+              - "org.mozilla.firefox.vpn"
+            service_account: { "dummy" }
+            credentials_file: { "$eval": "GOOGLE_CREDENTIALS_MOZILLAVPN_DEP_PATH" }
