@@ -3,14 +3,17 @@ verbose: { "$eval": "VERBOSE == 'true'" }
 jarsigner_key_store: { "$eval": "JARSIGNER_KEY_STORE" }
 do_not_contact_server: { "$eval": "ENV != 'prod'" }
 taskcluster_scope_prefixes:
-  $if: 'COT_PRODUCT == "mobile"'
-  then:
-    - "project:mobile:focus-android:releng:googleplay:product:"
-    - "project:mobile:reference-browser:releng:googleplay:product:"
-    - "project:mobile:fenix:releng:googleplay:product:"
-    - "project:mobile:firefox-tv:releng:googleplay:product:"
-  else:
-    - "project:releng:googleplay:"
+  $flatten:
+    $match:
+      'COT_PRODUCT == "firefox"':
+        - "project:releng:googleplay:"
+      'COT_PRODUCT == "mobile"':
+        - "project:mobile:focus-android:releng:googleplay:product:"
+        - "project:mobile:reference-browser:releng:googleplay:product:"
+        - "project:mobile:fenix:releng:googleplay:product:"
+        - "project:mobile:firefox-tv:releng:googleplay:product:"
+      'COT_PRODUCT == "mozillavpn"':
+        - "project:mozillavpn:releng:googleplay:"
 products:
   $flatten:
     $match:
