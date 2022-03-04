@@ -13,7 +13,7 @@ taskcluster_scope_prefixes:
         - "project:mobile:fenix:releng:googleplay:product:"
         - "project:mobile:firefox-tv:releng:googleplay:product:"
       'COT_PRODUCT == "mozillavpn"':
-        - "project:mozillavpn:releng:googleplay:"
+        - "project:mozillavpn:releng:googleplay:product:"
 products:
   $flatten:
     $match:
