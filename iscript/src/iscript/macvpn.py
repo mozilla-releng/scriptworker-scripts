@@ -59,17 +59,17 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile
         sign_config (dict): the config for this signing key
         app (App): the App the notarize
         entitlements_url (str): URL for entitlements file
-        provisionprofile_filename (str): .provisionprofile filename in <config.provisionprofile_folder>
+        provisionprofile_filename (str): .provisionprofile filename in <config.provisionprofile_dir>
 
     """
     # We mock the task for downloading entitlements and provisioning profiles
     entitlements_path = await download_entitlements_file(config, sign_config, {"payload": {"entitlements-url": entitlements_url}})
     provisioning_profile_path = None
-    if config.get("provisionprofile_folder"):
-        provisioning_profile_path = os.path.join(config.get("provisionprofile_folder"), provisionprofile_filename)
+    if config.get("provisionprofile_dir"):
+        provisioning_profile_path = os.path.join(config["provisionprofile_dir"], provisionprofile_filename)
         if not os.path.exists(provisioning_profile_path):
             log.error(f"Could not find provisionprofile file: {provisioning_profile_path}")
-            raise IScriptError("Something")
+            raise IScriptError(f"Could not find provisionprofile file: {provisioning_profile_path}")
         else:
             log.info(f"Using provisionprofile {provisioning_profile_path}")
 
