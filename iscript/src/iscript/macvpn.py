@@ -12,7 +12,6 @@ from iscript.mac import (
     copy_pkgs_to_artifact_dir,
     create_pkg_files,
     download_entitlements_file,
-    download_provisioning_profile,
     extract_all_apps,
     get_app_paths,
     notarize_no_sudo,
@@ -68,6 +67,11 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile
     provisioning_profile_path = None
     if config.get("provisionprofile_folder"):
         provisioning_profile_path = os.path.join(config.get("provisionprofile_folder"), provisionprofile_filename)
+        if not os.path.exists(provisioning_profile_path):
+            log.error(f"Could not find provisionprofile file: {provisioning_profile_path}")
+            raise IScriptError("Something")
+        else:
+            log.info(f"Using provisionprofile {provisioning_profile_path}")
 
     await sign_all_apps(config, sign_config, entitlements_path, [app], provisioning_profile_path)
 

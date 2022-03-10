@@ -30,12 +30,16 @@ async def test_create_notarization_zipfile(mocker):
 
 
 @pytest.mark.asyncio
-async def test_sign_app(mocker):
+async def test_sign_app(mocker, tmp_path):
     mocker.patch.object(macvpn, "download_entitlements_file", new=noop_async)
-    mocker.patch.object(macvpn, "download_provisioning_profile", new=noop_async)
     mocker.patch.object(macvpn, "sign_all_apps", new=noop_async)
     app = App(app_name="mock.app")
-    await macvpn._sign_app({}, {}, app, "", "")
+    await macvpn._sign_app({}, {}, app, "", None)
+    with pytest.raises(IScriptError):
+        await macvpn._sign_app({"provisionprofile_folder": str(tmp_path)}, {}, app, "", "Does not exist")
+    fake_file = tmp_path / "fake.provisionprofile"
+    fake_file.write_text("contents")
+    await macvpn._sign_app({"provisionprofile_folder": str(tmp_path)}, {}, app, "", str(fake_file))
 
 
 @pytest.mark.asyncio
