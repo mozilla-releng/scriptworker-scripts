@@ -12,7 +12,6 @@ from iscript.mac import (
     copy_pkgs_to_artifact_dir,
     create_pkg_files,
     download_entitlements_file,
-    download_provisioning_profile,
     extract_all_apps,
     get_app_paths,
     notarize_no_sudo,
@@ -51,7 +50,7 @@ async def _create_notarization_zipfile(work_dir, source, dest):
     )
 
 
-async def _sign_app(config, sign_config, app, entitlements_url, provisioning_profile_url):
+async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile_filename):
     """Sign an app.
 
     Args:
@@ -60,12 +59,19 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisioning_pro
         sign_config (dict): the config for this signing key
         app (App): the App the notarize
         entitlements_url (str): URL for entitlements file
-        provisioning_profile_url (str): URL for provisioning profile
+        provisionprofile_filename (str): .provisionprofile filename in <config.provisionprofile_dir>
 
     """
     # We mock the task for downloading entitlements and provisioning profiles
     entitlements_path = await download_entitlements_file(config, sign_config, {"payload": {"entitlements-url": entitlements_url}})
-    provisioning_profile_path = await download_provisioning_profile(config, {"payload": {"provisioning-profile-url": provisioning_profile_url}})
+    provisioning_profile_path = None
+    if config.get("provisionprofile_dir"):
+        provisioning_profile_path = os.path.join(config["provisionprofile_dir"], provisionprofile_filename)
+        if not os.path.exists(provisioning_profile_path):
+            log.error(f"Could not find provisionprofile file: {provisioning_profile_path}")
+            raise IScriptError(f"Could not find provisionprofile file: {provisioning_profile_path}")
+        else:
+            log.info(f"Using provisionprofile {provisioning_profile_path}")
 
     await sign_all_apps(config, sign_config, entitlements_path, [app], provisioning_profile_path)
 
@@ -132,7 +138,7 @@ async def vpn_behavior(config, task, notarize=True):
         sign_config,
         loginitems_app,
         entitlements_url=task["payload"]["loginItemsEntitlementsUrl"],
-        provisioning_profile_url=task["payload"]["loginItemsProvisioningProfileUrl"],
+        provisionprofile_filename="firefoxvpn_loginitem_developerid.provisionprofile",
     )
 
     # NativeMessaging inner app
@@ -149,7 +155,7 @@ async def vpn_behavior(config, task, notarize=True):
         sign_config,
         nativemessaging_app,
         entitlements_url=task["payload"]["nativeMessagingEntitlementsUrl"],
-        provisioning_profile_url=task["payload"]["nativeMessagingProvisioningProfileUrl"],
+        provisionprofile_filename="firefoxvpn_native_messaging.provisionprofile",
     )
 
     # Main VPN app
@@ -162,7 +168,7 @@ async def vpn_behavior(config, task, notarize=True):
         sign_config,
         top_app,
         entitlements_url=task["payload"]["entitlementsUrl"],
-        provisioning_profile_url=task["payload"]["provisioningProfileUrl"],
+        provisionprofile_filename="firefoxvpn_developerid.provisionprofile",
     )
 
     # Create the PKG and sign it
