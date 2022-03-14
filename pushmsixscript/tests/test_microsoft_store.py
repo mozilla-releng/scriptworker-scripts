@@ -118,7 +118,7 @@ def test_update_submission(status_code, upload_status_code, raises, publish_mode
     headers = {}
     channel = "mock"
     application_id = CONFIG["application_ids"][channel]
-    submission_request = {"id": 888, "fileUploadUrl": "https://some/url"}
+    submission_request = {"id": 888, "fileUploadUrl": "https://some/url", "applicationPackages": [{"minimumDirectXVersion": 1, "minimumSystemRam": 1024}]}
     submission_id = submission_request["id"]
     upload_url = submission_request["fileUploadUrl"]
     mocked_response = {"status": "OK"}
@@ -209,7 +209,7 @@ def test_push_to_store(status_code, raises, mocked_response):
     submission_id = 888
     upload_url = "https://some/url"
     publish_mode = "Manual"
-    create_mocked_response = {"id": 888, "fileUploadUrl": "https://some/url"}
+    create_mocked_response = {"id": 888, "fileUploadUrl": "https://some/url", "applicationPackages": [{"minimumDirectXVersion": 1, "minimumSystemRam": 1024}]}
     with tempfile.NamedTemporaryFile(mode="wb") as f:
         f.write(b"hello there")
         with requests_mock.Mocker() as m:

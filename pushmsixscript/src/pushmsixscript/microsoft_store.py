@@ -1,5 +1,8 @@
 import logging
+import os
+import tempfile
 import time
+import zipfile
 
 import requests
 from scriptworker_client.exceptions import TaskVerificationError
@@ -150,6 +153,35 @@ def _update_submission(config, channel, session, submission_request, headers, fi
     if publish_mode:
         submission_request["targetPublishMode"] = publish_mode
         log.info(f"using targetPublishMode override: {publish_mode}")
+    for package in submission_request.get("applicationPackages"):
+        package["fileStatus"] = "PendingDelete"
+    # "Upload file names" are file names specified in the submission request.
+    # The zip file's members must match the upload file names.
+    # Upload file names appear on the Partner Center website but are not
+    # available to the public (do not appear in the Store). The Partner Center
+    # examines the uploaded files and displays the architecture (like "x86")
+    # and msix application version number alongside each upload file name.
+    # The basic "target.store.X.msix" name format is chosen to reflect the
+    # file names used for the treeherder artifacts; {index} is added to make
+    # each upload file name unique within the zip file; {datestamp} is added
+    # as a simple sanity check but is otherwise superfluous.
+    # Note that using the exact same upload file names for a subsequent
+    # submission is absolutely fine.
+    upload_file_names = {}
+    datestamp = time.strftime("%y%m%d")
+    index = 1
+    for file_path in file_paths:
+        upload_file_names[file_path] = f"target.store.{datestamp}.{index}.msix"
+        index += 1
+    for file_path in file_paths:
+        package = {
+            "fileName": upload_file_names[file_path],
+            "fileStatus": "PendingUpload",
+            "minimumDirectXVersion": submission_request["applicationPackages"][0]["minimumDirectXVersion"],
+            "minimumSystemRam": submission_request["applicationPackages"][0]["minimumSystemRam"],
+        }
+        submission_request["applicationPackages"].append(package)
+
     # The Store expects all-lower-case 'true' and 'false' in the submission request.
     submission_request = str(submission_request)
     submission_request = submission_request.replace("True", "true").replace("False", "false")
@@ -157,8 +189,12 @@ def _update_submission(config, channel, session, submission_request, headers, fi
     response = session.put(url, submission_request, headers=headers)
     _log_response(response)
     response.raise_for_status()
-    for file_path in file_paths:
-        with open(file_path, "rb") as f:
+    with tempfile.TemporaryDirectory() as work_dir:
+        zip_file_name = os.path.join(work_dir, "pushmsix.zip")
+        with zipfile.ZipFile(zip_file_name, "w") as zf:
+            for file_path in file_paths:
+                zf.write(file_path, arcname=upload_file_names[file_path])
+        with open(zip_file_name, "rb") as f:
             upload_headers = {"x-ms-blob-type": "BlockBlob"}
             response = requests.put(upload_url, f, headers=upload_headers, timeout=int(config["request_timeout_seconds"]))
             response.raise_for_status()
