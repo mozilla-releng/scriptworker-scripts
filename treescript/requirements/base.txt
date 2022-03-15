@@ -189,7 +189,9 @@ cryptography==36.0.1 \
     --hash=sha256:e0344c14c9cb89e76eb6a060e67980c9e35b3f36691e15e1b7a9e58a0a6c6dc3 \
     --hash=sha256:ebc15b1c22e55c4d5566e3ca4db8689470a0ca2babef8e3a9ee057a8b82ce4b1 \
     --hash=sha256:ec63da4e7e4a5f924b90af42eddf20b698a70e58d86a72d943857c4c6045b3ee
-    # via scriptworker
+    # via
+    #   pyjwt
+    #   scriptworker
 dictdiffer==0.9.0 \
     --hash=sha256:17bacf5fbfe613ccf1b6d512bd766e6b21fb798822a133aa86098b8ac9997578 \
     --hash=sha256:442bfc693cfcadaf46674575d2eba1c53b42f5e404218ca2c2ff549f2df56595
@@ -264,13 +266,13 @@ gitdb==4.0.9 \
     --hash=sha256:8033ad4e853066ba6ca92050b9df2f89301b8fc8bf7e9324d412a63f8bf1a8fd \
     --hash=sha256:bac2fd45c0a1c9cf619e63a90d62bdc63892ef92387424b855792a6cabe789aa
     # via gitpython
-github3-py==3.1.0 \
-    --hash=sha256:1ac9eec4f1c9cd61272fe487016eadf425d7494b1789b5ea0353dc641d6bd6b9 \
-    --hash=sha256:43133fbb2e4bfc8bab77ea996de6b027ea5054a958cc01f5efdcab3f5cb116ae
+github3-py==3.2.0 \
+    --hash=sha256:09b72be1497d346b0968cde8360a0d6af79dc206d0149a63cd3ec86c65c377cc \
+    --hash=sha256:a9016e40609c6f5cb9954dd188d08257dafd09c4da8c0e830a033fca00054b0d
     # via scriptworker
-gitpython==3.1.26 \
-    --hash=sha256:26ac35c212d1f7b16036361ca5cff3ec66e11753a0d677fb6c48fa4e1a9dd8d6 \
-    --hash=sha256:fc8868f63a2e6d268fb25f481995ba185a85a66fcad126f039323ff6635669ee
+gitpython==3.1.27 \
+    --hash=sha256:1c885ce809e8ba2d88a29befeb385fcea06338d3640712b59ca623c220bb5704 \
+    --hash=sha256:5b68b000463593e05ff2b261acff0ff0972df8ab1b70d3cdbd41b546c8b8fc3d
     # via -r requirements/base.in
 idna==3.3 \
     --hash=sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff \
@@ -289,16 +291,18 @@ jsonschema==4.4.0 \
     --hash=sha256:636694eb41b3535ed608fe04129f26542b59ed99808b4f688aa32dcf55317a83 \
     --hash=sha256:77281a1f71684953ee8b3d488371b162419767973789272434bbc3f29d9c8823
     # via scriptworker
-mercurial==6.0.2 \
-    --hash=sha256:33c64c50e5697062792aa59ba2489a42fde96f1d3331c6135620195b2203cf56 \
-    --hash=sha256:5fb4c36d3856292ebf584051d59306d96ad8aa32b5537452b1d9c476f95ab11a \
-    --hash=sha256:6119caba760fe5aa2e3fb63fee8c17f8a82715e8e2f7a6f0a558698801592b41 \
-    --hash=sha256:74a15fa9a5e0a8441d1ee432af608e5fe32fe0b41888cf81a03b65c060161430 \
-    --hash=sha256:8b38a601e9696f78bb00ce66fe1cb6810580d1e505a68da7cbfa2482eaa37ec4 \
-    --hash=sha256:ad5862552bb6f76a8d5a0092ab1afd5b0f952fc114b31a4459f5c2294b425956 \
-    --hash=sha256:bd3f54fe92a5271dc6e3b1ab52002eb888a4d9d3c8d1ad88f044753dda3aa2ec \
-    --hash=sha256:d45e815794e7299542e82181c9b3109d3acb9bfc28950fa8a4401e9eb27ff472 \
-    --hash=sha256:fad281af45dbbac2475770670222caa2db1bc1e9d83485fa3905f28d926d3fad
+mercurial==6.1 \
+    --hash=sha256:142a83c7848448652ee2fb6e5d19ecb665c6fc14226f01e81bf2897c8242e1c7 \
+    --hash=sha256:28fa9c09b4f97aba6de244b5fbb16c51d779add9a9675412fc6c34cea9cf10ea \
+    --hash=sha256:4d04be98262de003cbcc69e8734c048c6ed46a9625b16989942cc74b7747926f \
+    --hash=sha256:6128dee18b8800f5e2dbd5e2c7f4c2307946d82e8dba0b66a7698d5d7ba26baf \
+    --hash=sha256:6907dd94a273890be27e74f5dee60ff578c496a252781e0e5c1afe2e42e41e35 \
+    --hash=sha256:848915125bfc817ee0674b58a1888d90846e9165909813fe22eee58bb6928e1a \
+    --hash=sha256:86f98645e4565a9256991dcde22b77b8e7d22ca6fbb60c1f4cdbd8469a38cc1f \
+    --hash=sha256:a8e9329ebbca5d745e3f0145f979cd57328ab9bc1c5c61f0f08140a56fe9c6ef \
+    --hash=sha256:e328a63bc3708f727924f1d5a22721e55cde005b2e8ab9d08689fda92ea739d8 \
+    --hash=sha256:e715a9b5a208c8b1e71c0ad0cd4d0e2b6ea891ec510094ad800e468c4779c910 \
+    --hash=sha256:fa38b42c6e2fa5697fcd9f186b83bc9f799928e2cf08c6e9cedd74011ba70618
     # via -r requirements/base.in
 mohawk==1.1.0 \
     --hash=sha256:3ed296a30453d0b724679e0fd41e4e940497f8e461a9a9c3b7f36e43bab0fa09 \
@@ -375,7 +379,7 @@ pycparser==2.21 \
     --hash=sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9 \
     --hash=sha256:e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206
     # via cffi
-pyjwt==2.3.0 \
+pyjwt[crypto]==2.3.0 \
     --hash=sha256:b888b4d56f06f6dcd777210c334e69c737be74755d3e5e9ee3fe67dc18a0ee41 \
     --hash=sha256:e0c4bb8d9f0af0c7f5b1ec4c5036309617d03d56932877f2f7a0beeb5318322f
     # via github3-py
@@ -449,9 +453,9 @@ requests==2.27.1 \
     # via
     #   github3-py
     #   taskcluster
-scriptworker==42.1.0 \
-    --hash=sha256:1e1d0c667acf9d6103b78daa78ea2a2eb954cce47f10dfefb3f646540f83fe64 \
-    --hash=sha256:b6be7067f24a065dcc40330df635dc0b6581877eb2c27e23861a30c5bf40ed06
+scriptworker==42.2.0 \
+    --hash=sha256:00f9ad82d36b837f83cca32a5503098148bb9e3b99afcf07e14074184395b002 \
+    --hash=sha256:157f511edadd632c7a7679ab0791c097c34104a250b79ec7b7217d1f5595d37e
     # via -r requirements/base.in
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
@@ -467,9 +471,9 @@ smmap==5.0.0 \
     --hash=sha256:2aba19d6a040e78d8b09de5c57e96207b09ed71d8e55ce0959eeee6c8e190d94 \
     --hash=sha256:c840e62059cd3be204b0c9c9f74be2c09d5648eddd4580d9314c3ecde0b30936
     # via gitdb
-taskcluster==44.6.1 \
-    --hash=sha256:51604c6ea4e641f7038e2e0d030c525f92b603577a6984065a55739b7da31f1f \
-    --hash=sha256:8d374b8197ba1bad68166694e87af551a822e4bfc13e88b99719194abd6c9406
+taskcluster==44.8.3 \
+    --hash=sha256:82f5ff44307020d2d5ce30947f82fa62a9c5f6a96a83ea7a151fa1a64948ed74 \
+    --hash=sha256:b7dd0cd82431af1ec0352daa5a1053134674ad9d0a9e6add47d6455abb3c7d33
     # via
     #   -r requirements/base.in
     #   scriptworker
