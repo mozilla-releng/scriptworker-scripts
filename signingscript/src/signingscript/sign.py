@@ -1390,3 +1390,10 @@ async def sign_authenticode_zip(context, orig_path, fmt, *, authenticode_comment
         # Recreate the zipfile
         await _create_zipfile(context, orig_path, files, tmp_dir=tmp_dir)
     return orig_path
+
+
+async def sign_mozillavpn_debian_packages(*args, **kwargs):
+    # unpack the tarball sign the .dsc .buildinfo .changes files for bionic, focal, impish, and jammy
+    # using the autograph /sign/files end point (+ a signer/keyid in debsign mode... https://github.com/mozilla-services/autograph/blob/main/autograph.yaml#L827)
+    # re-compress the tarball, upload the new tarball with the sign files as an artifact
+    pass
