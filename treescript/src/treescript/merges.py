@@ -61,7 +61,7 @@ def touch_clobber_file(config, repo_path):
             line = line.strip()
             if line.startswith("#") or line == "":
                 new_contents += f"{line}\n"
-        new_contents += "Merge day clobber " + str(date.today())
+        new_contents = f"{new_contents}Merge day clobber {str(date.today())}"
         with open(clobber_file, "w") as f:
             f.write(new_contents)
 
