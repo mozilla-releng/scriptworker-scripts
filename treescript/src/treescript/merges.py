@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import string
+from datetime import date
 
 import attr
 from scriptworker_client.utils import makedirs
@@ -60,7 +61,7 @@ def touch_clobber_file(config, repo_path):
             line = line.strip()
             if line.startswith("#") or line == "":
                 new_contents += f"{line}\n"
-        new_contents += "Merge day clobber"
+        new_contents += "Merge day clobber " + str(date.today())
         with open(clobber_file, "w") as f:
             f.write(new_contents)
 
