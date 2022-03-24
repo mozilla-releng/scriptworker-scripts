@@ -141,23 +141,6 @@ async def vpn_behavior(config, task, notarize=True):
         provisionprofile_filename="firefoxvpn_loginitem_developerid.provisionprofile",
     )
 
-    # NativeMessaging inner app
-    nativemessaging_app = App(
-        orig_path=os.path.join(submodule_dir, "NativeMessaging/MozillaVPNNativeMessaging.app"),
-        parent_dir=os.path.join(submodule_dir, "NativeMessaging"),  # Using main app as reference
-        app_path=os.path.join(submodule_dir, "NativeMessaging/MozillaVPNNativeMessaging.app"),
-        app_name="MozillaVPNNativeMessaging.app",
-        formats=task["payload"]["upstreamArtifacts"][0]["formats"],
-        artifact_prefix="public/",
-    )
-    await _sign_app(
-        config,
-        sign_config,
-        nativemessaging_app,
-        entitlements_url=task["payload"]["nativeMessagingEntitlementsUrl"],
-        provisionprofile_filename="firefoxvpn_native_messaging.provisionprofile",
-    )
-
     # Main VPN app
     # Already defined from extract - just need the extra bits
     top_app.app_name = "Mozilla VPN.app"

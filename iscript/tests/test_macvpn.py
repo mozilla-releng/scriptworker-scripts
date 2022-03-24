@@ -72,8 +72,6 @@ async def test_vpn_behavior(mocker):
             "upstreamArtifacts": [{"formats": ["mac_behavior"]}],
             "loginItemsEntitlementsUrl": "http://localhost/notarealurl",
             "loginItemsProvisioningProfileUrl": "http://localhost/notarealurl",
-            "nativeMessagingEntitlementsUrl": "http://localhost/notarealurl",
-            "nativeMessagingProvisioningProfileUrl": "http://localhost/notarealurl",
             "entitlementsUrl": "http://localhost/notarealurl",
             "provisioningProfileUrl": "http://localhost/notarealurl",
         }
