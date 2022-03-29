@@ -1271,6 +1271,12 @@ async def merge_omnija_files(orig, signed, to):
 
 
 # sign_authenticode_file {{{1
+async def _winsign_helper(error_message, *args, **kwargs):
+    """Raise an exception if winsign.sign.sign_file returns False to enable retries."""
+    if not await winsign.sign.sign_file(*args, **kwargs):
+        raise SigningScriptError(error_message)
+
+
 @time_async_function
 async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_comment=None):
     """Sign a file in-place with authenticode, using autograph as a backend.
@@ -1328,20 +1334,19 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         log.info("Not using specified comment to sign %s, not yet implemented for non *.msi files.", orig_path)
         authenticode_comment = None
 
-    if not await winsign.sign.sign_file(
-        infile,
-        outfile,
-        digest_algo,
-        certs,
-        signer,
-        cafile=cafile,
-        timestampfile=timestampfile,
-        url=url,
-        comment=authenticode_comment,
-        crosscert=crosscert,
-        timestamp_style=timestamp_style,
-    ):
-        raise IOError(f"Couldn't sign {orig_path}")
+    # Retry winsign.sign.sign_file, because the timestamp server can hiccup
+    await retry_async(
+        _winsign_helper,
+        args=(f"Couldn't sign {orig_path}", infile, outfile, digest_algo, certs, signer),
+        kwargs={
+            "cafile": cafile,
+            "timestampfile": timestampfile,
+            "url": url,
+            "comment": authenticode_comment,
+            "crosscert": crosscert,
+            "timestamp_style": timestamp_style,
+        },
+    )
     os.rename(outfile, infile)
 
     return True
