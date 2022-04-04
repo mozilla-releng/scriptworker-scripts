@@ -3,7 +3,10 @@
 
 import logging
 import os
+import tempfile
+from shutil import copy2, copytree, rmtree
 
+from scriptworker_client.aio import retry_async
 from scriptworker_client.utils import run_command
 
 from iscript.exceptions import IScriptError
@@ -44,7 +47,7 @@ async def _create_notarization_zipfile(work_dir, source, dest):
 
     """
     await run_command(
-        ["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", source, dest],
+        ["ditto", "-c", "-k", "--sequesterRsrc", source, dest],
         cwd=work_dir,
         exception=IScriptError,
     )
@@ -64,18 +67,122 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile
     """
     # We mock the task for downloading entitlements and provisioning profiles
     entitlements_path = await download_entitlements_file(config, sign_config, {"payload": {"entitlements-url": entitlements_url}})
+
+    # TODO: Add provisionprofile_dir to scriptworker config
+    # https://github.com/mozilla-releng/scriptworker/blob/master/src/scriptworker/constants.py#L34
     provisioning_profile_path = None
-    if config.get("provisionprofile_dir"):
-        provisioning_profile_path = os.path.join(config["provisionprofile_dir"], provisionprofile_filename)
+
+    if provisionprofile_filename:
+        provisioning_profile_path = os.path.join("/builds/scriptworker/provisionprofiles", provisionprofile_filename)
         if not os.path.exists(provisioning_profile_path):
             log.error(f"Could not find provisionprofile file: {provisioning_profile_path}")
             raise IScriptError(f"Could not find provisionprofile file: {provisioning_profile_path}")
-        else:
-            log.info(f"Using provisionprofile {provisioning_profile_path}")
+        log.info(f"Using provisionprofile {provisioning_profile_path}")
 
     await sign_all_apps(config, sign_config, entitlements_path, [app], provisioning_profile_path)
 
     log.info(f"Done signing app {app.app_name}")
+
+
+async def _sign_wireguard(sign_config, app):
+    """Custom signing command for wireguard
+
+    Args:
+        sign_config (dict): the task config
+        app (App): App object
+    """
+    sign_command = [
+        "codesign",
+        "--timestamp",
+        "-fv",
+        "-s",
+        sign_config["identity"],
+        "--keychain",
+        sign_config["signing_keychain"],
+        "--options",
+        "runtime",
+        app.app_path,
+    ]
+    await retry_async(
+        run_command,
+        args=(sign_command,),
+        kwargs={"cwd": app.parent_dir, "exception": IScriptError, "output_log_on_exception": True},
+        retry_exceptions=(IScriptError,),
+    )
+
+
+async def _create_pkg_files(config, sign_config, app):
+    """Create .pkg installer from the .app file. VPN specific behavior
+
+    Args:
+        config (dict): the task config
+        sign_config (dict): the signing config
+        app (App): App object to pkg
+
+    Raises:
+        IScriptError: on failure
+    """
+    log.info("Creating PKG files")
+
+    async def _retry_async_cmd(cmd):
+        await retry_async(
+            func=run_command,
+            kwargs={"cmd": cmd, "cwd": app.parent_dir, "exception": IScriptError},
+            retry_exceptions=(IScriptError,),
+        )
+
+    # We MUST use the same name as Distribution specifies
+    app.pkg_path = os.path.join(app.parent_dir, "MozillaVPN.pkg")
+
+    root_path = tempfile.mkdtemp()
+    # os.mkdir(os.path.join(root_path, "Applications"))
+    copytree(app.app_path, os.path.join(root_path, "Mozilla VPN.app"))
+
+    cmd_opts = []
+    if sign_config.get("pkg_cert_id"):
+        cmd_opts = ["--keychain", sign_config["signing_keychain"], "--sign", sign_config["pkg_cert_id"]]
+    pkgbuild_cmd = (
+        "pkgbuild",
+        *cmd_opts,
+        "--install-location",
+        "/Applications",
+        "--identifier",
+        sign_config["base_bundle_id"],
+        "--version",
+        "2.0",  # TODO: version
+        "--scripts",
+        os.path.join(app.parent_dir, "scripts"),
+        "--root",
+        root_path,
+        app.pkg_path,
+    )
+    try:
+        await _retry_async_cmd(pkgbuild_cmd)
+    finally:
+        rmtree(root_path)
+
+    build_path = app.pkg_path.replace(".pkg", ".productbuild.pkg")
+    productbuild_cmd = (
+        "productbuild",
+        *cmd_opts,
+        "--distribution",
+        os.path.join(app.parent_dir, "Distribution"),
+        "--resources",
+        os.path.join(app.parent_dir, "Resources"),
+        "--package-path",  # TODO: Docs say cwd is already searched, so may not be needed
+        app.parent_dir,
+        build_path,
+    )
+    await _retry_async_cmd(productbuild_cmd)
+
+    # Now that productbuild is finished with it, we need to replace for final signing
+    os.remove(app.pkg_path)
+
+    if sign_config.get("pkg_cert_id"):
+        productsign_cmd = ("productsign", *cmd_opts, build_path, app.pkg_path)
+        await _retry_async_cmd(productsign_cmd)
+    else:
+        copy2(build_path, app.pkg_path)
 
 
 async def vpn_behavior(config, task, notarize=True):
@@ -123,6 +230,7 @@ async def vpn_behavior(config, task, notarize=True):
     await update_keychain_search_path(config, sign_config["signing_keychain"])
 
     submodule_dir = os.path.join(top_app.parent_dir, "Mozilla VPN.app", "Contents/Library/")
+    utils_dir = os.path.join(top_app.parent_dir, "Mozilla VPN.app", "Contents/Resources/utils")
 
     # LoginItems inner app
     loginitems_app = App(
@@ -141,22 +249,16 @@ async def vpn_behavior(config, task, notarize=True):
         provisionprofile_filename="firefoxvpn_loginitem_developerid.provisionprofile",
     )
 
-    # NativeMessaging inner app
-    nativemessaging_app = App(
-        orig_path=os.path.join(submodule_dir, "NativeMessaging/MozillaVPNNativeMessaging.app"),
-        parent_dir=os.path.join(submodule_dir, "NativeMessaging"),  # Using main app as reference
-        app_path=os.path.join(submodule_dir, "NativeMessaging/MozillaVPNNativeMessaging.app"),
-        app_name="MozillaVPNNativeMessaging.app",
-        formats=task["payload"]["upstreamArtifacts"][0]["formats"],
-        artifact_prefix="public/",
+    # Wireguard inner app
+    wireguard_app = App(
+        # orig_path=os.path.join(utils_dir, "wireguard-go"),
+        parent_dir=os.path.join(utils_dir),  # Using main app as reference
+        app_path=os.path.join(utils_dir, "wireguard-go"),
+        # app_name="wireguard-go",
+        # formats=task["payload"]["upstreamArtifacts"][0]["formats"],
+        # artifact_prefix="public/",
     )
-    await _sign_app(
-        config,
-        sign_config,
-        nativemessaging_app,
-        entitlements_url=task["payload"]["nativeMessagingEntitlementsUrl"],
-        provisionprofile_filename="firefoxvpn_native_messaging.provisionprofile",
-    )
+    await _sign_wireguard(sign_config, wireguard_app)
 
     # Main VPN app
     # Already defined from extract - just need the extra bits
@@ -172,7 +274,7 @@ async def vpn_behavior(config, task, notarize=True):
     )
 
     # Create the PKG and sign it
-    await create_pkg_files(config, sign_config, [top_app])
+    await _create_pkg_files(config, sign_config, top_app)
 
     if notarize:
         # Need to zip the pkg instead
