@@ -127,7 +127,6 @@ def schedule(task, config, auth0_secrets):
         task["payload"]["release_eta"] or None,  # Send None if release_eta is ''
         task["payload"].get("background_rate"),
     ]
-    # XXX optionally append background_rate if/when we want to support it
 
     # XXX should we catch requests.HTTPError and raise a scriptworker
     # error? maybe not since balrogscript isn't py3
