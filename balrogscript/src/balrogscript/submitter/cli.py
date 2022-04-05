@@ -479,13 +479,19 @@ class ReleasePusher(object):
         if dummy:
             self.suffix += "-dummy"
 
-    def run(self, productName, version, build_number, rule_ids, backgroundRate=None):
+    def run(self, productName, version, build_number, rule_ids, pin_channels, backgroundRate=None):
         name = get_release_blob_name(productName, version, build_number, self.suffix)
         for rule_id in rule_ids:
             data = {"mapping": name}
             if backgroundRate:
                 data["backgroundRate"] = backgroundRate
             Rule(api_root=self.api_root, auth0_secrets=self.auth0_secrets, rule_id=rule_id).update_rule(**data)
+
+        for channel in pin_channels:
+            url = self.api_root + f"/v2/releases/{name}/pinnable"
+            data = {"product": productName, "channel": channel, "version": version}
+            session = get_balrog_session(auth0_secrets=self.auth0_secrets)
+            balrog_request(session, "post", url, json=data)
 
 
 class ReleaseScheduler(object):
@@ -496,7 +502,7 @@ class ReleaseScheduler(object):
         if dummy:
             self.suffix = "-dummy"
 
-    def run(self, productName, version, build_number, rule_ids, forceFallbackMappingUpdate=False, when=None, backgroundRate=None):
+    def run(self, productName, version, build_number, rule_ids, pin_channels, forceFallbackMappingUpdate=False, when=None, backgroundRate=None):
         name = get_release_blob_name(productName, version, build_number, self.suffix)
 
         if when is not None:
@@ -530,6 +536,12 @@ class ReleaseScheduler(object):
                 data["backgroundRate"] = backgroundRate
 
             ScheduledRuleChange(api_root=self.api_root, auth0_secrets=self.auth0_secrets, rule_id=rule_id).add_scheduled_rule_change(**data)
+
+        for channel in pin_channels:
+            url = self.api_root + f"/v2/releases/{name}/pinnable"
+            data = {"product": productName, "channel": channel, "version": version}  # XXX "when": when?
+            session = get_balrog_session(auth0_secrets=self.auth0_secrets)
+            balrog_request(session, "post", url, json=data)
 
 
 class ReleaseStateUpdater(object):
