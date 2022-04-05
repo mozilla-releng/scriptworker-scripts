@@ -84,12 +84,12 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile
     log.info(f"Done signing app {app.app_name}")
 
 
-async def _sign_wireguard(sign_config, app):
-    """Custom signing command for wireguard
+async def _sign_util(sign_config, binary_path):
+    """Custom signing command for util binaries
 
     Args:
         sign_config (dict): the task config
-        app (App): App object
+        binary_path (str): the binary name
     """
     sign_command = [
         "codesign",
@@ -101,12 +101,12 @@ async def _sign_wireguard(sign_config, app):
         sign_config["signing_keychain"],
         "--options",
         "runtime",
-        app.app_path,
+        binary_path,
     ]
     await retry_async(
         run_command,
         args=(sign_command,),
-        kwargs={"cwd": app.parent_dir, "exception": IScriptError, "output_log_on_exception": True},
+        kwargs={"cwd": os.path.dirname(binary_path), "exception": IScriptError, "output_log_on_exception": True},
         retry_exceptions=(IScriptError,),
     )
 
@@ -134,8 +134,9 @@ async def _create_pkg_files(config, sign_config, app):
     # We MUST use the same name as Distribution specifies
     app.pkg_path = os.path.join(app.parent_dir, "MozillaVPN.pkg")
 
-    root_path = tempfile.mkdtemp()
-    # os.mkdir(os.path.join(root_path, "Applications"))
+    root_path = os.path.join(config["work_dir"], "tmp1root")
+    os.mkdir(root_path)
+
     copytree(app.app_path, os.path.join(root_path, "Mozilla VPN.app"))
 
     cmd_opts = []
@@ -156,10 +157,8 @@ async def _create_pkg_files(config, sign_config, app):
         root_path,
         app.pkg_path,
     )
-    try:
-        await _retry_async_cmd(pkgbuild_cmd)
-    finally:
-        rmtree(root_path)
+
+    await _retry_async_cmd(pkgbuild_cmd)
 
     build_path = app.pkg_path.replace(".pkg", ".productbuild.pkg")
     productbuild_cmd = (
@@ -229,8 +228,7 @@ async def vpn_behavior(config, task, notarize=True):
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
 
-    submodule_dir = os.path.join(top_app.parent_dir, "Mozilla VPN.app", "Contents/Library/")
-    utils_dir = os.path.join(top_app.parent_dir, "Mozilla VPN.app", "Contents/Resources/utils")
+    submodule_dir = os.path.join(top_app.app_path, "Contents/Library/")
 
     # LoginItems inner app
     loginitems_app = App(
@@ -249,16 +247,11 @@ async def vpn_behavior(config, task, notarize=True):
         provisionprofile_filename="firefoxvpn_loginitem_developerid.provisionprofile",
     )
 
+    utils_dir = os.path.join(top_app.app_path, "Contents/Resources/utils")
     # Wireguard inner app
-    wireguard_app = App(
-        # orig_path=os.path.join(utils_dir, "wireguard-go"),
-        parent_dir=os.path.join(utils_dir),  # Using main app as reference
-        app_path=os.path.join(utils_dir, "wireguard-go"),
-        # app_name="wireguard-go",
-        # formats=task["payload"]["upstreamArtifacts"][0]["formats"],
-        # artifact_prefix="public/",
-    )
-    await _sign_wireguard(sign_config, wireguard_app)
+    await _sign_util(sign_config, os.path.join(utils_dir, "wireguard-go"))
+    # Mozillavpnnp
+    await _sign_util(sign_config, os.path.join(utils_dir, "mozillavpnnp"))
 
     # Main VPN app
     # Already defined from extract - just need the extra bits
