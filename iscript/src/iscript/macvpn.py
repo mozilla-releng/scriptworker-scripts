@@ -3,8 +3,7 @@
 
 import logging
 import os
-import tempfile
-from shutil import copy2, copytree, rmtree
+from shutil import copy2, copytree
 
 from scriptworker_client.aio import retry_async
 from scriptworker_client.utils import run_command
@@ -13,7 +12,6 @@ from iscript.exceptions import IScriptError
 from iscript.mac import (
     App,
     copy_pkgs_to_artifact_dir,
-    create_pkg_files,
     download_entitlements_file,
     extract_all_apps,
     get_app_paths,
@@ -85,7 +83,7 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile
 
 
 async def _sign_util(sign_config, binary_path):
-    """Custom signing command for util binaries
+    """Sign command for VPN util binaries.
 
     Args:
         sign_config (dict): the task config
@@ -112,7 +110,7 @@ async def _sign_util(sign_config, binary_path):
 
 
 async def _create_pkg_files(config, sign_config, app):
-    """Create .pkg installer from the .app file. VPN specific behavior
+    """Create .pkg installer from the .app file. VPN specific behavior.
 
     Args:
         config (dict): the task config
