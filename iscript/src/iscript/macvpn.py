@@ -3,6 +3,7 @@
 
 import logging
 import os
+from pathlib import Path
 from shutil import copy2, copytree
 
 from scriptworker_client.aio import retry_async
@@ -45,7 +46,7 @@ async def _create_notarization_zipfile(work_dir, source, dest):
 
     """
     await run_command(
-        ["ditto", "-c", "-k", "--sequesterRsrc", source, dest],
+        ["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", source, dest],
         cwd=work_dir,
         exception=IScriptError,
     )
@@ -56,7 +57,6 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile
 
     Args:
         config (dict): script config
-        task (dict): running task
         sign_config (dict): the config for this signing key
         app (App): the App the notarize
         entitlements_url (str): URL for entitlements file
@@ -71,8 +71,12 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile
     provisioning_profile_path = None
 
     if provisionprofile_filename:
-        provisioning_profile_path = os.path.join("/builds/scriptworker/provisionprofiles", provisionprofile_filename)
-        if not os.path.exists(provisioning_profile_path):
+        pp_dir = config.get("provisioning_profile_dir", None)
+        if not pp_dir:
+            pp_dir = Path(config["work_dir"]).parent / "provisionprofiles"
+            log.warning(f"No provisioning_profile_dir in settings, using default {pp_dir}")
+        provisioning_profile_path = Path(pp_dir) / provisionprofile_filename
+        if not provisioning_profile_path.is_file():
             log.error(f"Could not find provisionprofile file: {provisioning_profile_path}")
             raise IScriptError(f"Could not find provisionprofile file: {provisioning_profile_path}")
         log.info(f"Using provisionprofile {provisioning_profile_path}")
@@ -110,7 +114,13 @@ async def _sign_util(sign_config, binary_path):
 
 
 async def _create_pkg_files(config, sign_config, app):
-    """Create .pkg installer from the .app file. VPN specific behavior.
+    """Create .pkg installer from the .app file.
+
+    VPN specific behavior:
+        pkgbuild: requires identifier, version, script, and root; No component arg.
+        productbuild: requires distribution, resources, and package-path; No package arg.
+
+    productbuild are different from gecko
 
     Args:
         config (dict): the task config
