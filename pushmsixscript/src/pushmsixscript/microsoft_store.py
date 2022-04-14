@@ -5,6 +5,7 @@ import time
 import zipfile
 
 import requests
+from azure.storage.blob import BlobClient
 from scriptworker_client.exceptions import TaskVerificationError
 
 from pushmsixscript import task
@@ -194,12 +195,9 @@ def _update_submission(config, channel, session, submission_request, headers, fi
         with zipfile.ZipFile(zip_file_name, "w") as zf:
             for file_path in file_paths:
                 zf.write(file_path, arcname=upload_file_names[file_path])
+        blob_client = BlobClient.from_blob_url(upload_url)
         with open(zip_file_name, "rb") as f:
-            upload_headers = {"x-ms-blob-type": "BlockBlob"}
-            response = requests.put(upload_url, f, headers=upload_headers, timeout=int(config["request_timeout_seconds"]))
-            response.raise_for_status()
-            _log_response(response)
-            # no response body expected
+            blob_client.upload_blob(f, blob_type="BlockBlob", logging_enable=False)
 
 
 def _commit_submission(config, channel, session, submission_id, headers):

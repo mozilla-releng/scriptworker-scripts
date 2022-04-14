@@ -1,7 +1,7 @@
 import json
 import os
 import tempfile
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 import requests
@@ -51,7 +51,7 @@ from pushmsixscript.script import main
             "release",
             "Manual",
             False,
-            7,
+            6,
         ),
     ),
 )
@@ -117,9 +117,10 @@ def test_script_can_push_msix(monkeypatch, config, channel, publish_mode, raises
                 json.dump(config, config_file)
                 config_file.seek(0)
 
-                if raises:
-                    with pytest.raises(requests.exceptions.HTTPError):
+                with patch.object(microsoft_store, "BlobClient"):
+                    if raises:
+                        with pytest.raises(requests.exceptions.HTTPError):
+                            main(config_path=config_file.name)
+                    else:
                         main(config_path=config_file.name)
-                else:
-                    main(config_path=config_file.name)
                     assert m.call_count == requests_call_count
