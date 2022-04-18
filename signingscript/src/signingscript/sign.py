@@ -817,7 +817,7 @@ def write_signing_req_to_disk(fp, signing_req):
         encoded_signing_req = signing_req.copy()
         encoded_signing_req["files"] = []
         for input_file in signing_req["files"]:
-            encoded_file = input_file.copy() # Don't mutate signing_req in case of retry
+            encoded_file = input_file.copy()  # Don't mutate signing_req in case of retry
             encoded_file_content = StringIO()
             input_stream = input_file["content"]
             # Make sure we're always reading from the beginning of the file in case of retry
