@@ -20,7 +20,7 @@ import time
 import zipfile
 from contextlib import ExitStack
 from functools import wraps
-from io import BytesIO
+from io import BytesIO, StringIO
 
 import mohawk
 import winsign.sign
@@ -812,32 +812,53 @@ def write_signing_req_to_disk(fp, signing_req):
     Does proper base64 and json encoding.
     Tries not to hold onto a lot of memory.
     """
-    fp.write(b"[{")
-    for k, v in signing_req.items():
-        fp.write(json.dumps(k).encode("utf8"))
-        fp.write(b":")
-        if hasattr(v, "read"):
-            # Make sure we're always reading from the beginning of the file
-            # Sometimes we have to retry the request
-            v.seek(0)
-            fp.write(b'"')
+    if "files" in signing_req:
+        # Don't mutate signing_req in case of retry
+        encoded_signing_req = signing_req.copy()
+        for input_file in encoded_signing_req["files"]:
+            encoded_file_content = StringIO()
+            input_stream = input_file["content"]
+            # Make sure we're always reading from the beginning of the file in case of retry
+            input_stream.seek(0)
             while True:
-                block = v.read(1020)
+                block = input_stream.read(1020)
                 if not block:
                     break
-                e = b64encode(block).encode("utf8")
-                fp.write(e)
-            fp.write(b'"')
-        else:
-            fp.write(json.dumps(v).encode("utf8"))
-        fp.write(b",")
-    fp.seek(-1, 1)
-    fp.write(b"}]")
+                encoded_block = b64encode(block)
+                encoded_file_content.write(encoded_block)
+            input_file["content"] = encoded_file_content.getvalue()
+            encoded_file_content.close()
+        encoded_signing_req_bytes = json.dumps(encoded_signing_req).encode("utf-8")
+        fp.write(encoded_signing_req_bytes)
+    else:
+        fp.write(b"[{")
+        for k, v in signing_req.items():
+            fp.write(json.dumps(k).encode("utf8"))
+            fp.write(b":")
+            if hasattr(v, "read"):
+                # Make sure we're always reading from the beginning of the file
+                # Sometimes we have to retry the request
+                v.seek(0)
+                fp.write(b'"')
+                while True:
+                    block = v.read(1020)
+                    if not block:
+                        break
+                    e = b64encode(block).encode("utf8")
+                    fp.write(e)
+                fp.write(b'"')
+            else:
+                fp.write(json.dumps(v).encode("utf8"))
+            fp.write(b",")
+        fp.seek(-1, 1)
+        fp.write(b"}]")
 
 
 def write_files_signing_req_to_disk(fp, signing_req):
-    """Write files/ signing_req to fp.
-    The files content should be ecoded as base64 strings
+    """Write signing_req to fp.
+
+    Does proper base64 and json encoding.
+    Tries not to hold onto a lot of memory.
     """
     encoded_signing_req = json.dumps(signing_req).encode("utf-8")
     fp.write(encoded_signing_req)
@@ -874,10 +895,7 @@ async def call_autograph(session, url, user, password, sign_req):
     content_type = "application/json"
 
     request_body = tempfile.TemporaryFile("w+b")
-    if "files" in sign_req:
-        write_files_signing_req_to_disk(request_body, sign_req)
-    else:
-        write_signing_req_to_disk(request_body, sign_req)
+    write_signing_req_to_disk(request_body, sign_req)
     request_body.seek(0)
 
     content_hash = get_hawk_content_hash(request_body, content_type)
@@ -914,7 +932,12 @@ def _is_xpi_format(fmt):
 @time_function
 def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
     """Make a signing request object to pass to autograph."""
-    sign_req = {"input": input_file}
+    if len(input_file) > 1:
+        sign_req = {"files": []}
+        for f in input_file:
+            sign_req["files"].append({"name": f.name, "content": f})
+    else:
+        sign_req = {"input": input_file}
 
     if keyid:
         sign_req["keyid"] = keyid
@@ -937,15 +960,6 @@ def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
         sign_req["options"]["pkcs7_digest"] = "SHA256"
 
     return sign_req
-
-
-@time_function
-def make_files_signing_req(input_files, fmt, keyid=None, options=None):
-    """Make a signing request to pass to the /sign/files endpoint in autograph."""
-    signing_req = {"keyid": keyid, "options": options, "files": []}
-    for input_file in input_files:
-        signing_req["files"].append({"name": input_file.name, "content": b64encode(input_file.read())})
-    return signing_req
 
 
 @time_async_function
@@ -974,10 +988,8 @@ async def sign_with_autograph(session, server, input_file, fmt, autograph_method
         raise SigningScriptError(f"Unsupported autograph method: {autograph_method}")
 
     keyid = keyid or server.key_id
-    if autograph_method == "files":
-        sign_req = make_files_signing_req(input_file, fmt, keyid=keyid)
-    else:
-        sign_req = make_signing_req(input_file, fmt, keyid, extension_id)
+
+    sign_req = make_signing_req(input_file, fmt, keyid, extension_id)
 
     url = f"{server.url}/sign/{autograph_method}"
 
@@ -1439,7 +1451,7 @@ async def sign_debian_pkg(context, path, fmt, *args, **kwargs):
     extensions = (".dsc", ".buildinfo", ".changes")
     tmp_dir = os.path.join(context.config["work_dir"], "untarred")
     all_file_names = await _extract_tarfile(context, path, compression, tmp_dir=tmp_dir)
-    all_file_names = [os.path.abspath(file_name) for file_name in all_file_names]  #  get rid of "."s because they break autograph
+    all_file_names = [os.path.abspath(file_name) for file_name in all_file_names]  # get rid of "."s because they break autograph
     input_file_names = [input_file_name for input_file_name in all_file_names if input_file_name.endswith(extensions)]
     with ExitStack() as stack:
         input_files = [stack.enter_context(open(input_file_name, "rb")) for input_file_name in input_file_names]
