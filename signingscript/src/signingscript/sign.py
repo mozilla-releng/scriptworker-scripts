@@ -836,10 +836,8 @@ def write_signing_req_to_disk(fp, signing_req):
 
 
 def write_files_signing_req_to_disk(fp, signing_req):
-    """Write signing_req to fp.
-
-    Does proper base64 and json encoding.
-    Tries not to hold onto a lot of memory.
+    """Write files/ signing_req to fp.
+    The files content should be ecoded as base64 strings
     """
     encoded_signing_req = json.dumps(signing_req).encode("utf-8")
     fp.write(encoded_signing_req)
