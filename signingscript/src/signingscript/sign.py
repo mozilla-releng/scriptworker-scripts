@@ -854,16 +854,6 @@ def write_signing_req_to_disk(fp, signing_req):
         fp.write(b"}]")
 
 
-def write_files_signing_req_to_disk(fp, signing_req):
-    """Write signing_req to fp.
-
-    Does proper base64 and json encoding.
-    Tries not to hold onto a lot of memory.
-    """
-    encoded_signing_req = json.dumps(signing_req).encode("utf-8")
-    fp.write(encoded_signing_req)
-
-
 def get_hawk_content_hash(request_body, content_type):
     """Generate the content hash of the given request."""
     h = hashlib.new("sha256")
@@ -932,7 +922,7 @@ def _is_xpi_format(fmt):
 @time_function
 def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
     """Make a signing request object to pass to autograph."""
-    if len(input_file) > 1:
+    if isinstance(input_file, list):
         sign_req = {"files": []}
         for f in input_file:
             sign_req["files"].append({"name": f.name, "content": f})
