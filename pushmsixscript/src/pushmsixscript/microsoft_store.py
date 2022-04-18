@@ -134,7 +134,7 @@ def _create_submission(config, channel, session, headers):
 
 
 def _update_submission(config, channel, session, submission_request, headers, file_paths, publish_mode):
-    # update the in-progress submission, including uploading the new msix file
+    # update the in-progress submission, including uploading the new msix files
     application_id = config["application_ids"][channel]
     submission_id = submission_request.get("id")
     upload_url = submission_request.get("fileUploadUrl")
@@ -190,14 +190,18 @@ def _update_submission(config, channel, session, submission_request, headers, fi
     response = session.put(url, submission_request, headers=headers)
     _log_response(response)
     response.raise_for_status()
+    # Wrap all the msix files in a zip file and upload the zip
     with tempfile.TemporaryDirectory() as work_dir:
         zip_file_name = os.path.join(work_dir, "pushmsix.zip")
         with zipfile.ZipFile(zip_file_name, "w") as zf:
             for file_path in file_paths:
                 zf.write(file_path, arcname=upload_file_names[file_path])
+        # Note that simple HTTP uploads fail for large files (like ours!), so
+        # using the BlobClient is required.
         blob_client = BlobClient.from_blob_url(upload_url)
         with open(zip_file_name, "rb") as f:
-            blob_client.upload_blob(f, blob_type="BlockBlob", logging_enable=False)
+            d = blob_client.upload_blob(f, blob_type="BlockBlob", logging_enable=False)
+            log.debug(f"upload response: {d}")
 
 
 def _commit_submission(config, channel, session, submission_id, headers):
