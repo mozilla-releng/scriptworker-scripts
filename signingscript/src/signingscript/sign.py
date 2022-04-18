@@ -18,6 +18,7 @@ import tarfile
 import tempfile
 import time
 import zipfile
+from contextlib import ExitStack
 from functools import wraps
 from io import BytesIO
 
@@ -860,12 +861,15 @@ def get_hawk_header(url, user, password, content_type, content_hash):
 
 
 @time_async_function
-async def call_autograph(session, url, user, password, sign_req):
+async def call_autograph(session, url, user, password, sign_req, skip_encoding=False):
     """Call autograph and return the json response."""
     content_type = "application/json"
 
     request_body = tempfile.TemporaryFile("w+b")
-    write_signing_req_to_disk(request_body, sign_req)
+    if skip_encoding:
+        request_body.write(sign_req)
+    else:
+        write_signing_req_to_disk(request_body, sign_req)
     request_body.seek(0)
 
     content_hash = get_hawk_content_hash(request_body, content_type)
@@ -927,6 +931,44 @@ def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
     return sign_req
 
 
+@time_function
+def make_files_signing_req(input_files, fmt, keyid=None, options=None):
+    """Make a signing request to pass to the /sign/files endpoint in autograph."""
+    signing_req = {"keyid": keyid, "options": options}
+    encoded_signing_req = BytesIO()
+    encoded_signing_req.write(b"[{")
+    for k, v in signing_req.items():
+        encoded_signing_req.write(json.dumps(k).encode("utf8"))
+        encoded_signing_req.write(b":")
+        encoded_signing_req.write(json.dumps(v).encode("utf8"))
+        encoded_signing_req.write(b",")
+    encoded_signing_req.write(json.dumps("files").encode("utf8"))
+    encoded_signing_req.write(b":")
+    encoded_signing_req.write(b"[")
+    for input_file in input_files:
+        encoded_signing_req.write(b"{")
+        encoded_signing_req.write(json.dumps("name").encode("utf8"))
+        encoded_signing_req.write(b":")
+        encoded_signing_req.write(json.dumps(os.path.basename(input_file.name)).encode("utf8"))
+        encoded_signing_req.write(b",")
+        encoded_signing_req.write(json.dumps("content").encode("utf8"))
+        encoded_signing_req.write(b":")
+        input_file.seek(0)
+        encoded_signing_req.write(b'"')
+        while True:
+            block = input_file.read(1020)
+            if not block:
+                break
+            e = b64encode(block).encode("utf8")
+            encoded_signing_req.write(e)
+        encoded_signing_req.write(b'"')
+        encoded_signing_req.write(b"},")
+    encoded_signing_req.seek(-2, 1)
+    encoded_signing_req.write(b"}]}]")
+    encoded_signing_req.seek(0)
+    return encoded_signing_req.read()
+
+
 @time_async_function
 async def sign_with_autograph(session, server, input_file, fmt, autograph_method, keyid=None, extension_id=None):
     """Signs data with autograph and returns the result.
@@ -949,20 +991,31 @@ async def sign_with_autograph(session, server, input_file, fmt, autograph_method
         bytes: the signed data
 
     """
-    if autograph_method not in {"file", "hash", "data"}:
+    if autograph_method not in {"file", "hash", "data", "files"}:
         raise SigningScriptError(f"Unsupported autograph method: {autograph_method}")
 
     keyid = keyid or server.key_id
-    sign_req = make_signing_req(input_file, fmt, keyid, extension_id)
+    if autograph_method == "files":
+        sign_req = make_files_signing_req(input_file, fmt, keyid=keyid)
+        skip_encoding = True
+    else:
+        sign_req = make_signing_req(input_file, fmt, keyid, extension_id)
+        skip_encoding = False
 
     url = f"{server.url}/sign/{autograph_method}"
 
     sign_resp = await retry_async(
-        call_autograph, args=(session, url, server.client_id, server.access_key, sign_req), attempts=3, sleeptime_kwargs={"delay_factor": 2.0}
+        call_autograph,
+        args=(session, url, server.client_id, server.access_key, sign_req),
+        kwargs={"skip_encoding": skip_encoding},
+        attempts=3,
+        sleeptime_kwargs={"delay_factor": 2.0},
     )
 
     if autograph_method == "file":
         return sign_resp[0]["signed_file"]
+    elif autograph_method == "files":
+        return sign_resp[0]["signed_files"]
     else:
         return sign_resp[0]["signature"]
 
@@ -1395,3 +1448,38 @@ async def sign_authenticode_zip(context, orig_path, fmt, *, authenticode_comment
         # Recreate the zipfile
         await _create_zipfile(context, orig_path, files, tmp_dir=tmp_dir)
     return orig_path
+
+
+async def sign_debian_pkg(context, path, fmt, *args, **kwargs):
+    """
+    Sign a debian package using autograph's debsign support.
+
+    Unpacks a tarball and signs the .dsc .buildinfo .changes files using the autograph /sign/files end-point.
+    Then, it re-compresses the tarball and uploads the new tarball with the signed files as an artifact.
+    """
+    cert_type = task.task_cert_type(context)
+    autograph_config = get_autograph_config(context.autograph_configs, cert_type, [fmt], raise_on_empty=True)
+    cert_type = task.task_cert_type(context)
+    _, compression = os.path.splitext(path)
+    # Find *.dsc *.buildinfo *.changes. These are the files in the debian package we need to sign.
+    extensions = (".dsc", ".buildinfo", ".changes")
+    tmp_dir = os.path.join(context.config["work_dir"], "untarred")
+    all_file_names = await _extract_tarfile(context, path, compression, tmp_dir=tmp_dir)
+    input_file_names = [input_file_name for input_file_name in all_file_names if input_file_name.endswith(extensions)]
+    basename_to_file_name = {os.path.basename(input_file_name): input_file_name for input_file_name in input_file_names}
+    with ExitStack() as stack:
+        input_files = [stack.enter_context(open(input_file_name, "rb")) for input_file_name in input_file_names]
+        signed_files = await sign_with_autograph(
+            context.session,
+            autograph_config,
+            input_files,
+            fmt,
+            "files",
+        )
+    # go from base64 back to bytes before writing the files
+    signed_files = [{"name": basename_to_file_name[signed_file["name"]], "content": base64.b64decode(signed_file["content"])} for signed_file in signed_files]
+    for signed_file in signed_files:
+        with open(signed_file["name"], "wb") as fh:
+            fh.write(signed_file["content"])
+    await _create_tarfile(context, path, all_file_names, compression, tmp_dir=tmp_dir)
+    return path
