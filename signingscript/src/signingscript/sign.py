@@ -806,6 +806,58 @@ async def _create_tarfile(context, to, files, compression, tmp_dir=None):
         raise SigningScriptError(e)
 
 
+def _encode_single_file(fp, signing_req):
+    """Write signing_req to fp.
+
+    Does proper base64 and json encoding.
+    Tries not to hold onto a lot of memory.
+    """
+    fp.write(b"[{")
+    for k, v in signing_req.items():
+        fp.write(json.dumps(k).encode("utf8"))
+        fp.write(b":")
+        if hasattr(v, "read"):
+            # Make sure we're always reading from the beginning of the file
+            # Sometimes we have to retry the request
+            v.seek(0)
+            fp.write(b'"')
+            while True:
+                block = v.read(1020)
+                if not block:
+                    break
+                e = b64encode(block).encode("utf8")
+                fp.write(e)
+            fp.write(b'"')
+        else:
+            fp.write(json.dumps(v).encode("utf8"))
+        fp.write(b",")
+    fp.seek(-1, 1)
+    fp.write(b"}]")
+
+
+def _encode_multiple_files(fp, signing_req):
+    # Don't mutate signing_req in case of retry
+    encoded_signing_req = signing_req.copy()
+    encoded_signing_req["files"] = []
+    for input_file in signing_req["files"]:
+        encoded_file = input_file.copy() # Don't mutate signing_req in case of retry
+        encoded_file_content = StringIO()
+        input_stream = input_file["content"]
+        # Make sure we're always reading from the beginning of the file in case of retry
+        input_stream.seek(0)
+        while True:
+            block = input_stream.read(1020)
+            if not block:
+                break
+            encoded_block = b64encode(block)
+            encoded_file_content.write(encoded_block)
+        encoded_file["content"] = encoded_file_content.getvalue()
+        encoded_file_content.close()
+        encoded_signing_req["files"].append(encoded_file)
+    encoded_signing_req_bytes = json.dumps(encoded_signing_req).encode("utf-8")
+    fp.write(encoded_signing_req_bytes)
+
+
 def write_signing_req_to_disk(fp, signing_req):
     """Write signing_req to fp.
 
@@ -813,48 +865,9 @@ def write_signing_req_to_disk(fp, signing_req):
     Tries not to hold onto a lot of memory.
     """
     if "files" in signing_req:
-        # Don't mutate signing_req in case of retry
-        encoded_signing_req = signing_req.copy()
-        encoded_signing_req["files"] = []
-        for input_file in signing_req["files"]:
-            encoded_file = input_file.copy()  # Don't mutate signing_req in case of retry
-            encoded_file_content = StringIO()
-            input_stream = input_file["content"]
-            # Make sure we're always reading from the beginning of the file in case of retry
-            input_stream.seek(0)
-            while True:
-                block = input_stream.read(1020)
-                if not block:
-                    break
-                encoded_block = b64encode(block)
-                encoded_file_content.write(encoded_block)
-            encoded_file["content"] = encoded_file_content.getvalue()
-            encoded_file_content.close()
-            encoded_signing_req["files"].append(encoded_file)
-        encoded_signing_req_bytes = json.dumps(encoded_signing_req).encode("utf-8")
-        fp.write(encoded_signing_req_bytes)
+        _encode_multiple_files(fp, signing_req)
     else:
-        fp.write(b"[{")
-        for k, v in signing_req.items():
-            fp.write(json.dumps(k).encode("utf8"))
-            fp.write(b":")
-            if hasattr(v, "read"):
-                # Make sure we're always reading from the beginning of the file
-                # Sometimes we have to retry the request
-                v.seek(0)
-                fp.write(b'"')
-                while True:
-                    block = v.read(1020)
-                    if not block:
-                        break
-                    e = b64encode(block).encode("utf8")
-                    fp.write(e)
-                fp.write(b'"')
-            else:
-                fp.write(json.dumps(v).encode("utf8"))
-            fp.write(b",")
-        fp.seek(-1, 1)
-        fp.write(b"}]")
+        _encode_single_file(fp, signing_req)
 
 
 def get_hawk_content_hash(request_body, content_type):
@@ -1443,8 +1456,8 @@ async def sign_debian_pkg(context, path, fmt, *args, **kwargs):
     extensions = (".dsc", ".buildinfo", ".changes")
     tmp_dir = os.path.join(context.config["work_dir"], "untarred")
     all_file_names = await _extract_tarfile(context, path, compression, tmp_dir=tmp_dir)
-    all_file_names = [os.path.abspath(file_name) for file_name in all_file_names]  # get rid of "."s because they break autograph
     input_file_names = [input_file_name for input_file_name in all_file_names if input_file_name.endswith(extensions)]
+    basename_to_file_name = {os.path.basename(input_file_name): input_file_name for input_file_name in input_file_names}
     with ExitStack() as stack:
         input_files = [stack.enter_context(open(input_file_name, "rb")) for input_file_name in input_file_names]
         signed_files = await sign_with_autograph(
@@ -1455,7 +1468,7 @@ async def sign_debian_pkg(context, path, fmt, *args, **kwargs):
             "files",
         )
     # go from base64 back to bytes before writing the files to disk
-    signed_files = [{"name": signed_file["name"], "content": base64.b64decode(signed_file["content"])} for signed_file in signed_files]
+    signed_files = [{"name": basename_to_file_name[signed_file["name"]], "content": base64.b64decode(signed_file["content"])} for signed_file in signed_files]
     for signed_file in signed_files:
         with open(signed_file["name"], "wb") as fh:
             fh.write(signed_file["content"])
