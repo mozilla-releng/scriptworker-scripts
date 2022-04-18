@@ -806,7 +806,7 @@ async def _create_tarfile(context, to, files, compression, tmp_dir=None):
         raise SigningScriptError(e)
 
 
-def write_file_signing_req_to_disk(fp, signing_req):
+def write_signing_req_to_disk(fp, signing_req):
     """Write signing_req to fp.
 
     Does proper base64 and json encoding.
@@ -879,7 +879,7 @@ async def call_autograph(session, url, user, password, sign_req):
     if "files" in sign_req:
         write_files_signing_req_to_disk(request_body, sign_req)
     else:
-        write_file_signing_req_to_disk(request_body, sign_req)
+        write_signing_req_to_disk(request_body, sign_req)
     request_body.seek(0)
 
     content_hash = get_hawk_content_hash(request_body, content_type)
@@ -984,10 +984,7 @@ async def sign_with_autograph(session, server, input_file, fmt, autograph_method
     url = f"{server.url}/sign/{autograph_method}"
 
     sign_resp = await retry_async(
-        call_autograph,
-        args=(session, url, server.client_id, server.access_key, sign_req),
-        attempts=3,
-        sleeptime_kwargs={"delay_factor": 2.0},
+        call_autograph, args=(session, url, server.client_id, server.access_key, sign_req), attempts=3, sleeptime_kwargs={"delay_factor": 2.0}
     )
 
     if autograph_method == "file":
@@ -1428,6 +1425,7 @@ async def sign_authenticode_zip(context, orig_path, fmt, *, authenticode_comment
     return orig_path
 
 
+@time_async_function
 async def sign_debian_pkg(context, path, fmt, *args, **kwargs):
     """
     Sign a debian package using autograph's debsign support.
