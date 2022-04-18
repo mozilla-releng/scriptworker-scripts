@@ -978,7 +978,6 @@ async def sign_with_autograph(session, server, input_file, fmt, autograph_method
         raise SigningScriptError(f"Unsupported autograph method: {autograph_method}")
 
     keyid = keyid or server.key_id
-
     sign_req = make_signing_req(input_file, fmt, keyid, extension_id)
 
     url = f"{server.url}/sign/{autograph_method}"
