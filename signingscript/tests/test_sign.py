@@ -107,6 +107,11 @@ async def helper_archive(context, filename, create_fn, extract_fn, *args):
         assert hash1 == hash2
 
 
+async def fake_retry_async(func, args=(), kwargs=None, attempts=5, sleeptime_kwargs=None):
+    kwargs = kwargs or {}
+    return await func(*args, **kwargs)
+
+
 # get_autograph_config {{{1
 @pytest.mark.parametrize(
     "formats,expected",
@@ -196,10 +201,6 @@ async def test_sign_file_with_autograph_raises_http_error(context, mocker, to, e
 
     mocked_session = MockedSession(signed_file="bW96aWxsYQ==", exception=aiohttp.ClientError)
     mocker.patch.object(context, "session", new=mocked_session)
-
-    async def fake_retry_async(func, args=(), attempts=5, sleeptime_kwargs=None):
-        await func(*args)
-
     mocker.patch.object(sign, "retry_async", new=fake_retry_async)
 
     context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
@@ -1039,6 +1040,7 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt, use_comment):
         if filename.endswith("signed.exe"):
             return True
 
+    mocker.patch.object(sign, "retry_async", new=fake_retry_async)
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
     mocker.patch.object(winsign.osslsigncode, "is_signed", mocked_issigned)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
@@ -1082,6 +1084,7 @@ async def test_authenticode_sign_msi(tmpdir, mocker, context, fmt, use_comment):
         if filename.endswith("signed.exe"):
             return True
 
+    mocker.patch.object(sign, "retry_async", new=fake_retry_async)
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
     mocker.patch.object(winsign.osslsigncode, "is_signed", mocked_issigned)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
@@ -1125,8 +1128,9 @@ async def test_authenticode_sign_zip_error(tmpdir, mocker, context):
     async def mocked_winsign(infile, outfile, *args, **kwargs):
         return False
 
+    mocker.patch.object(sign, "retry_async", new=fake_retry_async)
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
-    with pytest.raises(IOError):
+    with pytest.raises(SigningScriptError):
         await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode")
 
 
@@ -1149,6 +1153,7 @@ async def test_authenticode_sign_authenticode_permanent_error(tmpdir, mocker, co
         shutil.copyfile(infile, outfile)
         return True
 
+    mocker.patch.object(sign, "retry_async", new=fake_retry_async)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_authenticode_sign)
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
 
