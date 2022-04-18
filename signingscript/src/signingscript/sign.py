@@ -946,10 +946,7 @@ def make_files_signing_req(input_files, fmt, keyid=None, options=None):
     """Make a signing request to pass to the /sign/files endpoint in autograph."""
     signing_req = {"keyid": keyid, "options": options, "files": []}
     for input_file in input_files:
-        signing_req["files"].append({
-            "name": input_file.name,
-            "content": b64encode(input_file.read())
-        })
+        signing_req["files"].append({"name": input_file.name, "content": b64encode(input_file.read())})
     return signing_req
 
 
