@@ -62,8 +62,9 @@ def is_tarfile(archive):
 
 
 class MockedSession:
-    def __init__(self, signed_file=None, signature=None, exception=None):
+    def __init__(self, signed_file=None, signed_files=None, signature=None, exception=None):
         self.signed_file = signed_file
+        self.signed_files = signed_files
         self.exception = exception
         self.signature = signature
         self.post = mock.MagicMock(wraps=self.post)
@@ -74,6 +75,8 @@ class MockedSession:
         resp.json.return_value = asyncio.Future()
         if self.signed_file:
             resp.json.return_value.set_result([{"signed_file": self.signed_file}])
+        if self.signed_files:
+            resp.json.return_value.set_result([{"signed_files": self.signed_files}])
         if self.signature:
             resp.json.return_value.set_result([{"signature": self.signature}])
         if self.exception:
@@ -1257,4 +1260,24 @@ async def test_authenticode_sign_keyids(tmpdir, mocker, context):
 
     result = await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode:202005")
     assert result == test_file
+    assert os.path.exists(result)
+
+
+@pytest.mark.asyncio
+async def test_sign_debian_pkg(tmpdir, mocker, context):
+    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
+    context.autograph_configs = {
+        "project:releng:signing:cert:dep-signing": [utils.Autograph(*["https://autograph.dev.mozaws.net", "user", "pass", ["autograph_debsign"]])]
+    }
+    tmp_dir = os.path.join(context.config["work_dir"], "test_untarred")
+    path = os.path.join(TEST_DATA_DIR, "target.tar.gz")
+    extensions = (".dsc", ".buildinfo", ".changes")
+    _, compression = os.path.splitext(path)
+    all_file_names = await sign._extract_tarfile(context, path, compression, tmp_dir=tmp_dir)
+    input_file_names = [input_file_name for input_file_name in all_file_names if input_file_name.endswith(extensions)]
+    signed_files = [{"name": os.path.basename(input_file_name), "content": sign.b64encode(b"<DATA>")} for input_file_name in input_file_names]
+    mocked_session = MockedSession(signed_files=signed_files)
+    mocker.patch.object(context, "session", new=mocked_session)
+    result = await sign.sign_debian_pkg(context, path, "autograph_debsign")
+    assert result == path
     assert os.path.exists(result)

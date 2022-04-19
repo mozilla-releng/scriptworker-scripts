@@ -862,8 +862,8 @@ def _encode_multiple_files(fp, signing_req):
             block = input_file["content"].read(1020)
             if not block:
                 break
-            e = b64encode(block).encode("utf8")
-            encoded_signing_req_bytes_io.write(e)
+            encoded_block = b64encode(block).encode("utf8")
+            encoded_signing_req_bytes_io.write(encoded_block)
         encoded_signing_req_bytes_io.write(b'"')
         encoded_signing_req_bytes_io.write(b"},")
     encoded_signing_req_bytes_io.seek(-2, 1)
