@@ -852,7 +852,7 @@ def _encode_multiple_files(fp, signing_req):
         encoded_signing_req_bytes_io.write(b"{")
         encoded_signing_req_bytes_io.write(json.dumps("name").encode("utf8"))
         encoded_signing_req_bytes_io.write(b":")
-        encoded_signing_req_bytes_io.write(json.dumps(os.path.basename(input_file["name"])).encode("utf8"))
+        encoded_signing_req_bytes_io.write(json.dumps(input_file["name"]).encode("utf8"))
         encoded_signing_req_bytes_io.write(b",")
         encoded_signing_req_bytes_io.write(json.dumps("content").encode("utf8"))
         encoded_signing_req_bytes_io.write(b":")
@@ -1471,8 +1471,8 @@ async def sign_debian_pkg(context, path, fmt, *args, **kwargs):
     extensions = (".dsc", ".buildinfo", ".changes")
     tmp_dir = os.path.join(context.config["work_dir"], "untarred")
     all_file_names = await _extract_tarfile(context, path, compression, tmp_dir=tmp_dir)
+    all_file_names = [os.path.abspath(file_name) for file_name in all_file_names]
     input_file_names = [input_file_name for input_file_name in all_file_names if input_file_name.endswith(extensions)]
-    basename_to_file_name = {os.path.basename(input_file_name): input_file_name for input_file_name in input_file_names}
     with ExitStack() as stack:
         input_files = [stack.enter_context(open(input_file_name, "rb")) for input_file_name in input_file_names]
         signed_files = await sign_with_autograph(
@@ -1483,7 +1483,7 @@ async def sign_debian_pkg(context, path, fmt, *args, **kwargs):
             "files",
         )
     # go from base64 back to bytes before writing the files to disk
-    signed_files = [{"name": basename_to_file_name[signed_file["name"]], "content": base64.b64decode(signed_file["content"])} for signed_file in signed_files]
+    signed_files = [{"name": signed_file["name"], "content": base64.b64decode(signed_file["content"])} for signed_file in signed_files]
     for signed_file in signed_files:
         with open(signed_file["name"], "wb") as fh:
             fh.write(signed_file["content"])
