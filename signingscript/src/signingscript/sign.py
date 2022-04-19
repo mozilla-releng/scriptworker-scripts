@@ -20,7 +20,7 @@ import time
 import zipfile
 from contextlib import ExitStack
 from functools import wraps
-from io import BytesIO, StringIO
+from io import BytesIO
 
 import mohawk
 import winsign.sign
