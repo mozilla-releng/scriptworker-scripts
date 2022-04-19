@@ -8,9 +8,11 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import zipfile
 from contextlib import contextmanager
 from hashlib import sha256
+from io import BufferedRandom, BytesIO
 from unittest import mock
 
 import aiohttp
@@ -1281,3 +1283,38 @@ async def test_sign_debian_pkg(tmpdir, mocker, context):
     result = await sign.sign_debian_pkg(context, path, "autograph_debsign")
     assert result == path
     assert os.path.exists(result)
+
+
+def test_encode_multiple_files(tmpdir, mocker, context):
+    output_file = tempfile.TemporaryFile("w+b")
+    input_files = [
+        {"name": "uawum.txt", "content": BufferedRandom(BytesIO(b"RmUOX3AesiyzSlh"))},
+        {"name": "mweut.txt", "content": BufferedRandom(BytesIO(b"dhD52zxxKoKjKls"))},
+        {"name": "xbtnd.txt", "content": BufferedRandom(BytesIO(b"I0XvQRZh7CcYme6"))},
+    ]
+    signing_req = {"keyid": "rvkgu", "options": {"zip": "passthrough"}, "files": input_files}
+    sign.write_signing_req_to_disk(output_file, signing_req)
+    output_file.seek(0)
+    result = json.loads(output_file.read().decode())
+    expected = [
+        {
+            "keyid": "rvkgu",
+            "options": {"zip": "passthrough"},
+            "files": [
+                {"name": "uawum.txt", "content": "Um1VT1gzQWVzaXl6U2xo"},
+                {"name": "mweut.txt", "content": "ZGhENTJ6eHhLb0tqS2xz"},
+                {"name": "xbtnd.txt", "content": "STBYdlFSWmg3Q2NZbWU2"},
+            ],
+        }
+    ]
+    assert result == expected
+
+
+def test_encode_single_file(tmpdir, mocker, context):
+    output_file = tempfile.TemporaryFile("w+b")
+    signing_req = {"keyid": "rvkgu", "options": {"zip": "passthrough"}, "input": BufferedRandom(BytesIO(b"RmUOX3AesiyzSlh"))}
+    sign.write_signing_req_to_disk(output_file, signing_req)
+    output_file.seek(0)
+    result = json.loads(output_file.read().decode())
+    expected = [{"keyid": "rvkgu", "options": {"zip": "passthrough"}, "input": "Um1VT1gzQWVzaXl6U2xo"}]
+    assert result == expected
