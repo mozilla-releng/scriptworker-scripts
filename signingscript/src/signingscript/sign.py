@@ -836,25 +836,40 @@ def _encode_single_file(fp, signing_req):
 
 
 def _encode_multiple_files(fp, signing_req):
-    # Don't mutate signing_req in case of retry
-    encoded_signing_req = signing_req.copy()
-    encoded_signing_req["files"] = []
-    for input_file in signing_req["files"]:
-        encoded_file = input_file.copy()  # Don't mutate signing_req in case of retry
-        encoded_file_content = StringIO()
-        input_stream = input_file["content"]
-        # Make sure we're always reading from the beginning of the file in case of retry
-        input_stream.seek(0)
+    _signing_req = signing_req.copy()
+    input_files = _signing_req.pop("files")
+    encoded_signing_req_bytes_io = BytesIO()
+    encoded_signing_req_bytes_io.write(b"[{")
+    for k, v in _signing_req.items():
+        encoded_signing_req_bytes_io.write(json.dumps(k).encode("utf8"))
+        encoded_signing_req_bytes_io.write(b":")
+        encoded_signing_req_bytes_io.write(json.dumps(v).encode("utf8"))
+        encoded_signing_req_bytes_io.write(b",")
+    encoded_signing_req_bytes_io.write(json.dumps("files").encode("utf8"))
+    encoded_signing_req_bytes_io.write(b":")
+    encoded_signing_req_bytes_io.write(b"[")
+    for input_file in input_files:
+        encoded_signing_req_bytes_io.write(b"{")
+        encoded_signing_req_bytes_io.write(json.dumps("name").encode("utf8"))
+        encoded_signing_req_bytes_io.write(b":")
+        encoded_signing_req_bytes_io.write(json.dumps(os.path.basename(input_file["name"])).encode("utf8"))
+        encoded_signing_req_bytes_io.write(b",")
+        encoded_signing_req_bytes_io.write(json.dumps("content").encode("utf8"))
+        encoded_signing_req_bytes_io.write(b":")
+        input_file["content"].seek(0)
+        encoded_signing_req_bytes_io.write(b'"')
         while True:
-            block = input_stream.read(1020)
+            block = input_file["content"].read(1020)
             if not block:
                 break
-            encoded_block = b64encode(block)
-            encoded_file_content.write(encoded_block)
-        encoded_file["content"] = encoded_file_content.getvalue()
-        encoded_file_content.close()
-        encoded_signing_req["files"].append(encoded_file)
-    encoded_signing_req_bytes = json.dumps(encoded_signing_req).encode("utf-8")
+            e = b64encode(block).encode("utf8")
+            encoded_signing_req_bytes_io.write(e)
+        encoded_signing_req_bytes_io.write(b'"')
+        encoded_signing_req_bytes_io.write(b"},")
+    encoded_signing_req_bytes_io.seek(-2, 1)
+    encoded_signing_req_bytes_io.write(b"}]}]")
+    encoded_signing_req_bytes_io.seek(0)
+    encoded_signing_req_bytes = encoded_signing_req_bytes_io.read()
     fp.write(encoded_signing_req_bytes)
 
 
