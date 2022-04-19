@@ -1272,7 +1272,9 @@ async def test_sign_debian_pkg(tmpdir, mocker, context):
         "project:releng:signing:cert:dep-signing": [utils.Autograph(*["https://autograph.dev.mozaws.net", "user", "pass", ["autograph_debsign"]])]
     }
     tmp_dir = os.path.join(context.config["work_dir"], "test_untarred")
-    path = os.path.join(TEST_DATA_DIR, "target.tar.gz")
+    path = os.path.join(context.config["work_dir"], "test_tar", "target.tar.gz")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    shutil.copy2(os.path.join(TEST_DATA_DIR, "target.tar.gz"), path)
     extensions = (".dsc", ".buildinfo", ".changes")
     _, compression = os.path.splitext(path)
     all_file_names = await sign._extract_tarfile(context, path, compression, tmp_dir=tmp_dir)
