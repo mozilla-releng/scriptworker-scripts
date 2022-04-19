@@ -836,6 +836,13 @@ def _encode_single_file(fp, signing_req):
 
 
 def _encode_multiple_files(fp, signing_req):
+    """Write signing_req to fp.
+
+    Builds a JSON byte string from the signing_req.
+    Does a proper base64 encoding of the binary content in the request's file blobs.
+    Doesn't hold onto a lot of memory by chunking the file blobs.
+    Writes the request to the binary-stream fp.
+    """
     _signing_req = signing_req.copy()
     input_files = _signing_req.pop("files")
     encoded_signing_req_bytes_io = BytesIO()
