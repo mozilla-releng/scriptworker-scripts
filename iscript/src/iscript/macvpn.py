@@ -71,14 +71,15 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile
     provisioning_profile_path = None
 
     if provisionprofile_filename:
-        pp_dir = config.get("provisioning_profile_dir", None)
+        pp_dir = sign_config.get("provisioning_profile_dir", None)
         if not pp_dir:
             pp_dir = Path(config["work_dir"]).parent / "provisionprofiles"
             log.warning(f"No provisioning_profile_dir in settings, using default {pp_dir}")
-        provisioning_profile_path = Path(pp_dir) / provisionprofile_filename
-        if not provisioning_profile_path.is_file():
-            log.error(f"Could not find provisionprofile file: {provisioning_profile_path}")
-            raise IScriptError(f"Could not find provisionprofile file: {provisioning_profile_path}")
+        else:
+            provisioning_profile_path = Path(pp_dir) / provisionprofile_filename
+            if not provisioning_profile_path.is_file():
+                log.error(f"Could not find provisionprofile file: {provisioning_profile_path}")
+                provisioning_profile_path = None
         log.info(f"Using provisionprofile {provisioning_profile_path}")
 
     await sign_all_apps(config, sign_config, entitlements_path, [app], provisioning_profile_path)

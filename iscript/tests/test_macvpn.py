@@ -55,12 +55,16 @@ async def test_sign_app(mocker, tmp_path):
     mocker.patch.object(macvpn, "download_entitlements_file", new=noop_async)
     mocker.patch.object(macvpn, "sign_all_apps", new=noop_async)
     app = App(app_name="mock.app")
+    sign_config = {"provisioning_profile_dir": str(tmp_path)}
     await macvpn._sign_app({}, {}, app, "", None)
-    with pytest.raises(IScriptError):
-        await macvpn._sign_app({"work_dir": "."}, {}, app, "", "Does not exist")
     fake_file = tmp_path / "fake.provisionprofile"
     fake_file.write_text("contents")
-    await macvpn._sign_app({"provisioning_profile_dir": str(tmp_path), "work_dir": "."}, {}, app, "", str(fake_file))
+    # Missing dir
+    await macvpn._sign_app({"work_dir": "."}, {}, app, "", "Does not exist")
+    # Missing file
+    await macvpn._sign_app({"work_dir": "."}, sign_config, app, "", "Does not exist")
+    # With both dir and file
+    await macvpn._sign_app({"work_dir": "."}, sign_config, app, "", str(fake_file))
 
 
 @pytest.mark.asyncio
