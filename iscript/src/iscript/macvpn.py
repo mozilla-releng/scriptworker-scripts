@@ -66,10 +66,7 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile
     # We mock the task for downloading entitlements and provisioning profiles
     entitlements_path = await download_entitlements_file(config, sign_config, {"payload": {"entitlements-url": entitlements_url}})
 
-    # TODO: Add provisionprofile_dir to scriptworker config
-    # https://github.com/mozilla-releng/scriptworker/blob/master/src/scriptworker/constants.py#L34
     provisioning_profile_path = None
-
     if provisionprofile_filename:
         pp_dir = sign_config.get("provisioning_profile_dir", None)
         if not pp_dir:
@@ -87,7 +84,7 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile
     log.info(f"Done signing app {app.app_name}")
 
 
-async def _sign_util(sign_config, binary_path):
+async def _codesign(sign_config, binary_path):
     """Sign command for VPN util binaries.
 
     Args:
@@ -258,9 +255,9 @@ async def vpn_behavior(config, task, notarize=True):
 
     utils_dir = os.path.join(top_app.app_path, "Contents/Resources/utils")
     # Wireguard inner app
-    await _sign_util(sign_config, os.path.join(utils_dir, "wireguard-go"))
+    await _codesign(sign_config, os.path.join(utils_dir, "wireguard-go"))
     # Mozillavpnnp
-    await _sign_util(sign_config, os.path.join(utils_dir, "mozillavpnnp"))
+    await _codesign(sign_config, os.path.join(utils_dir, "mozillavpnnp"))
 
     # Main VPN app
     # Already defined from extract - just need the extra bits

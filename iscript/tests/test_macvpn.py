@@ -28,10 +28,10 @@ async def test_create_notarization_zipfile(mocker):
 
 
 @pytest.mark.asyncio
-async def test_sign_util(mocker):
+async def test_codesign(mocker):
     mocker.patch.object(macvpn, "run_command", new=noop_async)
     sign_config = {"identity": "1", "signing_keychain": "1"}
-    await macvpn._sign_util(sign_config, "fake/path")
+    await macvpn._codesign(sign_config, "fake/path")
 
 
 @pytest.mark.asyncio
@@ -87,7 +87,7 @@ async def test_vpn_behavior(mocker):
     mocker.patch.object(macvpn, "_sign_app", new=noop_async)
     mocker.patch.object(macvpn, "_create_notarization_zipfile", new=noop_async)
     mocker.patch.object(macvpn, "_create_pkg_files", new=noop_async)
-    mocker.patch.object(macvpn, "_sign_util", new=noop_async)
+    mocker.patch.object(macvpn, "_codesign", new=noop_async)
     mocker.patch.object(macvpn, "notarize_no_sudo", new=noop_async)
     mocker.patch.object(macvpn, "poll_all_notarization_status", new=noop_async)
     mocker.patch.object(macvpn, "staple_notarization", new=noop_async)
