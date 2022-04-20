@@ -16,6 +16,7 @@ from scriptworker.utils import get_single_item_from_sequence
 
 from signingscript.sign import (
     sign_authenticode_zip,
+    sign_debian_pkg,
     sign_file,
     sign_gpg,
     sign_gpg_with_autograph,
@@ -42,6 +43,7 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "focus-jar": sign_jar,
         "macapp": sign_macapp,
         "widevine": sign_widevine,
+        "autograph_debsign": sign_debian_pkg,
         "autograph_widevine": sign_widevine,
         "autograph_omnija": sign_omnija,
         "autograph_langpack": sign_xpi,
