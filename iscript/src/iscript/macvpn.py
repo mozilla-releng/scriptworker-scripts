@@ -3,14 +3,16 @@
 
 import logging
 import os
+from pathlib import Path
+from shutil import copy2, copytree
 
+from scriptworker_client.aio import retry_async
 from scriptworker_client.utils import run_command
 
 from iscript.exceptions import IScriptError
 from iscript.mac import (
     App,
     copy_pkgs_to_artifact_dir,
-    create_pkg_files,
     download_entitlements_file,
     extract_all_apps,
     get_app_paths,
@@ -55,7 +57,6 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile
 
     Args:
         config (dict): script config
-        task (dict): running task
         sign_config (dict): the config for this signing key
         app (App): the App the notarize
         entitlements_url (str): URL for entitlements file
@@ -64,18 +65,129 @@ async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile
     """
     # We mock the task for downloading entitlements and provisioning profiles
     entitlements_path = await download_entitlements_file(config, sign_config, {"payload": {"entitlements-url": entitlements_url}})
+
     provisioning_profile_path = None
-    if config.get("provisionprofile_dir"):
-        provisioning_profile_path = os.path.join(config["provisionprofile_dir"], provisionprofile_filename)
-        if not os.path.exists(provisioning_profile_path):
-            log.error(f"Could not find provisionprofile file: {provisioning_profile_path}")
-            raise IScriptError(f"Could not find provisionprofile file: {provisioning_profile_path}")
+    if provisionprofile_filename:
+        pp_dir = sign_config.get("provisioning_profile_dir", None)
+        if not pp_dir:
+            pp_dir = Path(config["work_dir"]).parent / "provisionprofiles"
+            log.warning(f"No provisioning_profile_dir in settings, using default {pp_dir}")
         else:
-            log.info(f"Using provisionprofile {provisioning_profile_path}")
+            provisioning_profile_path = Path(pp_dir) / provisionprofile_filename
+            if not provisioning_profile_path.is_file():
+                log.error(f"Could not find provisionprofile file: {provisioning_profile_path}")
+                provisioning_profile_path = None
+        log.info(f"Using provisionprofile {provisioning_profile_path}")
 
     await sign_all_apps(config, sign_config, entitlements_path, [app], provisioning_profile_path)
 
     log.info(f"Done signing app {app.app_name}")
+
+
+async def _codesign(sign_config, binary_path):
+    """Sign command for VPN util binaries.
+
+    Args:
+        sign_config (dict): the task config
+        binary_path (str): the binary name
+    """
+    sign_command = [
+        "codesign",
+        "--timestamp",
+        "-fv",
+        "-s",
+        sign_config["identity"],
+        "--keychain",
+        sign_config["signing_keychain"],
+        "--options",
+        "runtime",
+        binary_path,
+    ]
+    await retry_async(
+        run_command,
+        args=(sign_command,),
+        kwargs={"cwd": os.path.dirname(binary_path), "exception": IScriptError, "output_log_on_exception": True},
+        retry_exceptions=(IScriptError,),
+    )
+
+
+async def _create_pkg_files(config, sign_config, app):
+    """Create .pkg installer from the .app file.
+
+    VPN specific behavior:
+        pkgbuild: requires identifier, version, script, and root; No component arg.
+        productbuild: requires distribution, resources, and package-path; No package arg.
+
+    productbuild are different from gecko
+
+    Args:
+        config (dict): the task config
+        sign_config (dict): the signing config
+        app (App): App object to pkg
+
+    Raises:
+        IScriptError: on failure
+    """
+    log.info("Creating PKG files")
+
+    async def _retry_async_cmd(cmd):
+        await retry_async(
+            func=run_command,
+            kwargs={"cmd": cmd, "cwd": app.parent_dir, "exception": IScriptError},
+            retry_exceptions=(IScriptError,),
+        )
+
+    # We MUST use the same name as Distribution specifies
+    app.pkg_path = os.path.join(app.parent_dir, "MozillaVPN.pkg")
+
+    root_path = os.path.join(config["work_dir"], "tmp1root")
+    os.mkdir(root_path)
+
+    copytree(app.app_path, os.path.join(root_path, "Mozilla VPN.app"))
+
+    cmd_opts = []
+    if sign_config.get("pkg_cert_id"):
+        cmd_opts = ["--keychain", sign_config["signing_keychain"], "--sign", sign_config["pkg_cert_id"]]
+    pkgbuild_cmd = (
+        "pkgbuild",
+        *cmd_opts,
+        "--install-location",
+        "/Applications",
+        "--identifier",
+        sign_config["base_bundle_id"],
+        "--version",
+        "2.0",  # TODO: version
+        "--scripts",
+        os.path.join(app.parent_dir, "scripts"),
+        "--root",
+        root_path,
+        app.pkg_path,
+    )
+
+    await _retry_async_cmd(pkgbuild_cmd)
+
+    build_path = app.pkg_path.replace(".pkg", ".productbuild.pkg")
+    productbuild_cmd = (
+        "productbuild",
+        *cmd_opts,
+        "--distribution",
+        os.path.join(app.parent_dir, "Distribution"),
+        "--resources",
+        os.path.join(app.parent_dir, "Resources"),
+        "--package-path",  # TODO: Docs say cwd is already searched, so may not be needed
+        app.parent_dir,
+        build_path,
+    )
+    await _retry_async_cmd(productbuild_cmd)
+
+    # Now that productbuild is finished with it, we need to replace for final signing
+    os.remove(app.pkg_path)
+
+    if sign_config.get("pkg_cert_id"):
+        productsign_cmd = ("productsign", *cmd_opts, build_path, app.pkg_path)
+        await _retry_async_cmd(productsign_cmd)
+    else:
+        copy2(build_path, app.pkg_path)
 
 
 async def vpn_behavior(config, task, notarize=True):
@@ -122,7 +234,7 @@ async def vpn_behavior(config, task, notarize=True):
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
 
-    submodule_dir = os.path.join(top_app.parent_dir, "Mozilla VPN.app", "Contents/Library/")
+    submodule_dir = os.path.join(top_app.app_path, "Contents/Library/")
 
     # LoginItems inner app
     loginitems_app = App(
@@ -141,22 +253,11 @@ async def vpn_behavior(config, task, notarize=True):
         provisionprofile_filename="firefoxvpn_loginitem_developerid.provisionprofile",
     )
 
-    # NativeMessaging inner app
-    nativemessaging_app = App(
-        orig_path=os.path.join(submodule_dir, "NativeMessaging/MozillaVPNNativeMessaging.app"),
-        parent_dir=os.path.join(submodule_dir, "NativeMessaging"),  # Using main app as reference
-        app_path=os.path.join(submodule_dir, "NativeMessaging/MozillaVPNNativeMessaging.app"),
-        app_name="MozillaVPNNativeMessaging.app",
-        formats=task["payload"]["upstreamArtifacts"][0]["formats"],
-        artifact_prefix="public/",
-    )
-    await _sign_app(
-        config,
-        sign_config,
-        nativemessaging_app,
-        entitlements_url=task["payload"]["nativeMessagingEntitlementsUrl"],
-        provisionprofile_filename="firefoxvpn_native_messaging.provisionprofile",
-    )
+    utils_dir = os.path.join(top_app.app_path, "Contents/Resources/utils")
+    # Wireguard inner app
+    await _codesign(sign_config, os.path.join(utils_dir, "wireguard-go"))
+    # Mozillavpnnp
+    await _codesign(sign_config, os.path.join(utils_dir, "mozillavpnnp"))
 
     # Main VPN app
     # Already defined from extract - just need the extra bits
@@ -172,7 +273,7 @@ async def vpn_behavior(config, task, notarize=True):
     )
 
     # Create the PKG and sign it
-    await create_pkg_files(config, sign_config, [top_app])
+    await _create_pkg_files(config, sign_config, top_app)
 
     if notarize:
         # Need to zip the pkg instead
