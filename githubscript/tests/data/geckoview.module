@@ -1,0 +1,60 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "org.mozilla.geckoview",
+    "module": "geckoview-omni",
+    "version": "95.0.20211218203254",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "6.9.1",
+      "buildId": "gdvcmq42tnapvkktmmhsgwxojy"
+    }
+  },
+  "variants": [
+    {
+      "name": "withGeckoBinariesDebugApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.5.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "geckoview-omni-95.0.20211218203254.aar",
+          "url": "geckoview-omni-95.0.20211218203254.aar",
+          "size": 211178396,
+          "sha512": "ada952fc4872b86dda17aa98659d170da37bc45f9a5120fbe02a57bec4bef49c919957a0e3dd6773186a83594f7871700a43d818d1d17aa0fe326a2cfb7d00de",
+          "sha256": "445e91c6fa28c848665f7a53c4510229e7ee2e6c4d59d594fe4df197c5a2ba7c",
+          "sha1": "734e080df0f7da9b12c64be355d1506db587587b",
+          "md5": "6c164fe31a8262a7500ee244f193ea1b"
+        }
+      ],
+      "capabilities": [
+        {
+          "group": "org.mozilla.geckoview",
+          "name": "geckoview-omni",
+          "version": "95.0.20211218203254"
+        },
+        {
+          "group": "org.mozilla.telemetry",
+          "name": "glean-native",
+          "version": "42.1.0"
+        }
+      ]
+    }
+   ]
+}

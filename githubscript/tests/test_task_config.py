@@ -3,7 +3,7 @@ from contextlib import nullcontext as does_not_raise
 import pytest
 from scriptworker_client.exceptions import TaskVerificationError
 
-import githubscript.release_config as release_config
+import githubscript.task_config as task_config
 
 
 @pytest.mark.parametrize(
@@ -117,11 +117,11 @@ def test_release_config(monkeypatch, product_config, task_payload, expected_resu
     def _dummy_get_artifacts(*args, **kwargs):
         return [{"content_type": "application/vnd.android.package-archive", "local_path": "/dummy/path/to.apk", "name": "somme_pretty_name.apk", "size": 9000}]
 
-    monkeypatch.setattr(release_config, "_get_artifacts", _dummy_get_artifacts)
+    monkeypatch.setattr(task_config, "_get_artifacts", _dummy_get_artifacts)
 
     config = {}
 
-    assert release_config.get_release_config(product_config, task_payload, config) == expected_result
+    assert task_config.get_release_config(product_config, task_payload, config) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -163,12 +163,12 @@ def test_release_config_override_missing_key(monkeypatch, product_config, task_p
     def _dummy_get_artifacts(*args, **kwargs):
         return [{"content_type": "application/vnd.android.package-archive", "local_path": "/dummy/path/to.apk", "name": "somme_pretty_name.apk", "size": 9000}]
 
-    monkeypatch.setattr(release_config, "_get_artifacts", _dummy_get_artifacts)
+    monkeypatch.setattr(task_config, "_get_artifacts", _dummy_get_artifacts)
 
     config = {}
 
     with pytest.raises(TaskVerificationError):
-        release_config.get_release_config(product_config, task_payload, config)
+        task_config.get_release_config(product_config, task_payload, config)
 
 
 def test_get_artifacts(monkeypatch):
@@ -194,10 +194,10 @@ def test_get_artifacts(monkeypatch):
         else:
             raise ValueError(f'Unsupported path "{taskcluster_path}"')
 
-    monkeypatch.setattr(release_config, "_find_target_path", _dummy_find_target_path)
+    monkeypatch.setattr(task_config, "_find_target_path", _dummy_find_target_path)
     monkeypatch.setattr("os.path.getsize", lambda _: 9000)
 
-    assert release_config._get_artifacts(task_payload, config) == [
+    assert task_config._get_artifacts(task_payload, config) == [
         {
             "content_type": "application/vnd.android.package-archive",
             "local_path": "/some/work/dir/cot/someTaskId/public/build/target.apk",
@@ -268,4 +268,4 @@ def test_get_artifacts(monkeypatch):
 )
 def test_find_target_path(taskcluster_path, artifact_map, expectation, expected_result):
     with expectation:
-        assert release_config._find_target_path(taskcluster_path, artifact_map) == expected_result
+        assert task_config._find_target_path(taskcluster_path, artifact_map) == expected_result

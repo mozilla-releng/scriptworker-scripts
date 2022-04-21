@@ -1,6 +1,13 @@
 {
     "work_dir": "/tmp/githubscript/work_dir",
     "github_projects": {
+        "android-components": {
+          "allowed_actions": ["bump-geckoview"],
+          "github_token": null,
+          "github_owner": "mozilla-mobile",
+          "github_repo_name": "android-components",
+          "contact_github": false
+        },
         "fenix": {
           "allowed_actions": ["release"],
           "github_token": "SOME_TOKEN",
@@ -9,7 +16,8 @@
           "contact_github": true
         }
     },
-    "taskcluster_scope_prefixes": ["project:mobile:fenix:releng:github:"],
+    "taskcluster_scope_prefixes": ["project:mobile:fenix:releng:github:",
+                                   "project:mobile:android-components:releng:github:"],
 
     "verbose": true
 }

@@ -37,6 +37,7 @@ async def test_async_main(monkeypatch, action, expectation):
     "action, expectation",
     (
         ("release", does_not_raise()),
+        ("bump-geckoview", does_not_raise()),
         ("non-existing", pytest.raises(NotImplementedError)),
     ),
 )
@@ -46,13 +47,18 @@ async def test_async_main_partialmatch(monkeypatch, action, expectation):
     monkeypatch.setattr(script, "extract_common_scope_prefix", lambda *args: "some:prefix:")
     monkeypatch.setattr(script, "get_github_project", lambda *args: "myproject")
     monkeypatch.setattr(script, "get_release_config", lambda *args: {"release": "config"})
+    monkeypatch.setattr(script, "get_bump_config", lambda *args: {"bump": "config"})
     monkeypatch.setattr(script, "get_action", lambda *args: action)
     monkeypatch.setattr(script, "check_action_is_allowed", lambda *args: None)
 
     async def _dummy_release(release_config):
         assert release_config == {"release": "config"}
 
+    async def _dummy_bump_gv(bump_config):
+        assert bump_config == {"bump": "config"}
+
     monkeypatch.setattr(script, "release", _dummy_release)
+    monkeypatch.setattr(script, "bump_geckoview", _dummy_bump_gv)
     with expectation:
         await script.async_main(config, task)
 

@@ -40,6 +40,16 @@ def get_release_config(product_config, task_payload, config):
     }
 
 
+def get_bump_config(product_config, task_payload, config):
+    return {
+        "contact_github": product_config["contact_github"],
+        "github_owner": product_config["github_owner"],
+        "github_repo_name": product_config["github_repo_name"],
+        "github_token": product_config["github_token"],
+        "git_branch": task_payload["git_branch"],
+    }
+
+
 def _get_artifacts(task_payload, config):
     artifacts = []
 

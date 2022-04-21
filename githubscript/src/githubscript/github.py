@@ -94,6 +94,18 @@ async def _upload_artifact(existing_release, artifact):
         await async_func(content_type=artifact["content_type"], name=artifact["name"], asset=f)
 
 
+@github_retry
+async def _get_contents(repo, path, ref=None):
+    async_get_contents = async_wrap(repo.file_contents)
+    return await async_get_contents(path, ref)
+
+
+@github_retry
+async def _get_branch(repo, branch):
+    async_get_branch = async_wrap(repo.branch)
+    return await async_get_branch(branch)
+
+
 def _get_github_release_kwargs(release_config, include_target_commitish=True):
     release_kwargs = dict(
         tag_name=release_config["git_tag"],

@@ -163,6 +163,22 @@ async def test_upload_artifact(tmpdir):
     )
 
 
+@pytest.mark.asyncio
+async def test_get_contents():
+    github_repository = MagicMock()
+    await github._get_contents(github_repository, "path")
+    github_repository.file_contents.assert_called_once_with("path", None)
+    await github._get_contents(github_repository, "path", "refs/heads/main")
+    github_repository.file_contents.assert_called_with("path", "refs/heads/main")
+
+
+@pytest.mark.asyncio
+async def test_get_branch():
+    github_repository = MagicMock()
+    await github._get_branch(github_repository, "main")
+    github_repository.branch.assert_called_once_with("main")
+
+
 @pytest.mark.parametrize(
     "include_target_commitish, expected_result",
     (

@@ -2,3 +2,5 @@ aiohttp_retry >= 2.3
 github3.py
 scriptworker
 taskcluster
+mozilla-version
+xmltodict

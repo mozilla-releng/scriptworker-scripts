@@ -7,9 +7,10 @@ import os
 from scriptworker_client.client import sync_main
 from scriptworker_client.exceptions import TaskError
 
+from githubscript.geckoview import bump_geckoview
 from githubscript.github import release
-from githubscript.release_config import get_release_config
 from githubscript.task import check_action_is_allowed, extract_common_scope_prefix, get_action, get_github_project
+from githubscript.task_config import get_bump_config, get_release_config
 
 log = logging.getLogger(__name__)
 
@@ -32,15 +33,14 @@ async def async_main(config, task):
                     raise TaskError(f'project "{project}" matches multiple configs in "{projects}"')
                 project_config = config["github_projects"][p]
 
-    release_config = get_release_config(project_config, task["payload"], config)
-
-    contact_github = bool(release_config.get("contact_github"))
-    _warn_contact_github(contact_github)
-
     action = get_action(task, prefix)
     check_action_is_allowed(project_config, action)
     if action == "release":
+        release_config = get_release_config(project_config, task["payload"], config)
         await release(release_config)
+    elif action == "bump-geckoview":
+        bump_config = get_bump_config(project_config, task["payload"], config)
+        await bump_geckoview(bump_config)
     else:
         raise NotImplementedError(f'Action "{action}" is not supported')
 
