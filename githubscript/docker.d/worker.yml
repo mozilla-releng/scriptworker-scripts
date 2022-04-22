@@ -10,7 +10,7 @@ github_projects:
         github_repo_name: fenix
         contact_github: true
       android-components:
-        allowed_actions: ["release"]
+        allowed_actions: ["release", "bump-geckoview"]
         github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_PROD" }
         github_owner: mozilla-mobile
         github_repo_name: android-components
@@ -29,7 +29,7 @@ github_projects:
         github_repo_name: non-existing-repo
         contact_github: false
       staging-android-components:
-        allowed_actions: ["release"]
+        allowed_actions: ["release", "bump-geckoview"]
         github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
         github_owner: mozilla-releng
         github_repo_name: staging-android-components
@@ -48,7 +48,7 @@ github_projects:
         github_repo_name: non-existing-repo
         contact_github: false
       staging-android-components:
-        allowed_actions: ["release"]
+        allowed_actions: ["release", "bump-geckoview"]
         github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
         github_owner: mozilla-releng
         github_repo_name: staging-android-components
