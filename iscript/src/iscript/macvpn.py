@@ -250,7 +250,7 @@ async def vpn_behavior(config, task, notarize=True):
         sign_config,
         loginitems_app,
         entitlements_url=task["payload"]["loginItemsEntitlementsUrl"],
-        provisionprofile_filename="firefoxvpn_loginitem_developerid.provisionprofile",
+        provisionprofile_filename="orgmozillamacosFirefoxVPNloginitem.provisionprofile",
     )
 
     utils_dir = os.path.join(top_app.app_path, "Contents/Resources/utils")
@@ -269,7 +269,7 @@ async def vpn_behavior(config, task, notarize=True):
         sign_config,
         top_app,
         entitlements_url=task["payload"]["entitlementsUrl"],
-        provisionprofile_filename="firefoxvpn_developerid.provisionprofile",
+        provisionprofile_filename="orgmozillamacosFirefoxVPN.provisionprofile",
     )
 
     # Create the PKG and sign it
