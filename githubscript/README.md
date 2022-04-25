@@ -1,7 +1,7 @@
 # githubscript
 
-Script to handle sensitive operation on Github with Taskcluster. For instance: creating a Github release and publishing Taskcluster artifacts to it.
-It's is aimed to be run with [scriptworker](https://github.com/mozilla-releng/scriptworker) (but runs perfectly fine as a standalone script).
+Script to handle sensitive operations on Github with Taskcluster. For instance: creating a Github release and publishing Taskcluster artifacts to it.
+It is aimed to be run with [scriptworker](https://github.com/mozilla-releng/scriptworker) (but runs perfectly fine as a standalone script).
 
 
 ## Get the code
