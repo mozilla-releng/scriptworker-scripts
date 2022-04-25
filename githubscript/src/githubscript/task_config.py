@@ -41,6 +41,11 @@ def get_release_config(product_config, task_payload, config):
 
 
 def get_bump_config(product_config, task_payload, config):
+    if not product_config.get("github_owner", ""):
+        raise TaskVerificationError("missing github_owner from config")
+    if not product_config.get("github_repo_name", ""):
+        raise TaskVerificationError("missing github_repo_name from config")
+
     return {
         "contact_github": product_config["contact_github"],
         "github_owner": product_config["github_owner"],
