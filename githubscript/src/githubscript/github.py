@@ -4,6 +4,7 @@ from asyncio import ensure_future
 from aiohttp_retry import ExponentialRetry, RetryClient
 from github3 import GitHub
 from github3.exceptions import NotFoundError, ServerError
+from mozilla_version.mobile import MobileVersion
 from scriptworker_client.exceptions import TaskError
 from scriptworker_client.utils import async_wrap, get_single_item_from_sequence, raise_future_exceptions, retry_async_decorator
 
@@ -223,3 +224,21 @@ async def _check_final_state_of_release(existing_release, release_config):
         existing_artifact = _get_existing_artifact(existing_artifacts, artifact)
         if await _does_existing_artifact_need_to_be_reuploaded(existing_artifact, artifact, retry_on_404=True):
             raise TaskError(f'Artifact "{artifact["name"]}" needs to be reuploaded')
+
+
+def get_relevant_major_versions(repo):
+    releases = repo.releases(10)
+    versions = (MobileVersion.parse(r.tag_name.lstrip("v")) for r in releases)
+    latest = max(versions).major_number
+    return latest - 1, latest
+
+
+def get_relevant_ac_branches(repo):
+    for major in get_relevant_major_versions(repo):
+        branch_name = f"releases/{major}.0"
+        try:
+            repo.branch(branch_name)
+        except NotFoundError:
+            continue
+        yield branch_name
+    yield "main"

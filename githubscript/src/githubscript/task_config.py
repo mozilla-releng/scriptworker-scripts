@@ -51,7 +51,6 @@ def get_bump_config(product_config, task_payload, config):
         "github_owner": product_config["github_owner"],
         "github_repo_name": product_config["github_repo_name"],
         "github_token": product_config["github_token"],
-        "git_branch": task_payload["git_branch"],
     }
 
 

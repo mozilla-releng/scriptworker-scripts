@@ -1,3 +1,4 @@
+from collections import namedtuple
 from contextlib import asynccontextmanager
 from contextlib import nullcontext as does_not_raise
 from dataclasses import dataclass
@@ -391,3 +392,24 @@ async def test_check_final_state_of_release(monkeypatch, update_release, update_
     release_config = {"artifacts": [{"name": "some_artifact"}]}
     with expectation:
         await github._check_final_state_of_release(existing_release, release_config)
+
+
+def test_get_relevant_major_versions():
+    repo = MagicMock()
+    Release = namedtuple("Release", ["tag_name"])
+    repo.releases.return_value = [Release("90.1.2"), Release("91.0.0")]
+    assert github.get_relevant_major_versions(repo) == (90, 91)
+
+
+def test_get_relevant_ac_branches():
+    repo = MagicMock()
+    Release = namedtuple("Release", ["tag_name"])
+    repo.releases.return_value = [Release("90.1.2"), Release("91.0.0")]
+
+    def get_branch(branch_name):
+        if "90" in branch_name:
+            raise NotFoundError(MagicMock())
+        return True
+
+    repo.branch.side_effect = get_branch
+    assert list(github.get_relevant_ac_branches(repo)) == ["releases/91.0", "main"]

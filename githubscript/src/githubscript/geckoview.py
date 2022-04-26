@@ -141,10 +141,10 @@ async def bump_geckoview(bump_config):
 
     github_client = await github._init_github_client(bump_config.pop("github_token"))
     ac_repo = await github._get_github_repository(github_client, bump_config)
-    release_branch_name = bump_config["git_branch"]
-    if release_branch_name == "main":
-        await appservices.update_application_services(ac_repo, release_branch_name)
-    await _update_geckoview(ac_repo, release_branch_name)
+    for release_branch_name in github.get_relevant_ac_branches(ac_repo):
+        if release_branch_name == "main":
+            await appservices.update_application_services(ac_repo, release_branch_name)
+        await _update_geckoview(ac_repo, release_branch_name)
 
 
 async def _update_geckoview(ac_repo, release_branch_name):

@@ -223,18 +223,19 @@ async def test_bump_geckoview_no_contact_github(gh_init):
 
 
 @pytest.mark.asyncio
+@patch("githubscript.github.get_relevant_ac_branches")
 @patch("githubscript.application_services.update_application_services")
 @patch("githubscript.geckoview._update_geckoview")
 @patch("githubscript.github._get_github_repository")
 @patch("githubscript.github._init_github_client")
-async def test_bump_geckoview_main(gh_init, get_gh_repo, update_gv, update_as):
+async def test_bump_geckoview_main(gh_init, get_gh_repo, update_gv, update_as, get_branches):
     bump_config = {
         "contact_github": True,
         "github_token": "dummy",
-        "git_branch": "main",
         "github_owner": "mozilla-releng",
         "github_repo_name": "staging-android-components",
     }
+    get_branches.return_value = ["main"]
     await geckoview.bump_geckoview(bump_config)
     gh_init.assert_called_once_with("dummy")
     update_gv.assert_called_once()
@@ -242,18 +243,19 @@ async def test_bump_geckoview_main(gh_init, get_gh_repo, update_gv, update_as):
 
 
 @pytest.mark.asyncio
+@patch("githubscript.github.get_relevant_ac_branches")
 @patch("githubscript.application_services.update_application_services")
 @patch("githubscript.geckoview._update_geckoview")
 @patch("githubscript.github._get_github_repository")
 @patch("githubscript.github._init_github_client")
-async def test_bump_geckoview_release(gh_init, get_gh_repo, update_gv, update_as):
+async def test_bump_geckoview_release(gh_init, get_gh_repo, update_gv, update_as, get_branches):
     bump_config = {
         "contact_github": True,
         "github_token": "dummy",
-        "git_branch": "releases_v100",
         "github_owner": "mozilla-releng",
         "github_repo_name": "staging-android-components",
     }
+    get_branches.return_value = ["releases_v100"]
     await geckoview.bump_geckoview(bump_config)
     gh_init.assert_called_once_with("dummy")
     update_gv.assert_called_once()
