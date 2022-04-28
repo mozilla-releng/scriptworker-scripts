@@ -413,3 +413,6 @@ def test_get_relevant_ac_branches():
 
     repo.branch.side_effect = get_branch
     assert list(github.get_relevant_ac_branches(repo)) == ["releases/91.0", "main"]
+
+    repo.branch.side_effect = NotFoundError(MagicMock())
+    assert list(github.get_relevant_ac_branches(repo)) == ["main"]

@@ -229,7 +229,10 @@ async def _check_final_state_of_release(existing_release, release_config):
 def get_relevant_major_versions(repo):
     releases = repo.releases(10)
     versions = (MobileVersion.parse(r.tag_name.lstrip("v")) for r in releases)
-    latest = max(versions).major_number
+    try:
+        latest = max(versions).major_number
+    except ValueError:
+        return ()
     return latest - 1, latest
 
 
