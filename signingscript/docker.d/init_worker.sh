@@ -46,6 +46,7 @@ echo $GPG_PUBKEY | base64 -d > $GPG_PUBKEY_PATH
 
 case $COT_PRODUCT in
   firefox)
+    export AUTHENTICODE_TIMESTAMP_URL=http://timestamp.sectigo.com
     test_var_set 'WIDEVINE_CERT'
 
     echo $WIDEVINE_CERT | base64 -d > $WIDEVINE_CERT_PATH
