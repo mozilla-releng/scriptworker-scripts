@@ -29,6 +29,7 @@ export PASSWORDS_PATH=$CONFIG_DIR/passwords.json
 export GPG_PUBKEY_PATH=$CONFIG_DIR/gpg_pubkey
 export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
 export AUTHENTICODE_TIMESTAMP_STYLE=old
+export AUTHENTICODE_TIMESTAMP_URL=http://timestamp.digicert.com
 export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_dep.crt
 export AUTHENTICODE_CERT_PATH_202005=/app/signingscript/src/signingscript/data/authenticode_dep.crt
 export AUTHENTICODE_CA_PATH=/app/signingscript/src/signingscript/data/authenticode_dep_ca.crt
@@ -151,6 +152,7 @@ case $ENV in
   prod)
     case $COT_PRODUCT in
       firefox|thunderbird)
+        export AUTHENTICODE_TIMESTAMP_URL=http://timestamp.sectigo.com
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'

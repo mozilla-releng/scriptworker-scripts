@@ -51,6 +51,9 @@
         "authenticode_timestamp_style": {
             "type": "string"
         },
+        "authenticode_timestamp_url": {
+            "type": "string"
+        },
         "authenticode_url": {
             "type": "string"
         }
