@@ -1388,6 +1388,7 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
 
     url = context.config["authenticode_url"]
     timestamp_style = context.config["authenticode_timestamp_style"]
+    timestamp_url = context.config["authenticode_timestamp_url"]
     if fmt.endswith(("authenticode_stub", "authenticode_sha2_stub")):
         crosscert = context.config["authenticode_cross_cert"]
     else:
@@ -1410,6 +1411,7 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
             "comment": authenticode_comment,
             "crosscert": crosscert,
             "timestamp_style": timestamp_style,
+            "timestamp_url": timestamp_url,
         },
     )
     os.rename(outfile, infile)
