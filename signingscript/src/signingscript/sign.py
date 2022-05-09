@@ -1387,7 +1387,11 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         certs = load_pem_certs(open(context.config["authenticode_cert"], "rb").read())
 
     url = context.config["authenticode_url"]
-    timestamp_style = context.config["authenticode_timestamp_style"]
+    if fmt == "autograph_authenticode_sha2_rfc3161_stub":
+        fmt = "autograph_authenticode_sha2_stub"
+        timestamp_style = "rfc3161"
+    else:
+        timestamp_style = context.config["authenticode_timestamp_style"]
     timestamp_url = context.config["authenticode_timestamp_url"]
     if fmt.endswith(("authenticode_stub", "authenticode_sha2_stub")):
         crosscert = context.config["authenticode_cross_cert"]
