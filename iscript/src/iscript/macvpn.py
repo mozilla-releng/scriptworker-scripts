@@ -218,16 +218,7 @@ async def vpn_behavior(config, task, notarize=True):
     # Extract fills in app.parent_dir
     top_app = top_app[0]
 
-    ##############
-    # TODO: Decide what to do with the incoming package
-    # TODO: Remove when we switch to .tar.gz payloads (1/2)
-    build_zip_path = os.path.join(top_app.parent_dir, "BUILD.zip")
-    await run_command(["unzip", build_zip_path, "-d", top_app.parent_dir])
-    os.remove(build_zip_path)
-
     top_app.app_path = os.path.join(top_app.parent_dir, "Mozilla VPN.app")
-    ##############
-
     sign_config = get_sign_config(config, task, base_key="mac_config")
 
     # Assuming we only need to unlock and update the keychain once
@@ -288,10 +279,6 @@ async def vpn_behavior(config, task, notarize=True):
 
         # Staple step
         await staple_notarization([top_app], path_attr="pkg_path")
-
-    # TODO: Remove when we switch to .tar.gz payloads (2/2)
-    # Fake source so we can create artifact destination path properly
-    top_app.orig_path = top_app.orig_path.replace(".zip", ".tar.gz")
 
     # Move PKG to artifact directory
     await copy_pkgs_to_artifact_dir(config, [top_app])
