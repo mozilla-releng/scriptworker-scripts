@@ -152,6 +152,7 @@ case $ENV in
   prod)
     case $COT_PRODUCT in
       firefox|thunderbird)
+        export AUTHENTICODE_TIMESTAMP_URL=http://time.certum.pl
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
