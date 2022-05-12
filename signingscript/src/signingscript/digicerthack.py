@@ -1,5 +1,6 @@
 """Work around DigiCert timestamp signatures missing a trust path on Windows 7."""
 import io
+import logging
 import pathlib
 import tempfile
 
@@ -9,6 +10,8 @@ from pyasn1_modules.pem import readPemFromFile
 from pyasn1_modules.rfc2315 import ContentInfo, ExtendedCertificateOrCertificate
 from pyasn1_modules.rfc5280 import X520CommonName, id_at_commonName
 from winsign import asn1, osslsigncode, pefile
+
+log = logging.getLogger(__name__)
 
 digicert_cross_sign = """\
 -----BEGIN CERTIFICATE-----
@@ -74,7 +77,9 @@ def add_cert_to_signature(sig):
     sd = asn1.get_signeddata(sig)
     issuers = [_issuer_commonname(cert) for cert in sd["certificates"]]
     if "DigiCert Trusted Root G4" not in issuers or "DigiCert Global Root CA" in issuers:
+        log.info("No need to add_cert_to_signature, skipping...")
         return sig
+    log.info("Adding cert to signature...")
     crosscert_der = readPemFromFile(io.StringIO(digicert_cross_sign))
     sd["certificates"].append(der_decode(crosscert_der, ExtendedCertificateOrCertificate())[0])
     ci = ContentInfo()
@@ -101,6 +106,7 @@ def add_cert_to_signed_file(old, new, cafile, timestampfile):
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = pathlib.Path(tmpdir)
         signature_path = tmpdir / "old-signature"
+        log.info(f"Extracting signature from {old}...")
         osslsigncode.extract_signature(old, signature_path)
         unsigned_path = tmpdir / "unsigned"
         cmd = ["remove-signature", "-in", old, "-out", unsigned_path]
@@ -111,6 +117,7 @@ def add_cert_to_signed_file(old, new, cafile, timestampfile):
         else:
             sig = signature_path.read_bytes()
         newsig = add_cert_to_signature(sig)
+        log.info(f"Writing signature to {new}...")
         osslsigncode.write_signature(unsigned_path, new, newsig, None, cafile, timestampfile)
 
 

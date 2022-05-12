@@ -42,7 +42,7 @@ if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_CA_PATH=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
 fi
-if [ "$COT_PRODUCT" = "adhoc" ]; then
+if [ "$COT_PRODUCT" == "adhoc" ]; then
   export AUTHENTICODE_ADD_DIGICERT_CROSS=true
 else
   export AUTHENTICODE_ADD_DIGICERT_CROSS=false
