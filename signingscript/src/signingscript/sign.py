@@ -1426,6 +1426,8 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         with tempfile.TemporaryDirectory() as tmpdir:
             digicerthack.add_cert_to_signed_file(infile, outfile, os.path.join(tmpdir, "signature"), cafile, timestampfile)
         os.rename(outfile, infile)
+    else:
+        log.info("Digicert Cross hack is not enabled, skipping...")
 
     return True
 
