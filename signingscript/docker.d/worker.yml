@@ -42,4 +42,4 @@ authenticode_cross_cert: { "$eval": "AUTHENTICODE_CROSS_CERT_PATH" }
 authenticode_timestamp_style: { "$eval": "AUTHENTICODE_TIMESTAMP_STYLE" }
 authenticode_timestamp_url: { "$eval": "AUTHENTICODE_TIMESTAMP_URL" }
 authenticode_url: "https://mozilla.org"
-authenticode_add_digicert_cross: { "$eval": "AUTHENTICODE_ADD_DIGICERT_CROSS == true" }
+authenticode_add_digicert_cross: { "$eval": "AUTHENTICODE_ADD_DIGICERT_CROSS == '1'" }

@@ -1404,25 +1404,29 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         log.info("Not using specified comment to sign %s, not yet implemented for non *.msi files.", orig_path)
         authenticode_comment = None
 
+    winsign_kwargs = {
+        "cafile": cafile,
+        "timestampfile": timestampfile,
+        "url": url,
+        "comment": authenticode_comment,
+        "crosscert": crosscert,
+        "timestamp_style": timestamp_style,
+        "timestamp_url": timestamp_url,
+    }
+    log.info(f"running winsign.sign.sign_file with kwargs {winsign_kwargs}...")
     # Retry winsign.sign.sign_file, because the timestamp server can hiccup
     await retry_async(
         _winsign_helper,
         args=(f"Couldn't sign {orig_path}", infile, outfile, digest_algo, certs, signer),
-        kwargs={
-            "cafile": cafile,
-            "timestampfile": timestampfile,
-            "url": url,
-            "comment": authenticode_comment,
-            "crosscert": crosscert,
-            "timestamp_style": timestamp_style,
-            "timestamp_url": timestamp_url,
-        },
+        kwargs=winsign_kwargs,
     )
     os.rename(outfile, infile)
     if context.config["authenticode_add_digicert_cross"]:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            digicerthack.add_cert_to_signed_file(infile, outfile, os.path.join(tmpdir, "signature"), cafile, timestampfile)
+        log.info("Adding Digicert Cross hack")
+        digicerthack.add_cert_to_signed_file(infile, outfile, cafile, timestampfile)
         os.rename(outfile, infile)
+    else:
+        log.info("Digicert Cross hack is not enabled, skipping...")
 
     return True
 
