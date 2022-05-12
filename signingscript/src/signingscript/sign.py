@@ -1423,8 +1423,7 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
     os.rename(outfile, infile)
     if context.config["authenticode_add_digicert_cross"]:
         log.info("Adding Digicert Cross hack")
-        with tempfile.TemporaryDirectory() as tmpdir:
-            digicerthack.add_cert_to_signed_file(infile, outfile, cafile, timestampfile)
+        digicerthack.add_cert_to_signed_file(infile, outfile, cafile, timestampfile)
         os.rename(outfile, infile)
     else:
         log.info("Digicert Cross hack is not enabled, skipping...")
