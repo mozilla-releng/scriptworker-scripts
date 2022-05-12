@@ -29,7 +29,7 @@ from mardor.writer import add_signature_block
 from scriptworker.utils import get_single_item_from_sequence, makedirs, raise_future_exceptions, retry_async, rm
 from winsign.crypto import load_pem_certs
 
-from signingscript import task, utils
+from signingscript import digicerthack, task, utils
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
 
@@ -1419,6 +1419,10 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         },
     )
     os.rename(outfile, infile)
+    if context.config["authenticode_add_digicert_cross"]:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            digicerthack.add_cert_to_signed_file(infile, outfile, os.path.join(tmpdir, "signature"), cafile, timestampfile)
+        os.rename(outfile, infile)
 
     return True
 

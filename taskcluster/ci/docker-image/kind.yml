@@ -40,3 +40,9 @@ jobs:
     pushflatpakscript-python39:
         definition: pushflatpakscript
         parent: python39
+    signingscript-python38:
+        definition: signingscript
+        parent: python38
+    signingscript-python39:
+        definition: signingscript
+        parent: python39

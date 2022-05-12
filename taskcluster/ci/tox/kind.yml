@@ -93,6 +93,8 @@ jobs:
         resources:
             - shipitscript
     signingscript:
+        worker:
+            docker-image: {in-tree: 'signingscript-python{python_version}'}
         resources:
             - signingscript
             - vendored/mozbuild

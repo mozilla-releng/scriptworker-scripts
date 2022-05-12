@@ -4,6 +4,10 @@ FROM python:${PYTHON_VERSION}
 
 WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install -y osslsigncode && \
+    apt-get clean
+
 COPY MANIFEST.in setup.py tox.ini /app/
 COPY requirements/ /app/requirements/
 
