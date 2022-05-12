@@ -56,6 +56,9 @@
         },
         "authenticode_url": {
             "type": "string"
+        },
+        "authenticode_add_digicert_cross": {
+            "type": "boolean"
         }
     }
 }
