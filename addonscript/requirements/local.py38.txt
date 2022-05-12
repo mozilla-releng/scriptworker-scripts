@@ -20,13 +20,13 @@ toml==0.10.2 \
     --hash=sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b \
     --hash=sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f
     # via tox
-tox==3.24.5 \
-    --hash=sha256:67e0e32c90e278251fea45b696d0fef3879089ccbe979b0c556d35d5a70e2993 \
-    --hash=sha256:be3362472a33094bce26727f5f771ca0facf6dafa217f65875314e9a6600c95c
+tox==3.25.0 \
+    --hash=sha256:0805727eb4d6b049de304977dfc9ce315a1938e6619c3ab9f38682bb04662a5a \
+    --hash=sha256:37888f3092aa4e9f835fc8cc6dadbaaa0782651c41ef359e3a5743fcb0308160
     # via -r requirements/local.in
-virtualenv==20.13.3 \
-    --hash=sha256:dd448d1ded9f14d1a4bfa6bfc0c5b96ae3be3f2d6c6c159b23ddcfd701baa021 \
-    --hash=sha256:e9dd1a1359d70137559034c0f5433b34caf504af2dc756367be86a5a32967134
+virtualenv==20.14.1 \
+    --hash=sha256:e617f16e25b42eb4f6e74096b9c9e37713cf10bf30168fb4a739f3fa8f898a3a \
+    --hash=sha256:ef589a79795589aada0c1c5b319486797c03b67ac3984c48c669c0e4f50df3a5
     # via tox
 
 # WARNING: The following packages were not pinned, but pip requires them to be
