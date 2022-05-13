@@ -51,6 +51,7 @@ case $COT_PRODUCT in
     test_var_set 'WIDEVINE_CERT'
 
     echo $WIDEVINE_CERT | base64 -d > $WIDEVINE_CERT_PATH
+    export AUTHENTICODE_ADD_DIGICERT_CROSS=1
     ;;
   thunderbird)
     ;;
