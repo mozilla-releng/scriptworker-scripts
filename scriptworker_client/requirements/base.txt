@@ -168,9 +168,9 @@ immutabledict==2.2.1 \
     --hash=sha256:1ddb0edf1bb6c70d0197eb90ce1fe2b2d58502334f5fdfde72d7c633d723ec3a \
     --hash=sha256:8d7e32e0bda6dfb846349b78c753b858587c736f46be247d01ccd583ce5cc85b
     # via -r requirements/base.in
-jsonschema==4.4.0 \
-    --hash=sha256:636694eb41b3535ed608fe04129f26542b59ed99808b4f688aa32dcf55317a83 \
-    --hash=sha256:77281a1f71684953ee8b3d488371b162419767973789272434bbc3f29d9c8823
+jsonschema==4.5.1 \
+    --hash=sha256:71b5e39324422543546572954ce71c67728922c104902cb7ce252e522235b33f \
+    --hash=sha256:7c6d882619340c3347a1bf7315e147e6d3dae439033ae6383d6acb908c101dfc
     # via -r requirements/base.in
 multidict==6.0.2 \
     --hash=sha256:0327292e745a880459ef71be14e709aaea2f783f3537588fb4ed09b6c01bca60 \

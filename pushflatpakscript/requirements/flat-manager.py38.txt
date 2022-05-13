@@ -236,8 +236,8 @@ pycairo==1.21.0 \
     --hash=sha256:dace6b356c476de27f8e1522428ac21a799c225703f746e2957d441f885dcb6c \
     --hash=sha256:f63c153a9ea3d21aff85e2caeee4b0c5d566b2368b4ed64826020d12953d76a4
     # via pygobject
-pygobject==3.42.0 \
-    --hash=sha256:b9803991ec0b0b4175e81fee0ad46090fa7af438fe169348a9b18ae53447afcd
+pygobject==3.42.1 \
+    --hash=sha256:80d6a3ad1630e9d1edf31b9e9fad9a894c57e18545a3c95ef0044ac4042b8620
     # via -r requirements/flat-manager.in
 tenacity==8.0.1 \
     --hash=sha256:43242a20e3e73291a28bcbcacfd6e000b02d3857a9a9fff56b297a27afdc932f \
