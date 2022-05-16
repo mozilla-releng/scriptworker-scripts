@@ -447,9 +447,9 @@ rsa==4.8 \
     --hash=sha256:5c6bd9dc7a543b7fe4304a631f8a8a3b674e2bbfc49c2ae96200cdbe55df6b17 \
     --hash=sha256:95c5d300c4e879ee69708c428ba566c59478fd653cc3a22243eeb8ed846950bb
     # via python-jose
-scriptworker==43.0.0 \
-    --hash=sha256:bbd20593fe71a8216cf3141a1a414b173e883058c91fab73836b5475eed83ed0 \
-    --hash=sha256:c3606c11ef33e63ada98978e3b32d3f5acd9363db8368801efcb0df29d4c96c6
+scriptworker==43.1.0 \
+    --hash=sha256:0fe36b7b04dee28a5acdbf462a8351de843274f596e5be3a46eecedb10e71821 \
+    --hash=sha256:a9c8efcde421c780fb97af397dcc73e2cffb72e33a29a6fb4a6d8990949c77fd
     # via -r requirements/base.in
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \

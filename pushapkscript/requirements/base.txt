@@ -124,9 +124,9 @@ backcall==0.2.0 \
     --hash=sha256:5cbdbf27be5e7cfadb448baf0aa95508f91f2bbc6c6437cd9cd06e2a4c215e1e \
     --hash=sha256:fbbce6a29f263178a1f7915c1940bde0ec2b2a967566fe1c65c1dfb7422bd255
     # via ipython
-cachetools==5.0.0 \
-    --hash=sha256:486471dfa8799eb7ec503a8059e263db000cdda20075ce5e48903087f79d5fd6 \
-    --hash=sha256:8fecd4203a38af17928be7b90689d8083603073622229ca7077b72d8e5a976e4
+cachetools==5.1.0 \
+    --hash=sha256:4ebbd38701cdfd3603d1f751d851ed248ab4570929f2d8a7ce69e30c420b141c \
+    --hash=sha256:8b3b8fa53f564762e5b221e9896798951e7f915513abf2ba072ce0f07f3f5a98
     # via google-auth
 certifi==2021.10.8 \
     --hash=sha256:78884e7c1d4b00ce3cea67b44566851c4343c120abd683433ce934a68ea58872 \
@@ -855,9 +855,9 @@ rsa==4.8 \
     # via
     #   google-auth
     #   oauth2client
-scriptworker==43.0.0 \
-    --hash=sha256:bbd20593fe71a8216cf3141a1a414b173e883058c91fab73836b5475eed83ed0 \
-    --hash=sha256:c3606c11ef33e63ada98978e3b32d3f5acd9363db8368801efcb0df29d4c96c6
+scriptworker==43.1.0 \
+    --hash=sha256:0fe36b7b04dee28a5acdbf462a8351de843274f596e5be3a46eecedb10e71821 \
+    --hash=sha256:a9c8efcde421c780fb97af397dcc73e2cffb72e33a29a6fb4a6d8990949c77fd
     # via -r requirements/base.in
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
@@ -887,9 +887,9 @@ taskcluster-urls==13.0.1 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
     --hash=sha256:f66dcbd6572a6216ab65949f0fa0b91f2df647918028436c384e6af5cd12ae2b
     # via taskcluster
-traitlets==5.2.0 \
-    --hash=sha256:60474f39bf1d39a11e0233090b99af3acee93bbc2281777e61dd8c87da8a0014 \
-    --hash=sha256:9dd4025123fbe018a2092b2ad6984792f53ea3362c698f37473258b1fa97b0bc
+traitlets==5.2.1.post0 \
+    --hash=sha256:70815ecb20ec619d1af28910ade523383be13754283aef90528eb3d47b77c5db \
+    --hash=sha256:f44b708d33d98b0addb40c29d148a761f44af740603a8fd0e2f8b5b27cf0f087
     # via
     #   ipython
     #   matplotlib-inline
