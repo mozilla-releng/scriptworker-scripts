@@ -4,73 +4,79 @@ reporting: checks-v1
 policy:
     pullRequests: public
 tasks:
-    - $if: 'tasks_for in ["github-pull-request", "github-push", "action", "cron"]'
-      then:
-          $let:
-              trustDomain: scriptworker
-              # Github events have this stuff in different places...
-              ownerEmail:
-                  $if: 'tasks_for == "github-push"'
-                  then: '${event.pusher.email}'
-                  # Assume Pull Request
-                  else:
-                      $if: 'tasks_for == "github-pull-request"'
-                      then: '${event.pull_request.user.login}@users.noreply.github.com'
-                      else:
-                          $if: 'tasks_for in ["cron", "action"]'
-                          then: '${tasks_for}@noreply.mozilla.org'
-              baseRepoUrl:
-                  $if: 'tasks_for == "github-push"'
-                  then: '${event.repository.html_url}'
-                  else:
-                      $if: 'tasks_for == "github-pull-request"'
-                      then: '${event.pull_request.base.repo.html_url}'
-                      else:
-                          $if: 'tasks_for in ["cron", "action"]'
-                          then: '${repository.url}'
-              repoUrl:
-                  $if: 'tasks_for == "github-push"'
-                  then: '${event.repository.html_url}'
-                  else:
-                      $if: 'tasks_for == "github-pull-request"'
-                      then: '${event.pull_request.head.repo.html_url}'
-                      else:
-                          $if: 'tasks_for in ["cron", "action"]'
-                          then: '${repository.url}'
-              project:
-                  $if: 'tasks_for == "github-push"'
-                  then: '${event.repository.name}'
-                  else:
-                      $if: 'tasks_for == "github-pull-request"'
-                      then: '${event.pull_request.head.repo.name}'
-                      else:
-                          $if: 'tasks_for in ["cron", "action"]'
-                          then: '${repository.project}'
-              head_branch:
+    - $let:
+          trustDomain: scriptworker
+          # Github events have this stuff in different places...
+          ownerEmail:
+              $if: 'tasks_for == "github-push"'
+              then: '${event.pusher.email}'
+              # Assume Pull Request
+              else:
                   $if: 'tasks_for == "github-pull-request"'
-                  then: ${event.pull_request.head.ref}
-                  else:
-                      $if: 'tasks_for == "github-push"'
-                      then: ${event.ref}
-                      else:
-                          $if: 'tasks_for in ["cron", "action"]'
-                          then: '${push.branch}'
-              head_sha:
-                  $if: 'tasks_for == "github-push"'
-                  then: '${event.after}'
-                  else:
-                      $if: 'tasks_for == "github-pull-request"'
-                      then: '${event.pull_request.head.sha}'
-                      else:
-                          $if: 'tasks_for in ["cron", "action"]'
-                          then: '${push.revision}'
-              ownTaskId:
-                  $if: '"github" in tasks_for'
-                  then: {$eval: as_slugid("decision_task")}
+                  then: '${event.pull_request.user.login}@users.noreply.github.com'
                   else:
                       $if: 'tasks_for in ["cron", "action"]'
-                      then: '${ownTaskId}'
-          in:
+                      then: '${tasks_for}@noreply.mozilla.org'
+          baseRepoUrl:
+              $if: 'tasks_for == "github-push"'
+              then: '${event.repository.html_url}'
+              else:
+                  $if: 'tasks_for == "github-pull-request"'
+                  then: '${event.pull_request.base.repo.html_url}'
+                  else:
+                      $if: 'tasks_for in ["cron", "action"]'
+                      then: '${repository.url}'
+          repoUrl:
+              $if: 'tasks_for == "github-push"'
+              then: '${event.repository.html_url}'
+              else:
+                  $if: 'tasks_for == "github-pull-request"'
+                  then: '${event.pull_request.head.repo.html_url}'
+                  else:
+                      $if: 'tasks_for in ["cron", "action"]'
+                      then: '${repository.url}'
+          project:
+              $if: 'tasks_for == "github-push"'
+              then: '${event.repository.name}'
+              else:
+                  $if: 'tasks_for == "github-pull-request"'
+                  then: '${event.pull_request.head.repo.name}'
+                  else:
+                      $if: 'tasks_for in ["cron", "action"]'
+                      then: '${repository.project}'
+          head_branch:
+              $if: 'tasks_for == "github-pull-request"'
+              then: ${event.pull_request.head.ref}
+              else:
+                  $if: 'tasks_for == "github-push"'
+                  then: ${event.ref}
+                  else:
+                      $if: 'tasks_for in ["cron", "action"]'
+                      then: '${push.branch}'
+          head_sha:
+              $if: 'tasks_for == "github-push"'
+              then: '${event.after}'
+              else:
+                  $if: 'tasks_for == "github-pull-request"'
+                  then: '${event.pull_request.head.sha}'
+                  else:
+                      $if: 'tasks_for in ["cron", "action"]'
+                      then: '${push.revision}'
+          ownTaskId:
+              $if: '"github" in tasks_for'
+              then: {$eval: as_slugid("decision_task")}
+              else:
+                  $if: 'tasks_for in ["cron", "action"]'
+                  then: '${ownTaskId}'
+          pullRequestAction:
+              $if: 'tasks_for == "github-pull-request"'
+              then: ${event.action}
+              else: 'UNDEFINED'
+      in:
+          $if: >
+            tasks_for in ["github-push", "action", "cron"]
+            || (tasks_for == "github-pull-request" && pullRequestAction in ["opened", "reopened", "synchronize"])
+          then:
               $let:
                   level:
                       $if: 'tasks_for in ["github-push", "cron", "action"] && repoUrl == "https://github.com/mozilla-releng/scriptworker-scripts"'
