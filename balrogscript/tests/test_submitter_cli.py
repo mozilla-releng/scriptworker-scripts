@@ -3,7 +3,7 @@ import unittest
 from balrogclient import SingleLocale
 from mock import patch
 
-from balrogscript.submitter.cli import NightlySubmitterBase, NightlySubmitterV4, ReleaseCreatorV9
+from balrogscript.submitter.cli import NightlySubmitterBase, NightlySubmitterV4, PinnableVersion, ReleaseCreatorV9
 
 
 class TestNightlySubmitterBase(unittest.TestCase):
@@ -247,3 +247,22 @@ class TestReleaseCreatorFileUrlsMixin(unittest.TestCase):
             }
         }
         self.assertDictEqual(data, expected)
+
+
+class TestPinnable(unittest.TestCase):
+    def parse_pinnable_string(self, version_string, major_pin, minor_pin):
+        pin_version = PinnableVersion(version_string)
+        self.assertEqual(pin_version.major_pin(), major_pin)
+        self.assertEqual(pin_version.minor_pin(), minor_pin)
+
+    def test_pinnable_parsing(self):
+        self.parse_pinnable_string("1.0", "1.", "1.0.")
+        self.parse_pinnable_string("100.0", "100.", "100.0.")
+        self.parse_pinnable_string("100.1", "100.", "100.1.")
+        self.parse_pinnable_string("100.100", "100.", "100.100.")
+        self.parse_pinnable_string("100.100.0", "100.", "100.100.")
+        self.parse_pinnable_string("100.100.100", "100.", "100.100.")
+        self.parse_pinnable_string("100.100a1", "100.", "100.100.")
+        self.parse_pinnable_string("100.100b1", "100.", "100.100.")
+        self.parse_pinnable_string("100.100.100a1", "100.", "100.100.")
+        self.parse_pinnable_string("100.100.100b1", "100.", "100.100.")
