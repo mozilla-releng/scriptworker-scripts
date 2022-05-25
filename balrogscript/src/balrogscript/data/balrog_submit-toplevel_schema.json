@@ -37,7 +37,14 @@
                 "version": {"type": "string"},
                 "blob_suffix": {"type": "string"},
                 "complete_mar_filename_pattern": {"type": "string"},
-                "complete_mar_bouncer_product_pattern": {"type": "string"}
+                "complete_mar_bouncer_product_pattern": {"type": "string"},
+                "pin_channels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true
+                }
             },
             "required": ["app_version", "archive_domain", "build_number",
                          "channel_names", "download_domain", "partial_versions",
