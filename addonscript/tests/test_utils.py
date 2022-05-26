@@ -6,6 +6,7 @@ import uuid
 
 import aiohttp
 import pytest
+import pytest_asyncio
 from aioresponses import aioresponses
 from freezegun import freeze_time
 from jose import jws
@@ -39,7 +40,7 @@ def payload():
     return payload
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def fake_session(event_loop):
     async with aiohttp.ClientSession() as session:
         yield session

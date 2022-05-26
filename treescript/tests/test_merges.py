@@ -16,12 +16,12 @@ def does_not_raise():
     yield
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def task():
     return {"payload": {}, "metadata": {"source": "https://hg.mozilla.org/repo-name/file/filename"}}
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def merge_info():
     return {
         "version_files": [{"filename": "browser/config/version.txt"}, {"filename": "config/milestone.txt"}],
@@ -50,7 +50,7 @@ def merge_info():
     }
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def merge_bump_info():
     return {
         "version_files": [],
@@ -65,7 +65,7 @@ def merge_bump_info():
     }
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def config(tmpdir):
     config_ = get_default_config()
     config_["work_dir"] = os.path.join(tmpdir, "work")

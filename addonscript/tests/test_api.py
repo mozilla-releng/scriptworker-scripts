@@ -4,6 +4,7 @@ from contextlib import contextmanager
 
 import aiohttp
 import pytest
+import pytest_asyncio
 from aioresponses import aioresponses
 from scriptworker.context import Context
 
@@ -28,7 +29,7 @@ def context():
     return context
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def fake_session(event_loop):
     async with aiohttp.ClientSession() as session:
         yield session

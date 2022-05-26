@@ -5,12 +5,13 @@ import json
 import aiohttp
 import mock
 import pytest
+import pytest_asyncio
 from scriptworker.context import Context
 
 from . import get_fake_valid_config, get_fake_valid_task
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def context():
     context = Context()
     context.task = get_fake_valid_task()
@@ -41,16 +42,13 @@ class FakeResponse(aiohttp.client_reqrep.ClientResponse):
         self._url = args[1]
         self._history = ()
 
-    @asyncio.coroutine
-    def text(self, *args, **kwargs):
+    async def text(self, *args, **kwargs):
         return json.dumps(self._payload)
 
-    @asyncio.coroutine
-    def json(self, *args, **kwargs):
+    async def json(self, *args, **kwargs):
         return self._payload
 
-    @asyncio.coroutine
-    def release(self):
+    async def release(self):
         return
 
     async def read(self, *args):
@@ -58,15 +56,14 @@ class FakeResponse(aiohttp.client_reqrep.ClientResponse):
             return self.resp.pop(0)
 
 
-@asyncio.coroutine
-def _fake_request(resp_status, method, url, *args, **kwargs):
+async def _fake_request(resp_status, method, url, *args, **kwargs):
     resp = FakeResponse(method, url, status=resp_status)
     resp._history = (FakeResponse(method, url, status=302),)
     return resp
 
 
 @pytest.mark.asyncio
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def fake_session():
     session = aiohttp.ClientSession()
     session._request = functools.partial(_fake_request, 200)
@@ -75,7 +72,7 @@ async def fake_session():
 
 
 @pytest.mark.asyncio
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def fake_session_500():
     session = aiohttp.ClientSession()
     session._request = functools.partial(_fake_request, 500)

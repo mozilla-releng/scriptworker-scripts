@@ -25,7 +25,7 @@ def release_manifest():
         return json.load(fh)
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def config():
     tmpdir = tempfile.mkdtemp()
     try:
@@ -87,14 +87,14 @@ def release_task(config):
         return json.load(fh)
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def nightly_config(config):
     os.makedirs(os.path.join(config["work_dir"], "cot", "upstream-task-id", "public"))
     shutil.copyfile(NIGHTLY_MANIFEST_PATH, os.path.join(config["work_dir"], "cot", "upstream-task-id", "public", "manifest.json"))
     yield config
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def release_config(config):
     os.makedirs(os.path.join(config["work_dir"], "cot", "upstream-task-id", "public"))
     shutil.copyfile(RELEASE_MANIFEST_PATH, os.path.join(config["work_dir"], "cot", "upstream-task-id", "public", "manifest.json"))
