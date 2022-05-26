@@ -105,7 +105,7 @@ def locations_context():
     yield context
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def fake_ClientError_throwing_session():
     async def _fake_request(method, url, *args, **kwargs):
         raise aiohttp.ClientError
@@ -116,7 +116,7 @@ async def fake_ClientError_throwing_session():
     return session
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def fake_TimeoutError_throwing_session():
     async def _fake_request(method, url, *args, **kwargs):
         raise aiohttp.ServerTimeoutError
