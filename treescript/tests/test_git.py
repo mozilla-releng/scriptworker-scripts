@@ -12,12 +12,12 @@ from treescript.exceptions import PushError
 from treescript.script import get_default_config
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def task():
     return {"payload": {}, "metadata": {"source": "https://github.com/some-user/some-repo/blob/master/taskcluster/ci/version-bump"}}
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def config(tmpdir):
     config = get_default_config()
     config["work_dir"] = os.path.join(tmpdir, "work")

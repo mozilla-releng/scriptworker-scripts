@@ -56,7 +56,7 @@ async def checkout_repo(config, task, repo_path):
         repo.create_head(branch, remote_branch)
         repo.branches[branch].checkout()
     else:
-        log.warn("No branch provided in the task payload. Staying on the default one")
+        log.warning("No branch provided in the task payload. Staying on the default one")
 
 
 async def get_existing_tags(config, repo_path):

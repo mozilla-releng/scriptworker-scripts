@@ -1,6 +1,7 @@
 import os
 
 import pytest
+import pytest_asyncio
 from scriptworker.context import Context
 from scriptworker.exceptions import TaskVerificationError
 
@@ -25,7 +26,7 @@ def context(tmpdir):
     return context
 
 
-@pytest.fixture(scope="function", params=(("unlisted", ("en-US", "en-GB")), ("listed", ("de", "ja", "ja-JP-mac"))), ids=("unlisted", "listed"))
+@pytest_asyncio.fixture(scope="function", params=(("unlisted", ("en-US", "en-GB")), ("listed", ("de", "ja", "ja-JP-mac"))), ids=("unlisted", "listed"))
 async def task_dfn(request):
     channel, locales = request.param
     payload = {"channel": channel, "upstreamArtifacts": []}

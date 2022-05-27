@@ -32,7 +32,7 @@ async def noop_async(*args, **kwargs):
     pass
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def tmpfile():
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
         tmp.write(bytes("fake", "utf-8"))
@@ -44,7 +44,7 @@ def die(*args, **kwargs):
     raise SigningScriptError("dying!")
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def context(tmpdir):
     context = Context()
     context.config = get_default_config()

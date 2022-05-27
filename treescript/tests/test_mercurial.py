@@ -21,7 +21,7 @@ from treescript.task import DONTBUILD_MSG
 UNEXPECTED_ENV_KEYS = "HG HGPROF CDPATH GREP_OPTIONS http_proxy no_proxy " "HGPLAINEXCEPT EDITOR VISUAL PAGER NO_PROXY CHGDEBUG".split()
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def task():
     return {"payload": {}, "metadata": {"source": "https://hg.mozilla.org/repo-name/file/filename"}}
 
@@ -41,7 +41,7 @@ def is_slice_in_list(myslice, mylist):
     return any(myslice == mylist[i : len_s + i] for i in range(len(mylist) - len_s + 1))
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def config(tmpdir):
     config = get_default_config()
     config["work_dir"] = os.path.join(tmpdir, "work")

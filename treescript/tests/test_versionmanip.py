@@ -28,7 +28,7 @@ def does_not_raise():
     yield
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def config(tmpdir):
     config_ = get_default_config()
     config_["work_dir"] = os.path.join(tmpdir, "work")
