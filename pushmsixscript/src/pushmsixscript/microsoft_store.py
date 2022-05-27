@@ -2,6 +2,7 @@ import logging
 import os
 import tempfile
 import time
+import traceback
 import zipfile
 
 import requests
@@ -70,9 +71,15 @@ def _store_url(config, tail):
 
 
 def _log_response(response):
-    log.info(f"response code: {response.status_code}")
-    # log.info(f"response headers: {response.headers}")
-    log.info(f"response body: {response.text}")
+    try:
+        log.info(f"response code: {response.status_code}")
+        if hasattr(response, "text"):
+            max_len = 1000
+            body = (response.text[:max_len] + "...") if len(response.text) > max_len else response.text
+            log.info(f"response body: {body}")
+    except Exception:
+        log.error("unable to log response")
+        traceback.print_exc()
 
 
 def _store_session(config):
@@ -95,12 +102,18 @@ def _push_to_store(config, channel, msix_file_paths, publish_mode, access_token)
     headers = {"Authorization": f"Bearer {access_token}", "Content-type": "application/json", "User-Agent": "Python"}
     with requests.Session() as session:
         session.mount("https://", requests.adapters.HTTPAdapter(max_retries=MAX_RETRIES))
+        log.info(">> checking for pending submissions...")
         _check_for_pending_submission(config, channel, session, headers)
+        log.info(">> creating a new submission...")
         submission_request = _create_submission(config, channel, session, headers)
         submission_id = submission_request.get("id")
+        log.info(">> updating the submission...")
         _update_submission(config, channel, session, submission_request, headers, msix_file_paths, publish_mode)
+        log.info(">> committing the submission...")
         _commit_submission(config, channel, session, submission_id, headers)
+        log.info(">> waiting for completion...")
         _wait_for_commit_completion(config, channel, session, submission_id, headers)
+        log.info(">> push complete!")
 
 
 def _check_for_pending_submission(config, channel, session, headers):
