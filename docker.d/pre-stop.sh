@@ -30,7 +30,7 @@ while true; do
     fi
 
     now=$(date +%s)
-    duration=$[ $now - $started ]
+    duration=$(( $now - $started ))
 
     if [ $duration -gt $POLL_DURATION ]; then
         echo "Waited too long ($duration), giving up"
