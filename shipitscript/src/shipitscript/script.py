@@ -24,6 +24,16 @@ async def async_main(context):
     log.info("Success!")
 
 
+def mark_phase_as_completed_action(context):
+    """Action to perform is to tell Ship-it API that a phase can be marked
+    as completed"""
+    release_name = context.task["payload"]["release_name"]
+    phase = context.task["payload"]["phase"]
+
+    log.info("Marking the release's phase as completed ...")
+    ship_actions.mark_phase_as_completed(context.ship_it_instance_config, release_name, phase)
+
+
 def mark_as_shipped_action(context):
     """Action to perform is to tell Ship-it API that a release can be marked
     as shipped"""
@@ -63,7 +73,11 @@ def create_new_release_action(context):
 
 
 # ACTION_MAP {{{1
-ACTION_MAP = {"mark-as-shipped": mark_as_shipped_action, "create-new-release": create_new_release_action}
+ACTION_MAP = {
+    "mark-as-shipped": mark_as_shipped_action,
+    "create-new-release": create_new_release_action,
+    "mark-phase-as-completed": mark_phase_as_completed_action,
+}
 
 
 def get_default_config():
