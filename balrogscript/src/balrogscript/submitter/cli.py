@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 
 import arrow
 from balrogclient import Release, ReleaseState, Rule, ScheduledRuleChange, SingleLocale, balrog_request, get_balrog_session
@@ -25,6 +26,21 @@ def get_release_blob_name(productName, version, build_number, suffix=None):
     if suffix is None:
         suffix = ""
     return "%s-%s-build%s%s" % (productName, version, build_number, suffix)
+
+
+class PinnableVersion(object):
+    def __init__(self, version_str):
+        match_obj = re.match(r"(\d+)\.(\d+)", version_str)
+        if not match_obj:
+            raise ValueError(f"Version string '{version_str}' could not be parsed into a pinnable version")
+        self.major_version = match_obj.group(1)
+        self.minor_version = match_obj.group(2)
+
+    def major_pin(self):
+        return f"{self.major_version}."
+
+    def minor_pin(self):
+        return f"{self.major_version}.{self.minor_version}."
 
 
 class ReleaseCreatorFileUrlsMixin(object):
@@ -479,13 +495,22 @@ class ReleasePusher(object):
         if dummy:
             self.suffix += "-dummy"
 
-    def run(self, productName, version, build_number, rule_ids, backgroundRate=None):
+    def run(self, productName, version, build_number, rule_ids, pin_channels, backgroundRate=None):
         name = get_release_blob_name(productName, version, build_number, self.suffix)
         for rule_id in rule_ids:
             data = {"mapping": name}
             if backgroundRate:
                 data["backgroundRate"] = backgroundRate
             Rule(api_root=self.api_root, auth0_secrets=self.auth0_secrets, rule_id=rule_id).update_rule(**data)
+
+        pinVersion = PinnableVersion(version)
+        for channel in pin_channels:
+            url = self.api_root + f"/v2/releases/{name}/pinnable"
+            data = {"product": productName, "channel": channel, "version": pinVersion.major_pin()}
+            session = get_balrog_session(auth0_secrets=self.auth0_secrets)
+            balrog_request(session, "put", url, json=data)
+            data["version"] = pinVersion.minor_pin()
+            balrog_request(session, "put", url, json=data)
 
 
 class ReleaseScheduler(object):
@@ -496,7 +521,7 @@ class ReleaseScheduler(object):
         if dummy:
             self.suffix = "-dummy"
 
-    def run(self, productName, version, build_number, rule_ids, forceFallbackMappingUpdate=False, when=None, backgroundRate=None):
+    def run(self, productName, version, build_number, rule_ids, pin_channels, forceFallbackMappingUpdate=False, when=None, backgroundRate=None):
         name = get_release_blob_name(productName, version, build_number, self.suffix)
 
         if when is not None:
@@ -530,6 +555,15 @@ class ReleaseScheduler(object):
                 data["backgroundRate"] = backgroundRate
 
             ScheduledRuleChange(api_root=self.api_root, auth0_secrets=self.auth0_secrets, rule_id=rule_id).add_scheduled_rule_change(**data)
+
+        pinVersion = PinnableVersion(version)
+        for channel in pin_channels:
+            url = self.api_root + f"/v2/releases/{name}/pinnable"
+            data = {"product": productName, "channel": channel, "version": pinVersion.major_pin(), "when": when.int_timestamp * 1000}
+            session = get_balrog_session(auth0_secrets=self.auth0_secrets)
+            balrog_request(session, "put", url, json=data)
+            data["version"] = pinVersion.minor_pin()
+            balrog_request(session, "put", url, json=data)
 
 
 class ReleaseStateUpdater(object):

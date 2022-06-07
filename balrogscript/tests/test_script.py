@@ -101,21 +101,42 @@ def test_create_scheduler(config):
     assert isinstance(bscript.create_scheduler(api_root=config["api_root"], auth0_secrets=None), ReleaseScheduler)
 
 
-def test_schedule(config, mocker):
+@pytest.mark.parametrize(
+    "task,expected",
+    (
+        (
+            {
+                "payload": {
+                    "product": "foo",
+                    "version": "99.bottles",
+                    "build_number": 7,
+                    "publish_rules": [1, 2],
+                    "release_eta": None,
+                    "force_fallback_mapping_update": False,
+                    "background_rate": None,
+                }
+            },
+            ["Foo", "99.bottles", 7, [1, 2], [], False, None, None],
+        ),
+        (
+            {
+                "payload": {
+                    "product": "foo",
+                    "version": "99.bottles",
+                    "build_number": 7,
+                    "publish_rules": [1, 2],
+                    "release_eta": None,
+                    "force_fallback_mapping_update": False,
+                    "background_rate": None,
+                    "pin_channels": ["release", "beta"],
+                }
+            },
+            ["Foo", "99.bottles", 7, [1, 2], ["release", "beta"], False, None, None],
+        ),
+    ),
+)
+def test_schedule(task, expected, config, mocker):
     auth0_secrets = None
-
-    task = {
-        "payload": {
-            "product": "foo",
-            "version": "99.bottles",
-            "build_number": 7,
-            "publish_rules": [1, 2],
-            "release_eta": None,
-            "force_fallback_mapping_update": False,
-            "background_rate": None,
-        }
-    }
-    expected = ["Foo", "99.bottles", 7, [1, 2], False, None, None]
     real = []
 
     def fake_scheduler(*args):
@@ -174,7 +195,7 @@ def test_create_pusher(config):
                 "requiresMirrors": False,
                 "updateLine": None,
             },
-            {"productName": "Widget", "version": "60", "build_number": 8, "rule_ids": [1]},
+            {"productName": "Widget", "version": "60", "build_number": 8, "rule_ids": [1], "pin_channels": []},
         ),
         (
             {
@@ -206,7 +227,7 @@ def test_create_pusher(config):
                 "requiresMirrors": True,
                 "updateLine": None,
             },
-            {"productName": "Widget", "version": "60", "build_number": 8, "rule_ids": [1]},
+            {"productName": "Widget", "version": "60", "build_number": 8, "rule_ids": [1], "pin_channels": []},
         ),
         (
             {
@@ -239,7 +260,39 @@ def test_create_pusher(config):
                 "requiresMirrors": True,
                 "updateLine": {"for": {}, "fields": {"detailsURL": "https://some.text/details", "type": "minor"}},
             },
-            {"productName": "Widget", "version": "60", "build_number": 8, "rule_ids": [1]},
+            {"productName": "Widget", "version": "60", "build_number": 8, "rule_ids": [1], "pin_channels": []},
+        ),
+        (
+            {
+                "payload": {
+                    "app_version": "60.0",
+                    "product": "widget",
+                    "version": "60",
+                    "build_number": 8,
+                    "channel_names": ["x", "y"],
+                    "archive_domain": "archive",
+                    "download_domain": "download",
+                    "platforms": ["foo", "bar"],
+                    "require_mirrors": False,
+                    "rules_to_update": [1],
+                    "pin_channels": ["release", "beta"],
+                }
+            },
+            {
+                "appVersion": "60.0",
+                "productName": "Widget",
+                "version": "60",
+                "buildNumber": 8,
+                "updateChannels": ["x", "y"],
+                "ftpServer": "archive",
+                "bouncerServer": "download",
+                "enUSPlatforms": ["foo", "bar"],
+                "hashFunction": "sha512",
+                "partialUpdates": {},
+                "requiresMirrors": False,
+                "updateLine": None,
+            },
+            {"productName": "Widget", "version": "60", "build_number": 8, "rule_ids": [1], "pin_channels": ["release", "beta"]},
         ),
     ),
 )

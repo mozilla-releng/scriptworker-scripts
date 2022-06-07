@@ -123,11 +123,11 @@ def schedule(task, config, auth0_secrets):
         task["payload"]["version"],
         task["payload"]["build_number"],
         task["payload"]["publish_rules"],
+        task["payload"].get("pin_channels", []),
         task["payload"].get("force_fallback_mapping_update", False),
         task["payload"]["release_eta"] or None,  # Send None if release_eta is ''
         task["payload"].get("background_rate"),
     ]
-    # XXX optionally append background_rate if/when we want to support it
 
     # XXX should we catch requests.HTTPError and raise a scriptworker
     # error? maybe not since balrogscript isn't py3
@@ -189,6 +189,7 @@ def submit_toplevel(task, config, auth0_secrets, backend_version):
             version=task["payload"]["version"],
             build_number=task["payload"]["build_number"],
             rule_ids=task["payload"]["rules_to_update"],
+            pin_channels=task["payload"].get("pin_channels", []),
         )
     )
 

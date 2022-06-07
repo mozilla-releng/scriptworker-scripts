@@ -21,6 +21,13 @@
                 "force_fallback_mapping_update": {
                     "type": "boolean",
                     "default": "False"
+                },
+                "pin_channels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true
                 }
             },
             "required": ["build_number", "product", "publish_rules", "version"]
