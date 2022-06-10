@@ -105,10 +105,10 @@ def _push_to_store(config, channel, msix_file_paths, publish_mode, access_token)
         log.info(">> checking for pending submissions...")
         _check_for_pending_submission(config, channel, session, headers)
         log.info(">> creating a new submission...")
-        submission_request = _create_submission(config, channel, session, headers)
+        (submission_request, encoding) = _create_submission(config, channel, session, headers)
         submission_id = submission_request.get("id")
         log.info(">> updating the submission...")
-        _update_submission(config, channel, session, submission_request, headers, msix_file_paths, publish_mode)
+        _update_submission(config, channel, session, submission_request, headers, msix_file_paths, publish_mode, encoding)
         log.info(">> committing the submission...")
         _commit_submission(config, channel, session, submission_id, headers)
         log.info(">> waiting for completion...")
@@ -143,10 +143,11 @@ def _create_submission(config, channel, session, headers):
     response = session.post(url, headers=headers, timeout=int(config["request_timeout_seconds"]))
     _log_response(response)
     response.raise_for_status()
-    return response.json()
+    log.info(f"submission data response encoding: {response.encoding}")
+    return (response.json(), response.encoding)
 
 
-def _update_submission(config, channel, session, submission_request, headers, file_paths, publish_mode):
+def _update_submission(config, channel, session, submission_request, headers, file_paths, publish_mode, encoding):
     # update the in-progress submission, including uploading the new msix files
     application_id = config["application_ids"][channel]
     submission_id = submission_request.get("id")
@@ -200,7 +201,7 @@ def _update_submission(config, channel, session, submission_request, headers, fi
     submission_request = str(submission_request)
     submission_request = submission_request.replace("True", "true").replace("False", "false")
     url = _store_url(config, f"{application_id}/submissions/{submission_id}")
-    response = session.put(url, submission_request, headers=headers)
+    response = session.put(url, submission_request.encode(encoding), headers=headers)
     _log_response(response)
     response.raise_for_status()
     # Wrap all the msix files in a zip file and upload the zip
