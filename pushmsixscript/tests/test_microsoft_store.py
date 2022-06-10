@@ -98,10 +98,11 @@ def test_create_submission(status_code, raises):
             m.post(url, headers=headers, json=mocked_response, status_code=status_code)
             if raises:
                 with pytest.raises(requests.exceptions.HTTPError):
-                    submission_request = microsoft_store._create_submission(CONFIG, channel, session, headers)
+                    (submission_request, enc) = microsoft_store._create_submission(CONFIG, channel, session, headers)
             else:
-                submission_request = microsoft_store._create_submission(CONFIG, channel, session, headers)
+                (submission_request, enc) = microsoft_store._create_submission(CONFIG, channel, session, headers)
                 assert submission_request == mocked_response
+                assert enc == "utf-8"
 
 
 @pytest.mark.parametrize(
@@ -121,6 +122,7 @@ def test_update_submission(status_code, raises, publish_mode):
     submission_id = submission_request["id"]
     upload_url = submission_request["fileUploadUrl"]
     mocked_response = {"status": "OK"}
+    encoding = "utf-8"
     with tempfile.NamedTemporaryFile(mode="wb") as f:
         f.write(b"hello there")
         with requests.Session() as session:
@@ -131,9 +133,9 @@ def test_update_submission(status_code, raises, publish_mode):
                 with patch.object(microsoft_store, "BlobClient"):
                     if raises:
                         with pytest.raises(requests.exceptions.HTTPError):
-                            microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name], publish_mode)
+                            microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name], publish_mode, encoding)
                     else:
-                        microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name], publish_mode)
+                        microsoft_store._update_submission(CONFIG, channel, session, submission_request, headers, [f.name], publish_mode, encoding)
 
 
 @pytest.mark.parametrize(
