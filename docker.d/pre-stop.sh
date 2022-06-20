@@ -10,7 +10,7 @@ SCRIPTWORKER_PID=${SCRIPTWORKER_PID:-1}
 # in case the task takes too long, this script exits 2 minutes before
 # `terminationGracePeriodSeconds` to let scriptworker upload files and report
 # `machine-shutdown` to Taskcluster.
-POLL_DURATION=1080
+POLL_DURATION=2700
 POLL_INTERVAL=5
 
 started=$(date +%s)
