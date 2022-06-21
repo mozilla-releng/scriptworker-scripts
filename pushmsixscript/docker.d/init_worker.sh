@@ -10,7 +10,7 @@ test_var_set() {
   fi
 }
 
-export REQUEST_TIMEOUT_SECONDS=30
+export REQUEST_TIMEOUT_SECONDS=90
 export LOGIN_URL=https://login.microsoftonline.com
 export TOKEN_RESOURCE=https://manage.devcenter.microsoft.com
 export STORE_URL=https://manage.devcenter.microsoft.com/v1.0/my/applications/
