@@ -2,15 +2,23 @@
 
 # scriptworker runs as PID 1 in Kubernetes
 SCRIPTWORKER_PID=${SCRIPTWORKER_PID:-1}
-# See https://kubernetes.io/docs/concepts/workloads/pods/pod/?source=post_page---------------------------#termination-of-pods
+# See https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination
 # for the details
 # Kubernetes executes this script synchronously and waits for it to finish. If
 # the script doesn't finish in `terminationGracePeriodSeconds`, it sends
 # SIGTERM, waits 2 seconds and kills the container. To prevent this scenario
 # in case the task takes too long, this script exits 2 minutes before
-# `terminationGracePeriodSeconds` to let scriptworker upload files and report
-# `machine-shutdown` to Taskcluster.
-POLL_DURATION=1080
+# `terminationGracePeriodSeconds` (as set e.g. in
+# https://github.com/mozilla-services/cloudops-infra/blob/d94d5fd6a7704ffd2c829d870206f5c0ed8d75e7/projects/relengworker/k8s/charts/beetmover/templates/deployment.yaml)
+# to let scriptworker upload files and report `worker-shutdown` to Taskcluster.
+case ${PROJECT_NAME} in
+    tree)
+        POLL_DURATION=3480
+        ;;
+    *)
+        POLL_DURATION=1080
+        ;;
+esac
 POLL_INTERVAL=5
 
 started=$(date +%s)
