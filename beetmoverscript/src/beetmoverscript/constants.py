@@ -40,6 +40,7 @@ STAGE_PLATFORM_MAP = {
     "win64-devedition": "win64",
     "win64-pinebuild": "win64",
     "win64-aarch64-devedition": "win64-aarch64",
+    "win64-aarch64-pinebuild": "win64-aarch64",
 }
 
 NORMALIZED_BALROG_PLATFORMS = {
@@ -52,6 +53,7 @@ NORMALIZED_BALROG_PLATFORMS = {
     "win64-devedition": "win64",
     "win64-pinebuild": "win64",
     "win64-aarch64-devedition": "win64-aarch64",
+    "win64-aarch64-pinebuild": "win64-aarch64",
 }
 
 NORMALIZED_FILENAME_PLATFORMS = NORMALIZED_BALROG_PLATFORMS.copy()
