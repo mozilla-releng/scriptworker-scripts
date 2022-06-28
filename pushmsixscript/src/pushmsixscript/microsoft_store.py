@@ -110,6 +110,8 @@ def _push_to_store(config, channel, msix_file_paths, publish_mode, access_token)
         log.info(">> updating the submission...")
         _update_submission(config, channel, session, submission_request, headers, msix_file_paths, publish_mode, encoding)
         if channel == "release":
+            # On the Release channel, do not commit (leave the submission in the pending state)
+            # to give Release Management a chance to edit the submission prior to certification.
             log.info(">> skipping commit on release channel: submit manually in the Partner Center")
         else:
             log.info(">> committing the submission...")
