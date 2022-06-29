@@ -109,10 +109,15 @@ def _push_to_store(config, channel, msix_file_paths, publish_mode, access_token)
         submission_id = submission_request.get("id")
         log.info(">> updating the submission...")
         _update_submission(config, channel, session, submission_request, headers, msix_file_paths, publish_mode, encoding)
-        log.info(">> committing the submission...")
-        _commit_submission(config, channel, session, submission_id, headers)
-        log.info(">> waiting for completion...")
-        _wait_for_commit_completion(config, channel, session, submission_id, headers)
+        if channel == "release":
+            # On the Release channel, do not commit (leave the submission in the pending state)
+            # to give Release Management a chance to edit the submission prior to certification.
+            log.info(">> skipping commit on release channel: submit manually in the Partner Center")
+        else:
+            log.info(">> committing the submission...")
+            _commit_submission(config, channel, session, submission_id, headers)
+            log.info(">> waiting for completion...")
+            _wait_for_commit_completion(config, channel, session, submission_id, headers)
         log.info(">> push complete!")
 
 

@@ -51,7 +51,7 @@ from pushmsixscript.script import main
             "release",
             "Manual",
             False,
-            6,
+            4,
         ),
     ),
 )
