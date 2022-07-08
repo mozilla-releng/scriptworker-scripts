@@ -358,9 +358,9 @@ mohawk==1.1.0 \
     --hash=sha256:3ed296a30453d0b724679e0fd41e4e940497f8e461a9a9c3b7f36e43bab0fa09 \
     --hash=sha256:d2a0e3ab10a209cc79e95e28f2dd54bd4a73fd1998ffe27b7ba0f962b6be9723
     # via taskcluster
-mozilla-version==1.0.1 \
-    --hash=sha256:9d6f50eb0b362106e468ba84cafd683d56cab153e252c2d272b135b5c65da48e \
-    --hash=sha256:eb913cc47fd244e8767d19eb53c68875ea77740eaf1ca518213c3e4b6b2f050b
+mozilla-version==1.1.0 \
+    --hash=sha256:1a56c1ea668ec10e18c0a2e394a79373b5ec0ea25a33d204ac6382f337cb9f8a \
+    --hash=sha256:1fdd9ed90eeec801852b981e98d5b4f6a69efee32eb5f492db86be97393ce4e9
     # via -r requirements/base.in
 multidict==6.0.2 \
     --hash=sha256:0327292e745a880459ef71be14e709aaea2f783f3537588fb4ed09b6c01bca60 \
