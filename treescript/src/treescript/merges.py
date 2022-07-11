@@ -10,7 +10,7 @@ from scriptworker_client.utils import makedirs
 
 from treescript.l10n import l10n_bump
 from treescript.mercurial import commit, get_revision, run_hg_command
-from treescript.task import get_l10n_bump_info, get_merge_config
+from treescript.task import get_l10n_bump_info, get_merge_config, get_metadata_source_repo
 from treescript.versionmanip import do_bump_version, get_version
 
 log = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ def touch_clobber_file(config, repo_path):
             f.write(new_contents)
 
 
-def create_new_version(version_config, repo_path):
+def create_new_version(version_config, repo_path, source_repo):
     """Create the new version string used in file manipulation.
 
     Arguments:
@@ -80,7 +80,7 @@ def create_new_version(version_config, repo_path):
     Returns:
         string: new version string for file contents.
     """
-    version = get_version(version_config["filename"], repo_path)
+    version = get_version(version_config["filename"], repo_path, source_repo)
     if version_config.get("version_bump") == "major":
         version = version.bump("major_number")
     elif version_config.get("version_bump") == "minor":
@@ -94,12 +94,12 @@ def create_new_version(version_config, repo_path):
     return version
 
 
-async def apply_rebranding(config, repo_path, merge_config):
+async def apply_rebranding(config, repo_path, merge_config, source_repo):
     """Apply changes to repo required for merge/rebranding."""
     log.info("Rebranding %s to %s", merge_config.get("from_branch"), merge_config.get("to_branch"))
 
     # Must collect this before any bumping.
-    version = get_version(core_version_file(merge_config), repo_path)
+    version = get_version(core_version_file(merge_config), repo_path, source_repo)
     # Used in file replacements, further down.
     format_options = {
         "current_major_version": version.major_number,
@@ -110,7 +110,7 @@ async def apply_rebranding(config, repo_path, merge_config):
 
     if merge_config.get("version_files"):
         for version_config in merge_config["version_files"]:
-            await do_bump_version(config, repo_path, [version_config["filename"]], create_new_version(version_config, repo_path))
+            await do_bump_version(config, repo_path, [version_config["filename"]], create_new_version(version_config, repo_path, source_repo), source_repo)
 
     for f in merge_config.get("copy_files", list()):
         shutil.copyfile(os.path.join(repo_path, f[0]), os.path.join(repo_path, f[1]))
@@ -195,6 +195,7 @@ async def do_merge(config, task, repo_path):
               to know which branches to push.
     """
     merge_config = get_merge_config(task)
+    source_repo = get_metadata_source_repo(task)
 
     upstream_repo = config["upstream_repo"]
     from_branch = merge_config.get("from_branch")
@@ -204,20 +205,20 @@ async def do_merge(config, task, repo_path):
 
     # Used if end_tag is set.
     await run_hg_command(config, "up", "-C", to_branch, repo_path=repo_path)
-    to_fx_major_version = get_version(core_version_file(merge_config), repo_path).major_number
+    to_fx_major_version = get_version(core_version_file(merge_config), repo_path, source_repo).major_number
     base_to_rev = await get_revision(config, repo_path, branch=to_branch)
 
     if from_branch:
         await run_hg_command(config, "up", "-C", from_branch, repo_path=repo_path)
         base_from_rev = await get_revision(config, repo_path, branch=from_branch)
-        from_fx_major_version = get_version(core_version_file(merge_config), repo_path).major_number
+        from_fx_major_version = get_version(core_version_file(merge_config), repo_path, source_repo).major_number
         if from_fx_major_version == to_fx_major_version:
             log.info("Skipping merge: %s and %s versions already match (%s)", from_branch, to_branch, from_fx_major_version)
             return []
 
     base_tag = merge_config.get("base_tag")
     if base_tag:
-        base_tag = base_tag.format(major_version=get_version(core_version_file(merge_config), repo_path).major_number)
+        base_tag = base_tag.format(major_version=get_version(core_version_file(merge_config), repo_path, source_repo).major_number)
         tag_message = f"No bug - tagging {base_from_rev} with {base_tag} a=release DONTBUILD CLOSED TREE"
         await run_hg_command(config, "tag", "-m", tag_message, "-r", base_from_rev, "-f", base_tag, repo_path=repo_path)
 
@@ -238,7 +239,7 @@ async def do_merge(config, task, repo_path):
         await run_hg_command(config, "tag", "-m", tag_message, "-r", base_to_rev, "-f", end_tag, repo_path=repo_path)
 
     await _maybe_bump_l10n(config, task, repo_path)
-    await apply_rebranding(config, repo_path, merge_config)
+    await apply_rebranding(config, repo_path, merge_config, source_repo)
 
     diff_output = await run_hg_command(config, "diff", repo_path=repo_path, return_output=True)
     path = os.path.join(config["artifact_dir"], "public", "logs", "{}.diff".format(to_branch))

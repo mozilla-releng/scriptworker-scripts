@@ -4,11 +4,12 @@
 import logging
 import os
 
-from mozilla_version.fenix import FenixVersion
 from mozilla_version.gecko import FirefoxVersion, GeckoVersion, ThunderbirdVersion
+from mozilla_version.maven import MavenVersion
+from mozilla_version.mobile import MobileVersion
 
 from treescript.exceptions import TaskVerificationError, TreeScriptError
-from treescript.task import DONTBUILD_MSG, get_dontbuild, get_vcs_module, get_version_bump_info
+from treescript.task import DONTBUILD_MSG, get_dontbuild, get_metadata_source_repo, get_vcs_module, get_version_bump_info
 
 log = logging.getLogger(__name__)
 
@@ -19,27 +20,41 @@ ALLOWED_BUMP_FILES = (
     "config/milestone.txt",
     "mail/config/version.txt",
     "mail/config/version_display.txt",
-    "version.txt",  # Fenix
+    "version.txt",  # Github repositories
 )
 
 _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
     "browser/": FirefoxVersion,
     "config/milestone.txt": GeckoVersion,
     "mail/": ThunderbirdVersion,
-    "version.txt": FenixVersion,
+}
+
+_VERSION_CLASS_PER_END_OF_SOURCE_REPO = {
+    "fenix": MobileVersion,
+    "focus-android": MobileVersion,
+    "android-components": MavenVersion,
 }
 
 
-def _find_what_version_parser_to_use(file_):
-    start_string_then_version_class = [cls for path, cls in _VERSION_CLASS_PER_BEGINNING_OF_PATH.items() if file_.startswith(path)]
+def _find_what_version_parser_to_use(file_, source_repo):
+    version_classes = [cls for path, cls in _VERSION_CLASS_PER_BEGINNING_OF_PATH.items() if file_.startswith(path)]
 
+    number_of_version_classes = len(version_classes)
+    if number_of_version_classes > 1:
+        raise TreeScriptError(f'File "{file_}" matched too many classes: {version_classes}')
+    if number_of_version_classes > 0:
+        return version_classes[0]
+
+    log.info("Could not determine version class based on file path. Falling back to source_repo")
+
+    version_classes = [cls for repo_name, cls in _VERSION_CLASS_PER_END_OF_SOURCE_REPO.items() if source_repo.endswith(repo_name)]
     try:
-        return start_string_then_version_class[0]
+        return version_classes[0]
     except IndexError as exc:
         raise TreeScriptError(exc) from exc
 
 
-def get_version(file_, parent_directory=None):
+def get_version(file_, parent_directory, source_repo):
     """Parse the version from file.
 
     Args:
@@ -52,7 +67,7 @@ def get_version(file_, parent_directory=None):
     """
     abs_path = os.path.join(parent_directory, file_)
     log.info("Reading {} for version information.".format(abs_path))
-    VersionClass = _find_what_version_parser_to_use(file_)
+    VersionClass = _find_what_version_parser_to_use(file_, source_repo)
     with open(abs_path, "r") as f:
         contents = f.read()
     log.info("Contents:")
@@ -81,7 +96,8 @@ async def bump_version(config, task, repo_path, repo_type):
     bump_info = get_version_bump_info(task)
     num_commits = 0
 
-    changed = await do_bump_version(config, repo_path, bump_info["files"], bump_info["next_version"])
+    source_repo = get_metadata_source_repo(task)
+    changed = await do_bump_version(config, repo_path, bump_info["files"], bump_info["next_version"], source_repo)
     vcs = get_vcs_module(repo_type)
     if changed:
         commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
@@ -92,7 +108,7 @@ async def bump_version(config, task, repo_path, repo_type):
     return num_commits
 
 
-async def do_bump_version(config, repo_path, files, next_version):
+async def do_bump_version(config, repo_path, files, next_version, source_repo):
     """Perform a version bump.
 
     This function takes its inputs from task by using the ``get_version_bump_info``
@@ -124,8 +140,8 @@ async def do_bump_version(config, repo_path, files, next_version):
         if not os.path.exists(abs_file):
             raise TaskVerificationError("{} is not in repo".format(abs_file))
 
-        VersionClass = _find_what_version_parser_to_use(file_)
-        curr_version = get_version(file_, repo_path)
+        VersionClass = _find_what_version_parser_to_use(file_, source_repo)
+        curr_version = get_version(file_, repo_path, source_repo)
         next_version = VersionClass.parse(saved_next_version)
 
         try:

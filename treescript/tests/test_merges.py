@@ -196,7 +196,7 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
     def noop_replace(*arguments, **kwargs):
         called_args.append("replace")
 
-    def mocked_get_version(path, repo_path):
+    def mocked_get_version(path, repo_path, source_repo):
         return FirefoxVersion.parse("76.0")
 
     mocker.patch.object(merges, "get_version", new=mocked_get_version)
@@ -205,7 +205,7 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
     mocker.patch.object(merges, "replace", new=noop_replace)
     mocker.patch.object(merges, "touch_clobber_file", new=sync_noop)
 
-    await merges.apply_rebranding(config, repo_context.repo, merge_config)
+    await merges.apply_rebranding(config, repo_context.repo, merge_config, "https://hg.mozilla.org/repo")
     assert called_args[0] == expected
 
 
@@ -227,12 +227,12 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
     ),
 )
 async def test_create_new_version(config, mocker, version_config, current_version, expected):
-    def mocked_get_version(path, repo_path):
+    def mocked_get_version(path, repo_path, source_repo):
         return current_version
 
     mocker.patch.object(merges, "get_version", new=mocked_get_version)
 
-    result = merges.create_new_version(version_config, repo_path="")  # Dummy repo_path, ignored.
+    result = merges.create_new_version(version_config, repo_path="", source_repo="https://hg.mozilla.org/repo")  # Dummy repo_path, ignored.
     assert result == expected
 
 
