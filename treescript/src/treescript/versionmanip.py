@@ -5,7 +5,7 @@ import logging
 import os
 
 from mozilla_version.fenix import FenixVersion
-from mozilla_version.gecko import FennecVersion, FirefoxVersion, GeckoVersion, ThunderbirdVersion
+from mozilla_version.gecko import FirefoxVersion, GeckoVersion, ThunderbirdVersion
 
 from treescript.exceptions import TaskVerificationError, TreeScriptError
 from treescript.task import DONTBUILD_MSG, get_dontbuild, get_vcs_module, get_version_bump_info
@@ -25,7 +25,6 @@ ALLOWED_BUMP_FILES = (
 _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
     "browser/": FirefoxVersion,
     "config/milestone.txt": GeckoVersion,
-    "mobile/android/": FennecVersion,
     "mail/": ThunderbirdVersion,
     "version.txt": FenixVersion,
 }
