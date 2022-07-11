@@ -113,7 +113,7 @@ async def test_log_outgoing(config, task, mocker, output):
 
     assert number_of_changesets == 2
     repo_mock.iter_commits.assert_called_once_with("origin/master..master")
-    repo_mock.git.diff.assert_called_once_with("master")
+    repo_mock.git.diff.assert_called_once_with("origin/master")
     if output:
         with open(os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff"), "r") as fh:
             assert fh.read().rstrip() == output
