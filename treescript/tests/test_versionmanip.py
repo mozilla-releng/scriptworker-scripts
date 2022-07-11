@@ -3,6 +3,8 @@ from contextlib import contextmanager
 
 import pytest
 from mozilla_version.gecko import FirefoxVersion, GeckoVersion, ThunderbirdVersion
+from mozilla_version.maven import MavenVersion
+from mozilla_version.mobile import MobileVersion
 
 import treescript.versionmanip as vmanip
 from treescript.exceptions import TaskVerificationError, TreeScriptError
@@ -53,7 +55,7 @@ def repo_context(tmpdir, config, request, mocker):
 
 
 def test_get_version(repo_context):
-    ver = vmanip.get_version("config/milestone.txt", repo_context.repo)
+    ver = vmanip.get_version("config/milestone.txt", repo_context.repo, "https://hg.mozilla.org/repo")
     assert ver == repo_context.xtest_version
 
 
@@ -62,7 +64,7 @@ def test_replace_ver_in_file(repo_context, new_version):
     filepath = "config/milestone.txt"
     old_ver = repo_context.xtest_version
     vmanip.replace_ver_in_file(os.path.join(repo_context.repo, filepath), old_ver, new_version)
-    assert new_version == vmanip.get_version(filepath, repo_context.repo)
+    assert new_version == vmanip.get_version(filepath, repo_context.repo, "https://hg.mozilla.org/repo")
 
 
 @pytest.mark.parametrize("new_version", ("68.0", "68.0b3"))
@@ -74,19 +76,26 @@ def test_replace_ver_in_file_invalid_old_ver(repo_context, new_version):
 
 
 @pytest.mark.parametrize(
-    "file, expectation, expected_result",
+    "file, source_repo, expectation, expected_result",
     (
-        ("browser/config/version.txt", does_not_raise(), FirefoxVersion),
-        ("browser/config/version_display.txt", does_not_raise(), FirefoxVersion),
-        ("mail/config/version.txt", does_not_raise(), ThunderbirdVersion),
-        ("mail/config/version_display.txt", does_not_raise(), ThunderbirdVersion),
-        ("config/milestone.txt", does_not_raise(), GeckoVersion),
-        ("some/random/file.txt", pytest.raises(TreeScriptError), None),
+        ("browser/config/version.txt", "https://hg.mozilla.org/mozilla-central", does_not_raise(), FirefoxVersion),
+        ("browser/config/version_display.txt", "https://hg.mozilla.org/releases/mozilla-beta", does_not_raise(), FirefoxVersion),
+        ("mail/config/version.txt", "https://hg.mozilla.org/releases/comm-beta", does_not_raise(), ThunderbirdVersion),
+        ("mail/config/version_display.txt", "https://hg.mozilla.org/releases/comm-release", does_not_raise(), ThunderbirdVersion),
+        ("config/milestone.txt", "https://hg.mozilla.org/releases/mozilla-release", does_not_raise(), GeckoVersion),
+        ("version.txt", "https://github.com/mozilla-mobile/fenix", does_not_raise(), MobileVersion),
+        ("version.txt", "https://github.com/mozilla-mobile/focus-android", does_not_raise(), MobileVersion),
+        ("version.txt", "https://github.com/mozilla-mobile/android-components", does_not_raise(), MavenVersion),
+        ("version.txt", "https://github.com/mozilla-releng/staging-fenix", does_not_raise(), MobileVersion),
+        ("version.txt", "https://github.com/mozilla-releng/staging-focus-android", does_not_raise(), MobileVersion),
+        ("version.txt", "https://github.com/mozilla-releng/staging-android-components", does_not_raise(), MavenVersion),
+        ("some/random/file.txt", "https://hg.mozilla.org/mozilla-central", pytest.raises(TreeScriptError), None),
+        ("some/random/file.txt", "https://github.com/some-owner/some-repo", pytest.raises(TreeScriptError), None),
     ),
 )
-def test_find_what_version_parser_to_use(file, expectation, expected_result):
+def test_find_what_version_parser_to_use(file, source_repo, expectation, expected_result):
     with expectation:
-        assert vmanip._find_what_version_parser_to_use(file) == expected_result
+        assert vmanip._find_what_version_parser_to_use(file, source_repo) == expected_result
 
 
 @pytest.mark.asyncio
@@ -103,7 +112,7 @@ async def test_bump_version(mocker, repo_context, new_version, should_append_esr
     vcs_mock = AsyncMock()
     mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
     await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
-    assert test_version == vmanip.get_version(relative_files[0], repo_context.repo)
+    assert test_version == vmanip.get_version(relative_files[0], repo_context.repo, "https://hg.mozilla.org/repo")
     assert vcs_mock.commit.call_args_list[0][0][2] == "Automatic version bump CLOSED TREE NO BUG a=release"
 
 
@@ -150,7 +159,7 @@ async def test_bump_version_invalid_file(mocker, repo_context, new_version):
     mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
     with pytest.raises(TaskVerificationError):
         await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
-    assert repo_context.xtest_version == vmanip.get_version(relative_files[1], repo_context.repo)
+    assert repo_context.xtest_version == vmanip.get_version(relative_files[1], repo_context.repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_not_called()
 
 
@@ -166,7 +175,7 @@ async def test_bump_version_missing_file(mocker, repo_context, new_version):
     mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
     with pytest.raises(TaskVerificationError):
         await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
-    assert repo_context.xtest_version == vmanip.get_version(relative_files[1], repo_context.repo)
+    assert repo_context.xtest_version == vmanip.get_version(relative_files[1], repo_context.repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_not_called()
 
 
@@ -180,7 +189,7 @@ async def test_bump_version_smaller_version(mocker, repo_context, new_version):
     vcs_mock = AsyncMock()
     mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
     await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
-    assert repo_context.xtest_version == vmanip.get_version(relative_files[0], repo_context.repo)
+    assert repo_context.xtest_version == vmanip.get_version(relative_files[0], repo_context.repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_not_called()
 
 
@@ -198,7 +207,7 @@ async def test_bump_version_esr(mocker, repo_context, new_version, expect_versio
     vcs_mock = AsyncMock()
     mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
     await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
-    assert expect_version == vmanip.get_version(relative_files[0], repo_context.repo)
+    assert expect_version == vmanip.get_version(relative_files[0], repo_context.repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_called_once()
 
 
@@ -223,9 +232,14 @@ async def test_bump_version_esr_dont_bump_non_esr(mocker, config, tmpdir, new_ve
     mocked_bump_info.return_value = bump_info
     vcs_mock = AsyncMock()
     mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
-    await vmanip.bump_version(config, {}, repo, repo_type="hg")
-    assert expect_esr_version == vmanip.get_version(display_version_file, repo)
-    assert new_version == vmanip.get_version(version_file, repo)
+    task = {
+        "metadata": {
+            "source": "https://hg.mozilla.org/repo/file/deadb33f/.taskcluster.yml",
+        },
+    }
+    await vmanip.bump_version(config, task, repo, repo_type="hg")
+    assert expect_esr_version == vmanip.get_version(display_version_file, repo, "https://hg.mozilla.org/repo")
+    assert new_version == vmanip.get_version(version_file, repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_called_once()
 
 
@@ -238,5 +252,5 @@ async def test_bump_version_same_version(mocker, repo_context):
     vcs_mock = AsyncMock()
     mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
     await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
-    assert repo_context.xtest_version == vmanip.get_version(relative_files[0], repo_context.repo)
+    assert repo_context.xtest_version == vmanip.get_version(relative_files[0], repo_context.repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_not_called()
