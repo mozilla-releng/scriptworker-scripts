@@ -2,7 +2,7 @@ import os
 from contextlib import contextmanager
 
 import pytest
-from mozilla_version.gecko import FennecVersion, FirefoxVersion, GeckoVersion, ThunderbirdVersion
+from mozilla_version.gecko import FirefoxVersion, GeckoVersion, ThunderbirdVersion
 
 import treescript.versionmanip as vmanip
 from treescript.exceptions import TaskVerificationError, TreeScriptError
@@ -81,10 +81,6 @@ def test_replace_ver_in_file_invalid_old_ver(repo_context, new_version):
         ("mail/config/version.txt", does_not_raise(), ThunderbirdVersion),
         ("mail/config/version_display.txt", does_not_raise(), ThunderbirdVersion),
         ("config/milestone.txt", does_not_raise(), GeckoVersion),
-        ("mobile/android/config/version-files/beta/version.txt", does_not_raise(), FennecVersion),
-        ("mobile/android/config/version-files/beta/version_display.txt", does_not_raise(), FennecVersion),
-        ("mobile/android/config/version-files/release/version.txt", does_not_raise(), FennecVersion),
-        ("mobile/android/config/version-files/release/version_display.txt", does_not_raise(), FennecVersion),
         ("some/random/file.txt", pytest.raises(TreeScriptError), None),
     ),
 )

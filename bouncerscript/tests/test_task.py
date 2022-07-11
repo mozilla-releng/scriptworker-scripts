@@ -129,13 +129,6 @@ def test_validate_task_schema(submission_context, schema="submission"):
         ({"firefox-sha1": "Firefox-52.7.2esr-sha1", "firefox-sha1-ssl": "Firefox-70.1.2esr-sha1"}, False),
         ({"firefox-sha1": "Firefox-70.1.0esr", "firefox-sha1-ssl": "Firefox-70.1.2-sha1"}, True),
         ({"firefox-sha1": "Firefox-70.1.0esr", "firefox-sha1-ssl": "Firefox-70.1.2esr-sha1"}, True),
-        ({"fennec-beta-latest": "Fennec-70.0b2"}, False),
-        ({"fennec-latest": "Fennec-70.0"}, False),
-        ({"fennec-beta-latest": "Fennec-70.0"}, True),
-        ({"fennec-latest": "Fennec-70.0.1-SSL"}, True),
-        ({"fennec-beta-latest": "Fennec-70.0.1"}, True),
-        ({"fennec-latest": "Fennec-70.0b1"}, True),
-        ({"fennec-latest": "Fennec-70.0.1"}, False),
         ({"thunderbird-beta-latest": "Thunderbird-70.0b2"}, False),
         ({"thunderbird-beta-latest-ssl": "Thunderbird-70.0b2-SSL"}, False),
         ({"thunderbird-beta-msi-latest-ssl": "Thunderbird-70.0b2-msi-SSL"}, False),
@@ -175,17 +168,6 @@ def test_check_product_names_match_aliases(aliases_context, entries, raises):
         (["a", "b"], {"aaaa": "a", "bbbb": "b"}, False),
         (["a", "b"], {"aaaa": "b", "bbbb": "a"}, False),
         ([], {}, False),
-        (
-            [
-                "/mobile/releases/62.0b10/android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk",
-                "/mobile/releases/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk",
-            ],
-            {
-                "android": "/mobile/releases/62.0b10/android-api-16/:lang/fennec-62.0b10.:lang.android-arm.apk",
-                "android-x86": "/mobile/releases/62.0b10/android-x86/:lang/fennec-62.0b10.:lang.android-i386.apk",
-            },
-            False,
-        ),
         (["a"], {"a": "b"}, True),
         ([], {"a": "b"}, True),
     ),
@@ -204,9 +186,6 @@ def test_check_locations_match(locations, product_config, raises):
     (
         (
             ("Firefox-61.0b15-SSL", "/firefox/releases/61.0b15/mac/:lang/Firefox%2061.0b15.dmg", False),
-            ("Fennec-61.0b15", "/mobile/releases/61.0b15/android-x86/:lang/fennec-61.0b15.:lang.android-i386.apk", False),
-            ("Fennec-61.0b15", "/mobile/releases/61.0b15/android-x86/:lang/fennec-61.0b15.:lang.android-i386.apk", False),
-            ("Fennec-61.0b15", "/firefox/releases/61.0b15/update/mac/:lang/firefox-61.0b15-61.0b15.partial.mar", True),
             ("Firefox-61.0b15", "/firefox/releases/61.0b15/linux-x86_64/:lang/firefox-61.0b15.tar.bz2", False),
             ("Firefox-61.0b15", "/firefox/releases/61.0b15/win64/:lang/Firefox%20Setup%2061.0b15.exe", False),
             ("Firefox-65.0b13-msi-SSL", "/firefox/releases/65.0b13/win64/:lang/Firefox%20Setup%2065.0b13.msi", False),
@@ -222,7 +201,6 @@ def test_check_locations_match(locations, product_config, raises):
             ("Firefox-61.0b15-Complete", "/firefox/releases/61.0b15/update/linux-i686/:lang/firefox-61.0b15.complete.mar", False),
             ("Firefox-61.0b15-Complete", "/firefox/releases/61.0b15/update/mac/:lang/firefox-61.0b15.complete.marx", True),
             ("Firefox-61.0b15-Partial-61.0b15", "/firefox/releases/61.0b15/update/linux-x86_64/:lang/firefox-61.0b15-61.0b15.partial.mar", False),
-            ("Firefox-61.0b15-Partial-61.0b15", "/firefox/releases/61.0b15/update/win32/:lang/fennec-61.0b15-61.0b15.partial.mar", True),
             ("Firefox-61.0b15-Partial-61.0b15", "/firefox/releases/61.0b15/update/win64/:lang/firefox-61.0b15-61.0b15.partial.mar", False),
             ("Firefox-61.0b15-SSL", "/firefox/releases/61.0b15/linux-i686/:lang/firefox-61.0b15.tar.bz2", False),
             ("Firefox-61.0b15-SSL", "/firefox/releases/61.0b15/win64/Firefox%20Setup%2061.0b15.exe", True),
@@ -271,17 +249,6 @@ def test_check_path_matches_destination(product_name, path, raises):
     "entries,provided,raises",
     (
         (
-            (
-                {"fennec-beta-latest": "Fennec-62.0b5", "fennec-latest": "Fennec-61.0"},
-                {
-                    ("https://download.mozilla.org/?product=" "fennec-beta-latest&print=yes"): "404 page not found\n",
-                    ("https://download.mozilla.org/?product=" "fennec-latest&print=yes"): "404 page not found\n",
-                    ("https://download.mozilla.org/?product=" "thunderbird-next-latest-ssl&print=yes"): "404 page not found\n",
-                    ("https://download.mozilla.org/?product=" "thunderbird-next-latest&print=yes"): "404 page not found\n",
-                    ("https://download.mozilla.org/?product=" "thunderbird-latest-ssl&print=yes"): "404 page not found\n",
-                },
-                False,
-            ),
             (
                 {"firefox-latest": "Firefox-61.0.1", "firefox-latest-ssl": "Firefox-61.0.1-SSL", "firefox-stub": "Firefox-61.0.1-stub"},
                 {
@@ -388,9 +355,6 @@ async def test_check_aliases_match(aliases_context, mocker, entries, provided, r
             (["firefox-nightly-latest", "firefox-nightly-latest-ssl"], True),
             (["firefox-nightly-latest-l10n", "firefox-nightly-latest-l10n-ssl"], True),
             (["firefox-latest"], True),
-            (["fennec-nightly-latest"], False),
-            (["fennec-nightly-latest", "firefox-latest"], True),
-            (["fennec-nightly-latest", "firefox-nightly-latest", "firefox-nightly-latest-ssl", "firefox-nightly-latest-l10n", "firefox-nightly-latest-l10n-ssl"], True),
         )
     ),
 )
@@ -416,32 +380,6 @@ def test_check_product_names_match_nightly_locations(locations_context, products
             ("63.0", "firefox", (True, ScriptWorkerTaskException)),
             ("ZFJSh389fjSMN<@<Ngv", "firefox", (True, PatternNotMatchedError)),
             ("63", "firefox", (True, PatternNotMatchedError)),
-            ("68.1a1", "fennec", (False, None)),
-            ("68.0b3", "fennec", (True, ScriptWorkerTaskException)),
-            ("68.0b17", "fennec", (True, ScriptWorkerTaskException)),
-            ("68.0", "fennec", (True, ScriptWorkerTaskException)),
-            ("68.0.1", "fennec", (True, ScriptWorkerTaskException)),
-            ("68.1b2", "fennec", (True, ScriptWorkerTaskException)),
-            ("68.1.0", "fennec", (True, ScriptWorkerTaskException)),
-            ("68.1b3", "fennec", (True, ScriptWorkerTaskException)),
-            ("68.1.1", "fennec", (True, ScriptWorkerTaskException)),
-            ("68.2a1", "fennec", (False, None)),
-            ("68.2b1", "fennec", (True, ScriptWorkerTaskException)),
-            ("68.0.1a1", "fennec", (True, PatternNotMatchedError)),
-            ("68.1a1b1", "fennec", (True, PatternNotMatchedError)),
-            ("68.0.1b1", "fennec", (True, PatternNotMatchedError)),
-            ("68.1.0a1", "fennec", (True, PatternNotMatchedError)),
-            ("68.1.0b1", "fennec", (True, PatternNotMatchedError)),
-            ("68.1.1a1", "fennec", (True, PatternNotMatchedError)),
-            ("68.1.1b2", "fennec", (True, PatternNotMatchedError)),
-            ("69.0a1", "fennec", (True, PatternNotMatchedError)),
-            ("69.0b3", "fennec", (True, PatternNotMatchedError)),
-            ("69.0", "fennec", (True, PatternNotMatchedError)),
-            ("69.0.1", "fennec", (True, PatternNotMatchedError)),
-            ("63.0.1", "fennec", (True, ScriptWorkerTaskException)),
-            ("63.0", "fennec", (True, ScriptWorkerTaskException)),
-            ("ZFJSh389fjSMN<@<Ngv", "fennec", (True, PatternNotMatchedError)),
-            ("63", "fennec", (True, PatternNotMatchedError)),
         )
     ),
 )
@@ -516,12 +454,6 @@ def test_check_version_matches_nightly_regex(version, product, raises):
             ("firefox-nightly-latest-l10n", "/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0b1.:lang.linux-x86_64.tar.bz2", True),
             ("firefox-nightly-latest-l10n", "/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0b1.:lang.mac.dmg", True),
             ("firefox-nightly-latest-l10n", "/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0.1.:lang.win64.installer.exe", True),
-            ("fennec-nightly-latest", "/mobile/nightly/latest-mozilla-esr68-android-api-16/fennec-68.1a1.:lang.android-arm.apk", False),
-            ("fennec-nightly-latest", "/mobile/nightly/latest-mozilla-esr68-android-api-16/fennec-68.1a1.:lang.android-arm.apk", False),
-            ("fennec-nightly-latest", "/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0.1.:lang.win64.installer.exe", True),
-            ("fennec-nightly-latest", "/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0.1.:lang.win64.installer.exe", True),
-            ("fennec-nightly-latest", "/mobile/nightly/latest-mozilla-central-l10n/android-api-16/fennec-68.1a1.:lang.android-arm.apk", True),
-            ("fennec-nightly-latest", "/mobile/nightly/latest-mozilla-esr68-android-api-16/fennec-68.1b1.:lang.android-arm.apk", True),
         )
     ),
 )
@@ -542,12 +474,6 @@ def test_check_location_path_matches_destination(product_name, path, raises):
             ("63.0a1", "63.0a1", "firefox", True),
             ("63.0a1", "65.0a1", "firefox", True),
             ("64.0a1", "63.0a1", "firefox", True),
-            ("68.1a1", "68.2a1", "fennec", False),
-            ("68.7a1", "68.8a1", "fennec", False),
-            ("68.7a1", "68.8a1", "fennec", False),
-            ("68.1a1", "68.1a1", "fennec", True),
-            ("68.1a1", "68.3a1", "fennec", True),
-            ("68.2a1", "68.1a1", "fennec", True),
             ("68.2a1", "68.1a1", "VNSJKSGH#(*#HG#LG@()", True),
         )
     ),

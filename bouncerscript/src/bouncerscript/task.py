@@ -1,7 +1,7 @@
 import logging
 import re
 
-from mozilla_version.gecko import FennecVersion, FirefoxVersion
+from mozilla_version.gecko import FirefoxVersion
 from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
 from scriptworker.utils import retry_request
@@ -18,7 +18,9 @@ from bouncerscript.constants import (
 log = logging.getLogger(__name__)
 
 
-version_map = {"firefox": FirefoxVersion, "fennec": FennecVersion}
+version_map = {
+    "firefox": FirefoxVersion,
+}
 
 
 def get_task_server(task, script_config):
@@ -158,17 +160,6 @@ def check_versions_are_successive(current_version, payload_version, product):
         candidate_version = FirefoxVersion.parse(payload_version)
 
         _successive_sanity(current_bouncer_version.major_number, candidate_version.major_number)
-    elif product == "fennec":
-        # XXX: this will fail for the next ESR cut, on 75, since that will be a
-        # major_number bump, but also a minor_number. But cutting ESR releases
-        # can vary over time (could be 7 releases or 8 like ESR8, etc);
-        # It's unrecommended to hardcode those variable window times here
-        # in order to ensure the check; So for now we leave this code smell here.
-        # Real fix is to centralize this operation and implement it in mozilla-version directly
-        current_bouncer_version = FennecVersion.parse(current_version)
-        candidate_version = FennecVersion.parse(payload_version)
-
-        _successive_sanity(current_bouncer_version.minor_number, candidate_version.minor_number)
     else:
         err_msg = "Unknown product {} in the payload".format(product)
         raise ScriptWorkerTaskException(err_msg)
