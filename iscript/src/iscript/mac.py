@@ -1374,7 +1374,7 @@ async def sign_and_pkg_behavior(config, task):
 
 
 # single_file_behavior {{{1
-async def single_file_behavior(config, task):
+async def single_file_behavior(config, task, notarize=True):
     """Create and sign the single file for this task.
 
     Args:
@@ -1396,5 +1396,20 @@ async def single_file_behavior(config, task):
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
     await sign_single_files(config, sign_config, all_paths)
+
+    if notarize:
+        for app in all_paths:
+            if app.target_bundle_path.endswith(".zip"):
+                zip_path = app.target_bundle_path
+                log.info("Notarizing...")
+                poll_uuids = await notarize_no_sudo(config["work_dir"], sign_config, zip_path)
+                await poll_all_notarization_status(sign_config, poll_uuids)
+                log.info(f"{zip_path} notarized")
+                # Stapling would normally happen next, but stapling of zip files
+                # is not possible; the standard advice is to staple the contents
+                # of the zip file. However, it is also not possible to staple
+                # .dylib files, which is what we normally expect here.
+            else:
+                log.info("Unable to notarize non-zip")
 
     log.info("Done signing single files.")

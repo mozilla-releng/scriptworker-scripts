@@ -55,8 +55,8 @@ def get_behavior_function(behavior):
 
     """
     functions = {
-        "mac_geckodriver": (single_file_behavior, {}),
-        "mac_single_file": (single_file_behavior, {}),
+        "mac_geckodriver": (single_file_behavior, {"notarize": True}),
+        "mac_single_file": (single_file_behavior, {"notarize": True}),
         "mac_notarize": (notarize_behavior, {}),
         "mac_notarize_vpn": (vpn_behavior, {"notarize": True}),
         "mac_sign_and_pkg_vpn": (vpn_behavior, {"notarize": False}),
