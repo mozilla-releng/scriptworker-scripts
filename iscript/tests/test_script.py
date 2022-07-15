@@ -44,7 +44,7 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
     if behavior == "mac_notarize_vpn":
         expected = [[(config, task), {"notarize": "mac_notarize_vpn" in supported_behaviors}]]
     elif behavior == "mac_single_file":
-        expected = [[(config, task), {"notarize": True}]]
+        expected = [[(config, task), {"notarize": "mac_notarize_single_file" in supported_behaviors}]]
 
     sign_config = {"supported_behaviors": supported_behaviors}
 
