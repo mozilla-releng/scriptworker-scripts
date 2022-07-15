@@ -14,6 +14,8 @@ from iscript.exceptions import IScriptError
 @pytest.mark.parametrize(
     "behavior, supported_behaviors, expected_behavior, raises",
     (
+        ("mac_notarize_single_file", ["mac_notarize_single_file", "mac_single_file"], "mac_notarize_single_file", False),
+        ("mac_notarize_single_file", ["mac_single_file"], "mac_single_file", False),
         ("mac_single_file", ["mac_sign", "mac_single_file"], "mac_single_file", False),
         ("mac_notarize", ["mac_sign", "mac_notarize"], "mac_notarize", False),
         ("mac_notarize", ["mac_sign", "mac_notarize", "mac_sign_and_pkg"], "mac_notarize", False),
@@ -43,8 +45,10 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
     # Accounts for notarizing True/False
     if behavior == "mac_notarize_vpn":
         expected = [[(config, task), {"notarize": "mac_notarize_vpn" in supported_behaviors}]]
-    elif behavior == "mac_single_file":
+    elif behavior == "mac_notarize_single_file":
         expected = [[(config, task), {"notarize": "mac_notarize_single_file" in supported_behaviors}]]
+    elif behavior == "mac_single_file":
+        expected = [[(config, task), {"notarize": False}]]
 
     sign_config = {"supported_behaviors": supported_behaviors}
 
