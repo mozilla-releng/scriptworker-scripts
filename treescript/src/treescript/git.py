@@ -96,10 +96,11 @@ async def log_outgoing(config, task, repo_path):
     repo = Repo(repo_path)
     branch = get_branch(task, "master")
 
-    upstream_to_local_branch_interval = "{}..{}".format(_get_upstream_branch_name(branch), branch)
+    upstream_branch = _get_upstream_branch_name(branch)
+    upstream_to_local_branch_interval = f"{upstream_branch}..{branch}"
     log.debug("Checking the number of changesets between these 2 references: {}".format(upstream_to_local_branch_interval))
     num_changesets = len(list(repo.iter_commits(upstream_to_local_branch_interval)))
-    diff = repo.git.diff(branch)
+    diff = repo.git.diff(upstream_branch)
 
     if diff:
         path = os.path.join(config["artifact_dir"], "public", "logs", "outgoing.diff")

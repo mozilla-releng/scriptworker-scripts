@@ -4,7 +4,7 @@ from contextlib import contextmanager
 
 import hglib
 import pytest
-from mozilla_version.gecko import FennecVersion, FirefoxVersion
+from mozilla_version.gecko import FirefoxVersion
 
 import treescript.merges as merges
 from treescript.exceptions import TaskVerificationError
@@ -196,7 +196,7 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
     def noop_replace(*arguments, **kwargs):
         called_args.append("replace")
 
-    def mocked_get_version(path, repo_path):
+    def mocked_get_version(path, repo_path, source_repo):
         return FirefoxVersion.parse("76.0")
 
     mocker.patch.object(merges, "get_version", new=mocked_get_version)
@@ -205,7 +205,7 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
     mocker.patch.object(merges, "replace", new=noop_replace)
     mocker.patch.object(merges, "touch_clobber_file", new=sync_noop)
 
-    await merges.apply_rebranding(config, repo_context.repo, merge_config)
+    await merges.apply_rebranding(config, repo_context.repo, merge_config, "https://hg.mozilla.org/repo")
     assert called_args[0] == expected
 
 
@@ -224,19 +224,15 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
         # bump_esr
         ({"filename": "browser/config/version.txt", "version_bump": "minor"}, FirefoxVersion.parse("68.1.0"), "68.2.0"),
         ({"filename": "browser/config/version_display.txt", "version_bump": "minor"}, FirefoxVersion.parse("68.1.0esr"), "68.2.0esr"),
-        ({"filename": "mobile/android/config/version-files/beta/version.txt", "version_bump": "minor"}, FennecVersion.parse("68.1"), "68.2"),
-        ({"filename": "mobile/android/config/version-files/beta/version_display.txt", "version_bump": "minor"}, FennecVersion.parse("68.1b9"), "68.2b1"),
-        ({"filename": "mobile/android/config/version-files/nightly/version.txt", "version_bump": "minor"}, FennecVersion.parse("68.1a1"), "68.2a1"),
-        ({"filename": "mobile/android/config/version-files/release/version.txt", "version_bump": "minor"}, FennecVersion.parse("68.6.1"), "68.7.0"),
     ),
 )
 async def test_create_new_version(config, mocker, version_config, current_version, expected):
-    def mocked_get_version(path, repo_path):
+    def mocked_get_version(path, repo_path, source_repo):
         return current_version
 
     mocker.patch.object(merges, "get_version", new=mocked_get_version)
 
-    result = merges.create_new_version(version_config, repo_path="")  # Dummy repo_path, ignored.
+    result = merges.create_new_version(version_config, repo_path="", source_repo="https://hg.mozilla.org/repo")  # Dummy repo_path, ignored.
     assert result == expected
 
 
