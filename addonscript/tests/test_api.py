@@ -20,6 +20,7 @@ def does_not_raise():
 def context():
     context = Context()
     context.config = {
+        "cot_product": "firefox",
         "taskcluster_scope_prefix": "project:releng:addons.mozilla.org:server",
         "amo_instances": {
             "project:releng:addons.mozilla.org:server:dev": {"amo_server": "http://some-amo-it.url", "jwt_user": "test-user", "jwt_secret": "secret"}

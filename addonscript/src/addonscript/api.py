@@ -15,9 +15,7 @@ UPLOAD_STATUS_PK = "api/v4/addons/{id}/versions/{version}/uploads/{upload_pk}/"
 
 
 # https://addons-server.readthedocs.io/en/latest/topics/api/applications.html
-# XXX when we want to support multiple products, we'll need to unhardcode the
-#     `firefox` below
-ADD_VERSION = "api/v4/applications/firefox/{version}/"
+ADD_VERSION = "api/v4/applications/{product}/{version}/"
 
 
 async def add_version(context, version):
@@ -31,7 +29,7 @@ async def add_version(context, version):
 
 
     """
-    url = get_api_url(context, ADD_VERSION, version=version)
+    url = get_api_url(context, ADD_VERSION, version=version, product=context.config["cot_product"])
 
     try:
         result = await amo_put(context, url, data=None)

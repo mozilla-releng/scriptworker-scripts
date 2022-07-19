@@ -2,6 +2,7 @@ work_dir: { "$eval": "WORK_DIR" }
 artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
+cot_product: { "$eval": "COT_PRODUCT" }
 amo_instances:
   $if: 'ENV == "prod"'
   then:
