@@ -84,8 +84,8 @@
                 "mac_notarize_part_1",
                 "mac_notarize_part_3",
                 "mac_single_file",
-                "mac_notarize_vpn"
-                "mac_notarize_single_file",
+                "mac_notarize_vpn",
+                "mac_notarize_single_file"
               ]
             },
             "product": {
