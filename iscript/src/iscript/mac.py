@@ -194,7 +194,7 @@ async def sign_single_files(config, sign_config, all_paths):
     """
     identity = sign_config["identity"]
     keychain = sign_config["signing_keychain"]
-    sign_command = _get_sign_command(identity, keychain, sign_config)
+    sign_command = _get_sign_command(identity, keychain, sign_config, file_=all_paths[0].single_file_globs[0])
 
     for app in all_paths:
         app.check_required_attrs(["orig_path", "parent_dir", "artifact_prefix", "single_file_globs"])
