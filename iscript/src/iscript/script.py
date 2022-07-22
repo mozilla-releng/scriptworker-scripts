@@ -39,6 +39,8 @@ def check_dep_behavior(task, behavior, supported_behaviors):
         behavior = "mac_sign_and_pkg_vpn"
     if behavior == "mac_notarize_single_file" and "mac_single_file" in supported_behaviors:
         behavior = "mac_single_file"
+    if behavior == "mac_notarize_geckodriver" and "mac_geckodriver" in supported_behaviors:
+        behavior = "mac_geckodriver"
 
     # Raise if unsupported
     if behavior not in supported_behaviors:
@@ -58,6 +60,7 @@ def get_behavior_function(behavior):
     """
     functions = {
         "mac_notarize_single_file": (single_file_behavior, {"notarize": True}),
+        "mac_notarize_geckodriver": (single_file_behavior, {"notarize": True}),
         "mac_geckodriver": (single_file_behavior, {"notarize": False}),
         "mac_single_file": (single_file_behavior, {"notarize": False}),
         "mac_notarize": (notarize_behavior, {}),

@@ -1409,7 +1409,22 @@ async def single_file_behavior(config, task, notarize=True):
                 # is not possible; the standard advice is to staple the contents
                 # of the zip file. However, it is also not possible to staple
                 # .dylib files, which is what we normally expect here.
+            elif app.target_bundle_path.endswith(".tar.gz"):
+                # add the single file to a zip file and notarize the zip
+                log.info("Notarizing...")
+                single_paths = expand_globs(app.single_file_globs, parent_dir=app.parent_dir)
+                if not single_paths:
+                    raise IScriptError(f"Unable to find anything to notarize for {app.orig_path}!")
+                if len(single_paths) != 1:
+                    raise IScriptError("Unexpected number of files found for notarization")
+                app.single_path = os.path.join(app.parent_dir, single_paths[0])
+                path_attrs = ["single_path"]
+                zip_path = await create_one_notarization_zipfile(config["work_dir"], all_paths, sign_config, path_attrs)
+                poll_uuids = await notarize_no_sudo(config["work_dir"], sign_config, zip_path)
+                await poll_all_notarization_status(sign_config, poll_uuids)
+                log.info(f"{zip_path} notarized")
+                # no stapling: unable to staple executables like geckodriver
             else:
-                log.info("Unable to notarize non-zip")
+                log.info("Unable to notarize: unexpected format")
 
     log.info("Done signing single files.")
