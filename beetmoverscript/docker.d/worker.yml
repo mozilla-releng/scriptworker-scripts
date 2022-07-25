@@ -21,6 +21,8 @@ taskcluster_scope_prefixes:
         - 'project:mozilla:glean:releng:beetmover:'
       'COT_PRODUCT == "xpi"':
         - 'project:xpi:beetmover:'
+      'COT_PRODUCT == "mozillavpn"':
+        - 'project:mozillavpn:releng:beetmover:'
 verbose: { "$eval": "VERBOSE == 'true'" }
 zip_max_file_size_in_mb: 300
 bucket_config:
@@ -251,4 +253,22 @@ bucket_config:
             key: { "$eval": "MAVEN_KEY" }
           buckets:
             telemetry: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
+        dummy: {}
+      'COT_PRODUCT == "mozillavpn" && (ENV == "dev" || ENV == "fake-prod")':
+        dep:
+          credentials:
+            id: { "$eval": "DEP_ID" }
+            key: { "$eval": "DEP_KEY" }
+          buckets:
+            vpn: 'net-mozaws-stage-delivery-archive'
+          url_prefix: 'https://ftp.stage.mozaws.net'
+        dummy: {}
+      'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
+        release:
+          credentials:
+            id: { "$eval": "RELEASE_ID" }
+            key: { "$eval": "RELEASE_KEY" }
+          buckets:
+            vpn: 'net-mozaws-prod-delivery-archive'
+          url_prefix: 'https://archive.mozilla.org'
         dummy: {}
