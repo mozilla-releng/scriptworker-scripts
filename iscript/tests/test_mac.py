@@ -1236,9 +1236,10 @@ async def test_notarize_3_behavior(mocker, tmpdir, create_pkg):
 # single_file_behavior {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "use_langpack,filename,format", ((False, "geckodriver", "mac_geckodriver"), (True, "foo", "mac_single_file"), (False, "geckodriver", "mac_single_file"))
+    "use_langpack,filename,format,notarize",
+    ((False, "geckodriver", "mac_geckodriver", True), (True, "foo", "mac_single_file", False), (False, "geckodriver", "mac_single_file", True)),
 )
-async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, format):
+async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, format, notarize):
     """Mock ``single_file_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1250,8 +1251,10 @@ async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, form
         "mac_config": {
             "dep": {
                 "designated_requirements": "",  # put this here bc it's easier
+                "zipfile_cmd": "zip",
                 "notarize_type": "single_zip",
                 "signing_keychain": "keychain_path",
+                "sign_with_entitlements": False,
                 "base_bundle_id": "org.test",
                 "identity": "id",
                 "keychain_password": "keychain_password",
@@ -1280,8 +1283,10 @@ async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, form
             print(f"touch {app.parent_dir}/{filename}")
             print(os.path.exists(os.path.join(app.parent_dir, filename)))
 
+    mocker.patch.object(mac, "poll_notarization_uuid", new=noop_async)
+    mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
     mocker.patch.object(mac, "extract_all_apps", new=fake_extract)
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
-    await mac.single_file_behavior(config, task)
+    await mac.single_file_behavior(config, task, notarize)

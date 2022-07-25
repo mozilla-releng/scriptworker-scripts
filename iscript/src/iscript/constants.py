@@ -14,6 +14,7 @@ MAC_PRODUCT_CONFIG = {
         "skip_dirs": tuple(),
         "zipfile_cmd": "zip",
         "create_pkg": True,
+        "hardened_runtime_only_files": "geckodriver",
     },
     "mozillavpn": {
         "designated_requirements": """=designated => certificate leaf[subject.OU] = "%(subject_ou)s" """,
