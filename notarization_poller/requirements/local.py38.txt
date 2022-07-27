@@ -20,9 +20,9 @@ tox==3.25.1 \
     --hash=sha256:c138327815f53bc6da4fe56baec5f25f00622ae69ef3fe4e1e385720e22486f9 \
     --hash=sha256:c38e15f4733683a9cc0129fba078633e07eb0961f550a010ada879e95fb32632
     # via -r requirements/local.in
-virtualenv==20.15.1 \
-    --hash=sha256:288171134a2ff3bfb1a2f54f119e77cd1b81c29fc1265a2356f3e8d14c7d58c4 \
-    --hash=sha256:b30aefac647e86af6d82bfc944c556f8f1a9c90427b2fb4e3bfbf338cb82becf
+virtualenv==20.16.1 \
+    --hash=sha256:6cc42cad4d1a15c7ea5ed68e602eb49cc243b52d2eead36e577555cb56bf8705 \
+    --hash=sha256:bde925b831f36053a0fa7a468ca337dee26851c9f0bfc3d72a79d534703102d2
     # via tox
 
 # WARNING: The following packages were not pinned, but pip requires them to be
