@@ -19,6 +19,8 @@ COMMIT_POLL_MAX_ATTEMPTS = 10
 COMMIT_POLL_WAIT_SECONDS = 30
 # Max requests retries
 MAX_RETRIES = 5
+# Default rollout percentage for release submissions
+DEFAULT_ROLLOUT_PCT = 25.0
 DEFAULT_LISTINGS = {
     "en-us": {
         "baseListing": {
@@ -109,15 +111,16 @@ def _push_to_store(config, channel, msix_file_paths, publish_mode, access_token)
         submission_id = submission_request.get("id")
         log.info(">> updating the submission...")
         _update_submission(config, channel, session, submission_request, headers, msix_file_paths, publish_mode, encoding)
-        if channel == "release":
-            # On the Release channel, do not commit (leave the submission in the pending state)
-            # to give Release Management a chance to edit the submission prior to certification.
-            log.info(">> skipping commit on release channel: submit manually in the Partner Center")
-        else:
-            log.info(">> committing the submission...")
-            _commit_submission(config, channel, session, submission_id, headers)
-            log.info(">> waiting for completion...")
-            _wait_for_commit_completion(config, channel, session, submission_id, headers)
+        # Commit the submission.
+        # We previously tried skipping the commit on the Release channel, to give
+        # Release Management a chance to edit the submission prior to certification;
+        # this strategy did not work: we found that, inexplicably, the changes to
+        # the package (the msix upload) were lost.
+        log.info(">> committing the submission...")
+        _commit_submission(config, channel, session, submission_id, headers)
+        log.info(">> waiting for completion...")
+        _wait_for_commit_completion(config, channel, session, submission_id, headers)
+
         log.info(">> push complete!")
 
 
@@ -201,6 +204,14 @@ def _update_submission(config, channel, session, submission_request, headers, fi
             "minimumSystemRam": submission_request["applicationPackages"][0]["minimumSystemRam"],
         }
         submission_request["applicationPackages"].append(package)
+    # Bug 1776696 / bug 1779435: Once commited, the submission will automatically go
+    # to certification. The submission cannot be edited while in certification; the
+    # Partner Center user must cancel certification, edit the submission, and then
+    # re-submit. Specification of a common rollout % may reduce the need for manual
+    # intervention.
+    if channel == "release":
+        submission_request["packageDeliveryOptions"]["packageRollout"]["isPackageRollout"] = True
+        submission_request["packageDeliveryOptions"]["packageRollout"]["packageRolloutPercentage"] = DEFAULT_ROLLOUT_PCT
 
     # The Store expects all-lower-case 'true' and 'false' in the submission request.
     submission_request = str(submission_request)
