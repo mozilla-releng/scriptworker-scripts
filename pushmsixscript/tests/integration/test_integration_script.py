@@ -51,7 +51,7 @@ from pushmsixscript.script import main
             "release",
             "Manual",
             False,
-            4,
+            6,
         ),
     ),
 )
@@ -75,7 +75,12 @@ def test_script_can_push_msix(monkeypatch, config, channel, publish_mode, raises
     submission_id = 888
     upload_url = "https://some/url"
     session_mocked_response = {"access_token": "mocked-access-token"}
-    create_mocked_response = {"id": 888, "fileUploadUrl": "https://some/url", "applicationPackages": [{"minimumDirectXVersion": 1, "minimumSystemRam": 1024}]}
+    create_mocked_response = {
+        "id": 888,
+        "fileUploadUrl": "https://some/url",
+        "applicationPackages": [{"minimumDirectXVersion": 1, "minimumSystemRam": 1024}],
+        "packageDeliveryOptions": {"packageRollout": {"isPackageRollout": False}},
+    }
     mocked_response = {}
     status_code = 200
     with requests_mock.Mocker() as m:
