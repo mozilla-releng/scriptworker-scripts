@@ -11,6 +11,8 @@ from multiprocessing.pool import ThreadPool
 
 import aiohttp
 import boto3
+from google.cloud.storage import Bucket, Client
+from google.auth.credentials import Credentials
 from botocore.exceptions import ClientError
 from redo import retry
 from scriptworker import client
@@ -621,6 +623,28 @@ async def upload_to_s3(context, s3_key, path):
 
     log.info("upload_to_s3: %s -> s3://%s/%s", path, api_kwargs.get("Bucket"), s3_key)
     await retry_async(put, args=(context, url, headers, path), retry_exceptions=(Exception,), kwargs={"session": context.session})
+
+
+# upload_to_gcs {{{1
+async def upload_to_gcs(context, target_path, path):
+    product = get_product_name(context.release_props["appName"].lower(), context.release_props["stage_platform"])
+    mime_type = mimetypes.guess_type(path)[0]
+    if not mime_type:
+        raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
+    bucket = get_bucket_name(context, product)
+    headers = {"Content-Type": mime_type, "Cache-Control": "public, max-age=%d" % CACHE_CONTROL_MAXAGE}
+    # TODO: Is this the path to the credentials file?
+    creds = context.config["bucket_config"][context.bucket]["credentials"]
+    # TODO: Fix this, should be :class:`~google.auth.credentials.Credentials` and passed to Client
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds
+
+    client = Client(project=context.config["project"])
+    bucket = Bucket(client, name=bucket)
+    blob = bucket.blob(target_path)
+    blob.content_type = mime_type
+    blob.cache_control = "public, max-age=%d" % CACHE_CONTROL_MAXAGE
+
+    return asyncio.ensure_future(blob.upload_from_file(path, content_type=mime_type))
 
 
 def setup_mimetypes():
