@@ -12,6 +12,7 @@ application_ids:
     beta: { "$eval": "BETA_APPLICATION_ID" }
     release: { "$eval": "RELEASE_APPLICATION_ID" }
   else: {}
+release_rollout_percentage: { "$eval": "RELEASE_ROLLOUT_PERCENTAGE" }
 tenant_id: { "$eval": "TENANT_ID" }
 client_id: { "$eval": "CLIENT_ID" }
 client_secret: { "$eval": "CLIENT_SECRET" }

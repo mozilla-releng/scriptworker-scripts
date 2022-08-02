@@ -18,6 +18,7 @@ COMMON_CONTEXT = {
     "CLIENT_SECRET": "fake-secret",
     "BETA_APPLICATION_ID": "fake-beta-app-id",
     "RELEASE_APPLICATION_ID": "fake-release-app-id",
+    "RELEASE_ROLLOUT_PERCENTAGE": 25.0,
 }
 
 
