@@ -19,8 +19,6 @@ COMMIT_POLL_MAX_ATTEMPTS = 10
 COMMIT_POLL_WAIT_SECONDS = 30
 # Max requests retries
 MAX_RETRIES = 5
-# Default rollout percentage for release submissions
-DEFAULT_ROLLOUT_PCT = 25.0
 DEFAULT_LISTINGS = {
     "en-us": {
         "baseListing": {
@@ -210,8 +208,9 @@ def _update_submission(config, channel, session, submission_request, headers, fi
     # re-submit. Specification of a common rollout % may reduce the need for manual
     # intervention.
     if channel == "release":
-        submission_request["packageDeliveryOptions"]["packageRollout"]["isPackageRollout"] = True
-        submission_request["packageDeliveryOptions"]["packageRollout"]["packageRolloutPercentage"] = DEFAULT_ROLLOUT_PCT
+        if "release_rollout_percentage" in config:
+            submission_request["packageDeliveryOptions"]["packageRollout"]["isPackageRollout"] = True
+            submission_request["packageDeliveryOptions"]["packageRollout"]["packageRolloutPercentage"] = config["release_rollout_percentage"]
 
     # The Store expects all-lower-case 'true' and 'false' in the submission request.
     submission_request = str(submission_request)

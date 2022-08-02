@@ -11,6 +11,7 @@
     "beta": "",
     "release": ""
   }
+  "release_rollout_percentage": 25.0,
   "tenant_id": "",
   "client_id": "",
   "client_secret": "",
