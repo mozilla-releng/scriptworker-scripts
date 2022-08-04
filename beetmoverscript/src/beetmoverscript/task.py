@@ -78,7 +78,7 @@ def get_task_bucket(task, script_config):
     if re.search("^[0-9A-Za-z_-]+$", bucket) is None:
         messages.append("Bucket {} is malformed".format(bucket))
 
-    if bucket not in script_config["bucket_config"]:
+    if bucket not in script_config["bucket_config"] and bucket not in script_config["gcs_bucket_config"]:
         messages.append("Invalid bucket scope")
 
     if messages:
@@ -215,7 +215,8 @@ def get_updated_buildhub_artifact(path, installer_artifact, installer_path, cont
     buildhub.json fields that should be changed: download.size, download.date, download.url
     """
     contents = utils.load_json(path)
-    url_prefix = context.config["bucket_config"][context.bucket]["url_prefix"]
+    url_prefix = utils.get_bucket_url_prefix(context)
+    
     if artifact_map:
         task_id = get_taskId_from_full_path(installer_path)
         cfg = utils.extract_file_config_from_artifact_map(artifact_map, installer_artifact, task_id, locale)

@@ -307,8 +307,20 @@ def get_bucket_name(context, product):
     return context.config["bucket_config"][context.bucket]["buckets"][product]
 
 
+def get_gcs_bucket_name(context, product):
+    return context.config["gcs_bucket_config"][context.bucket]["buckets"][product]
+
+
 def get_bucket_url_prefix(context):
-    return context.config["bucket_config"][context.bucket]["url_prefix"]
+    bucket_config = context.config["bucket_config"].get(context.bucket, None)
+    bucket_config = bucket_config or context.config["gcs_bucket_config"].get(context.bucket, None)
+    if not bucket_config:
+        raise ValueError(f"No bucket config found for {context.bucket}")
+
+    if "url_prefix" not in bucket_config:
+        raise ValueError(f"No url_prefix found for bucket config {context.bucket}")
+
+    return bucket_config["url_prefix"]
 
 
 def validated_task_id(task_id):
