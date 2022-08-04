@@ -986,6 +986,7 @@ def test_extension_id_missing_manifest():
         ({}, pytest.raises(SigningScriptError)),
         ({"languages": {}}, pytest.raises(SigningScriptError)),
         ({"languages": {}, "langpack_id": "en-CA"}, pytest.raises(SigningScriptError)),
+        # run the test with the deprecated xpi manifest "applications" key
         ({"languages": {}, "langpack_id": "en-CA", "applications": {}}, pytest.raises(SigningScriptError)),
         ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {}}}, pytest.raises(SigningScriptError)),
         ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {}}}, pytest.raises(SigningScriptError)),
@@ -995,6 +996,22 @@ def test_extension_id_missing_manifest():
         ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-de@devedition.mozilla.org"}}}, does_not_raise()),
         ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-ja-JP-mac@devedition.mozilla.org"}}}, does_not_raise()),
         ({"langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}}}, pytest.raises(SigningScriptError)),
+        # run the test with the supported xpi manifest "browser_specific_settings" key
+        ({"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {}}, pytest.raises(SigningScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {}}}, pytest.raises(SigningScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {}}}, pytest.raises(SigningScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {"id": ""}}}, pytest.raises(SigningScriptError)),
+        (
+            {"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {"id": "invalid-langpack-id@example.com"}}},
+            pytest.raises(SigningScriptError),
+        ),
+        ({"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}}}, does_not_raise()),
+        ({"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {"id": "langpack-de@devedition.mozilla.org"}}}, does_not_raise()),
+        (
+            {"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {"id": "langpack-ja-JP-mac@devedition.mozilla.org"}}},
+            does_not_raise(),
+        ),
+        ({"langpack_id": "en-CA", "browser_specific_settings": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}}}, pytest.raises(SigningScriptError)),
     ),
 )
 def test_extension_id_raises(json_, raises, mocker):
@@ -1009,7 +1026,9 @@ def test_extension_id_raises(json_, raises, mocker):
     mocker.patch.object(sign.json, "load", load_manifest)
     with raises:
         id = sign._extension_id(filename, "autograph_langpack")
-        assert id == json_["applications"]["gecko"]["id"]
+        browser_specific_settings = json_.get("browser_specific_settings", json_.get("applications", {}))
+        gecko_id = browser_specific_settings.get("gecko", {}).get("id")
+        assert id == gecko_id
 
 
 @pytest.mark.asyncio
