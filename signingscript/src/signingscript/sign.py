@@ -527,13 +527,14 @@ def _extension_id(filename, fmt):
                 break
         except KeyError:
             log.debug("{} doesn't exist in {}...".format(manifest_name, filename))
-    if not manifest.get("applications", {}).get("gecko", {}).get("id"):
+    # Check for "browser_specific_settings" key first. Fall back to deprecated "applications" key
+    browser_specific_settings = manifest.get("browser_specific_settings", manifest.get("applications", {}))
+    gecko_id = browser_specific_settings.get("gecko", {}).get("id")
+    if not gecko_id:
         raise SigningScriptError("{} is not a valid xpi".format(filename))
-    if "langpack" in fmt and not (
-        "languages" in manifest and "langpack_id" in manifest and LANGPACK_RE.match(manifest["applications"]["gecko"]["id"]) and filename.endswith(".xpi")
-    ):
+    if "langpack" in fmt and not ("languages" in manifest and "langpack_id" in manifest and LANGPACK_RE.match(gecko_id) and filename.endswith(".xpi")):
         raise SigningScriptError("{} is not a valid langpack".format(filename))
-    return manifest["applications"]["gecko"]["id"]
+    return gecko_id
 
 
 # _get_mac_sigpath {{{1
