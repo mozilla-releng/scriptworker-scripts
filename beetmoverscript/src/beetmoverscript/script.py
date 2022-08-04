@@ -2,22 +2,24 @@
 """Beetmover script
 """
 import asyncio
+import base64
 import logging
 import mimetypes
 import os
 import re
 import sys
+import tempfile
+import traceback
 from multiprocessing.pool import ThreadPool
 
 import aiohttp
 import boto3
-from google.cloud.storage import Bucket, Client
-from google.auth.credentials import Credentials
 from botocore.exceptions import ClientError
+from google.cloud.storage import Bucket, Client
 from redo import retry
 from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerRetryException, ScriptWorkerTaskException
-from scriptworker.utils import raise_future_exceptions, retry_async
+from scriptworker.utils import get_results_and_future_exceptions, raise_future_exceptions, retry_async
 
 from beetmoverscript import task
 from beetmoverscript.constants import (
@@ -52,6 +54,7 @@ from beetmoverscript.utils import (
     get_bucket_url_prefix,
     get_candidates_prefix,
     get_creds,
+    get_gcs_bucket_name,
     get_hash,
     get_partials_props,
     get_partner_candidates_prefix,
@@ -305,21 +308,43 @@ async def async_main(context):
 
     validate_task_schema(context)
 
+    # determine the task bucket and action
+    #   Note: bucket here is the config key under {,gcs_}bucket_config
+    context.bucket = get_task_bucket(context.task, context.config)
+    context.action = get_task_action(context.task, context.config, valid_actions=action_map.keys())
+
+    # Keep the filename so we can cleanup
+    setup_gcs_credentials(context)
+    context.gcs_client = Client()
+
     connector = aiohttp.TCPConnector(limit=context.config["aiohttp_max_connections"])
     async with aiohttp.ClientSession(connector=connector) as session:
         context.session = session
 
-        # determine the task bucket and action
-        context.bucket = get_task_bucket(context.task, context.config)
-        context.action = get_task_action(context.task, context.config, valid_actions=action_map.keys())
-
-        if action_map.get(context.action):
-            await action_map[context.action](context)
-        else:
+        if not action_map.get(context.action):
             log.critical("Unknown action {}!".format(context.action))
+            cleanup()
             sys.exit(3)
 
+        await action_map[context.action](context)
+
+    cleanup()
     log.info("Success!")
+
+
+# cleanup {{{1
+def cleanup():
+    os.remove(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
+
+
+# setup_gcs_credentials {{{1
+def setup_gcs_credentials(context):
+    # TODO: Dynamic creds
+    raw_creds = base64.decodebytes(context.config["gcs_bucket_config"][context.bucket]["credentials"].encode("ascii"))
+    fp = tempfile.NamedTemporaryFile(delete=False)
+    fp.write(raw_creds)
+    fp.close()
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = fp.name
 
 
 # move_beets {{{1
@@ -590,9 +615,25 @@ def enrich_balrog_manifest(context, locale):
 async def retry_upload(context, destinations, path):
     """Manage upload of `path` to `destinations`."""
     uploads = []
+    gcs_uploads = []
     for dest in destinations:
-        uploads.append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
+        # S3 upload
+        if context.bucket in context.config["bucket_config"]:
+            uploads.append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
+
+        # GCS upload
+        if context.bucket in context.config["gcs_bucket_config"]:
+            gcs_uploads.append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path)))
     await raise_future_exceptions(uploads)
+
+    if context.config["gcs_bucket_config"].get(context.bucket, {}).get("fail_task_on_error", False):
+        await raise_future_exceptions(gcs_uploads)
+    else:
+        _, ex = await get_results_and_future_exceptions(gcs_uploads)
+        # Print out the exceptions
+        for e in ex:
+            log.warning("Skipped exception:")
+            traceback.print_tb(e.__traceback__)
 
 
 # put {{{1
@@ -627,24 +668,22 @@ async def upload_to_s3(context, s3_key, path):
 
 # upload_to_gcs {{{1
 async def upload_to_gcs(context, target_path, path):
+    if not context.config.get("gcs_bucket_config", {}).get(context.bucket):
+        log.info("No GCS config found. Skipping GCS upload.")
+        return
+
     product = get_product_name(context.release_props["appName"].lower(), context.release_props["stage_platform"])
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
         raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
-    bucket = get_bucket_name(context, product)
-    headers = {"Content-Type": mime_type, "Cache-Control": "public, max-age=%d" % CACHE_CONTROL_MAXAGE}
-    # TODO: Is this the path to the credentials file?
-    creds = context.config["bucket_config"][context.bucket]["credentials"]
-    # TODO: Fix this, should be :class:`~google.auth.credentials.Credentials` and passed to Client
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds
+    bucket = get_gcs_bucket_name(context, product)
 
-    client = Client(project=context.config["project"])
-    bucket = Bucket(client, name=bucket)
+    bucket = Bucket(context.gcs_client, name=bucket)
     blob = bucket.blob(target_path)
     blob.content_type = mime_type
     blob.cache_control = "public, max-age=%d" % CACHE_CONTROL_MAXAGE
 
-    return asyncio.ensure_future(blob.upload_from_file(path, content_type=mime_type))
+    return blob.upload_from_filename(path, content_type=mime_type)
 
 
 def setup_mimetypes():
