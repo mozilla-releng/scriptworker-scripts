@@ -363,8 +363,10 @@ def set_gcs_client(context):
         if not bucket.exists():
             log.warning(f"GCS bucket {bucket} doesn't exit. Skipping GCS uploads.")
             return
-    except Forbidden:
+    except Forbidden as e:
         log.warning(f"GCS credentials don't have access to {bucket}. Skipping GCS uploads.")
+        if context.config["bucket_config"][context.bucket].get("fail_task_on_gcs_error"):
+            raise e
         return
 
     log.info(f"Found GCS bucket {bucket} - proceeding with GCS uploads.")
