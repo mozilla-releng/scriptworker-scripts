@@ -8,6 +8,8 @@
 
     "bucket_config": {
         "nightly": {
+            "gcs_credentials": "eyJoZWxsbyI6ICJ3b3JsZCJ9Cg==",
+            "fail_task_on_gcs_error": true,
             "credentials": {
                 "id": "dummy",
                 "key": "dummy"

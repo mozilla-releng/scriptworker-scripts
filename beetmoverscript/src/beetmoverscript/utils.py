@@ -307,10 +307,6 @@ def get_bucket_name(context, product):
     return context.config["bucket_config"][context.bucket]["buckets"][product]
 
 
-def get_gcs_bucket_name(context, product):
-    return context.config["gcs_bucket_config"][context.bucket]["buckets"][product]
-
-
 def get_bucket_url_prefix(context):
     bucket_config = context.config["bucket_config"].get(context.bucket, None)
     bucket_config = bucket_config or context.config["gcs_bucket_config"].get(context.bucket, None)
