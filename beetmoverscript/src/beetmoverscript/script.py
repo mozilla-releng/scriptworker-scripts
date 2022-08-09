@@ -15,6 +15,7 @@ from multiprocessing.pool import ThreadPool
 import aiohttp
 import boto3
 from botocore.exceptions import ClientError
+from google.api_core.exceptions import Forbidden
 from google.cloud.storage import Bucket, Client
 from redo import retry
 from scriptworker import client
@@ -54,7 +55,6 @@ from beetmoverscript.utils import (
     get_bucket_url_prefix,
     get_candidates_prefix,
     get_creds,
-    get_gcs_bucket_name,
     get_hash,
     get_partials_props,
     get_partner_candidates_prefix,
@@ -309,13 +309,20 @@ async def async_main(context):
     validate_task_schema(context)
 
     # determine the task bucket and action
-    #   Note: bucket here is the config key under {,gcs_}bucket_config
+    #   Note: bucket here is the config key under bucket_config, for aws/gcs
+    #         platform "bucket" name use get_bucket_name()
     context.bucket = get_task_bucket(context.task, context.config)
     context.action = get_task_action(context.task, context.config, valid_actions=action_map.keys())
 
-    # Keep the filename so we can cleanup
-    setup_gcs_credentials(context)
-    context.gcs_client = Client()
+    gcs_creds = context.config["bucket_config"][context.bucket].get("gcs_credentials")
+    if type(gcs_creds) is str and len(gcs_creds) > 0:
+        setup_gcs_credentials(gcs_creds)
+        # TODO: should we load release_props in async_main instead of each action?
+        #   Needed for bucket lookup
+        context.release_props = get_release_props(context)
+        set_gcs_client(context)
+    else:
+        log.info("No GCS credentials found, skipping")
 
     connector = aiohttp.TCPConnector(limit=context.config["aiohttp_max_connections"])
     async with aiohttp.ClientSession(connector=connector) as session:
@@ -328,23 +335,40 @@ async def async_main(context):
 
         await action_map[context.action](context)
 
-    cleanup()
+    cleanup(context)
     log.info("Success!")
 
 
 # cleanup {{{1
-def cleanup():
-    os.remove(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
+def cleanup(context):
+    # Cleanup credentials file if gcs client is present
+    if hasattr(context, "gcs_client") and context.gcs_client:
+        os.remove(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
 
 
 # setup_gcs_credentials {{{1
-def setup_gcs_credentials(context):
-    # TODO: Dynamic creds
-    raw_creds = base64.decodebytes(context.config["gcs_bucket_config"][context.bucket]["credentials"].encode("ascii"))
+def setup_gcs_credentials(raw_creds):
     fp = tempfile.NamedTemporaryFile(delete=False)
-    fp.write(raw_creds)
+    fp.write(base64.decodebytes(raw_creds.encode("ascii")))
     fp.close()
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = fp.name
+
+
+# get_gcs_client {{{1
+def set_gcs_client(context):
+    client = Client()
+    product = get_product_name(context.release_props["appName"].lower(), context.release_props["stage_platform"])
+    bucket = client.bucket(get_bucket_name(context, product))
+    try:
+        if not bucket.exists():
+            log.warning(f"GCS bucket {bucket} doesn't exit. Skipping GCS uploads.")
+            return
+    except Forbidden:
+        log.warning(f"GCS credentials don't have access to {bucket}. Skipping GCS uploads.")
+        return
+
+    log.info(f"Found GCS bucket {bucket} - proceeding with GCS uploads.")
+    context.gcs_client = client
 
 
 # move_beets {{{1
@@ -618,15 +642,14 @@ async def retry_upload(context, destinations, path):
     gcs_uploads = []
     for dest in destinations:
         # S3 upload
-        if context.bucket in context.config["bucket_config"]:
-            uploads.append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
+        uploads.append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
 
         # GCS upload
-        if context.bucket in context.config["gcs_bucket_config"]:
+        if hasattr(context, "gcs_client") and context.gcs_client:
             gcs_uploads.append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path)))
     await raise_future_exceptions(uploads)
 
-    if context.config["gcs_bucket_config"].get(context.bucket, {}).get("fail_task_on_error", False):
+    if hasattr(context, "gcs_client") and context.gcs_client and context.config["bucket_config"][context.bucket].get("fail_task_on_gcs_error"):
         await raise_future_exceptions(gcs_uploads)
     else:
         _, ex = await get_results_and_future_exceptions(gcs_uploads)
@@ -668,15 +691,11 @@ async def upload_to_s3(context, s3_key, path):
 
 # upload_to_gcs {{{1
 async def upload_to_gcs(context, target_path, path):
-    if not context.config.get("gcs_bucket_config", {}).get(context.bucket):
-        log.info("No GCS config found. Skipping GCS upload.")
-        return
-
     product = get_product_name(context.release_props["appName"].lower(), context.release_props["stage_platform"])
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
         raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
-    bucket = get_gcs_bucket_name(context, product)
+    bucket = get_bucket_name(context, product)
 
     bucket = Bucket(context.gcs_client, name=bucket)
     blob = bucket.blob(target_path)
