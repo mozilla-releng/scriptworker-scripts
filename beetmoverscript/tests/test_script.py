@@ -594,6 +594,9 @@ async def test_async_main(context, mocker, action, raises, task_filename):
     mocker.patch("beetmoverscript.utils.JINJA_ENV", get_test_jinja_env())
     mocker.patch("beetmoverscript.script.move_beets", new=noop_async)
     mocker.patch.object(beetmoverscript.script, "get_task_action", new=fake_action)
+    mocker.patch("beetmoverscript.script.setup_gcs_credentials", new=noop_sync)
+    mocker.patch("beetmoverscript.script.set_gcs_client", new=noop_sync)
+    mocker.patch("beetmoverscript.script.cleanup", new=noop_sync)
     if raises:
         with pytest.raises(SystemExit):
             await async_main(context)
