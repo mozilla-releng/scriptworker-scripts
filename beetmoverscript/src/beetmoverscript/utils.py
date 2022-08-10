@@ -303,8 +303,23 @@ def get_creds(context):
     return context.config["bucket_config"][context.bucket]["credentials"]
 
 
-def get_bucket_name(context, product):
-    return context.config["bucket_config"][context.bucket]["buckets"][product]
+def get_bucket_name(context, product, cloud=None):
+    if not cloud:
+        return context.config["bucket_config"][context.bucket]["buckets"][product]
+    return context.config["clouds"][cloud][context.bucket]["product_buckets"][product]
+
+
+def get_fail_task_on_error(context, cloud):
+    return context.config["clouds"][cloud][context.bucket].get("fail_task_on_error")
+
+
+def get_cloud_credentials(context, cloud):
+    clouds = context.config["clouds"]
+    if cloud not in clouds:
+        raise ValueError(f"{cloud} not a valid cloud [{clouds.keys()}]")
+    if context.bucket not in clouds[cloud]:
+        return
+    return clouds[cloud][context.bucket]["credentials"]
 
 
 def get_bucket_url_prefix(context):

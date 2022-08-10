@@ -30,6 +30,31 @@
         "zip_max_file_size_in_mb": {
             "type": "number"
         },
+        "clouds": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "credentials": {
+                        "type": ["object", "string"],
+                        "description": "AWS uses key and secret, gcloud uses base64 encoded string"
+                    },
+                    "product_buckets": {
+                        "description": "Map of bucket per project",
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "fail_task_on_error": {
+                        "type": "boolean"
+                    },
+                    "url_prefix": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "bucket_config": {
             "type": "object",
             "additionalProperties": {
