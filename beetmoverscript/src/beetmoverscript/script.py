@@ -16,6 +16,7 @@ import aiohttp
 import boto3
 from botocore.exceptions import ClientError
 from google.api_core.exceptions import Forbidden
+from google.auth.exceptions import DefaultCredentialsError
 from google.cloud.storage import Bucket, Client
 from redo import retry
 from scriptworker import client
@@ -54,7 +55,9 @@ from beetmoverscript.utils import (
     get_bucket_name,
     get_bucket_url_prefix,
     get_candidates_prefix,
+    get_cloud_credentials,
     get_creds,
+    get_fail_task_on_error,
     get_hash,
     get_partials_props,
     get_partner_candidates_prefix,
@@ -314,10 +317,10 @@ async def async_main(context):
     context.bucket = get_task_bucket(context.task, context.config)
     context.action = get_task_action(context.task, context.config, valid_actions=action_map.keys())
 
-    gcs_creds = context.config["bucket_config"][context.bucket].get("gcs_credentials")
+    gcs_creds = get_cloud_credentials(context, "gcloud")
     if type(gcs_creds) is str and len(gcs_creds) > 0:
         setup_gcs_credentials(gcs_creds)
-        # TODO: should we load release_props in async_main instead of each action?
+        # TODO: maybe we should load release_props in async_main instead of each action?
         #   Needed for bucket lookup
         context.release_props = get_release_props(context)
         set_gcs_client(context)
@@ -356,19 +359,31 @@ def setup_gcs_credentials(raw_creds):
 
 # get_gcs_client {{{1
 def set_gcs_client(context):
-    client = Client()
     product = get_product_name(context.release_props["appName"].lower(), context.release_props["stage_platform"])
-    bucket = client.bucket(get_bucket_name(context, product))
+
+    def handle_exception(e):
+        if get_fail_task_on_error(context, "gcloud"):
+            raise e
+        print(e.__traceback__)
+
     try:
+        client = Client()
+        bucket = client.bucket(get_bucket_name(context, product, "gcloud"))
         if not bucket.exists():
             log.warning(f"GCS bucket {bucket} doesn't exit. Skipping GCS uploads.")
             return
     except Forbidden as e:
         log.warning(f"GCS credentials don't have access to {bucket}. Skipping GCS uploads.")
-        if context.config["bucket_config"][context.bucket].get("fail_task_on_gcs_error"):
-            raise e
+        handle_exception(e)
         return
-
+    except DefaultCredentialsError as e:
+        log.warning("GCS credential error. Skipping GCS uploads.")
+        handle_exception(e)
+        return
+    except Exception as e:
+        log.warning("Unknown error setting GCS credentials.")
+        handle_exception(e)
+        return
     log.info(f"Found GCS bucket {bucket} - proceeding with GCS uploads.")
     context.gcs_client = client
 
@@ -644,6 +659,7 @@ async def retry_upload(context, destinations, path):
     gcs_uploads = []
     for dest in destinations:
         # S3 upload
+        # TODO: if aws enabled
         uploads.append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
 
         # GCS upload
@@ -651,7 +667,7 @@ async def retry_upload(context, destinations, path):
             gcs_uploads.append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path)))
     await raise_future_exceptions(uploads)
 
-    if hasattr(context, "gcs_client") and context.gcs_client and context.config["bucket_config"][context.bucket].get("fail_task_on_gcs_error"):
+    if hasattr(context, "gcs_client") and context.gcs_client and get_fail_task_on_error(context, "gcloud"):
         await raise_future_exceptions(gcs_uploads)
     else:
         _, ex = await get_results_and_future_exceptions(gcs_uploads)

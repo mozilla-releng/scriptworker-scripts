@@ -5,11 +5,21 @@
     "aiohttp_max_connections": 5,
     "checksums_digests": ["sha512", "sha256"],
     "verbose": true,
-
+    "clouds": {
+        "gcloud": {
+            "nightly": {
+                "credentials": "eyJoZWxsbyI6ICJ3b3JsZCJ9Cg==",
+                "fail_task_on_error": false,
+                "product_buckets": {
+                    "fennec": "dummy",
+                    "firefox": "dummy",
+                    "fake": "dummy"
+                }
+            }
+        }
+    },
     "bucket_config": {
         "nightly": {
-            "gcs_credentials": "eyJoZWxsbyI6ICJ3b3JsZCJ9Cg==",
-            "fail_task_on_gcs_error": true,
             "credentials": {
                 "id": "dummy",
                 "key": "dummy"

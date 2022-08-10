@@ -26,13 +26,150 @@ taskcluster_scope_prefixes:
         - 'project:mozillavpn:releng:beetmover:'
 verbose: { "$eval": "VERBOSE == 'true'" }
 zip_max_file_size_in_mb: 300
+clouds:
+  gcloud:
+    $merge:
+      $match:
+        'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              devedition: 'net-mozaws-stage-delivery-archive'
+              pinebuild:  'net-mozaws-stage-delivery-archive'
+              firefox:    'net-mozaws-stage-delivery-firefox'
+              fennec:     'net-mozaws-stage-delivery-archive'
+              mobile:     'net-mozaws-stage-delivery-archive'
+          dep-partner:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              firefox: 'mozilla-releng-dep-partner'
+        'COT_PRODUCT == "firefox" && ENV == "prod"':
+          nightly:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              devedition: 'net-mozaws-prod-delivery-archive'
+              pinebuild:  'net-mozaws-prod-delivery-archive'
+              firefox:    'net-mozaws-prod-delivery-firefox'
+              mobile:     'net-mozaws-prod-delivery-archive'
+          release:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              devedition: 'net-mozaws-prod-delivery-archive'
+              pinebuild:  'net-mozaws-prod-delivery-archive'
+              firefox:    'net-mozaws-prod-delivery-firefox'
+              mobile:     'net-mozaws-prod-delivery-archive'
+          partner:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              firefox: 'fxpartners-distros'
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              devedition: 'net-mozaws-stage-delivery-archive'
+              pinebuild:  'net-mozaws-stage-delivery-archive'
+              firefox:    'net-mozaws-stage-delivery-firefox'
+              mobile:     'net-mozaws-stage-delivery-archive'
+          dep-partner:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              firefox: 'mozilla-releng-dep-partner'
+        'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              xpi: 'net-mozaws-stage-delivery-archive'
+        'COT_PRODUCT == "xpi" && ENV == "prod"':
+          release:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              xpi: 'net-mozaws-prod-delivery-archive'
+        'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              thunderbird: 'net-mozaws-stage-delivery-archive'
+        'COT_PRODUCT == "thunderbird" && ENV == "prod"':
+          nightly:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              thunderbird: 'net-mozaws-prod-delivery-archive'
+          release:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              thunderbird: 'net-mozaws-prod-delivery-archive'
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              thunderbird: 'net-mozaws-stage-delivery-archive'
+        'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              fenix: 'net-mozaws-stage-delivery-archive'
+              focus: 'net-mozaws-stage-delivery-archive'
+          nightly:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              fenix: 'net-mozaws-stage-delivery-archive'
+              focus: 'net-mozaws-stage-delivery-archive'
+          release:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              fenix: 'net-mozaws-stage-delivery-archive'
+              focus: 'net-mozaws-stage-delivery-archive'
+        'COT_PRODUCT == "mobile" && ENV == "prod"':
+          nightly:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              fenix: 'net-mozaws-prod-delivery-archive'
+              focus: 'net-mozaws-prod-delivery-archive'
+          release:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              fenix: 'net-mozaws-prod-delivery-archive'
+              focus: 'net-mozaws-prod-delivery-archive'
+        'COT_PRODUCT == "mozillavpn" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              vpn: 'net-mozaws-stage-delivery-archive'
+        'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
+          release:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            product_buckets:
+              vpn: 'net-mozaws-prod-delivery-archive'
+
+  aws: {}
+
+  maven: {}
+
+# TODO: Remove bucket_config and move to cloud:aws/maven
+# TODO: Move url_prefix to balrog_config(?)
 bucket_config:
   $merge:
     $match:
       'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
         dep:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "DEP_ID" }
             key: { "$eval": "DEP_KEY" }
@@ -44,8 +181,6 @@ bucket_config:
             mobile:     'net-mozaws-stage-delivery-archive'
           url_prefix: 'https://ftp.stage.mozaws.net'
         dep-partner:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "DEP_PARTNER_ID" }
             key: { "$eval": "DEP_PARTNER_KEY" }
@@ -60,8 +195,6 @@ bucket_config:
         dummy: {}
       'COT_PRODUCT == "firefox" && ENV == "prod"':
         nightly:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "NIGHTLY_ID" }
             key: { "$eval": "NIGHTLY_KEY" }
@@ -72,8 +205,6 @@ bucket_config:
             mobile:     'net-mozaws-prod-delivery-archive'
           url_prefix: 'https://archive.mozilla.org'
         release:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "RELEASE_ID" }
             key: { "$eval": "RELEASE_KEY" }
@@ -84,16 +215,12 @@ bucket_config:
             mobile:     'net-mozaws-prod-delivery-archive'
           url_prefix: 'https://archive.mozilla.org'
         partner:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "PARTNER_ID" }
             key: { "$eval": "PARTNER_KEY" }
           buckets:
             firefox: 'fxpartners-distros'
         dep:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "DEP_ID" }
             key: { "$eval": "DEP_KEY" }
@@ -104,8 +231,6 @@ bucket_config:
             mobile:     'net-mozaws-stage-delivery-archive'
           url_prefix: 'https://ftp.stage.mozaws.net'
         dep-partner:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "DEP_PARTNER_ID" }
             key: { "$eval": "DEP_PARTNER_KEY" }
@@ -120,8 +245,6 @@ bucket_config:
         dummy: {}
       'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
         dep:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "DEP_ID" }
             key: { "$eval": "DEP_KEY" }
@@ -131,8 +254,6 @@ bucket_config:
         dummy: {}
       'COT_PRODUCT == "xpi" && ENV == "prod"':
         release:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "RELEASE_ID" }
             key: { "$eval": "RELEASE_KEY" }
@@ -142,8 +263,6 @@ bucket_config:
         dummy: {}
       'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
         dep:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "DEP_ID" }
             key: { "$eval": "DEP_KEY" }
@@ -153,8 +272,6 @@ bucket_config:
         dummy: {}
       'COT_PRODUCT == "thunderbird" && ENV == "prod"':
         nightly:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "NIGHTLY_ID" }
             key: { "$eval": "NIGHTLY_KEY" }
@@ -162,8 +279,6 @@ bucket_config:
             thunderbird: 'net-mozaws-prod-delivery-archive'
           url_prefix: 'https://archive.mozilla.org'
         release:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "RELEASE_ID" }
             key: { "$eval": "RELEASE_KEY" }
@@ -171,8 +286,6 @@ bucket_config:
             thunderbird: 'net-mozaws-prod-delivery-archive'
           url_prefix: 'https://archive.mozilla.org'
         dep:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "DEP_ID" }
             key: { "$eval": "DEP_KEY" }
@@ -195,8 +308,6 @@ bucket_config:
             nightly_components: 'maven-nightly-stage-s3-upload-bucket'
         dummy: {}
         dep:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "DEP_ID" }
             key: { "$eval": "DEP_KEY" }
@@ -206,8 +317,6 @@ bucket_config:
           url_prefix: 'https://ftp.stage.mozaws.net'
         # TODO: nightly and release will only be used while we test prod with dev workers
         nightly:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "DEP_ID" }
             key: { "$eval": "DEP_KEY" }
@@ -216,8 +325,6 @@ bucket_config:
             focus: 'net-mozaws-stage-delivery-archive'
           url_prefix: 'https://ftp.stage.mozaws.net'
         release:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "DEP_ID" }
             key: { "$eval": "DEP_KEY" }
@@ -239,8 +346,6 @@ bucket_config:
           buckets:
             nightly_components: 'maven-nightly-s3-upload-bucket-d4zm9oo354qe'
         nightly:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "NIGHTLY_ID" }
             key: { "$eval": "NIGHTLY_KEY" }
@@ -249,8 +354,6 @@ bucket_config:
             focus: 'net-mozaws-prod-delivery-archive'
           url_prefix: 'https://archive.mozilla.org'
         release:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "RELEASE_ID" }
             key: { "$eval": "RELEASE_KEY" }
@@ -293,8 +396,6 @@ bucket_config:
         dummy: {}
       'COT_PRODUCT == "mozillavpn" && (ENV == "dev" || ENV == "fake-prod")':
         dep:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "DEP_ID" }
             key: { "$eval": "DEP_KEY" }
@@ -304,8 +405,6 @@ bucket_config:
         dummy: {}
       'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
         release:
-          gcs_credentials: { "$eval": "GCS_CREDENTIALS" }
-          fail_task_on_gcs_error: False
           credentials:
             id: { "$eval": "RELEASE_ID" }
             key: { "$eval": "RELEASE_KEY" }
