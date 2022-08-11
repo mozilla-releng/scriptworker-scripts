@@ -5,31 +5,36 @@
     "aiohttp_max_connections": 5,
     "checksums_digests": ["sha512", "sha256"],
     "verbose": true,
+    "url_prefix": {
+        "nightly": "https://archive.test"
+    },
     "clouds": {
         "gcloud": {
             "nightly": {
+                "enabled": true,
+                "fail_task_on_error": true,
                 "credentials": "eyJoZWxsbyI6ICJ3b3JsZCJ9Cg==",
-                "fail_task_on_error": false,
                 "product_buckets": {
                     "fennec": "dummy",
                     "firefox": "dummy",
                     "fake": "dummy"
                 }
             }
-        }
-    },
-    "bucket_config": {
-        "nightly": {
-            "credentials": {
-                "id": "dummy",
-                "key": "dummy"
-            },
-            "buckets": {
-                "fennec": "dummy",
-                "firefox": "dummy",
-                "fake": "dummy"
-            },
-            "url_prefix": "https://archive.test"
+        },
+        "aws": {
+            "nightly": {
+                "enabled": true,
+                "fail_task_on_error": true,
+                "credentials": {
+                    "id": "dummy",
+                    "key": "dummy"
+                },
+                "product_buckets": {
+                    "fennec": "dummy",
+                    "firefox": "dummy",
+                    "fake": "dummy"
+                }
+            }
         }
     }
 }

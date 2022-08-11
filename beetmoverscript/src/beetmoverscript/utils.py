@@ -299,13 +299,7 @@ def get_partner_match(keyname, candidates_prefix, partners):
     return None
 
 
-def get_creds(context):
-    return context.config["bucket_config"][context.bucket]["credentials"]
-
-
-def get_bucket_name(context, product, cloud=None):
-    if not cloud:
-        return context.config["bucket_config"][context.bucket]["buckets"][product]
+def get_bucket_name(context, product, cloud):
     return context.config["clouds"][cloud][context.bucket]["product_buckets"][product]
 
 
@@ -313,7 +307,7 @@ def get_fail_task_on_error(context, cloud):
     return context.config["clouds"][cloud][context.bucket].get("fail_task_on_error")
 
 
-def get_cloud_credentials(context, cloud):
+def get_credentials(context, cloud):
     clouds = context.config["clouds"]
     if cloud not in clouds:
         raise ValueError(f"{cloud} not a valid cloud [{clouds.keys()}]")
@@ -322,16 +316,11 @@ def get_cloud_credentials(context, cloud):
     return clouds[cloud][context.bucket]["credentials"]
 
 
-def get_bucket_url_prefix(context):
-    bucket_config = context.config["bucket_config"].get(context.bucket, None)
-    bucket_config = bucket_config or context.config["gcs_bucket_config"].get(context.bucket, None)
-    if not bucket_config:
+def get_url_prefix(context):
+    if context.bucket not in context.config["url_prefix"]:
         raise ValueError(f"No bucket config found for {context.bucket}")
 
-    if "url_prefix" not in bucket_config:
-        raise ValueError(f"No url_prefix found for bucket config {context.bucket}")
-
-    return bucket_config["url_prefix"]
+    return context.config["url_prefix"][context.bucket]
 
 
 def validated_task_id(task_id):
