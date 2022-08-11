@@ -6,7 +6,7 @@
         "taskcluster_scope_prefixes",
         "aiohttp_max_connections",
         "zip_max_file_size_in_mb",
-        "bucket_config"
+        "clouds"
     ],
     "properties": {
         "checksums_digests": {
@@ -35,6 +35,9 @@
             "additionalProperties": {
                 "type": "object",
                 "properties": {
+                    "enabled": {
+                        "type": "boolean"
+                    },
                     "credentials": {
                         "type": ["object", "string"],
                         "description": "AWS uses key and secret, gcloud uses base64 encoded string"
@@ -48,46 +51,6 @@
                     },
                     "fail_task_on_error": {
                         "type": "boolean"
-                    },
-                    "url_prefix": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "bucket_config": {
-            "type": "object",
-            "additionalProperties": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "gcs_credentials": {
-                        "type": "string"
-                    },
-                    "fail_task_on_gcs_error": {
-                        "type": "boolean"
-                    },
-                    "credentials": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                            "id",
-                            "key"
-                        ],
-                        "properties": {
-                            "id": {
-                                "type": "string"
-                            },
-                            "key": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "buckets": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string"
-                        }
                     },
                     "url_prefix": {
                         "type": "string"

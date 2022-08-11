@@ -2,22 +2,16 @@
 """Beetmover script
 """
 import asyncio
-import base64
 import logging
 import mimetypes
 import os
 import re
 import sys
-import tempfile
-import traceback
 from multiprocessing.pool import ThreadPool
 
 import aiohttp
 import boto3
 from botocore.exceptions import ClientError
-from google.api_core.exceptions import Forbidden
-from google.auth.exceptions import DefaultCredentialsError
-from google.cloud.storage import Bucket, Client
 from redo import retry
 from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerRetryException, ScriptWorkerTaskException
@@ -36,6 +30,7 @@ from beetmoverscript.constants import (
     RELEASE_BRANCHES,
     RELEASE_EXCLUDE,
 )
+from beetmoverscript.gcloud import cleanup_gcloud, setup_gcloud, upload_to_gcs
 from beetmoverscript.task import (
     add_balrog_manifest_to_artifacts,
     add_checksums_to_artifacts,
@@ -53,10 +48,9 @@ from beetmoverscript.utils import (
     generate_beetmover_manifest,
     get_addon_data,
     get_bucket_name,
-    get_bucket_url_prefix,
+    get_url_prefix,
     get_candidates_prefix,
-    get_cloud_credentials,
-    get_creds,
+    get_credentials,
     get_fail_task_on_error,
     get_hash,
     get_partials_props,
@@ -185,12 +179,12 @@ async def push_to_releases(context):
     product = context.task["payload"]["product"]
     build_number = context.task["payload"]["build_number"]
     version = context.task["payload"]["version"]
-    context.bucket_name = get_bucket_name(context, product)
+    context.bucket_name = get_bucket_name(context, product, "aws")
 
     candidates_prefix = get_candidates_prefix(product, version, build_number)
     releases_prefix = get_releases_prefix(product, version)
 
-    creds = get_creds(context)
+    creds = get_credentials(context, "aws")
     s3_resource = boto3.resource("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
 
     candidates_keys_checksums = list_bucket_objects(context, s3_resource, candidates_prefix)
@@ -248,7 +242,7 @@ async def push_to_maven(context):
 
 # copy_beets {{{1
 def copy_beets(context, from_keys_checksums, to_keys_checksums):
-    creds = get_creds(context)
+    creds = get_credentials(context, "aws")
     boto_client = boto3.client("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
 
     def worker(item):
@@ -312,20 +306,11 @@ async def async_main(context):
     validate_task_schema(context)
 
     # determine the task bucket and action
-    #   Note: bucket here is the config key under bucket_config, for aws/gcs
-    #         platform "bucket" name use get_bucket_name()
+    #   Note: context.bucket is the release type (release,nightly,dep,etc)
     context.bucket = get_task_bucket(context.task, context.config)
     context.action = get_task_action(context.task, context.config, valid_actions=action_map.keys())
 
-    gcs_creds = get_cloud_credentials(context, "gcloud")
-    if type(gcs_creds) is str and len(gcs_creds) > 0:
-        setup_gcs_credentials(gcs_creds)
-        # TODO: maybe we should load release_props in async_main instead of each action?
-        #   Needed for bucket lookup
-        context.release_props = get_release_props(context)
-        set_gcs_client(context)
-    else:
-        log.info("No GCS credentials found, skipping")
+    setup_gcloud(context)
 
     connector = aiohttp.TCPConnector(limit=context.config["aiohttp_max_connections"])
     async with aiohttp.ClientSession(connector=connector) as session:
@@ -333,7 +318,7 @@ async def async_main(context):
 
         if not action_map.get(context.action):
             log.critical("Unknown action {}!".format(context.action))
-            cleanup()
+            cleanup(context)
             sys.exit(3)
 
         await action_map[context.action](context)
@@ -344,48 +329,7 @@ async def async_main(context):
 
 # cleanup {{{1
 def cleanup(context):
-    # Cleanup credentials file if gcs client is present
-    if hasattr(context, "gcs_client") and context.gcs_client:
-        os.remove(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
-
-
-# setup_gcs_credentials {{{1
-def setup_gcs_credentials(raw_creds):
-    fp = tempfile.NamedTemporaryFile(delete=False)
-    fp.write(base64.decodebytes(raw_creds.encode("ascii")))
-    fp.close()
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = fp.name
-
-
-# get_gcs_client {{{1
-def set_gcs_client(context):
-    product = get_product_name(context.release_props["appName"].lower(), context.release_props["stage_platform"])
-
-    def handle_exception(e):
-        if get_fail_task_on_error(context, "gcloud"):
-            raise e
-        print(e.__traceback__)
-
-    try:
-        client = Client()
-        bucket = client.bucket(get_bucket_name(context, product, "gcloud"))
-        if not bucket.exists():
-            log.warning(f"GCS bucket {bucket} doesn't exit. Skipping GCS uploads.")
-            return
-    except Forbidden as e:
-        log.warning(f"GCS credentials don't have access to {bucket}. Skipping GCS uploads.")
-        handle_exception(e)
-        return
-    except DefaultCredentialsError as e:
-        log.warning("GCS credential error. Skipping GCS uploads.")
-        handle_exception(e)
-        return
-    except Exception as e:
-        log.warning("Unknown error setting GCS credentials.")
-        handle_exception(e)
-        return
-    log.info(f"Found GCS bucket {bucket} - proceeding with GCS uploads.")
-    context.gcs_client = client
+    cleanup_gcloud(context)
 
 
 # move_beets {{{1
@@ -585,7 +529,7 @@ def generate_system_addons_balrog_manifest(context):
             addon_data = get_addon_data(filepath)
             addon_name = addon_data["name"]
             addon_version = addon_data["version"]
-            addon_url = "{prefix}/{s3_key}".format(prefix=get_bucket_url_prefix(context), s3_key=destinations[0])
+            addon_url = "{prefix}/{s3_key}".format(prefix=get_url_prefix(context), s3_key=destinations[0])
             checksums_path = path_info["checksums_path"]
             checksums_info = context.checksums[checksums_path]
             addon_hash = checksums_info[hash_type]
@@ -606,7 +550,7 @@ def generate_balrog_info(context, artifact_pretty_name, locale, destinations, fr
     release_props = context.release_props
     checksums = context.checksums
 
-    url = "{prefix}/{s3_key}".format(prefix=get_bucket_url_prefix(context), s3_key=destinations[0])
+    url = "{prefix}/{s3_key}".format(prefix=get_url_prefix(context), s3_key=destinations[0])
 
     data = {"hash": checksums[artifact_pretty_name][release_props["hashType"]], "size": checksums[artifact_pretty_name]["size"], "url": url}
     if from_buildid:
@@ -655,26 +599,31 @@ def enrich_balrog_manifest(context, locale):
 # retry_upload {{{1
 async def retry_upload(context, destinations, path):
     """Manage upload of `path` to `destinations`."""
-    uploads = []
-    gcs_uploads = []
+    cloud_uploads = {
+        "aws": [],
+        "gcloud": [],
+    }
     for dest in destinations:
         # S3 upload
-        # TODO: if aws enabled
-        uploads.append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
+        if context.config["clouds"]["aws"][context.bucket]["enabled"]:
+            cloud_uploads["aws"].append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
 
         # GCS upload
-        if hasattr(context, "gcs_client") and context.gcs_client:
-            gcs_uploads.append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path)))
-    await raise_future_exceptions(uploads)
+        if context.config["clouds"]["gcloud"][context.bucket]["enabled"]:
+            cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path)))
 
-    if hasattr(context, "gcs_client") and context.gcs_client and get_fail_task_on_error(context, "gcloud"):
-        await raise_future_exceptions(gcs_uploads)
-    else:
-        _, ex = await get_results_and_future_exceptions(gcs_uploads)
-        # Print out the exceptions
-        for e in ex:
-            log.warning("Skipped exception:")
-            traceback.print_tb(e.__traceback__)
+    for cloud in cloud_uploads:
+        if len(cloud_uploads[cloud]) == 0:
+            continue
+        if get_fail_task_on_error(context, cloud):
+            await raise_future_exceptions(cloud_uploads[cloud])
+        else:
+            _, ex = await get_results_and_future_exceptions(cloud_uploads[cloud])
+            # Print out the exceptions
+            for e in ex:
+                log.warning("Skipped exception:")
+                print(e.__traceback__)
+                print(e.message)
 
 
 # put {{{1
@@ -697,30 +646,14 @@ async def upload_to_s3(context, s3_key, path):
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
         raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
-    api_kwargs = {"Bucket": get_bucket_name(context, product), "Key": s3_key, "ContentType": mime_type}
+    api_kwargs = {"Bucket": get_bucket_name(context, product, "aws"), "Key": s3_key, "ContentType": mime_type}
     headers = {"Content-Type": mime_type, "Cache-Control": "public, max-age=%d" % CACHE_CONTROL_MAXAGE}
-    creds = context.config["bucket_config"][context.bucket]["credentials"]
+    creds = get_credentials(context, "aws")
     s3 = boto3.client("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
     url = s3.generate_presigned_url("put_object", api_kwargs, ExpiresIn=1800, HttpMethod="PUT")
 
     log.info("upload_to_s3: %s -> s3://%s/%s", path, api_kwargs.get("Bucket"), s3_key)
     await retry_async(put, args=(context, url, headers, path), retry_exceptions=(Exception,), kwargs={"session": context.session})
-
-
-# upload_to_gcs {{{1
-async def upload_to_gcs(context, target_path, path):
-    product = get_product_name(context.release_props["appName"].lower(), context.release_props["stage_platform"])
-    mime_type = mimetypes.guess_type(path)[0]
-    if not mime_type:
-        raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
-    bucket = get_bucket_name(context, product)
-
-    bucket = Bucket(context.gcs_client, name=bucket)
-    blob = bucket.blob(target_path)
-    blob.content_type = mime_type
-    blob.cache_control = "public, max-age=%d" % CACHE_CONTROL_MAXAGE
-
-    return blob.upload_from_filename(path, content_type=mime_type)
 
 
 def setup_mimetypes():

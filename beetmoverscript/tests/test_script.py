@@ -201,6 +201,7 @@ def test_enrich_balrog_manifest(context, branch, action):
 @pytest.mark.asyncio
 async def test_retry_upload(context, mocker):
     mocker.patch.object(beetmoverscript.script, "upload_to_s3", new=noop_async)
+    mocker.patch.object(beetmoverscript.script, "upload_to_gcs", new=noop_async)
     await beetmoverscript.script.retry_upload(context, ["a", "b"], "c")
 
 
@@ -594,9 +595,9 @@ async def test_async_main(context, mocker, action, raises, task_filename):
     mocker.patch("beetmoverscript.utils.JINJA_ENV", get_test_jinja_env())
     mocker.patch("beetmoverscript.script.move_beets", new=noop_async)
     mocker.patch.object(beetmoverscript.script, "get_task_action", new=fake_action)
-    mocker.patch("beetmoverscript.script.setup_gcs_credentials", new=noop_sync)
-    mocker.patch("beetmoverscript.script.set_gcs_client", new=noop_sync)
-    mocker.patch("beetmoverscript.script.cleanup", new=noop_sync)
+    mocker.patch("beetmoverscript.gcloud.setup_gcs_credentials", new=noop_sync)
+    mocker.patch("beetmoverscript.gcloud.set_gcs_client", new=noop_sync)
+    mocker.patch("beetmoverscript.gcloud.cleanup_gcloud", new=noop_sync)
     if raises:
         with pytest.raises(SystemExit):
             await async_main(context)
