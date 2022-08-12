@@ -34,6 +34,7 @@ from . import get_fake_checksums_manifest, get_fake_valid_config, get_fake_valid
         (["project:releng:beetmover:bucket:dep", "project:releng:beetmover:action:push-to-candidates"], "schema_file"),
         (["project:releng:beetmover:bucket:dep", "project:releng:beetmover:action:push-to-partner"], "schema_file"),
         (["project:releng:beetmover:bucket:dep", "project:releng:beetmover:action:push-to-nightly"], "schema_file"),
+        (["project:releng:beetmover:bucket:dep", "project:releng:beetmover:action:direct-push-to-bucket"], "artifactMap_schema_file"),
     ),
 )
 def test_get_schema_key_by_action(scopes, expected):
