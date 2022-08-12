@@ -1,12 +1,12 @@
+import copy
 import json
 from contextlib import asynccontextmanager
 from unittest.mock import Mock
-import copy
 
 import pytest
 
-import beetmoverscript.script
 import beetmoverscript.gcloud
+import beetmoverscript.script
 from beetmoverscript.constants import BUILDHUB_ARTIFACT
 from beetmoverscript.script import main
 from beetmoverscript.utils import load_json, write_json

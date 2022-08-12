@@ -13,12 +13,7 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 
 from beetmoverscript.constants import CACHE_CONTROL_MAXAGE
 from beetmoverscript.task import get_release_props
-from beetmoverscript.utils import (
-    get_bucket_name,
-    get_credentials,
-    get_fail_task_on_error,
-    get_product_name,
-)
+from beetmoverscript.utils import get_bucket_name, get_credentials, get_fail_task_on_error, get_product_name
 
 log = logging.getLogger(__name__)
 
