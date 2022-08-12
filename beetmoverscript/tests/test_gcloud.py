@@ -1,12 +1,13 @@
+import os
+
 import pytest
 from google.api_core.exceptions import Forbidden
 from google.auth.exceptions import DefaultCredentialsError
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-import os
 import beetmoverscript.gcloud
 
-from . import get_fake_valid_config, get_fake_valid_task, get_test_jinja_env, noop_async, noop_sync
+from . import noop_sync
 
 
 class FakeClient:
