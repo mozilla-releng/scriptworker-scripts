@@ -42,8 +42,10 @@ def set_gcs_client(context):
     def handle_exception(e):
         if get_fail_task_on_error(context, "gcloud"):
             raise e
-        print(e.__traceback__)
+        log.error(e)
 
+    # Only used for exception handling/logging
+    bucket = "<unset>"
     try:
         client = Client()
         bucket = client.bucket(get_bucket_name(context, product, "gcloud"))
@@ -78,9 +80,9 @@ async def upload_to_gcs(context, target_path, path):
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
         raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
-    bucket = get_bucket_name(context, product, "gcloud")
+    bucket_name = get_bucket_name(context, product, "gcloud")
 
-    bucket = Bucket(context.gcs_client, name=bucket)
+    bucket = Bucket(context.gcs_client, name=bucket_name)
     blob = bucket.blob(target_path)
     blob.content_type = mime_type
     blob.cache_control = "public, max-age=%d" % CACHE_CONTROL_MAXAGE
