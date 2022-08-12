@@ -13,6 +13,7 @@ from beetmoverscript.utils import (
     generate_beetmover_manifest,
     generate_beetmover_template_args,
     get_candidates_prefix,
+    get_credentials,
     get_hash,
     get_partials_props,
     get_partner_candidates_prefix,
@@ -20,6 +21,7 @@ from beetmoverscript.utils import (
     get_partner_releases_prefix,
     get_product_name,
     get_releases_prefix,
+    get_url_prefix,
     is_partner_private_task,
     is_partner_public_task,
     is_promotion_action,
@@ -319,6 +321,8 @@ def test_get_partner_match(keyname, partners, expected):
         ("Fennec", "dummy", "Fennec"),
         ("Firefox", "dummy", "Firefox"),
         ("fennec", "dummy", "fennec"),
+        ("Pinebuild", "pinebuild", "Pinebuild"),
+        ("pinebuild", "pinebuild", "pinebuild"),
     ),
 )
 def test_get_product_name(appName, tmpl_key, expected):
@@ -414,3 +418,31 @@ def test_extract_full_artifact_map_path(path, locale, found):
 )
 def test_exists_or_endswith(filename, basenames, expected):
     assert exists_or_endswith(filename, basenames) == expected
+
+
+@pytest.mark.parametrize(
+    "cloud,bucket,expected,raises",
+    (
+        ("aws", "nightly", {"id": "dummy", "key": "dummy"}, False),
+        ("gcloud", "nightly", "eyJoZWxsbyI6ICJ3b3JsZCJ9Cg==", False),
+        ("gcloud", "fakeRelease", None, False),
+        ("ibw", "fakeRelease", None, True),
+    ),
+)
+def test_get_credentials(context, cloud, bucket, expected, raises):
+    context.bucket = bucket
+
+    if raises:
+        with pytest.raises(ValueError):
+            get_credentials(context, cloud)
+    else:
+        aws_creds = get_credentials(context, cloud)
+        assert aws_creds == expected
+
+
+def test_get_url_prefix(context):
+    assert get_url_prefix(context) == "https://archive.test"
+
+    with pytest.raises(ValueError):
+        context.bucket = "FakeRelease"
+        get_url_prefix(context)
