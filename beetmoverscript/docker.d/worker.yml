@@ -226,7 +226,6 @@ clouds:
               firefox:    'net-mozaws-stage-delivery-firefox'
               fennec:     'net-mozaws-stage-delivery-archive'
               mobile:     'net-mozaws-stage-delivery-archive'
-            url_prefix: 'https://ftp.stage.mozaws.net'
           dep-partner:
             fail_task_on_error: True
             credentials:
@@ -253,7 +252,6 @@ clouds:
               pinebuild:  'net-mozaws-prod-delivery-archive'
               firefox:    'net-mozaws-prod-delivery-firefox'
               mobile:     'net-mozaws-prod-delivery-archive'
-            url_prefix: 'https://archive.mozilla.org'
           release:
             fail_task_on_error: True
             credentials:
@@ -264,7 +262,6 @@ clouds:
               pinebuild:  'net-mozaws-prod-delivery-archive'
               firefox:    'net-mozaws-prod-delivery-firefox'
               mobile:     'net-mozaws-prod-delivery-archive'
-            url_prefix: 'https://archive.mozilla.org'
           partner:
             fail_task_on_error: True
             credentials:
@@ -282,7 +279,6 @@ clouds:
               pinebuild:  'net-mozaws-stage-delivery-archive'
               firefox:    'net-mozaws-stage-delivery-firefox'
               mobile:     'net-mozaws-stage-delivery-archive'
-            url_prefix: 'https://ftp.stage.mozaws.net'
           dep-partner:
             fail_task_on_error: True
             credentials:
@@ -306,7 +302,6 @@ clouds:
               key: { "$eval": "DEP_KEY" }
             product_buckets:
               xpi: 'net-mozaws-stage-delivery-archive'
-            url_prefix: 'https://ftp.stage.mozaws.net'
 
         'COT_PRODUCT == "xpi" && ENV == "prod"':
           release:
@@ -316,7 +311,6 @@ clouds:
               key: { "$eval": "RELEASE_KEY" }
             product_buckets:
               xpi: 'net-mozaws-prod-delivery-archive'
-            url_prefix: 'https://archive.mozilla.org'
 
         'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
@@ -326,7 +320,6 @@ clouds:
               key: { "$eval": "DEP_KEY" }
             product_buckets:
               thunderbird: 'net-mozaws-stage-delivery-archive'
-            url_prefix: 'https://ftp.stage.mozaws.net'
 
         'COT_PRODUCT == "thunderbird" && ENV == "prod"':
           nightly:
@@ -336,7 +329,6 @@ clouds:
               key: { "$eval": "NIGHTLY_KEY" }
             product_buckets:
               thunderbird: 'net-mozaws-prod-delivery-archive'
-            url_prefix: 'https://archive.mozilla.org'
           release:
             fail_task_on_error: True
             credentials:
@@ -344,7 +336,6 @@ clouds:
               key: { "$eval": "RELEASE_KEY" }
             product_buckets:
               thunderbird: 'net-mozaws-prod-delivery-archive'
-            url_prefix: 'https://archive.mozilla.org'
           dep:
             fail_task_on_error: True
             credentials:
@@ -352,7 +343,6 @@ clouds:
               key: { "$eval": "DEP_KEY" }
             product_buckets:
               thunderbird: 'net-mozaws-stage-delivery-archive'
-            url_prefix: 'https://ftp.stage.mozaws.net'
 
         'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
           maven-staging:
@@ -378,7 +368,6 @@ clouds:
             product_buckets:
               fenix: 'net-mozaws-stage-delivery-archive'
               focus: 'net-mozaws-stage-delivery-archive'
-            url_prefix: 'https://ftp.stage.mozaws.net'
           # TODO: nightly and release will only be used while we test prod with dev workers
           nightly:
             fail_task_on_error: True
@@ -388,7 +377,6 @@ clouds:
             product_buckets:
               fenix: 'net-mozaws-stage-delivery-archive'
               focus: 'net-mozaws-stage-delivery-archive'
-            url_prefix: 'https://ftp.stage.mozaws.net'
           release:
             fail_task_on_error: True
             credentials:
@@ -397,7 +385,6 @@ clouds:
             product_buckets:
               fenix: 'net-mozaws-stage-delivery-archive'
               focus: 'net-mozaws-stage-delivery-archive'
-            url_prefix: 'https://ftp.stage.mozaws.net'
         'COT_PRODUCT == "mobile" && ENV == "prod"':
           maven-production:
             fail_task_on_error: True
@@ -421,7 +408,6 @@ clouds:
             product_buckets:
               fenix: 'net-mozaws-prod-delivery-archive'
               focus: 'net-mozaws-prod-delivery-archive'
-            url_prefix: 'https://archive.mozilla.org'
           release:
             fail_task_on_error: True
             credentials:
@@ -430,7 +416,6 @@ clouds:
             product_buckets:
               fenix: 'net-mozaws-prod-delivery-archive'
               focus: 'net-mozaws-prod-delivery-archive'
-            url_prefix: 'https://archive.mozilla.org'
 
         'COT_PRODUCT == "app-services" && (ENV == "dev" || ENV == "fake-prod")':
           maven-staging:
@@ -476,7 +461,6 @@ clouds:
               key: { "$eval": "DEP_KEY" }
             product_buckets:
               vpn: 'net-mozaws-stage-delivery-archive'
-            url_prefix: 'https://ftp.stage.mozaws.net'
 
         'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
           release:
@@ -486,7 +470,6 @@ clouds:
               key: { "$eval": "RELEASE_KEY" }
             product_buckets:
               vpn: 'net-mozaws-prod-delivery-archive'
-            url_prefix: 'https://archive.mozilla.org'
 
   maven: {}
   # TODO: Move maven info
