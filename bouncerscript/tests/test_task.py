@@ -355,6 +355,26 @@ async def test_check_aliases_match(aliases_context, mocker, entries, provided, r
             (["firefox-nightly-latest", "firefox-nightly-latest-ssl"], True),
             (["firefox-nightly-latest-l10n", "firefox-nightly-latest-l10n-ssl"], True),
             (["firefox-latest"], True),
+            (["thunderbird-nightly-latest", "thunderbird-nightly-latest-ssl", "thunderbird-nightly-latest-l10n", "thunderbird-nightly-latest-l10n-ssl"], True),
+            (["thunderbird-nightly-msi-latest-ssl", "thunderbird-nightly-msi-latest-l10n-ssl"], True),
+            (["thunderbird-nightly-pkg-latest-ssl", "thunderbird-nightly-pkg-latest-l10n-ssl"], True),
+            (["thunderbird-nightly-msi-latest-ssl", "thunderbird-nightly-msi-latest-l10n-ssl", "thunderbird-nightly-latest"], True),
+            (["thunderbird-nightly-pkg-latest-ssl", "thunderbird-nightly-pkg-latest-l10n-ssl", "thunderbird-nightly-latest"], True),
+            (["thunderbird-nightly-msi-latest-l10n-ssl", "thunderbird-nightly-latest"], True),
+            (["thunderbird-nightly-pkg-latest-l10n-ssl", "thunderbird-nightly-latest"], True),
+            (
+                [
+                    "thunderbird-nightly-msi-latest-ssl",
+                    "thunderbird-nightly-msi-latest-l10n-ssl",
+                    "thunderbird-nightly-pkg-latest-ssl",
+                    "thunderbird-nightly-pkg-latest-l10n-ssl",
+                    "thunderbird-nightly-latest",
+                    "thunderbird-nightly-latest-ssl",
+                    "thunderbird-nightly-latest-l10n",
+                    "thunderbird-nightly-latest-l10n-ssl",
+                ],
+                False,
+            ),
         )
     ),
 )
@@ -454,6 +474,11 @@ def test_check_version_matches_nightly_regex(version, product, raises):
             ("firefox-nightly-latest-l10n", "/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0b1.:lang.linux-x86_64.tar.bz2", True),
             ("firefox-nightly-latest-l10n", "/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0b1.:lang.mac.dmg", True),
             ("firefox-nightly-latest-l10n", "/firefox/nightly/latest-mozilla-central-l10n/firefox-63.0.1.:lang.win64.installer.exe", True),
+            ("thunderbird-nightly-latest", "/thunderbird/nightly/latest-comm-central/thunderbird-63.0a1.en-US.linux-x86_64.tar.bz2", False),
+            ("thunderbird-nightly-msi-latest-l10n-ssl", "/thunderbird/nightly/latest-comm-central-l10n/thunderbird-63.0a1.:lang.win64.installer.exe", True),
+            ("thunderbird-nightly-latest-l10n", "/thunderbird/nightly/latest-comm-central-l10n/thunderbird-63.0a1.:lang.win32.installer.exe", False),
+            ("thunderbird-nightly-latest-l10n", "/thunderbird/candidates/latest-comm-central-l10n/thunderbird-63.0a1.:lang.win32.installer.exeexe", True),
+            ("thunderbird-nightly-latest-l10n", "/mobile/nightly/latest-comm-central-l10n/thunderbird-63.0a1.:lang.win32.installer.exeexe", True),
         )
     ),
 )
