@@ -23,7 +23,7 @@ from beetmoverscript.script import (
     move_beets,
     move_partner_beets,
     push_to_partner,
-    push_to_releases,
+    push_to_releases_s3,
     put,
     sanity_check_partner_path,
     setup_mimetypes,
@@ -42,13 +42,13 @@ async def test_push_to_partner(context, mocker):
     await push_to_partner(context)
 
 
-# push_to_releases {{{1
+# push_to_releases_s3 {{{1
 @pytest.mark.parametrize(
     "candidates_keys,releases_keys,exception_type",
     (({"foo.zip": "x", "foo.exe": "y"}, {}, None), ({"foo.zip": "x", "foo.exe": "y"}, {"asdf": 1}, None), ({}, {"asdf": 1}, ScriptWorkerTaskException)),
 )
 @pytest.mark.asyncio
-async def test_push_to_releases(context, mocker, candidates_keys, releases_keys, exception_type):
+async def test_push_to_releases_s3(context, mocker, candidates_keys, releases_keys, exception_type):
     context.task = {"payload": {"product": "fennec", "build_number": 33, "version": "99.0b44"}}
 
     objects = [candidates_keys, releases_keys]
@@ -65,9 +65,9 @@ async def test_push_to_releases(context, mocker, candidates_keys, releases_keys,
 
     if exception_type is not None:
         with pytest.raises(exception_type):
-            await push_to_releases(context)
+            await push_to_releases_s3(context)
     else:
-        await push_to_releases(context)
+        await push_to_releases_s3(context)
 
 
 # copy_beets {{{1

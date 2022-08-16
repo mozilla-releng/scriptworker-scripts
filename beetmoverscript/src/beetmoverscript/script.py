@@ -169,8 +169,8 @@ async def push_to_partner(context):
     add_checksums_to_artifacts(context)
 
 
-# push_to_releases {{{1
-async def push_to_releases(context):
+# push_to_releases_s3 {{{1
+async def push_to_releases_s3(context):
     """Copy artifacts from one S3 location to another.
 
     Determine the list of artifacts to be copied and transfer them. These
@@ -290,7 +290,7 @@ action_map = {
     "push-to-nightly": push_to_nightly,
     # push to candidates is at this point identical to push_to_nightly
     "push-to-candidates": push_to_nightly,
-    "push-to-releases": push_to_releases,
+    "push-to-releases": push_to_releases_s3,
     "direct-push-to-bucket": direct_push_to_bucket,
     "push-to-maven": push_to_maven,
 }
