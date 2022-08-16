@@ -27,34 +27,36 @@ taskcluster_scope_prefixes:
 verbose: { "$eval": "VERBOSE == 'true'" }
 zip_max_file_size_in_mb: 300
 url_prefix:
-  $match:
-    'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
-      dep: 'https://ftp.stage.mozaws.net'
-    'COT_PRODUCT == "firefox" && ENV == "prod"':
-      nightly: 'https://archive.mozilla.org'
-      release: 'https://archive.mozilla.org'
-      dep: 'https://ftp.stage.mozaws.net'
-    'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
-      dep: 'https://ftp.stage.mozaws.net'
-    'COT_PRODUCT == "xpi" && ENV == "prod"':
-      release: 'https://archive.mozilla.org'
-    'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
-      dep: 'https://ftp.stage.mozaws.net'
-    'COT_PRODUCT == "thunderbird" && ENV == "prod"':
-      nightly: 'https://archive.mozilla.org'
-      release: 'https://archive.mozilla.org'
-      dep: 'https://ftp.stage.mozaws.net'
-    'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
-      dep: 'https://ftp.stage.mozaws.net'
-      nightly: 'https://ftp.stage.mozaws.net'
-      release: 'https://ftp.stage.mozaws.net'
-    'COT_PRODUCT == "mobile" && ENV == "prod"':
-      nightly: 'https://archive.mozilla.org'
-      release: 'https://archive.mozilla.org'
-    'COT_PRODUCT == "mozillavpn" && (ENV == "dev" || ENV == "fake-prod")':
-      dep: 'https://ftp.stage.mozaws.net'
-    'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
-      release: 'https://archive.mozilla.org'
+  # we need to $merge as $match returns an array
+  $merge:
+    $match:
+      'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
+        dep: 'https://ftp.stage.mozaws.net'
+      'COT_PRODUCT == "firefox" && ENV == "prod"':
+        nightly: 'https://archive.mozilla.org'
+        release: 'https://archive.mozilla.org'
+        dep: 'https://ftp.stage.mozaws.net'
+      'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
+        dep: 'https://ftp.stage.mozaws.net'
+      'COT_PRODUCT == "xpi" && ENV == "prod"':
+        release: 'https://archive.mozilla.org'
+      'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
+        dep: 'https://ftp.stage.mozaws.net'
+      'COT_PRODUCT == "thunderbird" && ENV == "prod"':
+        nightly: 'https://archive.mozilla.org'
+        release: 'https://archive.mozilla.org'
+        dep: 'https://ftp.stage.mozaws.net'
+      'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
+        dep: 'https://ftp.stage.mozaws.net'
+        nightly: 'https://ftp.stage.mozaws.net'
+        release: 'https://ftp.stage.mozaws.net'
+      'COT_PRODUCT == "mobile" && ENV == "prod"':
+        nightly: 'https://archive.mozilla.org'
+        release: 'https://archive.mozilla.org'
+      'COT_PRODUCT == "mozillavpn" && (ENV == "dev" || ENV == "fake-prod")':
+        dep: 'https://ftp.stage.mozaws.net'
+      'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
+        release: 'https://archive.mozilla.org'
 
 clouds:
   gcloud:

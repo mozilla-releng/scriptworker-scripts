@@ -132,7 +132,7 @@ async def push_to_releases_gcs(context):
                     get_partner_candidates_prefix(candidates_prefix, partner_match), get_partner_releases_prefix(product, version, partner_match)
                 )
             else:
-                log.debug("Excluding partner repack {}".format(k))
+                log.debug("Excluding partner repack {}".format(blob_path))
         elif not matches_exclude(blob_path, RELEASE_EXCLUDE):
             blobs_to_copy[blob_path] = blob_path.replace(candidates_prefix, releases_prefix)
         else:

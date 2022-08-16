@@ -2,11 +2,12 @@
     "title": "beetmoverscript config schema",
     "type": "object",
     "required": [
+        "aiohttp_max_connections",
+        "clouds",
         "checksums_digests",
         "taskcluster_scope_prefixes",
-        "aiohttp_max_connections",
-        "zip_max_file_size_in_mb",
-        "clouds"
+        "url_prefix",
+        "zip_max_file_size_in_mb"
     ],
     "properties": {
         "checksums_digests": {
@@ -30,6 +31,13 @@
         "zip_max_file_size_in_mb": {
             "type": "number"
         },
+        "url_prefix": {
+            "type": "object",
+            "description": "Map of release type (dep, nightly, release, etc) to url_prefix",
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
         "clouds": {
             "type": "object",
             "additionalProperties": {
@@ -51,9 +59,6 @@
                     },
                     "fail_task_on_error": {
                         "type": "boolean"
-                    },
-                    "url_prefix": {
-                        "type": "string"
                     }
                 }
             }
