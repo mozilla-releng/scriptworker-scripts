@@ -11,9 +11,20 @@ from google.auth.exceptions import DefaultCredentialsError
 from google.cloud.storage import Bucket, Client
 from scriptworker.exceptions import ScriptWorkerTaskException
 
-from beetmoverscript.constants import CACHE_CONTROL_MAXAGE
+from beetmoverscript.constants import CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE
 from beetmoverscript.task import get_release_props
-from beetmoverscript.utils import get_bucket_name, get_credentials, get_fail_task_on_error, get_product_name
+from beetmoverscript.utils import (
+    get_bucket_name,
+    get_candidates_prefix,
+    get_credentials,
+    get_fail_task_on_error,
+    get_partner_candidates_prefix,
+    get_partner_match,
+    get_partner_releases_prefix,
+    get_product_name,
+    get_releases_prefix,
+    matches_exclude,
+)
 
 log = logging.getLogger(__name__)
 
@@ -88,3 +99,65 @@ async def upload_to_gcs(context, target_path, path):
     blob.cache_control = "public, max-age=%d" % CACHE_CONTROL_MAXAGE
 
     return blob.upload_from_filename(path, content_type=mime_type)
+
+
+# TODO: Below are WIP methods (not called in script.py yet)
+async def push_to_releases_gcs(context):
+    product = context.task["payload"]["product"]
+    build_number = context.task["payload"]["build_number"]
+    version = context.task["payload"]["version"]
+    context.bucket_name = get_bucket_name(context, product, "gcloud")
+
+    candidates_prefix = get_candidates_prefix(product, version, build_number)
+    releases_prefix = get_releases_prefix(product, version)
+
+    candidates_blobs = list_bucket_objects_gcs(context.client, context.bucket_name, candidates_prefix)
+    releases_blobs = list_bucket_objects_gcs(context.client, context.bucket_name, releases_prefix)
+
+    if not candidates_blobs:
+        raise ScriptWorkerTaskException("No artifacts to copy from {} so there is no reason to continue.".format(candidates_prefix))
+
+    if releases_blobs:
+        log.warning("Destination {} already exists with {} keys".format(releases_prefix, len(releases_blobs)))
+
+    blobs_to_copy = {}
+
+    # Weed out RELEASE_EXCLUDE matches, but allow partners specified in the payload
+    push_partners = context.task["payload"].get("partners", [])
+    for blob_path in candidates_blobs.keys():
+        if "/partner-repacks/" in blob_path:
+            partner_match = get_partner_match(blob_path, candidates_prefix, push_partners)
+            if partner_match:
+                blobs_to_copy[blob_path] = blob_path.replace(
+                    get_partner_candidates_prefix(candidates_prefix, partner_match), get_partner_releases_prefix(product, version, partner_match)
+                )
+            else:
+                log.debug("Excluding partner repack {}".format(k))
+        elif not matches_exclude(blob_path, RELEASE_EXCLUDE):
+            blobs_to_copy[blob_path] = blob_path.replace(candidates_prefix, releases_prefix)
+        else:
+            log.debug("Excluding {}".format(blob_path))
+
+    move_artifacts(context.client, context.bucket_name, blobs_to_copy, candidates_blobs, releases_blobs)
+
+
+def list_bucket_objects_gcs(client, bucket, prefix):
+    return {b.name: b.md5_hash for b in list(client.list_blobs(bucket, prefix=prefix))}
+
+
+def move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, releases_blobs):
+    bucket = Bucket(client, bucket_name)
+    for source, destination in blobs_to_copy.items():
+        if destination in releases_blobs:
+            # compare md5
+            if candidates_blobs[source] != releases_blobs[destination]:
+                raise ScriptWorkerTaskException(
+                    "{} already exists with different content "
+                    "(src etag: {}, dest etag: {}), aborting".format(destination, candidates_blobs[source], releases_blobs[destination])
+                )
+            else:
+                log.warning("{} already exists with the same content ({}), " "skipping copy".format(destination, releases_blobs[destination]))
+        else:
+            log.info("Copying {} to {}".format(source, destination))
+            source_blob = bucket.blob(source)
+            bucket.copy_blob(source_blob, bucket, destination)
