@@ -6,9 +6,8 @@ from google.auth.exceptions import DefaultCredentialsError
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 import beetmoverscript.gcloud
-import logging
 
-from . import noop_sync, get_fake_valid_task
+from . import get_fake_valid_task, noop_sync
 
 
 class FakeClient:
@@ -35,7 +34,6 @@ class FakeClient:
             self.name = name
 
         def exists(self):
-            logging.getLogger(__name__).warning(self.name)
             return self.name == self.FAKE_BUCKET_NAME
 
         def blob(*args):

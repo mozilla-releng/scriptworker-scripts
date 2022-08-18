@@ -448,7 +448,7 @@ async def move_beet(context, source, destinations, locale, update_balrog_manifes
 
     if update_balrog_manifest:
         context.raw_balrog_manifest.setdefault(locale, {})
-        balrog_info = generate_balrog_info(context, artifact_pretty_name, locale, destinations, from_buildid)
+        balrog_info = generate_balrog_info(context, artifact_pretty_name, destinations, from_buildid)
         if from_buildid:
             context.raw_balrog_manifest[locale].setdefault("partialInfo", []).append(balrog_info)
         else:
@@ -563,11 +563,11 @@ def generate_system_addons_balrog_manifest(context):
 
 
 # generate_balrog_info {{{1
-def generate_balrog_info(context, artifact_pretty_name, locale, destinations, from_buildid=None):
+def generate_balrog_info(context, artifact_pretty_name, destinations, from_buildid=None):
     release_props = context.release_props
     checksums = context.checksums
 
-    url = "{prefix}/{s3_key}".format(prefix=get_url_prefix(context), s3_key=destinations[0])
+    url = "{prefix}/{path}".format(prefix=get_url_prefix(context), path=destinations[0])
 
     data = {"hash": checksums[artifact_pretty_name][release_props["hashType"]], "size": checksums[artifact_pretty_name]["size"], "url": url}
     if from_buildid:
