@@ -174,6 +174,8 @@ def _update_submission(config, channel, session, submission_request, headers, fi
     if publish_mode:
         submission_request["targetPublishMode"] = publish_mode
         log.info(f"using targetPublishMode override: {publish_mode}")
+    else:
+        log.info("using existing targetPublishMode (task publishMode not specified)")
     for package in submission_request.get("applicationPackages"):
         package["fileStatus"] = "PendingDelete"
     # "Upload file names" are file names specified in the submission request.
