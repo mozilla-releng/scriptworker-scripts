@@ -12,7 +12,6 @@ from google.cloud.storage import Bucket, Client
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from beetmoverscript.constants import CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE
-from beetmoverscript.task import get_release_props
 from beetmoverscript.utils import (
     get_bucket_name,
     get_candidates_prefix,
@@ -39,16 +38,13 @@ def setup_gcloud(context):
     gcs_creds = get_credentials(context, "gcloud")
     if type(gcs_creds) is str and len(gcs_creds) > 0:
         setup_gcs_credentials(gcs_creds)
-        # TODO: maybe we should load release_props in async_main instead of each action?
-        #   Needed for bucket lookup
-        context.release_props = get_release_props(context)
         set_gcs_client(context)
     else:
         log.info("No GCS credentials found, skipping")
 
 
 def set_gcs_client(context):
-    product = get_product_name(context.release_props["appName"].lower(), context.release_props["stage_platform"])
+    product = get_product_name(context.task, context.config)
 
     def handle_exception(e):
         if get_fail_task_on_error(context, "gcloud"):
@@ -87,7 +83,7 @@ def setup_gcs_credentials(raw_creds):
 
 
 async def upload_to_gcs(context, target_path, path):
-    product = get_product_name(context.release_props["appName"].lower(), context.release_props["stage_platform"])
+    product = get_product_name(context.task, context.config)
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
         raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
@@ -101,18 +97,18 @@ async def upload_to_gcs(context, target_path, path):
     return blob.upload_from_filename(path, content_type=mime_type)
 
 
-# TODO: Below are WIP methods (not called in script.py yet)
 async def push_to_releases_gcs(context):
     product = context.task["payload"]["product"]
     build_number = context.task["payload"]["build_number"]
     version = context.task["payload"]["version"]
-    context.bucket_name = get_bucket_name(context, product, "gcloud")
+    bucket_name = get_bucket_name(context, product, "gcloud")
+    client = context.gcs_client
 
     candidates_prefix = get_candidates_prefix(product, version, build_number)
     releases_prefix = get_releases_prefix(product, version)
 
-    candidates_blobs = list_bucket_objects_gcs(context.client, context.bucket_name, candidates_prefix)
-    releases_blobs = list_bucket_objects_gcs(context.client, context.bucket_name, releases_prefix)
+    candidates_blobs = list_bucket_objects_gcs(client, bucket_name, candidates_prefix)
+    releases_blobs = list_bucket_objects_gcs(client, bucket_name, releases_prefix)
 
     if not candidates_blobs:
         raise ScriptWorkerTaskException("No artifacts to copy from {} so there is no reason to continue.".format(candidates_prefix))
@@ -138,7 +134,7 @@ async def push_to_releases_gcs(context):
         else:
             log.debug("Excluding {}".format(blob_path))
 
-    move_artifacts(context.client, context.bucket_name, blobs_to_copy, candidates_blobs, releases_blobs)
+    move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, releases_blobs)
 
 
 def list_bucket_objects_gcs(client, bucket, prefix):
