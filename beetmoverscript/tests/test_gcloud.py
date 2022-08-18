@@ -6,25 +6,51 @@ from google.auth.exceptions import DefaultCredentialsError
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 import beetmoverscript.gcloud
+import logging
 
-from . import noop_sync
+from . import noop_sync, get_fake_valid_task
 
 
 class FakeClient:
+    class FakeBlob:
+        PATH = "/foo.zip"
+
+        content_type = ""
+        cache_control = ""
+        name = "fakename"
+        md5_hash = "fakemd5hash"
+
+        def copy_blob(*args):
+            pass
+
+        def upload_from_filename(self, path, content_type):
+            assert path == self.PATH
+            assert content_type == "application/zip"
+
     class FakeBucket:
-        def __init__(self, name):
+        FAKE_BUCKET_NAME = "existingbucket"
+
+        def __init__(self, client, name, *args):
+            self.client = client
             self.name = name
 
         def exists(self):
-            return self.name == "existingbucket"
+            logging.getLogger(__name__).warning(self.name)
+            return self.name == self.FAKE_BUCKET_NAME
+
+        def blob(*args):
+            return FakeClient.FakeBlob()
+
+        def copy_blob(*args):
+            pass
 
     def bucket(self, bucket_name):
-        return self.FakeBucket(bucket_name)
+        return self.FakeBucket(self, bucket_name)
 
-
-@pytest.fixture(scope="function")
-def mock_gcs(monkeypatch):
-    monkeypatch.setattr(beetmoverscript.gcloud, "Client", FakeClient)
+    def list_blobs(self, bucket, prefix):
+        blob = self.FakeBlob()
+        blob.name = f"{prefix}/{blob.name}"
+        return [blob, blob, blob]
 
 
 def test_cleanup_gcloud(monkeypatch, context):
@@ -49,12 +75,18 @@ def test_setup_gcloud(monkeypatch, context):
     beetmoverscript.gcloud.setup_gcloud(context)
 
 
-def test_set_gcs_client(context, mock_gcs, monkeypatch):
-    # Bucket won't exist by default
+@pytest.mark.parametrize(
+    "bucket_name,client_set",
+    [
+        (FakeClient.FakeBucket.FAKE_BUCKET_NAME, True),
+        ("nopebucket", False),
+    ],
+)
+def test_set_gcs_client(context, monkeypatch, bucket_name, client_set):
+    monkeypatch.setattr(beetmoverscript.gcloud, "Client", FakeClient)
+    monkeypatch.setattr(beetmoverscript.gcloud, "get_bucket_name", lambda *x: bucket_name)
     beetmoverscript.gcloud.set_gcs_client(context)
-
-    monkeypatch.setattr(beetmoverscript.gcloud, "get_bucket_name", lambda *x: "existingbucket")
-    beetmoverscript.gcloud.set_gcs_client(context)
+    assert hasattr(context, "gcs_client") == client_set
 
 
 @pytest.mark.parametrize("exception", (Forbidden, DefaultCredentialsError, Exception))
@@ -103,25 +135,43 @@ async def test_upload_to_gcs_fail(context):
 
 @pytest.mark.asyncio
 async def test_upload_to_gcs(context, monkeypatch):
-    TARGET_PATH = "/target_path"
-    PATH = "/hello.zip"
-
-    class FakeBucket:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        class FakeBlob:
-            content_type = ""
-            cache_control = ""
-
-            def upload_from_filename(self, path, content_type):
-                assert path == PATH
-                assert content_type == "application/zip"
-
-        def blob(self, path):
-            assert path == TARGET_PATH
-            return self.FakeBlob()
-
     context.gcs_client = "FakeClient"
-    monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeBucket)
-    await beetmoverscript.gcloud.upload_to_gcs(context, TARGET_PATH, PATH)
+    monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeClient.FakeBucket)
+    await beetmoverscript.gcloud.upload_to_gcs(context, "path/target", FakeClient.FakeBlob.PATH)
+
+
+@pytest.mark.parametrize(
+    "candidate_blobs,release_blobs,partner_match,raises",
+    [
+        ({"foo/path": "md5hash"}, {"foo/path": "md5hash"}, None, False),
+        ({"foo/path": "md5hash"}, {"foo/path": "oopsie"}, None, True),
+        ({"foo/path": "md5hash"}, {}, None, False),
+        ({"foo/tests/foo": "md5hash"}, {}, None, False),
+        ({"foo/partner-repacks/bar": "md5hash"}, {}, None, False),
+        ({"foo/partner-repacks/bar": "md5hash"}, {}, True, False),
+        ({}, {}, None, True),
+    ],
+)
+@pytest.mark.asyncio
+async def test_push_to_releases_gcs_no_moves(context, monkeypatch, candidate_blobs, release_blobs, partner_match, raises):
+    def fake_list_bucket_objects_gcs_same(client, bucket, prefix):
+        if "candidates" in prefix:
+            return {f"{prefix}{key}": value for (key, value) in candidate_blobs.items()}
+        if "releases" in prefix:
+            return {f"{prefix}{key}": value for (key, value) in release_blobs.items()}
+
+    context.gcs_client = FakeClient()
+    context.task = get_fake_valid_task("task_push_to_releases.json")
+    monkeypatch.setattr(beetmoverscript.gcloud, "list_bucket_objects_gcs", fake_list_bucket_objects_gcs_same)
+    monkeypatch.setattr(beetmoverscript.gcloud, "get_partner_match", lambda *x: partner_match)
+    monkeypatch.setattr(beetmoverscript.gcloud, "get_partner_candidates_prefix", lambda *x: "fake_prefix")
+    monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeClient.FakeBucket)
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            await beetmoverscript.gcloud.push_to_releases_gcs(context)
+    else:
+        await beetmoverscript.gcloud.push_to_releases_gcs(context)
+
+
+def test_list_bucket_objects_gcs():
+    beetmoverscript.gcloud.list_bucket_objects_gcs(FakeClient(), "foobucket", "prefix")
