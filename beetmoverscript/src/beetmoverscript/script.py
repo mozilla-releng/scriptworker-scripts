@@ -15,7 +15,7 @@ from botocore.exceptions import ClientError
 from redo import retry
 from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerRetryException, ScriptWorkerTaskException
-from scriptworker.utils import get_results_and_future_exceptions, raise_future_exceptions, retry_async
+from scriptworker.utils import raise_future_exceptions, retry_async
 
 from beetmoverscript import task
 from beetmoverscript.constants import (
@@ -43,6 +43,7 @@ from beetmoverscript.task import (
     validate_task_schema,
 )
 from beetmoverscript.utils import (
+    await_and_raise_uploads,
     exists_or_endswith,
     extract_file_config_from_artifact_map,
     generate_beetmover_manifest,
@@ -50,7 +51,6 @@ from beetmoverscript.utils import (
     get_bucket_name,
     get_candidates_prefix,
     get_credentials,
-    get_fail_task_on_error,
     get_hash,
     get_partials_props,
     get_partner_candidates_prefix,
@@ -458,13 +458,20 @@ async def move_beet(context, source, destinations, locale, update_balrog_manifes
 # move_partner_beets {{{1
 async def move_partner_beets(context, manifest):
     artifacts_to_beetmove = context.artifacts_to_beetmove
-    beets = []
+    cloud_uploads = {key: [] for key in context.config["clouds"]}
 
     for locale in artifacts_to_beetmove:
         for full_path_artifact in artifacts_to_beetmove[locale]:
             source = artifacts_to_beetmove[locale][full_path_artifact]
             destination = get_destination_for_partner_repack_path(context, manifest, full_path_artifact, locale)
-            beets.append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=destination, path=source)))
+
+            # S3 upload
+            if context.config["clouds"]["aws"][context.bucket]["enabled"]:
+                cloud_uploads["aws"].append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=destination, path=source)))
+
+            # GCS upload
+            if context.config["clouds"]["gcloud"][context.bucket]["enabled"]:
+                cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=destination, path=source)))
 
             if is_partner_public_task(context):
                 # we trim the full destination to the part after
@@ -474,7 +481,7 @@ async def move_partner_beets(context, manifest):
                     context.checksums[artifact_pretty_name] = {algo: get_hash(source, algo) for algo in context.config["checksums_digests"]}
                     context.checksums[artifact_pretty_name]["size"] = get_size(source)
 
-    await raise_future_exceptions(beets)
+    await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.bucket)
 
 
 def sanity_check_partner_path(path, repl_dict, regexes):
@@ -609,10 +616,7 @@ def enrich_balrog_manifest(context, locale):
 # retry_upload {{{1
 async def retry_upload(context, destinations, path):
     """Manage upload of `path` to `destinations`."""
-    cloud_uploads = {
-        "aws": [],
-        "gcloud": [],
-    }
+    cloud_uploads = {key: [] for key in context.config["clouds"]}
 
     # TODO: There's a "bug" where if you define
     #  "gcloud.release" but not "aws.release", the context.bucket will fail here
@@ -626,18 +630,7 @@ async def retry_upload(context, destinations, path):
         if context.config["clouds"]["gcloud"][context.bucket]["enabled"]:
             cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path)))
 
-    for cloud in cloud_uploads:
-        if len(cloud_uploads[cloud]) == 0:
-            continue
-        if get_fail_task_on_error(context, cloud):
-            await raise_future_exceptions(cloud_uploads[cloud])
-        else:
-            _, ex = await get_results_and_future_exceptions(cloud_uploads[cloud])
-            # Print out the exceptions
-            for e in ex:
-                log.warning("Skipped exception:")
-                print(e.__traceback__)
-                print(e.message)
+    await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.bucket)
 
 
 # put {{{1

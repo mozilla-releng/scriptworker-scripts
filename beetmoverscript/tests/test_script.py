@@ -496,6 +496,7 @@ async def test_move_partner_beets(context, mocker):
 
     mocker.patch.object(beetmoverscript.script, "get_destination_for_partner_repack_path", new=noop_sync)
     mocker.patch.object(beetmoverscript.script, "upload_to_s3", new=noop_async)
+    mocker.patch.object(beetmoverscript.script, "upload_to_gcs", new=noop_async)
     await move_partner_beets(context, mapping_manifest)
 
 

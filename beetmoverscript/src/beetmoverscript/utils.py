@@ -12,6 +12,7 @@ import arrow
 import jinja2
 import yaml
 from scriptworker.exceptions import TaskVerificationError
+from scriptworker.utils import get_results_and_future_exceptions, raise_future_exceptions
 
 from beetmoverscript.constants import (
     DIRECT_RELEASE_ACTIONS,
@@ -54,6 +55,8 @@ class BadXPIFile(Exception):
 
 
 def get_addon_data(filepath):
+    name = None
+    version = None
     tmpdir = tempfile.mkdtemp()
     with zipfile.ZipFile(filepath, "r") as zf:
         zf.extractall(tmpdir)
@@ -318,8 +321,23 @@ def get_bucket_name(context, product, cloud):
     return context.config["clouds"][cloud][context.bucket]["product_buckets"][product.lower()]
 
 
-def get_fail_task_on_error(context, cloud):
-    return context.config["clouds"][cloud][context.bucket].get("fail_task_on_error")
+def get_fail_task_on_error(clouds_config, release_bucket, cloud):
+    return clouds_config[cloud][release_bucket].get("fail_task_on_error")
+
+
+async def await_and_raise_uploads(cloud_uploads, clouds_config, release_bucket):
+    for cloud in cloud_uploads:
+        if len(cloud_uploads[cloud]) == 0:
+            continue
+        if get_fail_task_on_error(clouds_config, release_bucket, cloud):
+            await raise_future_exceptions(cloud_uploads[cloud])
+        else:
+            _, ex = await get_results_and_future_exceptions(cloud_uploads[cloud])
+            # Print out the exceptions
+            for e in ex:
+                log.warning("Skipped exception:")
+                print(e.__traceback__)
+                print(getattr(e, "message", "<no message>"))
 
 
 def get_credentials(context, cloud):
