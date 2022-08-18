@@ -73,7 +73,7 @@
       "parent": "VIWyOqTaQZKWo5Fuj0MgaQ"
   },
   "tags": {
-    "createdForUser": "jcristau@mozilla.com",
+    "createdForUser": "fake@email.com",
     "kind": "beetmover-repackage",
     "label": "beetmover-repackage-ach-linux-nightly/opt"
   }

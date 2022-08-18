@@ -138,7 +138,7 @@ async def push_to_releases_gcs(context):
 
 
 def list_bucket_objects_gcs(client, bucket, prefix):
-    return {b.name: b.md5_hash for b in list(client.list_blobs(bucket, prefix=prefix))}
+    return {blob.name: blob.md5_hash for blob in list(client.list_blobs(bucket, prefix=prefix))}
 
 
 def move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, releases_blobs):
