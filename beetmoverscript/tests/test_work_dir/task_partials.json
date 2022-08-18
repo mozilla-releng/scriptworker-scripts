@@ -39,6 +39,14 @@
           "locale": "en-US",
           "taskType": "build"
         }
-      ]
+      ],
+        "releaseProperties": {
+          "branch": "mozilla-central",
+          "appName": "Fake",
+          "buildid": "20220817190533",
+          "hashType": "sha512",
+          "platform": "linux",
+          "appVersion": "105.0a1"
+        }
     }
 }

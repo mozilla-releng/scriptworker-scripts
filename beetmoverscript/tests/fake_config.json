@@ -6,7 +6,8 @@
     "checksums_digests": ["sha512", "sha256"],
     "verbose": true,
     "url_prefix": {
-        "nightly": "https://archive.test"
+        "nightly": "https://archive.test",
+        "fake": "https://archive.test"
     },
     "clouds": {
         "gcloud": {

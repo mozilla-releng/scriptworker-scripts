@@ -259,18 +259,18 @@ def test_get_release_props(context, mocker, taskjson, locale, relprops, expected
         context.task["payload"]["locale"] = "lang"
 
     context.task["payload"]["releaseProperties"] = relprops
-    assert get_release_props(context) == expected
+    assert get_release_props(context.task) == expected
 
     context.task["payload"]["releaseProperties"] = None
     with pytest.raises(ScriptWorkerTaskException):
-        get_release_props(context)
+        get_release_props(context.task)
 
 
 # get_release_props {{{1
 def test_get_release_props_raises(context, mocker):
     context.task = get_fake_valid_task(taskjson="task_missing_relprops.json")
     with pytest.raises(ScriptWorkerTaskException):
-        get_release_props(context)
+        get_release_props(context.task)
 
 
 # is_custom_beetmover_checksums_task {{{1

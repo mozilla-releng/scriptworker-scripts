@@ -2,7 +2,6 @@ import logging
 import os
 import re
 import urllib.parse
-from copy import deepcopy
 
 import arrow
 from mozilla_version.errors import PatternNotMatchedError
@@ -79,7 +78,7 @@ def get_task_bucket(task, script_config):
         messages.append("Bucket {} is malformed".format(bucket))
 
     if bucket not in {*script_config["clouds"]["aws"].keys(), *script_config["clouds"]["gcloud"].keys()}:
-        messages.append("Invalid bucket scope")
+        messages.append(f"Invalid bucket scope: {bucket}")
 
     if messages:
         raise ScriptWorkerTaskException("\n".join(messages))
@@ -185,28 +184,21 @@ def get_upstream_artifacts(context, preserve_full_paths=False):
     return artifacts
 
 
-def get_release_props(context, platform_mapping=STAGE_PLATFORM_MAP):
+def get_release_props(task, platform_mapping=STAGE_PLATFORM_MAP):
     """determined via parsing the Nightly build job's payload and
     expanded the properties with props beetmover knows about."""
-    payload_properties = context.task.get("payload", {}).get("releaseProperties", None)
+    payload_properties = task.get("payload", {}).get("releaseProperties", None)
 
     if not payload_properties:
         raise ScriptWorkerTaskException("could not determine release props file from task payload")
 
     log.debug("Loading release_props from task's payload: {}".format(payload_properties))
-    return update_props(context, payload_properties, platform_mapping)
 
-
-def update_props(context, props, platform_mapping):
-    """Function to alter slightly the `platform` value and to enrich context with
-    `stage_platform` as we need both in the beetmover template manifests."""
-    props = deepcopy(props)
-
-    stage_platform = props.get("platform", "")
+    stage_platform = payload_properties.get("platform", "")
     # for some products/platforms this mapping is not needed, hence the default
-    props["platform"] = platform_mapping.get(stage_platform, stage_platform)
-    props["stage_platform"] = stage_platform
-    return props
+    payload_properties["platform"] = platform_mapping.get(stage_platform, stage_platform)
+    payload_properties["stage_platform"] = stage_platform
+    return payload_properties
 
 
 def get_updated_buildhub_artifact(path, installer_artifact, installer_path, context, locale, manifest=None, artifact_map=None):

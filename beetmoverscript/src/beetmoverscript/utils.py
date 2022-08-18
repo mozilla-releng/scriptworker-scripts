@@ -146,23 +146,38 @@ def is_partner_public_task(context):
     return is_partner_action(context.action) and "partner" not in context.bucket
 
 
-def get_product_name(appName, platform):
-    if "devedition" in platform:
-        # XXX: this check is helps reuse this function in both
-        # returning the proper templates file but also for the release name in
-        # Balrog manifest that beetmover is uploading upon successful run
-        if appName[0].isupper():
-            return "Devedition"
-        else:
-            return "devedition"
-    if "pinebuild" in platform:
-        # XXX: this check is helps reuse this function in both
-        # returning the proper templates file but also for the release name in
-        # Balrog manifest that beetmover is uploading upon successful run
-        if appName[0].isupper():
-            return "Pinebuild"
-        else:
-            return "pinebuild"
+def get_product_name(task, config, lowercase_app_name=True):
+    # importing in-function to avoid circular dependency problems
+    from beetmoverscript.task import get_release_props, get_task_action
+
+    action = get_task_action(task, config)
+
+    if action == "push-to-releases":
+        if "product" not in task["payload"]:
+            raise ValueError("product not found in task payload.")
+        return task["payload"]["product"].lower()
+
+    if "releaseProperties" not in task["payload"]:
+        raise ValueError("releaseProperties not found in task payload.")
+
+    if "appName" not in task["payload"]["releaseProperties"]:
+        raise ValueError("appName not found in task payload.")
+
+    release_props = get_release_props(task)
+    appName = task["payload"]["releaseProperties"]["appName"]
+    if lowercase_app_name:
+        appName = appName.lower()
+
+    # XXX: this check is helps reuse this function in both
+    # returning the proper templates file but also for the release name in
+    # Balrog manifest that beetmover is uploading upon successful run
+    for dynamic_platform in ("devedition", "pinebuild"):
+        if dynamic_platform in release_props["stage_platform"]:
+            if appName[0].isupper():
+                return dynamic_platform.capitalize()
+            else:
+                return dynamic_platform
+
     return appName
 
 
@@ -210,7 +225,7 @@ def generate_beetmover_template_args(context):
     elif "locale" in task["payload"]:
         tmpl_args["locales"] = [task["payload"]["locale"]]
 
-    product_name = get_product_name(release_props["appName"].lower(), release_props["stage_platform"])
+    product_name = get_product_name(task, context.config)
     if tmpl_args.get("locales") and (
         # we only apply the repacks template if not english or android "multi" locale
         set(tmpl_args.get("locales")).isdisjoint({"en-US", "multi"})
@@ -300,7 +315,7 @@ def get_partner_match(keyname, candidates_prefix, partners):
 
 
 def get_bucket_name(context, product, cloud):
-    return context.config["clouds"][cloud][context.bucket]["product_buckets"][product]
+    return context.config["clouds"][cloud][context.bucket]["product_buckets"][product.lower()]
 
 
 def get_fail_task_on_error(context, cloud):
