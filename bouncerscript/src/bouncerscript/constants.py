@@ -5,9 +5,6 @@ ALIASES_REGEXES = {
     "thunderbird-latest": r"^Thunderbird-\d+\.\d+(\.\d+)?$",
     "thunderbird-latest-ssl": r"^Thunderbird-\d+\.\d+(\.\d+)?-SSL$",
     "thunderbird-msi-latest-ssl": r"^Thunderbird-\d+\.\d+(\.\d+)?-msi-SSL$",
-    # TODO Use mozilla-version
-    "fennec-beta-latest": r"^Fennec-\d+\.\d+b\d+$",
-    "fennec-latest": r"^Fennec-\d+\.\d+(\.\d+)?$",
     "firefox-devedition-stub": r"^Devedition-\d+\.0b\d+-stub$",
     "firefox-devedition-latest": r"^Devedition-\d+\.0b\d+$",
     "firefox-devedition-latest-ssl": r"^Devedition-\d+\.0b\d+-SSL$",
@@ -54,7 +51,6 @@ PARTNER_ALIASES_REGEX = {
 }
 
 PRODUCT_TO_DESTINATIONS_REGEXES = {
-    "fennec": r"^(/mobile/releases/.*?/(?:android-api-16|android-x86)/\:lang/fennec-.*\:lang\.(?:android-arm|android-i386)\.apk)$",
     "firefox-rc": r"^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$",
     "firefox": (
         r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix|pkg))$"
@@ -105,10 +101,6 @@ _BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT_WITH_MSIX = {
     "firefox-nightly-msix-latest-ssl": (r"^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.multi\." r"(?:(win32|win64)\.installer\.msix)$"),
 }
 
-_BOUNCER_PATH_REGEXES_PER_PRODUCT_FENNEC = {
-    "fennec-nightly-latest": (r"^(/mobile/nightly/latest-mozilla-esr\d+-(?:android-api-16|android-x86)/fennec-\d+\.\d+a1\.:lang\.(?:android-arm|android-i386)\.apk)$")
-}
-
 _BOUNCER_PATH_REGEXES_PRODUCT_THUNDERBIRD = {
     "thunderbird-nightly-latest": (
         r"^(/thunderbird/nightly/latest-comm-central/thunderbird-\d+\.0a1\.en-US\."
@@ -141,14 +133,12 @@ BOUNCER_PATH_REGEXES_PER_PRODUCT = [
     _BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT,
     _BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT,
     _BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT_WITH_MSIX,
-    _BOUNCER_PATH_REGEXES_PER_PRODUCT_FENNEC,
     _BOUNCER_PATH_REGEXES_PRODUCT_THUNDERBIRD,
 ]
 
 # XXX A list of tuple is used because we care about the order:
 # the firefox regex also matches the firefox-rc regex.
 PRODUCT_TO_PRODUCT_ENTRY = [
-    ("fennec", r"^Fennec-.*$"),
     ("firefox-rc", r"^Firefox-.*build[0-9]+-.*$"),
     ("firefox", r"^Firefox-.*$"),
     ("devedition", r"^Devedition-.*$"),

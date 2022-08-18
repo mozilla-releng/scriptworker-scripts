@@ -154,8 +154,6 @@ def check_versions_are_successive(current_version, payload_version, product):
             err_msg = "In-tree version {} can't be greater than current bouncer {} by more than 1 digit".format(payload_version, current_version)
             raise ScriptWorkerTaskException(err_msg)
 
-    # XXX: for Firefox central nightlies we need to handle the major number
-    # while for Fennec nightlies on ESR we need to handle minor_number
     if product in version_map:
         current_bouncer_version = version_map[product].parse(current_version)
         candidate_version = version_map[product].parse(payload_version)
