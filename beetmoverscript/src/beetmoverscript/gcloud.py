@@ -47,7 +47,7 @@ def set_gcs_client(context):
     product = get_product_name(context.task, context.config)
 
     def handle_exception(e):
-        if get_fail_task_on_error(context, "gcloud"):
+        if get_fail_task_on_error(context.config["clouds"], context.bucket, "gcloud"):
             raise e
         log.error(e)
 
