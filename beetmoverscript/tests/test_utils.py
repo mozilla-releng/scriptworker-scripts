@@ -137,7 +137,6 @@ def test_beetmover_template_args_generation(context, taskjson, partials):
         "partials": partials,
         "locales": ["en-US"],
     }
-
     template_args = generate_beetmover_template_args(context)
     assert template_args == expected_template_args
 
@@ -171,6 +170,7 @@ def test_beetmover_template_args_generation(context, taskjson, partials):
 )
 def test_beetmover_template_args_locales(context, payload, expected_locales):
     context.task = get_fake_valid_task("task_partials.json")
+    payload["releaseProperties"] = context.task["payload"]["releaseProperties"]
     context.task["payload"] = payload
     context.task["payload"]["upload_date"] = "2018/04/2018-04-09-15-30-00"
 
@@ -181,15 +181,6 @@ def test_beetmover_template_args_locales(context, payload, expected_locales):
     else:
         assert "locale" not in template_args
         assert "locales" not in template_args
-
-
-def test_beetmover_template_args_fennec_nightly(context):
-    """Ensure that fennec which is en-US and multi don't get the repack template"""
-    context.task = get_fake_valid_task("task_fennec.json")
-    template_args = generate_beetmover_template_args(context)
-    assert "locale" not in template_args
-    assert template_args["locales"] == ["en-US", "multi"]
-    assert template_args["template_key"] == "fake_nightly"
 
 
 def test_beetmover_template_args_generation_release(context):
@@ -313,7 +304,7 @@ def test_get_partner_match(keyname, partners, expected):
 
 # product_name {{{1
 @pytest.mark.parametrize(
-    "appName,tmpl_key,expected",
+    "appName,stage_platform,expected",
     (
         ("firefox", "dummy", "firefox"),
         ("firefox", "devedition", "devedition"),
@@ -325,8 +316,10 @@ def test_get_partner_match(keyname, partners, expected):
         ("pinebuild", "pinebuild", "pinebuild"),
     ),
 )
-def test_get_product_name(appName, tmpl_key, expected):
-    assert get_product_name(appName, tmpl_key) == expected
+def test_get_product_name(context, appName, stage_platform, expected):
+    context.task["payload"]["releaseProperties"]["appName"] = appName
+    context.task["payload"]["releaseProperties"]["platform"] = stage_platform
+    assert get_product_name(context.task, context.config, lowercase_app_name=False) == expected
 
 
 # is_partner_private_public_task {{{1

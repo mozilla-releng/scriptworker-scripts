@@ -94,6 +94,7 @@ def get_paths_for_task(task):
 def gcloud_client_mock(monkeypatch):
     monkeypatch.setattr(beetmoverscript.script, "setup_gcloud", noop_sync)
     monkeypatch.setattr(beetmoverscript.script, "upload_to_gcs", noop_async)
+    monkeypatch.setattr(beetmoverscript.script, "push_to_releases_gcs", noop_async)
 
 
 @pytest.fixture

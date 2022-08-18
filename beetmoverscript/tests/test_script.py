@@ -490,7 +490,7 @@ async def test_move_beet(update_manifest, action):
 @pytest.mark.asyncio
 async def test_move_partner_beets(context, mocker):
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
-    context.release_props = get_release_props(context)
+    context.release_props = get_release_props(context.task)
     mocker.patch("beetmoverscript.utils.JINJA_ENV", get_test_jinja_env())
     mapping_manifest = generate_beetmover_manifest(context)
 
@@ -543,7 +543,7 @@ def test_get_destination_for_partner_repack_path(context, full_path, expected, b
     for artifact_dict in context.task["payload"]["upstreamArtifacts"]:
         artifact_dict["locale"] = locale
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
-    context.release_props = get_release_props(context)
+    context.release_props = get_release_props(context.task)
     mapping_manifest = generate_beetmover_manifest(context)
 
     if raises:

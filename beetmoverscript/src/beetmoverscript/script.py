@@ -30,7 +30,7 @@ from beetmoverscript.constants import (
     RELEASE_BRANCHES,
     RELEASE_EXCLUDE,
 )
-from beetmoverscript.gcloud import cleanup_gcloud, setup_gcloud, upload_to_gcs
+from beetmoverscript.gcloud import cleanup_gcloud, push_to_releases_gcs, setup_gcloud, upload_to_gcs
 from beetmoverscript.task import (
     add_balrog_manifest_to_artifacts,
     add_checksums_to_artifacts,
@@ -77,7 +77,7 @@ async def push_to_system_addons(context):
     """Push artifacts to pub/system-addons
     Upon successful transfer, generate checksums files and manifests to be
     consumed downstream by balrogworkers."""
-    context.release_props = get_release_props(context)
+    context.release_props = get_release_props(context.task)
     context.balrog_manifest = list()
     context.raw_balrog_manifest = dict()
     context.checksums = dict()
@@ -100,7 +100,7 @@ async def push_to_nightly(context):
 
     Upon successful transfer, generate checksums files and manifests to be
     consumed downstream by balrogworkers."""
-    context.release_props = get_release_props(context)
+    context.release_props = get_release_props(context.task)
 
     # balrog_manifest is written and uploaded as an artifact which is used by
     # a subsequent balrogworker task in the release graph. Balrogworker uses
@@ -143,7 +143,7 @@ async def direct_push_to_bucket(context):
     Determine the list of artifacts to be transferred, generate the
     mapping manifest, run some data validations, and upload the bits.
     """
-    context.release_props = get_release_props(context)
+    context.release_props = get_release_props(context.task)
     context.checksums = dict()  # Needed by downstream calls
     context.raw_balrog_manifest = dict()  # Needed by downstream calls
 
@@ -160,13 +160,23 @@ async def push_to_partner(context):
     Determine the list of artifacts to be transferred, generate the
     mapping manifest and upload the bits."""
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
-    context.release_props = get_release_props(context)
+    context.release_props = get_release_props(context.task)
     context.checksums = dict()
 
     mapping_manifest = generate_beetmover_manifest(context)
     await move_partner_beets(context, mapping_manifest)
 
     add_checksums_to_artifacts(context)
+
+
+async def push_to_releases(context):
+    # S3 upload
+    if context.config["clouds"]["aws"][context.bucket]["enabled"]:
+        await push_to_releases_s3(context)
+
+    # GCS upload
+    if context.config["clouds"]["gcloud"][context.bucket]["enabled"]:
+        await push_to_releases_gcs(context)
 
 
 # push_to_releases_s3 {{{1
@@ -227,7 +237,7 @@ async def push_to_maven(context):
     all possible cornercases. For example it needs to handle both MavenVersion for
     Github projects but also FirefoxVersion for GeckoView in-tree releases.
     """
-    context.release_props = get_release_props(context)
+    context.release_props = get_release_props(context.task)
     context.checksums = dict()  # Needed by downstream calls
     context.raw_balrog_manifest = dict()  # Needed by downstream calls
 
@@ -290,7 +300,7 @@ action_map = {
     "push-to-nightly": push_to_nightly,
     # push to candidates is at this point identical to push_to_nightly
     "push-to-candidates": push_to_nightly,
-    "push-to-releases": push_to_releases_s3,
+    "push-to-releases": push_to_releases,
     "direct-push-to-bucket": direct_push_to_bucket,
     "push-to-maven": push_to_maven,
 }
@@ -575,7 +585,7 @@ def enrich_balrog_manifest(context, locale):
         url_replacements.append(["http://archive.mozilla.org/pub", "http://download.cdn.mozilla.net/pub"])
 
     enrich_dict = {
-        "appName": get_product_name(release_props["appName"], release_props["stage_platform"]),
+        "appName": get_product_name(context.task, context.config, lowercase_app_name=False),
         "appVersion": release_props["appVersion"],
         "branch": release_props["branch"],
         "buildid": release_props["buildid"],
@@ -603,6 +613,10 @@ async def retry_upload(context, destinations, path):
         "aws": [],
         "gcloud": [],
     }
+
+    # TODO: There's a "bug" where if you define
+    #  "gcloud.release" but not "aws.release", the context.bucket will fail here
+    #  we don't have that use case right now, but might be worth fixing
     for dest in destinations:
         # S3 upload
         if context.config["clouds"]["aws"][context.bucket]["enabled"]:
@@ -642,7 +656,7 @@ async def put(context, url, headers, abs_filename, session=None):
 
 # upload_to_s3 {{{1
 async def upload_to_s3(context, s3_key, path):
-    product = get_product_name(context.release_props["appName"].lower(), context.release_props["stage_platform"])
+    product = get_product_name(context.task, context.config)
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
         raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
