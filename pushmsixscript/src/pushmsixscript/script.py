@@ -20,11 +20,7 @@ async def async_main(config, task_dict):
     channel = task.get_msix_channel(config, task_dict)
     _log_warning_forewords(config, channel)
 
-    payload = task_dict.get("payload")
-    if payload:
-        publish_mode = payload.get("publishMode")
-    else:
-        publish_mode = None
+    publish_mode = task_dict.get("payload", {}).get("publishMode")
 
     microsoft_store.push(config, msix_file_paths, channel, publish_mode)
 
