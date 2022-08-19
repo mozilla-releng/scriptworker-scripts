@@ -40,6 +40,7 @@ from beetmoverscript.task import (
     get_taskId_from_full_path,
     get_updated_buildhub_artifact,
     get_upstream_artifacts,
+    is_cloud_enabled,
     validate_task_schema,
 )
 from beetmoverscript.utils import (
@@ -623,11 +624,11 @@ async def retry_upload(context, destinations, path):
     #  we don't have that use case right now, but might be worth fixing
     for dest in destinations:
         # S3 upload
-        if context.config["clouds"]["aws"][context.bucket]["enabled"]:
+        if is_cloud_enabled(context.config, "aws", context.bucket):
             cloud_uploads["aws"].append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
 
         # GCS upload
-        if context.config["clouds"]["gcloud"][context.bucket]["enabled"]:
+        if is_cloud_enabled(context.config, "gcloud", context.bucket):
             cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path)))
 
     await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.bucket)
