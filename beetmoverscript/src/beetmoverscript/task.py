@@ -77,13 +77,34 @@ def get_task_bucket(task, script_config):
     if re.search("^[0-9A-Za-z_-]+$", bucket) is None:
         messages.append("Bucket {} is malformed".format(bucket))
 
-    if bucket not in {*script_config["clouds"]["aws"].keys(), *script_config["clouds"]["gcloud"].keys()}:
+    # Set of all clouds configured and enabled
+    available_buckets = set()
+    for cloud in script_config["clouds"].values():
+        for release_type, config in cloud.items():
+            log.warning(release_type)
+            log.warning(config)
+            if config["enabled"]:
+                available_buckets.add(release_type)
+
+    if bucket not in available_buckets:
         messages.append(f"Invalid bucket scope: {bucket}")
 
     if messages:
         raise ScriptWorkerTaskException("\n".join(messages))
 
     return bucket
+
+
+def is_cloud_enabled(script_config, cloud, task_bucket):
+    """
+    Checks if a release type is enabled on a cloud
+    Defaults to False
+    """
+    if cloud not in script_config["clouds"]:
+        return False
+    if task_bucket not in script_config["clouds"][cloud]:
+        return False
+    return script_config["clouds"][cloud][task_bucket].get("enabled", False)
 
 
 def get_task_action(task, script_config, valid_actions=None):

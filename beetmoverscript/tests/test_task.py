@@ -107,7 +107,7 @@ def test_validate_task(context):
 )
 def test_get_task_bucket(scopes, expected, raises):
     task = {"scopes": scopes}
-    config = {"clouds": {"aws": {"dep": ""}, "gcloud": {}}, "taskcluster_scope_prefixes": ["project:releng:beetmover:"]}
+    config = {"clouds": {"aws": {"dep": {"enabled": True}}, "gcloud": {}}, "taskcluster_scope_prefixes": ["project:releng:beetmover:"]}
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
             get_task_bucket(task, config)
