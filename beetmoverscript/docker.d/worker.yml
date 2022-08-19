@@ -469,6 +469,3 @@ clouds:
               key: { "$eval": "RELEASE_KEY" }
             product_buckets:
               vpn: 'net-mozaws-prod-delivery-archive'
-
-  maven: {}
-  # TODO: Move maven info
