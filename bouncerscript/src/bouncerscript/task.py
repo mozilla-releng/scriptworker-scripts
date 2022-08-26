@@ -1,7 +1,7 @@
 import logging
 import re
 
-from mozilla_version.gecko import FirefoxVersion
+from mozilla_version.gecko import FirefoxVersion, ThunderbirdVersion
 from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationError
 from scriptworker.utils import retry_request
@@ -20,6 +20,7 @@ log = logging.getLogger(__name__)
 
 version_map = {
     "firefox": FirefoxVersion,
+    "thunderbird": ThunderbirdVersion,
 }
 
 
@@ -155,9 +156,9 @@ def check_versions_are_successive(current_version, payload_version, product):
 
     # XXX: for Firefox central nightlies we need to handle the major number
     # while for Fennec nightlies on ESR we need to handle minor_number
-    if product == "firefox":
-        current_bouncer_version = FirefoxVersion.parse(current_version)
-        candidate_version = FirefoxVersion.parse(payload_version)
+    if product in version_map:
+        current_bouncer_version = version_map[product].parse(current_version)
+        candidate_version = version_map[product].parse(payload_version)
 
         _successive_sanity(current_bouncer_version.major_number, candidate_version.major_number)
     else:

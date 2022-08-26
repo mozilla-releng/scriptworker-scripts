@@ -400,6 +400,14 @@ def test_check_product_names_match_nightly_locations(locations_context, products
             ("63.0", "firefox", (True, ScriptWorkerTaskException)),
             ("ZFJSh389fjSMN<@<Ngv", "firefox", (True, PatternNotMatchedError)),
             ("63", "firefox", (True, PatternNotMatchedError)),
+            ("76.0a1", "thunderbird", (False, None)),
+            ("76.0b1", "thunderbird", (True, ScriptWorkerTaskException)),
+            ("76.0.1a1", "thunderbird", (True, PatternNotMatchedError)),
+            ("76.0.1esr", "thunderbird", (True, PatternNotMatchedError)),
+            ("76.0.1", "thunderbird", (True, ScriptWorkerTaskException)),
+            ("76.0", "thunderbird", (True, ScriptWorkerTaskException)),
+            ("ZFJSh389fjSMN<@<Ngv", "thunderbird", (True, PatternNotMatchedError)),
+            ("76", "thunderbird", (True, PatternNotMatchedError)),
         )
     ),
 )
@@ -500,6 +508,11 @@ def test_check_location_path_matches_destination(product_name, path, raises):
             ("63.0a1", "65.0a1", "firefox", True),
             ("64.0a1", "63.0a1", "firefox", True),
             ("68.2a1", "68.1a1", "VNSJKSGH#(*#HG#LG@()", True),
+            ("75.0a1", "76.0a1", "thunderbird", False),
+            ("75.0a1", "75.0a1", "thunderbird", True),
+            ("75.0a1", "77.0a1", "thunderbird", True),
+            ("76.0a1", "75.0a1", "thunderbird", True),
+            ("78.2a1", "78.1a1", "VNSJKSGH#(*#HG#LG@()", True),
         )
     ),
 )
