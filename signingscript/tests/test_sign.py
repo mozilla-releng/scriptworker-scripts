@@ -219,6 +219,42 @@ async def test_sign_file_with_autograph_raises_http_error(context, mocker, to, e
     open_mock.assert_called()
 
 
+# sign_file_detached {{{1
+@pytest.mark.asyncio
+async def test_sign_file_detached(context, mocker):
+    path = "hello.txt"
+    data = b"Hello there!"
+
+    h = sha256()
+    h.update(data)
+    expected_hash = base64.b64encode(h.digest()).decode("ascii")
+    expected_signature = b"0" * 512
+
+    open_mock = mocker.mock_open(read_data=data)
+    mocker.patch("builtins.open", open_mock, create=True)
+
+    mocked_session = MockedSession(signature=base64.b64encode(expected_signature))
+    mocker.patch.object(context, "session", new=mocked_session)
+
+    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
+    context.autograph_configs = {
+        "project:releng:signing:cert:dep-signing": [
+            utils.Autograph("https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_rsa"])
+        ]
+    }
+
+    result = await sign.sign_file_detached(context, path, "autograph_rsa")
+    assert result == [path, f"{path}.sig"]
+
+    mocked_session.post.assert_called_with("https://autograph-hsm.dev.mozaws.net/sign/hash", headers=mocker.ANY, data=mocker.ANY)
+    called_with_data = mocked_session.post.call_args[1]["data"]
+    assert json.loads(called_with_data.read())[0]["input"] == expected_hash
+
+    open_mock.assert_called_with(f"{path}.sig", "wb")
+    fh_mock = open_mock.return_value.__enter__.return_value
+    fh_mock.write.assert_called_with(expected_signature)
+
+
 # get_mar_verification_key {{{1
 @pytest.mark.parametrize(
     "format,cert_type,keyid,raises,expected",

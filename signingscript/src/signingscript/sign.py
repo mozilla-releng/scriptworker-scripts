@@ -1116,6 +1116,36 @@ async def sign_hash_with_autograph(context, hash_, fmt, keyid=None):
     return signature
 
 
+@time_async_function
+async def sign_file_detached(context, file_, fmt, keyid=None, **kwargs):
+    """Signs the sha256 hash of a file and returns is along with a detached signature.
+
+    Args:
+        context (Context): the signing context
+        hash_ (bytes): the input hash to sign
+        fmt (str): the format to sign with
+        keyid (str): which key to use on autograph (optional)
+
+    Raises:
+        aiohttp.ClientError: on failure
+        SigningScriptError: when no suitable signing server is found for fmt
+
+    Returns:
+        list: path to the original file and its detached signature named `file.sig`.
+    """
+    h = hashlib.sha256()
+    with open(file_, "rb") as fh:
+        h.update(fh.read())
+
+    signature = await sign_hash_with_autograph(context, h.digest(), fmt, keyid=keyid)
+    detached_signature = f"{file_}.sig"
+    with open(detached_signature, "wb") as fh:
+        fh.write(signature)
+
+    log.info(f"Wrote autograph detached signature to {detached_signature}")
+    return [file_, detached_signature]
+
+
 def get_mar_verification_key(cert_type, fmt, keyid):
     """Get the public key file for the format/cert_type.
 
