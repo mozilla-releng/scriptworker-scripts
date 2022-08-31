@@ -18,6 +18,7 @@ from signingscript.sign import (
     sign_authenticode_zip,
     sign_debian_pkg,
     sign_file,
+    sign_file_detached,
     sign_gpg,
     sign_gpg_with_autograph,
     sign_jar,
@@ -54,6 +55,7 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "autograph_authenticode_sha2_rfc3161_stub": sign_authenticode_zip,
         "privileged_webextension": sign_xpi,
         "system_addon": sign_xpi,
+        "autograph_rsa": sign_file_detached,
         "default": sign_file,
     }
 )
@@ -178,7 +180,7 @@ def _sort_formats(formats):
     """
     # Widevine formats must be after other formats other than macapp; GPG must
     # be last.
-    for fmt in ("widevine", "autograph_widevine", "autograph_omnija", "macapp", "gpg", "autograph_gpg"):
+    for fmt in ("widevine", "autograph_widevine", "autograph_omnija", "macapp", "autograph_rsa", "gpg", "autograph_gpg"):
         if fmt in formats:
             formats.remove(fmt)
             formats.append(fmt)
