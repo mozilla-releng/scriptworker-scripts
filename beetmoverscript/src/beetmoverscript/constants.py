@@ -18,9 +18,11 @@ MIME_MAP = {
     ".msix": "application/msix",
     ".pkg": "application/x-newton-compatible-pkg",
     ".pom": "application/xml",
+    ".rcc": "application/octet-stream",
     ".sha1": "text/plain",
     ".sha256": "text/plain",
     ".sha512": "text/plain",
+    ".sig": "application/octet-stream",
     ".snap": "application/octet-stream",
     ".xpi": "application/x-xpinstall",
 }
