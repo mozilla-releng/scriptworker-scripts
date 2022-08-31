@@ -211,6 +211,8 @@ case $ENV in
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTOGRAPH_MOZILLAVPN_PASSWORD'
         test_var_set 'AUTOGRAPH_MOZILLAVPN_USERNAME'
+        test_var_set 'AUTOGRAPH_MOZILLAVPN_ADDONS_PASSWORD'
+        test_var_set 'AUTOGRAPH_MOZILLAVPN_ADDONS_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
         test_var_set 'AUTHENTICODE_CA_PATH'
         test_var_set 'AUTHENTICODE_CA_TIMESTAMP_PATH'
