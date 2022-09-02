@@ -265,7 +265,7 @@ def _wait_for_commit_completion(config, channel, session, submission_id, headers
         time.sleep(COMMIT_POLL_WAIT_SECONDS)
         response_json = _get_submission_status(config, channel, session, submission_id, headers)
         log.info(response_json.get("status"))
-    if "Failed" in response_json.get("status"):
+    if "Failed" in response_json.get("status", ""):
         log.error(
             "This task failed and may have left a pending submission in the Store. "
             "It may be possible to edit it and submit it manually from the Partner "
