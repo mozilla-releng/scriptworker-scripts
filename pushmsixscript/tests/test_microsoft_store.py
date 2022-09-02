@@ -164,28 +164,29 @@ def test_commit_submission(status_code, raises):
 
 
 @pytest.mark.parametrize(
-    "status_code, raises, mocked_response",
+    "status_code, raises, mocked_response, exc",
     (
-        (200, False, {"status": "CommitStarted"}),
-        (200, False, {"status": "Done"}),
-        (404, True, {}),
-        (503, True, {}),
+        (200, False, {"status": "CommitStarted"}, None),
+        (200, False, {"status": "Done"}, None),
+        (200, True, {"status": "CommitFailed"}, TaskVerificationError),
+        (404, True, {}, requests.exceptions.HTTPError),
+        (503, True, {}, requests.exceptions.HTTPError),
     ),
 )
-def test_get_submission_status(status_code, raises, mocked_response):
+def test_get_submission_status(status_code, raises, mocked_response, exc):
     headers = {}
     channel = "mock"
     application_id = CONFIG["application_ids"][channel]
     submission_id = 888
-    mocked_response = {"id": 888, "fileUploadUrl": "https://some/url"}
     with requests.Session() as session:
         with requests_mock.Mocker() as m:
             url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions/{submission_id}/status")
             m.get(url, headers=headers, json=mocked_response, status_code=status_code)
             if raises:
-                with pytest.raises(requests.exceptions.HTTPError):
-                    status = microsoft_store._get_submission_status(CONFIG, channel, session, submission_id, headers)
-                with pytest.raises(requests.exceptions.HTTPError):
+                if exc != TaskVerificationError:
+                    with pytest.raises(exc):
+                        status = microsoft_store._get_submission_status(CONFIG, channel, session, submission_id, headers)
+                with pytest.raises(exc):
                     microsoft_store._wait_for_commit_completion(CONFIG, channel, session, submission_id, headers)
             else:
                 status = microsoft_store._get_submission_status(CONFIG, channel, session, submission_id, headers)
