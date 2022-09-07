@@ -89,9 +89,9 @@ altgraph==0.17.2 \
     --hash=sha256:743628f2ac6a7c26f5d9223c91ed8ecbba535f506f4b6f558885a8a56a105857 \
     --hash=sha256:ebf2269361b47d97b3b88e696439f6e4cbc607c17c51feb1754f90fb79839158
     # via macholib
-arrow==1.2.2 \
-    --hash=sha256:05caf1fd3d9a11a1135b2b6f09887421153b94558e5ef4d090b567b47173ac2b \
-    --hash=sha256:d622c46ca681b5b3e3574fcb60a04e5cc81b9625112d5fb2b44220c36c892177
+arrow==1.2.3 \
+    --hash=sha256:3934b30ca1b9f292376d9db15b19446088d12ec58629bc3f0da28fd55fb633a1 \
+    --hash=sha256:5a49ab92e3b7b71d96cd6bfcc4df14efefc9dfa96ea19045815914a6ab6b1fe2
     # via -r requirements/base.in
 async-timeout==4.0.2 \
     --hash=sha256:2163e1640ddb52b7a8c80d0a67a08587e5d245cc9c553a74a847056bc2976b15 \
@@ -289,9 +289,9 @@ slugid==2.0.0 \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
     # via taskcluster
-taskcluster==44.18.0 \
-    --hash=sha256:8b2787a71d7646e674ea44011502f53e108b27617d1416bc209962a27c93b7ae \
-    --hash=sha256:e5943a327a68398983b1885dd47be8807256db18ee7347c85104e32f88507c5e
+taskcluster==44.20.4 \
+    --hash=sha256:3b19adc4b08010288a68b523969228a586dc97d1cec39a64a4ff0dc575df3e73 \
+    --hash=sha256:caf0e4870949b597f126bc479a8599b61ccb0ff83d5d91a51671e5200a129f32
     # via -r requirements/base.in
 taskcluster-urls==13.0.1 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
