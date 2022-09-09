@@ -119,6 +119,7 @@ PRODUCT_TO_PATH = {
     "pinebuild": "pub/pinebuild/",
     "firefox": "pub/firefox/",
     "thunderbird": "pub/thunderbird/",
+    "vpn": "pub/vpn/",
 }
 
 PARTNER_REPACK_PUBLIC_PREFIX_TMPL = "pub/firefox/candidates/{version}-candidates/build{build_number}/"
