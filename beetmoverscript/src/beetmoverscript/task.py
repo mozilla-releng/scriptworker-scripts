@@ -81,8 +81,6 @@ def get_task_bucket(task, script_config):
     available_buckets = set()
     for cloud in script_config["clouds"].values():
         for release_type, config in cloud.items():
-            log.warning(release_type)
-            log.warning(config)
             if config["enabled"]:
                 available_buckets.add(release_type)
 
