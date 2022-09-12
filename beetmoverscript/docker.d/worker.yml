@@ -68,11 +68,11 @@ clouds:
             fail_task_on_error: False
             enabled: True
             product_buckets:
-              devedition: ' moz-fx-productdelivery-no-7d6a-productdelivery '
-              pinebuild:  ' moz-fx-productdelivery-no-7d6a-productdelivery '
-              firefox:    ' moz-fx-productdelivery-no-7d6a-productdelivery '
-              fennec:     ' moz-fx-productdelivery-no-7d6a-productdelivery '
-              mobile:     ' moz-fx-productdelivery-no-7d6a-productdelivery '
+              devedition: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+              pinebuild:  'moz-fx-productdelivery-no-7d6a-productdelivery'
+              firefox:    'moz-fx-productdelivery-no-7d6a-productdelivery'
+              fennec:     'moz-fx-productdelivery-no-7d6a-productdelivery'
+              mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
           dep-partner:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
@@ -109,10 +109,10 @@ clouds:
             fail_task_on_error: False
             enabled: True
             product_buckets:
-              devedition: ' moz-fx-productdelivery-no-7d6a-productdelivery '
-              pinebuild:  ' moz-fx-productdelivery-no-7d6a-productdelivery '
-              firefox:    ' moz-fx-productdelivery-no-7d6a-productdelivery '
-              mobile:     ' moz-fx-productdelivery-no-7d6a-productdelivery '
+              devedition: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+              pinebuild:  'moz-fx-productdelivery-no-7d6a-productdelivery'
+              firefox:    'moz-fx-productdelivery-no-7d6a-productdelivery'
+              mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
           dep-partner:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
@@ -125,7 +125,7 @@ clouds:
             fail_task_on_error: False
             enabled: True
             product_buckets:
-              xpi: ' moz-fx-productdelivery-no-7d6a-productdelivery '
+              xpi: 'moz-fx-productdelivery-no-7d6a-productdelivery'
         'COT_PRODUCT == "xpi" && ENV == "prod"':
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
@@ -139,7 +139,7 @@ clouds:
             fail_task_on_error: False
             enabled: True
             product_buckets:
-              thunderbird: ' moz-fx-productdelivery-no-7d6a-productdelivery '
+              thunderbird: 'moz-fx-productdelivery-no-7d6a-productdelivery'
         'COT_PRODUCT == "thunderbird" && ENV == "prod"':
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
@@ -158,29 +158,29 @@ clouds:
             fail_task_on_error: False
             enabled: True
             product_buckets:
-              thunderbird: ' moz-fx-productdelivery-no-7d6a-productdelivery '
+              thunderbird: 'moz-fx-productdelivery-no-7d6a-productdelivery'
         'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
             enabled: True
             product_buckets:
-              fenix: ' moz-fx-productdelivery-no-7d6a-productdelivery '
-              focus: ' moz-fx-productdelivery-no-7d6a-productdelivery '
+              fenix: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+              focus: 'moz-fx-productdelivery-no-7d6a-productdelivery'
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
             enabled: True
             product_buckets:
-              fenix: ' moz-fx-productdelivery-no-7d6a-productdelivery '
-              focus: ' moz-fx-productdelivery-no-7d6a-productdelivery '
+              fenix: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+              focus: 'moz-fx-productdelivery-no-7d6a-productdelivery'
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
             enabled: True
             product_buckets:
-              fenix: ' moz-fx-productdelivery-no-7d6a-productdelivery '
-              focus: ' moz-fx-productdelivery-no-7d6a-productdelivery '
+              fenix: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+              focus: 'moz-fx-productdelivery-no-7d6a-productdelivery'
         'COT_PRODUCT == "mobile" && ENV == "prod"':
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
@@ -202,7 +202,7 @@ clouds:
             fail_task_on_error: False
             enabled: True
             product_buckets:
-              vpn: ' moz-fx-productdelivery-no-7d6a-productdelivery '
+              vpn: 'moz-fx-productdelivery-no-7d6a-productdelivery'
         'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
