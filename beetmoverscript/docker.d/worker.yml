@@ -83,7 +83,7 @@ clouds:
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
-            enabled: True
+            enabled: False
             product_buckets:
               devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
               pinebuild:  'moz-fx-productdelivery-pr-38b5-productdelivery'
@@ -130,7 +130,7 @@ clouds:
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
-            enabled: True
+            enabled: False
             product_buckets:
               xpi: 'moz-fx-productdelivery-pr-38b5-productdelivery'
         'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
@@ -144,7 +144,7 @@ clouds:
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
-            enabled: True
+            enabled: False
             product_buckets:
               thunderbird: 'moz-fx-productdelivery-pr-38b5-productdelivery'
           release:
@@ -185,7 +185,7 @@ clouds:
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
-            enabled: True
+            enabled: False
             product_buckets:
               fenix: 'moz-fx-productdelivery-pr-38b5-productdelivery'
               focus: 'moz-fx-productdelivery-pr-38b5-productdelivery'
@@ -207,7 +207,7 @@ clouds:
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
-            enabled: True
+            enabled: False
             product_buckets:
               vpn: 'moz-fx-productdelivery-pr-38b5-productdelivery'
 
@@ -217,6 +217,7 @@ clouds:
         'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "DEP_ID" }
               key: { "$eval": "DEP_KEY" }
@@ -228,6 +229,7 @@ clouds:
               mobile:     'net-mozaws-stage-delivery-archive'
           dep-partner:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "DEP_PARTNER_ID" }
               key: { "$eval": "DEP_PARTNER_KEY" }
@@ -235,6 +237,7 @@ clouds:
               firefox: 'mozilla-releng-dep-partner'
           maven-staging:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "MAVEN_ID" }
               key: { "$eval": "MAVEN_KEY" }
@@ -244,6 +247,7 @@ clouds:
         'COT_PRODUCT == "firefox" && ENV == "prod"':
           nightly:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "NIGHTLY_ID" }
               key: { "$eval": "NIGHTLY_KEY" }
@@ -254,6 +258,7 @@ clouds:
               mobile:     'net-mozaws-prod-delivery-archive'
           release:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "RELEASE_ID" }
               key: { "$eval": "RELEASE_KEY" }
@@ -264,6 +269,7 @@ clouds:
               mobile:     'net-mozaws-prod-delivery-archive'
           partner:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "PARTNER_ID" }
               key: { "$eval": "PARTNER_KEY" }
@@ -271,6 +277,7 @@ clouds:
               firefox: 'fxpartners-distros'
           dep:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "DEP_ID" }
               key: { "$eval": "DEP_KEY" }
@@ -281,6 +288,7 @@ clouds:
               mobile:     'net-mozaws-stage-delivery-archive'
           dep-partner:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "DEP_PARTNER_ID" }
               key: { "$eval": "DEP_PARTNER_KEY" }
@@ -288,6 +296,7 @@ clouds:
               firefox: 'mozilla-releng-dep-partner'
           maven-production:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "MAVEN_ID" }
               key: { "$eval": "MAVEN_KEY" }
@@ -297,6 +306,7 @@ clouds:
         'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "DEP_ID" }
               key: { "$eval": "DEP_KEY" }
@@ -306,6 +316,7 @@ clouds:
         'COT_PRODUCT == "xpi" && ENV == "prod"':
           release:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "RELEASE_ID" }
               key: { "$eval": "RELEASE_KEY" }
@@ -315,6 +326,7 @@ clouds:
         'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "DEP_ID" }
               key: { "$eval": "DEP_KEY" }
@@ -324,6 +336,7 @@ clouds:
         'COT_PRODUCT == "thunderbird" && ENV == "prod"':
           nightly:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "NIGHTLY_ID" }
               key: { "$eval": "NIGHTLY_KEY" }
@@ -331,6 +344,7 @@ clouds:
               thunderbird: 'net-mozaws-prod-delivery-archive'
           release:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "RELEASE_ID" }
               key: { "$eval": "RELEASE_KEY" }
@@ -338,6 +352,7 @@ clouds:
               thunderbird: 'net-mozaws-prod-delivery-archive'
           dep:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "DEP_ID" }
               key: { "$eval": "DEP_KEY" }
@@ -347,6 +362,7 @@ clouds:
         'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
           maven-staging:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "MAVEN_ID" }
               key: { "$eval": "MAVEN_KEY" }
@@ -354,6 +370,7 @@ clouds:
               components: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
           maven-nightly-staging:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "MAVEN_NIGHTLY_ID" }
               key: { "$eval": "MAVEN_NIGHTLY_KEY" }
@@ -362,6 +379,7 @@ clouds:
 
           dep:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "DEP_ID" }
               key: { "$eval": "DEP_KEY" }
@@ -371,6 +389,7 @@ clouds:
           # TODO: nightly and release will only be used while we test prod with dev workers
           nightly:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "DEP_ID" }
               key: { "$eval": "DEP_KEY" }
@@ -379,6 +398,7 @@ clouds:
               focus: 'net-mozaws-stage-delivery-archive'
           release:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "DEP_ID" }
               key: { "$eval": "DEP_KEY" }
@@ -388,6 +408,7 @@ clouds:
         'COT_PRODUCT == "mobile" && ENV == "prod"':
           maven-production:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "MAVEN_ID" }
               key: { "$eval": "MAVEN_KEY" }
@@ -395,6 +416,7 @@ clouds:
               components: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
           maven-nightly-production:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "MAVEN_NIGHTLY_ID" }
               key: { "$eval": "MAVEN_NIGHTLY_KEY" }
@@ -402,6 +424,7 @@ clouds:
               nightly_components: 'maven-nightly-s3-upload-bucket-d4zm9oo354qe'
           nightly:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "NIGHTLY_ID" }
               key: { "$eval": "NIGHTLY_KEY" }
@@ -410,6 +433,7 @@ clouds:
               focus: 'net-mozaws-prod-delivery-archive'
           release:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "RELEASE_ID" }
               key: { "$eval": "RELEASE_KEY" }
@@ -420,6 +444,7 @@ clouds:
         'COT_PRODUCT == "app-services" && (ENV == "dev" || ENV == "fake-prod")':
           maven-staging:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "MAVEN_ID" }
               key: { "$eval": "MAVEN_KEY" }
@@ -429,6 +454,7 @@ clouds:
         'COT_PRODUCT == "app-services" && ENV == "prod"':
           maven-production:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "MAVEN_ID" }
               key: { "$eval": "MAVEN_KEY" }
@@ -438,6 +464,7 @@ clouds:
         'COT_PRODUCT == "glean" && (ENV == "dev" || ENV == "fake-prod")':
           maven-staging:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "MAVEN_ID" }
               key: { "$eval": "MAVEN_KEY" }
@@ -447,6 +474,7 @@ clouds:
         'COT_PRODUCT == "glean" && ENV == "prod"':
           maven-production:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "MAVEN_ID" }
               key: { "$eval": "MAVEN_KEY" }
@@ -456,6 +484,7 @@ clouds:
         'COT_PRODUCT == "mozillavpn" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "DEP_ID" }
               key: { "$eval": "DEP_KEY" }
@@ -465,6 +494,7 @@ clouds:
         'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
           release:
             fail_task_on_error: True
+            enabled: True
             credentials:
               id: { "$eval": "RELEASE_ID" }
               key: { "$eval": "RELEASE_KEY" }
