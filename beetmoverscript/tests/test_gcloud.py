@@ -13,6 +13,7 @@ from . import get_fake_valid_task, noop_sync
 class FakeClient:
     class FakeBlob:
         PATH = "/foo.zip"
+        _exists = False
 
         content_type = ""
         cache_control = ""
@@ -25,6 +26,9 @@ class FakeClient:
         def upload_from_filename(self, path, content_type):
             assert path == self.PATH
             assert content_type == "application/zip"
+
+        def exists(self):
+            return self._exists
 
     class FakeBucket:
         FAKE_BUCKET_NAME = "existingbucket"
@@ -41,6 +45,12 @@ class FakeClient:
 
         def copy_blob(*args):
             pass
+
+    class FakeBucketExisting(FakeBucket):
+        def blob(*args):
+            blob = FakeClient.FakeBlob()
+            blob._exists = True
+            return blob
 
     def bucket(self, bucket_name):
         return self.FakeBucket(self, bucket_name)
@@ -135,6 +145,9 @@ async def test_upload_to_gcs_fail(context):
 async def test_upload_to_gcs(context, monkeypatch):
     context.gcs_client = "FakeClient"
     monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeClient.FakeBucket)
+    await beetmoverscript.gcloud.upload_to_gcs(context, "path/target", FakeClient.FakeBlob.PATH)
+    # With existing file
+    monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeClient.FakeBucketExisting)
     await beetmoverscript.gcloud.upload_to_gcs(context, "path/target", FakeClient.FakeBlob.PATH)
 
 
