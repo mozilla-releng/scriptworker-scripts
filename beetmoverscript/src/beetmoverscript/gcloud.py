@@ -94,6 +94,10 @@ async def upload_to_gcs(context, target_path, path):
     blob.content_type = mime_type
     blob.cache_control = "public, max-age=%d" % CACHE_CONTROL_MAXAGE
 
+    if blob.exists():
+        log.warn("upload_to_gcs: Overriding file: %s", target_path)
+    log.info("upload_to_gcs: %s -> Bucket: gs://%s/%s", path, bucket_name, target_path)
+
     return blob.upload_from_filename(path, content_type=mime_type)
 
 
