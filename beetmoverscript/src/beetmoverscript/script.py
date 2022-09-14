@@ -167,6 +167,37 @@ async def push_to_partner(context):
     add_checksums_to_artifacts(context)
 
 
+# copy_candidates_to_releases {{{1
+async def copy_candidates_to_releases(context):
+    """A un-opinionated action to copy artifacts from candidates to releases."""
+    context.artifacts_to_beetmove = {}
+    product = context.task["payload"]["product"]
+    context.bucket_name = get_bucket_name(context, product)
+    candidates_prefix = context.task["payload"]["candidates_prefix"]
+    releases_prefix = context.task["payload"]["releases_prefix"]
+    exclude_from_releases = context.task["payload"].get("exclude_from_releases")
+
+    creds = get_creds(context)
+    s3_resource = boto3.resource("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
+
+    candidates_keys_checksums = list_bucket_objects(context, s3_resource, candidates_prefix)
+    releases_keys_checksums = list_bucket_objects(context, s3_resource, releases_prefix)
+
+    if not candidates_keys_checksums:
+        raise ScriptWorkerTaskException("No artifacts to copy from {} so there is no reason to continue.".format(candidates_prefix))
+
+    if releases_keys_checksums:
+        log.warning("Destination {} already exists with {} keys".format(releases_prefix, len(releases_keys_checksums)))
+
+    for k in candidates_keys_checksums.keys():
+        if not exclude_from_releases and not matches_exclude(k, exclude_from_releases):
+            context.artifacts_to_beetmove[k] = k.replace(candidates_prefix, releases_prefix)
+        else:
+            log.debug("Excluding {}".format(k))
+
+    copy_beets(context, candidates_keys_checksums, releases_keys_checksums)
+
+
 # push_to_releases {{{1
 async def push_to_releases(context):
     """Copy artifacts from one S3 location to another.
@@ -283,6 +314,7 @@ def list_bucket_objects(context, s3_resource, prefix):
 
 # action_map {{{1
 action_map = {
+    "copy-candidates-to-releases": copy_candidates_to_releases,
     "push-to-partner": push_to_partner,
     "push-to-system-addons": push_to_system_addons,
     "push-to-nightly": push_to_nightly,
@@ -636,6 +668,7 @@ def main(config_path=None):
         "release_schema_file": os.path.join(data_dir, "release_beetmover_task_schema.json"),
         "maven_schema_file": os.path.join(data_dir, "maven_beetmover_task_schema.json"),
         "artifactMap_schema_file": os.path.join(data_dir, "artifactMap_beetmover_task_schema.json"),
+        "copy_candidates_to_releases_schema_file": os.path.join(data_dir, "copy_candidates_to_releases_schema.json"),
     }
 
     # There are several task schema. Validation occurs in async_main
