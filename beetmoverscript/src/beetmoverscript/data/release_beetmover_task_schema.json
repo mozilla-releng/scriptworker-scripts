@@ -13,6 +13,12 @@
         "payload": {
             "type": "object",
             "properties": {
+                "candidates_prefix": {
+                    "type": "string"
+                },
+                "releases_prefix": {
+                    "type": "string"
+                },
                 "product": {
                     "type": "string"
                 },

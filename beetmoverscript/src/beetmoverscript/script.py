@@ -179,8 +179,13 @@ async def push_to_releases(context):
     version = context.task["payload"]["version"]
     context.bucket_name = get_bucket_name(context, product)
 
-    candidates_prefix = get_candidates_prefix(product, version, build_number)
-    releases_prefix = get_releases_prefix(product, version)
+    candidates_prefix = context.task["payload"].get("candidates_prefix")
+    if not candidates_prefix:
+        candidates_prefix = get_candidates_prefix(product, version, build_number)
+
+    releases_prefix = context.task["payload"].get("releases_prefix")
+    if not releases_prefix:
+        releases_prefix = get_releases_prefix(product, version)
 
     creds = get_creds(context)
     s3_resource = boto3.resource("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
