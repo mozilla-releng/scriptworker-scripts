@@ -57,7 +57,7 @@ def set_gcs_client(context):
         client = Client()
         bucket = client.bucket(get_bucket_name(context, product, "gcloud"))
         if not bucket.exists():
-            log.warning(f"GCS bucket {bucket} doesn't exit. Skipping GCS uploads.")
+            log.warning(f"GCS bucket {bucket} doesn't exist. Skipping GCS uploads.")
             return
     except Forbidden as e:
         log.warning(f"GCS credentials don't have access to {bucket}. Skipping GCS uploads.")
