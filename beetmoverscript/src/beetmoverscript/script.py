@@ -30,7 +30,7 @@ from beetmoverscript.constants import (
     RELEASE_BRANCHES,
     RELEASE_EXCLUDE,
 )
-from beetmoverscript.gcloud import cleanup_gcloud, push_to_releases_gcs, setup_gcloud, upload_to_gcs
+from beetmoverscript.gcloud import copy_artifacts_gcs, cleanup_gcloud, push_to_releases_gcs, setup_gcloud, upload_to_gcs
 from beetmoverscript.task import (
     add_balrog_manifest_to_artifacts,
     add_checksums_to_artifacts,
@@ -251,6 +251,44 @@ async def push_to_maven(context):
     await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task["payload"]["artifactMap"])
 
 
+async def copy_artifacts(context):
+    """A un-opinionated action to copy artifacts from one location to another. It WONT overwrite existing artifacts in the destination."""
+    if context.config["clouds"]["aws"][context.bucket]["enabled"]:
+        await _copy_artifacts_s3(context)
+    if context.config["clouds"]["gcloud"][context.bucket]["enabled"]:
+        await copy_artifacts_gcs(context)
+
+
+# copy_to_releases {{{1
+async def _copy_artifacts_s3(context):
+    context.artifacts_to_beetmove = {}
+    product = context.task["payload"]["product"]
+    context.bucket_name = get_bucket_name(context, product, "aws")
+    copy_from = context.task["payload"]["copy_from"]
+    copy_to = context.task["payload"]["copy_to"]
+    exclude_files = context.task["payload"].get("exclude_files")
+
+    creds = get_credentials(context, "aws")
+    s3_resource = boto3.resource("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
+
+    from_keys = list_bucket_objects(context, s3_resource, copy_from)
+    to_keys = list_bucket_objects(context, s3_resource, copy_to)
+
+    if not from_keys:
+        raise ScriptWorkerTaskException("No artifacts to copy from {} so there is no reason to continue.".format(copy_from))
+
+    if to_keys:
+        log.warning("Destination {} already exists with {} keys".format(copy_to, len(to_keys)))
+
+    for k in from_keys.keys():
+        if not exclude_files and not matches_exclude(k, exclude_files):
+            context.artifacts_to_beetmove[k] = k.replace(copy_from, copy_to)
+        else:
+            log.debug("Excluding {}".format(k))
+
+    copy_beets(context, from_keys, to_keys)
+
+
 # copy_beets {{{1
 def copy_beets(context, from_keys_checksums, to_keys_checksums):
     creds = get_credentials(context, "aws")
@@ -296,6 +334,7 @@ def list_bucket_objects(context, s3_resource, prefix):
 
 # action_map {{{1
 action_map = {
+    "copy-artifacts": copy_artifacts,
     "push-to-partner": push_to_partner,
     "push-to-system-addons": push_to_system_addons,
     "push-to-nightly": push_to_nightly,
@@ -677,6 +716,7 @@ def main(config_path=None):
         "release_schema_file": os.path.join(data_dir, "release_beetmover_task_schema.json"),
         "maven_schema_file": os.path.join(data_dir, "maven_beetmover_task_schema.json"),
         "artifactMap_schema_file": os.path.join(data_dir, "artifactMap_beetmover_task_schema.json"),
+        "copy_artifacts_schema_file": os.path.join(data_dir, "copy_artifacts_beetmover_task_schema.json"),
     }
 
     # There are several task schema. Validation occurs in async_main

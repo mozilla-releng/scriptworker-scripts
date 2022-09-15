@@ -101,6 +101,34 @@ async def upload_to_gcs(context, target_path, path):
     return blob.upload_from_filename(path, content_type=mime_type)
 
 
+async def copy_artifacts_gcs(context):
+    product = context.task["payload"]["product"]
+    bucket_name = get_bucket_name(context, product, "gcloud")
+    client = context.gcs_client
+    copy_from = context.task["payload"]["copy_from"]
+    copy_to = context.task["payload"]["copy_to"]
+    exclude_files = context.task["payload"].get("exclude_files")
+
+    from_blobs = list_bucket_objects_gcs(client, bucket_name, copy_from)
+    to_blobs = list_bucket_objects_gcs(client, bucket_name, copy_to)
+
+    if not from_blobs:
+        raise ScriptWorkerTaskException("No artifacts to copy from {} so there is no reason to continue.".format(copy_from))
+
+    if to_blobs:
+        log.warning("Destination {} already exists with {} keys".format(to_blobs, len(to_blobs)))
+
+    blobs_to_copy = {}
+
+    for blob_path in from_blobs.keys():
+        if not exclude_files and not matches_exclude(blob_path, exclude_files):
+            blobs_to_copy[blob_path] = blob_path.replace(from_blobs, to_blobs)
+        else:
+            log.debug("Excluding {}".format(blob_path))
+
+    move_artifacts(client, bucket_name, blobs_to_copy, from_blobs, to_blobs)
+
+
 async def push_to_releases_gcs(context):
     product = context.task["payload"]["product"]
     build_number = context.task["payload"]["build_number"]
