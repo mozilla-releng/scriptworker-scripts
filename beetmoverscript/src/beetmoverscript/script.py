@@ -167,6 +167,37 @@ async def push_to_partner(context):
     add_checksums_to_artifacts(context)
 
 
+# copy_artifacts {{{1
+async def copy_artifacts(context):
+    """A un-opinionated action to copy artifacts from one location to another. It WONT overwrite existing artifacts in the destination."""
+    context.artifacts_to_beetmove = {}
+    product = context.task["payload"]["product"]
+    context.bucket_name = get_bucket_name(context, product, "aws")
+    copy_from = context.task["payload"]["copy_from"]
+    copy_to = context.task["payload"]["copy_to"]
+    exclude_files = context.task["payload"].get("exclude_files")
+
+    creds = get_creds(context)
+    s3_resource = boto3.resource("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
+
+    from_keys = list_bucket_objects(context, s3_resource, copy_from)
+    to_keys = list_bucket_objects(context, s3_resource, copy_to)
+
+    if not from_keys:
+        raise ScriptWorkerTaskException("No artifacts to copy from {} so there is no reason to continue.".format(copy_from))
+
+    if to_keys:
+        log.warning("Destination {} already exists with {} keys".format(copy_to, len(to_keys)))
+
+    for k in from_keys.keys():
+        if not exclude_files and not matches_exclude(k, exclude_files):
+            context.artifacts_to_beetmove[k] = k.replace(copy_from, copy_to)
+        else:
+            log.debug("Excluding {}".format(k))
+
+    copy_beets(context, from_keys, to_keys)
+
+
 # push_to_releases {{{1
 async def push_to_releases(context):
     """Copy artifacts from one S3 location to another.
@@ -283,6 +314,7 @@ def list_bucket_objects(context, s3_resource, prefix):
 
 # action_map {{{1
 action_map = {
+    "copy-artifacts": copy_artifacts,
     "push-to-partner": push_to_partner,
     "push-to-system-addons": push_to_system_addons,
     "push-to-nightly": push_to_nightly,
@@ -636,6 +668,7 @@ def main(config_path=None):
         "release_schema_file": os.path.join(data_dir, "release_beetmover_task_schema.json"),
         "maven_schema_file": os.path.join(data_dir, "maven_beetmover_task_schema.json"),
         "artifactMap_schema_file": os.path.join(data_dir, "artifactMap_beetmover_task_schema.json"),
+        "copy_artifacts_schema_file": os.path.join(data_dir, "copy_artifacts_beetmover_task_schema.json"),
     }
 
     # There are several task schema. Validation occurs in async_main

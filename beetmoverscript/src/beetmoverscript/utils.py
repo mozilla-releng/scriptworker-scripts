@@ -14,6 +14,7 @@ import yaml
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.constants import (
+    DIRECT_COPY_ACTIONS,
     DIRECT_RELEASE_ACTIONS,
     HASH_BLOCK_SIZE,
     MAVEN_ACTIONS,
@@ -123,6 +124,10 @@ def is_partner_action(action):
     nightly or something else. Does that by checking the action type.
     """
     return action in PARTNER_REPACK_ACTIONS
+
+
+def is_copy_artifacts_action(action):
+    return action in DIRECT_COPY_ACTIONS
 
 
 def is_maven_action(action):

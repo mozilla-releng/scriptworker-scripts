@@ -84,6 +84,8 @@ RELEASE_ACTIONS = ("push-to-releases",)
 
 DIRECT_RELEASE_ACTIONS = ("direct-push-to-bucket",)
 
+DIRECT_COPY_ACTIONS = ("copy-artifacts",)
+
 PARTNER_REPACK_ACTIONS = ("push-to-partner",)
 
 MAVEN_ACTIONS = ("push-to-maven",)
