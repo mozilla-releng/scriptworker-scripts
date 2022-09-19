@@ -13,7 +13,8 @@ SCRIPTWORKER_PID=${SCRIPTWORKER_PID:-1}
 # to let scriptworker upload files and report `worker-shutdown` to Taskcluster.
 case ${PROJECT_NAME} in
     tree)
-        POLL_DURATION=3480
+        # TODO bug 1791366: Reset timeout back to 3490s
+        POLL_DURATION=14280
         ;;
     *)
         POLL_DURATION=1080
