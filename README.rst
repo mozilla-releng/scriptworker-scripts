@@ -150,7 +150,8 @@ gecko-1-shipit-dev    shipit-dev-relengworker-firefoxci-gecko-1
 gecko-3-signing       signing-prod-relengworker-firefoxci-gecko-3
 gecko-t-signing       signing-prod-relengworker-firefoxci-gecko-t
 mobile-3-signing      signing-prod-relengworker-firefoxci-mobile-3
-mobile-t-signing      signing-prod-relengworker-firefoxci-mobile-t
+mobile-t-signing      signing-prod-relengworker-firefoxci-mobile-t-1
+mobile-t-signing-dev  signing-dev-relengworker-firefoxci-mobile-t-1
 comm-3-signing        signing-prod-relengworker-firefoxci-comm-3
 comm-t-signing        signing-prod-relengworker-firefoxci-comm-t
 appservices-3-signing signing-prod-relengworker-firefoxci-applicationservices-3
