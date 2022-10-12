@@ -5,3 +5,4 @@ mozilla-version
 redo
 scriptworker
 taskcluster
+google-cloud-storage

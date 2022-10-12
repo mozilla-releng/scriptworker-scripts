@@ -30,6 +30,7 @@ from beetmoverscript.constants import (
     RELEASE_BRANCHES,
     RELEASE_EXCLUDE,
 )
+from beetmoverscript.gcloud import cleanup_gcloud, push_to_releases_gcs, setup_gcloud, upload_to_gcs
 from beetmoverscript.task import (
     add_balrog_manifest_to_artifacts,
     add_checksums_to_artifacts,
@@ -39,17 +40,18 @@ from beetmoverscript.task import (
     get_taskId_from_full_path,
     get_updated_buildhub_artifact,
     get_upstream_artifacts,
+    is_cloud_enabled,
     validate_task_schema,
 )
 from beetmoverscript.utils import (
+    await_and_raise_uploads,
     exists_or_endswith,
     extract_file_config_from_artifact_map,
     generate_beetmover_manifest,
     get_addon_data,
     get_bucket_name,
-    get_bucket_url_prefix,
     get_candidates_prefix,
-    get_creds,
+    get_credentials,
     get_hash,
     get_partials_props,
     get_partner_candidates_prefix,
@@ -58,6 +60,7 @@ from beetmoverscript.utils import (
     get_product_name,
     get_releases_prefix,
     get_size,
+    get_url_prefix,
     is_partner_action,
     is_partner_private_task,
     is_partner_public_task,
@@ -75,7 +78,7 @@ async def push_to_system_addons(context):
     """Push artifacts to pub/system-addons
     Upon successful transfer, generate checksums files and manifests to be
     consumed downstream by balrogworkers."""
-    context.release_props = get_release_props(context)
+    context.release_props = get_release_props(context.task)
     context.balrog_manifest = list()
     context.raw_balrog_manifest = dict()
     context.checksums = dict()
@@ -98,7 +101,7 @@ async def push_to_nightly(context):
 
     Upon successful transfer, generate checksums files and manifests to be
     consumed downstream by balrogworkers."""
-    context.release_props = get_release_props(context)
+    context.release_props = get_release_props(context.task)
 
     # balrog_manifest is written and uploaded as an artifact which is used by
     # a subsequent balrogworker task in the release graph. Balrogworker uses
@@ -141,7 +144,7 @@ async def direct_push_to_bucket(context):
     Determine the list of artifacts to be transferred, generate the
     mapping manifest, run some data validations, and upload the bits.
     """
-    context.release_props = get_release_props(context)
+    context.release_props = get_release_props(context.task)
     context.checksums = dict()  # Needed by downstream calls
     context.raw_balrog_manifest = dict()  # Needed by downstream calls
 
@@ -158,7 +161,7 @@ async def push_to_partner(context):
     Determine the list of artifacts to be transferred, generate the
     mapping manifest and upload the bits."""
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
-    context.release_props = get_release_props(context)
+    context.release_props = get_release_props(context.task)
     context.checksums = dict()
 
     mapping_manifest = generate_beetmover_manifest(context)
@@ -167,8 +170,18 @@ async def push_to_partner(context):
     add_checksums_to_artifacts(context)
 
 
-# push_to_releases {{{1
 async def push_to_releases(context):
+    # S3 upload
+    if context.config["clouds"]["aws"][context.bucket]["enabled"]:
+        await push_to_releases_s3(context)
+
+    # GCS upload
+    if context.config["clouds"]["gcloud"][context.bucket]["enabled"]:
+        await push_to_releases_gcs(context)
+
+
+# push_to_releases_s3 {{{1
+async def push_to_releases_s3(context):
     """Copy artifacts from one S3 location to another.
 
     Determine the list of artifacts to be copied and transfer them. These
@@ -177,12 +190,12 @@ async def push_to_releases(context):
     product = context.task["payload"]["product"]
     build_number = context.task["payload"]["build_number"]
     version = context.task["payload"]["version"]
-    context.bucket_name = get_bucket_name(context, product)
+    context.bucket_name = get_bucket_name(context, product, "aws")
 
     candidates_prefix = get_candidates_prefix(product, version, build_number)
     releases_prefix = get_releases_prefix(product, version)
 
-    creds = get_creds(context)
+    creds = get_credentials(context, "aws")
     s3_resource = boto3.resource("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
 
     candidates_keys_checksums = list_bucket_objects(context, s3_resource, candidates_prefix)
@@ -225,7 +238,7 @@ async def push_to_maven(context):
     all possible cornercases. For example it needs to handle both MavenVersion for
     Github projects but also FirefoxVersion for GeckoView in-tree releases.
     """
-    context.release_props = get_release_props(context)
+    context.release_props = get_release_props(context.task)
     context.checksums = dict()  # Needed by downstream calls
     context.raw_balrog_manifest = dict()  # Needed by downstream calls
 
@@ -240,7 +253,7 @@ async def push_to_maven(context):
 
 # copy_beets {{{1
 def copy_beets(context, from_keys_checksums, to_keys_checksums):
-    creds = get_creds(context)
+    creds = get_credentials(context, "aws")
     boto_client = boto3.client("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
 
     def worker(item):
@@ -303,21 +316,31 @@ async def async_main(context):
 
     validate_task_schema(context)
 
+    # determine the task bucket and action
+    #   Note: context.bucket is the release type (release,nightly,dep,etc)
+    context.bucket = get_task_bucket(context.task, context.config)
+    context.action = get_task_action(context.task, context.config, valid_actions=action_map.keys())
+
+    setup_gcloud(context)
+
     connector = aiohttp.TCPConnector(limit=context.config["aiohttp_max_connections"])
     async with aiohttp.ClientSession(connector=connector) as session:
         context.session = session
 
-        # determine the task bucket and action
-        context.bucket = get_task_bucket(context.task, context.config)
-        context.action = get_task_action(context.task, context.config, valid_actions=action_map.keys())
-
-        if action_map.get(context.action):
-            await action_map[context.action](context)
-        else:
+        if not action_map.get(context.action):
             log.critical("Unknown action {}!".format(context.action))
+            cleanup(context)
             sys.exit(3)
 
+        await action_map[context.action](context)
+
+    cleanup(context)
     log.info("Success!")
+
+
+# cleanup {{{1
+def cleanup(context):
+    cleanup_gcloud(context)
 
 
 # move_beets {{{1
@@ -426,7 +449,7 @@ async def move_beet(context, source, destinations, locale, update_balrog_manifes
 
     if update_balrog_manifest:
         context.raw_balrog_manifest.setdefault(locale, {})
-        balrog_info = generate_balrog_info(context, artifact_pretty_name, locale, destinations, from_buildid)
+        balrog_info = generate_balrog_info(context, artifact_pretty_name, destinations, from_buildid)
         if from_buildid:
             context.raw_balrog_manifest[locale].setdefault("partialInfo", []).append(balrog_info)
         else:
@@ -436,13 +459,20 @@ async def move_beet(context, source, destinations, locale, update_balrog_manifes
 # move_partner_beets {{{1
 async def move_partner_beets(context, manifest):
     artifacts_to_beetmove = context.artifacts_to_beetmove
-    beets = []
+    cloud_uploads = {key: [] for key in context.config["clouds"]}
 
     for locale in artifacts_to_beetmove:
         for full_path_artifact in artifacts_to_beetmove[locale]:
             source = artifacts_to_beetmove[locale][full_path_artifact]
             destination = get_destination_for_partner_repack_path(context, manifest, full_path_artifact, locale)
-            beets.append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=destination, path=source)))
+
+            # S3 upload
+            if context.config["clouds"]["aws"][context.bucket]["enabled"]:
+                cloud_uploads["aws"].append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=destination, path=source)))
+
+            # GCS upload
+            if context.config["clouds"]["gcloud"][context.bucket]["enabled"]:
+                cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=destination, path=source)))
 
             if is_partner_public_task(context):
                 # we trim the full destination to the part after
@@ -452,7 +482,7 @@ async def move_partner_beets(context, manifest):
                     context.checksums[artifact_pretty_name] = {algo: get_hash(source, algo) for algo in context.config["checksums_digests"]}
                     context.checksums[artifact_pretty_name]["size"] = get_size(source)
 
-    await raise_future_exceptions(beets)
+    await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.bucket)
 
 
 def sanity_check_partner_path(path, repl_dict, regexes):
@@ -517,7 +547,7 @@ def generate_system_addons_balrog_manifest(context):
             addon_data = get_addon_data(filepath)
             addon_name = addon_data["name"]
             addon_version = addon_data["version"]
-            addon_url = "{prefix}/{s3_key}".format(prefix=get_bucket_url_prefix(context), s3_key=destinations[0])
+            addon_url = "{prefix}/{s3_key}".format(prefix=get_url_prefix(context), s3_key=destinations[0])
             checksums_path = path_info["checksums_path"]
             checksums_info = context.checksums[checksums_path]
             addon_hash = checksums_info[hash_type]
@@ -534,11 +564,11 @@ def generate_system_addons_balrog_manifest(context):
 
 
 # generate_balrog_info {{{1
-def generate_balrog_info(context, artifact_pretty_name, locale, destinations, from_buildid=None):
+def generate_balrog_info(context, artifact_pretty_name, destinations, from_buildid=None):
     release_props = context.release_props
     checksums = context.checksums
 
-    url = "{prefix}/{s3_key}".format(prefix=get_bucket_url_prefix(context), s3_key=destinations[0])
+    url = "{prefix}/{path}".format(prefix=get_url_prefix(context), path=destinations[0])
 
     data = {"hash": checksums[artifact_pretty_name][release_props["hashType"]], "size": checksums[artifact_pretty_name]["size"], "url": url}
     if from_buildid:
@@ -563,7 +593,7 @@ def enrich_balrog_manifest(context, locale):
         url_replacements.append(["http://archive.mozilla.org/pub", "http://download.cdn.mozilla.net/pub"])
 
     enrich_dict = {
-        "appName": get_product_name(release_props["appName"], release_props["stage_platform"]),
+        "appName": get_product_name(context.task, context.config, lowercase_app_name=False),
         "appVersion": release_props["appVersion"],
         "branch": release_props["branch"],
         "buildid": release_props["buildid"],
@@ -587,10 +617,21 @@ def enrich_balrog_manifest(context, locale):
 # retry_upload {{{1
 async def retry_upload(context, destinations, path):
     """Manage upload of `path` to `destinations`."""
-    uploads = []
+    cloud_uploads = {key: [] for key in context.config["clouds"]}
+
+    # TODO: There's a "bug" where if you define
+    #  "gcloud.release" but not "aws.release", the context.bucket will fail here
+    #  we don't have that use case right now, but might be worth fixing
     for dest in destinations:
-        uploads.append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
-    await raise_future_exceptions(uploads)
+        # S3 upload
+        if is_cloud_enabled(context.config, "aws", context.bucket):
+            cloud_uploads["aws"].append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
+
+        # GCS upload
+        if is_cloud_enabled(context.config, "gcloud", context.bucket):
+            cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path)))
+
+    await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.bucket)
 
 
 # put {{{1
@@ -609,13 +650,13 @@ async def put(context, url, headers, abs_filename, session=None):
 
 # upload_to_s3 {{{1
 async def upload_to_s3(context, s3_key, path):
-    product = get_product_name(context.release_props["appName"].lower(), context.release_props["stage_platform"])
+    product = get_product_name(context.task, context.config)
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
         raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
-    api_kwargs = {"Bucket": get_bucket_name(context, product), "Key": s3_key, "ContentType": mime_type}
+    api_kwargs = {"Bucket": get_bucket_name(context, product, "aws"), "Key": s3_key, "ContentType": mime_type}
     headers = {"Content-Type": mime_type, "Cache-Control": "public, max-age=%d" % CACHE_CONTROL_MAXAGE}
-    creds = context.config["bucket_config"][context.bucket]["credentials"]
+    creds = get_credentials(context, "aws")
     s3 = boto3.client("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
     url = s3.generate_presigned_url("put_object", api_kwargs, ExpiresIn=1800, HttpMethod="PUT")
 
