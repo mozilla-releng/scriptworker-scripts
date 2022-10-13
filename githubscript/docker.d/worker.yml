@@ -15,6 +15,12 @@ github_projects:
         github_owner: mozilla-mobile
         github_repo_name: android-components
         contact_github: true
+      firefox-android:
+        allowed_actions: ["release"]
+        github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_PROD" }
+        github_owner: mozilla-mobile
+        github_repo_name: firefox-android
+        contact_github: true
       focus-android:
         allowed_actions: ["release"]
         github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_PROD" }
@@ -34,6 +40,12 @@ github_projects:
         github_owner: mozilla-releng
         github_repo_name: staging-android-components
         contact_github: true
+      staging-firefox-android:
+        allowed_actions: ["release"]
+        github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
+        github_owner: mozilla-releng
+        github_repo_name: staging-firefox-android
+        contact_github: true
       staging-focus-android:
         allowed_actions: ["release"]
         github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
@@ -52,6 +64,12 @@ github_projects:
         github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
         github_owner: mozilla-releng
         github_repo_name: staging-android-components
+        contact_github: true
+      staging-firefox-android:
+        allowed_actions: ["release"]
+        github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
+        github_owner: mozilla-releng
+        github_repo_name: staging-firefox-android
         contact_github: true
       staging-focus-android:
         allowed_actions: ["release"]
@@ -81,6 +99,6 @@ github_projects:
 taskcluster_scope_prefixes:
   $switch:
     'COT_PRODUCT == "mobile"':
-       ["project:mobile:fenix:releng:github:", "project:mobile:android-components:releng:github:", "project:mobile:focus-android:releng:github:"]
+       ["project:mobile:fenix:releng:github:", "project:mobile:android-components:releng:github:", "project:mobile:focus-android:releng:github:", "project:mobile:firefox-android:releng:github:"]
     'COT_PRODUCT == "xpi"':
       ["project:xpi:releng:github:"]
