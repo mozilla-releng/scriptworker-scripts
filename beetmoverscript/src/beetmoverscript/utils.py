@@ -12,7 +12,6 @@ import arrow
 import jinja2
 import yaml
 from scriptworker.exceptions import TaskVerificationError
-from scriptworker.utils import get_results_and_future_exceptions, raise_future_exceptions
 
 from beetmoverscript.constants import (
     DIRECT_RELEASE_ACTIONS,
@@ -55,8 +54,6 @@ class BadXPIFile(Exception):
 
 
 def get_addon_data(filepath):
-    name = None
-    version = None
     tmpdir = tempfile.mkdtemp()
     with zipfile.ZipFile(filepath, "r") as zf:
         zf.extractall(tmpdir)
@@ -149,38 +146,23 @@ def is_partner_public_task(context):
     return is_partner_action(context.action) and "partner" not in context.bucket
 
 
-def get_product_name(task, config, lowercase_app_name=True):
-    # importing in-function to avoid circular dependency problems
-    from beetmoverscript.task import get_release_props, get_task_action
-
-    action = get_task_action(task, config)
-
-    if action == "push-to-releases":
-        if "product" not in task["payload"]:
-            raise ValueError("product not found in task payload.")
-        return task["payload"]["product"].lower()
-
-    if "releaseProperties" not in task["payload"]:
-        raise ValueError("releaseProperties not found in task payload.")
-
-    if "appName" not in task["payload"]["releaseProperties"]:
-        raise ValueError("appName not found in task payload.")
-
-    release_props = get_release_props(task)
-    appName = task["payload"]["releaseProperties"]["appName"]
-    if lowercase_app_name:
-        appName = appName.lower()
-
-    # XXX: this check is helps reuse this function in both
-    # returning the proper templates file but also for the release name in
-    # Balrog manifest that beetmover is uploading upon successful run
-    for dynamic_platform in ("devedition", "pinebuild"):
-        if dynamic_platform in release_props["stage_platform"]:
-            if appName[0].isupper():
-                return dynamic_platform.capitalize()
-            else:
-                return dynamic_platform
-
+def get_product_name(appName, platform):
+    if "devedition" in platform:
+        # XXX: this check is helps reuse this function in both
+        # returning the proper templates file but also for the release name in
+        # Balrog manifest that beetmover is uploading upon successful run
+        if appName[0].isupper():
+            return "Devedition"
+        else:
+            return "devedition"
+    if "pinebuild" in platform:
+        # XXX: this check is helps reuse this function in both
+        # returning the proper templates file but also for the release name in
+        # Balrog manifest that beetmover is uploading upon successful run
+        if appName[0].isupper():
+            return "Pinebuild"
+        else:
+            return "pinebuild"
     return appName
 
 
@@ -228,7 +210,7 @@ def generate_beetmover_template_args(context):
     elif "locale" in task["payload"]:
         tmpl_args["locales"] = [task["payload"]["locale"]]
 
-    product_name = get_product_name(task, context.config)
+    product_name = get_product_name(release_props["appName"].lower(), release_props["stage_platform"])
     if tmpl_args.get("locales") and (
         # we only apply the repacks template if not english or android "multi" locale
         set(tmpl_args.get("locales")).isdisjoint({"en-US", "multi"})
@@ -317,43 +299,16 @@ def get_partner_match(keyname, candidates_prefix, partners):
     return None
 
 
-def get_bucket_name(context, product, cloud):
-    return context.config["clouds"][cloud][context.bucket]["product_buckets"][product.lower()]
+def get_creds(context):
+    return context.config["bucket_config"][context.bucket]["credentials"]
 
 
-def get_fail_task_on_error(clouds_config, release_bucket, cloud):
-    return clouds_config[cloud][release_bucket].get("fail_task_on_error")
+def get_bucket_name(context, product):
+    return context.config["bucket_config"][context.bucket]["buckets"][product]
 
 
-async def await_and_raise_uploads(cloud_uploads, clouds_config, release_bucket):
-    for cloud in cloud_uploads:
-        if len(cloud_uploads[cloud]) == 0:
-            continue
-        if get_fail_task_on_error(clouds_config, release_bucket, cloud):
-            await raise_future_exceptions(cloud_uploads[cloud])
-        else:
-            _, ex = await get_results_and_future_exceptions(cloud_uploads[cloud])
-            # Print out the exceptions
-            for e in ex:
-                log.warning("Skipped exception:")
-                print(e.__traceback__)
-                print(getattr(e, "message", "<no message>"))
-
-
-def get_credentials(context, cloud):
-    clouds = context.config["clouds"]
-    if cloud not in clouds:
-        raise ValueError(f"{cloud} not a valid cloud [{clouds.keys()}]")
-    if context.bucket not in clouds[cloud]:
-        return
-    return clouds[cloud][context.bucket]["credentials"]
-
-
-def get_url_prefix(context):
-    if context.bucket not in context.config["url_prefix"]:
-        raise ValueError(f"No bucket config found for {context.bucket}")
-
-    return context.config["url_prefix"][context.bucket]
+def get_bucket_url_prefix(context):
+    return context.config["bucket_config"][context.bucket]["url_prefix"]
 
 
 def validated_task_id(task_id):

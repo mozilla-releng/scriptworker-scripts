@@ -34,7 +34,6 @@ from . import get_fake_checksums_manifest, get_fake_valid_config, get_fake_valid
         (["project:releng:beetmover:bucket:dep", "project:releng:beetmover:action:push-to-candidates"], "schema_file"),
         (["project:releng:beetmover:bucket:dep", "project:releng:beetmover:action:push-to-partner"], "schema_file"),
         (["project:releng:beetmover:bucket:dep", "project:releng:beetmover:action:push-to-nightly"], "schema_file"),
-        (["project:releng:beetmover:bucket:dep", "project:releng:beetmover:action:direct-push-to-bucket"], "artifactMap_schema_file"),
     ),
 )
 def test_get_schema_key_by_action(scopes, expected):
@@ -107,7 +106,7 @@ def test_validate_task(context):
 )
 def test_get_task_bucket(scopes, expected, raises):
     task = {"scopes": scopes}
-    config = {"clouds": {"aws": {"dep": {"enabled": True}}, "gcloud": {}}, "taskcluster_scope_prefixes": ["project:releng:beetmover:"]}
+    config = {"bucket_config": {"dep": ""}, "taskcluster_scope_prefixes": ["project:releng:beetmover:"]}
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
             get_task_bucket(task, config)
@@ -259,18 +258,18 @@ def test_get_release_props(context, mocker, taskjson, locale, relprops, expected
         context.task["payload"]["locale"] = "lang"
 
     context.task["payload"]["releaseProperties"] = relprops
-    assert get_release_props(context.task) == expected
+    assert get_release_props(context) == expected
 
     context.task["payload"]["releaseProperties"] = None
     with pytest.raises(ScriptWorkerTaskException):
-        get_release_props(context.task)
+        get_release_props(context)
 
 
 # get_release_props {{{1
 def test_get_release_props_raises(context, mocker):
     context.task = get_fake_valid_task(taskjson="task_missing_relprops.json")
     with pytest.raises(ScriptWorkerTaskException):
-        get_release_props(context.task)
+        get_release_props(context)
 
 
 # is_custom_beetmover_checksums_task {{{1

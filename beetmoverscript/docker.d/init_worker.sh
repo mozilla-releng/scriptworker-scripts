@@ -14,7 +14,6 @@ case $COT_PRODUCT in
   firefox)
     case $ENV in
       dev|fake-prod)
-        test_var_set 'GCS_CREDENTIALS'
         test_var_set 'DEP_ID'
         test_var_set 'DEP_KEY'
         test_var_set 'DEP_PARTNER_ID'
@@ -23,7 +22,6 @@ case $COT_PRODUCT in
         test_var_set 'MAVEN_KEY'
         ;;
       prod)
-        test_var_set 'GCS_CREDENTIALS'
         test_var_set 'NIGHTLY_ID'
         test_var_set 'NIGHTLY_KEY'
         test_var_set 'RELEASE_ID'
@@ -45,12 +43,10 @@ case $COT_PRODUCT in
   xpi)
     case $ENV in
       dev|fake-prod)
-        test_var_set 'GCS_CREDENTIALS'
         test_var_set 'DEP_ID'
         test_var_set 'DEP_KEY'
         ;;
       prod)
-        test_var_set 'GCS_CREDENTIALS'
         test_var_set 'RELEASE_ID'
         test_var_set 'RELEASE_KEY'
         ;;
@@ -62,12 +58,10 @@ case $COT_PRODUCT in
   thunderbird)
     case $ENV in
       dev|fake-prod)
-        test_var_set 'GCS_CREDENTIALS'
         test_var_set 'DEP_ID'
         test_var_set 'DEP_KEY'
         ;;
       prod)
-        test_var_set 'GCS_CREDENTIALS'
         test_var_set 'NIGHTLY_ID'
         test_var_set 'NIGHTLY_KEY'
         test_var_set 'RELEASE_ID'
@@ -83,7 +77,6 @@ case $COT_PRODUCT in
   mobile)
     case $ENV in
       dev|fake-prod)
-        test_var_set 'GCS_CREDENTIALS'
         test_var_set 'MAVEN_ID'
         test_var_set 'MAVEN_KEY'
         test_var_set 'MAVEN_NIGHTLY_ID'
@@ -92,7 +85,6 @@ case $COT_PRODUCT in
         test_var_set 'DEP_KEY'
         ;;
       prod)
-        test_var_set 'GCS_CREDENTIALS'
         test_var_set 'MAVEN_ID'
         test_var_set 'MAVEN_KEY'
         test_var_set 'MAVEN_NIGHTLY_ID'
@@ -120,12 +112,10 @@ case $COT_PRODUCT in
   mozillavpn)
     case $ENV in
       dev|fake-prod)
-        test_var_set 'GCS_CREDENTIALS'
         test_var_set 'DEP_ID'
         test_var_set 'DEP_KEY'
         ;;
       prod)
-        test_var_set 'GCS_CREDENTIALS'
         test_var_set 'RELEASE_ID'
         test_var_set 'RELEASE_KEY'
         ;;
