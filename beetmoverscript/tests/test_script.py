@@ -23,7 +23,7 @@ from beetmoverscript.script import (
     move_beets,
     move_partner_beets,
     push_to_partner,
-    push_to_releases_s3,
+    push_to_releases,
     put,
     sanity_check_partner_path,
     setup_mimetypes,
@@ -42,13 +42,13 @@ async def test_push_to_partner(context, mocker):
     await push_to_partner(context)
 
 
-# push_to_releases_s3 {{{1
+# push_to_releases {{{1
 @pytest.mark.parametrize(
     "candidates_keys,releases_keys,exception_type",
     (({"foo.zip": "x", "foo.exe": "y"}, {}, None), ({"foo.zip": "x", "foo.exe": "y"}, {"asdf": 1}, None), ({}, {"asdf": 1}, ScriptWorkerTaskException)),
 )
 @pytest.mark.asyncio
-async def test_push_to_releases_s3(context, mocker, candidates_keys, releases_keys, exception_type):
+async def test_push_to_releases(context, mocker, candidates_keys, releases_keys, exception_type):
     context.task = {"payload": {"product": "fennec", "build_number": 33, "version": "99.0b44"}}
 
     objects = [candidates_keys, releases_keys]
@@ -65,9 +65,9 @@ async def test_push_to_releases_s3(context, mocker, candidates_keys, releases_ke
 
     if exception_type is not None:
         with pytest.raises(exception_type):
-            await push_to_releases_s3(context)
+            await push_to_releases(context)
     else:
-        await push_to_releases_s3(context)
+        await push_to_releases(context)
 
 
 # copy_beets {{{1
@@ -201,7 +201,6 @@ def test_enrich_balrog_manifest(context, branch, action):
 @pytest.mark.asyncio
 async def test_retry_upload(context, mocker):
     mocker.patch.object(beetmoverscript.script, "upload_to_s3", new=noop_async)
-    mocker.patch.object(beetmoverscript.script, "upload_to_gcs", new=noop_async)
     await beetmoverscript.script.retry_upload(context, ["a", "b"], "c")
 
 
@@ -490,13 +489,12 @@ async def test_move_beet(update_manifest, action):
 @pytest.mark.asyncio
 async def test_move_partner_beets(context, mocker):
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
-    context.release_props = get_release_props(context.task)
+    context.release_props = get_release_props(context)
     mocker.patch("beetmoverscript.utils.JINJA_ENV", get_test_jinja_env())
     mapping_manifest = generate_beetmover_manifest(context)
 
     mocker.patch.object(beetmoverscript.script, "get_destination_for_partner_repack_path", new=noop_sync)
     mocker.patch.object(beetmoverscript.script, "upload_to_s3", new=noop_async)
-    mocker.patch.object(beetmoverscript.script, "upload_to_gcs", new=noop_async)
     await move_partner_beets(context, mapping_manifest)
 
 
@@ -544,7 +542,7 @@ def test_get_destination_for_partner_repack_path(context, full_path, expected, b
     for artifact_dict in context.task["payload"]["upstreamArtifacts"]:
         artifact_dict["locale"] = locale
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
-    context.release_props = get_release_props(context.task)
+    context.release_props = get_release_props(context)
     mapping_manifest = generate_beetmover_manifest(context)
 
     if raises:
@@ -596,9 +594,6 @@ async def test_async_main(context, mocker, action, raises, task_filename):
     mocker.patch("beetmoverscript.utils.JINJA_ENV", get_test_jinja_env())
     mocker.patch("beetmoverscript.script.move_beets", new=noop_async)
     mocker.patch.object(beetmoverscript.script, "get_task_action", new=fake_action)
-    mocker.patch("beetmoverscript.gcloud.setup_gcs_credentials", new=noop_sync)
-    mocker.patch("beetmoverscript.gcloud.set_gcs_client", new=noop_sync)
-    mocker.patch("beetmoverscript.gcloud.cleanup_gcloud", new=noop_sync)
     if raises:
         with pytest.raises(SystemExit):
             await async_main(context)
