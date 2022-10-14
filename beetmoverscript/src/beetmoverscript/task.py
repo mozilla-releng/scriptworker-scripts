@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import urllib.parse
+from copy import deepcopy
 
 import arrow
 from mozilla_version.errors import PatternNotMatchedError
@@ -206,7 +207,7 @@ def get_upstream_artifacts(context, preserve_full_paths=False):
 def get_release_props(task, platform_mapping=STAGE_PLATFORM_MAP):
     """determined via parsing the Nightly build job's payload and
     expanded the properties with props beetmover knows about."""
-    payload_properties = task.get("payload", {}).get("releaseProperties", None)
+    payload_properties = deepcopy(task).get("payload", {}).get("releaseProperties", None)
 
     if not payload_properties:
         raise ScriptWorkerTaskException("could not determine release props file from task payload")
