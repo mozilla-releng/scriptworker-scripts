@@ -83,7 +83,7 @@ clouds:
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
-            enabled: False
+            enabled: True
             product_buckets:
               devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
               pinebuild:  'moz-fx-productdelivery-pr-38b5-productdelivery'
@@ -130,7 +130,7 @@ clouds:
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
-            enabled: False
+            enabled: True
             product_buckets:
               xpi: 'moz-fx-productdelivery-pr-38b5-productdelivery'
         'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
@@ -144,7 +144,7 @@ clouds:
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
-            enabled: False
+            enabled: True
             product_buckets:
               thunderbird: 'moz-fx-productdelivery-pr-38b5-productdelivery'
           release:
@@ -185,7 +185,7 @@ clouds:
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
-            enabled: False
+            enabled: True
             product_buckets:
               fenix: 'moz-fx-productdelivery-pr-38b5-productdelivery'
               focus: 'moz-fx-productdelivery-pr-38b5-productdelivery'
@@ -207,7 +207,7 @@ clouds:
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: False
-            enabled: False
+            enabled: True
             product_buckets:
               vpn: 'moz-fx-productdelivery-pr-38b5-productdelivery'
 
