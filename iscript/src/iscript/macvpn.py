@@ -250,6 +250,9 @@ async def vpn_behavior(config, task, notarize=True):
     # Mozillavpnnp
     await _codesign(sign_config, os.path.join(utils_dir, "mozillavpnnp"))
 
+    # Prevent override of entitlements of LoginItems
+    sign_config["skip_dirs"] = sign_config.setdefault("skip_dirs", tuple()) + ("LoginItems",)
+
     # Main VPN app
     # Already defined from extract - just need the extra bits
     top_app.app_name = "Mozilla VPN.app"
