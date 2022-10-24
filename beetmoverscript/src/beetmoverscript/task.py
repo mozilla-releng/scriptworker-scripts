@@ -78,13 +78,32 @@ def get_task_bucket(task, script_config):
     if re.search("^[0-9A-Za-z_-]+$", bucket) is None:
         messages.append("Bucket {} is malformed".format(bucket))
 
-    if bucket not in script_config["bucket_config"]:
-        messages.append("Invalid bucket scope")
+    # Set of all clouds configured and enabled
+    available_buckets = set()
+    for cloud in script_config["clouds"].values():
+        for release_type, config in cloud.items():
+            if config["enabled"]:
+                available_buckets.add(release_type)
+
+    if bucket not in available_buckets:
+        messages.append(f"Invalid bucket scope: {bucket}")
 
     if messages:
         raise ScriptWorkerTaskException("\n".join(messages))
 
     return bucket
+
+
+def is_cloud_enabled(script_config, cloud, task_bucket):
+    """
+    Checks if a release type is enabled on a cloud
+    Defaults to False
+    """
+    if cloud not in script_config["clouds"]:
+        return False
+    if task_bucket not in script_config["clouds"][cloud]:
+        return False
+    return script_config["clouds"][cloud][task_bucket].get("enabled", False)
 
 
 def get_task_action(task, script_config, valid_actions=None):
@@ -185,28 +204,21 @@ def get_upstream_artifacts(context, preserve_full_paths=False):
     return artifacts
 
 
-def get_release_props(context, platform_mapping=STAGE_PLATFORM_MAP):
+def get_release_props(task, platform_mapping=STAGE_PLATFORM_MAP):
     """determined via parsing the Nightly build job's payload and
     expanded the properties with props beetmover knows about."""
-    payload_properties = context.task.get("payload", {}).get("releaseProperties", None)
+    payload_properties = deepcopy(task).get("payload", {}).get("releaseProperties", None)
 
     if not payload_properties:
         raise ScriptWorkerTaskException("could not determine release props file from task payload")
 
     log.debug("Loading release_props from task's payload: {}".format(payload_properties))
-    return update_props(context, payload_properties, platform_mapping)
 
-
-def update_props(context, props, platform_mapping):
-    """Function to alter slightly the `platform` value and to enrich context with
-    `stage_platform` as we need both in the beetmover template manifests."""
-    props = deepcopy(props)
-
-    stage_platform = props.get("platform", "")
+    stage_platform = payload_properties.get("platform", "")
     # for some products/platforms this mapping is not needed, hence the default
-    props["platform"] = platform_mapping.get(stage_platform, stage_platform)
-    props["stage_platform"] = stage_platform
-    return props
+    payload_properties["platform"] = platform_mapping.get(stage_platform, stage_platform)
+    payload_properties["stage_platform"] = stage_platform
+    return payload_properties
 
 
 def get_updated_buildhub_artifact(path, installer_artifact, installer_path, context, locale, manifest=None, artifact_map=None):
@@ -215,7 +227,8 @@ def get_updated_buildhub_artifact(path, installer_artifact, installer_path, cont
     buildhub.json fields that should be changed: download.size, download.date, download.url
     """
     contents = utils.load_json(path)
-    url_prefix = context.config["bucket_config"][context.bucket]["url_prefix"]
+    url_prefix = utils.get_url_prefix(context)
+
     if artifact_map:
         task_id = get_taskId_from_full_path(installer_path)
         cfg = utils.extract_file_config_from_artifact_map(artifact_map, installer_artifact, task_id, locale)

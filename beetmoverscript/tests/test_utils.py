@@ -13,6 +13,7 @@ from beetmoverscript.utils import (
     generate_beetmover_manifest,
     generate_beetmover_template_args,
     get_candidates_prefix,
+    get_credentials,
     get_hash,
     get_partials_props,
     get_partner_candidates_prefix,
@@ -20,6 +21,7 @@ from beetmoverscript.utils import (
     get_partner_releases_prefix,
     get_product_name,
     get_releases_prefix,
+    get_url_prefix,
     is_partner_private_task,
     is_partner_public_task,
     is_promotion_action,
@@ -135,7 +137,6 @@ def test_beetmover_template_args_generation(context, taskjson, partials):
         "partials": partials,
         "locales": ["en-US"],
     }
-
     template_args = generate_beetmover_template_args(context)
     assert template_args == expected_template_args
 
@@ -169,6 +170,7 @@ def test_beetmover_template_args_generation(context, taskjson, partials):
 )
 def test_beetmover_template_args_locales(context, payload, expected_locales):
     context.task = get_fake_valid_task("task_partials.json")
+    payload["releaseProperties"] = context.task["payload"]["releaseProperties"]
     context.task["payload"] = payload
     context.task["payload"]["upload_date"] = "2018/04/2018-04-09-15-30-00"
 
@@ -179,15 +181,6 @@ def test_beetmover_template_args_locales(context, payload, expected_locales):
     else:
         assert "locale" not in template_args
         assert "locales" not in template_args
-
-
-def test_beetmover_template_args_fennec_nightly(context):
-    """Ensure that fennec which is en-US and multi don't get the repack template"""
-    context.task = get_fake_valid_task("task_fennec.json")
-    template_args = generate_beetmover_template_args(context)
-    assert "locale" not in template_args
-    assert template_args["locales"] == ["en-US", "multi"]
-    assert template_args["template_key"] == "fake_nightly"
 
 
 def test_beetmover_template_args_generation_release(context):
@@ -311,7 +304,7 @@ def test_get_partner_match(keyname, partners, expected):
 
 # product_name {{{1
 @pytest.mark.parametrize(
-    "appName,tmpl_key,expected",
+    "appName,stage_platform,expected",
     (
         ("firefox", "dummy", "firefox"),
         ("firefox", "devedition", "devedition"),
@@ -319,10 +312,14 @@ def test_get_partner_match(keyname, partners, expected):
         ("Fennec", "dummy", "Fennec"),
         ("Firefox", "dummy", "Firefox"),
         ("fennec", "dummy", "fennec"),
+        ("Pinebuild", "pinebuild", "Pinebuild"),
+        ("pinebuild", "pinebuild", "pinebuild"),
     ),
 )
-def test_get_product_name(appName, tmpl_key, expected):
-    assert get_product_name(appName, tmpl_key) == expected
+def test_get_product_name(context, appName, stage_platform, expected):
+    context.task["payload"]["releaseProperties"]["appName"] = appName
+    context.task["payload"]["releaseProperties"]["platform"] = stage_platform
+    assert get_product_name(context.task, context.config, lowercase_app_name=False) == expected
 
 
 # is_partner_private_public_task {{{1
@@ -414,3 +411,31 @@ def test_extract_full_artifact_map_path(path, locale, found):
 )
 def test_exists_or_endswith(filename, basenames, expected):
     assert exists_or_endswith(filename, basenames) == expected
+
+
+@pytest.mark.parametrize(
+    "cloud,bucket,expected,raises",
+    (
+        ("aws", "nightly", {"id": "dummy", "key": "dummy"}, False),
+        ("gcloud", "nightly", "eyJoZWxsbyI6ICJ3b3JsZCJ9Cg==", False),
+        ("gcloud", "fakeRelease", None, False),
+        ("ibw", "fakeRelease", None, True),
+    ),
+)
+def test_get_credentials(context, cloud, bucket, expected, raises):
+    context.bucket = bucket
+
+    if raises:
+        with pytest.raises(ValueError):
+            get_credentials(context, cloud)
+    else:
+        aws_creds = get_credentials(context, cloud)
+        assert aws_creds == expected
+
+
+def test_get_url_prefix(context):
+    assert get_url_prefix(context) == "https://archive.test"
+
+    with pytest.raises(ValueError):
+        context.bucket = "FakeRelease"
+        get_url_prefix(context)

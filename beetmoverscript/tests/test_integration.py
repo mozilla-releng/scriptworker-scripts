@@ -1,15 +1,17 @@
+import copy
 import json
 from contextlib import asynccontextmanager
 from unittest.mock import Mock
 
 import pytest
 
+import beetmoverscript.gcloud
 import beetmoverscript.script
 from beetmoverscript.constants import BUILDHUB_ARTIFACT
 from beetmoverscript.script import main
 from beetmoverscript.utils import load_json, write_json
 
-from . import get_fake_valid_config
+from . import get_fake_valid_config, noop_async, noop_sync
 
 
 def get_test_task(task_name):
@@ -18,31 +20,38 @@ def get_test_task(task_name):
 
 def get_config(scope_prefix):
     config = get_fake_valid_config()
-    credentials = {"id": "dummy", "key": "dummy"}
+    awscreds = {"id": "dummy", "key": "dummy"}
+    gcscreds = "eyJoZWxsbyI6ICJ3b3JsZCJ9Cg=="
     url_prefix = "https://url.prefix"
+    release_types = ("maven-nightly-staging", "maven-production", "nightly", "release")
+    config["url_prefix"] = {p: url_prefix for p in release_types}
     config["taskcluster_scope_prefixes"] = [scope_prefix]
-    config["bucket_config"] = {
+    cloud_template = {
         "maven-nightly-staging": {
-            "buckets": {"nightly_components": "dummy"},
-            "credentials": credentials,
-            "url_prefix": url_prefix,
+            "product_buckets": {"nightly_components": "dummy"},
         },
         "maven-production": {
-            "buckets": {"appservices": "dummy", "geckoview": "dummy", "telemetry": "dummy"},
-            "credentials": credentials,
-            "url_prefix": url_prefix,
+            "product_buckets": {"appservices": "dummy", "geckoview": "dummy", "telemetry": "dummy"},
         },
         "nightly": {
-            "buckets": {"firefox": "dummy"},
-            "credentials": credentials,
-            "url_prefix": url_prefix,
+            "product_buckets": {"firefox": "dummy"},
         },
         "release": {
-            "buckets": {"devedition": "dummy", "firefox": "dummy"},
-            "credentials": credentials,
-            "url_prefix": url_prefix,
+            "product_buckets": {"devedition": "dummy", "firefox": "dummy"},
         },
     }
+    config["clouds"] = {
+        "aws": copy.deepcopy(cloud_template),
+        "gcloud": copy.deepcopy(cloud_template),
+    }
+    for rt in release_types:
+        config["clouds"]["aws"][rt]["credentials"] = awscreds
+        config["clouds"]["gcloud"][rt]["credentials"] = gcscreds
+        config["clouds"]["aws"][rt]["enabled"] = True
+        config["clouds"]["gcloud"][rt]["enabled"] = True
+        config["clouds"]["aws"][rt]["fail_task_on_error"] = True
+        config["clouds"]["gcloud"][rt]["fail_task_on_error"] = True
+
     return config
 
 
@@ -79,6 +88,13 @@ def get_paths_for_task(task):
                 paths[dest] = path
 
     return paths
+
+
+@pytest.fixture
+def gcloud_client_mock(monkeypatch):
+    monkeypatch.setattr(beetmoverscript.script, "setup_gcloud", noop_sync)
+    monkeypatch.setattr(beetmoverscript.script, "upload_to_gcs", noop_async)
+    monkeypatch.setattr(beetmoverscript.script, "push_to_releases_gcs", noop_async)
 
 
 @pytest.fixture
@@ -187,7 +203,15 @@ def prepare_scriptworker_config(path, config, task):
         ("firefox_generated_screenshots_release", "project:releng:beetmover:", 7),
     ),
 )
-def test_main_maven_nightly_candidates(task_name, scope_prefix, expected_number_of_moved_artifacts, tmp_path, boto3_client_mock, aiohttp_session_mock):
+def test_main_maven_nightly_candidates(
+    task_name,
+    scope_prefix,
+    expected_number_of_moved_artifacts,
+    tmp_path,
+    boto3_client_mock,
+    aiohttp_session_mock,
+    gcloud_client_mock,
+):
     config = get_config(scope_prefix)
     task = get_test_task(task_name)
     scriptworker_config = prepare_scriptworker_config(tmp_path, config, task)
@@ -214,7 +238,9 @@ def test_main_maven_nightly_candidates(task_name, scope_prefix, expected_number_
     "task_name, scope_prefix, expected_number_of_moved_artifacts",
     (("firefox_eme_free_release", "project:releng:beetmover:", 2),),
 )
-def test_main_push_to_partner(task_name, scope_prefix, expected_number_of_moved_artifacts, tmp_path, boto3_client_mock, aiohttp_session_mock):
+def test_main_push_to_partner(
+    task_name, scope_prefix, expected_number_of_moved_artifacts, tmp_path, boto3_client_mock, aiohttp_session_mock, gcloud_client_mock
+):
     config = get_config(scope_prefix)
     task = get_test_task(task_name)
     scriptworker_config = prepare_scriptworker_config(tmp_path, config, task)
@@ -235,7 +261,7 @@ def test_main_push_to_partner(task_name, scope_prefix, expected_number_of_moved_
             assert put_call["data"] == b"some data"
 
 
-def test_main_push_to_releases(tmp_path, boto3_client_mock, boto3_resource_mock):
+def test_main_push_to_releases(tmp_path, boto3_client_mock, boto3_resource_mock, gcloud_client_mock):
     task_name = "firefox_release"
     scope_prefix = "project:releng:beetmover:"
     config = get_config(scope_prefix)

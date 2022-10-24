@@ -26,250 +26,477 @@ taskcluster_scope_prefixes:
         - 'project:mozillavpn:releng:beetmover:'
 verbose: { "$eval": "VERBOSE == 'true'" }
 zip_max_file_size_in_mb: 300
-bucket_config:
+url_prefix:
+  # we need to $merge as $match returns an array
   $merge:
     $match:
       'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
-        dep:
-          credentials:
-            id: { "$eval": "DEP_ID" }
-            key: { "$eval": "DEP_KEY" }
-          buckets:
-            devedition: 'net-mozaws-stage-delivery-archive'
-            pinebuild:  'net-mozaws-stage-delivery-archive'
-            firefox:    'net-mozaws-stage-delivery-firefox'
-            fennec:     'net-mozaws-stage-delivery-archive'
-            mobile:     'net-mozaws-stage-delivery-archive'
-          url_prefix: 'https://ftp.stage.mozaws.net'
-        dep-partner:
-          credentials:
-            id: { "$eval": "DEP_PARTNER_ID" }
-            key: { "$eval": "DEP_PARTNER_KEY" }
-          buckets:
-            firefox: 'mozilla-releng-dep-partner'
-        maven-staging:
-          credentials:
-            id: { "$eval": "MAVEN_ID" }
-            key: { "$eval": "MAVEN_KEY" }
-          buckets:
-            geckoview: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
-        dummy: {}
+        dep: 'https://ftp.stage.mozaws.net'
       'COT_PRODUCT == "firefox" && ENV == "prod"':
-        nightly:
-          credentials:
-            id: { "$eval": "NIGHTLY_ID" }
-            key: { "$eval": "NIGHTLY_KEY" }
-          buckets:
-            devedition: 'net-mozaws-prod-delivery-archive'
-            pinebuild:  'net-mozaws-prod-delivery-archive'
-            firefox:    'net-mozaws-prod-delivery-firefox'
-            mobile:     'net-mozaws-prod-delivery-archive'
-          url_prefix: 'https://archive.mozilla.org'
-        release:
-          credentials:
-            id: { "$eval": "RELEASE_ID" }
-            key: { "$eval": "RELEASE_KEY" }
-          buckets:
-            devedition: 'net-mozaws-prod-delivery-archive'
-            pinebuild:  'net-mozaws-prod-delivery-archive'
-            firefox:    'net-mozaws-prod-delivery-firefox'
-            mobile:      'net-mozaws-prod-delivery-archive'
-          url_prefix: 'https://archive.mozilla.org'
-        partner:
-          credentials:
-            id: { "$eval": "PARTNER_ID" }
-            key: { "$eval": "PARTNER_KEY" }
-          buckets:
-            firefox: 'fxpartners-distros'
-        dep:
-          credentials:
-            id: { "$eval": "DEP_ID" }
-            key: { "$eval": "DEP_KEY" }
-          buckets:
-            devedition: 'net-mozaws-stage-delivery-archive'
-            pinebuild:  'net-mozaws-stage-delivery-archive'
-            firefox:    'net-mozaws-stage-delivery-firefox'
-            mobile:     'net-mozaws-stage-delivery-archive'
-          url_prefix: 'https://ftp.stage.mozaws.net'
-        dep-partner:
-          credentials:
-            id: { "$eval": "DEP_PARTNER_ID" }
-            key: { "$eval": "DEP_PARTNER_KEY" }
-          buckets:
-            firefox: 'mozilla-releng-dep-partner'
-        maven-production:
-          credentials:
-            id: { "$eval": "MAVEN_ID" }
-            key: { "$eval": "MAVEN_KEY" }
-          buckets:
-            geckoview: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
-        dummy: {}
+        nightly: 'https://archive.mozilla.org'
+        release: 'https://archive.mozilla.org'
+        dep: 'https://ftp.stage.mozaws.net'
       'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
-        dep:
-          credentials:
-            id: { "$eval": "DEP_ID" }
-            key: { "$eval": "DEP_KEY" }
-          buckets:
-            xpi: 'net-mozaws-stage-delivery-archive'
-          url_prefix: 'https://ftp.stage.mozaws.net'
-        dummy: {}
+        dep: 'https://ftp.stage.mozaws.net'
       'COT_PRODUCT == "xpi" && ENV == "prod"':
-        release:
-          credentials:
-            id: { "$eval": "RELEASE_ID" }
-            key: { "$eval": "RELEASE_KEY" }
-          buckets:
-            xpi: 'net-mozaws-prod-delivery-archive'
-          url_prefix: 'https://archive.mozilla.org'
-        dummy: {}
+        release: 'https://archive.mozilla.org'
       'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
-        dep:
-          credentials:
-            id: { "$eval": "DEP_ID" }
-            key: { "$eval": "DEP_KEY" }
-          buckets:
-            thunderbird: 'net-mozaws-stage-delivery-archive'
-          url_prefix: 'https://ftp.stage.mozaws.net'
-        dummy: {}
+        dep: 'https://ftp.stage.mozaws.net'
       'COT_PRODUCT == "thunderbird" && ENV == "prod"':
-        nightly:
-          credentials:
-            id: { "$eval": "NIGHTLY_ID" }
-            key: { "$eval": "NIGHTLY_KEY" }
-          buckets:
-            thunderbird: 'net-mozaws-prod-delivery-archive'
-          url_prefix: 'https://archive.mozilla.org'
-        release:
-          credentials:
-            id: { "$eval": "RELEASE_ID" }
-            key: { "$eval": "RELEASE_KEY" }
-          buckets:
-            thunderbird: 'net-mozaws-prod-delivery-archive'
-          url_prefix: 'https://archive.mozilla.org'
-        dep:
-          credentials:
-            id: { "$eval": "DEP_ID" }
-            key: { "$eval": "DEP_KEY" }
-          buckets:
-            thunderbird: 'net-mozaws-stage-delivery-archive'
-          url_prefix: 'https://ftp.stage.mozaws.net'
-        dummy: {}
+        nightly: 'https://archive.mozilla.org'
+        release: 'https://archive.mozilla.org'
+        dep: 'https://ftp.stage.mozaws.net'
       'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
-        maven-staging:
-          credentials:
-            id: { "$eval": "MAVEN_ID" }
-            key: { "$eval": "MAVEN_KEY" }
-          buckets:
-            components: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
-        maven-nightly-staging:
-          credentials:
-            id: { "$eval": "MAVEN_NIGHTLY_ID" }
-            key: { "$eval": "MAVEN_NIGHTLY_KEY" }
-          buckets:
-            nightly_components: 'maven-nightly-stage-s3-upload-bucket'
-        dummy: {}
-        dep:
-          credentials:
-            id: { "$eval": "DEP_ID" }
-            key: { "$eval": "DEP_KEY" }
-          buckets:
-            fenix: 'net-mozaws-stage-delivery-archive'
-            focus: 'net-mozaws-stage-delivery-archive'
-          url_prefix: 'https://ftp.stage.mozaws.net'
-        # TODO: nightly and release will only be used while we test prod with dev workers
-        nightly:
-          credentials:
-            id: { "$eval": "DEP_ID" }
-            key: { "$eval": "DEP_KEY" }
-          buckets:
-            fenix: 'net-mozaws-stage-delivery-archive'
-            focus: 'net-mozaws-stage-delivery-archive'
-          url_prefix: 'https://ftp.stage.mozaws.net'
-        release:
-          credentials:
-            id: { "$eval": "DEP_ID" }
-            key: { "$eval": "DEP_KEY" }
-          buckets:
-            fenix: 'net-mozaws-stage-delivery-archive'
-            focus: 'net-mozaws-stage-delivery-archive'
-          url_prefix: 'https://ftp.stage.mozaws.net'
+        dep: 'https://ftp.stage.mozaws.net'
+        nightly: 'https://ftp.stage.mozaws.net'
+        release: 'https://ftp.stage.mozaws.net'
       'COT_PRODUCT == "mobile" && ENV == "prod"':
-        maven-production:
-          credentials:
-            id: { "$eval": "MAVEN_ID" }
-            key: { "$eval": "MAVEN_KEY" }
-          buckets:
-            components: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
-        maven-nightly-production:
-          credentials:
-            id: { "$eval": "MAVEN_NIGHTLY_ID" }
-            key: { "$eval": "MAVEN_NIGHTLY_KEY" }
-          buckets:
-            nightly_components: 'maven-nightly-s3-upload-bucket-d4zm9oo354qe'
-        nightly:
-          credentials:
-            id: { "$eval": "NIGHTLY_ID" }
-            key: { "$eval": "NIGHTLY_KEY" }
-          buckets:
-            fenix: 'net-mozaws-prod-delivery-archive'
-            focus: 'net-mozaws-prod-delivery-archive'
-          url_prefix: 'https://archive.mozilla.org'
-        release:
-          credentials:
-            id: { "$eval": "RELEASE_ID" }
-            key: { "$eval": "RELEASE_KEY" }
-          buckets:
-            fenix: 'net-mozaws-prod-delivery-archive'
-            focus: 'net-mozaws-prod-delivery-archive'
-          url_prefix: 'https://archive.mozilla.org'
-        dummy: {}
-      'COT_PRODUCT == "app-services" && (ENV == "dev" || ENV == "fake-prod")':
-        maven-staging:
-          credentials:
-            id: { "$eval": "MAVEN_ID" }
-            key: { "$eval": "MAVEN_KEY" }
-          buckets:
-            appservices: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
-        dummy: {}
-      'COT_PRODUCT == "app-services" && ENV == "prod"':
-        maven-production:
-          credentials:
-            id: { "$eval": "MAVEN_ID" }
-            key: { "$eval": "MAVEN_KEY" }
-          buckets:
-            appservices: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
-        dummy: {}
-      'COT_PRODUCT == "glean" && (ENV == "dev" || ENV == "fake-prod")':
-        maven-staging:
-          credentials:
-            id: { "$eval": "MAVEN_ID" }
-            key: { "$eval": "MAVEN_KEY" }
-          buckets:
-            telemetry: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
-        dummy: {}
-      'COT_PRODUCT == "glean" && ENV == "prod"':
-        maven-production:
-          credentials:
-            id: { "$eval": "MAVEN_ID" }
-            key: { "$eval": "MAVEN_KEY" }
-          buckets:
-            telemetry: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
-        dummy: {}
+        nightly: 'https://archive.mozilla.org'
+        release: 'https://archive.mozilla.org'
       'COT_PRODUCT == "mozillavpn" && (ENV == "dev" || ENV == "fake-prod")':
-        dep:
-          credentials:
-            id: { "$eval": "DEP_ID" }
-            key: { "$eval": "DEP_KEY" }
-          buckets:
-            vpn: 'net-mozaws-stage-delivery-archive'
-          url_prefix: 'https://ftp.stage.mozaws.net'
-        dummy: {}
+        dep: 'https://ftp.stage.mozaws.net'
       'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
-        release:
-          credentials:
-            id: { "$eval": "RELEASE_ID" }
-            key: { "$eval": "RELEASE_KEY" }
-          buckets:
-            vpn: 'net-mozaws-prod-delivery-archive'
-          url_prefix: 'https://archive.mozilla.org'
-        dummy: {}
+        release: 'https://archive.mozilla.org'
+
+clouds:
+  gcloud:
+    $merge:
+      $match:
+        'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              devedition: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+              pinebuild:  'moz-fx-productdelivery-no-7d6a-productdelivery'
+              firefox:    'moz-fx-productdelivery-no-7d6a-productdelivery'
+              fennec:     'moz-fx-productdelivery-no-7d6a-productdelivery'
+              mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
+          dep-partner:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              firefox: 'mozilla-releng-dep-partner'
+        'COT_PRODUCT == "firefox" && ENV == "prod"':
+          nightly:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+              pinebuild:  'moz-fx-productdelivery-pr-38b5-productdelivery'
+              firefox:    'moz-fx-productdelivery-pr-38b5-productdelivery'
+              mobile:     'moz-fx-productdelivery-pr-38b5-productdelivery'
+          release:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+              pinebuild:  'moz-fx-productdelivery-pr-38b5-productdelivery'
+              firefox:    'moz-fx-productdelivery-pr-38b5-productdelivery'
+              mobile:     'moz-fx-productdelivery-pr-38b5-productdelivery'
+          partner:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              firefox: 'fxpartners-distros'
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              devedition: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+              pinebuild:  'moz-fx-productdelivery-no-7d6a-productdelivery'
+              firefox:    'moz-fx-productdelivery-no-7d6a-productdelivery'
+              mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
+          dep-partner:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              firefox: 'mozilla-releng-dep-partner'
+        'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              xpi: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+        'COT_PRODUCT == "xpi" && ENV == "prod"':
+          release:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              xpi: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+        'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              thunderbird: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+        'COT_PRODUCT == "thunderbird" && ENV == "prod"':
+          nightly:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              thunderbird: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+          release:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              thunderbird: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              thunderbird: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+        'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              fenix: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+              focus: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+          nightly:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              fenix: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+              focus: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+          release:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              fenix: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+              focus: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+        'COT_PRODUCT == "mobile" && ENV == "prod"':
+          nightly:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              fenix: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+              focus: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+          release:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              fenix: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+              focus: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+        'COT_PRODUCT == "mozillavpn" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              vpn: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+        'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
+          release:
+            credentials: { "$eval": "GCS_CREDENTIALS" }
+            fail_task_on_error: False
+            enabled: True
+            product_buckets:
+              vpn: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+
+  aws:
+    $merge:
+      $match:
+        'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "DEP_ID" }
+              key: { "$eval": "DEP_KEY" }
+            product_buckets:
+              devedition: 'net-mozaws-stage-delivery-archive'
+              pinebuild:  'net-mozaws-stage-delivery-archive'
+              firefox:    'net-mozaws-stage-delivery-firefox'
+              fennec:     'net-mozaws-stage-delivery-archive'
+              mobile:     'net-mozaws-stage-delivery-archive'
+          dep-partner:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "DEP_PARTNER_ID" }
+              key: { "$eval": "DEP_PARTNER_KEY" }
+            product_buckets:
+              firefox: 'mozilla-releng-dep-partner'
+          maven-staging:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "MAVEN_ID" }
+              key: { "$eval": "MAVEN_KEY" }
+            product_buckets:
+              geckoview: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
+
+        'COT_PRODUCT == "firefox" && ENV == "prod"':
+          nightly:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "NIGHTLY_ID" }
+              key: { "$eval": "NIGHTLY_KEY" }
+            product_buckets:
+              devedition: 'net-mozaws-prod-delivery-archive'
+              pinebuild:  'net-mozaws-prod-delivery-archive'
+              firefox:    'net-mozaws-prod-delivery-firefox'
+              mobile:     'net-mozaws-prod-delivery-archive'
+          release:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "RELEASE_ID" }
+              key: { "$eval": "RELEASE_KEY" }
+            product_buckets:
+              devedition: 'net-mozaws-prod-delivery-archive'
+              pinebuild:  'net-mozaws-prod-delivery-archive'
+              firefox:    'net-mozaws-prod-delivery-firefox'
+              mobile:     'net-mozaws-prod-delivery-archive'
+          partner:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "PARTNER_ID" }
+              key: { "$eval": "PARTNER_KEY" }
+            product_buckets:
+              firefox: 'fxpartners-distros'
+          dep:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "DEP_ID" }
+              key: { "$eval": "DEP_KEY" }
+            product_buckets:
+              devedition: 'net-mozaws-stage-delivery-archive'
+              pinebuild:  'net-mozaws-stage-delivery-archive'
+              firefox:    'net-mozaws-stage-delivery-firefox'
+              mobile:     'net-mozaws-stage-delivery-archive'
+          dep-partner:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "DEP_PARTNER_ID" }
+              key: { "$eval": "DEP_PARTNER_KEY" }
+            product_buckets:
+              firefox: 'mozilla-releng-dep-partner'
+          maven-production:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "MAVEN_ID" }
+              key: { "$eval": "MAVEN_KEY" }
+            product_buckets:
+              geckoview: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
+
+        'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "DEP_ID" }
+              key: { "$eval": "DEP_KEY" }
+            product_buckets:
+              xpi: 'net-mozaws-stage-delivery-archive'
+
+        'COT_PRODUCT == "xpi" && ENV == "prod"':
+          release:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "RELEASE_ID" }
+              key: { "$eval": "RELEASE_KEY" }
+            product_buckets:
+              xpi: 'net-mozaws-prod-delivery-archive'
+
+        'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "DEP_ID" }
+              key: { "$eval": "DEP_KEY" }
+            product_buckets:
+              thunderbird: 'net-mozaws-stage-delivery-archive'
+
+        'COT_PRODUCT == "thunderbird" && ENV == "prod"':
+          nightly:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "NIGHTLY_ID" }
+              key: { "$eval": "NIGHTLY_KEY" }
+            product_buckets:
+              thunderbird: 'net-mozaws-prod-delivery-archive'
+          release:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "RELEASE_ID" }
+              key: { "$eval": "RELEASE_KEY" }
+            product_buckets:
+              thunderbird: 'net-mozaws-prod-delivery-archive'
+          dep:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "DEP_ID" }
+              key: { "$eval": "DEP_KEY" }
+            product_buckets:
+              thunderbird: 'net-mozaws-stage-delivery-archive'
+
+        'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
+          maven-staging:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "MAVEN_ID" }
+              key: { "$eval": "MAVEN_KEY" }
+            product_buckets:
+              components: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
+          maven-nightly-staging:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "MAVEN_NIGHTLY_ID" }
+              key: { "$eval": "MAVEN_NIGHTLY_KEY" }
+            product_buckets:
+              nightly_components: 'maven-nightly-stage-s3-upload-bucket'
+
+          dep:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "DEP_ID" }
+              key: { "$eval": "DEP_KEY" }
+            product_buckets:
+              fenix: 'net-mozaws-stage-delivery-archive'
+              focus: 'net-mozaws-stage-delivery-archive'
+          # TODO: nightly and release will only be used while we test prod with dev workers
+          nightly:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "DEP_ID" }
+              key: { "$eval": "DEP_KEY" }
+            product_buckets:
+              fenix: 'net-mozaws-stage-delivery-archive'
+              focus: 'net-mozaws-stage-delivery-archive'
+          release:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "DEP_ID" }
+              key: { "$eval": "DEP_KEY" }
+            product_buckets:
+              fenix: 'net-mozaws-stage-delivery-archive'
+              focus: 'net-mozaws-stage-delivery-archive'
+        'COT_PRODUCT == "mobile" && ENV == "prod"':
+          maven-production:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "MAVEN_ID" }
+              key: { "$eval": "MAVEN_KEY" }
+            product_buckets:
+              components: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
+          maven-nightly-production:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "MAVEN_NIGHTLY_ID" }
+              key: { "$eval": "MAVEN_NIGHTLY_KEY" }
+            product_buckets:
+              nightly_components: 'maven-nightly-s3-upload-bucket-d4zm9oo354qe'
+          nightly:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "NIGHTLY_ID" }
+              key: { "$eval": "NIGHTLY_KEY" }
+            product_buckets:
+              fenix: 'net-mozaws-prod-delivery-archive'
+              focus: 'net-mozaws-prod-delivery-archive'
+          release:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "RELEASE_ID" }
+              key: { "$eval": "RELEASE_KEY" }
+            product_buckets:
+              fenix: 'net-mozaws-prod-delivery-archive'
+              focus: 'net-mozaws-prod-delivery-archive'
+
+        'COT_PRODUCT == "app-services" && (ENV == "dev" || ENV == "fake-prod")':
+          maven-staging:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "MAVEN_ID" }
+              key: { "$eval": "MAVEN_KEY" }
+            product_buckets:
+              appservices: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
+
+        'COT_PRODUCT == "app-services" && ENV == "prod"':
+          maven-production:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "MAVEN_ID" }
+              key: { "$eval": "MAVEN_KEY" }
+            product_buckets:
+              appservices: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
+
+        'COT_PRODUCT == "glean" && (ENV == "dev" || ENV == "fake-prod")':
+          maven-staging:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "MAVEN_ID" }
+              key: { "$eval": "MAVEN_KEY" }
+            product_buckets:
+              telemetry: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
+
+        'COT_PRODUCT == "glean" && ENV == "prod"':
+          maven-production:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "MAVEN_ID" }
+              key: { "$eval": "MAVEN_KEY" }
+            product_buckets:
+              telemetry: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
+
+        'COT_PRODUCT == "mozillavpn" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "DEP_ID" }
+              key: { "$eval": "DEP_KEY" }
+            product_buckets:
+              vpn: 'net-mozaws-stage-delivery-archive'
+
+        'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
+          release:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "RELEASE_ID" }
+              key: { "$eval": "RELEASE_KEY" }
+            product_buckets:
+              vpn: 'net-mozaws-prod-delivery-archive'
