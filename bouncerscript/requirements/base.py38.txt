@@ -121,9 +121,9 @@ attrs==22.1.0 \
     #   aiohttp
     #   jsonschema
     #   mozilla-version
-certifi==2022.9.14 \
-    --hash=sha256:36973885b9542e6bd01dea287b2b4b3b21236307c56324fcc3f1160f2d655ed5 \
-    --hash=sha256:e232343de1ab72c2aa521b625c80f699e356830fd0e2c620b465b304b17b0516
+certifi==2022.9.24 \
+    --hash=sha256:0d9c601124e5a6ba9712dbc60d9c53c21e34f5f641fe83002317394311bdce14 \
+    --hash=sha256:90c1a32f1d68f940488354e36370f6cca89f0f106db09518524c88d6ed83f382
     # via requests
 cffi==1.15.1 \
     --hash=sha256:00a9ed42e88df81ffae7a8ab6d9356b371399b91dbdf0c3cb1e84c03a13aceb5 \
@@ -311,9 +311,9 @@ immutabledict==2.2.1 \
     --hash=sha256:1ddb0edf1bb6c70d0197eb90ce1fe2b2d58502334f5fdfde72d7c633d723ec3a \
     --hash=sha256:8d7e32e0bda6dfb846349b78c753b858587c736f46be247d01ccd583ce5cc85b
     # via scriptworker
-importlib-resources==5.9.0 \
-    --hash=sha256:5481e97fb45af8dcf2f798952625591c58fe599d0735d86b10f54de086a61681 \
-    --hash=sha256:f78a8df21a79bcc30cfd400bdc38f314333de7c0fb619763f6b9dabab8268bb7
+importlib-resources==5.10.0 \
+    --hash=sha256:c01b1b94210d9849f286b86bb51bcea7cd56dde0600d8db721d7b81330711668 \
+    --hash=sha256:ee17ec648f85480d523596ce49eae8ead87d5631ae1551f913c0100b5edd3437
     # via jsonschema
 json-e==4.4.3 \
     --hash=sha256:604cc506746ece244e5f4c66ce1b77887b0340749f9f10f58f311caf5701315f \
@@ -402,9 +402,9 @@ pycparser==2.21 \
     --hash=sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9 \
     --hash=sha256:e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206
     # via cffi
-pyjwt[crypto]==2.5.0 \
-    --hash=sha256:8d82e7087868e94dd8d7d418e5088ce64f7daab4b36db654cbaedb46f9d1ca80 \
-    --hash=sha256:e77ab89480905d86998442ac5788f35333fa85f65047a534adc38edf3c88fc3b
+pyjwt[crypto]==2.6.0 \
+    --hash=sha256:69285c7e31fc44f68a1feb309e948e0df53259d579295e6cfe2b1792329f05fd \
+    --hash=sha256:d83c3d892a77bbb74d3e1a2cfa90afaadb60945205d1095d9221f04466f64c14
     # via github3-py
 pyrsistent==0.18.1 \
     --hash=sha256:0e3e1fcc45199df76053026a51cc59ab2ea3fc7c094c6627e93b7b44cdae2c8c \
@@ -483,9 +483,9 @@ requests==2.28.1 \
     # via
     #   github3-py
     #   taskcluster
-scriptworker==44.0.0 \
-    --hash=sha256:106f6a1c2d172f9ac0d44fbf0aa37c88db17cc02c3a44059b69c76391ad82c8e \
-    --hash=sha256:af93f6e5cb2badd13b292792effa63841c14344441137dba10bae4cc81389383
+scriptworker==44.2.0 \
+    --hash=sha256:0e8fde084c529d86e249ec95dabe068de7a973e7e4b4fc1579fe7337241a2640 \
+    --hash=sha256:acbb4826fc228e93e4e6037d1bde541671273d2f04eebee9d5770159400eca7f
     # via -r requirements/base.in
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
@@ -497,9 +497,9 @@ slugid==2.0.0 \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
     # via taskcluster
-taskcluster==44.21.0 \
-    --hash=sha256:351574da5bf737653152b79a5163137fe3cab5cffbd884982695b8871f9ebe80 \
-    --hash=sha256:598596475e19d34c77329b3ab9b2a536a191a99203278e63c7fe9c86b69f17d6
+taskcluster==44.22.1 \
+    --hash=sha256:1699fdcad4542b6f025da7bae85c1c8e42528bc2cfaeb31fa90af3e6cbff0385 \
+    --hash=sha256:fa19a3c6e7bcf70e52488a2f8812265cb2fd97e5fcd59b1663f9e8caae0d005f
     # via
     #   -r requirements/base.in
     #   scriptworker
@@ -508,10 +508,6 @@ taskcluster-urls==13.0.1 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
     --hash=sha256:f66dcbd6572a6216ab65949f0fa0b91f2df647918028436c384e6af5cd12ae2b
     # via taskcluster
-types-cryptography==3.3.23 \
-    --hash=sha256:913b3e66a502edbf4bfc3bb45e33ab476040c56942164a7ff37bd1f0ef8ef783 \
-    --hash=sha256:b85c45fd4d3d92e8b18e9a5ee2da84517e8fff658e3ef5755c885b1c2a27c1fe
-    # via pyjwt
 uritemplate==4.1.1 \
     --hash=sha256:4346edfc5c3b79f694bccd6d6099a322bbeb628dbf2cd86eea55a456ce5124f0 \
     --hash=sha256:830c08b8d99bdd312ea4ead05994a38e8936266f84b9a7878232db50b044e02e
@@ -581,7 +577,7 @@ yarl==1.8.1 \
     --hash=sha256:f5af52738e225fcc526ae64071b7e5342abe03f42e0e8918227b38c9aa711e28 \
     --hash=sha256:fae37373155f5ef9b403ab48af5136ae9851151f7aacd9926251ab26b953118b
     # via aiohttp
-zipp==3.8.1 \
-    --hash=sha256:05b45f1ee8f807d0cc928485ca40a07cb491cf092ff587c0df9cb1fd154848d2 \
-    --hash=sha256:47c40d7fe183a6f21403a199b3e4192cca5774656965b0a4988ad2f8feb5f009
+zipp==3.10.0 \
+    --hash=sha256:4fcb6f278987a6605757302a6e40e896257570d11c51628968ccb2a47e80c6c1 \
+    --hash=sha256:7a7262fd930bd3e36c50b9a64897aec3fafff3dfdeec9623ae22b40e93f99bb8
     # via importlib-resources
