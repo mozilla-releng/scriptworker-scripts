@@ -596,7 +596,7 @@ async def test_async_main(context, mocker, action, raises, task_filename):
     mocker.patch("beetmoverscript.script.move_beets", new=noop_async)
     mocker.patch.object(beetmoverscript.script, "get_task_action", new=fake_action)
     mocker.patch("beetmoverscript.gcloud.setup_gcs_credentials", new=noop_sync)
-    mocker.patch("beetmoverscript.gcloud.set_gcs_client", new=noop_sync)
+    mocker.patch("beetmoverscript.gcloud.set_gcp_client", new=noop_sync)
     mocker.patch("beetmoverscript.gcloud.cleanup_gcloud", new=noop_sync)
     if raises:
         with pytest.raises(SystemExit):

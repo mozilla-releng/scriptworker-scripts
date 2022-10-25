@@ -26,6 +26,8 @@ def get_schema_key_by_action(context):
         return "maven_schema_file"
     elif utils.is_direct_release_action(action):
         return "artifactMap_schema_file"
+    elif utils.is_import_from_gcs_to_artifact_registry_action(action):
+        return "import_from_gcs_to_artifact_registry_schema_file"
 
     return "schema_file"
 
@@ -33,6 +35,7 @@ def get_schema_key_by_action(context):
 def validate_task_schema(context):
     """Perform a schema validation check against task definition"""
     schema_key = get_schema_key_by_action(context)
+    log.info(f"Using task validation schema: {context.config[schema_key]}")
     client.validate_task_schema(context, schema_key=schema_key)
 
 
@@ -64,34 +67,34 @@ def _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes):
         raise ScriptWorkerTaskException("Scopes must exist and all have the same prefix. " "Given scopes: {}. Allowed prefixes: {}".format(scopes, prefixes))
 
 
-def get_task_bucket(task, script_config):
-    """Extract task bucket from scopes"""
-    prefixes = _get_bucket_prefixes(script_config)
-    scopes = _extract_scopes_from_unique_prefix(task["scopes"], prefixes=prefixes)
-    buckets = [s.split(":")[-1] for s in scopes for p in prefixes if s.startswith(p)]
-    log.info("Buckets: %s", buckets)
+def get_task_resource(context):
+    """Extract task cloud resource from scopes"""
+    prefixes = _get_scope_prefixes(context.config, context.resource_type)
+    scopes = _extract_scopes_from_unique_prefix(context.task["scopes"], prefixes=prefixes)
+    resources = [s.split(":")[-1] for s in scopes for p in prefixes if s.startswith(p)]
+    log.info("Resource: %s", resources)
     messages = []
-    if len(buckets) != 1:
-        messages.append("Only one bucket can be used")
+    if len(resources) != 1:
+        messages.append("Only one resource can be used")
 
-    bucket = buckets[0]
-    if re.search("^[0-9A-Za-z_-]+$", bucket) is None:
-        messages.append("Bucket {} is malformed".format(bucket))
+    resource = resources[0]
+    if re.search("^[0-9A-Za-z_-]+$", resource) is None:
+        messages.append("Resource name `{}` is malformed".format(resource))
 
     # Set of all clouds configured and enabled
-    available_buckets = set()
-    for cloud in script_config["clouds"].values():
+    available_resources = set()
+    for cloud in context.config["clouds"].values():
         for release_type, config in cloud.items():
             if config["enabled"]:
-                available_buckets.add(release_type)
+                available_resources.add(release_type)
 
-    if bucket not in available_buckets:
-        messages.append(f"Invalid bucket scope: {bucket}")
+    if resource not in available_resources:
+        messages.append(f"Invalid resource scope: {resource}")
 
     if messages:
         raise ScriptWorkerTaskException("\n".join(messages))
 
-    return bucket
+    return resource
 
 
 def is_cloud_enabled(script_config, cloud, task_bucket):

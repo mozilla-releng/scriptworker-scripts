@@ -30,13 +30,13 @@ from beetmoverscript.constants import (
     RELEASE_BRANCHES,
     RELEASE_EXCLUDE,
 )
-from beetmoverscript.gcloud import cleanup_gcloud, push_to_releases_gcs, setup_gcloud, upload_to_gcs
+from beetmoverscript.gcloud import cleanup_gcloud, import_from_gcs_to_artifact_registry, push_to_releases_gcs, setup_gcloud, upload_to_gcs
 from beetmoverscript.task import (
     add_balrog_manifest_to_artifacts,
     add_checksums_to_artifacts,
     get_release_props,
     get_task_action,
-    get_task_bucket,
+    get_task_resource,
     get_taskId_from_full_path,
     get_updated_buildhub_artifact,
     get_upstream_artifacts,
@@ -304,6 +304,7 @@ action_map = {
     "push-to-releases": push_to_releases,
     "direct-push-to-bucket": direct_push_to_bucket,
     "push-to-maven": push_to_maven,
+    "import-from-gcs-to-artifact-registry": import_from_gcs_to_artifact_registry,
 }
 
 
@@ -318,7 +319,18 @@ async def async_main(context):
 
     # determine the task bucket and action
     #   Note: context.bucket is the release type (release,nightly,dep,etc)
-    context.bucket = get_task_bucket(context.task, context.config)
+    if any("apt-repo" in scope for scope in context.task["scopes"]):
+        context.resource_type = "apt-repo"
+    elif any("yum-repo" in scope for scope in context.task["scopes"]):
+        context.resource_type = "yum-repo"
+    elif any("bucket" in scope for scope in context.task["scopes"]):
+        context.resource_type = "bucket"
+    else:
+        raise Exception("No valid resource type in task scopes. Resource must be one of [apt-repo, yum-repo, bucket]")
+
+    # the context.bucket name assumes the place we a moving the beets to it's a storage bucket...
+    # from the note above (about bucket being the release type) and this... maybe we should re-name it?
+    context.bucket = get_task_resource(context)
     context.action = get_task_action(context.task, context.config, valid_actions=action_map.keys())
 
     setup_gcloud(context)
@@ -676,6 +688,7 @@ def main(config_path=None):
         "release_schema_file": os.path.join(data_dir, "release_beetmover_task_schema.json"),
         "maven_schema_file": os.path.join(data_dir, "maven_beetmover_task_schema.json"),
         "artifactMap_schema_file": os.path.join(data_dir, "artifactMap_beetmover_task_schema.json"),
+        "import_from_gcs_to_artifact_registry_schema_file": os.path.join(data_dir, "import_from_gcs_to_artifact_registry_task_schema.json"),
     }
 
     # There are several task schema. Validation occurs in async_main
