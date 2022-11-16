@@ -28,7 +28,6 @@ from mardor.reader import MarReader
 from mardor.writer import add_signature_block
 from scriptworker.utils import get_single_item_from_sequence, makedirs, raise_future_exceptions, retry_async, rm
 from winsign.crypto import load_pem_certs
-from winsign.makemsix import is_msixfile
 
 from signingscript import digicerthack, task, utils
 from signingscript.createprecomplete import generate_precomplete
@@ -1457,7 +1456,7 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         kwargs=winsign_kwargs,
     )
     os.rename(outfile, infile)
-    if context.config["authenticode_add_digicert_cross"] and not is_msixfile(infile):
+    if context.config["authenticode_add_digicert_cross"]:
         log.info("Adding Digicert Cross hack")
         digicerthack.add_cert_to_signed_file(infile, outfile, cafile, timestampfile)
         os.rename(outfile, infile)
