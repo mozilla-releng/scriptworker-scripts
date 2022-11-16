@@ -36,13 +36,17 @@ export AUTHENTICODE_CERT_PATH_202005=$APP_DIR/signingscript/src/signingscript/da
 export AUTHENTICODE_CA_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_dep_ca.crt
 export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
 export AUTHENTICODE_CROSS_CERT_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_stub.crt
-export AUTHENTICODE_ADD_DIGICERT_CROSS=0
 if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_TIMESTAMP_STYLE=old
   export AUTHENTICODE_CERT_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CERT_PATH_202005=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CA_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
+fi
+if [ "$COT_PRODUCT" = "adhoc" ]; then
+  export AUTHENTICODE_ADD_DIGICERT_CROSS=true
+else
+  export AUTHENTICODE_ADD_DIGICERT_CROSS=false
 fi
 
 echo $GPG_PUBKEY | base64 -d > $GPG_PUBKEY_PATH
@@ -69,7 +73,6 @@ case $COT_PRODUCT in
     test_var_set 'WIDEVINE_CERT'
 
     echo $WIDEVINE_CERT | base64 -d > $WIDEVINE_CERT_PATH
-    export AUTHENTICODE_ADD_DIGICERT_CROSS=1
     ;;
   *)
     exit 1
