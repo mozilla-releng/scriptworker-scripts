@@ -24,11 +24,11 @@ log_manager.add_terminal_logging()
 
 def prepare_tmp_topsrcdir(path):
     for p in (
-        'build/autoconf/config.guess',
-        'build/autoconf/config.sub',
-        'build/moz.configure/checks.configure',
-        'build/moz.configure/init.configure',
-        'build/moz.configure/util.configure',
+        "build/autoconf/config.guess",
+        "build/autoconf/config.sub",
+        "build/moz.configure/checks.configure",
+        "build/moz.configure/init.configure",
+        "build/moz.configure/util.configure",
     ):
         file_path = os.path.join(path, p)
         try:
@@ -42,40 +42,33 @@ def prepare_tmp_topsrcdir(path):
 # mozconfig is not a reusable type (it's actually a module) so, we
 # have to mock it.
 class MockConfig(object):
-    def __init__(self,
-                 topsrcdir='/path/to/topsrcdir',
-                 extra_substs={},
-                 error_is_fatal=True,
-                 ):
+    def __init__(
+        self,
+        topsrcdir="/path/to/topsrcdir",
+        extra_substs={},
+        error_is_fatal=True,
+    ):
         self.topsrcdir = mozpath.abspath(topsrcdir)
-        self.topobjdir = mozpath.abspath('/path/to/topobjdir')
+        self.topobjdir = mozpath.abspath("/path/to/topobjdir")
 
-        self.substs = ReadOnlyDict({
-            'MOZ_FOO': 'foo',
-            'MOZ_BAR': 'bar',
-            'MOZ_TRUE': '1',
-            'MOZ_FALSE': '',
-            'DLL_PREFIX': 'lib',
-            'DLL_SUFFIX': '.so'
-        }, **extra_substs)
-
-        def decode_value(value):
-            if isinstance(value, list):
-                return [v.decode('utf-8', 'replace') for v in value]
-            return value.decode('utf-8', 'replace')
-
-        self.substs_unicode = ReadOnlyDict({k.decode('utf-8'): decode_value(v)
-                                            for k, v in self.substs.items()})
+        self.substs = ReadOnlyDict(
+            {
+                "MOZ_FOO": "foo",
+                "MOZ_BAR": "bar",
+                "MOZ_TRUE": "1",
+                "MOZ_FALSE": "",
+                "DLL_PREFIX": "lib",
+                "DLL_SUFFIX": ".so",
+            },
+            **extra_substs
+        )
 
         self.defines = self.substs
 
-        self.external_source_dir = None
-        self.lib_prefix = 'lib'
-        self.rust_lib_prefix = 'lib'
-        self.lib_suffix = '.a'
-        self.rust_lib_suffix = '.a'
-        self.import_prefix = 'lib'
-        self.import_suffix = '.so'
-        self.dll_prefix = 'lib'
-        self.dll_suffix = '.so'
+        self.lib_prefix = "lib"
+        self.lib_suffix = ".a"
+        self.import_prefix = "lib"
+        self.import_suffix = ".so"
+        self.dll_prefix = "lib"
+        self.dll_suffix = ".so"
         self.error_is_fatal = error_is_fatal
