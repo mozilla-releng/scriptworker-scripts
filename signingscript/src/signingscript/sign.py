@@ -1499,7 +1499,7 @@ async def sign_authenticode_zip(context, orig_path, fmt, *, authenticode_comment
         raise SigningScriptError("Did not find any files to sign, all files: {}".format(files))
 
     # Sign the appropriate inner files
-    tasks = [sign_authenticode_file(context, file_, fmt, authenticode_comment=authenticode_comment) for file_ in files_to_sign]
+    tasks = [asyncio.create_task(sign_authenticode_file(context, file_, fmt, authenticode_comment=authenticode_comment)) for file_ in files_to_sign]
     done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
     [f.result() for f in done]
     if file_extension == ".zip":
