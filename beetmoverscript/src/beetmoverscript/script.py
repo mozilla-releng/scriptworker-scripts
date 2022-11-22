@@ -231,8 +231,8 @@ async def push_to_maven(context):
 
     XXX: This function handles the transfer of artifacts to the maven.mozilla.org repository.
     The artifacts being published come from different projects and are all handled here. For
-    example as of Q4 2020, we use this function for beetmover releases coming from
-    Android-Components, Glean, Application-Services but also in-tree GeckoView.
+    example as of Q4 2022, we use this function for beetmover releases coming from
+    Firefox-Android, Glean, Application-Services but also in-tree GeckoView.
 
     This large variety of beetmover jobs usually implies complex checks to cover
     all possible cornercases. For example it needs to handle both MavenVersion for

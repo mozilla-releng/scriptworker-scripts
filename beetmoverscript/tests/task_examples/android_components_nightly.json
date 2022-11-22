@@ -1,8 +1,8 @@
 {
     "dependencies": ["dependency-task-id"],
     "scopes": [
-	"project:mobile:android-components:releng:beetmover:action:push-to-maven",
-	"project:mobile:android-components:releng:beetmover:bucket:maven-nightly-staging"
+	"project:mobile:firefox-android:releng:beetmover:action:push-to-maven",
+	"project:mobile:firefox-android:releng:beetmover:bucket:maven-nightly-staging"
     ],
     "payload": {
 	"version": "63.0.20201013153553",

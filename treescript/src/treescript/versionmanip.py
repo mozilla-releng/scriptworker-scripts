@@ -5,7 +5,6 @@ import logging
 import os
 
 from mozilla_version.gecko import FirefoxVersion, GeckoVersion, ThunderbirdVersion
-from mozilla_version.maven import MavenVersion
 from mozilla_version.mobile import MobileVersion
 
 from treescript.exceptions import TaskVerificationError, TreeScriptError
@@ -30,7 +29,6 @@ _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
 }
 
 _VERSION_CLASS_PER_END_OF_SOURCE_REPO = {
-    "android-components": MavenVersion,
     "fenix": MobileVersion,
     "firefox-android": MobileVersion,
     "focus-android": MobileVersion,

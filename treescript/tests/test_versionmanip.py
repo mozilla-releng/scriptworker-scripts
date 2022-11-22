@@ -3,7 +3,6 @@ from contextlib import contextmanager
 
 import pytest
 from mozilla_version.gecko import FirefoxVersion, GeckoVersion, ThunderbirdVersion
-from mozilla_version.maven import MavenVersion
 from mozilla_version.mobile import MobileVersion
 
 import treescript.versionmanip as vmanip
@@ -86,11 +85,9 @@ def test_replace_ver_in_file_invalid_old_ver(repo_context, new_version):
         ("version.txt", "https://github.com/mozilla-mobile/fenix", does_not_raise(), MobileVersion),
         ("version.txt", "https://github.com/mozilla-mobile/firefox-android", does_not_raise(), MobileVersion),
         ("version.txt", "https://github.com/mozilla-mobile/focus-android", does_not_raise(), MobileVersion),
-        ("version.txt", "https://github.com/mozilla-mobile/android-components", does_not_raise(), MavenVersion),
         ("version.txt", "https://github.com/mozilla-releng/staging-fenix", does_not_raise(), MobileVersion),
         ("version.txt", "https://github.com/mozilla-releng/staging-firefox-android", does_not_raise(), MobileVersion),
         ("version.txt", "https://github.com/mozilla-releng/staging-focus-android", does_not_raise(), MobileVersion),
-        ("version.txt", "https://github.com/mozilla-releng/staging-android-components", does_not_raise(), MavenVersion),
         ("some/random/file.txt", "https://hg.mozilla.org/mozilla-central", pytest.raises(TreeScriptError), None),
         ("some/random/file.txt", "https://github.com/some-owner/some-repo", pytest.raises(TreeScriptError), None),
     ),
