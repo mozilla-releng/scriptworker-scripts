@@ -194,7 +194,7 @@ def prepare_scriptworker_config(path, config, task):
 @pytest.mark.parametrize(
     "task_name, scope_prefix, expected_number_of_moved_artifacts",
     (
-        ("android_components_nightly", "project:mobile:android-components:releng:beetmover:", 12),
+        ("android_components_nightly", "project:mobile:firefox-android:releng:beetmover:", 12),
         ("application_services_release", "project:mozilla:app-services:releng:beetmover:", 12),
         ("geckoview_nightly", "project:releng:beetmover:", 16),
         ("glean_release", "project:mozilla:glean:releng:beetmover:", 20),
