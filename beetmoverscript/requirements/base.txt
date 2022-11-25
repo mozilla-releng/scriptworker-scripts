@@ -123,13 +123,13 @@ attrs==22.1.0 \
     #   aiohttp
     #   jsonschema
     #   mozilla-version
-boto3==1.26.15 \
-    --hash=sha256:0e455bc50190cec1af819c9e4a257130661c4f2fad1e211b4dd2cb8f9af89464 \
-    --hash=sha256:e2bfc955fb70053951589d01919c9233c6ef091ae1404bb5249a0f27e05b6b36
+boto3==1.26.16 \
+    --hash=sha256:31c0adf71e4bd19a5428580bb229d7ea3b5795eecaa0847a85385df00c026116 \
+    --hash=sha256:4f493a2aed71cee93e626de4f67ce58dd82c0473480a0fc45b131715cd8f4f30
     # via -r requirements/base.in
-botocore==1.29.15 \
-    --hash=sha256:02cfa6d060c50853a028b36ada96f4ddb225948bf9e7e0a4dc5b72f9e3878f15 \
-    --hash=sha256:7d4e148870c98bbaab04b0c85b4d3565fc00fec6148cab9da96ab4419dbfb941
+botocore==1.29.16 \
+    --hash=sha256:271b599e6cfe214405ed50d41cd967add1d5d469383dd81ff583bc818b47f59b \
+    --hash=sha256:8cfcc10f2f1751608c3cec694f2d6b5e16ebcd50d0a104f9914d5616227c62e9
     # via
     #   boto3
     #   s3transfer
@@ -730,9 +730,9 @@ uritemplate==4.1.1 \
     --hash=sha256:4346edfc5c3b79f694bccd6d6099a322bbeb628dbf2cd86eea55a456ce5124f0 \
     --hash=sha256:830c08b8d99bdd312ea4ead05994a38e8936266f84b9a7878232db50b044e02e
     # via github3-py
-urllib3==1.26.12 \
-    --hash=sha256:3fa96cf423e6987997fc326ae8df396db2a8b7c667747d47ddd8ecba91f4a74e \
-    --hash=sha256:b930dd878d5a8afb066a637fbb35144fe7901e3b209d1cd4f524bd0e9deee997
+urllib3==1.26.13 \
+    --hash=sha256:47cc05d99aaa09c9e72ed5809b60e7ba354e64b59c9c173ac3018642d8bb41fc \
+    --hash=sha256:c083dd0dce68dbfbe1129d5271cb90f9447dea7d52097c6e0126120c521ddea8
     # via
     #   botocore
     #   requests
