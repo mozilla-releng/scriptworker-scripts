@@ -6,7 +6,6 @@ from copy import deepcopy
 
 import arrow
 from mozilla_version.errors import PatternNotMatchedError
-from mozilla_version.gecko import FirefoxVersion
 from mozilla_version.maven import MavenVersion
 from scriptworker import artifacts as scriptworker_artifacts
 from scriptworker import client
@@ -130,17 +129,6 @@ def get_task_action(task, script_config, valid_actions=None):
 def get_maven_version(context):
     """Extract and validate a valid Maven version"""
     version = context.task["payload"]["version"]
-    release_props = context.release_props
-    # TODO The following 'if' should be removed once GeckoView >= 84 is in mozilla-release.
-    # This is a temporary solution to maintain compatibility while the 'version' field in
-    # GeckoView's payload transitions from FirefoxVersion format to MavenVersion.
-    if release_props.get("appName") == "geckoview":
-        app_version = FirefoxVersion.parse(release_props["appVersion"])
-        if int(app_version.major_number) < 84:
-            # Change version number to major.minor.buildId because that's what the build task produces
-            version = "{}.{}.{}".format(app_version.major_number, app_version.minor_number, release_props["buildid"])
-
-    # Check that version is a valid maven version
     try:
         MavenVersion.parse(version)
     except (ValueError, PatternNotMatchedError) as e:
