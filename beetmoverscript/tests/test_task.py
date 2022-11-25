@@ -138,8 +138,15 @@ def test_get_task_action(scopes, expected, raises):
     "appName,payload_version,buildid,expected,raises",
     (
         ("components", "63.0.20201013153553", "20201013153553", "63.0.20201013153553", False),
-        ("components", "63.0.0-TESTING", "not-important", None, True),
-        ("geckoview", "84.0.20200920201111", "not-important", "84.0.20200920201111", False),
+        ("components", "63.0.0-TESTING", None, None, True),
+        ("components", "108.0.0", None, "108.0.0", False),
+        ("components", "108.0.1", None, "108.0.1", False),
+        ("components", "109.0.20221213153553", None, "109.0.20221213153553", False),
+        ("components", "109.0b1", None, "109.0b1", False),
+        ("components", "109.0", None, "109.0", False),
+        ("components", "109.0.1", None, "109.0.1", False),
+        ("components", "109.0.0", None, None, True),
+        ("geckoview", "84.0.20200920201111", None, "84.0.20200920201111", False),
         ("geckoview", "84.0.0-TESTING", "0-TESTING", None, True),
     ),
 )

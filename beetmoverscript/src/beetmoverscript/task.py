@@ -7,6 +7,7 @@ from copy import deepcopy
 import arrow
 from mozilla_version.errors import PatternNotMatchedError
 from mozilla_version.maven import MavenVersion
+from mozilla_version.mobile import MobileVersion
 from scriptworker import artifacts as scriptworker_artifacts
 from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException
@@ -129,8 +130,9 @@ def get_task_action(task, script_config, valid_actions=None):
 def get_maven_version(context):
     """Extract and validate a valid Maven version"""
     version = context.task["payload"]["version"]
+    VersionClass = MobileVersion if context.release_props["appName"] == "components" else MavenVersion
     try:
-        MavenVersion.parse(version)
+        VersionClass.parse(version)
     except (ValueError, PatternNotMatchedError) as e:
         raise ScriptWorkerTaskException(f"Version defined in the payload does not match the pattern of a MavenVersion. Got: {version}") from e
 
