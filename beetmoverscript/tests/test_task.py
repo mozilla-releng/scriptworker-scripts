@@ -135,20 +135,16 @@ def test_get_task_action(scopes, expected, raises):
 
 
 @pytest.mark.parametrize(
-    "appName,appVersion,payload_version,buildid,expected,raises",
+    "appName,payload_version,buildid,expected,raises",
     (
-        ("components", None, "63.0.20201013153553", "20201013153553", "63.0.20201013153553", False),
-        ("components", None, "63.0.0-TESTING", "not-important", None, True),
-        ("geckoview", "83.0a1", "83.0a1", "20200920201111", "83.0.20200920201111", False),  # Tests special case
-        ("geckoview", "84.0b2", "84.0.20200920201111", "not-important", "84.0.20200920201111", False),
-        ("geckoview", "83.0a1", "83.0.0-TESTING", "0-TESTING", None, True),
-        ("geckoview", "84.0b2", "84.0.0-TESTING", "0-TESTING", None, True),
+        ("components", "63.0.20201013153553", "20201013153553", "63.0.20201013153553", False),
+        ("components", "63.0.0-TESTING", "not-important", None, True),
+        ("geckoview", "84.0.20200920201111", "not-important", "84.0.20200920201111", False),
+        ("geckoview", "84.0.0-TESTING", "0-TESTING", None, True),
     ),
 )
-def test_get_maven_version(context, appName, appVersion, payload_version, buildid, expected, raises):
+def test_get_maven_version(context, appName, payload_version, buildid, expected, raises):
     context.release_props["appName"] = appName
-    if appVersion is not None:
-        context.release_props["appVersion"] = appVersion
     context.release_props["buildid"] = buildid
     context.task["payload"]["version"] = payload_version
 
