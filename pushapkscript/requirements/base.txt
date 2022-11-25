@@ -695,9 +695,9 @@ mozapkpublisher==6.1.1 \
     --hash=sha256:efc5e19ab8f13c65f1f5e583fc3a9bb197d5f2f1fa2c38614ce965bb4262d10a \
     --hash=sha256:f132e4dea3343b7ca648d5f82b019e46cc0d03bb55fc83ebd3493d94cdf573c8
     # via -r requirements/base.in
-mozilla-version==1.1.0 \
-    --hash=sha256:1a56c1ea668ec10e18c0a2e394a79373b5ec0ea25a33d204ac6382f337cb9f8a \
-    --hash=sha256:1fdd9ed90eeec801852b981e98d5b4f6a69efee32eb5f492db86be97393ce4e9
+mozilla-version==1.2.0 \
+    --hash=sha256:832b651b061d0a7064865947127fb30fa498a621452073291a7cc64cb1425048 \
+    --hash=sha256:b30bc41319ca1cf2496f95ba7ae7b371b03503870abd1f1a942c9f34ef4280b6
     # via mozapkpublisher
 multidict==6.0.2 \
     --hash=sha256:0327292e745a880459ef71be14e709aaea2f783f3537588fb4ed09b6c01bca60 \
