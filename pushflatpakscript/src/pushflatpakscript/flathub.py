@@ -102,7 +102,26 @@ def check_and_extract_tar_archive(context, tar_file_path):
         if topdir != "repo":
             log.warning(f"{tar_file_path} does not have `repo` as topdir")
             flatpak_deflated_dir = topdir
-        tar.extractall(path=flatpak_tar_basedir)
+        def is_within_directory(directory, target):
+            
+            abs_directory = os.path.abspath(directory)
+            abs_target = os.path.abspath(target)
+        
+            prefix = os.path.commonprefix([abs_directory, abs_target])
+            
+            return prefix == abs_directory
+        
+        def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+        
+            for member in tar.getmembers():
+                member_path = os.path.join(path, member.name)
+                if not is_within_directory(path, member_path):
+                    raise Exception("Attempted Path Traversal in Tar File")
+        
+            tar.extractall(path, members, numeric_owner=numeric_owner) 
+            
+        
+        safe_extract(tar, path=flatpak_tar_basedir)
 
     # we remove the `tar.xz` as it's not longer needed
     os.remove(tar_file_path)
