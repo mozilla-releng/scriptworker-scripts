@@ -6,3 +6,4 @@ redo
 scriptworker
 taskcluster
 google-cloud-storage
+google-cloud-artifact-registry
