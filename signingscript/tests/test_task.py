@@ -84,9 +84,9 @@ def test_task_signing_formats(context):
 
 
 def test_task_signing_formats_support_several_projects(context):
-    context.config["taskcluster_scope_prefixes"] = ["project:mobile:focus-android:releng:signing:", "project:mobile:fenix:releng:signing:"]
+    context.config["taskcluster_scope_prefixes"] = ["project:mobile:firefox-android:releng:signing:", "project:mobile:fenix:releng:signing:"]
 
-    context.task = {"payload": {"upstreamArtifacts": [{"formats": ["focus-jar"]}]}, "scopes": ["project:mobile:focus-android:releng:signing:cert:dep-signing"]}
+    context.task = {"payload": {"upstreamArtifacts": [{"formats": ["focus-jar"]}]}, "scopes": ["project:mobile:firefox-android:releng:signing:cert:dep-signing"]}
     assert {"focus-jar"} == stask.task_signing_formats(context)
 
     context.task = {"payload": {"upstreamArtifacts": [{"formats": ["autograph_fenix"]}]}, "scopes": ["project:mobile:fenix:releng:signing:cert:dep-signing"]}
@@ -94,8 +94,8 @@ def test_task_signing_formats_support_several_projects(context):
 
 
 def test_task_cert_errors_when_2_different_projects_are_signed_in_the_same_task(context):
-    context.config["taskcluster_scope_prefixes"] = ["project:mobile:focus-android:releng:signing:", "project:mobile:fenix:releng:signing:"]
-    context.task = {"scopes": ["project:mobile:focus-android:releng:signing:cert:dep-signing", "project:mobile:fenix:releng:signing:cert:dep-signing"]}
+    context.config["taskcluster_scope_prefixes"] = ["project:mobile:firefox-android:releng:signing:", "project:mobile:fenix:releng:signing:"]
+    context.task = {"scopes": ["project:mobile:firefox-android:releng:signing:cert:dep-signing", "project:mobile:fenix:releng:signing:cert:dep-signing"]}
     with pytest.raises(TaskVerificationError):
         stask.task_cert_type(context)
 

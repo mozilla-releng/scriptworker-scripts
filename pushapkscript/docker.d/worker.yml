@@ -8,7 +8,6 @@ taskcluster_scope_prefixes:
       'COT_PRODUCT == "firefox"':
         - "project:releng:googleplay:"
       'COT_PRODUCT == "mobile"':
-        - "project:mobile:focus-android:releng:googleplay:product:"
         - "project:mobile:reference-browser:releng:googleplay:product:"
         - "project:mobile:fenix:releng:googleplay:product:"
         - "project:mobile:firefox-tv:releng:googleplay:product:"

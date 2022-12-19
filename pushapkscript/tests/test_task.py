@@ -86,7 +86,7 @@ def test_validate_real_life_tasks(context, task):
         (["project:releng:googleplay:"], ["project:releng:googleplay:aurora"], False, "aurora"),
         (["project:releng:googleplay:"], ["project:releng:googleplay:beta"], False, "beta"),
         (["project:releng:googleplay:"], ["project:releng:googleplay:release"], False, "release"),
-        (["project:mobile:focus-android:googleplay:product:"], ["project:mobile:focus-android:googleplay:product:focus-android"], False, "focus-android"),
+        (["project:mobile:firefox-android:googleplay:product:"], ["project:mobile:firefox-android:googleplay:product:focus-android"], False, "focus-android"),
         (
             ["project:mobile:reference-browser:googleplay:product:"],
             ["project:mobile:reference-browser:googleplay:product:reference-browser:dep"],
@@ -99,12 +99,12 @@ def test_validate_real_life_tasks(context, task):
             False,
             "reference-browser",
         ),
-        (["project:mobile:focus-android:googleplay:product:"], [], True, None),
-        ([], ["project:mobile:focus-android:googleplay:product:focus"], True, None),
+        (["project:mobile:firefox-android:googleplay:product:"], [], True, None),
+        ([], ["project:mobile:firefox-android:googleplay:product:focus"], True, None),
         (["project:releng:googleplay:"], ["project:releng:googleplay:beta", "project:releng:googleplay:release"], True, None),
         (
-            ["project:releng:googleplay:", "project:mobile:focus-android:releng:googleplay"],
-            ["project:releng:googleplay:beta", "project:mobile:focus-android:releng:googleplay:product:focus-android"],
+            ["project:releng:googleplay:", "project:mobile:firefox-android:releng:googleplay"],
+            ["project:releng:googleplay:beta", "project:mobile:firefox-android:releng:googleplay:product:focus-android"],
             True,
             None,
         ),
@@ -118,9 +118,9 @@ def test_validate_real_life_tasks(context, task):
             None,
         ),
         (
-            ["project:mobile:focus-android:releng:googleplay", "project:mobile:reference_browser:releng:googleplay:"],
+            ["project:mobile:firefox-android:releng:googleplay", "project:mobile:reference_browser:releng:googleplay:"],
             [
-                "project:mobile:focus-android:releng:googleplay:product:focus-android",
+                "project:mobile:firefox-android:releng:googleplay:product:focus-android",
                 "project:mobile:reference_browser:releng:googleplay:product:reference_browser",
             ],
             True,
