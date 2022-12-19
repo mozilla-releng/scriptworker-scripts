@@ -86,7 +86,10 @@ def test_task_signing_formats(context):
 def test_task_signing_formats_support_several_projects(context):
     context.config["taskcluster_scope_prefixes"] = ["project:mobile:firefox-android:releng:signing:", "project:mobile:fenix:releng:signing:"]
 
-    context.task = {"payload": {"upstreamArtifacts": [{"formats": ["focus-jar"]}]}, "scopes": ["project:mobile:firefox-android:releng:signing:cert:dep-signing"]}
+    context.task = {
+        "payload": {"upstreamArtifacts": [{"formats": ["focus-jar"]}]},
+        "scopes": ["project:mobile:firefox-android:releng:signing:cert:dep-signing"]
+    }
     assert {"focus-jar"} == stask.task_signing_formats(context)
 
     context.task = {"payload": {"upstreamArtifacts": [{"formats": ["autograph_fenix"]}]}, "scopes": ["project:mobile:fenix:releng:signing:cert:dep-signing"]}
