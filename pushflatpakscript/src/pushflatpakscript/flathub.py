@@ -1,5 +1,6 @@
 import logging
 import os
+import stat
 import subprocess
 import tarfile
 
@@ -114,6 +115,8 @@ def check_and_extract_tar_archive(context, tar_file_path):
                 member_path = os.path.join(path, member.name)
                 if not is_within_directory(path, member_path):
                     raise Exception("Attempted path traversal in tar file")
+                if member.mode & (stat.S_ISUID | stat.S_ISGID):
+                    raise Exception("Attempted setuid or setgid in tar file")
             tar.extractall(path, members, numeric_owner=numeric_owner)
 
         safe_extract(tar, path=flatpak_tar_basedir)
