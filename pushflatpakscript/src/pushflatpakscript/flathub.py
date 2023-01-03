@@ -114,9 +114,9 @@ def check_and_extract_tar_archive(context, tar_file_path):
             for member in tar.getmembers():
                 member_path = os.path.join(path, member.name)
                 if not is_within_directory(path, member_path):
-                    raise Exception("Attempted path traversal in tar file: "+member.name)
+                    raise Exception("Attempted path traversal in tar file: " + member.name)
                 if member.mode & (stat.S_ISUID | stat.S_ISGID):
-                    raise Exception("Attempted setuid or setgid in tar file: "+member.name)
+                    raise Exception("Attempted setuid or setgid in tar file: " + member.name)
             tar.extractall(path, members, numeric_owner=numeric_owner)
 
         safe_extract(tar, path=flatpak_tar_basedir)
