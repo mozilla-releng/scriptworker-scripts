@@ -772,7 +772,26 @@ async def _extract_tarfile(context, from_, compression, tmp_dir=None):
         rm(tmp_dir)
         utils.mkdir(tmp_dir)
         with tarfile.open(from_, mode="r:{}".format(compression)) as t:
-            t.extractall(path=tmp_dir)
+            def is_within_directory(directory, target):
+                
+                abs_directory = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+            
+                prefix = os.path.commonprefix([abs_directory, abs_target])
+                
+                return prefix == abs_directory
+            
+            def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+            
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Attempted Path Traversal in Tar File")
+            
+                tar.extractall(path, members, numeric_owner) 
+                
+            
+            safe_extract(t, path=tmp_dir)
             for name in t.getnames():
                 path = os.path.join(tmp_dir, name)
                 os.path.isfile(path) and files.append(path)
