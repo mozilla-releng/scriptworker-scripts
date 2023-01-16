@@ -1464,13 +1464,15 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
     return True
 
 
-# sign_authenticode_zip {{{1
+# sign_authenticode {{{1
 @time_async_function
-async def sign_authenticode_zip(context, orig_path, fmt, *, authenticode_comment=None, **kwargs):
-    """Sign a zipfile with authenticode, using autograph as a backend.
+async def sign_authenticode(context, orig_path, fmt, *, authenticode_comment=None, **kwargs):
+    """Sign a file with authenticode, using autograph as a backend.
 
-    Extract the zip and only sign unsigned files that don't match certain
-    patterns (see `_should_sign_windows`). Then recreate the zip.
+    Supported formats are a single file or a zip.
+
+    If a zip is passed in, extract it and only sign unsigned files that don't
+    match certain patterns (see `_should_sign_windows`). Then recreate the zip.
 
     Args:
         context (Context): the signing context
@@ -1481,10 +1483,10 @@ async def sign_authenticode_zip(context, orig_path, fmt, *, authenticode_comment
                        (Defaults to None)
 
     Returns:
-        str: the path to the signed zip
+        str: the path to the signed file or re-created zip
 
     """
-    file_base, file_extension = os.path.splitext(orig_path)
+    _, file_extension = os.path.splitext(orig_path)
     # This will get cleaned up when we nuke `work_dir`. Clean up at that point
     # rather than immediately after `sign_signcode`, to optimize task runtime
     # speed over disk space.

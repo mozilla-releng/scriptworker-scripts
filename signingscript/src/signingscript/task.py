@@ -15,7 +15,7 @@ from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
 from signingscript.sign import (
-    sign_authenticode_zip,
+    sign_authenticode,
     sign_debian_pkg,
     sign_file,
     sign_file_detached,
@@ -48,11 +48,11 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "autograph_widevine": sign_widevine,
         "autograph_omnija": sign_omnija,
         "autograph_langpack": sign_xpi,
-        "autograph_authenticode": sign_authenticode_zip,
-        "autograph_authenticode_stub": sign_authenticode_zip,
-        "autograph_authenticode_sha2": sign_authenticode_zip,
-        "autograph_authenticode_sha2_stub": sign_authenticode_zip,
-        "autograph_authenticode_sha2_rfc3161_stub": sign_authenticode_zip,
+        "autograph_authenticode": sign_authenticode,
+        "autograph_authenticode_stub": sign_authenticode,
+        "autograph_authenticode_sha2": sign_authenticode,
+        "autograph_authenticode_sha2_stub": sign_authenticode,
+        "autograph_authenticode_sha2_rfc3161_stub": sign_authenticode,
         "privileged_webextension": sign_xpi,
         "system_addon": sign_xpi,
         "autograph_rsa": sign_file_detached,
