@@ -1089,7 +1089,7 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt, use_comment):
     mocker.patch.object(winsign.osslsigncode, "is_signed", mocked_issigned)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
 
-    result = await sign.sign_authenticode(context, test_file, fmt, authenticode_comment=comment)
+    result = await sign.sign_authenticode_zip(context, test_file, fmt, authenticode_comment=comment)
     assert result == test_file
     assert os.path.exists(result)
 
@@ -1135,7 +1135,7 @@ async def test_authenticode_sign_msi(tmpdir, mocker, context, fmt, use_comment):
     mocker.patch.object(winsign.osslsigncode, "is_signed", mocked_issigned)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
 
-    result = await sign.sign_authenticode(context, test_file, fmt, authenticode_comment=comment)
+    result = await sign.sign_authenticode_zip(context, test_file, fmt, authenticode_comment=comment)
     assert result == test_file
     assert os.path.exists(result)
 
@@ -1159,7 +1159,7 @@ async def test_authenticode_sign_zip_nofiles(tmpdir, mocker, context):
 
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
     with pytest.raises(SigningScriptError):
-        await sign.sign_authenticode(context, test_file, "autograph_authenticode")
+        await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode")
 
 
 @pytest.mark.asyncio
@@ -1181,7 +1181,7 @@ async def test_authenticode_sign_zip_error(tmpdir, mocker, context):
     mocker.patch.object(sign, "retry_async", new=fake_retry_async)
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
     with pytest.raises(SigningScriptError):
-        await sign.sign_authenticode(context, test_file, "autograph_authenticode")
+        await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode")
 
 
 @pytest.mark.asyncio
@@ -1210,7 +1210,7 @@ async def test_authenticode_sign_authenticode_permanent_error(tmpdir, mocker, co
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
 
     with pytest.raises(Exception):
-        await sign.sign_authenticode(context, test_file, "autograph_authenticode")
+        await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode")
 
     assert "BAD!" in caplog.text
 
@@ -1277,7 +1277,7 @@ async def test_authenticode_sign_single_file(tmpdir, mocker, context):
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
 
-    result = await sign.sign_authenticode(context, test_file, "autograph_authenticode")
+    result = await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode")
     assert result == test_file
     assert os.path.exists(result)
 
@@ -1309,7 +1309,7 @@ async def test_authenticode_sign_keyids(tmpdir, mocker, context):
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
 
-    result = await sign.sign_authenticode(context, test_file, "autograph_authenticode:202005")
+    result = await sign.sign_authenticode_zip(context, test_file, "autograph_authenticode:202005")
     assert result == test_file
     assert os.path.exists(result)
 
