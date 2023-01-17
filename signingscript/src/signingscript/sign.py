@@ -1410,16 +1410,12 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
     else:
         digest_algo = "sha256"
 
+    cafile = context.config["authenticode_ca"]
     timestampfile = context.config["authenticode_ca_timestamp"]
 
     if keyid:
-        # Sometimes a given keyid may chain up to a shared intermediate, and
-        # sometimes it may not. Check if a ca.crt with the given keyid exists
-        # and fallback to the regular one if it doesn't.
-        cafile = context.config.get(f"authenticode_ca_{keyid}", context.config["authenticode_ca"])
         certs = load_pem_certs(open(context.config[f"authenticode_cert_{keyid}"], "rb").read())
     else:
-        cafile = context.config["authenticode_ca"]
         certs = load_pem_certs(open(context.config["authenticode_cert"], "rb").read())
 
     url = context.config["authenticode_url"]
