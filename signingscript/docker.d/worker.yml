@@ -36,9 +36,7 @@ gpg_pubkey: { "$eval": "GPG_PUBKEY_PATH" }
 widevine_cert: { "$eval": "WIDEVINE_CERT_PATH" }
 authenticode_cert: { "$eval": "AUTHENTICODE_CERT_PATH" }
 authenticode_cert_202005: { "$eval": "AUTHENTICODE_CERT_PATH_202005" }
-authenticode_cert_ev: { "$eval": "AUTHENTICODE_CERT_PATH_EV" }
 authenticode_ca: { "$eval": "AUTHENTICODE_CA_PATH" }
-authenticode_ca_ev: { "$eval": "AUTHENTICODE_CA_PATH_EV" }
 authenticode_ca_timestamp: { "$eval": "AUTHENTICODE_CA_TIMESTAMP_PATH" }
 authenticode_cross_cert: { "$eval": "AUTHENTICODE_CROSS_CERT_PATH" }
 authenticode_timestamp_style: { "$eval": "AUTHENTICODE_TIMESTAMP_STYLE" }

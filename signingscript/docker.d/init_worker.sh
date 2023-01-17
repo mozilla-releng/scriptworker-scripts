@@ -40,9 +40,7 @@ if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_TIMESTAMP_STYLE=old
   export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CERT_PATH_202005=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
-  export AUTHENTICODE_CERT_PATH_EV=/app/signingscript/src/signingscript/data/authenticode_prod_ev.crt
   export AUTHENTICODE_CA_PATH=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
-  export AUTHENTICODE_CA_PATH_EV=/app/signingscript/src/signingscript/data/authenticode_prod_ca_ev.crt
   export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
 fi
 
@@ -222,16 +220,10 @@ case $ENV in
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
         ;;
       adhoc)
-        test_var_set 'AUTHENTICODE_CERT_PATH_EV'
-        test_var_set 'AUTHENTICODE_CA_PATH_EV'
-        test_var_set 'AUTHENTICODE_CA_TIMESTAMP_PATH'
-        test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_EV_PASSWORD'
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_EV_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_RELEASE_PASSWORD'
         test_var_set 'AUTOGRAPH_MAR_RELEASE_USERNAME'
         ;;
