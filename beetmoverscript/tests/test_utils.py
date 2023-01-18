@@ -12,6 +12,7 @@ from beetmoverscript.utils import (
     extract_full_artifact_map_path,
     generate_beetmover_manifest,
     generate_beetmover_template_args,
+    get_addon_data,
     get_candidates_prefix,
     get_credentials,
     get_hash,
@@ -439,3 +440,9 @@ def test_get_url_prefix(context):
     with pytest.raises(ValueError):
         context.bucket = "FakeRelease"
         get_url_prefix(context)
+
+
+def test_get_addon_data():
+    addon_data = get_addon_data("tests/fixtures/dummy.xpi")
+    assert addon_data["name"] == "@some-test-xpi"
+    assert addon_data["version"] == "1.0.0"

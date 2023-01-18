@@ -73,7 +73,7 @@ def get_addon_data(filepath):
     elif os.path.exists(manifest_path):
         with open(manifest_path) as f:
             manifest = json.loads(f.read())
-            name = manifest.get("applications", {}).get("gecko", {}).get("id")
+            name = manifest.get("browser_specific_settings", manifest.get("applications", {})).get("gecko", {}).get("id")
             version = manifest.get("version")
     else:
         raise BadXPIFile(filepath)

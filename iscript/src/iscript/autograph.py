@@ -462,16 +462,16 @@ def langpack_id(app):
     id = None
     with langpack.open("manifest.json", "r") as f:
         manifest = json.load(f)
+        browser_specific_settings = manifest.get("browser_specific_settings", manifest.get("applications", {}))
         if not (
             "languages" in manifest
             and "langpack_id" in manifest
-            and "applications" in manifest
-            and "gecko" in manifest["applications"]
-            and "id" in manifest["applications"]["gecko"]
-            and LANGPACK_RE.match(manifest["applications"]["gecko"]["id"])
+            and "gecko" in browser_specific_settings
+            and "id" in browser_specific_settings["gecko"]
+            and LANGPACK_RE.match(browser_specific_settings["gecko"]["id"])
         ):
             raise IScriptError(f"{app.orig_path} is not a valid langpack")
-        id = manifest["applications"]["gecko"]["id"]
+        id = browser_specific_settings["gecko"]["id"]
     return id
 
 

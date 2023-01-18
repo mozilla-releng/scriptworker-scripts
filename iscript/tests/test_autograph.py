@@ -369,6 +369,21 @@ def test_langpack_id():
         ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-de@devedition.mozilla.org"}}}, does_not_raise()),
         ({"languages": {}, "langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-ja-JP-mac@devedition.mozilla.org"}}}, does_not_raise()),
         ({"langpack_id": "en-CA", "applications": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}}}, pytest.raises(IScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {}}, pytest.raises(IScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {}}}, pytest.raises(IScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {}}}, pytest.raises(IScriptError)),
+        ({"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {"id": ""}}}, pytest.raises(IScriptError)),
+        (
+            {"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {"id": "invalid-langpack-id@example.com"}}},
+            pytest.raises(IScriptError),
+        ),
+        ({"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}}}, does_not_raise()),
+        ({"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {"id": "langpack-de@devedition.mozilla.org"}}}, does_not_raise()),
+        (
+            {"languages": {}, "langpack_id": "en-CA", "browser_specific_settings": {"gecko": {"id": "langpack-ja-JP-mac@devedition.mozilla.org"}}},
+            does_not_raise(),
+        ),
+        ({"langpack_id": "en-CA", "browser_specific_settings": {"gecko": {"id": "langpack-en-CA@firefox.mozilla.org"}}}, pytest.raises(IScriptError)),
     ),
 )
 def test_langpack_id_raises(json_, raises, mocker):
@@ -384,7 +399,8 @@ def test_langpack_id_raises(json_, raises, mocker):
     mocker.patch.object(autograph.json, "load", load_manifest)
     with raises:
         id = autograph.langpack_id(langpack_app)
-        assert id == json_["applications"]["gecko"]["id"]
+        browser_specific_settings = json_.get("browser_specific_settings", json_.get("applications", {}))
+        assert id == browser_specific_settings["gecko"]["id"]
 
 
 @pytest.mark.asyncio

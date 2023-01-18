@@ -30,11 +30,12 @@ def get_langpack_info(path):
         with langpack_xpi.open(manifest) as f:
             contents = f.read().decode("utf-8")
     manifest_info = json.loads(contents)
+    browser_specific_settings = manifest_info.get("browser_specific_settings", manifest_info.get("applications", {}))
     langpack_info = {
         "locale": manifest_info["langpack_id"],
         "version": manifest_info["version"],
-        "id": manifest_info["applications"]["gecko"]["id"],
+        "id": browser_specific_settings["gecko"]["id"],
         "unsigned": path,
-        "min_version": manifest_info["applications"]["gecko"].get("strict_min_version", get_stripped_version(manifest_info["version"])),
+        "min_version": browser_specific_settings["gecko"].get("strict_min_version", get_stripped_version(manifest_info["version"])),
     }
     return langpack_info
