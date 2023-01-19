@@ -24,9 +24,6 @@ job-defaults:
     worker:
         docker-image: {in-tree: 'python{python_version}'}
         max-run-time: 1800
-    python-versions:
-        - 39
-        - 38
     run:
         using: run-task
         cache-dotcache: false
@@ -43,62 +40,92 @@ job-defaults:
 
 jobs:
     addonscript:
+        python-versions: [38, 39]
         resources:
             - addonscript
     balrogscript:
+        python-versions: [38, 39]
         resources:
             - balrogscript
             - scriptworker_client
     beetmoverscript:
+        python-versions: [38, 39]
         resources:
             - beetmoverscript
     bouncerscript:
+        python-versions: [38, 39]
         resources:
             - bouncerscript
     configloader:
+        python-versions: [38, 39]
         resources:
             - configloader
     githubscript:
+        python-versions: [38, 39]
         resources:
             - githubscript
             - scriptworker_client
+    init:
+        python-versions: [39]
+        resources:
+            - docker.d
+            - addonscript/docker.d
+            - balrogscript/docker.d
+            - beetmoverscript/docker.d
+            - bouncerscript/docker.d
+            - githubscript/docker.d
+            - pushapkscript/docker.d
+            - pushflatpakscript/docker.d
+            - pushmsixscript/docker.d
+            - shipitscript/docker.d
+            - signingscript/docker.d
+            - treescript/docker.d
     iscript:
+        python-versions: [38, 39]
         resources:
             - iscript
             - scriptworker_client
             - vendored/mozbuild
     notarization_poller:
+        python-versions: [38, 39]
         resources:
             - notarization_poller
             - scriptworker_client
     pushapkscript:
+        python-versions: [38, 39]
         worker:
             docker-image: {in-tree: 'pushapkscript-python{python_version}'}
         resources:
             - pushapkscript
     pushflatpakscript:
+        python-versions: [38, 39]
         worker:
             docker-image: {in-tree: 'pushflatpakscript-python{python_version}'}
         resources:
             - pushflatpakscript
     pushmsixscript:
+        python-versions: [38, 39]
         worker:
             docker-image: {in-tree: 'pushmsixscript-python{python_version}'}
         resources:
             - pushmsixscript
     scriptworker_client:
+        python-versions: [38, 39]
         resources:
             - scriptworker_client
     shipitscript:
+        python-versions: [38, 39]
         resources:
             - shipitscript
     signingscript:
+        python-versions: [38, 39]
         worker:
             docker-image: {in-tree: 'signingscript-python{python_version}'}
         resources:
             - signingscript
             - vendored/mozbuild
     treescript:
+        python-versions: [38, 39]
         resources:
             - treescript
             - scriptworker_client
