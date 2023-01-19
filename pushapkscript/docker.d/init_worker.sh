@@ -10,11 +10,13 @@ test_var_set() {
   fi
 }
 
-export JARSIGNER_KEY_STORE="/app/mozilla-android-keystore"
+test_var_set APP_DIR
+
+export JARSIGNER_KEY_STORE="$APP_DIR/mozilla-android-keystore"
 rm -f "$JARSIGNER_KEY_STORE"
 # Generate a temporary password
 JARSIGNER_KEY_STORE_PASSWORD=$(openssl rand -hex 30)
-CERT_DIR=/app/pushapkscript/files
+CERT_DIR=$APP_DIR/pushapkscript/files
 
 function import_cert() {
         JARSIGNER_KEY_STORE_NAME=$1
