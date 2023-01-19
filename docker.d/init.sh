@@ -10,6 +10,8 @@ test_var_set() {
   fi
 }
 
+export APP_DIR="${APP_DIR:-/app}"
+
 #
 # Check for certain variables which should be set
 #
@@ -95,16 +97,16 @@ esac
 #
 # For development purposes uncomment the following line when pushing to dev branch
 # export $COT_PRODUCT="thunderbird|mobile|..."
-export ARTIFACTS_DIR=/app/artifacts
+export ARTIFACTS_DIR=$APP_DIR/artifacts
 export ARTIFACT_UPLOAD_TIMEOUT=1200
-export CONFIG_DIR=/app/configs
-export CONFIG_LOADER=/app/configloader_venv/bin/configloader
+export CONFIG_DIR=$APP_DIR/configs
+export CONFIG_LOADER=$APP_DIR/configloader_venv/bin/configloader
 export ED25519_PRIVKEY_PATH=$CONFIG_DIR/ed25519_privkey
 # if this variable exists, we should use it. Default to None otherwise
 export GITHUB_OAUTH_TOKEN=$GITHUB_OAUTH_TOKEN
-export LOGS_DIR=/app/logs
+export LOGS_DIR=$APP_DIR/logs
 export PROVISIONER_ID=scriptworker-k8s
-export SCRIPTWORKER=/app/bin/scriptworker
+export SCRIPTWORKER=$APP_DIR/bin/scriptworker
 export SIGN_CHAIN_OF_TRUST=false
 if [ "$ENV" == "prod" ]; then
   export SIGN_CHAIN_OF_TRUST=true
@@ -112,15 +114,15 @@ fi
 export TASK_CONFIG=$CONFIG_DIR/worker.json
 export TASK_LOGS_DIR=$ARTIFACTS_DIR/public/logs
 export TASK_MAX_TIMEOUT=3600
-export TASK_SCRIPT=/app/bin/${PROJECT_NAME}script
-export TEMPLATE_DIR=/app/docker.d
+export TASK_SCRIPT=$APP_DIR/bin/${PROJECT_NAME}script
+export TEMPLATE_DIR=$APP_DIR/docker.d
 export VERBOSE=true
 export VERIFY_CHAIN_OF_TRUST=true
 export VERIFY_COT_SIGNATURE=false
 if [ "$ENV" == "prod" ]; then
   export VERIFY_COT_SIGNATURE=true
 fi
-export WORK_DIR=/app/workdir
+export WORK_DIR=$APP_DIR/workdir
 export WORKER_TYPE="${TRUST_DOMAIN}-${TRUST_LEVEL}-${PROJECT_NAME}${WORKER_SUFFIX}"
 export WORKER_GROUP=${WORKER_TYPE}
 export WORKER_ID_PREFIX="${WORKER_TYPE}-"
@@ -145,4 +147,4 @@ $CONFIG_LOADER $TEMPLATE_DIR/worker.yml $CONFIG_DIR/worker.json
 
 
 # unset all of the variables to not potentially leak them
-exec env - /app/bin/scriptworker /app/configs/scriptworker.json
+exec env - $APP_DIR/bin/scriptworker $APP_DIR/configs/scriptworker.json

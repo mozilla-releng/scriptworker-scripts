@@ -13,6 +13,7 @@ test_var_set() {
 #
 # Check that all required variables exist
 #
+test_var_set 'APP_DIR'
 test_var_set 'CONFIG_DIR'
 test_var_set 'CONFIG_LOADER'
 test_var_set 'COT_PRODUCT'
@@ -21,8 +22,8 @@ test_var_set 'PROJECT_NAME'
 test_var_set 'PUBLIC_IP'
 test_var_set 'TEMPLATE_DIR'
 
-export DMG_PATH=/app/signingscript/files/dmg
-export HFSPLUS_PATH=/app/signingscript/files/hfsplus
+export DMG_PATH=$APP_DIR/signingscript/files/dmg
+export HFSPLUS_PATH=$APP_DIR/signingscript/files/hfsplus
 export ZIPALIGN_PATH=/usr/bin/zipalign
 
 export PASSWORDS_PATH=$CONFIG_DIR/passwords.json
@@ -30,17 +31,17 @@ export GPG_PUBKEY_PATH=$CONFIG_DIR/gpg_pubkey
 export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
 export AUTHENTICODE_TIMESTAMP_STYLE=old
 export AUTHENTICODE_TIMESTAMP_URL=http://timestamp.digicert.com
-export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_dep.crt
-export AUTHENTICODE_CERT_PATH_202005=/app/signingscript/src/signingscript/data/authenticode_dep.crt
-export AUTHENTICODE_CA_PATH=/app/signingscript/src/signingscript/data/authenticode_dep_ca.crt
+export AUTHENTICODE_CERT_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_dep.crt
+export AUTHENTICODE_CERT_PATH_202005=$APP_DIR/signingscript/src/signingscript/data/authenticode_dep.crt
+export AUTHENTICODE_CA_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_dep_ca.crt
 export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
-export AUTHENTICODE_CROSS_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_stub.crt
+export AUTHENTICODE_CROSS_CERT_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_stub.crt
 export AUTHENTICODE_ADD_DIGICERT_CROSS=0
 if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_TIMESTAMP_STYLE=old
-  export AUTHENTICODE_CERT_PATH=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
-  export AUTHENTICODE_CERT_PATH_202005=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
-  export AUTHENTICODE_CA_PATH=/app/signingscript/src/signingscript/data/authenticode_prod_202005.crt
+  export AUTHENTICODE_CERT_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
+  export AUTHENTICODE_CERT_PATH_202005=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
+  export AUTHENTICODE_CA_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
 fi
 
