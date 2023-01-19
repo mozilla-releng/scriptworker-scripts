@@ -1,0 +1,4 @@
+-r ../configloader/requirements/base.txt
+pytest
+pytest-xdist
+tox
