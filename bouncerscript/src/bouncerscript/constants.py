@@ -16,22 +16,26 @@ ALIASES_REGEXES = {
     "firefox-beta-msi-latest-ssl": r"^Firefox-\d+\.0b\d+-msi-SSL$",
     "firefox-beta-msix-latest-ssl": r"^Firefox-\d+\.0b\d+-msix-SSL$",
     "firefox-beta-pkg-latest-ssl": r"^Firefox-\d+\.0b\d+-pkg-SSL$",
+    "firefox-beta-langpack-latest-ssl": r"^Firefox-\d+\.0b\d+-langpack-SSL$",
     "firefox-stub": r"^Firefox-\d+\.\d+(\.\d+)?-stub$",
     "firefox-latest": r"^Firefox-\d+\.\d+(\.\d+)?$",
     "firefox-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?-SSL$",
     "firefox-msi-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?-msi-SSL$",
     "firefox-msix-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?-msix-SSL$",
+    "firefox-langpack-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?-langpack-SSL$",
     "firefox-pkg-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?-pkg-SSL$",
     "firefox-esr-latest": r"^Firefox-\d+\.\d+(\.\d+)?esr$",
     "firefox-esr-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-SSL$",
     "firefox-esr-msi-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-msi-SSL$",
     "firefox-esr-msix-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-msix-SSL$",
     "firefox-esr-pkg-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-pkg-SSL$",
+    "firefox-esr-langpack-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-langpack-SSL$",
     "firefox-esr-next-latest": r"^Firefox-\d+\.\d+(\.\d+)?esr$",
     "firefox-esr-next-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-SSL$",
     "firefox-esr-next-msi-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-msi-SSL$",
     "firefox-esr-next-msix-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-msix-SSL$",
     "firefox-esr-next-pkg-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-pkg-SSL$",
+    "firefox-esr-next-langpack-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-langpack-SSL$",
 }
 
 PARTNER_ALIASES_REGEX = {
@@ -46,7 +50,7 @@ PARTNER_ALIASES_REGEX = {
 PRODUCT_TO_DESTINATIONS_REGEXES = {
     "firefox-rc": r"^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$",
     "firefox": (
-        r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix|pkg))$"
+        r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:(?:\:lang|multi)/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix|pkg)|xpi/:lang.xpi))$"  # noqa: E501
     ),
     "devedition": (
         r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix))$"
