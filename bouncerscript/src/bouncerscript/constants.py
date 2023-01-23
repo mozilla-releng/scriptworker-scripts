@@ -10,11 +10,6 @@ ALIASES_REGEXES = {
     "firefox-devedition-latest-ssl": r"^Devedition-\d+\.0b\d+-SSL$",
     "firefox-devedition-msi-latest-ssl": r"^Devedition-\d+\.0b\d+-msi-SSL$",
     "firefox-devedition-msix-latest-ssl": r"^Devedition-\d+\.0b\d+-msix-SSL$",
-    "firefox-pinebuild-stub": r"^Pinebuild-\d+\.0b\d+-stub$",
-    "firefox-pinebuild-latest": r"^Pinebuild-\d+\.0b\d+$",
-    "firefox-pinebuild-latest-ssl": r"^Pinebuild-\d+\.0b\d+-SSL$",
-    "firefox-pinebuild-msi-latest-ssl": r"^Pinebuild-\d+\.0b\d+-msi-SSL$",
-    "firefox-pinebuild-msix-latest-ssl": r"^Pinebuild-\d+\.0b\d+-msix-SSL$",
     "firefox-beta-stub": r"^Firefox-\d+\.0b\d+-stub$",
     "firefox-beta-latest": r"^Firefox-\d+\.0b\d+$",
     "firefox-beta-latest-ssl": r"^Firefox-\d+\.0b\d+-SSL$",
@@ -37,8 +32,6 @@ ALIASES_REGEXES = {
     "firefox-esr-next-msi-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-msi-SSL$",
     "firefox-esr-next-msix-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-msix-SSL$",
     "firefox-esr-next-pkg-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-pkg-SSL$",
-    "firefox-sha1": r"^Firefox-\d+\.\d+(\.\d+)?esr-sha1$",
-    "firefox-sha1-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-sha1$",
 }
 
 PARTNER_ALIASES_REGEX = {
@@ -57,9 +50,6 @@ PRODUCT_TO_DESTINATIONS_REGEXES = {
     ),
     "devedition": (
         r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix))$"
-    ),
-    "pinebuild": (
-        r"^(/pinebuild/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:pinebuild|Pinebuild).*\.(?:bz2|dmg|exe|mar|msi|msix))$"
     ),
     "thunderbird": (
         r"^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/" r"(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar|msi))$"
@@ -142,7 +132,6 @@ PRODUCT_TO_PRODUCT_ENTRY = [
     ("firefox-rc", r"^Firefox-.*build[0-9]+-.*$"),
     ("firefox", r"^Firefox-.*$"),
     ("devedition", r"^Devedition-.*$"),
-    ("pinebuild", r"^Pinebuild-.*$"),
     ("thunderbird", r"^Thunderbird-.*$"),
 ]
 
