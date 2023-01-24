@@ -6,15 +6,14 @@ from __future__ import absolute_import, print_function
 
 import sys
 
-from mozwebidlcodegen import create_build_system_manager
-from mozbuild.action.util import log_build_task
+from mozwebidlcodegen import BuildSystemWebIDL
 
 
 def main(argv):
     """Perform WebIDL code generation required by the build system."""
-    manager = create_build_system_manager()
+    manager = BuildSystemWebIDL.from_environment().manager
     manager.generate_build_files()
 
 
-if __name__ == "__main__":
-    sys.exit(log_build_task(main, sys.argv[1:]))
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))
