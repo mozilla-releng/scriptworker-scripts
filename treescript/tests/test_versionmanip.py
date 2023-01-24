@@ -96,11 +96,13 @@ def test_find_what_version_parser_to_use(file, source_repo, expectation, expecte
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version, should_append_esr", (("68.0", True), ("68.0b3", False)))
+@pytest.mark.parametrize("new_version, should_append_esr", (("68.0", True), ("68.0b3", False), ("68.0esr", False)))
 async def test_bump_version(mocker, repo_context, new_version, should_append_esr):
     test_version = new_version
     if repo_context.xtest_version.endswith("esr") and should_append_esr:
         test_version = new_version + "esr"
+    if new_version.endswith("esr") and not repo_context.xtest_version.endswith("esr"):
+        test_version = new_version[:-3]
 
     relative_files = [os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
