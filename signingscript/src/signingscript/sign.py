@@ -28,9 +28,8 @@ from mardor.reader import MarReader
 from mardor.writer import add_signature_block
 from scriptworker.utils import get_single_item_from_sequence, makedirs, raise_future_exceptions, retry_async, rm
 from winsign.crypto import load_pem_certs
-from winsign.makemsix import is_msixfile
 
-from signingscript import digicerthack, task, utils
+from signingscript import task, utils
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
 
@@ -1457,13 +1456,6 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         kwargs=winsign_kwargs,
     )
     os.rename(outfile, infile)
-    cert_type = task.task_cert_type(context)
-    if cert_type == "release-signing" and context.config["authenticode_add_digicert_cross"] and not is_msixfile(infile):
-        log.info("Adding Digicert Cross hack")
-        digicerthack.add_cert_to_signed_file(infile, outfile, cafile, timestampfile)
-        os.rename(outfile, infile)
-    else:
-        log.info("Digicert Cross hack is not enabled, skipping...")
 
     return True
 

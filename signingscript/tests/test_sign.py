@@ -1060,7 +1060,6 @@ async def test_authenticode_sign_zip(tmpdir, mocker, context, fmt, use_comment):
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
     context.config["authenticode_timestamp_url"] = None
-    context.config["authenticode_add_digicert_cross"] = False
     comment = None
     if use_comment:
         comment = "Some authenticode comment"
@@ -1105,7 +1104,6 @@ async def test_authenticode_sign_msi(tmpdir, mocker, context, fmt, use_comment):
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
     context.config["authenticode_timestamp_url"] = None
-    context.config["authenticode_add_digicert_cross"] = False
     comment = None
     if use_comment:
         comment = "Some authenticode comment"
@@ -1148,7 +1146,6 @@ async def test_authenticode_sign_zip_nofiles(tmpdir, mocker, context):
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
     context.config["authenticode_timestamp_url"] = None
-    context.config["authenticode_add_digicert_cross"] = False
 
     test_file = os.path.join(tmpdir, "partial1.mar")
     shutil.copyfile(os.path.join(TEST_DATA_DIR, "partial1.mar"), test_file)
@@ -1170,7 +1167,6 @@ async def test_authenticode_sign_zip_error(tmpdir, mocker, context):
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
     context.config["authenticode_timestamp_url"] = None
-    context.config["authenticode_add_digicert_cross"] = False
 
     test_file = os.path.join(tmpdir, "windows.zip")
     shutil.copyfile(os.path.join(TEST_DATA_DIR, "windows.zip"), test_file)
@@ -1192,7 +1188,6 @@ async def test_authenticode_sign_authenticode_permanent_error(tmpdir, mocker, co
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
     context.config["authenticode_timestamp_url"] = None
-    context.config["authenticode_add_digicert_cross"] = False
 
     test_file = os.path.join(tmpdir, "windows.zip")
     shutil.copyfile(os.path.join(TEST_DATA_DIR, "windows.zip"), test_file)
@@ -1261,7 +1256,6 @@ async def test_authenticode_sign_single_file(tmpdir, mocker, context):
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
     context.config["authenticode_timestamp_url"] = None
-    context.config["authenticode_add_digicert_cross"] = False
 
     await sign._extract_zipfile(context, os.path.join(TEST_DATA_DIR, "windows.zip"), tmp_dir=tmpdir)
     test_file = os.path.join(tmpdir, "helper.exe")
@@ -1295,7 +1289,6 @@ async def test_authenticode_sign_keyids(tmpdir, mocker, context, keyid):
     context.config["authenticode_url"] = "https://example.com"
     context.config["authenticode_timestamp_style"] = None
     context.config["authenticode_timestamp_url"] = None
-    context.config["authenticode_add_digicert_cross"] = False
 
     await sign._extract_zipfile(context, os.path.join(TEST_DATA_DIR, "windows.zip"), tmp_dir=tmpdir)
     test_file = os.path.join(tmpdir, "helper.exe")
