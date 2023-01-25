@@ -7,32 +7,34 @@ from __future__ import absolute_import, print_function, unicode_literals
 import copy
 import errno
 import os
-import six
 import subprocess
 import sys
 import tempfile
 import unittest
-from six import StringIO
 
 from mozbuild.configure import ConfigureSandbox
-from mozbuild.util import memoized_property, ReadOnlyNamespace
+from mozbuild.util import ReadOnlyNamespace
 from mozpack import path as mozpath
-from six import string_types
 
-from buildconfig import topobjdir, topsrcdir
+from StringIO import StringIO
+from which import WhichError
+
+from buildconfig import (
+    topobjdir,
+    topsrcdir,
+)
 
 
 def fake_short_path(path):
-    if sys.platform.startswith("win"):
-        return "/".join(
-            p.split(" ", 1)[0] + "~1" if " " in p else p for p in mozpath.split(path)
-        )
+    if sys.platform.startswith('win'):
+        return '/'.join(p.split(' ', 1)[0] + '~1' if ' 'in p else p
+                        for p in mozpath.split(path))
     return path
 
 
 def ensure_exe_extension(path):
-    if sys.platform.startswith("win"):
-        return path + ".exe"
+    if sys.platform.startswith('win'):
+        return path + '.exe'
     return path
 
 
@@ -40,13 +42,10 @@ class ConfigureTestVFS(object):
     def __init__(self, paths):
         self._paths = set(mozpath.abspath(p) for p in paths)
 
-    def _real_file(self, path):
-        return mozpath.basedir(path, [topsrcdir, topobjdir, tempfile.gettempdir()])
-
     def exists(self, path):
         if path in self._paths:
             return True
-        if self._real_file(path):
+        if mozpath.basedir(path, [topsrcdir, topobjdir]):
             return os.path.exists(path)
         return False
 
@@ -54,29 +53,13 @@ class ConfigureTestVFS(object):
         path = mozpath.abspath(path)
         if path in self._paths:
             return True
-        if self._real_file(path):
+        if mozpath.basedir(path, [topsrcdir, topobjdir]):
             return os.path.isfile(path)
         return False
 
-    def expanduser(self, path):
-        return os.path.expanduser(path)
-
-    def isdir(self, path):
-        path = mozpath.abspath(path)
-        if any(mozpath.basedir(mozpath.dirname(p), [path]) for p in self._paths):
-            return True
-        if self._real_file(path):
-            return os.path.isdir(path)
-        return False
-
-    def getsize(self, path):
-        if not self._real_file(path):
-            raise FileNotFoundError(path)
-        return os.path.getsize(path)
-
 
 class ConfigureTestSandbox(ConfigureSandbox):
-    """Wrapper around the ConfigureSandbox for testing purposes.
+    '''Wrapper around the ConfigureSandbox for testing purposes.
 
     Its arguments are the same as ConfigureSandbox, except for the additional
     `paths` argument, which is a dict where the keys are file paths and the
@@ -90,88 +73,112 @@ class ConfigureTestSandbox(ConfigureSandbox):
 
     This class is only meant to implement the minimal things to make
     moz.configure testing possible. As such, it takes shortcuts.
-    """
+    '''
 
     def __init__(self, paths, config, environ, *args, **kwargs):
-        self._search_path = environ.get("PATH", "").split(os.pathsep)
+        self._search_path = environ.get('PATH', '').split(os.pathsep)
 
         self._subprocess_paths = {
-            mozpath.abspath(k): v for k, v in six.iteritems(paths) if v
+            mozpath.abspath(k): v for k, v in paths.iteritems() if v
         }
 
-        paths = list(paths)
+        paths = paths.keys()
 
         environ = copy.copy(environ)
-        if "CONFIG_SHELL" not in environ:
-            environ["CONFIG_SHELL"] = mozpath.abspath("/bin/sh")
-            self._subprocess_paths[environ["CONFIG_SHELL"]] = self.shell
-            paths.append(environ["CONFIG_SHELL"])
-        self._subprocess_paths[
-            mozpath.join(topsrcdir, "build/win32/vswhere.exe")
-        ] = self.vswhere
+        if 'CONFIG_SHELL' not in environ:
+            environ['CONFIG_SHELL'] = mozpath.abspath('/bin/sh')
+            self._subprocess_paths[environ['CONFIG_SHELL']] = self.shell
+            paths.append(environ['CONFIG_SHELL'])
+        self._subprocess_paths[mozpath.join(topsrcdir, 'build/win32/vswhere.exe')] = self.vswhere
 
         vfs = ConfigureTestVFS(paths)
 
-        os_path = {k: getattr(vfs, k) for k in dir(vfs) if not k.startswith("_")}
+        os_path = {
+            k: getattr(vfs, k) for k in dir(vfs) if not k.startswith('_')
+        }
 
         os_path.update(self.OS.path.__dict__)
 
-        os_contents = {}
-        exec("from os import *", {}, os_contents)
-        os_contents["path"] = ReadOnlyNamespace(**os_path)
-        os_contents["environ"] = dict(environ)
-        self.imported_os = ReadOnlyNamespace(**os_contents)
+        self.imported_os = ReadOnlyNamespace(path=ReadOnlyNamespace(**os_path))
 
-        super(ConfigureTestSandbox, self).__init__(config, environ, *args, **kwargs)
+        self.modules = kwargs.pop('modules', {}) or {}
 
-    @memoized_property
-    def _wrapped_mozfile(self):
-        return ReadOnlyNamespace(which=self.which)
+        super(ConfigureTestSandbox, self).__init__(config, environ, *args,
+                                                   **kwargs)
 
-    @memoized_property
-    def _wrapped_os(self):
-        return self.imported_os
+    def _get_one_import(self, what):
+        if what in self.modules:
+            return self.modules[what]
 
-    @memoized_property
-    def _wrapped_subprocess(self):
-        return ReadOnlyNamespace(
-            CalledProcessError=subprocess.CalledProcessError,
-            check_output=self.check_output,
-            PIPE=subprocess.PIPE,
-            STDOUT=subprocess.STDOUT,
-            Popen=self.Popen,
-        )
+        if what == 'which.which':
+            return self.which
 
-    @memoized_property
-    def _wrapped_ctypes(self):
-        class CTypesFunc(object):
-            def __init__(self, func):
-                self._func = func
+        if what == 'which':
+            return ReadOnlyNamespace(
+                which=self.which,
+                WhichError=WhichError,
+            )
 
-            def __call__(self, *args, **kwargs):
-                return self._func(*args, **kwargs)
+        if what == 'subprocess.Popen':
+            return self.Popen
 
-        return ReadOnlyNamespace(
-            create_unicode_buffer=self.create_unicode_buffer,
-            windll=ReadOnlyNamespace(
-                kernel32=ReadOnlyNamespace(
-                    GetShortPathNameW=CTypesFunc(self.GetShortPathNameW)
-                )
-            ),
-            wintypes=ReadOnlyNamespace(LPCWSTR=0, LPWSTR=1, DWORD=2),
-        )
+        if what == 'subprocess':
+            return ReadOnlyNamespace(
+                CalledProcessError=subprocess.CalledProcessError,
+                check_output=self.check_output,
+                PIPE=subprocess.PIPE,
+                STDOUT=subprocess.STDOUT,
+                Popen=self.Popen,
+            )
 
-    @memoized_property
-    def _wrapped__winreg(self):
-        def OpenKey(*args, **kwargs):
-            raise WindowsError()
+        if what == 'os.path':
+            return self.imported_os.path
 
-        return ReadOnlyNamespace(HKEY_LOCAL_MACHINE=0, OpenKey=OpenKey)
+        if what == 'os.path.exists':
+            return self.imported_os.path.exists
+
+        if what == 'os.path.isfile':
+            return self.imported_os.path.isfile
+
+        if what == 'ctypes.wintypes':
+            return ReadOnlyNamespace(
+                LPCWSTR=0,
+                LPWSTR=1,
+                DWORD=2,
+            )
+
+        if what == 'ctypes':
+            class CTypesFunc(object):
+                def __init__(self, func):
+                    self._func = func
+
+                def __call__(self, *args, **kwargs):
+                    return self._func(*args, **kwargs)
+
+            return ReadOnlyNamespace(
+                create_unicode_buffer=self.create_unicode_buffer,
+                windll=ReadOnlyNamespace(
+                    kernel32=ReadOnlyNamespace(
+                        GetShortPathNameW=CTypesFunc(self.GetShortPathNameW),
+                    )
+                ),
+            )
+
+        if what == '_winreg':
+            def OpenKey(*args, **kwargs):
+                raise WindowsError()
+
+            return ReadOnlyNamespace(
+                HKEY_LOCAL_MACHINE=0,
+                OpenKey=OpenKey,
+            )
+
+        return super(ConfigureTestSandbox, self)._get_one_import(what)
 
     def create_unicode_buffer(self, *args, **kwargs):
         class Buffer(object):
             def __init__(self):
-                self.value = ""
+                self.value = ''
 
         return Buffer()
 
@@ -179,21 +186,19 @@ class ConfigureTestSandbox(ConfigureSandbox):
         path_out.value = fake_short_path(path_in)
         return length
 
-    def which(self, command, mode=None, path=None, exts=None):
-        if isinstance(path, string_types):
-            path = path.split(os.pathsep)
-
-        for parent in path or self._search_path:
+    def which(self, command, path=None, exts=None):
+        for parent in (path or self._search_path):
             c = mozpath.abspath(mozpath.join(parent, command))
             for candidate in (c, ensure_exe_extension(c)):
                 if self.imported_os.path.exists(candidate):
                     return candidate
-        return None
+        raise WhichError()
 
     def Popen(self, args, stdin=None, stdout=None, stderr=None, **kargs):
-        program = self.which(args[0])
-        if not program:
-            raise OSError(errno.ENOENT, "File not found")
+        try:
+            program = self.which(args[0])
+        except WhichError:
+            raise OSError(errno.ENOENT, 'File not found')
 
         func = self._subprocess_paths.get(program)
         retcode, stdout, stderr = func(stdin, args[1:])
@@ -219,26 +224,23 @@ class ConfigureTestSandbox(ConfigureSandbox):
         script = mozpath.abspath(args[0])
         if script in self._subprocess_paths:
             return self._subprocess_paths[script](stdin, args[1:])
-        return 127, "", "File not found"
+        return 127, '', 'File not found'
 
     def vswhere(self, stdin, args):
-        return 0, "[]", ""
+        return 0, '[]', ''
 
     def get_config(self, name):
         # Like the loop in ConfigureSandbox.run, but only execute the code
         # associated with the given config item.
         for func, args in self._execution_queue:
-            if (
-                func == self._resolve_and_set
-                and args[0] is self._config
-                and args[1] == name
-            ):
+            if (func == self._resolve_and_set and args[0] is self._config
+                    and args[1] == name):
                 func(*args)
                 return self._config.get(name)
 
 
 class BaseConfigureTest(unittest.TestCase):
-    HOST = "x86_64-pc-linux-gnu"
+    HOST = 'x86_64-pc-linux-gnu'
 
     def setUp(self):
         self._cwd = os.getcwd()
@@ -248,61 +250,51 @@ class BaseConfigureTest(unittest.TestCase):
         os.chdir(self._cwd)
 
     def config_guess(self, stdin, args):
-        return 0, self.HOST, ""
+        return 0, self.HOST, ''
 
     def config_sub(self, stdin, args):
-        return 0, args[0], ""
+        return 0, args[0], ''
 
-    def get_sandbox(
-        self,
-        paths,
-        config,
-        args=[],
-        environ={},
-        mozconfig="",
-        out=None,
-        logger=None,
-        cls=ConfigureTestSandbox,
-    ):
+    def get_sandbox(self, paths, config, args=[], environ={}, mozconfig='',
+                    out=None, logger=None, modules=None):
         kwargs = {}
         if logger:
-            kwargs["logger"] = logger
+            kwargs['logger'] = logger
         else:
             if not out:
                 out = StringIO()
-            kwargs["stdout"] = out
-            kwargs["stderr"] = out
+            kwargs['stdout'] = out
+            kwargs['stderr'] = out
 
-        if hasattr(self, "TARGET"):
-            target = ["--target=%s" % self.TARGET]
+        if hasattr(self, 'TARGET'):
+            target = ['--target=%s' % self.TARGET]
         else:
             target = []
 
         if mozconfig:
-            fh, mozconfig_path = tempfile.mkstemp(text=True)
-            os.write(fh, six.ensure_binary(mozconfig))
+            fh, mozconfig_path = tempfile.mkstemp()
+            os.write(fh, mozconfig)
             os.close(fh)
         else:
-            mozconfig_path = os.path.join(
-                os.path.dirname(__file__), "data", "empty_mozconfig"
-            )
+            mozconfig_path = os.path.join(os.path.dirname(__file__), 'data',
+                                          'empty_mozconfig')
 
         try:
             environ = dict(
                 environ,
-                OLD_CONFIGURE=os.path.join(topsrcdir, "old-configure"),
-                MOZCONFIG=mozconfig_path,
-            )
+                OLD_CONFIGURE=os.path.join(topsrcdir, 'old-configure'),
+                MOZCONFIG=mozconfig_path)
 
             paths = dict(paths)
-            autoconf_dir = mozpath.join(topsrcdir, "build", "autoconf")
-            paths[mozpath.join(autoconf_dir, "config.guess")] = self.config_guess
-            paths[mozpath.join(autoconf_dir, "config.sub")] = self.config_sub
+            autoconf_dir = mozpath.join(topsrcdir, 'build', 'autoconf')
+            paths[mozpath.join(autoconf_dir,
+                               'config.guess')] = self.config_guess
+            paths[mozpath.join(autoconf_dir, 'config.sub')] = self.config_sub
 
-            sandbox = cls(
-                paths, config, environ, ["configure"] + target + args, **kwargs
-            )
-            sandbox.include_file(os.path.join(topsrcdir, "moz.configure"))
+            sandbox = ConfigureTestSandbox(paths, config, environ,
+                                           ['configure'] + target + args,
+                                           modules=modules, **kwargs)
+            sandbox.include_file(os.path.join(topsrcdir, 'moz.configure'))
 
             return sandbox
         finally:

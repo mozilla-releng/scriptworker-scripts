@@ -7,7 +7,6 @@ from __future__ import absolute_import, print_function
 import sys
 
 from mozbuild.preprocessor import Preprocessor
-from mozbuild.action.util import log_build_task
 
 
 def generate(output, *args):
@@ -23,4 +22,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    log_build_task(main, sys.argv[1:])
+    main(sys.argv[1:])
