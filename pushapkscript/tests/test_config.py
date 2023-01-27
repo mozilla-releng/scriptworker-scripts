@@ -49,8 +49,6 @@ def test_mobile_prod():
         "GOOGLE_CREDENTIALS_FIREFOX_RELEASE_PATH": "release",
         "GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER": "reference-browser",
         "GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH": "reference-browser",
-        "AMAZON_CLIENT_ID": "amazon",
-        "AMAZON_CLIENT_SECRET": "amazon",
     }
     _validate_config(context)
 

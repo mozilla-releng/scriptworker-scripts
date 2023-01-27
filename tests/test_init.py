@@ -51,8 +51,6 @@ CONTEXT = {
         "GITHUB_TOKEN_WRITE_ACCESS_PROD": "1",
     },
     "pushapk": {
-        "AMAZON_CLIENT_ID": "1",
-        "AMAZON_CLIENT_SECRET": "Zm9vYmFyCg==",
         "GOOGLE_CREDENTIALS_FENIX_PROD": "Zm9vYmFyCg==",
         "GOOGLE_CREDENTIALS_FIREFOX_BETA": "Zm9vYmFyCg==",
         "GOOGLE_CREDENTIALS_FIREFOX_DEP": "Zm9vYmFyCg==",

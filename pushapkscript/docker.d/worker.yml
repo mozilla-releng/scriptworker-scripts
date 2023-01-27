@@ -10,7 +10,6 @@ taskcluster_scope_prefixes:
       'COT_PRODUCT == "mobile"':
         - "project:mobile:reference-browser:releng:googleplay:product:"
         - "project:mobile:fenix:releng:googleplay:product:"
-        - "project:mobile:firefox-tv:releng:googleplay:product:"
         - "project:mobile:firefox-android:releng:googleplay:product:"
       'COT_PRODUCT == "mozillavpn"':
         - "project:mozillavpn:releng:googleplay:product:"
@@ -110,19 +109,6 @@ products:
             package_names:
               - "org.mozilla.reference.browser"
             certificate_alias: "reference-browser"
-        - product_names: [ "firefox-tv" ]
-          skip_check_multiple_locales: true
-          skip_check_same_locales: true
-          skip_checks_fennec: true
-          skip_check_signature: true
-          skip_check_ordered_version_codes: true
-          apps:
-            production:
-              package_names:
-                - "org.mozilla.tv.firefox"
-              amazon:
-                client_id: { "$eval": "AMAZON_CLIENT_ID" }
-                client_secret: { "$eval": "AMAZON_CLIENT_SECRET" }
       'COT_PRODUCT == "mobile" && ENV == "fake-prod"':
         - product_names: [ "fenix" ]
           digest_algorithm: "SHA-256"
@@ -207,19 +193,6 @@ products:
                 default_track: 'alpha'
                 service_account: 'dummy'
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
-        - product_names: [ "firefox-tv" ]
-          skip_check_multiple_locales: true
-          skip_check_same_locales: true
-          skip_checks_fennec: true
-          skip_check_signature: true
-          skip_check_ordered_version_codes: true
-          apps:
-            production:
-              package_names:
-                - "org.mozilla.tv.firefox"
-              amazon:
-                client_id: 'dummy'
-                client_secret: 'dummy'
         - product_names: [ "reference-browser" ]
           digest_algorithm: "SHA-256"
           skip_check_multiple_locales: true

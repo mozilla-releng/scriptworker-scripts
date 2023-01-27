@@ -81,8 +81,6 @@ case $COT_PRODUCT in
         test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_BETA'
         test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE'
         test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_RELEASE'
-        test_var_set 'AMAZON_CLIENT_ID'
-        test_var_set 'AMAZON_CLIENT_SECRET'
 
         export GOOGLE_CREDENTIALS_FENIX_PROD_PATH=$CONFIG_DIR/fenix_prod.p12
         export GOOGLE_CREDENTIALS_FOCUS_PATH=$CONFIG_DIR/focus.p12

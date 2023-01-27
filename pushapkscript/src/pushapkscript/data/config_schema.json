@@ -117,22 +117,6 @@
                                         "type": "string"
                                     }
                                 },
-                                "amazon": {
-                                    "type": "object",
-                                    "required": [
-                                        "client_id",
-                                        "client_secret"
-                                    ],
-                                    "additionalProperties": false,
-                                    "properties": {
-                                        "client_id": {
-                                            "type": "string"
-                                        },
-                                        "client_secret": {
-                                            "type": "string"
-                                        }
-                                    }
-                                },
                                 "google": {
                                     "type": "object",
                                     "required": [

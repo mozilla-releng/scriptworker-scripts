@@ -64,43 +64,26 @@ def _get_channel_publish_config(product_config, task):
     if target_store:
         if not publish_config.get(target_store):
             raise ValueError('Task had `target_store` set to "{}", but the "{}" channel does not support ' "that target".format(target_store, task["channel"]))
-    elif publish_config.get("google") and not publish_config.get("amazon"):
+    elif publish_config.get("google"):
         target_store = "google"
-    elif publish_config.get("amazon") and not publish_config.get("google"):
-        target_store = "amazon"
     else:
-        raise ValueError(
-            'The "{}" channel supports "amazon" and "google" as targets, but ' "`target_store` was not provided in the task payload to disambiguate"
-        )
+        raise ValueError("Unknown target store")
 
     store_config = publish_config[target_store]
-    if target_store == "amazon":
-        if task.get("google_play_track") or task.get("rollout_percentage") or task.get("commit"):
-            raise ValueError('"google_play_track", "rollout_percentage" and "commit" are not ' 'allowed on the task if the target store is "amazon"')
+    rollout_percentage = task.get("rollout_percentage")
+    google_track = task.get("google_play_track", store_config["default_track"])
+    google_track = _handle_legacy_google_track(google_track)
 
-        return {
-            "target_store": "amazon",
-            "dry_run": False,
-            "certificate_alias": publish_config.get("certificate_alias"),
-            "username": store_config["client_id"],
-            "secret": store_config["client_secret"],
-            "package_names": publish_config["package_names"],
-        }
-    else:
-        rollout_percentage = task.get("rollout_percentage")
-        google_track = task.get("google_play_track", store_config["default_track"])
-        google_track = _handle_legacy_google_track(google_track)
-
-        return {
-            "target_store": "google",
-            "dry_run": _google_should_do_dry_run(task),
-            "certificate_alias": publish_config.get("certificate_alias"),
-            "username": store_config["service_account"],
-            "secret": store_config["credentials_file"],
-            "package_names": publish_config["package_names"],
-            "google_track": google_track,
-            "google_rollout_percentage": rollout_percentage,
-        }
+    return {
+        "target_store": target_store,
+        "dry_run": _google_should_do_dry_run(task),
+        "certificate_alias": publish_config.get("certificate_alias"),
+        "username": store_config["service_account"],
+        "secret": store_config["credentials_file"],
+        "package_names": publish_config["package_names"],
+        "google_track": google_track,
+        "google_rollout_percentage": rollout_percentage,
+    }
 
 
 def get_publish_config(product_config, task, scope_product):
@@ -118,5 +101,5 @@ def get_publish_config(product_config, task, scope_product):
 
     else:
         # The common configuration will have "channel" specified in the payload, which is used
-        # to choose the app to deploy to. It can support both Google and Amazon as a target store.
+        # to choose the app to deploy to.
         return _get_channel_publish_config(product_config, task)

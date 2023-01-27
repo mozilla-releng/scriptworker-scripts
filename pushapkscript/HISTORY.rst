@@ -3,6 +3,14 @@ Change Log
 All notable changes to this project will be documented in this file.
 This project adheres to `Semantic Versioning <http://semver.org/>`__.
 
+[6.0.0] = 2023-01-27
+----------------------
+
+Removed
+~~~~~~~
+* Pushing APKs to Amazon was removed for being unused for almost 2 years.
+
+
 [5.0.0] = 2021-10-25
 ----------------------
 

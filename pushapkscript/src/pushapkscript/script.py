@@ -66,13 +66,7 @@ def _get_product_config(context, android_product):
 
 def _log_warning_forewords(contact_server, dry_run, target_store):
     if contact_server:
-        if target_store == "amazon":
-            log.warning(
-                'You will create a new "Upcoming Release" on Amazon. This release '
-                "will not be deployed until someone manually submits it on the "
-                "Amazon web console."
-            )
-        elif target_store == "google":
+        if target_store == "google":
             if not dry_run:
                 log.warning(
                     "You will publish APKs to Google Play. This action is irreversible,\
