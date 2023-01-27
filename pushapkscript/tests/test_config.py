@@ -30,11 +30,6 @@ def _validate_config(context):
     jsonschema.validate(config, schema)
 
 
-def test_firefox_fake_prod():
-    context = {"COT_PRODUCT": "firefox", "ENV": "fake-prod", "GOOGLE_CREDENTIALS_FIREFOX_DEP_PATH": "dep"}
-    _validate_config(context)
-
-
 def test_mobile_prod():
     context = {
         "COT_PRODUCT": "mobile",

@@ -5,8 +5,6 @@ do_not_contact_server: { "$eval": "ENV != 'prod'" }
 taskcluster_scope_prefixes:
   $flatten:
     $match:
-      'COT_PRODUCT == "firefox"':
-        - "project:releng:googleplay:"
       'COT_PRODUCT == "mobile"':
         - "project:mobile:reference-browser:releng:googleplay:product:"
         - "project:mobile:fenix:releng:googleplay:product:"
@@ -17,19 +15,6 @@ taskcluster_scope_prefixes:
 products:
   $flatten:
     $match:
-      'COT_PRODUCT == "firefox" && ENV != "prod"':
-        - product_names: [ "dep" ]
-          digest_algorithm: SHA1
-          override_channel_model: 'choose_google_app_with_scope'
-          apps:
-            dep:
-              service_account: dummy
-              default_track: beta
-              package_names:
-                - "org.mozilla.fennec_aurora"
-              credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FIREFOX_DEP_PATH" }
-              certificate_alias: dep
-
       'COT_PRODUCT == "mobile" && ENV == "prod"':
         - product_names: [ "fenix" ]
           digest_algorithm: 'SHA-256'

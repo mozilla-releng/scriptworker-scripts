@@ -40,22 +40,6 @@ function import_cert() {
 }
 
 case $COT_PRODUCT in
-  firefox)
-    case $ENV in
-      dev|fake-prod)
-        test_var_set 'GOOGLE_CREDENTIALS_FIREFOX_DEP'
-        export GOOGLE_CREDENTIALS_FIREFOX_DEP_PATH=$CONFIG_DIR/dep.p12
-        echo $GOOGLE_CREDENTIALS_FIREFOX_DEP | base64 -d > $GOOGLE_CREDENTIALS_FIREFOX_DEP_PATH
-
-        import_cert dep $CERT_DIR/dep.pem
-        ;;
-      prod)
-        ;;
-      *)
-        exit 1
-        ;;
-    esac
-    ;;
   mobile)
     case $ENV in
       dev|fake-prod)

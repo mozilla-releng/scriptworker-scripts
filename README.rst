@@ -95,15 +95,15 @@ comm-3-bouncer      bouncer-prod-relengworker-firefoxci-comm-3
 pushapkscript
 -------------
 
-=================== ============================================
-Worker type         Deployment name
-=================== ============================================
-gecko-1-pushapk-dev pushapk-dev-relengworker-firefoxci-gecko-1
-gecko-3-pushapk     pushapk-prod-relengworker-firefoxci-gecko-3
-gecko-1-pushapk     pushapk-prod-relengworker-firefoxci-gecko-1
-mobile-3-pushapk    pushapk-prod-relengworker-firefoxci-mobile-3
-mobile-1-pushapk    pushapk-prod-relengworker-firefoxci-mobile-1
-=================== ============================================
+======================== ================================================
+Worker type              Deployment name
+======================== ================================================
+mobile-3-pushapk         pushapk-prod-relengworker-firefoxci-mobile-3
+mobile-1-pushapk         pushapk-prod-relengworker-firefoxci-mobile-1
+mozillavpn-1-pushapk     pushapk-prod-relengworker-firefoxci-mozillavpn-1
+mozillavpn-1-pushapk-dev pushapk-prod-relengworker-firefoxci-mozillavpn-1
+mozillavpn-3-pushapk     pushapk-prod-relengworker-firefoxci-mozillavpn-3
+======================== ================================================
 
 pushflatpakscript
 -----------------
