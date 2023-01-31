@@ -1,5 +1,3 @@
-import pytest
-
 from pushapkscript.publish_config import _google_should_do_dry_run, get_publish_config
 
 AURORA_CONFIG = {
@@ -41,7 +39,6 @@ ANY_STORE_CONFIG = {
             "package_names": ["org.mozilla.flex"],
             "certificate_alias": "flex",
             "google": {"default_track": "internal", "service_account": "flex@service.account.com", "credentials_file": "flex.p12"},
-            "amazon": {"client_id": "flex_client", "client_secret": "flex_secret"},
         }
     }
 }
@@ -142,12 +139,6 @@ def test_get_publish_config_fenix_rollout():
     }
 
 
-def test_ambiguous_target():
-    payload = {"channel": "production"}
-    with pytest.raises(ValueError):
-        get_publish_config(ANY_STORE_CONFIG, payload, "flex")
-
-
 def test_target_google():
     payload = {"channel": "production", "target_store": "google"}
     assert get_publish_config(ANY_STORE_CONFIG, payload, "flex") == {
@@ -160,52 +151,6 @@ def test_target_google():
         "secret": "flex.p12",
         "package_names": ["org.mozilla.flex"],
     }
-
-
-def test_target_amazon():
-    payload = {"channel": "production", "target_store": "amazon"}
-    assert get_publish_config(ANY_STORE_CONFIG, payload, "flex") == {
-        "target_store": "amazon",
-        "dry_run": False,
-        "certificate_alias": "flex",
-        "username": "flex_client",
-        "secret": "flex_secret",
-        "package_names": ["org.mozilla.flex"],
-    }
-
-
-def test_google_params_for_amazon():
-    payload = {"channel": "production", "target_store": "amazon", "rollout_percentage": 10}
-    with pytest.raises(ValueError):
-        assert get_publish_config(ANY_STORE_CONFIG, payload, "flex")
-
-
-def test_incorrect_target():
-    google_only_config = {
-        "apps": {
-            "production": {
-                "package_names": ["org.mozilla.google"],
-                "certificate_alias": "google",
-                "google": {"default_track": "internal", "service_account": "google@service.account.com", "credentials_file": "google.p12"},
-            }
-        }
-    }
-    payload = {"channel": "production", "target_store": "amazon"}
-    with pytest.raises(ValueError):
-        get_publish_config(google_only_config, payload, "google")
-
-    amazon_only_config = {
-        "apps": {
-            "production": {
-                "package_names": ["org.mozilla.amazon"],
-                "certificate_alias": "amazon",
-                "amazon": {"client_id": "amazon_client", "client_secret": "amazon_secret"},
-            }
-        }
-    }
-    payload = {"channel": "production", "target_store": "google"}
-    with pytest.raises(ValueError):
-        get_publish_config(amazon_only_config, payload, "amazon")
 
 
 def test_google_should_do_dry_run():

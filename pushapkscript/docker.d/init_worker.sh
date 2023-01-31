@@ -65,8 +65,6 @@ case $COT_PRODUCT in
         test_var_set 'GOOGLE_CREDENTIALS_FENIX_BETA'
         test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_RELEASE'
         test_var_set 'GOOGLE_CREDENTIALS_FENIX_RELEASE'
-        test_var_set 'AMAZON_CLIENT_ID'
-        test_var_set 'AMAZON_CLIENT_SECRET'
 
         export GOOGLE_CREDENTIALS_FOCUS_PATH=$CONFIG_DIR/focus.p12
         export GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH=$CONFIG_DIR/reference_browser.p12

@@ -53,10 +53,6 @@
                     "default_track": "beta",
                     "service_account": "fenix-nightly@iam.gserviceaccount.com",
                     "credentials_file": "/fenix-nightly.p12"
-                },
-                "amazon": {
-                    "client_id": "amzn1.application-oa2-client.fenix",
-                    "client_secret": "123456"
                 }
             },
             "beta": {
@@ -66,10 +62,6 @@
                     "default_track": "production",
                     "service_account": "fenix-beta@iam.gserviceaccount.com",
                     "credentials_file": "/fenix-beta.p12"
-                },
-                "amazon": {
-                    "client_id": "amzn1.application-oa2-client.fenix",
-                    "client_secret": "123456"
                 }
             },
             "release": {
@@ -79,25 +71,6 @@
                     "default_track": "production",
                     "service_account": "fenix-production@iam.gserviceaccount.com",
                     "credentials_file": "/fenix-production.p12"
-                },
-                "amazon": {
-                    "client_id": "amzn1.application-oa2-client.fenix",
-                    "client_secret": "123456"
-                }
-            }
-        }
-    },{
-        "product_names": ["firefox-tv"],
-        "skip_check_multiple_locales": true,
-        "skip_check_same_locales": true,
-        "skip_checks_fennec": true,
-        "skip_check_signature": true,
-        "apps": {
-            "production": {
-                "package_names": ["org.mozilla.video.firefox"],
-                "amazon": {
-                    "client_id": "amzn1.application-oa2-client.firefox-tv",
-                    "client_secret": "123456"
                 }
             }
         }
