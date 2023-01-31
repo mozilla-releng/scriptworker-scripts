@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function
 
+import os
 import sys
 
 from mozbuild.backend.test_manifest import TestManifestBackend
@@ -22,16 +23,20 @@ def gen_test_backend():
         # to be re-created if configure runs. If the file doesn't exist,
         # mozbuild continually thinks the TestManifest backend is out of date
         # and tries to regenerate it.
-        config_status = mozpath.join(build_obj.topobjdir, 'config.status')
-        open(config_status, 'w').close()
+
+        if not os.path.isdir(build_obj.topobjdir):
+            os.makedirs(build_obj.topobjdir)
+
+        config_status = mozpath.join(build_obj.topobjdir, "config.status")
+        open(config_status, "w").close()
 
         print("No build detected, test metadata may be incomplete.")
 
         # If 'JS_STANDALONE' is set, tests that don't require an objdir won't
         # be picked up due to bug 1345209.
         substs = EmptyConfig.default_substs
-        if 'JS_STANDALONE' in substs:
-            del substs['JS_STANDALONE']
+        if "JS_STANDALONE" in substs:
+            del substs["JS_STANDALONE"]
 
         config = EmptyConfig(build_obj.topsrcdir, substs)
         config.topobjdir = build_obj.topobjdir
@@ -45,5 +50,5 @@ def gen_test_backend():
     backend.consume(data)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(gen_test_backend())
