@@ -2,6 +2,10 @@
 # This runs in docker to pin our requirements files.
 set -e
 SUFFIX=${SUFFIX:-txt}
+
+# Supress pip root user warning
+export PIP_ROOT_USER_ACTION=ignore
+
 if [ $# -gt 0 ]; then
     DIRS="$@"
 else
