@@ -63,7 +63,7 @@ clouds:
         'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               devedition: 'moz-fx-productdelivery-no-7d6a-productdelivery'
@@ -73,14 +73,14 @@ clouds:
               mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
           dep-partner:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               firefox: 'mozilla-releng-dep-partner'
         'COT_PRODUCT == "firefox" && ENV == "prod"':
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
@@ -89,7 +89,7 @@ clouds:
               mobile:     'moz-fx-productdelivery-pr-38b5-productdelivery'
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
@@ -98,13 +98,13 @@ clouds:
               mobile:     'moz-fx-productdelivery-pr-38b5-productdelivery'
           partner:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               firefox: 'fxpartners-distros'
           dep:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               devedition: 'moz-fx-productdelivery-no-7d6a-productdelivery'
@@ -113,68 +113,68 @@ clouds:
               mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
           dep-partner:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               firefox: 'mozilla-releng-dep-partner'
         'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               xpi: 'moz-fx-productdelivery-no-7d6a-productdelivery'
         'COT_PRODUCT == "xpi" && ENV == "prod"':
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               xpi: 'moz-fx-productdelivery-pr-38b5-productdelivery'
         'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               thunderbird: 'moz-fx-productdelivery-no-7d6a-productdelivery'
         'COT_PRODUCT == "thunderbird" && ENV == "prod"':
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               thunderbird: 'moz-fx-productdelivery-pr-38b5-productdelivery'
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               thunderbird: 'moz-fx-productdelivery-pr-38b5-productdelivery'
           dep:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               thunderbird: 'moz-fx-productdelivery-no-7d6a-productdelivery'
         'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               fenix: 'moz-fx-productdelivery-no-7d6a-productdelivery'
               focus: 'moz-fx-productdelivery-no-7d6a-productdelivery'
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               fenix: 'moz-fx-productdelivery-no-7d6a-productdelivery'
               focus: 'moz-fx-productdelivery-no-7d6a-productdelivery'
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               fenix: 'moz-fx-productdelivery-no-7d6a-productdelivery'
@@ -182,14 +182,14 @@ clouds:
         'COT_PRODUCT == "mobile" && ENV == "prod"':
           nightly:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               fenix: 'moz-fx-productdelivery-pr-38b5-productdelivery'
               focus: 'moz-fx-productdelivery-pr-38b5-productdelivery'
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               fenix: 'moz-fx-productdelivery-pr-38b5-productdelivery'
@@ -197,14 +197,14 @@ clouds:
         'COT_PRODUCT == "mozillavpn" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               vpn: 'moz-fx-productdelivery-no-7d6a-productdelivery'
         'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: False
+            fail_task_on_error: True
             enabled: True
             product_buckets:
               vpn: 'moz-fx-productdelivery-pr-38b5-productdelivery'
