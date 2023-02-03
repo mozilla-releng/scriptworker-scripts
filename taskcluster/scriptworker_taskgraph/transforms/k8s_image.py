@@ -22,6 +22,9 @@ def add_dependencies(config, jobs):
     discrepancies in upstream deps.
 
     """
+    if not config.params.get("push_docker_image") or config.params.get("docker_tag") != "production":
+        yield from jobs
+
     for job in jobs:
         attributes = job["attributes"]
         dependencies = job.setdefault("dependencies", {})
