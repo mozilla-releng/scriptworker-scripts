@@ -118,16 +118,11 @@ async def fake_retry_async(func, args=(), kwargs=None, attempts=5, sleeptime_kwa
 
 # get_autograph_config {{{1
 @pytest.mark.parametrize(
-    "formats,keyid,expected",
-    (
-        (["autograph_marsha384"], None, utils.Autograph(*["https://127.0.0.3", "hawk_user", "hawk_secret", ["autograph_marsha384"]])),
-        (["autograph_authenticode"], "keyid", utils.Autograph(*["https://127.0.0.3", "hawk_user", "hawk_secret", ["autograph_authenticode"], "keyid"])),
-        (["autograph_authenticode"], None, utils.Autograph(*["https://127.0.0.3", "hawk_user", "hawk_secret", ["autograph_authenticode"], "keyid"])),
-        (["invalid"], None, None),
-    ),
+    "formats,expected",
+    ((["autograph_marsha384"], utils.Autograph(*["https://127.0.0.3", "hawk_user", "hawk_secret", ["autograph_marsha384"]])), (["invalid"], None)),
 )
-def test_get_autograph_config(context, formats, keyid, expected):
-    assert sign.get_autograph_config(context.autograph_configs, TEST_CERT_TYPE, formats, keyid=keyid) == expected
+def test_get_autograph_config(context, formats, expected):
+    assert sign.get_autograph_config(context.autograph_configs, TEST_CERT_TYPE, formats) == expected
 
 
 def test_get_autograph_config_raises_signingscript_error(context):
@@ -331,8 +326,8 @@ async def test_sign_mar384_with_autograph_hash_keyid(context, mocker):
                 "https://autograph-hsm.dev.mozaws.net",
                 "alice",
                 "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
-                {"autograph_hash_only_mar384"},
-                "keyid1",
+                ["autograph_hash_only_mar384"],
+                "autograph",
             )
         ]
     }
