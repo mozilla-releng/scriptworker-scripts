@@ -17,6 +17,17 @@ PROJECT_SPECIFIC_PREFIXES = {
 
 PUSH_TAGS = ("dev", "production")
 
+
+def get_defaults(_):
+    return {
+        "docker_tag": None,
+        "push_docker_image": False,
+        "script_name": None,
+        "script_revision": None,
+        "shipping_phase": None,
+    }
+
+
 scriptworker_schema = {
     Optional('docker_tag'): Any(str, None),
     Optional('push_docker_image'): Any(True, False, None),
@@ -25,7 +36,7 @@ scriptworker_schema = {
     Optional('shipping_phase'): Any("build", "promote", None),
 }
 
-extend_parameters_schema(scriptworker_schema)
+extend_parameters_schema(scriptworker_schema, defaults_fn=get_defaults)
 
 
 def get_decision_parameters(graph_config, parameters):
