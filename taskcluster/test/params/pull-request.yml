@@ -1,0 +1,21 @@
+base_repository: https://github.com/mozilla-releng/scriptworker-scripts
+build_date: 1675443102
+do_not_optimize: []
+docker_tag: github-pull-request
+existing_tasks: {}
+filters:
+- target_tasks_method
+head_ref: feature_branch
+head_repository: https://github.com/user/scriptworker-scripts
+head_rev: 91c957aaf87d40afe2c21c166fdb8f7e5511e8c4
+head_tag: ''
+level: '1'
+moz_build_date: '20230203165142'
+optimize_target_tasks: true
+owner: user@example.com
+project: scriptworker-scripts
+pushdate: 0
+pushlog_id: '0'
+repository_type: git
+target_tasks_method: default
+tasks_for: github-pull-request
