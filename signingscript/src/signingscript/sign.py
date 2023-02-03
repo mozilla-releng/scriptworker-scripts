@@ -118,8 +118,8 @@ def time_function(f):
 
 
 # get_autograph_config {{{1
-def get_autograph_config(autograph_configs, cert_type, signing_formats, keyid=None, raise_on_empty=False):
-    """Get the autograph config for given `signing_formats`, `cert_type` and `keyid`.
+def get_autograph_config(autograph_configs, cert_type, signing_formats, raise_on_empty=False):
+    """Get the autograph config for given `signing_formats` and `cert_type`.
 
     Args:
         autograph_configs (dict of lists of lists): the contents of
@@ -127,8 +127,6 @@ def get_autograph_config(autograph_configs, cert_type, signing_formats, keyid=No
         cert_type (str): the certificate type - essentially signing level,
             separating release vs nightly vs dep.
         signing_formats (list): the signing formats the server needs to support
-        keyid (str): identifier denoting a non-default key to use. Optional.
-            Defaults to None.
         raise_on_empty (bool): flag to raise errors. Optional. Defaults to False.
 
     Raises:
@@ -139,13 +137,11 @@ def get_autograph_config(autograph_configs, cert_type, signing_formats, keyid=No
 
     """
     for a in autograph_configs.get(cert_type, []):
-        # Requests that don't specify a keyid, will still use the keyid defined
-        # in the autograph configs.
-        if a and (set(a.formats) & set(signing_formats)) and (keyid is None or a.key_id == keyid):
+        if a and (set(a.formats) & set(signing_formats)):
             return a
 
     if raise_on_empty:
-        raise SigningScriptError(f"No autograph config found with cert type {cert_type}, formats {signing_formats} and keyid {keyid}")
+        raise SigningScriptError(f"No autograph config found with cert type {cert_type} and formats {signing_formats}")
     return None
 
 
@@ -1113,7 +1109,7 @@ async def sign_hash_with_autograph(context, hash_, fmt, keyid=None):
 
     """
     cert_type = task.task_cert_type(context)
-    a = get_autograph_config(context.autograph_configs, cert_type, [fmt], keyid=keyid, raise_on_empty=True)
+    a = get_autograph_config(context.autograph_configs, cert_type, [fmt], raise_on_empty=True)
     input_file = BytesIO(hash_)
     signature = base64.b64decode(await sign_with_autograph(context.session, a, input_file, fmt, "hash", keyid))
     return signature
@@ -1227,7 +1223,7 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None, **kwargs
     # Get any key id that the task may have specified
     fmt, keyid = utils.split_autograph_format(fmt)
     # Call to check that we have a server available
-    get_autograph_config(context.autograph_configs, cert_type, [fmt], keyid=keyid, raise_on_empty=True)
+    get_autograph_config(context.autograph_configs, cert_type, [fmt], raise_on_empty=True)
 
     hash_algo, expected_signature_length = "sha384", 512
 
