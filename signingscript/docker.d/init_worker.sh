@@ -44,7 +44,7 @@ if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_CERT_PATH_202005=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CERT_PATH_EV=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_ev.crt
   export AUTHENTICODE_CA_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
-  export AUTHENTICODE_CA_PATH_EV=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_ca_ev.crt
+  export AUTHENTICODE_CA_PATH_EV=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_ev.crt
   export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
 fi
 
