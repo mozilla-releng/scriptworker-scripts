@@ -33,9 +33,9 @@ export AUTHENTICODE_TIMESTAMP_STYLE=old
 export AUTHENTICODE_TIMESTAMP_URL=http://timestamp.digicert.com
 export AUTHENTICODE_CERT_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_dep.crt
 export AUTHENTICODE_CERT_PATH_202005=$APP_DIR/signingscript/src/signingscript/data/authenticode_dep.crt
-export AUTHENTICODE_CERT_PATH_EV=""
+export AUTHENTICODE_CERT_PATH_EV="$AUTHENTICODE_CERT_PATH"
 export AUTHENTICODE_CA_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_dep_ca.crt
-export AUTHENTICODE_CA_PATH_EV=""
+export AUTHENTICODE_CA_PATH_EV="$AUTHENTICODE_CA_PATH"
 export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
 export AUTHENTICODE_CROSS_CERT_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_stub.crt
 if [ "$ENV" == "prod" ]; then
