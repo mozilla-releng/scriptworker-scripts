@@ -7,7 +7,17 @@ from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationE
 import bouncerscript.script as bscript
 from bouncerscript.script import async_main, bouncer_aliases, bouncer_locations, bouncer_submission, main
 
-from . import counted, noop_async, noop_sync, raise_sync, return_empty_list_async, return_false_async, return_true_async, return_true_sync, toggled_boolean_async
+from . import (
+    counted,
+    noop_async,
+    noop_sync,
+    raise_sync,
+    return_empty_list_async,
+    return_false_async,
+    return_true_async,
+    return_true_sync,
+    toggled_boolean_async,
+)
 
 
 # main {{{1

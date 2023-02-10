@@ -5,11 +5,10 @@
 Tox-specific transforms
 """
 
-from copy import deepcopy
 import time
+from copy import deepcopy
 
 from taskgraph.transforms.base import TransformSequence
-
 
 transforms = TransformSequence()
 
@@ -25,10 +24,10 @@ def add_dependencies(config, jobs):
 
     """
     for job in jobs:
-        image = job['worker']['docker-image']
+        image = job["worker"]["docker-image"]
         if isinstance(image, dict):
-            if 'in-tree' in image:
-                name = image['in-tree']
-                docker_image_task = 'build-docker-image-' + image['in-tree']
-                job.setdefault('dependencies', {})['docker-image'] = docker_image_task
+            if "in-tree" in image:
+                name = image["in-tree"]
+                docker_image_task = "build-docker-image-" + image["in-tree"]
+                job.setdefault("dependencies", {})["docker-image"] = docker_image_task
         yield job

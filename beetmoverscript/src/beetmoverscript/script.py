@@ -348,7 +348,6 @@ async def move_beets(context, artifacts_to_beetmove, manifest=None, artifact_map
     beets = []
 
     for locale in artifacts_to_beetmove:
-
         installer_artifact = ""
         buildhub_artifact_exists = False
         # get path of installer beet

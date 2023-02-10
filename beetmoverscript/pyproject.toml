@@ -26,6 +26,7 @@ include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
 line_length = 160
+profile = "black"
 known_first_party = 'beetmoverscript'
 
 [tool.towncrier]

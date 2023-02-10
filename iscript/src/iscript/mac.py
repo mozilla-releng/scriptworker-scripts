@@ -391,7 +391,7 @@ async def unlock_keychain(signing_keychain, keychain_password):
             if index == 0:
                 break
             child.sendline(keychain_password)
-    except (pexpect.exceptions.TIMEOUT) as exc:
+    except pexpect.exceptions.TIMEOUT as exc:
         raise TimeoutError("Timeout trying to unlock the keychain {}: {}!".format(signing_keychain, exc)) from exc
     child.close()
     if child.exitstatus != 0 or child.signalstatus is not None:
@@ -417,7 +417,10 @@ async def update_keychain_search_path(config, signing_keychain):
     """
     await run_command(
         ["security", "list-keychains", "-s", signing_keychain]
-        + config.get("default_keychains", [f"{os.environ['HOME']}/Library/Keychains/login.keychain-db", "/Library/Keychains/System.keychain"]),
+        + config.get(
+            "default_keychains",
+            [f"{os.environ['HOME']}/Library/Keychains/login.keychain-db", "/Library/Keychains/System.keychain"],
+        ),
         cwd=config["work_dir"],
         exception=IScriptError,
     )
@@ -514,14 +517,24 @@ async def extract_all_apps(config, all_paths):
         makedirs(app.parent_dir)
         if app.orig_path.endswith((".tar.bz2", ".tar.gz", ".tgz")):
             futures.append(
-                asyncio.ensure_future(run_command(["tar", "xf", app.orig_path], cwd=app.parent_dir, exception=IScriptError, log_level=logging.DEBUG))
+                asyncio.ensure_future(
+                    run_command(
+                        ["tar", "xf", app.orig_path],
+                        cwd=app.parent_dir,
+                        exception=IScriptError,
+                        log_level=logging.DEBUG,
+                    )
+                )
             )
         elif app.orig_path.endswith(".dmg"):
             unpack_mountpoint = os.path.join("/tmp", f"{config.get('dmg_prefix', 'dmg')}-{counter}-unpack")
             futures.append(
                 asyncio.ensure_future(
                     run_command(
-                        [unpack_dmg, app.orig_path, unpack_mountpoint, app.parent_dir], cwd=app.parent_dir, exception=IScriptError, log_level=logging.DEBUG
+                        [unpack_dmg, app.orig_path, unpack_mountpoint, app.parent_dir],
+                        cwd=app.parent_dir,
+                        exception=IScriptError,
+                        log_level=logging.DEBUG,
                     )
                 )
             )
@@ -587,7 +600,11 @@ async def create_one_notarization_zipfile(work_dir, all_paths, sign_config, path
     if sign_config["zipfile_cmd"] == "zip":
         await run_command(["zip", "-r", zip_path, *app_paths], cwd=work_dir, exception=IScriptError)
     elif sign_config["zipfile_cmd"] == "ditto":
-        await run_command(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", "0", zip_path], cwd=work_dir, exception=IScriptError)
+        await run_command(
+            ["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", "0", zip_path],
+            cwd=work_dir,
+            exception=IScriptError,
+        )
     else:
         raise IScriptError(f"Unknown zipfile_cmd {sign_config['zipfile_cmd']}!")
     return zip_path
@@ -773,7 +790,13 @@ async def wrap_notarization_with_sudo(config, sign_config, all_paths, path_attr=
                     "--password",
                 ]
             )
-            cmd = ["sudo", "su", account, "-c", base_cmdln + " {}".format(shlex.quote(sign_config["apple_notarization_password"]))]
+            cmd = [
+                "sudo",
+                "su",
+                account,
+                "-c",
+                base_cmdln + " {}".format(shlex.quote(sign_config["apple_notarization_password"])),
+            ]
             log_cmd = ["sudo", "su", account, "-c", base_cmdln + " ********"]
             futures.append(
                 asyncio.ensure_future(
@@ -1005,7 +1028,15 @@ async def create_pkg_files(config, sign_config, all_paths, requirements_plist_pa
         app.tmp_pkg_path2 = app.app_path.replace(".appex", ".tmp2.pkg").replace(".app", ".tmp2.pkg")
         app.pkg_path = app.app_path.replace(".appex", ".pkg").replace(".app", ".pkg")
         app.pkg_name = os.path.basename(app.pkg_path)
-        cmd = ("pkgbuild", "--install-location", "/Applications", *cmd_opts, "--component", app.app_path, app.tmp_pkg_path1)
+        cmd = (
+            "pkgbuild",
+            "--install-location",
+            "/Applications",
+            *cmd_opts,
+            "--component",
+            app.app_path,
+            app.tmp_pkg_path1,
+        )
         futures.append(_retry_run_cmd_semaphore(semaphore=semaphore, cmd=cmd, cwd=app.parent_dir))
     await raise_future_exceptions(futures)
     futures = []

@@ -56,9 +56,7 @@ def verify_json_schema(data, schema, name="task"):
     try:
         jsonschema.validate(data, schema)
     except jsonschema.exceptions.ValidationError as exc:
-        raise TaskVerificationError(
-            "Can't verify {} schema!\n{}".format(name, str(exc))
-        ) from exc
+        raise TaskVerificationError("Can't verify {} schema!\n{}".format(name, str(exc))) from exc
 
 
 def verify_task_schema(config, task, schema_key="schema_file"):
@@ -85,9 +83,7 @@ def verify_task_schema(config, task, schema_key="schema_file"):
 
         verify_json_schema(task, task_schema)
     except (KeyError, OSError) as e:
-        raise TaskVerificationError(
-            "Cannot verify task against schema. Task: {}.".format(task)
-        ) from e
+        raise TaskVerificationError("Cannot verify task against schema. Task: {}.".format(task)) from e
 
 
 def sync_main(

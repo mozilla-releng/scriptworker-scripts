@@ -45,7 +45,9 @@ async def bouncer_submission(context):
             log.warning('Product "{}" already exists. Skipping...'.format(product_name))
         else:
             log.info('Adding product "{}"...'.format(product_name))
-            await api_add_product(context, product_name=product_name, add_locales=pr_config["options"]["add_locales"], ssl_only=pr_config["options"]["ssl_only"])
+            await api_add_product(
+                context, product_name=product_name, add_locales=pr_config["options"]["add_locales"], ssl_only=pr_config["options"]["ssl_only"]
+            )
             log.info("Sanity check to ensure product has been successfully added...")
             if not await does_product_exist(context, product_name):
                 raise ScriptWorkerTaskException("Bouncer entries are corrupt")

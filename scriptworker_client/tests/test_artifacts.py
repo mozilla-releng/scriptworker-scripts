@@ -12,7 +12,6 @@ from scriptworker_client.artifacts import (
     get_single_upstream_artifact_full_path,
     get_upstream_artifacts_full_paths_per_task_id,
 )
-
 from scriptworker_client.exceptions import TaskVerificationError
 
 from . import touch
@@ -89,11 +88,7 @@ def test_get_upstream_artifacts_full_paths_per_task_id():
             os.path.join(config["work_dir"], "cot", "dependency2", "public", "file_b1"),
             os.path.join(config["work_dir"], "cot", "dependency2", "public", "file_b2"),
         ],
-        "dependency3": [
-            os.path.join(
-                config["work_dir"], "cot", "dependency3", "some_other_folder", "file_c"
-            )
-        ],
+        "dependency3": [os.path.join(config["work_dir"], "cot", "dependency3", "some_other_folder", "file_c")],
     }
     assert failed_artifacts == {
         "failedDependency1": ["public/failed_optional_file1"],
@@ -128,19 +123,15 @@ def test_get_and_check_single_upstream_artifact_full_path():
     folder = os.path.join(config["work_dir"], "cot", "dependency1")
     touch(os.path.join(folder, "public/file_a"))
 
-    assert get_and_check_single_upstream_artifact_full_path(
-        config, "dependency1", "public/file_a"
-    ) == os.path.join(config["work_dir"], "cot", "dependency1", "public", "file_a")
+    assert get_and_check_single_upstream_artifact_full_path(config, "dependency1", "public/file_a") == os.path.join(
+        config["work_dir"], "cot", "dependency1", "public", "file_a"
+    )
 
     with pytest.raises(TaskVerificationError):
-        get_and_check_single_upstream_artifact_full_path(
-            config, "dependency1", "public/non_existing_file"
-        )
+        get_and_check_single_upstream_artifact_full_path(config, "dependency1", "public/non_existing_file")
 
     with pytest.raises(TaskVerificationError):
-        get_and_check_single_upstream_artifact_full_path(
-            config, "non-existing-dep", "public/file_a"
-        )
+        get_and_check_single_upstream_artifact_full_path(config, "non-existing-dep", "public/file_a")
 
 
 def test_get_single_upstream_artifact_full_path():
@@ -148,19 +139,17 @@ def test_get_single_upstream_artifact_full_path():
     config["work_dir"] = os.path.abspath("some/path")
     os.path.join(config["work_dir"], "cot", "dependency1")
 
-    assert get_single_upstream_artifact_full_path(
-        config, "dependency1", "public/file_a"
-    ) == os.path.join(config["work_dir"], "cot", "dependency1", "public", "file_a")
+    assert get_single_upstream_artifact_full_path(config, "dependency1", "public/file_a") == os.path.join(
+        config["work_dir"], "cot", "dependency1", "public", "file_a"
+    )
 
-    assert get_single_upstream_artifact_full_path(
-        config, "dependency1", "public/non_existing_file"
-    ) == os.path.join(
+    assert get_single_upstream_artifact_full_path(config, "dependency1", "public/non_existing_file") == os.path.join(
         config["work_dir"], "cot", "dependency1", "public", "non_existing_file"
     )
 
-    assert get_single_upstream_artifact_full_path(
-        config, "non-existing-dep", "public/file_a"
-    ) == os.path.join(config["work_dir"], "cot", "non-existing-dep", "public", "file_a")
+    assert get_single_upstream_artifact_full_path(config, "non-existing-dep", "public/file_a") == os.path.join(
+        config["work_dir"], "cot", "non-existing-dep", "public", "file_a"
+    )
 
 
 @pytest.mark.parametrize(

@@ -15,13 +15,7 @@ import mock
 import pytest
 
 import scriptworker_client.aio as aio
-from scriptworker_client.exceptions import (
-    Download404,
-    DownloadError,
-    LockfileError,
-    RetryError,
-    TaskError,
-)
+from scriptworker_client.exceptions import Download404, DownloadError, LockfileError, RetryError, TaskError
 
 if sys.version_info < (3, 7):
     from async_generator import asynccontextmanager
@@ -158,9 +152,7 @@ async def test_semaphore_wrapper():
 
 # lockfile {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "use_name, attempts, has_slept", ((False, 2, True), (True, 1, False))
-)
+@pytest.mark.parametrize("use_name, attempts, has_slept", ((False, 2, True), (True, 1, False)))
 async def test_lockfile(tmpdir, mocker, attempts, has_slept, use_name):
     """Given two lockfile paths, a third ``lockfile`` call should hit a
     ``LockfileError`` after exhausting attempts.
@@ -186,9 +178,7 @@ async def test_lockfile(tmpdir, mocker, attempts, has_slept, use_name):
             assert os.path.exists(path2)
             with pytest.raises(LockfileError):
                 name = "three" if use_name else None
-                async with aio.lockfile(
-                    paths, name=name, attempts=attempts, sleep=0
-                ) as path3:
+                async with aio.lockfile(paths, name=name, attempts=attempts, sleep=0) as path3:
                     assert path3 is None
     for path in paths:
         assert not os.path.exists(path)
@@ -282,13 +272,10 @@ def test_calculate_sleep_time(attempt):
     if attempt == 0:
         min_delay = max_delay = 0
     else:
-        min_delay = (float(2 ** (attempt - 1)) * float(delay_factor)) * (
-            (randomization_factor * -1) + 1
-        )
+        min_delay = (float(2 ** (attempt - 1)) * float(delay_factor)) * ((randomization_factor * -1) + 1)
         max_delay = min(
             max_delay,
-            (float(2 ** (attempt - 1)) * float(delay_factor))
-            * ((randomization_factor * 1) + 1),
+            (float(2 ** (attempt - 1)) * float(delay_factor)) * ((randomization_factor * 1) + 1),
         )
     t = aio.calculate_sleep_time(
         attempt,
@@ -338,9 +325,7 @@ async def test_retry_async_always_fail():
     retry_count["always_fail"] = 0
     with mock.patch("asyncio.sleep", new=fake_sleep):
         with pytest.raises(TaskError):
-            status = await aio.retry_async(
-                always_fail, sleeptime_kwargs={"delay_factor": 0}
-            )
+            status = await aio.retry_async(always_fail, sleeptime_kwargs={"delay_factor": 0})
             assert status is None
     assert retry_count["always_fail"] == 5
 
@@ -358,26 +343,20 @@ async def test_retry_async_always_fail():
     ),
 )
 @pytest.mark.asyncio
-async def test_request(
-    mocker, url, method, return_type, expected, exception, num_attempts
-):
+async def test_request(mocker, url, method, return_type, expected, exception, num_attempts):
     """A request returns the expected value, or raises ``exception`` if not ``None``."""
     mocker.patch.object(aiohttp, "ClientSession", new=GetFakeSession)
     mocker.patch.object(asyncio, "sleep", new=noop_async)
 
     if not exception:
-        result = await aio.request(
-            url, method=method, return_type=return_type, num_attempts=num_attempts
-        )
+        result = await aio.request(url, method=method, return_type=return_type, num_attempts=num_attempts)
         if return_type in ("text", "json"):
             assert result == expected
         else:
             assert await result.text() == expected
     else:
         with pytest.raises(exception):
-            await aio.request(
-                url, method=method, return_type=return_type, num_attempts=num_attempts
-            )
+            await aio.request(url, method=method, return_type=return_type, num_attempts=num_attempts)
 
 
 # download_file {{{1

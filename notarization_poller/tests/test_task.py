@@ -183,7 +183,6 @@ async def test_upload_log(mocker, config, claim_task, event_loop, response_statu
     ),
 )
 async def test_complete_task(mocker, config, claim_task, event_loop, status, raises, result):
-
     nooptask = NoOpTask(config, claim_task, event_loop=event_loop)
     nooptask.status = status
     nooptask._reclaim_task = {}

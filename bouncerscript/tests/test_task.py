@@ -79,7 +79,14 @@ def test_validate_task_schema(submission_context, schema="submission"):
         ({"firefox-devedition-latest": "Devedition-70.0"}, True),
         ({"firefox-devedition-latest-ssl": "Devedition-70.0.1-SSL"}, True),
         ({"firefox-devedition-stub": "Devedition-70.0-stub"}, True),
-        ({"firefox-devedition-latest": "Devedition-70.0b2", "firefox-devedition-latest-ssl": "Devedition-70.0b2-SSL", "firefox-devedition-stub": "Devedition-70.0b2-stub"}, False),
+        (
+            {
+                "firefox-devedition-latest": "Devedition-70.0b2",
+                "firefox-devedition-latest-ssl": "Devedition-70.0b2-SSL",
+                "firefox-devedition-stub": "Devedition-70.0b2-stub",
+            },
+            False,
+        ),
         (
             {
                 "firefox-devedition-latest": "Devedition-70.0b2",
@@ -90,8 +97,22 @@ def test_validate_task_schema(submission_context, schema="submission"):
             },
             False,
         ),
-        ({"firefox-devedition-latest": "Devedition-70.0b2", "firefox-devedition-latest-ssl": "Devedition-70.0b2-SSL", "firefox-devedition-stub": "Devedition-70.0-stub"}, True),
-        ({"firefox-devedition-latest": "Devedition-70.02", "firefox-devedition-latest-ssl": "Devedition-70.0b2-SSL", "firefox-devedition-stub": "Devedition-70.0.1-stub"}, True),
+        (
+            {
+                "firefox-devedition-latest": "Devedition-70.0b2",
+                "firefox-devedition-latest-ssl": "Devedition-70.0b2-SSL",
+                "firefox-devedition-stub": "Devedition-70.0-stub",
+            },
+            True,
+        ),
+        (
+            {
+                "firefox-devedition-latest": "Devedition-70.02",
+                "firefox-devedition-latest-ssl": "Devedition-70.0b2-SSL",
+                "firefox-devedition-stub": "Devedition-70.0.1-stub",
+            },
+            True,
+        ),
         ({"firefox-beta-latest": "Firefox-70.0b2"}, False),
         ({"firefox-beta-latest-ssl": "Firefox-70.0b2-SSL"}, False),
         ({"firefox-beta-msi-latest-ssl": "Firefox-70.0b2-msi-SSL"}, False),
@@ -144,11 +165,41 @@ def test_validate_task_schema(submission_context, schema="submission"):
         ({"thunderbird-latest": "Thunderbird-70.0b1"}, True),
         ({"thunderbird-latest-ssl": "Thunderbird-70.0b1-SSL"}, True),
         ({"thunderbird-msi-latest-ssl": "Thunderbird-70.0b1-msi-SSL"}, True),
-        ({"partner-firefox-beta-foo-bar-baz-latest": "Firefox-69.0b9-foo-bar-baz", "partner-firefox-beta-foo-bar-baz-stub": "Firefox-69.0b9-foo-bar-baz-stub"}, False),
-        ({"partner-firefox-release-foo-bar-baz-latest": "Firefox-69.0-foo-bar-baz", "partner-firefox-release-foo-bar-baz-stub": "Firefox-69.0-foo-bar-baz-stub"}, False),
-        ({"partner-firefox-release-foo-bar-baz-latest": "Firefox-69.0.1-foo-bar-baz", "partner-firefox-release-foo-bar-baz-stub": "Firefox-69.0.1-foo-bar-baz-stub"}, False),
-        ({"partner-firefox-esr-foo-bar-baz-latest": "Firefox-68.0esr-foo-bar-baz", "partner-firefox-esr-foo-bar-baz-stub": "Firefox-68.0esr-foo-bar-baz-stub"}, False),
-        ({"partner-firefox-esr-foo-bar-baz-latest": "Firefox-68.0.2esr-foo-bar-baz", "partner-firefox-esr-foo-bar-baz-stub": "Firefox-68.0.2esr-foo-bar-baz-stub"}, False),
+        (
+            {
+                "partner-firefox-beta-foo-bar-baz-latest": "Firefox-69.0b9-foo-bar-baz",
+                "partner-firefox-beta-foo-bar-baz-stub": "Firefox-69.0b9-foo-bar-baz-stub",
+            },
+            False,
+        ),
+        (
+            {
+                "partner-firefox-release-foo-bar-baz-latest": "Firefox-69.0-foo-bar-baz",
+                "partner-firefox-release-foo-bar-baz-stub": "Firefox-69.0-foo-bar-baz-stub",
+            },
+            False,
+        ),
+        (
+            {
+                "partner-firefox-release-foo-bar-baz-latest": "Firefox-69.0.1-foo-bar-baz",
+                "partner-firefox-release-foo-bar-baz-stub": "Firefox-69.0.1-foo-bar-baz-stub",
+            },
+            False,
+        ),
+        (
+            {
+                "partner-firefox-esr-foo-bar-baz-latest": "Firefox-68.0esr-foo-bar-baz",
+                "partner-firefox-esr-foo-bar-baz-stub": "Firefox-68.0esr-foo-bar-baz-stub",
+            },
+            False,
+        ),
+        (
+            {
+                "partner-firefox-esr-foo-bar-baz-latest": "Firefox-68.0.2esr-foo-bar-baz",
+                "partner-firefox-esr-foo-bar-baz-stub": "Firefox-68.0.2esr-foo-bar-baz-stub",
+            },
+            False,
+        ),
         ({"partner-firefox-beta-foo-bar-baz-latest": "Firefox-69.0b9", "partner-firefox-beta-foo-bar-baz-stub": "Firefox-69.0b9-stub"}, True),
         ({"firefox-latest": "Firefox-69.0b9-foo-bar-baz", "firefox-stub": "Firefox-69.0b9-foo-bar-baz-stub"}, True),
         ({"corrupt-alias": "corrupt-entry"}, True),
@@ -211,7 +262,11 @@ def test_check_locations_match(locations, product_config, raises):
             ("Firefox-61.0b15-stub", "/firefox/releases/61.0b15/win32/:lang/Firefox%20Installer.exe", False),
             ("Firefox-61.0b15-stub", "/firefox/releases/61.0b15/win32/:lang/Firefox%20Installer.exe", False),
             ("Firefox-61.0b15-stub", "/mobile/releases/61.0b15/win32/:lang/Firefox%20Installer.exe", True),
-            ("Firefox-62.0build1-Partial-60.0.2build1", "/firefox/candidates/62.0-candidates/build1/update/linux-i686/:lang/firefox-60.0.2-62.0.partial.mar", False),
+            (
+                "Firefox-62.0build1-Partial-60.0.2build1",
+                "/firefox/candidates/62.0-candidates/build1/update/linux-i686/:lang/firefox-60.0.2-62.0.partial.mar",
+                False,
+            ),
             ("Firefox-62.0build1-Partial-60.0.2build1", "/firefox/releases/62.0/update/linux-i686/:lang/firefox-60.0.2-62.0.partial.mar", True),
             ("Firefox-110.0b1-langpack-SSL", "/firefox/releases/109.0b1/linux-i686/xpi/:lang.xpi", False),
             ("Devedition-61.0b15", "/devedition/releases/61.0b15/linux-i686/:lang/firefox-61.0b15.tar.bz2", False),
@@ -278,7 +333,11 @@ def test_check_path_matches_destination(product_name, path, raises):
                 False,
             ),
             (
-                {"thunderbird-next-latest": "Thunderbird-62.0", "thunderbird-next-latest-ssl": "Thunderbird-62.0", "thunderbird-latest-ssl": "Thunderbird-62.0"},
+                {
+                    "thunderbird-next-latest": "Thunderbird-62.0",
+                    "thunderbird-next-latest-ssl": "Thunderbird-62.0",
+                    "thunderbird-latest-ssl": "Thunderbird-62.0",
+                },
                 {
                     ("https://download.mozilla.org/?product=" "thunderbird-next-latest-ssl&print=yes"): "404 page not found\n",
                     ("https://download.mozilla.org/?product=" "thunderbird-next-latest&print=yes"): "404 page not found\n",
