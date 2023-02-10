@@ -28,7 +28,7 @@ for dir in $DIRS; do
         ARGS="$ARGS -g flat-manager"
     fi
     pushd $dir
-    pip-compile-multi -o "$SUFFIX" $ARGS -P scriptworker
+    pip-compile-multi -o "$SUFFIX" $ARGS
     chmod 644 requirements/*.txt
     popd
 done
