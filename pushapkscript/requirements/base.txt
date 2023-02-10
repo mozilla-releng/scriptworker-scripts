@@ -1071,9 +1071,9 @@ rsa==4.9 \
     # via
     #   google-auth
     #   oauth2client
-scriptworker==46.0.1 \
-    --hash=sha256:88feedbc95d0ea9837a3cdeac7f8387820b19820ffdba77421eda05046fef67a \
-    --hash=sha256:d0531c353b89ce38ff1ecced599afc6cdf896eabc172bd2e77eb93ed53ad8bf3
+scriptworker==47.0.0 \
+    --hash=sha256:50fb09049cc02b3b16cbd986868d28bc7e02aa1b1f96591ba9967a6aaf01632d \
+    --hash=sha256:517505caa10428f61b7018e46d6c4d76478b2beebe7fcfbdde0cc446b64985ee
     # via -r requirements/base.in
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
