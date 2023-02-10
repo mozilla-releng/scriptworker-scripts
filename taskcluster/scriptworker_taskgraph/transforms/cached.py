@@ -20,6 +20,7 @@ transforms = TransformSequence()
 
 BASE_DIR = os.getcwd()
 
+
 @transforms.add
 def add_resources(config, tasks):
     for task in tasks:
@@ -29,7 +30,10 @@ def add_resources(config, tasks):
             if resources and attributes["resources"] != resources:
                 raise Exception(
                     "setting {} {} task.attributes.resources to {}: it's already set to {}!".format(
-                        config.kind, task.get("name"), resources, attributes["resources"],
+                        config.kind,
+                        task.get("name"),
+                        resources,
+                        attributes["resources"],
                     )
                 )
         attributes["resources"] = resources
@@ -43,7 +47,7 @@ def build_cache(config, tasks):
             digest_data = []
             resources = task["attributes"]["resources"]
             for resource in resources:
-                digest_data.append(hash_paths(os.path.join(BASE_DIR, resource), ['']))
+                digest_data.append(hash_paths(os.path.join(BASE_DIR, resource), [""]))
             cache_name = task["name"].replace(":", "-")
             task["cache"] = {
                 "type": f"scriptworker-scripts.v1.{config.kind}",

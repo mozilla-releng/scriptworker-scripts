@@ -9,8 +9,8 @@ from copy import deepcopy
 
 from taskgraph.transforms.base import TransformSequence
 
-
 transforms = TransformSequence()
+
 
 def _replace_string(obj, subs):
     if isinstance(obj, dict):
@@ -26,8 +26,8 @@ def _replace_string(obj, subs):
 def _resolve_replace_string(item, field, subs):
     # largely from resolve_keyed_by
     container, subfield = item, field
-    while '.' in subfield:
-        f, subfield = subfield.split('.', 1)
+    while "." in subfield:
+        f, subfield = subfield.split(".", 1)
         if f not in container:
             return item
         container = container[f]
@@ -41,13 +41,14 @@ def _resolve_replace_string(item, field, subs):
     return item
 
 
-
 @transforms.add
 def set_script_name(config, jobs):
     for job in jobs:
-        job.setdefault("attributes", {}).update({
-            "script-name": job["name"],
-        })
+        job.setdefault("attributes", {}).update(
+            {
+                "script-name": job["name"],
+            }
+        )
         yield job
 
 

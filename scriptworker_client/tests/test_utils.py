@@ -92,9 +92,7 @@ def test_load_json_or_yaml(string, is_path, exception, raises, result):
             utils.load_json_or_yaml(string, is_path=is_path, exception=exception)
     else:
         for file_type in ("json", "yaml"):
-            assert result == utils.load_json_or_yaml(
-                string, is_path=is_path, exception=exception, file_type=file_type
-            )
+            assert result == utils.load_json_or_yaml(string, is_path=is_path, exception=exception, file_type=file_type)
 
 
 # get_artifact_path {{{1
@@ -104,17 +102,13 @@ def test_load_json_or_yaml(string, is_path, exception, raises, result):
 )
 def test_get_artifact_path(work_dir, expected):
     """``get_artifact_path`` gives the expected path."""
-    assert (
-        utils.get_artifact_path("taskId", "public/foo", work_dir=work_dir) == expected
-    )
+    assert utils.get_artifact_path("taskId", "public/foo", work_dir=work_dir) == expected
 
 
 # to_unicode {{{1
 @pytest.mark.parametrize(
     "input, expected",
-    [[v, v] for _, v in sorted(text.items())]
-    + [[v, v] for _, v in sorted(non_text.items())]
-    + [[b"foo", "foo"]],
+    [[v, v] for _, v in sorted(text.items())] + [[v, v] for _, v in sorted(non_text.items())] + [[b"foo", "foo"]],
 )
 def test_to_unicode(input, expected):
     """``to_unicode`` returns unicode, given unicode or bytestring input. Otherwise
@@ -129,9 +123,7 @@ def test_to_unicode(input, expected):
 async def test_pipe_to_log(tmpdir):
     """``pipe_to_log`` writes command output to the log filehandle."""
     cmd = r""">&2 echo "foo" && echo "bar" && exit 0"""
-    proc = await asyncio.create_subprocess_exec(
-        "bash", "-c", cmd, stdout=PIPE, stderr=PIPE, stdin=None
-    )
+    proc = await asyncio.create_subprocess_exec("bash", "-c", cmd, stdout=PIPE, stderr=PIPE, stdin=None)
     tasks = []
     path = os.path.join(tmpdir, "log")
     with open(path, "w") as log_fh:
@@ -246,9 +238,7 @@ def test_list_files():
     """
     parent_dir = os.path.dirname(__file__)
     ignored = os.path.join(parent_dir, "data", "bad.json")
-    output = subprocess.check_output(
-        ["find", parent_dir, "-type", "f", "-print"]
-    ).decode("utf-8")
+    output = subprocess.check_output(["find", parent_dir, "-type", "f", "-print"]).decode("utf-8")
     expected_paths = output.splitlines()
     all_paths = []
     paths_with_ignore = []
@@ -354,9 +344,7 @@ async def test_retry_async_always_fail():
     retry_count["always_fail"] = 0
     with mock.patch("asyncio.sleep", new=fake_sleep):
         with pytest.raises(ClientError):
-            status = await utils.retry_async(
-                always_fail, sleeptime_kwargs={"delay_factor": 0}
-            )
+            status = await utils.retry_async(always_fail, sleeptime_kwargs={"delay_factor": 0})
             assert status is None
     assert retry_count["always_fail"] == 5
 

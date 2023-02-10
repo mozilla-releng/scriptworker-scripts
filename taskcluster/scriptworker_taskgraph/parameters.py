@@ -4,11 +4,7 @@
 
 
 from taskgraph.parameters import extend_parameters_schema
-from voluptuous import (
-    Any,
-    Optional,
-    Required,
-)
+from voluptuous import Any, Optional, Required
 
 PROJECT_SPECIFIC_PREFIXES = {
     "refs/heads/dev-": "dev",
@@ -29,11 +25,11 @@ def get_defaults(_):
 
 
 scriptworker_schema = {
-    Optional('docker_tag'): Any(str, None),
-    Optional('push_docker_image'): Any(True, False, None),
-    Optional('script_name'): Any(str, None),
-    Optional('script_revision'): Any(str, None),
-    Optional('shipping_phase'): Any("build", "promote", None),
+    Optional("docker_tag"): Any(str, None),
+    Optional("push_docker_image"): Any(True, False, None),
+    Optional("script_name"): Any(str, None),
+    Optional("script_revision"): Any(str, None),
+    Optional("shipping_phase"): Any("build", "promote", None),
 }
 
 extend_parameters_schema(scriptworker_schema, defaults_fn=get_defaults)
@@ -52,7 +48,7 @@ def get_decision_parameters(graph_config, parameters):
         for prefix, tag in PROJECT_SPECIFIC_PREFIXES.items():
             if parameters["head_ref"].startswith(prefix):
                 parameters["script_name"] = parameters["head_ref"].replace(prefix, "")
-                parameters["docker_tag" ] = tag
+                parameters["docker_tag"] = tag
                 break
         if parameters["docker_tag"] in PUSH_TAGS and parameters["level"] == "3":
             parameters["push_docker_image"] = True

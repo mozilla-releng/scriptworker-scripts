@@ -13,22 +13,13 @@ import os
 import random
 import shutil
 import tempfile
-import yaml
-
 from asyncio.subprocess import PIPE
 from contextlib import contextmanager
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    Dict,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Any, Awaitable, Callable, Dict, Optional, Sequence, Tuple, Type, Union
 from urllib.parse import unquote, urlparse
+
+import yaml
+
 from scriptworker_client.exceptions import ClientError, TaskError
 
 log = logging.getLogger(__name__)
@@ -241,12 +232,8 @@ async def run_command(
         kwargs["env"] = env
     proc = await asyncio.create_subprocess_exec(*cmd, **kwargs)
     with get_log_filehandle(log_path=log_path) as log_filehandle:
-        stderr_future = asyncio.ensure_future(
-            pipe_to_log(proc.stderr, filehandles=[log_filehandle], level=log_level)
-        )
-        stdout_future = asyncio.ensure_future(
-            pipe_to_log(proc.stdout, filehandles=[log_filehandle], level=log_level)
-        )
+        stderr_future = asyncio.ensure_future(pipe_to_log(proc.stderr, filehandles=[log_filehandle], level=log_level))
+        stdout_future = asyncio.ensure_future(pipe_to_log(proc.stdout, filehandles=[log_filehandle], level=log_level))
         _, pending = await asyncio.wait([stderr_future, stdout_future])
         exitcode = await proc.wait()
         await asyncio.wait([stdout_future, stderr_future])
@@ -291,9 +278,7 @@ def list_files(path, ignore_list=None):
             if entry.name in ignore_list:
                 continue
             if entry.is_dir():
-                for file_ in list_files(
-                    os.path.join(path, entry.name), ignore_list=ignore_list
-                ):
+                for file_ in list_files(os.path.join(path, entry.name), ignore_list=ignore_list):
                     yield file_
             else:
                 yield os.path.join(path, entry.name)
@@ -338,9 +323,7 @@ def rm(path):
             os.remove(path)
 
 
-def calculate_sleep_time(
-    attempt, delay_factor=5.0, randomization_factor=0.5, max_delay=120
-):
+def calculate_sleep_time(attempt, delay_factor=5.0, randomization_factor=0.5, max_delay=120):
     """Calculate the sleep time between retries, in seconds.
 
     Based off of `taskcluster.utils.calculateSleepTime`, but with kwargs instead
@@ -372,9 +355,7 @@ async def retry_async(
     func: Callable[..., Awaitable[Any]],
     attempts: int = 5,
     sleeptime_callback: Callable[..., Any] = calculate_sleep_time,
-    retry_exceptions: Union[
-        Type[BaseException], Tuple[Type[BaseException], ...]
-    ] = Exception,
+    retry_exceptions: Union[Type[BaseException], Tuple[Type[BaseException], ...]] = Exception,
     args: Sequence[Any] = (),
     kwargs: Optional[Dict[str, Any]] = None,
     sleeptime_kwargs: Optional[Dict[str, Any]] = None,
@@ -408,20 +389,12 @@ async def retry_async(
         except retry_exceptions:
             attempt += 1
             _check_number_of_attempts(attempt, attempts, func, "retry_async")
-            await asyncio.sleep(
-                _define_sleep_time(
-                    sleeptime_kwargs, sleeptime_callback, attempt, func, "retry_async"
-                )
-            )
+            await asyncio.sleep(_define_sleep_time(sleeptime_kwargs, sleeptime_callback, attempt, func, "retry_async"))
 
 
-def _check_number_of_attempts(
-    attempt: int, attempts: int, func: Callable[..., Any], retry_function_name: str
-) -> None:
+def _check_number_of_attempts(attempt: int, attempts: int, func: Callable[..., Any], retry_function_name: str) -> None:
     if attempt > attempts:
-        log.warning(
-            "{}: {}: too many retries!".format(retry_function_name, func.__name__)
-        )
+        log.warning("{}: {}: too many retries!".format(retry_function_name, func.__name__))
         raise
 
 
@@ -434,18 +407,12 @@ def _define_sleep_time(
 ) -> float:
     sleeptime_kwargs = sleeptime_kwargs or {}
     sleep_time = sleeptime_callback(attempt, **sleeptime_kwargs)
-    log.debug(
-        "{}: {}: sleeping {} seconds before retry".format(
-            retry_function_name, func.__name__, sleep_time
-        )
-    )
+    log.debug("{}: {}: sleeping {} seconds before retry".format(retry_function_name, func.__name__, sleep_time))
     return sleep_time
 
 
 def retry_async_decorator(
-    retry_exceptions: Union[
-        Type[BaseException], Tuple[Type[BaseException], ...]
-    ] = Exception,
+    retry_exceptions: Union[Type[BaseException], Tuple[Type[BaseException], ...]] = Exception,
     sleeptime_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Callable[..., Callable[..., Awaitable[Any]]]:
     """Decorate a function by wrapping ``retry_async`` around.
@@ -459,9 +426,7 @@ def retry_async_decorator(
         function: the decorated function
     """
     # Better type hinting here once https://www.python.org/dev/peps/pep-0612/ is implemented
-    def wrap(
-        async_func: Callable[..., Awaitable[Any]]
-    ) -> Callable[..., Awaitable[Any]]:
+    def wrap(async_func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
         @functools.wraps(async_func)
         async def wrapped(*args: Any, **kwargs: Any) -> Any:
             return await retry_async(
@@ -509,9 +474,7 @@ async def raise_future_exceptions(tasks):
     Raises:
         Exception: any exceptions in task.exception()
     """
-    succeeded_results, _ = await _process_future_exceptions(
-        tasks, raise_at_first_error=True
-    )
+    succeeded_results, _ = await _process_future_exceptions(tasks, raise_at_first_error=True)
     return succeeded_results
 
 

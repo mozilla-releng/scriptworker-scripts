@@ -54,9 +54,7 @@ def test_is_github_url(url, expected):
         ("https://hg.mozilla.org/mozilla-central", None, None, True),
     ),
 )
-def test_extract_github_repo_owner_and_name(
-    repo_url, expected_user, expected_repo_name, raises
-):
+def test_extract_github_repo_owner_and_name(repo_url, expected_user, expected_repo_name, raises):
     if raises:
         with pytest.raises(ValueError):
             github.extract_github_repo_owner_and_name(repo_url)

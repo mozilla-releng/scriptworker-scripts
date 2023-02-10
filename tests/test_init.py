@@ -161,9 +161,7 @@ def app_dir(tmp_path_factory, configloader):
 
     # Copy the 'docker.d' directory over
     repo_root = here.parent
-    shutil.copytree(
-        repo_root.joinpath("docker.d"), app_dir.joinpath("docker.d"), dirs_exist_ok=True
-    )
+    shutil.copytree(repo_root.joinpath("docker.d"), app_dir.joinpath("docker.d"), dirs_exist_ok=True)
 
     # Symlink configloader to the expected location
     os.symlink(configloader, str(app_dir.joinpath("configloader_venv")))
