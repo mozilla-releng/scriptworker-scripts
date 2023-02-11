@@ -84,7 +84,6 @@ def test_script_can_push_msix(monkeypatch, config, channel, publish_mode, raises
     mocked_response = {}
     status_code = 200
     with requests_mock.Mocker() as m:
-
         url = f"{login_url}/{tenant_id}/oauth2/token"
         m.post(url, headers=headers, json=session_mocked_response, status_code=status_code)
         url = microsoft_store._store_url(config, f"{application_id}")

@@ -288,7 +288,6 @@ def set_up_merge_mocks(mocker, called_args):
     ),
 )
 async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merge_info, raises, expected_calls, l10n_bump, expected_return):
-
     called_args = []
     if add_merge_info:
         task["payload"]["merge_info"] = merge_info
