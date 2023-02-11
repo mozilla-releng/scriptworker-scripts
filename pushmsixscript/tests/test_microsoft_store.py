@@ -216,7 +216,6 @@ def test_push_to_store(status_code, raises, mocked_response):
     with tempfile.NamedTemporaryFile(mode="wb") as f:
         f.write(b"hello there")
         with requests_mock.Mocker() as m:
-
             url = microsoft_store._store_url(CONFIG, f"{application_id}")
             m.get(url, headers=headers, json=mocked_response, status_code=status_code)
             url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions/{submission_id}")
