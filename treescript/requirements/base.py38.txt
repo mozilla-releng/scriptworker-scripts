@@ -528,9 +528,9 @@ requests==2.28.2 \
     # via
     #   github3-py
     #   taskcluster
-scriptworker==47.0.2 \
-    --hash=sha256:7a55edf3452a23e29ed10a9671cc989447260fc30c89e4b8970539f13921de59 \
-    --hash=sha256:e84d73e3118759677cff0b55a0f1418a52e0d1da9173235145c3c56d7b5f17a4
+scriptworker==48.0.0 \
+    --hash=sha256:2814b56858ef0f3acc1d2d804510cfdfcdd8ffd45c97e5939e35a1e4bf6bdd08 \
+    --hash=sha256:36c060db43a1058c0c549494b3e93534e68e94afc01ee6a7dbd5c9aef255755f
     # via -r requirements/base.in
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
