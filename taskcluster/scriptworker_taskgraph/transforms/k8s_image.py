@@ -5,8 +5,6 @@
 Kubernetes docker image builds.
 """
 
-import time
-from copy import deepcopy
 
 from taskgraph.transforms.base import TransformSequence
 
@@ -61,9 +59,9 @@ def set_environment(config, jobs):
     for job in jobs:
         project_name = job["attributes"]["script-name"]
         secret_url = job.pop("deploy-secret-url")
-        tasks_for = config.params["tasks_for"]
+        _tasks_for = config.params["tasks_for"]
         scopes = job.setdefault("scopes", [])
-        attributes = job["attributes"]
+        _attributes = job["attributes"]
         env = job["worker"].setdefault("env", {})
         env.update(
             {

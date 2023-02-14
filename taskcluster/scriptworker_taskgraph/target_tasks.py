@@ -12,10 +12,10 @@ def filter_for_script(task, parameters):
 @_target_task("default")
 def target_tasks_default(full_task_graph, parameters, graph_config):
     """Filter by `run_on_tasks_for` and `script-name`."""
-    return [l for l, t in full_task_graph.tasks.items() if filter_for_tasks_for(t, parameters) and filter_for_script(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter_for_tasks_for(t, parameters) and filter_for_script(t, parameters)]  # noqa: E741
 
 
 @_target_task("docker-hub-push")
-def target_tasks_default(full_task_graph, parameters, graph_config):
+def target_tasks_docker_hub_push(full_task_graph, parameters, graph_config):
     """Filter by kind and `script-name`."""
-    return [l for l, t in full_task_graph.tasks.items() if t.kind == "k8s-image" and filter_for_script(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if t.kind == "k8s-image" and filter_for_script(t, parameters)]  # noqa: E741

@@ -6,15 +6,11 @@ Build the cached_task digest to prevent rerunning tasks if the code hasn't chang
 """
 
 
-import hashlib
-import json
 import os
-import subprocess
 
 import taskgraph
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.hash import hash_paths
-from taskgraph.util.memoize import memoize
 
 transforms = TransformSequence()
 
