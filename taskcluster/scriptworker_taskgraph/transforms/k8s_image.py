@@ -12,7 +12,7 @@ transforms = TransformSequence()
 
 
 @transforms.add
-def add_dependencies(config, jobs):
+def add_dependencies(config, tasks):
     """Add dependencies that match python-version and script-name.
 
     Also copy the resources attribute, and fail if there are unexpected
@@ -20,13 +20,13 @@ def add_dependencies(config, jobs):
 
     """
     if not config.params.get("push_docker_image") or config.params.get("docker_tag") != "production":
-        yield from jobs
+        yield from tasks
 
-    for job in jobs:
-        attributes = job["attributes"]
-        dependencies = job.setdefault("dependencies", {})
+    for task in tasks:
+        attributes = task["attributes"]
+        dependencies = task.setdefault("dependencies", {})
         resources = None
-        for dep_task in config.kind_dependencies_tasks:
+        for dep_task in config.kind_dependencies_tasks.values():
             dep_attrs = dep_task.attributes
             dep_kind = dep_task.kind
             if dep_attrs["python-version"] == attributes["python-version"] and dep_attrs["script-name"] == attributes["script-name"]:
@@ -50,23 +50,23 @@ def add_dependencies(config, jobs):
                     resources = dep_attrs["resources"]
         if resources:
             attributes["resources"] = resources
-        yield job
+        yield task
 
 
 @transforms.add
-def set_environment(config, jobs):
+def set_environment(config, tasks):
     """Set the environment variables for the docker hub task."""
-    for job in jobs:
-        project_name = job["attributes"]["script-name"]
-        secret_url = job.pop("deploy-secret-url")
+    for task in tasks:
+        project_name = task["attributes"]["script-name"]
+        secret_url = task.pop("deploy-secret-url")
         _tasks_for = config.params["tasks_for"]
-        scopes = job.setdefault("scopes", [])
-        _attributes = job["attributes"]
-        env = job["worker"].setdefault("env", {})
+        scopes = task.setdefault("scopes", [])
+        _attributes = task["attributes"]
+        env = task["worker"].setdefault("env", {})
         env.update(
             {
                 "SCRIPTWORKER_HEAD_REV": config.params["head_rev"],
-                "DOCKER_REPO": job.pop("docker-repo"),
+                "DOCKER_REPO": task.pop("docker-repo"),
                 "DOCKER_TAG": config.params.get("docker_tag", "unknown"),
                 "PROJECT_NAME": project_name,
                 "SCRIPTWORKER_HEAD_REPOSITORY": config.params["head_repository"],
@@ -86,4 +86,4 @@ def set_environment(config, jobs):
             scopes.append("secrets:get:project/releng/scriptworker-scripts/deploy")
         else:
             env["PUSH_DOCKER_IMAGE"] = "0"
-        yield job
+        yield task

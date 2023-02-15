@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-Create a task per job python-version
+Create a task per python-version
 """
 
 from copy import deepcopy
@@ -42,18 +42,18 @@ def _resolve_replace_string(item, field, subs):
 
 
 @transforms.add
-def set_script_name(config, jobs):
-    for job in jobs:
-        job.setdefault("attributes", {}).update(
+def set_script_name(config, tasks):
+    for task in tasks:
+        task.setdefault("attributes", {}).update(
             {
-                "script-name": job["name"],
+                "script-name": task["name"],
             }
         )
-        yield job
+        yield task
 
 
 @transforms.add
-def tasks_per_python_version(config, jobs):
+def tasks_per_python_version(config, tasks):
     fields = [
         "description",
         "docker-repo",
@@ -61,10 +61,10 @@ def tasks_per_python_version(config, jobs):
         "worker.command",
         "worker.docker-image",
     ]
-    for job in jobs:
-        for python_version in job.pop("python-versions"):
-            task = deepcopy(job)
-            subs = {"name": job["name"], "python_version": python_version}
+    for task_raw in tasks:
+        task = deepcopy(task_raw)
+        for python_version in task.pop("python-versions"):
+            subs = {"name": task["name"], "python_version": python_version}
             for field in fields:
                 _resolve_replace_string(task, field, subs)
             task["attributes"]["python-version"] = python_version
@@ -72,7 +72,8 @@ def tasks_per_python_version(config, jobs):
 
 
 @transforms.add
-def update_name_with_python_version(config, jobs):
-    for job in jobs:
-        job["name"] = "{}-python{}".format(job["name"], job["attributes"]["python-version"])
-        yield job
+def update_name_with_python_version(config, tasks):
+    for task_raw in tasks:
+        task = deepcopy(task_raw)
+        task["name"] = "{}-python{}".format(task["name"], task["attributes"]["python-version"])
+        yield task
