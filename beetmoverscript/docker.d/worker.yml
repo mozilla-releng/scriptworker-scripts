@@ -67,7 +67,6 @@ clouds:
             enabled: True
             product_buckets:
               devedition: 'moz-fx-productdelivery-no-7d6a-productdelivery'
-              pinebuild:  'moz-fx-productdelivery-no-7d6a-productdelivery'
               firefox:    'moz-fx-productdelivery-no-7d6a-productdelivery'
               fennec:     'moz-fx-productdelivery-no-7d6a-productdelivery'
               mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
@@ -84,7 +83,6 @@ clouds:
             enabled: True
             product_buckets:
               devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
-              pinebuild:  'moz-fx-productdelivery-pr-38b5-productdelivery'
               firefox:    'moz-fx-productdelivery-pr-38b5-productdelivery'
               mobile:     'moz-fx-productdelivery-pr-38b5-productdelivery'
           release:
@@ -93,7 +91,6 @@ clouds:
             enabled: True
             product_buckets:
               devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
-              pinebuild:  'moz-fx-productdelivery-pr-38b5-productdelivery'
               firefox:    'moz-fx-productdelivery-pr-38b5-productdelivery'
               mobile:     'moz-fx-productdelivery-pr-38b5-productdelivery'
           partner:
@@ -108,7 +105,6 @@ clouds:
             enabled: True
             product_buckets:
               devedition: 'moz-fx-productdelivery-no-7d6a-productdelivery'
-              pinebuild:  'moz-fx-productdelivery-no-7d6a-productdelivery'
               firefox:    'moz-fx-productdelivery-no-7d6a-productdelivery'
               mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
           dep-partner:
@@ -221,7 +217,6 @@ clouds:
               key: { "$eval": "DEP_KEY" }
             product_buckets:
               devedition: 'net-mozaws-stage-delivery-archive'
-              pinebuild:  'net-mozaws-stage-delivery-archive'
               firefox:    'net-mozaws-stage-delivery-firefox'
               fennec:     'net-mozaws-stage-delivery-archive'
               mobile:     'net-mozaws-stage-delivery-archive'
@@ -251,7 +246,6 @@ clouds:
               key: { "$eval": "NIGHTLY_KEY" }
             product_buckets:
               devedition: 'net-mozaws-prod-delivery-archive'
-              pinebuild:  'net-mozaws-prod-delivery-archive'
               firefox:    'net-mozaws-prod-delivery-firefox'
               mobile:     'net-mozaws-prod-delivery-archive'
           release:
@@ -262,7 +256,6 @@ clouds:
               key: { "$eval": "RELEASE_KEY" }
             product_buckets:
               devedition: 'net-mozaws-prod-delivery-archive'
-              pinebuild:  'net-mozaws-prod-delivery-archive'
               firefox:    'net-mozaws-prod-delivery-firefox'
               mobile:     'net-mozaws-prod-delivery-archive'
           partner:
@@ -281,7 +274,6 @@ clouds:
               key: { "$eval": "DEP_KEY" }
             product_buckets:
               devedition: 'net-mozaws-stage-delivery-archive'
-              pinebuild:  'net-mozaws-stage-delivery-archive'
               firefox:    'net-mozaws-stage-delivery-firefox'
               mobile:     'net-mozaws-stage-delivery-archive'
           dep-partner:
