@@ -7,7 +7,7 @@ import scriptworker.client
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from scriptworker.utils import retry_async
 
-from addonscript.api import add_version, do_upload, get_signed_addon_url, get_signed_xpi
+from addonscript.api import add_app_version, do_upload, do_create_version, get_signed_addon_url, get_signed_xpi, check_upload
 from addonscript.exceptions import AMOConflictError, SignatureError
 from addonscript.task import build_filelist
 from addonscript.xpi import get_langpack_info
@@ -32,20 +32,29 @@ def get_default_config(base_dir=None):
 async def sign_addon(context, locale):
     """Upload addons to AMO, then poll AMO for signed addons."""
 
-    # upload langpack to AMO for validation/sanity check and signing
+    # upload langpack to AMO for validation/sanity check
+    upload = await retry_async(do_upload, args=(context, locale), retry_exceptions=tuple([ClientError, asyncio.TimeoutError]))
+    await retry_async(
+        check_upload,
+        args=(context, upload["uuid"]),
+        attempts=10,
+        retry_exceptions=(ClientError, asyncio.TimeoutError, SignatureError),
+    )
+
+    # create version or addon for signing
     try:
-        upload_data = await retry_async(do_upload, args=(context, locale), retry_exceptions=tuple([ClientError, asyncio.TimeoutError]))
+        version = await retry_async(do_create_version, args=(context, locale, upload["uuid"]), retry_exceptions=tuple([ClientError, asyncio.TimeoutError]))
     except AMOConflictError as exc:
         log.info(exc.message)
-        upload_data = {"pk": None}
+        version = {"id": None}
 
     # poll AMO for the the URL that contains the signed langpack
     signed_addon_url = await retry_async(
         get_signed_addon_url,
-        args=(context, locale, upload_data["pk"]),
+        args=(context, locale, version["id"]),
         attempts=10,  # 10 attempts with default backoff yield around 10 minutes of time
         # Most addons will be signed in less than that.
-        retry_exceptions=tuple([ClientError, asyncio.TimeoutError, SignatureError]),
+        retry_exceptions=(ClientError, asyncio.TimeoutError, SignatureError),
     )
 
     # make the signed langpack available in task's artifacts for downstream beetmover
@@ -60,12 +69,7 @@ def build_locales_context(context):
         current_info = get_langpack_info(file_)
         langpack_info.append(current_info)
     context.locales = {
-        locale_info["locale"]: {
-            "id": locale_info["id"],
-            "min_version": locale_info["min_version"],
-            "unsigned": locale_info["unsigned"],
-            "version": locale_info["version"],
-        }
+        locale_info["locale"]: locale_info
         for locale_info in langpack_info
     }
 
@@ -80,7 +84,7 @@ async def async_main(context):
         # building a set here since the version is shared among all locales usually
         versions = {context.locales[locale]["min_version"] for locale in context.locales}
         for version in versions:
-            await retry_async(add_version, args=(context, version), retry_exceptions=tuple([ClientResponseError]))
+            await retry_async(add_app_version, args=(context, version), retry_exceptions=tuple([ClientResponseError]))
 
         tasks = []
         for locale in context.locales:
