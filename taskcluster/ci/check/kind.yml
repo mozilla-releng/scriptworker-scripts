@@ -7,16 +7,12 @@ loader: taskgraph.loader.transform:loader
 kind-dependencies:
     - docker-image
 
-# Copy of tox job, but doesn't use caching
-
 transforms:
-    - scriptworker_taskgraph.transforms.python_version:transforms
-    - scriptworker_taskgraph.transforms.tox:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
 jobs:
-    check:
+    ruff:
         description: "ruff-py39"
         run-on-tasks-for: ["action", "github-pull-request", "github-push"]
         attributes:
@@ -25,7 +21,8 @@ jobs:
         worker:
             docker-image: {in-tree: 'python39'}
             max-run-time: 1800
-        python-versions: [39]
+        dependencies:
+            docker-image: build-docker-image-python39
         run:
             using: run-task
             cache-dotcache: false
