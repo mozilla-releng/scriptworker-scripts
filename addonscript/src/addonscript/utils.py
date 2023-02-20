@@ -33,16 +33,16 @@ async def amo_get(context, url):
     """Perform a GET request against AMO's API.
 
     Automatically fills in the HTTP header with the Authorization token.
-    Assumes request will return a valid json object, on success.
+    Assumes request will return a valid json object.
     """
     log.debug('Calling amo_get() with URL "{}"'.format(url))
     async with timeout(30):
         resp = context.session.get(url, headers={"Authorization": "JWT {}".format(generate_JWT(context))})
         async with resp as r:
             log.debug('amo_get() for URL "{}" returned HTTP status code: {}'.format(url, r.status))
-            r.raise_for_status()
             returned_value = await r.json()
             log.debug('amo_get() for URL "{}" returned: {}'.format(url, returned_value))
+            r.raise_for_status()
             return returned_value
 
 
@@ -67,17 +67,17 @@ async def amo_put(context, url, data):
 
     Automatically fills in the HTTP header with the Authorization token.
     Passes values in the `data` dictionary as FORM data.
-    Assumes request will return a valid json object, on success.
+    Assumes request will return a valid json object.
     """
     log.debug('Calling amo_put() with URL "{}"'.format(url))
     async with timeout(270):  # 4 minutes, 30 sec.
         resp = context.session.put(url, headers={"Authorization": "JWT {}".format(generate_JWT(context))}, data=data)
         async with resp as r:
             log.debug('amo_put() for URL "{}" returned HTTP status code: {}'.format(url, r.status))
-            r.raise_for_status()
             # we silence aiohttp in case we have Null returns from AMO API
             returned_value = await r.json(content_type=None)
             log.debug('amo_put() for URL "{}" returned: {}'.format(url, returned_value))
+            r.raise_for_status()
             return returned_value
 
 
