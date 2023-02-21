@@ -174,7 +174,7 @@ def get_product_name(task, config, lowercase_app_name=True):
     # XXX: this check helps reuse this function in both
     # returning the proper templates file but also for the release name in
     # Balrog manifest that beetmover is uploading upon successful run
-    for dynamic_platform in ("devedition", ):
+    for dynamic_platform in ("devedition",):
         if dynamic_platform in release_props["stage_platform"]:
             if appName[0].isupper():
                 return dynamic_platform.capitalize()
