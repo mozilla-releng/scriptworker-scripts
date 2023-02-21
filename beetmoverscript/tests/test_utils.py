@@ -313,8 +313,6 @@ def test_get_partner_match(keyname, partners, expected):
         ("Fennec", "dummy", "Fennec"),
         ("Firefox", "dummy", "Firefox"),
         ("fennec", "dummy", "fennec"),
-        ("Pinebuild", "pinebuild", "Pinebuild"),
-        ("pinebuild", "pinebuild", "pinebuild"),
     ),
 )
 def test_get_product_name(context, appName, stage_platform, expected):

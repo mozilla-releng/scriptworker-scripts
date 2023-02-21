@@ -391,7 +391,7 @@ async def unlock_keychain(signing_keychain, keychain_password):
             if index == 0:
                 break
             child.sendline(keychain_password)
-    except (pexpect.exceptions.TIMEOUT) as exc:
+    except pexpect.exceptions.TIMEOUT as exc:
         raise TimeoutError("Timeout trying to unlock the keychain {}: {}!".format(signing_keychain, exc)) from exc
     child.close()
     if child.exitstatus != 0 or child.signalstatus is not None:
