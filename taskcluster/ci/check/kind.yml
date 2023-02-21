@@ -14,7 +14,9 @@ transforms:
 jobs:
     ruff:
         description: "ruff-py39"
-        run-on-tasks-for: ["action", "github-pull-request", "github-push"]
+        run-on-tasks-for: 
+            - "github-pull-request"
+            - "github-push"
         attributes:
             code-review: true
         worker-type: b-linux
