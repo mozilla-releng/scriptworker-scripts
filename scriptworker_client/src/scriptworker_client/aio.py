@@ -10,14 +10,7 @@ import sys
 import aiohttp
 import async_timeout
 
-from scriptworker_client.exceptions import (
-    Download404,
-    DownloadError,
-    LockfileError,
-    RetryError,
-    TaskError,
-    TimeoutError,
-)
+from scriptworker_client.exceptions import Download404, DownloadError, LockfileError, RetryError, TaskError, TimeoutError
 from scriptworker_client.utils import makedirs, rm
 
 if sys.version_info < (3, 7):  # pragma: no cover
@@ -50,9 +43,7 @@ async def raise_future_exceptions(futures, timeout=None):
         return
     done, pending = await asyncio.wait(futures, timeout=timeout)
     if pending:
-        raise TimeoutError(
-            "{} futures still pending after timeout of {}".format(len(pending), timeout)
-        )
+        raise TimeoutError("{} futures still pending after timeout of {}".format(len(pending), timeout))
     results = []
     exceptions = []
     for fut in futures:
@@ -127,9 +118,7 @@ async def lockfile(paths, name=None, attempts=10, sleep=30):
     if name is not None:
         acquired_msg = "Lockfile acquired for {} at %s".format(name)
         wait_msg = "Couldn't get lock for {}; sleeping %s".format(name)
-        failed_msg = "Can't get lock for {} from paths %s after %s attempts".format(
-            name
-        )
+        failed_msg = "Can't get lock for {} from paths %s after %s attempts".format(name)
     else:
         acquired_msg = "Lockfile acquired at %s"
         wait_msg = "Couldn't get lock; sleeping %s"
@@ -236,23 +225,17 @@ class LockfileFuture:
         (wrapped with ``retry_async`` if ``self.use_retry_async``).
 
         """
-        async with lockfile(
-            self.lockfile_map.keys(), **self.lockfile_kwargs
-        ) as lockfile_path:
+        async with lockfile(self.lockfile_map.keys(), **self.lockfile_kwargs) as lockfile_path:
             args = self.replace_args(self.args, self.lockfile_map[lockfile_path])
             kwargs = self.replace_args(self.kwargs, self.lockfile_map[lockfile_path])
             if self.use_retry_async:
-                await retry_async(
-                    self.coro, args=args, kwargs=kwargs, **self.retry_async_kwargs
-                )
+                await retry_async(self.coro, args=args, kwargs=kwargs, **self.retry_async_kwargs)
             else:
                 await self.coro(*args, **kwargs)
 
 
 # retry_async {{{1
-def calculate_sleep_time(
-    attempt, delay_factor=5.0, randomization_factor=0.5, max_delay=120
-):
+def calculate_sleep_time(attempt, delay_factor=5.0, randomization_factor=0.5, max_delay=120):
     """Calculate the sleep time between retries, in seconds.
 
     Based off of `taskcluster.utils.calculateSleepTime`, but with kwargs instead
@@ -327,11 +310,7 @@ async def retry_async(
                 raise
             sleeptime_kwargs = sleeptime_kwargs or {}
             sleep_time = sleeptime_callback(attempt, **sleeptime_kwargs)
-            log.debug(
-                "retry_async: {}: sleeping {} seconds before retry".format(
-                    func.__name__, sleep_time
-                )
-            )
+            log.debug("retry_async: {}: sleeping {} seconds before retry".format(func.__name__, sleep_time))
             await asyncio.sleep(sleep_time)
 
 
@@ -405,9 +384,7 @@ async def request(
 
 # download_file {{{1
 async def _log_download_error(resp, log_url, msg):
-    log.debug(
-        msg, {"url": log_url, "status": resp.status, "body": (await resp.text())[:1000]}
-    )
+    log.debug(msg, {"url": log_url, "status": resp.status, "body": (await resp.text())[:1000]})
     for i, h in enumerate(resp.history):
         log.debug(
             "Redirect history %s: %s; body=%s",
@@ -437,9 +414,7 @@ async def download_file(url, abs_filename, log_url=None, chunk_size=128, timeout
         parent_dir = os.path.dirname(abs_filename)
         async with session.get(url) as resp:
             if resp.status == 404:
-                await _log_download_error(
-                    resp, log_url, "404 downloading %(url)s: %(status)s; body=%(body)s"
-                )
+                await _log_download_error(resp, log_url, "404 downloading %(url)s: %(status)s; body=%(body)s")
                 raise Download404("{} status {}!".format(log_url, resp.status))
             elif resp.status != 200:
                 await _log_download_error(
@@ -447,9 +422,7 @@ async def download_file(url, abs_filename, log_url=None, chunk_size=128, timeout
                     log_url,
                     "Failed to download %(url)s: %(status)s; body=%(body)s",
                 )
-                raise DownloadError(
-                    "{} status {} is not 200!".format(log_url, resp.status)
-                )
+                raise DownloadError("{} status {} is not 200!".format(log_url, resp.status))
             makedirs(parent_dir)
             with open(abs_filename, "wb") as fd:
                 while True:

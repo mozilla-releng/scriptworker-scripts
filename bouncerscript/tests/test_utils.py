@@ -106,7 +106,11 @@ def test_do_failed_with_TimeoutError_api_call(submission_context, mocker, event_
 # does_product_exist {{{1
 @pytest.mark.parametrize(
     "product,response,expected",
-    (("fake-product", "<products/>", False), ("fake-product", "sd9fh398ghJKDFH@(*YFG@I#KJHWEF@(*G@", False), ("fake-product", "<product>fake-product</product>", True)),
+    (
+        ("fake-product", "<products/>", False),
+        ("fake-product", "sd9fh398ghJKDFH@(*YFG@I#KJHWEF@(*G@", False),
+        ("fake-product", "<product>fake-product</product>", True),
+    ),
 )
 @pytest.mark.asyncio
 async def test_does_product_exist(submission_context, mocker, product, response, expected):
@@ -142,7 +146,8 @@ async def test_api_add_product(submission_context, mocker, product, add_locales,
 
 # api_add_location {{{1
 @pytest.mark.parametrize(
-    "product,os,path,expected", (("fake-product", "fake-os", "fake-path", ("location_add/", {"product": "fake-product", "os": "fake-os", "path": "fake-path"})),)
+    "product,os,path,expected",
+    (("fake-product", "fake-os", "fake-path", ("location_add/", {"product": "fake-product", "os": "fake-os", "path": "fake-path"})),),
 )
 @pytest.mark.asyncio
 async def test_api_add_location(submission_context, mocker, product, os, path, expected):
@@ -157,7 +162,8 @@ async def test_api_add_location(submission_context, mocker, product, os, path, e
 
 # api_modify_location {{{1
 @pytest.mark.parametrize(
-    "product,os,path,expected", (("fake-product", "fake-os", "fake-path", ("location_modify/", {"product": "fake-product", "os": "fake-os", "path": "fake-path"})),)
+    "product,os,path,expected",
+    (("fake-product", "fake-os", "fake-path", ("location_modify/", {"product": "fake-product", "os": "fake-os", "path": "fake-path"})),),
 )
 @pytest.mark.asyncio
 async def test_api_modify_location(submission_context, mocker, product, os, path, expected):
@@ -224,7 +230,9 @@ async def test_api_show_location(submission_context, mocker, product, expected):
 
 
 # api_update_alias {{{1
-@pytest.mark.parametrize("alias,product,expected", (("fake-alias", "fake-product", ("create_update_alias", {"alias": "fake-alias", "related_product": "fake-product"})),))
+@pytest.mark.parametrize(
+    "alias,product,expected", (("fake-alias", "fake-product", ("create_update_alias", {"alias": "fake-alias", "related_product": "fake-product"})),)
+)
 @pytest.mark.asyncio
 async def test_api_update_alias(submission_context, mocker, alias, product, expected):
     context = submission_context

@@ -1,0 +1,37 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - docker-image
+
+transforms:
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+jobs:
+    ruff:
+        description: "ruff-py39"
+        run-on-tasks-for: 
+            - "github-pull-request"
+            - "github-push"
+        attributes:
+            code-review: true
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: 'python39'}
+            max-run-time: 1800
+        dependencies:
+            docker-image: build-docker-image-python39
+        run:
+            using: run-task
+            cache-dotcache: false
+            checkout:
+                scriptworker: {}
+            cwd: '{checkout}'
+            command:
+                - sh
+                - -lxce
+                - tox -e ruff-py39

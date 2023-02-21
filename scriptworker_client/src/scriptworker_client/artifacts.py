@@ -26,23 +26,16 @@ def get_upstream_artifacts_full_paths_per_task_id(config, task):
 
     """
     upstream_artifacts = task["payload"]["upstreamArtifacts"]
-    task_ids_and_relative_paths = [
-        (artifact_definition["taskId"], artifact_definition["paths"])
-        for artifact_definition in upstream_artifacts
-    ]
+    task_ids_and_relative_paths = [(artifact_definition["taskId"], artifact_definition["paths"]) for artifact_definition in upstream_artifacts]
 
-    optional_artifacts_per_task_id = get_optional_artifacts_per_task_id(
-        upstream_artifacts
-    )
+    optional_artifacts_per_task_id = get_optional_artifacts_per_task_id(upstream_artifacts)
 
     upstream_artifacts_full_paths_per_task_id = {}
     failed_paths_per_task_id = {}
     for task_id, paths in task_ids_and_relative_paths:
         for path in paths:
             try:
-                path_to_add = get_and_check_single_upstream_artifact_full_path(
-                    config, task_id, path
-                )
+                path_to_add = get_and_check_single_upstream_artifact_full_path(config, task_id, path)
                 add_enumerable_item_to_dict(
                     dict_=upstream_artifacts_full_paths_per_task_id,
                     key=task_id,
@@ -50,14 +43,8 @@ def get_upstream_artifacts_full_paths_per_task_id(config, task):
                 )
             except TaskVerificationError:
                 if path in optional_artifacts_per_task_id.get(task_id, []):
-                    log.warning(
-                        'Optional artifact "{}" of task "{}" not found'.format(
-                            path, task_id
-                        )
-                    )
-                    add_enumerable_item_to_dict(
-                        dict_=failed_paths_per_task_id, key=task_id, item=path
-                    )
+                    log.warning('Optional artifact "{}" of task "{}" not found'.format(path, task_id))
+                    add_enumerable_item_to_dict(dict_=failed_paths_per_task_id, key=task_id, item=path)
                 else:
                     raise
 
@@ -81,9 +68,7 @@ def get_and_check_single_upstream_artifact_full_path(config, task_id, path):
     """
     abs_path = get_single_upstream_artifact_full_path(config, task_id, path)
     if not os.path.exists(abs_path):
-        raise TaskVerificationError(
-            "upstream artifact with path: {}, does not exist".format(abs_path)
-        )
+        raise TaskVerificationError("upstream artifact with path: {}, does not exist".format(abs_path))
 
     return abs_path
 
@@ -130,9 +115,7 @@ def get_optional_artifacts_per_task_id(upstream_artifacts):
             task_id = artifact_definition["taskId"]
             artifacts_paths = artifact_definition["paths"]
 
-            add_enumerable_item_to_dict(
-                dict_=optional_artifacts_per_task_id, key=task_id, item=artifacts_paths
-            )
+            add_enumerable_item_to_dict(dict_=optional_artifacts_per_task_id, key=task_id, item=artifacts_paths)
 
     return optional_artifacts_per_task_id
 

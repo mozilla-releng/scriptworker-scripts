@@ -30,6 +30,7 @@ FAKE_SCHEMA = {
     "required": ["list-of-strings"],
 }
 
+
 # get_task {{{1
 def test_get_task(tmpdir):
     """Get the contents of ``work_dir/task.json``."""
@@ -71,9 +72,7 @@ def test_verify_task_schema(tmpdir):
     with pytest.raises(TaskVerificationError):
         client.verify_task_schema(config, {"list-of-strings": ["a", "a"]}, "foo.bar")
     with pytest.raises(TaskVerificationError):
-        client.verify_task_schema(
-            config, {"list-of-strings": ["a", "a"]}, "nonexistent_path"
-        )
+        client.verify_task_schema(config, {"list-of-strings": ["a", "a"]}, "nonexistent_path")
 
 
 @pytest.mark.asyncio
@@ -83,9 +82,7 @@ async def test_sync_main_runs_fully(tmpdir, should_verify_task):
     work_dir = str(tmpdir)
     config = {
         "work_dir": work_dir,
-        "schema_file": os.path.join(
-            os.path.dirname(__file__), "data", "basic_schema.json"
-        ),
+        "schema_file": os.path.join(os.path.dirname(__file__), "data", "basic_schema.json"),
     }
     with open(os.path.join(config["work_dir"], "task.json"), "w") as fh:
         fh.write(
@@ -140,9 +137,7 @@ def test_usage(capsys, monkeypatch):
     assert captured.err == "Usage: my_binary CONFIG_FILE\n"
 
 
-@pytest.mark.parametrize(
-    "is_verbose, log_level", ((True, logging.DEBUG), (False, logging.INFO))
-)
+@pytest.mark.parametrize("is_verbose, log_level", ((True, logging.DEBUG), (False, logging.INFO)))
 def test_init_logging(monkeypatch, is_verbose, log_level):
     """``_init_logging`` sets the logging module format and level."""
     basic_config_mock = mock.MagicMock()
@@ -151,9 +146,7 @@ def test_init_logging(monkeypatch, is_verbose, log_level):
     monkeypatch.setattr(logging, "basicConfig", basic_config_mock)
     client._init_logging(config)
 
-    basic_config_mock.assert_called_once_with(
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=log_level
-    )
+    basic_config_mock.assert_called_once_with(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=log_level)
     assert logging.getLogger("taskcluster").level == logging.WARNING
 
 

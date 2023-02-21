@@ -48,15 +48,21 @@ PARTNER_ALIASES_REGEX = {
 }
 
 PRODUCT_TO_DESTINATIONS_REGEXES = {
-    "firefox-rc": r"^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar))$",
+    "firefox-rc": (
+        r"^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox)"
+        r".*\.(?:bz2|dmg|exe|mar))$"
+    ),
     "firefox": (
-        r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:(?:\:lang|multi)/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix|pkg)|xpi/:lang.xpi))$"  # noqa: E501
+        r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:(?:\:lang|multi)/(?:firefox|Firefox)"
+        r".*\.(?:bz2|dmg|exe|mar|msi|msix|pkg)|xpi/:lang.xpi))$"
     ),
     "devedition": (
-        r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox).*\.(?:bz2|dmg|exe|mar|msi|msix))$"
+        r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox)"
+        r".*\.(?:bz2|dmg|exe|mar|msi|msix))$"
     ),
     "thunderbird": (
-        r"^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/" r"(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar|msi))$"
+        r"^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/"
+        r"(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar|msi))$"
     ),
 }
 
@@ -81,7 +87,9 @@ _BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT = {
 
 _BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT = {
     **_BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT,
-    "firefox-nightly-msi-latest-ssl": (r"^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.en-US\." r"(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$"),
+    "firefox-nightly-msi-latest-ssl": (
+        r"^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.en-US\." r"(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$"
+    ),
     "firefox-nightly-msi-latest-l10n-ssl": (
         r"^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\." r"(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$"
     ),

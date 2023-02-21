@@ -52,9 +52,7 @@ def test_main(monkeypatch, worker_id_prefix, input, env, exit_code, expected):
 
         with monkeypatch.context() as m:
             m.setattr(slugid, "nice", lambda: "abcdef")
-            result = runner.invoke(
-                main, ["--worker-id-prefix", worker_id_prefix, "input.yml", "output.json"]
-            )
+            result = runner.invoke(main, ["--worker-id-prefix", worker_id_prefix, "input.yml", "output.json"])
             assert result.exit_code == exit_code
             if exit_code == 0:
                 output = json.load(open("output.json"))

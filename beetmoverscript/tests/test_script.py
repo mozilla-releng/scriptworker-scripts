@@ -347,7 +347,6 @@ async def test_move_beets(task_filename, partials, mocker, restore_buildhub_file
         actual_sources.append(source)
         actual_destinations.append(destinations)
         if update_balrog_manifest:
-
             data = {"hash": "dummyhash", "size": 123456, "url": destinations[0]}
             context.raw_balrog_manifest.setdefault(locale, {})
             if from_buildid:
