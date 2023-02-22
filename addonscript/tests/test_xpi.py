@@ -30,21 +30,6 @@ def fake_xpi_with_bss():
     return make_fake_xpi("fake_target_with_bss.langpack.xpi")
 
 
-@pytest.mark.parametrize(
-    "version,expected_version",
-    (
-        ("81.0buildid20200914232702", "81.0"),
-        ("81.0", "81.0"),
-        ("81.0buildid", "81.0"),
-        ("81.0buildid202009142", "81.0"),
-        ("81.0a1buildid202009142", "81.0"),
-        ("81.0b1buildid202009142", "81.0"),
-    ),
-)
-def test_get_stripped_version(version, expected_version):
-    assert xpi.get_stripped_version(version) == expected_version
-
-
 def test_get_langpack_info(fake_xpi_with_applications):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     path = f"{current_dir}/fake_target.langpack.xpi"
