@@ -105,16 +105,20 @@ def check_and_extract_tar_archive(context, tar_file_path):
             flatpak_deflated_dir = topdir
 
         def is_within_directory(directory, target):
-            abs_directory = os.path.abspath(directory)
-            abs_target = os.path.abspath(target)
-            prefix = os.path.commonprefix([abs_directory, abs_target])
-            return prefix == abs_directory
+            real_directory = os.path.realpath(directory)
+            real_target = os.path.realpath(target)
+            prefix = os.path.commonprefix([real_directory, real_target])
+            return prefix == real_directory
 
         def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
             for member in tar.getmembers():
                 member_path = os.path.join(path, member.name)
                 if not is_within_directory(path, member_path):
                     raise Exception("Attempted path traversal in tar file: " + member.name)
+                if member.issym():
+                    link_path = os.path.join(os.path.dirname(member_path), member.linkname)
+                    if not _is_within_directory(path, link_path):
+                        raise Exception("Attempted link path traversal in tar file: " + member.name)
                 if member.mode & (stat.S_ISUID | stat.S_ISGID):
                     raise Exception("Attempted setuid or setgid in tar file: " + member.name)
             tar.extractall(path, members, numeric_owner=numeric_owner)
