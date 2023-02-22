@@ -117,7 +117,7 @@ def check_and_extract_tar_archive(context, tar_file_path):
                     raise Exception("Attempted path traversal in tar file: " + member.name)
                 if member.issym():
                     link_path = os.path.join(os.path.dirname(member_path), member.linkname)
-                    if not _is_within_directory(path, link_path):
+                    if not is_within_directory(path, link_path):
                         raise Exception("Attempted link path traversal in tar file: " + member.name)
                 if member.mode & (stat.S_ISUID | stat.S_ISGID):
                     raise Exception("Attempted setuid or setgid in tar file: " + member.name)
