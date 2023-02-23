@@ -1,5 +1,8 @@
 """API helpers for addonscript."""
 
+import hashlib
+import os
+
 from aiohttp.client_exceptions import ClientResponseError
 
 from addonscript.exceptions import AMOConflictError, AuthFailedError, AuthInsufficientPermissionsError, FatalSignatureError, SignatureError
@@ -110,7 +113,7 @@ async def do_create_version(context, locale, upload_uuid):
     return result["version"]
 
 
-async def get_signed_addon_url(context, locale, version_id):
+async def get_signed_addon_info(context, locale, version_id):
     """Query AMO to get the location of the signed XPI.
 
     This function should be called within `scriptworker.utils.retry_async()`.
@@ -122,18 +125,19 @@ async def get_signed_addon_url(context, locale, version_id):
         aiohttp.ClientError: If there is some sort of networking issue.
         asyncio.TimeoutError: If the network request times out.
 
-    Returns the signed XPI URL
+    Returns the XPI url, size and hash
 
     """
     # XXX Retry is done at top-level. Avoiding a retry here avoids never-ending retries cascade
     version_detail = await get_version(context, locale, version_id)
-    status = version_detail["file"]["status"]
+    file_detail = version_detail["file"]
+    status = file_detail["status"]
 
     if status == "disabled":
         raise FatalSignatureError("XPI disabled on AMO")
     if status != "public":
         raise SignatureError("XPI not public")
-    return version_detail["file"]["url"]
+    return file_detail["url"], file_detail["size"], file_detail["hash"]
 
 
 async def get_version(context, locale, version_id):
@@ -163,11 +167,29 @@ async def get_version(context, locale, version_id):
     return await amo_get(context, url)
 
 
-async def get_signed_xpi(context, download_path, destination_path):
+async def get_signed_xpi(context, download_info, destination_path):
     """Download the signed xpi from AMO.
 
     Fetches from `download_path` (identified in a previous API call)
     And stores at `destination_path`.
     """
+    download_path, download_size, download_hash = download_info
     with open(destination_path, "wb") as file:
         await amo_download(context, download_path, file)
+    size = os.path.getsize(destination_path)
+    if size != download_size:
+        raise SignatureError(f"Wrong size for {download_path}, expected {download_size}, actual {size}")
+    hashalg, amo_digest = download_hash.split(":", 1)
+    with open(destination_path, "rb") as file:
+        # XXX use hashlib.file_digest on python 3.11
+        hash = hashlib.new(hashalg)
+        buf = bytearray(2**18)
+        view = memoryview(buf)
+        while True:
+            size = file.readinto(buf)
+            if size == 0:
+                break
+            hash.update(view[:size])
+        digest = hash.hexdigest()
+    if digest != amo_digest:
+        raise SignatureError(f"Wrong {hashalg} digest for {download_path}, expected {amo_digest}, actual {digest}")

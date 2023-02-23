@@ -110,15 +110,15 @@ async def test_do_create_version(fake_session, context, statuscode, retval, exce
 
 
 @pytest.mark.asyncio
-async def test_get_signed_addon_url_success(context, mocker):
-    status_json = {"file": {"status": "public", "url": "https://some-download-url/foo"}}
+async def test_get_signed_addon_info_success(context, mocker):
+    status_json = {"file": {"status": "public", "url": "https://some-download-url/foo", "size": 3, "hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}}
 
     async def new_version(*args, **kwargs):
         return status_json
 
     mocker.patch.object(api, "get_version", new=new_version)
-    resp = await api.get_signed_addon_url(context, "en-GB", "deadbeef")
-    assert resp == "https://some-download-url/foo"
+    resp = await api.get_signed_addon_info(context, "en-GB", "deadbeef")
+    assert resp == ("https://some-download-url/foo", 3, "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
 
 
 @pytest.mark.asyncio
@@ -163,7 +163,7 @@ async def test_check_upload(fake_session, context, data, raises):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("variant,exception", (("nominated", SignatureError), ("disabled", FatalSignatureError)))
-async def test_get_signed_addon_url_other_errors(context, mocker, variant, exception):
+async def test_get_signed_addon_info_other_errors(context, mocker, variant, exception):
     status_json = {"file": {"status": variant}}
 
     async def new_version(*args, **kwargs):
@@ -173,26 +173,39 @@ async def test_get_signed_addon_url_other_errors(context, mocker, variant, excep
 
     raisectx = pytest.raises(exception)
     with raisectx as excinfo:
-        await api.get_signed_addon_url(context, "en-GB", "deadbeef")
-    if variant == "signed":
+        await api.get_signed_addon_info(context, "en-GB", "deadbeef")
+    if variant == "nominated":
         assert "XPI not public" in str(excinfo.value)
-    if variant == "download":
-        assert 'Expected XPI "download_url" parameter' in str(excinfo.value)
+    if variant == "disabled":
+        assert 'XPI disabled on AMO' in str(excinfo.value)
 
 
 @pytest.mark.asyncio
 async def test_get_signed_xpi(fake_session, context, tmpdir):
     destination = os.path.join(tmpdir, "langpack.xpi")
-    download_path = "https://addons.example.com/some/file+path"
+    download_info = ("https://addons.example.com/some/file+path", 6, "sha256:c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2")
     with aioresponses() as m:
         context.session = fake_session
-        m.get(download_path, status=200, body=b"foobar")
+        m.get(download_info[0], status=200, body=b"foobar")
 
         # py37 nullcontext would be better
-        await api.get_signed_xpi(context, download_path, destination)
+        await api.get_signed_xpi(context, download_info, destination)
         with open(destination, "rb") as f:
             contents = f.read()
         assert contents == b"foobar"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("contents", (b"fooba", b"foobaz"))
+async def test_get_signed_xpi_error(fake_session, context, tmpdir, contents):
+    destination = os.path.join(tmpdir, "langpack.xpi")
+    download_info = ("https://addons.example.com/some/file+path", 6, "sha256:c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2")
+    with aioresponses() as m:
+        context.session = fake_session
+        m.get(download_info[0], status=200, body=contents)
+
+        with pytest.raises(SignatureError):
+            await api.get_signed_xpi(context, download_info, destination)
 
 
 @pytest.mark.asyncio

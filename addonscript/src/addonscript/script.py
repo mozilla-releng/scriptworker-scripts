@@ -7,7 +7,7 @@ import scriptworker.client
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from scriptworker.utils import retry_async
 
-from addonscript.api import add_app_version, do_upload, do_create_version, get_signed_addon_url, get_signed_xpi, check_upload
+from addonscript.api import add_app_version, do_upload, do_create_version, get_signed_addon_info, get_signed_xpi, check_upload
 from addonscript.exceptions import AMOConflictError, SignatureError
 from addonscript.task import build_filelist
 from addonscript.xpi import get_langpack_info
@@ -49,8 +49,8 @@ async def sign_addon(context, locale):
         version = {"id": None}
 
     # poll AMO for the the URL that contains the signed langpack
-    signed_addon_url = await retry_async(
-        get_signed_addon_url,
+    signed_addon_info = await retry_async(
+        get_signed_addon_info,
         args=(context, locale, version["id"]),
         attempts=10,  # 10 attempts with default backoff yield around 10 minutes of time
         # Most addons will be signed in less than that.
@@ -60,7 +60,7 @@ async def sign_addon(context, locale):
     # make the signed langpack available in task's artifacts for downstream beetmover
     destination = os.path.join(context.config["artifact_dir"], "public/build/", locale, "target.langpack.xpi")
     os.makedirs(os.path.dirname(destination))
-    await retry_async(get_signed_xpi, args=(context, signed_addon_url, destination))
+    await retry_async(get_signed_xpi, args=(context, signed_addon_info, destination))
 
 
 def build_locales_context(context):
