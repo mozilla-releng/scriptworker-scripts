@@ -150,19 +150,9 @@ async def get_version(context, locale, version_id):
     """
     locale_info = context.locales[locale]
     langpack_id = locale_info["id"]
-    version = locale_info["version"]
     if version_id is None:
-        # When the addon was already uploaded with this version we don't have
-        # an id, and we can't look it up by version number
-        # See https://github.com/mozilla/addons-server/issues/20388
-        url = get_api_url(context, VERSION_LIST, id=langpack_id)
-        addon_versions = await amo_get(context, url)
-        for v in addon_versions["results"]:
-            if v["version"] == version:
-                return v
-        # TODO: handle pagination?
-        raise FatalSignatureError(f"could not find {langpack_id} version {version}")
-
+        # use the version number instead
+        version_id = "v" + locale_info["version"]
     url = get_api_url(context, VERSION_DETAIL, id=langpack_id, version=version_id)
     return await amo_get(context, url)
 

@@ -210,36 +210,29 @@ async def test_get_signed_xpi_error(fake_session, context, tmpdir, contents):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "expected_url,id,response,exception",
+    "expected_url,id,exception",
     (
         (
             "api/v5/addons/addon/langpack-en-GB@firefox.mozilla.org/versions/1234/",
             1234,
-            '{"id": 1234, "version": "59.0buildid20180406102847"}',
             does_not_raise(),
         ),
         (
-            "api/v5/addons/addon/langpack-en-GB@firefox.mozilla.org/versions/?filter=all_with_unlisted",
+            "api/v5/addons/addon/langpack-en-GB@firefox.mozilla.org/versions/v59.0buildid20180406102847/",
             None,
-            '{"results": [{"id": 1, "version": "something else"}, {"id": 1234, "version": "59.0buildid20180406102847"}]}',
             does_not_raise(),
-        ),
-        (
-            "api/v5/addons/addon/langpack-en-GB@firefox.mozilla.org/versions/?filter=all_with_unlisted",
-            None,
-            '{"results": [{"id": 1, "version": "something else"}]}',
-            pytest.raises(FatalSignatureError),
         ),
     ),
 )
-async def test_get_version(context, fake_session, expected_url, id, response, exception):
+async def test_get_version(context, fake_session, expected_url, id, exception):
     context.locales = {}
     context.locales["en-GB"] = {"id": "langpack-en-GB@firefox.mozilla.org", "version": "59.0buildid20180406102847"}
+    response = {"id": 1234, "version": "59.0buildid20180406102847"}
     mocked_url = "{}/{}".format("http://some-amo-it.url", expected_url)
     with aioresponses() as m:
         context.session = fake_session
-        m.get(mocked_url, status=200, body=response)
+        m.get(mocked_url, status=200, body=json.dumps(response))
 
         with exception:
             resp = await api.get_version(context, "en-GB", id)
-            assert resp == {"id": 1234, "version": "59.0buildid20180406102847"}
+            assert resp == response
