@@ -62,8 +62,8 @@ def tasks_per_python_version(config, tasks):
         "worker.docker-image",
     ]
     for task_raw in tasks:
-        task = deepcopy(task_raw)
-        for python_version in task.pop("python-versions"):
+        for python_version in task_raw.pop("python-versions"):
+            task = deepcopy(task_raw)
             subs = {"name": task["name"], "python_version": python_version}
             for field in fields:
                 _resolve_replace_string(task, field, subs)
@@ -73,7 +73,6 @@ def tasks_per_python_version(config, tasks):
 
 @transforms.add
 def update_name_with_python_version(config, tasks):
-    for task_raw in tasks:
-        task = deepcopy(task_raw)
+    for task in tasks:
         task["name"] = "{}-python{}".format(task["name"], task["attributes"]["python-version"])
         yield task
