@@ -103,8 +103,7 @@ async def do_create_version(context, locale, upload_uuid):
     try:
         result = await amo_put(context, url, json=data)
     except ClientResponseError as exc:
-        if exc.status in (400, 409):
-            # TODO: check actual response for other errors
+        if exc.status == 409:
             raise AMOConflictError("Addon <{}> already present on AMO with version <{}>".format(langpack_id, locale_info["version"]))
         raise
 
