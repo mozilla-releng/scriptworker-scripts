@@ -104,14 +104,14 @@ def check_and_extract_tar_archive(context, tar_file_path):
             log.warning(f"{tar_file_path} does not have `repo` as topdir")
             flatpak_deflated_dir = topdir
 
-        def is_within_directory(directory, target):
-            real_directory = os.path.realpath(directory)
-            real_target = os.path.realpath(target)
-            prefix = os.path.commonprefix([real_directory, real_target])
-            return prefix == real_directory
-
         def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
-            for member in tar.getmembers():
+            def is_within_directory(directory, target):
+                real_directory = os.path.realpath(directory)
+                real_target = os.path.realpath(target)
+                prefix = os.path.commonprefix([real_directory, real_target])
+                return prefix == real_directory
+
+            def validate_tar_member(member, path):
                 member_path = os.path.join(path, member.name)
                 if not is_within_directory(path, member_path):
                     raise Exception("Attempted path traversal in tar file: " + member.name)
@@ -121,7 +121,12 @@ def check_and_extract_tar_archive(context, tar_file_path):
                         raise Exception("Attempted link path traversal in tar file: " + member.name)
                 if member.mode & (stat.S_ISUID | stat.S_ISGID):
                     raise Exception("Attempted setuid or setgid in tar file: " + member.name)
-            tar.extractall(path, members, numeric_owner=numeric_owner)
+            def files(tar, path):
+                for member in tar:
+                    validate_tar_member(member, path)
+                    yield member
+
+            tar.extractall(path, members=files(tar, path), numeric_owner=numeric_owner)
 
         safe_extract(tar, path=flatpak_tar_basedir)
 
