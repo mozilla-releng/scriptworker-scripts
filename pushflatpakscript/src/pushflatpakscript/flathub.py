@@ -104,7 +104,7 @@ def check_and_extract_tar_archive(context, tar_file_path):
             log.warning(f"{tar_file_path} does not have `repo` as topdir")
             flatpak_deflated_dir = topdir
 
-        def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+        def safe_extract(tar, path=".", *, numeric_owner=False):
             def is_within_directory(directory, target):
                 real_directory = os.path.realpath(directory)
                 real_target = os.path.realpath(target)
@@ -121,6 +121,7 @@ def check_and_extract_tar_archive(context, tar_file_path):
                         raise Exception("Attempted link path traversal in tar file: " + member.name)
                 if member.mode & (stat.S_ISUID | stat.S_ISGID):
                     raise Exception("Attempted setuid or setgid in tar file: " + member.name)
+
             def files(tar, path):
                 for member in tar:
                     validate_tar_member(member, path)
