@@ -6,7 +6,6 @@ import aiohttp
 import pytest
 import pytest_asyncio
 from aioresponses import aioresponses
-from scriptworker.context import Context
 
 import addonscript.api as api
 from addonscript.exceptions import AMOConflictError, AuthFailedError, AuthInsufficientPermissionsError, FatalSignatureError, SignatureError
@@ -15,18 +14,6 @@ from addonscript.exceptions import AMOConflictError, AuthFailedError, AuthInsuff
 @contextmanager
 def does_not_raise():
     yield
-
-
-@pytest.fixture(scope="function")
-def context():
-    context = Context()
-    context.config = {
-        "amo_instances": {
-            "project:releng:addons.mozilla.org:server:dev": {"amo_server": "http://some-amo-it.url", "jwt_user": "test-user", "jwt_secret": "secret"}
-        }
-    }
-    context.task = {"scopes": ["project:releng:addons.mozilla.org:server:dev"]}
-    return context
 
 
 @pytest_asyncio.fixture(scope="function")
