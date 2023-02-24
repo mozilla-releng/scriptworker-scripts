@@ -33,12 +33,6 @@ class FatalSignatureError(ScriptWorkerTaskException):
     pass
 
 
-class BadVersionError(ScriptWorkerTaskException):
-    """Fatal error when XPI's version is invalid against AMO sanity checks."""
-
-    pass
-
-
 class AMOConflictError(Exception):
     """Error when AMO returns 409-Conflict usually from a duplicate version."""
 
