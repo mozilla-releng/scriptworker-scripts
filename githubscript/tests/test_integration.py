@@ -18,11 +18,11 @@ def config():
                 "allowed_actions": ["release"],
                 "github_token": "SOME_TOKEN",
                 "github_owner": "mozilla-mobile",
-                "github_repo_name": "fenix",
+                "github_repo_name": "firefox-android",
                 "contact_github": True,
             },
         },
-        "taskcluster_scope_prefixes": ["project:mobile:fenix:releng:github:"],
+        "taskcluster_scope_prefixes": ["project:mobile:firefox-android:releng:github:"],
         "verbose": True,
     }
 
@@ -31,7 +31,7 @@ def config():
 def task():
     return {
         "dependencies": ["dependency-task-id"],
-        "scopes": ["project:mobile:fenix:releng:github:project:fenix", "project:mobile:fenix:releng:github:action:release"],
+        "scopes": ["project:mobile:firefox-android:releng:github:project:fenix", "project:mobile:firefox-android:releng:github:action:release"],
         "payload": {
             "artifactMap": [
                 {
