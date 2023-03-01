@@ -84,7 +84,7 @@ def test_task_signing_formats(context):
 
 
 def test_task_signing_formats_support_several_projects(context):
-    context.config["taskcluster_scope_prefixes"] = ["project:mobile:firefox-android:releng:signing:", "project:mobile:firefox-android:releng:signing:"]
+    context.config["taskcluster_scope_prefixes"] = ["project:mobile:firefox-android:releng:signing:"]
 
     context.task = {
         "payload": {"upstreamArtifacts": [{"formats": ["focus-jar"]}]},
