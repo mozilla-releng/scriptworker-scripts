@@ -1,10 +1,9 @@
 #!/bin/bash
 set +e
 
-git clone https://github.com/mozilla/msix-packaging msix-packaging
+git clone --depth=1 https://github.com/mozilla/msix-packaging --branch johnmcpms/signing --single-branch msix-packaging
 
 cd msix-packaging
-git checkout johnmcpms/signing
 
 ./makelinux.sh --pack
 

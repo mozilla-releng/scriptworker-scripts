@@ -10,10 +10,23 @@ RUN apt-get update \
  && apt-get clean \
  && ln -s /app/docker.d/healthcheck /bin/healthcheck
 
-COPY . /app
-RUN chown -R app:app /app
+# Copy only required folders
+COPY --chown=app:app ["signingscript", "/app/signingscript/"]
+COPY --chown=app:app ["configloader", "/app/configloader/"]
+COPY --chown=app:app ["docker.d", "/app/docker.d/"]
 
-RUN cd /app/signingscript/docker.d && bash build_msix_packaging.sh && cp msix-packaging/.vs/bin/makemsix /usr/bin && cp msix-packaging/.vs/lib/libmsix.so /usr/lib && cd .. && rm -rf msix-packaging && cd /
+RUN cd /app/signingscript/docker.d && \
+    bash build_msix_packaging.sh && \
+    cp msix-packaging/.vs/bin/makemsix /usr/bin && \
+    cp msix-packaging/.vs/lib/libmsix.so /usr/lib && \
+    cd .. && \
+    rm -rf msix-packaging
+
+# Download rcodesign: https://github.com/indygreg/apple-platform-rs/releases
+RUN wget -qO- \
+    https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign%2F0.22.0/apple-codesign-0.22.0-x86_64-unknown-linux-musl.tar.gz \
+    | tar xvz -C /usr/bin --transform 's/.*\///g' --wildcards --no-anchored 'rcodesign' && \
+    chmod +x /usr/bin/rcodesign
 
 USER app
 WORKDIR /app
