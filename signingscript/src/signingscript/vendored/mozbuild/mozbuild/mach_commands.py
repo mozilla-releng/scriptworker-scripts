@@ -2,14 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import argparse
+import errno
 import itertools
 import json
 import logging
 import operator
 import os
+import os.path
 import platform
 import re
 import shutil
@@ -17,26 +17,24 @@ import subprocess
 import sys
 import tempfile
 import time
-import errno
-
-import mozbuild.settings  # noqa need @SettingsProvider hook to execute
-import mozpack.path as mozpath
-
+from os import path
 from pathlib import Path
+
+import mozpack.path as mozpath
+import yaml
 from mach.decorators import (
+    Command,
     CommandArgument,
     CommandArgumentGroup,
-    Command,
     SettingsProvider,
     SubCommand,
 )
+from voluptuous import All, Boolean, Required, Schema
 
-from mozbuild.base import (
-    BinaryNotFoundException,
-    BuildEnvironmentNotFoundException,
-    MachCommandConditions as conditions,
-    MozbuildObject,
-)
+import mozbuild.settings  # noqa need @SettingsProvider hook to execute
+from mozbuild.base import BinaryNotFoundException, BuildEnvironmentNotFoundException
+from mozbuild.base import MachCommandConditions as conditions
+from mozbuild.base import MozbuildObject
 from mozbuild.util import MOZBUILD_METRICS_PATH
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -106,26 +104,66 @@ def watch(command_context, verbose=False):
         sys.exit(3)
 
 
-@Command("cargo", category="build", description="Invoke cargo in useful ways.")
-def cargo(command_context):
-    """Invoke cargo in useful ways."""
-    command_context._sub_mach(["help", "cargo"])
-    return 1
+CARGO_CONFIG_NOT_FOUND_ERROR_MSG = """\
+The sub-command {subcommand} is not currently configured to be used with ./mach cargo.
+To do so, add the corresponding file in <mozilla-root-dir>/cargo/config, following the template provided in <mozilla-root-dir>/cargo/config/template.yaml """
 
 
-@SubCommand(
+def _cargo_config_yaml_schema():
+    def starts_with_cargo(s):
+        if s.startswith("cargo-"):
+            return s
+        else:
+            raise ValueError
+
+    return Schema(
+        {
+            # The name of the command (not checked for now, but maybe
+            #  later)
+            Required("command"): All(str, starts_with_cargo),
+            # Whether `make` should stop immediately in case
+            # of error returned by the command. Default: False
+            "continue_on_error": Boolean,
+            # Build flags to use.  If this variable is not
+            # defined here, the build flags are generated automatically and are
+            # the same as for `cargo build`. See available substitutions at the
+            # end.
+            "cargo_build_flags": [str],
+            # Extra build flags to use. These flags are added
+            # after the cargo_build_flags both when they are provided or
+            # automatically generated. See available substitutions at the end.
+            "cargo_extra_flags": [str],
+            # Available substitutions for `cargo_*_flags`:
+            # * {arch}: architecture target
+            # * {crate}: current crate name
+            # * {directory}: Directory of the current crate within the source tree
+            # * {features}: Rust features (for `--features`)
+            # * {manifest}: full path of `Cargo.toml` file
+            # * {target}: `--lib` for library, `--bin CRATE` for executables
+            # * {topsrcdir}: Top directory of sources
+        }
+    )
+
+
+@Command(
     "cargo",
-    "check",
-    description="Run `cargo check` on a given crate.  Defaults to gkrust.",
+    category="build",
+    description="Run `cargo <cargo_command>` on a given crate.  Defaults to gkrust.",
     metrics_path=MOZBUILD_METRICS_PATH,
 )
 @CommandArgument(
-    "--all-crates",
+    "cargo_command",
     default=None,
+    help="Target to cargo, must be one of the commands in config/cargo/",
+)
+@CommandArgument(
+    "--all-crates",
     action="store_true",
     help="Check all of the crates in the tree.",
 )
-@CommandArgument("crates", default=None, nargs="*", help="The crate name(s) to check.")
+@CommandArgument(
+    "-p", "--package", default=None, help="The specific crate name to check."
+)
 @CommandArgument(
     "--jobs",
     "-j",
@@ -141,71 +179,152 @@ def cargo(command_context):
     action="store_true",
     help="Emit error messages as JSON.",
 )
-def check(
+@CommandArgument(
+    "--continue-on-error",
+    action="store_true",
+    help="Do not return an error exit code if the subcommands errors out.",
+)
+@CommandArgument(
+    "subcommand_args",
+    nargs=argparse.REMAINDER,
+    help="These arguments are passed as-is to the cargo subcommand.",
+)
+def cargo(
     command_context,
+    cargo_command,
     all_crates=None,
-    crates=None,
+    package=None,
     jobs=0,
     verbose=False,
     message_format_json=False,
+    continue_on_error=False,
+    subcommand_args=[],
 ):
+
     from mozbuild.controller.building import BuildDriver
 
     command_context.log_manager.enable_all_structured_loggers()
 
-    try:
-        command_context.config_environment
-    except BuildEnvironmentNotFoundException:
-        build = command_context._spawn(BuildDriver)
-        ret = build.build(
-            command_context.metrics,
-            what=["pre-export", "export"],
-            jobs=jobs,
-            verbose=verbose,
-            mach_context=command_context._mach_context,
-        )
-        if ret != 0:
-            return ret
+    topsrcdir = Path(mozpath.normpath(command_context.topsrcdir))
+    cargodir = Path(topsrcdir / "build" / "cargo")
+
+    cargo_command_basename = "cargo-" + cargo_command + ".yaml"
+    cargo_command_fullname = Path(cargodir / cargo_command_basename)
+    if path.exists(cargo_command_fullname):
+        with open(cargo_command_fullname) as fh:
+            yaml_config = yaml.load(fh, Loader=yaml.FullLoader)
+            schema = _cargo_config_yaml_schema()
+            schema(yaml_config)
+        if not yaml_config:
+            yaml_config = {}
+    else:
+        print(CARGO_CONFIG_NOT_FOUND_ERROR_MSG.format(subcommand=cargo_command))
+        return 1
+
+    # print("yaml_config = ", yaml_config)
+
+    yaml_config.setdefault("continue_on_error", False)
+    continue_on_error = continue_on_error or yaml_config["continue_on_error"] is True
+
+    cargo_build_flags = yaml_config.get("cargo_build_flags")
+    if cargo_build_flags is not None:
+        cargo_build_flags = " ".join(cargo_build_flags)
+    cargo_extra_flags = yaml_config.get("cargo_extra_flags")
+    if cargo_extra_flags is not None:
+        cargo_extra_flags = " ".join(cargo_extra_flags)
+
+    if cargo_build_flags:
+        try:
+            command_context.config_environment
+        except BuildEnvironmentNotFoundException:
+            build = command_context._spawn(BuildDriver)
+            ret = build.build(
+                command_context.metrics,
+                what=["pre-export", "export"],
+                jobs=jobs,
+                verbose=verbose,
+                mach_context=command_context._mach_context,
+            )
+            if ret != 0:
+                return ret
 
     # XXX duplication with `mach vendor rust`
     crates_and_roots = {
-        "gkrust": "toolkit/library/rust",
-        "gkrust-gtest": "toolkit/library/gtest/rust",
-        "geckodriver": "testing/geckodriver",
+        "gkrust": {"directory": "toolkit/library/rust", "library": True},
+        "gkrust-gtest": {"directory": "toolkit/library/gtest/rust", "library": True},
+        "geckodriver": {"directory": "testing/geckodriver", "library": False},
     }
 
     if all_crates:
         crates = crates_and_roots.keys()
-    elif crates is None or crates == []:
+    elif package:
+        crates = [package]
+    else:
         crates = ["gkrust"]
 
+    if subcommand_args:
+        subcommand_args = " ".join(subcommand_args)
+
     for crate in crates:
-        root = crates_and_roots.get(crate, None)
-        if not root:
+        crate_info = crates_and_roots.get(crate, None)
+        if not crate_info:
             print(
                 "Cannot locate crate %s.  Please check your spelling or "
                 "add the crate information to the list." % crate
             )
             return 1
 
-        check_targets = [
-            "force-cargo-library-check",
-            "force-cargo-host-library-check",
-            "force-cargo-program-check",
-            "force-cargo-host-program-check",
+        targets = [
+            "force-cargo-library-%s" % cargo_command,
+            "force-cargo-host-library-%s" % cargo_command,
+            "force-cargo-program-%s" % cargo_command,
+            "force-cargo-host-program-%s" % cargo_command,
         ]
 
+        directory = crate_info["directory"]
+        # you can use these variables in 'cargo_build_flags'
+        subst = {
+            "arch": '"$(RUST_TARGET)"',
+            "crate": crate,
+            "directory": directory,
+            "features": '"$(RUST_LIBRARY_FEATURES)"',
+            "manifest": str(Path(topsrcdir / directory / "Cargo.toml")),
+            "target": "--lib" if crate_info["library"] else "--bin " + crate,
+            "topsrcdir": str(topsrcdir),
+        }
+
+        if subcommand_args:
+            targets = targets + [
+                "cargo_extra_cli_flags=%s" % (subcommand_args.format(**subst))
+            ]
+        if cargo_build_flags:
+            targets = targets + [
+                "cargo_build_flags=%s" % (cargo_build_flags.format(**subst))
+            ]
+
         append_env = {}
+        if cargo_extra_flags:
+            append_env["CARGO_EXTRA_FLAGS"] = cargo_extra_flags.format(**subst)
         if message_format_json:
             append_env["USE_CARGO_JSON_MESSAGE_FORMAT"] = "1"
+        if continue_on_error:
+            append_env["CARGO_CONTINUE_ON_ERROR"] = "1"
+        if cargo_build_flags:
+            append_env["CARGO_NO_AUTO_ARG"] = "1"
+        else:
+            append_env[
+                "ADD_RUST_LTOABLE"
+            ] = "force-cargo-library-{s:s} force-cargo-program-{s:s}".format(
+                s=cargo_command
+            )
 
         ret = command_context._run_make(
             srcdir=False,
-            directory=root,
+            directory=directory,
             ensure_exit_code=0,
             silent=not verbose,
             print_directory=False,
-            target=check_targets,
+            target=targets,
             num_jobs=jobs,
             append_env=append_env,
         )
@@ -891,8 +1010,9 @@ def gtest(
             pass_thru=True,
         )
 
-    from mozprocess import ProcessHandlerMixin
     import functools
+
+    from mozprocess import ProcessHandlerMixin
 
     def handle_line(job_id, line):
         # Prepend the jobId
@@ -946,7 +1066,7 @@ def android_gtest(
     setup_logging("mach-gtest", {}, {default_format: sys.stdout}, format_args)
 
     # ensure that a device is available and test app is installed
-    from mozrunner.devices.android_device import verify_android_device, get_adb_path
+    from mozrunner.devices.android_device import get_adb_path, verify_android_device
 
     verify_android_device(
         command_context, install=install, app=package, device_serial=device_serial
@@ -1046,8 +1166,8 @@ def install(command_context, **kwargs):
     """Install a package."""
     if conditions.is_android(command_context):
         from mozrunner.devices.android_device import (
-            verify_android_device,
             InstallIntent,
+            verify_android_device,
         )
 
         ret = (
@@ -1386,9 +1506,9 @@ def _run_android(
     use_existing_process=False,
 ):
     from mozrunner.devices.android_device import (
-        verify_android_device,
-        _get_device,
         InstallIntent,
+        _get_device,
+        verify_android_device,
     )
     from six.moves import shlex_quote
 
@@ -1782,7 +1902,7 @@ def _run_desktop(
     stacks,
     show_dump_stats,
 ):
-    from mozprofile import Profile, Preferences
+    from mozprofile import Preferences, Profile
 
     try:
         if packaged:
@@ -2106,7 +2226,50 @@ def repackage(command_context):
     scriptworkers in order to bundle things up into shippable formats, such as a
     .dmg on OSX or an installer exe on Windows.
     """
-    print("Usage: ./mach repackage [dmg|installer|mar] [args...]")
+    print("Usage: ./mach repackage [dmg|pkg|installer|mar] [args...]")
+
+
+@SubCommand(
+    "repackage", "deb", description="Repackage a tar file into a .deb for Linux"
+)
+@CommandArgument(
+    "--input", "-i", type=str, required=True, help="Input tarfile filename"
+)
+@CommandArgument("--output", "-o", type=str, required=True, help="Output .deb filename")
+@CommandArgument("--arch", type=str, required=True, help="One of ['x86', 'x86_64']")
+@CommandArgument(
+    "--version",
+    type=str,
+    required=True,
+    help="The Firefox version used to create the installer",
+)
+@CommandArgument(
+    "--build-number",
+    type=str,
+    required=True,
+    help="The release's build number",
+)
+@CommandArgument(
+    "--templates",
+    type=str,
+    required=True,
+    help="Location of the templates used to generate the debian/ directory files",
+)
+def repackage_deb(
+    command_context, input, output, arch, version, build_number, templates
+):
+    if not os.path.exists(input):
+        print("Input file does not exist: %s" % input)
+        return 1
+
+    template_dir = os.path.join(
+        command_context.topsrcdir,
+        templates,
+    )
+
+    from mozbuild.repackaging.deb import repackage_deb
+
+    repackage_deb(input, output, template_dir, arch, version, build_number)
 
 
 @SubCommand("repackage", "dmg", description="Repackage a tar file into a .dmg for OSX")
@@ -2117,16 +2280,22 @@ def repackage_dmg(command_context, input, output):
         print("Input file does not exist: %s" % input)
         return 1
 
-    if not os.path.exists(os.path.join(command_context.topobjdir, "config.status")):
-        print(
-            "config.status not found.  Please run |mach configure| "
-            "prior to |mach repackage|."
-        )
-        return 1
-
     from mozbuild.repackaging.dmg import repackage_dmg
 
     repackage_dmg(input, output)
+
+
+@SubCommand("repackage", "pkg", description="Repackage a tar file into a .pkg for OSX")
+@CommandArgument("--input", "-i", type=str, required=True, help="Input filename")
+@CommandArgument("--output", "-o", type=str, required=True, help="Output filename")
+def repackage_pkg(command_context, input, output):
+    if not os.path.exists(input):
+        print("Input file does not exist: %s" % input)
+        return 1
+
+    from mozbuild.repackaging.pkg import repackage_pkg
+
+    repackage_pkg(input, output)
 
 
 @SubCommand(
