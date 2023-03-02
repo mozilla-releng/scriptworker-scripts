@@ -7,7 +7,7 @@ import aiohttp
 import scriptworker.client
 
 from signingscript.task import build_filelist_dict, sign, task_signing_formats
-from signingscript.utils import copy_to_dir, load_autograph_configs
+from signingscript.utils import copy_to_dir, load_apple_notarization_configs, load_autograph_configs
 
 log = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ async def async_main(context):
 
         context.session = session
         context.autograph_configs = load_autograph_configs(context.config["autograph_configs"])
+        context.apple_notarization_configs = load_apple_notarization_configs(context.config["apple_notarization_configs"])
         work_dir = context.config["work_dir"]
         filelist_dict = build_filelist_dict(context)
         for path, path_dict in filelist_dict.items():

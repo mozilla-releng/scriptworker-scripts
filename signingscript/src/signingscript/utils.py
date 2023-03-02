@@ -25,6 +25,14 @@ class Autograph:
     key_id: str = None
 
 
+@dataclass
+class AppleNotarization:
+    """Apple notarization configuration object."""
+    issuer_id: str
+    key_id: str
+    private_key: str
+
+
 def mkdir(path):
     """Equivalent to `mkdir -p`.
 
@@ -72,6 +80,25 @@ def load_json(path):
         return json.load(fh)
 
 
+def _load_scoped_configs(filename, cls, name):
+    """Load config for a given class
+
+    Args:
+        filename (str): config file
+        cls (Class): The dataclass for the config
+        name (str): Config name for logging
+    """
+    log.info("Loading %s config from %s", name, filename)
+    with open(filename) as f:
+        raw_cfg = json.load(f)
+
+    cfg = {}
+    for scope, config in raw_cfg.items():
+        cfg[scope] = [cls(*s) for s in config]
+    log.info("%s config loaded from %s", name, filename)
+    return cfg
+
+
 def load_autograph_configs(filename):
     """Load the autograph configuration from `filename`.
 
@@ -82,15 +109,20 @@ def load_autograph_configs(filename):
         dict of Autograph objects: keyed by signing cert type
 
     """
-    log.info("Loading autograph config from %s", filename)
-    with open(filename) as f:
-        raw_cfg = json.load(f)
+    return _load_scoped_configs(filename, Autograph, "Autograph")
 
-    cfg = {}
-    for cert_type, autograph_config in raw_cfg.items():
-        cfg[cert_type] = [Autograph(*s) for s in autograph_config]
-    log.info("Autograph config loaded from %s", filename)
-    return cfg
+
+def load_apple_notarization_configs(filename):
+    """Load the apple notarization configuration from `filename`.
+
+    Args:
+        filename (str): config file
+
+    Returns:
+        dict of Apple Notarization objects: keyed by signing cert type
+
+    """
+    return _load_scoped_configs(filename, AppleNotarization, "Apple Notarization")
 
 
 async def log_output(fh, log_level=logging.INFO):

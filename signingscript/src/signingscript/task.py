@@ -15,6 +15,7 @@ from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
 from signingscript.sign import (
+    apple_notarize,
     sign_authenticode,
     sign_debian_pkg,
     sign_file,
@@ -57,6 +58,7 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "privileged_webextension": sign_xpi,
         "system_addon": sign_xpi,
         "autograph_rsa": sign_file_detached,
+        "apple_notarization": apple_notarize,
         "default": sign_file,
     }
 )
