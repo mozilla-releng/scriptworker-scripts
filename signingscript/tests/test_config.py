@@ -11,6 +11,7 @@ COMMON_CONTEXT = {
     "VERBOSE": "true",
     "PUBLIC_IP": "0.0.0.0",
     "PASSWORDS_PATH": "",
+    "APPLE_NOTARIZATION_CREDS_PATH": "",
     "SSL_CERT_PATH": "",
     "SIGNTOOL_PATH": "",
     "DMG_PATH": "",

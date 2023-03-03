@@ -28,12 +28,13 @@ async def async_main_helper(tmpdir, mocker, formats, extra_config={}, server_typ
         return [val]
 
     mocker.patch.object(script, "load_autograph_configs", new=noop_sync)
+    mocker.patch.object(script, "load_apple_notarization_configs", new=noop_sync)
     # mocker.patch.object(script, "task_cert_type", new=noop_sync)
     mocker.patch.object(script, "task_signing_formats", return_value=formats)
     mocker.patch.object(script, "build_filelist_dict", new=fake_filelist_dict)
     mocker.patch.object(script, "sign", new=fake_sign)
     context = mock.MagicMock()
-    context.config = {"work_dir": tmpdir, "artifact_dir": tmpdir, "autograph_configs": {}}
+    context.config = {"work_dir": tmpdir, "artifact_dir": tmpdir, "autograph_configs": {}, "apple_notarization_configs": {}}
     context.config.update(extra_config)
     await script.async_main(context)
 
