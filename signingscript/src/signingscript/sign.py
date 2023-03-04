@@ -19,7 +19,6 @@ import tempfile
 import time
 import zipfile
 from contextlib import ExitStack
-from dataclasses import asdict
 from functools import wraps
 from io import BytesIO
 
@@ -1574,15 +1573,6 @@ async def apple_notarize(context, path, *args, **kwargs):
     """
     Notarizes given package(s) using rcodesign.
     """
-    # Get credentials
-    cert_type = task.task_cert_type(context)
-    if cert_type not in context.apple_notarization_configs:
-        raise SigningScriptError("Credentials not found for scope: %s" % cert_type)
-    scope_credentials =  context.apple_notarization_configs.get(cert_type)
-    if len(scope_credentials) != 1:
-        raise SigningScriptError("There should only be 1 scope credential, %s found." % len(scope_credentials))
-    credential = asdict(scope_credentials[0])
-    
     # Setup workdir
     notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
     _, compression = os.path.splitext(path)
@@ -1590,10 +1580,7 @@ async def apple_notarize(context, path, *args, **kwargs):
     workdir_files = os.listdir(notarization_workdir)
 
     # Notarize
-    with tempfile.NamedTemporaryFile() as temp_creds:
-        temp_creds.write(json.dumps(credential).encode("ascii"))
-        temp_creds.flush()
-        await rcodesign_notarize(workdir_files, notarization_workdir, temp_creds.name)
+    await rcodesign_notarize(workdir_files, notarization_workdir, context.apple_credentials_path)
 
     # Compress files and return path to tarball
     return await _create_tarfile(context, path, all_file_names, compression, notarization_workdir)

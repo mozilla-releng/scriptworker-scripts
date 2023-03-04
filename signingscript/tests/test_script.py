@@ -2,11 +2,15 @@ import os
 from unittest.mock import MagicMock
 
 import mock
+from unittest.mock import mock_open
 import pytest
+import builtins
 import scriptworker.client
-from conftest import BASE_DIR, noop_sync
+from conftest import BASE_DIR, noop_sync, TEST_CERT_TYPE, APPLE_CONFIG_PATH
 
-import signingscript.script as script
+from signingscript import script
+from signingscript.exceptions import SigningScriptError
+from signingscript.utils import AppleNotarization
 
 # helper constants, fixtures, functions {{{1
 EXAMPLE_CONFIG = os.path.join(BASE_DIR, "config_example.json")
@@ -29,12 +33,13 @@ async def async_main_helper(tmpdir, mocker, formats, extra_config={}, server_typ
 
     mocker.patch.object(script, "load_autograph_configs", new=noop_sync)
     mocker.patch.object(script, "load_apple_notarization_configs", new=noop_sync)
+    mocker.patch.object(script, "write_apple_notarization_credentials", new=noop_sync)
     # mocker.patch.object(script, "task_cert_type", new=noop_sync)
     mocker.patch.object(script, "task_signing_formats", return_value=formats)
     mocker.patch.object(script, "build_filelist_dict", new=fake_filelist_dict)
     mocker.patch.object(script, "sign", new=fake_sign)
     context = mock.MagicMock()
-    context.config = {"work_dir": tmpdir, "artifact_dir": tmpdir, "autograph_configs": {}, "apple_notarization_configs": {}}
+    context.config = {"work_dir": tmpdir, "artifact_dir": tmpdir, "autograph_configs": {}, "apple_notarization_configs": "fake"}
     context.config.update(extra_config)
     await script.async_main(context)
 
@@ -89,6 +94,22 @@ async def test_async_main_autograph(tmpdir, mocker):
 
 
 @pytest.mark.asyncio
+async def test_async_main_apple_notarization(tmpdir, mocker):
+    formats = ["apple_notarization"]
+    mocker.patch.object(script, "copy_to_dir", new=noop_sync)
+    await async_main_helper(tmpdir, mocker, formats)
+
+
+@pytest.mark.asyncio
+async def test_async_main_apple_notarization_no_config(tmpdir, mocker):
+    formats = ["apple_notarization"]
+    try:
+        await async_main_helper(tmpdir, mocker, formats, {"apple_notarization_configs": None})
+    except Exception as e:
+        assert e.args[0] == "Apple notarization is enabled but apple_notarization_configs is not defined"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("use_comment", (True, False))
 async def test_async_main_autograph_authenticode(tmpdir, mocker, use_comment):
     formats = ["autograph_authenticode"]
@@ -123,3 +144,25 @@ async def test_async_main_widevine(tmp_path, mocker):
     tmp_cert = tmp_path / "widevine.crt"
     formats = ["autograph_widevine"]
     await async_main_helper(tmp_path, mocker, formats, {"widevine_cert": tmp_cert})
+
+
+def test_write_apple_notarization_credentials_fail_scope(context, mocker):
+    mocker.patch.object(script, "load_apple_notarization_configs", lambda _: {"invalidscope": "foobar"})
+    with pytest.raises(SigningScriptError, match=r"Credentials not found for scope.*"):
+        script.write_apple_notarization_credentials(context)
+
+    mocker.patch.object(script, "load_apple_notarization_configs", lambda _: {TEST_CERT_TYPE: ["one", "too many"]})
+    with pytest.raises(SigningScriptError, match=r"There should only be 1 scope credential.*"):
+        script.write_apple_notarization_credentials(context)
+
+
+def test_write_apple_notarization_credentials_exit_early(context, mocker):
+    mocker.patch.object(os.path, "exists", lambda _: True)
+    script.write_apple_notarization_credentials(context)
+
+
+def test_write_apple_notarization_credentials(context, mocker):
+    mocker.patch.object(builtins, "open", lambda *_: MagicMock())
+    fake_key = AppleNotarization('1', '2', '3')
+    mocker.patch.object(script, "load_apple_notarization_configs", lambda _: {TEST_CERT_TYPE: [fake_key]})
+    script.write_apple_notarization_credentials(context)

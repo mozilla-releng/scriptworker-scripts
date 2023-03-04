@@ -8,7 +8,7 @@ from scriptworker.context import Context
 
 from signingscript.exceptions import SigningScriptError
 from signingscript.script import get_default_config
-from signingscript.utils import AppleNotarization, load_apple_notarization_configs, load_autograph_configs, mkdir
+from signingscript.utils import load_autograph_configs, mkdir
 
 
 def read_file(path):
@@ -54,8 +54,9 @@ def context(tmpdir):
     context.config["work_dir"] = os.path.join(tmpdir, "work")
     context.config["artifact_dir"] = os.path.join(tmpdir, "artifact")
     context.config["taskcluster_scope_prefixes"] = [DEFAULT_SCOPE_PREFIX]
+    context.config["apple_notarization_configs"] = APPLE_CONFIG_PATH
     context.autograph_configs = load_autograph_configs(SERVER_CONFIG_PATH)
-    context.apple_notarization_configs = load_apple_notarization_configs(APPLE_CONFIG_PATH)
+    context.apple_credentials_path = "fakepath"
     mkdir(context.config["work_dir"])
     mkdir(context.config["artifact_dir"])
     context.task = {"scopes": [TEST_CERT_TYPE]}

@@ -1421,17 +1421,6 @@ async def test_apple_notarize(mocker, context):
 
 
 @pytest.mark.asyncio
-async def test_apple_notarize_fail_scope(context):
-    context.apple_notarization_configs = {"invalidscope": "foobar"}
-    with pytest.raises(sign.SigningScriptError, match=r"Credentials not found for scope.*"):
-        await sign.apple_notarize(context, context.config["work_dir"])
-
-    context.apple_notarization_configs = {TEST_CERT_TYPE: ["one", "too many"]}
-    with pytest.raises(sign.SigningScriptError, match=r"There should only be 1 scope credential.*"):
-        await sign.apple_notarize(context, context.config["work_dir"])
-
-
-@pytest.mark.asyncio
 async def test_apple_notarize_fail_format(context):
     filename = "target.tar.gz"
     path = os.path.join(context.config["work_dir"], filename)
