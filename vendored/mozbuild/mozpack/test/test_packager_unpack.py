@@ -2,25 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import mozunit
-from mozpack.packager.formats import (
-    FlatFormatter,
-    JarFormatter,
-    OmniJarFormatter,
-)
+from mozpack.copier import FileCopier, FileRegistry
+from mozpack.packager.formats import FlatFormatter, JarFormatter, OmniJarFormatter
 from mozpack.packager.unpack import unpack_to_registry
-from mozpack.copier import (
-    FileCopier,
-    FileRegistry,
-)
-from mozpack.test.test_packager_formats import (
-    CONTENTS,
-    fill_formatter,
-    get_contents,
-)
 from mozpack.test.test_files import TestWithTmpDir
+from mozpack.test.test_packager_formats import CONTENTS, fill_formatter, get_contents
 
 
 class TestUnpack(TestWithTmpDir):
@@ -35,8 +22,9 @@ class TestUnpack(TestWithTmpDir):
 
     @classmethod
     def setUpClass(cls):
-        cls.contents = get_contents(cls._get_copier(FlatFormatter),
-                                    read_all=True)
+        cls.contents = get_contents(
+            cls._get_copier(FlatFormatter), read_all=True, mode="rb"
+        )
 
     def _unpack_test(self, cls):
         # Format a package with the given formatter class
@@ -46,9 +34,10 @@ class TestUnpack(TestWithTmpDir):
         # Unpack that package. Its content is expected to match that of a Flat
         # formatted package.
         registry = FileRegistry()
-        unpack_to_registry(self.tmpdir, registry,
-                           getattr(cls, 'OMNIJAR_NAME', None))
-        self.assertEqual(get_contents(registry, read_all=True), self.contents)
+        unpack_to_registry(self.tmpdir, registry, getattr(cls, "OMNIJAR_NAME", None))
+        self.assertEqual(
+            get_contents(registry, read_all=True, mode="rb"), self.contents
+        )
 
     def test_flat_unpack(self):
         self._unpack_test(FlatFormatter)
@@ -63,14 +52,15 @@ class TestUnpack(TestWithTmpDir):
 
             def __init__(self, registry):
                 super(OmniFooFormatter, self).__init__(registry, name)
+
         return OmniFooFormatter
 
     def test_omnijar_unpack(self):
-        self._unpack_test(self._omni_foo_formatter('omni.foo'))
+        self._unpack_test(self._omni_foo_formatter("omni.foo"))
 
     def test_omnijar_subpath_unpack(self):
-        self._unpack_test(self._omni_foo_formatter('bar/omni.foo'))
+        self._unpack_test(self._omni_foo_formatter("bar/omni.foo"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

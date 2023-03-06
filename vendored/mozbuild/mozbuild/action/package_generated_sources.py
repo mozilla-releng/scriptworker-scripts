@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import argparse
 import sys
 
@@ -11,13 +9,13 @@ import buildconfig
 import mozpack.path as mozpath
 from mozpack.archive import create_tar_gz_from_files
 from mozpack.files import BaseFile
+
 from mozbuild.generated_sources import get_generated_sources
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(
-        description='Produce archive of generated sources')
-    parser.add_argument('outputfile', help='File to write output to')
+    parser = argparse.ArgumentParser(description="Produce archive of generated sources")
+    parser.add_argument("outputfile", help="File to write output to")
     args = parser.parse_args(argv)
 
     objdir_abspath = mozpath.abspath(buildconfig.topobjdir)
@@ -28,15 +26,17 @@ def main(argv):
         else:
             entry_abspath = mozpath.abspath(entry[1])
         if not entry_abspath.startswith(objdir_abspath):
-            print("Warning: omitting generated source [%s] from archive" % entry_abspath,
-                  file=sys.stderr)
+            print(
+                "Warning: omitting generated source [%s] from archive" % entry_abspath,
+                file=sys.stderr,
+            )
             return False
         return True
 
     files = dict(filter(is_valid_entry, get_generated_sources()))
-    with open(args.outputfile, 'wb') as fh:
+    with open(args.outputfile, "wb") as fh:
         create_tar_gz_from_files(fh, files, compresslevel=5)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
