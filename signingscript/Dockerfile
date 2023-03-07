@@ -3,34 +3,37 @@
 FROM python:3.9.7
 
 RUN groupadd --gid 10001 app && \
-    useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
-
-RUN apt-get update \
- && apt-get install -y zipalign osslsigncode cmake clang \
- && apt-get clean \
- && ln -s /app/docker.d/healthcheck /bin/healthcheck
+    useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app && \
+    apt-get update && \
+    apt-get install -y zipalign osslsigncode cmake clang && \
+    apt-get clean && \
+    ln -s /app/docker.d/healthcheck /bin/healthcheck
 
 # Copy only required folders
-COPY --chown=app:app ["signingscript", "/app/signingscript/"]
-COPY --chown=app:app ["configloader", "/app/configloader/"]
-COPY --chown=app:app ["docker.d", "/app/docker.d/"]
+COPY ["signingscript", "/app/signingscript/"]
+COPY ["configloader", "/app/configloader/"]
+COPY ["docker.d", "/app/docker.d/"]
 
-RUN cd /app/signingscript/docker.d && \
+# Change owner of /app to app:app
+# Install msix
+# Install rcodesign
+RUN chown -R app:app /app && \
+    cd /app/signingscript/docker.d && \
     bash build_msix_packaging.sh && \
     cp msix-packaging/.vs/bin/makemsix /usr/bin && \
     cp msix-packaging/.vs/lib/libmsix.so /usr/lib && \
     cd .. && \
-    rm -rf msix-packaging
-
-# Download rcodesign: https://github.com/indygreg/apple-platform-rs/releases
-RUN wget -qO- \
+    rm -rf msix-packaging && \
+    wget -qO- \
     https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign%2F0.22.0/apple-codesign-0.22.0-x86_64-unknown-linux-musl.tar.gz \
     | tar xvz -C /usr/bin --transform 's/.*\///g' --wildcards --no-anchored 'rcodesign' && \
     chmod +x /usr/bin/rcodesign
 
+# Set user and workdir
 USER app
 WORKDIR /app
 
+# Install signingscript + configloader + widevine
 RUN python -m venv /app \
  && cd signingscript \
  && /app/bin/pip install -r requirements/base.txt \
