@@ -12,10 +12,10 @@ in:
       # TODO: Investigate one key per release type (nightly/release)
       'ENV == "prod" && scope_prefix[0]':
         '${scope_prefix[0]}cert:release-apple-notarization':
-          - "issuer_id": {"$eval": "APPLE_NOTARIZATION_ISSUER_ID"},
-            "key_id": {"$eval": "APPLE_NOTARIZATION_KEY_ID"},
+          - "issuer_id": {"$eval": "APPLE_NOTARIZATION_ISSUER_ID"}
+            "key_id": {"$eval": "APPLE_NOTARIZATION_KEY_ID"}
             "private_key": {"$eval": "APPLE_NOTARIZATION_PRIVATE_KEY"}
         '${scope_prefix[0]}cert:nightly-apple-notarization':
-          - "issuer_id": {"$eval": "APPLE_NOTARIZATION_ISSUER_ID"},
-            "key_id": {"$eval": "APPLE_NOTARIZATION_KEY_ID"},
+          - "issuer_id": {"$eval": "APPLE_NOTARIZATION_ISSUER_ID"}
+            "key_id": {"$eval": "APPLE_NOTARIZATION_KEY_ID"}
             "private_key": {"$eval": "APPLE_NOTARIZATION_PRIVATE_KEY"}
