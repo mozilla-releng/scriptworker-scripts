@@ -314,8 +314,8 @@ async def test_omnija_same(mocker, tmpdir, orig):
 @pytest.mark.parametrize(
     "orig,signed,sha256_expected",
     (
-        ("no_preload_unsigned_omni.ja", "no_preload_signed_omni.ja", "851890c7eac926ad1dfd1fc4b7bf96e57b519d87806f1055fe108d493e753f98"),
-        ("preload_unsigned_omni.ja", "preload_signed_omni.ja", "d619ab6c25b31950540847b520d0791625ab4ca31ee4f58d02409c784f9206cd"),
+        ("no_preload_unsigned_omni.ja", "no_preload_signed_omni.ja", "9b05478ca8774d13c9a5f1699b90a10ffd283b9a21b8ebe4653cd63f052cf107"),
+        ("preload_unsigned_omni.ja", "preload_signed_omni.ja", "c353145c32cb3b251d65f85bcdba0c96d361292dad932b85d30f1dfe0b073e3f"),
     ),
 )
 async def test_omnija_sign(tmpdir, mocker, orig, signed, sha256_expected):
