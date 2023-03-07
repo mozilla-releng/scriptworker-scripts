@@ -16,9 +16,9 @@ cachy==0.3.0 \
     --hash=sha256:186581f4ceb42a0bbe040c407da73c14092379b1e4c0e327fdb72ae4a9b269b1 \
     --hash=sha256:338ca09c8860e76b275aff52374330efedc4d5a5e45dc1c5b539c1ead0786fe7
     # via poetry
-certifi==2021.10.8 \
-    --hash=sha256:78884e7c1d4b00ce3cea67b44566851c4343c120abd683433ce934a68ea58872 \
-    --hash=sha256:d62a0163eb4c2344ac042ab2bdf75399a71a2d8c7d47eac2e2ee91b9d6339569
+certifi==2022.12.7 \
+    --hash=sha256:35824b4c3a97115964b408844d64aa14db1cc518f6562e8d7261699d1350a9e3 \
+    --hash=sha256:4ad3232f5e926d6718ec31cfc1fcadfde020920e278684144551c91769c7bc18
     # via requests
 cffi==1.15.0 \
     --hash=sha256:00c878c90cb53ccfaae6b8bc18ad05d2036553e6d9d1d9dbcf323bbe83854ca3 \
@@ -108,7 +108,7 @@ cryptography==36.0.2 \
     --hash=sha256:ec6597aa85ce03f3e507566b8bcdf9da2227ec86c4266bd5e6ab4d9e0cc8dab2 \
     --hash=sha256:f64b232348ee82f13aac22856515ce0195837f6968aeaa94a3d0353ea2ec06a6
     # via secretstorage
-dataclasses==0.8; python_version < "3.7" \
+dataclasses==0.8 \
     --hash=sha256:0201d89fa866f68c8ebd9d08ee6ff50c0b255f8ec63a71c16fda7af82bb887bf \
     --hash=sha256:8479067f342acf957dc82ec415d355ab5edb7e7646b90dc6e2fd1d96ad084c97
     # via
@@ -208,16 +208,16 @@ pkginfo==1.8.2 \
     --hash=sha256:542e0d0b6750e2e21c20179803e40ab50598d8066d51097a0e382cba9eb02bff \
     --hash=sha256:c24c487c6a7f72c66e816ab1796b96ac6c3d14d49338293d2141664330b55ffc
     # via poetry
+poetry==1.2.0a2 \
+    --hash=sha256:475fe6884a0a2ec97eee9daca80c37210aee4cd78b6d9ca8e800fad8d3828624 \
+    --hash=sha256:4bad54dd1b40fd7b7efe90f05288ebab3d55b091cb682c847eac1d24ff1d1e31
+    # via -r vendor_requirements.in
 poetry-core==1.1.0a6 \
     --hash=sha256:4093226d89e1b79f16c917fba766461c01b184d3184d7cad4b7be8426c0cb4be \
     --hash=sha256:e22c8897216216f6344b3d57167a8cd5485a1403934817d7efaf7fb8f6bcffc9
     # via
-    #   -r third_party/python/vendor_requirements.in
+    #   -r vendor_requirements.in
     #   poetry
-poetry==1.2.0a2 \
-    --hash=sha256:475fe6884a0a2ec97eee9daca80c37210aee4cd78b6d9ca8e800fad8d3828624 \
-    --hash=sha256:4bad54dd1b40fd7b7efe90f05288ebab3d55b091cb682c847eac1d24ff1d1e31
-    # via -r third_party/python/vendor_requirements.in
 ptyprocess==0.7.0 \
     --hash=sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35 \
     --hash=sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220
@@ -234,14 +234,6 @@ pyparsing==3.0.8 \
     --hash=sha256:7bf433498c016c4314268d95df76c81b842a4cb2b276fa3312cfb1e1d85f6954 \
     --hash=sha256:ef7b523f6356f763771559412c0d7134753f037822dad1b16945b7b846f7ad06
     # via packaging
-pywin32-ctypes==0.2.0; sys_platform == "win32" \
-    --hash=sha256:24ffc3b341d457d48e8922352130cf2644024a4ff09762a2261fd34c36ee5942 \
-    --hash=sha256:9dc2d991b3479cc2df15930958b674a48a227d5361d413827a4cfd0b5876fc98
-    # via keyring
-requests-toolbelt==0.9.1 \
-    --hash=sha256:380606e1d10dc85c3bd47bf5a6095f815ec007be7a8b69c878507068df059e6f \
-    --hash=sha256:968089d4584ad4ad7c171454f0a5c6dac23971e9472521ea3b6d49d610aa6fc0
-    # via poetry
 requests==2.27.1 \
     --hash=sha256:68d7c56fd5a8999887728ef304a6d12edc7be74f1cfa47714fc8b414525c9a61 \
     --hash=sha256:f22fa1e554c9ddfd16e6e41ac79759e17be9e492b3587efa038054674760e72d
@@ -249,6 +241,10 @@ requests==2.27.1 \
     #   cachecontrol
     #   poetry
     #   requests-toolbelt
+requests-toolbelt==0.9.1 \
+    --hash=sha256:380606e1d10dc85c3bd47bf5a6095f815ec007be7a8b69c878507068df059e6f \
+    --hash=sha256:968089d4584ad4ad7c171454f0a5c6dac23971e9472521ea3b6d49d610aa6fc0
+    # via poetry
 secretstorage==3.3.1 \
     --hash=sha256:422d82c36172d88d6a0ed5afdec956514b189ddbfb72fefab0c8a1cee4eaf71f \
     --hash=sha256:fd666c51a6bf200643495a04abb261f83229dcb6fd8472ec393df7ffc8b6f195
