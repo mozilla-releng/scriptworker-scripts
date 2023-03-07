@@ -85,7 +85,7 @@ async def test_do_upload(fake_session, context, tmpdir, mocker, statuscode, rais
     "statuscode,retval,exception",
     (
         (200, {"id": 1234}, does_not_raise()),
-        (400, None, pytest.raises(aiohttp.client_exceptions.ClientResponseError)),
+        (400, None, pytest.raises(FatalSignatureError)),
         (409, None, pytest.raises(AMOConflictError)),
         (500, None, pytest.raises(aiohttp.client_exceptions.ClientResponseError)),
     ),

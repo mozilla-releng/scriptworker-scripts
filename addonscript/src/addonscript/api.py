@@ -90,6 +90,7 @@ async def do_create_version(context, locale, upload_uuid):
 
     Raises:
         AMOConflictError: If the version already exists for this addon
+        FatalSignatureError: If AMO returned a permanent error
     """
     locale_info = context.locales[locale]
     langpack_id = locale_info["id"]
@@ -108,6 +109,8 @@ async def do_create_version(context, locale, upload_uuid):
     except ClientResponseError as exc:
         if exc.status == 409:
             raise AMOConflictError("Addon <{}> already present on AMO with version <{}>".format(langpack_id, locale_info["version"]))
+        if exc.status < 500:
+            raise FatalSignatureError(str(exc))
         raise
 
     return result["version"]
