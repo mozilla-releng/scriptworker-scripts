@@ -87,7 +87,7 @@ def get_rss():
 
 def time_async_function(f):
     """Time an async function."""
-    # comment to keep black/flake8 happy together
+
     @wraps(f)
     async def wrapped(*args, **kwargs):
         start = time.time()
@@ -103,7 +103,7 @@ def time_async_function(f):
 
 def time_function(f):
     """Time a sync function."""
-    # comment to keep black/flake8 happy together
+
     @wraps(f)
     def wrapped(*args, **kwargs):
         start = time.time()
