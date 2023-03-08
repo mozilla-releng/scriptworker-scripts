@@ -10,7 +10,7 @@ in:
     $match:
       # TODO: Investigate one key per product
       # TODO: Investigate one key per release type (nightly/release)
-      'ENV == "prod" && scope_prefix[0]':
+      'ENV == "prod" && scope_prefix':
         '${scope_prefix[0]}cert:release-apple-notarization':
           - "issuer_id": {"$eval": "APPLE_NOTARIZATION_ISSUER_ID"}
             "key_id": {"$eval": "APPLE_NOTARIZATION_KEY_ID"}
