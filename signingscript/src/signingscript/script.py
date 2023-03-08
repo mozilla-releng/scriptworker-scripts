@@ -42,7 +42,7 @@ async def async_main(context):
 
         context.session = session
         context.autograph_configs = load_autograph_configs(context.config["autograph_configs"])
-        
+
         work_dir = context.config["work_dir"]
         filelist_dict = build_filelist_dict(context)
         for path, path_dict in filelist_dict.items():
