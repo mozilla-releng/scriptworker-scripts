@@ -2,20 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import argparse
 import logging
 import os
 import subprocess
 import sys
 
-from mozbuild import build_commands
-
-from mozfile import which
-from mach.decorators import CommandArgument, Command
-
 import mozpack.path as mozpath
+from mach.decorators import Command, CommandArgument
+from mozfile import which
+
+from mozbuild import build_commands
 
 
 @Command(
@@ -159,9 +156,10 @@ def setup_vscode(command_context, vscode_cmd):
         if rc != 0:
             return rc
 
-    import multiprocessing
-    import json
     import difflib
+    import json
+    import multiprocessing
+
     from mozbuild.code_analysis.utils import ClangTidyConfig
 
     clang_tidy_cfg = ClangTidyConfig(command_context.topsrcdir)
@@ -177,6 +175,13 @@ def setup_vscode(command_context, vscode_cmd):
         "--all-crates",
         "--message-format-json",
     ]
+
+    file_associations_json = {
+        "files.associations": {
+            "*.jsm": "javascript",
+            "*.sjs": "javascript",
+        }
+    }
 
     clangd_json = {
         "clangd.path": clangd_path,
@@ -244,7 +249,7 @@ def setup_vscode(command_context, vscode_cmd):
                 "Existing settings will be lost!"
             )
 
-        settings = {**old_settings, **clangd_json}
+        settings = {**old_settings, **clangd_json, **file_associations_json}
 
         if old_settings != settings:
             # Prompt the user with a diff of the changes we're going to make
