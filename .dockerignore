@@ -1,0 +1,37 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.python-version
+env
+pip-log.txt
+.swp
+.vscode
+**/.ruff_cache
+**/.tox
+**/.coverage
+**/.coverage.*
+**/.cache
+nosetests.xml
+coverage.xml
+**/htmlcov
+*.cover
+*.log
+**/.git
+**/.mypy_cache
+**/.DS_Store
+**/.pytest_cache
+
+# Don't include test files
+*/tests/*
+
+# Docs files
+docs/
+
+# Human readable content
+**/*.rst
+**/*.md
+
+# Buildables
+**/build/*
