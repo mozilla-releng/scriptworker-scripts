@@ -5,30 +5,36 @@
 # This script creates a zip file, but will also strip any binaries
 # it finds before adding them to the zip.
 
-from __future__ import absolute_import, print_function
+import argparse
+import sys
 
-from mozpack.files import FileFinder
+import mozpack.path as mozpath
 from mozpack.copier import Jarrer
 from mozpack.errors import errors
+from mozpack.files import FileFinder
 from mozpack.path import match
 
-import argparse
-import mozpack.path as mozpath
-import sys
+from mozbuild.action.util import log_build_task
 
 
 def main(args):
     parser = argparse.ArgumentParser()
-    parser.add_argument("-C", metavar='DIR', default=".",
-                        help="Change to given directory before considering "
-                        "other paths")
-    parser.add_argument("--strip", action='store_true',
-                        help="Strip executables")
-    parser.add_argument("-x", metavar='EXCLUDE', default=[], action='append',
-                        help="Exclude files that match the pattern")
+    parser.add_argument(
+        "-C",
+        metavar="DIR",
+        default=".",
+        help="Change to given directory before considering " "other paths",
+    )
+    parser.add_argument("--strip", action="store_true", help="Strip executables")
+    parser.add_argument(
+        "-x",
+        metavar="EXCLUDE",
+        default=[],
+        action="append",
+        help="Exclude files that match the pattern",
+    )
     parser.add_argument("zip", help="Path to zip file to write")
-    parser.add_argument("input", nargs="+",
-                        help="Path to files to add to zip")
+    parser.add_argument("input", nargs="+", help="Path to files to add to zip")
     args = parser.parse_args(args)
 
     jarrer = Jarrer()
@@ -42,5 +48,5 @@ def main(args):
         jarrer.copy(mozpath.join(args.C, args.zip))
 
 
-if __name__ == '__main__':
-    main(sys.argv[1:])
+if __name__ == "__main__":
+    log_build_task(main, sys.argv[1:])

@@ -2,22 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import sys
 from contextlib import contextmanager
 
 
 class ErrorMessage(Exception):
-    '''Exception type raised from errors.error() and errors.fatal()'''
+    """Exception type raised from errors.error() and errors.fatal()"""
 
 
 class AccumulatedErrors(Exception):
-    '''Exception type raised from errors.accumulate()'''
+    """Exception type raised from errors.accumulate()"""
 
 
 class ErrorCollector(object):
-    '''
+    """
     Error handling/logging class. A global instance, errors, is provided for
     convenience.
 
@@ -66,7 +64,8 @@ class ErrorCollector(object):
 
     In such cases, a single AccumulatedErrors exception is thrown, but doesn't
     contain information about the exceptions. The logged messages do.
-    '''
+    """
+
     out = sys.stderr
     WARN = 1
     ERROR = 2
@@ -83,9 +82,9 @@ class ErrorCollector(object):
 
     def _full_message(self, level, msg):
         if level >= self._level:
-            level = 'Error'
+            level = "error"
         else:
-            level = 'Warning'
+            level = "warning"
         if self._context:
             file, line = self._context[-1]
             return "%s: %s:%d: %s" % (level, file, line, msg)
