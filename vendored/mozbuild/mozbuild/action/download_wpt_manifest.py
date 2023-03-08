@@ -4,8 +4,6 @@
 
 # This action is used to generate the wpt manifest
 
-from __future__ import absolute_import, print_function
-
 import sys
 
 import buildconfig
@@ -15,8 +13,9 @@ def main():
     print("Downloading wpt manifest")
     sys.path.insert(0, buildconfig.topsrcdir)
     import manifestupdate
+
     return 0 if manifestupdate.run(buildconfig.topsrcdir, buildconfig.topobjdir) else 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
