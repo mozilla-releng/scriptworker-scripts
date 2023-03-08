@@ -24,7 +24,7 @@ coverage.xml
 **/.pytest_cache
 
 # Don't include test files
-*/tests/*
+# */tests/*
 
 # Docs files
 docs/
