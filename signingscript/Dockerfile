@@ -13,6 +13,7 @@ RUN groupadd --gid 10001 app && \
 COPY ["signingscript", "/app/signingscript/"]
 COPY ["configloader", "/app/configloader/"]
 COPY ["docker.d", "/app/docker.d/"]
+COPY ["vendored", "/app/vendored/"]
 
 # Change owner of /app to app:app
 # Install msix
