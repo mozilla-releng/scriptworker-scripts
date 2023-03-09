@@ -17,8 +17,8 @@
   "deadline": "2020-06-17T22:32:06.776Z",
   "expires": "2021-06-16T22:32:06.776Z",
   "scopes": [
-    "project:mobile:fenix:releng:github:project:fenix",
-    "project:mobile:fenix:releng:github:action:release"
+    "project:mobile:firefox-android:releng:github:project:firefox-android",
+    "project:mobile:firefox-android:releng:github:action:release"
   ],
   "payload": {
     "artifactMap": [{

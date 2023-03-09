@@ -1,13 +1,13 @@
 # Prefixes
 Supported scope prefixes:
 * `project:releng:signing`
-  * Used for Firefox/Fennec/Devedition style signing tasks
+  * Used for Firefox/Devedition style signing tasks
 
 * `project:comm:thunderbird:releng:signing`
   * Used for Thunderbird style signing tasks
 
-* `project:mobile:focus:releng:signing`
-  * Used for android Firefox Focus style signing tasks
+* `project:mobile:firefox-android:releng:signing`
+  * Used for firefox-android style signing tasks
 
 # Scopes
 
