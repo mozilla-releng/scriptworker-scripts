@@ -18,7 +18,7 @@ def context():
     context.release_props = context.task["payload"]["releaseProperties"]
     context.release_props["stage_platform"] = context.release_props["platform"]
     context.resource_type = "bucket"
-    context.bucket = "nightly"
+    context.resource = "nightly"
     context.action = "push-to-nightly"
     yield context
 

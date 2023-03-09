@@ -144,14 +144,14 @@ def is_partner_private_task(context):
     """Function to return boolean if we're considering a public partner task.
     Does that by checking the action type and presence of a flag in payload
     """
-    return is_partner_action(context.action) and "partner" in context.bucket
+    return is_partner_action(context.action) and "partner" in context.resource
 
 
 def is_partner_public_task(context):
     """Function to return boolean if we're considering a private partner task.
     Does that by checking the action type and absence of a flag in payload
     """
-    return is_partner_action(context.action) and "partner" not in context.bucket
+    return is_partner_action(context.action) and "partner" not in context.resource
 
 
 def get_product_name(task, config, lowercase_app_name=True):
@@ -323,14 +323,14 @@ def get_partner_match(keyname, candidates_prefix, partners):
 
 
 def get_bucket_name(context, product, cloud):
-    return context.config["clouds"][cloud][context.bucket]["product_buckets"][product.lower()]
+    return context.config["clouds"][cloud][context.resource]["product_buckets"][product.lower()]
 
 
 def get_resource_project(context, product, cloud):
     if context.resource_type == "apt-repo":
-        return context.config["clouds"][cloud][context.bucket]["product_apt_repos"][product.lower()]["project"]
+        return context.config["clouds"][cloud][context.resource]["product_apt_repos"][product.lower()]["project"]
     if context.resource_type == "yum-repo":
-        return context.config["clouds"][cloud][context.bucket]["product_yum_repos"][product.lower()]["project"]
+        return context.config["clouds"][cloud][context.resource]["product_yum_repos"][product.lower()]["project"]
     if context.resource_type == "bucket":
         return Exception("The project is not needed to push to buckets. The storage client only needs the name.")
     raise Exception("No valid resource type in task scopes. Resource must be one of [apt-repo, yum-repo, bucket]")
@@ -338,9 +338,9 @@ def get_resource_project(context, product, cloud):
 
 def get_resource_location(context, product, cloud):
     if context.resource_type == "apt-repo":
-        return context.config["clouds"][cloud][context.bucket]["product_apt_repos"][product.lower()]["location"]
+        return context.config["clouds"][cloud][context.resource]["product_apt_repos"][product.lower()]["location"]
     if context.resource_type == "yum-repo":
-        return context.config["clouds"][cloud][context.bucket]["product_yum_repos"][product.lower()]["location"]
+        return context.config["clouds"][cloud][context.resource]["product_yum_repos"][product.lower()]["location"]
     if context.resource_type == "bucket":
         return Exception("The location is not needed to push to buckets. The storage client only needs the name.")
     raise Exception("No valid resource type in task scopes. Resource must be one of [apt-repo, yum-repo, bucket]")
@@ -348,11 +348,11 @@ def get_resource_location(context, product, cloud):
 
 def get_resource_name(context, product, cloud):
     if context.resource_type == "apt-repo":
-        return context.config["clouds"][cloud][context.bucket]["product_apt_repos"][product.lower()]["name"]
+        return context.config["clouds"][cloud][context.resource]["product_apt_repos"][product.lower()]["name"]
     if context.resource_type == "yum-repo":
-        return context.config["clouds"][cloud][context.bucket]["product_yum_repos"][product.lower()]["name"]
+        return context.config["clouds"][cloud][context.resource]["product_yum_repos"][product.lower()]["name"]
     if context.resource_type == "bucket":
-        return context.config["clouds"][cloud][context.bucket]["product_buckets"][product.lower()]
+        return context.config["clouds"][cloud][context.resource]["product_buckets"][product.lower()]
     raise Exception("No valid resource type in task scopes. Resource must be one of [apt-repo, yum-repo, bucket]")
 
 
@@ -379,16 +379,16 @@ def get_credentials(context, cloud):
     clouds = context.config["clouds"]
     if cloud not in clouds:
         raise ValueError(f"{cloud} not a valid cloud [{clouds.keys()}]")
-    if context.bucket not in clouds[cloud]:
+    if context.resource not in clouds[cloud]:
         return
-    return clouds[cloud][context.bucket]["credentials"]
+    return clouds[cloud][context.resource]["credentials"]
 
 
 def get_url_prefix(context):
-    if context.bucket not in context.config["url_prefix"]:
-        raise ValueError(f"No bucket config found for {context.bucket}")
+    if context.resource not in context.config["url_prefix"]:
+        raise ValueError(f"No bucket config found for {context.resource}")
 
-    return context.config["url_prefix"][context.bucket]
+    return context.config["url_prefix"][context.resource]
 
 
 def validated_task_id(task_id):

@@ -51,7 +51,7 @@ def _get_gcs_client(context, product):
     """Set up a google-cloud-storage client"""
 
     def handle_exception(e):
-        if get_fail_task_on_error(context.config["clouds"], context.bucket, "gcloud"):
+        if get_fail_task_on_error(context.config["clouds"], context.resource, "gcloud"):
             raise e
         log.error(e)
 
@@ -129,7 +129,6 @@ def build_artifact_registry_gcs_source(context, product):
         return artifactregistry_v1.ImportAptArtifactsGcsSource(**gcs_source_kwargs)
     if context.resource_type == "yum-repo":
         return artifactregistry_v1.ImportYumArtifactsGcsSource(**gcs_source_kwargs)
-    # artifact registry supports docker... interesting...
     raise Exception("Artifact Registry resource must be one of [apt-repo, yum-repo]")
 
 

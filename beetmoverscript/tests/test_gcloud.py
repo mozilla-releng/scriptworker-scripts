@@ -79,7 +79,7 @@ def test_setup_gcloud(monkeypatch, context):
     beetmoverscript.gcloud.setup_gcloud(context)
 
     # Should just skip without a cloud set
-    context.bucket = "NotACloud"
+    context.resource = "NotACloud"
     beetmoverscript.gcloud.setup_gcloud(context)
 
 
