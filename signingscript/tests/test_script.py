@@ -1,12 +1,11 @@
+import builtins
 import os
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, mock_open
 
 import mock
-from unittest.mock import mock_open
 import pytest
-import builtins
 import scriptworker.client
-from conftest import BASE_DIR, noop_sync, TEST_CERT_TYPE, APPLE_CONFIG_PATH
+from conftest import APPLE_CONFIG_PATH, BASE_DIR, TEST_CERT_TYPE, noop_sync
 
 from signingscript import script
 from signingscript.exceptions import SigningScriptError
