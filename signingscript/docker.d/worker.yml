@@ -11,11 +11,7 @@ taskcluster_scope_prefixes:
       'COT_PRODUCT == "thunderbird"':
         - 'project:comm:thunderbird:releng:signing:'
       'COT_PRODUCT == "mobile"':
-        - 'project:mobile:fenix:releng:signing:'
-        - 'project:mobile:firefox-tv:releng:signing:'
         - 'project:mobile:firefox-android:releng:signing:'
-        - 'project:mobile:focus:releng:signing:'
-        - 'project:mobile:focus-android:releng:signing:'
         - 'project:mobile:reference-browser:releng:signing:'
       'COT_PRODUCT == "app-services"':
         - 'project:mozilla:app-services:releng:signing:'
