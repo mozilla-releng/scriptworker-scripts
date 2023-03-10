@@ -32,7 +32,7 @@ async def async_main_helper(tmpdir, mocker, formats, extra_config={}, server_typ
 
     mocker.patch.object(script, "load_autograph_configs", new=noop_sync)
     mocker.patch.object(script, "load_apple_notarization_configs", new=noop_sync)
-    mocker.patch.object(script, "write_apple_notarization_credentials", new=noop_sync)
+    mocker.patch.object(script, "setup_apple_notarization_credentials", new=noop_sync)
     # mocker.patch.object(script, "task_cert_type", new=noop_sync)
     mocker.patch.object(script, "task_signing_formats", return_value=formats)
     mocker.patch.object(script, "build_filelist_dict", new=fake_filelist_dict)
@@ -145,23 +145,23 @@ async def test_async_main_widevine(tmp_path, mocker):
     await async_main_helper(tmp_path, mocker, formats, {"widevine_cert": tmp_cert})
 
 
-def test_write_apple_notarization_credentials_fail_scope(context, mocker):
+def test_setup_apple_notarization_credentials_fail_scope(context, mocker):
     mocker.patch.object(script, "load_apple_notarization_configs", lambda _: {"invalidscope": "foobar"})
     with pytest.raises(SigningScriptError, match=r"Credentials not found for scope.*"):
-        script.write_apple_notarization_credentials(context)
+        script.setup_apple_notarization_credentials(context)
 
     mocker.patch.object(script, "load_apple_notarization_configs", lambda _: {TEST_CERT_TYPE: ["one", "too many"]})
     with pytest.raises(SigningScriptError, match=r"There should only be 1 scope credential.*"):
-        script.write_apple_notarization_credentials(context)
+        script.setup_apple_notarization_credentials(context)
 
 
-def test_write_apple_notarization_credentials_exit_early(context, mocker):
+def test_setup_apple_notarization_credentials_exit_early(context, mocker):
     mocker.patch.object(os.path, "exists", lambda _: True)
-    script.write_apple_notarization_credentials(context)
+    script.setup_apple_notarization_credentials(context)
 
 
-def test_write_apple_notarization_credentials(context, mocker):
+def test_setup_apple_notarization_credentials(context, mocker):
     mocker.patch.object(builtins, "open", lambda *_: MagicMock())
     fake_key = AppleNotarization('1', '2', '3')
     mocker.patch.object(script, "load_apple_notarization_configs", lambda _: {TEST_CERT_TYPE: [fake_key]})
-    script.write_apple_notarization_credentials(context)
+    script.setup_apple_notarization_credentials(context)

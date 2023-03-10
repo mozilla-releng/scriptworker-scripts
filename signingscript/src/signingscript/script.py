@@ -38,7 +38,7 @@ async def async_main(context):
         if "apple_notarization" in all_signing_formats:
             if not context.config.get("apple_notarization_configs", False):
                 raise Exception("Apple notarization is enabled but apple_notarization_configs is not defined")
-            write_apple_notarization_credentials(context)
+            setup_apple_notarization_credentials(context)
 
         context.session = session
         context.autograph_configs = load_autograph_configs(context.config["autograph_configs"])
@@ -84,7 +84,7 @@ def get_default_config(base_dir=None):
     return default_config
 
 
-def write_apple_notarization_credentials(context):
+def setup_apple_notarization_credentials(context):
     """Writes the notarization credential to a file
 
     Adds property to context: apple_credentials_path
