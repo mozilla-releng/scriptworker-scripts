@@ -32,6 +32,7 @@ from winsign.crypto import load_pem_certs
 from signingscript import task, utils
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
+from mozbuild.action.tooltool import safe_extract
 
 log = logging.getLogger(__name__)
 
@@ -771,7 +772,7 @@ async def _extract_tarfile(context, from_, compression, tmp_dir=None):
         rm(tmp_dir)
         utils.mkdir(tmp_dir)
         with tarfile.open(from_, mode="r:{}".format(compression)) as t:
-            t.extractall(path=tmp_dir)
+            safe_extract(t, path=tmp_dir)
             for name in t.getnames():
                 path = os.path.join(tmp_dir, name)
                 os.path.isfile(path) and files.append(path)
