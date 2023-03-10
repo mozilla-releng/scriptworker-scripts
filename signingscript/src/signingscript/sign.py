@@ -32,7 +32,6 @@ from winsign.crypto import load_pem_certs
 from signingscript import task, utils
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
-from mozbuild.action.tooltool import safe_extract
 
 log = logging.getLogger(__name__)
 
@@ -45,6 +44,7 @@ except ImportError:
 
 sys.path.append(os.path.abspath(os.path.join(os.path.realpath(os.path.dirname(__file__)), "vendored", "mozbuild")))  # append the mozbuild vendor
 
+from mozbuild.action.tooltool import safe_extract  # noqa  # isort:skip
 from mozpack import mozjar  # noqa  # isort:skip
 
 _ZIP_ALIGNMENT = "4"  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
