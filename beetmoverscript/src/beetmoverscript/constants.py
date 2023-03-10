@@ -113,6 +113,14 @@ PRODUCT_TO_PATH = {
     "vpn": "pub/vpn/",
 }
 
+MAVEN_PRODUCT_TO_PATH = {
+    "appservices": "maven2/org/mozilla/appservices/",
+    "components": "maven2/org/mozilla/components/",
+    "nightly_components": "maven2/org/mozilla/components/",
+    "geckoview": "maven2/org/mozilla/geckoview/",
+    "telemetry": "maven2/org/mozilla/telemetry/",
+}
+
 PARTNER_REPACK_PUBLIC_PREFIX_TMPL = "pub/firefox/candidates/{version}-candidates/build{build_number}/"
 PARTNER_REPACK_PRIVATE_REGEXES = (
     r"^(?P<partner>[^\/%]+)\/{version}-{build_number}\/(?P<subpartner>[^\/%]+)\/(mac|win32|win64(|-aarch64)|linux-i686|linux-x86_64)\/(?P<locale>[^\/%]+)$",

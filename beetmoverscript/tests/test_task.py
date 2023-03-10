@@ -163,14 +163,15 @@ def test_get_maven_version(context, appName, payload_version, buildid, expected,
 
 
 @pytest.mark.parametrize(
-    "payload_version,filename_version,folder_version,expectation",
+    "payload_version,filename_version,folder_version,dest,expectation",
     (
-        ("12.3.20200920201111", "12.3.20200920201111", "12.3.20200920201111", does_not_raise()),
-        ("12.3.20200920201111", "a.bad.version", "12.3.20200920201111", pytest.raises(ScriptWorkerTaskException)),
-        ("12.3.20200920201111", "12.3.20200920201111", "a.bad.version", pytest.raises(ScriptWorkerTaskException)),
+        ("12.3.20200920201111", "12.3.20200920201111", "12.3.20200920201111", "destination", does_not_raise()),
+        ("12.3.20200920201111", "a.bad.version", "12.3.20200920201111", "destination", pytest.raises(ScriptWorkerTaskException)),
+        ("12.3.20200920201111", "12.3.20200920201111", "a.bad.version", "destination", pytest.raises(ScriptWorkerTaskException)),
+        ("12.3.20200920201111", "12.3.20200920201111", "12.3.20200920201111", "bad-dest", pytest.raises(ScriptWorkerTaskException)),
     ),
 )
-def test_check_maven_artifact_map(context, payload_version, filename_version, folder_version, expectation):
+def test_check_maven_artifact_map(context, mocker, payload_version, filename_version, folder_version, dest, expectation):
     context.action = "push-to-maven"
     source = "fake_path/fake-artifact-{version}.jar"
 
@@ -179,7 +180,7 @@ def test_check_maven_artifact_map(context, payload_version, filename_version, fo
         "paths": {
             source: {
                 "checksums_path": "",
-                "destinations": [f"fake/destination/{folder_version}/fake-artifact-{filename_version}.jar"],
+                "destinations": [f"fake/{dest}/{folder_version}/fake-artifact-{filename_version}.jar"],
             }
         },
         "taskId": "fake-task-id",
@@ -191,8 +192,10 @@ def test_check_maven_artifact_map(context, payload_version, filename_version, fo
             "releaseProperties": {"appName": "nightly_components"},
             "upstreamArtifacts": [{"paths": [source], "taskId": "fake-task-id", "taskType": "build"}],
             "version": payload_version,
-        }
+        },
+        "scopes": ["project:releng:beetmover:action:push-to-maven"],
     }
+    mocker.patch('beetmoverscript.task.MAVEN_PRODUCT_TO_PATH', {"nightly_components": "fake/destination/"})
 
     with expectation:
         check_maven_artifact_map(context, payload_version)
