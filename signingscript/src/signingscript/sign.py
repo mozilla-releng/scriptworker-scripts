@@ -44,6 +44,7 @@ except ImportError:
 
 sys.path.append(os.path.abspath(os.path.join(os.path.realpath(os.path.dirname(__file__)), "vendored", "mozbuild")))  # append the mozbuild vendor
 
+from mozbuild.action.tooltool import safe_extract  # noqa  # isort:skip
 from mozpack import mozjar  # noqa  # isort:skip
 
 _ZIP_ALIGNMENT = "4"  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
@@ -771,7 +772,7 @@ async def _extract_tarfile(context, from_, compression, tmp_dir=None):
         rm(tmp_dir)
         utils.mkdir(tmp_dir)
         with tarfile.open(from_, mode="r:{}".format(compression)) as t:
-            t.extractall(path=tmp_dir)
+            safe_extract(t, path=tmp_dir)
             for name in t.getnames():
                 path = os.path.join(tmp_dir, name)
                 os.path.isfile(path) and files.append(path)
