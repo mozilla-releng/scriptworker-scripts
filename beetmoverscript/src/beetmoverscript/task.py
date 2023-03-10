@@ -13,7 +13,7 @@ from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from beetmoverscript import utils
-from beetmoverscript.constants import CHECKSUMS_CUSTOM_FILE_NAMING, STAGE_PLATFORM_MAP
+from beetmoverscript.constants import CHECKSUMS_CUSTOM_FILE_NAMING, STAGE_PLATFORM_MAP, MAVEN_PRODUCT_TO_PATH
 
 log = logging.getLogger(__name__)
 
@@ -140,10 +140,13 @@ def get_maven_version(context):
 
 
 def check_maven_artifact_map(context, version):
-    """Check that versions in artifact map are consistent with a given version"""
+    """Check that paths in artifact map are consistent with a given product and version"""
+    product = utils.get_product_name(context.task, context.config).lower()
     for artifact_dict in context.task["payload"]["artifactMap"]:
         for dest_dict in artifact_dict["paths"].values():
             for dest in dest_dict["destinations"]:
+                if not dest.startswith(MAVEN_PRODUCT_TO_PATH[product]):
+                    raise ScriptWorkerTaskException(f"Destination path '{dest}' does not match bucket '{product}'")
                 dest_folder, dest_file = os.path.split(dest)
                 last_folder = os.path.basename(dest_folder)
                 if version != last_folder:
