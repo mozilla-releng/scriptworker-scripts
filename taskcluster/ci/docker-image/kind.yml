@@ -10,7 +10,7 @@ transforms:
     - taskgraph.transforms.cached_tasks:transforms
     - taskgraph.transforms.task:transforms
 
-jobs:
+tasks:
     # k8s-image:
     #     definition: k8s-image
     python39:

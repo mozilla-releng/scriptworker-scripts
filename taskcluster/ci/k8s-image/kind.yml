@@ -14,7 +14,7 @@ transforms:
     - taskgraph.transforms.cached_tasks:transforms
     - taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     description: "{name} k8s image builder py{python_version}"
     name: "{name}-python{python_version}"
     run-on-tasks-for: ["action", "github-pull-request", "github-push"]
@@ -42,7 +42,7 @@ job-defaults:
     docker-repo: mozilla/releng-{name}
     # TODO copy image to artifacts
 
-jobs:
+tasks:
     addonscript: {}
     balrogscript: {}
     beetmoverscript: {}

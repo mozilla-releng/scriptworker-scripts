@@ -15,7 +15,7 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     description: "{name} tox-py{python_version}"
     run-on-tasks-for: 
         - "github-pull-request"
@@ -40,7 +40,7 @@ job-defaults:
             - >-
               tox -e {name}-py{python_version}
 
-jobs:
+tasks:
     addonscript:
         python-versions: [38, 39]
         resources:

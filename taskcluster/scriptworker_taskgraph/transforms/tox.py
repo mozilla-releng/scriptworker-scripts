@@ -12,7 +12,7 @@ transforms = TransformSequence()
 
 
 @transforms.add
-def add_dependencies(config, jobs):
+def add_dependencies(config, tasks):
     """Explicitly add the docker-image task as a dependency.
 
     This needs to be done before the `cached_tasks` transform, so we can't
@@ -21,11 +21,11 @@ def add_dependencies(config, jobs):
     From `build_docker_worker_payload`.
 
     """
-    for job in jobs:
-        image = job["worker"]["docker-image"]
+    for task in tasks:
+        image = task["worker"]["docker-image"]
         if isinstance(image, dict):
             if "in-tree" in image:
                 _name = image["in-tree"]
                 docker_image_task = "build-docker-image-" + image["in-tree"]
-                job.setdefault("dependencies", {})["docker-image"] = docker_image_task
-        yield job
+                task.setdefault("dependencies", {})["docker-image"] = docker_image_task
+        yield task
