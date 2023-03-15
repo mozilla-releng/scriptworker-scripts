@@ -7,6 +7,9 @@ COPY ["pushapkscript", "/app/pushapkscript/"]
 COPY ["configloader", "/app/configloader/"]
 COPY ["docker.d", "/app/docker.d/"]
 
+# Copy the version.json file if it's present
+COPY ["version.jso[n]", "/app/"]
+
 RUN chown -R app:app /app && \
     ln -s /app/docker.d/healthcheck /bin/healthcheck
 
