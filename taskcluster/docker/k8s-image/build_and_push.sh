@@ -1,6 +1,7 @@
 #!/bin/sh
 # TODO: move docker.d/ files into the image?
 set -e
+set -x
 test SCRIPTWORKER_HEAD_REPOSITORY
 test SCRIPTWORKER_HEAD_REV
 test PROJECT_NAME

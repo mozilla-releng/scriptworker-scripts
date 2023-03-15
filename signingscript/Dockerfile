@@ -15,6 +15,9 @@ COPY ["configloader", "/app/configloader/"]
 COPY ["docker.d", "/app/docker.d/"]
 COPY ["vendored", "/app/vendored/"]
 
+# Copy the version.json file if it's present
+COPY ["version.jso[n]", "/app/"]
+
 # Change owner of /app to app:app
 # Install msix
 # Install rcodesign
