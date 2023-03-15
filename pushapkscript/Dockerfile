@@ -3,14 +3,14 @@ FROM python:3.9.7
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
 
-RUN ln -s /app/docker.d/healthcheck /bin/healthcheck
+COPY ["pushapkscript", "/app/pushapkscript/"]
+COPY ["configloader", "/app/configloader/"]
+COPY ["docker.d", "/app/docker.d/"]
+
+RUN chown -R app:app /app && \
+    ln -s /app/docker.d/healthcheck /bin/healthcheck
 
 WORKDIR /app
-
-COPY . /app
-
-RUN /app/docker.d/image_setup.sh
-
 USER app
 
 RUN python -m venv /app \

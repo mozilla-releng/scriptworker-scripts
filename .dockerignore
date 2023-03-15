@@ -35,3 +35,7 @@ docs/
 
 # Buildables
 **/build/*
+
+# Required files
+!githubscript/README.md
+!pushapkscript/README.md
