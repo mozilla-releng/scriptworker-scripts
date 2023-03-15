@@ -31,11 +31,8 @@ docs/
 
 # Human readable content
 **/*.rst
-**/*.md
+# githubscript and pushapkscript need README.md files
+# **/*.md
 
 # Buildables
 **/build/*
-
-# Required files
-!githubscript/README.md
-!pushapkscript/README.md
