@@ -1,7 +1,10 @@
 FROM python:3.9.7
 
 RUN groupadd --gid 10001 app && \
-    useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
+    useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app && \
+    apt-get update && \
+    apt-get install -y default-jdk && \
+    apt-get clean
 
 COPY ["pushapkscript", "/app/pushapkscript/"]
 COPY ["configloader", "/app/configloader/"]
