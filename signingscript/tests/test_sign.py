@@ -1408,3 +1408,23 @@ def test_encode_single_file(tmpdir, mocker, context):
     result = json.loads(output_file.read().decode())
     expected = [{"keyid": "rvkgu", "options": {"zip": "passthrough"}, "input": "Um1VT1gzQWVzaXl6U2xo"}]
     assert result == expected
+
+@pytest.mark.asyncio
+async def test_apple_notarize(mocker, context):
+    filename = "appletest.tar.gz"
+    path = os.path.join(context.config["work_dir"], filename)
+    shutil.copy2(os.path.join(TEST_DATA_DIR, filename), path)
+    mocker.patch.object(sign.utils, "execute_subprocess", noop_async)
+
+    result = await sign.apple_notarize(context, path)
+    assert result == path
+
+
+@pytest.mark.asyncio
+async def test_apple_notarize_fail_format(context):
+    filename = "target.tar.gz"
+    path = os.path.join(context.config["work_dir"], filename)
+    shutil.copy2(os.path.join(TEST_DATA_DIR, filename), path)
+
+    with pytest.raises(sign.SigningScriptError, match=r"Unable to notarize app format.*"):
+        await sign.apple_notarize(context, path)
