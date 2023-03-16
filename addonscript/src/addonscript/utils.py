@@ -62,7 +62,7 @@ async def amo_download(context, url, file):
             file.write(await r.read())
 
 
-async def amo_put(context, url, data):
+async def amo_put(context, url, data=None, json=None):
     """Perform a PUT request against AMO's API.
 
     Automatically fills in the HTTP header with the Authorization token.
@@ -71,13 +71,32 @@ async def amo_put(context, url, data):
     """
     log.debug('Calling amo_put() with URL "{}"'.format(url))
     async with timeout(270):  # 4 minutes, 30 sec.
-        resp = context.session.put(url, headers={"Authorization": "JWT {}".format(generate_JWT(context))}, data=data)
+        resp = context.session.put(url, headers={"Authorization": "JWT {}".format(generate_JWT(context))}, data=data, json=json)
         async with resp as r:
             log.debug('amo_put() for URL "{}" returned HTTP status code: {}'.format(url, r.status))
             # we silence aiohttp in case we have Null returns from AMO API
             returned_value = await r.json(content_type=None)
             log.debug('amo_put() for URL "{}" returned: {}'.format(url, returned_value))
             r.raise_for_status()
+            return returned_value
+
+
+async def amo_post(context, url, data=None, json=None):
+    """Perform a POST request against AMO's API.
+
+    Automatically fills in the HTTP header with the Authorization token.
+    Passes values in the `data` dictionary as FORM data.
+    Assumes request will return a valid json object.
+    """
+    log.debug('Calling amo_post() with URL "{}"'.format(url))
+    async with timeout(270):  # 4 minutes, 30 sec.
+        resp = context.session.post(url, headers={"Authorization": "JWT {}".format(generate_JWT(context))}, data=data, json=json)
+        async with resp as r:
+            log.debug('amo_post() for URL "{}" returned HTTP status code: {}'.format(url, r.status))
+            r.raise_for_status()
+            # we silence aiohttp in case we have Null returns from AMO API
+            returned_value = await r.json(content_type=None)
+            log.debug('amo_post() for URL "{}" returned: {}'.format(url, returned_value))
             return returned_value
 
 
