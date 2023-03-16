@@ -15,9 +15,6 @@ UPLOAD_CREATE = "api/v5/addons/upload/"
 # https://addons-server.readthedocs.io/en/latest/topics/api/addons.html#upload-detail
 UPLOAD_DETAIL = "api/v5/addons/upload/{uuid}/"
 
-# https://addons-server.readthedocs.io/en/latest/topics/api/addons.html#versions-list
-VERSION_LIST = "api/v5/addons/addon/{id}/versions/?filter=all_with_unlisted"
-
 # https://addons-server.readthedocs.io/en/latest/topics/api/addons.html#version-detail
 VERSION_DETAIL = "api/v5/addons/addon/{id}/versions/{version}/"
 
