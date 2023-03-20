@@ -71,7 +71,7 @@ clouds:
               mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
             product_apt_repos:
               firefox:
-                name: 'productdelivery-deb'
+                name: 'apt'
                 location: 'us'
                 project: 'moz-fx-productdelivery-no-7d6a'
           dep-partner:
@@ -91,7 +91,7 @@ clouds:
               mobile:     'moz-fx-productdelivery-pr-38b5-productdelivery'
             product_apt_repos:
               firefox:
-                name: 'productdelivery-deb'
+                name: 'apt'
                 location: 'us'
                 project: 'moz-fx-productdelivery-pr-38b5'
           release:
@@ -104,7 +104,7 @@ clouds:
               mobile:     'moz-fx-productdelivery-pr-38b5-productdelivery'
             product_apt_repos:
               firefox:
-                name: 'productdelivery-deb'
+                name: 'apt'
                 location: 'us'
                 project: 'moz-fx-productdelivery-pr-38b5'
           partner:
@@ -123,7 +123,7 @@ clouds:
               mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
             product_apt_repos:
               firefox:
-                name: 'productdelivery-deb'
+                name: 'apt'
                 location: 'us'
                 project: 'moz-fx-productdelivery-no-7d6a'
           dep-partner:
