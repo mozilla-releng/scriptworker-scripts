@@ -86,7 +86,7 @@ case $COT_PRODUCT in
         import_cert fennec-production $CERT_DIR/release.pem
         import_cert fenix-nightly $CERT_DIR/fenix_nightly.pem
         import_cert fenix-beta $CERT_DIR/fenix_beta.pem
-        import_cert fenix-release $CERT_DIR/fenix_production.pem
+        import_cert fenix-release $CERT_DIR/fenix_release.pem
         # TODO bug 1817466 - remove
         import_cert fenix-production $CERT_DIR/fenix_production.pem
         import_cert focus $CERT_DIR/focus_release.pem
