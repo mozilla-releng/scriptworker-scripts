@@ -68,7 +68,7 @@ def _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes):
 
 
 def get_task_resource(context):
-    """Extract task cloud resource from scopes"""
+    """Extract task's cloud resource. This storage resource may be a GCS Bucket or a Artifact Registry Repository."""
     prefixes = _get_scope_prefixes(context.config, context.resource_type)
     scopes = _extract_scopes_from_unique_prefix(context.task["scopes"], prefixes=prefixes)
     resources = [s.split(":")[-1] for s in scopes for p in prefixes if s.startswith(p)]
