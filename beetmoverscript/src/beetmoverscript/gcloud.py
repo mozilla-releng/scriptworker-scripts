@@ -33,8 +33,8 @@ log = logging.getLogger(__name__)
 
 
 def cleanup_gcloud(context):
-    filename = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
-    if os.path.isfile(filename):
+    filename = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if filename and os.path.isfile(filename):
         os.remove(filename)
 
 

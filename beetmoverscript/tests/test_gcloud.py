@@ -62,11 +62,7 @@ class FakeClient:
 
 
 def test_cleanup_gcloud(monkeypatch, context):
-    # Without gcp_client set
     beetmoverscript.gcloud.cleanup_gcloud(context)
-
-    # With gcp_client set
-    context.gcp_client = True
     monkeypatch.setattr(beetmoverscript.gcloud.os, "remove", noop_sync)
     monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", "something")
     beetmoverscript.gcloud.cleanup_gcloud(context)
@@ -94,7 +90,7 @@ def test_set_gcs_client(context, monkeypatch, bucket_name, client_set):
     monkeypatch.setattr(beetmoverscript.gcloud, "Client", FakeClient)
     monkeypatch.setattr(beetmoverscript.gcloud, "get_bucket_name", lambda *x: bucket_name)
     beetmoverscript.gcloud.set_gcp_client(context)
-    assert bool(context.gcp_client) == client_set
+    assert bool(context.gcs_client) == client_set
 
 
 @pytest.mark.parametrize("exception", (Forbidden, DefaultCredentialsError, Exception))
@@ -143,7 +139,7 @@ async def test_upload_to_gcs_fail(context):
 
 @pytest.mark.asyncio
 async def test_upload_to_gcs(context, monkeypatch):
-    context.gcp_client = "FakeClient"
+    context.gcs_client = "FakeClient"
     monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeClient.FakeBucket)
     await beetmoverscript.gcloud.upload_to_gcs(context, "path/target", FakeClient.FakeBlob.PATH)
     # With existing file
@@ -171,7 +167,7 @@ async def test_push_to_releases_gcs_no_moves(context, monkeypatch, candidate_blo
         if "releases" in prefix:
             return {f"{prefix}{key}": value for (key, value) in release_blobs.items()}
 
-    context.gcp_client = FakeClient()
+    context.gcs_client = FakeClient()
     context.task = get_fake_valid_task("task_push_to_releases.json")
     monkeypatch.setattr(beetmoverscript.gcloud, "list_bucket_objects_gcs", fake_list_bucket_objects_gcs_same)
     monkeypatch.setattr(beetmoverscript.gcloud, "get_partner_match", lambda *x: partner_match)
