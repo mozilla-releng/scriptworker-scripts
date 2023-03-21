@@ -119,39 +119,6 @@ async def upload_to_gcs(context, target_path, path):
     return blob.upload_from_filename(path, content_type=mime_type)
 
 
-def build_artifact_registry_gcs_source(context, product):
-    bucket_name = get_bucket_name(context, product, "gcloud")
-    gcs_source_kwargs = {
-        "uris": [f"gs://{bucket_name}/{gcs_source}" for gcs_source in context.task["payload"]["gcs_sources"]],
-        "use_wildcards": False,
-    }
-    if context.resource_type == "apt-repo":
-        return artifactregistry_v1.ImportAptArtifactsGcsSource(**gcs_source_kwargs)
-    if context.resource_type == "yum-repo":
-        return artifactregistry_v1.ImportYumArtifactsGcsSource(**gcs_source_kwargs)
-    raise Exception("Artifact Registry resource must be one of [apt-repo, yum-repo]")
-
-
-def build_artifact_registry_import_artifacts_request(context, repository, gcs_source):
-    import_request_kwargs = {
-        "gcs_source": gcs_source,
-        "parent": repository.name,
-    }
-    if context.resource_type == "apt-repo":
-        return artifactregistry_v1.ImportAptArtifactsRequest(**import_request_kwargs)
-    if context.resource_type == "yum-repo":
-        return artifactregistry_v1.ImportYumArtifactsRequest(**import_request_kwargs)
-    raise Exception("Artifact Registry resource must be one of [apt-repo, yum-repo]")
-
-
-def do_artifact_registry_import_artifacts_request(context, import_artifacts_request):
-    if context.resource_type == "apt-repo":
-        return context.gar_client.import_apt_artifacts(request=import_artifacts_request)
-    if context.resource_type == "yum-repo":
-        return context.gar_client.import_yum_artifacts(request=import_artifacts_request)
-    raise Exception("Artifact Registry resource must be one of [apt-repo, yum-repo]")
-
-
 async def import_from_gcs_to_artifact_registry(context):
     """Imports release artifacts from gcp cloud storage to gcp artifact registry"""
     product = get_product_name(context.task, context.config)
@@ -166,13 +133,32 @@ async def import_from_gcs_to_artifact_registry(context):
     repository = await context.gar_client.get_repository(request=get_repo_request)
     log.info(repository)
 
-    gcs_source = build_artifact_registry_gcs_source(context, product)
+    if context.resource_type == "apt-repo":
+        import_artifacts_gcs_source = artifactregistry_v1.ImportAptArtifactsGcsSource
+        import_artifacts_request = artifactregistry_v1.ImportAptArtifactsRequest
+        import_artifacts = context.gar_client.import_apt_artifacts
+    elif context.resource_type == "yum-repo":
+        import_artifacts_gcs_source = artifactregistry_v1.ImportYumArtifactsGcsSource
+        import_artifacts_request = artifactregistry_v1.ImportYumArtifactsRequest
+        import_artifacts = context.gar_client.import_yum_artifacts
+    else:
+        raise Exception(f"Artifact Registry resource must be one of [apt-repo, yum-repo]. Got {context.resource_type} instead.")
+
+    bucket_name = get_bucket_name(context, product, "gcloud")
+    uris = [f"gs://{bucket_name}/{gcs_source}" for gcs_source in context.task["payload"]["gcs_sources"]]
+    gcs_source = import_artifacts_gcs_source(
+        uris=uris,
+        use_wildcards=False,
+    )
     log.info(gcs_source)
 
-    import_artifacts_request = build_artifact_registry_import_artifacts_request(context, repository, gcs_source)
-    log.info(import_artifacts_request)
+    request = import_artifacts_request(
+        gcs_source=gcs_source,
+        parent=repository.name,
+    )
+    log.info(request)
 
-    async_operation = await do_artifact_registry_import_artifacts_request(context, import_artifacts_request)
+    async_operation = await import_artifacts(request)
     result = await async_operation.result()
     if len(result.errors) != 0:
         log.error(result.errors)
