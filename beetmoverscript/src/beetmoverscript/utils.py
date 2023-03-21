@@ -160,7 +160,7 @@ def get_product_name(task, config, lowercase_app_name=True):
 
     action = get_task_action(task, config)
 
-    if action == "push-to-releases" or action == "import-from-gcs-to-artifact-registry":
+    if action in ("push-to-releases", "import-from-gcs-to-artifact-registry"):
         if "product" not in task["payload"]:
             raise ValueError("product not found in task payload.")
         return task["payload"]["product"].lower()
