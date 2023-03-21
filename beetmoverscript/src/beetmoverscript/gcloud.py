@@ -33,9 +33,9 @@ log = logging.getLogger(__name__)
 
 
 def cleanup_gcloud(context):
-    # Cleanup credentials file if gcs client is present
-    if hasattr(context, "gcp_client") and context.gcp_client:
-        os.remove(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
+    filename = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+    if os.path.isfile(filename):
+        os.remove(filename)
 
 
 def setup_gcloud(context):
@@ -87,10 +87,10 @@ def _get_artifact_registry_client(context, product):
 
 def set_gcp_client(context):
     product = get_product_name(context.task, context.config)
-    if "repo" in context.resource_type:
-        context.gcp_client = _get_artifact_registry_client(context, product)
+    if context.resource_type in ("yum-repo", "apt-repo"):
+        context.gar_client = _get_artifact_registry_client(context, product)
     else:
-        context.gcp_client = _get_gcs_client(context, product)
+        context.gcs_client = _get_gcs_client(context, product)
 
 
 def setup_gcs_credentials(raw_creds):
@@ -107,7 +107,7 @@ async def upload_to_gcs(context, target_path, path):
         raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
     bucket_name = get_bucket_name(context, product, "gcloud")
 
-    bucket = Bucket(context.gcp_client, name=bucket_name)
+    bucket = Bucket(context.gcs_client, name=bucket_name)
     blob = bucket.blob(target_path)
     blob.content_type = mime_type
     blob.cache_control = "public, max-age=%d" % CACHE_CONTROL_MAXAGE
@@ -141,15 +141,14 @@ def build_artifact_registry_import_artifacts_request(context, repository, gcs_so
         return artifactregistry_v1.ImportAptArtifactsRequest(**import_request_kwargs)
     if context.resource_type == "yum-repo":
         return artifactregistry_v1.ImportYumArtifactsRequest(**import_request_kwargs)
-    # artifact registry supports docker... interesting...
     raise Exception("Artifact Registry resource must be one of [apt-repo, yum-repo]")
 
 
 def do_artifact_registry_import_artifacts_request(context, import_artifacts_request):
     if context.resource_type == "apt-repo":
-        return context.gcp_client.import_apt_artifacts(request=import_artifacts_request)
+        return context.gar_client.import_apt_artifacts(request=import_artifacts_request)
     if context.resource_type == "yum-repo":
-        return context.gcp_client.import_yum_artifacts(request=import_artifacts_request)
+        return context.gar_client.import_yum_artifacts(request=import_artifacts_request)
     raise Exception("Artifact Registry resource must be one of [apt-repo, yum-repo]")
 
 
@@ -164,7 +163,7 @@ async def import_from_gcs_to_artifact_registry(context):
         name=parent,
     )
 
-    repository = await context.gcp_client.get_repository(request=get_repo_request)
+    repository = await context.gar_client.get_repository(request=get_repo_request)
     log.info(repository)
 
     gcs_source = build_artifact_registry_gcs_source(context, product)
@@ -186,7 +185,7 @@ async def push_to_releases_gcs(context):
     build_number = context.task["payload"]["build_number"]
     version = context.task["payload"]["version"]
     bucket_name = get_bucket_name(context, product, "gcloud")
-    client = context.gcp_client
+    client = context.gcs_client
 
     candidates_prefix = get_candidates_prefix(product, version, build_number)
     releases_prefix = get_releases_prefix(product, version)
