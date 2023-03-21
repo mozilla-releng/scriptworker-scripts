@@ -24,7 +24,6 @@ products:
               package_names: [ "org.mozilla.firefox_beta" ]
               certificate_alias: 'fenix-beta'
               google:
-                # TODO Revisit the default track once Fenix is kicked off by shipit
                 default_track: 'alpha'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_BETA" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_BETA_PATH" }
@@ -33,7 +32,6 @@ products:
               package_names: [ "org.mozilla.firefox_beta" ]
               certificate_alias: 'fennec-beta'
               google:
-                # TODO Revisit the default track once Fenix is kicked off by shipit
                 default_track: 'alpha'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_BETA" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_BETA_PATH" }
@@ -41,7 +39,6 @@ products:
               package_names: [ "org.mozilla.firefox" ]
               certificate_alias: 'fenix-release'
               google:
-                # TODO Revisit the default track once Fenix is kicked off by shipit
                 default_track: 'alpha'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_RELEASE" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH" }
@@ -50,7 +47,6 @@ products:
               package_names: [ "org.mozilla.firefox" ]
               certificate_alias: 'fennec-production'
               google:
-                # TODO Revisit the default track once Fenix is kicked off by shipit
                 default_track: 'alpha'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_RELEASE" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH" }
