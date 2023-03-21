@@ -1,0 +1,7 @@
+{
+  "project:releng:signing:cert:dep-signing": [{
+    "issuer_id": "7",
+    "key_id": "8",
+    "private_key": "9"
+  }]
+}

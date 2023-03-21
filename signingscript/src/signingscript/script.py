@@ -4,10 +4,13 @@ import logging
 import os
 
 import aiohttp
+import json
 import scriptworker.client
+from dataclasses import asdict
 
-from signingscript.task import build_filelist_dict, sign, task_signing_formats
-from signingscript.utils import copy_to_dir, load_autograph_configs
+from signingscript.task import build_filelist_dict, sign, task_signing_formats, task_cert_type
+from signingscript.utils import copy_to_dir, load_apple_notarization_configs, load_autograph_configs
+from signingscript.exceptions import SigningScriptError
 
 log = logging.getLogger(__name__)
 
@@ -32,8 +35,14 @@ async def async_main(context):
             if not context.config.get("widevine_cert"):
                 raise Exception("Widevine format is enabled, but widevine_cert is not defined")
 
+        if "apple_notarization" in all_signing_formats:
+            if not context.config.get("apple_notarization_configs", False):
+                raise Exception("Apple notarization is enabled but apple_notarization_configs is not defined")
+            setup_apple_notarization_credentials(context)
+
         context.session = session
         context.autograph_configs = load_autograph_configs(context.config["autograph_configs"])
+
         work_dir = context.config["work_dir"]
         filelist_dict = build_filelist_dict(context)
         for path, path_dict in filelist_dict.items():
@@ -73,6 +82,35 @@ def get_default_config(base_dir=None):
         "widevine_cert": None,
     }
     return default_config
+
+
+def setup_apple_notarization_credentials(context):
+    """Writes the notarization credential to a file
+
+    Adds property to context: apple_credentials_path
+
+    Args:
+        context: Running task Context
+    """
+    cert_type = task_cert_type(context)
+    apple_notarization_configs = load_apple_notarization_configs(context.config["apple_notarization_configs"])
+    if cert_type not in apple_notarization_configs:
+        raise SigningScriptError("Credentials not found for scope: %s" % cert_type)
+    scope_credentials = apple_notarization_configs.get(cert_type)
+    if len(scope_credentials) != 1:
+        raise SigningScriptError("There should only be 1 scope credential, %s found." % len(scope_credentials))
+
+    context.apple_credentials_path = os.path.join(
+        os.path.dirname(context.config["apple_notarization_configs"]),
+        'apple_api_key.json',
+    )
+    if os.path.exists(context.apple_credentials_path):
+        # TODO: If we have different api keys for each product, this needs to overwrite every task:
+        return
+    # Convert dataclass to dict so json module can read it
+    credential = asdict(scope_credentials[0])
+    with open(context.apple_credentials_path, 'w') as credfile:
+        credfile.write(json.dumps(credential).encode("ascii"))
 
 
 def main():

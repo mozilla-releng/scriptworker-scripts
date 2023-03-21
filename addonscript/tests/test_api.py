@@ -1,4 +1,5 @@
 import contextlib
+import json
 import os
 from contextlib import contextmanager
 
@@ -31,9 +32,10 @@ async def fake_session(event_loop):
         (202, does_not_raise()),
         (401, pytest.raises(AuthFailedError)),
         (403, pytest.raises(AuthInsufficientPermissionsError)),
+        (500, pytest.raises(aiohttp.client_exceptions.ClientResponseError)),
     ),
 )
-async def test_add_version(fake_session, context, mocker, statuscode, expectation):
+async def test_add_app_version(fake_session, context, statuscode, expectation):
     context.session = fake_session
     mocked_url = "http://some-amo-it.url/api/v4/applications/firefox/42/"
 
@@ -41,7 +43,7 @@ async def test_add_version(fake_session, context, mocker, statuscode, expectatio
         m.put(mocked_url, status=statuscode)
 
         with expectation:
-            await api.add_version(context, "42")
+            await api.add_app_version(context, "42")
 
 
 @pytest.mark.asyncio
@@ -53,7 +55,6 @@ async def test_add_version(fake_session, context, mocker, statuscode, expectatio
         (302, None),
         (401, aiohttp.client_exceptions.ClientResponseError),
         (503, aiohttp.client_exceptions.ClientResponseError),
-        (409, AMOConflictError),
     ),
 )
 async def test_do_upload(fake_session, context, tmpdir, mocker, statuscode, raises):
@@ -62,14 +63,14 @@ async def test_do_upload(fake_session, context, tmpdir, mocker, statuscode, rais
     context.locales["en-GB"] = {"id": "langpack-en-GB@firefox.mozilla.org", "version": "59.0buildid20180406102847", "unsigned": upload_file}
     with open(upload_file, "wb") as f:
         f.write(b"foobar")
-    expected_url = "api/v4/addons/{id}/versions/{version}/".format(id="langpack-en-GB@firefox.mozilla.org", version="59.0buildid20180406102847")
+    expected_url = "api/v5/addons/upload/"
     mocked_url = "{}/{}".format("http://some-amo-it.url", expected_url)
 
     mocker.patch.object(api, "get_channel", return_value="unlisted")
 
     with aioresponses() as m:
         context.session = fake_session
-        m.put(mocked_url, status=statuscode, body='{"foo": "bar"}')
+        m.post(mocked_url, status=statuscode, body='{"foo": "bar"}')
 
         raisectx = contextlib.suppress()
         if raises:
@@ -80,112 +81,158 @@ async def test_do_upload(fake_session, context, tmpdir, mocker, statuscode, rais
 
 
 @pytest.mark.asyncio
-async def test_get_signed_addon_url_success(context, mocker):
-    status_json = {"files": [{"signed": True, "download_url": "https://some-download-url/foo"}]}
+@pytest.mark.parametrize(
+    "statuscode,retval,exception",
+    (
+        (200, {"id": 1234}, does_not_raise()),
+        (400, None, pytest.raises(FatalSignatureError)),
+        (409, None, pytest.raises(AMOConflictError)),
+        (500, None, pytest.raises(aiohttp.client_exceptions.ClientResponseError)),
+    ),
+)
+async def test_do_create_version(fake_session, context, statuscode, retval, exception):
+    context.locales = {}
+    context.locales["ja"] = {
+        "id": "langpack-ja@firefox.mozilla.org",
+        "version": "59.0buildid20180406102847",
+        "name": "ja",
+        "description": "japanese language pack",
+    }
+    context.session = fake_session
+    expected_url = "api/v5/addons/addon/langpack-ja@firefox.mozilla.org/"
+    data = {"version": {"id": 1234}}
+    mocked_url = f"http://some-amo-it.url/{expected_url}"
 
-    async def new_upload_status(*args, **kwargs):
-        return status_json
-
-    mocker.patch.object(api, "get_upload_status", new=new_upload_status)
-    resp = await api.get_signed_addon_url(context, "en-GB", "deadbeef")
-    assert resp == "https://some-download-url/foo"
+    with aioresponses() as m:
+        m.put(mocked_url, status=statuscode, body=json.dumps(data))
+        with exception:
+            assert retval == await api.do_create_version(context, "ja", "deadbeef")
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("num_files,raises", ((0, True), (1, False), (2, True), (10, True)))
-async def test_get_signed_addon_url_files(context, mocker, num_files, raises):
-    status_json = {"files": []}
-    for _ in range(num_files):
-        status_json["files"].append({"signed": True, "download_url": "https://some-download-url/foo"})
+async def test_get_signed_addon_info_success(context, mocker):
+    status_json = {"file": {"status": "public", "url": "https://some-download-url/foo", "size": 3, "hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}}
 
-    async def new_upload_status(*args, **kwargs):
+    async def new_version(*args, **kwargs):
         return status_json
 
-    mocker.patch.object(api, "get_upload_status", new=new_upload_status)
-
-    raisectx = contextlib.suppress()
-    if raises:
-        raisectx = pytest.raises(SignatureError)
-    with raisectx as excinfo:
-        resp = await api.get_signed_addon_url(context, "en-GB", "deadbeef")
-        assert resp == "https://some-download-url/foo"
-    if raises:
-        assert "Expected 1 file" in str(excinfo.value)
+    mocker.patch.object(api, "get_version", new=new_version)
+    resp = await api.get_signed_addon_info(context, "en-GB", "deadbeef")
+    assert resp == ("https://some-download-url/foo", 3, "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("errors,raises", (([], False), (["deadbeef", "whimsycorn"], True), (["deadbeef"], True)))
-async def test_get_signed_addon_url_validation_errors(context, mocker, errors, raises):
-    status_json = {"files": [{"signed": True, "download_url": "https://some-download-url/foo"}], "validation_results": {"errors": errors}}
+async def test_check_upload_validation_errors(fake_session, context, errors, raises):
+    expected_url = "api/v5/addons/upload/deadbeef/"
+    mocked_url = "{}/{}".format("http://some-amo-it.url", expected_url)
+    status_json = {"uuid": "deadbeef", "processed": True, "valid": not errors, "validation": {"errors": errors}}
+    context.session = fake_session
 
-    async def new_upload_status(*args, **kwargs):
-        return status_json
-
-    mocker.patch.object(api, "get_upload_status", new=new_upload_status)
-
-    raisectx = contextlib.suppress()
-    if raises:
-        raisectx = pytest.raises(FatalSignatureError)
-    with raisectx as excinfo:
-        resp = await api.get_signed_addon_url(context, "en-GB", "deadbeef")
-        assert resp == "https://some-download-url/foo"
-    if raises:
-        assert "Automated validation produced" in str(excinfo.value)
-        for val in errors:
-            assert val in str(excinfo.value)
+    with aioresponses() as m:
+        m.get(mocked_url, status=200, body=json.dumps(status_json))
+        raisectx = contextlib.suppress()
+        if raises:
+            raisectx = pytest.raises(FatalSignatureError)
+        with raisectx as excinfo:
+            await api.check_upload(context, "deadbeef")
+        if raises:
+            assert "Automated validation produced" in str(excinfo.value)
+            for val in errors:
+                assert val in str(excinfo.value)
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("variant", ("signed", "download"))
-async def test_get_signed_addon_url_other_errors(context, mocker, variant):
-    status_json = {"files": [{"signed": True if variant != "signed" else False}]}
-    if variant != "download":
-        status_json["files"][0]["download_url"] = "https://some-download-url/foo"
+@pytest.mark.parametrize(
+    "data,raises",
+    (
+        ({"processed": False}, pytest.raises(SignatureError)),
+        ({"processed": True, "valid": True}, does_not_raise()),
+    ),
+)
+async def test_check_upload(fake_session, context, data, raises):
+    expected_url = "api/v5/addons/upload/deadbeef/"
+    mocked_url = "{}/{}".format("http://some-amo-it.url", expected_url)
+    context.session = fake_session
 
-    async def new_upload_status(*args, **kwargs):
+    with aioresponses() as m:
+        m.get(mocked_url, status=200, body=json.dumps(data))
+        with raises:
+            await api.check_upload(context, "deadbeef")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("variant,exception", (("nominated", SignatureError), ("disabled", FatalSignatureError)))
+async def test_get_signed_addon_info_other_errors(context, mocker, variant, exception):
+    status_json = {"file": {"status": variant}}
+
+    async def new_version(*args, **kwargs):
         return status_json
 
-    mocker.patch.object(api, "get_upload_status", new=new_upload_status)
+    mocker.patch.object(api, "get_version", new=new_version)
 
-    raisectx = pytest.raises(SignatureError)
+    raisectx = pytest.raises(exception)
     with raisectx as excinfo:
-        await api.get_signed_addon_url(context, "en-GB", "deadbeef")
-    if variant == "signed":
-        assert 'Expected XPI "signed" parameter' in str(excinfo.value)
-    if variant == "download":
-        assert 'Expected XPI "download_url" parameter' in str(excinfo.value)
+        await api.get_signed_addon_info(context, "en-GB", "deadbeef")
+    if variant == "nominated":
+        assert "XPI not public" in str(excinfo.value)
+    if variant == "disabled":
+        assert 'XPI disabled on AMO' in str(excinfo.value)
 
 
 @pytest.mark.asyncio
 async def test_get_signed_xpi(fake_session, context, tmpdir):
     destination = os.path.join(tmpdir, "langpack.xpi")
-    download_path = "https://addons.example.com/some/file+path"
+    download_info = ("https://addons.example.com/some/file+path", 6, "sha256:c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2")
     with aioresponses() as m:
         context.session = fake_session
-        m.get(download_path, status=200, body=b"foobar")
+        m.get(download_info[0], status=200, body=b"foobar")
 
         # py37 nullcontext would be better
-        await api.get_signed_xpi(context, download_path, destination)
+        await api.get_signed_xpi(context, download_info, destination)
         with open(destination, "rb") as f:
             contents = f.read()
         assert contents == b"foobar"
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("contents", (b"fooba", b"foobaz"))
+async def test_get_signed_xpi_error(fake_session, context, tmpdir, contents):
+    destination = os.path.join(tmpdir, "langpack.xpi")
+    download_info = ("https://addons.example.com/some/file+path", 6, "sha256:c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2")
+    with aioresponses() as m:
+        context.session = fake_session
+        m.get(download_info[0], status=200, body=contents)
+
+        with pytest.raises(SignatureError):
+            await api.get_signed_xpi(context, download_info, destination)
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "expected_url,pk",
+    "expected_url,id,exception",
     (
-        ("api/v4/addons/langpack-en-GB@firefox.mozilla.org/versions/59.0buildid20180406102847/uploads/deadbeef/", "deadbeef"),
-        ("api/v4/addons/langpack-en-GB@firefox.mozilla.org/versions/59.0buildid20180406102847/", None),
+        (
+            "api/v5/addons/addon/langpack-en-GB@firefox.mozilla.org/versions/1234/",
+            1234,
+            does_not_raise(),
+        ),
+        (
+            "api/v5/addons/addon/langpack-en-GB@firefox.mozilla.org/versions/v59.0buildid20180406102847/",
+            None,
+            does_not_raise(),
+        ),
     ),
 )
-async def test_get_upload_status(context, fake_session, expected_url, pk):
+async def test_get_version(context, fake_session, expected_url, id, exception):
     context.locales = {}
     context.locales["en-GB"] = {"id": "langpack-en-GB@firefox.mozilla.org", "version": "59.0buildid20180406102847"}
+    response = {"id": 1234, "version": "59.0buildid20180406102847"}
     mocked_url = "{}/{}".format("http://some-amo-it.url", expected_url)
     with aioresponses() as m:
         context.session = fake_session
-        m.get(mocked_url, status=200, body='{"foo": "bar"}')
+        m.get(mocked_url, status=200, body=json.dumps(response))
 
-        resp = await api.get_upload_status(context, "en-GB", pk)
-        assert resp == {"foo": "bar"}
+        with exception:
+            resp = await api.get_version(context, "en-GB", id)
+            assert resp == response

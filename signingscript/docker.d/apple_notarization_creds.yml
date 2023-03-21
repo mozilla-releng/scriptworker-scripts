@@ -1,0 +1,21 @@
+$let:
+  scope_prefix:
+    $match:
+      'COT_PRODUCT == "firefox"': 'project:releng:signing:'
+      'COT_PRODUCT == "thunderbird"': 'project:comm:thunderbird:releng:signing:'
+      'COT_PRODUCT == "mozillavpn"': 'project:mozillavpn:releng:signing:'
+      'COT_PRODUCT == "adhoc"': 'project:adhoc:releng:signing:'
+in:
+  $merge:
+    $match:
+      # TODO: Investigate one key per product
+      # TODO: Investigate one key per release type (nightly/release)
+      'ENV == "prod" && scope_prefix':
+        '${scope_prefix[0]}cert:release-apple-notarization':
+          - "issuer_id": {"$eval": "APPLE_NOTARIZATION_ISSUER_ID"}
+            "key_id": {"$eval": "APPLE_NOTARIZATION_KEY_ID"}
+            "private_key": {"$eval": "APPLE_NOTARIZATION_PRIVATE_KEY"}
+        '${scope_prefix[0]}cert:nightly-apple-notarization':
+          - "issuer_id": {"$eval": "APPLE_NOTARIZATION_ISSUER_ID"}
+            "key_id": {"$eval": "APPLE_NOTARIZATION_KEY_ID"}
+            "private_key": {"$eval": "APPLE_NOTARIZATION_PRIVATE_KEY"}

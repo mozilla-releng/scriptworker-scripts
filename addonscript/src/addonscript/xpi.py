@@ -18,5 +18,7 @@ def get_langpack_info(path):
         "id": browser_specific_settings["gecko"]["id"],
         "unsigned": path,
         "min_version": browser_specific_settings["gecko"]["strict_min_version"],
+        "name": manifest_info["name"],
+        "description": manifest_info["description"],
     }
     return langpack_info
