@@ -109,7 +109,7 @@ def setup_apple_notarization_credentials(context):
         return
     # Convert dataclass to dict so json module can read it
     credential = asdict(scope_credentials[0])
-    with open(context.apple_credentials_path, 'w') as credfile:
+    with open(context.apple_credentials_path, 'wb') as credfile:
         credfile.write(json.dumps(credential).encode("ascii"))
 
 
