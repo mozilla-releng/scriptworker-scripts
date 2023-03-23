@@ -9,7 +9,7 @@ from asyncio.subprocess import PIPE, STDOUT
 from dataclasses import dataclass
 from shutil import copyfile
 
-from signingscript.exceptions import FailedSubprocess, SigningServerError
+from signingscript.exceptions import FailedSubprocess, SigningServerError, SigningScriptError
 
 log = logging.getLogger(__name__)
 
@@ -92,11 +92,17 @@ def _load_scoped_configs(filename, cls, name):
     with open(filename) as f:
         raw_cfg = json.load(f)
 
-    cfg = {}
+    scope_configs = {}
+    # TODO: We should refactor how Autograph data is loaded to be key-pair instead of list
     for scope, config in raw_cfg.items():
-        cfg[scope] = [cls(*s) for s in config]
+        if cls == Autograph:
+            scope_configs[scope] = [cls(*s) for s in config]
+        elif cls == AppleNotarization:
+            scope_configs[scope] = [cls(**s) for s in config]
+        else:
+            raise SigningScriptError("Unknown class for scoped configs: %s" % cls.__name__)
     log.info("%s config loaded from %s", name, filename)
-    return cfg
+    return scope_configs
 
 
 def load_autograph_configs(filename):
