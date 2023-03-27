@@ -69,6 +69,11 @@ clouds:
               firefox:    'moz-fx-productdelivery-no-7d6a-productdelivery'
               fennec:     'moz-fx-productdelivery-no-7d6a-productdelivery'
               mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
+            product_apt_repos:
+              firefox:
+                name: 'apt'
+                location: 'us'
+                project: 'moz-fx-productdelivery-no-7d6a'
           dep-partner:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: True
@@ -84,6 +89,11 @@ clouds:
               devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
               firefox:    'moz-fx-productdelivery-pr-38b5-productdelivery'
               mobile:     'moz-fx-productdelivery-pr-38b5-productdelivery'
+            product_apt_repos:
+              firefox:
+                name: 'apt'
+                location: 'us'
+                project: 'moz-fx-productdelivery-pr-38b5'
           release:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: True
@@ -92,6 +102,11 @@ clouds:
               devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
               firefox:    'moz-fx-productdelivery-pr-38b5-productdelivery'
               mobile:     'moz-fx-productdelivery-pr-38b5-productdelivery'
+            product_apt_repos:
+              firefox:
+                name: 'apt'
+                location: 'us'
+                project: 'moz-fx-productdelivery-pr-38b5'
           partner:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: True
@@ -106,6 +121,11 @@ clouds:
               devedition: 'moz-fx-productdelivery-no-7d6a-productdelivery'
               firefox:    'moz-fx-productdelivery-no-7d6a-productdelivery'
               mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
+            product_apt_repos:
+              firefox:
+                name: 'apt'
+                location: 'us'
+                project: 'moz-fx-productdelivery-no-7d6a'
           dep-partner:
             credentials: { "$eval": "GCS_CREDENTIALS" }
             fail_task_on_error: True

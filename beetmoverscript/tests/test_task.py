@@ -15,7 +15,7 @@ from beetmoverscript.task import (
     get_release_props,
     get_schema_key_by_action,
     get_task_action,
-    get_task_bucket,
+    get_task_resource,
     get_taskId_from_full_path,
     get_upstream_artifacts,
     is_custom_checksums_task,
@@ -106,13 +106,16 @@ def test_validate_task(context):
     ),
 )
 def test_get_task_bucket(scopes, expected, raises):
-    task = {"scopes": scopes}
-    config = {"clouds": {"aws": {"dep": {"enabled": True}}, "gcloud": {}}, "taskcluster_scope_prefixes": ["project:releng:beetmover:"]}
+    context = Context()
+    context.task = {"scopes": scopes}
+    context.config = {"clouds": {"aws": {"dep": {"enabled": True}}, "gcloud": {}}, "taskcluster_scope_prefixes": ["project:releng:beetmover:"]}
+    context.resource_type = "bucket"
+
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
-            get_task_bucket(task, config)
+            get_task_resource(context)
     else:
-        assert expected == get_task_bucket(task, config)
+        assert expected == get_task_resource(context)
 
 
 # get_task_action {{{1
