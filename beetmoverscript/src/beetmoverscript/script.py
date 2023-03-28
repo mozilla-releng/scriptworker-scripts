@@ -30,13 +30,13 @@ from beetmoverscript.constants import (
     RELEASE_BRANCHES,
     RELEASE_EXCLUDE,
 )
-from beetmoverscript.gcloud import cleanup_gcloud, push_to_releases_gcs, setup_gcloud, upload_to_gcs
+from beetmoverscript.gcloud import cleanup_gcloud, import_from_gcs_to_artifact_registry, push_to_releases_gcs, setup_gcloud, upload_to_gcs
 from beetmoverscript.task import (
     add_balrog_manifest_to_artifacts,
     add_checksums_to_artifacts,
     get_release_props,
     get_task_action,
-    get_task_bucket,
+    get_task_resource,
     get_taskId_from_full_path,
     get_updated_buildhub_artifact,
     get_upstream_artifacts,
@@ -172,11 +172,11 @@ async def push_to_partner(context):
 
 async def push_to_releases(context):
     # S3 upload
-    if context.config["clouds"]["aws"][context.bucket]["enabled"]:
+    if context.config["clouds"]["aws"][context.resource]["enabled"]:
         await push_to_releases_s3(context)
 
     # GCS upload
-    if context.config["clouds"]["gcloud"][context.bucket]["enabled"]:
+    if context.config["clouds"]["gcloud"][context.resource]["enabled"]:
         await push_to_releases_gcs(context)
 
 
@@ -304,6 +304,7 @@ action_map = {
     "push-to-releases": push_to_releases,
     "direct-push-to-bucket": direct_push_to_bucket,
     "push-to-maven": push_to_maven,
+    "import-from-gcs-to-artifact-registry": import_from_gcs_to_artifact_registry,
 }
 
 
@@ -316,9 +317,18 @@ async def async_main(context):
 
     validate_task_schema(context)
 
-    # determine the task bucket and action
-    #   Note: context.bucket is the release type (release,nightly,dep,etc)
-    context.bucket = get_task_bucket(context.task, context.config)
+    # determine the task resource and action
+    #   Note: context.resource is the release type (release,nightly,dep,etc)
+    if any("apt-repo" in scope for scope in context.task["scopes"]):
+        context.resource_type = "apt-repo"
+    elif any("yum-repo" in scope for scope in context.task["scopes"]):
+        context.resource_type = "yum-repo"
+    elif any("bucket" in scope for scope in context.task["scopes"]):
+        context.resource_type = "bucket"
+    else:
+        raise Exception("No valid resource type in task scopes. Resource must be one of [apt-repo, yum-repo, bucket]")
+
+    context.resource = get_task_resource(context)
     context.action = get_task_action(context.task, context.config, valid_actions=action_map.keys())
 
     setup_gcloud(context)
@@ -466,11 +476,11 @@ async def move_partner_beets(context, manifest):
             destination = get_destination_for_partner_repack_path(context, manifest, full_path_artifact, locale)
 
             # S3 upload
-            if context.config["clouds"]["aws"][context.bucket]["enabled"]:
+            if context.config["clouds"]["aws"][context.resource]["enabled"]:
                 cloud_uploads["aws"].append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=destination, path=source)))
 
             # GCS upload
-            if context.config["clouds"]["gcloud"][context.bucket]["enabled"]:
+            if context.config["clouds"]["gcloud"][context.resource]["enabled"]:
                 cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=destination, path=source)))
 
             if is_partner_public_task(context):
@@ -481,7 +491,7 @@ async def move_partner_beets(context, manifest):
                     context.checksums[artifact_pretty_name] = {algo: get_hash(source, algo) for algo in context.config["checksums_digests"]}
                     context.checksums[artifact_pretty_name]["size"] = get_size(source)
 
-    await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.bucket)
+    await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.resource)
 
 
 def sanity_check_partner_path(path, repl_dict, regexes):
@@ -619,18 +629,18 @@ async def retry_upload(context, destinations, path):
     cloud_uploads = {key: [] for key in context.config["clouds"]}
 
     # TODO: There's a "bug" where if you define
-    #  "gcloud.release" but not "aws.release", the context.bucket will fail here
+    #  "gcloud.release" but not "aws.release", the context.resource will fail here
     #  we don't have that use case right now, but might be worth fixing
     for dest in destinations:
         # S3 upload
-        if is_cloud_enabled(context.config, "aws", context.bucket):
+        if is_cloud_enabled(context.config, "aws", context.resource):
             cloud_uploads["aws"].append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
 
         # GCS upload
-        if is_cloud_enabled(context.config, "gcloud", context.bucket):
+        if is_cloud_enabled(context.config, "gcloud", context.resource):
             cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path)))
 
-    await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.bucket)
+    await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.resource)
 
 
 # put {{{1
@@ -676,6 +686,7 @@ def main(config_path=None):
         "release_schema_file": os.path.join(data_dir, "release_beetmover_task_schema.json"),
         "maven_schema_file": os.path.join(data_dir, "maven_beetmover_task_schema.json"),
         "artifactMap_schema_file": os.path.join(data_dir, "artifactMap_beetmover_task_schema.json"),
+        "import_from_gcs_to_artifact_registry_schema_file": os.path.join(data_dir, "import_from_gcs_to_artifact_registry_task_schema.json"),
     }
 
     # There are several task schema. Validation occurs in async_main

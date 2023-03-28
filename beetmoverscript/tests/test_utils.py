@@ -185,7 +185,7 @@ def test_beetmover_template_args_locales(context, payload, expected_locales):
 
 
 def test_beetmover_template_args_generation_release(context):
-    context.bucket = "dep"
+    context.resource = "dep"
     context.action = "push-to-candidates"
     context.task["payload"]["build_number"] = 3
     context.task["payload"]["version"] = "4.4"
@@ -333,7 +333,7 @@ def test_get_product_name(context, appName, stage_platform, expected):
 )
 def test_is_partner_private_public_task(context, action, bucket, expected_private, expected_public):
     context.action = action
-    context.bucket = bucket
+    context.resource = bucket
 
     assert is_partner_private_task(context) == expected_private
     assert is_partner_public_task(context) == expected_public
@@ -422,7 +422,7 @@ def test_exists_or_endswith(filename, basenames, expected):
     ),
 )
 def test_get_credentials(context, cloud, bucket, expected, raises):
-    context.bucket = bucket
+    context.resource = bucket
 
     if raises:
         with pytest.raises(ValueError):
@@ -436,7 +436,7 @@ def test_get_url_prefix(context):
     assert get_url_prefix(context) == "https://archive.test"
 
     with pytest.raises(ValueError):
-        context.bucket = "FakeRelease"
+        context.resource = "FakeRelease"
         get_url_prefix(context)
 
 

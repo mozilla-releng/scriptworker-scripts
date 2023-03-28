@@ -244,7 +244,7 @@ async def test_move_beets(task_filename, partials, mocker, restore_buildhub_file
     context.task = get_fake_valid_task(taskjson=task_filename)
     context.release_props = context.task["payload"]["releaseProperties"]
     context.release_props["stage_platform"] = context.release_props["platform"]
-    context.bucket = "nightly"
+    context.resource = "nightly"
     context.action = "push-to-nightly"
     context.raw_balrog_manifest = dict()
     context.balrog_manifest = list()
@@ -380,7 +380,7 @@ async def test_move_beets_raises(mocker):
     context.task = get_fake_valid_task(taskjson="task_missing_installer.json")
     context.release_props = context.task["payload"]["releaseProperties"]
     context.release_props["stage_platform"] = context.release_props["platform"]
-    context.bucket = "nightly"
+    context.resource = "nightly"
     context.action = "push-to-nightly"
     context.raw_balrog_manifest = dict()
     context.balrog_manifest = list()
@@ -419,7 +419,7 @@ async def test_move_beet(update_manifest, action):
         },
     ]
     context.action = action
-    context.bucket = "nightly"
+    context.resource = "nightly"
     context.checksums = dict()
     context.balrog_manifest = list()
     context.raw_balrog_manifest = dict()
@@ -527,7 +527,7 @@ async def test_move_partner_beets(context, mocker):
     ),
 )
 def test_get_destination_for_partner_repack_path(context, full_path, expected, bucket, raises, locale):
-    context.bucket = bucket
+    context.resource = bucket
     context.action = "push-to-partner"
     context.task["payload"]["build_number"] = 99
     context.task["payload"]["version"] = "9999.0"
@@ -596,7 +596,7 @@ async def test_async_main(context, mocker, action, raises, task_filename):
     mocker.patch("beetmoverscript.script.move_beets", new=noop_async)
     mocker.patch.object(beetmoverscript.script, "get_task_action", new=fake_action)
     mocker.patch("beetmoverscript.gcloud.setup_gcs_credentials", new=noop_sync)
-    mocker.patch("beetmoverscript.gcloud.set_gcs_client", new=noop_sync)
+    mocker.patch("beetmoverscript.gcloud.set_gcp_client", new=noop_sync)
     mocker.patch("beetmoverscript.gcloud.cleanup_gcloud", new=noop_sync)
     if raises:
         with pytest.raises(SystemExit):

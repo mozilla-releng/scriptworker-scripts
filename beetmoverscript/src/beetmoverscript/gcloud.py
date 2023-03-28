@@ -8,6 +8,7 @@ import tempfile
 
 from google.api_core.exceptions import Forbidden
 from google.auth.exceptions import DefaultCredentialsError
+from google.cloud import artifactregistry_v1
 from google.cloud.storage import Bucket, Client
 from scriptworker.exceptions import ScriptWorkerTaskException
 
@@ -22,6 +23,9 @@ from beetmoverscript.utils import (
     get_partner_releases_prefix,
     get_product_name,
     get_releases_prefix,
+    get_resource_location,
+    get_resource_name,
+    get_resource_project,
     matches_exclude,
 )
 
@@ -29,25 +33,25 @@ log = logging.getLogger(__name__)
 
 
 def cleanup_gcloud(context):
-    # Cleanup credentials file if gcs client is present
-    if hasattr(context, "gcs_client") and context.gcs_client:
-        os.remove(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
+    filename = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if filename and os.path.isfile(filename):
+        os.remove(filename)
 
 
 def setup_gcloud(context):
     gcs_creds = get_credentials(context, "gcloud")
     if type(gcs_creds) is str and len(gcs_creds) > 0:
         setup_gcs_credentials(gcs_creds)
-        set_gcs_client(context)
+        set_gcp_client(context)
     else:
         log.info("No GCS credentials found, skipping")
 
 
-def set_gcs_client(context):
-    product = get_product_name(context.task, context.config)
+def _get_gcs_client(context, product):
+    """Set up a google-cloud-storage client"""
 
     def handle_exception(e):
-        if get_fail_task_on_error(context.config["clouds"], context.bucket, "gcloud"):
+        if get_fail_task_on_error(context.config["clouds"], context.resource, "gcloud"):
             raise e
         log.error(e)
 
@@ -72,7 +76,21 @@ def set_gcs_client(context):
         handle_exception(e)
         return
     log.info(f"Found GCS bucket {bucket} - proceeding with GCS uploads.")
-    context.gcs_client = client
+    return client
+
+
+def _get_artifact_registry_client(context, product):
+    """Set up a google-cloud-artifact-registry client"""
+    client = artifactregistry_v1.ArtifactRegistryAsyncClient()
+    return client
+
+
+def set_gcp_client(context):
+    product = get_product_name(context.task, context.config)
+    if context.resource_type in ("yum-repo", "apt-repo"):
+        context.gar_client = _get_artifact_registry_client(context, product)
+    else:
+        context.gcs_client = _get_gcs_client(context, product)
 
 
 def setup_gcs_credentials(raw_creds):
@@ -99,6 +117,53 @@ async def upload_to_gcs(context, target_path, path):
     log.info("upload_to_gcs: %s -> Bucket: gs://%s/%s", path, bucket_name, target_path)
 
     return blob.upload_from_filename(path, content_type=mime_type)
+
+
+async def import_from_gcs_to_artifact_registry(context):
+    """Imports release artifacts from gcp cloud storage to gcp artifact registry"""
+    product = get_product_name(context.task, context.config)
+    project = get_resource_project(context, product, "gcloud")
+    location = get_resource_location(context, product, "gcloud")
+    repository_name = get_resource_name(context, product, "gcloud")
+    parent = f"projects/{project}/locations/{location}/repositories/{repository_name}"
+    get_repo_request = artifactregistry_v1.GetRepositoryRequest(
+        name=parent,
+    )
+
+    repository = await context.gar_client.get_repository(request=get_repo_request)
+    log.info(repository)
+
+    if context.resource_type == "apt-repo":
+        import_artifacts_gcs_source = artifactregistry_v1.ImportAptArtifactsGcsSource
+        import_artifacts_request = artifactregistry_v1.ImportAptArtifactsRequest
+        import_artifacts = context.gar_client.import_apt_artifacts
+    elif context.resource_type == "yum-repo":
+        import_artifacts_gcs_source = artifactregistry_v1.ImportYumArtifactsGcsSource
+        import_artifacts_request = artifactregistry_v1.ImportYumArtifactsRequest
+        import_artifacts = context.gar_client.import_yum_artifacts
+    else:
+        raise Exception(f"Artifact Registry resource must be one of [apt-repo, yum-repo]. Got {context.resource_type} instead.")
+
+    bucket_name = get_bucket_name(context, product, "gcloud")
+    uris = [f"gs://{bucket_name}/{gcs_source}" for gcs_source in context.task["payload"]["gcs_sources"]]
+    gcs_source = import_artifacts_gcs_source(
+        uris=uris,
+        use_wildcards=False,
+    )
+    log.info(gcs_source)
+
+    request = import_artifacts_request(
+        gcs_source=gcs_source,
+        parent=repository.name,
+    )
+    log.info(request)
+
+    async_operation = await import_artifacts(request)
+    result = await async_operation.result()
+    if len(result.errors) != 0:
+        log.error(result.errors)
+    else:
+        log.info(result)
 
 
 async def push_to_releases_gcs(context):
