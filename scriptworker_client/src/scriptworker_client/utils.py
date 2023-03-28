@@ -425,6 +425,7 @@ def retry_async_decorator(
     Returns:
         function: the decorated function
     """
+
     # Better type hinting here once https://www.python.org/dev/peps/pep-0612/ is implemented
     def wrap(async_func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
         @functools.wraps(async_func)
@@ -450,6 +451,7 @@ def async_wrap(func):
     Returns:
         function: the decorated async function
     """
+
     # From https://dev.to/0xbf/turn-sync-function-to-async-python-tips-58nn
     @functools.wraps(func)
     async def run(*args, loop=None, executor=None, **kwargs):
