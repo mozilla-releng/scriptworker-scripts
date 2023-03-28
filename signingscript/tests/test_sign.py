@@ -1426,5 +1426,5 @@ async def test_apple_notarize_fail_format(context):
     path = os.path.join(context.config["work_dir"], filename)
     shutil.copy2(os.path.join(TEST_DATA_DIR, filename), path)
 
-    with pytest.raises(sign.SigningScriptError, match=r"Unable to notarize app format.*"):
+    with pytest.raises(sign.SigningScriptError, match=r"No supported files found"):
         await sign.apple_notarize(context, path)

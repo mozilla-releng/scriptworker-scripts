@@ -1552,10 +1552,7 @@ async def sign_debian_pkg(context, path, fmt, *args, **kwargs):
 
 
 async def rcodesign_notarize(paths, notarization_workdir, creds_path):
-    NOTARIZATION_EXTENSIONS = ("app", "pkg")
     for app in paths:
-        if app.split(".")[-1].lower() not in NOTARIZATION_EXTENSIONS:
-            raise SigningScriptError("Unable to notarize app format: %s" % app)
         app_path = os.path.join(notarization_workdir, app)
         command = [
             "rcodesign",
@@ -1573,14 +1570,26 @@ async def apple_notarize(context, path, *args, **kwargs):
     """
     Notarizes given package(s) using rcodesign.
     """
+    # Files that are usually included in .dmg packages don't need notarizing
+    NOTARIZATION_EXTENSIONS = (".app", ".pkg")
+
     # Setup workdir
     notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
     _, compression = os.path.splitext(path)
     all_file_names = await _extract_tarfile(context, path, compression, tmp_dir=notarization_workdir)
     workdir_files = os.listdir(notarization_workdir)
 
+    # Filter supported file extensions
+    def is_supported(path):
+        return os.path.splitext(path)[1] in NOTARIZATION_EXTENSIONS
+
+    supported_files = [path for path in workdir_files if is_supported(path)]
+
+    if not supported_files:
+        raise SigningScriptError("No supported files found")
+
     # Notarize
-    await rcodesign_notarize(workdir_files, notarization_workdir, context.apple_credentials_path)
+    await rcodesign_notarize(supported_files, notarization_workdir, context.apple_credentials_path)
 
     # Compress files and return path to tarball
     return await _create_tarfile(context, path, all_file_names, compression, notarization_workdir)
