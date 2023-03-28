@@ -78,17 +78,9 @@ case $COT_PRODUCT in
         echo $GOOGLE_CREDENTIALS_FENIX_BETA | base64 -d >        $GOOGLE_CREDENTIALS_FENIX_BETA_PATH
         echo $GOOGLE_CREDENTIALS_FENIX_RELEASE | base64 -d >     $GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH
 
-        # TODO bug 1817466 - remove
-        import_cert fennec-nightly $CERT_DIR/nightly.pem
-        # TODO bug 1817466 - remove
-        import_cert fennec-beta $CERT_DIR/release.pem
-        # TODO bug 1817466 - remove
-        import_cert fennec-production $CERT_DIR/release.pem
         import_cert fenix-nightly $CERT_DIR/fenix_nightly.pem
         import_cert fenix-beta $CERT_DIR/fenix_beta.pem
         import_cert fenix-release $CERT_DIR/fenix_release.pem
-        # TODO bug 1817466 - remove
-        import_cert fenix-production $CERT_DIR/fenix_production.pem
         import_cert focus $CERT_DIR/focus_release.pem
         import_cert reference-browser $CERT_DIR/reference_browser_release.pem
         ;;
