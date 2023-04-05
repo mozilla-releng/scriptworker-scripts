@@ -2,7 +2,9 @@ import os
 
 import pytest
 from google.api_core.exceptions import Forbidden
+from google.api_core.retry import Retry
 from google.auth.exceptions import DefaultCredentialsError
+from google.cloud.storage.retry import DEFAULT_RETRY_IF_GENERATION_SPECIFIED, ConditionalRetryPolicy
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 import beetmoverscript.gcloud
@@ -20,12 +22,14 @@ class FakeClient:
         name = "fakename"
         md5_hash = "fakemd5hash"
 
-        def copy_blob(*args):
+        def copy_blob(*args, **kwargs):
             pass
 
-        def upload_from_filename(self, path, content_type):
+        def upload_from_filename(self, path, content_type, retry=DEFAULT_RETRY_IF_GENERATION_SPECIFIED, if_generation_match=None):
             assert path == self.PATH
             assert content_type == "application/zip"
+            assert isinstance(retry, (Retry, ConditionalRetryPolicy))
+            assert isinstance(if_generation_match, (int, type(None)))
 
         def exists(self):
             return self._exists
@@ -43,7 +47,7 @@ class FakeClient:
         def blob(*args):
             return FakeClient.FakeBlob()
 
-        def copy_blob(*args):
+        def copy_blob(*args, **kwargs):
             pass
 
     class FakeBucketExisting(FakeBucket):
