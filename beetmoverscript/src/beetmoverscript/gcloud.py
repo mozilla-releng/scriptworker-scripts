@@ -10,6 +10,7 @@ from google.api_core.exceptions import Forbidden
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import artifactregistry_v1
 from google.cloud.storage import Bucket, Client
+from google.cloud.storage.retry import DEFAULT_RETRY
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from beetmoverscript.constants import CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE
@@ -115,8 +116,17 @@ async def upload_to_gcs(context, target_path, path):
     if blob.exists():
         log.warn("upload_to_gcs: Overriding file: %s", target_path)
     log.info("upload_to_gcs: %s -> Bucket: gs://%s/%s", path, bucket_name, target_path)
+    """
+    In certain cases, such as when handling *-latest directories, we need to overwrite existing file blobs.
+    Since we don't use `DELETE` requests in beetmover, the race condition mentioned in the GCS documentation [1] should not occur.
+    A race condition may arise if multiple tasks run simultaneously and attempt to upload to the same file key.
+    However, this issue exists independently of retries, so we proceed with retrying.
+    That's why we explicitly provide `retry=DEFAULT_RETRY` instead of utilizing `if_generation_match` [2], as recommended in the documentation.
 
-    return blob.upload_from_filename(path, content_type=mime_type)
+    [1] https://cloud.google.com/storage/docs/request-preconditions#multiple_request_retries
+    [2] https://cloud.google.com/storage/docs/xml-api/reference-headers#xgoogifgenerationmatch
+    """
+    return blob.upload_from_filename(path, content_type=mime_type, retry=DEFAULT_RETRY)
 
 
 async def import_from_gcs_to_artifact_registry(context):
@@ -225,4 +235,4 @@ def move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, release
         else:
             log.info("Copying {} to {}".format(source, destination))
             source_blob = bucket.blob(source)
-            bucket.copy_blob(source_blob, bucket, destination)
+            bucket.copy_blob(source_blob, bucket, destination, retry=DEFAULT_RETRY)
