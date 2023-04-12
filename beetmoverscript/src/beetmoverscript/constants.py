@@ -99,7 +99,6 @@ RELEASE_EXCLUDE = (
     r"^.*json$",
     r"^.*/host.*$",
     r"^.*/mar-tools/.*$",
-    r"^.*robocop.apk$",
     r"^.*contrib.*",
     r"^.*/beetmover-checksums/.*$",
     r"^.*\.deb$",
