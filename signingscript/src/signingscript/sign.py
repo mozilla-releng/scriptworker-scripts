@@ -1565,13 +1565,51 @@ async def rcodesign_notarize(paths, notarization_workdir, creds_path):
         await utils.execute_subprocess(command)
 
 
-def _can_notarize(filename):
+def _can_notarize(filename, supported_extensions):
     """
     Check if file can be notarized based on extension
     """
-    NOTARIZATION_EXTENSIONS = (".app", ".pkg")
     _, extension = os.path.splitext(filename)
-    return extension in NOTARIZATION_EXTENSIONS
+    return extension in supported_extensions
+
+
+async def _notarize_pkg(context, path, workdir):
+    """Notarizes a .pkg file"""
+    # Copy pkg to notarization_workdir
+    pkg_path = shutil.copy2(path, workdir)
+    all_file_names = [pkg_path]
+    workdir_files = os.listdir(workdir)
+
+    # Filter supported file extensions
+    supported_files = [filename for filename in workdir_files if _can_notarize(filename, (".pkg",))]
+    if not supported_files:
+        raise SigningScriptError("No supported files found")
+
+    # Notarize
+    await rcodesign_notarize(supported_files, workdir, context.apple_credentials_path)
+
+    # Copy pkg back - returns the destination path
+    return shutil.copy2(all_file_names[0], path)
+
+
+async def _notarize_all(context, path, workdir):
+    """Notarizes all files in a tarball"""
+    _, extension = os.path.splitext(path)
+    # Attempt extracting
+    all_file_names = await _extract_tarfile(context, path, extension, tmp_dir=workdir)
+    workdir_files = os.listdir(workdir)
+
+    # Filter supported file extensions
+    #  We also support .pkg in case it's a tarball with .app + .pkg inside
+    supported_files = [filename for filename in workdir_files if _can_notarize(filename, (".app", ".pkg"))]
+    if not supported_files:
+        raise SigningScriptError("No supported files found")
+
+    # Notarize
+    await rcodesign_notarize(supported_files, workdir, context.apple_credentials_path)
+
+    # Compress files and return path to tarball
+    return await _create_tarfile(context, path, all_file_names, extension, workdir)
 
 
 @time_async_function
@@ -1579,7 +1617,6 @@ async def apple_notarize(context, path, *args, **kwargs):
     """
     Notarizes given package(s) using rcodesign.
     """
-
     # Setup workdir
     notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
     if os.path.exists(notarization_workdir):
@@ -1588,27 +1625,6 @@ async def apple_notarize(context, path, *args, **kwargs):
 
     _, extension = os.path.splitext(path)
     if extension == ".pkg":
-        # Copy pkg to notarization_workdir
-        pkg_path = shutil.copy2(path, notarization_workdir)
-        all_file_names = [pkg_path]
+        return await _notarize_pkg(context, path, notarization_workdir)
     else:
-        # Attempt extracting
-        all_file_names = await _extract_tarfile(context, path, extension, tmp_dir=notarization_workdir)
-
-    workdir_files = os.listdir(notarization_workdir)
-
-    # Filter supported file extensions
-    supported_files = [filename for filename in workdir_files if _can_notarize(filename)]
-
-    if not supported_files:
-        raise SigningScriptError("No supported files found")
-
-    # Notarize
-    await rcodesign_notarize(supported_files, notarization_workdir, context.apple_credentials_path)
-
-    if extension == ".pkg":
-        # Copy pkg back - returns the destination path
-        return shutil.copy2(all_file_names[0], path)
-
-    # Compress files and return path to tarball
-    return await _create_tarfile(context, path, all_file_names, extension, notarization_workdir)
+        return await _notarize_all(context, path, notarization_workdir)
