@@ -1565,25 +1565,40 @@ async def rcodesign_notarize(paths, notarization_workdir, creds_path):
         await utils.execute_subprocess(command)
 
 
+def _can_notarize(filename):
+    """
+    Check if file can be notarized based on extension
+    """
+    NOTARIZATION_EXTENSIONS = (".app", ".pkg")
+    _, extension = os.path.splitext(filename)
+    return extension in NOTARIZATION_EXTENSIONS
+
+
 @time_async_function
 async def apple_notarize(context, path, *args, **kwargs):
     """
     Notarizes given package(s) using rcodesign.
     """
-    # Files that are usually included in .dmg packages don't need notarizing
-    NOTARIZATION_EXTENSIONS = (".app", ".pkg")
 
     # Setup workdir
     notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
-    _, compression = os.path.splitext(path)
-    all_file_names = await _extract_tarfile(context, path, compression, tmp_dir=notarization_workdir)
+    if os.path.exists(notarization_workdir):
+        shutil.rmtree(notarization_workdir, ignore_errors=True)
+    os.mkdir(notarization_workdir)
+
+    _, extension = os.path.splitext(path)
+    if extension == ".pkg":
+        # Copy pkg to notarization_workdir
+        pkg_path = shutil.copy2(path, notarization_workdir)
+        all_file_names = [pkg_path]
+    else:
+        # Attempt extracting
+        all_file_names = await _extract_tarfile(context, path, extension, tmp_dir=notarization_workdir)
+
     workdir_files = os.listdir(notarization_workdir)
 
     # Filter supported file extensions
-    def is_supported(path):
-        return os.path.splitext(path)[1] in NOTARIZATION_EXTENSIONS
-
-    supported_files = [path for path in workdir_files if is_supported(path)]
+    supported_files = [filename for filename in workdir_files if _can_notarize(filename)]
 
     if not supported_files:
         raise SigningScriptError("No supported files found")
@@ -1591,5 +1606,9 @@ async def apple_notarize(context, path, *args, **kwargs):
     # Notarize
     await rcodesign_notarize(supported_files, notarization_workdir, context.apple_credentials_path)
 
+    if extension == ".pkg":
+        # Copy pkg back - returns the destination path
+        return shutil.copy2(all_file_names[0], path)
+
     # Compress files and return path to tarball
-    return await _create_tarfile(context, path, all_file_names, compression, notarization_workdir)
+    return await _create_tarfile(context, path, all_file_names, extension, notarization_workdir)
