@@ -22,6 +22,9 @@ MAC_PRODUCT_CONFIG = {
         "zipfile_cmd": "ditto",
         "create_pkg": False,
         "hardened_runtime_only_files": ["wg", "wireguard-go"],
+        "profiles": {
+            "path": "local_profile_path"
+        }
     },
 }
 
