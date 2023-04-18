@@ -47,7 +47,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.realpath(os.path.dirname(__
 from mozbuild.action.tooltool import safe_extract  # noqa  # isort:skip
 from mozpack import mozjar  # noqa  # isort:skip
 
-_ZIP_ALIGNMENT = "4"  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
+_ZIP_ALIGNMENT = "4"  # Value must always be 4, based on https://developer.android.com/tools/zipalign
+_SO_ALIGNMENT = "-p"  # Page-aligns uncompressed .so files, based on https://developer.android.com/tools/zipalign
 
 # Blessed files call the other widevine files.
 _WIDEVINE_BLESSED_FILENAMES = (
@@ -664,7 +665,7 @@ async def zip_align_apk(context, abs_to):
         if context.config["verbose"] is True:
             zipalign_command += ["-v"]
 
-        zipalign_command += [_ZIP_ALIGNMENT, original_apk_location, temp_apk_location]
+        zipalign_command += [_SO_ALIGNMENT, _ZIP_ALIGNMENT, original_apk_location, temp_apk_location]
         await utils.execute_subprocess(zipalign_command)
         shutil.move(temp_apk_location, abs_to)
 

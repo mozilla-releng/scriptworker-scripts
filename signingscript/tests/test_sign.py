@@ -625,11 +625,11 @@ async def test_zip_align_apk(context, monkeypatch, is_verbose):
 
     async def execute_subprocess_mock(command):
         if is_verbose:
-            assert command[0:4] == ["/path/to/android/sdk/zipalign", "-v", "4", abs_to]
-            assert len(command) == 5
+            assert command[0:5] == ["/path/to/android/sdk/zipalign", "-v", "-p", "4", abs_to]
+            assert len(command) == 6
         else:
-            assert command[0:3] == ["/path/to/android/sdk/zipalign", "4", abs_to]
-            assert len(command) == 4
+            assert command[0:4] == ["/path/to/android/sdk/zipalign", "-p", "4", abs_to]
+            assert len(command) == 5
 
     def shutil_mock(_, destination):
         assert destination == abs_to
