@@ -15,6 +15,9 @@ case ${PROJECT_NAME} in
     tree)
         POLL_DURATION=3480
         ;;
+    signing)
+        POLL_DURATION=1500  # 25 minutes
+        ;;
     *)
         POLL_DURATION=1080
         ;;
