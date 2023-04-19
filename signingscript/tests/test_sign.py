@@ -409,20 +409,6 @@ async def test_sign_gpg(context, mocker):
     assert await sign.sign_gpg(context, "from", "blah") == ["from", "from.asc"]
 
 
-# sign_jar {{{1
-@pytest.mark.asyncio
-async def test_sign_jar(context, mocker):
-    counter = []
-
-    async def fake_zipalign(*args):
-        counter.append("1")
-
-    mocker.patch.object(sign, "sign_file", new=noop_async)
-    mocker.patch.object(sign, "zip_align_apk", new=fake_zipalign)
-    await sign.sign_jar(context, "from", "blah")
-    assert len(counter) == 1
-
-
 # sign_macapp {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize("filename,expected", (("foo.dmg", "foo.tar.gz"), ("foo.tar.bz2", "foo.tar.bz2")))
@@ -613,31 +599,6 @@ def test_remove_extra_files(context):
         assert not os.path.exists(path)
     for f in good:
         assert os.path.exists(os.path.join(work_dir, f))
-
-
-# zip_align_apk {{{1
-@pytest.mark.asyncio
-@pytest.mark.parametrize("is_verbose", (True, False))
-async def test_zip_align_apk(context, monkeypatch, is_verbose):
-    context.config["zipalign"] = "/path/to/android/sdk/zipalign"
-    context.config["verbose"] = is_verbose
-    abs_to = "/absolute/path/to/apk.apk"
-
-    async def execute_subprocess_mock(command):
-        if is_verbose:
-            assert command[0:4] == ["/path/to/android/sdk/zipalign", "-v", "4", abs_to]
-            assert len(command) == 5
-        else:
-            assert command[0:3] == ["/path/to/android/sdk/zipalign", "4", abs_to]
-            assert len(command) == 4
-
-    def shutil_mock(_, destination):
-        assert destination == abs_to
-
-    monkeypatch.setattr("signingscript.utils.execute_subprocess", execute_subprocess_mock)
-    monkeypatch.setattr("shutil.move", shutil_mock)
-
-    await sign.zip_align_apk(context, abs_to)
 
 
 # _convert_dmg_to_tar_gz {{{1

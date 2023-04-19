@@ -32,14 +32,6 @@ Supported scope prefixes:
   * Tells signingscript to expect to use the `gpg` signing format on some or all of the upstreamArtifacts.
   * **Branch Restrictions**: `None`
 
-* `{scope_prefix}:format:jar`
-  * Tells signingscript to expect to use the `jar` signing format on some or all of the upstreamArtifacts.
-  * **Branch Restrictions**: `None`
-
-* `{scope_prefix}:format:focus-jar`
-  * Tells signingscript to expect to use the `focus-jar` signing format on some or all of the upstreamArtifacts.
-  * **Branch Restrictions**: `None`
-
 * `{scope_prefix}:format:macapp`
   * Tells signingscript to expect to use the `macapp` signing format on some or all of the upstreamArtifacts.
   * **Branch Restrictions**: `None`

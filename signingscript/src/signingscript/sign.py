@@ -47,8 +47,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.realpath(os.path.dirname(__
 from mozbuild.action.tooltool import safe_extract  # noqa  # isort:skip
 from mozpack import mozjar  # noqa  # isort:skip
 
-_ZIP_ALIGNMENT = "4"  # Value must always be 4, based on https://developer.android.com/studio/command-line/zipalign.html
-
 # Blessed files call the other widevine files.
 _WIDEVINE_BLESSED_FILENAMES = (
     # plugin-container is the top of the calling stack
@@ -187,24 +185,6 @@ async def sign_gpg(context, from_, fmt, **kwargs):
     to = f"{from_}.asc"
     await sign_file(context, from_, fmt, to=to)
     return [from_, to]
-
-
-# sign_jar {{{1
-async def sign_jar(context, from_, fmt, **kwargs):
-    """Sign an apk, and zipalign.
-
-    Args:
-        context (Context): the signing context
-        from_ (str): the source file to sign
-        fmt (str): the format to sign with
-
-    Returns:
-        str: the path to the signed file
-
-    """
-    await sign_file(context, from_, fmt)
-    await zip_align_apk(context, from_)
-    return from_
 
 
 # sign_macapp {{{1
@@ -639,36 +619,6 @@ def remove_extra_files(top_dir, file_list):
             log.warning("Extra file to clean up: {}".format(f))
             rm(f)
     return extra_files
-
-
-# zip_align_apk {{{1
-@time_async_function
-async def zip_align_apk(context, abs_to):
-    """Optimize APK for better run-time performance.
-
-    This is necessary if the APK is uploaded to the Google Play Store.
-    https://developer.android.com/studio/command-line/zipalign.html
-
-    Args:
-        context (Context): the signing context
-        abs_to (str): the absolute path to the apk
-
-    """
-    original_apk_location = abs_to
-    zipalign_executable_location = context.config["zipalign"]
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_apk_location = os.path.join(temp_dir, "aligned.apk")
-
-        zipalign_command = [zipalign_executable_location]
-        if context.config["verbose"] is True:
-            zipalign_command += ["-v"]
-
-        zipalign_command += [_ZIP_ALIGNMENT, original_apk_location, temp_apk_location]
-        await utils.execute_subprocess(zipalign_command)
-        shutil.move(temp_apk_location, abs_to)
-
-    log.info('"{}" has been zip aligned'.format(abs_to))
 
 
 # _convert_dmg_to_tar_gz {{{1

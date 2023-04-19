@@ -87,10 +87,10 @@ def test_task_signing_formats_support_several_projects(context):
     context.config["taskcluster_scope_prefixes"] = ["project:mobile:firefox-android:releng:signing:"]
 
     context.task = {
-        "payload": {"upstreamArtifacts": [{"formats": ["focus-jar"]}]},
+        "payload": {"upstreamArtifacts": [{"formats": ["autograph_focus"]}]},
         "scopes": ["project:mobile:firefox-android:releng:signing:cert:dep-signing"],
     }
-    assert {"focus-jar"} == stask.task_signing_formats(context)
+    assert {"autograph_focus"} == stask.task_signing_formats(context)
 
     context.task = {"payload": {"upstreamArtifacts": [{"formats": ["autograph_fenix"]}]}, "scopes": ["project:mobile:firefox-android:releng:signing:cert:dep-signing"]}
     assert {"autograph_fenix"} == stask.task_signing_formats(context)
@@ -140,11 +140,8 @@ async def test_sign(context, mocker, format, filename, post_files):
     "format, expected",
     (
         # Hardcoded cases
-        ("autograph_apk_fennec_sha1", stask.sign_jar),
         ("autograph_hash_only_mar384", stask.sign_mar384_with_autograph_hash),
         ("gpg", stask.sign_gpg),
-        ("jar", stask.sign_jar),
-        ("focus-jar", stask.sign_jar),
         ("macapp", stask.sign_macapp),
         ("widevine", stask.sign_widevine),
         ("autograph_authenticode", stask.sign_authenticode),
