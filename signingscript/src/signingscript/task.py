@@ -22,7 +22,6 @@ from signingscript.sign import (
     sign_file_detached,
     sign_gpg,
     sign_gpg_with_autograph,
-    sign_jar,
     sign_macapp,
     sign_mar384_with_autograph_hash,
     sign_omnija,
@@ -34,15 +33,10 @@ log = logging.getLogger(__name__)
 
 FORMAT_TO_SIGNING_FUNCTION = immutabledict(
     {
-        # XXX Bug 1618531 - Fennec is the only remaining APK product where we want to run zipalign
-        # after autograph signed it. Others just default.
-        "autograph_apk_fennec_sha1": sign_jar,
         "autograph_hash_only_mar384": sign_mar384_with_autograph_hash,
         "autograph_stage_mar384": sign_mar384_with_autograph_hash,
         "gpg": sign_gpg,
         "autograph_gpg": sign_gpg_with_autograph,
-        "jar": sign_jar,
-        "focus-jar": sign_jar,
         "macapp": sign_macapp,
         "widevine": sign_widevine,
         "autograph_debsign": sign_debian_pkg,
