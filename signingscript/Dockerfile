@@ -5,7 +5,7 @@ FROM python:3.9.7
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app && \
     apt-get update && \
-    apt-get install -y zipalign osslsigncode cmake clang && \
+    apt-get install -y osslsigncode cmake clang && \
     apt-get clean && \
     ln -s /app/docker.d/healthcheck /bin/healthcheck
 

@@ -33,9 +33,6 @@
         "hfsplus": {
             "type": "string"
         },
-        "zipalign": {
-            "type": "string"
-        },
         "gpg_pubkey": {
             "type": "string"
         },

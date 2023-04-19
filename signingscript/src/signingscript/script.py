@@ -75,7 +75,6 @@ def get_default_config(base_dir=None):
         "my_ip": "127.0.0.1",
         "schema_file": os.path.join(os.path.dirname(__file__), "data", "signing_task_schema.json"),
         "verbose": True,
-        "zipalign": "zipalign",
         "dmg": "dmg",
         "hfsplus": "hfsplus",
         "gpg_pubkey": None,

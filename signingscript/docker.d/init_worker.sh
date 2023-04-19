@@ -24,7 +24,6 @@ test_var_set 'TEMPLATE_DIR'
 
 export DMG_PATH=$APP_DIR/signingscript/files/dmg
 export HFSPLUS_PATH=$APP_DIR/signingscript/files/hfsplus
-export ZIPALIGN_PATH=/usr/bin/zipalign
 
 export PASSWORDS_PATH=$CONFIG_DIR/passwords.json
 export APPLE_NOTARIZATION_CREDS_PATH=$CONFIG_DIR/apple_notarization_creds.json
