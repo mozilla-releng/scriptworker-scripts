@@ -27,7 +27,6 @@ taskcluster_scope_prefixes:
 token_duration_seconds: 7200
 dmg: { "$eval": "DMG_PATH" }
 hfsplus: { "$eval": "HFSPLUS_PATH" }
-zipalign: { "$eval": "ZIPALIGN_PATH" }
 gpg_pubkey: { "$eval": "GPG_PUBKEY_PATH" }
 widevine_cert: { "$eval": "WIDEVINE_CERT_PATH" }
 authenticode_cert: { "$eval": "AUTHENTICODE_CERT_PATH" }
