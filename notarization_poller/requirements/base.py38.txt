@@ -111,9 +111,9 @@ async-timeout==4.0.2 \
     #   -r requirements/base.in
     #   aiohttp
     #   taskcluster
-attrs==22.2.0 \
-    --hash=sha256:29e95c7f6778868dbd49170f98f8818f78f3dc5e0e37c0b1f474e3561b240836 \
-    --hash=sha256:c9227bfc2f01993c03f68db37d1d15c9690188323c067c641f1a35ca58185f99
+attrs==23.1.0 \
+    --hash=sha256:1f28b4522cdc2fb4256ac1a020c78acf9cba2c6b461ccd2c126f3aa8e8335d04 \
+    --hash=sha256:6279836d581513a26f1bf235f9acd333bc9115683f14f7e8fae46c98fc50e015
     # via aiohttp
 certifi==2022.12.7 \
     --hash=sha256:35824b4c3a97115964b408844d64aa14db1cc518f6562e8d7261699d1350a9e3 \
@@ -282,9 +282,9 @@ idna==3.4 \
     # via
     #   requests
     #   yarl
-immutabledict==2.2.3 \
-    --hash=sha256:0e1e8a3f2b3ff062daa19795f947e9ec7a58add269d44e34d3ab4319e1343853 \
-    --hash=sha256:a7b078ebcc4a58ddc73b55f808b26e7c8c2d5183fad325615112689e1a63e714
+immutabledict==2.2.4 \
+    --hash=sha256:3bedc0741faaa2846f6edf5c29183f993da3abaff6a5961bb70a5659bb9e68ab \
+    --hash=sha256:c827715c147d2364522f9a7709cc424c7001015274a3c705250e673605bde64b
     # via -r requirements/base.in
 mohawk==1.1.0 \
     --hash=sha256:3ed296a30453d0b724679e0fd41e4e940497f8e461a9a9c3b7f36e43bab0fa09 \
@@ -388,9 +388,9 @@ slugid==2.0.0 \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
     # via taskcluster
-taskcluster==48.2.1 \
-    --hash=sha256:3482a8eb910c0bcbfb7d93a2d6cee479dc28d6e352c30064740bf952159d2f99 \
-    --hash=sha256:46ad8d221d23133945b1dbcd5ca2071e6d1db7b3fb64d841cfe4996c618dc7cd
+taskcluster==49.1.1 \
+    --hash=sha256:1f783cd916cb48cc98b33f96260dab92f713d2fc8fdde823b45256641ca1cd0a \
+    --hash=sha256:79a8feecb9580e6e43ee61e5a25404eca9237344cc6489a3a95bcfeb0cfe5efc
     # via -r requirements/base.in
 taskcluster-urls==13.0.1 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
