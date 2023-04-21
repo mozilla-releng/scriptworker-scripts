@@ -1501,6 +1501,30 @@ async def sign_debian_pkg(context, path, fmt, *args, **kwargs):
     return path
 
 
+async def rcodesign_staple(path):
+    """Staples a given app"""
+    command = [
+        "rcodesign",
+        "staple",
+        path,
+    ]
+    log.info(f"Stapling binary at path {path}")
+    await utils.execute_subprocess(command)
+
+
+async def rcodesign_notary_wait(submission_id, creds_path):
+    """Polls Apple services for notarization status"""
+    command = [
+        "rcodesign",
+        "notary-wait",
+        "--api-key-path",
+        creds_path,
+        submission_id,
+    ]
+    log.info(f"Polling Apple Notary service for notarization status. Submission ID {submission_id}")
+    await utils.execute_subprocess(command)
+
+
 async def rcodesign_notarize(paths, notarization_workdir, creds_path):
     for app in paths:
         app_path = os.path.join(notarization_workdir, app)
@@ -1512,7 +1536,38 @@ async def rcodesign_notarize(paths, notarization_workdir, creds_path):
             creds_path,
             app_path,
         ]
-        await utils.execute_subprocess(command)
+
+        # Similar implementation to utils.execute_subprocess, but handling some errors:
+        message = 'Running "{}"'.format(" ".join(command))
+        log.info(message)
+        subprocess = await asyncio.create_subprocess_exec(
+            *command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+        log.info("COMMAND OUTPUT: ")
+        output_lines = []
+        while True:
+            line = await subprocess.stdout.readline()
+            if not line:
+                break
+            line = line.decode("utf-8").rstrip()
+            log.info(line)
+            output_lines.append(line)
+        exitcode = await subprocess.wait()
+        log.info("exitcode {}".format(exitcode))
+        if exitcode > 0:
+            if "Connection reset by peer" not in output_lines[-1]:
+                raise SigningScriptError("Unknown error from notarization service.")
+            log.info("Connection reset by peer, attempting to recover")
+            for line in output_lines:
+                if "submission ID: " in line:
+                    submission_id = line.split(": ")[-1]
+                    break
+            else:
+                raise SigningScriptError("Unable to find notarization submission ID from logs.")
+            await rcodesign_notary_wait(submission_id, creds_path)
+            await rcodesign_staple(app_path)
 
 
 def _can_notarize(filename, supported_extensions):
