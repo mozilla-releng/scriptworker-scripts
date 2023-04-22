@@ -1557,7 +1557,7 @@ async def rcodesign_notarize(paths, notarization_workdir, creds_path):
         exitcode = await subprocess.wait()
         log.info("exitcode {}".format(exitcode))
         if exitcode > 0:
-            if "Connection reset by peer" not in output_lines[-1]:
+            if not output_lines or "Connection reset by peer" not in output_lines[-1]:
                 raise SigningScriptError("Unknown error from notarization service.")
             log.info("Connection reset by peer, attempting to recover")
             for line in output_lines:
