@@ -32,7 +32,7 @@ from winsign.crypto import load_pem_certs
 from signingscript import task, utils
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
-from signingscript.rcodesign import RCodesignError, find_submission_id, rcodesign_notarize, rcodesign_notary_wait, rcodesign_staple
+from signingscript.rcodesign import RCodesignError, rcodesign_notarize, rcodesign_notary_wait, rcodesign_staple
 
 log = logging.getLogger(__name__)
 

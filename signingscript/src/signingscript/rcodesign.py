@@ -61,7 +61,7 @@ def find_submission_id(logs):
             ids.add(line.split(": ")[-1])
     if len(ids) > 1:
         log.error(f"Submission ids: {str(ids)}")
-        raise Exception("More than one submission id found in the logs")
+        raise RCodesignError("More than one submission id found in the logs")
     return ids.pop()
 
 

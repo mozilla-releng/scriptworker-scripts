@@ -10,7 +10,6 @@ import sys
 import tarfile
 import tempfile
 import zipfile
-from collections import namedtuple
 from contextlib import contextmanager
 from hashlib import sha256
 from io import BufferedRandom, BytesIO
@@ -1373,14 +1372,62 @@ def test_encode_single_file(tmpdir, mocker, context):
 
 
 @pytest.mark.asyncio
-async def test_apple_notarize(mocker, context):
-    filename = "appletest.tar.gz"
-    path = os.path.join(context.config["work_dir"], filename)
-    shutil.copy2(os.path.join(TEST_DATA_DIR, filename), path)
-    mocker.patch.object(sign, "rcodesign_notarize", noop_async)
+async def test_notarize_single(mocker):
+    retry_mock = mock.AsyncMock()
+    mocker.patch.object(sign, "retry_async", retry_mock)
+    await sign._notarize_single("/foo/bar", "/baz")
+    retry_mock.assert_awaited()
 
-    result = await sign.apple_notarize(context, path)
-    assert result == path
+
+@pytest.mark.asyncio
+async def test_notarize_pkg(mocker, context):
+    mocker.patch.object(sign.shutil, "copy2", lambda *_: "/foo.pkg")
+    mocker.patch.object(sign.os, "listdir", lambda *_: ["/foo.pkg", "/baz"])
+    mocker.patch.object(sign, "_notarize_single", noop_async)
+    mocker.patch.object(sign, "_create_tarfile", noop_async)
+    result = await sign._notarize_pkg(context, "/foo/bar", "/baz")
+    assert result == "/foo.pkg"
+
+
+@pytest.mark.asyncio
+async def test_notarize_pkg_fail(mocker, context):
+    mocker.patch.object(sign.shutil, "copy2", lambda *_: "/foo.pkg")
+    mocker.patch.object(sign.os, "listdir", lambda *_: [])
+    with pytest.raises(SigningScriptError):
+        await sign._notarize_pkg(context, "/foo/bar", "/baz")
+
+
+@pytest.mark.asyncio
+async def test_notarize_all(mocker, context):
+    mocker.patch.object(sign, "_extract_tarfile", noop_async)
+    mocker.patch.object(sign.os, "listdir", lambda *_: ["/foo.app"])
+    mocker.patch.object(sign, "_notarize_single", noop_async)
+    mocker.patch.object(sign, "_create_tarfile", noop_async)
+    await sign._notarize_all(context, "/foo/bar", "/baz")
+
+
+@pytest.mark.asyncio
+async def test_notarize_all_fail(mocker, context):
+    mocker.patch.object(sign, "_extract_tarfile", noop_async)
+    mocker.patch.object(sign.os, "listdir", lambda *_: [])
+    with pytest.raises(SigningScriptError):
+        await sign._notarize_all(context, "/foo/bar", "/baz")
+
+
+@pytest.mark.asyncio
+async def test_apple_notarize(mocker, context):
+    mocker.patch.object(sign, "_notarize_all", noop_async)
+    mocker.patch.object(sign, "_notarize_pkg", noop_async)
+    mocker.patch.object(sign.os.path, "exists", noop_sync)
+    mocker.patch.object(sign.os, "mkdir", noop_sync)
+    mocker.patch.object(sign.shutil, "rmtree", noop_sync)
+
+    await sign.apple_notarize(context, "/foo/bar.pkg")
+    # cover if workdir exists and non .pkg path
+    exists = mock.MagicMock()
+    exists.side_effect = [True]
+    mocker.patch.object(sign.os.path, "exists", exists)
+    await sign.apple_notarize(context, "/foo/bar")
 
 
 @pytest.mark.asyncio
@@ -1391,111 +1438,3 @@ async def test_apple_notarize_fail_format(context):
 
     with pytest.raises(sign.SigningScriptError, match=r"No supported files found"):
         await sign.apple_notarize(context, path)
-
-
-def mockit_async(value):
-    async def func():
-        return value
-
-    return func
-
-
-@pytest.mark.asyncio
-async def test_rcodesign_notarize(mocker, context):
-    path = os.path.join(TEST_DATA_DIR, "appletest.tar.gz")
-
-    async def mock_create_subprocess_exec(*args, **kwargs):
-        Subprocess = namedtuple("subprocess", ["stdout", "wait"])
-        Stdout = namedtuple("stdout", ["readline"])
-        return Subprocess(Stdout(mockit_async("")), mockit_async(0))
-
-    mocker.patch.object(sign.asyncio, "create_subprocess_exec", mock_create_subprocess_exec)
-
-    await sign.rcodesign_notarize([path], context.config["work_dir"], context.config["apple_notarization_configs"])
-
-
-@pytest.mark.asyncio
-async def test_rcodesign_notarize_fail_unknown(mocker, context):
-    path = os.path.join(TEST_DATA_DIR, "appletest.tar.gz")
-
-    async def mock_create_subprocess_exec(*args, **kwargs):
-        Subprocess = namedtuple("subprocess", ["stdout", "wait"])
-        Stdout = namedtuple("stdout", ["readline"])
-        return Subprocess(Stdout(mockit_async(None)), mockit_async(1))
-
-    mocker.patch.object(sign.asyncio, "create_subprocess_exec", mock_create_subprocess_exec)
-
-    with pytest.raises(SigningScriptError):
-        await sign.rcodesign_notarize([path], context.config["work_dir"], context.config["apple_notarization_configs"])
-
-
-@pytest.mark.asyncio
-async def test_rcodesign_notarize_fail_no_id(mocker, context):
-    path = os.path.join(TEST_DATA_DIR, "appletest.tar.gz")
-
-    async def mock_create_subprocess_exec(*args, **kwargs):
-        Subprocess = namedtuple("subprocess", ["stdout", "wait"])
-        Stdout = namedtuple("stdout", ["readline"])
-        readlinemock = mock.AsyncMock()
-        readlinemock.side_effect = [b"Connection reset by peer", None]
-        return Subprocess(Stdout(readlinemock), mockit_async(1))
-
-    mocker.patch.object(sign.asyncio, "create_subprocess_exec", mock_create_subprocess_exec)
-
-    with pytest.raises(SigningScriptError):
-        await sign.rcodesign_notarize([path], context.config["work_dir"], context.config["apple_notarization_configs"])
-
-
-@pytest.mark.asyncio
-async def test_rcodesign_notarize_recover(mocker, context):
-    path = os.path.join(TEST_DATA_DIR, "appletest.tar.gz")
-
-    async def mock_create_subprocess_exec(*args, **kwargs):
-        Subprocess = namedtuple("subprocess", ["stdout", "wait"])
-        Stdout = namedtuple("stdout", ["readline"])
-        readlinemock = mock.AsyncMock()
-        readlinemock.side_effect = [b"submission ID: 123", b"Connection reset by peer", None]
-        return Subprocess(Stdout(readlinemock), mockit_async(1))
-
-    mocker.patch.object(sign.asyncio, "create_subprocess_exec", mock_create_subprocess_exec)
-    mock_notary_wait = mock.AsyncMock()
-    mocker.patch.object(sign, "rcodesign_notary_wait", mock_notary_wait)
-    mock_staple = mock.AsyncMock()
-    mocker.patch.object(sign, "rcodesign_staple", mock_staple)
-
-    await sign.rcodesign_notarize([path], context.config["work_dir"], context.config["apple_notarization_configs"])
-    mock_notary_wait.assert_awaited_once_with("123", context.config["apple_notarization_configs"])
-    mock_staple.assert_awaited_once_with(path)
-
-
-@pytest.mark.asyncio
-async def test_rcodesign_notary_wait(mocker):
-    execute = mock.AsyncMock()
-    mocker.patch.object(sign.utils, "execute_subprocess", execute)
-
-    creds_path = "/foo/bar"
-    submission_id = "123"
-    await sign.rcodesign_notary_wait(submission_id, creds_path)
-    command = [
-        "rcodesign",
-        "notary-wait",
-        "--api-key-path",
-        creds_path,
-        submission_id,
-    ]
-    execute.assert_awaited_once_with(command)
-
-
-@pytest.mark.asyncio
-async def test_rcodesign_staple(mocker):
-    execute = mock.AsyncMock()
-    mocker.patch.object(sign.utils, "execute_subprocess", execute)
-
-    path = "/foo/bar"
-    await sign.rcodesign_staple(path)
-    command = [
-        "rcodesign",
-        "staple",
-        path,
-    ]
-    execute.assert_awaited_once_with(command)
