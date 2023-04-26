@@ -11,6 +11,9 @@ from pathlib import Path
 from iscript.autograph import sign_langpacks
 from iscript.exceptions import IScriptError
 from iscript.mac import (
+    create_pkg_files,
+    copy_pkgs_to_artifact_dir,
+    download_requirements_plist_file,
     extract_all_apps,
     filter_apps,
     get_app_paths,
@@ -170,3 +173,9 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
     # TODO: create .pkg!!
     await tar_apps(config, all_apps)
     log.info("Done signing apps.")
+
+    if create_pkg:
+        requirements_plist_path = await download_requirements_plist_file(config, task)
+        await create_pkg_files(config, sign_config, all_apps, requirements_plist_path)
+        await copy_pkgs_to_artifact_dir(config, all_apps)
+        log.info("Done creating pkgs.")
