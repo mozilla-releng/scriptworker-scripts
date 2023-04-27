@@ -39,7 +39,7 @@ async def download_signing_resources(hardened_sign_config, folder):
     for cfg in hardened_sign_config:
         if not cfg.get("entitlements", None):
             continue
-        entitlement_urls.update(cfg["entitlements"])
+        entitlement_urls.add(cfg["entitlements"])
     # Async download and set url -> file location mapping
     url_map = {}
     futures = []
@@ -99,7 +99,8 @@ def build_sign_command(app_path, identity, keychain, config, file_map):
         cmd.append(file_map[config["entitlements"]])
     # List globs
     for path_glob in config["globs"]:
-        full_path_glob = str(app_path / path_glob)
+        # Join incoming glob with root of app path
+        full_path_glob = str(app_path) + path_glob
         for binary_path in glob(full_path_glob, recursive=True):
             cmd.append(binary_path)
     return cmd
@@ -161,7 +162,7 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
             command = build_sign_command(
                 app_path=Path(app.app_path),
                 identity=sign_config["identity"],
-                keychain=sign_config["keychain"],
+                keychain=sign_config["signing_keychain"],
                 config=config_settings,
                 file_map=sign_config_files,
             )
@@ -170,7 +171,7 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
                 cwd=app.parent_dir,
                 exception=IScriptError,
             )
-    # TODO: create .pkg!!
+
     await tar_apps(config, all_apps)
     log.info("Done signing apps.")
 
