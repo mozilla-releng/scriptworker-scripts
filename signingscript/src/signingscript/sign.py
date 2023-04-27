@@ -32,6 +32,7 @@ from winsign.crypto import load_pem_certs
 from signingscript import task, utils
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
+from signingscript.rcodesign import RCodesignError, rcodesign_notarize, rcodesign_notary_wait, rcodesign_staple
 
 log = logging.getLogger(__name__)
 
@@ -1501,20 +1502,6 @@ async def sign_debian_pkg(context, path, fmt, *args, **kwargs):
     return path
 
 
-async def rcodesign_notarize(paths, notarization_workdir, creds_path):
-    for app in paths:
-        app_path = os.path.join(notarization_workdir, app)
-        command = [
-            "rcodesign",
-            "notary-submit",
-            "--staple",
-            "--api-key-path",
-            creds_path,
-            app_path,
-        ]
-        await utils.execute_subprocess(command)
-
-
 def _can_notarize(filename, supported_extensions):
     """
     Check if file can be notarized based on extension
@@ -1523,11 +1510,36 @@ def _can_notarize(filename, supported_extensions):
     return extension in supported_extensions
 
 
+async def _notarize_single(path, creds_path):
+    """Notarizes a single app/pkg retrying if necessary"""
+    ATTEMPTS = 5
+    # Notarize
+    submission_id = await retry_async(
+        func=rcodesign_notarize,
+        args=(path, creds_path),
+        attempts=ATTEMPTS,
+        retry_exceptions=RCodesignError,
+    )
+    # Wait for notary to be done
+    await retry_async(
+        func=rcodesign_notary_wait,
+        args=(submission_id, creds_path),
+        attempts=ATTEMPTS,
+        retry_exceptions=RCodesignError,
+    )
+    # Staple
+    await retry_async(
+        func=rcodesign_staple,
+        args=[path],
+        attempts=ATTEMPTS,
+        retry_exceptions=RCodesignError,
+    )
+
+
 async def _notarize_pkg(context, path, workdir):
     """Notarizes a .pkg file"""
     # Copy pkg to notarization_workdir
     pkg_path = shutil.copy2(path, workdir)
-    all_file_names = [pkg_path]
     workdir_files = os.listdir(workdir)
 
     # Filter supported file extensions
@@ -1536,10 +1548,11 @@ async def _notarize_pkg(context, path, workdir):
         raise SigningScriptError("No supported files found")
 
     # Notarize
-    await rcodesign_notarize(supported_files, workdir, context.apple_credentials_path)
+    for file in supported_files:
+        await _notarize_single(os.path.join(workdir, file), context.apple_credentials_path)
 
     # Copy pkg back - returns the destination path
-    return shutil.copy2(all_file_names[0], path)
+    return shutil.copy2(pkg_path, path)
 
 
 async def _notarize_all(context, path, workdir):
@@ -1556,7 +1569,8 @@ async def _notarize_all(context, path, workdir):
         raise SigningScriptError("No supported files found")
 
     # Notarize
-    await rcodesign_notarize(supported_files, workdir, context.apple_credentials_path)
+    for file in supported_files:
+        await _notarize_single(os.path.join(workdir, file), context.apple_credentials_path)
 
     # Compress files and return path to tarball
     return await _create_tarfile(context, path, all_file_names, extension, workdir)

@@ -1370,15 +1370,64 @@ def test_encode_single_file(tmpdir, mocker, context):
     expected = [{"keyid": "rvkgu", "options": {"zip": "passthrough"}, "input": "Um1VT1gzQWVzaXl6U2xo"}]
     assert result == expected
 
+
+@pytest.mark.asyncio
+async def test_notarize_single(mocker):
+    retry_mock = mock.AsyncMock()
+    mocker.patch.object(sign, "retry_async", retry_mock)
+    await sign._notarize_single("/foo/bar", "/baz")
+    retry_mock.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_notarize_pkg(mocker, context):
+    mocker.patch.object(sign.shutil, "copy2", lambda *_: "/foo.pkg")
+    mocker.patch.object(sign.os, "listdir", lambda *_: ["/foo.pkg", "/baz"])
+    mocker.patch.object(sign, "_notarize_single", noop_async)
+    mocker.patch.object(sign, "_create_tarfile", noop_async)
+    result = await sign._notarize_pkg(context, "/foo/bar", "/baz")
+    assert result == "/foo.pkg"
+
+
+@pytest.mark.asyncio
+async def test_notarize_pkg_fail(mocker, context):
+    mocker.patch.object(sign.shutil, "copy2", lambda *_: "/foo.pkg")
+    mocker.patch.object(sign.os, "listdir", lambda *_: [])
+    with pytest.raises(SigningScriptError):
+        await sign._notarize_pkg(context, "/foo/bar", "/baz")
+
+
+@pytest.mark.asyncio
+async def test_notarize_all(mocker, context):
+    mocker.patch.object(sign, "_extract_tarfile", noop_async)
+    mocker.patch.object(sign.os, "listdir", lambda *_: ["/foo.app"])
+    mocker.patch.object(sign, "_notarize_single", noop_async)
+    mocker.patch.object(sign, "_create_tarfile", noop_async)
+    await sign._notarize_all(context, "/foo/bar", "/baz")
+
+
+@pytest.mark.asyncio
+async def test_notarize_all_fail(mocker, context):
+    mocker.patch.object(sign, "_extract_tarfile", noop_async)
+    mocker.patch.object(sign.os, "listdir", lambda *_: [])
+    with pytest.raises(SigningScriptError):
+        await sign._notarize_all(context, "/foo/bar", "/baz")
+
+
 @pytest.mark.asyncio
 async def test_apple_notarize(mocker, context):
-    filename = "appletest.tar.gz"
-    path = os.path.join(context.config["work_dir"], filename)
-    shutil.copy2(os.path.join(TEST_DATA_DIR, filename), path)
-    mocker.patch.object(sign.utils, "execute_subprocess", noop_async)
+    mocker.patch.object(sign, "_notarize_all", noop_async)
+    mocker.patch.object(sign, "_notarize_pkg", noop_async)
+    mocker.patch.object(sign.os.path, "exists", noop_sync)
+    mocker.patch.object(sign.os, "mkdir", noop_sync)
+    mocker.patch.object(sign.shutil, "rmtree", noop_sync)
 
-    result = await sign.apple_notarize(context, path)
-    assert result == path
+    await sign.apple_notarize(context, "/foo/bar.pkg")
+    # cover if workdir exists and non .pkg path
+    exists = mock.MagicMock()
+    exists.side_effect = [True]
+    mocker.patch.object(sign.os.path, "exists", exists)
+    await sign.apple_notarize(context, "/foo/bar")
 
 
 @pytest.mark.asyncio
