@@ -608,9 +608,9 @@ slugid==2.0.0 \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
     # via taskcluster
-taskcluster==49.1.3 \
-    --hash=sha256:0156ad0089b25380bbc24645424f059fa7bee321361598333e0c79ca18555104 \
-    --hash=sha256:aa3c84be471492ba84b679bd50606076af09c23f5f3e1514e23d2ebc7e77f6c8
+taskcluster==49.2.0 \
+    --hash=sha256:b72c0b7db82b799919f869704a42a4b210dd4eb49dae9bf6f9d63e7432de1daa \
+    --hash=sha256:f935179a75095c5eff7d588db314cb63ffdfccdf5da22be6499446ab16638a0e
     # via
     #   -r requirements/base.in
     #   scriptworker

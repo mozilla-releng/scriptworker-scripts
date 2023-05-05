@@ -172,20 +172,13 @@ mypy-extensions==1.0.0 \
     # via
     #   black
     #   mypy
-packaging==23.1 \
-    --hash=sha256:994793af429502c4ea2ebf6bf664629d07c1a9fe974af92966e4b8d2df7edc61 \
-    --hash=sha256:a392980d2b6cffa644431898be54b0045151319d1e7ec34f0cfed48767dd334f
-    # via
-    #   black
-    #   build
-    #   pytest
 pathspec==0.11.1 \
     --hash=sha256:2798de800fa92780e33acca925945e9a19a133b715067cf165b8866c15a31687 \
     --hash=sha256:d8af70af76652554bd134c22b3e8a1cc46ed7d91edcdd721ef1a0c51a84a5293
     # via black
-pip-compile-multi==2.6.2 \
-    --hash=sha256:3521f9bb9cc48850cba014bc09be79438090fabdf5100fcd66d7eb44dc55b5ad \
-    --hash=sha256:79e6387ac1c390fc7ab99831407a4c446c416a5c83997b9d867b4811ae4fb44a
+pip-compile-multi==2.6.3 \
+    --hash=sha256:50f7db9f5c57a2d11035805b6d86620c4d640c560f22e3c8b509e133456d8a53 \
+    --hash=sha256:f0b950a2175d0b86fd5a186d2f786bc8f7c013acd2e856a2bc948d194e0e4c92
     # via -r requirements/test.in
 pip-tools==6.13.0 \
     --hash=sha256:50943f151d87e752abddec8158622c34ad7f292e193836e90e30d87da60b19d9 \
@@ -307,9 +300,9 @@ toposort==1.10 \
     --hash=sha256:bfbb479c53d0a696ea7402601f4e693c97b0367837c8898bc6471adfca37a6bd \
     --hash=sha256:cbdbc0d0bee4d2695ab2ceec97fe0679e9c10eab4b2a87a9372b929e70563a87
     # via pip-compile-multi
-types-requests==2.29.0.0 \
-    --hash=sha256:4cf6e323e856c779fbe8815bb977a5bf5d6c5034713e4c17ff2a9a20610f5b27 \
-    --hash=sha256:c86f4a955d943d2457120dbe719df24ef0924e11177164d10a0373cf311d7b4d
+types-requests==2.30.0.0 \
+    --hash=sha256:c6cf08e120ca9f0dc4fa4e32c3f953c3fba222bcc1db6b97695bce8da1ba9864 \
+    --hash=sha256:dec781054324a70ba64430ae9e62e7e9c8e4618c185a5cb3f87a6738251b5a31
     # via -r requirements/test.in
 types-urllib3==1.26.25.12 \
     --hash=sha256:3ba3d3a8ee46e0d5512c6bd0594da4f10b2584b47a470f8422044a2ab462f1df \

@@ -5,3 +5,7 @@ macholib
 pexpect
 requests-hawk
 taskcluster
+
+# for mozbuild - remove after the following bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1831648
+packaging
+six
