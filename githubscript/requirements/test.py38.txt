@@ -140,9 +140,9 @@ pathspec==0.11.1 \
     --hash=sha256:2798de800fa92780e33acca925945e9a19a133b715067cf165b8866c15a31687 \
     --hash=sha256:d8af70af76652554bd134c22b3e8a1cc46ed7d91edcdd721ef1a0c51a84a5293
     # via black
-pip-compile-multi==2.6.2 \
-    --hash=sha256:3521f9bb9cc48850cba014bc09be79438090fabdf5100fcd66d7eb44dc55b5ad \
-    --hash=sha256:79e6387ac1c390fc7ab99831407a4c446c416a5c83997b9d867b4811ae4fb44a
+pip-compile-multi==2.6.3 \
+    --hash=sha256:50f7db9f5c57a2d11035805b6d86620c4d640c560f22e3c8b509e133456d8a53 \
+    --hash=sha256:f0b950a2175d0b86fd5a186d2f786bc8f7c013acd2e856a2bc948d194e0e4c92
     # via -r requirements/test.in
 pip-tools==6.13.0 \
     --hash=sha256:50943f151d87e752abddec8158622c34ad7f292e193836e90e30d87da60b19d9 \
