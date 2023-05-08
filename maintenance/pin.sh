@@ -25,5 +25,19 @@ else
     "
 fi
 
-echo $DIRS | xargs -n4 -P4 docker run --rm -t -v $PWD:/src -w /src python:3.9 maintenance/pin-helper.sh
-echo $DIRS | xargs -n4 -P4 docker run --rm -t -v $PWD:/src -e SUFFIX=py38.txt -w /src python:3.8 maintenance/pin-helper.sh
+RUNCMD="RUN apt-get update && \
+    apt-get install -y \
+        gir1.2-ostree-1.0 \
+        libgirepository1.0-dev \
+        libsodium-dev && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip install --upgrade pip && \
+    pip install pip-compile-multi
+"
+
+echo -e "FROM python:3.8\n${RUNCMD}" | docker build --pull --tag "scriptworker-script-pin:3.8" -
+echo -e "FROM python:3.9\n${RUNCMD}" | docker build --pull --tag "scriptworker-script-pin:3.9" -
+
+
+echo $DIRS | xargs -n4 -P4 time docker run --rm -t -v $PWD:/src -w /src scriptworker-script-pin:3.8 maintenance/pin-helper.sh
+echo $DIRS | xargs -n4 -P4 time docker run --rm -t -v $PWD:/src -e SUFFIX=py38.txt -w /src scriptworker-script-pin:3.9 maintenance/pin-helper.sh
