@@ -1030,6 +1030,8 @@ async def create_pkg_files(config, sign_config, all_paths, requirements_plist_pa
         app.pkg_name = os.path.basename(app.pkg_path)
         cmd = (
             "pkgbuild",
+            "--ownership",
+            "preserve",
             "--install-location",
             "/Applications",
             *cmd_opts,
