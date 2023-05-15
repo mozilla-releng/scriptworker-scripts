@@ -17,7 +17,6 @@ test_var_set 'APP_DIR'
 test_var_set 'CONFIG_DIR'
 test_var_set 'CONFIG_LOADER'
 test_var_set 'COT_PRODUCT'
-test_var_set 'GPG_PUBKEY'
 test_var_set 'PROJECT_NAME'
 test_var_set 'PUBLIC_IP'
 test_var_set 'TEMPLATE_DIR'
@@ -27,7 +26,7 @@ export HFSPLUS_PATH=$APP_DIR/signingscript/files/hfsplus
 
 export PASSWORDS_PATH=$CONFIG_DIR/passwords.json
 export APPLE_NOTARIZATION_CREDS_PATH=$CONFIG_DIR/apple_notarization_creds.json
-export GPG_PUBKEY_PATH=$CONFIG_DIR/gpg_pubkey
+export GPG_PUBKEY_PATH=$APP_DIR/signingscript/src/signingscript/data/gpg_pubkey_dep.asc
 export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
 export AUTHENTICODE_TIMESTAMP_STYLE=old
 export AUTHENTICODE_TIMESTAMP_URL=http://timestamp.digicert.com
@@ -46,9 +45,8 @@ if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_CA_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CA_PATH_EV=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_ev.crt
   export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
+  export GPG_PUBKEY_PATH=$APP_DIR/signingscript/src/signingscript/data/gpg_pubkey_20230505.asc
 fi
-
-echo $GPG_PUBKEY | base64 -d > $GPG_PUBKEY_PATH
 
 case $COT_PRODUCT in
   firefox)
