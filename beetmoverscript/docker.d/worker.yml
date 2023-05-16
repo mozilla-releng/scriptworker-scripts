@@ -113,25 +113,6 @@ clouds:
             enabled: True
             product_buckets:
               firefox: 'fxpartners-distros'
-          dep:
-            credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: True
-            enabled: True
-            product_buckets:
-              devedition: 'moz-fx-productdelivery-no-7d6a-productdelivery'
-              firefox:    'moz-fx-productdelivery-no-7d6a-productdelivery'
-              mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
-            product_apt_repos:
-              firefox:
-                name: 'mozilla'
-                location: 'us'
-                project: 'moz-fx-productdelivery-no-7d6a'
-          dep-partner:
-            credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: True
-            enabled: True
-            product_buckets:
-              firefox: 'mozilla-releng-dep-partner'
         'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_CREDENTIALS" }
@@ -166,12 +147,6 @@ clouds:
             enabled: True
             product_buckets:
               thunderbird: 'moz-fx-productdelivery-pr-38b5-productdelivery'
-          dep:
-            credentials: { "$eval": "GCS_CREDENTIALS" }
-            fail_task_on_error: True
-            enabled: True
-            product_buckets:
-              thunderbird: 'moz-fx-productdelivery-no-7d6a-productdelivery'
         'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_CREDENTIALS" }
@@ -285,24 +260,6 @@ clouds:
               key: { "$eval": "PARTNER_KEY" }
             product_buckets:
               firefox: 'fxpartners-distros'
-          dep:
-            fail_task_on_error: True
-            enabled: True
-            credentials:
-              id: { "$eval": "DEP_ID" }
-              key: { "$eval": "DEP_KEY" }
-            product_buckets:
-              devedition: 'net-mozaws-stage-delivery-archive'
-              firefox:    'net-mozaws-stage-delivery-firefox'
-              mobile:     'net-mozaws-stage-delivery-archive'
-          dep-partner:
-            fail_task_on_error: True
-            enabled: True
-            credentials:
-              id: { "$eval": "DEP_PARTNER_ID" }
-              key: { "$eval": "DEP_PARTNER_KEY" }
-            product_buckets:
-              firefox: 'mozilla-releng-dep-partner'
           maven-production:
             fail_task_on_error: True
             enabled: True
@@ -359,14 +316,6 @@ clouds:
               key: { "$eval": "RELEASE_KEY" }
             product_buckets:
               thunderbird: 'net-mozaws-prod-delivery-archive'
-          dep:
-            fail_task_on_error: True
-            enabled: True
-            credentials:
-              id: { "$eval": "DEP_ID" }
-              key: { "$eval": "DEP_KEY" }
-            product_buckets:
-              thunderbird: 'net-mozaws-stage-delivery-archive'
 
         'COT_PRODUCT == "mobile" && (ENV == "dev" || ENV == "fake-prod")':
           maven-staging:
