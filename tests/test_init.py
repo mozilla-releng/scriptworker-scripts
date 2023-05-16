@@ -30,7 +30,6 @@ CONTEXT = {
         "DEP_KEY": "1",
         "DEP_PARTNER_ID": "1",
         "DEP_PARTNER_KEY": "1",
-        "GCS_CREDENTIALS": "1",
         "GCS_DEP_CREDS": "1",
         "GCS_RELEASE_CREDS": "1",
         "MAVEN_ID": "1",
