@@ -125,7 +125,7 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
         shutil.rmtree(tempdir, ignore_errors=True)
     os.mkdir(tempdir)
 
-    hardened_sign_config = task["payload"]["signing-config"]
+    hardened_sign_config = task["payload"]["hardened-sign-config"]
     sign_config_files = await download_signing_resources(hardened_sign_config, tempdir)
 
     all_apps = get_app_paths(config, task)

@@ -101,7 +101,7 @@
             "entitlements-url": {
               "type": "string"
             },
-            "signing-config": {
+            "hardened-sign-config": {
               "type": "array",
               "minItems": 0,
               "uniqueItems": true,
