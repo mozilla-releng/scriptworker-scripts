@@ -51,6 +51,10 @@ from mozpack import mozjar  # noqa  # isort:skip
 # Blessed files call the other widevine files.
 _WIDEVINE_BLESSED_FILENAMES = (
     # plugin-container is the top of the calling stack
+    "Firefox Media Plugin Helper",
+    "Firefox Developer Edition Media Plugin Helper",
+    "Firefox Nightly Media Plugin Helper",
+    "Nightly Media Plugin Helper",
     "plugin-container",
     "plugin-container.exe",
 )
