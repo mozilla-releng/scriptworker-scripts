@@ -94,6 +94,7 @@ case $ENV in
         test_var_set 'AUTOGRAPH_FENNEC_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_LANGPACK_PASSWORD'
         test_var_set 'AUTOGRAPH_LANGPACK_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_PASSWORD'
@@ -118,16 +119,19 @@ case $ENV in
         test_var_set 'AUTOGRAPH_FOCUS_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_PASSWORD'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_USERNAME'
         ;;
       app-services)
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         ;;
       glean)
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         ;;
       xpi)
         test_var_set 'AUTOGRAPH_XPI_PASSWORD'
@@ -153,6 +157,7 @@ case $ENV in
         test_var_set 'AUTOGRAPH_MAR_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         ;;
     esac
     ;;
@@ -170,9 +175,8 @@ case $ENV in
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
-        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
-        test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_LANGPACK_PASSWORD'
         test_var_set 'AUTOGRAPH_LANGPACK_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_NIGHTLY_PASSWORD'
@@ -195,16 +199,19 @@ case $ENV in
         test_var_set 'AUTOGRAPH_FOCUS_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_PASSWORD'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_USERNAME'
         ;;
       app-services)
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        test_var_set 'GPG_PUBKEY_PATH'
         ;;
       glean)
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        test_var_set 'GPG_PUBKEY_PATH'
         ;;
       xpi)
         test_var_set 'AUTOGRAPH_XPI_PASSWORD'
