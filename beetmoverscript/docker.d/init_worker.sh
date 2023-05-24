@@ -102,8 +102,21 @@ case $COT_PRODUCT in
     esac
     ;;
   app-services)
-    test_var_set 'MAVEN_ID'
-    test_var_set 'MAVEN_KEY'
+    case $ENV in
+      dev|fake-prod)
+        test_var_set 'GCS_DEP_CREDS'
+        test_var_set 'MAVEN_ID'
+        test_var_set 'MAVEN_KEY'
+        ;;
+      prod)
+        test_var_set 'GCS_RELEASE_CREDS'
+        test_var_set 'MAVEN_ID'
+        test_var_set 'MAVEN_KEY'
+        ;;
+      *)
+        exit 1
+        ;;
+    esac
     ;;
   glean)
     test_var_set 'MAVEN_ID'

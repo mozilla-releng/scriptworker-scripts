@@ -127,10 +127,10 @@ def test_mobile_prod():
 
 
 def test_application_services_fake_prod():
-    context = {"COT_PRODUCT": "app-services", "ENV": "fake-prod", "MAVEN_ID": "", "MAVEN_KEY": ""}
+    context = {"COT_PRODUCT": "app-services", "ENV": "fake-prod", "GCS_DEP_CREDS": "", "MAVEN_ID": "", "MAVEN_KEY": ""}
     _validate_config(context)
 
 
 def test_application_services_prod():
-    context = {"COT_PRODUCT": "app-services", "ENV": "prod", "MAVEN_ID": "", "MAVEN_KEY": ""}
+    context = {"COT_PRODUCT": "app-services", "ENV": "prod", "GCS_RELEASE_CREDS": "", "MAVEN_ID": "", "MAVEN_KEY": ""}
     _validate_config(context)
