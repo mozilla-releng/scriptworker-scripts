@@ -400,6 +400,12 @@ clouds:
               focus: 'net-mozaws-prod-delivery-archive'
 
         'COT_PRODUCT == "app-services" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            credentials: { "$eval": "GCS_DEP_CREDS" }
+            fail_task_on_error: True
+            enabled: True
+            product_buckets:
+              appservices: 'moz-fx-productdelivery-no-7d6a-productdelivery'
           maven-staging:
             fail_task_on_error: True
             enabled: True
@@ -410,6 +416,12 @@ clouds:
               appservices: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
 
         'COT_PRODUCT == "app-services" && ENV == "prod"':
+          release:
+            credentials: { "$eval": "GCS_RELEASE_CREDS" }
+            fail_task_on_error: True
+            enabled: True
+            product_buckets:
+              appservices: 'moz-fx-productdelivery-pr-38b5-productdelivery'
           maven-production:
             fail_task_on_error: True
             enabled: True
