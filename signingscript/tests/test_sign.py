@@ -1377,6 +1377,8 @@ async def test_notarize_single(mocker):
     mocker.patch.object(sign, "retry_async", retry_mock)
     await sign._notarize_single("/foo/bar", "/baz")
     retry_mock.assert_awaited()
+    # cover no staple
+    await sign._notarize_single("/foo/bar", "/baz", staple=False)
 
 
 @pytest.mark.asyncio
@@ -1416,18 +1418,17 @@ async def test_notarize_all_fail(mocker, context):
 
 @pytest.mark.asyncio
 async def test_apple_notarize(mocker, context):
-    mocker.patch.object(sign, "_notarize_all", noop_async)
-    mocker.patch.object(sign, "_notarize_pkg", noop_async)
-    mocker.patch.object(sign.os.path, "exists", noop_sync)
-    mocker.patch.object(sign.os, "mkdir", noop_sync)
+    notarize_all = mock.AsyncMock()
+    mocker.patch.object(sign, "_notarize_all", notarize_all)
+    notarize_pkg = mock.AsyncMock()
+    mocker.patch.object(sign, "_notarize_pkg", notarize_pkg)
     mocker.patch.object(sign.shutil, "rmtree", noop_sync)
+    mocker.patch.object(sign.utils, "mkdir", noop_sync)
 
     await sign.apple_notarize(context, "/foo/bar.pkg")
-    # cover if workdir exists and non .pkg path
-    exists = mock.MagicMock()
-    exists.side_effect = [True]
-    mocker.patch.object(sign.os.path, "exists", exists)
-    await sign.apple_notarize(context, "/foo/bar")
+    await sign.apple_notarize(context, "/foo/bar.tar.gz")
+    notarize_pkg.assert_awaited_once()
+    notarize_all.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -1438,3 +1439,22 @@ async def test_apple_notarize_fail_format(context):
 
     with pytest.raises(sign.SigningScriptError, match=r"No supported files found"):
         await sign.apple_notarize(context, path)
+
+
+@pytest.mark.asyncio
+async def test_notarize_geckodriver(mocker, context):
+    mocker.patch.object(sign, "_extract_tarfile", noop_async)
+    mocker.patch.object(sign, "_create_zipfile", noop_async)
+    mocker.patch.object(sign, "_notarize_single", noop_async)
+    await sign._notarize_geckodriver(context, "/foo/geckodriver.tar.gz", "/foo")
+
+
+@pytest.mark.asyncio
+async def test_apple_notarize_geckodriver(mocker, context):
+    notarize_geckodriver = mock.AsyncMock()
+    mocker.patch.object(sign, "_notarize_geckodriver", notarize_geckodriver)
+    mocker.patch.object(sign.shutil, "rmtree", noop_sync)
+    mocker.patch.object(sign.utils, "mkdir", noop_sync)
+
+    await sign.apple_notarize_geckodriver(context, "/foo/bar.pkg")
+    notarize_geckodriver.assert_awaited_once()

@@ -16,6 +16,7 @@ from scriptworker.utils import get_single_item_from_sequence
 
 from signingscript.sign import (
     apple_notarize,
+    apple_notarize_geckodriver,
     sign_authenticode,
     sign_debian_pkg,
     sign_file,
@@ -53,6 +54,7 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "system_addon": sign_xpi,
         "autograph_rsa": sign_file_detached,
         "apple_notarization": apple_notarize,
+        "apple_notarization_geckodriver": apple_notarize_geckodriver,
         "default": sign_file,
     }
 )
