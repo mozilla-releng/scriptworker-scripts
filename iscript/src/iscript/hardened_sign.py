@@ -67,9 +67,10 @@ def check_globs(app_path, globs):
     for path_glob in globs:
         if not path_glob.startswith("/"):
             raise IScriptError('ERROR: file pattern "{path_glob}" must start with "/"')
-        binary_paths = glob(str(app_path / path_glob), recursive=True)
+        joined_path = str(app_path) + str(path_glob)
+        binary_paths = glob(joined_path, recursive=True)
         if len(binary_paths) == 0:
-            log.warning('file pattern "%s" matches no files' % path_glob)
+            log.warning('file pattern "%s" matches no files' % joined_path)
 
 
 def build_sign_command(app_path, identity, keychain, config, file_map):
