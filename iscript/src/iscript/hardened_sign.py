@@ -65,9 +65,10 @@ async def download_signing_resources(hardened_sign_config, folder):
 
 def check_globs(app_path, globs):
     for path_glob in globs:
+        separator = ""
         if not path_glob.startswith("/"):
-            raise IScriptError('ERROR: file pattern "{path_glob}" must start with "/"')
-        joined_path = str(app_path) + str(path_glob)
+            separator = "/"
+        joined_path = str(app_path) + separator + path_glob
         binary_paths = glob(joined_path, recursive=True)
         if len(binary_paths) == 0:
             log.warning('file pattern "%s" matches no files' % joined_path)
@@ -100,8 +101,11 @@ def build_sign_command(app_path, identity, keychain, config, file_map):
         cmd.append(file_map[config["entitlements"]])
     # List globs
     for path_glob in config["globs"]:
+        separator = ""
+        if not path_glob.startswith("/"):
+            separator = "/"
         # Join incoming glob with root of app path
-        full_path_glob = str(app_path) + path_glob
+        full_path_glob = str(app_path) + separator + path_glob
         for binary_path in glob(full_path_glob, recursive=True):
             cmd.append(binary_path)
     return cmd
@@ -159,9 +163,9 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
     # sign apps concurrently
     for app in all_apps:
         for config_settings in hardened_sign_config:
-            check_globs(Path(app.app_path), config_settings["globs"])
+            check_globs(app.app_path, config_settings["globs"])
             command = build_sign_command(
-                app_path=Path(app.app_path),
+                app_path=app.app_path,
                 identity=sign_config["identity"],
                 keychain=sign_config["signing_keychain"],
                 config=config_settings,
