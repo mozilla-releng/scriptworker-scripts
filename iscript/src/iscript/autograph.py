@@ -29,9 +29,13 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-# Blessed files call the other widevine files.
+# These files load the Widevine CDM and therefore need a .sig file to be
+# generated.
 _WIDEVINE_BLESSED_FILENAMES = (
-    # plugin-container is the top of the calling stack
+    # On macOS, newer versions of Firefox will transition to use the
+    # "* Media Plugin Helper" executable instead of plugin-container for
+    # Widevine. plugin-container and plugin-container.exe will continue to
+    # be used for Linux and Windows respectively.
     "Firefox Media Plugin Helper",
     "Firefox Developer Edition Media Plugin Helper",
     "Firefox Nightly Media Plugin Helper",
