@@ -1518,7 +1518,7 @@ def _can_notarize(filename, supported_extensions):
     return extension in supported_extensions
 
 
-async def _notarize_single(path, creds_path):
+async def _notarize_single(path, creds_path, staple=True):
     """Notarizes a single app/pkg retrying if necessary"""
     ATTEMPTS = 5
     # Notarize
@@ -1535,6 +1535,8 @@ async def _notarize_single(path, creds_path):
         attempts=ATTEMPTS,
         retry_exceptions=RCodesignError,
     )
+    if not staple:
+        return
     # Staple
     await retry_async(
         func=rcodesign_staple,
@@ -1561,6 +1563,19 @@ async def _notarize_pkg(context, path, workdir):
 
     # Copy pkg back - returns the destination path
     return shutil.copy2(pkg_path, path)
+
+
+async def _notarize_geckodriver(context, path, workdir):
+    """Notarize geckodriver binary"""
+    _, extension = os.path.splitext(path)
+    all_file_names = await _extract_tarfile(context, path, extension, tmp_dir=workdir)
+    # Zip geckodriver to notarization_workdir
+    #  rCodesign doesn't know how to notarize other types of containers
+    zip_path = await _create_zipfile(context, os.path.join(workdir, "geckodriver.zip"), all_file_names, workdir)
+    # Notarize without stapling
+    await _notarize_single(zip_path, context.apple_credentials_path, staple=False)
+    # Return original signed file
+    return path
 
 
 async def _notarize_all(context, path, workdir):
@@ -1591,12 +1606,24 @@ async def apple_notarize(context, path, *args, **kwargs):
     """
     # Setup workdir
     notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
-    if os.path.exists(notarization_workdir):
-        shutil.rmtree(notarization_workdir, ignore_errors=True)
-    os.mkdir(notarization_workdir)
+    shutil.rmtree(notarization_workdir, ignore_errors=True)
+    utils.mkdir(notarization_workdir)
 
     _, extension = os.path.splitext(path)
     if extension == ".pkg":
         return await _notarize_pkg(context, path, notarization_workdir)
     else:
         return await _notarize_all(context, path, notarization_workdir)
+
+
+@time_async_function
+async def apple_notarize_geckodriver(context, path, *args, **kwargs):
+    """
+    Notarizes given geckodriver package using rcodesign.
+    """
+    # Setup workdir
+    notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
+    shutil.rmtree(notarization_workdir, ignore_errors=True)
+    utils.mkdir(notarization_workdir)
+
+    return await _notarize_geckodriver(context, path, notarization_workdir)

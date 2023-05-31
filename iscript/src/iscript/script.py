@@ -3,13 +3,13 @@
 import logging
 import os
 
-from scriptworker_client.client import sync_main
-from scriptworker_client.utils import run_command
-
 from iscript.exceptions import IScriptError
+from iscript.hardened_sign import sign_hardened_behavior
 from iscript.mac import notarize_1_behavior, notarize_3_behavior, notarize_behavior, sign_and_pkg_behavior, sign_behavior, single_file_behavior
 from iscript.macvpn import vpn_behavior
 from iscript.util import get_sign_config
+from scriptworker_client.client import sync_main
+from scriptworker_client.utils import run_command
 
 log = logging.getLogger(__name__)
 
@@ -69,6 +69,8 @@ def get_behavior_function(behavior):
         "mac_notarize_part_1": (notarize_1_behavior, {}),
         "mac_notarize_part_3": (notarize_3_behavior, {}),
         "mac_sign": (sign_behavior, {}),
+        "mac_sign_and_pkg_hardened": (sign_hardened_behavior, {"create_pkg": True}),
+        "mac_sign_hardened": (sign_hardened_behavior, {"create_pkg": False}),
         # For staging releases; or should we mac_notarize but skip notarization
         # for dep?
         "mac_sign_and_pkg": (sign_and_pkg_behavior, {}),
