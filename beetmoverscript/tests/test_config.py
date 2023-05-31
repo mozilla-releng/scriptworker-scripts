@@ -34,7 +34,8 @@ def test_firefox_fake_prod():
     context = {
         "COT_PRODUCT": "firefox",
         "ENV": "fake-prod",
-        "GCS_CREDENTIALS": "",
+        "GCS_DEP_CREDS": "",
+        "GCS_RELEASE_CREDS": "",
         "DEP_ID": "",
         "DEP_KEY": "",
         "DEP_PARTNER_ID": "",
@@ -49,7 +50,8 @@ def test_firefox_prod():
     context = {
         "COT_PRODUCT": "firefox",
         "ENV": "prod",
-        "GCS_CREDENTIALS": "",
+        "GCS_DEP_CREDS": "",
+        "GCS_RELEASE_CREDS": "",
         "NIGHTLY_ID": "",
         "NIGHTLY_KEY": "",
         "RELEASE_ID": "",
@@ -70,7 +72,8 @@ def test_thunderbird_fake_prod():
     context = {
         "COT_PRODUCT": "thunderbird",
         "ENV": "fake-prod",
-        "GCS_CREDENTIALS": "",
+        "GCS_DEP_CREDS": "",
+        "GCS_RELEASE_CREDS": "",
         "DEP_ID": "",
         "DEP_KEY": "",
     }
@@ -81,7 +84,8 @@ def test_thunderbird_prod():
     context = {
         "COT_PRODUCT": "thunderbird",
         "ENV": "prod",
-        "GCS_CREDENTIALS": "",
+        "GCS_DEP_CREDS": "",
+        "GCS_RELEASE_CREDS": "",
         "NIGHTLY_ID": "",
         "NIGHTLY_KEY": "",
         "RELEASE_ID": "",
@@ -96,7 +100,8 @@ def test_mobile_fake_prod():
     context = {
         "COT_PRODUCT": "mobile",
         "ENV": "fake-prod",
-        "GCS_CREDENTIALS": "",
+        "GCS_DEP_CREDS": "",
+        "GCS_RELEASE_CREDS": "",
         "DEP_ID": "",
         "DEP_KEY": "",
         "MAVEN_ID": "",
@@ -111,7 +116,8 @@ def test_mobile_prod():
     context = {
         "COT_PRODUCT": "mobile",
         "ENV": "prod",
-        "GCS_CREDENTIALS": "",
+        "GCS_DEP_CREDS": "",
+        "GCS_RELEASE_CREDS": "",
         "DEP_ID": "",
         "DEP_KEY": "",
         "NIGHTLY_ID": "",
@@ -127,10 +133,10 @@ def test_mobile_prod():
 
 
 def test_application_services_fake_prod():
-    context = {"COT_PRODUCT": "app-services", "ENV": "fake-prod", "MAVEN_ID": "", "MAVEN_KEY": ""}
+    context = {"COT_PRODUCT": "app-services", "ENV": "fake-prod", "GCS_DEP_CREDS": "", "MAVEN_ID": "", "MAVEN_KEY": ""}
     _validate_config(context)
 
 
 def test_application_services_prod():
-    context = {"COT_PRODUCT": "app-services", "ENV": "prod", "MAVEN_ID": "", "MAVEN_KEY": ""}
+    context = {"COT_PRODUCT": "app-services", "ENV": "prod", "GCS_RELEASE_CREDS": "", "MAVEN_ID": "", "MAVEN_KEY": ""}
     _validate_config(context)

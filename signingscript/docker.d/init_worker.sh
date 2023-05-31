@@ -17,7 +17,6 @@ test_var_set 'APP_DIR'
 test_var_set 'CONFIG_DIR'
 test_var_set 'CONFIG_LOADER'
 test_var_set 'COT_PRODUCT'
-test_var_set 'GPG_PUBKEY'
 test_var_set 'PROJECT_NAME'
 test_var_set 'PUBLIC_IP'
 test_var_set 'TEMPLATE_DIR'
@@ -27,7 +26,7 @@ export HFSPLUS_PATH=$APP_DIR/signingscript/files/hfsplus
 
 export PASSWORDS_PATH=$CONFIG_DIR/passwords.json
 export APPLE_NOTARIZATION_CREDS_PATH=$CONFIG_DIR/apple_notarization_creds.json
-export GPG_PUBKEY_PATH=$CONFIG_DIR/gpg_pubkey
+export GPG_PUBKEY_PATH=$APP_DIR/signingscript/src/signingscript/data/gpg_pubkey_dep.asc
 export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
 export AUTHENTICODE_TIMESTAMP_STYLE=old
 export AUTHENTICODE_TIMESTAMP_URL=http://timestamp.digicert.com
@@ -46,9 +45,8 @@ if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_CA_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CA_PATH_EV=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_ev.crt
   export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
+  export GPG_PUBKEY_PATH=$APP_DIR/signingscript/src/signingscript/data/gpg_pubkey_20230505.asc
 fi
-
-echo $GPG_PUBKEY | base64 -d > $GPG_PUBKEY_PATH
 
 case $COT_PRODUCT in
   firefox)
@@ -96,6 +94,7 @@ case $ENV in
         test_var_set 'AUTOGRAPH_FENNEC_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_LANGPACK_PASSWORD'
         test_var_set 'AUTOGRAPH_LANGPACK_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_PASSWORD'
@@ -120,16 +119,19 @@ case $ENV in
         test_var_set 'AUTOGRAPH_FOCUS_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_PASSWORD'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_USERNAME'
         ;;
       app-services)
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         ;;
       glean)
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         ;;
       xpi)
         test_var_set 'AUTOGRAPH_XPI_PASSWORD'
@@ -155,6 +157,7 @@ case $ENV in
         test_var_set 'AUTOGRAPH_MAR_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         ;;
     esac
     ;;
@@ -172,9 +175,8 @@ case $ENV in
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
-        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
-        test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_LANGPACK_PASSWORD'
         test_var_set 'AUTOGRAPH_LANGPACK_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_NIGHTLY_PASSWORD'
@@ -197,16 +199,19 @@ case $ENV in
         test_var_set 'AUTOGRAPH_FOCUS_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_PASSWORD'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_USERNAME'
         ;;
       app-services)
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        test_var_set 'GPG_PUBKEY_PATH'
         ;;
       glean)
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
+        test_var_set 'GPG_PUBKEY_PATH'
         ;;
       xpi)
         test_var_set 'AUTOGRAPH_XPI_PASSWORD'
