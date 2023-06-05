@@ -381,7 +381,7 @@ async def test_move_beets_raises(mocker, task_filename):
     context.balrog_manifest = list()
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
 
-    with pytest.raises(ScriptWorkerTaskException) as excinfo:
+    with pytest.raises(ScriptWorkerTaskException):
         await move_beets(context, context.artifacts_to_beetmove, artifact_map={})
 
 
