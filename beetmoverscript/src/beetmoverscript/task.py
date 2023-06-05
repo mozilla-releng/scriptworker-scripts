@@ -217,7 +217,7 @@ def get_release_props(task, platform_mapping=STAGE_PLATFORM_MAP):
     return payload_properties
 
 
-def get_updated_buildhub_artifact(path, installer_artifact, installer_path, context, locale, manifest=None, artifact_map=None):
+def get_updated_buildhub_artifact(path, installer_artifact, installer_path, context, locale, artifact_map):
     """
     Read the file into a dict, alter the fields below, and return the updated dict
     buildhub.json fields that should be changed: download.size, download.date, download.url
@@ -225,13 +225,9 @@ def get_updated_buildhub_artifact(path, installer_artifact, installer_path, cont
     contents = utils.load_json(path)
     url_prefix = utils.get_url_prefix(context)
 
-    if artifact_map:
-        task_id = get_taskId_from_full_path(installer_path)
-        cfg = utils.extract_file_config_from_artifact_map(artifact_map, installer_artifact, task_id, locale)
-        path = urllib.parse.quote(cfg["destinations"][0])
-    else:
-        dest = manifest["mapping"][locale][installer_artifact]["destinations"][0]
-        path = urllib.parse.quote(urllib.parse.urljoin(manifest["s3_bucket_path"], dest))
+    task_id = get_taskId_from_full_path(installer_path)
+    cfg = utils.extract_file_config_from_artifact_map(artifact_map, installer_artifact, task_id, locale)
+    path = urllib.parse.quote(cfg["destinations"][0])
     url = urllib.parse.urljoin(url_prefix, path)
 
     # Update fields
