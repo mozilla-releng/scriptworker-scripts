@@ -354,7 +354,7 @@ def cleanup(context):
 
 
 # move_beets {{{1
-async def move_beets(context, artifacts_to_beetmove, manifest=None, artifact_map=None):
+async def move_beets(context, artifacts_to_beetmove, artifact_map):
     beets = []
 
     for locale in artifacts_to_beetmove:
@@ -388,35 +388,19 @@ async def move_beets(context, artifacts_to_beetmove, manifest=None, artifact_map
                         installer_path=artifacts_to_beetmove[locale][installer_artifact],
                         context=context,
                         locale=locale,
-                        manifest=manifest,
                         artifact_map=artifact_map,
                     ),
                 )
 
-            if artifact_map:
-                task_id = get_taskId_from_full_path(source)
-                # Should only ever be one (taskId, locale) match.
-                map_entry = extract_file_config_from_artifact_map(artifact_map, artifact, task_id, locale)
+            task_id = get_taskId_from_full_path(source)
+            # Should only ever be one (taskId, locale) match.
+            map_entry = extract_file_config_from_artifact_map(artifact_map, artifact, task_id, locale)
 
-                artifact_pretty_name = map_entry["checksums_path"]
-                destinations = map_entry["destinations"]
-                update_balrog_manifest = map_entry.get("update_balrog_manifest", False)
-                balrog_format = map_entry.get("balrog_format", "")
-                from_buildid = map_entry.get("from_buildid")
-            else:
-                artifact_pretty_name = manifest["mapping"][locale][artifact]["s3_key"]
-                destinations = [os.path.join(manifest["s3_bucket_path"], dest) for dest in manifest["mapping"][locale][artifact]["destinations"]]
-                update_balrog_manifest = manifest["mapping"][locale][artifact].get("update_balrog_manifest")
-                # Adjust old template format.
-                # artifact map specifies these separately.
-                # templates say "update_balrog_manifest": true
-                # or "update_balrog_manifest": {"format": mozinfo}
-                if isinstance(update_balrog_manifest, dict):
-                    balrog_format = update_balrog_manifest.get("format")
-                    update_balrog_manifest = True
-                else:
-                    balrog_format = ""
-                from_buildid = manifest["mapping"][locale][artifact].get("from_buildid")
+            artifact_pretty_name = map_entry["checksums_path"]
+            destinations = map_entry["destinations"]
+            update_balrog_manifest = map_entry.get("update_balrog_manifest", False)
+            balrog_format = map_entry.get("balrog_format", "")
+            from_buildid = map_entry.get("from_buildid")
 
             beets.append(
                 asyncio.ensure_future(

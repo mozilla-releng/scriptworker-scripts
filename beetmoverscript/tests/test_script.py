@@ -234,14 +234,13 @@ def restore_buildhub_file():
 
 # move_beets {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("task_filename", ("task.json", "task_artifact_map.json"))
 @pytest.mark.parametrize("partials", (False, True))
-async def test_move_beets(task_filename, partials, mocker, restore_buildhub_file):
+async def test_move_beets(partials, mocker, restore_buildhub_file):
     mocker.patch("beetmoverscript.utils.JINJA_ENV", get_test_jinja_env())
 
     context = Context()
     context.config = get_fake_valid_config()
-    context.task = get_fake_valid_task(taskjson=task_filename)
+    context.task = get_fake_valid_task(taskjson="task_artifact_map.json")
     context.release_props = context.task["payload"]["releaseProperties"]
     context.release_props["stage_platform"] = context.release_props["platform"]
     context.resource = "nightly"
@@ -249,12 +248,7 @@ async def test_move_beets(task_filename, partials, mocker, restore_buildhub_file
     context.raw_balrog_manifest = dict()
     context.balrog_manifest = list()
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
-    if context.task["payload"].get("artifactMap"):
-        artifact_map = context.task["payload"].get("artifactMap")
-        manifest = None
-    else:
-        artifact_map = None
-        manifest = generate_beetmover_manifest(context)
+    artifact_map = context.task["payload"]["artifactMap"]
 
     expected_sources = [
         os.path.abspath("tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.mozinfo.json"),
@@ -359,7 +353,7 @@ async def test_move_beets(task_filename, partials, mocker, restore_buildhub_file
                 context.raw_balrog_manifest[locale].setdefault("completeInfo", {})[balrog_format] = data
 
     with mock.patch("beetmoverscript.script.move_beet", fake_move_beet):
-        await move_beets(context, context.artifacts_to_beetmove, manifest=manifest, artifact_map=artifact_map)
+        await move_beets(context, context.artifacts_to_beetmove, artifact_map=artifact_map)
 
     assert sorted(expected_sources) == sorted(actual_sources)
     assert sorted(expected_destinations) == sorted(actual_destinations)
@@ -372,12 +366,13 @@ async def test_move_beets(task_filename, partials, mocker, restore_buildhub_file
 
 # move_beets {{{1
 @pytest.mark.asyncio
-async def test_move_beets_raises(mocker):
+@pytest.mark.parametrize("task_filename", ("task.json", "task_missing_installer.json"))
+async def test_move_beets_raises(mocker, task_filename):
     mocker.patch("beetmoverscript.utils.JINJA_ENV", get_test_jinja_env())
 
     context = Context()
     context.config = get_fake_valid_config()
-    context.task = get_fake_valid_task(taskjson="task_missing_installer.json")
+    context.task = get_fake_valid_task(taskjson=task_filename)
     context.release_props = context.task["payload"]["releaseProperties"]
     context.release_props["stage_platform"] = context.release_props["platform"]
     context.resource = "nightly"
@@ -387,7 +382,7 @@ async def test_move_beets_raises(mocker):
     context.artifacts_to_beetmove = get_upstream_artifacts(context)
 
     with pytest.raises(ScriptWorkerTaskException):
-        await move_beets(context, context.artifacts_to_beetmove, manifest=None, artifact_map=None)
+        await move_beets(context, context.artifacts_to_beetmove, artifact_map={})
 
 
 # move_beet {{{1
