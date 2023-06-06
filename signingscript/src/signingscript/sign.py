@@ -1574,7 +1574,7 @@ async def _notarize_all(context, path, workdir):
     """Notarizes all files in a tarball"""
     _, extension = os.path.splitext(path)
     # Attempt extracting
-    all_file_names = await _extract_tarfile(context, path, extension, tmp_dir=workdir)
+    await _extract_tarfile(context, path, extension, tmp_dir=workdir)
     workdir_files = os.listdir(workdir)
 
     # Filter supported file extensions
@@ -1587,8 +1587,14 @@ async def _notarize_all(context, path, workdir):
     for file in supported_files:
         await _notarize_single(os.path.join(workdir, file), context.apple_credentials_path)
 
+    # List all files from workdir for tarball
+    all_files = []
+    for root, _, files in os.walk(workdir):
+        for f in files:
+            all_files.append(os.path.join(root, f))
+
     # Compress files and return path to tarball
-    return await _create_tarfile(context, path, all_file_names, extension, workdir)
+    return await _create_tarfile(context, path, all_files, extension, workdir)
 
 
 @time_async_function
