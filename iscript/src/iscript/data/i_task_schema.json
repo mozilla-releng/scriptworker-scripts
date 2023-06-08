@@ -95,7 +95,8 @@
               "type": "string",
               "enum": [
                 "firefox",
-                "mozillavpn"
+                "mozillavpn",
+                "mozregression"
               ]
             },
             "entitlements-url": {
