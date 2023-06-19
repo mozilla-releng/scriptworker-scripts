@@ -240,7 +240,7 @@ async def sign_xpi(context, orig_path, fmt, **kwargs):
         raise SigningScriptError("Expected a .xpi")
 
     ext_id = _extension_id(orig_path, fmt)
-    log.info("Identified {} as extension id: {}".format(orig_path, id))
+    log.info("Identified {} as extension id: {}".format(orig_path, ext_id))
     kwargs = {"extension_id": ext_id}
     # Sign the appropriate inner files
     await sign_file_with_autograph(context, orig_path, fmt, **kwargs)
