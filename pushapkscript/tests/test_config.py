@@ -57,3 +57,13 @@ def test_mobile_fake_prod():
         "GOOGLE_CREDENTIALS_REFERENCE_BROWSER_DEP_PATH": "reference-browser",
     }
     _validate_config(context)
+
+
+def test_firefox_fake_prod():
+    context = {
+        "COT_PRODUCT": "firefox",
+        "ENV": "fake-prod",
+        "GOOGLE_CREDENTIALS_FENIX_DEP_PATH": "fenix",
+        "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH": "focus",
+    }
+    _validate_config(context)
