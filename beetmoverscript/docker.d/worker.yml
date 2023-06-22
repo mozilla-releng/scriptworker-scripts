@@ -244,6 +244,15 @@ clouds:
               key: { "$eval": "MAVEN_KEY" }
             product_buckets:
               geckoview: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
+              components: 'maven-default-s3-upload-bucket-13gy5ufwa3qv'
+          maven-nightly-staging:
+            fail_task_on_error: True
+            enabled: True
+            credentials:
+              id: { "$eval": "MAVEN_NIGHTLY_ID" }
+              key: { "$eval": "MAVEN_NIGHTLY_KEY" }
+            product_buckets:
+              nightly_components: 'maven-nightly-stage-s3-upload-bucket'
 
         'COT_PRODUCT == "firefox" && ENV == "prod"':
           nightly:

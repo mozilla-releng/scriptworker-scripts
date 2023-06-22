@@ -21,6 +21,8 @@ case $COT_PRODUCT in
         test_var_set 'DEP_PARTNER_KEY'
         test_var_set 'MAVEN_ID'
         test_var_set 'MAVEN_KEY'
+        test_var_set 'MAVEN_NIGHTLY_ID'
+        test_var_set 'MAVEN_NIGHTLY_KEY'
         ;;
       prod)
         test_var_set 'GCS_RELEASE_CREDS'
