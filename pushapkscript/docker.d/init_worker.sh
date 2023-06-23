@@ -89,6 +89,23 @@ case $COT_PRODUCT in
         ;;
     esac
     ;;
+  firefox)
+    case $ENV in
+      dev|fake-prod)
+
+        echo "dummy" > $CONFIG_DIR/fake_cert.p12
+        export GOOGLE_CREDENTIALS_FENIX_DEP_PATH=$CONFIG_DIR/fake_cert.p12
+        export GOOGLE_CREDENTIALS_FOCUS_DEP_PATH=$CONFIG_DIR/fake_cert.p12
+
+        import_cert fenix $CERT_DIR/fenix_dep.pem
+        import_cert focus $CERT_DIR/focus_dep.pem
+
+        ;;
+      *)
+        exit 1
+        ;;
+    esac
+    ;;
   mozillavpn)
     case $ENV in
       dev|fake-prod)
