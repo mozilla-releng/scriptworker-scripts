@@ -147,10 +147,6 @@ async def do_bump_version(config, repo_path, files, next_version, source_repo):
             is_esr = curr_version.is_esr
         except AttributeError:  # Fenix does not expose the is_esr attribute
             is_esr = False
-        else:
-            if not is_esr and next_version.is_esr:
-                # if the file had no esr prefix then don't add it
-                next_version = VersionClass.parse(str(next_version)[:-3])
 
         # XXX In the case of ESR, some files (like version.txt) show version numbers without `esr`
         # at the end. next_version is usually provided without `esr` too.
