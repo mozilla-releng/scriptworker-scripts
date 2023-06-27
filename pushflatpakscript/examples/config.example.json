@@ -1,6 +1,7 @@
 {
   "work_dir": "/some/work/dir",
   "verbose": true,
+  "taskcluster_scope_prefix": "project:releng:flathub:firefox:",
   "push_to_flathub": true,
   "flathub_url": "flathub URL location",
   "flat_manager_client": "local-path-to-flat-manager",

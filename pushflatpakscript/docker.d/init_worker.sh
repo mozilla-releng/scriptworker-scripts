@@ -32,7 +32,12 @@ case $ENV in
 esac
 
 case $COT_PRODUCT in
-  firefox) ;;
+  firefox)
+    export TASKCLUSTER_SCOPE_PREFIX="project:releng:flathub:firefox:"
+    ;;
+  thunderbird)
+    export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:flathub:"
+    ;;
   *)
     exit 1
     ;;

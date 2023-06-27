@@ -202,7 +202,7 @@ def get_expected_return_code(app, product, env):
         if product not in ("mobile", "mozillavpn"):
             return 1
     elif app == "pushflatpak":
-        if product != "firefox":
+        if product  not in ("firefox", "thunderbird"):
             return 1
     elif app == "pushmsix":
         if product != "firefox":

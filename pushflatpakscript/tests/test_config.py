@@ -9,6 +9,7 @@ COMMON_CONTEXT = {
     "WORK_DIR": "",
     "ARTIFACTS_DIR": "",
     "VERBOSE": "true",
+    "TASKCLUSTER_SCOPE_PREFIX": "",
     "FLATHUB_URL": "https://flat.example",
     "FLAT_MANAGER_CLIENT": "/app/bin/flat-manager-client",
     "TASKCLUSTER_ROOT_URL": "http://taskcluster",
