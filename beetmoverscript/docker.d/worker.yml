@@ -67,6 +67,8 @@ clouds:
             product_buckets:
               devedition: 'moz-fx-productdelivery-no-7d6a-productdelivery'
               firefox:    'moz-fx-productdelivery-no-7d6a-productdelivery'
+              fenix:      'moz-fx-productdelivery-no-7d6a-productdelivery'
+              focus:      'moz-fx-productdelivery-no-7d6a-productdelivery'
             product_apt_repos:
               firefox:
                 name: 'mozilla'
