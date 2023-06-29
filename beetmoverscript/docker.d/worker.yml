@@ -74,12 +74,6 @@ clouds:
                 name: 'mozilla'
                 location: 'us'
                 project: 'moz-fx-productdelivery-no-7d6a'
-          dep-partner:
-            credentials: { "$eval": "GCS_DEP_CREDS" }
-            fail_task_on_error: True
-            enabled: True
-            product_buckets:
-              firefox: 'mozilla-releng-dep-partner'
         'COT_PRODUCT == "firefox" && ENV == "prod"':
           nightly:
             credentials: { "$eval": "GCS_RELEASE_CREDS" }
@@ -107,12 +101,6 @@ clouds:
                 name: 'mozilla'
                 location: 'us'
                 project: 'moz-fx-productdelivery-pr-38b5'
-          partner:
-            credentials: { "$eval": "GCS_RELEASE_CREDS" }
-            fail_task_on_error: True
-            enabled: True
-            product_buckets:
-              firefox: 'fxpartners-distros'
         'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_DEP_CREDS" }
@@ -228,14 +216,6 @@ clouds:
               firefox:    'net-mozaws-stage-delivery-firefox'
               fennec:     'net-mozaws-stage-delivery-archive'
               mobile:     'net-mozaws-stage-delivery-archive'
-          dep-partner:
-            fail_task_on_error: True
-            enabled: True
-            credentials:
-              id: { "$eval": "DEP_PARTNER_ID" }
-              key: { "$eval": "DEP_PARTNER_KEY" }
-            product_buckets:
-              firefox: 'mozilla-releng-dep-partner'
           maven-staging:
             fail_task_on_error: True
             enabled: True
@@ -275,14 +255,6 @@ clouds:
               devedition: 'net-mozaws-prod-delivery-archive'
               firefox:    'net-mozaws-prod-delivery-firefox'
               mobile:     'net-mozaws-prod-delivery-archive'
-          partner:
-            fail_task_on_error: True
-            enabled: True
-            credentials:
-              id: { "$eval": "PARTNER_ID" }
-              key: { "$eval": "PARTNER_KEY" }
-            product_buckets:
-              firefox: 'fxpartners-distros'
           maven-production:
             fail_task_on_error: True
             enabled: True
