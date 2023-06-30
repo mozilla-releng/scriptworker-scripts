@@ -258,14 +258,14 @@ def test_get_partials_props(taskjson, expected):
 # get_candidates_prefix {{{1
 @pytest.mark.parametrize(
     "product,version,build_number,expected",
-    (("fennec", "bar", "baz", "pub/mobile/candidates/bar-candidates/buildbaz/"), ("mobile", "99.0a3", 14, "pub/mobile/candidates/99.0a3-candidates/build14/")),
+    (("firefox", "bar", "baz", "pub/firefox/candidates/bar-candidates/buildbaz/"), ("devedition", "99.0a3", 14, "pub/devedition/candidates/99.0a3-candidates/build14/")),
 )
 def test_get_candidates_prefix(product, version, build_number, expected):
     assert get_candidates_prefix(product, version, build_number) == expected
 
 
 # get_releases_prefix {{{1
-@pytest.mark.parametrize("product,version,expected", (("firefox", "bar", "pub/firefox/releases/bar/"), ("fennec", "99.0a3", "pub/mobile/releases/99.0a3/")))
+@pytest.mark.parametrize("product,version,expected", (("firefox", "bar", "pub/firefox/releases/bar/"), ("thunderbird", "99.0a3", "pub/thunderbird/releases/99.0a3/")))
 def test_get_releases_prefix(product, version, expected):
     assert get_releases_prefix(product, version) == expected
 
@@ -310,9 +310,9 @@ def test_get_partner_match(keyname, partners, expected):
         ("firefox", "dummy", "firefox"),
         ("firefox", "devedition", "devedition"),
         ("Firefox", "devedition", "Devedition"),
-        ("Fennec", "dummy", "Fennec"),
+        ("thunderbird", "dummy", "thunderbird"),
         ("Firefox", "dummy", "Firefox"),
-        ("fennec", "dummy", "fennec"),
+        ("Thunderbird", "dummy", "Thunderbird"),
     ),
 )
 def test_get_product_name(context, appName, stage_platform, expected):
