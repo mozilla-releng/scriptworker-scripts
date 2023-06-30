@@ -47,7 +47,7 @@ class FakeResponse(aiohttp.client_reqrep.ClientResponse):
     async def json(self, *args, **kwargs):
         return self._payload
 
-    async def release(self):
+    def release(self):
         return
 
     async def read(self, *args):
