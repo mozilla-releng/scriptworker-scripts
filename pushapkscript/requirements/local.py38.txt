@@ -20,13 +20,13 @@ filelock==3.12.2 \
     # via
     #   tox
     #   virtualenv
-pyproject-api==1.5.2 \
-    --hash=sha256:999f58fa3c92b23ebd31a6bad5d1f87d456744d75e05391be7f5c729015d3d91 \
-    --hash=sha256:9cffcbfb64190f207444d7579d315f3278f2c04ba46d685fad93197b5326d348
+pyproject-api==1.5.3 \
+    --hash=sha256:14cf09828670c7b08842249c1f28c8ee6581b872e893f81b62d5465bec41502f \
+    --hash=sha256:ffb5b2d7cad43f5b2688ab490de7c4d3f6f15e0b819cb588c4b771567c9729eb
     # via tox
-tox==4.6.2 \
-    --hash=sha256:52241851a7b0cd7de07d6ef067a13b092d2a4f82fe9048efb2444aed1708d713 \
-    --hash=sha256:58c7c2acce2f3d44cd1b359349557162336288ecf19ef53ccda89c9cee0ad9c4
+tox==4.6.4 \
+    --hash=sha256:1b8f8ae08d6a5475cad9d508236c51ea060620126fd7c3c513d0f5c7f29cc776 \
+    --hash=sha256:5e2ad8845764706170d3dcaac171704513cc8a725655219acb62fe4380bdadda
     # via -r requirements/local.in
 virtualenv==20.23.1 \
     --hash=sha256:34da10f14fea9be20e0fd7f04aba9732f84e593dac291b757ce42e3368a39419 \
@@ -34,6 +34,7 @@ virtualenv==20.23.1 \
     # via tox
 
 # WARNING: The following packages were not pinned, but pip requires them to be
-# pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.
+# pinned when the requirements file includes hashes and the requirement is not
+# satisfied by a package already installed. Consider using the --allow-unsafe flag.
 # pip
 # setuptools
