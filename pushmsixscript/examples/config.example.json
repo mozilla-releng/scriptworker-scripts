@@ -1,6 +1,7 @@
 {
   "work_dir": "/some/path",
   "verbose": true,
+  "taskcluster_scope_prefix": "project:releng:microsoftstore",
   "push_to_store": false,
   "request_timeout_seconds": 30,
   "login_url": "https://login.microsoftonline.com",

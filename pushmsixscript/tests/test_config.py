@@ -9,6 +9,7 @@ COMMON_CONTEXT = {
     "WORK_DIR": "",
     "ARTIFACTS_DIR": "",
     "VERBOSE": "true",
+    "TASKCLUSTER_SCOPE_PREFIX": "",
     "REQUEST_TIMEOUT_SECONDS": 30,
     "LOGIN_URL": "https://fake-login.com/",
     "TOKEN_RESOURCE": "https://fake-token-resource.com/",

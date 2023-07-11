@@ -15,8 +15,6 @@ export LOGIN_URL=https://login.microsoftonline.com
 export TOKEN_RESOURCE=https://manage.devcenter.microsoft.com
 export STORE_URL=https://manage.devcenter.microsoft.com/v1.0/my/applications/
 export MOCK_APPLICATION_ID=MOCK-APP-ID
-export BETA_APPLICATION_ID=9NZW26FRNDLN
-export RELEASE_APPLICATION_ID=9NZVDKPMR9RD
 export RELEASE_ROLLOUT_PERCENTAGE=25.0
 
 case $ENV in
@@ -36,7 +34,16 @@ case $ENV in
 esac
 
 case $COT_PRODUCT in
-  firefox) ;;
+  firefox)
+    export BETA_APPLICATION_ID=9NZW26FRNDLN
+    export RELEASE_APPLICATION_ID=9NZVDKPMR9RD
+    export TASKCLUSTER_SCOPE_PREFIX="project:releng:microsoftstore:"
+    ;;
+  thunderbird)
+    export BETA_APPLICATION_ID=ZZZZZTBDZZZZZ
+    export RELEASE_APPLICATION_ID=ZZZZZTBDZZZZZ
+    export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:microsoftstore:"
+    ;;
   *)
     exit 1
     ;;

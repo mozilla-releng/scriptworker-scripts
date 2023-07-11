@@ -17,6 +17,7 @@ from pushmsixscript.script import main
     (
         (
             {
+                "taskcluster_scope_prefix": "project:releng:microsoftstore:",
                 "push_to_store": False,
                 "login_url": "https://fake-login.com",
                 "token_resource": "https://fake-token-resource.com",
@@ -36,6 +37,7 @@ from pushmsixscript.script import main
         ),
         (
             {
+                "taskcluster_scope_prefix": "project:releng:microsoftstore:",
                 "push_to_store": True,
                 "login_url": "https://fake-login.com",
                 "token_resource": "https://fake-token-resource.com",

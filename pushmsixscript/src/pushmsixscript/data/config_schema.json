@@ -13,6 +13,9 @@
         "client_secret"
     ],
     "properties": {
+        "taskcluster_scope_prefix": {
+            "type": "string"
+        },
         "push_to_store": {
             "type": "boolean"
         },

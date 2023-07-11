@@ -200,7 +200,7 @@ def get_expected_return_code(app, product, env):
         if product != "firefox":
             return 1
     elif app == "pushmsix":
-        if product != "firefox":
+        if product not in ("firefox", "thunderbird"):
             return 1
     elif app == "shipit":
         if product not in ("adhoc", "firefox", "mobile", "thunderbird", "xpi"):
