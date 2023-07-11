@@ -16,7 +16,7 @@
                 "fail_task_on_error": true,
                 "credentials": "eyJoZWxsbyI6ICJ3b3JsZCJ9Cg==",
                 "product_buckets": {
-                    "fennec": "dummy",
+                    "devedition": "dummy",
                     "firefox": "dummy",
                     "fake": "dummy"
                 }
@@ -31,7 +31,7 @@
                     "key": "dummy"
                 },
                 "product_buckets": {
-                    "fennec": "dummy",
+                    "devedition": "dummy",
                     "firefox": "dummy",
                     "fake": "dummy"
                 }

@@ -67,8 +67,8 @@ clouds:
             product_buckets:
               devedition: 'moz-fx-productdelivery-no-7d6a-productdelivery'
               firefox:    'moz-fx-productdelivery-no-7d6a-productdelivery'
-              fennec:     'moz-fx-productdelivery-no-7d6a-productdelivery'
-              mobile:     'moz-fx-productdelivery-no-7d6a-productdelivery'
+              fenix:      'moz-fx-productdelivery-no-7d6a-productdelivery'
+              focus:      'moz-fx-productdelivery-no-7d6a-productdelivery'
             product_apt_repos:
               firefox:
                 name: 'mozilla'
@@ -82,7 +82,6 @@ clouds:
             product_buckets:
               devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
               firefox:    'moz-fx-productdelivery-pr-38b5-productdelivery'
-              mobile:     'moz-fx-productdelivery-pr-38b5-productdelivery'
             product_apt_repos:
               firefox:
                 name: 'mozilla'
@@ -95,7 +94,6 @@ clouds:
             product_buckets:
               devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
               firefox:    'moz-fx-productdelivery-pr-38b5-productdelivery'
-              mobile:     'moz-fx-productdelivery-pr-38b5-productdelivery'
             product_apt_repos:
               firefox:
                 name: 'mozilla'
@@ -214,8 +212,6 @@ clouds:
             product_buckets:
               devedition: 'net-mozaws-stage-delivery-archive'
               firefox:    'net-mozaws-stage-delivery-firefox'
-              fennec:     'net-mozaws-stage-delivery-archive'
-              mobile:     'net-mozaws-stage-delivery-archive'
           maven-staging:
             fail_task_on_error: True
             enabled: True
@@ -244,7 +240,6 @@ clouds:
             product_buckets:
               devedition: 'net-mozaws-prod-delivery-archive'
               firefox:    'net-mozaws-prod-delivery-firefox'
-              mobile:     'net-mozaws-prod-delivery-archive'
           release:
             fail_task_on_error: True
             enabled: True
@@ -254,7 +249,6 @@ clouds:
             product_buckets:
               devedition: 'net-mozaws-prod-delivery-archive'
               firefox:    'net-mozaws-prod-delivery-firefox'
-              mobile:     'net-mozaws-prod-delivery-archive'
           maven-production:
             fail_task_on_error: True
             enabled: True

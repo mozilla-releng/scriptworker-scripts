@@ -49,7 +49,7 @@ async def test_push_to_partner(context, mocker):
 )
 @pytest.mark.asyncio
 async def test_push_to_releases_s3(context, mocker, candidates_keys, releases_keys, exception_type):
-    context.task = {"payload": {"product": "fennec", "build_number": 33, "version": "99.0b44"}}
+    context.task = {"payload": {"product": "devedition", "build_number": 33, "version": "99.0b44"}}
 
     objects = [candidates_keys, releases_keys]
 
