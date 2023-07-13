@@ -2,6 +2,7 @@
     "title": "pushmsixscript config schema",
     "type": "object",
     "required": [
+        "taskcluster_scope_prefix",
         "push_to_store",
         "request_timeout_seconds",
         "login_url",
