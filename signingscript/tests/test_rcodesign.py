@@ -60,10 +60,20 @@ async def test_rcodesign_notarize_failure(mocker, context):
 @pytest.mark.asyncio
 async def test_rcodesign_notary_wait(mocker):
     execute = mock.AsyncMock()
-    execute.side_effect = [(0, ["mock poll complete"])]
+    execute.side_effect = [(0, ["poll state after 1s: InProgress", "poll state after 108s: Accepted"])]
     mocker.patch.object(rcodesign, "_execute_command", execute)
     creds_path = "/foo/bar"
     submission_id = "123"
+    await rcodesign.rcodesign_notary_wait(submission_id, creds_path)
+    execute.assert_awaited_once_with([
+        "rcodesign",
+        "notary-wait",
+        "--api-key-path",
+        creds_path,
+        submission_id,
+    ])
+    execute.reset_mock()
+    execute.side_effect = [(0, ["weird logs, but no errors"])]
     await rcodesign.rcodesign_notary_wait(submission_id, creds_path)
     execute.assert_awaited_once_with([
         "rcodesign",
@@ -78,6 +88,17 @@ async def test_rcodesign_notary_wait(mocker):
 async def test_rcodesign_notary_wait_fail(mocker):
     execute = mock.AsyncMock()
     execute.side_effect = [(1, ["mock poll failure complete"])]
+    mocker.patch.object(rcodesign, "_execute_command", execute)
+    creds_path = "/foo/bar"
+    submission_id = "123"
+    with pytest.raises(rcodesign.RCodesignError):
+        await rcodesign.rcodesign_notary_wait(submission_id, creds_path)
+
+
+@pytest.mark.asyncio
+async def test_rcodesign_notary_wait_check_fail(mocker):
+    execute = mock.AsyncMock()
+    execute.side_effect = [(0, ["poll state after 100s: Invalid"])]
     mocker.patch.object(rcodesign, "_execute_command", execute)
     creds_path = "/foo/bar"
     submission_id = "123"

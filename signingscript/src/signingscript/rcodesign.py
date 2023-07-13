@@ -2,6 +2,7 @@
 """Functions that interface with rcodesign"""
 import asyncio
 import logging
+import re
 from signingscript.exceptions import SigningScriptError
 
 log = logging.getLogger(__name__)
@@ -100,11 +101,32 @@ async def rcodesign_notary_wait(submission_id, creds_path):
         submission_id,
     ]
     log.info(f"Polling Apple Notary service for notarization status. Submission ID {submission_id}")
-    exitcode, _ = await _execute_command(command)
+    exitcode, logs = await _execute_command(command)
     if exitcode > 0:
         raise RCodesignError(f"Error polling notary service. Exit code {exitcode}")
+
+    await rcodesign_check_result(logs)
     return
 
+
+async def rcodesign_check_result(logs):
+    """Checks notarization results
+    rcodesign cli call can exit with 0 even though the notarization has failed
+    Args:
+        logs (list<str>): output from polling result
+    """
+    re_inprogress = re.compile("^poll state after.*InProgress$")
+    re_accepted = re.compile("^poll state after.*Accepted$")
+    re_invalid = re.compile("^poll state after.*Invalid$")
+    for line in logs:
+        if re_inprogress.search(line):
+            continue
+        if re_accepted.search(line):
+            # Notarization Accepted - should be good
+            return
+        if re_invalid.search(line):
+            raise RCodesignError("Notarization failed!")
+    return
 
 async def rcodesign_staple(path):
     """Staples a given app
