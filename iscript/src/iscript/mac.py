@@ -119,6 +119,17 @@ def _get_pkg_name_from_tarball(path):
     raise IScriptError("Unknown tarball suffix in path {}".format(path))
 
 
+async def flush_disk_cache():
+    """Force disk cache to be purged (flushed and emptied)
+    Tar can have issues reading sparse files and losing signatures if the system isn't done
+    writing down signature to files.
+    """
+    await run_command(
+        ["sudo", "/usr/sbin/purge"],
+        exception=IScriptError,
+    )
+
+
 # set_app_path_and_name {{{1
 def set_app_path_and_name(app):
     """Set the ``App`` ``app_path`` and ``app_name``.
@@ -1363,6 +1374,7 @@ async def sign_behavior(config, task):
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
     await sign_all_apps(config, sign_config, entitlements_path, all_paths, provisioning_profile_path)
+    await flush_disk_cache()
     await tar_apps(config, all_paths)
     log.info("Done signing apps.")
 
