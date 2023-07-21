@@ -23,6 +23,9 @@ case $COT_PRODUCT in
   adhoc)
     export TASKCLUSTER_SCOPE_PREFIX="project:adhoc:releng:ship-it:"
     ;;
+  app-services)
+    export TASKCLUSTER_SCOPE_PREFIX="project:app-services:releng:ship-it:"
+    ;;
   *)
     exit 1
     ;;

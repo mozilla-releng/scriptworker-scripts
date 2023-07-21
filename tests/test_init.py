@@ -203,7 +203,7 @@ def get_expected_return_code(app, product, env):
         if product != "firefox":
             return 1
     elif app == "shipit":
-        if product not in ("adhoc", "firefox", "mobile", "thunderbird", "xpi"):
+        if product not in ("adhoc", "app-services", "firefox", "mobile", "thunderbird", "xpi"):
             return 1
     elif app == "tree":
         if product not in ("firefox", "mobile", "thunderbird"):
