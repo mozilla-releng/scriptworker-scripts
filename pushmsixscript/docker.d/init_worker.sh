@@ -40,8 +40,8 @@ case $COT_PRODUCT in
     export TASKCLUSTER_SCOPE_PREFIX="project:releng:microsoftstore:"
     ;;
   thunderbird)
-    export BETA_APPLICATION_ID=ZZZZZTBDZZZZZ
-    export RELEASE_APPLICATION_ID=ZZZZZTBDZZZZZ
+    export BETA_APPLICATION_ID=9PFQWVMSS45P
+    export RELEASE_APPLICATION_ID=9PM5VM1S3VMQ
     export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:microsoftstore:"
     ;;
   *)
