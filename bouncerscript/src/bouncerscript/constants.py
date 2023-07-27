@@ -2,9 +2,11 @@ ALIASES_REGEXES = {
     "thunderbird-beta-latest": r"^Thunderbird-\d+\.0b\d+$",
     "thunderbird-beta-latest-ssl": r"^Thunderbird-\d+\.0b\d+-SSL$",
     "thunderbird-beta-msi-latest-ssl": r"^Thunderbird-\d+\.0b\d+-msi-SSL$",
+    "thunderbird-beta-msix-latest-ssl": r"^Thunderbird-\d+\.0b\d+-msix-SSL$",
     "thunderbird-latest": r"^Thunderbird-\d+\.\d+(\.\d+)?$",
     "thunderbird-latest-ssl": r"^Thunderbird-\d+\.\d+(\.\d+)?-SSL$",
     "thunderbird-msi-latest-ssl": r"^Thunderbird-\d+\.\d+(\.\d+)?-msi-SSL$",
+    "thunderbird-msix-latest-ssl": r"^Thunderbird-\d+\.\d+(\.\d+)?-msix-SSL$",
     "firefox-devedition-stub": r"^Devedition-\d+\.0b\d+-stub$",
     "firefox-devedition-latest": r"^Devedition-\d+\.0b\d+$",
     "firefox-devedition-latest-ssl": r"^Devedition-\d+\.0b\d+-SSL$",
@@ -61,8 +63,8 @@ PRODUCT_TO_DESTINATIONS_REGEXES = {
         r".*\.(?:bz2|dmg|exe|mar|msi|msix))$"
     ),
     "thunderbird": (
-        r"^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/"
-        r"(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar|msi))$"
+        r"^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/"
+        r"(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar|msi|msix))$"
     ),
 }
 
