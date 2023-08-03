@@ -124,13 +124,13 @@ attrs==23.1.0 \
     #   jsonschema
     #   mozilla-version
     #   referencing
-boto3==1.28.17 \
-    --hash=sha256:90f7cfb5e1821af95b1fc084bc50e6c47fa3edc99f32de1a2591faa0c546bea7 \
-    --hash=sha256:bca0526f819e0f19c0f1e6eba3e2d1d6b6a92a45129f98c0d716e5aab6d9444b
+boto3==1.28.18 \
+    --hash=sha256:87ecac82d2a68430c0292b7946512c8b1f01ea6971b43dc5832582fcb176c0dd \
+    --hash=sha256:f2ec3e6f173fe8d141d512ea7d90138db5a58af130773e26ce8e72bdbfd2cddc
     # via -r requirements/base.in
-botocore==1.31.17 \
-    --hash=sha256:396459065dba4339eb4da4ec8b4e6599728eb89b7caaceea199e26f7d824a41c \
-    --hash=sha256:6ac34a1d34aa3750e78b77b8596617e2bab938964694d651939dba2cbde2c12b
+botocore==1.31.18 \
+    --hash=sha256:909db57f5d6ca765fc9dc9dcae962a87566d0123da1d2bd5be32432493d5785e \
+    --hash=sha256:c4c01fae2ba32c242ce62175cad719aa49415618560d6e215ed76dab91991dc5
     # via
     #   boto3
     #   s3transfer
@@ -583,9 +583,9 @@ json-e==4.5.3 \
     --hash=sha256:4d40ed481d19e475bb4b21807675a34b077a19197385007fed0ca4e867b5d9cd \
     --hash=sha256:b150f590e4febd77589f6becb45a99dc503351c3927d2c41b7310ab7dfd547e2
     # via scriptworker
-jsonschema==4.18.4 \
-    --hash=sha256:971be834317c22daaa9132340a51c01b50910724082c2c1a2ac87eeec153a3fe \
-    --hash=sha256:fb3642735399fa958c0d2aad7057901554596c63349f4f6b283c493cf692a25d
+jsonschema==4.18.6 \
+    --hash=sha256:ce71d2f8c7983ef75a756e568317bf54bc531dc3ad7e66a128eae0d51623d8a3 \
+    --hash=sha256:dc274409c36175aad949c68e5ead0853aaffbe8e88c830ae66bb3c7a1728ad2d
     # via scriptworker
 jsonschema-specifications==2023.7.1 \
     --hash=sha256:05adf340b659828a004220a9613be00fa3f223f2b82002e273dee62fd50524b1 \
@@ -953,9 +953,9 @@ s3transfer==0.6.1 \
     --hash=sha256:3c0da2d074bf35d6870ef157158641178a4204a6e689e82546083e31e0311346 \
     --hash=sha256:640bb492711f4c0c0905e1f62b6aaeb771881935ad27884852411f8e9cacbca9
     # via boto3
-scriptworker==48.4.0 \
-    --hash=sha256:11e0c1e632446e359ad6195c0424d85344cbd412a092ebd011016b96f1936549 \
-    --hash=sha256:a344e2e51e1b813339d348564e9261e2f2acb00e2c35c658ef18dd6a039c3310
+scriptworker==48.5.0 \
+    --hash=sha256:3fb530ec98ce9a41e54e70f6d46da1b822c6078acaf9135abab6c0730d76281f \
+    --hash=sha256:a19335135262053dc12a5ce1877e915f30c08d9b08d44e16a58ccf7bb7a1f6a6
     # via -r requirements/base.in
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
