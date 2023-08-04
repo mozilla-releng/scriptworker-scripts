@@ -90,8 +90,6 @@ case $ENV in
         test_var_set 'AUTHENTICODE_CA_TIMESTAMP_PATH'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
-        test_var_set 'AUTOGRAPH_FENNEC_PASSWORD'
-        test_var_set 'AUTOGRAPH_FENNEC_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         test_var_set 'GPG_PUBKEY_PATH'
