@@ -302,6 +302,13 @@ async def sign_app(sign_config, app_path, entitlements_path, provisioning_profil
                 continue
             if dir_.endswith((".app", ".appex")):
                 await sign_app(sign_config, abs_dir, entitlements_path)
+            if dir_.endswith(".framework"):
+                # Sign the entire .framework folder
+                #  codesign cannot determine if it's a Framework or an app bundle if signing the binary directly
+                sign_command = _get_sign_command(identity, keychain, sign_config, file_=dir_, entitlements_path=entitlements_path)
+                abs_file = os.path.join(top_dir, dir_)
+                await _do_sign_file(top_dir, abs_file, dir_, sign_command, app_path_len, app_executable)
+                continue
         if top_dir == contents_dir:
             log.debug("Skipping file iteration in %s because it's the root directory.", top_dir)
             continue

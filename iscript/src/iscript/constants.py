@@ -9,7 +9,7 @@ MAC_PRODUCT_CONFIG = {
             """and certificate leaf[field.1.2.840.113635.100.6.1.13] and certificate """
             """leaf[subject.OU] = "%(subject_ou)s" """
         ),
-        "sign_dirs": ("MacOS", "Library"),
+        "sign_dirs": ("MacOS", "Library", "Frameworks"),
         "skip_dirs": tuple(),
         "zipfile_cmd": "zip",
         "create_pkg": True,
