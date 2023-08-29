@@ -163,14 +163,6 @@ case $ENV in
         test_var_set 'AUTOGRAPH_MAR_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
-        test_var_set 'AUTOGRAPH_STAGE_FENIX_PASSWORD'
-        test_var_set 'AUTOGRAPH_STAGE_FENIX_USERNAME'
-        test_var_set 'AUTOGRAPH_STAGE_FENIX_V3_PASSWORD'
-        test_var_set 'AUTOGRAPH_STAGE_FENIX_V3_USERNAME'
-        test_var_set 'AUTOGRAPH_STAGE_FOCUS_PASSWORD'
-        test_var_set 'AUTOGRAPH_STAGE_FOCUS_USERNAME'
-        test_var_set 'AUTOGRAPH_STAGE_FOCUS_V3_PASSWORD'
-        test_var_set 'AUTOGRAPH_STAGE_FOCUS_V3_USERNAME'
         test_var_set 'GPG_PUBKEY_PATH'
         ;;
     esac
