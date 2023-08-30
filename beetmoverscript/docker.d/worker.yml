@@ -177,6 +177,11 @@ clouds:
             enabled: True
             product_buckets:
               vpn: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+            product_apt_repos:
+              vpn:
+                name: 'mozilla'
+                location: 'us'
+                project: 'moz-fx-productdelivery-no-7d6a'
         'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
           release:
             credentials: { "$eval": "GCS_RELEASE_CREDS" }
@@ -184,6 +189,11 @@ clouds:
             enabled: True
             product_buckets:
               vpn: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+            product_apt_repos:
+              vpn:
+                name: 'mozilla'
+                location: 'us'
+                project: 'moz-fx-productdelivery-pr-38b5'
         'COT_PRODUCT == "app-services" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_DEP_CREDS" }
