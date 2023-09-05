@@ -154,8 +154,8 @@ BOUNCER_LOCATION_PLATFORMS = ["linux", "linux64", "osx", "win", "win64", "androi
 GO_BOUNCER_URL_TMPL = {
     "project:releng:bouncer:server:production": "https://download.mozilla.org/?product={}&print=yes",
     "project:comm:thunderbird:releng:bouncer:server:production": "https://download.mozilla.org/?product={}&print=yes",
-    "project:releng:bouncer:server:staging": "https://bouncer-bouncer-releng.stage.mozaws.net/?product={}&print=yes",
-    "project:comm:thunderbird:releng:bouncer:server:staging": "https://bouncer-bouncer-releng.stage.mozaws.net/?product={}&print=yes",
+    "project:releng:bouncer:server:staging": "https://dev.bouncer.nonprod.webservices.mozgcp.net/?product={}&print=yes",
+    "project:comm:thunderbird:releng:bouncer:server:staging": "https://dev.bouncer.nonprod.webservices.mozgcp.net/?product={}&print=yes",
 }
 
 NIGHTLY_VERSION_REGEX = r"\d+\.\d+a1"
