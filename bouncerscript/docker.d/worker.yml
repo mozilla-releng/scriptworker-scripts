@@ -5,9 +5,9 @@ taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
 bouncer_config:
   $merge:
     $match:
-      'COT_PRODUCT == "firefox"':
+      'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
         project:releng:bouncer:server:staging:
-          api_root: 'https://bounceradmin-default.stage.mozaws.net/api'
+          api_root: 'https://dev.bounceradmin.nonprod.webservices.mozgcp.net/api'
           timeout_in_seconds: 60
           username: { "$eval": "BOUNCER_USERNAME" }
           password: { "$eval": "BOUNCER_PASSWORD" }
@@ -19,9 +19,9 @@ bouncer_config:
           username: { "$eval": "BOUNCER_USERNAME" }
           password: { "$eval": "BOUNCER_PASSWORD" }
 
-      'COT_PRODUCT == "thunderbird"':
+      'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
         project:comm:thunderbird:releng:bouncer:server:staging:
-          api_root: 'https://bounceradmin-default.stage.mozaws.net/api'
+          api_root: 'https://dev.bounceradmin.nonprod.webservices.mozgcp.net/api'
           timeout_in_seconds: 60
           username: { "$eval": "BOUNCER_USERNAME" }
           password: { "$eval": "BOUNCER_PASSWORD" }
