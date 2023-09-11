@@ -185,6 +185,13 @@ class GooglePlayEdit:
         version_codes = [metadata['version_code'] for _, metadata in extracted_apks]
         self._update_track(track, version_codes, rollout_percentage)
 
+    def update_aab(self, extracted_aabs, track, rollout_percentage=None):
+        for aab, _ in extracted_aabs:
+            self.upload_aab(aab)
+
+        version_codes = [metadata['version_code'] for _, metadata in extracted_aabs]
+        self._update_track(track, version_codes, rollout_percentage)
+
     def get_track_status(self, track):
         response = self._edit_resource.tracks().get(
             editId=self._edit_id,
@@ -221,13 +228,24 @@ class GooglePlayEdit:
                     return
             raise
 
+    def upload_aab(self, aab):
+        aab_path = aab.name
+        logger.info('Uploading "{}" ...'.format(aab_path))
+        response = self._edit_resource.bundles().upload(
+            editId=self._edit_id,
+            packageName=self._package_name,
+            media_body=aab_path
+        ).execute()
+        logger.info('"{}" uploaded'.format(aab_path))
+        logger.debug('Upload response: {}'.format(response))
+
     def _update_track(self, track, version_codes, rollout_percentage=None):
         if track == 'rollout' and rollout_percentage is None:
             raise WrongArgumentGiven("To perform a rollout, you must provide the target track "
                                      "(probably 'production') and a rollout_percentage")
         if rollout_percentage is not None:
             if track == 'rollout':
-                logger.warn(
+                logger.warning(
                     "track='rollout' is deprecated, assuming you meant 'production'. To avoid "
                     "this message, specify the target track to roll out to (probably 'production'")
                 track = 'production'
@@ -327,6 +345,11 @@ def _create_google_edit_resource(contact_google_play, service_account, credentia
         apks_mock.upload = lambda *args, **kwargs: _ExecuteDummy(
             {'versionCode': 'fake-version-code'})
         edit_resource_mock.apks = lambda *args, **kwargs: apks_mock
+
+        bundles_mock = MagicMock()
+        bundles_mock.upload = lambda *args, **kwargs: _ExecuteDummy(
+            {'versionCode': 'fake-version-code'})
+        edit_resource_mock.bundles = lambda *args, **kwargs: bundles_mock
 
         update_mock = MagicMock()
         update_mock.update = lambda *args, **kwargs: _ExecuteDummy('fake-update-response')
