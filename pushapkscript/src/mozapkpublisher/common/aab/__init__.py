@@ -8,7 +8,7 @@ def add_aab_checks_arguments(parser):
                         help='The path to the AAB to upload.')
 
 
-def extract_and_check_aabs_metadata(
+def extract_aabs_metadata(
     aabs,
 ):
     aabs_metadata = {

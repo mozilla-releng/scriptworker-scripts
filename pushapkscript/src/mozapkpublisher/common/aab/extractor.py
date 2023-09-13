@@ -1,6 +1,8 @@
 import logging
 import os
+import shutil
 import subprocess
+import tempfile
 
 
 logger = logging.getLogger(__name__)
@@ -10,10 +12,14 @@ def extract_metadata(aab_path):
     logger.info('Extracting metadata from "{}"...'.format(aab_path))
     metadata = {}
 
-    metadata['package_name'] = _extract_package_name(aab_path)
-    logger.info('Found package name "{}"'.format(metadata['package_name']))
-    metadata['version_code'] = _extract_version_code(aab_path)
-    logger.info('Found version code "{}"'.format(metadata['version_code']))
+    with tempfile.NamedTemporaryFile() as aab_copy:
+        shutil.copy(aab_path, aab_copy.name)
+        aab_copy.seek(0)
+
+        metadata['package_name'] = _extract_package_name(aab_copy.name)
+        logger.info('Found package name "{}"'.format(metadata['package_name']))
+        metadata['version_code'] = _extract_version_code(aab_copy.name)
+        logger.info('Found version code "{}"'.format(metadata['version_code']))
 
     return metadata
 

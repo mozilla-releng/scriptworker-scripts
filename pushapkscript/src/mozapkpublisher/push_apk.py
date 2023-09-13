@@ -7,6 +7,7 @@ from mozapkpublisher.common import main_logging
 from mozapkpublisher.common.apk import add_apk_checks_arguments, extract_and_check_apks_metadata
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.common.store import AmazonStoreEdit, GooglePlayEdit
+from mozapkpublisher.common.utils import add_push_arguments, metadata_by_package_name
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +97,7 @@ def push_apk(
 
     # Each distinct product must be uploaded in different "edit"/transaction, so we split them
     # by package name here.
-    apks_by_package_name = _apks_by_package_name(apks_metadata_per_paths)
+    apks_by_package_name = metadata_by_package_name(apks_metadata_per_paths)
     for package_name, extracted_apks in apks_by_package_name.items():
         store = _STORE_PER_TARGET_PLATFORM[target_store]
         with store.transaction(username, secret, package_name, contact_server=contact_server,
@@ -104,22 +105,12 @@ def push_apk(
             edit.update_app(extracted_apks, **update_app_kwargs)
 
 
-def _apks_by_package_name(apks_metadata):
-    apk_package_names = {}
-    for (apk, metadata) in apks_metadata.items():
-        package_name = metadata['package_name']
-        if package_name not in apk_package_names:
-            apk_package_names[package_name] = []
-        apk_package_names[package_name].append((apk, metadata))
-
-    return apk_package_names
-
-
 def main():
     parser = argparse.ArgumentParser(description='Upload APKs on the Google Play Store.')
 
     subparsers = parser.add_subparsers(dest='target_store', title='Target Store')
 
+    # TODO: move these to add_push_arguments when Amazon support is removed
     google_parser = subparsers.add_parser('google')
     google_parser.add_argument('track', help='Track on which to upload')
     google_parser.add_argument(
@@ -139,15 +130,7 @@ def main():
                                help='Keep "upcoming version" on Amazon to be submitted or '
                                     'cancelled on the Amazon Developer Web UI.')
 
-    parser.add_argument('--username', required=True,
-                        help='Either the amazon client id or the google service account')
-    parser.add_argument('--secret', required=True,
-                        help='Either the amazon client secret or the file that contains '
-                             'google credentials')
-    parser.add_argument('--do-not-contact-server', action='store_false', dest='contact_server',
-                        help='''Prevent any request to reach the APK server. Use this option if
-you want to run the script without any valid credentials nor valid APKs. --service-account and
---credentials must still be provided (you can just fill them with random string and file).''')
+    add_push_arguments(parser)
     add_apk_checks_arguments(parser)
     config = parser.parse_args()
 
