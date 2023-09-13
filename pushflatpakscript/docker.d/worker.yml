@@ -1,6 +1,7 @@
 work_dir: { "$eval": "WORK_DIR" }
 artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
+app_id: { "$eval": "APP_ID" }
 taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
 push_to_flathub: { "$eval": "ENV == 'prod'" }
 flathub_url: { "$eval": "FLATHUB_URL" }

@@ -8,7 +8,7 @@ def get_flatpak_channel(config, task):
     payload = task["payload"]
     if "channel" not in payload:
         raise TaskVerificationError(f"Channel must be defined in the task payload. Given payload: {payload}")
-    
+
     channel = payload["channel"]
     scope = config["taskcluster_scope_prefix"] + channel
     if config["push_to_flathub"] and scope not in task["scopes"]:

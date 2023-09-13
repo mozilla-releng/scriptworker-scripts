@@ -33,9 +33,11 @@ esac
 
 case $COT_PRODUCT in
   firefox)
+    export APP_ID="org.mozilla.firefox"
     export TASKCLUSTER_SCOPE_PREFIX="project:releng:flathub:firefox:"
     ;;
   thunderbird)
+    export APP_ID="org.mozilla.Thunderbird"
     export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:flathub:"
     ;;
   *)
