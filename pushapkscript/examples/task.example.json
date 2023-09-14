@@ -32,6 +32,13 @@
       },
       {
         "paths": [
+          "public/build/target.aab"
+        ],
+        "taskId": "fa4gz4nbRX2NpL2t-jus2A",
+        "taskType": "signing-bundle"
+      },
+      {
+        "paths": [
           "public/build/target.apk"
         ],
         "taskId": "NzsogFgjQZiRvE0bRJ1Z8A",
