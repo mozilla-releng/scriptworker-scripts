@@ -481,3 +481,78 @@ def test_google_update_whats_new(edit_resource_mock):
         apkVersionCode='2015012345',
         body={'recentChanges': 'Check out this cool feature!'}
     )
+
+
+def test_google_update_aab():
+    edit = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
+    edit.upload_aab = MagicMock()
+    edit._update_track = MagicMock()
+    aab_mock = Mock()
+    aab_mock.name = '/path/to/dummy.aab'
+    edit.update_aab([(aab_mock, {'version_code': 1})], 'alpha')
+
+    edit.upload_aab.assert_called_once_with(aab_mock)
+    edit._update_track.assert_called_once_with('alpha', [1], None)
+
+
+def test_google_upload_aab_returns_files_metadata(edit_resource_mock):
+    edit_resource_mock.bundles().upload().execute.return_value = {
+        'binary': {'sha1': '1234567890abcdef1234567890abcdef12345678'}, 'versionCode': 2015012345
+    }
+    edit_resource_mock.bundles().upload.reset_mock()
+
+    google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
+    aab_mock = Mock()
+    aab_mock.name = '/path/to/dummy.aab'
+    google_play.upload_aab(aab_mock)
+    edit_resource_mock.bundles().upload.assert_called_once_with(
+        editId=google_play._edit_id,
+        packageName='dummy_package_name',
+        media_body='/path/to/dummy.aab',
+    )
+
+
+@pytest.mark.parametrize('http_status_code', (400, 403))
+def test_google_upload_aab_errors_out(edit_resource_mock, http_status_code):
+    edit_resource_mock.bundles().upload().execute.side_effect = HttpError(
+        # XXX status is presented as a string by googleapiclient
+        resp={'status': str(http_status_code)},
+        # XXX content must be bytes
+        # https://github.com/googleapis/google-api-python-client/blob/ffea1a7fe9d381d23ab59048263c631cc2b45323/googleapiclient/errors.py#L41
+        content=b'{"error": {"errors": [{"reason": "someRandomReason"}] } }',
+    )
+    google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
+
+    with pytest.raises(HttpError):
+        aab_mock = Mock()
+        aab_mock.name = '/path/to/dummy.aab'
+        google_play.upload_aab(aab_mock)
+
+
+@pytest.mark.parametrize('reason, expectation', (
+    ('someRandomReason', pytest.raises(HttpError)),
+))
+def test_google_upload_aab_does_not_error_out_when_aab_is_already_published(edit_resource_mock,
+                                                                            reason, expectation):
+    content = {
+        'error': {
+            'errors': [{
+                'reason': reason
+            }],
+        },
+    }
+    # XXX content must be bytes
+    # https://github.com/googleapis/google-api-python-client/blob/ffea1a7fe9d381d23ab59048263c631cc2b45323/googleapiclient/errors.py#L41
+    content_bytes = json.dumps(content).encode('ascii')
+
+    edit_resource_mock.bundles().upload().execute.side_effect = HttpError(
+        # XXX status is presented as a string by googleapiclient
+        resp={'status': '403'},
+        content=content_bytes,
+    )
+    google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
+
+    with expectation:
+        aab_mock = Mock()
+        aab_mock.name = '/path/to/dummy.aab'
+        google_play.upload_aab(aab_mock)

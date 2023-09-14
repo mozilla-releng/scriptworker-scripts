@@ -4,9 +4,13 @@ import requests
 import tempfile
 
 from aioresponses import aioresponses
+from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock
 
-from mozapkpublisher.common.utils import load_json_url, file_sha512sum, download_file, is_firefox_version_nightly
+from mozapkpublisher.common.utils import load_json_url, file_sha512sum, download_file, is_firefox_version_nightly, metadata_by_package_name
+
+apk_x86 = NamedTemporaryFile()
+apk_arm = NamedTemporaryFile()
 
 
 def test_load_json_url(monkeypatch):
@@ -52,3 +56,42 @@ def test_is_firefox_version_nightly(version, expected):
 def test_bad_is_firefox_version_nightly():
     with pytest.raises(ValueError):
         is_firefox_version_nightly('66.0esr')
+
+
+def test_metadata_by_package_name():
+    one_package_apks_metadata = {
+        apk_arm: {'package_name': 'org.mozilla.firefox'},
+        apk_x86: {'package_name': 'org.mozilla.firefox'}
+    }
+
+    expected_one_package_metadata = {
+        'org.mozilla.firefox': [
+            (apk_arm, {'package_name': 'org.mozilla.firefox'}),
+            (apk_x86, {'package_name': 'org.mozilla.firefox'}),
+        ]
+    }
+
+    one_package_metadata = metadata_by_package_name(one_package_apks_metadata)
+    assert len(one_package_metadata.keys()) == 1
+    assert expected_one_package_metadata == one_package_metadata
+
+    apk_arm_other = NamedTemporaryFile()
+    two_package_apks_metadata = {
+        apk_arm: {'package_name': 'org.mozilla.focus'},
+        apk_x86: {'package_name': 'org.mozilla.focus'},
+        apk_arm_other: {'package_name': 'org.mozilla.klar'}
+    }
+
+    expected_two_package_metadata = {
+        'org.mozilla.klar': [
+            (apk_arm_other, {'package_name': 'org.mozilla.klar'}),
+        ],
+        'org.mozilla.focus': [
+            (apk_arm, {'package_name': 'org.mozilla.focus'}),
+            (apk_x86, {'package_name': 'org.mozilla.focus'}),
+        ]
+    }
+
+    two_package_metadata = metadata_by_package_name(two_package_apks_metadata)
+    assert len(two_package_metadata.keys()) == 2
+    assert expected_two_package_metadata == two_package_metadata

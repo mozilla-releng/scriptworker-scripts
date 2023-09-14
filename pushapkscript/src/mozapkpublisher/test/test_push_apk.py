@@ -16,7 +16,6 @@ from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.push_apk import (
     push_apk,
     main,
-    _apks_by_package_name,
 )
 from unittest.mock import patch
 
@@ -124,50 +123,11 @@ def test_amazon(monkeypatch):
     ])
 
 
-def test_apks_by_package_name():
-    one_package_apks_metadata = {
-        apk_arm: {'package_name': 'org.mozilla.firefox'},
-        apk_x86: {'package_name': 'org.mozilla.firefox'}
-    }
-
-    expected_one_package_metadata = {
-        'org.mozilla.firefox': [
-            (apk_arm, {'package_name': 'org.mozilla.firefox'}),
-            (apk_x86, {'package_name': 'org.mozilla.firefox'}),
-        ]
-    }
-
-    one_package_metadata = _apks_by_package_name(one_package_apks_metadata)
-    assert len(one_package_metadata.keys()) == 1
-    assert expected_one_package_metadata == one_package_metadata
-
-    apk_arm_other = NamedTemporaryFile()
-    two_package_apks_metadata = {
-        apk_arm: {'package_name': 'org.mozilla.focus'},
-        apk_x86: {'package_name': 'org.mozilla.focus'},
-        apk_arm_other: {'package_name': 'org.mozilla.klar'}
-    }
-
-    expected_two_package_metadata = {
-        'org.mozilla.klar': [
-            (apk_arm_other, {'package_name': 'org.mozilla.klar'}),
-        ],
-        'org.mozilla.focus': [
-            (apk_arm, {'package_name': 'org.mozilla.focus'}),
-            (apk_x86, {'package_name': 'org.mozilla.focus'}),
-        ]
-    }
-
-    two_package_metadata = _apks_by_package_name(two_package_apks_metadata)
-    assert len(two_package_metadata.keys()) == 2
-    assert expected_two_package_metadata == two_package_metadata
-
-
 def test_push_apk_tunes_down_logs(monkeypatch):
     main_logging_mock = MagicMock()
     monkeypatch.setattr('mozapkpublisher.push_apk.main_logging', main_logging_mock)
     monkeypatch.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', MagicMock())
-    monkeypatch.setattr('mozapkpublisher.push_apk._apks_by_package_name', MagicMock())
+    monkeypatch.setattr('mozapkpublisher.common.utils.metadata_by_package_name', MagicMock())
 
     push_apk(APKS, 'google', SERVICE_ACCOUNT, credentials, [], 'alpha', contact_server=False)
 
