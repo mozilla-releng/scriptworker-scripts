@@ -27,6 +27,9 @@ RUN python -m venv /app \
  && cd /app/configloader \
  && /app/configloader_venv/bin/pip install -r requirements/base.txt \
  && /app/configloader_venv/bin/pip install . \
- && cd /app
+ && cd /app \
+ && curl -L https://github.com/google/bundletool/releases/download/1.15.4/bundletool-all-1.15.4.jar -o /app/bundletool.jar
+
+ENV BUNDLETOOL_PATH=/app/bundletool.jar
 
 CMD ["/app/docker.d/init.sh"]

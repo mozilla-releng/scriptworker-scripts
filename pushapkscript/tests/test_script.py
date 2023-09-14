@@ -20,7 +20,7 @@ async def test_async_main(monkeypatch, android_product):
     monkeypatch.setattr(
         artifacts,
         "get_upstream_artifacts_full_paths_per_task_id",
-        lambda _: ({"someTaskId": ["/some/path/to/one.apk", "/some/path/to/another.apk"], "someOtherTaskId": ["/some/path/to/yet_another.apk"]}, {}),
+        lambda _: ({"someTaskId": ["/some/path/to/one.apk", "/some/path/to/another.apk"], "someOtherTaskId": ["/some/path/to/yet_another.apk", "/some/path/to/one.aab"]}, {}),
     )
     monkeypatch.setattr(jarsigner, "verify", lambda _, __, ___: None)
     monkeypatch.setattr(manifest, "verify", lambda _, __: None)
@@ -43,10 +43,15 @@ async def test_async_main(monkeypatch, android_product):
     context.config = {"do_not_contact_google_play": True}
     context.task = {"payload": {"channel": android_product}}
 
-    def assert_google_play_call(_, __, all_apks_files, ___):
+    def assert_google_play_call_apk(_, __, all_apks_files, ___):
         assert sorted([file.name for file in all_apks_files]) == ["/some/path/to/another.apk", "/some/path/to/one.apk", "/some/path/to/yet_another.apk"]
 
-    monkeypatch.setattr(publish, "publish", assert_google_play_call)
+    monkeypatch.setattr(publish, "publish", assert_google_play_call_apk)
+
+    def assert_google_play_call_aab(_, __, all_aabs_files, ___):
+        assert sorted([file.name for file in all_aabs_files]) == ["/some/path/to/one.aab"]
+
+    monkeypatch.setattr(publish, "publish_aab", assert_google_play_call_aab)
 
     with patch("pushapkscript.script.open", new=mock_open):
         await async_main(context)
