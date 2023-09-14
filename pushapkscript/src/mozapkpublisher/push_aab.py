@@ -16,7 +16,7 @@ def push_aab(
     aabs,
     username,
     secret,
-    track=None,
+    track,
     rollout_percentage=None,
     dry_run=True,
     contact_server=True,
