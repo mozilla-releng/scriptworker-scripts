@@ -19,6 +19,8 @@ RUN chown -R app:app /app && \
 WORKDIR /app
 USER app
 
+ARG BUNDLETOOL_SHA="e5f54597dbb5211f050e8ddd03d4d731a9b4dfa5684c7687928b654a8ddc212a"
+
 RUN python -m venv /app \
  && cd pushapkscript \
  && /app/bin/pip install -r requirements/base.txt \
@@ -28,7 +30,9 @@ RUN python -m venv /app \
  && /app/configloader_venv/bin/pip install -r requirements/base.txt \
  && /app/configloader_venv/bin/pip install . \
  && cd /app \
- && curl -L https://github.com/google/bundletool/releases/download/1.15.4/bundletool-all-1.15.4.jar -o /app/bundletool.jar
+ && curl -L https://github.com/google/bundletool/releases/download/1.15.4/bundletool-all-1.15.4.jar -o /app/bundletool.jar \
+ && echo "${BUNDLETOOL_SHA} bundletool.jar" > shasum \
+ && sha256sum --check --status shasum
 
 ENV BUNDLETOOL_PATH=/app/bundletool.jar
 
