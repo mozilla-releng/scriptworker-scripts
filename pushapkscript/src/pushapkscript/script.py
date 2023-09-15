@@ -31,6 +31,10 @@ async def async_main(context):
 
     all_aabs_paths = [artifact for artifacts_list in artifacts_per_task_id.values() for artifact in artifacts_list if artifact.endswith(".aab")]
 
+    if all_apks_paths and all_aabs_paths:
+        # Google Play won't accept both APK and AAB
+        raise TaskVerificationError("The configuration is invalid: Unable to push both APK and AAB files for the same product.")
+
     if not publish_config.get("skip_check_signature", True):
         log.info("Verifying APKs' signatures...")
         for apk_path in all_apks_paths:
