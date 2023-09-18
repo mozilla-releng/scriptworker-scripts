@@ -64,7 +64,7 @@ def patch_store_transaction(monkeypatch_, patch_target):
 
 def test_google_no_track():
     with pytest.raises(WrongArgumentGiven):
-        push_aab(AABS, SERVICE_ACCOUNT, credentials)
+        push_aab(AABS, SERVICE_ACCOUNT, credentials, track=None)
 
 
 def test_google(monkeypatch):
