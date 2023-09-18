@@ -4,13 +4,11 @@ FROM python:${PYTHON_VERSION}
 
 WORKDIR /app
 
-ARG BUNDLETOOL_SHA="e5f54597dbb5211f050e8ddd03d4d731a9b4dfa5684c7687928b654a8ddc212a"
-
 RUN apt-get update && \
     apt-get install -y default-jdk && \
     apt-get clean && \
     curl -L https://github.com/google/bundletool/releases/download/1.15.4/bundletool-all-1.15.4.jar -o /app/bundletool.jar && \
-    echo "${BUNDLETOOL_SHA} bundletool.jar" > shasum && \
+    echo "e5f54597dbb5211f050e8ddd03d4d731a9b4dfa5684c7687928b654a8ddc212a bundletool.jar" > shasum && \
     sha256sum --check --status shasum
 
 ENV BUNDLETOOL_PATH=/app/bundletool.jar
