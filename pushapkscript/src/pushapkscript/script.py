@@ -29,18 +29,30 @@ async def async_main(context):
 
     all_apks_paths = [artifact for artifacts_list in artifacts_per_task_id.values() for artifact in artifacts_list if artifact.endswith(".apk")]
 
+    all_aabs_paths = [artifact for artifacts_list in artifacts_per_task_id.values() for artifact in artifacts_list if artifact.endswith(".aab")]
+
+    if all_apks_paths and all_aabs_paths:
+        # Google Play won't accept both APK and AAB
+        raise TaskVerificationError("The configuration is invalid: Unable to push both APK and AAB files for the same product.")
+
     if not publish_config.get("skip_check_signature", True):
         log.info("Verifying APKs' signatures...")
         for apk_path in all_apks_paths:
             jarsigner.verify(context, publish_config, apk_path)
             manifest.verify(product_config, apk_path)
+        log.info("Verifying AABs' signatures...")
+        for aab_path in all_aabs_paths:
+            jarsigner.verify(context, publish_config, aab_path)
+            manifest.verify(product_config, aab_path)
     else:
-        log.info('This product is configured with "skip_check_signature", so the signing of the ' "APK will not be verified.")
+        log.info('This product is configured with "skip_check_signature", so the signing of the ' "files will not be verified.")
 
     log.info("Delegating publication to mozapkpublisher...")
     with contextlib.ExitStack() as stack:
         files = [stack.enter_context(open(apk_file_name)) for apk_file_name in all_apks_paths]
         publish.publish(product_config, publish_config, files, contact_server)
+        files = [stack.enter_context(open(aab_file_name)) for aab_file_name in all_aabs_paths]
+        publish.publish_aab(product_config, publish_config, files, contact_server)
 
     log.info("Done!")
 

@@ -22,6 +22,8 @@ pip install pushapkscript
 
 Then you need to install [jarsigner](http://docs.oracle.com/javase/8/docs/technotes/tools/windows/jarsigner.html) (usually included with JDK).
 
+If pushing AAB files, you need to install [bundletool](https://github.com/google/bundletool/releases); then set environment variable BUNDLETOOL_PATH=/path/to/bundletool.jar.
+
 ### Configure
 
 #### Jarsigner
@@ -56,10 +58,10 @@ cp examples/task.example.json /path/to/work_dir
 Ordinarily, scriptworker would get the task definition from TaskCluster, and write it to a `task.json` in the `work_dir`.  Since you're initially not going to run through scriptworker, you need to put this file on disk yourself.
 
 The important entries to edit are the:
- * `apks`: point to the file(s) to publish to Google Play
+ * `upstreamArtifacts/path`: point to the APK and/or AAB file(s) to publish to Google Play
  * `dependencies`: need to match the `taskId`s of the URLs unless you modify the `valid_artifact_*` config items as specified above
  * `scopes`: the first and only scope, `project:releng:googleplay:*`, tells which product in Google Play store should be updated (either [aurora](https://play.google.com/store/apps/details?id=org.mozilla.fennec_aurora), [beta](https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta), or [release](https://play.google.com/store/apps/details?id=org.mozilla.firefox))
- * `google_play_track`: refers to which Google Play track (either production, beta, or alpha) the APK will be uploaded
+ * `google_play_track`: refers to which Google Play track (either production, beta, or alpha) the APK/AAB will be uploaded
 
 #### (aurora, beta, release) vs (alpha, beta, production)?
 
