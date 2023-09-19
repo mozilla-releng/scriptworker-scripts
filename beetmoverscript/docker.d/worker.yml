@@ -215,7 +215,7 @@ clouds:
         'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             fail_task_on_error: True
-            enabled: False
+            enabled: True
             credentials:
               id: { "$eval": "DEP_ID" }
               key: { "$eval": "DEP_KEY" }
@@ -243,7 +243,7 @@ clouds:
         'COT_PRODUCT == "firefox" && ENV == "prod"':
           nightly:
             fail_task_on_error: True
-            enabled: False
+            enabled: True
             credentials:
               id: { "$eval": "NIGHTLY_ID" }
               key: { "$eval": "NIGHTLY_KEY" }
@@ -252,7 +252,7 @@ clouds:
               firefox:    'net-mozaws-prod-delivery-firefox'
           release:
             fail_task_on_error: True
-            enabled: False
+            enabled: True
             credentials:
               id: { "$eval": "RELEASE_ID" }
               key: { "$eval": "RELEASE_KEY" }
@@ -291,7 +291,7 @@ clouds:
         'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             fail_task_on_error: True
-            enabled: False
+            enabled: True
             credentials:
               id: { "$eval": "DEP_ID" }
               key: { "$eval": "DEP_KEY" }
@@ -301,7 +301,7 @@ clouds:
         'COT_PRODUCT == "thunderbird" && ENV == "prod"':
           nightly:
             fail_task_on_error: True
-            enabled: False
+            enabled: True
             credentials:
               id: { "$eval": "NIGHTLY_ID" }
               key: { "$eval": "NIGHTLY_KEY" }
@@ -309,7 +309,7 @@ clouds:
               thunderbird: 'net-mozaws-prod-delivery-archive'
           release:
             fail_task_on_error: True
-            enabled: False
+            enabled: True
             credentials:
               id: { "$eval": "RELEASE_ID" }
               key: { "$eval": "RELEASE_KEY" }
