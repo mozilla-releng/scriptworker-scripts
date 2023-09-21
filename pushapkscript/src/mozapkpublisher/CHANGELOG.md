@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [6.2.1] - 2023-09-21
+
+### Fixed
+* Specify media mime type for AAB uploads
+
 ## [6.2.0] - 2023-09-11
 
 ### Added

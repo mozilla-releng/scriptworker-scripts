@@ -208,7 +208,9 @@ class GooglePlayEdit:
             response = self._edit_resource.apks().upload(
                 editId=self._edit_id,
                 packageName=self._package_name,
-                media_body=apk_path
+                media_body=apk_path,
+                # Seems like mime type need not be specified for apk files:
+                # media_mime_type='application/octet-stream',
             ).execute()
             logger.info('"{}" uploaded'.format(apk_path))
             logger.debug('Upload response: {}'.format(response))
@@ -234,7 +236,8 @@ class GooglePlayEdit:
         response = self._edit_resource.bundles().upload(
             editId=self._edit_id,
             packageName=self._package_name,
-            media_body=aab_path
+            media_body=aab_path,
+            media_mime_type='application/octet-stream',
         ).execute()
         logger.info('"{}" uploaded'.format(aab_path))
         logger.debug('Upload response: {}'.format(response))

@@ -510,6 +510,7 @@ def test_google_upload_aab_returns_files_metadata(edit_resource_mock):
         editId=google_play._edit_id,
         packageName='dummy_package_name',
         media_body='/path/to/dummy.aab',
+        media_mime_type='application/octet-stream',
     )
 
 
