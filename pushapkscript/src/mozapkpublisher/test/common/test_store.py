@@ -5,6 +5,7 @@ from mock import ANY, patch, Mock, call
 import pytest
 import random
 
+from httplib2 import Response
 from googleapiclient.errors import HttpError
 from unittest.mock import MagicMock
 
@@ -362,7 +363,7 @@ def test_google_upload_apk_returns_files_metadata(edit_resource_mock):
 def test_google_upload_apk_errors_out(edit_resource_mock, http_status_code):
     edit_resource_mock.apks().upload().execute.side_effect = HttpError(
         # XXX status is presented as a string by googleapiclient
-        resp={'status': str(http_status_code)},
+        resp=Response({'status': str(http_status_code)}),
         # XXX content must be bytes
         # https://github.com/googleapis/google-api-python-client/blob/ffea1a7fe9d381d23ab59048263c631cc2b45323/googleapiclient/errors.py#L41
         content=b'{"error": {"errors": [{"reason": "someRandomReason"}] } }',
@@ -395,7 +396,7 @@ def test_google_upload_apk_does_not_error_out_when_apk_is_already_published(edit
 
     edit_resource_mock.apks().upload().execute.side_effect = HttpError(
         # XXX status is presented as a string by googleapiclient
-        resp={'status': '403'},
+        resp=Response({'status': '403'}),
         content=content_bytes,
     )
     google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
@@ -516,7 +517,7 @@ def test_google_upload_aab_returns_files_metadata(edit_resource_mock):
 def test_google_upload_aab_errors_out(edit_resource_mock, http_status_code):
     edit_resource_mock.bundles().upload().execute.side_effect = HttpError(
         # XXX status is presented as a string by googleapiclient
-        resp={'status': str(http_status_code)},
+        resp=Response({'status': str(http_status_code)}),
         # XXX content must be bytes
         # https://github.com/googleapis/google-api-python-client/blob/ffea1a7fe9d381d23ab59048263c631cc2b45323/googleapiclient/errors.py#L41
         content=b'{"error": {"errors": [{"reason": "someRandomReason"}] } }',
@@ -547,7 +548,7 @@ def test_google_upload_aab_does_not_error_out_when_aab_is_already_published(edit
 
     edit_resource_mock.bundles().upload().execute.side_effect = HttpError(
         # XXX status is presented as a string by googleapiclient
-        resp={'status': '403'},
+        resp=Response({'status': '403'}),
         content=content_bytes,
     )
     google_play = GooglePlayEdit(edit_resource_mock, 1, 'dummy_package_name')
