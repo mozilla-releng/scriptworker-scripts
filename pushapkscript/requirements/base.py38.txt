@@ -507,13 +507,13 @@ github3-py==4.0.1 \
     --hash=sha256:30d571076753efc389edc7f9aaef338a4fcb24b54d8968d5f39b1342f45ddd36 \
     --hash=sha256:a89af7de25650612d1da2f0609622bcdeb07ee8a45a1c06b2d16a05e4234e753
     # via scriptworker
-google-api-core==2.11.1 \
-    --hash=sha256:25d29e05a0058ed5f19c61c0a78b1b53adea4d9364b464d014fbda941f6d1c9a \
-    --hash=sha256:d92a5a92dc36dd4f4b9ee4e55528a90e432b059f93aee6ad857f9de8cc7ae94a
+google-api-core==2.12.0 \
+    --hash=sha256:c22e01b1e3c4dcd90998494879612c38d0a3411d1f7b679eb89e2abe3ce1f553 \
+    --hash=sha256:ec6054f7d64ad13b41e43d96f735acbd763b0f3b695dabaa2d579673f6a6e160
     # via google-api-python-client
-google-api-python-client==2.100.0 \
-    --hash=sha256:226ca35355993d6182506c51745ab5149405cdf6a92975b2725ab3e0d757dbe9 \
-    --hash=sha256:eaed50efc2f8a4027dcca8fd0037f4b1b03b8093efc84ce3cb6c75bfc79a7e31
+google-api-python-client==2.101.0 \
+    --hash=sha256:71760dcf11d191b65520d1c13757a776f4f43cf87f302097a0d8e491c2ef87b0 \
+    --hash=sha256:e9620a809251174818e1fce16604006f10a9c2ac0d3d94a139cdddcd4dbea2d8
     # via
     #   -r requirements/base.in
     #   mozapkpublisher
@@ -1326,9 +1326,9 @@ taskcluster-urls==13.0.1 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
     --hash=sha256:f66dcbd6572a6216ab65949f0fa0b91f2df647918028436c384e6af5cd12ae2b
     # via taskcluster
-traitlets==5.10.0 \
-    --hash=sha256:417745a96681fbb358e723d5346a547521f36e9bd0d50ba7ab368fff5d67aa54 \
-    --hash=sha256:f584ea209240466e66e91f3c81aa7d004ba4cf794990b0c775938a1544217cd1
+traitlets==5.10.1 \
+    --hash=sha256:07ab9c5bf8a0499fd7b088ba51be899c90ffc936ffc797d7b6907fc516bcd116 \
+    --hash=sha256:db9c4aa58139c3ba850101913915c042bdba86f7c8a0dda1c6f7f92c5da8e542
     # via
     #   ipython
     #   matplotlib-inline
