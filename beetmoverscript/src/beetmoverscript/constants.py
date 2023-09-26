@@ -1,5 +1,6 @@
 MIME_MAP = {
     "": "text/plain",
+    ".aab": "application/octet-stream",
     ".aar": "application/java-archive",
     ".apk": "application/vnd.android.package-archive",
     ".asc": "text/plain",
