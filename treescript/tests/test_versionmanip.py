@@ -99,6 +99,7 @@ def test_replace_ver_in_file_invalid_old_ver(repo_context, new_version):
         ("version.txt", "https://github.com/mozilla-releng/staging-firefox-android", does_not_raise(), MobileVersion),
         ("some/random/file.txt", "https://hg.mozilla.org/mozilla-central", pytest.raises(TreeScriptError), None),
         ("some/random/file.txt", "https://github.com/some-owner/some-repo", pytest.raises(TreeScriptError), None),
+        ("mobile/android/version.txt", "https://hg.mozilla.org/mozilla-central", does_not_raise(), MobileVersion),
     ),
 )
 def test_find_what_version_parser_to_use(file, source_repo, expectation, expected_result):
