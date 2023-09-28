@@ -17,6 +17,7 @@ ALLOWED_BUMP_FILES = (
     "browser/config/version.txt",
     "browser/config/version_display.txt",
     "config/milestone.txt",
+    "mobile/android/version.txt",
     "mail/config/version.txt",
     "mail/config/version_display.txt",
     "version.txt",  # Github repositories
@@ -25,6 +26,7 @@ ALLOWED_BUMP_FILES = (
 _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
     "browser/": FirefoxVersion,
     "config/milestone.txt": GeckoVersion,
+    "mobile/android/": MobileVersion,
     "mail/": ThunderbirdVersion,
 }
 
