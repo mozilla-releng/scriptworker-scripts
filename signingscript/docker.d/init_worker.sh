@@ -206,6 +206,8 @@ case $ENV in
         test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_PASSWORD'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_REFERENCE_BROWSER_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_REFERENCE_BROWSER_USERNAME'
         ;;
       app-services)
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
