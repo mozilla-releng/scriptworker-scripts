@@ -210,7 +210,7 @@ def is_apk_autograph_signing_format(format_):
 
     """
     # TODO Remove autograph_focus once format is migrated
-    return format_ and format_.startswith("autograph_apk_") or format_ == "autograph_focus"
+    return format_ and format_.startswith("autograph_apk_") or format_ == "autograph_focus" or format_ == "autograph_stage_aab"
 
 
 def is_sha1_apk_autograph_signing_format(format_):
