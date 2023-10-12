@@ -92,6 +92,13 @@ products:
                 default_track: 'production'
                 service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_NIGHTLY" }
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH" }
+            fenix-aab-nightly:
+              package_names: [ "org.mozilla.fenix" ]
+              certificate_alias: 'fenix-nightly'
+              google:
+                default_track: 'aab'
+                service_account: { "$eval": "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_NIGHTLY" }
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH" }
             fenix-beta:
               package_names: [ "org.mozilla.firefox_beta" ]
               certificate_alias: 'fenix-beta'
