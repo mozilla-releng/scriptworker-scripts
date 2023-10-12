@@ -7,7 +7,7 @@ import pytest
 from git import Actor, PushInfo
 from scriptworker_client.utils import makedirs
 
-from treescript import git
+from treescript.github import git
 from treescript.exceptions import PushError
 from treescript.script import get_default_config
 

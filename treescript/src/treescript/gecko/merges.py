@@ -8,10 +8,10 @@ from datetime import date
 import attr
 from scriptworker_client.utils import makedirs
 
-from treescript.l10n import l10n_bump
-from treescript.mercurial import commit, get_revision, run_hg_command
-from treescript.task import get_l10n_bump_info, get_merge_config, get_metadata_source_repo
-from treescript.versionmanip import do_bump_version, get_version
+from treescript.gecko.l10n import l10n_bump
+from treescript.gecko.mercurial import commit, get_revision, run_hg_command
+from treescript.gecko.versionmanip import do_bump_version, get_version
+from treescript.util.task import get_l10n_bump_info, get_merge_config, get_metadata_source_repo
 
 log = logging.getLogger(__name__)
 
@@ -110,7 +110,7 @@ async def apply_rebranding(config, repo_path, merge_config, source_repo):
 
     if merge_config.get("version_files"):
         for version_config in merge_config["version_files"]:
-            await do_bump_version(config, repo_path, [version_config["filename"]], create_new_version(version_config, repo_path, source_repo), source_repo)
+            await do_bump_version(repo_path, [version_config["filename"]], create_new_version(version_config, repo_path, source_repo), source_repo)
 
     for f in merge_config.get("copy_files", list()):
         shutil.copyfile(os.path.join(repo_path, f[0]), os.path.join(repo_path, f[1]))

@@ -6,8 +6,8 @@ import hglib
 import pytest
 from mozilla_version.gecko import FirefoxVersion
 
-import treescript.merges as merges
 from treescript.exceptions import TaskVerificationError
+from treescript.gecko import merges
 from treescript.script import get_default_config
 
 
@@ -185,7 +185,7 @@ async def test_apply_rebranding(config, repo_context, mocker, merge_config, expe
     called_args = []
 
     async def noop_bump_version(*arguments, **kwargs):
-        called_args.append([arguments[2]])
+        called_args.append([arguments[1]])
 
     def sync_noop(*arguments, **kwargs):
         called_args.extend(arguments)

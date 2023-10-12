@@ -7,8 +7,9 @@ import os
 from mozilla_version.gecko import FirefoxVersion, GeckoVersion, ThunderbirdVersion
 from mozilla_version.mobile import MobileVersion
 
+from treescript.gecko import mercurial as vcs
 from treescript.exceptions import TaskVerificationError, TreeScriptError
-from treescript.task import DONTBUILD_MSG, get_dontbuild, get_metadata_source_repo, get_vcs_module, get_version_bump_info
+from treescript.util.task import DONTBUILD_MSG, get_dontbuild, get_metadata_source_repo, get_version_bump_info
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +21,6 @@ ALLOWED_BUMP_FILES = (
     "mobile/android/version.txt",
     "mail/config/version.txt",
     "mail/config/version_display.txt",
-    "version.txt",  # Github repositories
 )
 
 _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
@@ -78,7 +78,7 @@ def get_version(file_, parent_directory, source_repo):
     return VersionClass.parse(lines[-1])
 
 
-async def bump_version(config, task, repo_path, repo_type):
+async def bump_version(config, task, repo_path):
     """Perform a version bump.
 
     This function takes its inputs from task by using the ``get_version_bump_info``
@@ -98,8 +98,7 @@ async def bump_version(config, task, repo_path, repo_type):
     num_commits = 0
 
     source_repo = get_metadata_source_repo(task)
-    changed = await do_bump_version(config, repo_path, bump_info["files"], bump_info["next_version"], source_repo)
-    vcs = get_vcs_module(repo_type)
+    changed = await do_bump_version(repo_path, bump_info["files"], bump_info["next_version"], source_repo)
     if changed:
         commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
         if get_dontbuild(task):
@@ -109,7 +108,7 @@ async def bump_version(config, task, repo_path, repo_type):
     return num_commits
 
 
-async def do_bump_version(config, repo_path, files, next_version, source_repo):
+async def do_bump_version(repo_path, files, next_version, source_repo):
     """Perform a version bump.
 
     This function takes its inputs from task by using the ``get_version_bump_info``
@@ -119,9 +118,10 @@ async def do_bump_version(config, repo_path, files, next_version, source_repo):
     match, and nothing if the next_version is actually less than current_version.
 
     Args:
-        config (dict): the running config
-        task (dict): the running task
         repo_path (str): the source directory
+        files (List[str]): the files to bump
+        next_version (str): the version to bump to
+        source_repo (str): the source repository
 
     Raises:
         TaskverificationError: if a file specified is not allowed, or

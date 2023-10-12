@@ -7,7 +7,7 @@ from scriptworker_client.github import extract_github_repo_ssh_url
 from scriptworker_client.utils import get_single_item_from_sequence, makedirs
 
 from treescript.exceptions import PushError, TaskVerificationError
-from treescript.task import get_branch, get_source_repo, get_ssh_user
+from treescript.util.task import get_branch, get_source_repo, get_ssh_user
 
 log = logging.getLogger(__name__)
 
