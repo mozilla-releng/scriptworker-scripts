@@ -7,12 +7,12 @@ import tempfile
 from scriptworker_client.utils import load_json_or_yaml, makedirs, run_command
 
 from treescript.exceptions import CheckoutError, FailedSubprocess, PushError
-from treescript.task import DONTBUILD_MSG, get_branch, get_dontbuild, get_source_repo, get_ssh_user, get_tag_info
+from treescript.util.task import DONTBUILD_MSG, get_branch, get_dontbuild, get_source_repo, get_ssh_user, get_tag_info
 
 # https://www.mercurial-scm.org/repo/hg/file/tip/tests/run-tests.py#l1040
 # For environment vars.
 
-HGRCPATH = os.path.join(os.path.dirname(__file__), "data", "hgrc")
+HGRCPATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "hgrc")
 TAG_MSG = "No bug - Tagging {revision} with {tags} a=release CLOSED TREE"
 
 log = logging.getLogger(__name__)

@@ -12,10 +12,10 @@ import os
 import pytest
 from scriptworker_client.utils import makedirs
 
-from treescript import mercurial
+from treescript.gecko import mercurial
 from treescript.exceptions import FailedSubprocess, PushError
 from treescript.script import get_default_config
-from treescript.task import DONTBUILD_MSG
+from treescript.util.task import DONTBUILD_MSG
 
 # constants, helpers, fixtures {{{1
 UNEXPECTED_ENV_KEYS = "HG HGPROF CDPATH GREP_OPTIONS http_proxy no_proxy " "HGPLAINEXCEPT EDITOR VISUAL PAGER NO_PROXY CHGDEBUG".split()

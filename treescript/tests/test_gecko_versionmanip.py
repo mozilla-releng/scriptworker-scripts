@@ -5,10 +5,10 @@ import pytest
 from mozilla_version.gecko import FirefoxVersion, GeckoVersion, ThunderbirdVersion
 from mozilla_version.mobile import MobileVersion
 
-import treescript.versionmanip as vmanip
+import treescript.gecko.versionmanip as vmanip
 from treescript.exceptions import TaskVerificationError, TreeScriptError
 from treescript.script import get_default_config
-from treescript.task import DONTBUILD_MSG
+from treescript.util.task import DONTBUILD_MSG
 
 try:
     from unittest.mock import AsyncMock
@@ -119,20 +119,10 @@ async def test_bump_version(mocker, repo_context, new_version, should_append_esr
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
     vcs_mock = AsyncMock()
-    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
+    mocker.patch.object(vmanip, "vcs", new=vcs_mock)
+    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
     assert test_version == vmanip.get_version(relative_files[0], repo_context.repo, "https://hg.mozilla.org/repo")
     assert vcs_mock.commit.call_args_list[0][0][2] == "Automatic version bump CLOSED TREE NO BUG a=release"
-
-
-@pytest.mark.asyncio
-async def test_bump_version_mobile(mocker, mobile_repo_context):
-    bump_info = {"files": ["version.txt"], "next_version": "110.1.0"}
-    mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
-    mocked_bump_info.return_value = bump_info
-    vcs_mock = AsyncMock()
-    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
-    await vmanip.bump_version(mobile_repo_context.config, mobile_repo_context.task, mobile_repo_context.repo, repo_type="git")
 
 
 @pytest.mark.asyncio
@@ -145,8 +135,8 @@ async def test_bump_version_DONTBUILD_true(mocker, repo_context, new_version):
     mocked_dontbuild = mocker.patch.object(vmanip, "get_dontbuild")
     mocked_dontbuild.return_value = True
     vcs_mock = AsyncMock()
-    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
+    mocker.patch.object(vmanip, "vcs", new=vcs_mock)
+    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
     commit_msg = vcs_mock.commit.call_args_list[0][0][2]
     assert DONTBUILD_MSG in commit_msg
 
@@ -161,8 +151,8 @@ async def test_bump_version_DONTBUILD_false(mocker, repo_context, new_version):
     mocked_dontbuild = mocker.patch.object(vmanip, "get_dontbuild")
     mocked_dontbuild.return_value = False
     vcs_mock = AsyncMock()
-    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
+    mocker.patch.object(vmanip, "vcs", new=vcs_mock)
+    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
     commit_msg = vcs_mock.commit.call_args_list[0][0][2]
     assert DONTBUILD_MSG not in commit_msg
 
@@ -175,9 +165,9 @@ async def test_bump_version_invalid_file(mocker, repo_context, new_version):
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
     vcs_mock = AsyncMock()
-    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
+    mocker.patch.object(vmanip, "vcs", new=vcs_mock)
     with pytest.raises(TaskVerificationError):
-        await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
+        await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
     assert repo_context.xtest_version == vmanip.get_version(relative_files[1], repo_context.repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_not_called()
 
@@ -191,9 +181,9 @@ async def test_bump_version_missing_file(mocker, repo_context, new_version):
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
     vcs_mock = AsyncMock()
-    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
+    mocker.patch.object(vmanip, "vcs", new=vcs_mock)
     with pytest.raises(TaskVerificationError):
-        await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
+        await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
     assert repo_context.xtest_version == vmanip.get_version(relative_files[1], repo_context.repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_not_called()
 
@@ -206,8 +196,8 @@ async def test_bump_version_smaller_version(mocker, repo_context, new_version):
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
     vcs_mock = AsyncMock()
-    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
+    mocker.patch.object(vmanip, "vcs", new=vcs_mock)
+    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
     assert repo_context.xtest_version == vmanip.get_version(relative_files[0], repo_context.repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_not_called()
 
@@ -224,8 +214,8 @@ async def test_bump_version_esr(mocker, repo_context, new_version, expect_versio
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
     vcs_mock = AsyncMock()
-    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
+    mocker.patch.object(vmanip, "vcs", new=vcs_mock)
+    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
     assert expect_version == vmanip.get_version(relative_files[0], repo_context.repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_called_once()
 
@@ -249,14 +239,14 @@ async def test_bump_version_esr_dont_bump_non_esr(mocker, config, tmpdir, new_ve
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
-    vcs_mock = AsyncMock()
-    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
     task = {
         "metadata": {
             "source": "https://hg.mozilla.org/repo/file/deadb33f/.taskcluster.yml",
         },
     }
-    await vmanip.bump_version(config, task, repo, repo_type="hg")
+    vcs_mock = AsyncMock()
+    mocker.patch.object(vmanip, "vcs", new=vcs_mock)
+    await vmanip.bump_version(config, task, repo)
     assert expect_esr_version == vmanip.get_version(display_version_file, repo, "https://hg.mozilla.org/repo")
     assert new_version == vmanip.get_version(version_file, repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_called_once()
@@ -269,7 +259,7 @@ async def test_bump_version_same_version(mocker, repo_context):
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
     mocked_bump_info.return_value = bump_info
     vcs_mock = AsyncMock()
-    mocker.patch.object(vmanip, "get_vcs_module", return_value=vcs_mock)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo, repo_type="hg")
+    mocker.patch.object(vmanip, "vcs", new=vcs_mock)
+    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
     assert repo_context.xtest_version == vmanip.get_version(relative_files[0], repo_context.repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_not_called()

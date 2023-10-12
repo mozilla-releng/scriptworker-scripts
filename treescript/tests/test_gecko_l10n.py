@@ -4,7 +4,7 @@ import os
 import pytest
 from scriptworker_client.utils import makedirs
 
-import treescript.l10n as l10n
+import treescript.gecko.l10n as l10n
 
 try:
     from unittest.mock import AsyncMock
@@ -264,7 +264,7 @@ async def test_l10n_bump(mocker, ignore_closed_tree, l10n_bump_info, tmpdir, old
     mocker.patch.object(l10n, "load_json_or_yaml", return_value=old_contents)
     mocker.patch.object(l10n, "get_latest_revision", new=noop_async)
     mocker.patch.object(l10n, "build_revision_dict", new=fake_build_revision_dict)
-    mocker.patch.object(l10n, "get_vcs_module", return_value=AsyncMock())
+    mocker.patch.object(l10n, "vcs", new=AsyncMock())
 
     assert await l10n.l10n_bump({}, {}, tmpdir) == changes
 

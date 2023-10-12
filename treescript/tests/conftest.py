@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from treescript.mercurial import HGRCPATH
+from treescript.gecko.mercurial import HGRCPATH
 
 ROBUSTCHECKOUT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "vendored", "robustcheckout.py"))
 HGRC_ROBUSTCHECKOUT = os.path.abspath(os.path.join(os.path.dirname(__file__), "robustcheckout.hgrc"))

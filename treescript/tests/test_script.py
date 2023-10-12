@@ -1,3 +1,4 @@
+import inspect
 import json
 import os
 from unittest.mock import MagicMock
@@ -6,8 +7,8 @@ import mock
 import pytest
 from scriptworker_client.exceptions import TaskError
 
-import treescript.script as script
-from treescript.exceptions import TreeScriptError
+from treescript import gecko, github, script
+from treescript.exceptions import TaskVerificationError, TreeScriptError
 
 try:
     from unittest.mock import AsyncMock
@@ -50,25 +51,28 @@ async def die_async(*args, **kwargs):
 
 # async_main {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("robustcheckout_works,raises,actions", ((False, TaskError, ["some_action"]), (True, None, ["some_action"]), (True, None, None)))
-async def test_async_main(tmpdir, mocker, robustcheckout_works, raises, actions):
-    async def fake_validate_robustcheckout(_):
-        return robustcheckout_works
-
-    def action_fun(*args, **kwargs):
-        return actions
-
-    mocker.patch.object(script, "task_action_types", new=action_fun)
-    mocker.patch.object(script, "validate_robustcheckout_works", new=fake_validate_robustcheckout)
-    mocker.patch.object(script, "log_mercurial_version", new=noop_async)
-    mocker.patch.object(script, "do_actions", new=noop_async)
+@pytest.mark.parametrize("task,expected", (
+    ({"payload": {"source_repo": "https://github.com/foo/bar"}}, "github"),
+    ({"payload": {"source_repo": "https://hg.mozilla.org/foo"}}, "gecko"),
+    ({"payload": {}}, TaskVerificationError),
+))
+async def test_async_main(mocker, task, expected):
+    gecko_mock = AsyncMock()
+    github_mock = AsyncMock()
+    mocker.patch.object(gecko, "do_actions", new=gecko_mock)
+    mocker.patch.object(github, "do_actions", new=github_mock)
     config = mock.MagicMock()
-    task = mock.MagicMock()
-    if raises:
-        with pytest.raises(raises):
+    if inspect.isclass(expected) and issubclass(expected, Exception):
+        with pytest.raises(expected):
             await script.async_main(config, task)
     else:
         await script.async_main(config, task)
+        if expected == "github":
+            assert github_mock.called_with(config, task)
+            assert not gecko_mock.called
+        elif expected == "gecko":
+            assert gecko_mock.called_with(config, task)
+            assert not github_mock.called
 
 
 # get_default_config {{{1
@@ -76,192 +80,6 @@ def test_get_default_config():
     parent_dir = os.path.dirname(os.getcwd())
     c = script.get_default_config()
     assert c["work_dir"] == os.path.join(parent_dir, "work_dir")
-
-
-# do_actions {{{1
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "push_scope,push_payload,dry_run,push_expect_called",
-    (
-        (["push"], False, False, False),
-        (["push"], False, True, False),
-        (["push"], True, False, True),
-        (["push"], True, True, False),
-        ([], False, False, False),
-        ([], False, True, False),
-        ([], True, False, True),
-        ([], True, True, False),
-    ),
-)
-async def test_do_actions(mocker, push_scope, push_payload, dry_run, push_expect_called):
-    actions = ["tag", "version_bump", "l10n_bump"]
-    actions += push_scope
-    called = {"version_bump": False, "l10n_bump": False, "merge": False}
-
-    async def mocked_bump(*args, **kwargs):
-        called["version_bump"] = True
-        return 1
-
-    async def mocked_l10n(*args, **kwargs):
-        called["l10n_bump"] = True
-        return 1
-
-    async def mocked_perform_merge_actions(*args, **kwargs):
-        called["merge"] = True
-
-    vcs_mock = AsyncMock()
-    vcs_mock.do_tagging.return_value = 1
-    vcs_mock.log_outgoing.return_value = 3
-
-    mocker.patch.object(script, "get_vcs_module", return_value=vcs_mock)
-    mocker.patch.object(script, "bump_version", new=mocked_bump)
-    mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
-    mocker.patch.object(script, "perform_merge_actions", new=mocked_perform_merge_actions)
-
-    task_defn = {
-        "payload": {"push": push_payload, "dry_run": dry_run},
-        "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source" "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
-    }
-    await script.do_actions({}, task_defn, actions, "/some/folder/here")
-
-    assert called["merge"] is False
-    vcs_mock.checkout_repo.assert_called_once()
-    vcs_mock.do_tagging.assert_called_once()
-    vcs_mock.log_outgoing.assert_called_once()
-    vcs_mock.strip_outgoing.assert_called_once()
-    if push_expect_called:
-        vcs_mock.push.assert_called_once()
-    else:
-        vcs_mock.push.assert_not_called()
-
-
-# do_actions {{{1
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "push_scope,push_payload,dry_run",
-    (
-        (["push"], False, False),
-        (["push"], False, True),
-        (["push"], True, False),
-        (["push"], True, True),
-        ([], False, False),
-        ([], False, True),
-        ([], True, False),
-        ([], True, True),
-    ),
-)
-async def test_do_actions_merge_tasks(mocker, push_scope, push_payload, dry_run):
-    actions = ["merge_day"]
-    actions += push_scope
-    called = {"version_bump": False, "l10n_bump": False, "merge": False}
-
-    async def mocked_bump(*args, **kwargs):
-        called["version_bump"] = True
-        return 1
-
-    async def mocked_l10n(*args, **kwargs):
-        called["l10n_bump"] = True
-        return 1
-
-    async def mocked_perform_merge_actions(*args, **kwargs):
-        called["merge"] = True
-
-    vcs_mock = AsyncMock()
-    vcs_mock.do_tagging.return_value = 1
-    vcs_mock.log_outgoing.return_value = 0
-
-    mocker.patch.object(script, "get_vcs_module", return_value=vcs_mock)
-    mocker.patch.object(script, "bump_version", new=mocked_bump)
-    mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
-    mocker.patch.object(script, "perform_merge_actions", new=mocked_perform_merge_actions)
-
-    task_defn = {
-        "payload": {"push": push_payload, "dry_run": dry_run},
-        "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source" "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
-    }
-    await script.do_actions({}, task_defn, actions, "/some/folder/here")
-    for action in ["version_bump", "l10n_bump"]:
-        assert called[action] is False
-    assert called["merge"] is True
-
-    vcs_mock.checkout_repo.assert_called_once()
-    vcs_mock.log_outgoing.assert_not_called()
-    vcs_mock.strip_outgoing.assert_not_called()
-
-
-# do_actions {{{1
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "push_scope,should_push,push_expect_called", ((["push"], False, False), (["push"], True, True), ([], False, False), ([], False, False))
-)
-async def test_perform_merge_actions(mocker, push_scope, should_push, push_expect_called):
-    actions = ["merge_day"]
-    actions += push_scope
-    called = {"merge": False}
-
-    async def mocked_do_merge(*args, **kwargs):
-        called["merge"] = True
-        return [("https://hg.mozilla.org/treescript-test", ".")]
-
-    vcs_mock = AsyncMock()
-
-    mocker.patch.object(script, "get_vcs_module", return_value=vcs_mock)
-    mocker.patch.object(script, "do_merge", new=mocked_do_merge)
-    mocker.patch.object(script, "should_push", return_value=should_push)
-    await script.perform_merge_actions({}, {}, actions, "/some/folder/here", "hg")
-    assert called["merge"] is True
-    if push_expect_called:
-        vcs_mock.push.assert_called_once()
-    else:
-        vcs_mock.push.assert_not_called()
-
-
-@pytest.mark.asyncio
-async def test_do_actions_no_changes(mocker):
-    actions = ["push"]
-    called = {"bump": False, "l10n": False}
-
-    async def mocked_bump(*args, **kwargs):
-        called["bump"] = True
-        return 1
-
-    async def mocked_l10n(*args, **kwargs):
-        called["l10n"] = True
-        return 1
-
-    vcs_mock = AsyncMock()
-    vcs_mock.log_outgoing.return_value = 0
-
-    mocker.patch.object(script, "get_vcs_module", return_value=vcs_mock)
-    mocker.patch.object(script, "bump_version", new=mocked_bump)
-    mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
-    await script.do_actions({}, {"metadata": {"source": "https://hg.mozilla.org/file/"}, "payload": {"push": True}}, actions, "/some/folder/here")
-    assert not any(called.values())
-    vcs_mock.checkout_repo.assert_called_once()
-    vcs_mock.do_tagging.assert_not_called()
-    vcs_mock.log_outgoing.assert_called_once()
-    vcs_mock.strip_outgoing.assert_called_once()
-    vcs_mock.push.assert_not_called()
-
-
-@pytest.mark.asyncio
-async def test_do_actions_mismatch_change_count(mocker):
-    actions = ["tag"]
-
-    async def mocked_bump(*args, **kwargs):
-        return 1
-
-    async def mocked_l10n(*args, **kwargs):
-        return 1
-
-    vcs_mock = AsyncMock()
-    vcs_mock.log_outgoing.return_value = 14
-
-    mocker.patch.object(script, "get_vcs_module", return_value=vcs_mock)
-    mocker.patch.object(script, "bump_version", new=mocked_bump)
-    mocker.patch.object(script, "l10n_bump", new=mocked_l10n)
-    with pytest.raises(TreeScriptError):
-        await script.do_actions({}, {"metadata": {"source": "https://hg.mozilla.org/file/"}, "payload": {"push": False}}, actions, "/some/folder/here")
 
 
 def test_main(monkeypatch):

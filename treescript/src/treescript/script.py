@@ -7,84 +7,11 @@ from scriptworker_client.aio import retry_async
 from scriptworker_client.client import sync_main
 from scriptworker_client.github import is_github_url
 
-from treescript.exceptions import CheckoutError, PushError, TreeScriptError
-from treescript.l10n import l10n_bump
-from treescript.mercurial import log_mercurial_version, validate_robustcheckout_works
-from treescript.merges import do_merge
-from treescript.task import get_source_repo, get_vcs_module, should_push, task_action_types
-from treescript.versionmanip import bump_version
+from treescript import gecko, github
+from treescript.exceptions import CheckoutError, PushError
+from treescript.util.task import get_source_repo
 
 log = logging.getLogger(__name__)
-
-
-async def perform_merge_actions(config, task, actions, repo_path, repo_type):
-    """Perform merge day related actions.
-
-    This has different behaviour to other treescript actions:
-    * Reporting on outgoing changesets has less meaning
-    * Logging outgoing changesets can easily break with the volume and content of the diffs
-    * We need to do more than just |hg push -r .| since we have two branches to update
-
-    Args:
-        config (dict): the running config
-        task (dict): the running task
-        actions (list): the actions to perform
-        repo_path (str): the source directory to use.
-    """
-    if repo_type != "hg":
-        raise NotImplementedError("Only mercurial merges are supported. Got repo_type: {}".format(repo_type))
-    vcs = get_vcs_module(repo_type)
-
-    log.info("Starting merge day operations")
-    push_activity = await do_merge(config, task, repo_path)
-
-    if should_push(task, actions) and push_activity:
-        log.info("%d branches to push", len(push_activity))
-        for target_repo, revision in push_activity:
-            log.info("pushing %s to %s", revision, target_repo)
-            await vcs.push(config, task, repo_path, target_repo=target_repo, revision=revision)
-
-
-async def do_actions(config, task, actions, repo_path):
-    """Perform the set of actions that treescript can perform.
-
-    The actions happen in order, tagging, ver bump, then push
-
-    Args:
-        config (dict): the running config
-        task (dict): the running task
-        actions (list): the actions to perform
-        repo_path (str): the source directory to use.
-    """
-    source_repo = get_source_repo(task)
-    # mercurial had been the only default choice until git was supported, default to it.
-    repo_type = "git" if is_github_url(source_repo) else "hg"
-    vcs = get_vcs_module(repo_type)
-    await vcs.checkout_repo(config, task, repo_path)
-
-    # Split the action selection up due to complexity in do_actions
-    # caused by different push behaviour, and action return values.
-    if "merge_day" in actions:
-        await perform_merge_actions(config, task, actions, repo_path, repo_type)
-        return
-
-    num_changes = 0
-    if "tag" in actions:
-        num_changes += await vcs.do_tagging(config, task, repo_path)
-    if "version_bump" in actions:
-        num_changes += await bump_version(config, task, repo_path, repo_type)
-    if "l10n_bump" in actions:
-        num_changes += await l10n_bump(config, task, repo_path, repo_type)
-
-    num_outgoing = await vcs.log_outgoing(config, task, repo_path)
-    if num_outgoing != num_changes:
-        raise TreeScriptError("Outgoing changesets don't match number of expected changesets!" " {} vs {}".format(num_outgoing, num_changes))
-    if should_push(task, actions):
-        if num_changes:
-            await vcs.push(config, task, repo_path, target_repo=get_source_repo(task))
-        else:
-            log.info("No changes; skipping push.")
-    await vcs.strip_outgoing(config, task, repo_path)
 
 
 # async_main {{{1
@@ -96,13 +23,15 @@ async def async_main(config, task):
         task (dict): the running task.
 
     """
-    work_dir = config["work_dir"]
-    repo_path = os.path.join(work_dir, "src")
-    actions_to_perform = task_action_types(config, task)
-    await log_mercurial_version(config)
-    if not await validate_robustcheckout_works(config):
-        raise TreeScriptError("Robustcheckout can't run on our version of hg, aborting")
-    await retry_async(do_actions, args=(config, task, actions_to_perform, repo_path), retry_exceptions=(CheckoutError, PushError))
+    # Github and Gecko are split up into two separate modules because
+    # the Github case is being refactored to use Github's GraphQL API
+    # rather than using `git` on a local clone.
+    #
+    # Since Mercurial will be removed at some point in the future
+    # anyway, they are hard forked rather than sharing logic.
+    source_repo = get_source_repo(task)
+    mod = github if is_github_url(source_repo) else gecko
+    await retry_async(mod.do_actions, args=(config, task), retry_exceptions=(CheckoutError, PushError))
     log.info("Done!")
 
 
@@ -132,4 +61,5 @@ def main():
     return sync_main(async_main, default_config=get_default_config())
 
 
-__name__ == "__main__" and main()
+if __name__ == "__main__":
+    main()
