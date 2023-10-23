@@ -26,6 +26,7 @@ RUN python -m venv /app \
     https://github.com/flatpak/flat-manager/raw/d9d7972b24de6022c7079f8721fd8335c3319dc5/flat-manager-client | \
     sed -e '1i#!/app/flat_manager_venv/bin/python' -e '1d' > /app/flat_manager_venv/bin/flat-manager-client \
  && chmod 755 /app/flat_manager_venv/bin/flat-manager-client \
+ && echo "5024c853d7529e82fc4a9fb9b982e561598df033545187238c9be8c791a6797c /app/flat_manager_venv/bin/flat-manager-client" | sha256sum -c \
  && cd /app
 
 
