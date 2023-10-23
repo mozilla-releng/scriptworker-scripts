@@ -22,8 +22,8 @@ RUN python -m venv /app \
  && /app/configloader_venv/bin/pip install . \
  && python -m venv /app/flat_manager_venv \
  && /app/flat_manager_venv/bin/pip install -r /app/pushflatpakscript/requirements/flat-manager.txt \
- && curl -s \
-    https://raw.githubusercontent.com/flatpak/flat-manager/a0005a8046a290590ccb53b631b9949ba52fd8cd/flat-manager-client | \
+ && curl -Ls \
+    https://github.com/flatpak/flat-manager/raw/d9d7972b24de6022c7079f8721fd8335c3319dc5/flat-manager-client | \
     sed -e '1i#!/app/flat_manager_venv/bin/python' -e '1d' > /app/flat_manager_venv/bin/flat-manager-client \
  && chmod 755 /app/flat_manager_venv/bin/flat-manager-client \
  && cd /app
