@@ -11,6 +11,7 @@ test_var_set() {
 }
 
 test_var_set 'FLATHUB_URL'
+test_var_set 'TASKCLUSTER_ROOT_URL'
 
 export FLAT_MANAGER_CLIENT=/app/flat_manager_venv/bin/flat-manager-client
 
