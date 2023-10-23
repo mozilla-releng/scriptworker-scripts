@@ -130,7 +130,25 @@
                     }
                   }
                 }
-            }
+              }
+            },
+            "provisioning-profile-config": {
+              "type": "array",
+              "minItems": 0,
+              "uniqueItems": true,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "description": "Filename of profile in the workers.",
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "Relative path to add profile to.",
+                    "type": "string"
+                  }
+                }
+              }
             },
             "provisioning-profile-url": {
               "type": "string"
