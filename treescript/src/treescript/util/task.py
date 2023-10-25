@@ -7,8 +7,13 @@ from treescript.exceptions import TaskVerificationError
 log = logging.getLogger(__name__)
 
 
-# This list should be sorted in the order the actions should be taken
-VALID_ACTIONS = {"tag", "version_bump", "l10n_bump", "push", "merge_day"}
+# These sets should be listed in the order the actions should be taken for
+# human reference.
+VALID_ACTIONS = {
+    "comm": {"tag", "version_bump", "l10n_bump", "push", "merge_day"},
+    "gecko": {"tag", "version_bump", "l10n_bump", "push", "merge_day"},
+    "mobile": {"version_bump"},
+}
 
 DONTBUILD_MSG = " DONTBUILD"
 CLOSED_TREE_MSG = " CLOSED TREE"
@@ -215,9 +220,9 @@ def task_action_types(config, task):
     """
     actions = set(task["payload"].get("actions", []))
     log.info("Action requests: %s", actions)
-    invalid_actions = actions - VALID_ACTIONS
+    invalid_actions = actions - VALID_ACTIONS[config["trust_domain"]]
     if len(invalid_actions) > 0:
-        raise TaskVerificationError("Task specified invalid actions: {}".format(invalid_actions))
+        raise TaskVerificationError(f"Task specified invalid actions for '{config['trust_domain']}: {invalid_actions}")
 
     return actions
 

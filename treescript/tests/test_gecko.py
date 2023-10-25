@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from treescript import gecko, script
+from treescript import gecko
 from treescript.exceptions import TreeScriptError
 
 
@@ -50,7 +50,7 @@ async def test_do_actions(mocker, push_scope, push_payload, dry_run, push_expect
         "payload": {"push": push_payload, "dry_run": dry_run, "actions": actions},
         "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source" "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
     }
-    await gecko.do_actions({"work_dir": "foo"}, task_defn)
+    await gecko.do_actions({"work_dir": "foo", "trust_domain": "gecko"}, task_defn)
 
     assert called["merge"] is False
     vcs_mock.checkout_repo.assert_called_once()
@@ -107,7 +107,7 @@ async def test_do_actions_merge_tasks(mocker, push_scope, push_payload, dry_run)
         "payload": {"push": push_payload, "dry_run": dry_run, "actions": actions},
         "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source" "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
     }
-    await gecko.do_actions({"work_dir": "foo"}, task_defn)
+    await gecko.do_actions({"work_dir": "foo", "trust_domain": "gecko"}, task_defn)
     for action in ["version_bump", "l10n_bump"]:
         assert called[action] is False
     assert called["merge"] is True
@@ -163,7 +163,9 @@ async def test_do_actions_no_changes(mocker):
     mocker.patch.object(gecko, "vcs", new=vcs_mock)
     mocker.patch.object(gecko, "bump_version", new=mocked_bump)
     mocker.patch.object(gecko, "l10n_bump", new=mocked_l10n)
-    await gecko.do_actions({"work_dir": "foo"}, {"metadata": {"source": "https://hg.mozilla.org/file/"}, "payload": {"push": True, "actions": actions}})
+    await gecko.do_actions(
+        {"work_dir": "foo", "trust_domain": "gecko"}, {"metadata": {"source": "https://hg.mozilla.org/file/"}, "payload": {"push": True, "actions": actions}}
+    )
     assert not any(called.values())
     vcs_mock.checkout_repo.assert_called_once()
     vcs_mock.do_tagging.assert_not_called()
@@ -189,6 +191,4 @@ async def test_do_actions_mismatch_change_count(mocker):
     mocker.patch.object(gecko, "bump_version", new=mocked_bump)
     mocker.patch.object(gecko, "l10n_bump", new=mocked_l10n)
     with pytest.raises(TreeScriptError):
-        await gecko.do_actions({"work_dir": "foo"}, {"metadata": {"source": "https://hg.mozilla.org/file/"}, "payload": {"push": False, "actions": actions}})
-
-
+        await gecko.do_actions({"work_dir": "foo", "trust_domain": "gecko"}, {"metadata": {"source": "https://hg.mozilla.org/file/"}, "payload": {"push": False, "actions": actions}})

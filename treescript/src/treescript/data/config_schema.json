@@ -20,7 +20,8 @@
         "hg_share_base_dir",
         "upstream_repo",
         "hg_ssh_config",
-        "merge_day_clobber_file"
+        "merge_day_clobber_file",
+        "trust_domain"
     ],
     "properties": {
         "taskcluster_scope_prefix": {
@@ -43,6 +44,9 @@
             "additionalProperties": {"$ref": "#/definitions/ssh_user"}
         },
         "merge_day_clobber_file": {
+            "type": "string"
+        },
+        "trust_domain": {
             "type": "string"
         }
     }
