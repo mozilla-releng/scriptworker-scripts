@@ -26,14 +26,17 @@ case $COT_PRODUCT in
   firefox)
     test_var_set 'SSH_USER'
     export TASKCLUSTER_SCOPE_PREFIX="project:releng:${PROJECT_NAME}script:"
+    export TRUST_DOMAIN="gecko"
     ;;
   mobile)
     export TASKCLUSTER_SCOPE_PREFIX=""  # No prefix needed on mobile (and likely firefox, too)
+    export TRUST_DOMAIN="mobile"
     ;;
   thunderbird)
     test_var_set 'SSH_KEY'
     test_var_set 'SSH_USER'
     export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:${PROJECT_NAME}script:"
+    export TRUST_DOMAIN="comm"
     export UPSTREAM_REPO=""
     export MERGE_DAY_CLOBBER_FILE=""
     ;;

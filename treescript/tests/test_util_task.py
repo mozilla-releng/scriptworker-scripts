@@ -1,16 +1,13 @@
 import os
-from contextlib import nullcontext as does_not_raise
 
 import pytest
 from scriptworker_client.client import verify_task_schema
 from scriptworker_client.exceptions import TaskVerificationError
 
 from treescript.util import task as ttask
-from treescript.gecko import mercurial
-from treescript.github import git
 from treescript.script import get_default_config
 
-SCRIPT_CONFIG = {"taskcluster_scope_prefix": "project:releng:treescript:"}
+SCRIPT_CONFIG = {"trust_domain": "gecko", "taskcluster_scope_prefix": "project:releng:treescript:"}
 
 
 @pytest.fixture(scope="function")
@@ -40,6 +37,7 @@ def task_defn():
 def config(tmpdir):
     config_ = get_default_config()
     config_["work_dir"] = os.path.join(tmpdir, "work")
+    config_["trust_domain"] = "gecko"
     yield config_
 
 

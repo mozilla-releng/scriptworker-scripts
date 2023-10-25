@@ -41,5 +41,6 @@ def test_config():
         "SSH_MERGE_KEY_PATH": "",
         "MERGE_DAY_CLOBBER_FILE": "",
         "COT_PRODUCT": "firefox",
+        "TRUST_DOMAIN": "gecko",
     }
     _validate_config(context)
