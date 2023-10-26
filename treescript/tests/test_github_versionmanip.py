@@ -1,37 +1,46 @@
-import os
-from unittest.mock import AsyncMock
+import base64
 
 import pytest
+from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
+from yarl import URL
 
 from treescript.github import versionmanip as vmanip
-from treescript.script import get_default_config
-
-
-@pytest.fixture(scope="function")
-def config(tmpdir):
-    config_ = get_default_config()
-    config_["work_dir"] = os.path.join(tmpdir, "work")
-    yield config_
-
-
-@pytest.fixture()
-def mobile_repo_context(tmpdir, config, request, mocker):
-    context = mocker.MagicMock()
-    context.repo = os.path.join(tmpdir, "repo")
-    context.task = {"metadata": {"source": "https://github.com/mozilla-mobile/firefox-android/blob/rev/foo"}}
-    context.config = config
-    os.mkdir(context.repo)
-    version_file = os.path.join(context.repo, "version.txt")
-    with open(version_file, "w") as f:
-        f.write("109.0")
-    yield context
 
 
 @pytest.mark.asyncio
-async def test_bump_version_mobile(mocker, mobile_repo_context):
-    bump_info = {"files": ["version.txt"], "next_version": "110.1.0"}
-    mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
-    mocked_bump_info.return_value = bump_info
-    vcs_mock = AsyncMock()
-    mocker.patch.object(vmanip, "vcs", new=vcs_mock)
-    await vmanip.bump_version(mobile_repo_context.config, mobile_repo_context.task, mobile_repo_context.repo)
+async def test_bump_version_mobile(aioresponses, client):
+    head_rev = "abcdef"
+    next_version = "110.1.0"
+    task = {
+        "payload": {
+            "push": True,
+            "version_bump_info": {
+                "files": ["version.txt"],
+                "next_version": next_version,
+            },
+        },
+        "metadata": {
+            "source": f"https://github.com/foo/bar/blob/{head_rev}/taskcluster/ci/version-bump",
+        }
+    }
+
+    # First query is to get the contents of 'version.txt'
+    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {"version.txt": {"text": "109.1.0"}}}})
+    # Second query is to get the head_rev
+    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {"object": {"oid": head_rev}}}})
+    # Third query is to commit
+    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {}})
+
+    await vmanip.bump_version(client, task)
+
+    aioresponses.assert_called()
+    key = ("POST", URL(GITHUB_GRAPHQL_ENDPOINT))
+    called_with = aioresponses.requests[key][-1]
+
+    changes = called_with[1]["json"]["variables"]["input"]["fileChanges"]
+    assert "deletions" not in changes
+    assert len(changes["additions"]) == 1
+
+    change = changes["additions"][0]
+    assert change["path"] == "version.txt"
+    assert base64.b64decode(change["contents"]).decode("utf-8") == next_version

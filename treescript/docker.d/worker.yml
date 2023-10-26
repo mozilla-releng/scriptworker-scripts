@@ -6,28 +6,27 @@ verbose: {"$eval": "VERBOSE == 'true'"}
 taskcluster_scope_prefix: {"$eval": "TASKCLUSTER_SCOPE_PREFIX"}
 treestatus_base_url: https://treestatus.mozilla-releng.net
 hg: 'hg'
-hg_share_base_dir: {"$eval": "HG_SHARE_BASE_DIR"}
+hg_share_base_dir:
+  $if: 'REPO_TYPE == "hg"'
+  then: {"$eval": "HG_SHARE_BASE_DIR"}
+  else: ""
 upstream_repo: {"$eval": "UPSTREAM_REPO"}
 merge_day_clobber_file: {"$eval": "MERGE_DAY_CLOBBER_FILE"}
 hg_ssh_config:
-  $if: 'COT_PRODUCT in ["firefox", "thunderbird"]'
+  $if: 'REPO_TYPE == "hg"'
   then:
     $merge:
       - default:
           user: {"$eval": "SSH_USER"}
           keyfile: {"$eval": "SSH_KEY_PATH"}
       - $if: 'SSH_MERGE_KEY_PATH != "" && SSH_MERGE_USER != ""'
-        then: {merge_user: {
-          user: {"$eval": "SSH_MERGE_USER"},
-          keyfile: {"$eval": "SSH_MERGE_KEY_PATH"}}}
+        then:
+          merge_user:
+            user: {"$eval": "SSH_MERGE_USER"}
+            keyfile: {"$eval": "SSH_MERGE_KEY_PATH"}
   else: {}
-git_ssh_config:
-  $if: 'COT_PRODUCT == "mobile"'
+github_config:
+  $if: 'REPO_TYPE == "git"'
   then:
-    default:
-      keyfile: {"$eval": "SSH_KEY_PATH"}
-      emailAddress:
-        $if: 'ENV == "prod"'
-        then: "release+release-automation-bot@mozilla.com"
-        else: "release+release-automation-bot-staging@mozilla.com"
+    privkey_file: {"$eval": "GITHUB_PRIVKEY_FILE"}
   else: {}
