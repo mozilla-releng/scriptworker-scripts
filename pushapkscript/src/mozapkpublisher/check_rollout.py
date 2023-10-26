@@ -40,8 +40,7 @@ def main():
                         type=int, default=7)
     config = parser.parse_args()
 
-    with GooglePlayEdit.transaction(config.service_account,
-                                    config.google_play_credentials_filename,
+    with GooglePlayEdit.transaction(config.google_play_credentials_filename,
                                     'org.mozilla.firefox', contact_server=True, dry_run=True) as edit:
         for (release, age) in check_rollout(edit, config.days):
             print('fennec {} is on staged rollout at {}% but it shipped {} days ago'.format(

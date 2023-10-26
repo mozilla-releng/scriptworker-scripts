@@ -47,14 +47,12 @@ def is_firefox_version_nightly(firefox_version):
 
 
 def add_push_arguments(parser):
-    parser.add_argument('--username', required=True,
-                        help='Google service account')
     parser.add_argument('--secret', required=True,
-                        help='File that contains google credentials')
+                        help='File that contains google credentials (json)')
     parser.add_argument('--do-not-contact-server', action='store_false', dest='contact_server',
                         help='''Prevent any request to reach the APK server. Use this option if
-you want to run the script without any valid credentials nor valid APKs. --service-account and
---credentials must still be provided (you can just fill them with random string and file).''')
+you want to run the script without any valid credentials nor valid APKs. --credentials must
+still be provided (you can pass a random file name).''')
     parser.add_argument('track', help='Track on which to upload')
     parser.add_argument(
         '--rollout-percentage',

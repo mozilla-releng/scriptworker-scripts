@@ -21,24 +21,23 @@ def test_add_general_google_play_arguments():
     add_general_google_play_arguments(parser)
 
     config = parser.parse_args([
-        '--service-account', 'dummy@dummy', '--credentials', 'credentials.p12'
+        '--credentials', 'credentials.json'
     ])
-    assert config.google_play_credentials_filename == 'credentials.p12'
-    assert config.service_account == 'dummy@dummy'
+    assert config.google_play_credentials_filename == 'credentials.json'
 
 
 def test_google_edit_resource_for_options_contact(monkeypatch):
     service_mock = MagicMock()
     service_mock.edits.return_value = 'edit resource'
-    monkeypatch.setattr(store.ServiceAccountCredentials, 'from_p12_keyfile',
+    monkeypatch.setattr(store.service_account.Credentials, 'from_service_account_file',
                         lambda *args, **kwargs: MagicMock())
     monkeypatch.setattr(store, 'build', lambda *args, **kwargs: service_mock)
-    edit_resource = _create_google_edit_resource(True, 'account', 'credentials_filename')
+    edit_resource = _create_google_edit_resource(True, 'credentials_filename')
     assert edit_resource == 'edit resource'
 
 
 def test_google_edit_resource_for_options_do_not_contact():
-    edit_resource = _create_google_edit_resource(False, None, None)
+    edit_resource = _create_google_edit_resource(False, None)
     assert isinstance(edit_resource, MagicMock)
 
 
@@ -54,7 +53,7 @@ def edit_resource_mock():
 
 def test_google_rollout_without_rollout_percentage():
     # Note: specifying "track='rollout'" (even with a valid percentage) is currently deprecated
-    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
+    with GooglePlayEdit.transaction(None, 'dummy_package_name', contact_server=False,
                                     dry_run=True) as edit:
         with pytest.raises(WrongArgumentGiven):
             edit._update_track('rollout', [1], None)
@@ -64,7 +63,7 @@ def test_google_rollout_without_rollout_percentage():
 def test_google_valid_rollout_percentage_with_track_rollout(create_edit_resource):
     mock_edits_resource = MagicMock()
     create_edit_resource.return_value = mock_edits_resource
-    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
+    with GooglePlayEdit.transaction(None, 'dummy_package_name', contact_server=False,
                                     dry_run=True) as edit:
         edit._update_track('rollout', [1], 50)
 
@@ -84,7 +83,7 @@ def test_google_valid_rollout_percentage_with_track_rollout(create_edit_resource
 def test_google_valid_rollout_percentage_with_real_track(create_edit_resource):
     mock_edits_resource = MagicMock()
     create_edit_resource.return_value = mock_edits_resource
-    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
+    with GooglePlayEdit.transaction(None, 'dummy_package_name', contact_server=False,
                                     dry_run=True) as edit:
         edit._update_track('beta', [1, 2], 20)
 
@@ -104,7 +103,7 @@ def test_google_valid_rollout_percentage_with_real_track(create_edit_resource):
 def test_google_play_edit_commit_transaction(create_edit_resource):
     mock_edits_resource = MagicMock()
     create_edit_resource.return_value = mock_edits_resource
-    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
+    with GooglePlayEdit.transaction(None, 'dummy_package_name', contact_server=False,
                                     dry_run=False) as _:
         pass
 
@@ -115,7 +114,7 @@ def test_google_play_edit_commit_transaction(create_edit_resource):
 def test_google_play_edit_no_commit_transaction(create_edit_resource):
     mock_edits_resource = MagicMock()
     create_edit_resource.return_value = mock_edits_resource
-    with GooglePlayEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
+    with GooglePlayEdit.transaction(None, 'dummy_package_name', contact_server=False,
                                     dry_run=True) as _:
         pass
 
