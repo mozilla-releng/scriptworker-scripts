@@ -4,6 +4,7 @@
 google-api-python-client
 mozapkpublisher
 oauth2client
-pyOpenSSL
+# pyOpenSSL 23.3.0 is incompatible with oauth2client
+pyOpenSSL<23.3.0
 scriptworker
 taskcluster
