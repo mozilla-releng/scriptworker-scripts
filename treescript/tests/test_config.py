@@ -42,5 +42,6 @@ def test_config():
         "MERGE_DAY_CLOBBER_FILE": "",
         "COT_PRODUCT": "firefox",
         "TRUST_DOMAIN": "gecko",
+        "REPO_TYPE": "hg",
     }
     _validate_config(context)

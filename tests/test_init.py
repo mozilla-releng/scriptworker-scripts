@@ -134,6 +134,7 @@ CONTEXT = {
     "tree": {
         "SSH_KEY": "Zm9vYmFyCg==",
         "SSH_USER": "user",
+        "GITHUB_PRIVKEY": "Zm9vYmFyCg==",
     },
 }
 
