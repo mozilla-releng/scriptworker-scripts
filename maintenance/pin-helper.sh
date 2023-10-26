@@ -14,11 +14,12 @@ else
 fi
 
 for dir in $DIRS; do
-    ARGS="-g base -g test -g local"
-    if [ $dir = "pushflatpakscript" ]; then
+    ARGS="$EXTRA_ARGS -g base -g test -g local"
+    if [ "$dir" = "pushflatpakscript" ]; then
         ARGS="$ARGS -g flat-manager"
     fi
-    pushd $dir
+    echo $ARGS
+    pushd "$dir"
     pip-compile-multi -o "$SUFFIX" $ARGS
     chmod 644 requirements/*.txt
     popd

@@ -3,6 +3,8 @@
 set -e
 set -x
 
+EXTRA_ARGS=${EXTRA_ARGS:-""}
+
 if [ $# -gt 0 ]; then
     DIRS="$@"
 else
@@ -39,5 +41,5 @@ echo -e "FROM python:3.8\n${RUNCMD}" | docker build --pull --tag "scriptworker-s
 echo -e "FROM python:3.9\n${RUNCMD}" | docker build --pull --tag "scriptworker-script-pin:3.9" -
 
 
-echo $DIRS | xargs -n8 -P8 time docker run --rm -t -v $PWD:/src -w /src scriptworker-script-pin:3.9 maintenance/pin-helper.sh
-echo $DIRS | xargs -n8 -P8 time docker run --rm -t -v $PWD:/src -e SUFFIX=py38.txt -w /src scriptworker-script-pin:3.8 maintenance/pin-helper.sh
+echo $DIRS | xargs -n8 -P8 time docker run --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -w /src scriptworker-script-pin:3.9 maintenance/pin-helper.sh
+echo $DIRS | xargs -n8 -P8 time docker run --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -e SUFFIX=py38.txt -w /src scriptworker-script-pin:3.8 maintenance/pin-helper.sh
