@@ -11,6 +11,7 @@ COMMON_CONTEXT = {
     "VERBOSE": "true",
     "FLATHUB_URL": "https://flat.example",
     "FLAT_MANAGER_CLIENT": "/app/bin/flat-manager-client",
+    "TASKCLUSTER_ROOT_URL": "http://taskcluster",
 }
 
 

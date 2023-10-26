@@ -1,8 +1,10 @@
 import pytest
+from unittest.mock import MagicMock
+
 from scriptworker import artifacts
 from scriptworker.exceptions import TaskVerificationError
 
-from pushflatpakscript.artifacts import get_flatpak_file_path
+from pushflatpakscript.artifacts import get_flatpak_file_path, get_flatpak_build_log_url
 
 
 @pytest.mark.parametrize(
@@ -25,3 +27,10 @@ def test_get_flatpak_file_path(monkeypatch, raises, returned, expected):
             get_flatpak_file_path(context)
     else:
         assert get_flatpak_file_path(context) == expected
+
+
+def test_get_flatpak_build_url():
+    context = MagicMock()
+    context.config = {"taskcluster_root_url": "http://taskcluster"}
+    context.task = {"payload": {"upstreamArtifacts": [{"taskId": "deadbeef", "paths": ["/path/to/file.flatpak.tar.xz"]}]}}
+    assert get_flatpak_build_log_url(context) == "http://taskcluster/api/queue/v1/task/deadbeef/artifacts/public%2Flogs%2Flive_backing.log"
