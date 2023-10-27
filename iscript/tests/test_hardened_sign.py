@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-import os
 from pathlib import Path
-
+import os
 import pytest
+import copy
 
 import iscript.hardened_sign as hs
 from iscript.exceptions import IScriptError
@@ -33,6 +33,11 @@ async def test_download_signing_resources(mocker):
     await hs.download_signing_resources(hs_config, Path("fakefolder"))
 
 
+def test_check_globs():
+    globs = ["doesntexist/*", "/*"]
+    hs.check_globs(TEST_DATA_DIR, globs)
+
+
 def test_copy_provisioning_profile(tmpdir):
     pprofile = {"name": "test.profile", "path": "/test.profile"}
     # Source pprofile
@@ -52,3 +57,10 @@ def test_copy_provisioning_profile_fail(tmpdir):
     # Source file doesn't exist
     with pytest.raises(IScriptError):
         hs.copy_provisioning_profile(pprofile, tmpdir, config)
+
+
+def test_build_sign_command(tmpdir):
+    file_map = {
+        hs_config[0]["entitlements"]: "filepath"
+    }
+    hs.build_sign_command(tmpdir, "12345identity", "keychainpath", hs_config[0], file_map)
