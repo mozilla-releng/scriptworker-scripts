@@ -1,3 +1,4 @@
+import inspect
 import os
 
 import pytest
@@ -296,6 +297,53 @@ def test_task_action_types_actions_invalid(actions):
     task = {"payload": {"actions": actions}}
     with pytest.raises(TaskVerificationError):
         ttask.task_action_types(SCRIPT_CONFIG, task)
+
+
+@pytest.mark.parametrize(
+    "task,expected",
+    (
+        pytest.param(
+            {
+                "scopes": [
+                    "project:mobile:foo:treescript:action:version_bump",
+                ]
+            },
+            {"version_bump"},
+            id="mobile_ok",
+        ),
+        pytest.param(
+            {
+                "scopes": [
+                    "project:mobile:bar:treescript:action:version_bump",
+                    "project:comm:foo:treescript:action:version_bump",
+                ]
+            },
+            TaskVerificationError,
+            id="mobile_missing",
+        ),
+        pytest.param(
+            {
+                "scopes": [
+                    "project:mobile:foo:treescript:action:tag",
+                ]
+            },
+            TaskVerificationError,
+            id="mobile_invalid",
+        ),
+    ),
+)
+def test_task_action_types_scopes(config, task, expected):
+    task.setdefault("payload", {}).setdefault("source_repo", "https://github.com/mobile/foo")
+
+    config["trust_domain"] = "mobile"
+    config["taskcluster_scope_prefix"] = "project:mobile:{repo}:treescript:"
+
+    if inspect.isclass(expected) and issubclass(expected, Exception):
+        with pytest.raises(expected):
+            ttask.task_action_types(config, task)
+    else:
+        actions = ttask.task_action_types(config, task)
+        assert actions == expected
 
 
 @pytest.mark.parametrize("task", ({"payload": {"push": True}}, {"payload": {"dry_run": False, "push": True}}, {"payload": {"actions": ["push"]}}))
