@@ -32,7 +32,6 @@ def test_config():
         "WORK_DIR": "",
         "ARTIFACTS_DIR": "",
         "VERBOSE": "true",
-        "TASKCLUSTER_SCOPE_PREFIX": "",
         "HG_SHARE_BASE_DIR": "",
         "SSH_USER": "",
         "SSH_KEY_PATH": "",

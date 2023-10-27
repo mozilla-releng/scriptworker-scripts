@@ -26,14 +26,12 @@ case $COT_PRODUCT in
     test_var_set 'SSH_USER'
     test_var_set 'SSH_KEY'
     export REPO_TYPE="hg"
-    export TASKCLUSTER_SCOPE_PREFIX="project:releng:${PROJECT_NAME}script:"
     export TRUST_DOMAIN="gecko"
     export UPSTREAM_REPO="https://hg.mozilla.org/mozilla-unified"
     ;;
   mobile)
     test_var_set 'GITHUB_PRIVKEY'
     export REPO_TYPE="git"
-    export TASKCLUSTER_SCOPE_PREFIX=""  # No prefix needed on mobile (and likely firefox, too)
     export TRUST_DOMAIN="mobile"
     export UPSTREAM_REPO=""
     ;;
@@ -41,7 +39,6 @@ case $COT_PRODUCT in
     test_var_set 'SSH_USER'
     test_var_set 'SSH_KEY'
     export REPO_TYPE="hg"
-    export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:${PROJECT_NAME}script:"
     export TRUST_DOMAIN="comm"
     export UPSTREAM_REPO=""
     export MERGE_DAY_CLOBBER_FILE=""

@@ -218,8 +218,20 @@ def task_action_types(config, task):
         set: the set of specified actions
 
     """
-    actions = set(task["payload"].get("actions", []))
-    log.info("Action requests: %s", actions)
+    if config["trust_domain"] in ("gecko", "comm"):
+        # Legacy, actions passed in via payload
+        actions = set(task["payload"].get("actions", []))
+    else:
+        # Actions derived from scopes
+        repo = get_short_source_repo(task)
+        prefix = f"project:{config['trust_domain']}:{repo}:treescript:action:"
+        actions = set([s[len(prefix) :] for s in task["scopes"] if s.startswith(prefix)])
+
+        if not actions:
+            scope_str = "\n  ".join(sorted(task["scopes"]))
+            raise TaskVerificationError(f"No action scopes match '{prefix[:-1]}':\n  {scope_str}")
+
+    log.info(f"Action requests: {actions}")
     invalid_actions = actions - VALID_ACTIONS[config["trust_domain"]]
     if len(invalid_actions) > 0:
         raise TaskVerificationError(f"Task specified invalid actions for '{config['trust_domain']}: {invalid_actions}")
@@ -237,9 +249,6 @@ def should_push(task, actions):
 
     Args:
         task (dict): the task definition.
-
-    Raises:
-        TaskVerificationError: if the number of cert scopes is not 1.
 
     Returns:
         bool: whether this task should push
