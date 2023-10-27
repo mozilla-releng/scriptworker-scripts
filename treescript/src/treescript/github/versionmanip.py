@@ -2,7 +2,8 @@
 """Treescript version manipulation."""
 
 import logging
-from typing import Dict, List, Type
+from difflib import unified_diff
+from typing import Dict, List, Tuple, Type
 
 from mozilla_version.mobile import MobileVersion
 from mozilla_version.version import BaseVersion
@@ -15,6 +16,9 @@ log = logging.getLogger(__name__)
 
 
 ALLOWED_BUMP_FILES = ("version.txt",)
+
+FileContents = Dict[str, str]
+
 
 _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
     "mobile/android/": MobileVersion,
@@ -75,15 +79,27 @@ async def bump_version(client: GithubClient, task: Dict) -> None:
     branch = get_branch(task)
     bump_info = get_version_bump_info(task)
 
-    changes = await do_bump_version(client, bump_info["files"], bump_info["next_version"], branch)
-    if changes and should_push(task, []):
-        commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
-        if get_dontbuild(task):
-            commit_msg += DONTBUILD_MSG
+    log.info(f"Version bumping {branch} branch of {client.owner}/{client.repo} to {bump_info['next_version']}")
+
+    changes, diff = await do_bump_version(client, bump_info["files"], bump_info["next_version"], branch)
+
+    if not changes:
+        log.warn("No changes to commit!")
+        return
+
+    commit_msg = "Automatic version bump CLOSED TREE NO BUG a=release"
+    if get_dontbuild(task):
+        commit_msg += DONTBUILD_MSG
+
+    push = should_push(task, [])
+    verb = "Committing" if push else "Would commit"
+    log.info(f"{verb} the following patch:\n\n{commit_msg}\n{diff}\n")
+
+    if push:
         await client.commit(branch, commit_msg, additions=changes)
 
 
-async def do_bump_version(client: GithubClient, files: List[str], next_version: str, branch: str) -> Dict[str, str]:
+async def do_bump_version(client: GithubClient, files: List[str], next_version: str, branch: str) -> Tuple[FileContents, str]:
     """Perform a version bump.
 
     This function takes its inputs from task by using the ``get_version_bump_info``
@@ -103,10 +119,12 @@ async def do_bump_version(client: GithubClient, files: List[str], next_version: 
                                if the file is not in the target repository.
 
     Returns:
-        Dict[str, str]: An object mapping file name to new contents.
-
+        Tuple[FileContents, str]: A tuple of length two. The first item is an
+            object mapping file name to new contents. The second is a unified diff
+            of the changes made.
     """
     changes = {}
+    diff = []
     file_contents = await client.get_files(files, branch=branch)
     for file_ in files:
         if file_ not in ALLOWED_BUMP_FILES:
@@ -129,7 +147,6 @@ async def do_bump_version(client: GithubClient, files: List[str], next_version: 
             if contents == new_contents:
                 raise TreeScriptError("File was not changed!")
             changes[file_] = new_contents
+            diff += unified_diff(file_contents[file_].splitlines(), new_contents.splitlines(), fromfile=file_, tofile=file_, lineterm="")
 
-    return changes
-
-
+    return changes, "\n".join(diff)
