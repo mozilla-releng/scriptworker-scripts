@@ -1,7 +1,7 @@
 import argparse
 import json
 
-from mock import ANY, patch, Mock, call
+from mock import ANY, patch, Mock
 import pytest
 import random
 
@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 from mozapkpublisher.common import store
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.common.store import add_general_google_play_arguments, \
-    GooglePlayEdit, _create_google_edit_resource, AmazonStoreEdit, AmazonAuth, MockAmazonStoreEdit
+    GooglePlayEdit, _create_google_edit_resource
 from mozapkpublisher.test import does_not_raise
 
 
@@ -25,181 +25,6 @@ def test_add_general_google_play_arguments():
     ])
     assert config.google_play_credentials_filename == 'credentials.p12'
     assert config.service_account == 'dummy@dummy'
-
-
-@patch.object(store.requests, 'request', return_value=Mock(status_code=500, text="oops"))
-def test_http_raise_if_mismatched_status(_):
-    with pytest.raises(RuntimeError):
-        store.http(200, 'get', 'http://fake')
-
-
-@patch.object(store.requests, 'request', return_value=Mock(status_code=200, text='body'))
-def test_http_return_response(_):
-    assert store.http(200, 'get', 'http://fake').text == 'body'
-
-
-def test_amazon_auth():
-    auth = AmazonAuth('token')
-    request = Mock(headers={})
-    auth(request)
-    assert request.headers['Authorization'] == 'Bearer token'
-
-
-@patch.object(store, 'http', return_value=Mock(status_code=200))
-def test_edit_http(mock_http):
-    edit = AmazonStoreEdit('auth', 'edit_id', 'dummy_package_name')
-    edit._http(200, 'get', '/endpoint')
-    mock_http.assert_called_once_with(200, 'get', 'https://developer.amazon.com/api/appstore/v1/'
-                                                  'applications/dummy_package_name/edits/edit_id/'
-                                                  'endpoint', auth='auth')
-
-
-@patch.object(store, 'http')
-def test_amazon_do_not_contact_server(http_mock):
-    with AmazonStoreEdit.transaction('client id', 'client secret', 'package.name',
-                                     contact_server=False, dry_run=False) as edit:
-        edit.update_app(('apk', None))
-
-    with AmazonStoreEdit.transaction('client id', 'client secret', 'package.name',
-                                     contact_server=False, dry_run=True) as edit:
-        edit.update_app(('apk', None))
-
-    http_mock.assert_not_called()
-
-
-def test_amazon_update_app():
-    edit = AmazonStoreEdit(None, None, 'dummy_package_name')
-    with patch.object(edit, '_http') as mock_http:
-        mock_http.side_effect = [
-            Mock(json=lambda: [{'id': 'apk_id'}]),
-            Mock(headers={'ETag': 'apk etag'}),
-            None,
-            None,
-            Mock(json=lambda: {'listings': {'en-US': {}}}),
-            Mock(headers={'ETag': 'listing etag'}, json=lambda: {}),
-            None,
-        ]
-
-        edit.update_app([('apk', None)])
-        mock_http.assert_any_call(200, 'post', '/apks/upload', data='apk',
-                                  headers={'Content-Type': 'application/octet-stream'})
-
-
-def test_amazon_release_notes():
-    edit = AmazonStoreEdit(None, None, 'dummy_package_name')
-    with patch.object(edit, '_http') as mock_http:
-        mock_http.side_effect = [
-            Mock(json=lambda: [{'id': 'apk_id'}]),
-            Mock(headers={'ETag': 'apk etag'}),
-            None,
-            None,
-            Mock(json=lambda: {'listings': {'sv-SE': {}, 'fr-FR': {}}}),
-            Mock(headers={'ETag': 'listing etag'}, json=lambda: {}),
-            None,
-            Mock(headers={'ETag': 'listing etag'}, json=lambda: {}),
-            None,
-        ]
-        edit.update_app([('apk', None)])
-
-        mock_http.assert_any_call(
-            200,
-            'put',
-            '/listings/fr-FR',
-            headers={'If-Match': 'listing etag'},
-            json={'recentChanges': 'Correction de bugs et amélioration des techniques.'}
-        )
-        mock_http.assert_any_call(200, 'put', '/listings/sv-SE',
-                                  headers={'If-Match': 'listing etag'},
-                                  json={'recentChanges': '✔'})
-
-
-def test_amazon_transaction_contact_and_keep():
-    with patch.object(store, 'http') as mock_http:
-        mock_http.side_effect = [
-            Mock(status_code=200, json=lambda: {'access_token': 'token'}),
-            Mock(status_code=200, text='{}'),
-            Mock(status_code=200, json=lambda: {'id': 'edit_id'}),
-            Mock(status_code=200, headers={'ETag': 'edit_etag'}),
-            Mock(status_code=200),
-        ]
-        with AmazonStoreEdit.transaction('client id', 'client secret', 'dummy_package_name',
-                                         contact_server=True, dry_run=False):
-            pass
-
-        mock_http.assert_any_call(200, 'post', 'https://api.amazon.com/auth/o2/token', data={
-            'client_id': 'client id',
-            'client_secret': 'client secret',
-            'grant_type': ANY,
-            'scope': ANY
-        })
-
-        assert call(200, 'post', 'https://developer.amazon.com/api/appstore/v1/applications/'
-                                 'dummy_package_name/edits/edit_id/commit',
-                    headers={'If-Match': 'edit_etag'},
-                    auth=ANY) not in mock_http.call_args_list
-
-
-def test_amazon_transaction_contact_dry_run():
-    with patch.object(store, 'http') as mock_http:
-        mock_http.side_effect = [
-            Mock(status_code=200, json=lambda: {'access_token': 'token'}),
-            Mock(status_code=200, text='{}'),
-            Mock(status_code=200, json=lambda: {'id': 'edit_id'}),
-            Mock(status_code=200),
-            Mock(status_code=200, headers={'ETag': 'edit_etag'}),
-            Mock(status_code=204),
-        ]
-        with AmazonStoreEdit.transaction('client id', 'client secret', 'dummy_package_name',
-                                         contact_server=True, dry_run=True):
-            pass
-
-        mock_http.assert_any_call(200, 'post', 'https://developer.amazon.com/api/appstore/v1/'
-                                               'applications/dummy_package_name/edits/edit_id/'
-                                               'validate',
-                                  auth=ANY)
-        mock_http.assert_any_call(204, 'delete', 'https://developer.amazon.com/api/appstore/v1/'
-                                                 'applications/dummy_package_name/edits/edit_id',
-                                  headers={'If-Match': 'edit_etag'},
-                                  auth=ANY)
-
-
-def test_amazon_transaction_existing_upcoming_version():
-    with patch.object(store, 'http') as mock_http:
-        mock_http.side_effect = [
-            Mock(status_code=200, json=lambda: {'access_token': 'token'}),
-            Mock(status_code=200, text='{"id": "...", "status": "IN_PROGRESS"}'),
-        ]
-
-    with pytest.raises(RuntimeError):
-        with AmazonStoreEdit.transaction('client id', 'client secret', 'dummy_package_name',
-                                         contact_server=True, dry_run=False):
-            pass
-
-
-def test_amazon_transaction_cancel_on_exception():
-    with patch.object(store, 'http') as mock_http:
-        mock_http.side_effect = [
-            Mock(status_code=200, json=lambda: {'access_token': 'token'}),
-            Mock(status_code=200, text='{}'),
-            Mock(status_code=200, json=lambda: {'id': 'edit_id'}),
-            Mock(status_code=200, headers={'ETag': 'edit_etag'}),
-            Mock(status_code=204),
-        ]
-        with pytest.raises(RuntimeError):
-            with AmazonStoreEdit.transaction('client id', 'client secret', 'dummy_package_name',
-                                             contact_server=True, dry_run=True):
-                raise RuntimeError('oops')
-
-        mock_http.assert_any_call(204, 'delete', 'https://developer.amazon.com/api/appstore/v1/'
-                                                 'applications/dummy_package_name/edits/edit_id',
-                                  headers={'If-Match': 'edit_etag'},
-                                  auth=ANY)
-
-
-def test_amazon_transaction_do_not_contact():
-    with AmazonStoreEdit.transaction(None, None, 'dummy_package_name', contact_server=False,
-                                     dry_run=True) as edit:
-        assert isinstance(edit, MockAmazonStoreEdit)
 
 
 def test_google_edit_resource_for_options_contact(monkeypatch):

@@ -48,14 +48,24 @@ def is_firefox_version_nightly(firefox_version):
 
 def add_push_arguments(parser):
     parser.add_argument('--username', required=True,
-                        help='Either the amazon client id or the google service account')
+                        help='Google service account')
     parser.add_argument('--secret', required=True,
-                        help='Either the amazon client secret or the file that contains '
-                             'google credentials')
+                        help='File that contains google credentials')
     parser.add_argument('--do-not-contact-server', action='store_false', dest='contact_server',
                         help='''Prevent any request to reach the APK server. Use this option if
 you want to run the script without any valid credentials nor valid APKs. --service-account and
 --credentials must still be provided (you can just fill them with random string and file).''')
+    parser.add_argument('track', help='Track on which to upload')
+    parser.add_argument(
+        '--rollout-percentage',
+        type=int,
+        choices=range(0, 101),
+        metavar='[0-100]',
+        default=None,
+        help='The percentage of user who will get the update. Specify only if track is rollout'
+    )
+    parser.add_argument('--commit', action='store_false', dest='dry_run',
+                        help='Commit new release on Google Play. This action cannot be reverted')
 
 
 def metadata_by_package_name(metadata_dict):
@@ -67,4 +77,3 @@ def metadata_by_package_name(metadata_dict):
         package_names[package_name].append((file, metadata))
 
     return package_names
-

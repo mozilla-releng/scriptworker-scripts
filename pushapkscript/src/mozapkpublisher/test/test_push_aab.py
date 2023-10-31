@@ -12,7 +12,6 @@ from unittest.mock import create_autospec, MagicMock
 from tempfile import NamedTemporaryFile
 
 from mozapkpublisher.common import store
-from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.push_aab import (
     push_aab,
     main,
@@ -60,11 +59,6 @@ def patch_store_transaction(monkeypatch_, patch_target):
 
     monkeypatch_.setattr(patch_target, 'transaction', fake_transaction)
     return mock_edit
-
-
-def test_google_no_track():
-    with pytest.raises(WrongArgumentGiven):
-        push_aab(AABS, SERVICE_ACCOUNT, credentials, track=None)
 
 
 def test_google(monkeypatch):
