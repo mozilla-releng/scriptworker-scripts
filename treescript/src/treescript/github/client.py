@@ -2,11 +2,12 @@
 import base64
 import logging
 from collections import defaultdict
-import os
 from string import Template
 from textwrap import dedent
 from typing import Dict, List, Optional, Union
 
+from gql.transport.exceptions import TransportQueryError
+from scriptworker_client.utils import retry_async
 from simple_github import AppClient
 
 log = logging.getLogger(__name__)
@@ -54,7 +55,7 @@ class GithubClient:
             log.warn("No changes to commit, aborting.")
             return
 
-        query = Template(
+        oid_query = Template(
             """
             query getLatestCommit {
               repository(owner: "$owner", name: "$repo") {
@@ -65,10 +66,9 @@ class GithubClient:
             }
             """
         )
-        query = query.substitute(owner=self.owner, repo=self.repo, branch=branch)
-        head_oid = (await self._client.execute(query))["repository"]["object"]["oid"]
+        oid_query = oid_query.substitute(owner=self.owner, repo=self.repo, branch=branch)
 
-        query = """
+        commit_query = """
             mutation ($input: CreateCommitOnBranchInput!) {
               createCommitOnBranch(input: $input)  {
                 commit { url }
@@ -83,10 +83,17 @@ class GithubClient:
                 },
                 "message": {"headline": message},
                 "fileChanges": changes,
-                "expectedHeadOid": head_oid,
+                "expectedHeadOid": None,
             }
         }
-        await self._client.execute(query, variables=variables)
+
+        # Retry the query a few times in-case the head_oid was changed.
+        async def _execute():
+            head_oid = (await self._client.execute(oid_query))["repository"]["object"]["oid"]
+            variables["input"]["expectedHeadOid"] = head_oid
+            await self._client.execute(commit_query, variables=variables)
+
+        await retry_async(_execute, attempts=3, retry_exceptions=(TransportQueryError,), sleeptime_kwargs={"delay_factor": 0})
 
     async def get_files(self, files: Union[str, List[str]], branch: Optional[str] = None) -> Dict[str, str]:
         """Get the contents of the specified files.

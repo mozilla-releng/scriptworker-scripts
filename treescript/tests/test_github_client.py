@@ -3,6 +3,8 @@ from pathlib import Path
 from textwrap import dedent
 
 import pytest
+from aioresponses import CallbackResult
+from gql.transport.exceptions import TransportQueryError
 from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
 from yarl import URL
 
@@ -51,6 +53,43 @@ async def test_commit(aioresponses, client):
             }
         },
     }
+
+
+@pytest.mark.asyncio
+async def test_commit_retry(aioresponses, client):
+    head_oid = "123"
+    branch = "main"
+    message = "Commit it!"
+    additions = {"version.txt": "foobar"}
+    expected_attempts = 3
+
+    counter = 0
+
+    def callback(url, **kwargs):
+        nonlocal counter
+        counter += 1
+        if counter % 2 == 1:
+            return CallbackResult(status=200, payload={"data": {"repository": {"object": {"oid": head_oid}}}})
+        return CallbackResult(
+            status=200,
+            payload={
+                "errors": [
+                    {
+                        "type": "NOT_FOUND",
+                        "path": ["createCommitOnBranch"],
+                        "locations": [{"line": 2, "column": 3}],
+                        "message": f"No commit exists with specified expectedHeadOid '{head_oid}'.",
+                    }
+                ]
+            },
+        )
+
+    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, callback=callback, repeat=True)
+
+    with pytest.raises(TransportQueryError):
+        await client.commit(branch, message, additions)
+
+    assert counter == expected_attempts * 2  # two queries per attempt
 
 
 @pytest.mark.asyncio
