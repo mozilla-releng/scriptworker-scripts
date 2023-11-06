@@ -80,15 +80,23 @@ def copy_provisioning_profile(pprofile, app_path, config):
     pprofile_source_dir = Path(config["work_dir"]).parent / "provisionprofiles"
 
     # Check if file exists locally
-    source_file = pprofile_source_dir / pprofile["name"]
+    source_file = Path(pprofile_source_dir / pprofile["name"]).resolve()
+    try:
+        source_file.relative_to(pprofile_source_dir)
+    except ValueError:
+        raise IScriptError("Illegal directory traversal resolving provisioning profile source")
     if not source_file.is_file():
         raise IScriptError(f"Provisioning profile not found in worker: {pprofile['name']}")
 
     # Adding ./ to destination as workaround for destination starting with /
-    destination = Path(Path(app_path) / ("./" + pprofile["path"]))
+    destination = Path(Path(app_path) / ("./" + pprofile["path"])).resolve()
     # If provided destination is a directory, then use default filename for profiles
     if destination.is_dir():
         destination = destination / "embedded.provisionprofile"
+    try:
+        destination.relative_to(app_path)
+    except ValueError:
+        raise IScriptError("Illegal directory traversal resolving provisioning profile destination")
     # If profile already exists in app, then replace
     if destination.exists():
         log.warn(f"Profile already exist. Replacing {str(destination)}")

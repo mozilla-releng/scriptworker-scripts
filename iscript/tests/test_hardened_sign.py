@@ -53,8 +53,25 @@ def test_copy_provisioning_profile(tmpdir):
 def test_copy_provisioning_profile_fail(tmpdir):
     pprofile = {"name": "test.profile", "path": "/"}
     config = {"work_dir": os.path.join(tmpdir, "foo")}
+    sourcedir = os.path.join(tmpdir, "provisionprofiles")
+    os.mkdir(sourcedir)
 
     # Source file doesn't exist
+    with pytest.raises(IScriptError):
+        hs.copy_provisioning_profile(pprofile, tmpdir, config)
+
+    # Illegal source traversal
+    pprofile = {"name": "../test.profile", "path": "/"}
+    source_profile = Path(sourcedir) / pprofile["name"]
+    source_profile.touch()
+    with pytest.raises(IScriptError):
+        hs.copy_provisioning_profile(pprofile, tmpdir, config)
+
+    # Illegal destination traversal
+    pprofile = {"name": "test.profile", "path": "../../../"}
+    sourcedir = os.path.join(tmpdir, "provisionprofiles")
+    source_profile = Path(sourcedir) / pprofile["name"]
+    source_profile.touch()
     with pytest.raises(IScriptError):
         hs.copy_provisioning_profile(pprofile, tmpdir, config)
 
