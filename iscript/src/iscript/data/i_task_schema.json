@@ -139,11 +139,11 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "name": {
+                  "profile_name": {
                     "description": "Filename of profile in the workers.",
                     "type": "string"
                   },
-                  "path": {
+                  "target_path": {
                     "description": "Relative path to add profile to.",
                     "type": "string"
                   }

@@ -39,19 +39,19 @@ def test_check_globs():
 
 
 def test_copy_provisioning_profile(tmpdir):
-    pprofile = {"name": "test.profile", "path": "/test.profile"}
+    pprofile = {"profile_name": "test.profile", "target_path": "/test.profile"}
     # Source pprofile
     sourcedir = os.path.join(tmpdir, "provisionprofiles")
     os.mkdir(sourcedir)
-    source_profile = Path(sourcedir) / pprofile["name"]
+    source_profile = Path(sourcedir) / pprofile["profile_name"]
     source_profile.touch()
     config = {"work_dir": os.path.join(tmpdir, "foo")}
     hs.copy_provisioning_profile(pprofile, tmpdir, config)
-    assert (Path(tmpdir) / pprofile["name"]).exists()
+    assert (Path(tmpdir) / pprofile["profile_name"]).exists()
 
 
 def test_copy_provisioning_profile_fail(tmpdir):
-    pprofile = {"name": "test.profile", "path": "/"}
+    pprofile = {"profile_name": "test.profile", "target_path": "/"}
     config = {"work_dir": os.path.join(tmpdir, "foo")}
     sourcedir = os.path.join(tmpdir, "provisionprofiles")
     os.mkdir(sourcedir)
@@ -61,16 +61,16 @@ def test_copy_provisioning_profile_fail(tmpdir):
         hs.copy_provisioning_profile(pprofile, tmpdir, config)
 
     # Illegal source traversal
-    pprofile = {"name": "../test.profile", "path": "/"}
-    source_profile = Path(sourcedir) / pprofile["name"]
+    pprofile = {"profile_name": "../test.profile", "target_path": "/"}
+    source_profile = Path(sourcedir) / pprofile["profile_name"]
     source_profile.touch()
     with pytest.raises(IScriptError):
         hs.copy_provisioning_profile(pprofile, tmpdir, config)
 
     # Illegal destination traversal
-    pprofile = {"name": "test.profile", "path": "../../../"}
+    pprofile = {"profile_name": "test.profile", "target_path": "../../../"}
     sourcedir = os.path.join(tmpdir, "provisionprofiles")
-    source_profile = Path(sourcedir) / pprofile["name"]
+    source_profile = Path(sourcedir) / pprofile["profile_name"]
     source_profile.touch()
     with pytest.raises(IScriptError):
         hs.copy_provisioning_profile(pprofile, tmpdir, config)
