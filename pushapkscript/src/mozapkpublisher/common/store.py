@@ -104,16 +104,26 @@ class GooglePlayEdit:
             raise
 
     def upload_aab(self, aab):
+        # try to get extra network diagnostics during upload
+        debuglevel = httplib2.debuglevel
+        httplib2.debuglevel = 4
+
         aab_path = aab.name
         logger.info('Uploading "{}" ...'.format(aab_path))
-        response = self._edit_resource.bundles().upload(
-            editId=self._edit_id,
-            packageName=self._package_name,
-            media_body=aab_path,
-            media_mime_type='application/octet-stream',
-        ).execute()
-        logger.info('"{}" uploaded'.format(aab_path))
-        logger.debug('Upload response: {}'.format(response))
+        try:
+            response = self._edit_resource.bundles().upload(
+                editId=self._edit_id,
+                packageName=self._package_name,
+                media_body=aab_path,
+                media_mime_type='application/octet-stream',
+            ).execute()
+            logger.info('"{}" uploaded'.format(aab_path))
+            logger.debug('Upload response: {}'.format(response))
+        except Exception:
+            logger.exception("caught exception in upload_aab:")
+            raise
+        finally:
+            httplib2.debuglevel = debuglevel
 
     def _update_track(self, track, version_codes, rollout_percentage=None):
         if track == 'rollout' and rollout_percentage is None:

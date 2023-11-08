@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [6.3.0] - 2023-11-08
+
+### Removed
+* Amazon Store support
+
+### Fixed
+* Better diagnostics during AAB upload
+
 ## [6.2.1] - 2023-09-21
 
 ### Fixed
