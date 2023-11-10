@@ -10,7 +10,6 @@ def publish(product_config, publish_config, apk_files, contact_server):
     if apk_files:
         push_apk(
             apks=apk_files,
-            target_store=publish_config["target_store"],
             username=publish_config["username"],
             secret=publish_config["secret"],
             expected_package_names=publish_config["package_names"],

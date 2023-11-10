@@ -28,7 +28,6 @@ class PublishTest(unittest.TestCase):
 
         mock_push_apk.assert_called_with(
             apks=[MockFile("/path/to/x86.apk"), MockFile("/path/to/arm_v15.apk")],
-            target_store="google",
             username="service_account",
             secret="/google_credentials.p12",
             track="beta",
