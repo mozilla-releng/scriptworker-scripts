@@ -7,12 +7,13 @@ import os
 import shutil
 from glob import glob
 from pathlib import Path
+from shutil import copy2
 
 from iscript.autograph import sign_langpacks
 from iscript.exceptions import IScriptError
 from iscript.mac import (
-    create_pkg_files,
     copy_pkgs_to_artifact_dir,
+    create_pkg_files,
     download_requirements_plist_file,
     extract_all_apps,
     filter_apps,
@@ -72,6 +73,35 @@ def check_globs(app_path, globs):
         binary_paths = glob(joined_path, recursive=True)
         if len(binary_paths) == 0:
             log.warning('file pattern "%s" matches no files' % joined_path)
+
+
+def copy_provisioning_profile(pprofile, app_path, config):
+    # TODO: Eventually move this to script_config
+    pprofile_source_dir = Path(config["work_dir"]).parent / "provisionprofiles"
+
+    # Check if file exists locally
+    source_file = Path(pprofile_source_dir / pprofile["profile_name"]).resolve()
+    try:
+        source_file.relative_to(pprofile_source_dir)
+    except ValueError:
+        raise IScriptError("Illegal directory traversal resolving provisioning profile source")
+    if not source_file.is_file():
+        raise IScriptError(f"Provisioning profile not found in worker: {pprofile['profile_name']}")
+
+    # Adding ./ to destination as workaround for destination starting with /
+    destination = Path(Path(app_path) / ("./" + pprofile["target_path"])).resolve()
+    # If provided destination is a directory, then use default filename for profiles
+    if destination.is_dir():
+        destination = destination / "embedded.provisionprofile"
+    try:
+        destination.relative_to(app_path)
+    except ValueError:
+        raise IScriptError("Illegal directory traversal resolving provisioning profile destination")
+    # If profile already exists in app, then replace
+    if destination.exists():
+        log.warn(f"Profile already exist. Replacing {str(destination)}")
+    copy2(source_file, destination)
+    log.debug(f"Copied {source_file} to {destination}")
 
 
 def build_sign_command(app_path, identity, keychain, config, file_map):
@@ -159,6 +189,11 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
     await raise_future_exceptions(futures)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     futures = []
+
+    # Handle provisioning profile if provided
+    pprofile_configs = task["payload"].get("provisioning-profile-config", [])
+    for pprofile in pprofile_configs:
+        copy_provisioning_profile(pprofile, app.app_path, config)
 
     # sign apps concurrently
     for app in all_apps:
