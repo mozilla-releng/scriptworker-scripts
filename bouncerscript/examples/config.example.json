@@ -2,6 +2,7 @@
         "work_dir": "some/work/dir/",
         "verbose": true,
         "taskcluster_scope_prefix": "project:releng:bouncer:",
+        "require_successive_versions": true,
         "bouncer_config": {
             "project:releng:bouncer:server:staging": {
                 "api_root": "some-root",

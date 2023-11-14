@@ -3,11 +3,15 @@
     "type": "object",
     "required": [
         "taskcluster_scope_prefix",
+        "require_successive_versions",
         "bouncer_config"
     ],
     "properties": {
         "taskcluster_scope_prefix": {
             "type": "string"
+        },
+        "require_successive_versions": {
+            "type": "boolean"
         },
         "bouncer_config": {
             "type": "object",
