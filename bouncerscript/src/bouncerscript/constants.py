@@ -78,19 +78,19 @@ PRODUCT_TO_DESTINATIONS_REGEXES = {
 
 _BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT = {
     "firefox-nightly-latest": (
-        r"^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\."
+        r"^(/firefox/nightly/latest-(mozilla-central|try)-l10n/firefox-\d+\.0a1\.:lang\."
         r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "firefox-nightly-latest-ssl": (
-        r"^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.en-US\."
+        r"^(/firefox/nightly/latest-(mozilla-central|try)/firefox-\d+\.0a1\.en-US\."
         r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "firefox-nightly-latest-l10n": (
-        r"^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\."
+        r"^(/firefox/nightly/latest-(mozilla-central|try)-l10n/firefox-\d+\.0a1\.:lang\."
         r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "firefox-nightly-latest-l10n-ssl": (
-        r"^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\."
+        r"^(/firefox/nightly/latest-(mozilla-central|try)-l10n/firefox-\d+\.0a1\.:lang\."
         r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
 }
@@ -98,19 +98,19 @@ _BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT = {
 _BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT = {
     **_BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT,
     "firefox-nightly-msi-latest-ssl": (
-        r"^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.en-US\." r"(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$"
+        r"^(/firefox/nightly/latest-(mozilla-central|try)/firefox-\d+\.0a1\.en-US\." r"(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$"
     ),
     "firefox-nightly-msi-latest-l10n-ssl": (
-        r"^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\." r"(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$"
+        r"^(/firefox/nightly/latest-(mozilla-central|try)-l10n/firefox-\d+\.0a1\.:lang\." r"(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$"
     ),
-    "firefox-nightly-pkg-latest-ssl": (r"^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.en-US\." r"(?:mac\.pkg))$"),
-    "firefox-nightly-pkg-latest-l10n-ssl": (r"^(/firefox/nightly/latest-mozilla-central-l10n/firefox-\d+\.0a1\.:lang\." r"(?:mac\.pkg))$"),
+    "firefox-nightly-pkg-latest-ssl": (r"^(/firefox/nightly/latest-(mozilla-central|try)/firefox-\d+\.0a1\.en-US\." r"(?:mac\.pkg))$"),
+    "firefox-nightly-pkg-latest-l10n-ssl": (r"^(/firefox/nightly/latest-(mozilla-central|try)-l10n/firefox-\d+\.0a1\.:lang\." r"(?:mac\.pkg))$"),
 }
 
 # msix should move up to _BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT once it exists consistently
 _BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT_WITH_MSIX = {
     **_BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT,
-    "firefox-nightly-msix-latest-ssl": (r"^(/firefox/nightly/latest-mozilla-central/firefox-\d+\.0a1\.multi\." r"(?:(win32|win64)\.installer\.msix)$"),
+    "firefox-nightly-msix-latest-ssl": (r"^(/firefox/nightly/latest-(mozilla-central|try)/firefox-\d+\.0a1\.multi\." r"(?:(win32|win64)\.installer\.msix)$"),
 }
 
 _BOUNCER_PATH_REGEXES_PRODUCT_THUNDERBIRD = {

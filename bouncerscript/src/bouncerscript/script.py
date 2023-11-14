@@ -104,6 +104,8 @@ async def bouncer_locations(context):
     check_version_matches_nightly_regex(context.task["payload"]["version"], product)
     log.info("In-tree version from payload looks good!")
 
+    require_successive_versions = context.config["require_successive_versions"]
+
     did_bump = False
     payload_version = context.task["payload"]["version"]
 
@@ -124,7 +126,9 @@ async def bouncer_locations(context):
                 log.info("No-op. Nightly version is the same")
                 continue
 
-            check_versions_are_successive(current_version, payload_version, product)
+            if require_successive_versions:
+                check_versions_are_successive(current_version, payload_version, product)
+
             bumped_path = get_version_bumped_path(path, current_version, payload_version)
             log.info("Modifying corresponding path with bumped one {}".format(bumped_path))
             await api_modify_location(context, product_name, platform, bumped_path)

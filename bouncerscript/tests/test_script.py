@@ -6,6 +6,7 @@ from scriptworker.exceptions import ScriptWorkerTaskException, TaskVerificationE
 
 import bouncerscript.script as bscript
 from bouncerscript.script import async_main, bouncer_aliases, bouncer_locations, bouncer_submission, main
+from bouncerscript.task import check_versions_are_successive
 
 from . import (
     counted,
@@ -107,7 +108,7 @@ async def test_bouncer_aliases(aliases_context, mocker):
 
 
 @pytest.mark.parametrize(
-    "info,updated_info,raises",
+    "info,updated_info,require_successive_versions,raises",
     (
         (
             [
@@ -118,6 +119,7 @@ async def test_bouncer_aliases(aliases_context, mocker):
                 {"os": "win64", "id": "47768", "path": "/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.linux-i686.tar.bz2"},
             ],
             [],
+            True,
             False,
         ),
         (
@@ -127,6 +129,7 @@ async def test_bouncer_aliases(aliases_context, mocker):
             ],
             [],
             True,
+            True,
         ),
         (
             [
@@ -135,6 +138,7 @@ async def test_bouncer_aliases(aliases_context, mocker):
             ],
             [],
             True,
+            True,
         ),
         (
             [
@@ -142,6 +146,7 @@ async def test_bouncer_aliases(aliases_context, mocker):
                 {"os": "linux", "id": "47764", "path": "/firefox/nightly/latest-mozilla-central/firefox-64.0a1.en-US.win64.installer.exe"},
             ],
             [],
+            True,
             True,
         ),
         (
@@ -153,13 +158,38 @@ async def test_bouncer_aliases(aliases_context, mocker):
                 {"os": "win", "id": "47767", "path": "/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win32.installer.exe"},
                 {"os": "linux", "id": "47764", "path": "/firefox/nightly/latest-mozilla-central/firefox-63.0a1.en-US.win64.installer.exe"},
             ],
+            True,
+            False,
+        ),
+        (
+            [
+                {"os": "win", "id": "47767", "path": "/firefox/nightly/latest-try/firefox-62.0a1.en-US.win32.installer.exe"},
+                {"os": "linux", "id": "47764", "path": "/firefox/nightly/latest-try/firefox-62.0a1.en-US.win64.installer.exe"},
+            ],
+            [
+                {"os": "win", "id": "47767", "path": "/firefox/nightly/latest-try/firefox-63.0a1.en-US.win32.installer.exe"},
+                {"os": "linux", "id": "47764", "path": "/firefox/nightly/latest-try/firefox-63.0a1.en-US.win64.installer.exe"},
+            ],
+            False,
+            False,
+        ),
+        (
+            [
+                {"os": "win", "id": "47767", "path": "/firefox/nightly/latest-try/firefox-58.0a1.en-US.win32.installer.exe"},
+                {"os": "linux", "id": "47764", "path": "/firefox/nightly/latest-try/firefox-58.0a1.en-US.win64.installer.exe"},
+            ],
+            [
+                {"os": "win", "id": "47767", "path": "/firefox/nightly/latest-try/firefox-63.0a1.en-US.win32.installer.exe"},
+                {"os": "linux", "id": "47764", "path": "/firefox/nightly/latest-try/firefox-63.0a1.en-US.win64.installer.exe"},
+            ],
+            False,
             False,
         ),
     ),
 )
 # bouncer_locations {{{1
 @pytest.mark.asyncio
-async def test_bouncer_locations(locations_context, mocker, info, updated_info, raises):
+async def test_bouncer_locations(locations_context, mocker, info, updated_info, require_successive_versions, raises):
     async def fake_get_locations_info(*args, **kwargs):
         return info
 
@@ -170,6 +200,10 @@ async def test_bouncer_locations(locations_context, mocker, info, updated_info, 
         else:
             return updated_info
 
+    if require_successive_versions:
+        locations_context.config["require_successive_versions"] = True
+    else:
+        locations_context.config["require_successive_versions"] = False
     locations_context.task["payload"]["bouncer_products"] = ["firefox-nightly-latest"]
     locations_context.task["payload"]["product"] = "firefox"
     mocker.patch.object(bscript, "check_product_names_match_nightly_locations", new=noop_sync)
@@ -183,6 +217,7 @@ async def test_bouncer_locations(locations_context, mocker, info, updated_info, 
     mocker.patch.object(bscript, "get_locations_info", new=fake_get_locations_info)
     mocker.patch.object(bscript, "check_location_path_matches_destination", new=noop_sync)
     mocker.patch.object(bscript, "api_modify_location", new=noop_async)
+    mock_versions_are_successive = mocker.patch.object(bscript, "check_versions_are_successive", wraps=check_versions_are_successive)
 
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
@@ -193,6 +228,13 @@ async def test_bouncer_locations(locations_context, mocker, info, updated_info, 
             mock.side_effect = toggled_get_locations_info
             mocker.patch.object(bscript, "get_locations_info", new=mock)
         await bouncer_locations(locations_context)
+
+        # We don't run this check unless info is being updated.
+        if updated_info:
+            if require_successive_versions:
+                mock_versions_are_successive.assert_called()
+            else:
+                mock_versions_are_successive.assert_not_called()
 
 
 # async_main {{{1
