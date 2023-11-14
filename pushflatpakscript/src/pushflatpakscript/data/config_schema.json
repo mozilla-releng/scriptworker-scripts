@@ -5,7 +5,8 @@
         "push_to_flathub",
         "token_locations",
         "flathub_url",
-        "flat_manager_client"
+        "flat_manager_client",
+        "taskcluster_root_url"
     ],
     "properties": {
         "push_to_flathub": {
@@ -22,6 +23,9 @@
             "additionalProperties": {
                 "type": "string"
             }
+        },
+        "taskcluster_root_url": {
+            "type": "string"
         }
     }
 }

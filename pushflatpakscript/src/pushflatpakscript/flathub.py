@@ -7,6 +7,7 @@ import tarfile
 from scriptworker.exceptions import TaskVerificationError
 
 from pushflatpakscript import task
+from pushflatpakscript.artifacts import get_flatpak_build_log_url
 from pushflatpakscript.constants import TAR_MAX_SIZE_IN_MB
 
 log = logging.getLogger(__name__)
@@ -145,6 +146,9 @@ def sanitize_buildid(bytes_input):
 
 def push(context, flatpak_file_path, channel):
     """Publishes a flatpak into a given channel."""
+
+    build_log = get_flatpak_build_log_url(context)
+
     if not task.is_allowed_to_push_to_flathub(context.config, channel=channel):
         log.warning("Not allowed to push to Flathub. Skipping push...")
         # We don't raise an error because we still want green tasks on dev instances
@@ -152,7 +156,7 @@ def push(context, flatpak_file_path, channel):
 
     token_args = ["--token-file", context.config["token_locations"][channel]]
     log.info("Grab a flatpak buildid from Flathub ...")
-    publish_build_output = run_flat_manager_client_process(context, token_args + ["create", context.config["flathub_url"], channel])
+    publish_build_output = run_flat_manager_client_process(context, token_args + ["create", context.config["flathub_url"], channel, "--build-log-url", build_log])
 
     log.info("Sanitize the buildid received from Flathub ...")
     publish_build_output = sanitize_buildid(publish_build_output)
