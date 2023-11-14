@@ -1,4 +1,5 @@
 aiohttp
 immutabledict
 jsonschema
+platformdirs<4 # Because of https://github.com/pypa/virtualenv/issues/2666
 PyYAML

@@ -1,5 +1,6 @@
 mercurial
 mozilla-version
+platformdirs<4 # Because of https://github.com/pypa/virtualenv/issues/2666
 scriptworker  # required for docker, even if treescript doesn't import it
 simple-github
 taskcluster
