@@ -2,6 +2,8 @@
     "title": "pushflatpakscript config schema",
     "type": "object",
     "required": [
+        "app_id",
+        "taskcluster_scope_prefix",
         "push_to_flathub",
         "token_locations",
         "flathub_url",
@@ -9,6 +11,12 @@
         "taskcluster_root_url"
     ],
     "properties": {
+        "app_id": {
+            "type": "string"
+        },
+        "taskcluster_scope_prefix": {
+            "type": "string"
+        },
         "push_to_flathub": {
             "type": "boolean"
         },

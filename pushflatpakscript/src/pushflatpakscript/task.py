@@ -1,7 +1,5 @@
 from scriptworker.exceptions import TaskVerificationError
 
-FLATPAK_SCOPES_PREFIX = "project:releng:flathub:firefox:"
-
 _CHANNELS_AUTHORIZED_TO_REACH_FLATHUB = ("beta", "stable")
 ALLOWED_CHANNELS = ("mock", *_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB)
 
@@ -9,10 +7,10 @@ ALLOWED_CHANNELS = ("mock", *_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB)
 def get_flatpak_channel(config, task):
     payload = task["payload"]
     if "channel" not in payload:
-        raise TaskVerificationError(f"channel must be defined in the task payload. Given payload: {payload}")
+        raise TaskVerificationError(f"Channel must be defined in the task payload. Given payload: {payload}")
 
     channel = payload["channel"]
-    scope = FLATPAK_SCOPES_PREFIX + channel
+    scope = config["taskcluster_scope_prefix"] + channel
     if config["push_to_flathub"] and scope not in task["scopes"]:
         raise TaskVerificationError(f"Channel {channel} not allowed, missing scope {scope}")
 

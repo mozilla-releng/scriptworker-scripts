@@ -14,7 +14,11 @@ def test_get_flatpak_channel_without_payload_raises():
 @pytest.mark.parametrize("raises, channel", ((False, "stable"), (False, "beta"), (False, "mock"), (False, "beta"), (False, "beta"), (True, "bogus")))
 def test_get_flatpak_channel_dep(raises, channel):
     task = {"scopes": [], "payload": {"channel": channel}}
-    config = {"push_to_flathub": False}
+    config = {
+        "app_id": "org.mozilla.firefox",
+        "taskcluster_scope_prefix": "project:releng:flathub:firefox:",
+        "push_to_flathub": False
+    }
     if raises:
         with pytest.raises(TaskVerificationError):
             get_flatpak_channel(config, task)
@@ -35,7 +39,11 @@ def test_get_flatpak_channel_dep(raises, channel):
 )
 def test_get_flatpak_channel_prod(raises, scopes, channel):
     task = {"scopes": scopes, "payload": {"channel": channel}}
-    config = {"push_to_flathub": True}
+    config = {
+        "app_id": "org.mozilla.firefox",
+        "taskcluster_scope_prefix": "project:releng:flathub:firefox:",
+        "push_to_flathub": True
+    }
     if raises:
         with pytest.raises(TaskVerificationError):
             get_flatpak_channel(config, task)
@@ -55,5 +63,9 @@ def test_get_flatpak_channel_prod(raises, scopes, channel):
     ),
 )
 def test_is_allowed_to_push_to_flathub(channel, push_to_flathub, expected):
-    config = {"push_to_flathub": push_to_flathub}
+    config = {
+        "app_id": "org.mozilla.firefox",
+        "taskcluster_scope_prefix": "project:releng:flathub:firefox:",
+        "push_to_flathub": push_to_flathub
+    }
     assert is_allowed_to_push_to_flathub(config, channel) == expected
