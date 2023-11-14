@@ -171,8 +171,8 @@ def test_get_log_filehandle(path, tmpdir):
             True,
         ),
         (
-            ["bash", "-c", ">&2 echo bar && echo foo && exit -11"],
-            245,
+            ["bash", "-c", ">&2 echo bar && echo foo && kill -11 $$"],
+            -11,
             ["foo\nbar\n", "bar\nfoo\n"],
             TaskError,
             True,
