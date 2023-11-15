@@ -1,4 +1,4 @@
--r ../configloader/requirements/base.txt
+-r ../configloader/requirements/base.in
 pytest
 pytest-xdist
 tox

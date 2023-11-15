@@ -6,9 +6,9 @@ set -x
 EXTRA_ARGS=${EXTRA_ARGS:-""}
 
 if [ $# -gt 0 ]; then
-    DIRS="$@"
+    DIRS=("$@")
 else
-    DIRS="
+    DIRS=(
         addonscript
         balrogscript
         beetmoverscript
@@ -24,7 +24,8 @@ else
         shipitscript
         signingscript
         treescript
-    "
+        .
+    )
 fi
 
 RUNCMD="RUN apt-get update && \
@@ -41,5 +42,11 @@ echo -e "FROM python:3.8\n${RUNCMD}" | docker build --pull --tag "scriptworker-s
 echo -e "FROM python:3.9\n${RUNCMD}" | docker build --pull --tag "scriptworker-script-pin:3.9" -
 
 
-echo $DIRS | xargs -n8 -P8 time docker run --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -w /src scriptworker-script-pin:3.9 maintenance/pin-helper.sh
-echo $DIRS | xargs -n8 -P8 time docker run --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -e SUFFIX=py38.txt -w /src scriptworker-script-pin:3.8 maintenance/pin-helper.sh
+echo "${DIRS[@]}" | xargs -n8 -P8 time docker run --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -w /src scriptworker-script-pin:3.9 maintenance/pin-helper.sh
+for idx in "${!DIRS[@]}"; do
+    # the toplevel requirements dir doesn't need py38
+    if [ "${DIRS[$idx]}" = "." ]; then unset DIRS[$idx]; fi
+done
+if [ ${#DIRS} -gt 0 ]; then
+    echo "${DIRS[@]}" | xargs -n8 -P8 time docker run --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -e SUFFIX=py38.txt -w /src scriptworker-script-pin:3.8 maintenance/pin-helper.sh
+fi

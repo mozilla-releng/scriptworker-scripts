@@ -9,6 +9,7 @@ pytest-mock
 flake8
 flake8_docstrings
 black
+platformdirs<4 # Because of https://github.com/pypa/virtualenv/issues/2666
 check-manifest
 isort
 pip-compile-multi
