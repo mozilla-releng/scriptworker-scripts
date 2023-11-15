@@ -6,6 +6,7 @@ flake8_docstrings
 isort
 mock
 pip-compile-multi
+platformdirs<4 # Because of https://github.com/pypa/virtualenv/issues/2666
 pytest
 pytest-asyncio
 pytest-black
