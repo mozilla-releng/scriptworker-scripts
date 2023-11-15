@@ -20,7 +20,7 @@ for dir in $DIRS; do
     fi
     echo $ARGS
     if [ "$dir" = "." ]; then
-        ARGS="$EXTRA_ARGS -g test"
+        ARGS="$EXTRA_ARGS -g test -g docs"
     fi
     pushd "$dir"
     pip-compile-multi -o "$SUFFIX" $ARGS
