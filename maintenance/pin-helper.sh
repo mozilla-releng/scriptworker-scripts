@@ -18,10 +18,10 @@ for dir in $DIRS; do
     if [ "$dir" = "pushflatpakscript" ]; then
         ARGS="$ARGS -g flat-manager"
     fi
-    echo $ARGS
     if [ "$dir" = "." ]; then
         ARGS="$EXTRA_ARGS -g test -g docs"
     fi
+    echo $ARGS
     pushd "$dir"
     pip-compile-multi -o "$SUFFIX" $ARGS
     chmod 644 requirements/*.txt
