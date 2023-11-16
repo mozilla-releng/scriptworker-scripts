@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 """Signing script."""
+import base64
+import json
 import logging
 import os
-
-import aiohttp
-import json
-import scriptworker.client
 from dataclasses import asdict
 
-from signingscript.task import build_filelist_dict, sign, task_signing_formats, task_cert_type
-from signingscript.utils import copy_to_dir, load_apple_notarization_configs, load_autograph_configs
+import aiohttp
+import scriptworker.client
+
 from signingscript.exceptions import SigningScriptError
+from signingscript.task import build_filelist_dict, sign, task_cert_type, task_signing_formats
+from signingscript.utils import copy_to_dir, load_apple_notarization_configs, load_apple_signing_configs, load_autograph_configs, unlink
 
 log = logging.getLogger(__name__)
 
@@ -39,6 +40,11 @@ async def async_main(context):
             if not context.config.get("apple_notarization_configs", False):
                 raise Exception("Apple notarization is enabled but apple_notarization_configs is not defined")
             setup_apple_notarization_credentials(context)
+
+        if "apple_hardened_signing" in all_signing_formats:
+            if not context.config.get("apple_signing_configs", False):
+                raise Exception("Apple signing is enabled but apple_signing_configs is not defined")
+            setup_apple_signing_credentials(context)
 
         context.session = session
         context.autograph_configs = load_autograph_configs(context.config["autograph_configs"])
@@ -83,6 +89,14 @@ def get_default_config(base_dir=None):
     return default_config
 
 
+def _write_text(path, contents):
+    with open(path, "wb") as fd:
+        if isinstance(contents, str):
+            fd.write(contents.encode("ascii"))
+        else:
+            fd.write(contents)
+
+
 def setup_apple_notarization_credentials(context):
     """Writes the notarization credential to a file
 
@@ -93,6 +107,7 @@ def setup_apple_notarization_credentials(context):
     """
     cert_type = task_cert_type(context)
     apple_notarization_configs = load_apple_notarization_configs(context.config["apple_notarization_configs"])
+
     if cert_type not in apple_notarization_configs:
         raise SigningScriptError("Credentials not found for scope: %s" % cert_type)
     scope_credentials = apple_notarization_configs.get(cert_type)
@@ -101,15 +116,60 @@ def setup_apple_notarization_credentials(context):
 
     context.apple_credentials_path = os.path.join(
         os.path.dirname(context.config["apple_notarization_configs"]),
-        'apple_api_key.json',
+        "apple_api_key.json",
     )
     if os.path.exists(context.apple_credentials_path):
         # TODO: If we have different api keys for each product, this needs to overwrite every task:
         return
     # Convert dataclass to dict so json module can read it
     credential = asdict(scope_credentials[0])
-    with open(context.apple_credentials_path, 'wb') as credfile:
-        credfile.write(json.dumps(credential).encode("ascii"))
+    _write_text(context.apple_credentials_path, json.dumps(credential))
+
+
+def setup_apple_signing_credentials(context):
+    """Writes the signing p12 file and password to a file
+
+    Adds properties to context: apple_credentials_path + apple_credentials_pass_path
+
+    Args:
+        context: Running task Context
+    """
+    cert_type = task_cert_type(context)
+
+    apple_signing_configs = load_apple_signing_configs(context.config["apple_signing_configs"])
+    if cert_type not in apple_signing_configs:
+        raise SigningScriptError("Credentials not found for scope: %s" % cert_type)
+    scope_credentials = apple_signing_configs.get(cert_type)
+    if len(scope_credentials) != 1:
+        raise SigningScriptError("There should only be 1 scope credential, %s found." % len(scope_credentials))
+
+    context.apple_app_signing_creds_path = os.path.join(
+        os.path.dirname(context.config["apple_signing_configs"]),
+        "apple_app_signing_creds.p12",
+    )
+    unlink(context.apple_app_signing_creds_path)
+    context.apple_installer_signing_creds_path = os.path.join(
+        os.path.dirname(context.config["apple_signing_configs"]),
+        "apple_installer_signing_creds.p12",
+    )
+    unlink(context.apple_installer_signing_creds_path)
+    context.apple_signing_creds_pass_path = os.path.join(
+        os.path.dirname(context.config["apple_signing_configs"]),
+        "apple_signing_creds_pass.passwd",
+    )
+    unlink(context.apple_signing_creds_pass_path)
+
+    # Convert dataclass to dict so json module can read it
+    creds_config = asdict(scope_credentials[0])
+    _write_text(context.apple_app_signing_creds_path, base64.b64decode(creds_config["app_credentials"]))
+
+    # Defaults to using the app credentials (ie: on Try)
+    if creds_config.get("installer_credentials"):
+        _write_text(context.apple_installer_signing_creds_path, base64.b64decode(creds_config["installer_credentials"]))
+    else:
+        context.apple_installer_signing_creds_path = context.apple_app_signing_creds_path
+
+    _write_text(context.apple_signing_creds_pass_path, creds_config["password"])
 
 
 def main():

@@ -15,6 +15,7 @@ from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import get_single_item_from_sequence
 
 from signingscript.sign import (
+    apple_app_hardened_sign,
     apple_notarize,
     apple_notarize_geckodriver,
     sign_authenticode,
@@ -39,6 +40,7 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "gpg": sign_gpg,
         "autograph_gpg": sign_gpg_with_autograph,
         "macapp": sign_macapp,
+        "apple_hardened_signing": apple_app_hardened_sign,
         "widevine": sign_widevine,
         "autograph_debsign": sign_debian_pkg,
         "autograph_widevine": sign_widevine,

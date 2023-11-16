@@ -19,6 +19,7 @@ def read_file(path):
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SERVER_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "example_server_config.json")
 APPLE_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "example_apple_notarization_config.json")
+APPLE_SIGNING_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "example_apple_signing_config.json")
 DEFAULT_SCOPE_PREFIX = "project:releng:signing:"
 TEST_CERT_TYPE = f"{DEFAULT_SCOPE_PREFIX}cert:dep-signing"
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -55,8 +56,12 @@ def context(tmpdir):
     context.config["artifact_dir"] = os.path.join(tmpdir, "artifact")
     context.config["taskcluster_scope_prefixes"] = [DEFAULT_SCOPE_PREFIX]
     context.config["apple_notarization_configs"] = APPLE_CONFIG_PATH
+    context.config["apple_signing_configs"] = APPLE_CONFIG_PATH
     context.autograph_configs = load_autograph_configs(SERVER_CONFIG_PATH)
-    context.apple_credentials_path = "fakepath"
+    context.apple_credentials_path = os.path.join(tmpdir, "fakepath")
+    context.apple_app_signing_creds_path = os.path.join(tmpdir, "apple_app.p12")
+    context.apple_installer_signing_creds_path = os.path.join(tmpdir, "apple_installer.p12")
+    context.apple_signing_creds_path = os.path.join(tmpdir, "apple_p12.passwd")
     mkdir(context.config["work_dir"])
     mkdir(context.config["artifact_dir"])
     context.task = {"scopes": [TEST_CERT_TYPE]}

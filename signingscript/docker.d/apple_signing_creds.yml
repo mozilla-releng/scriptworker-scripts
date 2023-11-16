@@ -1,0 +1,24 @@
+$let:
+  scope_prefix:
+    $match:
+      'COT_PRODUCT == "firefox"': 'project:releng:signing:'
+      'COT_PRODUCT == "thunderbird"': 'project:comm:thunderbird:releng:signing:'
+      'COT_PRODUCT == "mozillavpn"': 'project:mozillavpn:releng:signing:'
+      'COT_PRODUCT == "adhoc"': 'project:adhoc:releng:signing:'
+in:
+  $merge:
+    $match:
+      'ENV == "prod" && scope_prefix':
+        '${scope_prefix[0]}cert:release-signing':
+          - "app_credentials": {"$eval": "APPLE_APP_SIGNING_CREDENTIALS"}
+            "installer_credentials": {"$eval": "APPLE_INSTALLER_SIGNING_CREDENTIALS"}
+            "password": {"$eval": "APPLE_SIGNING_CREDS_PASSWORD"}
+        '${scope_prefix[0]}cert:nightly-signing':
+          - "app_credentials": {"$eval": "APPLE_APP_SIGNING_CREDENTIALS"}
+            "installer_credentials": {"$eval": "APPLE_INSTALLER_SIGNING_CREDENTIALS"}
+            "password": {"$eval": "APPLE_SIGNING_CREDS_PASSWORD"}
+      'ENV != "prod" && scope_prefix':
+        '${scope_prefix[0]}cert:dep-signing':
+          - "app_credentials": {"$eval": "APPLE_APP_SIGNING_DEP_CREDENTIALS"}
+            "installer_credentials": {"$eval": "APPLE_INSTALLER_SIGNING_DEP_CREDENTIALS"}
+            "password": {"$eval": "APPLE_SIGNING_DEP_CREDS_PASSWORD"}

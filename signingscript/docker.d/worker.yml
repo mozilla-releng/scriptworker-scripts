@@ -4,6 +4,7 @@ verbose: { "$eval": "VERBOSE == 'true'" }
 my_ip: { "$eval": "PUBLIC_IP" }
 autograph_configs: { "$eval": "PASSWORDS_PATH" }
 apple_notarization_configs: { "$eval": "APPLE_NOTARIZATION_CREDS_PATH" }
+apple_signing_configs: { "$eval": "APPLE_SIGNING_CONFIG_PATH" }
 taskcluster_scope_prefixes:
   $flatten:
     $match:

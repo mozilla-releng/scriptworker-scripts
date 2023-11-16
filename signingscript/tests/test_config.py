@@ -12,6 +12,7 @@ COMMON_CONTEXT = {
     "PUBLIC_IP": "0.0.0.0",
     "PASSWORDS_PATH": "",
     "APPLE_NOTARIZATION_CREDS_PATH": "",
+    "APPLE_SIGNING_CONFIG_PATH": "",
     "SSL_CERT_PATH": "",
     "SIGNTOOL_PATH": "",
     "DMG_PATH": "",

@@ -28,9 +28,19 @@ class Autograph:
 @dataclass
 class AppleNotarization:
     """Apple notarization configuration object."""
+
     issuer_id: str
     key_id: str
     private_key: str
+
+
+@dataclass
+class AppleSigning:
+    """Apple signing configuration object."""
+
+    app_credentials: str
+    installer_credentials: str
+    password: str
 
 
 def mkdir(path):
@@ -44,6 +54,20 @@ def mkdir(path):
         os.makedirs(path)
         log.info("mkdir {}".format(path))
     except OSError:
+        pass
+
+
+def unlink(path):
+    """Equivalent to rm -f {file}
+    Ignores FileNotFound errors (as rm -f would)
+
+    Args:
+        path (str): the path to remove
+    """
+    try:
+        os.unlink(path)
+        log.info(f"removed {path}")
+    except FileNotFoundError:
         pass
 
 
@@ -97,7 +121,7 @@ def _load_scoped_configs(filename, cls, name):
     for scope, config in raw_cfg.items():
         if cls == Autograph:
             scope_configs[scope] = [cls(*s) for s in config]
-        elif cls == AppleNotarization:
+        elif cls in (AppleNotarization, AppleSigning):
             scope_configs[scope] = [cls(**s) for s in config]
         else:
             raise SigningScriptError("Unknown class for scoped configs: %s" % cls.__name__)
@@ -129,6 +153,19 @@ def load_apple_notarization_configs(filename):
 
     """
     return _load_scoped_configs(filename, AppleNotarization, "Apple Notarization")
+
+
+def load_apple_signing_configs(filename):
+    """Load the apple notarization configuration from `filename`.
+
+    Args:
+        filename (str): config file
+
+    Returns:
+        dict of Apple Notarization objects: keyed by signing cert type
+
+    """
+    return _load_scoped_configs(filename, AppleSigning, "Apple Signing")
 
 
 async def log_output(fh, log_level=logging.INFO):
@@ -238,3 +275,22 @@ def split_autograph_format(format_):
         return format_.split(":", 1)
     else:
         return format_, None
+
+
+async def extract_dmg(context, source, dest):
+    """Extracts a source DMG into dest folder
+
+    Args:
+        context: The running task context object
+        source (str): the DMG sorce path
+        dest (str): the destination directory to extract files
+    """
+    dmg = context.config["dmg"]
+    hfsplus = context.config["hfsplus"]
+    undmg_cmd = [dmg, "extract", source, "tmp.hfs"]
+    log.info(undmg_cmd)
+    await execute_subprocess(undmg_cmd, cwd=context.config["work_dir"], log_level=logging.DEBUG)
+
+    hfsplus_cmd = [hfsplus, "tmp.hfs", "extractall", "/", dest]
+    log.info(hfsplus_cmd)
+    await execute_subprocess(hfsplus_cmd, cwd=context.config["work_dir"], log_level=logging.DEBUG)

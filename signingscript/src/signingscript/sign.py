@@ -30,9 +30,10 @@ from scriptworker.utils import get_single_item_from_sequence, makedirs, raise_fu
 from winsign.crypto import load_pem_certs
 
 from signingscript import task, utils
+from signingscript.apple import copy_provisioning_profiles
 from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
-from signingscript.rcodesign import RCodesignError, rcodesign_notarize, rcodesign_notary_wait, rcodesign_staple
+from signingscript.rcodesign import RCodesignError, rcodesign_notarize, rcodesign_notary_wait, rcodesign_sign, rcodesign_staple
 
 log = logging.getLogger(__name__)
 
@@ -1510,14 +1511,6 @@ async def sign_debian_pkg(context, path, fmt, *args, **kwargs):
     return path
 
 
-def _can_notarize(filename, supported_extensions):
-    """
-    Check if file can be notarized based on extension
-    """
-    _, extension = os.path.splitext(filename)
-    return extension in supported_extensions
-
-
 async def _notarize_single(path, creds_path, staple=True):
     """Notarizes a single app/pkg retrying if necessary"""
     ATTEMPTS = 5
@@ -1553,7 +1546,7 @@ async def _notarize_pkg(context, path, workdir):
     workdir_files = os.listdir(workdir)
 
     # Filter supported file extensions
-    supported_files = [filename for filename in workdir_files if _can_notarize(filename, (".pkg",))]
+    supported_files = [filename for filename in workdir_files if filename.endswith(".pkg")]
     if not supported_files:
         raise SigningScriptError("No supported files found")
 
@@ -1587,7 +1580,7 @@ async def _notarize_all(context, path, workdir):
 
     # Filter supported file extensions
     #  We also support .pkg in case it's a tarball with .app + .pkg inside
-    supported_files = [filename for filename in workdir_files if _can_notarize(filename, (".app", ".pkg"))]
+    supported_files = [filename for filename in workdir_files if filename.endswith((".app", ".pkg"))]
     if not supported_files:
         raise SigningScriptError("No supported files found")
 
@@ -1615,8 +1608,7 @@ async def apple_notarize(context, path, *args, **kwargs):
     shutil.rmtree(notarization_workdir, ignore_errors=True)
     utils.mkdir(notarization_workdir)
 
-    _, extension = os.path.splitext(path)
-    if extension == ".pkg":
+    if path.endswith(".pkg"):
         return await _notarize_pkg(context, path, notarization_workdir)
     else:
         return await _notarize_all(context, path, notarization_workdir)
@@ -1633,3 +1625,71 @@ async def apple_notarize_geckodriver(context, path, *args, **kwargs):
     utils.mkdir(notarization_workdir)
 
     return await _notarize_geckodriver(context, path, notarization_workdir)
+
+
+@time_async_function
+async def apple_app_hardened_sign(context, path, *args, **kwargs):
+    """
+    Sign an app using rcodesign.
+    """
+    # Setup workdir
+    signing_dir = os.path.join(context.config["work_dir"], "extracted")
+    shutil.rmtree(signing_dir, ignore_errors=True)
+    utils.mkdir(signing_dir)
+
+    if not path.endswith((".dmg", ".tar.gz")):
+        raise SigningScriptError("File format not supported.")
+
+    extension = os.path.splitext(path)[-1]
+    # For now, we convert to tar, then continue work as tar
+    if extension == ".dmg":
+        await utils.extract_dmg(context, path, signing_dir)
+    else:
+        await _extract_tarfile(context, path, extension, signing_dir)
+
+    # Get configs from task payload
+    payload = context.task.get("payload", {})
+    hardened_sign_config = payload.get("hardened-sign-config")
+    assert hardened_sign_config and isinstance(hardened_sign_config, list)
+    provisioning_profile_config = payload.get("provisioning-profile-config")
+
+    signed = False
+    for file in os.scandir(signing_dir):
+        if file.is_dir() and file.name.endswith(".app"):
+            # Developer ID Application certificate
+            creds = context.apple_app_signing_creds_path
+        elif file.is_file() and file.name.endswith(".pkg"):
+            # Use installer credentials
+            creds = context.apple_installer_signing_creds_path
+        else:
+            # If not pkg AND not a directory (.app) - then skip file
+            continue
+
+        bundle_path = os.path.join(signing_dir, file.path)
+        if provisioning_profile_config:
+            copy_provisioning_profiles(bundle_path, provisioning_profile_config)
+
+        # TODO: widevine and omnija signing should run from formats?
+        for f in glob.glob(os.path.join(bundle_path, "**", "omni.ja")):
+            sign_omnija_with_autograph(context, f)
+        widevine_files = _get_widevine_signing_files(glob.glob(os.path.join(bundle_path, "**", "*")))
+        for f, fmt in widevine_files.items():  # We should make _get_widevine_signing_files return a list
+            sign_widevine_with_autograph(context, f, "blessed" in fmt)
+        await rcodesign_sign(
+            context.config["work_dir"],
+            bundle_path,
+            creds,
+            context.apple_signing_creds_pass_path,
+            hardened_sign_config,
+        )
+        signed = True
+    if not signed:
+        raise SigningScriptError("Could not find an app to sign!")
+    # get all files from extracted folder (account for background, etc)
+    all_files = glob.glob(os.path.join(signing_dir, "**", "*"), recursive=True) + glob.glob(os.path.join(signing_dir, ".*"))
+    # filter for *non folders* so _create_tarfile doesn't include files multiple times
+    all_files = set([f for f in all_files if not os.path.isdir(f)])
+    target = os.path.join(context.config["work_dir"], "public/build", "target.tar.gz")
+    if not os.path.exists(os.path.dirname(target)):
+        os.mkdir(os.path.dirname(target))
+    return await _create_tarfile(context, target, all_files, "gz", signing_dir)

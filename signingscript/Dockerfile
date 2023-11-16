@@ -11,6 +11,7 @@ RUN groupadd --gid 10001 app && \
 
 # Copy only required folders
 COPY ["signingscript", "/app/signingscript/"]
+COPY ["scriptworker_client", "/app/scriptworker_client/"]
 COPY ["configloader", "/app/configloader/"]
 COPY ["docker.d", "/app/docker.d/"]
 COPY ["vendored", "/app/vendored/"]
@@ -19,19 +20,18 @@ COPY ["vendored", "/app/vendored/"]
 COPY ["version.jso[n]", "/app/"]
 
 # Change owner of /app to app:app
+# Build and install libdmg_hfsplus
 # Install msix
 # Install rcodesign
-RUN chown -R app:app /app && \
-    cd /app/signingscript/docker.d && \
-    bash build_msix_packaging.sh && \
-    cp msix-packaging/.vs/bin/makemsix /usr/bin && \
-    cp msix-packaging/.vs/lib/libmsix.so /usr/lib && \
-    cd .. && \
-    rm -rf msix-packaging && \
-    wget -qO- \
-    https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign%2F0.22.0/apple-codesign-0.22.0-x86_64-unknown-linux-musl.tar.gz \
-    | tar xvz -C /usr/bin --transform 's/.*\///g' --wildcards --no-anchored 'rcodesign' && \
-    chmod +x /usr/bin/rcodesign
+RUN chown -R app:app /app \
+ && cd /app/scriptworker_client \
+ && pip install /app/scriptworker_client \
+ && pip install -r requirements/base.txt \
+ && pip install . \
+ && cd /app/signingscript/docker.d \
+ && bash build_libdmg_hfsplus.sh /usr/bin \
+ && bash build_rcodesign.sh /usr/bin \
+ && bash build_msix_packaging.sh
 
 # Set user and workdir
 USER app
@@ -40,6 +40,7 @@ WORKDIR /app
 # Install signingscript + configloader + widevine
 RUN python -m venv /app \
  && cd signingscript \
+ && /app/bin/pip install /app/scriptworker_client \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \

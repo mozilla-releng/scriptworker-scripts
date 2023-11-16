@@ -1,0 +1,7 @@
+{
+  "project:releng:signing:cert:dep-signing": [{
+    "app_credentials": "abcdef",
+    "installer_credentials": "abcdef",
+    "password": "verysecret"
+  }]
+}
