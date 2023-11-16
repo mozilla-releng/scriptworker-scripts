@@ -208,6 +208,27 @@ async def push_to_releases_gcs(context):
                 )
             else:
                 log.debug("Excluding partner repack {}".format(blob_path))
+        # TODO: Remove this block when it's time to archive all the released .debs, we'd like to start by shipping beta and devedition.
+        elif "b" in context.task["payload"]["version"]:  # if we are shipping a beta build, we actually want to archive the .deb
+            # release_exclude is RELEASE_EXCLUDE minus r"^.*\.deb$"
+            release_exclude = (
+                r"^.*tests.*$",
+                r"^.*crashreporter.*$",
+                r"^(?!.*jsshell-).*\.zip(\.asc)?$",
+                r"^.*\.log$",
+                r"^.*\.txt$",
+                r"^.*/partner-repacks.*$",
+                r"^.*.checksums(\.asc)?$",
+                r"^.*/logs/.*$",
+                r"^.*json$",
+                r"^.*/host.*$",
+                r"^.*/mar-tools/.*$",
+                r"^.*contrib.*",
+                r"^.*/beetmover-checksums/.*$",
+            )
+            if not matches_exclude(blob_path, release_exclude):
+                blobs_to_copy[blob_path] = blob_path.replace(candidates_prefix, releases_prefix)
+        # EOF hacky fix for archiving beta and devedition .debs, if there's no 'b' in the version number carry on as normal
         elif not matches_exclude(blob_path, RELEASE_EXCLUDE):
             blobs_to_copy[blob_path] = blob_path.replace(candidates_prefix, releases_prefix)
         else:
