@@ -1,12 +1,14 @@
 from contextlib import contextmanager
 
-import httplib2
 import json
 import logging
 
+import google.auth
+import httplib2
+
 from apiclient.discovery import build
-from oauth2client.service_account import ServiceAccountCredentials
 from googleapiclient.errors import HttpError
+from google.oauth2 import service_account
 # HACK: importing mock in production is useful for option `--do-not-contact-google-play`
 from unittest.mock import MagicMock
 
@@ -16,16 +18,15 @@ logger = logging.getLogger(__name__)
 
 
 def add_general_google_play_arguments(parser):
-    parser.add_argument('--service-account', help='The service account email', required=True)
     parser.add_argument('--credentials', dest='google_play_credentials_filename',
-                        help='The p12 authentication file', required=True)
+                        help='The json authentication file', required=True)
 
     parser.add_argument('--commit', action='store_true',
                         help='Commit changes onto Google Play. This action cannot be reverted.')
     parser.add_argument('--do-not-contact-google-play', action='store_false', dest='contact_google_play',
                         help='''Prevent any request to reach Google Play. Use this option if you want to run the script
 without any valid credentials nor valid APKs. In fact, Google Play may error out at the first invalid piece of data sent.
---service-account and --credentials must still be provided (you can just fill them with random string and file).''')
+--credentials must still be provided (you can pass a random file name).''')
 
 
 class _ExecuteDummy:
@@ -186,8 +187,8 @@ class GooglePlayEdit:
 
     @staticmethod
     @contextmanager
-    def transaction(service_account, credentials_file_name, package_name, *, contact_server, dry_run):
-        edit_resource = _create_google_edit_resource(contact_server, service_account, credentials_file_name)
+    def transaction(credentials_file_name, package_name, *, contact_server, dry_run):
+        edit_resource = _create_google_edit_resource(contact_server, credentials_file_name)
         edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
         google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
         yield google_play
@@ -199,23 +200,16 @@ class GooglePlayEdit:
             logger.warning('Transaction not committed, since `dry_run` was `True`')
 
 
-def _create_google_edit_resource(contact_google_play, service_account, credentials_file_name):
+def _create_google_edit_resource(contact_google_play, credentials_file_name):
     if contact_google_play:
-        # Create an httplib2.Http object to handle our HTTP requests an
-        # authorize it with the Credentials. Note that the first parameter,
-        # service_account_name, is the Email address created for the Service
-        # account. It must be the email address associated with the key that
-        # was created.
         scope = 'https://www.googleapis.com/auth/androidpublisher'
-        credentials = ServiceAccountCredentials.from_p12_keyfile(
-            service_account,
+        credentials = service_account.Credentials.from_service_account_file(
             credentials_file_name,
-            scopes=scope
+            scopes=[scope],
         )
-        http = httplib2.Http()
-        http = credentials.authorize(http)
 
-        service = build(serviceName='androidpublisher', version='v3', http=http,
+        service = build(serviceName='androidpublisher', version='v3',
+                        credentials=credentials,
                         cache_discovery=False)
 
         return service.edits()

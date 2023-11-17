@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 def push_aab(
     aabs,
-    username,
     secret,
     track,
     rollout_percentage=None,
@@ -23,8 +22,7 @@ def push_aab(
     """
     Args:
         aabs: list of AAB files
-        username (str): Google Play service account
-        secret (str): Filename of Google Play Credentials file
+        secret (str): Filename of Google Play Credentials file (json)
         track (str): Google Play track to deploy to (e.g.: "nightly"). If "rollout" is chosen,
             the parameter `rollout_percentage` must be specified as well
         rollout_percentage (int): percentage of users to roll out this update to. Must be a number
@@ -51,7 +49,7 @@ def push_aab(
     # by package name here.
     aabs_by_package_name = metadata_by_package_name(aabs_metadata_per_paths)
     for package_name, extracted_aabs in aabs_by_package_name.items():
-        with GooglePlayEdit.transaction(username, secret, package_name, contact_server=contact_server,
+        with GooglePlayEdit.transaction(secret, package_name, contact_server=contact_server,
                                         dry_run=dry_run) as edit:
             edit.update_aab(extracted_aabs, **update_aab_kwargs)
 
@@ -64,7 +62,6 @@ def main():
 
     push_aab(
         config.aabs,
-        config.username,
         config.secret,
         config.track,
         config.rollout_percentage,

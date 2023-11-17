@@ -24,9 +24,6 @@ aab1 = NamedTemporaryFile()
 aab2 = NamedTemporaryFile()
 
 AABS = [aab1, aab2]
-SERVICE_ACCOUNT = 'foo@developer.gserviceaccount.com'
-CLIENT_ID = 'client'
-CLIENT_SECRET = 'secret'
 
 
 def patch_extract_metadata(monkeypatch):
@@ -54,7 +51,7 @@ def patch_store_transaction(monkeypatch_, patch_target):
     mock_edit = create_autospec(patch_target)
 
     @contextmanager
-    def fake_transaction(_, __, ___, *, contact_server, dry_run):
+    def fake_transaction(_, __, *, contact_server, dry_run):
         yield mock_edit
 
     monkeypatch_.setattr(patch_target, 'transaction', fake_transaction)
@@ -64,7 +61,7 @@ def patch_store_transaction(monkeypatch_, patch_target):
 def test_google(monkeypatch):
     mock_metadata = patch_extract_metadata(monkeypatch)
     edit_mock = patch_store_transaction(monkeypatch, store.GooglePlayEdit)
-    push_aab(AABS, SERVICE_ACCOUNT, credentials, 'production', rollout_percentage=50,
+    push_aab(AABS, credentials, 'production', rollout_percentage=50,
              contact_server=False)
     edit_mock.update_aab.assert_called_once_with([
         (aab1, mock_metadata[aab1]),
@@ -78,7 +75,7 @@ def test_push_aab_tunes_down_logs(monkeypatch):
     monkeypatch.setattr('mozapkpublisher.push_aab.extract_aabs_metadata', MagicMock())
     monkeypatch.setattr('mozapkpublisher.common.utils.metadata_by_package_name', MagicMock())
 
-    push_aab(AABS, SERVICE_ACCOUNT, credentials, 'alpha', contact_server=False)
+    push_aab(AABS, credentials, 'alpha', contact_server=False)
 
     main_logging_mock.init.assert_called_once_with()
 
@@ -94,7 +91,6 @@ def test_main_google(monkeypatch):
     file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
     fail_manual_validation_args = [
         'script',
-        '--username', 'foo@developer.gserviceaccount.com',
         '--secret', file,
         'alpha',
         file,
@@ -106,7 +102,6 @@ def test_main_google(monkeypatch):
 
         mock_push_aab.assert_called_once_with(
             ANY,
-            'foo@developer.gserviceaccount.com',
             file,
             'alpha',
             None,

@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 def push_apk(
     apks,
-    username,
     secret,
     expected_package_names,
     track,
@@ -28,8 +27,7 @@ def push_apk(
     """
     Args:
         apks: list of APK files
-        username (str): Google Play service account
-        secret (str): Filename of Google Play Credentials file
+        secret (str): Filename of Google Play Credentials file (json)
         expected_package_names (list of str): defines what the expected package names must be.
         track (str): Google Play track to deploy to (e.g.: "nightly"). If "rollout" is chosen, the parameter
             `rollout_percentage` must be specified as well
@@ -69,7 +67,7 @@ def push_apk(
     # by package name here.
     apks_by_package_name = metadata_by_package_name(apks_metadata_per_paths)
     for package_name, extracted_apks in apks_by_package_name.items():
-        with GooglePlayEdit.transaction(username, secret, package_name, contact_server=contact_server,
+        with GooglePlayEdit.transaction(secret, package_name, contact_server=contact_server,
                                         dry_run=dry_run) as edit:
             edit.update_app(extracted_apks, **update_app_kwargs)
 
@@ -82,7 +80,6 @@ def main():
 
     push_apk(
         config.apks,
-        config.username,
         config.secret,
         config.expected_package_names,
         config.track,
