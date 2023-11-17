@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [7.0.0] - 2023-XX-XX
+## [7.0.0] - 2023-11-17
 
 ### Changed
 * Switched Google Play Store authentication to the google-auth library.  The credentials now need to be passed as a json file instead of an email address and PKCS#12 file.
