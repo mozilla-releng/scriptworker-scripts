@@ -7,8 +7,7 @@ AURORA_CONFIG = {
             "package_names": ["org.mozilla.fennec_aurora"],
             "default_track": "beta",
             "certificate_alias": "aurora",
-            "service_account": "aurora@service.account.com",
-            "credentials_file": "aurora.p12",
+            "credentials_file": "aurora.json",
         }
     },
 }
@@ -18,8 +17,7 @@ FOCUS_CONFIG = {
     "app": {
         "certificate_alias": "focus",
         "package_names": ["org.mozilla.focus"],
-        "service_account": "focus@service.account.com",
-        "credentials_file": "focus.p12",
+        "credentials_file": "focus.json",
     },
 }
 
@@ -28,7 +26,7 @@ FENIX_CONFIG = {
         "production": {
             "package_names": ["org.mozilla.fenix"],
             "certificate_alias": "fenix",
-            "google": {"default_track": "internal", "service_account": "fenix@service.account.com", "credentials_file": "fenix.p12"},
+            "google": {"default_track": "internal", "credentials_file": "fenix.json"},
         }
     }
 }
@@ -38,7 +36,7 @@ ANY_STORE_CONFIG = {
         "production": {
             "package_names": ["org.mozilla.flex"],
             "certificate_alias": "flex",
-            "google": {"default_track": "internal", "service_account": "flex@service.account.com", "credentials_file": "flex.p12"},
+            "google": {"default_track": "internal", "credentials_file": "flex.json"},
         }
     }
 }
@@ -51,8 +49,7 @@ def test_get_publish_config_fennec():
         "certificate_alias": "aurora",
         "google_track": "beta",
         "google_rollout_percentage": None,
-        "username": "aurora@service.account.com",
-        "secret": "aurora.p12",
+        "secret": "aurora.json",
         "package_names": ["org.mozilla.fennec_aurora"],
     }
 
@@ -64,8 +61,7 @@ def test_get_publish_config_fennec_track_override():
         "certificate_alias": "aurora",
         "google_track": "internal_qa",
         "google_rollout_percentage": None,
-        "username": "aurora@service.account.com",
-        "secret": "aurora.p12",
+        "secret": "aurora.json",
         "package_names": ["org.mozilla.fennec_aurora"],
     }
 
@@ -77,8 +73,7 @@ def test_get_publish_config_fennec_rollout():
         "certificate_alias": "aurora",
         "google_track": "beta",
         "google_rollout_percentage": 10,
-        "username": "aurora@service.account.com",
-        "secret": "aurora.p12",
+        "secret": "aurora.json",
         "package_names": ["org.mozilla.fennec_aurora"],
     }
 
@@ -91,8 +86,7 @@ def test_get_publish_config_focus():
         "certificate_alias": "focus",
         "google_track": "beta",
         "google_rollout_percentage": None,
-        "username": "focus@service.account.com",
-        "secret": "focus.p12",
+        "secret": "focus.json",
         "package_names": ["org.mozilla.focus"],
     }
 
@@ -105,8 +99,7 @@ def test_get_publish_config_focus_rollout():
         "certificate_alias": "focus",
         "google_track": "production",
         "google_rollout_percentage": 10,
-        "username": "focus@service.account.com",
-        "secret": "focus.p12",
+        "secret": "focus.json",
         "package_names": ["org.mozilla.focus"],
     }
 
@@ -119,8 +112,7 @@ def test_get_publish_config_fenix():
         "certificate_alias": "fenix",
         "google_track": "internal",
         "google_rollout_percentage": None,
-        "username": "fenix@service.account.com",
-        "secret": "fenix.p12",
+        "secret": "fenix.json",
         "package_names": ["org.mozilla.fenix"],
     }
 
@@ -133,8 +125,7 @@ def test_get_publish_config_fenix_rollout():
         "certificate_alias": "fenix",
         "google_track": "internal",
         "google_rollout_percentage": 10,
-        "username": "fenix@service.account.com",
-        "secret": "fenix.p12",
+        "secret": "fenix.json",
         "package_names": ["org.mozilla.fenix"],
     }
 
@@ -147,8 +138,7 @@ def test_target_google():
         "certificate_alias": "flex",
         "google_track": "internal",
         "google_rollout_percentage": None,
-        "username": "flex@service.account.com",
-        "secret": "flex.p12",
+        "secret": "flex.json",
         "package_names": ["org.mozilla.flex"],
     }
 
