@@ -171,13 +171,16 @@ async def push_to_partner(context):
 
 
 async def push_to_releases(context):
+    coros = []
     # S3 upload
     if context.config["clouds"]["aws"][context.resource]["enabled"]:
-        await push_to_releases_s3(context)
+        coros.append(push_to_releases_s3(context))
 
     # GCS upload
     if context.config["clouds"]["gcloud"][context.resource]["enabled"]:
-        await push_to_releases_gcs(context)
+        coros.append(push_to_releases_gcs(context))
+
+    await asyncio.gather(*coros)
 
 
 # push_to_releases_s3 {{{1
