@@ -137,7 +137,7 @@ async def validate_robustcheckout_works(config):
 
 
 # checkout_repo {{{1
-async def checkout_repo(config, task, repo_path):
+async def checkout_repo(config, task, source_repo, repo_path):
     """Perform a clone via robustcheckout, at ${directory}/src.
 
     This function will perform a clone via robustcheckout, using hg's share extension
@@ -150,6 +150,7 @@ async def checkout_repo(config, task, repo_path):
     Args:
         config (dict): the running config.
         task (dict): the running task.
+        source_repo (str): source repository url
         repo_path (str): The directory to place the resulting clone.
 
     Raises:
@@ -158,7 +159,6 @@ async def checkout_repo(config, task, repo_path):
     """
     share_base = config["hg_share_base_dir"]
     upstream_repo = config["upstream_repo"]
-    source_repo = get_source_repo(task)
     # branch default is used to pull tip of the repo at checkout time
     branch = get_branch(task, "default")
     cmd_args = [config, "robustcheckout", source_repo, repo_path, "--sharebase", share_base, "--branch", branch]

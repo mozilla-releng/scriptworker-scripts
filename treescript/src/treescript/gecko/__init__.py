@@ -51,7 +51,7 @@ async def do_actions(config, task):
     if not await vcs.validate_robustcheckout_works(config):
         raise TreeScriptError("Robustcheckout can't run on our version of hg, aborting")
 
-    await vcs.checkout_repo(config, task, repo_path)
+    await vcs.checkout_repo(config, task, get_source_repo(task), repo_path)
 
     # Split the action selection up due to complexity in do_actions
     # caused by different push behaviour, and action return values.
