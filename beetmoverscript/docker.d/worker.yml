@@ -70,6 +70,10 @@ clouds:
               fenix:      'moz-fx-productdelivery-no-7d6a-productdelivery'
               focus:      'moz-fx-productdelivery-no-7d6a-productdelivery'
             product_apt_repos:
+              devedition:
+                name: 'mozilla'
+                location: 'us'
+                project: 'moz-fx-productdelivery-no-7d6a'
               firefox:
                 name: 'mozilla'
                 location: 'us'
@@ -83,6 +87,10 @@ clouds:
               devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
               firefox:    'moz-fx-productdelivery-pr-38b5-productdelivery'
             product_apt_repos:
+              devedition:
+                name: 'mozilla'
+                location: 'us'
+                project: 'moz-fx-productdelivery-no-7d6a'
               firefox:
                 name: 'mozilla'
                 location: 'us'
@@ -95,6 +103,10 @@ clouds:
               devedition: 'moz-fx-productdelivery-pr-38b5-productdelivery'
               firefox:    'moz-fx-productdelivery-pr-38b5-productdelivery'
             product_apt_repos:
+              devedition:
+                name: 'mozilla'
+                location: 'us'
+                project: 'moz-fx-productdelivery-no-7d6a'
               firefox:
                 name: 'mozilla'
                 location: 'us'
