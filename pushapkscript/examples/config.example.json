@@ -9,19 +9,22 @@
                 "package_names": ["org.mozilla.fennec_aurora"],
                 "certificate_alias": "nightly",
                 "default_track": "beta",
-                "credentials_file": "/firefox-nightly.json"
+                "service_account": "firefox-aurora@iam.gserviceaccount.com",
+                "credentials_file": "/firefox-nightly.p12"
             },
             "beta": {
                 "package_names": ["org.mozilla.firefox_beta"],
                 "certificate_alias": "release",
                 "default_track": "production",
-                "credentials_file": "/firefox.json"
+                "service_account": "firefox-beta@iam.gserviceaccount.com",
+                "credentials_file": "/firefox.p12"
             },
             "release": {
                 "package_names": ["org.mozilla.firefox"],
                 "certificate_alias": "release",
                 "default_track": "production",
-                "credentials_file": "/firefox.json"
+                "service_account": "firefox-production@iam.gserviceaccount.com",
+                "credentials_file": "/firefox.p12"
             }
         }
     },{
@@ -32,7 +35,8 @@
         "override_channel_model": "single_google_app",
         "app": {
             "package_names": ["org.mozilla.klar", "org.mozilla.focus"],
-            "credentials_file": "/focus.json",
+            "service_account": "focus@iam.gserviceaccount.com",
+            "credentials_file": "/focus.p12",
             "certificate_alias": "focus"
         }
     },{
@@ -47,7 +51,8 @@
                 "certificate_alias": "fenix-nightly",
                 "google": {
                     "default_track": "beta",
-                    "credentials_file": "/fenix-nightly.json"
+                    "service_account": "fenix-nightly@iam.gserviceaccount.com",
+                    "credentials_file": "/fenix-nightly.p12"
                 }
             },
             "beta": {
@@ -55,7 +60,8 @@
                 "certificate_alias": "fenix-beta",
                 "google": {
                     "default_track": "production",
-                    "credentials_file": "/fenix-beta.json"
+                    "service_account": "fenix-beta@iam.gserviceaccount.com",
+                    "credentials_file": "/fenix-beta.p12"
                 }
             },
             "release": {
@@ -63,7 +69,8 @@
                 "certificate_alias": "fenix-production",
                 "google": {
                     "default_track": "production",
-                    "credentials_file": "/fenix-production.json"
+                    "service_account": "fenix-production@iam.gserviceaccount.com",
+                    "credentials_file": "/fenix-production.p12"
                 }
             }
         }

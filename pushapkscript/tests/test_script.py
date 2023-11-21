@@ -41,7 +41,7 @@ async def test_async_main(monkeypatch, android_product, upstream_artifacts, is_a
                 android_product: {
                     "package_names": [android_product],
                     "certificate_alias": android_product,
-                    "google": {"default_track": "beta", "credentials_file": "{}.json".format(android_product)},
+                    "google": {"default_track": "beta", "service_account": android_product, "credentials_file": "{}.p12".format(android_product)},
                 }
             }
         },
