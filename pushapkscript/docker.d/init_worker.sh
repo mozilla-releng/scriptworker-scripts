@@ -44,10 +44,10 @@ case $COT_PRODUCT in
     case $ENV in
       dev|fake-prod)
 
-        echo "dummy" > $CONFIG_DIR/fake_cert.json
-        export GOOGLE_CREDENTIALS_FENIX_DEP_PATH=$CONFIG_DIR/fake_cert.json
-        export GOOGLE_CREDENTIALS_FOCUS_DEP_PATH=$CONFIG_DIR/fake_cert.json
-        export GOOGLE_CREDENTIALS_REFERENCE_BROWSER_DEP_PATH=$CONFIG_DIR/fake_cert.json
+        echo "dummy" > $CONFIG_DIR/fake_cert.p12
+        export GOOGLE_CREDENTIALS_FENIX_DEP_PATH=$CONFIG_DIR/fake_cert.p12
+        export GOOGLE_CREDENTIALS_FOCUS_DEP_PATH=$CONFIG_DIR/fake_cert.p12
+        export GOOGLE_CREDENTIALS_REFERENCE_BROWSER_DEP_PATH=$CONFIG_DIR/fake_cert.p12
 
         import_cert fenix $CERT_DIR/fenix_dep.pem
         import_cert focus $CERT_DIR/focus_dep.pem
@@ -55,23 +55,28 @@ case $COT_PRODUCT in
 
         ;;
       prod)
-        test_var_set 'GOOGLE_SERVICE_ACCOUNT_FOCUS'
-        test_var_set 'GOOGLE_SERVICE_ACCOUNT_REFERENCE_BROWSER'
-        test_var_set 'GOOGLE_SERVICE_ACCOUNT_FENIX_NIGHTLY'
-        test_var_set 'GOOGLE_SERVICE_ACCOUNT_FENIX_BETA'
-        test_var_set 'GOOGLE_SERVICE_ACCOUNT_FENIX_RELEASE'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FOCUS'
+        test_var_set 'GOOGLE_CREDENTIALS_FOCUS'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER'
+        test_var_set 'GOOGLE_CREDENTIALS_REFERENCE_BROWSER'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_NIGHTLY'
+        test_var_set 'GOOGLE_CREDENTIALS_FENIX_NIGHTLY'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_BETA'
+        test_var_set 'GOOGLE_CREDENTIALS_FENIX_BETA'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_RELEASE'
+        test_var_set 'GOOGLE_CREDENTIALS_FENIX_RELEASE'
 
-        export GOOGLE_CREDENTIALS_FOCUS_PATH=$CONFIG_DIR/focus.json
-        export GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH=$CONFIG_DIR/reference_browser.json
-        export GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH=$CONFIG_DIR/fenix_nightly.json
-        export GOOGLE_CREDENTIALS_FENIX_BETA_PATH=$CONFIG_DIR/fenix_beta.json
-        export GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH=$CONFIG_DIR/fenix_release.json
+        export GOOGLE_CREDENTIALS_FOCUS_PATH=$CONFIG_DIR/focus.p12
+        export GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH=$CONFIG_DIR/reference_browser.p12
+        export GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH=$CONFIG_DIR/fenix_nightly.p12
+        export GOOGLE_CREDENTIALS_FENIX_BETA_PATH=$CONFIG_DIR/fenix_beta.p12
+        export GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH=$CONFIG_DIR/fenix_release.p12
 
-        echo $GOOGLE_SERVICE_ACCOUNT_FOCUS | base64 -d >             $GOOGLE_CREDENTIALS_FOCUS_PATH
-        echo $GOOGLE_SERVICE_ACCOUNT_REFERENCE_BROWSER | base64 -d > $GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH
-        echo $GOOGLE_SERVICE_ACCOUNT_FENIX_NIGHTLY | base64 -d >     $GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH
-        echo $GOOGLE_SERVICE_ACCOUNT_FENIX_BETA | base64 -d >        $GOOGLE_CREDENTIALS_FENIX_BETA_PATH
-        echo $GOOGLE_SERVICE_ACCOUNT_FENIX_RELEASE | base64 -d >     $GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH
+        echo $GOOGLE_CREDENTIALS_FOCUS | base64 -d >             $GOOGLE_CREDENTIALS_FOCUS_PATH
+        echo $GOOGLE_CREDENTIALS_REFERENCE_BROWSER | base64 -d > $GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH
+        echo $GOOGLE_CREDENTIALS_FENIX_NIGHTLY | base64 -d >     $GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH
+        echo $GOOGLE_CREDENTIALS_FENIX_BETA | base64 -d >        $GOOGLE_CREDENTIALS_FENIX_BETA_PATH
+        echo $GOOGLE_CREDENTIALS_FENIX_RELEASE | base64 -d >     $GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH
 
         import_cert fenix-nightly $CERT_DIR/fenix_nightly.pem
         import_cert fenix-beta $CERT_DIR/fenix_beta.pem
@@ -88,9 +93,9 @@ case $COT_PRODUCT in
     case $ENV in
       dev|fake-prod)
 
-        echo "dummy" > $CONFIG_DIR/fake_cert.json
-        export GOOGLE_CREDENTIALS_FENIX_DEP_PATH=$CONFIG_DIR/fake_cert.json
-        export GOOGLE_CREDENTIALS_FOCUS_DEP_PATH=$CONFIG_DIR/fake_cert.json
+        echo "dummy" > $CONFIG_DIR/fake_cert.p12
+        export GOOGLE_CREDENTIALS_FENIX_DEP_PATH=$CONFIG_DIR/fake_cert.p12
+        export GOOGLE_CREDENTIALS_FOCUS_DEP_PATH=$CONFIG_DIR/fake_cert.p12
 
         import_cert fenix $CERT_DIR/fenix_dep.pem
         import_cert focus $CERT_DIR/focus_dep.pem
@@ -105,16 +110,17 @@ case $COT_PRODUCT in
     case $ENV in
       dev|fake-prod)
 
-        echo "dummy" > $CONFIG_DIR/fake_cert.json
-        export GOOGLE_CREDENTIALS_MOZILLAVPN_DEP_PATH=$CONFIG_DIR/fake_cert.json
+        echo "dummy" > $CONFIG_DIR/fake_cert.p12
+        export GOOGLE_CREDENTIALS_MOZILLAVPN_DEP_PATH=$CONFIG_DIR/fake_cert.p12
 
         # no dep signing for mozillavpn yet, so no import_cert
         ;;
       prod)
-        test_var_set 'GOOGLE_SERVICE_ACCOUNT_MOZILLAVPN'
+        test_var_set 'GOOGLE_PLAY_SERVICE_ACCOUNT_MOZILLAVPN'
+        test_var_set 'GOOGLE_CREDENTIALS_MOZILLAVPN'
 
-        export GOOGLE_CREDENTIALS_MOZILLAVPN_PATH=$CONFIG_DIR/mozillavpn.json
-        echo $GOOGLE_SERVICE_ACCOUNT_MOZILLAVPN | base64 -d > $GOOGLE_CREDENTIALS_MOZILLAVPN_PATH
+        export GOOGLE_CREDENTIALS_MOZILLAVPN_PATH=$CONFIG_DIR/mozillavpn.p12
+        echo $GOOGLE_CREDENTIALS_MOZILLAVPN | base64 -d > $GOOGLE_CREDENTIALS_MOZILLAVPN_PATH
 
         import_cert mozillavpn $CERT_DIR/mozillavpn.pem
         ;;
