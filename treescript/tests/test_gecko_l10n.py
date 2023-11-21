@@ -214,19 +214,6 @@ def test_build_commit_message(dontbuild, ignore_closed_tree):
     assert l10n.build_commit_message("foo", locale_map, dontbuild=dontbuild, ignore_closed_tree=ignore_closed_tree).splitlines() == expected
 
 
-# check_treestatus {{{1
-@pytest.mark.parametrize("status, expected", (("open", True), ("closed", False), ("approval required", True)))
-@pytest.mark.asyncio
-async def test_check_treestatus(status, mocker, expected):
-    """check_treestatus returns False for a closed tree, and True otherwise."""
-    config = {"treestatus_base_url": "url", "work_dir": "foo"}
-    treestatus = {"result": {"message_of_the_day": "", "reason": "", "status": status, "tree": "mozilla-central"}}
-    mocker.patch.object(l10n, "download_file", new=noop_async)
-    mocker.patch.object(l10n, "get_short_source_repo", return_value="tree")
-    mocker.patch.object(l10n, "load_json_or_yaml", return_value=treestatus)
-    assert await l10n.check_treestatus(config, {}) == expected
-
-
 # l10n_bump {{{1
 @pytest.mark.parametrize(
     "ignore_closed_tree, l10n_bump_info, old_contents, new_contents, changes",
