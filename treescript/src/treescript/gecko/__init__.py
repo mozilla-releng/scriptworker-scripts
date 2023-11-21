@@ -2,6 +2,7 @@ import logging
 import os
 
 from treescript.gecko import mercurial as vcs
+from treescript.gecko.android_l10n import android_l10n_import, android_l10n_sync
 from treescript.gecko.l10n import l10n_bump
 from treescript.gecko.merges import do_merge
 from treescript.gecko.versionmanip import bump_version
@@ -66,6 +67,10 @@ async def do_actions(config, task):
         num_changes += await bump_version(config, task, repo_path)
     if "l10n_bump" in actions:
         num_changes += await l10n_bump(config, task, repo_path)
+    if "android_l10n_import" in actions:
+        num_changes += await android_l10n_import(config, task, repo_path)
+    if "android_l10n_sync" in actions:
+        num_changes += await android_l10n_sync(config, task, repo_path)
 
     num_outgoing = await vcs.log_outgoing(config, task, repo_path)
     if num_outgoing != num_changes:

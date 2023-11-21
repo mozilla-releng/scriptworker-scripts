@@ -186,6 +186,66 @@
                         "files"
                     ]
                 },
+                "android_l10n_import_info": {
+                    "type": "object",
+                    "properties": {
+                        "from_repo_url": {
+                            "type": "string"
+                        },
+                        "toml_info": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "toml_path": {
+                                        "type": "string"
+                                    },
+                                    "dest_path": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "toml_path",
+                                    "dest_path"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "from_repo_url",
+                        "toml_info"
+                    ]
+                },
+                "android_l10n_sync_info": {
+                    "type": "object",
+                    "properties": {
+                        "from_repo_url": {
+                            "type": "string"
+                        },
+                        "toml_info": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "toml_path": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "toml_path"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "from_repo_url",
+                        "toml_info"
+                    ]
+                },
                 "l10n_bump_info": {
                     "type": "array",
                     "minItems": 1,
@@ -258,6 +318,8 @@
                             "version_bump",
                             "l10n_bump",
                             "merge_day",
+                            "android_l10n_import",
+                            "android_l10n_sync",
                             "push"
                         ]
                     }
