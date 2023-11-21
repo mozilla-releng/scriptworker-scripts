@@ -90,7 +90,7 @@ clouds:
               devedition:
                 name: 'mozilla'
                 location: 'us'
-                project: 'moz-fx-productdelivery-no-7d6a'
+                project: 'moz-fx-productdelivery-pr-38b5'
               firefox:
                 name: 'mozilla'
                 location: 'us'
@@ -106,7 +106,7 @@ clouds:
               devedition:
                 name: 'mozilla'
                 location: 'us'
-                project: 'moz-fx-productdelivery-no-7d6a'
+                project: 'moz-fx-productdelivery-pr-38b5'
               firefox:
                 name: 'mozilla'
                 location: 'us'
