@@ -4,6 +4,7 @@
 import contextlib
 import logging
 import os
+import socket
 
 from scriptworker import artifacts, client
 from scriptworker.exceptions import TaskVerificationError
@@ -49,6 +50,9 @@ async def async_main(context):
 
     log.info("Delegating publication to mozapkpublisher...")
     with contextlib.ExitStack() as stack:
+        # googleapiclient sets a default timeout of 60s, which doesn't appear to be enough for fenix AAB uploads, so make it 5 minutes
+        socket.setdefaulttimeout(300)
+
         files = [stack.enter_context(open(apk_file_name)) for apk_file_name in all_apks_paths]
         publish.publish(product_config, publish_config, files, contact_server)
         files = [stack.enter_context(open(aab_file_name)) for aab_file_name in all_aabs_paths]
