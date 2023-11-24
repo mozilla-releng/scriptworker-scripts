@@ -16,7 +16,7 @@ async def noop_async(*args, **kwargs):
 @pytest.mark.parametrize("dontbuild, ignore_closed_tree", ((True, True), (False, False)))
 def test_build_commit_message(dontbuild, ignore_closed_tree):
     """build_commit_message adds the correct approval strings"""
-    expected = "no bug - DESCRIPTION r=release a=android_l10n-import"
+    expected = "no bug - DESCRIPTION r=release a=l10n"
     if dontbuild:
         expected += android_l10n.DONTBUILD_MSG
     if ignore_closed_tree:
@@ -45,6 +45,16 @@ locales = [
     mocker.patch.object(os.path, "exists", return_value=True)
 
     assert android_l10n.get_android_l10n_files_toml("path") == []
+    assert android_l10n.get_android_l10n_files_toml("path", "search_path") == []
+    mocker.patch.object(android_l10n.paths, "ProjectFiles", return_value=[("l10n-path", "ref-path", "unused", "unused")])
+    assert android_l10n.get_android_l10n_files_toml("path") == [
+        {"abs_path": "l10n-path", "rel_path": "l10n-path"},
+        {"abs_path": "l10n-path", "rel_path": "l10n-path"},
+    ]
+    assert android_l10n.get_android_l10n_files_toml("path", "search_path") == [
+        {"abs_path": "l10n-path", "rel_path": "../l10n-path"},
+        {"abs_path": "l10n-path", "rel_path": "../l10n-path"},
+    ]
 
 
 # copy_android_l10n_files {{{1
@@ -113,6 +123,7 @@ async def test_android_l10n_import_closed_tree(mocker):
 
     mocker.patch.object(android_l10n, "get_dontbuild", return_value=False)
     mocker.patch.object(android_l10n, "get_ignore_closed_tree", return_value=False)
+    mocker.patch.object(android_l10n, "get_short_source_repo", return_value="mozilla-central")
     mocker.patch.object(android_l10n, "check_treestatus", new=check_treestatus)
     mocker.patch.object(android_l10n, "run_command")
     # this will [intentionally] break if we fail to exit android_l10n_import where
@@ -177,6 +188,7 @@ async def test_android_l10n_sync_closed_tree(mocker):
 
     mocker.patch.object(android_l10n, "get_dontbuild", return_value=False)
     mocker.patch.object(android_l10n, "get_ignore_closed_tree", return_value=False)
+    mocker.patch.object(android_l10n, "get_short_source_repo", return_value="mozilla-central")
     mocker.patch.object(android_l10n, "check_treestatus", new=check_treestatus)
     mocker.patch.object(android_l10n, "vcs", new=AsyncMock())
     # this will [intentionally] break if we fail to exit android_l10n_sync where

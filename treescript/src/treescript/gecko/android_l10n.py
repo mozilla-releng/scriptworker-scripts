@@ -13,7 +13,7 @@ from scriptworker_client.utils import run_command
 
 from treescript.exceptions import CheckoutError
 from treescript.gecko import mercurial as vcs
-from treescript.util.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_android_l10n_import_info, get_android_l10n_sync_info
+from treescript.util.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_android_l10n_import_info, get_android_l10n_sync_info, get_short_source_repo
 from treescript.util.treestatus import check_treestatus
 
 log = logging.getLogger(__name__)
@@ -85,7 +85,7 @@ def build_commit_message(description, dontbuild=False, ignore_closed_tree=False)
         str: the commit message
 
     """
-    approval_str = "r=release a=android_l10n-import"
+    approval_str = "r=release a=l10n"
     if dontbuild:
         approval_str += DONTBUILD_MSG
     if ignore_closed_tree:
@@ -116,7 +116,8 @@ async def android_l10n_action(config, task, task_info, repo_path, from_repo_path
     ignore_closed_tree = get_ignore_closed_tree(task)
     if not ignore_closed_tree:
         if not await check_treestatus(config, task):
-            log.info("Treestatus is closed; skipping android-l10n action.")
+            tree = get_short_source_repo(task)
+            log.info(f"Treestatus reports {tree} is closed; skipping android-l10n action.")
             return 0
 
     dontbuild = get_dontbuild(task)
