@@ -93,7 +93,7 @@ async def test_android_l10n_import(mocker, ignore_closed_tree, android_l10n_impo
     mocker.patch.object(android_l10n, "get_ignore_closed_tree", return_value=ignore_closed_tree)
     mocker.patch.object(android_l10n, "check_treestatus", new=check_treestatus)
     mocker.patch.object(android_l10n, "get_android_l10n_import_info", return_value=android_l10n_import_info)
-    mocker.patch.object(android_l10n, "subprocess")
+    mocker.patch.object(android_l10n, "run_command")
     mocker.patch.object(android_l10n, "get_android_l10n_files_toml")
     mocker.patch.object(android_l10n, "copy_android_l10n_files")
     mocker.patch.object(android_l10n, "vcs", new=AsyncMock())
@@ -114,7 +114,7 @@ async def test_android_l10n_import_closed_tree(mocker):
     mocker.patch.object(android_l10n, "get_dontbuild", return_value=False)
     mocker.patch.object(android_l10n, "get_ignore_closed_tree", return_value=False)
     mocker.patch.object(android_l10n, "check_treestatus", new=check_treestatus)
-    mocker.patch.object(android_l10n, "subprocess")
+    mocker.patch.object(android_l10n, "run_command")
     # this will [intentionally] break if we fail to exit android_l10n_import where
     # we're supposed to
     mocker.patch.object(android_l10n, "get_android_l10n_import_info", return_value={"from_repo_url": "x"})

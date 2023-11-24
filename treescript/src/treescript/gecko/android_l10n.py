@@ -5,12 +5,13 @@ import asyncio
 import logging
 import os
 import shutil
-import subprocess
 import tempfile
 from compare_locales import parser, paths
 
 from scriptworker_client.aio import retry_async
+from scriptworker_client.utils import run_command
 
+from treescript.exceptions import CheckoutError
 from treescript.gecko import mercurial as vcs
 from treescript.util.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_android_l10n_import_info, get_android_l10n_sync_info
 from treescript.util.treestatus import check_treestatus
@@ -163,7 +164,7 @@ async def android_l10n_import(config, task, repo_path):
     try:
         from_repo_url = task_info["from_repo_url"]
         cmd = ["git", "clone", from_repo_url, from_repo_path]
-        subprocess.run(cmd, text=True, check=True)
+        await run_command(cmd, exception=CheckoutError)
         search_path = None
         changes = await android_l10n_action(config, task, task_info, repo_path, from_repo_path, description, search_path, None, "dest_path")
     finally:
