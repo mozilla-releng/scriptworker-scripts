@@ -200,12 +200,13 @@ async def test_checkout_repo(config, task, mocker, branch):
         assert is_slice_in_list(calls.pop(0), args)
 
     mocker.patch.object(mercurial, "run_hg_command", new=check_params)
-    mocker.patch.object(mercurial, "get_source_repo").return_value = "https://hg.mozilla.org/test-repo"
 
     config["hg_share_base_dir"] = "/builds/hg-shared-test"
     config["upstream_repo"] = "https://hg.mozilla.org/mozilla-test-unified"
 
-    await mercurial.checkout_repo(config, task, config["work_dir"])
+    source_repo = "https://hg.mozilla.org/test-repo"
+
+    await mercurial.checkout_repo(config, task, source_repo, config["work_dir"])
 
 
 # do_tagging {{{1

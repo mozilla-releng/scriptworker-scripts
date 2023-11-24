@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 # human reference.
 VALID_ACTIONS = {
     "comm": {"tag", "version_bump", "l10n_bump", "push", "merge_day"},
-    "gecko": {"tag", "version_bump", "l10n_bump", "push", "merge_day"},
+    "gecko": {"tag", "version_bump", "l10n_bump", "push", "merge_day", "android_l10n_import", "android_l10n_sync"},
     "mobile": {"version_bump"},
 }
 
@@ -143,10 +143,10 @@ def get_version_bump_info(task):
         task: the task definition.
 
     Returns:
-        object: the tag info structure as passed to the task payload.
+        object: the info structure as passed to the task payload.
 
     Raises:
-        TaskVerificationError: If run without tag_info in task definition.
+        TaskVerificationError: If expected item missing from task definition.
 
     """
     version_info = task.get("payload", {}).get("version_bump_info")
@@ -163,16 +163,56 @@ def get_l10n_bump_info(task, raise_on_empty=True):
         task: the task definition.
 
     Returns:
-        object: the tag info structure as passed to the task payload.
+        object: the info structure as passed to the task payload.
 
     Raises:
-        TaskVerificationError: If run without tag_info in task definition.
+        TaskVerificationError: If expected item missing from task definition.
 
     """
     l10n_bump_info = task.get("payload", {}).get("l10n_bump_info")
     if not l10n_bump_info and raise_on_empty:
         raise TaskVerificationError("Requested l10n bump but no l10n_bump_info in payload")
     return l10n_bump_info
+
+
+# get_android_l10n_import_info {{{1
+def get_android_l10n_import_info(task, raise_on_empty=True):
+    """Get the android-l10n import information from the task metadata.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        object: the info structure as passed to the task payload.
+
+    Raises:
+        TaskVerificationError: If expected item missing from task definition.
+
+    """
+    android_l10n_import_info = task.get("payload", {}).get("android_l10n_import_info")
+    if not android_l10n_import_info and raise_on_empty:
+        raise TaskVerificationError("Requested android-l10n import but no android_l10n_import_info in payload")
+    return android_l10n_import_info
+
+
+# get_android_l10n_sync_info {{{1
+def get_android_l10n_sync_info(task, raise_on_empty=True):
+    """Get the android-l10n sync information from the task metadata.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        object: the info structure as passed to the task payload.
+
+    Raises:
+        TaskVerificationError: If expected item missing from task definition.
+
+    """
+    android_l10n_sync_info = task.get("payload", {}).get("android_l10n_sync_info")
+    if not android_l10n_sync_info and raise_on_empty:
+        raise TaskVerificationError("Requested android-l10n sync but no android_l10n_sync_info in payload")
+    return android_l10n_sync_info
 
 
 # get dontbuild {{{1

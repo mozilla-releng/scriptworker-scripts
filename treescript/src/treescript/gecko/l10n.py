@@ -17,7 +17,8 @@ from scriptworker_client.exceptions import DownloadError
 from scriptworker_client.utils import load_json_or_yaml
 
 from treescript.gecko import mercurial as vcs
-from treescript.util.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_l10n_bump_info, get_short_source_repo
+from treescript.util.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_l10n_bump_info
+from treescript.util.treestatus import check_treestatus
 
 log = logging.getLogger(__name__)
 
@@ -183,30 +184,6 @@ def build_commit_message(name, locale_map, dontbuild=False, ignore_closed_tree=F
     message = "no bug - Bumping %s %s\n\n" % (name, approval_str)
     message += comments
     return message
-
-
-# check_treestatus {{{1
-async def check_treestatus(config, task):
-    """Return True if we can land based on treestatus.
-
-    Args:
-        config (dict): the running config
-        task (dict): the running task
-
-    Returns:
-        bool: ``True`` if the tree is open.
-
-    """
-    tree = get_short_source_repo(task)
-    url = "%s/trees/%s" % (config["treestatus_base_url"], tree)
-    path = os.path.join(config["work_dir"], "treestatus.json")
-    await retry_async(download_file, args=(url, path), retry_exceptions=(DownloadError,))
-
-    treestatus = load_json_or_yaml(path, is_path=True)
-    if treestatus["result"]["status"] != "closed":
-        log.info("treestatus is %s - assuming we can land", repr(treestatus["result"]["status"]))
-        return True
-    return False
 
 
 # l10n_bump {{{1
