@@ -15,6 +15,9 @@ case ${PROJECT_NAME} in
     tree|signing)
         POLL_DURATION=3480 # 58 minutes
         ;;
+    beetmover)
+        POLL_DURATION=1680 # 28 minutes
+        ;;
     *)
         POLL_DURATION=1080 # 18 minutes
         ;;

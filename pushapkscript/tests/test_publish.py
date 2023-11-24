@@ -17,8 +17,7 @@ class PublishTest(unittest.TestCase):
             "dry_run": True,
             "google_track": "beta",
             "package_names": ["org.mozilla.fennec_aurora"],
-            "username": "service_account",
-            "secret": "/google_credentials.p12",
+            "secret": "/google_credentials.json",
         }
         self.apks = [MockFile("/path/to/x86.apk"), MockFile("/path/to/arm_v15.apk")]
         self.aabs = [MockFile("/path/to/aab1.aab"), MockFile("/path/to/aab2.aab")]
@@ -28,8 +27,7 @@ class PublishTest(unittest.TestCase):
 
         mock_push_apk.assert_called_with(
             apks=[MockFile("/path/to/x86.apk"), MockFile("/path/to/arm_v15.apk")],
-            username="service_account",
-            secret="/google_credentials.p12",
+            secret="/google_credentials.json",
             track="beta",
             expected_package_names=["org.mozilla.fennec_aurora"],
             rollout_percentage=None,
@@ -46,8 +44,7 @@ class PublishTest(unittest.TestCase):
 
         mock_push_aab.assert_called_with(
             aabs=[MockFile("/path/to/aab1.aab"), MockFile("/path/to/aab2.aab")],
-            username="service_account",
-            secret="/google_credentials.p12",
+            secret="/google_credentials.json",
             track="beta",
             rollout_percentage=None,
             dry_run=True,
@@ -61,8 +58,7 @@ class PublishTest(unittest.TestCase):
             "google_track": "production",
             "google_rollout_percentage": 10,
             "package_names": ["org.mozilla.fennec_aurora"],
-            "username": "service_account",
-            "secret": "/google_credentials.p12",
+            "secret": "/google_credentials.json",
         }
         publish({}, publish_config, self.apks, contact_server=True)
         _, args = mock_push_apk.call_args
@@ -75,8 +71,7 @@ class PublishTest(unittest.TestCase):
             "google_track": "production",
             "google_rollout_percentage": 10,
             "package_names": ["org.mozilla.fennec_aurora"],
-            "username": "service_account",
-            "secret": "/google_credentials.p12",
+            "secret": "/google_credentials.json",
         }
         publish_aab({}, publish_config, self.aabs, contact_server=True)
         _, args = mock_push_aab.call_args
@@ -119,8 +114,7 @@ class PublishTest(unittest.TestCase):
             "dry_run": True,
             "google_track": "beta",
             "package_names": ["org.mozilla.focus", "org.mozilla.klar"],
-            "username": "service_account",
-            "secret": "/google_credentials.p12",
+            "secret": "/google_credentials.json",
         }
         publish({}, publish_config, self.apks, contact_server=True)
         _, args = mock_push_apk.call_args
@@ -132,8 +126,7 @@ class PublishTest(unittest.TestCase):
             "dry_run": False,
             "google_track": "beta",
             "package_names": ["org.mozilla.focus", "org.mozilla.klar"],
-            "username": "service_account",
-            "secret": "/google_credentials.p12",
+            "secret": "/google_credentials.json",
         }
         publish({}, publish_config, self.apks, contact_server=True)
         _, args = mock_push_apk.call_args
@@ -144,8 +137,7 @@ class PublishTest(unittest.TestCase):
             "dry_run": False,
             "google_track": "beta",
             "package_names": ["org.mozilla.focus", "org.mozilla.klar"],
-            "username": "service_account",
-            "secret": "/google_credentials.p12",
+            "secret": "/google_credentials.json",
         }
         publish_aab({}, publish_config, self.aabs, contact_server=True)
         _, args = mock_push_aab.call_args

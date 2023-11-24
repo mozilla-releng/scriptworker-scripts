@@ -68,15 +68,11 @@
                         "type": "object",
                         "additionalProperties": false,
                         "required": [
-                            "service_account",
                             "credentials_file",
                             "package_names"
                         ],
                         "properties": {
                             "certificate_alias": {
-                                "type": "string"
-                            },
-                            "service_account": {
                                 "type": "string"
                             },
                             "credentials_file": {
@@ -103,9 +99,6 @@
                                 "certificate_alias": {
                                     "type": "string"
                                 },
-                                "service_account": {
-                                    "type": "string"
-                                },
                                 "credentials_file": {
                                     "type": "string"
                                 },
@@ -121,15 +114,11 @@
                                     "type": "object",
                                     "required": [
                                         "default_track",
-                                        "service_account",
                                         "credentials_file"
                                     ],
                                     "additionalProperties": false,
                                     "properties": {
                                         "default_track": {
-                                            "type": "string"
-                                        },
-                                        "service_account": {
                                             "type": "string"
                                         },
                                         "credentials_file": {
