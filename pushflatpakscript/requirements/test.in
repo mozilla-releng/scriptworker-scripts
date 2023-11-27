@@ -1,7 +1,6 @@
 -r base.in
 
 black
-platformdirs<4 # Because of https://github.com/pypa/virtualenv/issues/2666
 check-manifest
 coverage>=4.2b1
 flake8
