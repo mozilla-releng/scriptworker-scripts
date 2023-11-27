@@ -552,8 +552,16 @@ def test_check_version_matches_nightly_regex(version, product, raises):
             ("thunderbird-nightly-latest", "/thunderbird/nightly/latest-comm-central/thunderbird-63.0a1.en-US.linux-x86_64.tar.bz2", False),
             ("thunderbird-nightly-msi-latest-l10n-ssl", "/thunderbird/nightly/latest-comm-central-l10n/thunderbird-63.0a1.:lang.win64.installer.exe", True),
             ("thunderbird-nightly-latest-l10n", "/thunderbird/nightly/latest-comm-central-l10n/thunderbird-63.0a1.:lang.win32.installer.exe", False),
-            ("thunderbird-nightly-latest-l10n", "/thunderbird/candidates/latest-comm-central-l10n/thunderbird-63.0a1.:lang.win32.installer.exeexe", True),
-            ("thunderbird-nightly-latest-l10n", "/mobile/nightly/latest-comm-central-l10n/thunderbird-63.0a1.:lang.win32.installer.exeexe", True),
+            ("thunderbird-nightly-latest-l10n", "/thunderbird/candidates/latest-comm-central-l10n/thunderbird-63.0a1.:lang.win32.installer.exe", True),
+            ("thunderbird-nightly-latest-l10n", "/mobile/nightly/latest-comm-central-l10n/thunderbird-63.0a1.:lang.win32.installer.exe", True),
+            ("firefox-nightly-latest", "/firefox/nightly/latest-try-l10n/firefox-63.0a1.:lang.linux-i686.tar.bz2", False),
+            ("firefox-nightly-msi-latest-l10n-ssl", "/firefox/nightly/latest-try-l10n/firefox-63.0a1.:lang.win64.installer.msi", False),
+            ("firefox-nightly-msi-latest-ssl", "/firefox/nightly/latest-try/firefox-63.0a1.en-US.win64.installer.msi", False),
+            ("firefox-nightly-pkg-latest-l10n-ssl", "/firefox/nightly/latest-try-l10n/firefox-63.0a1.:lang.mac.pkg", False),
+            ("firefox-nightly-pkg-latest-ssl", "/firefox/nightly/latest-try/firefox-63.0a1.en-US.mac.pkg", False),
+            ("firefox-nightly-latest-l10n-ssl", "/firefox/nightly/latest-try-l10n/firefox-63.0a1.:lang.win64.installer.exe", False),
+            ("firefox-nightly-latest-ssl", "/firefox/nightly/latest-try/firefox-63.0a1.en-US.win32.installer.exe", False),
+            ("firefox-nightly-latest-l10n", "/firefox/nightly/latest-try-l10n/firefox-63.0a1.:lang.win32.installer.exe", False),
         )
     ),
 )

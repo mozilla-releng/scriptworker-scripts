@@ -2,6 +2,7 @@ work_dir: { "$eval": "WORK_DIR" }
 artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
+require_successive_versions: { "$eval": "ENV == 'prod'" }
 bouncer_config:
   $merge:
     $match:
