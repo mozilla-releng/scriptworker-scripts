@@ -23,7 +23,7 @@ for dir in $DIRS; do
     fi
     echo $ARGS
     pushd "$dir"
-    pip-compile-multi -o "$SUFFIX" $ARGS
+    pip-compile-multi -u -o "$SUFFIX" $ARGS
     chmod 644 requirements/*.txt
     popd
 done
