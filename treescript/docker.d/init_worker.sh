@@ -40,7 +40,7 @@ case $COT_PRODUCT in
     test_var_set 'SSH_KEY'
     export REPO_TYPE="hg"
     export TRUST_DOMAIN="comm"
-    export UPSTREAM_REPO=""
+    export UPSTREAM_REPO="https://hg.mozilla.org/comm-unified"
     export MERGE_DAY_CLOBBER_FILE=""
     ;;
   *)
