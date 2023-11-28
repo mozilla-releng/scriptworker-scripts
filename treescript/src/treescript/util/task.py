@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 # human reference.
 VALID_ACTIONS = {
     "comm": {"tag", "version_bump", "l10n_bump", "push", "merge_day"},
-    "gecko": {"tag", "version_bump", "l10n_bump", "push", "merge_day", "android_l10n_import", "android_l10n_sync"},
+    "gecko": {"tag", "version_bump", "l10n_bump", "push", "merge_day", "android_l10n_import", "android_l10n_sync", "android_nimbus_update"},
     "mobile": {"version_bump"},
 }
 
@@ -213,6 +213,26 @@ def get_android_l10n_sync_info(task, raise_on_empty=True):
     if not android_l10n_sync_info and raise_on_empty:
         raise TaskVerificationError("Requested android-l10n sync but no android_l10n_sync_info in payload")
     return android_l10n_sync_info
+
+
+# get_android_nimbus_update_info {{{1
+def get_android_nimbus_update_info(task, raise_on_empty=True):
+    """Get the android nimbus update information from the task metadata.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        object: the info structure as passed to the task payload.
+
+    Raises:
+        TaskVerificationError: If expected item missing from task definition.
+
+    """
+    android_nimbus_info = task.get("payload", {}).get("android_nimbus_update_info")
+    if not android_nimbus_info and raise_on_empty:
+        raise TaskVerificationError("Requested android nimbus but no android_nimbus_update_info in payload")
+    return android_nimbus_info
 
 
 # get dontbuild {{{1

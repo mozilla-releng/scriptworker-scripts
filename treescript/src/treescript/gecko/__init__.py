@@ -5,6 +5,7 @@ from treescript.gecko import mercurial as vcs
 from treescript.gecko.android_l10n import android_l10n_import, android_l10n_sync
 from treescript.gecko.l10n import l10n_bump
 from treescript.gecko.merges import do_merge
+from treescript.gecko.nimbus import android_nimbus_update
 from treescript.gecko.versionmanip import bump_version
 from treescript.exceptions import TreeScriptError
 from treescript.util.task import get_source_repo, should_push, task_action_types
@@ -71,6 +72,8 @@ async def do_actions(config, task):
         num_changes += await android_l10n_import(config, task, repo_path)
     if "android_l10n_sync" in actions:
         num_changes += await android_l10n_sync(config, task, repo_path)
+    if "android_nimbus_update" in actions:
+        num_changes += await android_nimbus_update(config, task, repo_path)
 
     num_outgoing = await vcs.log_outgoing(config, task, repo_path)
     if num_outgoing != num_changes:

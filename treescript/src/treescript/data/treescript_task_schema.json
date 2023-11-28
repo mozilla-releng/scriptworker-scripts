@@ -246,6 +246,38 @@
                         "toml_info"
                     ]
                 },
+                "android_nimbus_update_info": {
+                    "type": "object",
+                    "properties": {
+                        "updates": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "app_name": {
+                                        "type": "string"
+                                    },
+                                    "experiments_path": {
+                                        "type": "string"
+                                    },
+                                    "experiments_url": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "app_name",
+                                    "experiments_path",
+                                    "experiments_url"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "updates"
+                    ]
+                },
                 "l10n_bump_info": {
                     "type": "array",
                     "minItems": 1,
@@ -320,6 +352,7 @@
                             "merge_day",
                             "android_l10n_import",
                             "android_l10n_sync",
+                            "android_nimbus_update",
                             "push"
                         ]
                     }
