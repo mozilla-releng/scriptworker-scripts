@@ -4,7 +4,7 @@ RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
 
 RUN apt-get update \
- && apt-get install -y mercurial \
+ && apt-get install -y jq mercurial \
  && apt-get clean \
  && ln -s /app/docker.d/healthcheck /bin/healthcheck
 
