@@ -234,6 +234,8 @@ clouds:
             product_buckets:
               devedition: 'net-mozaws-stage-delivery-archive'
               firefox:    'net-mozaws-stage-delivery-firefox'
+              fenix:      'net-mozaws-stage-delivery-archive'
+              focus:      'net-mozaws-stage-delivery-archive'
           maven-staging:
             fail_task_on_error: True
             enabled: True
