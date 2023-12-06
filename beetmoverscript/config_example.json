@@ -40,15 +40,6 @@
                 "devedition": "mozilla-releng-mobile-dep-bucket"
             },
             "url_prefix": "http://ftp.stage.mozaws.net"
-        },
-        "partner": {
-            "credentials": {
-                "id": "dummy",
-                "key": "dummy"
-            },
-            "buckets": {
-                "firefox": "mozilla-releng-private-firefox-bucket"
-            }
         }
     }
 }

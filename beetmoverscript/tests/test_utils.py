@@ -23,8 +23,6 @@ from beetmoverscript.utils import (
     get_product_name,
     get_releases_prefix,
     get_url_prefix,
-    is_partner_private_task,
-    is_partner_public_task,
     is_promotion_action,
     is_release_action,
     matches_exclude,
@@ -319,24 +317,6 @@ def test_get_product_name(context, appName, stage_platform, expected):
     context.task["payload"]["releaseProperties"]["appName"] = appName
     context.task["payload"]["releaseProperties"]["platform"] = stage_platform
     assert get_product_name(context.task, context.config, lowercase_app_name=False) == expected
-
-
-# is_partner_private_public_task {{{1
-@pytest.mark.parametrize(
-    "action,bucket,expected_private,expected_public",
-    (
-        ("push-to-dummy", "dep", False, False),
-        ("push-to-dummy", "prod", False, False),
-        ("push-to-partner", "dep-partner", True, False),
-        ("push-to-partner", "dep", False, True),
-    ),
-)
-def test_is_partner_private_public_task(context, action, bucket, expected_private, expected_public):
-    context.action = action
-    context.resource = bucket
-
-    assert is_partner_private_task(context) == expected_private
-    assert is_partner_public_task(context) == expected_public
 
 
 # validated_task_id {{{1

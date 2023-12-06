@@ -140,20 +140,6 @@ def is_maven_action(action):
     return action in MAVEN_ACTIONS
 
 
-def is_partner_private_task(context):
-    """Function to return boolean if we're considering a public partner task.
-    Does that by checking the action type and presence of a flag in payload
-    """
-    return is_partner_action(context.action) and "partner" in context.resource
-
-
-def is_partner_public_task(context):
-    """Function to return boolean if we're considering a private partner task.
-    Does that by checking the action type and absence of a flag in payload
-    """
-    return is_partner_action(context.action) and "partner" not in context.resource
-
-
 def get_product_name(task, config, lowercase_app_name=True):
     # importing in-function to avoid circular dependency problems
     from beetmoverscript.task import get_release_props, get_task_action
