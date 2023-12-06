@@ -6,8 +6,7 @@
         "clouds",
         "checksums_digests",
         "taskcluster_scope_prefixes",
-        "url_prefix",
-        "zip_max_file_size_in_mb"
+        "url_prefix"
     ],
     "properties": {
         "checksums_digests": {
@@ -26,9 +25,6 @@
             }
         },
         "aiohttp_max_connections": {
-            "type": "number"
-        },
-        "zip_max_file_size_in_mb": {
             "type": "number"
         },
         "url_prefix": {
