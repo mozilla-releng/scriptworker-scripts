@@ -8,7 +8,7 @@ kind-dependencies:
     - docker-image
 
 transforms:
-    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.run:transforms
     - taskgraph.transforms.task:transforms
 
 jobs:
