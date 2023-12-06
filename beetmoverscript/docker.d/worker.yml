@@ -22,7 +22,6 @@ taskcluster_scope_prefixes:
       'COT_PRODUCT == "mozillavpn"':
         - 'project:mozillavpn:releng:beetmover:'
 verbose: { "$eval": "VERBOSE == 'true'" }
-zip_max_file_size_in_mb: 300
 url_prefix:
   # we need to $merge as $match returns an array
   $merge:
