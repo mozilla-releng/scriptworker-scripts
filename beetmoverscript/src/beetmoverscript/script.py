@@ -24,9 +24,8 @@ from beetmoverscript.constants import (
     INSTALLER_ARTIFACTS,
     MIME_MAP,
     NORMALIZED_BALROG_PLATFORMS,
-    PARTNER_REPACK_PRIVATE_REGEXES,
-    PARTNER_REPACK_PUBLIC_PREFIX_TMPL,
-    PARTNER_REPACK_PUBLIC_REGEXES,
+    PARTNER_REPACK_PREFIX_TMPL,
+    PARTNER_REPACK_REGEXES,
     RELEASE_BRANCHES,
     RELEASE_EXCLUDE,
 )
@@ -62,8 +61,6 @@ from beetmoverscript.utils import (
     get_size,
     get_url_prefix,
     is_partner_action,
-    is_partner_private_task,
-    is_partner_public_task,
     is_promotion_action,
     is_release_action,
     matches_exclude,
@@ -154,9 +151,8 @@ async def direct_push_to_bucket(context):
 
 # push_to_partner {{{1
 async def push_to_partner(context):
-    """Push private repack artifacts to a certain location. They can be either
-    private (to private S3 buckets) or public (going under regular firefox
-    bucket).
+    """Push partner repack artifacts to a certain location under the regular
+    release bucket.
 
     Determine the list of artifacts to be transferred, generate the
     mapping manifest and upload the bits."""
@@ -467,13 +463,12 @@ async def move_partner_beets(context, manifest):
             if context.config["clouds"]["gcloud"][context.resource]["enabled"]:
                 cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=destination, path=source)))
 
-            if is_partner_public_task(context):
-                # we trim the full destination to the part after
-                # candidates/{version}-candidates/build{build_number}/
-                artifact_pretty_name = destination[destination.find(locale) :]
-                if context.checksums.get(artifact_pretty_name) is None:
-                    context.checksums[artifact_pretty_name] = {algo: get_hash(source, algo) for algo in context.config["checksums_digests"]}
-                    context.checksums[artifact_pretty_name]["size"] = get_size(source)
+            # we trim the full destination to the part after
+            # candidates/{version}-candidates/build{build_number}/
+            artifact_pretty_name = destination[destination.find(locale) :]
+            if context.checksums.get(artifact_pretty_name) is None:
+                context.checksums[artifact_pretty_name] = {algo: get_hash(source, algo) for algo in context.config["checksums_digests"]}
+                context.checksums[artifact_pretty_name]["size"] = get_size(source)
 
     await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.resource)
 
@@ -495,17 +490,15 @@ def sanity_check_partner_path(path, repl_dict, regexes):
 
 def get_destination_for_partner_repack_path(context, manifest, full_path, locale):
     """Function to process the final destination path, relative to the root of
-    the S3 bucket. Depending on whether it's a private or public destination, it
-    performs several string manipulations.
+    the cloud bucket.
 
     Input: 'releng/partner/ghost/ghost-var/v1/linux-i686/ro/target.tar.bz2'
-    Possible output(s):
-        -> ghost/59.0b20-2/ghost-variant/v1/linux-i686/en-US/firefox-59.0b20.tar.bz2
+    Output:
         -> pub/firefox/candidates/59.0b20-candidates/build2/partner-repacks/ghost/ghost-variant/v1/linux-i686/en-US/firefox-59.0b20.tar.bz2
     """
-    # make sure we're calling this function from private-partner context
+    # make sure we're calling this function from partner context
     if not is_partner_action(context.action):
-        raise ScriptWorkerRetryException("Outside of private-partner context!")
+        raise ScriptWorkerRetryException("Outside of partner context!")
 
     # pretty name the `target` part to the actual filename
     pretty_full_path = os.path.join(locale, manifest["mapping"][locale][os.path.basename(full_path)])
@@ -513,13 +506,9 @@ def get_destination_for_partner_repack_path(context, manifest, full_path, locale
     build_number = context.task["payload"]["build_number"]
     version = context.task["payload"]["version"]
 
-    if is_partner_private_task(context):
-        sanity_check_partner_path(locale, {"version": version, "build_number": build_number}, PARTNER_REPACK_PRIVATE_REGEXES)
-        return pretty_full_path
-    elif is_partner_public_task(context):
-        sanity_check_partner_path(locale, {"version": version, "build_number": build_number}, PARTNER_REPACK_PUBLIC_REGEXES)
-        prefix = PARTNER_REPACK_PUBLIC_PREFIX_TMPL.format(version=version, build_number=build_number)
-        return os.path.join(prefix, pretty_full_path)
+    sanity_check_partner_path(locale, {"version": version, "build_number": build_number}, PARTNER_REPACK_REGEXES)
+    prefix = PARTNER_REPACK_PREFIX_TMPL.format(version=version, build_number=build_number)
+    return os.path.join(prefix, pretty_full_path)
 
 
 # generate_system_addons_balrog_manifest {{{1
