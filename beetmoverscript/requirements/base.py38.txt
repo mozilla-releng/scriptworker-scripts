@@ -974,9 +974,9 @@ s3transfer==0.8.0 \
     --hash=sha256:baa479dc2e63e5c2ed51611b4d46cdf0295e2070d8d0b86b22f335ee5b954986 \
     --hash=sha256:e8d6bd52ffd99841e3a57b34370a54841f12d3aab072af862cdcc50955288002
     # via boto3
-scriptworker==49.0.0 \
-    --hash=sha256:1fdd902efe541196034158eeff8f1e8eaaad82c352a3c4cd064c2a4ddb881ea0 \
-    --hash=sha256:c9da06a9e23af3f85811125eaf7801d4a23b441183532b43b4fb8ba41bfc10fc
+scriptworker==49.1.0 \
+    --hash=sha256:4e19d1474be2621dcca55dda74de1f42a3266878f54c481e596bf4b58082e782 \
+    --hash=sha256:ffbdf092e005c501bfe43d7055f19cf30833d56e14ac758359560f16d05403ea
     # via -r requirements/base.in
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
