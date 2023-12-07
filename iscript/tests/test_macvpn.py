@@ -41,6 +41,7 @@ async def test_create_pkg_files(mocker, tmp_path):
     mocker.patch.object(macvpn, "copy2", new=noop_sync)
     mocker.patch.object(macvpn.os, "remove", new=noop_sync)
     mocker.patch.object(macvpn.os, "mkdir", new=noop_sync)
+    mocker.patch.object(macvpn, "_create_pkg_plist", new=noop_async)
 
     config = {"work_dir": tmp_path}
     sign_config = {"signing_keychain": "1", "base_bundle_id": "1"}

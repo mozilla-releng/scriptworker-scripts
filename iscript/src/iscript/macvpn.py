@@ -133,7 +133,7 @@ async def _create_pkg_plist(root_path, plist_path, **kwargs):
 
     # Load the plist file.
     with open(plist_path, "rb") as fp:
-        data = plistlib(fp)
+        data = plistlib.load(fp)
 
     # Apply changes.
     for i in range(len(data)):
