@@ -6,6 +6,17 @@ Supported scope prefixes:
 * `project:comm:thunderbird:releng:beetmover`
   * Used for Thunderbird style beetmover tasks
 
+* `project:mozillavpn:releng:beetmover`
+  * Used for Mozilla VPN beetmover tasks
+
+* `project:mozilla:app-services:releng:beetmover`
+  * Used for Application-Services beetmover tasks
+
+* `project:mozilla:glean:releng:beetmover`
+  * Used for Glean beetmover tasks
+
+* `project:xpi:beetmover`
+  * Used for mozilla-extensions beetmover tasks
 
 # Scopes
 * `{scope_prefix}:action:push-to-candidates`
