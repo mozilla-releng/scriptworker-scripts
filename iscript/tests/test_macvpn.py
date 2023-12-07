@@ -2,6 +2,8 @@
 # coding=utf-8
 """Test iscript.mac
 """
+import os
+import plistlib
 import pytest
 
 import iscript.macvpn as macvpn
@@ -33,6 +35,29 @@ async def test_codesign(mocker):
     sign_config = {"identity": "1", "signing_keychain": "1"}
     await macvpn._codesign(sign_config, "fake/path")
 
+@pytest.mark.asyncio
+async def test_create_pkg_plist(mocker, tmp_path):
+    async def _pkgbuild_analyze_async(cmd, **kwargs):
+        outfile = cmd[-1]
+        testplist = [{
+            "BundleIsRelocatable": True,
+            "BundleHasStrictIdentifier": True,
+            "BundleIsVersionChecked": True
+        }]
+        with open(outfile, "wb") as fp:
+            plistlib.dump(testplist, fp)
+
+    mocker.patch.object(macvpn, "run_command", new=_pkgbuild_analyze_async)
+
+    app = App(app_name="mock.app", parent_dir=os.path.join(tmp_path, "Applications"))
+    plist_path = os.path.join(tmp_path, "component.plist")
+
+    await macvpn._create_pkg_plist(tmp_path, plist_path, BundleIsRelocatable=False)
+    with open(plist_path, "rb") as fp:
+        x = plistlib.load(fp)
+        assert len(x) == 1
+        assert x[0]['BundleIsRelocatable'] == False
+    
 
 @pytest.mark.asyncio
 async def test_create_pkg_files(mocker, tmp_path):
