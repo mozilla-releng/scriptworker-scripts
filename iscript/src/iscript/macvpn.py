@@ -3,6 +3,7 @@
 
 import logging
 import os
+import plistlib
 from pathlib import Path
 from shutil import copy2, copytree
 
@@ -110,6 +111,37 @@ async def _codesign(sign_config, binary_path):
         retry_exceptions=(IScriptError,),
     )
 
+async def _create_pkg_plist(root_path, plist_path, **kwargs):
+    """Generate the component plist file for a Mac application bundle.
+
+    This runs pkgbuild --analyze to generate a template plist, and then
+    updates it with values provided by the kwargs.
+
+    Args:
+        root_path (str): Root directory tree to be packaged.
+        plist_path (str): File path where the plist should be written.
+        kwargs: Values to be set in the component plist.
+
+    Raises:
+        IScriptError: on failure
+    """
+    # Analyze the root to be packaged to generate a template plist.
+    await run_command(
+        ["pkgbuild", "--analyze", "--root", root_path, plist_path],
+        exception=IScriptError,
+    )
+
+    # Load the plist file.
+    with open(plist_path, "rb") as fp:
+        data = plistlib.load(fp)
+
+    # Apply changes.
+    for i in range(len(data)):
+        data[i].update(kwargs)
+
+    # Write out.
+    with open(plist_path, "wb") as fp:
+        plistlib.dump(data, fp)
 
 async def _create_pkg_files(config, sign_config, app):
     """Create .pkg installer from the .app file.
@@ -145,6 +177,10 @@ async def _create_pkg_files(config, sign_config, app):
 
     copytree(app.app_path, os.path.join(root_path, "Mozilla VPN.app"))
 
+    # Generate the component plist.
+    component_plist_path = os.path.join(config["work_dir"], "component.plist")
+    await _create_pkg_plist(root_path, component_plist_path, BundleIsRelocatable=False)
+
     cmd_opts = []
     if sign_config.get("pkg_cert_id"):
         cmd_opts = ["--keychain", sign_config["signing_keychain"], "--sign", sign_config["pkg_cert_id"]]
@@ -161,6 +197,8 @@ async def _create_pkg_files(config, sign_config, app):
         os.path.join(app.parent_dir, "scripts"),
         "--root",
         root_path,
+        "--component-plist",
+        component_plist_path,
         app.pkg_path,
     )
 
