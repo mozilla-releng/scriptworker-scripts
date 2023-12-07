@@ -126,14 +126,10 @@ async def _create_pkg_plist(root_path, plist_path, **kwargs):
         IScriptError: on failure
     """
     # Analyze the root to be packaged to generate a template plist.
-    analyze_cmd = [
-        "pkgbuild",
-        "--analyze",
-        "--root",
-        root_path,
-        plist_path,
-    ]
-    await _retry_async_cmd(analyze_cmd)
+    await run_command(
+        ["pkgbuild", "--analyze", "--root", root_path, plist_path],
+        exception=IScriptError,
+    )
 
     # Load the plist file.
     with open(plist_path, "rb") as fp:
