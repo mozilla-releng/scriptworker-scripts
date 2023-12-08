@@ -156,8 +156,8 @@ def get_bundle_executable(appdir):
         KeyError: if the plist doesn't include ``CFBundleIdentifier``
 
     """
-    return plistlib.readPlist(os.path.join(appdir, "Contents", "Info.plist"))["CFBundleExecutable"]
-
+    with open(os.path.join(appdir, "Contents", "Info.plist"), "rb") as fp:
+        return plistlib.load(fp)["CFBundleExecutable"]
 
 # _get_sign_command {{{1
 def _get_sign_command(identity, keychain, sign_config, file_=None, entitlements_path=None):
