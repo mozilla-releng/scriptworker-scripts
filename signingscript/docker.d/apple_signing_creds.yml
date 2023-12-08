@@ -10,15 +10,15 @@ in:
     $match:
       'ENV == "prod" && scope_prefix':
         '${scope_prefix[0]}cert:release-signing':
-          - "app_credentials": {"$eval": "APPLE_APP_SIGNING_CREDENTIALS"}
-            "installer_credentials": {"$eval": "APPLE_INSTALLER_SIGNING_CREDENTIALS"}
-            "password": {"$eval": "APPLE_SIGNING_CREDS_PASSWORD"}
+          - "app_pkcs12_bundle": {"$eval": "APPLE_APP_SIGNING_PKCS12"}
+            "installer_pkcs12_bundle": {"$eval": "APPLE_INSTALLER_SIGNING_PKCS12"}
+            "pkcs12_password": {"$eval": "APPLE_SIGNING_PKCS12_PASSWORD"}
         '${scope_prefix[0]}cert:nightly-signing':
-          - "app_credentials": {"$eval": "APPLE_APP_SIGNING_CREDENTIALS"}
-            "installer_credentials": {"$eval": "APPLE_INSTALLER_SIGNING_CREDENTIALS"}
-            "password": {"$eval": "APPLE_SIGNING_CREDS_PASSWORD"}
+          - "app_pkcs12_bundle": {"$eval": "APPLE_APP_SIGNING_PKCS12"}
+            "installer_pkcs12_bundle": {"$eval": "APPLE_INSTALLER_SIGNING_PKCS12"}
+            "pkcs12_password": {"$eval": "APPLE_SIGNING_PKCS12_PASSWORD"}
       'ENV != "prod" && scope_prefix':
         '${scope_prefix[0]}cert:dep-signing':
-          - "app_credentials": {"$eval": "APPLE_APP_SIGNING_DEP_CREDENTIALS"}
-            "installer_credentials": {"$eval": "APPLE_INSTALLER_SIGNING_DEP_CREDENTIALS"}
-            "password": {"$eval": "APPLE_SIGNING_DEP_CREDS_PASSWORD"}
+          - "app_pkcs12_bundle": {"$eval": "APPLE_APP_SIGNING_DEP_PKCS12"}
+            "installer_pkcs12_bundle": {"$eval": "APPLE_INSTALLER_SIGNING_DEP_PKCS12"}
+            "pkcs12_password": {"$eval": "APPLE_SIGNING_DEP_PKCS12_PASSWORD"}

@@ -38,9 +38,9 @@ class AppleNotarization:
 class AppleSigning:
     """Apple signing configuration object."""
 
-    app_credentials: str
-    installer_credentials: str
-    password: str
+    app_pkcs12_bundle: str
+    installer_pkcs12_bundle: str
+    pkcs12_password: str
 
 
 def mkdir(path):

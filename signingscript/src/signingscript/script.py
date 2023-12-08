@@ -143,33 +143,33 @@ def setup_apple_signing_credentials(context):
     if len(scope_credentials) != 1:
         raise SigningScriptError("There should only be 1 scope credential, %s found." % len(scope_credentials))
 
-    context.apple_app_signing_creds_path = os.path.join(
+    context.apple_app_signing_pkcs12_path = os.path.join(
         os.path.dirname(context.config["apple_signing_configs"]),
         "apple_app_signing_creds.p12",
     )
-    unlink(context.apple_app_signing_creds_path)
-    context.apple_installer_signing_creds_path = os.path.join(
+    unlink(context.apple_app_signing_pkcs12_path)
+    context.apple_installer_signing_pkcs12_path = os.path.join(
         os.path.dirname(context.config["apple_signing_configs"]),
         "apple_installer_signing_creds.p12",
     )
-    unlink(context.apple_installer_signing_creds_path)
-    context.apple_signing_creds_pass_path = os.path.join(
+    unlink(context.apple_installer_signing_pkcs12_path)
+    context.apple_signing_pkcs12_pass_path = os.path.join(
         os.path.dirname(context.config["apple_signing_configs"]),
         "apple_signing_creds_pass.passwd",
     )
-    unlink(context.apple_signing_creds_pass_path)
+    unlink(context.apple_signing_pkcs12_pass_path)
 
     # Convert dataclass to dict so json module can read it
     creds_config = asdict(scope_credentials[0])
-    _write_text(context.apple_app_signing_creds_path, base64.b64decode(creds_config["app_credentials"]))
+    _write_text(context.apple_app_signing_pkcs12_path, base64.b64decode(creds_config["app_pkcs12_bundle"]))
 
     # Defaults to using the app credentials (ie: on Try)
-    if creds_config.get("installer_credentials"):
-        _write_text(context.apple_installer_signing_creds_path, base64.b64decode(creds_config["installer_credentials"]))
+    if creds_config.get("installer_pkcs12_bundle"):
+        _write_text(context.apple_installer_signing_pkcs12_path, base64.b64decode(creds_config["installer_pkcs12_bundle"]))
     else:
-        context.apple_installer_signing_creds_path = context.apple_app_signing_creds_path
+        context.apple_installer_signing_pkcs12_path = context.apple_app_signing_pkcs12_path
 
-    _write_text(context.apple_signing_creds_pass_path, creds_config["password"])
+    _write_text(context.apple_signing_pkcs12_pass_path, creds_config["pkcs12_password"])
 
 
 def main():

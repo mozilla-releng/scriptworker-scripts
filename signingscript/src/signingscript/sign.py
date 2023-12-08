@@ -1657,12 +1657,13 @@ async def apple_app_hardened_sign(context, path, *args, **kwargs):
     for file in os.scandir(signing_dir):
         if file.is_dir() and file.name.endswith(".app"):
             # Developer ID Application certificate
-            creds = context.apple_app_signing_creds_path
+            creds = context.apple_app_signing_pkcs12_path
         elif file.is_file() and file.name.endswith(".pkg"):
             # Use installer credentials
-            creds = context.apple_installer_signing_creds_path
+            creds = context.apple_installer_signing_pkcs12_path
         else:
             # If not pkg AND not a directory (.app) - then skip file
+            log.info(f"Skipping unsupported file at root: {file.path}")
             continue
 
         bundle_path = os.path.join(signing_dir, file.path)
@@ -1679,7 +1680,7 @@ async def apple_app_hardened_sign(context, path, *args, **kwargs):
             context.config["work_dir"],
             bundle_path,
             creds,
-            context.apple_signing_creds_pass_path,
+            context.apple_signing_pkcs12_pass_path,
             hardened_sign_config,
         )
         signed = True

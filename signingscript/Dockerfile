@@ -24,13 +24,9 @@ COPY ["version.jso[n]", "/app/"]
 # Install msix
 # Install rcodesign
 RUN chown -R app:app /app \
- && cd /app/scriptworker_client \
- && pip install /app/scriptworker_client \
- && pip install -r requirements/base.txt \
- && pip install . \
  && cd /app/signingscript/docker.d \
  && bash build_libdmg_hfsplus.sh /usr/bin \
- && bash build_rcodesign.sh /usr/bin \
+ && bash install_rcodesign.sh /usr/bin \
  && bash build_msix_packaging.sh
 
 # Set user and workdir
@@ -39,8 +35,8 @@ WORKDIR /app
 
 # Install signingscript + configloader + widevine
 RUN python -m venv /app \
- && cd signingscript \
  && /app/bin/pip install /app/scriptworker_client \
+ && cd signingscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \

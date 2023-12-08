@@ -179,8 +179,8 @@ async def test_rcodesign_sign(context, mocker):
     app_path.mkdir()
     (app_path / "samplefile").touch()
     (app_path / "samplefile2").touch()
-    context.apple_app_signing_creds_path = workdir / "test_cred.p12"
-    context.apple_signing_creds_pass_path = workdir / "test_cred.passwd"
+    context.apple_app_signing_pkcs12_path = workdir / "test_cred.p12"
+    context.apple_signing_pkcs12_pass_path = workdir / "test_cred.passwd"
     entitlement_file = workdir / "test.xml"
     entitlement_file.touch()
 
@@ -204,8 +204,8 @@ async def test_rcodesign_sign(context, mocker):
     await rcodesign.rcodesign_sign(
         context.config["work_dir"],
         str(app_path),
-        context.apple_app_signing_creds_path,
-        context.apple_signing_creds_pass_path,
+        context.apple_app_signing_pkcs12_path,
+        context.apple_signing_pkcs12_pass_path,
         hardened_sign_config,
     )
     download.assert_called_once()

@@ -59,8 +59,8 @@ def context(tmpdir):
     context.config["apple_signing_configs"] = APPLE_CONFIG_PATH
     context.autograph_configs = load_autograph_configs(SERVER_CONFIG_PATH)
     context.apple_credentials_path = os.path.join(tmpdir, "fakepath")
-    context.apple_app_signing_creds_path = os.path.join(tmpdir, "apple_app.p12")
-    context.apple_installer_signing_creds_path = os.path.join(tmpdir, "apple_installer.p12")
+    context.apple_app_signing_pkcs12_path = os.path.join(tmpdir, "apple_app.p12")
+    context.apple_installer_signing_pkcs12_path = os.path.join(tmpdir, "apple_installer.p12")
     context.apple_signing_creds_path = os.path.join(tmpdir, "apple_p12.passwd")
     mkdir(context.config["work_dir"])
     mkdir(context.config["artifact_dir"])
