@@ -19,9 +19,6 @@ def add_dependencies(config, tasks):
     discrepancies in upstream deps.
 
     """
-    if not config.params.get("push_docker_image") or config.params.get("docker_tag") != "production":
-        yield from tasks
-
     for task in tasks:
         attributes = task["attributes"]
         dependencies = task.setdefault("dependencies", {})
@@ -38,7 +35,9 @@ def add_dependencies(config, tasks):
                             new_label=dep_task.label,
                         )
                     )
-                dependencies[dep_kind] = dep_task.label
+                # don't add the actual dependency unless we're pushing the image to prod
+                if config.params.get("push_docker_image") and config.params.get("docker_tag") == "production":
+                    dependencies[dep_kind] = dep_task.label
                 if dep_attrs.get("resources"):
                     if resources and resources != dep_attrs["resources"]:
                         raise Exception(
@@ -49,7 +48,7 @@ def add_dependencies(config, tasks):
                         )
                     resources = dep_attrs["resources"]
         if resources:
-            attributes["resources"] = resources
+            task["resources"] = resources
         yield task
 
 
