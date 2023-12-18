@@ -1,19 +1,25 @@
 #!/usr/bin/env python
 """Treescript android-l10n import and sync support.
 """
-import asyncio
 import logging
 import os
 import shutil
 import tempfile
-from compare_locales import parser, paths
+from compare_locales import paths
 
-from scriptworker_client.aio import retry_async
 from scriptworker_client.utils import run_command
 
 from treescript.exceptions import CheckoutError
 from treescript.gecko import mercurial as vcs
-from treescript.util.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_android_l10n_import_info, get_android_l10n_sync_info, get_short_source_repo
+from treescript.util.task import (
+    CLOSED_TREE_MSG,
+    DONTBUILD_MSG,
+    get_dontbuild,
+    get_ignore_closed_tree,
+    get_android_l10n_import_info,
+    get_android_l10n_sync_info,
+    get_short_source_repo,
+)
 from treescript.util.treestatus import check_treestatus
 
 log = logging.getLogger(__name__)
@@ -161,15 +167,13 @@ async def android_l10n_import(config, task, repo_path):
 
     description = "Import translations from android-l10n"
     task_info = get_android_l10n_import_info(task)
-    from_repo_path = tempfile.mkdtemp()
-    try:
+    with tempfile.TemporaryDirectory() as tmp:
+        from_repo_path = os.path.join(tmp, "android-l10n-import")
         from_repo_url = task_info["from_repo_url"]
         cmd = ["git", "clone", from_repo_url, from_repo_path]
         await run_command(cmd, exception=CheckoutError)
         search_path = None
         changes = await android_l10n_action(config, task, task_info, repo_path, from_repo_path, description, search_path, None, "dest_path")
-    finally:
-        shutil.rmtree(from_repo_path, ignore_errors=True)
 
     return changes
 
@@ -196,13 +200,11 @@ async def android_l10n_sync(config, task, repo_path):
 
     description = "Merge android-l10n translations from mozilla-central"
     task_info = get_android_l10n_sync_info(task)
-    from_repo_path = tempfile.mkdtemp()
-    try:
+    with tempfile.TemporaryDirectory() as tmp:
+        from_repo_path = os.path.join(tmp, "android-l10n-sync")
         from_repo_url = task_info["from_repo_url"]
         await vcs.checkout_repo(config, task, from_repo_url, from_repo_path)
         search_path = from_repo_path
         changes = await android_l10n_action(config, task, task_info, repo_path, from_repo_path, description, search_path, from_repo_path, "toml_path")
-    finally:
-        shutil.rmtree(from_repo_path, ignore_errors=True)
 
     return changes
