@@ -104,10 +104,13 @@ def test_app_path_and_name(mocker):
 
 
 # get_bundle_executable {{{1
-def test_get_bundle_executable(mocker):
+def test_get_bundle_executable(tmpdir):
     """``get_bundle_executable`` returns the CFBundleExecutable."""
-    mocker.patch.object(plistlib, "readPlist", return_value={"CFBundleExecutable": "main"})
-    assert mac.get_bundle_executable("foo") == "main"
+    os.mkdir(os.path.join(tmpdir, "Contents"))
+    with open(os.path.join(tmpdir, "Contents", "Info.plist"), "wb") as fp:
+        plistlib.dump({ "CFBundleExecutable": "main" }, fp)
+
+    assert mac.get_bundle_executable(tmpdir) == "main"
 
 
 # sign_single_files {{{1
