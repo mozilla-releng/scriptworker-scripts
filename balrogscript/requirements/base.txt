@@ -686,9 +686,9 @@ rpds-py==0.13.1 \
     # via
     #   jsonschema
     #   referencing
-scriptworker==49.1.1 \
-    --hash=sha256:916ff0ec0f0e21ae8956ac9185caac881619772c4d1826e88954217e39dcdeb4 \
-    --hash=sha256:f5e5af3c7bd85686ec73e7fe260c45f4b9738334873f38abea53cb83dce2aedb
+scriptworker==50.0.0 \
+    --hash=sha256:08ffe00dc801fab20d2a2e984686f517683a65654f8d6cadc7e01071c7a723ae \
+    --hash=sha256:365c73a0cd8236efb0dd7c48cc3b1f24b025ee73f8c8a0ef2689ac2a4f0c3205
     # via -r requirements/base.in
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
