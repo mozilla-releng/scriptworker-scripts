@@ -26,6 +26,9 @@ case $COT_PRODUCT in
   app-services)
     export TASKCLUSTER_SCOPE_PREFIX="project:app-services:releng:ship-it:"
     ;;
+  mozillavpn)
+    export TASKCLUSTER_SCOPE_PREFIX="project:mozillavpn:releng:ship-it:"
+    ;;
   *)
     exit 1
     ;;
