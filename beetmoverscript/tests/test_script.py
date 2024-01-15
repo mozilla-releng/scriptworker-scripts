@@ -11,7 +11,7 @@ from scriptworker.exceptions import ScriptWorkerRetryException, ScriptWorkerTask
 from yarl import URL
 
 import beetmoverscript.script
-from beetmoverscript.constants import PARTNER_REPACK_PRIVATE_REGEXES, PARTNER_REPACK_PUBLIC_REGEXES
+from beetmoverscript.constants import PARTNER_REPACK_REGEXES
 from beetmoverscript.script import (
     async_main,
     copy_beets,
@@ -485,10 +485,11 @@ async def test_move_beet(update_manifest, action):
 async def test_move_partner_beets(context, mocker):
     context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
     context.release_props = get_release_props(context.task)
+    context.checksums = dict()
     mocker.patch("beetmoverscript.utils.JINJA_ENV", get_test_jinja_env())
     mapping_manifest = generate_beetmover_manifest(context)
 
-    mocker.patch.object(beetmoverscript.script, "get_destination_for_partner_repack_path", new=noop_sync)
+    mocker.patch.object(beetmoverscript.script, "get_destination_for_partner_repack_path", new=lambda *args: '')
     mocker.patch.object(beetmoverscript.script, "upload_to_s3", new=noop_async)
     mocker.patch.object(beetmoverscript.script, "upload_to_gcs", new=noop_async)
     await move_partner_beets(context, mapping_manifest)
@@ -498,13 +499,6 @@ async def test_move_partner_beets(context, mocker):
 @pytest.mark.parametrize(
     "full_path,expected,bucket,raises,locale",
     (
-        (
-            "releng/partner/foobar/target.tar.bz2",
-            "ghost/9999.0-99/ghost-variant/linux-i686/en-US/firefox-9999.0.tar.bz2",
-            "dep-partner",
-            False,
-            "ghost/9999.0-99/ghost-variant/linux-i686/en-US",
-        ),
         (
             "releng/partner/ghost/ghost-variant/en-US/target.tar.bz2",
             "pub/firefox/candidates/9999.0-candidates/build99/partner-repacks/ghost/ghost-variant/v1/linux-i686/en-US/firefox-9999.0.tar.bz2",
@@ -551,27 +545,27 @@ def test_get_destination_for_partner_repack_path(context, full_path, expected, b
 
 # sanity_check_partner_path {{{1
 @pytest.mark.parametrize(
-    "path,raises,regexes",
+    "path,raises",
     (
-        ("foo/bar", True, PARTNER_REPACK_PRIVATE_REGEXES),
-        ("foo/9999-1/bar/mac/baz", False, PARTNER_REPACK_PRIVATE_REGEXES),
-        ("../9999-1/bar/mac/baz", True, PARTNER_REPACK_PRIVATE_REGEXES),
-        ("foo/9999-1/../mac/baz", True, PARTNER_REPACK_PRIVATE_REGEXES),
-        ("foo/9999-1/bar/badplatform/baz", True, PARTNER_REPACK_PRIVATE_REGEXES),
-        ("mac-EME-free/foo", False, PARTNER_REPACK_PUBLIC_REGEXES),
-        ("badplatform-EME-free/foo", True, PARTNER_REPACK_PUBLIC_REGEXES),
-        ("partner-repacks/foo/foo-bar/v1/win32/en-US", False, PARTNER_REPACK_PUBLIC_REGEXES),
-        ("partner-repacks/foo/foo-bar/v1/badplatform/en-US", True, PARTNER_REPACK_PUBLIC_REGEXES),
-        ("partner-repacks/foo/foo-bar/v1/win32/en-US/extra", True, PARTNER_REPACK_PUBLIC_REGEXES),
+        ("foo/bar", True),
+        ("foo/9999-1/bar/mac/baz", True),
+        ("../9999-1/bar/mac/baz", True),
+        ("foo/9999-1/../mac/baz", True),
+        ("foo/9999-1/bar/badplatform/baz", True),
+        ("mac-EME-free/foo", False),
+        ("badplatform-EME-free/foo", True),
+        ("partner-repacks/foo/foo-bar/v1/win32/en-US", False),
+        ("partner-repacks/foo/foo-bar/v1/badplatform/en-US", True),
+        ("partner-repacks/foo/foo-bar/v1/win32/en-US/extra", True),
     ),
 )
-def test_sanity_check_partner_path(path, raises, regexes):
+def test_sanity_check_partner_path(path, raises):
     repl_dict = {"version": "9999", "build_number": 1}
     if raises:
         with pytest.raises(ScriptWorkerTaskException):
-            sanity_check_partner_path(path, repl_dict, regexes)
+            sanity_check_partner_path(path, repl_dict, PARTNER_REPACK_REGEXES)
     else:
-        sanity_check_partner_path(path, repl_dict, regexes)
+        sanity_check_partner_path(path, repl_dict, PARTNER_REPACK_REGEXES)
 
 
 # async_main {{{1
