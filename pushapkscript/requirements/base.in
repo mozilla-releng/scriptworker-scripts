@@ -1,2 +1,4 @@
 mozapkpublisher>=7
 scriptworker
+# Androguard has updated and causes mozapkpublisher to import a deleted item if version>=4
+androguard<4
