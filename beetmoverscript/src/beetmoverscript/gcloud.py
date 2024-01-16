@@ -213,8 +213,8 @@ async def push_to_releases_gcs(context):
                 )
             else:
                 log.debug("Excluding partner repack {}".format(blob_path))
-        # TODO: Remove this block when it's time to archive all the released .debs, we'd like to start by shipping beta and devedition.
-        elif version.is_beta:  # if we are shipping a beta build, we actually want to archive the .deb
+        # TODO: Remove this block when it's time to archive all the released .debs
+        elif not version.is_esr:  # If we are shipping a non esr build, we want to archive the .deb
             # release_exclude is RELEASE_EXCLUDE minus r"^.*\.deb$"
             release_exclude = set(RELEASE_EXCLUDE)
             release_exclude.discard(r"^.*\.deb$")
