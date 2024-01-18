@@ -64,7 +64,7 @@ def get_android_l10n_files_toml(toml_path, search_path=None):
 def copy_android_l10n_files(l10n_files, src_repo_path, dest_repo_path):
     """Copy localized files in code repository"""
 
-    log.info(f"Files to copy: {len(l10n_files)}.")
+    log.info(f"Copying {len(l10n_files)} files:")
     for l10n_file in l10n_files:
         if src_repo_path:
             src_file = os.path.join(src_repo_path, l10n_file["rel_path"])
@@ -108,7 +108,7 @@ async def android_l10n_action(config, task, task_info, repo_path, from_repo_path
         config (dict): the running config
         task (dict): the running task
         task_info (dict): the task's android_l10n_import/sync_info
-        repo_path (str): the source directory
+        repo_path (str): the destination directory
         from_repo_path (str): the source directory
         description (str): commit message description
         search_path (str): search path passed to get_android_l10n_files_toml
@@ -136,10 +136,12 @@ async def android_l10n_action(config, task, task_info, repo_path, from_repo_path
         copy_android_l10n_files(l10n_files, src_path, dest_path)
         shutil.copy2(toml_path, dest_path)
 
-    message = build_commit_message(description, dontbuild=dontbuild, ignore_closed_tree=ignore_closed_tree)
-    await vcs.commit(config, repo_path, message)
-
-    changes = 1
+    changes = 0
+    diff_output = await vcs.run_hg_command(config, "diff", repo_path=repo_path, return_output=True)
+    if diff_output:
+        message = build_commit_message(description, dontbuild=dontbuild, ignore_closed_tree=ignore_closed_tree)
+        await vcs.commit(config, repo_path, message)
+        changes = 1
 
     return changes
 
