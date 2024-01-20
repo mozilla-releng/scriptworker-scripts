@@ -6,6 +6,8 @@ from unittest import mock
 import pytest
 from conftest import TEST_DATA_DIR
 
+from pathlib import Path
+
 import signingscript.rcodesign as rcodesign
 
 
@@ -142,14 +144,14 @@ async def test_find_submission_id_fail():
 
 def mock_async_generator(*values):
     vals = [*values]
-    async def func():
+    async def func(*args, **kwargs):
         return vals.pop(0)
     return func
 
 
 def mock_sync_generator(*values):
     vals = [*values]
-    def func():
+    def func(*args, **kwargs):
         return vals.pop(0)
     return func
 
@@ -167,3 +169,44 @@ async def test_execute_command(mocker):
     assert exitcode == 96
     assert len(output) > 1
     assert output == ["hello", "err"]
+
+
+@pytest.mark.asyncio
+async def test_rcodesign_sign(context, mocker):
+
+    workdir = Path(context.config["work_dir"])
+    app_path = workdir / "test.app"
+    app_path.mkdir()
+    (app_path / "samplefile").touch()
+    (app_path / "samplefile2").touch()
+    context.apple_app_signing_pkcs12_path = workdir / "test_cred.p12"
+    context.apple_signing_pkcs12_pass_path = workdir / "test_cred.passwd"
+    entitlement_file = workdir / "test.xml"
+    entitlement_file.touch()
+
+    hardened_sign_config = [
+        {
+            "entitlements": "https://fakeurl",
+            "runtime": True,
+            "globs": [
+                "/*"
+            ]
+        }
+    ]
+
+    download = mock.AsyncMock()
+    download.side_effect = [{"https://fakeurl": str(entitlement_file)}]
+    mocker.patch.object(rcodesign, "_download_entitlements", download)
+    execute = mock.AsyncMock()
+    execute.side_effect = lambda x: x
+    mocker.patch.object(rcodesign, "_execute_command", execute)
+
+    await rcodesign.rcodesign_sign(
+        context.config["work_dir"],
+        str(app_path),
+        context.apple_app_signing_pkcs12_path,
+        context.apple_signing_pkcs12_pass_path,
+        hardened_sign_config,
+    )
+    download.assert_called_once()
+    execute.assert_called_once()

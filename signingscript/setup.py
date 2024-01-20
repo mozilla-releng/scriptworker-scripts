@@ -5,7 +5,8 @@ from setuptools import find_packages, setup
 with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "version.txt")) as f:
     version = f.read().rstrip()
 
-install_requires = ["arrow", "mar", "scriptworker", "taskcluster", "mohawk", "winsign", "macholib"]
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "requirements", "base.in")) as f:
+    install_requires = ["scriptworker_client"] + f.readlines()
 
 setup(
     name="signingscript",

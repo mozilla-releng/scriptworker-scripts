@@ -1,0 +1,7 @@
+{
+  "project:releng:signing:cert:dep-signing": [{
+    "app_pkcs12_bundle": "abcdef",
+    "installer_pkcs12_bundle": "abcdef",
+    "pkcs12_password": "verysecret"
+  }]
+}

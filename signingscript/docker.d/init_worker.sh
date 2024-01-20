@@ -21,11 +21,12 @@ test_var_set 'PROJECT_NAME'
 test_var_set 'PUBLIC_IP'
 test_var_set 'TEMPLATE_DIR'
 
-export DMG_PATH=$APP_DIR/signingscript/files/dmg
-export HFSPLUS_PATH=$APP_DIR/signingscript/files/hfsplus
+export DMG_PATH=/usr/bin/dmg
+export HFSPLUS_PATH=/usr/bin/hfsplus
 
 export PASSWORDS_PATH=$CONFIG_DIR/passwords.json
 export APPLE_NOTARIZATION_CREDS_PATH=$CONFIG_DIR/apple_notarization_creds.json
+export APPLE_SIGNING_CONFIG_PATH=$CONFIG_DIR/apple_signing_config.json
 export GPG_PUBKEY_PATH=$APP_DIR/signingscript/src/signingscript/data/gpg_pubkey_dep.asc
 export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
 export AUTHENTICODE_TIMESTAMP_STYLE=old
@@ -260,3 +261,4 @@ esac
 
 $CONFIG_LOADER $TEMPLATE_DIR/passwords.yml $PASSWORDS_PATH
 $CONFIG_LOADER $TEMPLATE_DIR/apple_notarization_creds.yml $APPLE_NOTARIZATION_CREDS_PATH
+$CONFIG_LOADER $TEMPLATE_DIR/apple_signing_creds.yml $APPLE_SIGNING_CONFIG_PATH
