@@ -67,20 +67,46 @@ def test_copy_android_l10n_files(mocker):
     copy.assert_called_with("src/relsource", "dest/relsource")
 
 
+# android_l10n_action {{{1
+@pytest.mark.asyncio
+async def test_android_l10n_action(mocker):
+
+    async def check_treestatus(*args):
+        return True
+
+    mocker.patch.object(os, "makedirs")
+    mocker.patch.object(shutil, "copy2")
+    mocker.patch.object(android_l10n, "get_dontbuild", return_value=False)
+    mocker.patch.object(android_l10n, "get_ignore_closed_tree", return_value=True)
+    mocker.patch.object(android_l10n, "check_treestatus", new=check_treestatus)
+    mocker.patch.object(android_l10n, "vcs", new=AsyncMock())
+    mocker.patch.object(android_l10n, "get_android_l10n_files_toml", return_value=["l10n1", "l10n2"])
+    copy = mocker.patch.object(android_l10n, "copy_android_l10n_files")
+
+    task_info = {"from_repo_url": "x", "toml_info": [{"toml_path": "x/y.toml", "dest_path": "x"}]}
+
+    # like import
+    await android_l10n.android_l10n_action({}, {}, task_info, "repo/path", "fromrepo/path", "", "", None, "dest_path")
+    copy.assert_called_with(["l10n1", "l10n2"], None, "repo/path/x")
+    # like sync
+    await android_l10n.android_l10n_action({}, {}, task_info, "repo/path", "fromrepo/path", "", "", "srcpath", None)
+    copy.assert_called_with(["l10n1", "l10n2"], "srcpath", "repo/path")
+
+
 # android_l10n_import {{{1
 @pytest.mark.parametrize(
     "ignore_closed_tree, android_l10n_import_info, old_contents, new_contents, changes",
     (
         (
             True,
-            {"from_repo_url": "x", "toml_info": [{"toml_path": "x", "dest_path": "x"}]},
+            {"from_repo_url": "x", "toml_info": [{"toml_path": "x/y.toml", "dest_path": "x"}]},
             {"one": {"revision": "onerev", "platforms": ["platform"]}, "two": {"revision": "tworev", "platforms": ["platform"]}},
             {"one": {"revision": "onerev", "platforms": ["platform"]}, "two": {"revision": "tworev", "platforms": ["platform"]}},
             1,
         ),
         (
             False,
-            {"from_repo_url": "x", "toml_info": [{"toml_path": "x", "dest_path": "x"}]},
+            {"from_repo_url": "x", "toml_info": [{"toml_path": "x/y.toml", "dest_path": "x"}]},
             {"one": {"revision": "oldonerev", "platforms": ["platform"]}, "two": {"revision": "oldtworev", "platforms": ["platform"]}},
             {"one": {"revision": "newonerev", "platforms": ["platform"]}, "two": {"revision": "newtworev", "platforms": ["platform"]}},
             1,
@@ -139,14 +165,14 @@ async def test_android_l10n_import_closed_tree(mocker):
     (
         (
             True,
-            {"from_repo_url": "x", "toml_info": [{"toml_path": "x"}]},
+            {"from_repo_url": "x", "toml_info": [{"toml_path": "x/y.toml"}]},
             {"one": {"revision": "onerev", "platforms": ["platform"]}, "two": {"revision": "tworev", "platforms": ["platform"]}},
             {"one": {"revision": "onerev", "platforms": ["platform"]}, "two": {"revision": "tworev", "platforms": ["platform"]}},
             1,
         ),
         (
             False,
-            {"from_repo_url": "x", "toml_info": [{"toml_path": "x"}]},
+            {"from_repo_url": "x", "toml_info": [{"toml_path": "x/y.toml"}]},
             {"one": {"revision": "oldonerev", "platforms": ["platform"]}, "two": {"revision": "oldtworev", "platforms": ["platform"]}},
             {"one": {"revision": "newonerev", "platforms": ["platform"]}, "two": {"revision": "newtworev", "platforms": ["platform"]}},
             1,
