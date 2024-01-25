@@ -131,7 +131,10 @@ async def android_l10n_action(config, task, task_info, repo_path, from_repo_path
     for toml_info in task_info["toml_info"]:
         toml_path = os.path.join(from_repo_path, toml_info["toml_path"])
         l10n_files = get_android_l10n_files_toml(toml_path, search_path)
-        dest_path = os.path.join(repo_path, toml_info[toml_key])
+        if toml_key:
+            dest_path = os.path.join(repo_path, toml_info[toml_key])
+        else:
+            dest_path = repo_path
         os.makedirs(dest_path, exist_ok=True)
         copy_android_l10n_files(l10n_files, src_path, dest_path)
         shutil.copy2(toml_path, dest_path)
@@ -207,6 +210,6 @@ async def android_l10n_sync(config, task, repo_path):
         from_repo_url = task_info["from_repo_url"]
         await vcs.checkout_repo(config, task, from_repo_url, from_repo_path)
         search_path = from_repo_path
-        changes = await android_l10n_action(config, task, task_info, repo_path, from_repo_path, description, search_path, from_repo_path, "toml_path")
+        changes = await android_l10n_action(config, task, task_info, repo_path, from_repo_path, description, search_path, from_repo_path, None)
 
     return changes
