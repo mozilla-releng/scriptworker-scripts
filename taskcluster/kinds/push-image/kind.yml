@@ -1,0 +1,67 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - docker-image
+
+transforms:
+    - taskgraph.transforms.run:transforms
+    - taskgraph.transforms.task:transforms
+
+task-defaults:
+    worker-type: images
+    description: "{name} k8s image builder py{python_version}"
+    name: "{name}-python{python_version}"
+    worker:
+        taskcluster-proxy: true
+        docker-image: {in-tree: skopeo}
+        max-run-time: 1800
+        env:
+            # TODO: This should probably be set in a transform? either that or remove it because we don't really use it
+            VCS_HEAD_REPOSITORY: scriptworker-scripts
+            VCS_HEAD_REV: main
+            APP_VERSION: 1.0.0
+    run-on-tasks-for: ["action", "github-pull-request", "github-push"]
+    # run-on-tasks-for: [github-push]
+    # run-on-git-branches:
+    #     - dev
+    #     - production
+    run:
+        using: run-task
+        checkout: false
+        cache-dotcache: false
+        command:
+            - /usr/local/bin/push_image.sh
+    fetches:
+        image:
+            - artifact: image.tar.zst
+              extract: false
+    # TODO: Uncomment to enable pushing
+    # scopes:
+    #     - secrets:get:project/releng/scriptworker-scripts/deploy
+
+tasks:
+    addonscript:
+        run-on-git-branches:
+            - dev-addonscript
+            - production-addonscript
+        dependencies:
+            image: build-docker-image-addonscript
+        worker:
+            env:
+                APP: addonscript
+                DOCKER_REPO: mozilla/releng-addonscript
+    # balrogscript: {}
+    # beetmoverscript: {}
+    # bouncerscript: {}
+    # githubscript: {}
+    # pushapkscript: {}
+    # pushflatpakscript: {}
+    # pushmsixscript: {}
+    # shipitscript: {}
+    # signingscript: {}
+    # treescript: {}

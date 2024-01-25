@@ -22,6 +22,20 @@ tasks:
         args:
             PYTHON_VERSION: "3.8"
             PYTHON_REQ_SUFFIX: ".py38"
+
+    # Used by push-image kind
+    skopeo: {}
+
+    base-image:
+        args:
+            BASE_IMAGE: python:3.9.7
+    # TODO: Figure out PYTHON_REQ_SUFFIX when we decide to have py3.10
+    # base-image-3.10:
+    #     definition: base-image
+    #     args:
+    #         BASE_IMAGE: python:3.10
+    addonscript:
+        parent: base-image
     pushapkscript-python38:
         definition: pushapkscript
         parent: python38
