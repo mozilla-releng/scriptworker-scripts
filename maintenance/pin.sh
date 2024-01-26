@@ -1,12 +1,10 @@
-#!/usr/bin/env bash
-# We run this in scriptworker-scripts/. to pin all requirements.
 set -e
 set -x
 
 EXTRA_ARGS=${EXTRA_ARGS:-""}
 
 if [ $# -gt 0 ]; then
-    DIRS=("$@")
+    DIRS=( $@ )
 else
     DIRS=(
         addonscript
@@ -28,6 +26,30 @@ else
     )
 fi
 
+# Note: some "scripts" have to be compiled for both python versions
+PY_38_SCRIPTS=(
+    configloader
+    scriptworker_client
+    iscript
+    notarization_poller
+)
+PY_39_SCRIPTS=(
+    addonscript
+    balrogscript
+    beetmoverscript
+    bouncerscript
+    configloader
+    githubscript
+    pushapkscript
+    pushflatpakscript
+    pushmsixscript
+    scriptworker_client
+    shipitscript
+    signingscript
+    treescript
+    .
+)
+
 RUNCMD="RUN apt-get update && \
     apt-get install -y \
         gir1.2-ostree-1.0 \
@@ -38,15 +60,24 @@ RUNCMD="RUN apt-get update && \
     pip install pip-compile-multi
 "
 
-echo -e "FROM python:3.8\n${RUNCMD}" | docker build --pull --tag "scriptworker-script-pin:3.8" -
-echo -e "FROM python:3.9\n${RUNCMD}" | docker build --pull --tag "scriptworker-script-pin:3.9" -
 
-
-echo "${DIRS[@]}" | xargs -n8 -P8 time docker run --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -w /src scriptworker-script-pin:3.9 maintenance/pin-helper.sh
+PY38_DIRS=()
+PY39_DIRS=()
 for idx in "${!DIRS[@]}"; do
-    # the toplevel requirements dir doesn't need py38
-    if [ "${DIRS[$idx]}" = "." ]; then unset DIRS[$idx]; fi
+    if [[ ${PY_38_SCRIPTS[@]} =~ "${DIRS[$idx]}" ]]; then
+        PY38_DIRS+=("${DIRS[$idx]}")
+    fi
+    if [[ ${PY_39_SCRIPTS[@]} =~ "${DIRS[$idx]}" ]]; then
+        PY39_DIRS+=("${DIRS[$idx]}")
+        echo ${DIRS[$idx]}
+    fi
 done
-if [ ${#DIRS} -gt 0 ]; then
-    echo "${DIRS[@]}" | xargs -n8 -P8 time docker run --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -e SUFFIX=py38.txt -w /src scriptworker-script-pin:3.8 maintenance/pin-helper.sh
+
+if [ ${#PY38_DIRS} -gt 0 ]; then
+    printf "FROM python:3.8\n${RUNCMD}" | docker build --platform linux/x86_64 --pull --tag "scriptworker-script-pin:3.8" -
+    echo "${PY38_DIRS[@]}" | xargs -n8 -P8 time docker run --platform linux/x86_64 --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -e SUFFIX=py38.txt -w /src scriptworker-script-pin:3.8 maintenance/pin-helper.sh
+fi
+if [ ${#PY39_DIRS} -gt 0 ]; then
+    printf "FROM python:3.9\n${RUNCMD}" | docker build --platform linux/x86_64 --pull --tag "scriptworker-script-pin:3.9" -
+    echo "${PY39_DIRS[@]}" | xargs -n8 -P8 time docker run --platform linux/x86_64 --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -w /src scriptworker-script-pin:3.9 maintenance/pin-helper.sh
 fi
