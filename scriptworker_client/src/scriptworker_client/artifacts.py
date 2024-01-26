@@ -1,4 +1,5 @@
 """Scriptworker-client artifact-related operations."""
+
 import logging
 import os
 from pathlib import Path
