@@ -1,0 +1,47 @@
+{
+  "provisionerId": "scriptworker-k8s",
+  "workerType": "mobile-1-bitrise",
+  "schedulerId": "mobile-level-1",
+  "taskGroupId": "DIP_TN0kRQyfvbflprgXYw",
+  "dependencies": [
+    "OyHu5OYGTFW05iGchdqdSA"
+  ],
+  "requires": "all-completed",
+  "routes": [
+    "tc-treeherder.v2.fenix.b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71.0",
+    "checks"
+  ],
+  "priority": "highest",
+  "retries": 5,
+  "created": "2020-06-16T22:32:06.776Z",
+  "deadline": "2020-06-17T22:32:06.776Z",
+  "expires": "2021-06-16T22:32:06.776Z",
+  "scopes": [
+    "project:mobile:firefox-ios:bitrise:app:firefox-ios",
+    "project:mobile:firefox-ios:bitrise:workflow:build-and-test"
+  ],
+  "payload": {
+    "build_params": {
+      "branch": "main"
+    }
+  },
+  "metadata": {
+    "owner": "user@example.com",
+    "source": "https://github.com/mozilla-mobile/firefox-ios/blob/b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71/taskcluster/ci/bitrise",
+    "description": "Trigger Bitrise build-and-test workflow",
+    "name": "bitrise-build-and-test"
+  },
+  "tags": {
+    "os": "scriptworker",
+    "createdForUser": "user@example.com",
+    "worker-implementation": "scriptworker",
+    "kind": "bitrise",
+    "label": "bitrise-build-and-test"
+  },
+  "extra": {
+    "index": {
+      "rank": 1592346625
+    },
+    "parent": "DIP_TN0kRQyfvbflprgXYw"
+  }
+}

@@ -1,0 +1,26 @@
+{
+    "title": "bitrisescript config schema",
+    "type": "object",
+    "required": [
+        "bitrise",
+        "taskcluster_scope_prefix",
+        "trust_domain"
+    ],
+    "properties": {
+        "bitrise": {
+            "type": "object",
+            "required": ["access_token"],
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "taskcluster_scope_prefix": {
+            "type": "string"
+        },
+        "trust_domain": {
+            "type": "string"
+        }
+    }
+}

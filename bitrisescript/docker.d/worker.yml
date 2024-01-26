@@ -1,0 +1,7 @@
+work_dir: { "$eval": "WORK_DIR" }
+verbose: { "$eval": "VERBOSE == 'true'" }
+bitrise:
+  access_token: { "$eval": "BITRISE_ACCESS_TOKEN" }
+
+taskcluster_scope_prefix: "project:${COT_PRODUCT}:bitrise:"
+trust_domain: "${COT_PRODUCT}"

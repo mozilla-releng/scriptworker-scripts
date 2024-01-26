@@ -46,6 +46,7 @@ tasks:
     addonscript: {}
     balrogscript: {}
     beetmoverscript: {}
+    bitrisescript: {}
     bouncerscript: {}
     githubscript: {}
     pushapkscript: {}

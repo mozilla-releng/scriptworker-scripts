@@ -1,0 +1,3 @@
+aiohttp
+aiohttp_retry >= 2.3
+scriptworker

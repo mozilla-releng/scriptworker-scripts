@@ -1,0 +1,9 @@
+{
+    "work_dir": "/tmp/bitrisescript/work_dir",
+    "bitrise": {
+        "access_token": "<token>"
+    },
+    "taskcluster_scope_prefix": ["project:mobile:firefox-ios:bitrise:"],
+
+    "verbose": true
+}

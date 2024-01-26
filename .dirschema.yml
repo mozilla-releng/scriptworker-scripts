@@ -8,6 +8,7 @@ docker-compose:
     - /addonscript
     - /balrogscript
     - /beetmoverscript
+    - /bitrisescript
     - /bouncerscript
     - /pushapkscript
     - /pushmsixscript
@@ -20,6 +21,7 @@ apps:
     - /addonscript
     - /balrogscript
     - /beetmoverscript
+    - /bitrisescript
     - /bouncerscript
     - /pushapkscript
     - /pushmsixscript

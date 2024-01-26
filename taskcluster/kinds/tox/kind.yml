@@ -53,6 +53,10 @@ tasks:
         python-versions: [39]
         resources:
             - beetmoverscript
+    bitrisescript:
+        python-versions: [39]
+        resources:
+            - bitrisescript
     bouncerscript:
         python-versions: [39]
         resources:
@@ -73,6 +77,7 @@ tasks:
             - addonscript/docker.d
             - balrogscript/docker.d
             - beetmoverscript/docker.d
+            - bitrisescript/docker.d
             - bouncerscript/docker.d
             - githubscript/docker.d
             - pushapkscript/docker.d

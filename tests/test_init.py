@@ -43,6 +43,10 @@ CONTEXT = {
         "PARTNER_ID": "1",
         "PARTNER_KEY": "1",
     },
+    "bitrise": {
+        "BITRISE_ACCESS_TOKEN_STAGING": "1",
+        "BITRISE_ACCESS_TOKEN_PROD": "1",
+    },
     "bouncer": {
         "BOUNCER_USERNAME": "1",
         "BOUNCER_PASSWORD": "1",
