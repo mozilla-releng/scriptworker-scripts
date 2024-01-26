@@ -10,6 +10,7 @@ else
         addonscript
         balrogscript
         beetmoverscript
+        bitrisescript
         bouncerscript
         configloader
         githubscript
@@ -37,6 +38,7 @@ PY_39_SCRIPTS=(
     addonscript
     balrogscript
     beetmoverscript
+    bitrisescript
     bouncerscript
     configloader
     githubscript
