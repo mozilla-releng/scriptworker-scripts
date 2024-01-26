@@ -55,13 +55,103 @@ tasks:
             env:
                 APP: addonscript
                 DOCKER_REPO: mozilla/releng-addonscript
-    # balrogscript: {}
-    # beetmoverscript: {}
-    # bouncerscript: {}
-    # githubscript: {}
-    # pushapkscript: {}
-    # pushflatpakscript: {}
-    # pushmsixscript: {}
-    # shipitscript: {}
-    # signingscript: {}
-    # treescript: {}
+    balrogscript:
+        run-on-git-branches:
+            - dev-balrogscript
+            - production-balrogscript
+        dependencies:
+            image: build-docker-image-balrogscript
+        worker:
+            env:
+                APP: balrogscript
+                DOCKER_REPO: mozilla/releng-balrogscript
+    beetmoverscript:
+        run-on-git-branches:
+            - dev-beetmoverscript
+            - production-beetmoverscript
+        dependencies:
+            image: build-docker-image-beetmoverscript
+        worker:
+            env:
+                APP: beetmoverscript
+                DOCKER_REPO: mozilla/releng-beetmoverscript
+    bouncerscript:
+        run-on-git-branches:
+            - dev-bouncerscript
+            - production-bouncerscript
+        dependencies:
+            image: build-docker-image-bouncerscript
+        worker:
+            env:
+                APP: bouncerscript
+                DOCKER_REPO: mozilla/releng-bouncerscript
+    githubscript:
+        run-on-git-branches:
+            - dev-githubscript
+            - production-githubscript
+        dependencies:
+            image: build-docker-image-githubscript
+        worker:
+            env:
+                APP: githubscript
+                DOCKER_REPO: mozilla/releng-githubscript
+    pushapkscript:
+        run-on-git-branches:
+            - dev-pushapkscript
+            - production-pushapkscript
+        dependencies:
+            image: build-docker-image-pushapkscript
+        worker:
+            env:
+                APP: pushapkscript
+                DOCKER_REPO: mozilla/releng-pushapkscript
+    pushflatpakscript:
+        run-on-git-branches:
+            - dev-pushflatpakscript
+            - production-pushflatpakscript
+        dependencies:
+            image: build-docker-image-pushflatpakscript
+        worker:
+            env:
+                APP: pushflatpakscript
+                DOCKER_REPO: mozilla/releng-pushflatpakscript
+    pushmsixscript:
+        run-on-git-branches:
+            - dev-pushmsixscript
+            - production-pushmsixscript
+        dependencies:
+            image: build-docker-image-pushmsixscript
+        worker:
+            env:
+                APP: pushmsixscript
+                DOCKER_REPO: mozilla/releng-pushmsixscript
+    shipitscript:
+        run-on-git-branches:
+            - dev-shipitscript
+            - production-shipitscript
+        dependencies:
+            image: build-docker-image-shipitscript
+        worker:
+            env:
+                APP: shipitscript
+                DOCKER_REPO: mozilla/releng-shipitscript
+    signingscript:
+        run-on-git-branches:
+            - dev-signingscript
+            - production-signingscript
+        dependencies:
+            image: build-docker-image-signingscript
+        worker:
+            env:
+                APP: signingscript
+                DOCKER_REPO: mozilla/releng-signingscript
+    treescript:
+        run-on-git-branches:
+            - dev-treescript
+            - production-treescript
+        dependencies:
+            image: build-docker-image-treescript
+        worker:
+            env:
+                APP: treescript
+                DOCKER_REPO: mozilla/releng-treescript
