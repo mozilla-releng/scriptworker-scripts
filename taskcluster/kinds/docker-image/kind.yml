@@ -36,21 +36,43 @@ tasks:
     #         BASE_IMAGE: python:3.10
     addonscript:
         parent: base-image
-    pushapkscript-python38:
-        definition: pushapkscript
-        parent: python38
-    pushapkscript-python39:
-        definition: pushapkscript
-        parent: python39
-    pushflatpakscript-python38:
-        definition: pushflatpakscript
-        parent: python38
-    pushflatpakscript-python39:
-        definition: pushflatpakscript
-        parent: python39
-    signingscript-python38:
-        definition: signingscript
-        parent: python38
-    signingscript-python39:
-        definition: signingscript
-        parent: python39
+    balrogscript:
+        parent: base-image
+    beetmoverscript:
+        parent: base-image
+    bouncerscript:
+        parent: base-image
+    githubscript:
+        parent: base-image
+    pushapkscript:
+        parent: base-image
+    pushflatpakscript:
+        parent: base-image
+    pushmsixscript:
+        parent: base-image
+    shipitscript:
+        parent: base-image
+    signingscript:
+        parent: base-image
+    treescript:
+        parent: base-image
+
+    # Testing images
+    pushapkscript-test-py39:
+        definition: base-image-test
+        args:
+            DOCKER_IMAGE_PARENT: python:3.9.7
+            APT_PACKAGES: default-jdk
+
+    pushflatpakscript-test-py39:
+        definition: base-image-test
+        args:
+            DOCKER_IMAGE_PARENT: python:3.9.7
+            # Copied from pushflatpakscript/docker.d/image_setup.sh
+            APT_PACKAGES: gir1.2-ostree-1.0 libgirepository1.0-dev ostree
+
+    signingscript-test-py39:
+        definition: base-image-test
+        args:
+            DOCKER_IMAGE_PARENT: python:3.9.7
+            APT_PACKAGES: osslsigncode cmake clang

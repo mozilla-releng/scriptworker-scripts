@@ -4,12 +4,14 @@
 
 FROM $DOCKER_IMAGE_PARENT
 
-# %include addonscript
-ADD --chown=app:app topsrcdir/addonscript /app/addonscript
+# %include githubscript
+ADD --chown=app:app topsrcdir/githubscript /app/githubscript
 
-RUN cp /app/addonscript/docker.d/* /app/docker.d \
- && python -m venv /app \
- && cd addonscript \
+RUN python -m venv /app \
+ && cd /app/scriptworker_client \
+ && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install . \
+ && cd /app/githubscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \

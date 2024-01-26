@@ -4,15 +4,17 @@
 
 FROM $DOCKER_IMAGE_PARENT
 
-# %include addonscript
-ADD --chown=app:app topsrcdir/addonscript /app/addonscript
+# %include balrogscript
+ADD --chown=app:app topsrcdir/balrogscript /app/balrogscript
 
-RUN cp /app/addonscript/docker.d/* /app/docker.d \
- && python -m venv /app \
- && cd addonscript \
+RUN python -m venv /app \
+ && cd /app/scriptworker_client \
+ && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install . \
+ && cd /app/balrogscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \
  && cd /app/configloader \
  && /app/configloader_venv/bin/pip install -r requirements/base.txt \
- && /app/configloader_venv/bin/pip install .
+ && /app/configloader_venv/bin/pip install . \

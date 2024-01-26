@@ -4,12 +4,13 @@
 
 FROM $DOCKER_IMAGE_PARENT
 
-# %include addonscript
-ADD --chown=app:app topsrcdir/addonscript /app/addonscript
+# %include beetmoverscript
+ADD --chown=app:app topsrcdir/beetmoverscript /app/beetmoverscript
 
-RUN cp /app/addonscript/docker.d/* /app/docker.d \
- && python -m venv /app \
- && cd addonscript \
+# TODO: remove the pip upgrade when we upgrade to a base image with pip >= 23.3
+RUN python -m venv /app \
+ && cd /app/beetmoverscript \
+ && /app/bin/pip install --upgrade pip \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \
