@@ -4,12 +4,11 @@
 
 FROM $DOCKER_IMAGE_PARENT
 
-# %include addonscript
-ADD --chown=app:app topsrcdir/addonscript /app/addonscript
+# %include shipitscript
+ADD --chown=app:app topsrcdir/shipitscript /app/shipitscript
 
-RUN cp /app/addonscript/docker.d/* /app/docker.d \
- && python -m venv /app \
- && cd addonscript \
+RUN python -m venv /app \
+ && cd shipitscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \
