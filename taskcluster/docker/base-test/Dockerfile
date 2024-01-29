@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ARG DOCKER_IMAGE_PARENT
-FROM $DOCKER_IMAGE_PARENT
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
 
 VOLUME /builds/worker/checkouts
 VOLUME /builds/worker/.cache
