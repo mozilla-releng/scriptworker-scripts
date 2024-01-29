@@ -20,4 +20,14 @@ ADD --chown=app:app topsrcdir/docker.d /app/docker.d
 USER app
 WORKDIR /app
 
+# Install scriptworker_client and configloader
+RUN python -m venv /app \
+ && cd /app/scriptworker_client \
+ && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install . \
+ && python -m venv /app/configloader_venv \
+ && cd /app/configloader \
+ && /app/configloader_venv/bin/pip install -r requirements/base.txt \
+ && /app/configloader_venv/bin/pip install .
+
 CMD ["/app/docker.d/init.sh"]
