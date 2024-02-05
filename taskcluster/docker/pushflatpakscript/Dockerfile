@@ -14,7 +14,8 @@ RUN apt-get update \
 
 USER app
 
-RUN python -m venv /app \
+RUN cp -R /app/pushflatpakscript/docker.d/* /app/docker.d/ \
+ && python -m venv /app \
  && cd pushflatpakscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \

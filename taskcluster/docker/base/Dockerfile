@@ -16,6 +16,8 @@ ADD --chown=app:app topsrcdir/scriptworker_client /app/scriptworker_client
 ADD --chown=app:app topsrcdir/configloader /app/configloader
 # %include docker.d
 ADD --chown=app:app topsrcdir/docker.d /app/docker.d
+# %include .dockerignore
+ADD --chown=app:app topsrcdir/.dockerignore /app/.dockerignore
 
 USER app
 WORKDIR /app
