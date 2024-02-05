@@ -7,7 +7,8 @@ FROM $DOCKER_IMAGE_PARENT
 # %include pushmsixscript
 ADD --chown=app:app topsrcdir/pushmsixscript /app/pushmsixscript
 
-RUN python -m venv /app \
+RUN cp -R /app/pushmsixscript/docker.d/* /app/docker.d/ \
+ && python -m venv /app \
  && cd /app/scriptworker_client \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \

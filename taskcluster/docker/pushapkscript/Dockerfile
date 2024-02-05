@@ -14,7 +14,8 @@ RUN apt-get update \
 
 USER app
 
-RUN python -m venv /app \
+RUN cp -R /app/pushapkscript/docker.d/* /app/docker.d/ \
+ && python -m venv /app \
  && cd pushapkscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
