@@ -37,7 +37,8 @@ USER app
 WORKDIR /app
 
 # Install signingscript + configloader + widevine
-RUN python -m venv /app \
+RUN cp -R /app/signingscript/docker.d/* /app/docker.d/ \
+ && python -m venv /app \
  && cd signingscript \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \

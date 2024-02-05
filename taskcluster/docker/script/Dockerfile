@@ -9,5 +9,6 @@ FROM $DOCKER_IMAGE_PARENT
 ADD --chown=app:app topsrcdir/$SCRIPT_NAME /app/$SCRIPT_NAME
 
 RUN cd /app/$SCRIPT_NAME \
+ && ([ -d docker.d ] && cp -R docker.d/* /app/docker.d/) \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install .

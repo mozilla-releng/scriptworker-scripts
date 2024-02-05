@@ -59,20 +59,17 @@ tasks:
         parent: base
         args:
             SCRIPT_NAME: githubscript
-    pushapkscript:
-        parent: base
-    pushflatpakscript:
-        parent: base
-    pushmsixscript:
-        definition: script
-        parent: base
-        args:
-            SCRIPT_NAME: pushmsixscript
     shipitscript:
         definition: script
         parent: base
         args:
             SCRIPT_NAME: shipitscript
+    pushapkscript:
+        parent: base
+    pushflatpakscript:
+        parent: base
+    pushmsixscript:
+        parent: base
     signingscript:
         parent: base
     treescript:
