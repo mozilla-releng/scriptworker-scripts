@@ -66,7 +66,7 @@ def set_environment(config, tasks):
             {
                 "SCRIPTWORKER_HEAD_REV": config.params["head_rev"],
                 "DOCKER_REPO": task.pop("docker-repo"),
-                "DOCKER_TAG": config.params.get("docker_tag", "unknown"),
+                "DOCKER_TAG": config.params.get("docker_tag") or "unknown",
                 "PROJECT_NAME": project_name,
                 "SCRIPTWORKER_HEAD_REPOSITORY": config.params["head_repository"],
                 "TASKCLUSTER_ROOT_URL": "$TASKCLUSTER_ROOT_URL",
