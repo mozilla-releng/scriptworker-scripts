@@ -1,12 +1,12 @@
 import logging
 import os
 
+from treescript.exceptions import TreeScriptError
 from treescript.gecko import mercurial as vcs
 from treescript.gecko.android_l10n import android_l10n_import, android_l10n_sync
 from treescript.gecko.l10n import l10n_bump
 from treescript.gecko.merges import do_merge
 from treescript.gecko.versionmanip import bump_version
-from treescript.exceptions import TreeScriptError
 from treescript.util.task import get_source_repo, should_push, task_action_types
 
 log = logging.getLogger(__name__)

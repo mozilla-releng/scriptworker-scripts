@@ -111,7 +111,14 @@ async def test_do_create_version(fake_session, context, statuscode, retval, exce
 
 @pytest.mark.asyncio
 async def test_get_signed_addon_info_success(context, mocker):
-    status_json = {"file": {"status": "public", "url": "https://some-download-url/foo", "size": 3, "hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}}
+    status_json = {
+        "file": {
+            "status": "public",
+            "url": "https://some-download-url/foo",
+            "size": 3,
+            "hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        }
+    }
 
     async def new_version(*args, **kwargs):
         return status_json
@@ -177,7 +184,7 @@ async def test_get_signed_addon_info_other_errors(context, mocker, variant, exce
     if variant == "nominated":
         assert "XPI not public" in str(excinfo.value)
     if variant == "disabled":
-        assert 'XPI disabled on AMO' in str(excinfo.value)
+        assert "XPI disabled on AMO" in str(excinfo.value)
 
 
 @pytest.mark.asyncio

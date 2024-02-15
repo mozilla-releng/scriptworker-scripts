@@ -15,13 +15,13 @@ from shutil import copy2
 import arrow
 import attr
 import pexpect
-from scriptworker_client.aio import download_file, raise_future_exceptions, retry_async, semaphore_wrapper
-from scriptworker_client.exceptions import DownloadError
-from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_command
 
 from iscript.autograph import sign_langpacks, sign_omnija_with_autograph, sign_widevine_dir
 from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
 from iscript.util import expand_globs, get_sign_config
+from scriptworker_client.aio import download_file, raise_future_exceptions, retry_async, semaphore_wrapper
+from scriptworker_client.exceptions import DownloadError
+from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_command
 
 log = logging.getLogger(__name__)
 
@@ -158,6 +158,7 @@ def get_bundle_executable(appdir):
     """
     with open(os.path.join(appdir, "Contents", "Info.plist"), "rb") as fp:
         return plistlib.load(fp)["CFBundleExecutable"]
+
 
 # _get_sign_command {{{1
 def _get_sign_command(identity, keychain, sign_config, file_=None, entitlements_path=None):

@@ -35,7 +35,7 @@ Supported scope prefixes:
     * See-Also [the script config in puppet](https://dxr.mozilla.org/build-central/source/puppet/modules/balrog_scriptworker/templates/script_config.json.erb)
     * *Informative*: This is production balrog, with beta, beta-localtest, and beta-cdntest channels
   * **Conflicts**: with any other `{scope_prefix}:server:*`
-  * **Branch Restrictions**: 
+  * **Branch Restrictions**:
     * `beta`
 
 * `{scope_prefix}:server:dep`
@@ -50,15 +50,15 @@ Supported scope prefixes:
     * See-Also [the script config in puppet](https://dxr.mozilla.org/build-central/source/puppet/modules/balrog_scriptworker/templates/script_config.json.erb)
     * *Informative*: This is production balrog, with esr, esr-localtest, and esr-cdntest channels
   * **Conflicts**: with any other `{scope_prefix}:server:*`
-  * **Branch Restrictions**: 
-    * `esr` 
+  * **Branch Restrictions**:
+    * `esr`
 
 * `{scope_prefix}:server:nightly`
   * Tells balrogscript to use the nightly server config
     * See-Also [the script config in puppet](https://dxr.mozilla.org/build-central/source/puppet/modules/balrog_scriptworker/templates/script_config.json.erb)
     * *Informative*: This is production balrog, with nightly channel
   * **Conflicts**: with any other `{scope_prefix}:server:*`
-  * **Branch Restrictions**: 
+  * **Branch Restrictions**:
     * `all-nightly-branches`
 
 * `{scope_prefix}:server:release`
@@ -66,5 +66,5 @@ Supported scope prefixes:
     * See-Also [the script config in puppet](https://dxr.mozilla.org/build-central/source/puppet/modules/balrog_scriptworker/templates/script_config.json.erb)
     * *Informative*: This is production balrog, with release, release-localtest, and release-cdntest channels.
   * **Conflicts**: with any other `{scope_prefix}:server:*`
-  * **Branch Restrictions**: 
+  * **Branch Restrictions**:
     * `release`

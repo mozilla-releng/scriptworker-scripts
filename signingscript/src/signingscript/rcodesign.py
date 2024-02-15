@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import re
+
 from signingscript.exceptions import SigningScriptError
 
 log = logging.getLogger(__name__)
@@ -47,6 +48,7 @@ async def _execute_command(command):
     exitcode = await proc.wait()
     log.info("exitcode {}".format(exitcode))
     return exitcode, output_lines
+
 
 def find_submission_id(logs):
     """Given notarization logs, find and return the submission id
@@ -127,6 +129,7 @@ async def rcodesign_check_result(logs):
         if re_invalid.search(line):
             raise RCodesignError("Notarization failed!")
     return
+
 
 async def rcodesign_staple(path):
     """Staples a given app

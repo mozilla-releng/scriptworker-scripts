@@ -7,9 +7,6 @@ import plistlib
 from pathlib import Path
 from shutil import copy2, copytree
 
-from scriptworker_client.aio import retry_async
-from scriptworker_client.utils import run_command
-
 from iscript.exceptions import IScriptError
 from iscript.mac import (
     App,
@@ -25,6 +22,8 @@ from iscript.mac import (
     update_keychain_search_path,
 )
 from iscript.util import get_sign_config
+from scriptworker_client.aio import retry_async
+from scriptworker_client.utils import run_command
 
 log = logging.getLogger(__name__)
 
@@ -111,6 +110,7 @@ async def _codesign(sign_config, binary_path):
         retry_exceptions=(IScriptError,),
     )
 
+
 async def _create_pkg_plist(root_path, plist_path, **kwargs):
     """Generate the component plist file for a Mac application bundle.
 
@@ -142,6 +142,7 @@ async def _create_pkg_plist(root_path, plist_path, **kwargs):
     # Write out.
     with open(plist_path, "wb") as fp:
         plistlib.dump(data, fp)
+
 
 async def _create_pkg_files(config, sign_config, app):
     """Create .pkg installer from the .app file.

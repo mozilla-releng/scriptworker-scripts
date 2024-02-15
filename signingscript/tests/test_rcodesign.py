@@ -18,13 +18,15 @@ async def test_rcodesign_notarize(mocker, context):
 
     submission_id = await rcodesign.rcodesign_notarize(path, context.config["apple_notarization_configs"])
     assert submission_id == "123"
-    execute.assert_awaited_once_with([
-        "rcodesign",
-        "notary-submit",
-        "--api-key-path",
-        context.config["apple_notarization_configs"],
-        path,
-    ])
+    execute.assert_awaited_once_with(
+        [
+            "rcodesign",
+            "notary-submit",
+            "--api-key-path",
+            context.config["apple_notarization_configs"],
+            path,
+        ]
+    )
 
 
 @pytest.mark.asyncio
@@ -36,14 +38,16 @@ async def test_rcodesign_notarize_staple(mocker, context):
 
     submission_id = await rcodesign.rcodesign_notarize(path, context.config["apple_notarization_configs"], True)
     assert submission_id == "123"
-    execute.assert_awaited_once_with([
-        "rcodesign",
-        "notary-submit",
-        "--staple",
-        "--api-key-path",
-        context.config["apple_notarization_configs"],
-        path,
-    ])
+    execute.assert_awaited_once_with(
+        [
+            "rcodesign",
+            "notary-submit",
+            "--staple",
+            "--api-key-path",
+            context.config["apple_notarization_configs"],
+            path,
+        ]
+    )
 
 
 @pytest.mark.asyncio
@@ -65,23 +69,27 @@ async def test_rcodesign_notary_wait(mocker):
     creds_path = "/foo/bar"
     submission_id = "123"
     await rcodesign.rcodesign_notary_wait(submission_id, creds_path)
-    execute.assert_awaited_once_with([
-        "rcodesign",
-        "notary-wait",
-        "--api-key-path",
-        creds_path,
-        submission_id,
-    ])
+    execute.assert_awaited_once_with(
+        [
+            "rcodesign",
+            "notary-wait",
+            "--api-key-path",
+            creds_path,
+            submission_id,
+        ]
+    )
     execute.reset_mock()
     execute.side_effect = [(0, ["weird logs, but no errors"])]
     await rcodesign.rcodesign_notary_wait(submission_id, creds_path)
-    execute.assert_awaited_once_with([
-        "rcodesign",
-        "notary-wait",
-        "--api-key-path",
-        creds_path,
-        submission_id,
-    ])
+    execute.assert_awaited_once_with(
+        [
+            "rcodesign",
+            "notary-wait",
+            "--api-key-path",
+            creds_path,
+            submission_id,
+        ]
+    )
 
 
 @pytest.mark.asyncio
@@ -142,15 +150,19 @@ async def test_find_submission_id_fail():
 
 def mock_async_generator(*values):
     vals = [*values]
+
     async def func():
         return vals.pop(0)
+
     return func
 
 
 def mock_sync_generator(*values):
     vals = [*values]
+
     def func():
         return vals.pop(0)
+
     return func
 
 

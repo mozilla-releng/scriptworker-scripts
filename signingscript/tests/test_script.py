@@ -162,6 +162,6 @@ def test_setup_apple_notarization_credentials_exit_early(context, mocker):
 
 def test_setup_apple_notarization_credentials(context, mocker):
     mocker.patch.object(builtins, "open", lambda *_: MagicMock())
-    fake_key = AppleNotarization('1', '2', '3')
+    fake_key = AppleNotarization("1", "2", "3")
     mocker.patch.object(script, "load_apple_notarization_configs", lambda _: {TEST_CERT_TYPE: [fake_key]})
     script.setup_apple_notarization_credentials(context)

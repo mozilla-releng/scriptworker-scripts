@@ -34,7 +34,7 @@ Supported scope prefixes:
       * This is **default** if no `action` specified in scopes.
   * **Conflicts**: with any other `{scope_prefix}:action:*`
   * **Branch Restrictions**: `all-nightly-tasks`
-  
+
 * `{scope_prefix}:action:push-to-partner`
   * Tells beetmoverscript to move the corresponding artifacts of partner releases of Firefox to their corresponding private buckets
   * **Conflicts**: with any other `{scope_prefix}:action:*`
@@ -44,7 +44,7 @@ Supported scope prefixes:
   * Tells beetmoverscript to use the dep (which stands for dependent) credentials to access the staging buckets
   * **Conflicts**: with any other `{scope_prefix}:bucket:*`
   * **Branch Restrictions**: `None`
-  
+
 * `{scope_prefix}:bucket:dep-partner`
   * Tells beetmoverscript to use the staging credentials to access the partner bucket
   * **Conflicts**: with any other `{scope_prefix}:bucket:*`
@@ -54,7 +54,7 @@ Supported scope prefixes:
   * Tells beetmoverscript to use the production credentials to access the nightly bucket
   * **Conflicts**: with any other `{scope_prefix}:bucket:*`
   * **Branch Restrictions**: `all-nightly-branches`
-  
+
 * `{scope_prefix}:bucket:partner`
   * Tells beetmoverscript to use the production credentials to access the partner bucket
   * **Conflicts**: with any other `{scope_prefix}:bucket:*`
@@ -63,4 +63,4 @@ Supported scope prefixes:
 * `{scope_prefix}:bucket:release`
   * Tells beetmoverscript to use the production credentials to access the release buckets (namely candidates and releases)
   * **Conflicts**: with any other `{scope_prefix}:bucket:*`
-  * **Branch Restrictions**: `all-release-branches` 
+  * **Branch Restrictions**: `all-release-branches`

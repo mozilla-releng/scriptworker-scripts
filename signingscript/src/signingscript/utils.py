@@ -1,4 +1,5 @@
 """Signingscript general utility functions."""
+
 import asyncio
 import functools
 import hashlib
@@ -9,7 +10,7 @@ from asyncio.subprocess import PIPE, STDOUT
 from dataclasses import dataclass
 from shutil import copyfile
 
-from signingscript.exceptions import FailedSubprocess, SigningServerError, SigningScriptError
+from signingscript.exceptions import FailedSubprocess, SigningScriptError, SigningServerError
 
 log = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ class Autograph:
 @dataclass
 class AppleNotarization:
     """Apple notarization configuration object."""
+
     issuer_id: str
     key_id: str
     private_key: str

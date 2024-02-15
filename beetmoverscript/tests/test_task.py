@@ -198,7 +198,7 @@ def test_check_maven_artifact_map(context, mocker, payload_version, filename_ver
         },
         "scopes": ["project:releng:beetmover:action:push-to-maven"],
     }
-    mocker.patch('beetmoverscript.task.MAVEN_PRODUCT_TO_PATH', {"nightly_components": "fake/destination/"})
+    mocker.patch("beetmoverscript.task.MAVEN_PRODUCT_TO_PATH", {"nightly_components": "fake/destination/"})
 
     with expectation:
         check_maven_artifact_map(context, payload_version)

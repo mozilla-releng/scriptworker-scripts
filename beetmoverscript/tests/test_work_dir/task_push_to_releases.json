@@ -81,4 +81,3 @@
     "taskQueueId": "scriptworker-k8s/gecko-3-beetmover",
     "workerType": "gecko-3-beetmover"
   }
-  

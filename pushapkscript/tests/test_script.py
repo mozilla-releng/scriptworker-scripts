@@ -15,14 +15,15 @@ from .helpers.mock_file import mock_open
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("android_product, upstream_artifacts, is_aab, raises", 
+@pytest.mark.parametrize(
+    "android_product, upstream_artifacts, is_aab, raises",
     (
-        ("beta", { "someTaskId": ["/some/path/to/one.apk", "/some/path/to/another.apk"], "someOtherTaskId": ["/some/path/to/yet_another.apk"]}, False, False ),
-        ("release", { "someTaskId": ["/some/path/to/one.apk", "/some/path/to/another.apk"], "someOtherTaskId": ["/some/path/to/yet_another.apk"]}, False, False ),
-        ("dep", { "someTaskId": ["/some/path/to/one.aab", "/some/path/to/another.aab"], "someOtherTaskId": ["/some/path/to/yet_another.aab"]}, True, False ),
-        ("focus", { "someTaskId": ["/some/path/to/one.aab", "/some/path/to/another.aab"], "someOtherTaskId": ["/some/path/to/yet_another.aab"]}, True, False ),
-        ("aurora", { "someTaskId": ["/some/path/to/one.aab", "/some/path/to/another.aab"], "someOtherTaskId": ["/some/path/to/yet_another.apk"]}, True, True ),
-    )
+        ("beta", {"someTaskId": ["/some/path/to/one.apk", "/some/path/to/another.apk"], "someOtherTaskId": ["/some/path/to/yet_another.apk"]}, False, False),
+        ("release", {"someTaskId": ["/some/path/to/one.apk", "/some/path/to/another.apk"], "someOtherTaskId": ["/some/path/to/yet_another.apk"]}, False, False),
+        ("dep", {"someTaskId": ["/some/path/to/one.aab", "/some/path/to/another.aab"], "someOtherTaskId": ["/some/path/to/yet_another.aab"]}, True, False),
+        ("focus", {"someTaskId": ["/some/path/to/one.aab", "/some/path/to/another.aab"], "someOtherTaskId": ["/some/path/to/yet_another.aab"]}, True, False),
+        ("aurora", {"someTaskId": ["/some/path/to/one.aab", "/some/path/to/another.aab"], "someOtherTaskId": ["/some/path/to/yet_another.apk"]}, True, True),
+    ),
 )
 async def test_async_main(monkeypatch, android_product, upstream_artifacts, is_aab, raises):
     monkeypatch.setattr(
@@ -52,11 +53,13 @@ async def test_async_main(monkeypatch, android_product, upstream_artifacts, is_a
     context.task = {"payload": {"channel": android_product}}
 
     if is_aab:
+
         def assert_google_play_call_aab(_, __, all_aabs_files, ___):
             assert sorted([file.name for file in all_aabs_files]) == ["/some/path/to/another.aab", "/some/path/to/one.aab", "/some/path/to/yet_another.aab"]
 
         monkeypatch.setattr(publish, "publish_aab", assert_google_play_call_aab)
     else:
+
         def assert_google_play_call_apk(_, __, all_apks_files, ___):
             assert sorted([file.name for file in all_apks_files]) == ["/some/path/to/another.apk", "/some/path/to/one.apk", "/some/path/to/yet_another.apk"]
 

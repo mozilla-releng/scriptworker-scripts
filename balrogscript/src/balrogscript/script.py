@@ -5,9 +5,10 @@ import logging
 import os
 import sys
 
-import scriptworker_client.client
 from immutabledict import immutabledict
 from redo import retry  # noqa: E402
+
+import scriptworker_client.client
 
 from .submitter.cli import (
     NightlySubmitterV4,

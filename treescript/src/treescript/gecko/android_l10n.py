@@ -5,19 +5,19 @@ import logging
 import os
 import shutil
 import tempfile
+
 from compare_locales import paths
 
 from scriptworker_client.utils import run_command
-
 from treescript.exceptions import CheckoutError
 from treescript.gecko import mercurial as vcs
 from treescript.util.task import (
     CLOSED_TREE_MSG,
     DONTBUILD_MSG,
-    get_dontbuild,
-    get_ignore_closed_tree,
     get_android_l10n_import_info,
     get_android_l10n_sync_info,
+    get_dontbuild,
+    get_ignore_closed_tree,
     get_short_source_repo,
 )
 from treescript.util.treestatus import check_treestatus

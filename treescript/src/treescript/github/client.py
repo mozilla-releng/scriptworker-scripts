@@ -1,4 +1,5 @@
 """Treescript git functions."""
+
 import base64
 import logging
 from collections import defaultdict
@@ -7,8 +8,9 @@ from textwrap import dedent
 from typing import Dict, List, Optional, Union
 
 from gql.transport.exceptions import TransportQueryError
-from scriptworker_client.utils import retry_async
 from simple_github import AppClient
+
+from scriptworker_client.utils import retry_async
 
 log = logging.getLogger(__name__)
 
@@ -116,7 +118,7 @@ class GithubClient:
         query = Template(
             dedent(
                 """
-            query getFileContents { 
+            query getFileContents {
               repository(owner: "$owner", name: "$repo") {
                   $fields
               }

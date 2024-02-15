@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 """Signing script."""
+import json
 import logging
 import os
-
-import aiohttp
-import json
-import scriptworker.client
 from dataclasses import asdict
 
-from signingscript.task import build_filelist_dict, sign, task_signing_formats, task_cert_type
-from signingscript.utils import copy_to_dir, load_apple_notarization_configs, load_autograph_configs
+import aiohttp
+import scriptworker.client
+
 from signingscript.exceptions import SigningScriptError
+from signingscript.task import build_filelist_dict, sign, task_cert_type, task_signing_formats
+from signingscript.utils import copy_to_dir, load_apple_notarization_configs, load_autograph_configs
 
 log = logging.getLogger(__name__)
 
@@ -101,14 +101,14 @@ def setup_apple_notarization_credentials(context):
 
     context.apple_credentials_path = os.path.join(
         os.path.dirname(context.config["apple_notarization_configs"]),
-        'apple_api_key.json',
+        "apple_api_key.json",
     )
     if os.path.exists(context.apple_credentials_path):
         # TODO: If we have different api keys for each product, this needs to overwrite every task:
         return
     # Convert dataclass to dict so json module can read it
     credential = asdict(scope_credentials[0])
-    with open(context.apple_credentials_path, 'wb') as credfile:
+    with open(context.apple_credentials_path, "wb") as credfile:
         credfile.write(json.dumps(credential).encode("ascii"))
 
 

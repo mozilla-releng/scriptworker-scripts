@@ -13,7 +13,7 @@ from scriptworker import client
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from beetmoverscript import utils
-from beetmoverscript.constants import CHECKSUMS_CUSTOM_FILE_NAMING, STAGE_PLATFORM_MAP, MAVEN_PRODUCT_TO_PATH
+from beetmoverscript.constants import CHECKSUMS_CUSTOM_FILE_NAMING, MAVEN_PRODUCT_TO_PATH, STAGE_PLATFORM_MAP
 
 log = logging.getLogger(__name__)
 

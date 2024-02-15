@@ -4,6 +4,7 @@ import pytest
 
 from scriptworker.context import Context
 
+
 @pytest.fixture(scope="function")
 def tmpdir():
     with tempfile.TemporaryDirectory() as tmp:

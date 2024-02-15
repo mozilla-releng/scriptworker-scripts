@@ -7,9 +7,9 @@ import zipfile
 
 import requests
 from azure.storage.blob import BlobClient
-from scriptworker_client.exceptions import TaskVerificationError
 
 from pushmsixscript import task
+from scriptworker_client.exceptions import TaskVerificationError
 
 log = logging.getLogger(__name__)
 

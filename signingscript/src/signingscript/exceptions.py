@@ -1,4 +1,5 @@
 """Signingscript exceptions."""
+
 from scriptworker.constants import STATUSES
 from scriptworker.exceptions import ScriptWorkerTaskException
 
