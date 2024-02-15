@@ -15,7 +15,6 @@ pip-compile-multi
 pytest
 pytest-aioresponses
 pytest-asyncio
-pytest-black
 pytest-cov
 pytest-mock
 tox
