@@ -1,14 +1,10 @@
 # Specifically for testing
 -r base.in
 
-black
 check-manifest
 coverage>=4.2
-flake8
-flake8_docstrings
 hglib
 json-e
-isort
 mock
 mypy
 pip-compile-multi

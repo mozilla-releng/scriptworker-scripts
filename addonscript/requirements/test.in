@@ -2,13 +2,9 @@
 # Specifically for testing
 -r base.in
 aioresponses
-black
 check-manifest
 coverage>=4.2
-flake8
-flake8_docstrings
 freezegun
-isort
 mock
 pip-compile-multi
 pytest

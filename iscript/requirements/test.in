@@ -1,10 +1,6 @@
 -r base.in
-black
 check-manifest
 coverage
-flake8
-flake8_docstrings
-isort
 mock
 mypy
 pip-compile-multi
