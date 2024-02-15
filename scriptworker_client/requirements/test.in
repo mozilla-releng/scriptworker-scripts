@@ -6,7 +6,8 @@ coverage
 flake8
 flake8_docstrings
 mock
-pytest
+# pytest-black is currently causing an exception with pytest >= 8
+pytest < 8
 pytest-asyncio
 pytest-black
 pytest-cov
