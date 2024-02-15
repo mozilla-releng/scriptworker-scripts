@@ -6,7 +6,6 @@ import os
 from scriptworker_client.aio import download_file, retry_async
 from scriptworker_client.exceptions import DownloadError
 from scriptworker_client.utils import load_json_or_yaml
-
 from treescript.util.task import get_short_source_repo
 
 log = logging.getLogger(__name__)

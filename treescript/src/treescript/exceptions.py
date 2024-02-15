@@ -1,4 +1,5 @@
 """Treescript exceptions."""
+
 import scriptworker_client.exceptions as sce
 
 

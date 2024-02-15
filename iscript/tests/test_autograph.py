@@ -34,12 +34,10 @@ def sign_config():
     }
 
 
-async def noop_async(*args, **kwargs):
-    ...
+async def noop_async(*args, **kwargs): ...
 
 
-def noop_sync(*args, **kwargs):
-    ...
+def noop_sync(*args, **kwargs): ...
 
 
 # sign_file_with_autograph {{{1

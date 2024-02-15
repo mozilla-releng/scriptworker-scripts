@@ -1,4 +1,5 @@
 """iScript exceptions."""
+
 from scriptworker_client.exceptions import TaskError
 
 

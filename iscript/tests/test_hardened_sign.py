@@ -77,7 +77,5 @@ def test_copy_provisioning_profile_fail(tmpdir):
 
 
 def test_build_sign_command(tmpdir):
-    file_map = {
-        hs_config[0]["entitlements"]: "filepath"
-    }
+    file_map = {hs_config[0]["entitlements"]: "filepath"}
     hs.build_sign_command(tmpdir, "12345identity", "keychainpath", hs_config[0], file_map)

@@ -7,8 +7,8 @@ import os
 from mozilla_version.gecko import FirefoxVersion, GeckoVersion, ThunderbirdVersion
 from mozilla_version.mobile import MobileVersion
 
-from treescript.gecko import mercurial as vcs
 from treescript.exceptions import TaskVerificationError, TreeScriptError
+from treescript.gecko import mercurial as vcs
 from treescript.util.task import DONTBUILD_MSG, get_dontbuild, get_metadata_source_repo, get_version_bump_info
 
 log = logging.getLogger(__name__)

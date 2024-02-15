@@ -51,11 +51,14 @@ async def die_async(*args, **kwargs):
 
 # async_main {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("task,expected", (
-    ({"payload": {"source_repo": "https://github.com/foo/bar"}}, "github"),
-    ({"payload": {"source_repo": "https://hg.mozilla.org/foo"}}, "gecko"),
-    ({"payload": {}}, TaskVerificationError),
-))
+@pytest.mark.parametrize(
+    "task,expected",
+    (
+        ({"payload": {"source_repo": "https://github.com/foo/bar"}}, "github"),
+        ({"payload": {"source_repo": "https://hg.mozilla.org/foo"}}, "gecko"),
+        ({"payload": {}}, TaskVerificationError),
+    ),
+)
 async def test_async_main(mocker, task, expected):
     gecko_mock = AsyncMock()
     github_mock = AsyncMock()

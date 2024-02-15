@@ -42,7 +42,7 @@ def cleanup_gcloud(context):
 
 def setup_gcloud(context):
     gcs_creds = get_credentials(context, "gcloud")
-    if type(gcs_creds) is str and len(gcs_creds) > 0:
+    if isinstance(gcs_creds, str) and len(gcs_creds) > 0:
         setup_gcs_credentials(gcs_creds)
         set_gcp_client(context)
     else:

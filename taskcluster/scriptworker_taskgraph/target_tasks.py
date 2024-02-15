@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from taskgraph.target_tasks import register_target_task, filter_for_tasks_for
+from taskgraph.target_tasks import filter_for_tasks_for, register_target_task
 
 
 def filter_for_script(task, parameters):

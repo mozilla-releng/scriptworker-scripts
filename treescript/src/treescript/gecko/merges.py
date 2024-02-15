@@ -1,4 +1,5 @@
 """Treescript merge day functionality."""
+
 import logging
 import os
 import shutil
@@ -6,8 +7,8 @@ import string
 from datetime import date
 
 import attr
-from scriptworker_client.utils import makedirs
 
+from scriptworker_client.utils import makedirs
 from treescript.gecko.l10n import l10n_bump
 from treescript.gecko.mercurial import commit, get_revision, run_hg_command
 from treescript.gecko.versionmanip import do_bump_version, get_version

@@ -4,6 +4,7 @@ from asyncio import ensure_future
 from aiohttp_retry import ExponentialRetry, RetryClient
 from github3 import GitHub
 from github3.exceptions import NotFoundError, ServerError
+
 from scriptworker_client.exceptions import TaskError
 from scriptworker_client.utils import async_wrap, get_single_item_from_sequence, raise_future_exceptions, retry_async_decorator
 

@@ -21,7 +21,7 @@ async def test_bump_version_mobile(aioresponses, client):
         },
         "metadata": {
             "source": f"https://github.com/foo/bar/blob/{head_rev}/taskcluster/ci/version-bump",
-        }
+        },
     }
 
     # First query is to get the contents of 'version.txt'

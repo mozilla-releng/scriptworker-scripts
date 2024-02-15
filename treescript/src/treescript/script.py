@@ -6,7 +6,6 @@ import os
 from scriptworker_client.aio import retry_async
 from scriptworker_client.client import sync_main
 from scriptworker_client.github import is_github_url
-
 from treescript import gecko, github
 from treescript.exceptions import CheckoutError, PushError
 from treescript.util.task import get_source_repo

@@ -8,6 +8,7 @@ import scriptworker.utils
 import addonscript.script as script
 from addonscript.exceptions import AMOConflictError, SignatureError
 
+
 @pytest.mark.asyncio
 async def test_sign_addon(context, mocker, tmpdir):
     context.config["artifact_dir"] = tmpdir

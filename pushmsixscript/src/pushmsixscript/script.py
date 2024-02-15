@@ -4,9 +4,8 @@
 import logging
 import os
 
-from scriptworker_client import client
-
 from pushmsixscript import artifacts, manifest, microsoft_store, task
+from scriptworker_client import client
 
 log = logging.getLogger(__name__)
 

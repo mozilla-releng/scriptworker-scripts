@@ -108,7 +108,7 @@ def test_get_bundle_executable(tmpdir):
     """``get_bundle_executable`` returns the CFBundleExecutable."""
     os.mkdir(os.path.join(tmpdir, "Contents"))
     with open(os.path.join(tmpdir, "Contents", "Info.plist"), "wb") as fp:
-        plistlib.dump({ "CFBundleExecutable": "main" }, fp)
+        plistlib.dump({"CFBundleExecutable": "main"}, fp)
 
     assert mac.get_bundle_executable(tmpdir) == "main"
 

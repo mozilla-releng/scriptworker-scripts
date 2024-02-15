@@ -14,7 +14,7 @@ transforms:
 jobs:
     ruff:
         description: "ruff-py39"
-        run-on-tasks-for: 
+        run-on-tasks-for:
             - "github-pull-request"
             - "github-push"
         attributes:

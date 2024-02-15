@@ -191,4 +191,7 @@ async def test_do_actions_mismatch_change_count(mocker):
     mocker.patch.object(gecko, "bump_version", new=mocked_bump)
     mocker.patch.object(gecko, "l10n_bump", new=mocked_l10n)
     with pytest.raises(TreeScriptError):
-        await gecko.do_actions({"work_dir": "foo", "trust_domain": "gecko"}, {"metadata": {"source": "https://hg.mozilla.org/file/"}, "payload": {"push": False, "actions": actions}})
+        await gecko.do_actions(
+            {"work_dir": "foo", "trust_domain": "gecko"},
+            {"metadata": {"source": "https://hg.mozilla.org/file/"}, "payload": {"push": False, "actions": actions}},
+        )

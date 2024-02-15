@@ -1,7 +1,7 @@
 import logging
 
-from mozapkpublisher.push_apk import push_apk
 from mozapkpublisher.push_aab import push_aab
+from mozapkpublisher.push_apk import push_apk
 
 log = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ def publish(product_config, publish_config, apk_files, contact_server):
             skip_check_same_locales=bool(product_config.get("skip_check_same_locales")),
             skip_checks_fennec=bool(product_config.get("skip_checks_fennec")),
         )
+
 
 def publish_aab(product_config, publish_config, aab_files, contact_server):
     if aab_files:

@@ -7,7 +7,7 @@ import scriptworker.client
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from scriptworker.utils import retry_async
 
-from addonscript.api import add_app_version, do_upload, do_create_version, get_signed_addon_info, get_signed_xpi, check_upload
+from addonscript.api import add_app_version, check_upload, do_create_version, do_upload, get_signed_addon_info, get_signed_xpi
 from addonscript.exceptions import AMOConflictError, SignatureError
 from addonscript.task import build_filelist
 from addonscript.xpi import get_langpack_info
@@ -68,10 +68,7 @@ def build_locales_context(context):
     for file_ in build_filelist(context):
         current_info = get_langpack_info(file_)
         langpack_info.append(current_info)
-    context.locales = {
-        locale_info["locale"]: locale_info
-        for locale_info in langpack_info
-    }
+    context.locales = {locale_info["locale"]: locale_info for locale_info in langpack_info}
 
 
 async def async_main(context):
