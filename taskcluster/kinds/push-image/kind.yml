@@ -9,27 +9,31 @@ kind-dependencies:
     - docker-image
 
 transforms:
+    - scriptworker_taskgraph.transforms.push_image
     - taskgraph.transforms.run:transforms
     - taskgraph.transforms.task:transforms
 
 task-defaults:
     worker-type: images
-    description: "{name} k8s image builder py{python_version}"
+    description: "{name} image builder py{python_version}"
     name: "{name}-python{python_version}"
     worker:
         taskcluster-proxy: true
         docker-image: {in-tree: skopeo}
         max-run-time: 1800
         env:
-            # TODO: This should probably be set in a transform? either that or remove it because we don't really use it
-            VCS_HEAD_REPOSITORY: scriptworker-scripts
-            VCS_HEAD_REV: main
-            APP_VERSION: 1.0.0
-    run-on-tasks-for: ["action", "github-pull-request", "github-push"]
-    # run-on-tasks-for: [github-push]
-    # run-on-git-branches:
-    #     - dev
-    #     - production
+            VCS_HEAD_REPOSITORY: https://github.com/mozilla-releng/scriptworker-scripts
+            TASKCLUSTER_ROOT_URL: "$TASKCLUSTER_ROOT_URL"
+            # The following are set in the transform:
+            APP:
+            VCS_HEAD_REV:
+            DOCKER_REPO:
+            DOCKER_TAG:
+            DOCKER_ARCHIVE_TAG:
+    run-on-tasks-for: [github-push]
+    run-on-git-branches:
+        - dev
+        - production
     run:
         using: run-task
         checkout: false
@@ -40,118 +44,16 @@ task-defaults:
         image:
             - artifact: image.tar.zst
               extract: false
-    # TODO: Uncomment to enable pushing
-    # scopes:
-    #     - secrets:get:project/releng/scriptworker-scripts/deploy
 
 tasks:
-    addonscript:
-        run-on-git-branches:
-            - dev-addonscript
-            - production-addonscript
-        dependencies:
-            image: build-docker-image-addonscript
-        worker:
-            env:
-                APP: addonscript
-                DOCKER_REPO: mozilla/releng-addonscript
-    balrogscript:
-        run-on-git-branches:
-            - dev-balrogscript
-            - production-balrogscript
-        dependencies:
-            image: build-docker-image-balrogscript
-        worker:
-            env:
-                APP: balrogscript
-                DOCKER_REPO: mozilla/releng-balrogscript
-    beetmoverscript:
-        run-on-git-branches:
-            - dev-beetmoverscript
-            - production-beetmoverscript
-        dependencies:
-            image: build-docker-image-beetmoverscript
-        worker:
-            env:
-                APP: beetmoverscript
-                DOCKER_REPO: mozilla/releng-beetmoverscript
-    bouncerscript:
-        run-on-git-branches:
-            - dev-bouncerscript
-            - production-bouncerscript
-        dependencies:
-            image: build-docker-image-bouncerscript
-        worker:
-            env:
-                APP: bouncerscript
-                DOCKER_REPO: mozilla/releng-bouncerscript
-    githubscript:
-        run-on-git-branches:
-            - dev-githubscript
-            - production-githubscript
-        dependencies:
-            image: build-docker-image-githubscript
-        worker:
-            env:
-                APP: githubscript
-                DOCKER_REPO: mozilla/releng-githubscript
-    pushapkscript:
-        run-on-git-branches:
-            - dev-pushapkscript
-            - production-pushapkscript
-        dependencies:
-            image: build-docker-image-pushapkscript
-        worker:
-            env:
-                APP: pushapkscript
-                DOCKER_REPO: mozilla/releng-pushapkscript
-    pushflatpakscript:
-        run-on-git-branches:
-            - dev-pushflatpakscript
-            - production-pushflatpakscript
-        dependencies:
-            image: build-docker-image-pushflatpakscript
-        worker:
-            env:
-                APP: pushflatpakscript
-                DOCKER_REPO: mozilla/releng-pushflatpakscript
-    pushmsixscript:
-        run-on-git-branches:
-            - dev-pushmsixscript
-            - production-pushmsixscript
-        dependencies:
-            image: build-docker-image-pushmsixscript
-        worker:
-            env:
-                APP: pushmsixscript
-                DOCKER_REPO: mozilla/releng-pushmsixscript
-    shipitscript:
-        run-on-git-branches:
-            - dev-shipitscript
-            - production-shipitscript
-        dependencies:
-            image: build-docker-image-shipitscript
-        worker:
-            env:
-                APP: shipitscript
-                DOCKER_REPO: mozilla/releng-shipitscript
-    signingscript:
-        run-on-git-branches:
-            - dev-signingscript
-            - production-signingscript
-        dependencies:
-            image: build-docker-image-signingscript
-        worker:
-            env:
-                APP: signingscript
-                DOCKER_REPO: mozilla/releng-signingscript
-    treescript:
-        run-on-git-branches:
-            - dev-treescript
-            - production-treescript
-        dependencies:
-            image: build-docker-image-treescript
-        worker:
-            env:
-                APP: treescript
-                DOCKER_REPO: mozilla/releng-treescript
+    addonscript: {}
+    balrogscript: {}
+    beetmoverscript: {}
+    bouncerscript: {}
+    githubscript: {}
+    pushapkscript: {}
+    pushflatpakscript: {}
+    pushmsixscript: {}
+    shipitscript: {}
+    signingscript: {}
+    treescript: {}
