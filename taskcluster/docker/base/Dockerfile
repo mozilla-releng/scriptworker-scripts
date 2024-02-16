@@ -5,10 +5,9 @@
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
 
-RUN ln -s /app/docker.d/healthcheck /bin/healthcheck
-
-RUN groupadd --gid 10001 app \
-  && useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
+RUN ln -s /app/docker.d/healthcheck /bin/healthcheck \
+ && groupadd --gid 10001 app \
+ && useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
 
 # %include scriptworker_client
 ADD --chown=app:app topsrcdir/scriptworker_client /app/scriptworker_client
