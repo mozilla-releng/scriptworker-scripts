@@ -93,7 +93,7 @@ tasks:
             || (tasks_for == "github-pull-request" && pullRequestAction in ["opened", "reopened", "synchronize"])
             || (tasks_for == "github-push"
                 && head_branch[:11] == "refs/heads/"
-                && (head_branch[11:] in ["main", "production", "dev"]
+                && (head_branch[11:] in ["master", "production", "dev"]
                     || (head_branch[11:22] == "production-" && head_branch[22:] in allScripts)
                     || (head_branch[11:15] == "dev-" && head_branch[15:] in allScripts)
                     )
