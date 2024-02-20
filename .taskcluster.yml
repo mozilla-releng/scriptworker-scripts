@@ -72,10 +72,32 @@ tasks:
               $if: 'tasks_for == "github-pull-request"'
               then: ${event.action}
               else: 'UNDEFINED'
+          # All scripts that are released via {production,dev}-{script} branch
+          allScripts:
+              - addonscript
+              - balrogscript
+              - beetmoverscript
+              - bouncerscript
+              - githubscript
+              # - iscript (iscript has special release via ronin_puppet repo)
+              - pushapkscript
+              - pushflatpakscript
+              - pushmsixscript
+              - shipitscript
+              - signingscript
+              - treescript
       in:
+          # if action/cron OR pr event OR push on protected branches
           $if: >
-            tasks_for in ["github-push", "action", "cron"]
+            tasks_for in ["action", "cron"]
             || (tasks_for == "github-pull-request" && pullRequestAction in ["opened", "reopened", "synchronize"])
+            || (tasks_for == "github-push"
+                && head_branch[:11] == "refs/heads/"
+                && (head_branch[11:] in ["main", "production", "dev"]
+                    || (head_branch[11:22] == "production-" && head_branch[22:] in allScripts)
+                    || (head_branch[11:15] == "dev-" && head_branch[15:] in allScripts)
+                    )
+                )
           then:
               $let:
                   level:
