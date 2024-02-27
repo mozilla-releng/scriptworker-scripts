@@ -48,6 +48,7 @@ task-defaults:
 tasks:
     addonscript: {}
     balrogscript: {}
+    bitrisescript: {}
     beetmoverscript: {}
     bouncerscript: {}
     githubscript: {}
