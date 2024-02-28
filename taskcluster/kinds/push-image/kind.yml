@@ -32,8 +32,9 @@ task-defaults:
             DOCKER_ARCHIVE_TAG:
     run-on-tasks-for: [github-push]
     run-on-git-branches:
-        - dev
-        - production
+        # Task-specific branches are added in transform
+        - ^dev$
+        - ^production$
     run:
         using: run-task
         checkout: false
