@@ -19,5 +19,4 @@ pushdate: 0
 pushlog_id: '0'
 repository_type: git
 script_name: signingscript
-target_tasks_method: docker-hub-push
 tasks_for: github-push

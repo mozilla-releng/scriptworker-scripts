@@ -53,4 +53,3 @@ def get_decision_parameters(graph_config, parameters):
         if parameters["docker_tag"] in PUSH_TAGS and parameters["level"] == "3":
             parameters["push_docker_image"] = True
             parameters["optimize_target_tasks"] = False
-            parameters["target_tasks_method"] = "docker-hub-push"
