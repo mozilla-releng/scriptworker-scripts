@@ -45,6 +45,8 @@ task-defaults:
         image:
             - artifact: image.tar.zst
               extract: false
+    scopes:
+        - secrets:get:project/releng/scriptworker-scripts/deploy
 
 tasks:
     addonscript: {}

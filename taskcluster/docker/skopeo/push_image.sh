@@ -1,5 +1,7 @@
 #!/bin/sh
 set -e
+# Set pipefail so curl failures are caught before the pipe to jq
+set -o pipefail
 
 test $APP
 test $DOCKER_TAG

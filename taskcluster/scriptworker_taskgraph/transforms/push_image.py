@@ -27,7 +27,6 @@ def set_task_requirements(config, tasks):
 def set_environment(config, tasks):
     """Set the environment variables for the docker hub task."""
     for task in tasks:
-        scopes = task.setdefault("scopes", [])
         env = task["worker"].setdefault("env", {})
         head_rev = config.params["head_rev"]
         docker_repo = f"mozilla/releng-{task['name']}"
@@ -43,10 +42,4 @@ def set_environment(config, tasks):
                 "DOCKER_ARCHIVE_TAG": docker_archive_tag,
             }
         )
-        push_docker_image = config.params.get("push_docker_image")
-        if push_docker_image:
-            env.update({"PUSH_DOCKER_IMAGE": "1"})
-            scopes.append("secrets:get:project/releng/scriptworker-scripts/deploy")
-        else:
-            env["PUSH_DOCKER_IMAGE"] = "0"
         yield task

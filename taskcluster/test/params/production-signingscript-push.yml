@@ -14,7 +14,6 @@ moz_build_date: '20230203184831'
 optimize_target_tasks: false
 owner: user@example.com
 project: scriptworker-scripts
-push_docker_image: true
 pushdate: 0
 pushlog_id: '0'
 repository_type: git
