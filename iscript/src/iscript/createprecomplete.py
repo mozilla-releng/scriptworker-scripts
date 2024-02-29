@@ -21,7 +21,15 @@ def get_build_entries(root_path):
             parent_dir_rel_path = root[len(root_path) + 1 :]
             rel_path_file = os.path.join(parent_dir_rel_path, file_name)
             rel_path_file = rel_path_file.replace("\\", "/")
-            if not (rel_path_file.endswith("channel-prefs.js") or rel_path_file.endswith("update-settings.ini") or rel_path_file.find("distribution/") != -1):
+            if not (
+                rel_path_file.endswith("channel-prefs.js")
+                or rel_path_file.endswith("update-settings.ini")
+                or "/ChannelPrefs.framework/" in rel_path_file
+                or rel_path_file.startswith("ChannelPrefs.framework/")
+                or "/UpdateSettings.framework/" in rel_path_file
+                or rel_path_file.startswith("UpdateSettings.framework/")
+                or "distribution/" in rel_path_file
+            ):
                 rel_file_path_set.add(rel_path_file)
 
         for dir_name in dirs:
