@@ -187,9 +187,9 @@ immutabledict==4.1.0 \
     --hash=sha256:93d100ccd2cd09a1fd3f136b9328c6e59529ba341de8bb499437f6819159fe8a \
     --hash=sha256:c176e99aa90aedb81716ad35218bb2055d049b549626db4523dbe011cf2f32ac
     # via -r requirements/base.in
-importlib-resources==6.1.1 \
-    --hash=sha256:3893a00122eafde6894c59914446a512f728a0c1a45f9bb9b63721b6bacf0b4a \
-    --hash=sha256:e8bf90d8213b486f428c9c39714b920041cb02c184686a3dee24905aaa8105d6
+importlib-resources==6.1.2 \
+    --hash=sha256:308abf8474e2dba5f867d279237cd4076482c3de7104a40b41426370e891549b \
+    --hash=sha256:9a0a862501dc38b68adebc82970140c9e4209fc99601782925178f8386339938
     # via
     #   jsonschema
     #   jsonschema-specifications
