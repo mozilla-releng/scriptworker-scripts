@@ -1,0 +1,63 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - docker-image
+
+transforms:
+    - scriptworker_taskgraph.transforms.push_image
+    - taskgraph.transforms.run:transforms
+    - taskgraph.transforms.task:transforms
+
+task-defaults:
+    worker-type: images
+    description: "{name} image builder py{python_version}"
+    name: "{name}-python{python_version}"
+    worker:
+        taskcluster-proxy: true
+        docker-image: {in-tree: skopeo}
+        max-run-time: 1800
+        env:
+            VCS_HEAD_REPOSITORY: https://github.com/mozilla-releng/scriptworker-scripts
+            TASKCLUSTER_ROOT_URL: "$TASKCLUSTER_ROOT_URL"
+            # The following are set in the transform:
+            APP:
+            VCS_HEAD_REV:
+            DOCKER_REPO:
+            DOCKER_TAG:
+            DOCKER_ARCHIVE_TAG:
+    run-on-tasks-for: [github-push]
+    run-on-git-branches:
+        # Task-specific branches are added in transform
+        - ^dev$
+        - ^production$
+    run:
+        using: run-task
+        checkout: false
+        cache-dotcache: false
+        command:
+            - /usr/local/bin/push_image.sh
+    fetches:
+        image:
+            - artifact: image.tar.zst
+              extract: false
+    scopes:
+        - secrets:get:project/releng/scriptworker-scripts/deploy
+
+tasks:
+    addonscript: {}
+    balrogscript: {}
+    bitrisescript: {}
+    beetmoverscript: {}
+    bouncerscript: {}
+    githubscript: {}
+    pushapkscript: {}
+    pushflatpakscript: {}
+    pushmsixscript: {}
+    shipitscript: {}
+    signingscript: {}
+    treescript: {}
