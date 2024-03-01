@@ -100,13 +100,13 @@ tasks:
     pushapkscript:
         python-versions: [39]
         worker:
-            docker-image: {in-tree: 'pushapkscript-test-py{python_version}'}
+            docker-image: {in-tree: 'pushapkscript-python{python_version}'}
         resources:
             - pushapkscript
     pushflatpakscript:
         python-versions: [39]
         worker:
-            docker-image: {in-tree: 'pushflatpakscript-test-py{python_version}'}
+            docker-image: {in-tree: 'pushflatpakscript-python{python_version}'}
         resources:
             - pushflatpakscript
     pushmsixscript:
@@ -124,7 +124,7 @@ tasks:
     signingscript:
         python-versions: [39]
         worker:
-            docker-image: {in-tree: 'signingscript-test-py{python_version}'}
+            docker-image: {in-tree: 'signingscript-python{python_version}'}
         resources:
             - signingscript
             - vendored/mozbuild

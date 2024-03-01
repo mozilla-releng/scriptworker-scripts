@@ -6,7 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - tox
-    - docker-image
+    - k8s-image
 
 transforms:
     - taskgraph.transforms.code_review:transforms

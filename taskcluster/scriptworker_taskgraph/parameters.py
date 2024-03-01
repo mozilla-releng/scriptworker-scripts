@@ -17,6 +17,7 @@ PUSH_TAGS = ("dev", "production")
 def get_defaults(_):
     return {
         "docker_tag": None,
+        "push_docker_image": False,
         "script_name": None,
         "script_revision": None,
         "shipping_phase": None,
@@ -25,6 +26,7 @@ def get_defaults(_):
 
 scriptworker_schema = {
     Optional("docker_tag"): Any(str, None),
+    Optional("push_docker_image"): Any(True, False, None),
     Optional("script_name"): Any(str, None),
     Optional("script_revision"): Any(str, None),
     Optional("shipping_phase"): Any("build", "promote", None),
@@ -49,4 +51,6 @@ def get_decision_parameters(graph_config, parameters):
                 parameters["docker_tag"] = tag
                 break
         if parameters["docker_tag"] in PUSH_TAGS and parameters["level"] == "3":
+            parameters["push_docker_image"] = True
             parameters["optimize_target_tasks"] = False
+            parameters["target_tasks_method"] = "docker-hub-push"
