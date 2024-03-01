@@ -22,80 +22,21 @@ tasks:
         args:
             PYTHON_VERSION: "3.8"
             PYTHON_REQ_SUFFIX: ".py38"
-
-    # Used by push-image kind
-    skopeo: {}
-
-    base:
-        args:
-            BASE_IMAGE: python:3.9.7
-    # TODO: Figure out PYTHON_REQ_SUFFIX when we decide to have py3.10
-    # base-3.10:
-    #     definition: base
-    #     args:
-    #         BASE_IMAGE: python:3.10
-    addonscript:
-        definition: script
-        parent: base
-        args:
-            SCRIPT_NAME: addonscript
-    balrogscript:
-        definition: script
-        parent: base
-        args:
-            SCRIPT_NAME: balrogscript
-    bitrisescript:
-        definition: script
-        parent: base
-        args:
-            SCRIPT_NAME: beetmoverscript
-    beetmoverscript:
-        definition: script
-        parent: base
-        args:
-            SCRIPT_NAME: beetmoverscript
-    bouncerscript:
-        definition: script
-        parent: base
-        args:
-            SCRIPT_NAME: bouncerscript
-    githubscript:
-        definition: script
-        parent: base
-        args:
-            SCRIPT_NAME: githubscript
-    shipitscript:
-        definition: script
-        parent: base
-        args:
-            SCRIPT_NAME: shipitscript
-    pushapkscript:
-        parent: base
-    pushflatpakscript:
-        parent: base
-    pushmsixscript:
-        parent: base
-    signingscript:
-        parent: base
-    treescript:
-        parent: base
-
-    # Testing images
-    pushapkscript-test-py39:
-        definition: base-test
-        args:
-            BASE_IMAGE: python:3.9.7
-            APT_PACKAGES: default-jdk
-
-    pushflatpakscript-test-py39:
-        definition: base-test
-        args:
-            BASE_IMAGE: python:3.9.7
-            # Copied from pushflatpakscript/docker.d/image_setup.sh
-            APT_PACKAGES: gir1.2-ostree-1.0 libgirepository1.0-dev ostree
-
-    signingscript-test-py39:
-        definition: base-test
-        args:
-            BASE_IMAGE: python:3.9.7
-            APT_PACKAGES: osslsigncode cmake clang
+    pushapkscript-python38:
+        definition: pushapkscript
+        parent: python38
+    pushapkscript-python39:
+        definition: pushapkscript
+        parent: python39
+    pushflatpakscript-python38:
+        definition: pushflatpakscript
+        parent: python38
+    pushflatpakscript-python39:
+        definition: pushflatpakscript
+        parent: python39
+    signingscript-python38:
+        definition: signingscript
+        parent: python38
+    signingscript-python39:
+        definition: signingscript
+        parent: python39
