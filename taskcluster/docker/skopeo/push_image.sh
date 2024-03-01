@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -e
 # Set pipefail so curl failures are caught before the pipe to jq
-set -o pipefail
+set -o pipefail  # This will fail on sh / only works on bash
 
 test $APP
 test $DOCKER_TAG
@@ -16,7 +16,8 @@ test $VCS_HEAD_REV
 echo "=== Generating dockercfg ==="
 PASSWORD_URL=http://taskcluster/secrets/v1/secret/project/releng/scriptworker-scripts/deploy
 install -m 600 /dev/null $HOME/.dockercfg
-curl $PASSWORD_URL | jq '.secret.dockercfg' > $HOME/.dockercfg
+# curl --fail forces curl to return a non-zero exit code if the response isn't HTTP 200 (i.e.: HTTP 403 Unauthorized)
+curl --fail -v $PASSWORD_URL | jq '.secret.dockercfg' > $HOME/.dockercfg
 
 cd $MOZ_FETCHES_DIR
 unzstd image.tar.zst
