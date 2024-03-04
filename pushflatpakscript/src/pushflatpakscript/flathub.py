@@ -198,6 +198,3 @@ def push(context, flatpak_file_path, channel):
 
     log.info(f"Publishing the flatpak to the associated {publish_build_output}")
     run_flat_manager_client_process(context, token_args + ["publish", "--wait", publish_build_output])
-
-    log.info(f"Cleaning up byt purging {publish_build_output}")
-    run_flat_manager_client_process(context, token_args + ["purge", publish_build_output])
