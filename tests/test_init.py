@@ -81,7 +81,6 @@ CONTEXT = {
         "CLIENT_SECRET": "Zm9vYmFyCg==",
     },
     "signing": {
-        "GPG_PUBKEY": "Zm9vYmFyCg==",
         "PUBLIC_IP": "127.0.0.1",
         "WIDEVINE_CERT": "Zm9vYmFyCg==",
         "AUTOGRAPH_AUTHENTICODE_PASSWORD": "1",
