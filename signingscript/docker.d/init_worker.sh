@@ -195,6 +195,16 @@ case $ENV in
         test_var_set 'AUTOGRAPH_OMNIJA_USERNAME'
         test_var_set 'AUTOGRAPH_WIDEVINE_PASSWORD'
         test_var_set 'AUTOGRAPH_WIDEVINE_USERNAME'
+        if [ "$COT_PRODUCT" = "firefox" ]; then
+            test_var_set 'AUTOGRAPH_FENIX_USERNAME'
+            test_var_set 'AUTOGRAPH_FENIX_PASSWORD'
+            test_var_set 'AUTOGRAPH_FENIX_MOZILLA_ONLINE_USERNAME'
+            test_var_set 'AUTOGRAPH_FENIX_MOZILLA_ONLINE_PASSWORD'
+            test_var_set 'AUTOGRAPH_FENNEC_RELEASE_USERNAME'
+            test_var_set 'AUTOGRAPH_FENNEC_RELEASE_PASSWORD'
+            test_var_set 'AUTOGRAPH_FOCUS_USERNAME'
+            test_var_set 'AUTOGRAPH_FOCUS_PASSWORD'
+        fi
         ;;
       mobile)
         test_var_set 'AUTOGRAPH_FENNEC_RELEASE_PASSWORD'
