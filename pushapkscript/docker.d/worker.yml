@@ -15,6 +15,62 @@ taskcluster_scope_prefixes:
 products:
   $flatten:
     $match:
+      'COT_PRODUCT == "firefox" && ENV == "prod"':
+        - product_names: [ "fenix" ]
+          digest_algorithm: 'SHA-256'
+          skip_check_multiple_locales: true
+          skip_check_same_locales: true
+          skip_checks_fennec: true
+          apps:
+            fenix-nightly:
+              package_names: [ "org.mozilla.fenix" ]
+              certificate_alias: 'fenix-nightly'
+              google:
+                default_track: 'production'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH" }
+            fenix-beta:
+              package_names: [ "org.mozilla.firefox_beta" ]
+              certificate_alias: 'fenix-beta'
+              google:
+                default_track: 'alpha'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_BETA_PATH" }
+            fenix-release:
+              package_names: [ "org.mozilla.firefox" ]
+              certificate_alias: 'fenix-release'
+              google:
+                default_track: 'alpha'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH" }
+        - product_names: ["focus-android" ]
+          digest_algorithm: 'SHA-256'
+          skip_check_ordered_version_codes: true
+          skip_check_multiple_locales: true
+          skip_check_same_locales: true
+          skip_checks_fennec: true
+          apps:
+            focus-nightly:
+              package_names: ["org.mozilla.focus.nightly"]
+              certificate_alias: 'focus'
+              google:
+                default_track: 'alpha'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_PATH" }
+            focus-beta:
+              package_names: ["org.mozilla.focus.beta"]
+              certificate_alias: 'focus'
+              google:
+                default_track: 'alpha'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_PATH" }
+            focus-release:
+              package_names: ["org.mozilla.focus"]
+              certificate_alias: 'focus'
+              google:
+                default_track: 'alpha'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_PATH" }
+            klar-release:
+              package_names: ["org.mozilla.klar"]
+              certificate_alias: 'focus'
+              google:
+                default_track: 'alpha'
+                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_PATH" }
       'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
         - product_names: [ "fenix" ]
           digest_algorithm: "SHA-256"
