@@ -96,6 +96,27 @@ case $COT_PRODUCT in
         import_cert focus $CERT_DIR/focus_dep.pem
 
         ;;
+      prod)
+        test_var_set 'GOOGLE_SERVICE_ACCOUNT_FOCUS'
+        test_var_set 'GOOGLE_SERVICE_ACCOUNT_FENIX_NIGHTLY'
+        test_var_set 'GOOGLE_SERVICE_ACCOUNT_FENIX_BETA'
+        test_var_set 'GOOGLE_SERVICE_ACCOUNT_FENIX_RELEASE'
+
+        export GOOGLE_CREDENTIALS_FOCUS_PATH=$CONFIG_DIR/focus.json
+        export GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH=$CONFIG_DIR/fenix_nightly.json
+        export GOOGLE_CREDENTIALS_FENIX_BETA_PATH=$CONFIG_DIR/fenix_beta.json
+        export GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH=$CONFIG_DIR/fenix_release.json
+
+        echo $GOOGLE_SERVICE_ACCOUNT_FOCUS | base64 -d >             $GOOGLE_CREDENTIALS_FOCUS_PATH
+        echo $GOOGLE_SERVICE_ACCOUNT_FENIX_NIGHTLY | base64 -d >     $GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH
+        echo $GOOGLE_SERVICE_ACCOUNT_FENIX_BETA | base64 -d >        $GOOGLE_CREDENTIALS_FENIX_BETA_PATH
+        echo $GOOGLE_SERVICE_ACCOUNT_FENIX_RELEASE | base64 -d >     $GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH
+
+        import_cert fenix-nightly $CERT_DIR/fenix_nightly.pem
+        import_cert fenix-beta $CERT_DIR/fenix_beta.pem
+        import_cert fenix-release $CERT_DIR/fenix_release.pem
+        import_cert focus $CERT_DIR/focus_release.pem
+        ;;
       *)
         exit 1
         ;;
