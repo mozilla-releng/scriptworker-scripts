@@ -66,6 +66,8 @@ def test_firefox_prod():
         "DEP_PARTNER_KEY": "",
         "MAVEN_ID": "",
         "MAVEN_KEY": "",
+        "MAVEN_NIGHTLY_ID": "",
+        "MAVEN_NIGHTLY_KEY": "",
     }
     _validate_config(context)
 

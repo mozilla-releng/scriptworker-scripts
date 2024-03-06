@@ -34,6 +34,8 @@ case $COT_PRODUCT in
         test_var_set 'PARTNER_KEY'
         test_var_set 'MAVEN_ID'
         test_var_set 'MAVEN_KEY'
+        test_var_set 'MAVEN_NIGHTLY_ID'
+        test_var_set 'MAVEN_NIGHTLY_KEY'
         ;;
       *)
         exit 1
