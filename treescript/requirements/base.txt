@@ -880,9 +880,9 @@ rpds-py==0.18.0 \
     # via
     #   jsonschema
     #   referencing
-scriptworker==50.1.0 \
-    --hash=sha256:3ad67d9671a495a847ce641068bb650927897161547807cbeae265974378c0df \
-    --hash=sha256:cfb9403b01ad69fecfba6411973c72eb0cfd4c367dca75b1b17f301dd6ed909e
+scriptworker==50.2.0 \
+    --hash=sha256:5039d2fe9df6757cdbef4af22c529d42e1d6b1fcc9a267332b5a249e57935faf \
+    --hash=sha256:da6a2d01d8553f60b00caef37b2d103836326511411a46a9c6d71b2ff413a828
     # via -r requirements/base.in
 simple-github==1.0.0 \
     --hash=sha256:7aa270f33a62c87af9bbbfee595cbf0c7c9f7b24eccc9fef93a05d969695d6e3 \
