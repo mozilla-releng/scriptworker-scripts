@@ -146,7 +146,7 @@ async def preserve_tags(config, repo_path, to_branch):
             fh.write(f"{line}\n")
     status_out = await run_hg_command(config, "status", os.path.join(repo_path, ".hgtags"), return_output=True, repo_path=repo_path)
     if status_out:
-        await commit(config, repo_path, "Preserve old tags after debusetparents. CLOSED TREE DONTBUILD a=release")
+        await commit(config, repo_path, "Preserve old tags after debugsetparents. CLOSED TREE DONTBUILD a=release")
 
 
 def core_version_file(merge_config):
