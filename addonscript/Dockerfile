@@ -13,11 +13,11 @@ COPY . /app
 
 RUN python -m venv /app \
  && cd addonscript \
- && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install --no-deps -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \
  && cd /app/configloader \
- && /app/configloader_venv/bin/pip install -r requirements/base.txt \
+ && /app/configloader_venv/bin/pip install --no-deps -r requirements/base.txt \
  && /app/configloader_venv/bin/pip install . \
  && cd /app
 

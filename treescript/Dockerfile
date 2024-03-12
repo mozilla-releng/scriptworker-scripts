@@ -15,14 +15,14 @@ COPY . /app
 
 RUN python -m venv /app \
  && cd /app/scriptworker_client \
- && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install --no-deps -r requirements/base.txt \
  && /app/bin/pip install . \
  && cd /app/treescript \
- && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install --no-deps -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \
  && cd /app/configloader \
- && /app/configloader_venv/bin/pip install -r requirements/base.txt \
+ && /app/configloader_venv/bin/pip install --no-deps -r requirements/base.txt \
  && /app/configloader_venv/bin/pip install . \
  && cd /app \
  && hg clone -r 0180a71f29b2f71113665cf9425fd73693d0265c https://hg.mozilla.org/hgcustom/version-control-tools /app/version-control-tools
