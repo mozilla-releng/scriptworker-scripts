@@ -48,7 +48,7 @@ tasks:
         definition: script
         parent: base
         args:
-            SCRIPT_NAME: beetmoverscript
+            SCRIPT_NAME: bitrisescript
     beetmoverscript:
         definition: script
         parent: base
