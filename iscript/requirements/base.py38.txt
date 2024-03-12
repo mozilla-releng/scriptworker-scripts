@@ -396,9 +396,9 @@ multidict==6.0.5 \
     # via
     #   aiohttp
     #   yarl
-packaging==23.2 \
-    --hash=sha256:048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5 \
-    --hash=sha256:8c491190033a9af7e1d931d0b5dacc2ef47509b34dd0de67ed209b5203fc88c7
+packaging==24.0 \
+    --hash=sha256:2ddfb553fdf02fb784c234c7ba6ccc288296ceabec964ad2eae3777778130bc5 \
+    --hash=sha256:eb82c5e3e56209074766e6885bb04b8c38a0c015d0a30036ebe7ece34c9989e9
     # via -r requirements/base.in
 pexpect==4.9.0 \
     --hash=sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523 \
@@ -408,9 +408,9 @@ ptyprocess==0.7.0 \
     --hash=sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35 \
     --hash=sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220
     # via pexpect
-python-dateutil==2.8.2 \
-    --hash=sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86 \
-    --hash=sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9
+python-dateutil==2.9.0.post0 \
+    --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
+    --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
     # via
     #   arrow
     #   taskcluster
@@ -435,18 +435,18 @@ slugid==2.0.0 \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
     # via taskcluster
-taskcluster==60.4.1 \
-    --hash=sha256:803c04ae7157352cb37959ea0f321660a002d8c09a0a141584d1e6c5083a7683 \
-    --hash=sha256:a7f127cd41e949b2e05df5e31a2e4cfd54100a74204d228f55ac1faaabee7dba
+taskcluster==60.4.2 \
+    --hash=sha256:5217073dd3c6642d976ab4a3f5861308b18bba533cd246d378a095d85e39597c \
+    --hash=sha256:9cacf06e790e81535a019c0623e5cdf284a7ecefce7f02de8f2802cdad161077
     # via -r requirements/base.in
 taskcluster-urls==13.0.1 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
     --hash=sha256:f66dcbd6572a6216ab65949f0fa0b91f2df647918028436c384e6af5cd12ae2b
     # via taskcluster
-types-python-dateutil==2.8.19.20240106 \
-    --hash=sha256:1f8db221c3b98e6ca02ea83a58371b22c374f42ae5bbdf186db9c9a76581459f \
-    --hash=sha256:efbbdc54590d0f16152fa103c9879c7d4a00e82078f6e2cf01769042165acaa2
+types-python-dateutil==2.8.19.20240311 \
+    --hash=sha256:51178227bbd4cbec35dc9adffbf59d832f20e09842d7dcb8c73b169b8780b7cb \
+    --hash=sha256:ef813da0809aca76472ca88807addbeea98b19339aebe56159ae2f4b4f70857a
     # via arrow
 urllib3==2.2.1 \
     --hash=sha256:450b20ec296a467077128bff42b73080516e71b56ff59a60a02bef2232c4fa9d \

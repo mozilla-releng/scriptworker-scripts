@@ -392,9 +392,9 @@ idna==3.6 \
     # via
     #   requests
     #   yarl
-immutabledict==4.1.0 \
-    --hash=sha256:93d100ccd2cd09a1fd3f136b9328c6e59529ba341de8bb499437f6819159fe8a \
-    --hash=sha256:c176e99aa90aedb81716ad35218bb2055d049b549626db4523dbe011cf2f32ac
+immutabledict==4.2.0 \
+    --hash=sha256:d728b2c2410d698d95e6200237feb50a695584d20289ad3379a439aa3d90baba \
+    --hash=sha256:e003fd81aad2377a5a758bf7e1086cf3b70b63e9a5cc2f46bce8d0a2b4727c5f
     # via scriptworker
 json-e==4.7.0 \
     --hash=sha256:c12b00552111ab2c43e1a87111a7113a73aee903709df96d7a778f45dc0a7ea8 \
@@ -518,9 +518,9 @@ pyjwt[crypto]==2.8.0 \
     --hash=sha256:57e28d156e3d5c10088e0c68abb90bfac3df82b40a71bd0daa20c65ccd5c23de \
     --hash=sha256:59127c392cc44c2da5bb3192169a91f429924e17aff6534d70fdc02ab3e04320
     # via github3-py
-python-dateutil==2.8.2 \
-    --hash=sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86 \
-    --hash=sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9
+python-dateutil==2.9.0.post0 \
+    --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
+    --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
     # via
     #   arrow
     #   github3-py
@@ -707,9 +707,9 @@ slugid==2.0.0 \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
     # via taskcluster
-taskcluster==60.4.1 \
-    --hash=sha256:803c04ae7157352cb37959ea0f321660a002d8c09a0a141584d1e6c5083a7683 \
-    --hash=sha256:a7f127cd41e949b2e05df5e31a2e4cfd54100a74204d228f55ac1faaabee7dba
+taskcluster==60.4.2 \
+    --hash=sha256:5217073dd3c6642d976ab4a3f5861308b18bba533cd246d378a095d85e39597c \
+    --hash=sha256:9cacf06e790e81535a019c0623e5cdf284a7ecefce7f02de8f2802cdad161077
     # via
     #   -r requirements/base.in
     #   scriptworker
@@ -718,9 +718,9 @@ taskcluster-urls==13.0.1 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
     --hash=sha256:f66dcbd6572a6216ab65949f0fa0b91f2df647918028436c384e6af5cd12ae2b
     # via taskcluster
-types-python-dateutil==2.8.19.20240106 \
-    --hash=sha256:1f8db221c3b98e6ca02ea83a58371b22c374f42ae5bbdf186db9c9a76581459f \
-    --hash=sha256:efbbdc54590d0f16152fa103c9879c7d4a00e82078f6e2cf01769042165acaa2
+types-python-dateutil==2.8.19.20240311 \
+    --hash=sha256:51178227bbd4cbec35dc9adffbf59d832f20e09842d7dcb8c73b169b8780b7cb \
+    --hash=sha256:ef813da0809aca76472ca88807addbeea98b19339aebe56159ae2f4b4f70857a
     # via arrow
 uritemplate==4.1.1 \
     --hash=sha256:4346edfc5c3b79f694bccd6d6099a322bbeb628dbf2cd86eea55a456ce5124f0 \
