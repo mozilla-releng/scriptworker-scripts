@@ -528,13 +528,13 @@ google-api-core==2.17.1 \
     --hash=sha256:610c5b90092c360736baccf17bd3efbcb30dd380e7a6dc28a71059edb8bd0d8e \
     --hash=sha256:9df18a1f87ee0df0bc4eea2770ebc4228392d8cc4066655b320e2cfccb15db95
     # via google-api-python-client
-google-api-python-client==2.119.0 \
-    --hash=sha256:84e43bdb58dd8d2301669513863996378ffe9a3bf6d23b5ccd4f1e021323dbeb \
-    --hash=sha256:ff9ef7539eaf7e088a481b25d1af4704210b07863e1d51b5ee498b910a3a46a3
+google-api-python-client==2.122.0 \
+    --hash=sha256:77447bf2d6b6ea9e686fd66fc2f12ee7a63e3889b7427676429ebf09fcb5dcf9 \
+    --hash=sha256:a5953e60394b77b98bcc7ff7c4971ed784b3b693e9a569c176eaccb1549330f2
     # via mozapkpublisher
-google-auth==2.28.1 \
-    --hash=sha256:25141e2d7a14bfcba945f5e9827f98092716e99482562f15306e5b026e21aa72 \
-    --hash=sha256:34fc3046c257cedcf1622fc4b31fc2be7923d9b4d44973d481125ecc50d83885
+google-auth==2.28.2 \
+    --hash=sha256:80b8b4969aa9ed5938c7828308f20f035bc79f9d8fb8120bf9dc8db20b41ba30 \
+    --hash=sha256:9fd67bbcd40f16d9d42f950228e9cf02a2ded4ae49198b27432d0cded5a74c38
     # via
     #   google-api-core
     #   google-api-python-client
@@ -544,9 +544,9 @@ google-auth-httplib2==0.2.0 \
     --hash=sha256:38aa7badf48f974f1eb9861794e9c0cb2a0511a4ec0679b1f886d108f5640e05 \
     --hash=sha256:b65a0a2123300dd71281a7bf6e64d65a0759287df52729bdd1ae2e47dc311a3d
     # via google-api-python-client
-googleapis-common-protos==1.62.0 \
-    --hash=sha256:4750113612205514f9f6aa4cb00d523a94f3e8c06c5ad2fee466387dc4875f07 \
-    --hash=sha256:83f0ece9f94e5672cced82f592d2a5edf527a96ed1794f0bab36d5735c996277
+googleapis-common-protos==1.63.0 \
+    --hash=sha256:17ad01b11d5f1d0171c06d3ba5c04c54474e883b66b949722b4938ee2694ef4e \
+    --hash=sha256:ae45f75702f7c08b541f750854a678bd8f534a1a6bace6afe975f1d0a82d6632
     # via google-api-core
 httplib2==0.22.0 \
     --hash=sha256:14ae0a53c1ba8f3d37e9e27cf37eabb0fb9980f435ba405d546948b009dd64dc \
@@ -564,13 +564,13 @@ idna==3.6 \
     # via
     #   requests
     #   yarl
-immutabledict==4.1.0 \
-    --hash=sha256:93d100ccd2cd09a1fd3f136b9328c6e59529ba341de8bb499437f6819159fe8a \
-    --hash=sha256:c176e99aa90aedb81716ad35218bb2055d049b549626db4523dbe011cf2f32ac
+immutabledict==4.2.0 \
+    --hash=sha256:d728b2c2410d698d95e6200237feb50a695584d20289ad3379a439aa3d90baba \
+    --hash=sha256:e003fd81aad2377a5a758bf7e1086cf3b70b63e9a5cc2f46bce8d0a2b4727c5f
     # via scriptworker
-importlib-resources==6.1.2 \
-    --hash=sha256:308abf8474e2dba5f867d279237cd4076482c3de7104a40b41426370e891549b \
-    --hash=sha256:9a0a862501dc38b68adebc82970140c9e4209fc99601782925178f8386339938
+importlib-resources==6.2.0 \
+    --hash=sha256:4351403cba8e3a1c03ff15b6bbea1cde4c6de00c705f49ea13909b404b415b9c \
+    --hash=sha256:8d035473d681d9bb95d06a31ad18594962933405519d36f4af1565fe6f998ad6
     # via matplotlib
 ipython==8.18.1 \
     --hash=sha256:ca6f079bb33457c66e233e4580ebfc4128855b4cf6370dddd73842a9563e8a27 \
@@ -962,9 +962,9 @@ numpy==1.26.4 \
     # via
     #   contourpy
     #   matplotlib
-packaging==23.2 \
-    --hash=sha256:048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5 \
-    --hash=sha256:8c491190033a9af7e1d931d0b5dacc2ef47509b34dd0de67ed209b5203fc88c7
+packaging==24.0 \
+    --hash=sha256:2ddfb553fdf02fb784c234c7ba6ccc288296ceabec964ad2eae3777778130bc5 \
+    --hash=sha256:eb82c5e3e56209074766e6885bb04b8c38a0c015d0a30036ebe7ece34c9989e9
     # via matplotlib
 parso==0.8.3 \
     --hash=sha256:8c07be290bb59f03588915921e29e8a50002acaf2cdc5fa0e0114f91709fafa0 \
@@ -1099,16 +1099,16 @@ pyjwt[crypto]==2.8.0 \
     --hash=sha256:57e28d156e3d5c10088e0c68abb90bfac3df82b40a71bd0daa20c65ccd5c23de \
     --hash=sha256:59127c392cc44c2da5bb3192169a91f429924e17aff6534d70fdc02ab3e04320
     # via github3-py
-pyparsing==3.1.1 \
-    --hash=sha256:32c7c0b711493c72ff18a981d24f28aaf9c1fb7ed5e9667c9e84e3db623bdbfb \
-    --hash=sha256:ede28a1a32462f5a9705e07aea48001a08f7cf81a021585011deba701581a0db
+pyparsing==3.1.2 \
+    --hash=sha256:a1bac0ce561155ecc3ed78ca94d3c9378656ad4c94c1270de543f621420f94ad \
+    --hash=sha256:f9db75911801ed778fe61bb643079ff86601aca99fcae6345aa67292038fb742
     # via
     #   httplib2
     #   matplotlib
     #   pydot
-python-dateutil==2.8.2 \
-    --hash=sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86 \
-    --hash=sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9
+python-dateutil==2.9.0.post0 \
+    --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
+    --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
     # via
     #   arrow
     #   github3-py
@@ -1307,24 +1307,24 @@ stack-data==0.6.3 \
     --hash=sha256:836a778de4fec4dcd1dcd89ed8abff8a221f58308462e1c4aa2a3cf30148f0b9 \
     --hash=sha256:d5558e0c25a4cb0853cddad3d77da9891a08cb85dd9f9f91b9f8cd66e511e695
     # via ipython
-taskcluster==60.4.1 \
-    --hash=sha256:803c04ae7157352cb37959ea0f321660a002d8c09a0a141584d1e6c5083a7683 \
-    --hash=sha256:a7f127cd41e949b2e05df5e31a2e4cfd54100a74204d228f55ac1faaabee7dba
+taskcluster==60.4.2 \
+    --hash=sha256:5217073dd3c6642d976ab4a3f5861308b18bba533cd246d378a095d85e39597c \
+    --hash=sha256:9cacf06e790e81535a019c0623e5cdf284a7ecefce7f02de8f2802cdad161077
     # via scriptworker
 taskcluster-urls==13.0.1 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
     --hash=sha256:f66dcbd6572a6216ab65949f0fa0b91f2df647918028436c384e6af5cd12ae2b
     # via taskcluster
-traitlets==5.14.1 \
-    --hash=sha256:2e5a030e6eff91737c643231bfcf04a65b0132078dad75e4936700b213652e74 \
-    --hash=sha256:8585105b371a04b8316a43d5ce29c098575c2e477850b62b848b964f1444527e
+traitlets==5.14.2 \
+    --hash=sha256:8cdd83c040dab7d1dee822678e5f5d100b514f7b72b01615b26fc5718916fdf9 \
+    --hash=sha256:fcdf85684a772ddeba87db2f398ce00b40ff550d1528c03c14dbf6a02003cd80
     # via
     #   ipython
     #   matplotlib-inline
-types-python-dateutil==2.8.19.20240106 \
-    --hash=sha256:1f8db221c3b98e6ca02ea83a58371b22c374f42ae5bbdf186db9c9a76581459f \
-    --hash=sha256:efbbdc54590d0f16152fa103c9879c7d4a00e82078f6e2cf01769042165acaa2
+types-python-dateutil==2.8.19.20240311 \
+    --hash=sha256:51178227bbd4cbec35dc9adffbf59d832f20e09842d7dcb8c73b169b8780b7cb \
+    --hash=sha256:ef813da0809aca76472ca88807addbeea98b19339aebe56159ae2f4b4f70857a
     # via arrow
 typing-extensions==4.10.0 \
     --hash=sha256:69b1a937c3a517342112fb4c6df7e72fc39a38e7891a5730ed4985b5214b5475 \
