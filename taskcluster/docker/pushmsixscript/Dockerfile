@@ -10,12 +10,12 @@ ADD --chown=app:app topsrcdir/pushmsixscript /app/pushmsixscript
 RUN cp -R /app/pushmsixscript/docker.d/* /app/docker.d/ \
  && python -m venv /app \
  && cd /app/scriptworker_client \
- && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install --no-deps -r requirements/base.txt \
  && /app/bin/pip install . \
  && cd /app/pushmsixscript \
- && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install --no-deps -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \
  && cd /app/configloader \
- && /app/configloader_venv/bin/pip install -r requirements/base.txt \
+ && /app/configloader_venv/bin/pip install --no-deps -r requirements/base.txt \
  && /app/configloader_venv/bin/pip install .
