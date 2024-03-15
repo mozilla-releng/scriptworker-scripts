@@ -17,7 +17,8 @@ RUN apt-get update \
 USER app
 WORKDIR /app
 
-RUN python -m venv /app \
+RUN cp -R /app/treescript/docker.d/* /app/docker.d/ \
+ && python -m venv /app \
  && cd /app/scriptworker_client \
  && /app/bin/pip install -r requirements/base.txt \
  && /app/bin/pip install . \
