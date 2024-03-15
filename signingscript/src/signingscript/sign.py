@@ -915,6 +915,8 @@ def _is_xpi_format(fmt):
         return True
     if fmt in ("privileged_webextension", "system_addon"):
         return True
+    if fmt.startswith("autograph_xpi"):
+        return True
     return False
 
 
@@ -945,10 +947,26 @@ def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
         sign_req.setdefault("options", {})
         # https://bugzilla.mozilla.org/show_bug.cgi?id=1533818#c9
         sign_req["options"]["id"] = extension_id
-        sign_req["options"]["cose_algorithms"] = ["ES256"]
-        sign_req["options"]["pkcs7_digest"] = "SHA256"
+        sign_req["options"].update(_xpi_signing_options(fmt))
 
     return sign_req
+
+
+def _xpi_signing_options(fmt):
+    if fmt.startswith("autograph_xpi_"):
+        try:
+            _, _, digest, algos = fmt.upper().split("_", 3)
+        except ValueError:
+            raise SigningScriptError(f"Unsupported format {fmt}")
+        if digest not in ("SHA256", "SHA1"):
+            raise SigningScriptError(f"Unsupported format {fmt}")
+        cose_algorithms = algos.split("_")
+        if not cose_algorithms or set(cose_algorithms) - {"PS256", "ES256", "ES384", "ES512"}:
+            raise SigningScriptError(f"Unsupported format {fmt}")
+    else:
+        cose_algorithms = ["ES256"]
+        digest = "SHA256"
+    return {"cose_algorithms": cose_algorithms, "pkcs7_digest": digest}
 
 
 @time_async_function
