@@ -419,9 +419,32 @@ async def test_sign_macapp(context, mocker, filename, expected):
 
 
 # sign_xpi {{{1
-@pytest.mark.parametrize("fmt, is_xpi", (("foo_omnija", True), ("langpack_foo", True), ("privileged_webextension", True), ("unknown", False)))
+@pytest.mark.parametrize(
+    "fmt, is_xpi", (("foo_omnija", True), ("langpack_foo", True), ("privileged_webextension", True), ("autograph_xpi", True), ("unknown", False))
+)
 def test_is_xpi_format(fmt, is_xpi):
     assert sign._is_xpi_format(fmt) is is_xpi
+
+
+@pytest.mark.parametrize(
+    "fmt, pkcs7_digest, cose_algorithms, raises",
+    (
+        ("foo_omnija", "SHA256", ["ES256"], does_not_raise()),
+        ("langpack_foo", "SHA256", ["ES256"], does_not_raise()),
+        ("autograph_xpi", "SHA256", ["ES256"], does_not_raise()),
+        ("privileged_webextension", "SHA256", ["ES256"], does_not_raise()),
+        ("autograph_xpi_sha1_es384_ps256", "SHA1", ["ES384", "PS256"], does_not_raise()),
+        ("autograph_xpi_sha256_es256", "SHA256", ["ES256"], does_not_raise()),
+        ("autograph_xpi_unknown_es256", None, None, pytest.raises(SigningScriptError)),
+        ("autograph_xpi_sha256_unknown", None, None, pytest.raises(SigningScriptError)),
+        ("autograph_xpi_sha1", None, None, pytest.raises(SigningScriptError)),
+    ),
+)
+def test_xpi_signing_options(fmt, pkcs7_digest, cose_algorithms, raises):
+    with raises:
+        options = sign._xpi_signing_options(fmt)
+        assert options["pkcs7_digest"] == pkcs7_digest
+        assert options["cose_algorithms"] == cose_algorithms
 
 
 @pytest.mark.asyncio

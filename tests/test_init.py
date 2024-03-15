@@ -133,6 +133,8 @@ CONTEXT = {
         "AUTOGRAPH_WIDEVINE_USERNAME": "1",
         "AUTOGRAPH_XPI_PASSWORD": "1",
         "AUTOGRAPH_XPI_USERNAME": "1",
+        "AUTOGRAPH_XPI_STAGE_PASSWORD": "1",
+        "AUTOGRAPH_XPI_STAGE_USERNAME": "1",
     },
     "tree": {
         "SSH_KEY": "Zm9vYmFyCg==",

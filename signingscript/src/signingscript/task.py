@@ -160,6 +160,8 @@ async def sign(context, path, signing_formats, **kwargs):
 
 
 def _get_signing_function_from_format(fmt):
+    if fmt.startswith("autograph_xpi"):
+        return sign_xpi
     return FORMAT_TO_SIGNING_FUNCTION.get(fmt.split(":")[0], FORMAT_TO_SIGNING_FUNCTION["default"])
 
 
