@@ -897,7 +897,10 @@ async def call_autograph(session, url, user, password, sign_req):
     request_body.seek(0)
 
     resp = await session.post(url, data=request_body, headers={"Authorization": auth_header, "Content-Type": content_type, "Content-Length": str(req_size)})
-    log.debug("Autograph response: %s", resp.status)
+    if resp.ok:
+        log.debug("Autograph response: %s", resp.status)
+    else:
+        log.error("Autograph response: %s, %s", resp.status, await resp.text())
     resp.raise_for_status()
     # TODO: Write this out to temporary file. The responses can be large,
     # especially in the case of APK/omnija signing where the entire file is
