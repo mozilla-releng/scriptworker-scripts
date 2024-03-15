@@ -15,8 +15,6 @@ transforms:
 
 task-defaults:
     worker-type: images
-    description: "{name} image builder py{python_version}"
-    name: "{name}-python{python_version}"
     worker:
         taskcluster-proxy: true
         docker-image: {in-tree: skopeo}
