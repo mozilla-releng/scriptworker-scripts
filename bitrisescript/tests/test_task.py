@@ -8,16 +8,43 @@ from scriptworker_client.exceptions import TaskVerificationError
 
 
 @pytest.mark.parametrize(
-    "task, expectation",
+    "config, task, expectation, expected_result",
     (
-        pytest.param({"scopes": ["test:prefix:app:foo", "test:prefix:workflow:bar"]}, does_not_raise(), id="valid"),
-        pytest.param({"scopes": ["bad:prefix:app:foo", "test:prefix:workflow:bar"]}, pytest.raises(TaskVerificationError), id="invalid"),
-        pytest.param({"scopes": ["test:prefix:app:foo", "bad:prefix:workflow:bar"]}, pytest.raises(TaskVerificationError), id="invalid"),
+        (
+            {"taskcluster_scope_prefixes": ["some:prefix"]},
+            {"scopes": ["some:prefix:project:someproject"]},
+            does_not_raise(),
+            "some:prefix:",
+        ),
+        (
+            {"taskcluster_scope_prefixes": ["some:prefix:"]},
+            {"scopes": ["some:prefix:project:someproject"]},
+            does_not_raise(),
+            "some:prefix:",
+        ),
+        (
+            {"taskcluster_scope_prefixes": ["some:prefix"]},
+            {"scopes": ["some:prefix:project:someproject", "some:prefix:action:someaction"]},
+            does_not_raise(),
+            "some:prefix:",
+        ),
+        (
+            {"taskcluster_scope_prefixes": ["another:prefix"]},
+            {"scopes": ["some:prefix:project:someproject", "some:prefix:action:someaction"]},
+            pytest.raises(TaskVerificationError),
+            None,
+        ),
+        (
+            {"taskcluster_scope_prefixes": ["some:prefix", "another:prefix"]},
+            {"scopes": ["some:prefix:project:someproject", "another:prefix:action:someaction"]},
+            pytest.raises(TaskVerificationError),
+            None,
+        ),
     ),
 )
-def test_validate_scope_prefixes(config, task, expectation):
+def test_extract_common_scope_prefix(config, task, expectation, expected_result):
     with expectation:
-        task_mod.validate_scope_prefixes(config, task)
+        assert task_mod.extract_common_scope_prefix(config, task) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -65,20 +92,23 @@ def test_get_bitrise_app(config, task, expected):
 
 
 @pytest.mark.parametrize(
-    "task, expected",
+    "task, expectation, expected",
     (
         (
             {"scopes": ["test:prefix:app:foo", "test:prefix:workflow:bar", "test:prefix:workflow:baz"]},
+            does_not_raise(),
             ["bar", "baz"],
         ),
         (
             {"scopes": ["test:prefix:app:foo"]},
-            [],
+            pytest.raises(TaskVerificationError),
+            None,
         ),
     ),
 )
-def test_get_bitrise_workflows(config, task, expected):
-    assert task_mod.get_bitrise_workflows(config, task) == expected
+def test_get_bitrise_workflows(config, task, expectation, expected):
+    with expectation:
+        assert task_mod.get_bitrise_workflows(config, task) == expected
 
 
 @pytest.mark.parametrize(

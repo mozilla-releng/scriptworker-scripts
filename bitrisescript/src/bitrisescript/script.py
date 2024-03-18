@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
-""" Github main script
+""" Bitrise main script
 """
 import asyncio
 import logging
 import os
 
 from bitrisescript.bitrise import BitriseClient, run_build
-from bitrisescript.task import get_bitrise_app, get_bitrise_workflows, get_build_params, validate_scope_prefixes
+from bitrisescript.task import get_bitrise_app, get_bitrise_workflows, get_build_params
 from scriptworker_client.client import sync_main
 
 log = logging.getLogger(__name__)
 
 
 async def async_main(config, task):
-    validate_scope_prefixes(config, task)
-
     artifact_dir = os.path.join(config["work_dir"], "artifacts")
 
     app = get_bitrise_app(config, task)

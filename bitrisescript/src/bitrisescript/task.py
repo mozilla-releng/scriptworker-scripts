@@ -1,33 +1,33 @@
-from textwrap import dedent
 from typing import Any
 
 from scriptworker_client.exceptions import TaskVerificationError
 from scriptworker_client.utils import get_single_item_from_sequence
 
 
-def validate_scope_prefixes(config, task):
-    """Validates scope prefixes.
+def _get_allowed_scope_prefixes(config):
+    prefixes = config["taskcluster_scope_prefixes"]
+    return [prefix if prefix.endswith(":") else "{}:".format(prefix) for prefix in prefixes]
+
+
+def extract_common_scope_prefix(config: dict[str, Any], task: dict[str, Any]) -> str:
+    """Extract common scope prefix.
 
     Args:
         config (dict): The bitrisescript config.
         task (dict): The task definition.
     """
-    prefix = config["taskcluster_scope_prefix"]
+    prefixes = _get_allowed_scope_prefixes(config)
+    scopes = task["scopes"]
 
-    invalid_scopes = {s for s in task["scopes"] if not s.startswith(prefix)}
-    if invalid_scopes:
-        invalid_scopes = "\n".join(sorted(invalid_scopes))
-        raise TaskVerificationError(
-            dedent(
-                f"""
-            The following scopes have an invalid prefix:
-            {invalid_scopes}
+    found_prefixes = {prefix for prefix in prefixes for scope in scopes if scope.startswith(prefix)}
 
-            Expected prefix:
-            {prefix}
-            """.lstrip()
-            )
-        )
+    return get_single_item_from_sequence(
+        sequence=found_prefixes,
+        condition=lambda _: True,
+        ErrorClass=TaskVerificationError,
+        no_item_error_message=f"No scope starting with any of these prefixes {prefixes} found",
+        too_many_item_error_message="Too many prefixes found",
+    )
 
 
 def _extract_last_chunk_of_scope(scope: str, prefix: str) -> str:
@@ -51,7 +51,7 @@ def get_bitrise_app(config: dict[str, Any], task: dict[str, Any]) -> str:
         TaskVerificationError: If task is missing the app scope or has more
         than one app scope.
     """
-    prefix = config["taskcluster_scope_prefix"]
+    prefix = extract_common_scope_prefix(config, task)
     app_prefix = f"{prefix}app:"
     scope = get_single_item_from_sequence(
         sequence=task["scopes"],
@@ -76,9 +76,13 @@ def get_bitrise_workflows(config: dict[str, Any], task: dict[str, Any]) -> list[
     Returns:
         list: A list of bitrise workflows that should be scheduled.
     """
-    prefix = config["taskcluster_scope_prefix"]
+    prefix = extract_common_scope_prefix(config, task)
     workflow_prefix = f"{prefix}workflow:"
-    return [_extract_last_chunk_of_scope(scope, workflow_prefix) for scope in task["scopes"] if scope.startswith(workflow_prefix)]
+    workflows = [_extract_last_chunk_of_scope(scope, workflow_prefix) for scope in task["scopes"] if scope.startswith(workflow_prefix)]
+
+    if not workflows:
+        raise TaskVerificationError(f"No workflow scopes starting with '{prefix}' found")
+    return workflows
 
 
 def get_build_params(task: dict[str, Any]) -> dict[str, Any]:

@@ -13,11 +13,11 @@ from scriptworker_client.exceptions import TaskVerificationError
 @pytest.mark.parametrize(
     "task, expectation, expected_num_futures",
     (
-        pytest.param({"scopes": ["test:prefix:app:bar"]}, does_not_raise(), 0, id="no_workflow"),
+        pytest.param({"scopes": ["test:prefix:app:bar"]}, pytest.raises(TaskVerificationError), 0, id="no_workflow"),
         pytest.param({"scopes": ["test:prefix:app:bar", "test:prefix:workflow:baz"]}, does_not_raise(), 1, id="single_workflow"),
         pytest.param({"scopes": ["test:prefix:app:bar", "test:prefix:workflow:baz", "test:prefix:workflow:other"]}, does_not_raise(), 2, id="two_workflows"),
-        pytest.param({"scopes": ["bad:app:bar"]}, pytest.raises(TaskVerificationError), 1, id="invalid_prefix_app"),
-        pytest.param({"scopes": ["test:prefix:app:bar", "bad:workflow:baz"]}, pytest.raises(TaskVerificationError), 1, id="invalid_prefix_workflow"),
+        pytest.param({"scopes": ["bad:app:bar"]}, pytest.raises(TaskVerificationError), 0, id="invalid_prefix_app"),
+        pytest.param({"scopes": ["test:prefix:app:bar", "bad:workflow:baz"]}, pytest.raises(TaskVerificationError), 0, id="invalid_prefix_workflow"),
     ),
 )
 async def test_async_main(mocker, config, task, expectation, expected_num_futures):
