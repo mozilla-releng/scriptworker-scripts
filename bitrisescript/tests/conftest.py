@@ -10,4 +10,4 @@ def responses():
 
 @pytest.fixture
 def config():
-    return {"bitrise": {"token": "abc"}, "taskcluster_scope_prefix": "test:prefix:", "work_dir": "work"}
+    return {"bitrise": {"token": "abc"}, "taskcluster_scope_prefixes": ["test:prefix:"], "work_dir": "work"}

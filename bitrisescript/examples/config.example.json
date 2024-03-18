@@ -3,7 +3,7 @@
     "bitrise": {
         "access_token": "<token>"
     },
-    "taskcluster_scope_prefix": ["project:mobile:firefox-ios:bitrise:"],
+    "taskcluster_scope_prefixes": ["project:mobile:firefox-ios:bitrise:"],
 
     "verbose": true
 }

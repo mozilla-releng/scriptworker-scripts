@@ -3,5 +3,8 @@ verbose: { "$eval": "VERBOSE == 'true'" }
 bitrise:
   access_token: { "$eval": "BITRISE_ACCESS_TOKEN" }
 
-taskcluster_scope_prefix: "project:${COT_PRODUCT}:bitrise:"
 trust_domain: "${COT_PRODUCT}"
+taskcluster_scope_prefixes:
+  $switch:
+    'COT_PRODUCT == "mobile"':
+       ["project:mobile:firefox-ios:releng:bitrise:"]
