@@ -16,7 +16,7 @@ transforms = TransformSequence()
 def set_task_description(config, tasks):
     """Set task description"""
     for task in tasks:
-        env = config.params.get('docker_tag') or "(unknown environment)"
+        env = config.params.get("docker_tag") or "(unknown environment)"
         task["description"] = f"Push {task['name']} {env} docker image to docker hub"
         yield task
 
