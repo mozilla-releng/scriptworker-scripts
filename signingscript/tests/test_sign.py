@@ -420,7 +420,16 @@ async def test_sign_macapp(context, mocker, filename, expected):
 
 # sign_xpi {{{1
 @pytest.mark.parametrize(
-    "fmt, is_xpi", (("foo_omnija", True), ("langpack_foo", True), ("privileged_webextension", True), ("autograph_xpi", True), ("unknown", False))
+    "fmt, is_xpi",
+    (
+        ("foo_omnija", True),
+        ("langpack_foo", True),
+        ("webextension", True),
+        ("privileged_webextension", True),
+        ("system_addon", True),
+        ("autograph_xpi", True),
+        ("unknown", False),
+    ),
 )
 def test_is_xpi_format(fmt, is_xpi):
     assert sign._is_xpi_format(fmt) is is_xpi
@@ -432,6 +441,7 @@ def test_is_xpi_format(fmt, is_xpi):
         ("foo_omnija", "SHA256", ["ES256"], does_not_raise()),
         ("langpack_foo", "SHA256", ["ES256"], does_not_raise()),
         ("autograph_xpi", "SHA256", ["ES256"], does_not_raise()),
+        ("webextension", "SHA1", ["ES256"], does_not_raise()),
         ("privileged_webextension", "SHA256", ["ES256"], does_not_raise()),
         ("autograph_xpi_sha1_es384_ps256", "SHA1", ["ES384", "PS256"], does_not_raise()),
         ("autograph_xpi_sha256_es256", "SHA256", ["ES256"], does_not_raise()),
