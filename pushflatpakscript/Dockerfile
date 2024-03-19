@@ -14,14 +14,14 @@ USER app
 
 RUN python -m venv /app \
  && cd pushflatpakscript \
- && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install --no-deps -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \
  && cd /app/configloader \
- && /app/configloader_venv/bin/pip install -r requirements/base.txt \
+ && /app/configloader_venv/bin/pip install --no-deps -r requirements/base.txt \
  && /app/configloader_venv/bin/pip install . \
  && python -m venv /app/flat_manager_venv \
- && /app/flat_manager_venv/bin/pip install -r /app/pushflatpakscript/requirements/flat-manager.txt \
+ && /app/flat_manager_venv/bin/pip install --no-deps -r /app/pushflatpakscript/requirements/flat-manager.txt \
  && curl -Ls \
     https://github.com/flatpak/flat-manager/raw/d9d7972b24de6022c7079f8721fd8335c3319dc5/flat-manager-client | \
     sed -e '1i#!/app/flat_manager_venv/bin/python' -e '1d' > /app/flat_manager_venv/bin/flat-manager-client \
