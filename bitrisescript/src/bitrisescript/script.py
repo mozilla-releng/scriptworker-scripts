@@ -13,8 +13,6 @@ log = logging.getLogger(__name__)
 
 
 async def async_main(config, task):
-    artifact_dir = os.path.join(config["work_dir"], "artifacts")
-
     app = get_bitrise_app(config, task)
     log.info(f"Bitrise app: '{app}'")
 
@@ -23,12 +21,12 @@ async def async_main(config, task):
     futures = []
     for workflow in get_bitrise_workflows(config, task):
         build_params["workflow_id"] = workflow
-        futures.append(run_build(artifact_dir, **build_params))
+        futures.append(run_build(config["artifact_dir"], **build_params))
 
     client = None
     try:
         client = BitriseClient()
-        client.set_auth(config["bitrise"]["token"])
+        client.set_auth(config["bitrise"]["access_token"])
         await client.set_app_prefix(app)
         await asyncio.gather(*futures)
     finally:
