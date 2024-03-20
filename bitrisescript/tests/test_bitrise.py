@@ -99,7 +99,7 @@ async def test_bitrise_client_set_app_prefix(mocker, client, app, response, expe
 )
 async def test_bitrise_client_request(config, mocker, client, prefix, endpoint, method, kwargs, raises, expected_args, expected_kwargs):
     expected_kwargs.setdefault("headers", {}).update(
-        {"Authorization": config["bitrise"]["token"]},
+        {"Authorization": config["bitrise"]["access_token"]},
     )
 
     m = mocker.patch.object(client._client, "request", return_value=Future())

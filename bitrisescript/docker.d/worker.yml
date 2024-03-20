@@ -1,4 +1,5 @@
 work_dir: { "$eval": "WORK_DIR" }
+artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 bitrise:
   access_token: { "$eval": "BITRISE_ACCESS_TOKEN" }

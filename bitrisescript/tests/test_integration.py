@@ -1,3 +1,4 @@
+from pathlib import Path
 import pytest
 
 from bitrisescript.bitrise import BITRISE_API_URL
@@ -8,7 +9,10 @@ from bitrisescript.script import async_main
 async def test_main_run_workflow(responses, tmp_path, config):
     work_dir = tmp_path / "work"
     work_dir.mkdir()
+
+    artifact_dir = work_dir / "artifacts"
     config["work_dir"] = str(work_dir)
+    config["artifact_dir"] = str(artifact_dir)
 
     app = "project"
     app_slug = "abc"
@@ -49,10 +53,10 @@ async def test_main_run_workflow(responses, tmp_path, config):
     await async_main(config, task)
 
     for workflow in workflows:
-        artifact = work_dir / "artifacts" / workflow / f"{workflow}.zip"
+        artifact = artifact_dir / workflow / f"{workflow}.zip"
         assert artifact.is_file()
         assert artifact.read_text() == workflow
 
-        log = work_dir / "artifacts" / workflow / "bitrise.log"
+        log = artifact_dir / workflow / "bitrise.log"
         assert log.is_file()
         assert log.read_text() == "log"
