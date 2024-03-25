@@ -96,9 +96,9 @@ case $ENV in
         test_var_set 'AUTOGRAPH_LANGPACK_PASSWORD'
         test_var_set 'AUTOGRAPH_LANGPACK_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_PASSWORD'
-        test_var_set 'AUTOGRAPH_MAR_STAGE_PASSWORD'
-        test_var_set 'AUTOGRAPH_MAR_STAGE_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_MAR_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_MAR_USERNAME'
         test_var_set 'AUTOGRAPH_OMNIJA_PASSWORD'
         test_var_set 'AUTOGRAPH_OMNIJA_USERNAME'
         test_var_set 'AUTOGRAPH_WIDEVINE_PASSWORD'
@@ -142,8 +142,8 @@ case $ENV in
         test_var_set 'GPG_PUBKEY_PATH'
         ;;
       xpi)
-        test_var_set 'AUTOGRAPH_XPI_PASSWORD'
-        test_var_set 'AUTOGRAPH_XPI_USERNAME'
+        test_var_set 'AUTOGRAPH_XPI_PRIVILEGED_PASSWORD'
+        test_var_set 'AUTOGRAPH_XPI_PRIVILEGED_USERNAME'
         ;;
       mozillavpn)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
@@ -160,9 +160,9 @@ case $ENV in
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_PASSWORD'
-        test_var_set 'AUTOGRAPH_MAR_STAGE_PASSWORD'
-        test_var_set 'AUTOGRAPH_MAR_STAGE_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_MAR_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_MAR_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         test_var_set 'GPG_PUBKEY_PATH'
@@ -232,8 +232,8 @@ case $ENV in
         test_var_set 'GPG_PUBKEY_PATH'
         ;;
       xpi)
-        test_var_set 'AUTOGRAPH_XPI_PASSWORD'
-        test_var_set 'AUTOGRAPH_XPI_USERNAME'
+        test_var_set 'AUTOGRAPH_XPI_PRIVILEGED_PASSWORD'
+        test_var_set 'AUTOGRAPH_XPI_PRIVILEGED_USERNAME'
         ;;
       mozillavpn)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
