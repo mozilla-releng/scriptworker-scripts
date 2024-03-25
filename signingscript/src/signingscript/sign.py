@@ -916,7 +916,7 @@ def b64encode(input_bytes):
 def _is_xpi_format(fmt):
     if "omnija" in fmt or "langpack" in fmt:
         return True
-    if fmt in ("privileged_webextension", "system_addon"):
+    if fmt in ("webextension", "privileged_webextension", "system_addon"):
         return True
     if fmt.startswith("autograph_xpi"):
         return True
@@ -966,6 +966,9 @@ def _xpi_signing_options(fmt):
         cose_algorithms = algos.split("_")
         if not cose_algorithms or set(cose_algorithms) - {"PS256", "ES256", "ES384", "ES512"}:
             raise SigningScriptError(f"Unsupported format {fmt}")
+    elif fmt == "webextension":
+        cose_algorithms = ["ES256"]
+        digest = "SHA1"
     else:
         cose_algorithms = ["ES256"]
         digest = "SHA256"

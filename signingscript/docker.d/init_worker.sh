@@ -165,6 +165,8 @@ case $ENV in
         test_var_set 'AUTOGRAPH_STAGE_MAR_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'AUTOGRAPH_XPI_PASSWORD'
+        test_var_set 'AUTOGRAPH_XPI_USERNAME'
         test_var_set 'GPG_PUBKEY_PATH'
         ;;
     esac
@@ -261,6 +263,8 @@ case $ENV in
         test_var_set 'AUTOGRAPH_AUTHENTICODE_EV_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_RELEASE_PASSWORD'
         test_var_set 'AUTOGRAPH_MAR_RELEASE_USERNAME'
+        test_var_set 'AUTOGRAPH_XPI_PASSWORD'
+        test_var_set 'AUTOGRAPH_XPI_USERNAME'
         ;;
     esac
     ;;
