@@ -102,8 +102,10 @@ async def test_bitrise_client_request(config, mocker, client, prefix, endpoint, 
         {"Authorization": config["bitrise"]["access_token"]},
     )
 
+    response = mocker.AsyncMock()
+    response.status = 200
     m = mocker.patch.object(client._client, "request", return_value=Future())
-    m.return_value.set_result(mocker.AsyncMock())
+    m.return_value.set_result(response)
 
     if prefix:
         client.prefix = prefix
