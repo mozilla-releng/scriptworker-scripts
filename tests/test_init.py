@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -17,15 +18,15 @@ here = Path(__file__).parent
 # the `init.sh` or `init_worker.sh` scripts, or else the purpose of the
 # test will be defeated.
 CONTEXT = {
-    "addon": {
+    re.compile(r"addon:.*"): {
         "JWT_USER": "user",
         "JWT_SECRET": "secret",
     },
-    "balrog": {
+    re.compile(r"balrog:.*"): {
         "AUTH0_CLIENT_ID": "1",
         "AUTH0_CLIENT_SECRET": "1",
     },
-    "beetmover": {
+    re.compile(r"beetmover:.*"): {
         "DEP_ID": "1",
         "DEP_KEY": "1",
         "DEP_PARTNER_ID": "1",
@@ -43,19 +44,19 @@ CONTEXT = {
         "PARTNER_ID": "1",
         "PARTNER_KEY": "1",
     },
-    "bitrise": {
+    re.compile(r"bitrise:.*"): {
         "BITRISE_ACCESS_TOKEN_STAGING": "1",
         "BITRISE_ACCESS_TOKEN_PROD": "1",
     },
-    "bouncer": {
+    re.compile(r"bouncer:.*"): {
         "BOUNCER_USERNAME": "1",
         "BOUNCER_PASSWORD": "1",
     },
-    "github": {
+    re.compile(r"github:.*"): {
         "GITHUB_TOKEN_WRITE_ACCESS_STAGING": "1",
         "GITHUB_TOKEN_WRITE_ACCESS_PROD": "1",
     },
-    "pushapk": {
+    re.compile(r"pushapk:.*"): {
         "GOOGLE_CREDENTIALS_FENIX_PROD": "Zm9vYmFyCg==",
         "GOOGLE_CREDENTIALS_FIREFOX_BETA": "Zm9vYmFyCg==",
         "GOOGLE_CREDENTIALS_FIREFOX_DEP": "Zm9vYmFyCg==",
@@ -70,17 +71,17 @@ CONTEXT = {
         "GOOGLE_PLAY_SERVICE_ACCOUNT_MOZILLAVPN": "1",
         "GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER": "1",
     },
-    "pushflatpak": {
+    re.compile(r"pushflatpak:.*"): {
         "FLATHUB_URL": "https://flathub.example.com",
         "REPO_TOKEN_BETA": "Zm9vYmFyCg==",
         "REPO_TOKEN_STABLE": "Zm9vYmFyCg==",
     },
-    "pushmsix": {
+    re.compile(r"pushmsix:.*"): {
         "TENANT_ID": "Zm9vYmFyCg==",
         "CLIENT_ID": "Zm9vYmFyCg==",
         "CLIENT_SECRET": "Zm9vYmFyCg==",
     },
-    "signing": {
+    re.compile(r"signing:.*"): {
         "PUBLIC_IP": "127.0.0.1",
         "WIDEVINE_CERT": "Zm9vYmFyCg==",
         "AUTOGRAPH_AUTHENTICODE_PASSWORD": "1",
@@ -136,7 +137,7 @@ CONTEXT = {
         "AUTOGRAPH_XPI_STAGE_PASSWORD": "1",
         "AUTOGRAPH_XPI_STAGE_USERNAME": "1",
     },
-    "tree": {
+    re.compile(r"tree:.*"): {
         "SSH_KEY": "Zm9vYmFyCg==",
         "SSH_USER": "user",
         "GITHUB_PRIVKEY": "Zm9vYmFyCg==",
@@ -288,7 +289,9 @@ def test_init_script(tmp_path, app_dir, app, product, environment):
     if env["ENV"] == "prod":
         env["ED25519_PRIVKEY"] = "secret"
 
-    env.update(CONTEXT.get(app, {}))
+    for k, v in CONTEXT.items():
+        if re.match(k, f"{app}:{product}:{environment}"):
+            env.update(v)
 
     pprint(env)
     proc = subprocess.run([str(app_dir.joinpath("docker.d", "init.sh"))], env=env)
