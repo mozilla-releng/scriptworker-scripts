@@ -87,6 +87,10 @@ class BitriseClient:
         while True:
             r = await self._client.request(method, url, **kwargs)
             log.debug(f"{method_and_url} returned HTTP code {r.status}")
+            if r.status >= 400:
+                log.debug(f"{method_and_url} returned JSON:\n{pformat(data)}")
+                r.raise_for_status()
+
             response = await r.json()
 
             if "data" not in response:
@@ -103,8 +107,6 @@ class BitriseClient:
             if not next:
                 break
             kwargs.setdefault("params", {})["next"] = next
-
-        log.debug(f"{method_and_url} returned JSON {pformat(data)}")
 
         return data
 
