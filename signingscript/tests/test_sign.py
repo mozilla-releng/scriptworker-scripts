@@ -525,10 +525,9 @@ async def test_sign_widevine(context, mocker, filename, fmt, raises, should_sign
     mocker.patch.object(sign, "sign_file", new=noop_async)
     mocker.patch.object(sign, "sign_widevine_with_autograph", new=noop_async)
     mocker.patch.object(sign, "makedirs", new=noop_sync)
-    mocker.patch.object(sign, "generate_precomplete", new=noop_sync)
+    mocker.patch.object(sign, "_update_precomplete", new=noop_sync)
     mocker.patch.object(sign, "_create_tarfile", new=noop_async)
     mocker.patch.object(sign, "_create_zipfile", new=noop_async)
-    mocker.patch.object(sign, "_run_generate_precomplete", new=noop_sync)
     mocker.patch.object(os.path, "isfile", new=fake_isfile)
 
     if raises:
@@ -576,21 +575,20 @@ def test_get_widevine_signing_files(filenames, expected):
     assert sign._get_widevine_signing_files(filenames) == expected
 
 
-# _run_generate_precomplete {{{1
+# _update_precomplete {{{1
 @pytest.mark.parametrize("num_precomplete,raises", ((1, False), (0, True), (2, True)))
-def test_run_generate_precomplete(context, num_precomplete, raises, mocker):
-    mocker.patch.object(sign, "generate_precomplete", new=noop_sync)
+def test_update_precomplete(context, num_precomplete, raises, mocker):
     work_dir = context.config["work_dir"]
     for i in range(0, num_precomplete):
         path = os.path.join(work_dir, "foo", str(i))
         makedirs(path)
         with open(os.path.join(path, "precomplete"), "w") as fh:
-            fh.write("blah")
+            fh.write('remove "blah"\n')
     if raises:
         with pytest.raises(SigningScriptError):
-            sign._run_generate_precomplete(context, work_dir)
+            sign._update_precomplete(context, work_dir)
     else:
-        sign._run_generate_precomplete(context, work_dir)
+        sign._update_precomplete(context, work_dir)
 
 
 # remove_extra_files {{{1
