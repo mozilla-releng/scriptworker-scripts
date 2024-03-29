@@ -32,7 +32,6 @@ from scriptworker.utils import get_single_item_from_sequence, makedirs, raise_fu
 from winsign.crypto import load_pem_certs
 
 from signingscript import task, utils
-from signingscript.createprecomplete import generate_precomplete
 from signingscript.exceptions import SigningScriptError
 from signingscript.rcodesign import RCodesignError, rcodesign_notarize, rcodesign_notary_wait, rcodesign_staple
 
@@ -315,9 +314,9 @@ async def sign_widevine_zip(context, orig_path, fmt):
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(tmp_dir, all_files)
-        # Regenerate the `precomplete` file, which is used for cleanup before
+        # Update the `precomplete` file, which is used for cleanup before
         # applying a complete mar.
-        _run_generate_precomplete(context, tmp_dir)
+        _update_precomplete(context, tmp_dir)
         await _create_zipfile(context, orig_path, all_files, mode="w", tmp_dir=tmp_dir)
     return orig_path
 
@@ -372,9 +371,9 @@ async def sign_widevine_tar(context, orig_path, fmt):
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(tmp_dir, all_files)
-        # Regenerate the `precomplete` file, which is used for cleanup before
+        # Update the `precomplete` file, which is used for cleanup before
         # applying a complete mar.
-        _run_generate_precomplete(context, tmp_dir)
+        _update_precomplete(context, tmp_dir)
         await _create_tarfile(context, orig_path, all_files, compression, tmp_dir=tmp_dir)
     return orig_path
 
@@ -584,16 +583,55 @@ def _get_omnija_signing_files(file_list):
     return files
 
 
-# _run_generate_precomplete {{{1
-def _run_generate_precomplete(context, tmp_dir):
-    """Regenerate `precomplete` file with widevine sig paths for complete mar."""
-    log.info("Generating `precomplete` file...")
-    path = _ensure_one_precomplete(tmp_dir, "before")
-    with open(path, "r") as fh:
+# _update_precomplete {{{1
+def _parse_precomplete_remove(line):
+    """Return the path from a precomplete `remove "<path>"` line, or None.
+
+    Args:
+        line (str): a single line from a `precomplete` file
+
+    Returns:
+        str: the unquoted path, or None if `line` isn't a `remove` instruction
+
+    """
+    parts = line.strip().split(None, 1)
+    if len(parts) != 2:
+        return None
+    instr, path = parts
+    if instr != "remove" or len(path) < 2 or not path.startswith('"') or not path.endswith('"'):
+        return None
+    return path[1:-1]
+
+
+# _update_precomplete {{{1
+def _update_precomplete(context, tmp_dir):
+    """Add `remove` instructions to `precomplete` for the widevine sig files."""
+    log.info("Updating `precomplete` file...")
+    precomplete = _ensure_one_precomplete(tmp_dir)
+    with open(precomplete, "r") as fh:
         before = fh.readlines()
-    generate_precomplete(os.path.dirname(path))
-    path = _ensure_one_precomplete(tmp_dir, "after")
-    with open(path, "r") as fh:
+
+    remove_paths = []
+    for line in before:
+        path = _parse_precomplete_remove(line)
+        if path is not None and path not in remove_paths:
+            remove_paths.append(path)
+    files_to_sign = _get_widevine_signing_files(remove_paths)
+
+    emitted = set()
+    with open(precomplete, "w") as fh:
+        for line in before:
+            fh.write(line)
+            path = _parse_precomplete_remove(line)
+            if path is None or path not in files_to_sign:
+                continue
+            sigfile = _get_mac_sigpath(path)
+            if sigfile in emitted:
+                continue
+            emitted.add(sigfile)
+            fh.write('remove "{}"\n'.format(sigfile))
+
+    with open(precomplete, "r") as fh:
         after = fh.readlines()
     # Create diff file
     diff_path = os.path.join(context.config["work_dir"], "precomplete.diff")
@@ -604,14 +642,14 @@ def _run_generate_precomplete(context, tmp_dir):
 
 
 # _ensure_one_precomplete {{{1
-def _ensure_one_precomplete(tmp_dir, adj):
+def _ensure_one_precomplete(tmp_dir):
     """Ensure we only have one `precomplete` file in `tmp_dir`."""
     return get_single_item_from_sequence(
         glob.glob(os.path.join(tmp_dir, "**", "precomplete"), recursive=True),
         condition=lambda _: True,
         ErrorClass=SigningScriptError,
         no_item_error_message='No `precomplete` file found in "{}"'.format(tmp_dir),
-        too_many_item_error_message='More than one `precomplete` file {} in "{}"'.format(adj, tmp_dir),
+        too_many_item_error_message='More than one `precomplete` file in "{}"'.format(tmp_dir),
     )
 
 
