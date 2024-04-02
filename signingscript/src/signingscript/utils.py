@@ -6,6 +6,7 @@ import hashlib
 import json
 import logging
 import os
+import shutil
 from asyncio.subprocess import PIPE, STDOUT
 from dataclasses import dataclass
 from shutil import copyfile
@@ -35,13 +36,15 @@ class AppleNotarization:
     private_key: str
 
 
-def mkdir(path):
+def mkdir(path, delete_before_create=False):
     """Equivalent to `mkdir -p`.
 
     Args:
         path (str): the path to mkdir
-
+        delete_before_create (bool, optional): whether to delete the path before creating it. Defaults to False
     """
+    if delete_before_create:
+        shutil.rmtree(path, ignore_errors=True)
     try:
         os.makedirs(path)
         log.info("mkdir {}".format(path))

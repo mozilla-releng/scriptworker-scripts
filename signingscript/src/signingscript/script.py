@@ -10,7 +10,7 @@ import aiohttp
 import scriptworker.client
 
 from signingscript.exceptions import SigningScriptError
-from signingscript.task import build_filelist_dict, sign, task_cert_type, task_signing_formats
+from signingscript.task import apple_notarize_stacked, build_filelist_dict, sign, task_cert_type, task_signing_formats
 from signingscript.utils import copy_to_dir, load_apple_notarization_configs, load_autograph_configs
 
 log = logging.getLogger(__name__)
@@ -24,6 +24,7 @@ async def async_main(context):
         context (Context): the signing context.
 
     """
+    work_dir = context.config["work_dir"]
     async with aiohttp.ClientSession() as session:
         all_signing_formats = task_signing_formats(context)
         if "gpg" in all_signing_formats or "autograph_gpg" in all_signing_formats:
@@ -36,7 +37,7 @@ async def async_main(context):
             if not context.config.get("widevine_cert"):
                 raise Exception("Widevine format is enabled, but widevine_cert is not defined")
 
-        if "apple_notarization" in all_signing_formats or "apple_notarization_geckodriver" in all_signing_formats:
+        if {"apple_notarization", "apple_notarization_geckodriver", "apple_notarization_stacked"}.intersection(all_signing_formats):
             if not context.config.get("apple_notarization_configs", False):
                 raise Exception("Apple notarization is enabled but apple_notarization_configs is not defined")
             setup_apple_notarization_credentials(context)
@@ -44,9 +45,11 @@ async def async_main(context):
         context.session = session
         context.autograph_configs = load_autograph_configs(context.config["autograph_configs"])
 
-        work_dir = context.config["work_dir"]
         filelist_dict = build_filelist_dict(context)
         for path, path_dict in filelist_dict.items():
+            if path_dict["formats"] == ["apple_notarization_stacked"]:
+                # Skip if only format is notarization_stacked - handled below
+                continue
             copy_to_dir(path_dict["full_path"], context.config["work_dir"], target=path)
             log.info("signing %s", path)
             output_files = await sign(context, os.path.join(work_dir, path), path_dict["formats"], authenticode_comment=path_dict.get("comment"))
@@ -55,6 +58,15 @@ async def async_main(context):
                 copy_to_dir(os.path.join(work_dir, source), context.config["artifact_dir"], target=source)
             if "gpg" in path_dict["formats"] or "autograph_gpg" in path_dict["formats"]:
                 copy_to_dir(context.config["gpg_pubkey"], context.config["artifact_dir"], target="public/build/KEY")
+
+        # notarization_stacked is a special format that takes in all files at once instead of sequentially like other formats
+        notarization_dict = {path: path_dict for path, path_dict in filelist_dict.items() if "apple_notarization_stacked" in path_dict["formats"]}
+        if notarization_dict:
+            output_files = await apple_notarize_stacked(context, notarization_dict)
+            for source in output_files:
+                source = os.path.relpath(source, work_dir)
+                copy_to_dir(os.path.join(work_dir, source), context.config["artifact_dir"], target=source)
+
     log.info("Done!")
 
 

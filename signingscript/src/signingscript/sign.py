@@ -1637,8 +1637,7 @@ async def apple_notarize(context, path, *args, **kwargs):
     """
     # Setup workdir
     notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
-    shutil.rmtree(notarization_workdir, ignore_errors=True)
-    utils.mkdir(notarization_workdir)
+    utils.mkdir(notarization_workdir, delete_before_create=True)
 
     _, extension = os.path.splitext(path)
     if extension == ".pkg":
@@ -1654,7 +1653,85 @@ async def apple_notarize_geckodriver(context, path, *args, **kwargs):
     """
     # Setup workdir
     notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
-    shutil.rmtree(notarization_workdir, ignore_errors=True)
-    utils.mkdir(notarization_workdir)
+    utils.mkdir(notarization_workdir, delete_before_create=True)
 
     return await _notarize_geckodriver(context, path, notarization_workdir)
+
+
+@time_async_function
+async def apple_notarize_stacked(context, filelist_dict):
+    """
+    Notarizes multiple packages using rcodesign.
+    Submits everything before polling for status.
+    """
+    ATTEMPTS = 5
+
+    # notarization submissions map (path -> submission_id)
+    submissions_map = {}
+    relpath_index_map = {}
+    task_index = 0
+    # Submit to notarization one by one
+    for relpath, path_dict in filelist_dict.items():
+        task_index += 1
+        relpath_index_map[relpath] = task_index
+        notarization_workdir = os.path.join(context.config["work_dir"], f"apple_notarize-{task_index}")
+        utils.mkdir(notarization_workdir, delete_before_create=True)
+        _, extension = os.path.splitext(relpath)
+        if extension == ".pkg":
+            path = os.path.join(notarization_workdir, relpath)
+            utils.copy_to_dir(path_dict["full_path"], notarization_workdir, target=relpath)
+            submissions_map[path] = await retry_async(
+                func=rcodesign_notarize,
+                args=(path, context.apple_credentials_path),
+                attempts=ATTEMPTS,
+                retry_exceptions=RCodesignError,
+            )
+        else:
+            await _extract_tarfile(context, path_dict["full_path"], extension, notarization_workdir)
+            workdir_files = os.listdir(notarization_workdir)
+            supported_files = [filename for filename in workdir_files if _can_notarize(filename, (".app", ".pkg"))]
+            if not supported_files:
+                raise SigningScriptError("No supported files found")
+            for file in supported_files:
+                path = os.path.join(notarization_workdir, file)
+                submissions_map[path] = await retry_async(
+                    func=rcodesign_notarize,
+                    args=(path, context.apple_credentials_path),
+                    attempts=ATTEMPTS,
+                    retry_exceptions=RCodesignError,
+                )
+
+    # Notary wait all files
+    for path, submission_id in submissions_map.items():
+        await retry_async(
+            func=rcodesign_notary_wait,
+            args=(submission_id, context.apple_credentials_path),
+            attempts=ATTEMPTS,
+            retry_exceptions=RCodesignError,
+        )
+
+    for path in submissions_map.keys():
+        await retry_async(
+            func=rcodesign_staple,
+            args=[path],
+            attempts=ATTEMPTS,
+            retry_exceptions=RCodesignError,
+        )
+
+    # Staple + create tarball where necessary
+    stapled_files = []
+    for relpath, path_dict in filelist_dict.items():
+        task_index = relpath_index_map[relpath]
+        notarization_workdir = os.path.join(context.config["work_dir"], f"apple_notarize-{task_index}")
+        target_path = os.path.join(context.config["work_dir"], relpath)
+        _, extension = os.path.splitext(relpath)
+        if extension == ".pkg":
+            utils.copy_to_dir(os.path.join(notarization_workdir, relpath), os.path.dirname(target_path))
+        else:
+            all_files = []
+            for root, _, files in os.walk(notarization_workdir):
+                for f in files:
+                    all_files.append(os.path.join(root, f))
+            await _create_tarfile(context, target_path, all_files, extension, notarization_workdir)
+        stapled_files.append(target_path)
+    return stapled_files

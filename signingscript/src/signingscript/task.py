@@ -18,6 +18,7 @@ from scriptworker.utils import get_single_item_from_sequence
 from signingscript.sign import (
     apple_notarize,
     apple_notarize_geckodriver,
+    apple_notarize_stacked,  # noqa: F401
     sign_authenticode,
     sign_debian_pkg,
     sign_file,
@@ -32,6 +33,10 @@ from signingscript.sign import (
 )
 
 log = logging.getLogger(__name__)
+
+
+async def noop_sign(*args, **kwargs):
+    return []
 
 FORMAT_TO_SIGNING_FUNCTION = immutabledict(
     {
@@ -58,6 +63,9 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "autograph_rsa": sign_file_detached,
         "apple_notarization": apple_notarize,
         "apple_notarization_geckodriver": apple_notarize_geckodriver,
+        # This format is handled in script.py
+        # "apple_notarization_stacked": apple_notarize_stacked,
+        "apple_notarization_stacked": noop_sign,
         "default": sign_file,
     }
 )
