@@ -240,6 +240,8 @@ case $ENV in
       mozillavpn)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTOGRAPH_MOZILLAVPN_PASSWORD'
         test_var_set 'AUTOGRAPH_MOZILLAVPN_USERNAME'
         test_var_set 'AUTOGRAPH_MOZILLAVPN_ADDONS_PASSWORD'
