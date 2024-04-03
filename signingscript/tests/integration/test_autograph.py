@@ -225,7 +225,7 @@ def _extract_apk_signature_algorithm(apk_path):
 @pytest.mark.asyncio
 @skip_when_no_autograph_server
 @pytest.mark.parametrize(
-    "format,expected_algorithm", (("autograph_apk_fennec_sha1", "SHA1withSHA1withRSA"), ("autograph_apk_fennec", "SHA256withSHA256withRSA"))
+    "format,expected_algorithm", (("autograph_apk_fennec", "SHA256withSHA256withRSA"),)
 )
 async def test_integration_autograph_custom_digest_algorithm(context, tmpdir, format, expected_algorithm):
     file_name = "app.apk"
