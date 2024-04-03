@@ -149,14 +149,14 @@ async def test_sign(context, mocker, format, filename, post_files):
         ("gpg", stask.sign_gpg),
         ("macapp", stask.sign_macapp),
         ("widevine", stask.sign_widevine),
-        ("autograph_authenticode", stask.sign_authenticode),
-        ("autograph_authenticode_stub", stask.sign_authenticode),
+        ("autograph_authenticode_sha2", stask.sign_authenticode),
+        ("autograph_authenticode_sha2_stub", stask.sign_authenticode),
         ("apple_notarization", stask.apple_notarize),
         ("default", stask.sign_file),
         # Key id cases
         ("autograph_hash_only_mar384:firefox_20190321_dev", stask.sign_mar384_with_autograph_hash),
-        ("autograph_authenticode:202005", stask.sign_authenticode),
-        ("autograph_authenticode_stub:202005", stask.sign_authenticode),
+        ("autograph_authenticode_sha2:202005", stask.sign_authenticode),
+        ("autograph_authenticode_sha2_stub:202005", stask.sign_authenticode),
         # XPI cases
         ("autograph_xpi", stask.sign_xpi),
         ("autograph_xpi_sha256_es256", stask.sign_xpi),
@@ -196,7 +196,11 @@ def test_build_filelist_dict_comment(context, task_defn_authenticode_comment):
         "public/build/firefox-52.0a1.en-US.win64.installer.msi",
     )
     expected = {
-        "public/build/firefox-52.0a1.en-US.win64.installer.msi": {"full_path": full_path, "formats": ["autograph_authenticode"], "comment": "Foo Installer"}
+        "public/build/firefox-52.0a1.en-US.win64.installer.msi": {
+            "full_path": full_path,
+            "formats": ["autograph_authenticode_sha2"],
+            "comment": "Foo Installer",
+        }
     }
     context.task = task_defn_authenticode_comment
 
@@ -206,7 +210,7 @@ def test_build_filelist_dict_comment(context, task_defn_authenticode_comment):
     assert "without an authenticode" in str(error.value)
 
     # coerce to authenticode
-    context.task["payload"]["upstreamArtifacts"][0]["formats"] = ["autograph_authenticode"]
+    context.task["payload"]["upstreamArtifacts"][0]["formats"] = ["autograph_authenticode_sha2"]
 
     # Still raises due to no msi
     with pytest.raises(TaskVerificationError) as error:

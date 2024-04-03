@@ -90,8 +90,6 @@ This is a best effort list of supported signing formats and what they correspond
 - `autograph_apk`, `autograph_focus`, `autograph_apk_mozillaonline`: sign apk or aab files (with different keys)
 - `autograph_stage_aab`, `autograph_stage_apk`, `autograph_stage_apk_mozillaonline`, `autograph_stage_focus`: sign apk or aab files using stage autograph
 - `autograph_stage_apk_v3`, `autograph_stage_focus_v3`, `autograph_stage_apk_mozillaonline_v3`: sign apk or aab file using v3 signing
-- `autograph_authenticode`: [DEPRECATED] sign windows binary (PE, MSI, MSIX) using autograph and sha1 hash
-- `autograph_authenticode_stub`: [DEPRECATED] sign windows binary (PE, MSI, MSIX) using autograph and sha1 hash, and adding a dummy certificate in the chain for attribution purposes
 - `autograph_authenticode_sha2`: sign windows binary (PE, MSI, MSIX) using autograph and sha2 hash
 - `autograph_authenticode_sha2_stub`: sign windows binary (PE, MSI, MSIX) using autograph and sha2 hash, and adding a dummy certificate in the chain for attribution purposes
 - `autograph_authenticode_sha2_rfc3161_stub`: sign windows binary (PE, MSI, MSIX) using autograph and sha2 hash, adding a dummy certificate in the chain for attribution purposes, and using the rfc3161 protocol for timestamping

@@ -84,8 +84,6 @@ case $ENV in
   dev|fake-prod)
     case $COT_PRODUCT in
       firefox|thunderbird)
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
@@ -150,8 +148,6 @@ case $ENV in
         test_var_set 'AUTOGRAPH_XPI_PRIVILEGED_USERNAME'
         ;;
       mozillavpn)
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
@@ -161,8 +157,6 @@ case $ENV in
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
         ;;
       adhoc)
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_PASSWORD'
@@ -180,8 +174,6 @@ case $ENV in
   prod)
     case $COT_PRODUCT in
       firefox|thunderbird)
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
@@ -244,8 +236,6 @@ case $ENV in
         test_var_set 'AUTOGRAPH_XPI_PRIVILEGED_USERNAME'
         ;;
       mozillavpn)
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTOGRAPH_MOZILLAVPN_PASSWORD'
@@ -263,8 +253,6 @@ case $ENV in
         test_var_set 'AUTHENTICODE_CA_PATH_EV'
         test_var_set 'AUTHENTICODE_CA_TIMESTAMP_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_PASSWORD'
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_USERNAME'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_EV_PASSWORD'

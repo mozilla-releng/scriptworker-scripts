@@ -130,7 +130,7 @@ async def test_async_main_apple_notarization_no_config(tmpdir, mocker):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("use_comment", (True, False))
 async def test_async_main_autograph_authenticode(tmpdir, mocker, use_comment):
-    formats = ["autograph_authenticode"]
+    formats = ["autograph_authenticode_sha2"]
     mocker.patch.object(script, "copy_to_dir", new=noop_sync)
     await async_main_helper(tmpdir, mocker, formats, {}, "autograph", use_comment=use_comment)
 

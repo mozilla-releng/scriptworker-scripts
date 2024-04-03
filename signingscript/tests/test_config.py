@@ -60,8 +60,6 @@ def test_firefox_dev():
     context = {
         "COT_PRODUCT": "firefox",
         "ENV": "dev",
-        "AUTOGRAPH_AUTHENTICODE_USERNAME": "",
-        "AUTOGRAPH_AUTHENTICODE_PASSWORD": "",
         "AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD": "",
         "AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME": "",
         "AUTOGRAPH_MAR_USERNAME": "",
@@ -88,8 +86,6 @@ def test_thunderbird_fake_prod():
     context = {
         "COT_PRODUCT": "thunderbird",
         "ENV": "fake-prod",
-        "AUTOGRAPH_AUTHENTICODE_USERNAME": "",
-        "AUTOGRAPH_AUTHENTICODE_PASSWORD": "",
         "AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD": "",
         "AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME": "",
         "AUTOGRAPH_MAR_USERNAME": "",
@@ -147,8 +143,6 @@ def test_firefox_prod():
     context = {
         "COT_PRODUCT": "firefox",
         "ENV": "prod",
-        "AUTOGRAPH_AUTHENTICODE_USERNAME": "",
-        "AUTOGRAPH_AUTHENTICODE_PASSWORD": "",
         "AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD": "",
         "AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME": "",
         "AUTOGRAPH_MAR_RELEASE_USERNAME": "",
@@ -179,8 +173,6 @@ def test_thunderbird_prod():
     context = {
         "COT_PRODUCT": "thunderbird",
         "ENV": "prod",
-        "AUTOGRAPH_AUTHENTICODE_USERNAME": "",
-        "AUTOGRAPH_AUTHENTICODE_PASSWORD": "",
         "AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD": "",
         "AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME": "",
         "AUTOGRAPH_MAR_RELEASE_USERNAME": "",
