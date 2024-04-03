@@ -8,6 +8,8 @@ import zipfile
 
 import aiohttp
 import pytest
+import cryptography.x509
+from cryptography.hazmat.primitives import hashes
 from conftest import skip_when_no_autograph_server
 from mardor.cli import do_verify
 from scriptworker.utils import makedirs
@@ -136,38 +138,24 @@ async def test_integration_autograph_mar_sign_hash(context, tmpdir, mocker):
         assert do_verify(signed_path, keyfiles=[mar_pub_key_path]), "Mar signature doesn't match expected key"
 
 
-def _get_java_path(tool_name):
-    if os.environ.get("JAVA_HOME"):
-        return os.path.join(os.environ["JAVA_HOME"], "bin", tool_name)
-    return tool_name
-
-
-def _instantiate_keystore(keystore_path, certificate_path, certificate_alias):
-    keystore_password = "12345678"
-    cmd = [
-        _get_java_path("keytool"),
-        "-import",
-        "-noprompt",
-        "-keystore",
-        keystore_path,
-        "-storepass",
-        keystore_password,
-        "-file",
-        certificate_path,
-        "-alias",
-        certificate_alias,
-    ]
-    log.info("running {}".format(cmd))
-    subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-
-
-def _verify_apk_signature(keystore_path, apk_path, certificate_alias, strict=True):
-    cmd = [_get_java_path("jarsigner"), "-verify", "-verbose", "-keystore", keystore_path, apk_path, certificate_alias]
+def _verify_apk_signature(apk_path, certificate, strict=True):
+    cmd = ["apksigner", "verify", "--verbose", "--print-certs"]
     if strict:
-        cmd += ["-strict"]
+        cmd.append("-Werr")
+    cmd.append(apk_path)
     log.info("running {}".format(cmd))
-    command = subprocess.run(cmd, universal_newlines=True)
-    return command.returncode == 0
+    command = subprocess.run(cmd, universal_newlines=True, stdout=subprocess.PIPE)
+
+    if command.returncode != 0:
+        return False
+
+    for line in command.stdout.splitlines():
+        if line.startswith("Signer #1 certificate SHA-256 digest: "):
+            cert_fpr = certificate.fingerprint(hashes.SHA256()).hex()
+            found_fpr = line.split(":", 1)[1].strip()
+            return found_fpr == cert_fpr
+
+    return False
 
 
 def _extract_compress_type_per_filename(path):
@@ -189,62 +177,24 @@ async def test_integration_autograph_focus(context, tmpdir):
     context.config["autograph_configs"] = _write_server_config(tmpdir)
     context.task = _craft_task([file_name], signing_format="autograph_focus")
 
-    keystore_path = os.path.join(tmpdir, "keystore")
     certificate_path = os.path.join(TEST_DATA_DIR, "autograph_apk.pub")
-    certificate_alias = "autograph_focus"
-    _instantiate_keystore(keystore_path, certificate_path, certificate_alias)
+    with open(certificate_path, "rb") as f:
+        certificate = cryptography.x509.load_pem_x509_certificate(f.read())
 
     await async_main(context)
 
     signed_path = os.path.join(tmpdir, "artifact", file_name)
-    assert _verify_apk_signature(keystore_path, signed_path, certificate_alias, strict=False)
+    assert _verify_apk_signature(signed_path, certificate)
 
     zip_infos_after_signature = _extract_compress_type_per_filename(signed_path)
-    for signature_file in ("META-INF/SIGNATURE.RSA", "META-INF/SIGNATURE.SF", "META-INF/MANIFEST.MF"):
-        del zip_infos_after_signature[signature_file]
+    for file in list(zip_infos_after_signature):
+        if file.startswith("META-INF/"):
+            del zip_infos_after_signature[file]
 
     # We want to make sure compression type hasn't changed after the signature
     # https://github.com/mozilla-services/autograph/issues/164
 
     assert zip_infos_before_signature == zip_infos_after_signature
-
-
-def _extract_apk_signature_algorithm(apk_path):
-    cmd = [_get_java_path("jarsigner"), "-verify", "-verbose", apk_path]
-    log.info("running {}".format(cmd))
-    command = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-
-    assert command.returncode == 0
-
-    algorithm_line = [line for line in command.stdout.split("\n") if "Signature algorithm:" in line][0]
-    algorithm = algorithm_line.strip().split(" ")[2]
-    return algorithm.rstrip(",")
-
-
-# TODO change fennec algorithm to just RSA alone, then add verification of digest algorithm
-@pytest.mark.asyncio
-@skip_when_no_autograph_server
-@pytest.mark.parametrize(
-    "format,expected_algorithm", (("autograph_apk_fennec", "SHA256withSHA256withRSA"),)
-)
-async def test_integration_autograph_custom_digest_algorithm(context, tmpdir, format, expected_algorithm):
-    file_name = "app.apk"
-    original_file_path = os.path.join(TEST_DATA_DIR, file_name)
-    shutil.copy(original_file_path, tmpdir)
-    apk_path = os.path.join(tmpdir, file_name)
-
-    async with aiohttp.ClientSession() as session:
-        context.session = session
-
-        context.autograph_configs = {
-            "project:releng:signing:cert:dep-signing": [
-                Autograph(*["http://localhost:5500", "bob", "1234567890abcdefghijklmnopqrstuvwxyz1234567890abcd", [format]])
-            ]
-        }
-        context.task = _craft_task([file_name], signing_format=format)
-
-        await sign_file_with_autograph(context, apk_path, format)
-        assert _extract_apk_signature_algorithm(apk_path) == expected_algorithm
 
 
 @pytest.mark.asyncio

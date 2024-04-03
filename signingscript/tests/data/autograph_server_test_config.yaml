@@ -71,7 +71,7 @@ signers:
           -----END PRIVATE KEY-----
 
     - id: test-apk
-      type: apk
+      type: apk2
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIDlTCCAn2gAwIBAgIETkY3pDANBgkqhkiG9w0BAQsFADB7MRAwDgYDVQQGEwdV
