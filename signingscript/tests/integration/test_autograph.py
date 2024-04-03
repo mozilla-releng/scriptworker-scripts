@@ -251,8 +251,11 @@ async def test_integration_autograph_custom_digest_algorithm(context, tmpdir, fo
 @skip_when_no_autograph_server
 async def test_integration_autograph_authenticode(context, tmpdir):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_ca"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_ca_timestamp"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_timestamp_style"] = None
     context.config["authenticode_url"] = "https://example.com"
+    context.config["authenticode_timestamp_url"] = "https://example.com"
     context.autograph_configs = {
         "project:releng:signing:cert:dep-signing": [
             Autograph(*["http://localhost:5500", "charlie", "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn", ["autograph_authenticode"]])
