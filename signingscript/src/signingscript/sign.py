@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Signingscript task functions."""
+
 import asyncio
 import base64
 import difflib

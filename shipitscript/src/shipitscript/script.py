@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-""" ShipIt main script
-"""
+"""ShipIt main script"""
+
 import logging
 import os
 import sys

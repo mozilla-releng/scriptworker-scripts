@@ -6,6 +6,7 @@ Attributes:
     log (logging.Logger): the log object for the module.
 
 """
+
 import argparse
 import logging
 import logging.handlers

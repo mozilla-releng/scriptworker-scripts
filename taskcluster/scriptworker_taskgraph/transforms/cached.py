@@ -5,7 +5,6 @@
 Build the cached_task digest to prevent rerunning tasks if the code hasn't changed.
 """
 
-
 import os
 
 import taskgraph

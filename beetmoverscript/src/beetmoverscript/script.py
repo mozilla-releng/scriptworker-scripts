@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-"""Beetmover script
-"""
+"""Beetmover script"""
+
 import asyncio
 import logging
 import mimetypes
@@ -14,7 +14,10 @@ import boto3
 from botocore.exceptions import ClientError
 from redo import retry
 from scriptworker import client
-from scriptworker.exceptions import ScriptWorkerRetryException, ScriptWorkerTaskException
+from scriptworker.exceptions import (
+    ScriptWorkerRetryException,
+    ScriptWorkerTaskException,
+)
 from scriptworker.utils import raise_future_exceptions, retry_async
 
 from beetmoverscript import task
@@ -29,7 +32,13 @@ from beetmoverscript.constants import (
     RELEASE_BRANCHES,
     RELEASE_EXCLUDE,
 )
-from beetmoverscript.gcloud import cleanup_gcloud, import_from_gcs_to_artifact_registry, push_to_releases_gcs, setup_gcloud, upload_to_gcs
+from beetmoverscript.gcloud import (
+    cleanup_gcloud,
+    import_from_gcs_to_artifact_registry,
+    push_to_releases_gcs,
+    setup_gcloud,
+    upload_to_gcs,
+)
 from beetmoverscript.task import (
     add_balrog_manifest_to_artifacts,
     add_checksums_to_artifacts,
@@ -81,7 +90,11 @@ async def push_to_system_addons(context):
     context.checksums = dict()
     if context.task["payload"].get("artifactMap"):
         context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
-        await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task["payload"]["artifactMap"])
+        await move_beets(
+            context,
+            context.artifacts_to_beetmove,
+            artifact_map=context.task["payload"]["artifactMap"],
+        )
         generate_system_addons_balrog_manifest(context)
     else:
         raise ScriptWorkerTaskException("task payload is missing artifactMap")
@@ -118,7 +131,11 @@ async def push_to_nightly(context):
     if context.task["payload"].get("artifactMap"):
         # determine artifacts to beetmove
         context.artifacts_to_beetmove = get_upstream_artifacts(context, preserve_full_paths=True)
-        await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task["payload"]["artifactMap"])
+        await move_beets(
+            context,
+            context.artifacts_to_beetmove,
+            artifact_map=context.task["payload"]["artifactMap"],
+        )
     else:
         raise ScriptWorkerTaskException("task payload is missing artifactMap")
 
@@ -146,7 +163,11 @@ async def direct_push_to_bucket(context):
     context.raw_balrog_manifest = dict()  # Needed by downstream calls
 
     context.artifacts_to_beetmove = task.get_upstream_artifacts(context, preserve_full_paths=True)
-    await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task["payload"]["artifactMap"])
+    await move_beets(
+        context,
+        context.artifacts_to_beetmove,
+        artifact_map=context.task["payload"]["artifactMap"],
+    )
 
 
 # push_to_partner {{{1
@@ -210,7 +231,8 @@ async def push_to_releases_s3(context):
             partner_match = get_partner_match(k, candidates_prefix, push_partners)
             if partner_match:
                 context.artifacts_to_beetmove[k] = k.replace(
-                    get_partner_candidates_prefix(candidates_prefix, partner_match), get_partner_releases_prefix(product, version, partner_match)
+                    get_partner_candidates_prefix(candidates_prefix, partner_match),
+                    get_partner_releases_prefix(product, version, partner_match),
                 )
             else:
                 log.debug("Excluding partner repack {}".format(k))
@@ -244,7 +266,11 @@ async def push_to_maven(context):
 
     # overwrite artifacts_to_beetmove with the declarative artifacts ones
     context.artifacts_to_beetmove = task.get_upstream_artifacts(context, preserve_full_paths=True)
-    await move_beets(context, context.artifacts_to_beetmove, artifact_map=context.task["payload"]["artifactMap"])
+    await move_beets(
+        context,
+        context.artifacts_to_beetmove,
+        artifact_map=context.task["payload"]["artifactMap"],
+    )
 
 
 # copy_beets {{{1
@@ -261,13 +287,21 @@ def copy_beets(context, from_keys_checksums, to_keys_checksums):
                 if from_keys_checksums[source] != to_keys_checksums[destination]:
                     raise ScriptWorkerTaskException(
                         "{} already exists with different content "
-                        "(src etag: {}, dest etag: {}), aborting".format(destination, from_keys_checksums[source], to_keys_checksums[destination])
+                        "(src etag: {}, dest etag: {}), aborting".format(
+                            destination,
+                            from_keys_checksums[source],
+                            to_keys_checksums[destination],
+                        )
                     )
                 else:
                     log.warning("{} already exists with the same content ({}), " "skipping copy".format(destination, to_keys_checksums[destination]))
             else:
                 log.info("Copying {} to {}".format(source, destination))
-                boto_client.copy_object(Bucket=context.bucket_name, CopySource={"Bucket": context.bucket_name, "Key": source}, Key=destination)
+                boto_client.copy_object(
+                    Bucket=context.bucket_name,
+                    CopySource={"Bucket": context.bucket_name, "Key": source},
+                    Key=destination,
+                )
 
         return retry(copy_key, sleeptime=5, max_sleeptime=60, retry_exceptions=(ClientError,))
 
@@ -429,7 +463,16 @@ async def move_beets(context, artifacts_to_beetmove, artifact_map):
 
 
 # move_beet {{{1
-async def move_beet(context, source, destinations, locale, update_balrog_manifest, balrog_format, from_buildid, artifact_pretty_name):
+async def move_beet(
+    context,
+    source,
+    destinations,
+    locale,
+    update_balrog_manifest,
+    balrog_format,
+    from_buildid,
+    artifact_pretty_name,
+):
     await retry_upload(context=context, destinations=destinations, path=source)
 
     if context.checksums.get(artifact_pretty_name) is None:
@@ -506,7 +549,11 @@ def get_destination_for_partner_repack_path(context, manifest, full_path, locale
     build_number = context.task["payload"]["build_number"]
     version = context.task["payload"]["version"]
 
-    sanity_check_partner_path(locale, {"version": version, "build_number": build_number}, PARTNER_REPACK_REGEXES)
+    sanity_check_partner_path(
+        locale,
+        {"version": version, "build_number": build_number},
+        PARTNER_REPACK_REGEXES,
+    )
     prefix = PARTNER_REPACK_PREFIX_TMPL.format(version=version, build_number=build_number)
     return os.path.join(prefix, pretty_full_path)
 
@@ -552,7 +599,11 @@ def generate_balrog_info(context, artifact_pretty_name, destinations, from_build
 
     url = "{prefix}/{path}".format(prefix=get_url_prefix(context), path=destinations[0])
 
-    data = {"hash": checksums[artifact_pretty_name][release_props["hashType"]], "size": checksums[artifact_pretty_name]["size"], "url": url}
+    data = {
+        "hash": checksums[artifact_pretty_name][release_props["hashType"]],
+        "size": checksums[artifact_pretty_name]["size"],
+        "url": url,
+    }
     if from_buildid:
         data["from_buildid"] = from_buildid
         if is_promotion_action(context.action):
@@ -636,20 +687,37 @@ async def upload_to_s3(context, s3_key, path):
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
         raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
-    api_kwargs = {"Bucket": get_bucket_name(context, product, "aws"), "Key": s3_key, "ContentType": mime_type}
-    headers = {"Content-Type": mime_type, "Cache-Control": "public, max-age=%d" % CACHE_CONTROL_MAXAGE}
+    api_kwargs = {
+        "Bucket": get_bucket_name(context, product, "aws"),
+        "Key": s3_key,
+        "ContentType": mime_type,
+    }
+    headers = {
+        "Content-Type": mime_type,
+        "Cache-Control": "public, max-age=%d" % CACHE_CONTROL_MAXAGE,
+    }
     creds = get_credentials(context, "aws")
     s3 = boto3.client("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
     url = s3.generate_presigned_url("put_object", api_kwargs, ExpiresIn=1800, HttpMethod="PUT")
 
     log.info("upload_to_s3: %s -> s3://%s/%s", path, api_kwargs.get("Bucket"), s3_key)
-    await retry_async(put, args=(context, url, headers, path), retry_exceptions=(Exception,), kwargs={"session": context.session})
+    await retry_async(
+        put,
+        args=(context, url, headers, path),
+        retry_exceptions=(Exception,),
+        kwargs={"session": context.session},
+    )
 
 
 def setup_mimetypes():
     mimetypes.init()
     # in py3 we must exhaust the map so that add_type is actually invoked
-    list(map(lambda ext_mimetype: mimetypes.add_type(ext_mimetype[1], ext_mimetype[0]), MIME_MAP.items()))
+    list(
+        map(
+            lambda ext_mimetype: mimetypes.add_type(ext_mimetype[1], ext_mimetype[0]),
+            MIME_MAP.items(),
+        )
+    )
 
 
 def main(config_path=None):
@@ -663,7 +731,12 @@ def main(config_path=None):
     }
 
     # There are several task schema. Validation occurs in async_main
-    client.sync_main(async_main, config_path=config_path, default_config=default_config, should_validate_task=False)
+    client.sync_main(
+        async_main,
+        config_path=config_path,
+        default_config=default_config,
+        should_validate_task=False,
+    )
 
 
 __name__ == "__main__" and main()

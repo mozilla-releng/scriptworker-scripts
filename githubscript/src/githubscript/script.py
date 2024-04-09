@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-""" Github main script
-"""
+"""Github main script"""
+
 import logging
 import os
 

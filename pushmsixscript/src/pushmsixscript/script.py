@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-""" Push msix Script main script
-"""
+"""Push msix Script main script"""
+
 import logging
 import os
 

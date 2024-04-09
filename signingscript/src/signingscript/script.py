@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Signing script."""
+
 import json
 import logging
 import os

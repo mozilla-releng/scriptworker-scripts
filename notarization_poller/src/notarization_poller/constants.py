@@ -6,6 +6,7 @@ Attributes:
         Running configs are validated against this.
 
 """
+
 import os
 
 from immutabledict import immutabledict

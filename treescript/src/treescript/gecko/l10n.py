@@ -4,6 +4,7 @@
 Largely from https://hg.mozilla.org/mozilla-central/file/63ef0618ec9a07c438701e0357ef0d37abea0dd8/testing/mozharness/scripts/l10n_bumper.py
 
 """
+
 import asyncio
 import json
 import logging

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Widevine signing functions."""
+
 import asyncio
 import base64
 import difflib

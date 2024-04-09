@@ -12,7 +12,10 @@ import arrow
 import jinja2
 import yaml
 from scriptworker.exceptions import TaskVerificationError
-from scriptworker.utils import get_results_and_future_exceptions, raise_future_exceptions
+from scriptworker.utils import (
+    get_results_and_future_exceptions,
+    raise_future_exceptions,
+)
 
 from beetmoverscript.constants import (
     ARTIFACT_REGISTRY_ACTIONS,

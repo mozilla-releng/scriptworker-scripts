@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Balrog script"""
+
 import json
 import logging
 import os

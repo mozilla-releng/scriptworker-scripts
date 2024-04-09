@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Treescript treestatus functions."""
+
 import logging
 import os
 
