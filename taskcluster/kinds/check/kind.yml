@@ -11,20 +11,22 @@ transforms:
     - taskgraph.transforms.run:transforms
     - taskgraph.transforms.task:transforms
 
+task-defaults:
+    run-on-tasks-for:
+        - "github-pull-request"
+        - "github-push"
+    attributes:
+        code-review: true
+    worker-type: b-linux
+    worker:
+        docker-image: {in-tree: 'python39'}
+        max-run-time: 1800
+    dependencies:
+        docker-image: build-docker-image-python39
+
 jobs:
     ruff:
         description: "ruff-py39"
-        run-on-tasks-for:
-            - "github-pull-request"
-            - "github-push"
-        attributes:
-            code-review: true
-        worker-type: b-linux
-        worker:
-            docker-image: {in-tree: 'python39'}
-            max-run-time: 1800
-        dependencies:
-            docker-image: build-docker-image-python39
         run:
             using: run-task
             cache-dotcache: false
@@ -35,3 +37,16 @@ jobs:
                 - sh
                 - -lxce
                 - tox -e ruff-py39
+
+    ruff-format:
+        description: "ruff-format"
+        run:
+            using: run-task
+            cache-dotcache: false
+            checkout:
+                scriptworker: {}
+            cwd: '{checkout}'
+            command:
+                - sh
+                - -lxce
+                - tox -e ruff-format
