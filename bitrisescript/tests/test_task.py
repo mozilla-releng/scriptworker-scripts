@@ -126,3 +126,16 @@ def test_get_bitrise_workflows(config, task, expectation, expected):
 )
 def test_get_build_params(task, expected):
     assert task_mod.get_build_params(task) == expected
+
+
+@pytest.mark.parametrize(
+    "task, expectation, expected",
+    (
+        pytest.param({"payload": {}}, does_not_raise(), "work/artifacts", id="no artifact prefix"),
+        pytest.param({"payload": {"artifact_prefix": "public"}}, does_not_raise(), "work/artifacts/public", id="artifact prefix"),
+        pytest.param({"payload": {"artifact_prefix": "../../../etc"}}, pytest.raises(TaskVerificationError), None, id="funny business"),
+    ),
+)
+def test_get_artifact_dir(config, task, expectation, expected):
+    with expectation:
+        assert task_mod.get_artifact_dir(config, task) == expected
