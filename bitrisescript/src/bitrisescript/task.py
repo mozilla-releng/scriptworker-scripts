@@ -1,3 +1,4 @@
+import os
 from typing import Any
 
 from scriptworker_client.exceptions import TaskVerificationError
@@ -95,3 +96,20 @@ def get_build_params(task: dict[str, Any]) -> dict[str, Any]:
         dict: The bitrise build_params to specify. Empty dict if unspecified.
     """
     return task["payload"].get("build_params", {})
+
+
+def get_artifact_dir(config: dict[str, Any], task: dict[str, Any]) -> str:
+    """Get the directory to store artifacts from the config and task payload.
+
+    Args:
+        task (dict): The task definition.
+
+    Returns:
+        str: The directory to store artifacts.
+    """
+    artifact_prefix = task["payload"].get("artifact_prefix", "")
+    artifact_dir = os.path.normpath(os.path.join(config["artifact_dir"], artifact_prefix))
+    if not artifact_dir.startswith(config["artifact_dir"]):
+        raise TaskVerificationError(f"{artifact_dir} is not a subdirectory of {config['artifact_dir']}!")
+
+    return artifact_dir

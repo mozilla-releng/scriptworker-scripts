@@ -13,6 +13,10 @@
         "payload": {
             "type": "object",
             "properties": {
+                "artifact_prefix": {
+                    "description": "Prefix to store task artifacts. Setting this to 'public' will generate public artifacts.",
+                    "type": "string"
+                },
                 "build_params": {
                     "description": "Parameters describing the build context to pass onto Bitrise. All keys are optional but specific workflows may depend on particular keys being set.",
                     "type": "object",
