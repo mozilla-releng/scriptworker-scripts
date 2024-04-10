@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-"""Treescript android-l10n import and sync support.
-"""
+"""Treescript android-l10n import and sync support."""
+
 import logging
 import os
 import shutil

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-""" PushAPK main script
-"""
+"""PushAPK main script"""
+
 import contextlib
 import logging
 import os

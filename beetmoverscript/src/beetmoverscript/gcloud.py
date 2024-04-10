@@ -209,7 +209,8 @@ async def push_to_releases_gcs(context):
             partner_match = get_partner_match(blob_path, candidates_prefix, push_partners)
             if partner_match:
                 blobs_to_copy[blob_path] = blob_path.replace(
-                    get_partner_candidates_prefix(candidates_prefix, partner_match), get_partner_releases_prefix(product, version, partner_match)
+                    get_partner_candidates_prefix(candidates_prefix, partner_match),
+                    get_partner_releases_prefix(product, version, partner_match),
                 )
             else:
                 log.debug("Excluding partner repack {}".format(blob_path))
@@ -240,8 +241,11 @@ def move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, release
             # compare md5
             if candidates_blobs[source] != releases_blobs[destination]:
                 raise ScriptWorkerTaskException(
-                    "{} already exists with different content "
-                    "(src etag: {}, dest etag: {}), aborting".format(destination, candidates_blobs[source], releases_blobs[destination])
+                    "{} already exists with different content (src etag: {}, dest etag: {}), aborting".format(
+                        destination,
+                        candidates_blobs[source],
+                        releases_blobs[destination],
+                    )
                 )
             else:
                 log.warning("{} already exists with the same content ({}), " "skipping copy".format(destination, releases_blobs[destination]))

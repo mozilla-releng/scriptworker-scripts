@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """iscript mac signing/notarization functions."""
+
 import asyncio
 import json
 import logging

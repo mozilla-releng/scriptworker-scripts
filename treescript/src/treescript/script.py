@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tree manipulation script."""
+
 import logging
 import os
 

@@ -8,4 +8,4 @@ trust_domain: "${COT_PRODUCT}"
 taskcluster_scope_prefixes:
   $switch:
     'COT_PRODUCT == "mobile"':
-       ["project:mobile:firefox-ios:releng:bitrise:"]
+      ["project:mobile:firefox-ios:releng:bitrise:"]

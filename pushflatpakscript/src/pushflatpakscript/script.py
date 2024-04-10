@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-""" Push Flatpak Script main script
-"""
+"""Push Flatpak Script main script"""
+
 import logging
 import os
 

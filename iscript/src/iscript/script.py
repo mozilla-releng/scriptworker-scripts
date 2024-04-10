@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """iScript: Apple signing and notarization."""
+
 import logging
 import os
 

@@ -1,0 +1,37 @@
+---
+extends: default
+
+# Relaxed set of rules copied from https://yamllint.readthedocs.io/en/stable/configuration.html
+rules:
+    braces:
+        level: warning
+        max-spaces-inside: 1
+    brackets:
+        level: warning
+        max-spaces-inside: 1
+    colons:
+        level: warning
+        max-spaces-before: 0
+        max-spaces-after: 6
+    commas:
+        level: warning
+    comments: disable
+    comments-indentation: disable
+    document-start: disable
+    empty-lines:
+        level: warning
+    hyphens:
+        level: warning
+    indentation:
+        level: warning
+        indent-sequences: consistent
+    line-length:
+        max: 160
+        level: warning
+        allow-non-breakable-inline-mappings: true
+    truthy: disable
+
+# Ignore templated yaml files since yamllint can't properly interpret them
+ignore:
+    - "**/beetmoverscript/tests/templates"
+    - "**/beetmoverscript/src/beetmoverscript/templates"

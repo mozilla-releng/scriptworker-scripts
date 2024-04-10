@@ -24,10 +24,8 @@ def _check_certificate_via_return_code(return_code, command_output, binary_path,
     if return_code != 0:
         log.critical(command_output)
         raise SignatureError(
-            '{} doesn\'t verify APK "{}". It compared certificate against "{}", located in keystore "{}".\
-            Maybe you\'re now allowed to push such APKs on this instance?'.format(
-                binary_path, apk_path, certificate_alias, keystore_path
-            )
+            "{} doesn't verify APK '{}'. It compared certificate against '{}', located in keystore '{}'."
+            " Maybe you're not allowed to push such APKs on this instance?".format(binary_path, apk_path, certificate_alias, keystore_path)
         )
 
     log.info('The signature of "{}" comes from the correct alias "{}"'.format(apk_path, certificate_alias))

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-""" Bouncer main script
-"""
+"""Bouncer main script"""
+
 import logging
 import os
 

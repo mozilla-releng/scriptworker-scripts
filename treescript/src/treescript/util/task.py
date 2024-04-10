@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Treescript task functions."""
+
 import logging
 
 from treescript.exceptions import TaskVerificationError

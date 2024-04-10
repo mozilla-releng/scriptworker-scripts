@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-""" Bitrise main script
-"""
+"""Bitrise main script"""
+
 import asyncio
 import logging
 import os

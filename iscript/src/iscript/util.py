@@ -5,6 +5,7 @@ Attributes:
     log (logging.Logger): the log object for the module
 
 """
+
 import glob
 import logging
 import os

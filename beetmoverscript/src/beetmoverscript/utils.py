@@ -12,7 +12,10 @@ import arrow
 import jinja2
 import yaml
 from scriptworker.exceptions import TaskVerificationError
-from scriptworker.utils import get_results_and_future_exceptions, raise_future_exceptions
+from scriptworker.utils import (
+    get_results_and_future_exceptions,
+    raise_future_exceptions,
+)
 
 from beetmoverscript.constants import (
     ARTIFACT_REGISTRY_ACTIONS,
@@ -234,8 +237,7 @@ def generate_beetmover_template_args(context):
 def _check_locale_consistency(locale_in_payload, uniques_locales_in_upstream_artifacts):
     if len(uniques_locales_in_upstream_artifacts) > 1:
         raise TaskVerificationError(
-            '`task.payload.locale` is defined ("{}") but too many locales set in \
-`task.payload.upstreamArtifacts` ({})'.format(
+            '`task.payload.locale` is defined ("{}") but too many locales set in `task.payload.upstreamArtifacts` ({})'.format(
                 locale_in_payload, uniques_locales_in_upstream_artifacts
             )
         )
@@ -243,8 +245,7 @@ def _check_locale_consistency(locale_in_payload, uniques_locales_in_upstream_art
         locale_in_upstream_artifacts = uniques_locales_in_upstream_artifacts[0]
         if locale_in_payload != locale_in_upstream_artifacts:
             raise TaskVerificationError(
-                '`task.payload.locale` ("{}") does not match the one set in \
-`task.payload.upstreamArtifacts` ("{}")'.format(
+                '`task.payload.locale` ("{}") does not match the one set in `task.payload.upstreamArtifacts` ("{}")'.format(
                     locale_in_payload, locale_in_upstream_artifacts
                 )
             )
