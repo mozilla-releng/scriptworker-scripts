@@ -79,19 +79,19 @@ PRODUCT_TO_DESTINATIONS_REGEXES = {
 _BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT = {
     "firefox-nightly-latest": (
         r"^(/firefox/nightly/latest-(mozilla-central|try)-l10n/firefox-\d+\.0a1\.:lang\."
-        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
+        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|linux-aarch64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "firefox-nightly-latest-ssl": (
         r"^(/firefox/nightly/latest-(mozilla-central|try)/firefox-\d+\.0a1\.en-US\."
-        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
+        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|linux-aarch64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "firefox-nightly-latest-l10n": (
         r"^(/firefox/nightly/latest-(mozilla-central|try)-l10n/firefox-\d+\.0a1\.:lang\."
-        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
+        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|linux-aarch64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "firefox-nightly-latest-l10n-ssl": (
         r"^(/firefox/nightly/latest-(mozilla-central|try)-l10n/firefox-\d+\.0a1\.:lang\."
-        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
+        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|linux-aarch64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
 }
 
@@ -157,7 +157,7 @@ PRODUCT_TO_PRODUCT_ENTRY = [
     ("thunderbird", r"^Thunderbird-.*$"),
 ]
 
-BOUNCER_LOCATION_PLATFORMS = ["linux", "linux64", "osx", "win", "win64", "android-x86", "android", "win64-aarch64"]
+BOUNCER_LOCATION_PLATFORMS = ["linux", "linux64", "osx", "win", "win64", "android-x86", "android", "win64-aarch64", "linux64-aarch64"]
 
 GO_BOUNCER_URL_TMPL = {
     "project:releng:bouncer:server:production": "https://download.mozilla.org/?product={}&print=yes",
