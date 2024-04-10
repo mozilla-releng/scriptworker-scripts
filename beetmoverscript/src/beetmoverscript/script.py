@@ -286,8 +286,7 @@ def copy_beets(context, from_keys_checksums, to_keys_checksums):
                 # compare md5
                 if from_keys_checksums[source] != to_keys_checksums[destination]:
                     raise ScriptWorkerTaskException(
-                        "{} already exists with different content "
-                        "(src etag: {}, dest etag: {}), aborting".format(
+                        "{} already exists with different content (src etag: {}, dest etag: {}), aborting".format(
                             destination,
                             from_keys_checksums[source],
                             to_keys_checksums[destination],

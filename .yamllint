@@ -33,5 +33,5 @@ rules:
 
 # Ignore templated yaml files since yamllint can't properly interpret them
 ignore:
-    - beetmoverscript/tests/templates
-    - beetmoverscript/src/beetmoverscript/templates
+    - "**/beetmoverscript/tests/templates"
+    - "**/beetmoverscript/src/beetmoverscript/templates"

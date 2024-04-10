@@ -241,8 +241,7 @@ def move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, release
             # compare md5
             if candidates_blobs[source] != releases_blobs[destination]:
                 raise ScriptWorkerTaskException(
-                    "{} already exists with different content "
-                    "(src etag: {}, dest etag: {}), aborting".format(
+                    "{} already exists with different content (src etag: {}, dest etag: {}), aborting".format(
                         destination,
                         candidates_blobs[source],
                         releases_blobs[destination],
