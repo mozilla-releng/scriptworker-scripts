@@ -21,8 +21,6 @@ task-defaults:
     worker:
         docker-image: {in-tree: 'python39'}
         max-run-time: 1800
-    dependencies:
-        build-docker-image: build-docker-image-python39
 
 tasks:
     ruff:
