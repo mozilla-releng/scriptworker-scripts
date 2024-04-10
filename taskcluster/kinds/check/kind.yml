@@ -23,7 +23,7 @@ task-defaults:
         max-run-time: 1800
 
 tasks:
-    ruff:
+    ruff-lint:
         description: "ruff-py39"
         run:
             using: run-task
