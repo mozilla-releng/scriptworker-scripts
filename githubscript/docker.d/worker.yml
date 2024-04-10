@@ -57,6 +57,6 @@ github_projects:
 taskcluster_scope_prefixes:
   $switch:
     'COT_PRODUCT == "mobile"':
-       ["project:mobile:firefox-android:releng:github:"]
+      ["project:mobile:firefox-android:releng:github:"]
     'COT_PRODUCT == "xpi"':
       ["project:xpi:releng:github:"]

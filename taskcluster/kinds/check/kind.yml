@@ -22,9 +22,9 @@ task-defaults:
         docker-image: {in-tree: 'python39'}
         max-run-time: 1800
     dependencies:
-        docker-image: build-docker-image-python39
+        build-docker-image: build-docker-image-python39
 
-jobs:
+tasks:
     ruff:
         description: "ruff-py39"
         run:
@@ -50,3 +50,16 @@ jobs:
                 - sh
                 - -lxce
                 - tox -e ruff-format
+
+    yamllint:
+        description: "yamllint"
+        run:
+            using: run-task
+            cache-dotcache: false
+            checkout:
+                scriptworker: {}
+            cwd: '{checkout}'
+            command:
+                - sh
+                - -lxce
+                - tox -e yamllint
