@@ -35,9 +35,6 @@ from signingscript.sign import (
 log = logging.getLogger(__name__)
 
 
-async def noop_sign(*args, **kwargs):
-    return []
-
 FORMAT_TO_SIGNING_FUNCTION = immutabledict(
     {
         "autograph_hash_only_mar384": sign_mar384_with_autograph_hash,
@@ -65,7 +62,6 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "apple_notarization_geckodriver": apple_notarize_geckodriver,
         # This format is handled in script.py
         # "apple_notarization_stacked": apple_notarize_stacked,
-        "apple_notarization_stacked": noop_sign,
         "default": sign_file,
     }
 )

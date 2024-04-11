@@ -45,11 +45,16 @@ async def async_main(context):
         context.session = session
         context.autograph_configs = load_autograph_configs(context.config["autograph_configs"])
 
+        # TODO: Make task.sign take in the whole filelist_dict and return a dict of output files.
+        #       That would likely mean changing all behaviors to accept and deal with multiple files at once.
+
         filelist_dict = build_filelist_dict(context)
         for path, path_dict in filelist_dict.items():
             if path_dict["formats"] == ["apple_notarization_stacked"]:
                 # Skip if only format is notarization_stacked - handled below
                 continue
+            if "apple_notarization_stacked" in path_dict["formats"]:
+                raise SigningScriptError("apple_notarization_stacked cannot be mixed with other signing types")
             copy_to_dir(path_dict["full_path"], context.config["work_dir"], target=path)
             log.info("signing %s", path)
             output_files = await sign(context, os.path.join(work_dir, path), path_dict["formats"], authenticode_comment=path_dict.get("comment"))

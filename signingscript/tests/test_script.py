@@ -111,10 +111,12 @@ async def test_async_main_apple_notarization_stacked(tmpdir, mocker):
 
 
 @pytest.mark.asyncio
-async def test_async_main_apple_notarization_stacked_multi(tmpdir, mocker):
+async def test_async_main_apple_notarization_stacked_mixed_fail(tmpdir, mocker):
     formats = ["autograph_mar", "apple_notarization_stacked"]
     mocker.patch.object(script, "copy_to_dir", new=noop_sync)
-    await async_main_helper(tmpdir, mocker, formats)
+    with pytest.raises(SigningScriptError):
+        await async_main_helper(tmpdir, mocker, formats)
+
 
 @pytest.mark.asyncio
 async def test_async_main_apple_notarization_no_config(tmpdir, mocker):

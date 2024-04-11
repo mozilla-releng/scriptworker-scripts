@@ -1604,7 +1604,11 @@ async def _notarize_geckodriver(context, path, workdir):
 
 
 async def _notarize_all(context, path, workdir):
-    """Notarizes all files in a tarball"""
+    """
+    Notarizes all files in a tarball
+
+    @Deprecated: This function is deprecated and will be removed in the future. Use apple_notarize_stacked instead.
+    """
     _, extension = os.path.splitext(path)
     # Attempt extracting
     await _extract_tarfile(context, path, extension, tmp_dir=workdir)
@@ -1634,6 +1638,8 @@ async def _notarize_all(context, path, workdir):
 async def apple_notarize(context, path, *args, **kwargs):
     """
     Notarizes given package(s) using rcodesign.
+
+    @Deprecated: This function is deprecated and will be removed in the future. Use apple_notarize_stacked instead.
     """
     # Setup workdir
     notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
@@ -1710,6 +1716,7 @@ async def apple_notarize_stacked(context, filelist_dict):
             retry_exceptions=RCodesignError,
         )
 
+    # Staple files
     for path in submissions_map.keys():
         await retry_async(
             func=rcodesign_staple,
@@ -1718,13 +1725,14 @@ async def apple_notarize_stacked(context, filelist_dict):
             retry_exceptions=RCodesignError,
         )
 
-    # Staple + create tarball where necessary
+    # Wrap up
     stapled_files = []
     for relpath, path_dict in filelist_dict.items():
         task_index = relpath_index_map[relpath]
         notarization_workdir = os.path.join(context.config["work_dir"], f"apple_notarize-{task_index}")
         target_path = os.path.join(context.config["work_dir"], relpath)
         _, extension = os.path.splitext(relpath)
+        # Pkgs don't need to be tarred
         if extension == ".pkg":
             utils.copy_to_dir(os.path.join(notarization_workdir, relpath), os.path.dirname(target_path))
         else:
