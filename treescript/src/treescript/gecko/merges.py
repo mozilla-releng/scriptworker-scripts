@@ -98,9 +98,9 @@ def create_new_version(version_config, repo_path, source_repo):
 
 def _get_attr_evolve_kwargs(version):
     kwargs = {
-            "beta_number": None,
-            "is_nightly": False,
-        }
+        "beta_number": None,
+        "is_nightly": False,
+    }
     if isinstance(version, GeckoVersion):
         kwargs["is_esr"] = False
     return kwargs

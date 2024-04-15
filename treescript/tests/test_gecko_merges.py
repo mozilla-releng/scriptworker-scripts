@@ -237,31 +237,34 @@ async def test_create_new_version(config, mocker, version_config, current_versio
     assert result == expected
 
 
-@pytest.mark.parametrize("version, expected", (
+@pytest.mark.parametrize(
+    "version, expected",
     (
-        FirefoxVersion.parse("126.0a1"),
-        {
-            "beta_number": None,
-            "is_nightly": False,
-            "is_esr": False,
-        }
+        (
+            FirefoxVersion.parse("126.0a1"),
+            {
+                "beta_number": None,
+                "is_nightly": False,
+                "is_esr": False,
+            },
+        ),
+        (
+            ThunderbirdVersion.parse("126.0a1"),
+            {
+                "beta_number": None,
+                "is_nightly": False,
+                "is_esr": False,
+            },
+        ),
+        (
+            MobileVersion.parse("126.0a1"),
+            {
+                "beta_number": None,
+                "is_nightly": False,
+            },
+        ),
     ),
-    (
-        ThunderbirdVersion.parse("126.0a1"),
-        {
-            "beta_number": None,
-            "is_nightly": False,
-            "is_esr": False,
-        }
-    ),
-    (
-        MobileVersion.parse("126.0a1"),
-        {
-            "beta_number": None,
-            "is_nightly": False,
-        }
-    ),
-))
+)
 def test_get_attr_evolve_kwargs(version, expected):
     assert merges._get_attr_evolve_kwargs(version) == expected
 
