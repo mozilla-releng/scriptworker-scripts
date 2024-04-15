@@ -4,7 +4,8 @@ from contextlib import contextmanager
 
 import hglib
 import pytest
-from mozilla_version.gecko import FirefoxVersion
+from mozilla_version.gecko import FirefoxVersion, ThunderbirdVersion
+from mozilla_version.mobile import MobileVersion
 
 from treescript.exceptions import TaskVerificationError
 from treescript.gecko import merges
@@ -234,6 +235,35 @@ async def test_create_new_version(config, mocker, version_config, current_versio
 
     result = merges.create_new_version(version_config, repo_path="", source_repo="https://hg.mozilla.org/repo")  # Dummy repo_path, ignored.
     assert result == expected
+
+
+@pytest.mark.parametrize("version, expected", (
+    (
+        FirefoxVersion.parse("126.0a1"),
+        {
+            "beta_number": None,
+            "is_nightly": False,
+            "is_esr": False,
+        }
+    ),
+    (
+        ThunderbirdVersion.parse("126.0a1"),
+        {
+            "beta_number": None,
+            "is_nightly": False,
+            "is_esr": False,
+        }
+    ),
+    (
+        MobileVersion.parse("126.0a1"),
+        {
+            "beta_number": None,
+            "is_nightly": False,
+        }
+    ),
+))
+def test_get_attr_evolve_kwargs(version, expected):
+    assert merges._get_attr_evolve_kwargs(version) == expected
 
 
 def set_up_merge_mocks(mocker, called_args):

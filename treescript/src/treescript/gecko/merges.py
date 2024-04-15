@@ -7,6 +7,7 @@ import string
 from datetime import date
 
 import attr
+from mozilla_version.gecko import GeckoVersion
 
 from scriptworker_client.utils import makedirs
 from treescript.gecko.l10n import l10n_bump
@@ -87,12 +88,22 @@ def create_new_version(version_config, repo_path, source_repo):
     elif version_config.get("version_bump") == "minor":
         version = version.bump("minor_number")
     if "new_suffix" in version_config:  # '' is a valid entry
-        version = attr.evolve(version, is_esr=False, beta_number=None, is_nightly=False)
+        version = attr.evolve(version, **_get_attr_evolve_kwargs(version))
         version = f"{version}{version_config['new_suffix']}"
     else:
         version = f"{version}"
     log.info("New version is %s", version)
     return version
+
+
+def _get_attr_evolve_kwargs(version):
+    kwargs = {
+            "beta_number": None,
+            "is_nightly": False,
+        }
+    if isinstance(version, GeckoVersion):
+        kwargs["is_esr"] = False
+    return kwargs
 
 
 async def apply_rebranding(config, repo_path, merge_config, source_repo):
