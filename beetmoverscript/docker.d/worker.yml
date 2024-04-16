@@ -288,6 +288,7 @@ clouds:
               key: { "$eval": "MAVEN_KEY" }
             product_buckets:
               geckoview: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
+              components: 'maven-default-s3-upload-bucket-1705kkmo2aj3c'
           maven-nightly-production:
             fail_task_on_error: True
             enabled: True
