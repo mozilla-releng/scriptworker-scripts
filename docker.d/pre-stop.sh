@@ -12,6 +12,9 @@ SCRIPTWORKER_PID=${SCRIPTWORKER_PID:-1}
 # https://github.com/mozilla-services/cloudops-infra/blob/d94d5fd6a7704ffd2c829d870206f5c0ed8d75e7/projects/relengworker/k8s/charts/beetmover/templates/deployment.yaml)
 # to let scriptworker upload files and report `worker-shutdown` to Taskcluster.
 case ${PROJECT_NAME} in
+    bitrise)
+        POLL_DURATION=7080 # 118 minutes
+        ;;
     tree|signing)
         POLL_DURATION=3480 # 58 minutes
         ;;
