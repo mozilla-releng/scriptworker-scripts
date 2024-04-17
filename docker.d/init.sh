@@ -113,7 +113,7 @@ if [ "$ENV" == "prod" ]; then
 fi
 export TASK_CONFIG=$CONFIG_DIR/worker.json
 export TASK_LOGS_DIR=$ARTIFACTS_DIR/public/logs
-export TASK_MAX_TIMEOUT=3600
+export TASK_MAX_TIMEOUT=7200
 export TASK_SCRIPT=$APP_DIR/bin/${PROJECT_NAME}script
 export TEMPLATE_DIR=$APP_DIR/docker.d
 export VERBOSE=true
