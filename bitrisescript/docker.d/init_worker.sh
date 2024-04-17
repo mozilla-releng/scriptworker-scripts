@@ -10,8 +10,6 @@ test_var_set() {
   fi
 }
 
-export TASK_MAX_TIMEOUT=7200
-
 case $COT_PRODUCT in
   mobile)
     case $ENV in
