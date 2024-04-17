@@ -6,11 +6,8 @@ worker_id: { "$eval": "WORKER_ID" }
 credentials:
     clientId: { "$eval": "TASKCLUSTER_CLIENT_ID" }
     accessToken: { "$eval": "TASKCLUSTER_ACCESS_TOKEN" }
-# XXX: there is no string to int conversion in json-e so we are hardcoding for now
-# artifact_upload_timeout: { "$eval": "ARTIFACT_UPLOAD_TIMEOUT" }
-# task_max_timeout: { "$eval": "TASK_MAX_TIMEOUT" }
-artifact_upload_timeout: 1200
-task_max_timeout: 3600
+artifact_upload_timeout: { "$eval": ARTIFACT_UPLOAD_TIMEOUT }
+task_max_timeout: { "$eval": TASK_MAX_TIMEOUT }
 task_script:
     - { "$eval": "TASK_SCRIPT" }
     - { "$eval": "TASK_CONFIG" }
