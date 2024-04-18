@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+from pathlib import Path
 from pprint import pformat
 from typing import Any
 
@@ -183,6 +184,30 @@ async def download_log(build_slug: str, artifacts_dir: str, poll_interval: int =
         log.error(f"Bitrise has no log for build '{build_slug}'. Please check https://app.bitrise.io/build/{build_slug}")
 
 
+async def dump_perfherder_data(artifacts_dir: str) -> None:
+    """Dumps any detected PERFHERDER_DATA log lines to stdout.
+
+    Perfherder is hardcoded to parse `public/live_backing.log` for lines that
+    start with PERFHERDER_DATA. Scan the bitrise log and forward any such lines
+    to stdout so Perfherder can find them.
+
+    Once bug 1646502 is fixed and all tasks relying on this function have been
+    migrated over to the new ingestion format, we can remove this.
+
+    Args:
+        artifacts_dir (str): Path to the artifact directory.
+    """
+    path = Path(artifacts_dir) / "bitrise.log"
+    if not path.is_file():
+        log.warning(f"Not scanning for Perfherder data, {path} does not exist!")
+        return
+
+    perfherder_data_lines = [line for line in path.read_text().splitlines() if line.startswith("PERFHERDER_DATA")]
+    if perfherder_data_lines:
+        perfherder_data_str = "\n".join(perfherder_data_lines)
+        log.info(f"Found Perfherder data in {path}:\n{perfherder_data_str}")
+
+
 async def download_file(download_url: str, file_destination: str, chunk_size: int = 512) -> None:
     """Download a file.
 
@@ -240,3 +265,4 @@ async def run_build(artifacts_dir: str, workflow_id: str, **build_params: Any) -
     finally:
         log.info(f"Retrieving bitrise log for '{build_slug}'...")
         await download_log(build_slug, artifacts_dir)
+        await dump_perfherder_data(artifacts_dir)

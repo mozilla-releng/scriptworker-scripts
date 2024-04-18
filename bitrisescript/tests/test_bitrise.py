@@ -1,6 +1,8 @@
-from asyncio import Future
 import inspect
+import logging
+from asyncio import Future
 from contextlib import nullcontext as does_not_raise
+from textwrap import dedent
 
 import pytest
 import pytest_asyncio
@@ -226,6 +228,55 @@ async def test_download_log(mocker, client):
     assert m_request.call_args == ((f"/builds/{build_slug}/log",),)
     assert m_download.call_count == 1
     assert m_download.call_args == ((log_url, f"{artifacts_dir}/bitrise.log"),)
+
+
+@pytest.mark.asyncio
+async def test_dump_perfherder_data(mocker, caplog):
+    caplog.set_level(logging.INFO)
+    artifacts_dir = "artifacts"
+
+    # bitrise.log doesn't exist
+    mock_is_file = mocker.patch.object(bitrise.Path, "is_file")
+    mock_is_file.return_value = False
+    await bitrise.dump_perfherder_data(artifacts_dir)
+    assert "Not scanning for Perfherder data" in caplog.text
+
+    # bitrise.log doesn't contain Perfherder data
+    caplog.clear()
+    mock_is_file.return_value = True
+    mock_read_text = mocker.patch.object(bitrise.Path, "read_text")
+    mock_read_text.return_value = dedent(
+        """
+    INFO does not contain
+    DEBUG any perfherder data
+    """
+    ).strip()
+    await bitrise.dump_perfherder_data(artifacts_dir)
+    assert "Not scanning for Perfherder data" not in caplog.text
+    assert "Found Perfherder data in" not in caplog.text
+
+    # bitrise.log contains Perfherder data
+    caplog.clear()
+    mock_read_text.return_value = dedent(
+        """
+    INFO does contain
+    PERFHERDER_DATA {"foo": "bar"}
+    DEBUG perfherder data
+    PERFHERDER_DATA {"baz": 1}
+    """
+    ).strip()
+    await bitrise.dump_perfherder_data(artifacts_dir)
+    assert "Not scanning for Perfherder data" not in caplog.text
+    assert (
+        dedent(
+            """
+        Found Perfherder data in artifacts/bitrise.log:
+        PERFHERDER_DATA {"foo": "bar"}
+        PERFHERDER_DATA {"baz": 1}
+        """
+        ).strip()
+        in caplog.text
+    )
 
 
 @pytest.mark.asyncio
