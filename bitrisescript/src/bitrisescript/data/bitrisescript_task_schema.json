@@ -17,8 +17,18 @@
                     "description": "Prefix to store task artifacts. Setting this to 'public' will generate public artifacts.",
                     "type": "string"
                 },
-                "build_params": {
-                    "description": "Parameters describing the build context to pass onto Bitrise. All keys are optional but specific workflows may depend on particular keys being set.",
+                "workflow_params": {
+                    "description": "Workflow-specific values to form a Bitrise build_params object. Mapping a workflow id to a list of permutations. It CAN override values in global_params.",
+                    "type": "object",
+                    "additionalProperties":{
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "global_params": {
+                    "description": "Default parameters describing the build context to pass onto Bitrise. All keys are optional but specific workflows may depend on particular keys being set.",
                     "type": "object",
                     "properties": {
                         "branch": {
