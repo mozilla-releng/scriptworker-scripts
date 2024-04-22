@@ -5,7 +5,7 @@ import asyncio
 import logging
 import os
 
-from bitrisescript.bitrise import BitriseClient, run_build
+from bitrisescript.bitrise import BitriseClient, find_running_build, get_running_builds, run_build, wait_and_download_workflow_log
 from bitrisescript.task import get_artifact_dir, get_bitrise_app, get_bitrise_workflows, get_build_params
 from scriptworker_client.client import sync_main
 
@@ -18,16 +18,23 @@ async def async_main(config, task):
 
     artifact_dir = get_artifact_dir(config, task)
 
-    futures = []
-    for workflow in get_bitrise_workflows(config, task):
-        build_params_list = get_build_params(task, workflow)
-        for build_params in build_params_list:
-            futures.append(run_build(artifact_dir, **build_params))
-
     client = None
     try:
         client = BitriseClient()
         client.set_auth(config["bitrise"]["access_token"])
+
+        futures = []
+        branch = task["payload"].get("global_params", {}).get("branch", "main")
+        for workflow in get_bitrise_workflows(config, task):
+            running_builds = await get_running_builds(workflow, branch=branch)
+            build_params_list = get_build_params(task, workflow)
+            for build_params in build_params_list:
+                existing_build_slug = find_running_build(running_builds, build_params)
+                if existing_build_slug:
+                    futures.append(wait_and_download_workflow_log(artifact_dir, existing_build_slug))
+                else:
+                    futures.append(run_build(artifact_dir, **build_params))
+
         await client.set_app_prefix(app)
         await asyncio.gather(*futures)
     finally:
