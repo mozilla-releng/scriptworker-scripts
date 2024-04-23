@@ -65,6 +65,7 @@ async def async_main(context):
                 copy_to_dir(context.config["gpg_pubkey"], context.config["artifact_dir"], target="public/build/KEY")
 
         # notarization_stacked is a special format that takes in all files at once instead of sequentially like other formats
+        # Should be fixed in https://github.com/mozilla-releng/scriptworker-scripts/issues/980
         notarization_dict = {path: path_dict for path, path_dict in filelist_dict.items() if "apple_notarization_stacked" in path_dict["formats"]}
         if notarization_dict:
             output_files = await apple_notarize_stacked(context, notarization_dict)

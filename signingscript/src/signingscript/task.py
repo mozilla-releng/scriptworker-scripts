@@ -61,6 +61,7 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "apple_notarization": apple_notarize,
         "apple_notarization_geckodriver": apple_notarize_geckodriver,
         # This format is handled in script.py
+        # Should be refactored in https://github.com/mozilla-releng/scriptworker-scripts/issues/980
         # "apple_notarization_stacked": apple_notarize_stacked,
         "default": sign_file,
     }
