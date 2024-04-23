@@ -1399,6 +1399,9 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
     if fmt == "autograph_authenticode_ev":
         cafile_key = f"{cafile_key}_ev"
         cert_key = f"{cert_key}_ev"
+    elif fmt.startswith("autograph_authenticode_202404"):
+        cafile_key += "_202404"
+        cert_key += "_202404"
 
     if keyid:
         # Sometimes a given keyid may chain up to a shared intermediate, and
@@ -1417,7 +1420,7 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
     else:
         timestamp_style = context.config["authenticode_timestamp_style"]
     timestamp_url = context.config["authenticode_timestamp_url"]
-    if fmt.endswith(("authenticode_stub", "authenticode_sha2_stub")):
+    if fmt.endswith(("authenticode_stub", "authenticode_sha2_stub", "authenticode_202404_stub")):
         crosscert = context.config["authenticode_cross_cert"]
     else:
         crosscert = None
