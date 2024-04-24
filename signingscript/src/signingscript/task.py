@@ -50,6 +50,8 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "autograph_authenticode_sha2": sign_authenticode,
         "autograph_authenticode_sha2_stub": sign_authenticode,
         "autograph_authenticode_sha2_rfc3161_stub": sign_authenticode,
+        "autograph_authenticode_202404": sign_authenticode,
+        "autograph_authenticode_202404_stub": sign_authenticode,
         "autograph_authenticode_ev": sign_authenticode,
         "privileged_webextension": sign_xpi,
         "system_addon": sign_xpi,
