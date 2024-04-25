@@ -1643,7 +1643,7 @@ async def apple_notarize(context, path, *args, **kwargs):
     """
     # Setup workdir
     notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
-    utils.mkdir(notarization_workdir, delete_before_create=True)
+    utils.mkdir(notarization_workdir)
 
     _, extension = os.path.splitext(path)
     if extension == ".pkg":
@@ -1659,7 +1659,8 @@ async def apple_notarize_geckodriver(context, path, *args, **kwargs):
     """
     # Setup workdir
     notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
-    utils.mkdir(notarization_workdir, delete_before_create=True)
+    shutil.rmtree(notarization_workdir, ignore_errors=True)
+    utils.mkdir(notarization_workdir)
 
     return await _notarize_geckodriver(context, path, notarization_workdir)
 
@@ -1681,7 +1682,8 @@ async def apple_notarize_stacked(context, filelist_dict):
         task_index += 1
         relpath_index_map[relpath] = task_index
         notarization_workdir = os.path.join(context.config["work_dir"], f"apple_notarize-{task_index}")
-        utils.mkdir(notarization_workdir, delete_before_create=True)
+        shutil.rmtree(notarization_workdir, ignore_errors=True)
+        utils.mkdir(notarization_workdir)
         _, extension = os.path.splitext(relpath)
         if extension == ".pkg":
             path = os.path.join(notarization_workdir, relpath)
