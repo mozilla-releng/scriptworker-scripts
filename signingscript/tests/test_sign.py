@@ -1495,12 +1495,50 @@ async def test_apple_notarize_stacked(mocker, context):
     mocker.patch.object(sign, "_extract_tarfile", noop_async)
     mocker.patch.object(sign, "_create_tarfile", noop_async)
     mocker.patch.object(sign.os, "listdir", lambda *_: ["/foo.pkg", "/baz.app", "/foobar"])
+    mocker.patch.object(sign.os, "walk", lambda *_: [("/", None, ["foo.pkg", "baz.app"])])
     mocker.patch.object(sign.shutil, "rmtree", noop_sync)
     mocker.patch.object(sign.utils, "mkdir", noop_sync)
     mocker.patch.object(sign.utils, "copy_to_dir", noop_sync)
 
-    await sign.apple_notarize_stacked(context, {"/app.tar.gz": {"full_path": "/app.tar.gz", "formats": ["apple_notarize_stacked"]}})
+    await sign.apple_notarize_stacked(
+        context,
+        {
+            "/app.tar.gz": {"full_path": "/app.tar.gz", "formats": ["apple_notarize_stacked"]},
+            "/app2.pkg": {"full_path": "/app2.pkg", "formats": ["apple_notarize_stacked"]},
+        },
+    )
     # one for each file format
-    assert notarize.await_count == 2
-    assert wait.await_count == 2
-    assert staple.await_count == 2
+    assert notarize.await_count == 3
+    assert wait.await_count == 3
+    assert staple.await_count == 3
+
+
+@pytest.mark.asyncio
+async def test_apple_notarize_stacked_unsupported(mocker, context):
+    """Test unsupported file extensions"""
+
+    mocker.patch.object(sign, "_extract_tarfile", noop_async)
+    mocker.patch.object(sign.shutil, "rmtree", noop_sync)
+    mocker.patch.object(sign.utils, "mkdir", noop_sync)
+    mocker.patch.object(sign.utils, "copy_to_dir", noop_sync)
+
+    # Returns unsupported file formats
+    mocker.patch.object(sign.os, "listdir", lambda *_: ["/foo.aaa", "/baz.bbb", "/foobar"])
+
+    with pytest.raises(SigningScriptError):
+        # Main file is supported, contents uses the above os.listdir
+        await sign.apple_notarize_stacked(
+            context,
+            {
+                "/app.tar.gz": {"full_path": "/app.tar.gz", "formats": ["apple_notarize_stacked"]},
+            },
+        )
+
+    with pytest.raises(SigningScriptError):
+        # Main file extension is unsupported
+        await sign.apple_notarize_stacked(
+            context,
+            {
+                "/app.bbb": {"full_path": "/app.bbb", "formats": ["apple_notarize_stacked"]},
+            },
+        )
