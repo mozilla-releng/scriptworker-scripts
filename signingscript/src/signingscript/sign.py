@@ -1673,11 +1673,11 @@ async def apple_notarize_stacked(context, filelist_dict):
     """
     ATTEMPTS = 5
 
-    # notarization submissions map (path -> submission_id)
-    submissions_map = {}
     relpath_index_map = {}
+    paths_to_notarize = []
     task_index = 0
-    # Submit to notarization one by one
+
+    # Create list of files to be notarized + check for potential problems
     for relpath, path_dict in filelist_dict.items():
         task_index += 1
         relpath_index_map[relpath] = task_index
@@ -1688,26 +1688,29 @@ async def apple_notarize_stacked(context, filelist_dict):
         if extension == ".pkg":
             path = os.path.join(notarization_workdir, relpath)
             utils.copy_to_dir(path_dict["full_path"], notarization_workdir, target=relpath)
-            submissions_map[path] = await retry_async(
-                func=rcodesign_notarize,
-                args=(path, context.apple_credentials_path),
-                attempts=ATTEMPTS,
-                retry_exceptions=RCodesignError,
-            )
-        else:
+            paths_to_notarize.append(path)
+        elif extension == ".gz":
             await _extract_tarfile(context, path_dict["full_path"], extension, notarization_workdir)
             workdir_files = os.listdir(notarization_workdir)
             supported_files = [filename for filename in workdir_files if _can_notarize(filename, (".app", ".pkg"))]
             if not supported_files:
-                raise SigningScriptError("No supported files found")
+                raise SigningScriptError(f"No supported files found for file {relpath}")
             for file in supported_files:
                 path = os.path.join(notarization_workdir, file)
-                submissions_map[path] = await retry_async(
-                    func=rcodesign_notarize,
-                    args=(path, context.apple_credentials_path),
-                    attempts=ATTEMPTS,
-                    retry_exceptions=RCodesignError,
-                )
+                paths_to_notarize.append(path)
+        else:
+            raise SigningScriptError(f"Unsupported file extension: {extension} for file {relpath}")
+
+    # notarization submissions map (path -> submission_id)
+    submissions_map = {}
+    # Submit to notarization one by one
+    for path in paths_to_notarize:
+        submissions_map[path] = await retry_async(
+            func=rcodesign_notarize,
+            args=(path, context.apple_credentials_path),
+            attempts=ATTEMPTS,
+            retry_exceptions=RCodesignError,
+        )
 
     # Notary wait all files
     for path, submission_id in submissions_map.items():
