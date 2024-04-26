@@ -40,7 +40,7 @@
                 "type": "object",
                 "properties": {
                     "enabled": {
-                        "type": "boolean"
+                        "enum": [true, false, "buildhub-only"]
                     },
                     "credentials": {
                         "type": ["object", "string"],
