@@ -151,6 +151,7 @@ async def test_sign(context, mocker, format, filename, post_files):
         ("widevine", stask.sign_widevine),
         ("autograph_authenticode", stask.sign_authenticode),
         ("autograph_authenticode_stub", stask.sign_authenticode),
+        ("apple_notarization", stask.apple_notarize),
         ("default", stask.sign_file),
         # Key id cases
         ("autograph_hash_only_mar384:firefox_20190321_dev", stask.sign_mar384_with_autograph_hash),

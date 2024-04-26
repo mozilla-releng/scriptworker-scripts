@@ -40,7 +40,6 @@ def mkdir(path):
 
     Args:
         path (str): the path to mkdir
-
     """
     try:
         os.makedirs(path)

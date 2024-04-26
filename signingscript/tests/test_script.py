@@ -30,6 +30,9 @@ async def async_main_helper(tmpdir, mocker, formats, extra_config={}, server_typ
             assert authenticode_comment == "Some authenticode comment"
         return [val]
 
+    async def fake_notarize_stacked(_, filelist_dict, *args, **kwargs):
+        return filelist_dict.keys()
+
     mocker.patch.object(script, "load_autograph_configs", new=noop_sync)
     mocker.patch.object(script, "load_apple_notarization_configs", new=noop_sync)
     mocker.patch.object(script, "setup_apple_notarization_credentials", new=noop_sync)
@@ -37,6 +40,7 @@ async def async_main_helper(tmpdir, mocker, formats, extra_config={}, server_typ
     mocker.patch.object(script, "task_signing_formats", return_value=formats)
     mocker.patch.object(script, "build_filelist_dict", new=fake_filelist_dict)
     mocker.patch.object(script, "sign", new=fake_sign)
+    mocker.patch.object(script, "apple_notarize_stacked", new=fake_notarize_stacked)
     context = mock.MagicMock()
     context.config = {"work_dir": tmpdir, "artifact_dir": tmpdir, "autograph_configs": {}, "apple_notarization_configs": "fake"}
     context.config.update(extra_config)
@@ -97,6 +101,21 @@ async def test_async_main_apple_notarization(tmpdir, mocker):
     formats = ["apple_notarization"]
     mocker.patch.object(script, "copy_to_dir", new=noop_sync)
     await async_main_helper(tmpdir, mocker, formats)
+
+
+@pytest.mark.asyncio
+async def test_async_main_apple_notarization_stacked(tmpdir, mocker):
+    formats = ["apple_notarization_stacked"]
+    mocker.patch.object(script, "copy_to_dir", new=noop_sync)
+    await async_main_helper(tmpdir, mocker, formats)
+
+
+@pytest.mark.asyncio
+async def test_async_main_apple_notarization_stacked_mixed_fail(tmpdir, mocker):
+    formats = ["autograph_mar", "apple_notarization_stacked"]
+    mocker.patch.object(script, "copy_to_dir", new=noop_sync)
+    with pytest.raises(SigningScriptError):
+        await async_main_helper(tmpdir, mocker, formats)
 
 
 @pytest.mark.asyncio
