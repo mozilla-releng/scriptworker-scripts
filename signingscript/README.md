@@ -80,6 +80,43 @@ key_ids:
   - fenix_china_rel_apk_v3
 ```
 
+Supported formats
+-----------------
+
+Last updated: 2024-04-26
+
+This is a best effort list of supported signing formats and what they correspond to.
+
+- `autograph_apk`, `autograph_focus`, `autograph_apk_mozillaonline`: sign apk or aab files (with different keys)
+- `autograph_stage_aab`, `autograph_stage_apk`, `autograph_stage_apk_mozillaonline`, `autograph_stage_focus`: sign apk or aab files using stage autograph
+- `autograph_stage_apk_v3`, `autograph_stage_focus_v3`, `autograph_stage_apk_mozillaonline_v3`: sign apk or aab file using v3 signing
+- `autograph_authenticode`: [DEPRECATED] sign windows binary (PE, MSI, MSIX) using autograph and sha1 hash
+- `autograph_authenticode_stub`: [DEPRECATED] sign windows binary (PE, MSI, MSIX) using autograph and sha1 hash, and adding a dummy certificate in the chain for attribution purposes
+- `autograph_authenticode_sha2`: sign windows binary (PE, MSI, MSIX) using autograph and sha2 hash
+- `autograph_authenticode_sha2_stub`: sign windows binary (PE, MSI, MSIX) using autograph and sha2 hash, and adding a dummy certificate in the chain for attribution purposes
+- `autograph_authenticode_sha2_rfc3161_stub`: sign windows binary (PE, MSI, MSIX) using autograph and sha2 hash, adding a dummy certificate in the chain for attribution purposes, and using the rfc3161 protocol for timestamping
+- `autograph_authenticode_202404`: sign windows binary (PE, MSI, MSIX) using autograph and sha2 hash, using the certificate issued 2024-04-02
+- `autograph_authenticode_202404_stub`: sign windows binary (PE, MSI, MSIX) using autograph and sha2 hash, using the certificate issued 2024-04-02, and adding a dummy certificate in the chain for attribution purposes
+- `autograph_authenticode_ev`: sign windows binary using autograph, using the EV (extended validation) code signing certificate, necessary for windows kernel modules
+- `autograph_debsign`: gpg-sign a debian changes file and associated dsc and/or buildinfo, using autograph
+- `autograph_gpg`: get a detached PGP signature for a file, using autograph's data signing endpoint
+- `gpg`: [DEPRECATED] [UNUSED] get a detached PGP signature for a file, using autograph's file signing endpoint
+- `autograph_hash_only_mar384`: sign a mar file, using autograph's hash signing endpoint
+- `autograph_mar384`: [DEPRECATED] sign a mar file using autograph's file signing endpoint
+- `autograph_stage_mar384`: sign a mar file, using autograph's hash signing endpoint.  This uses autograph stage, so is intended for testing only (no production certificates)
+- `autograph_langpack`: sign xpi file using autograph
+- `autograph_omnija`: sign omni.ja files contained in a tarball or zip file using autograph
+- `privileged_webextension`: sign xpi file using autograph and the privileged "extension_rsa" certificate
+- `system_addon`: sign xpi file using autograph and the privileged "systemaddon_rsa" certificate
+- `autograph_xpi`, `autograph_xpi_*`: sign xpi file using autograph, with different signing parameters; should not be used in production, that flow should go through addons.mozilla.org
+- `macapp`: [UNUSED] mac app signing is currently handled by iscript
+- `autograph_widevine`: get a detached signature for widevine verification purposes
+- `widevine`: [UNUSED] same as `autograph_widevine`
+- `autograph_rsa`: get a detached signature for a file using autograph's hash signing endpoint
+- `apple_notarization`: notarize and staple a mac pkg or tarball
+- `apple_notarization_geckodriver`: notarize a mac binary (without stapling)
+
+
 Testing
 -------
 
