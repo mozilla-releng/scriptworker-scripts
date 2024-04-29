@@ -1736,6 +1736,8 @@ async def apple_notarize_stacked(context, filelist_dict):
         task_index = relpath_index_map[relpath]
         notarization_workdir = os.path.join(context.config["work_dir"], f"apple_notarize-{task_index}")
         target_path = os.path.join(context.config["work_dir"], relpath)
+        if not os.path.exists(os.path.dirname(target_path)):
+            utils.mkdir(os.path.dirname(target_path))
         _, extension = os.path.splitext(relpath)
         # Pkgs don't need to be tarred
         if extension == ".pkg":
