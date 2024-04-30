@@ -189,7 +189,7 @@ async def push_to_partner(context):
 
 async def push_to_releases(context):
     # S3 upload
-    if context.config["clouds"]["aws"][context.resource]["enabled"]:
+    if context.config["clouds"]["aws"][context.resource]["enabled"] is True:
         await push_to_releases_s3(context)
 
     # GCS upload
@@ -498,7 +498,7 @@ async def move_partner_beets(context, manifest):
             destination = get_destination_for_partner_repack_path(context, manifest, full_path_artifact, locale)
 
             # S3 upload
-            if context.config["clouds"]["aws"][context.resource]["enabled"]:
+            if context.config["clouds"]["aws"][context.resource]["enabled"] is True:
                 cloud_uploads["aws"].append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=destination, path=source)))
 
             # GCS upload
@@ -656,7 +656,8 @@ async def retry_upload(context, destinations, path):
     #  we don't have that use case right now, but might be worth fixing
     for dest in destinations:
         # S3 upload
-        if is_cloud_enabled(context.config, "aws", context.resource):
+        enabled = is_cloud_enabled(context.config, "aws", context.resource)
+        if enabled is True or (enabled == "buildhub-only" and path.endswith("buildhub.json")):
             cloud_uploads["aws"].append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
 
         # GCS upload
