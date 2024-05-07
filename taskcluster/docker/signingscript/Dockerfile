@@ -40,10 +40,10 @@ WORKDIR /app
 RUN cp -R /app/signingscript/docker.d/* /app/docker.d/ \
  && python -m venv /app \
  && cd signingscript \
- && /app/bin/pip install -r requirements/base.txt \
+ && /app/bin/pip install --no-deps -r requirements/base.txt \
  && /app/bin/pip install . \
  && python -m venv /app/configloader_venv \
  && cd /app/configloader \
- && /app/configloader_venv/bin/pip install -r requirements/base.txt \
+ && /app/configloader_venv/bin/pip install --no-deps -r requirements/base.txt \
  && /app/configloader_venv/bin/pip install . \
  && ln -sf /etc/widevine.py $(/app/bin/python -c "import site; print(site.getsitepackages()[0])")/widevine.py

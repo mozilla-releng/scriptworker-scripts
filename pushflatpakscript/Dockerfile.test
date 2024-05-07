@@ -12,7 +12,7 @@ COPY MANIFEST.in setup.py tox.ini /app/
 COPY requirements/ /app/requirements/
 
 ARG PYTHON_REQ_SUFFIX
-RUN pip install -r requirements/local${PYTHON_REQ_SUFFIX}.txt
+RUN pip install --no-deps -r requirements/local${PYTHON_REQ_SUFFIX}.txt
 
 COPY src/ /app/src/
 
