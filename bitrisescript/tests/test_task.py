@@ -112,63 +112,20 @@ def test_get_bitrise_workflows(config, task, expectation, expected):
 
 
 @pytest.mark.parametrize(
-    "task_payload, expected",
+    "task, expected",
     (
-        # Simple payload with no global_params
         (
+            {"payload": {}},
             {},
-            [{"workflow_id": "wkflw"}],
         ),
-        # Simple payload with global_params
         (
-            {"global_params": {"foo": "bar"}},
-            [{"foo": "bar"}],
-        ),
-        # Payload with multiple workflow_params
-        (
-            {"global_params": {"foo": "bar"}, "workflow_params": {"wkflw": [{"baz": "qux"}, {"tap": "zab"}]}},
-            [
-                {"foo": "bar", "baz": "qux"},
-                {"foo": "bar", "tap": "zab"},
-            ],
-        ),
-        # Payload with workflow_params but no global_params
-        (
-            {"workflow_params": {"wkflw": [{"baz": "qux"}]}},
-            [{"baz": "qux"}],
-        ),
-        # Payload with workflow_params and overriding workflow_params
-        (
-            {"global_params": {"foo": "bar"}, "workflow_params": {"wkflw": [{"baz": "qux"}, {"foo": "zab"}]}},
-            [
-                {"foo": "bar", "baz": "qux"},
-                {"foo": "zab"},
-            ],
-        ),
-        # Complex global_params and workflow_params
-        (
-            {
-                "global_params": {"environment": {"var1": "value1"}},
-                "workflow_params": {
-                    "wkflw": [
-                        {"environment": {"var2": "value2"}},
-                        {"environment": {"var3": "value3"}},
-                        # Override var1
-                        {"environment": {"var3": "value3", "var1": "OVERRIDE"}},
-                    ]
-                },
-            },
-            [
-                {"environment": {"var1": "value1", "var2": "value2"}},
-                {"environment": {"var1": "value1", "var3": "value3"}},
-                {"environment": {"var1": "OVERRIDE", "var3": "value3"}},
-            ],
+            {"payload": {"build_params": "foo"}},
+            "foo",
         ),
     ),
 )
-def test_get_build_params(task_payload, expected):
-    # workflow_id should always be inserted into build_params
-    assert task_mod.get_build_params({"payload": task_payload}, "wkflw") == [{"workflow_id": "wkflw", **item} for item in expected]
+def test_get_build_params(task, expected):
+    assert task_mod.get_build_params(task) == expected
 
 
 @pytest.mark.parametrize(
