@@ -1,40 +1,8 @@
 import os
-from copy import deepcopy
 from typing import Any
 
 from scriptworker_client.exceptions import TaskVerificationError
 from scriptworker_client.utils import get_single_item_from_sequence
-
-
-def _deep_merge_dict(source: dict, dest: dict) -> dict:
-    """Deep merge two dictionaries.
-
-    Copied from taskgraph.utils.templates.merge_to
-    https://github.com/taskcluster/taskgraph/blob/main/src/taskgraph/util/templates.py
-
-    Args:
-        source (dict): The base dictionary to be copied from.
-        dest (dict): The destinatioon dictionary modified.
-    """
-    for key, value in source.items():
-        # Override mismatching or empty types
-        if type(value) != type(dest.get(key)):  # noqa: E721
-            dest[key] = source[key]
-            continue
-
-        # Merge dict
-        if isinstance(value, dict):
-            _deep_merge_dict(value, dest[key])
-            continue
-
-        # Merge list
-        if isinstance(value, list):
-            dest[key] = dest[key] + source[key]
-            continue
-
-        dest[key] = source[key]
-
-    return dest
 
 
 def _get_allowed_scope_prefixes(config):
@@ -118,27 +86,16 @@ def get_bitrise_workflows(config: dict[str, Any], task: dict[str, Any]) -> list[
     return workflows
 
 
-def get_build_params(task: dict[str, Any], workflow: str = None) -> list[dict[str, Any]]:
+def get_build_params(task: dict[str, Any]) -> dict[str, Any]:
     """Get the build_params from the task payload or an empty dict.
 
     Args:
         task (dict): The task definition.
-        workflow (str): Optional workflow reference used to load workflow_params
 
     Returns:
-        dict: The bitrise build_params to specify. Always adds workflow_id to the returned dict.
+        dict: The bitrise build_params to specify. Empty dict if unspecified.
     """
-    global_params = task["payload"].get("global_params", {})
-    workflow_params = task["payload"].get("workflow_params", {}).get(workflow)
-    global_params["workflow_id"] = workflow
-    if not workflow_params:
-        return [global_params]
-    build_params = []
-    for variation in workflow_params:
-        params = deepcopy(global_params)
-        params = _deep_merge_dict(variation, params)
-        build_params.append(params)
-    return build_params
+    return task["payload"].get("build_params", {})
 
 
 def get_artifact_dir(config: dict[str, Any], task: dict[str, Any]) -> str:
