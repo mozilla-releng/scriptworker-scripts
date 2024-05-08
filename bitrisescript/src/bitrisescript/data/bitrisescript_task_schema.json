@@ -17,8 +17,67 @@
                     "description": "Prefix to store task artifacts. Setting this to 'public' will generate public artifacts.",
                     "type": "string"
                 },
-                "build_params": {
-                    "description": "Parameters describing the build context to pass onto Bitrise. All keys are optional but specific workflows may depend on particular keys being set.",
+                "workflow_params": {
+                    "description": "Workflow-specific values to form a Bitrise build_params object. Mapping a workflow id to a list of permutations. It CAN override values in global_params.",
+                    "type": "object",
+                    "additionalProperties":{
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "branch": {
+                                    "description": "The branch running the build. For pull requests, this should be the head branch.",
+                                    "type": "string"
+                                },
+                                "branch_dest": {
+                                    "description": "The destination branch where the branch running the build will merge into. Only valid for pull requests.",
+                                    "type": "string"
+                                },
+                                "branch_dest_repo_owner": {
+                                    "description": "The repository owning the destination branch. Only valid for pull requests.",
+                                    "type": "string"
+                                },
+                                "branch_repo_owner": {
+                                    "description": "The repository owning the branch.",
+                                    "type": "string"
+                                },
+                                "commit_hash": {
+                                    "description": "The hash of the commit running the build.",
+                                    "type": "string"
+                                },
+                                "commit_message": {
+                                    "description": "The commit message of the commit running the build.",
+                                    "type": "string"
+                                },
+                                "environments": {
+                                    "description": "Environment variables to pass into the build.",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "pull_request_author": {
+                                    "description": "The author of the pull request running the build.",
+                                    "type": "string"
+                                },
+                                "pull_request_id": {
+                                    "description": "The id of the pull request running the build.",
+                                    "type": "integer"
+                                },
+                                "skip_git_status_report": {
+                                    "description": "Whether Bitrise should send a status report to Github (default False).",
+                                    "type": "boolean"
+                                },
+                                "tag": {
+                                    "description": "The tag of the commit running the build.",
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "global_params": {
+                    "description": "Default parameters describing the build context to pass onto Bitrise. All keys are optional but specific workflows may depend on particular keys being set.",
                     "type": "object",
                     "properties": {
                         "branch": {
