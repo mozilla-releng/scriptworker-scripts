@@ -17,12 +17,12 @@ async def async_main(config, task):
     log.info(f"Bitrise app: '{app}'")
 
     artifact_dir = get_artifact_dir(config, task)
-    build_params = get_build_params(task)
 
     futures = []
     for workflow in get_bitrise_workflows(config, task):
-        build_params["workflow_id"] = workflow
-        futures.append(run_build(artifact_dir, **build_params))
+        build_params_list = get_build_params(task, workflow)
+        for build_params in build_params_list:
+            futures.append(run_build(artifact_dir, **build_params))
 
     client = None
     try:
