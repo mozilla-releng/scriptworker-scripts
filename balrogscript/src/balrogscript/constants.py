@@ -24,6 +24,7 @@ SYSTEM_ADDONS_PLATFORMS = {
     "Darwin_x86_64-gcc3-u-i386-x86_64": {"alias": "default"},
     "Linux_x86-gcc3": {"alias": "default"},
     "Linux_x86_64-gcc3": {"alias": "default"},
+    "Linux_aarch64-gcc3": {"alias": "default"},
     "WINNT_x86-msvc": {"alias": "default"},
     "WINNT_x86-msvc-x64": {"alias": "default"},
     "WINNT_x86-msvc-x86": {"alias": "default"},

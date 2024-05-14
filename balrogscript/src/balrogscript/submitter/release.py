@@ -33,7 +33,15 @@ def makeCandidatesDir(product, version, buildNumber, nightlyDir="candidates", pr
         return directory
 
 
-bouncer_platform_map = {"win32": "win", "win64": "win64", "macosx": "osx", "linux": "linux", "linux64": "linux64", "macosx64": "osx"}
+bouncer_platform_map = {
+    "win32": "win",
+    "win64": "win64",
+    "macosx": "osx",
+    "linux": "linux",
+    "linux64": "linux64",
+    "linux64-aarch64": "linux64-aarch64",
+    "macosx64": "osx",
+}
 # buildbot -> ftp platform mapping
 ftp_platform_map = {
     "win32": "win32",
@@ -41,6 +49,7 @@ ftp_platform_map = {
     "macosx": "mac",
     "linux": "linux-i686",
     "linux64": "linux-x86_64",
+    "linux64-aarch64": "linux-aarch64",
     "macosx64": "mac",
     "linux-android": "android",
     "linux-mobile": "linux",
@@ -62,6 +71,7 @@ update_platform_map = {
     "android-aarch64": ["Android_aarch64-gcc3"],
     "linux": ["Linux_x86-gcc3"],
     "linux64": ["Linux_x86_64-gcc3"],
+    "linux64-aarch64": ["Linux_aarch64-gcc3"],
     "linux64-asan-reporter": ["Linux_x86_64-gcc3-asan"],
     "macosx64": [
         "Darwin_x86_64-gcc3-u-i386-x86_64",
