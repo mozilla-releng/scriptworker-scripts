@@ -28,7 +28,7 @@ DEFAULT_SERVER_CONFIG = {
         ["http://localhost:5500", "alice", "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn", ["autograph_mar384"]],
         ["http://localhost:5500", "bob", "1234567890abcdefghijklmnopqrstuvwxyz1234567890abcd", ["autograph_focus"]],
         ["http://localhost:5500", "alice", "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn", ["autograph_hash_only_mar384"]],
-        ["http://localhost:5500", "charlie", "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn", ["autograph_authenticode"]],
+        ["http://localhost:5500", "charlie", "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn", ["autograph_authenticode_sha2"]],
     ]
 }
 
@@ -208,11 +208,11 @@ async def test_integration_autograph_authenticode(context, tmpdir):
     context.config["authenticode_timestamp_url"] = "https://example.com"
     context.autograph_configs = {
         "project:releng:signing:cert:dep-signing": [
-            Autograph(*["http://localhost:5500", "charlie", "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn", ["autograph_authenticode"]])
+            Autograph(*["http://localhost:5500", "charlie", "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmn", ["autograph_authenticode_sha2"]])
         ]
     }
     context.config["autograph_configs"] = _write_server_config(tmpdir)
     _copy_files_to_work_dir("windows.zip", context)
-    context.task = _craft_task(["windows.zip"], signing_format="autograph_authenticode")
+    context.task = _craft_task(["windows.zip"], signing_format="autograph_authenticode_sha2")
 
     await async_main(context)

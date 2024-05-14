@@ -1386,10 +1386,7 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
 
     infile = orig_path
     outfile = orig_path + "-new"
-    if fmt in ["autograph_authenticode", "autograph_authenticode_stub"]:
-        digest_algo = "sha1"
-    else:
-        digest_algo = "sha256"
+    digest_algo = "sha256"
 
     timestampfile = context.config["authenticode_ca_timestamp"]
 

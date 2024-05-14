@@ -128,7 +128,7 @@ signers:
     - id: test-authenticode
       type: genericrsa
       mode: pkcs15
-      hash: sha1
+      hash: sha256
       publickey: |
         -----BEGIN PUBLIC KEY-----
         MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApP3X87nO4LxwCxiIMYWB
