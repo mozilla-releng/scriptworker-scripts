@@ -27,7 +27,7 @@ async def async_main(context):
     work_dir = context.config["work_dir"]
     async with aiohttp.ClientSession() as session:
         all_signing_formats = task_signing_formats(context)
-        if "gpg" in all_signing_formats or "autograph_gpg" in all_signing_formats:
+        if "autograph_gpg" in all_signing_formats:
             if not context.config.get("gpg_pubkey"):
                 raise Exception("GPG format is enabled but gpg_pubkey is not defined")
             if not os.path.exists(context.config["gpg_pubkey"]):
@@ -61,7 +61,7 @@ async def async_main(context):
             for source in output_files:
                 source = os.path.relpath(source, work_dir)
                 copy_to_dir(os.path.join(work_dir, source), context.config["artifact_dir"], target=source)
-            if "gpg" in path_dict["formats"] or "autograph_gpg" in path_dict["formats"]:
+            if "autograph_gpg" in path_dict["formats"]:
                 copy_to_dir(context.config["gpg_pubkey"], context.config["artifact_dir"], target="public/build/KEY")
 
         # notarization_stacked is a special format that takes in all files at once instead of sequentially like other formats

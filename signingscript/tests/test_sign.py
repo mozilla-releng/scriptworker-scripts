@@ -402,13 +402,6 @@ async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(
     assert json.load(mocked_session.post.call_args[1]["data"]) == [{"input": "YjY0bWFyaGFzaA=="}]
 
 
-# sign_gpg {{{1
-@pytest.mark.asyncio
-async def test_sign_gpg(context, mocker):
-    mocker.patch.object(sign, "sign_file", new=noop_async)
-    assert await sign.sign_gpg(context, "from", "blah") == ["from", "from.asc"]
-
-
 # sign_macapp {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize("filename,expected", (("foo.dmg", "foo.tar.gz"), ("foo.tar.bz2", "foo.tar.bz2")))

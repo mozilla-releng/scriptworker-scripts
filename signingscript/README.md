@@ -98,7 +98,6 @@ This is a best effort list of supported signing formats and what they correspond
 - `autograph_authenticode_ev`: sign windows binary using autograph, using the EV (extended validation) code signing certificate, necessary for windows kernel modules
 - `autograph_debsign`: gpg-sign a debian changes file and associated dsc and/or buildinfo, using autograph
 - `autograph_gpg`: get a detached PGP signature for a file, using autograph's data signing endpoint
-- `gpg`: [DEPRECATED] [UNUSED] get a detached PGP signature for a file, using autograph's file signing endpoint
 - `autograph_hash_only_mar384`: sign a mar file, using autograph's hash signing endpoint
 - `autograph_mar384`: [DEPRECATED] sign a mar file using autograph's file signing endpoint
 - `autograph_stage_mar384`: sign a mar file, using autograph's hash signing endpoint.  This uses autograph stage, so is intended for testing only (no production certificates)
