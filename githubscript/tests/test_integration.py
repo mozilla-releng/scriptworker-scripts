@@ -14,15 +14,15 @@ from githubscript.script import main
 def config():
     return {
         "github_projects": {
-            "fenix": {
+            "reference-browser": {
                 "allowed_actions": ["release"],
                 "github_token": "SOME_TOKEN",
                 "github_owner": "mozilla-mobile",
-                "github_repo_name": "firefox-android",
+                "github_repo_name": "reference-browser",
                 "contact_github": True,
             },
         },
-        "taskcluster_scope_prefixes": ["project:mobile:firefox-android:releng:github:"],
+        "taskcluster_scope_prefixes": ["project:mobile:reference-browser:releng:github:"],
         "verbose": True,
     }
 
@@ -31,7 +31,7 @@ def config():
 def task():
     return {
         "dependencies": ["dependency-task-id"],
-        "scopes": ["project:mobile:firefox-android:releng:github:project:fenix", "project:mobile:firefox-android:releng:github:action:release"],
+        "scopes": ["project:mobile:reference-browser:releng:github:project:reference-browser", "project:mobile:reference-browser:releng:github:action:release"],
         "payload": {
             "artifactMap": [
                 {

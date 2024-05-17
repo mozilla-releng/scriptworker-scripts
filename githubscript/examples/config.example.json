@@ -1,15 +1,15 @@
 {
     "work_dir": "/tmp/githubscript/work_dir",
     "github_projects": {
-        "fenix": {
+        "reference-browser": {
           "allowed_actions": ["release"],
           "github_token": "SOME_TOKEN",
           "github_owner": "mozilla-mobile",
-          "github_repo_name": "firefox-android",
+          "github_repo_name": "reference-browser",
           "contact_github": true
         }
     },
-    "taskcluster_scope_prefixes": ["project:mobile:firefox-android:releng:github:"],
+    "taskcluster_scope_prefixes": ["project:mobile:reference-browser:releng:github:"],
 
     "verbose": true
 }

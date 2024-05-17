@@ -53,19 +53,6 @@ def repo_context(tmpdir, config, request, mocker):
     yield context
 
 
-@pytest.fixture()
-def mobile_repo_context(tmpdir, config, request, mocker):
-    context = mocker.MagicMock()
-    context.repo = os.path.join(tmpdir, "repo")
-    context.task = {"metadata": {"source": "https://github.com/mozilla-mobile/firefox-android/blob/rev/foo"}}
-    context.config = config
-    os.mkdir(context.repo)
-    version_file = os.path.join(context.repo, "version.txt")
-    with open(version_file, "w") as f:
-        f.write("109.0")
-    yield context
-
-
 def test_get_version(repo_context):
     ver = vmanip.get_version("config/milestone.txt", repo_context.repo, "https://hg.mozilla.org/repo")
     assert ver == repo_context.xtest_version
@@ -95,8 +82,6 @@ def test_replace_ver_in_file_invalid_old_ver(repo_context, new_version):
         ("mail/config/version.txt", "https://hg.mozilla.org/releases/comm-beta", does_not_raise(), ThunderbirdVersion),
         ("mail/config/version_display.txt", "https://hg.mozilla.org/releases/comm-release", does_not_raise(), ThunderbirdVersion),
         ("config/milestone.txt", "https://hg.mozilla.org/releases/mozilla-release", does_not_raise(), GeckoVersion),
-        ("version.txt", "https://github.com/mozilla-mobile/firefox-android", does_not_raise(), MobileVersion),
-        ("version.txt", "https://github.com/mozilla-releng/staging-firefox-android", does_not_raise(), MobileVersion),
         ("some/random/file.txt", "https://hg.mozilla.org/mozilla-central", pytest.raises(TreeScriptError), None),
         ("some/random/file.txt", "https://github.com/some-owner/some-repo", pytest.raises(TreeScriptError), None),
         ("mobile/android/version.txt", "https://hg.mozilla.org/mozilla-central", does_not_raise(), MobileVersion),

@@ -100,42 +100,6 @@ def test_thunderbird_prod():
     _validate_config(context)
 
 
-def test_mobile_fake_prod():
-    context = {
-        "COT_PRODUCT": "mobile",
-        "ENV": "fake-prod",
-        "GCS_DEP_CREDS": "",
-        "GCS_RELEASE_CREDS": "",
-        "DEP_ID": "",
-        "DEP_KEY": "",
-        "MAVEN_ID": "",
-        "MAVEN_KEY": "",
-        "MAVEN_NIGHTLY_ID": "",
-        "MAVEN_NIGHTLY_KEY": "",
-    }
-    _validate_config(context)
-
-
-def test_mobile_prod():
-    context = {
-        "COT_PRODUCT": "mobile",
-        "ENV": "prod",
-        "GCS_DEP_CREDS": "",
-        "GCS_RELEASE_CREDS": "",
-        "DEP_ID": "",
-        "DEP_KEY": "",
-        "NIGHTLY_ID": "",
-        "NIGHTLY_KEY": "",
-        "RELEASE_ID": "",
-        "RELEASE_KEY": "",
-        "MAVEN_ID": "",
-        "MAVEN_KEY": "",
-        "MAVEN_NIGHTLY_ID": "",
-        "MAVEN_NIGHTLY_KEY": "",
-    }
-    _validate_config(context)
-
-
 def test_application_services_fake_prod():
     context = {"COT_PRODUCT": "app-services", "ENV": "fake-prod", "GCS_DEP_CREDS": "", "MAVEN_ID": "", "MAVEN_KEY": ""}
     _validate_config(context)
