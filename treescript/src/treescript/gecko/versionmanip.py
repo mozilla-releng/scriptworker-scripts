@@ -31,9 +31,7 @@ _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
 }
 
 _VERSION_CLASS_PER_END_OF_SOURCE_REPO = {
-    "fenix": MobileVersion,
-    "firefox-android": MobileVersion,
-    "focus-android": MobileVersion,
+    "placeholder-repo": MobileVersion,  # not currently used
 }
 
 

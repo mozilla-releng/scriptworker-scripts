@@ -25,7 +25,9 @@ _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
 }
 
 _VERSION_CLASS_PER_END_OF_SOURCE_REPO = {
-    "firefox-android": MobileVersion,
+    # previously, this mapped mobile github repos to the MobileVersion; now there are no remaining
+    # repos on github requiring version bumps
+    "placeholder-repo": MobileVersion,
 }
 
 

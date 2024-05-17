@@ -41,7 +41,7 @@ def pubkey(datadir):
 async def client(aioresponses, privkey_file):
     config = {"github_config": {"privkey_file": privkey_file}}
     owner = "mozilla-mobile"
-    repo = "reference-browser"
+    repo = "placeholder-repo"
     inst_id = 1
 
     aioresponses.get(
