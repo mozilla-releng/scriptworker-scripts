@@ -9,7 +9,6 @@ taskcluster_scope_prefixes:
         - "project:releng:googleplay:product:"
       'COT_PRODUCT == "mobile"':
         - "project:mobile:reference-browser:releng:googleplay:product:"
-        - "project:mobile:firefox-android:releng:googleplay:product:"
       'COT_PRODUCT == "mozillavpn"':
         - "project:mozillavpn:releng:googleplay:product:"
 products:
