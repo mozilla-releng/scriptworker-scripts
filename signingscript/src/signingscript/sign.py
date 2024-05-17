@@ -177,26 +177,6 @@ async def sign_file(context, from_, fmt, to=None, **kwargs):
     return to or from_
 
 
-# sign_gpg {{{1
-async def sign_gpg(context, from_, fmt, **kwargs):
-    """Create a detached armored signature with the gpg key.
-
-    Because this function returns a list, gpg must be the final signing format.
-
-    Args:
-        context (Context): the signing context
-        from_ (str): the source file to sign
-        fmt (str): the format to sign with
-
-    Returns:
-        list: the path to the signed file, and sig.
-
-    """
-    to = f"{from_}.asc"
-    await sign_file(context, from_, fmt, to=to)
-    return [from_, to]
-
-
 # sign_macapp {{{1
 async def sign_macapp(context, from_, fmt, **kwargs):
     """Sign a macapp.

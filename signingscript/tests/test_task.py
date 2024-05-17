@@ -28,7 +28,12 @@ def task_defn():
         "scopes": ["signing"],
         "payload": {
             "upstreamArtifacts": [
-                {"taskType": "build", "taskId": "VALID_TASK_ID", "formats": ["gpg"], "paths": ["public/build/firefox-52.0a1.en-US.win64.installer.exe"]}
+                {
+                    "taskType": "build",
+                    "taskId": "VALID_TASK_ID",
+                    "formats": ["autograph_gpg"],
+                    "paths": ["public/build/firefox-52.0a1.en-US.win64.installer.exe"],
+                }
             ]
         },
     }
@@ -53,7 +58,7 @@ def task_defn_authenticode_comment():
                 {
                     "taskType": "build",
                     "taskId": "VALID_TASK_ID",
-                    "formats": ["gpg"],
+                    "formats": ["autograph_gpg"],
                     "paths": ["public/build/firefox-52.0a1.en-US.win64.installer.exe"],
                     "authenticode_comment": "Foo Installer",
                 }
@@ -79,8 +84,8 @@ def test_task_cert_type_error(context):
 
 # task_signing_formats {{{1
 def test_task_signing_formats(context):
-    context.task = {"payload": {"upstreamArtifacts": [{"formats": ["mar", "gpg"]}]}, "scopes": [TEST_CERT_TYPE]}
-    assert {"mar", "gpg"} == stask.task_signing_formats(context)
+    context.task = {"payload": {"upstreamArtifacts": [{"formats": ["mar", "autograph_gpg"]}]}, "scopes": [TEST_CERT_TYPE]}
+    assert {"mar", "autograph_gpg"} == stask.task_signing_formats(context)
 
 
 def test_task_signing_formats_support_several_projects(context):
@@ -146,7 +151,7 @@ async def test_sign(context, mocker, format, filename, post_files):
     (
         # Hardcoded cases
         ("autograph_hash_only_mar384", stask.sign_mar384_with_autograph_hash),
-        ("gpg", stask.sign_gpg),
+        ("autograph_gpg", stask.sign_gpg_with_autograph),
         ("macapp", stask.sign_macapp),
         ("widevine", stask.sign_widevine),
         ("autograph_authenticode_sha2", stask.sign_authenticode),
@@ -174,7 +179,7 @@ def test_get_signing_function_from_format(format, expected):
 # build_filelist_dict {{{1
 def test_build_filelist_dict(context, task_defn):
     full_path = os.path.join(context.config["work_dir"], "cot", "VALID_TASK_ID", "public/build/firefox-52.0a1.en-US.win64.installer.exe")
-    expected = {"public/build/firefox-52.0a1.en-US.win64.installer.exe": {"full_path": full_path, "formats": ["gpg"]}}
+    expected = {"public/build/firefox-52.0a1.en-US.win64.installer.exe": {"full_path": full_path, "formats": ["autograph_gpg"]}}
     context.task = task_defn
 
     # first, the file is missing...

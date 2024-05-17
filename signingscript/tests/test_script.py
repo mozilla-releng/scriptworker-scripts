@@ -49,7 +49,7 @@ async def async_main_helper(tmpdir, mocker, formats, extra_config={}, server_typ
 
 @pytest.mark.asyncio
 async def test_async_main_gpg(tmpdir, tmpfile, mocker):
-    formats = ["gpg"]
+    formats = ["autograph_gpg"]
     fake_gpg_pubkey = tmpfile
     mocked_copy_to_dir = mocker.Mock()
     mocker.patch.object(script, "copy_to_dir", new=mocked_copy_to_dir)
@@ -64,7 +64,7 @@ async def test_async_main_gpg(tmpdir, tmpfile, mocker):
 
 @pytest.mark.asyncio
 async def test_async_main_gpg_no_pubkey_defined(tmpdir, mocker):
-    formats = ["gpg"]
+    formats = ["autograph_gpg"]
 
     try:
         await async_main_helper(tmpdir, mocker, formats)
@@ -74,7 +74,7 @@ async def test_async_main_gpg_no_pubkey_defined(tmpdir, mocker):
 
 @pytest.mark.asyncio
 async def test_async_main_gpg_pubkey_doesnt_exist(tmpdir, mocker):
-    formats = ["gpg"]
+    formats = ["autograph_gpg"]
 
     try:
         await async_main_helper(tmpdir, mocker, formats, {"gpg_pubkey": "faaaaaaake"})
