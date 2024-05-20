@@ -102,3 +102,10 @@ def mark_as_shipped_v2(shipit_config, release_name):
     log.info("Marking the release as shipped...")
     release_api.update_status(release_name, status="shipped", headers=headers)
     check_release_has_values_v2(release_api, release_name, headers, status="shipped")
+
+
+def mark_phase_as_completed(shipit_config, release_name, phase):
+    release_api, headers = get_shipit_api_instance(shipit_config)
+
+    log.info("Marking the release's phase as completed ...")
+    release_api.update_phase_status(release_name, phase, status="completed", headers=headers)

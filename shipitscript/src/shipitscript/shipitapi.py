@@ -150,3 +150,15 @@ class Release_V2(object):
                 log.error(resp.content)
                 log.error(f"Response code: {resp.status_code}")
             raise
+
+    def update_phase_status(self, release_name, phase, status, headers={}):
+        data = json.dumps({"status": status})
+        response = None
+        try:
+            response = self._request(api_endpoint=f"/releases/{release_name}/{phase}", method="PATCH", data=data, headers=headers)
+        except Exception:
+            log.error(f"Caught error while triggering {phase} for {release_name}", exc_info=True)
+            if response:
+                log.error(response.content)
+                log.error(f"Response code: {response.status_code}")
+            raise
