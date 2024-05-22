@@ -1,7 +1,7 @@
 {
     "work_dir": "/tmp/githubscript/work_dir",
     "github_projects": {
-        "reference-browser": {
+        "xpi": {
           "allowed_actions": ["release"],
           "github_token": "SOME_TOKEN",
           "github_owner": "mozilla-extensions",
