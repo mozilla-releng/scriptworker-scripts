@@ -20,8 +20,7 @@ ALLOWED_BUMP_FILES = ("version.txt",)
 FileContents = Dict[str, str]
 
 
-_VERSION_CLASS_PER_BEGINNING_OF_PATH = {
-}
+_VERSION_CLASS_PER_BEGINNING_OF_PATH = {}
 
 _VERSION_CLASS_PER_END_OF_SOURCE_REPO = {
     # previously, this mapped mobile github repos to the MobileVersion; now there are no remaining
