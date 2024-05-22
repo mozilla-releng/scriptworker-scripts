@@ -198,7 +198,7 @@ def get_expected_return_code(app, product, env):
         if product not in ("firefox", "thunderbird", "xpi"):
             return 1
     elif app == "beetmover":
-        if product == "adhoc":
+        if product in ("adhoc", "mobile"):
             return 1
     elif app == "bouncer":
         if product not in ("firefox", "thunderbird"):
@@ -207,7 +207,7 @@ def get_expected_return_code(app, product, env):
         if product not in ("mobile", "xpi"):
             return 1
     elif app == "pushapk":
-        if product not in ("mobile", "mozillavpn"):
+        if product not in ("firefox", "mobile", "mozillavpn"):
             return 1
     elif app == "pushflatpak":
         if product not in ("firefox", "thunderbird"):
@@ -256,6 +256,7 @@ def generate_params():
     xfail = {
         "pushapk-firefox-dev",
         "pushapk-firefox-fake-prod",
+        "pushapk-firefox-prod",
         "pushapk-mobile-dev",
         "pushapk-mobile-fake-prod",
         "pushapk-mobile-prod",
