@@ -21,7 +21,6 @@ FileContents = Dict[str, str]
 
 
 _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
-    "mobile/android/": MobileVersion,
 }
 
 _VERSION_CLASS_PER_END_OF_SOURCE_REPO = {
