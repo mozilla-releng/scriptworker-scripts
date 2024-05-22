@@ -4,12 +4,11 @@
         "reference-browser": {
           "allowed_actions": ["release"],
           "github_token": "SOME_TOKEN",
-          "github_owner": "mozilla-mobile",
-          "github_repo_name": "reference-browser",
+          "github_owner": "mozilla-extensions",
+          "github_repo_name": "privileged-test-xpi",
           "contact_github": true
         }
     },
-    "taskcluster_scope_prefixes": ["project:mobile:reference-browser:releng:github:"],
-
+    "taskcluster_scope_prefixes": ["project:xpi:releng:github:"],
     "verbose": true
 }
