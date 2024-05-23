@@ -584,9 +584,9 @@ referencing==0.35.1 \
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.31.0 \
-    --hash=sha256:58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f \
-    --hash=sha256:942c5a758f98d790eaed1a29cb6eefc7ffb0d1cf7af05c3d2791656dbd6ad1e1
+requests==2.32.2 \
+    --hash=sha256:dd951ff5ecf3e3b3aa26b40703ba77495dab41da839ae72ef3c8e5d8e2433289 \
+    --hash=sha256:fc06670dd0ed212426dfeb94fc1b983d917c4f9847c863f313c9dfaaffb7c23c
     # via
     #   github3-py
     #   taskcluster
@@ -707,9 +707,9 @@ slugid==2.0.0 \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
     # via taskcluster
-taskcluster==64.2.8 \
-    --hash=sha256:3a6e1739a66e900663064ba3a7c684c9757ceb63013f6ea73b90b71e05084505 \
-    --hash=sha256:98b5a646f136ca3fb620e5995a76c568016b6e48f419e07ee3a1571baba37166
+taskcluster==65.1.0 \
+    --hash=sha256:dd1e25daa6dc160b830a30482da21ad8b0b0be846df3630078c2cde7037e17a6 \
+    --hash=sha256:fefca91c68f096067bbeb25926e78f4c1656164423d46a71206fa0f293e365e9
     # via
     #   -r requirements/base.in
     #   scriptworker
