@@ -3,7 +3,6 @@ from contextlib import contextmanager
 import json
 import logging
 
-import google.auth
 import httplib2
 
 from apiclient.discovery import build

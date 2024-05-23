@@ -62,7 +62,7 @@ def get_expected_combos(firefox_version, package_name):
             combos.add((architecture, api_level))
 
     if not combos:
-        raise ValueError('No combos found for Firefox version {}. Current rules: {2}'.format(
+        raise ValueError('No combos found for Firefox version {}. Current rules: {}'.format(
             firefox_version, _MAJOR_FIREFOX_VERSIONS_PER_ARCHITECTURE_AND_API_LEVEL
         ))
 

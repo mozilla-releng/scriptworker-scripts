@@ -23,6 +23,7 @@ def extract_metadata(aab_path):
 
     return metadata
 
+
 def _run_bundletool(bundletool_args):
     bundletool_path = os.environ.get("BUNDLETOOL_PATH", "./bundletool.jar")
     cmd = ['java', '-jar', bundletool_path] + bundletool_args
@@ -32,10 +33,12 @@ def _run_bundletool(bundletool_args):
     logger.debug(f'Output: {out}')
     return out
 
+
 def _extract_package_name(aab_path):
     args = ['dump', 'manifest', f'--bundle={aab_path}', '--xpath=/manifest/@package']
     out = _run_bundletool(args)
     return out
+
 
 def _extract_version_code(aab_path):
     args = ['dump', 'manifest', f'--bundle={aab_path}', '--xpath=/manifest/@android:versionCode']
