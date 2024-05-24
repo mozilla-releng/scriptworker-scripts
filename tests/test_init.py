@@ -64,12 +64,12 @@ CONTEXT = {
         "GOOGLE_CREDENTIALS_FOCUS": "Zm9vYmFyCg==",
         "GOOGLE_CREDENTIALS_MOZILLAVPN": "Zm9vYmFyCg==",
         "GOOGLE_CREDENTIALS_REFERENCE_BROWSER": "Zm9vYmFyCg==",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_PROD": "1",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_BETA": "1",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE": "1",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_FOCUS": "1",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_MOZILLAVPN": "1",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER": "1",
+        "GOOGLE_SERVICE_ACCOUNT_FENIX_NIGHTLY": "Zm9vYmFyCg==",
+        "GOOGLE_SERVICE_ACCOUNT_FENIX_BETA": "Zm9vYmFyCg==",
+        "GOOGLE_SERVICE_ACCOUNT_FENIX_RELEASE": "Zm9vYmFyCg==",
+        "GOOGLE_SERVICE_ACCOUNT_FOCUS": "Zm9vYmFyCg==",
+        "GOOGLE_SERVICE_ACCOUNT_MOZILLAVPN": "Zm9vYmFyCg==",
+        "GOOGLE_SERVICE_ACCOUNT_REFERENCE_BROWSER": "Zm9vYmFyCg==",
     },
     re.compile(r"pushflatpak:.*"): {
         "FLATHUB_URL": "https://flathub.example.com",
@@ -253,22 +253,10 @@ def generate_params():
         "fake-prod",
         "dev",
     )
-    xfail = {
-        "pushapk-firefox-dev",
-        "pushapk-firefox-fake-prod",
-        "pushapk-firefox-prod",
-        "pushapk-mobile-dev",
-        "pushapk-mobile-fake-prod",
-        "pushapk-mobile-prod",
-        "pushapk-mozillavpn-prod",
-    }
     for app in apps:
         for product in products:
             for env in envs:
-                if f"{app}-{product}-{env}" in xfail:
-                    yield pytest.param(app, product, env, marks=pytest.mark.xfail)
-                else:
-                    yield (app, product, env)
+                yield (app, product, env)
 
 
 @pytest.mark.parametrize("app,product,environment", generate_params())
@@ -277,6 +265,11 @@ def test_init_script(tmp_path, app_dir, app, product, environment):
     repo_root = here.parent
     docker_d = repo_root.joinpath(f"{app}script", "docker.d")
     shutil.copytree(docker_d, app_dir.joinpath("docker.d"), dirs_exist_ok=True)
+    # pushapkscript needs its "files" directory
+    if app == "pushapk":
+        files_d = repo_root.joinpath("pushapkscript", "files")
+        dest_d = app_dir.joinpath("pushapkscript").joinpath("files")
+        shutil.copytree(files_d, dest_d, dirs_exist_ok=True)
 
     env = {
         "APP_DIR": str(app_dir),
