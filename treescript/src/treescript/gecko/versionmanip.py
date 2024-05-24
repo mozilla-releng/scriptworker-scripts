@@ -30,8 +30,7 @@ _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
     "mail/": ThunderbirdVersion,
 }
 
-_VERSION_CLASS_PER_END_OF_SOURCE_REPO = {
-}
+_VERSION_CLASS_PER_END_OF_SOURCE_REPO = {}
 
 
 def _find_what_version_parser_to_use(file_, source_repo):
