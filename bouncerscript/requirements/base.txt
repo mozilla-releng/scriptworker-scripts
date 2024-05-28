@@ -412,9 +412,9 @@ mohawk==1.1.0 \
     --hash=sha256:3ed296a30453d0b724679e0fd41e4e940497f8e461a9a9c3b7f36e43bab0fa09 \
     --hash=sha256:d2a0e3ab10a209cc79e95e28f2dd54bd4a73fd1998ffe27b7ba0f962b6be9723
     # via taskcluster
-mozilla-version==3.0.0 \
-    --hash=sha256:63c25a8cec007e8ca401e0a9aa343fe873679354819d4db6ad1e30c60b85787f \
-    --hash=sha256:93162faa1768f14c39c7f347efd0dab74e7ba75a63f78f765f60eb567a1b3154
+mozilla-version==3.1.0 \
+    --hash=sha256:3a9463ebcf2249dc8bcf504e246b6b5977c902dfa819de31602e10bce032ed93 \
+    --hash=sha256:f798e716da9063608a0b49ca1ec0a51b73ac810c3cc8a4bcc2c461df902b147c
     # via -r requirements/base.in
 multidict==6.0.5 \
     --hash=sha256:01265f5e40f5a17f8241d52656ed27192be03bfa8764d88e8220141d1e4b3556 \
@@ -693,9 +693,9 @@ rpds-py==0.18.1 \
     # via
     #   jsonschema
     #   referencing
-scriptworker==50.2.0 \
-    --hash=sha256:5039d2fe9df6757cdbef4af22c529d42e1d6b1fcc9a267332b5a249e57935faf \
-    --hash=sha256:da6a2d01d8553f60b00caef37b2d103836326511411a46a9c6d71b2ff413a828
+scriptworker==60.0.0 \
+    --hash=sha256:713bebe0b4d2280963e1cbcd39cb477ae2b3a0ac9044a7fc364f5c31e1e48557 \
+    --hash=sha256:a4d4191304c092e453574b2169652f3266aeb2d6ba6e76d81057cf013a26e8a3
     # via -r requirements/base.in
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
