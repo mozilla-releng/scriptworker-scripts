@@ -15,6 +15,10 @@ from scriptworker_client.utils import retry_async
 log = logging.getLogger(__name__)
 
 
+class UnknownBranchError(Exception):
+    pass
+
+
 class GithubClient:
     def __init__(self, config, owner, repo):
         with open(config["github_config"]["privkey_file"]) as fh:
@@ -56,19 +60,6 @@ class GithubClient:
             log.warn("No changes to commit, aborting.")
             return
 
-        oid_query = Template(
-            """
-            query getLatestCommit {
-              repository(owner: "$owner", name: "$repo") {
-                object(expression: "$branch") {
-                  oid
-                }
-              }
-            }
-            """
-        )
-        oid_query = oid_query.substitute(owner=self.owner, repo=self.repo, branch=branch)
-
         commit_query = """
             mutation ($input: CreateCommitOnBranchInput!) {
               createCommitOnBranch(input: $input)  {
@@ -90,7 +81,7 @@ class GithubClient:
 
         # Retry the query a few times in-case the head_oid was changed.
         async def _execute():
-            head_oid = (await self._client.execute(oid_query))["repository"]["object"]["oid"]
+            head_oid = await self.get_branch_head_oid(branch)
             variables["input"]["expectedHeadOid"] = head_oid
             await self._client.execute(commit_query, variables=variables)
 
@@ -144,3 +135,30 @@ class GithubClient:
 
         contents = (await self._client.execute(query))["repository"]
         return {k.replace(sentinel_dot, "."): v["text"] for k, v in contents.items()}
+
+    async def get_branch_head_oid(self, branch: str) -> str:
+        """Get the revision of the tip of the given branch.
+        Args:
+            branch (str): The branch to find the revision for.
+
+        Returns: The revision of the tip of the given branch.
+        """
+
+        oid_query = Template(
+            """
+            query getLatestCommit {
+              repository(owner: "$owner", name: "$repo") {
+                object(expression: "$branch") {
+                  oid
+                }
+              }
+            }
+            """
+        )
+        oid_query = oid_query.substitute(owner=self.owner, repo=self.repo, branch=branch)
+
+        repo = (await self._client.execute(oid_query))["repository"]
+        if "object" not in repo:
+            raise UnknownBranchError(f"branch '{branch}' not found in repo!")
+
+        return repo["object"]["oid"]
