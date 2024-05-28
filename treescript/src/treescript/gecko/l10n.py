@@ -15,8 +15,11 @@ from copy import deepcopy
 
 from scriptworker_client.aio import download_file, retry_async, semaphore_wrapper
 from scriptworker_client.exceptions import DownloadError
+from scriptworker_client.github import extract_github_repo_owner_and_name
 from scriptworker_client.utils import load_json_or_yaml
+from treescript.exceptions import TaskVerificationError, TreeScriptError
 from treescript.gecko import mercurial as vcs
+from treescript.github.client import GithubClient, UnknownBranchError
 from treescript.util.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_l10n_bump_info
 from treescript.util.treestatus import check_treestatus
 
@@ -156,6 +159,46 @@ async def build_revision_dict(bump_config, repo_path, old_contents):
     return revision_dict
 
 
+# build_revision_dict_github {{{1
+async def build_revision_dict_github(client: GithubClient, bump_config: dict, repo_path: str) -> dict:
+    """Add l10n revision information to the ``platform_dict``. All locales will
+    be bumped to head revision of the branch given in `l10n_repo_target_branch`
+    in the repository that `client` is configured with.
+
+    Args:
+        client (GithubClient): a GithubClient instance that is configured to talk
+            to the l10n repository.
+        bump_config (dict): one of the dictionaries from the payload ``l10n_bump_info``.
+            This dictionary must contain a `l10n_repo_target_branch`.
+        repo_path (str): the path to the repo containing the files we're bumping on disk
+
+    Returns:
+        dict: locale to dictionary of platforms and revision
+
+    Raises:
+        TaskVerificationError: if `l10n_repo_target_branch` is not present in `bump_config`
+        TreeScriptError: if `l10n_repo_target_branch` is not present in the l10n repository
+    """
+    l10n_repo_target_branch = bump_config.get("l10n_repo_target_branch")
+    if not l10n_repo_target_branch:
+        raise TaskVerificationError("l10n_repo_target_branch must be present in bump_config!")
+
+    log.info("Building revision dict...")
+    platform_dict = build_platform_dict(bump_config, repo_path)
+    try:
+        revision = await client.get_branch_head_oid(l10n_repo_target_branch)
+    except UnknownBranchError:
+        raise TreeScriptError(f"branch '{l10n_repo_target_branch}' not found in repo!")
+
+    for locale in platform_dict:
+        # no longer supported; this item will be removed in the future
+        platform_dict[locale]["pin"] = False
+        platform_dict[locale]["revision"] = revision
+
+    log.info("revision_dict:\n%s" % pprint.pformat(platform_dict))
+    return platform_dict
+
+
 # build_commit_message {{{1
 def build_commit_message(name, locale_map, dontbuild=False, ignore_closed_tree=False):
     """Build a commit message for the bumper.
@@ -231,4 +274,59 @@ async def l10n_bump(config, task, repo_path):
         message = build_commit_message(bump_config["name"], locale_map, dontbuild=dontbuild, ignore_closed_tree=ignore_closed_tree)
         await vcs.commit(config, repo_path, message)
         changes += 1
+    return changes
+
+
+# l10n_bump_github {{{1
+async def l10n_bump_github(config: dict, task: dict, repo_path: str) -> int:
+    """Perform a l10n revision bump.
+
+    This function takes its inputs from task by using the ``get_l10n_bump_info``
+    function from treescript.task. It then calculates the locales, the platforms
+    for each locale, and the locale revision for each locale.
+
+    Args:
+        config (dict): the running config
+        task (dict): the running task
+        repo_path (str): the source directory
+
+    Raises:
+        TaskVerificationError: if a file specified is not allowed, or
+                               if the file is not in the target repository.
+
+    Returns:
+        int: non-zero if there are any changes.
+
+    """
+    log.info("Preparing to bump l10n changesets.")
+
+    ignore_closed_tree = get_ignore_closed_tree(task)
+    if not ignore_closed_tree and not task["payload"].get("dry_run", False):
+        if not await check_treestatus(config, task):
+            log.info("Treestatus is closed; skipping l10n bump.")
+            return 0
+
+    dontbuild = get_dontbuild(task)
+    l10n_bump_info = get_l10n_bump_info(task)
+    changes = 0
+
+    for bump_config in l10n_bump_info:
+        l10n_repo_url = bump_config.get("l10n_repo_url")
+        if not l10n_repo_url:
+            raise Exception("fail")
+
+        owner, repo = extract_github_repo_owner_and_name(l10n_repo_url)
+        async with GithubClient(config, owner, repo) as client:
+            path = os.path.join(repo_path, bump_config["path"])
+            old_contents = load_json_or_yaml(path, is_path=True)
+            # find latest revision in l10n_repo_url
+            new_contents = await build_revision_dict_github(client, bump_config, repo_path)
+            if old_contents == new_contents:
+                continue
+            with open(path, "w") as fh:
+                fh.write(json.dumps(new_contents, sort_keys=True, indent=4, separators=(",", ": ")))
+            locale_map = build_locale_map(old_contents, new_contents)
+            message = build_commit_message(bump_config["name"], locale_map, dontbuild=dontbuild, ignore_closed_tree=ignore_closed_tree)
+            await vcs.commit(config, repo_path, message)
+            changes += 1
     return changes

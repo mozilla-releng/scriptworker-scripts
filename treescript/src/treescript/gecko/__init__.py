@@ -1,10 +1,11 @@
 import logging
 import os
 
+from scriptworker_client.exceptions import TaskVerificationError
 from treescript.exceptions import TreeScriptError
 from treescript.gecko import mercurial as vcs
 from treescript.gecko.android_l10n import android_l10n_import, android_l10n_sync
-from treescript.gecko.l10n import l10n_bump
+from treescript.gecko.l10n import l10n_bump, l10n_bump_github
 from treescript.gecko.merges import do_merge
 from treescript.gecko.versionmanip import bump_version
 from treescript.util.task import get_source_repo, should_push, task_action_types
@@ -32,6 +33,8 @@ async def perform_merge_actions(config, task, actions, repo_path):
 
     if "l10n_bump" in actions:
         l10n_bump_action = "l10n_bump"
+    elif "l10n_bump_github" in actions:
+        l10n_bump_action = "l10n_bump_github"
 
     push_activity = await do_merge(config, task, repo_path, l10n_bump_action)
 
@@ -58,6 +61,9 @@ async def do_actions(config, task):
     if not await vcs.validate_robustcheckout_works(config):
         raise TreeScriptError("Robustcheckout can't run on our version of hg, aborting")
 
+    if "l10n_bump" in actions and "l10n_bump_github" in actions:
+        raise TaskVerificationError("Cannot run 'l10n_bump' and 'l10n_bump_github' actions in the same task!")
+
     await vcs.checkout_repo(config, task, get_source_repo(task), repo_path)
 
     # Split the action selection up due to complexity in do_actions
@@ -73,6 +79,8 @@ async def do_actions(config, task):
         num_changes += await bump_version(config, task, repo_path)
     if "l10n_bump" in actions:
         num_changes += await l10n_bump(config, task, repo_path)
+    if "l10n_bump_github" in actions:
+        num_changes += await l10n_bump_github(config, task, repo_path)
     if "android_l10n_import" in actions:
         num_changes += await android_l10n_import(config, task, repo_path)
     if "android_l10n_sync" in actions:

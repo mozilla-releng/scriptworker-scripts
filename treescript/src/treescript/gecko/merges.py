@@ -10,7 +10,8 @@ import attr
 from mozilla_version.gecko import GeckoVersion
 
 from scriptworker_client.utils import makedirs
-from treescript.gecko.l10n import l10n_bump
+from treescript.exceptions import TreeScriptError
+from treescript.gecko.l10n import l10n_bump, l10n_bump_github
 from treescript.gecko.mercurial import commit, get_revision, run_hg_command
 from treescript.gecko.versionmanip import do_bump_version, get_version
 from treescript.util.task import get_merge_config, get_metadata_source_repo
@@ -277,6 +278,12 @@ async def do_merge(config, task, repo_path, l10n_bump_action):
 async def _bump_l10n(config, task, repo_path, l10n_bump_action):
     if l10n_bump_action == "l10n_bump":
         await l10n_bump(config, task, repo_path)
+    elif l10n_bump_action == "l10n_bump_github":
+        await l10n_bump_github(config, task, repo_path)
+    else:
+        # This should be unreachable as we validate this before we get here,
+        # but that may change in the future...
+        raise TreeScriptError(f"Unknown l10n_bump_action: '{l10n_bump_action}'")
 
     output = await run_hg_command(config, "log", "--patch", "--verbose", "-r", ".", repo_path=repo_path, return_output=True, expected_exit_codes=(0, 1))
     path = os.path.join(config["artifact_dir"], "public", "logs", "l10n_bump.diff")
