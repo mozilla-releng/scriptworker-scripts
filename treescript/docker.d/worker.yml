@@ -6,13 +6,13 @@ verbose: {"$eval": "VERBOSE == 'true'"}
 treestatus_base_url: https://treestatus.mozilla-releng.net
 hg: 'hg'
 hg_share_base_dir:
-  $if: 'REPO_TYPE == "hg"'
+  $if: 'NEEDS_HG == "1"'
   then: {"$eval": "HG_SHARE_BASE_DIR"}
   else: ""
 upstream_repo: {"$eval": "UPSTREAM_REPO"}
 merge_day_clobber_file: {"$eval": "MERGE_DAY_CLOBBER_FILE"}
 hg_ssh_config:
-  $if: 'REPO_TYPE == "hg"'
+  $if: 'NEEDS_HG == "1"'
   then:
     $merge:
       - default:
@@ -25,7 +25,7 @@ hg_ssh_config:
             keyfile: {"$eval": "SSH_MERGE_KEY_PATH"}
   else: {}
 github_config:
-  $if: 'REPO_TYPE == "git"'
+  $if: 'NEEDS_GIT == "1"'
   then:
     app_id:
       $if: 'ENV == "prod"'
