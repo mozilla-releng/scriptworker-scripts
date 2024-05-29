@@ -1,5 +1,6 @@
 from pathlib import Path
 import pytest
+import re
 
 from bitrisescript.bitrise import BITRISE_API_URL
 from bitrisescript.script import async_main
@@ -28,6 +29,7 @@ async def test_main_run_workflow(responses, tmp_path, config):
     task["scopes"].extend([f"test:prefix:workflow:{w}" for w in workflows])
 
     responses.get(f"{BITRISE_API_URL}/apps", status=200, payload={"data": [{"repo_slug": app, "slug": app_slug}]})
+    responses.get(re.compile(f"^{BITRISE_API_URL}/builds?.*"), status=200, payload={"data": [{"original_build_params": {"foo": "bar"}}]}, repeat=True)
 
     for i, workflow in enumerate(workflows):
         artifact_url = f"{base_artifact_url}/{workflow}.zip"
