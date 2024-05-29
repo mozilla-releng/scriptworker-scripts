@@ -29,6 +29,7 @@ case $COT_PRODUCT in
     test_var_set 'SSH_USER'
     test_var_set 'SSH_KEY'
     export NEEDS_HG="1"
+    export NEEDS_GIT="1"
     export TRUST_DOMAIN="gecko"
     export UPSTREAM_REPO="https://hg.mozilla.org/mozilla-unified"
     ;;
