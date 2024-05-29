@@ -150,3 +150,35 @@ class Release_V2(object):
                 log.error(resp.content)
                 log.error(f"Response code: {resp.status_code}")
             raise
+
+    def get_product_channel_version(self, product, channel, headers=None):
+        """Method to map over the GET /versions/{product}/{channel} API in Ship-it
+
+        Parameters:
+            * product
+            * channel
+        """
+        headers = headers if headers else {}
+        try:
+            response = self._request(api_endpoint=f"/versions/{product}/{channel}", method="GET", headers=headers)
+            return response.json()
+        except Exception:
+            log.error(f"Caught error while getting version for {product} {channel}!", exc_info=True)
+            raise
+
+    def update_product_channel_version(self, product, channel, version, headers=None):
+        """Method to map over the PUT /versions/{product}/{channel} API in Ship-it
+
+        Parameters:
+            * product
+            * channel
+            * version
+        """
+        headers = headers if headers else {}
+        data = json.dumps({"version": version})
+        try:
+            response = self._request(api_endpoint=f"/versions/{product}/{channel}", method="PUT", data=data, headers=headers)
+            return response.json()
+        except Exception:
+            log.error(f"Caught error while getting version for {product} {channel}!", exc_info=True)
+            raise
