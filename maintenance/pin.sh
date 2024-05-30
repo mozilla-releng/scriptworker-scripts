@@ -36,7 +36,6 @@ PY_38_SCRIPTS=(
 )
 PY_39_SCRIPTS=(
     addonscript
-    balrogscript
     beetmoverscript
     bitrisescript
     bouncerscript
@@ -52,6 +51,7 @@ PY_39_SCRIPTS=(
     .
 )
 PY_311_SCRIPTS=(
+    balrogscript
 )
 
 RUNCMD="RUN apt-get update && \
