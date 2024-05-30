@@ -14,16 +14,15 @@ from scriptworker_client.utils import retry_async
 
 log = logging.getLogger(__name__)
 
-GITHUB_APP_ID = 390757  # https://github.com/apps/releng-treescript
-
 
 class GithubClient:
     def __init__(self, config, owner, repo):
         with open(config["github_config"]["privkey_file"]) as fh:
             privkey = fh.read()
+        self.app_id = config["github_config"]["app_id"]
         self.owner = owner
         self.repo = repo
-        self._client = AppClient(GITHUB_APP_ID, privkey, owner=owner, repositories=[repo])
+        self._client = AppClient(self.app_id, privkey, owner=owner, repositories=[repo])
 
     async def close(self):
         await self._client.close()

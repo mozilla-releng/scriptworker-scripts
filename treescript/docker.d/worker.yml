@@ -27,5 +27,9 @@ hg_ssh_config:
 github_config:
   $if: 'REPO_TYPE == "git"'
   then:
+    app_id:
+      $if: 'ENV == "prod"'
+      then: 390757  # https://github.com/apps/releng-treescript
+      else: 909547  # https://github.com/apps/releng-treescript-dev
     privkey_file: {"$eval": "GITHUB_PRIVKEY_FILE"}
   else: {}
