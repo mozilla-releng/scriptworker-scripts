@@ -50,7 +50,7 @@ tasks:
             - balrogscript
             - scriptworker_client
     beetmoverscript:
-        python-versions: [39]
+        python-versions: [311]
         resources:
             - beetmoverscript
     bitrisescript:
