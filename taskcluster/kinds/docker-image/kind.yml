@@ -13,6 +13,10 @@ transforms:
 tasks:
     # k8s-image:
     #     definition: k8s-image
+    python311:
+        definition: python
+        args:
+            PYTHON_VERSION: "3.11.9"
     python39:
         definition: python
         args:
@@ -29,11 +33,10 @@ tasks:
     base:
         args:
             BASE_IMAGE: python:3.9.7
-    # TODO: Figure out PYTHON_REQ_SUFFIX when we decide to have py3.10
-    # base-3.10:
-    #     definition: base
-    #     args:
-    #         BASE_IMAGE: python:3.10
+    base-3.11:
+        definition: base
+        args:
+            BASE_IMAGE: python:3.11.9
     addonscript:
         definition: script
         parent: base
