@@ -51,6 +51,8 @@ PY_39_SCRIPTS=(
     treescript
     .
 )
+PY_311_SCRIPTS=(
+)
 
 RUNCMD="RUN apt-get update && \
     apt-get install -y \
@@ -65,13 +67,16 @@ RUNCMD="RUN apt-get update && \
 
 PY38_DIRS=()
 PY39_DIRS=()
+PY311_DIRS=()
 for idx in "${!DIRS[@]}"; do
     if [[ ${PY_38_SCRIPTS[@]} =~ "${DIRS[$idx]}" ]]; then
         PY38_DIRS+=("${DIRS[$idx]}")
     fi
     if [[ ${PY_39_SCRIPTS[@]} =~ "${DIRS[$idx]}" ]]; then
         PY39_DIRS+=("${DIRS[$idx]}")
-        echo ${DIRS[$idx]}
+    fi
+    if [[ ${PY_311_SCRIPTS[@]} =~ "${DIRS[$idx]}" ]]; then
+        PY311_DIRS+=("${DIRS[$idx]}")
     fi
 done
 
@@ -82,4 +87,8 @@ fi
 if [ ${#PY39_DIRS} -gt 0 ]; then
     printf "FROM python:3.9\n${RUNCMD}" | docker build --platform linux/x86_64 --pull --tag "scriptworker-script-pin:3.9" -
     echo "${PY39_DIRS[@]}" | xargs -n8 -P8 time docker run --platform linux/x86_64 --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -w /src scriptworker-script-pin:3.9 maintenance/pin-helper.sh
+fi
+if [ ${#PY311_DIRS} -gt 0 ]; then
+    printf "FROM python:3.11\n${RUNCMD}" | docker build --platform linux/x86_64 --pull --tag "scriptworker-script-pin:3.11" -
+    echo "${PY311_DIRS[@]}" | xargs -n8 -P8 time docker run --platform linux/x86_64 --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -w /src scriptworker-script-pin:3.11 maintenance/pin-helper.sh
 fi
