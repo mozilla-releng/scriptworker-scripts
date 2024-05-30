@@ -62,7 +62,7 @@ tasks:
         resources:
             - bouncerscript
     configloader:
-        python-versions: [38, 39]
+        python-versions: [38, 39, 311]
         resources:
             - configloader
     githubscript:
