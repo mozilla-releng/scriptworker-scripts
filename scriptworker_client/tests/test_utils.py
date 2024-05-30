@@ -127,8 +127,8 @@ async def test_pipe_to_log(tmpdir):
     tasks = []
     path = os.path.join(tmpdir, "log")
     with open(path, "w") as log_fh:
-        tasks.append(utils.pipe_to_log(proc.stderr, filehandles=[log_fh]))
-        tasks.append(utils.pipe_to_log(proc.stdout, filehandles=[log_fh]))
+        tasks.append(asyncio.create_task(utils.pipe_to_log(proc.stderr, filehandles=[log_fh])))
+        tasks.append(asyncio.create_task(utils.pipe_to_log(proc.stdout, filehandles=[log_fh])))
         await asyncio.wait(tasks)
         await proc.wait()
     with open(path, "r") as fh:
