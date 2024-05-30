@@ -114,7 +114,7 @@ tasks:
         resources:
             - pushmsixscript
     scriptworker_client:
-        python-versions: [38, 39]
+        python-versions: [38, 39, 311]
         resources:
             - scriptworker_client
     shipitscript:
