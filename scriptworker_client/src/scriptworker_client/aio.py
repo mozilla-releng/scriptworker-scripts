@@ -226,7 +226,7 @@ class LockfileFuture:
         (wrapped with ``retry_async`` if ``self.use_retry_async``).
 
         """
-        async with lockfile(self.lockfile_map.keys(), **self.lockfile_kwargs) as lockfile_path:
+        async with lockfile(sorted(self.lockfile_map), **self.lockfile_kwargs) as lockfile_path:
             args = self.replace_args(self.args, self.lockfile_map[lockfile_path])
             kwargs = self.replace_args(self.kwargs, self.lockfile_map[lockfile_path])
             if self.use_retry_async:
