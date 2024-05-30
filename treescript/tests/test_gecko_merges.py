@@ -301,36 +301,36 @@ def set_up_merge_mocks(mocker, called_args):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "add_merge_info,raises,expected_calls,l10n_bump,expected_return",
+    "add_merge_info,raises,expected_calls,l10n_bump_action,expected_return",
     (
         (
             True,
             does_not_raise(),
             14,
-            False,
+            "",
             [("https://hg.mozilla.org/mozilla-central", "some_revision"), ("https://hg.mozilla.org/releases/mozilla-beta", "some_revision")],
         ),
         (
             True,
             does_not_raise(),
             16,
-            True,
+            "l10n_bump",
             [("https://hg.mozilla.org/mozilla-central", "some_revision"), ("https://hg.mozilla.org/releases/mozilla-beta", "some_revision")],
         ),
         (False, pytest.raises(TaskVerificationError), 0, False, None),
     ),
 )
-async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merge_info, raises, expected_calls, l10n_bump, expected_return):
+async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merge_info, raises, expected_calls, l10n_bump_action, expected_return):
     called_args = []
     if add_merge_info:
         task["payload"]["merge_info"] = merge_info
-    if l10n_bump:
+    if l10n_bump_action:
         task["payload"]["l10n_bump_info"] = {"foo": "bar"}
     set_up_merge_mocks(mocker, called_args)
 
     result = None
     with raises:
-        result = await merges.do_merge(config, task, repo_context.repo)
+        result = await merges.do_merge(config, task, repo_context.repo, l10n_bump_action)
 
     assert len(called_args) == expected_calls
     if result is not None:
@@ -344,7 +344,7 @@ async def test_do_merge(mocker, config, task, repo_context, merge_info, add_merg
 
     # try again, to ensure do_merge is idempotent
     try:
-        result = await merges.do_merge(config, task, repo_context.repo)
+        result = await merges.do_merge(config, task, repo_context.repo, l10n_bump_action)
     except Exception:
         pass
     assert not result
@@ -374,7 +374,7 @@ async def test_bump_central(mocker, config, task, repo_context, merge_bump_info)
     mocker.patch.object(merges, "get_revision", new=mocked_get_revision)
     mocker.patch.object(merges, "apply_rebranding", new=noop_apply_rebranding)
 
-    result = await merges.do_merge(config, task, repo_context.repo)
+    result = await merges.do_merge(config, task, repo_context.repo, "")
 
     expected_calls = [
         ("pull", "https://hg.mozilla.org/repo/fake_upstream"),

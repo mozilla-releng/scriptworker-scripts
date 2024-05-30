@@ -27,7 +27,13 @@ async def perform_merge_actions(config, task, actions, repo_path):
         repo_path (str): the source directory to use.
     """
     log.info("Starting merge day operations")
-    push_activity = await do_merge(config, task, repo_path)
+
+    l10n_bump_action = ""
+
+    if "l10n_bump" in actions:
+        l10n_bump_action = "l10n_bump"
+
+    push_activity = await do_merge(config, task, repo_path, l10n_bump_action)
 
     if should_push(task, actions) and push_activity:
         log.info("%d branches to push", len(push_activity))

@@ -13,7 +13,7 @@ from scriptworker_client.utils import makedirs
 from treescript.gecko.l10n import l10n_bump
 from treescript.gecko.mercurial import commit, get_revision, run_hg_command
 from treescript.gecko.versionmanip import do_bump_version, get_version
-from treescript.util.task import get_l10n_bump_info, get_merge_config, get_metadata_source_repo
+from treescript.util.task import get_merge_config, get_metadata_source_repo
 
 log = logging.getLogger(__name__)
 
@@ -187,7 +187,7 @@ async def pull_branches(config, repo_path, upstream_repo, from_branch, to_branch
 
 
 # do_merge {{{1
-async def do_merge(config, task, repo_path):
+async def do_merge(config, task, repo_path, l10n_bump_action):
     """Perform a merge day operation.
 
     This function takes its inputs from task's payload.
@@ -196,6 +196,7 @@ async def do_merge(config, task, repo_path):
         config (dict): the running config
         task (dict): the running task
         repo_path (str): the source directory
+        l10n_bump_action (str): the l10n bump action, if present, otherwise an empty string
 
     Raises:
         TaskverificationError: from get_merge_config if the payload is invalid.
@@ -250,7 +251,8 @@ async def do_merge(config, task, repo_path):
         tag_message = f"No bug - tagging {base_to_rev} with {end_tag} a=release DONTBUILD CLOSED TREE"
         await run_hg_command(config, "tag", "-m", tag_message, "-r", base_to_rev, "-f", end_tag, repo_path=repo_path)
 
-    await _maybe_bump_l10n(config, task, repo_path)
+    if l10n_bump_action:
+        await _bump_l10n(config, task, repo_path, l10n_bump_action)
     await apply_rebranding(config, repo_path, merge_config, source_repo)
 
     diff_output = await run_hg_command(config, "diff", repo_path=repo_path, return_output=True)
@@ -272,11 +274,12 @@ async def do_merge(config, task, repo_path):
     return desired_pushes
 
 
-async def _maybe_bump_l10n(config, task, repo_path):
-    if get_l10n_bump_info(task, raise_on_empty=False):
+async def _bump_l10n(config, task, repo_path, l10n_bump_action):
+    if l10n_bump_action == "l10n_bump":
         await l10n_bump(config, task, repo_path)
-        output = await run_hg_command(config, "log", "--patch", "--verbose", "-r", ".", repo_path=repo_path, return_output=True, expected_exit_codes=(0, 1))
-        path = os.path.join(config["artifact_dir"], "public", "logs", "l10n_bump.diff")
-        makedirs(os.path.dirname(path))
-        with open(path, "w") as fh:
-            fh.write(output)
+
+    output = await run_hg_command(config, "log", "--patch", "--verbose", "-r", ".", repo_path=repo_path, return_output=True, expected_exit_codes=(0, 1))
+    path = os.path.join(config["artifact_dir"], "public", "logs", "l10n_bump.diff")
+    makedirs(os.path.dirname(path))
+    with open(path, "w") as fh:
+        fh.write(output)
