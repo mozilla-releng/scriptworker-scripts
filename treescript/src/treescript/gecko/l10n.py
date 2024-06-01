@@ -300,15 +300,10 @@ async def l10n_bump_github(config: dict, task: dict, repo_path: str) -> int:
     """
     log.info("Preparing to bump l10n changesets.")
 
-    ignore_closed_tree = get_ignore_closed_tree(task)
-    if not ignore_closed_tree and not task["payload"].get("dry_run", False):
-        if not await check_treestatus(config, task):
-            log.info("Treestatus is closed; skipping l10n bump.")
-            return 0
-
     dontbuild = get_dontbuild(task)
     l10n_bump_info = get_l10n_bump_info(task)
     changes = 0
+    ignore_closed_tree = False
 
     for bump_config in l10n_bump_info:
         l10n_repo_url = bump_config.get("l10n_repo_url")
