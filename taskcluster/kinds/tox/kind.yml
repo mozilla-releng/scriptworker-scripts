@@ -45,7 +45,7 @@ tasks:
         resources:
             - addonscript
     balrogscript:
-        python-versions: [39]
+        python-versions: [311]
         resources:
             - balrogscript
             - scriptworker_client
