@@ -35,7 +35,6 @@ PY_38_SCRIPTS=(
     notarization_poller
 )
 PY_39_SCRIPTS=(
-    addonscript
     balrogscript
     beetmoverscript
     bitrisescript
@@ -52,6 +51,7 @@ PY_39_SCRIPTS=(
     .
 )
 PY_311_SCRIPTS=(
+    addonscript
 )
 
 RUNCMD="RUN apt-get update && \
