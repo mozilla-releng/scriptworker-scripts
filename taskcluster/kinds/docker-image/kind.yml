@@ -44,7 +44,7 @@ tasks:
             SCRIPT_NAME: addonscript
     balrogscript:
         definition: script
-        parent: base
+        parent: base-3.11
         args:
             SCRIPT_NAME: balrogscript
     bitrisescript:
