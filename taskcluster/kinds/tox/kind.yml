@@ -41,7 +41,7 @@ task-defaults:
 
 tasks:
     addonscript:
-        python-versions: [39]
+        python-versions: [311]
         resources:
             - addonscript
     balrogscript:
