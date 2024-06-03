@@ -54,7 +54,7 @@ tasks:
             SCRIPT_NAME: bitrisescript
     beetmoverscript:
         definition: script
-        parent: base
+        parent: base-3.11
         args:
             SCRIPT_NAME: beetmoverscript
     bouncerscript:
