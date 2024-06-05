@@ -20,6 +20,7 @@ import aiohttp
 import boto3
 from botocore.exceptions import ClientError
 from redo import retry
+from scriptworker import artifacts as scriptworker_artifacts
 from scriptworker import client
 from scriptworker.exceptions import (
     ScriptWorkerRetryException,
@@ -491,6 +492,19 @@ def ensure_no_overwrites_in_artifact_map(artifactMap):
         raise ScriptWorkerTaskException(*errors)
 
 
+async def upload_translations_artifacts(context):
+    artifactMap = context.task["payload"]["artifactMap"]
+
+    # Ignore any failed artifacts; we'll take whatever we can get. All artifacts are considered optional.
+    upstreamArtifactPaths = scriptworker_artifacts.get_upstream_artifacts_full_paths_per_task_id(context)[0]
+    concreteArtifactMap = get_concrete_artifact_map_from_globbed(context.config["work_dir"], upstreamArtifactPaths, artifactMap, strip_prefixes=("public/build/", "public/logs/"))
+
+    for map_ in concreteArtifactMap:
+        for input_path, outputs in map_["paths"].items():
+            log.info(f"Uploading {input_path} to {outputs['destinations']}")
+            await retry_upload(context, outputs["destinations"], input_path, fail_on_unknown_mimetype=False)
+
+
 # copy_beets {{{1
 def copy_beets(context, from_keys_checksums, to_keys_checksums):
     creds = get_credentials(context, "aws")
@@ -553,6 +567,7 @@ action_map = {
     "push-to-maven": push_to_maven,
     "import-from-gcs-to-artifact-registry": import_from_gcs_to_artifact_registry,
     "upload-data": upload_data,
+    "upload-translations-artifacts": upload_translations_artifacts,
 }
 
 
@@ -1010,6 +1025,7 @@ def main(config_path=None):
         "artifactMap_schema_file": os.path.join(data_dir, "artifactMap_beetmover_task_schema.json"),
         "import_from_gcs_to_artifact_registry_schema_file": os.path.join(data_dir, "import_from_gcs_to_artifact_registry_task_schema.json"),
         "upload_data_schema_file": os.path.join(data_dir, "upload_data_task_schema.json"),
+        "upload_translations_artifacts": os.path.join(data_dir, "upload_translations_artifacts_task_schema.json"),
     }
 
     # There are several task schema. Validation occurs in async_main
