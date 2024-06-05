@@ -104,7 +104,7 @@ tasks:
         resources:
             - pushapkscript
     pushflatpakscript:
-        python-versions: [39]
+        python-versions: [311]
         worker:
             docker-image: {in-tree: 'pushflatpakscript-test-py{python_version}'}
         resources:

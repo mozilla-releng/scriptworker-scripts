@@ -40,7 +40,6 @@ PY_39_SCRIPTS=(
     configloader
     githubscript
     pushapkscript
-    pushflatpakscript
     pushmsixscript
     scriptworker_client
     shipitscript
@@ -52,6 +51,7 @@ PY_311_SCRIPTS=(
     addonscript
     balrogscript
     beetmoverscript
+    pushflatpakscript
 )
 
 RUNCMD="RUN apt-get update && \
