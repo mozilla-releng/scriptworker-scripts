@@ -1,7 +1,9 @@
 import logging
 import mimetypes
 import os
+import pathlib
 import shutil
+import tempfile
 
 import boto3
 import mock
@@ -29,6 +31,7 @@ from beetmoverscript.script import (
     put,
     sanity_check_partner_path,
     setup_mimetypes,
+    upload_translations_artifacts,
 )
 from beetmoverscript.task import get_release_props, get_upstream_artifacts
 from beetmoverscript.utils import generate_beetmover_manifest, is_promotion_action
@@ -952,6 +955,113 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
             assert e.args == errors
         else:
             assert False, "Unexpected exception"
+
+@pytest.mark.parametrize(
+    "upstream_artifacts,artifact_map,expected_uploads",
+    (
+        pytest.param(
+            [
+                {
+                    "paths": [
+                        "*",
+                    ],
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "*": {"destinations": [
+                            "some/dir/",
+                            ]},
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            {
+                "public/build/foo": ["some/dir/foo"],
+            },
+            id="one_file_one_dest",
+        ),
+        pytest.param(
+            [
+                {
+                    "paths": [
+                        "*",
+                    ],
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "*": {"destinations": [
+                            "some/dir/",
+                            "some/other/",
+                            "a/third/",
+                            ]},
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            {
+                "public/build/foo": ["some/dir/foo", "some/other/foo", "a/third/foo"],
+            },
+            id="one_file_multiple_dests",
+        ),
+        pytest.param(
+            [
+                {
+                    "paths": [
+                        "*",
+                    ],
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "*": {"destinations": [
+                            "some/dir/",
+                            ]},
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            {
+                "public/build/foo": ["some/dir/foo"],
+                "public/build/bar": ["some/dir/bar"],
+                "public/logs/live.log": ["some/dir/live.log"],
+            },
+            id="multiple_files_one_dest_each",
+        ),
+        # multiple files multiple dests
+        # some error cases
+    ),
+)
+@pytest.mark.asyncio
+async def test_upload_translations_artifacts(context, upstream_artifacts, artifact_map, expected_uploads, mocker):
+    with tempfile.TemporaryDirectory() as tmp:
+        context.config["work_dir"] = tmp
+        for artifact in expected_uploads.keys():
+            artifact_path = os.path.join(tmp, "cot", "dep1", artifact)
+            artifact_dir = os.path.dirname(artifact_path)
+            os.makedirs(artifact_dir, exist_ok=True)
+            pathlib.Path(artifact_path).touch()
+
+        mocked_retry_upload = mocker.patch.object(beetmoverscript.script, "retry_upload")
+        context.task = {"payload": {"upstreamArtifacts": upstream_artifacts, "artifactMap": artifact_map, "dryrun": False}}
+        await upload_translations_artifacts(context)
+
+        expected_calls = []
+        for file, dests in expected_uploads.items():
+            expected_calls.append(mock.call(
+                context,
+                dests,
+                os.path.join(tmp, "cot", "dep1", file),
+            ))
+
+        assert sorted(mocked_retry_upload.call_args_list) == sorted([*expected_calls])
 
 
 # async_main {{{1
