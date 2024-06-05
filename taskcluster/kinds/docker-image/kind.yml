@@ -75,7 +75,7 @@ tasks:
     pushapkscript:
         parent: base
     pushflatpakscript:
-        parent: base
+        parent: base-3.11
     pushmsixscript:
         parent: base
     signingscript:
@@ -90,10 +90,10 @@ tasks:
             BASE_IMAGE: python:3.9.7
             APT_PACKAGES: default-jdk
 
-    pushflatpakscript-test-py39:
+    pushflatpakscript-test-py311:
         definition: base-test
         args:
-            BASE_IMAGE: python:3.9.7
+            BASE_IMAGE: python:3.11
             # Copied from pushflatpakscript/docker.d/image_setup.sh
             APT_PACKAGES: gir1.2-ostree-1.0 libgirepository1.0-dev ostree
 
