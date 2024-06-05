@@ -27,6 +27,7 @@ from beetmoverscript.constants import (
     PRODUCT_TO_PATH,
     PROMOTION_ACTIONS,
     RELEASE_ACTIONS,
+    TRANSLATIONS_ACTIONS,
     UPLOAD_DATA_ACTIONS,
 )
 
@@ -146,6 +147,10 @@ def is_maven_action(action):
 
 def is_upload_data_action(action):
     return action in UPLOAD_DATA_ACTIONS
+
+
+def is_upload_translations_artifacts_action(action):
+    return action in TRANSLATIONS_ACTIONS
 
 
 def get_product_name(task, config, lowercase_app_name=True):
