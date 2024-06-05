@@ -36,6 +36,7 @@ from beetmoverscript.script import (
     sanity_check_partner_path,
     setup_mimetypes,
     upload_data,
+    upload_translations_artifacts,
 )
 from beetmoverscript.task import get_release_props, get_upstream_artifacts
 from beetmoverscript.utils import generate_beetmover_manifest, is_promotion_action
@@ -1165,6 +1166,130 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
             assert e.args == errors
         else:
             assert False, "Unexpected exception"
+
+@pytest.mark.parametrize(
+    "upstream_artifacts,artifact_map,expected_uploads",
+    (
+        pytest.param(
+            [
+                {
+                    "paths": [
+                        "public/build/*",
+                        "public/logs/*",
+                    ],
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "*": {"destinations": [
+                            "some/dir/",
+                            ]},
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            {
+                "public/build/foo": ["some/dir/foo"],
+            },
+            id="one_file_one_dest",
+        ),
+        pytest.param(
+            [
+                {
+                    "paths": [
+                        "public/build*",
+                    ],
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "*": {"destinations": [
+                            "some/dir/",
+                            "some/other/",
+                            "a/third/",
+                            ]},
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            {
+                "public/build/foo": ["some/dir/foo", "some/other/foo", "a/third/foo"],
+            },
+            id="one_file_multiple_dests",
+        ),
+        pytest.param(
+            [
+                {
+                    "paths": [
+                        "public/build/*",
+                        "public/logs/*",
+                    ],
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "*": {"destinations": [
+                            "some/dir/",
+                            ]},
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            {
+                "public/build/foo": ["some/dir/foo"],
+                "public/build/bar": ["some/dir/bar"],
+                "public/logs/live.log": ["some/dir/live.log"],
+            },
+            id="multiple_files_one_dest_each",
+        ),
+        # multiple files multiple dests
+        # some error cases
+    ),
+)
+@pytest.mark.asyncio
+async def test_upload_translations_artifacts(aioresponses, monkeypatch, context, upstream_artifacts, artifact_map, expected_uploads):
+    with tempfile.TemporaryDirectory() as tmp:
+        context.config["work_dir"] = tmp
+        for artifact in expected_uploads.keys():
+            artifact_path = os.path.join(tmp, "cot", "dep1", artifact)
+            artifact_dir = os.path.dirname(artifact_path)
+            os.makedirs(artifact_dir, exist_ok=True)
+            pathlib.Path(artifact_path).touch()
+
+        async with aiohttp.ClientSession() as session:
+            # needed for mocking AWS uploads
+            context.session = session
+            for uploads in expected_uploads.values():
+                for upload in uploads:
+                    # TODO: this seems like it's wrong, because we're getting hangs on requests?
+                    aioresponses.put(re.compile(f"https://dummy.s3.amazonaws.com/{upload}?.*"), status=200)
+
+            # needed for mocking GCS ploads
+            context.gcs_client = FakeClient()
+            blob = FakeClient.FakeBlob()
+            blob._exists = False
+            blob.upload_from_filename = mock.MagicMock()
+            bucket = FakeClient.FakeBucket(FakeClient, "foobucket")
+            bucket.blob = mock.MagicMock()
+            bucket.blob.return_value = blob
+            monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", lambda client, name: bucket)
+
+        context.action = "upload-translations-artifacts"
+        context.task = {"payload": {"releaseProperties": {"appName": "fake"}, "upstreamArtifacts": upstream_artifacts, "artifactMap": artifact_map}, "scopes": ["project:releng:beetmover:action:upload-translations-artifacts"]}
+        await upload_translations_artifacts(context)
+
+
+        # verify GCS expectations
+        expected_call_count = sum([uploads.len() for uploads in expected_uploads.values()])
+        assert blob.upload_from_filename.call_count == expected_call_count
+
+        # AWS expectations are implicitly verified by `aioresponses`
 
 
 # async_main {{{1
