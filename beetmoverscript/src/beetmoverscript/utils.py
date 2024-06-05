@@ -6,6 +6,7 @@ import pprint
 import re
 import tempfile
 import zipfile
+from datetime import datetime
 from xml.etree import ElementTree
 
 import arrow
@@ -414,3 +415,22 @@ def extract_file_config_from_artifact_map(artifact_map, path, task_id, locale):
             continue
         return entry["paths"][path]
     raise TaskVerificationError("No artifact map entry for {}/{} {}".format(task_id, locale, path))
+
+
+def get_expiry_datetime(expiry):
+    if re.fullmatch(r"^\d{4}-\d{2}-\d{2}$", expiry):
+        return datetime.strptime(expiry, "%Y-%m-%d")
+    if re.fullmatch(r"^\d{4}\/\d{2}\/\d{2}$", expiry):
+        return datetime.strptime(expiry, "%Y/%m/%d")
+    if re.fullmatch(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$", expiry):
+        return datetime.strptime(expiry, "%Y-%m-%dT%H:%M:%S")
+    raise TaskVerificationError(f"Unable to parse datetime from expiry {expiry}")
+
+
+def get_path_expiration(task, path):
+    expirationRules = task["payload"].get("expiryPathRules")
+    if not expirationRules:
+        return
+    for pathRegex, expiry in expirationRules.items():
+        if re.fullmatch(re.compile(pathRegex), path):
+            return get_expiry_datetime(expiry)

@@ -58,6 +58,12 @@
                     },
                     "required" : ["appName", "buildid", "appVersion", "hashType", "platform", "branch"]
                 },
+                "expiryPathRules": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
                 "upstreamArtifacts": {
                     "type": "array",
                     "items": {

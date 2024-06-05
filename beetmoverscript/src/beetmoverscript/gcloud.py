@@ -23,6 +23,7 @@ from beetmoverscript.utils import (
     get_partner_candidates_prefix,
     get_partner_match,
     get_partner_releases_prefix,
+    get_path_expiration,
     get_product_name,
     get_releases_prefix,
     get_resource_location,
@@ -113,6 +114,10 @@ async def upload_to_gcs(context, target_path, path):
     blob = bucket.blob(target_path)
     blob.content_type = mime_type
     blob.cache_control = "public, max-age=%d" % CACHE_CONTROL_MAXAGE
+
+    # Add artifact expiration tag
+    if expiry := get_path_expiration(context.task, target_path):
+        blob.custom_time = expiry
 
     if blob.exists():
         log.warning("upload_to_gcs: Overriding file: %s", target_path)

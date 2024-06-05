@@ -2,6 +2,7 @@ import json
 import tempfile
 
 import pytest
+from datetime import datetime
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.constants import BUILDHUB_ARTIFACT, HASH_BLOCK_SIZE, INSTALLER_ARTIFACTS
@@ -15,11 +16,13 @@ from beetmoverscript.utils import (
     get_addon_data,
     get_candidates_prefix,
     get_credentials,
+    get_expiry_datetime,
     get_hash,
     get_partials_props,
     get_partner_candidates_prefix,
     get_partner_match,
     get_partner_releases_prefix,
+    get_path_expiration,
     get_product_name,
     get_releases_prefix,
     get_url_prefix,
@@ -429,3 +432,51 @@ def test_get_addon_data():
     addon_data = get_addon_data("tests/fixtures/dummy.xpi")
     assert addon_data["name"] == "@some-test-xpi"
     assert addon_data["version"] == "1.0.0"
+
+
+@pytest.mark.parametrize(
+    "date,raises",
+    (
+        ("2024-01-01", False),
+        ("2024/01/01", False),
+        ("2024-01-01T00:00:00", False),
+        ("24-01-01", True),
+    ),
+)
+def test_get_expiry_datetime(date, raises):
+    if raises:
+        with pytest.raises(TaskVerificationError):
+            get_expiry_datetime(date)
+    else:
+        result = get_expiry_datetime(date)
+        assert isinstance(result, datetime)
+
+
+@pytest.mark.parametrize(
+    "rules, path, expected",
+    (
+        (
+            # https://archive.mozilla.org/pub/firefox/candidates/123.0b1-candidates/build1/.... as example
+            {"^pub\/firefox\/candidates\/\d+\.\d+b\d+-candidates\/.*": "2024-01-01"},
+            "pub/firefox/candidates/123.0b1-candidates/build3/firefox.pkg",
+            datetime(2024, 1, 1),
+        ),
+        (
+            # Same as above, but with 123.0 version (should keep)
+            {"^pub\/firefox\/candidates\/\d+\.\d+b\d+-candidates\/.*": "2024-01-01"},
+            "pub/firefox/candidates/123.0-candidates/build3/firefox.pkg",
+            None,
+        ),
+        (
+            # No rules
+            None,
+            "pub/firefox/candidates/123.0-candidates/build3/firefox.pkg",
+            None,
+        ),
+    ),
+)
+def test_get_path_expiration(rules, path, expected):
+    task = get_fake_valid_task()
+    task["payload"]["expiryPathRules"] = rules
+    expiration = get_path_expiration(task, path)
+    assert expiration == expected
