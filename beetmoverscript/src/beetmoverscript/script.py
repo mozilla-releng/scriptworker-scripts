@@ -17,6 +17,7 @@ import aiohttp
 import boto3
 from botocore.exceptions import ClientError
 from redo import retry
+from scriptworker import artifacts as scriptworker_artifacts
 from scriptworker import client
 from scriptworker.exceptions import (
     ScriptWorkerRetryException,
@@ -394,6 +395,24 @@ def ensure_no_overwrites_in_artifact_map(artifactMap):
     return False
 
 
+async def upload_translations_artifacts(context):
+    dryrun = context.task["payload"]["dryrun"]
+    artifactMap = context.task["payload"]["artifactMap"]
+
+    # Ignore any failed artifacts; we'll take whatever we can get. All artifacts are considered optional.
+    # TODO: cal lensure_no_overwrites somewhere. here or in get_concrete ?
+    upstreamArtifactPaths = scriptworker_artifacts.get_upstream_artifacts_full_paths_per_task_id(context)[0]
+    concreteArtifactMap = get_concrete_artifact_map_from_globbed(upstreamArtifactPaths, artifactMap)
+
+    for map_ in concreteArtifactMap:
+        for input_path, outputs in map_["paths"].items():
+            if dryrun:
+                log.info(f"Would've uploaded {input_path} to {outputs['destinations']}")
+            else:
+                log.info(f"Uploading {input_path} to {outputs['destinations']}")
+                await retry_upload(context, outputs["destinations"], input_path)
+    
+
 # copy_beets {{{1
 def copy_beets(context, from_keys_checksums, to_keys_checksums):
     creds = get_credentials(context, "aws")
@@ -455,6 +474,7 @@ action_map = {
     "direct-push-to-bucket": direct_push_to_bucket,
     "push-to-maven": push_to_maven,
     "import-from-gcs-to-artifact-registry": import_from_gcs_to_artifact_registry,
+    "upload-translations-artifacts": upload_translations_artifacts,
 }
 
 
@@ -849,6 +869,7 @@ def main(config_path=None):
         "maven_schema_file": os.path.join(data_dir, "maven_beetmover_task_schema.json"),
         "artifactMap_schema_file": os.path.join(data_dir, "artifactMap_beetmover_task_schema.json"),
         "import_from_gcs_to_artifact_registry_schema_file": os.path.join(data_dir, "import_from_gcs_to_artifact_registry_task_schema.json"),
+        "upload_translations_artifacts": os.path.join(data_dir, "upload_translations_artifacts_task_schema.json"),
     }
 
     # There are several task schema. Validation occurs in async_main
