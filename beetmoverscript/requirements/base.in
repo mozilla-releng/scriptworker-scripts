@@ -3,7 +3,7 @@ Jinja2
 boto3
 mozilla-version
 redo
-scriptworker
+scriptworker@https://github.com/bhearsum/scriptworker/archive/d026cc2feee95284792f48831b91a9f2548d1045.zip
 taskcluster
 google-cloud-storage
 google-cloud-artifact-registry
