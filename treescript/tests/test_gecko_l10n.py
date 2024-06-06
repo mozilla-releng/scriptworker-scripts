@@ -215,10 +215,10 @@ async def test_build_revision_dict_github(mocker, aioresponses, client):
     mocker.patch.object(l10n, "build_platform_dict", new=build_platform_dict)
     got = await l10n.build_revision_dict_github(client, bump_config, "")
     assert got == {
-                "one": {"pin": False, "revision": "new_revision", "platforms": ["platform"]},
-                "two": {"pin": False, "revision": "new_revision", "platforms": ["platform"]},
-                "three": {"pin": False, "revision": "new_revision", "platforms": ["platform"]},
-            }
+        "one": {"pin": False, "revision": "new_revision", "platforms": ["platform"]},
+        "two": {"pin": False, "revision": "new_revision", "platforms": ["platform"]},
+        "three": {"pin": False, "revision": "new_revision", "platforms": ["platform"]},
+    }
 
 
 @pytest.mark.asyncio
@@ -246,7 +246,7 @@ async def test_build_revision_dict_github_branch_not_in_repo(mocker, aioresponse
     aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {"ref": None}}})
 
     mocker.patch.object(l10n, "build_platform_dict", new=build_platform_dict)
-    
+
     with pytest.raises(TreeScriptError, match="branch 'branchy' not found in repo!"):
         await l10n.build_revision_dict_github(client, bump_config, "")
 

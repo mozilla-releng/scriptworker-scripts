@@ -46,7 +46,7 @@ def _validate_config(context):
             "1",
             id="hg_and_git",
         ),
-    )
+    ),
 )
 def test_config(needs_hg, needs_git):
     context = {
