@@ -3,6 +3,8 @@ import os
 
 import pytest
 from scriptworker_client.utils import makedirs
+from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
+from treescript.exceptions import TaskVerificationError, TreeScriptError
 
 import treescript.gecko.l10n as l10n
 
@@ -197,6 +199,56 @@ async def test_build_revision_dict(mocker, old_contents, expected):
     mocker.patch.object(l10n, "build_platform_dict", new=build_platform_dict)
     mocker.patch.object(l10n, "get_latest_revision", new=get_latest_revision)
     assert await l10n.build_revision_dict(bump_config, "", old_contents) == expected
+
+
+# build_revision_dict_github {{{1
+@pytest.mark.asyncio
+async def test_build_revision_dict_github(mocker, aioresponses, client):
+    platform_dict = {"one": {"platforms": ["platform"]}, "two": {"platforms": ["platform"]}, "three": {"platforms": ["platform"]}}
+    bump_config = {"l10n_repo_target_branch": "branchy"}
+
+    def build_platform_dict(*args):
+        return platform_dict
+
+    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {"object": {"oid": "new_revision"}}}})
+
+    mocker.patch.object(l10n, "build_platform_dict", new=build_platform_dict)
+    got = await l10n.build_revision_dict_github(client, bump_config, "")
+    assert got == {
+        "one": {"pin": False, "revision": "new_revision", "platforms": ["platform"]},
+        "two": {"pin": False, "revision": "new_revision", "platforms": ["platform"]},
+        "three": {"pin": False, "revision": "new_revision", "platforms": ["platform"]},
+    }
+
+
+@pytest.mark.asyncio
+async def test_build_revision_dict_github_branch_not_in_config(mocker):
+    platform_dict = {"one": {"platforms": ["platform"]}, "two": {"platforms": ["platform"]}, "three": {"platforms": ["platform"]}}
+    bump_config = {}
+
+    try:
+        await l10n.build_revision_dict_github({}, bump_config, "")
+    except TaskVerificationError as e:
+        assert str(e) == "l10n_repo_target_branch must be present in bump_config!"
+        return
+
+    assert False, "Should've raised TaskVerificationError"
+
+
+@pytest.mark.asyncio
+async def test_build_revision_dict_github_branch_not_in_repo(mocker, aioresponses, client):
+    platform_dict = {"one": {"platforms": ["platform"]}, "two": {"platforms": ["platform"]}, "three": {"platforms": ["platform"]}}
+    bump_config = {"l10n_repo_target_branch": "branchy"}
+
+    def build_platform_dict(*args):
+        return platform_dict
+
+    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {"ref": None}}})
+
+    mocker.patch.object(l10n, "build_platform_dict", new=build_platform_dict)
+
+    with pytest.raises(TreeScriptError, match="branch 'branchy' not found in repo!"):
+        await l10n.build_revision_dict_github(client, bump_config, "")
 
 
 # build_commit_message {{{1

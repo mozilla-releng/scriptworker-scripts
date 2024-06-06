@@ -6,6 +6,7 @@ import pytest
 from aioresponses import CallbackResult
 from gql.transport.exceptions import TransportQueryError
 from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
+from treescript.github.client import UnknownBranchError
 from yarl import URL
 
 
@@ -128,3 +129,40 @@ async def test_get_files(aioresponses, client):
             """
         ).strip(),
     }
+
+
+@pytest.mark.asyncio
+async def test_get_branch_head_oid(aioresponses, client):
+    branch = "main"
+    head_oid = "123"
+
+    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {"object": {"oid": head_oid}}}})
+
+    result = await client.get_branch_head_oid(branch)
+    assert result == head_oid
+
+    aioresponses.assert_called()
+    key = ("POST", URL(GITHUB_GRAPHQL_ENDPOINT))
+    called_with = aioresponses.requests[key][-1][1]["json"]
+
+    assert called_with == {
+        "query": dedent(
+            f"""
+            query getLatestCommit {{
+              repository(owner: "{client.owner}", name: "{client.repo}") {{
+                object(expression: "{branch}") {{
+                  oid
+                }}
+              }}
+            }}
+            """
+        ).strip(),
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_branch_head_oid_branch_not_found(aioresponses, client):
+    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {"ref": None}}})
+
+    with pytest.raises(UnknownBranchError, match="branch 'branchy' not found in repo!"):
+        await client.get_branch_head_oid("branchy")
