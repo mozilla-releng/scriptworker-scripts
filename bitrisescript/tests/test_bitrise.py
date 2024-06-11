@@ -330,3 +330,25 @@ async def test_run_build(mocker, tmp_path, client, build_response, expectation):
         m_dl_log.assert_called_once_with(slug, f"{artifacts_dir}/{wf_id}")
 
     assert artifacts_dir.is_dir()
+
+
+@pytest.mark.asyncio
+async def test_get_running_builds(responses):
+    workflow_id = "wkflw"
+    responses.get(f"{bitrise.BITRISE_API_URL}/builds?workflow={workflow_id}&status=0", status=200, payload={"data": ["foo"], "paging": {}})
+    result = await bitrise.get_running_builds(workflow_id)
+    assert result == ["foo"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "running_builds,build_params,expected",
+    (
+        pytest.param([], {}, None, id="success empty None"),
+        pytest.param([{"original_build_params": {"foo": "bar"}}], {"foo": "yeet"}, None, id="success non-empty None"),
+        pytest.param([{"original_build_params": {"foo": "bar"}, "slug": {"a": "b"}}], {"foo": "bar"}, {"a": "b"}, id="success non-empty Found"),
+    ),
+)
+async def test_find_running_build(responses, running_builds, build_params, expected):
+    result = bitrise.find_running_build(running_builds, build_params)
+    assert result == expected

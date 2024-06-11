@@ -3,7 +3,7 @@ import logging
 import os
 from pathlib import Path
 from pprint import pformat
-from typing import Any
+from typing import Any, Optional
 
 from aiohttp_retry import RetryClient
 
@@ -42,6 +42,7 @@ class BitriseClient:
             token (str): Bitrise API token.
         """
         self.headers["Authorization"] = token
+        log.info("Authorization header set")
 
     async def set_app_prefix(self, app: str):
         """Sets the client's prefix to the specified Bitrise app.
@@ -228,6 +229,23 @@ async def download_file(download_url: str, file_destination: str, chunk_size: in
     log.info(f"'{file_destination}' downloaded")
 
 
+async def wait_and_download_workflow_log(artifacts_dir: str, build_slug: str) -> None:
+    """Wait for a given build to finish, download artifacts, download logs, dump perherder data
+
+    Args:
+        artifacts_dir (str): Directory to download artifacts to.
+        build_slug (str): Identifier of workflow to run.
+    """
+    try:
+        await wait_for_build_finish(build_slug)
+        log.info(f"Build '{build_slug}' is successful. Retrieving artifacts...")
+        await download_artifacts(build_slug, artifacts_dir)
+    finally:
+        log.info(f"Retrieving bitrise log for '{build_slug}'...")
+        await download_log(build_slug, artifacts_dir)
+        await dump_perfherder_data(artifacts_dir)
+
+
 async def run_build(artifacts_dir: str, workflow_id: str, **build_params: Any) -> None:
     """Run the bitrise build corresponding to the specified worlfow and build params.
 
@@ -258,11 +276,40 @@ async def run_build(artifacts_dir: str, workflow_id: str, **build_params: Any) -
 
     log.info(f"Created new job for '{workflow_id}'. Slug: {build_slug}")
 
-    try:
-        await wait_for_build_finish(build_slug)
-        log.info(f"Build '{build_slug}' is successful. Retrieving artifacts...")
-        await download_artifacts(build_slug, artifacts_dir)
-    finally:
-        log.info(f"Retrieving bitrise log for '{build_slug}'...")
-        await download_log(build_slug, artifacts_dir)
-        await dump_perfherder_data(artifacts_dir)
+    await wait_and_download_workflow_log(artifacts_dir, build_slug)
+
+
+async def get_running_builds(workflow_id: str, **kwargs) -> Optional[str]:
+    """Attempt to resume a bitrise build corresponding to the specified worlfow and build params.
+
+    Args:
+        artifacts_dir (str): Directory to download artifacts to.
+        workflow_id (str): Identifier of workflow to run.
+        kwargs (Any): Additional parameter to forward to bitrise.
+
+    Returns:
+        The list of running builds
+    """
+    client = BitriseClient()
+    data = {
+        "workflow": workflow_id,  # Note: I don't know why this API uses workflow instead of workflow_id
+        "status": 0,  # not finished (0), successful (1), failed (2), aborted with failure (3), aborted with success (4)
+        **kwargs,
+    }
+
+    return await client.request("/builds", method="get", params=data)
+
+
+def find_running_build(running_builds: list[dict], build_params: Any):
+    """Given a list of running builds, find a matching build given build_params
+
+    Args:
+        running_builds (list[dict]): List of running builds
+        build_params (Any): Build parameters to compare
+    """
+    for build in running_builds:
+        if build.get("original_build_params") == build_params:
+            log.info(f"Found running build with same build_params: {build}")
+            return build["slug"]
+    # Nothing found
+    return None

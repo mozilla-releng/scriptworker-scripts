@@ -13,6 +13,10 @@ transforms:
 tasks:
     # k8s-image:
     #     definition: k8s-image
+    python311:
+        definition: python
+        args:
+            PYTHON_VERSION: "3.11.9"
     python39:
         definition: python
         args:
@@ -29,19 +33,18 @@ tasks:
     base:
         args:
             BASE_IMAGE: python:3.9.7
-    # TODO: Figure out PYTHON_REQ_SUFFIX when we decide to have py3.10
-    # base-3.10:
-    #     definition: base
-    #     args:
-    #         BASE_IMAGE: python:3.10
+    base-3.11:
+        definition: base
+        args:
+            BASE_IMAGE: python:3.11.9
     addonscript:
         definition: script
-        parent: base
+        parent: base-3.11
         args:
             SCRIPT_NAME: addonscript
     balrogscript:
         definition: script
-        parent: base
+        parent: base-3.11
         args:
             SCRIPT_NAME: balrogscript
     bitrisescript:
@@ -51,7 +54,7 @@ tasks:
             SCRIPT_NAME: bitrisescript
     beetmoverscript:
         definition: script
-        parent: base
+        parent: base-3.11
         args:
             SCRIPT_NAME: beetmoverscript
     bouncerscript:
@@ -72,7 +75,7 @@ tasks:
     pushapkscript:
         parent: base
     pushflatpakscript:
-        parent: base
+        parent: base-3.11
     pushmsixscript:
         parent: base
     signingscript:
@@ -87,10 +90,10 @@ tasks:
             BASE_IMAGE: python:3.9.7
             APT_PACKAGES: default-jdk
 
-    pushflatpakscript-test-py39:
+    pushflatpakscript-test-py311:
         definition: base-test
         args:
-            BASE_IMAGE: python:3.9.7
+            BASE_IMAGE: python:3.11
             # Copied from pushflatpakscript/docker.d/image_setup.sh
             APT_PACKAGES: gir1.2-ostree-1.0 libgirepository1.0-dev ostree
 

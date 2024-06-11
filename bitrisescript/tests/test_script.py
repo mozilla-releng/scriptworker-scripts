@@ -5,6 +5,8 @@ from inspect import iscoroutine
 
 import pytest
 
+from unittest.mock import AsyncMock
+
 import bitrisescript.script as script
 from scriptworker_client.exceptions import TaskVerificationError
 
@@ -37,6 +39,10 @@ async def test_async_main(mocker, config, task, expectation, expected_num_future
     # Mock out asyncio.gather
     mock_gather = mocker.patch("bitrisescript.script.asyncio.gather", return_value=Future())
     mock_gather.return_value.set_result(None)
+
+    async_mock = AsyncMock()
+    mocker.patch("bitrisescript.script.get_running_builds", side_effect=async_mock)
+    async_mock.return_value = []
 
     task_def = {
         "scopes": [],

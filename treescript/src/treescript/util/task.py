@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 # human reference.
 VALID_ACTIONS = {
     "comm": {"tag", "version_bump", "l10n_bump", "push", "merge_day"},
-    "gecko": {"tag", "version_bump", "l10n_bump", "push", "merge_day", "android_l10n_import", "android_l10n_sync"},
+    "gecko": {"tag", "version_bump", "l10n_bump", "l10n_bump_github", "push", "merge_day", "android_l10n_import", "android_l10n_sync"},
     "mobile": {"version_bump"},
 }
 
@@ -273,6 +273,7 @@ def task_action_types(config, task):
             raise TaskVerificationError(f"No action scopes match '{prefix[:-1]}':\n  {scope_str}")
 
     log.info(f"Action requests: {actions}")
+    log.info(f"Valid actions: {VALID_ACTIONS[config['trust_domain']]}")
     invalid_actions = actions - VALID_ACTIONS[config["trust_domain"]]
     if len(invalid_actions) > 0:
         raise TaskVerificationError(f"Task specified invalid actions for '{config['trust_domain']}: {invalid_actions}")

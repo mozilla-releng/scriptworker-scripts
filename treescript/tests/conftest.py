@@ -39,7 +39,7 @@ def pubkey(datadir):
 
 @pytest_asyncio.fixture
 async def client(aioresponses, privkey_file):
-    config = {"github_config": {"privkey_file": privkey_file}}
+    config = {"github_config": {"app_id": 12345, "privkey_file": privkey_file}}
     owner = "mozilla-mobile"
     repo = "placeholder-repo"
     inst_id = 1
