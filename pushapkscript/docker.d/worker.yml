@@ -9,7 +9,6 @@ taskcluster_scope_prefixes:
         - "project:releng:googleplay:product:"
       'COT_PRODUCT == "mobile"':
         - "project:mobile:reference-browser:releng:googleplay:product:"
-        - "project:mobile:firefox-android:releng:googleplay:product:"
       'COT_PRODUCT == "mozillavpn"':
         - "project:mozillavpn:releng:googleplay:product:"
 products:
@@ -128,67 +127,6 @@ products:
                 default_track: 'alpha'
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
       'COT_PRODUCT == "mobile" && ENV == "prod"':
-        - product_names: [ "fenix" ]
-          digest_algorithm: 'SHA-256'
-          skip_check_multiple_locales: true
-          skip_check_same_locales: true
-          skip_checks_fennec: true
-          apps:
-            fenix-nightly:
-              package_names: [ "org.mozilla.fenix" ]
-              certificate_alias: 'fenix-nightly'
-              google:
-                default_track: 'production'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH" }
-            fenix-aab-nightly:
-              package_names: [ "org.mozilla.fenix" ]
-              certificate_alias: 'fenix-nightly'
-              google:
-                default_track: 'aab'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH" }
-            fenix-beta:
-              package_names: [ "org.mozilla.firefox_beta" ]
-              certificate_alias: 'fenix-beta'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_BETA_PATH" }
-            fenix-release:
-              package_names: [ "org.mozilla.firefox" ]
-              certificate_alias: 'fenix-release'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH" }
-        - product_names: ["focus-android" ]
-          digest_algorithm: 'SHA-256'
-          skip_check_ordered_version_codes: true
-          skip_check_multiple_locales: true
-          skip_check_same_locales: true
-          skip_checks_fennec: true
-          apps:
-            focus-nightly:
-              package_names: ["org.mozilla.focus.nightly"]
-              certificate_alias: 'focus'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_PATH" }
-            focus-beta:
-              package_names: ["org.mozilla.focus.beta"]
-              certificate_alias: 'focus'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_PATH" }
-            focus-release:
-              package_names: ["org.mozilla.focus"]
-              certificate_alias: 'focus'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_PATH" }
-            klar-release:
-              package_names: ["org.mozilla.klar"]
-              certificate_alias: 'focus'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_PATH" }
         - product_names: [ "reference-browser" ]
           digest_algorithm: "SHA-256"
           skip_check_multiple_locales: true
@@ -201,61 +139,6 @@ products:
               - "org.mozilla.reference.browser"
             certificate_alias: "reference-browser"
       'COT_PRODUCT == "mobile" && ENV == "fake-prod"':
-        - product_names: [ "fenix" ]
-          digest_algorithm: "SHA-256"
-          skip_check_multiple_locales: true
-          skip_check_same_locales: true
-          skip_checks_fennec: true
-          apps:
-            fenix-nightly:
-              package_names: [ "org.mozilla.fenix" ]
-              certificate_alias: 'fenix'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
-            fenix-beta:
-              package_names: [ "org.mozilla.firefox_beta" ]
-              certificate_alias: 'fenix'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
-            fenix-release:
-              package_names: [ "org.mozilla.firefox" ]
-              certificate_alias: 'fenix'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
-        - product_names: ["focus-android" ]
-          digest_algorithm: "SHA-256"
-          skip_check_ordered_version_codes: true
-          skip_check_multiple_locales: true
-          skip_check_same_locales: true
-          skip_checks_fennec: true
-          apps:
-            focus-nightly:
-              package_names: ["org.mozilla.focus.nightly"]
-              certificate_alias: 'focus'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
-            focus-beta:
-              package_names: ["org.mozilla.focus.beta"]
-              certificate_alias: 'focus'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
-            focus-release:
-              package_names: ["org.mozilla.focus"]
-              certificate_alias: 'focus'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
-            klar-release:
-              package_names: ["org.mozilla.klar"]
-              certificate_alias: 'focus'
-              google:
-                default_track: 'alpha'
-                credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
         - product_names: [ "reference-browser" ]
           digest_algorithm: "SHA-256"
           skip_check_multiple_locales: true

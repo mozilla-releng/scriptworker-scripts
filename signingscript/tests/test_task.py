@@ -89,25 +89,19 @@ def test_task_signing_formats(context):
 
 
 def test_task_signing_formats_support_several_projects(context):
-    context.config["taskcluster_scope_prefixes"] = ["project:mobile:firefox-android:releng:signing:"]
+    context.config["taskcluster_scope_prefixes"] = ["project:mobile:reference-browser:releng:signing:"]
 
     context.task = {
-        "payload": {"upstreamArtifacts": [{"formats": ["autograph_focus"]}]},
-        "scopes": ["project:mobile:firefox-android:releng:signing:cert:dep-signing"],
+        "payload": {"upstreamArtifacts": [{"formats": ["autograph_apk"]}]},
+        "scopes": ["project:mobile:reference-browser:releng:signing:cert:dep-signing"],
     }
-    assert {"autograph_focus"} == stask.task_signing_formats(context)
-
-    context.task = {
-        "payload": {"upstreamArtifacts": [{"formats": ["autograph_fenix"]}]},
-        "scopes": ["project:mobile:firefox-android:releng:signing:cert:dep-signing"],
-    }
-    assert {"autograph_fenix"} == stask.task_signing_formats(context)
+    assert {"autograph_apk"} == stask.task_signing_formats(context)
 
 
 def test_task_cert_errors_when_2_different_projects_are_signed_in_the_same_task(context):
-    context.config["taskcluster_scope_prefixes"] = ["project:mobile:firefox-android:releng:signing:", "project:mobile:firefox-android:releng:signing:"]
+    context.config["taskcluster_scope_prefixes"] = ["project:mobile:reference-browser:releng:signing:", "project:mobile:reference-browser:releng:signing:"]
     context.task = {
-        "scopes": ["project:mobile:firefox-android:releng:signing:cert:dep-signing", "project:mobile:firefox-android:releng:signing:cert:dep-signing"]
+        "scopes": ["project:mobile:reference-browser:releng:signing:cert:dep-signing", "project:mobile:reference-browser:releng:signing:cert:dep-signing"]
     }
     with pytest.raises(TaskVerificationError):
         stask.task_cert_type(context)

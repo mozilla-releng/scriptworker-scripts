@@ -1,99 +1,73 @@
 {
   "provisionerId": "scriptworker-k8s",
-  "workerType": "mobile-1-github",
-  "schedulerId": "mobile-level-1",
-  "taskGroupId": "DIP_TN0kRQyfvbflprgXYw",
+  "workerType": "xpi-3-github",
+  "taskQueueId": "scriptworker-k8s/xpi-3-github",
+  "schedulerId": "xpi-level-3",
+  "projectId": "none",
+  "taskGroupId": "XP1dJHLKT6ONw7wy7eGqPQ",
   "dependencies": [
-    "OyHu5OYGTFW05iGchdqdSA"
+    "bpEeoIECRSqfjA09GXgUIw",
+    "XP1dJHLKT6ONw7wy7eGqPQ"
   ],
   "requires": "all-completed",
   "routes": [
-    "tc-treeherder.v2.fenix.b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71.0",
     "checks"
   ],
-  "priority": "highest",
+  "priority": "lowest",
   "retries": 5,
-  "created": "2020-06-16T22:32:06.776Z",
-  "deadline": "2020-06-17T22:32:06.776Z",
-  "expires": "2021-06-16T22:32:06.776Z",
+  "created": "2024-05-14T15:14:23.490Z",
+  "deadline": "2024-05-15T15:14:23.490Z",
+  "expires": "2025-05-14T15:14:23.490Z",
   "scopes": [
-    "project:mobile:firefox-android:releng:github:project:firefox-android",
-    "project:mobile:firefox-android:releng:github:action:release"
+    "project:xpi:releng:github:project:mozilla-extensions/privileged-test-xpi",
+    "project:xpi:releng:github:action:release"
   ],
   "payload": {
-    "artifactMap": [{
-      "paths": {
-        "public/build/arm64-v8a/geckoBeta/target.apk": {
-          "destinations": [
-              "firefox_preview_v5.2_arm64.apk"
-          ]
+    "gitTag": "4.0-build1",
+    "artifactMap": [
+      {
+        "paths": {
+          "public/build/privileged.xpi": {
+            "destinations": [
+              "privileged.xpi"
+            ]
+          }
         },
-        "public/build/armeabi-v7a/geckoBeta/target.apk": {
-          "destinations": [
-              "firefox_preview_v5.2_arm.apk"
-          ]
-        },
-        "public/build/x86/geckoBeta/target.apk": {
-          "destinations": [
-              "firefox_preview_v5.2_x86.apk"
-          ]
-        },
-        "public/build/x86_64/geckoBeta/target.apk": {
-          "destinations": [
-              "firefox_preview_v5.2_x86_64.apk"
-          ]
-        },
-        "taskId": "OyHu5OYGTFW05iGchdqdSA"
+        "taskId": "bpEeoIECRSqfjA09GXgUIw"
       }
-    }],
-    "gitTag": "v5.2.0",
-    "gitRevision": "b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71",
+    ],
+    "gitRevision": "96c2263a5ca9da43e64647d10b7511b1fcf50e7f",
+    "githubOwner": "mozilla-extensions",
+    "releaseName": "privileged-test-xpi-4.0-build1",
     "isPrerelease": false,
-    "releaseName": "Firefox Preview 5.2",
+    "githubRepoName": "privileged-test-xpi",
     "upstreamArtifacts": [
       {
         "paths": [
-          "public/build/arm64-v8a/geckoBeta/target.apk",
-          "public/build/armeabi-v7a/geckoBeta/target.apk",
-          "public/build/x86/geckoBeta/target.apk",
-          "public/build/x86_64/geckoBeta/target.apk"
+          "public/build/privileged.xpi"
         ],
-        "taskId": "OyHu5OYGTFW05iGchdqdSA",
-        "taskType": "scriptworker"
+        "taskId": "bpEeoIECRSqfjA09GXgUIw",
+        "taskType": "signing"
       }
     ]
   },
   "metadata": {
-    "owner": "liuche@users.noreply.github.com",
-    "source": "https://github.com/mozilla-mobile/fenix/blob/b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71/taskcluster/ci/push-apk",
-    "description": "Publish Fenix ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=fenix&revision=b94cfdf06be2be4b5a3c83ab4095eb2ecde7ba71))",
-    "name": "push-apk-beta"
+    "name": "release-github-release-github",
+    "owner": "gabrielbusta@gmail.com",
+    "source": "https://github.com/mozilla-extensions/xpi-manifest/blob/15abb43939b565a844f4a24dfce78361da332e12/taskcluster/kinds/release-github",
+    "description": "upload release artifacts to github and publish"
   },
   "tags": {
     "os": "scriptworker",
-    "createdForUser": "liuche@users.noreply.github.com",
-    "worker-implementation": "scriptworker",
-    "kind": "push-apk",
-    "label": "push-apk-beta"
+    "kind": "release-github",
+    "label": "release-github-release-github",
+    "createdForUser": "gabrielbusta@gmail.com",
+    "worker-implementation": "scriptworker"
   },
   "extra": {
     "index": {
-      "rank": 1592346625
+      "rank": 0
     },
-    "treeherder": {
-      "jobKind": "build",
-      "groupSymbol": "beta",
-      "collection": {
-        "opt": true
-      },
-      "machine": {
-        "platform": "android-all"
-      },
-      "groupName": "Beta-related tasks",
-      "tier": 1,
-      "symbol": "gp"
-    },
-    "treeherder-platform": "android-all/opt",
-    "parent": "DIP_TN0kRQyfvbflprgXYw"
+    "parent": "XP1dJHLKT6ONw7wy7eGqPQ"
   }
 }

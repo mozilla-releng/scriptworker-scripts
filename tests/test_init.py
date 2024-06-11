@@ -64,12 +64,12 @@ CONTEXT = {
         "GOOGLE_CREDENTIALS_FOCUS": "Zm9vYmFyCg==",
         "GOOGLE_CREDENTIALS_MOZILLAVPN": "Zm9vYmFyCg==",
         "GOOGLE_CREDENTIALS_REFERENCE_BROWSER": "Zm9vYmFyCg==",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_FENIX_PROD": "1",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_BETA": "1",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_FIREFOX_RELEASE": "1",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_FOCUS": "1",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_MOZILLAVPN": "1",
-        "GOOGLE_PLAY_SERVICE_ACCOUNT_REFERENCE_BROWSER": "1",
+        "GOOGLE_SERVICE_ACCOUNT_FENIX_NIGHTLY": "Zm9vYmFyCg==",
+        "GOOGLE_SERVICE_ACCOUNT_FENIX_BETA": "Zm9vYmFyCg==",
+        "GOOGLE_SERVICE_ACCOUNT_FENIX_RELEASE": "Zm9vYmFyCg==",
+        "GOOGLE_SERVICE_ACCOUNT_FOCUS": "Zm9vYmFyCg==",
+        "GOOGLE_SERVICE_ACCOUNT_MOZILLAVPN": "Zm9vYmFyCg==",
+        "GOOGLE_SERVICE_ACCOUNT_REFERENCE_BROWSER": "Zm9vYmFyCg==",
     },
     re.compile(r"pushflatpak:.*"): {
         "FLATHUB_URL": "https://flathub.example.com",
@@ -198,7 +198,7 @@ def get_expected_return_code(app, product, env):
         if product not in ("firefox", "thunderbird", "xpi"):
             return 1
     elif app == "beetmover":
-        if product == "adhoc":
+        if product in ("adhoc", "mobile"):
             return 1
     elif app == "bouncer":
         if product not in ("firefox", "thunderbird"):
@@ -207,7 +207,7 @@ def get_expected_return_code(app, product, env):
         if product not in ("mobile", "xpi"):
             return 1
     elif app == "pushapk":
-        if product not in ("mobile", "mozillavpn"):
+        if product not in ("firefox", "mobile", "mozillavpn"):
             return 1
     elif app == "pushflatpak":
         if product not in ("firefox", "thunderbird"):
@@ -254,8 +254,10 @@ def generate_params():
         "dev",
     )
     xfail = {
+        # pushapk needs keytool and certs
         "pushapk-firefox-dev",
         "pushapk-firefox-fake-prod",
+        "pushapk-firefox-prod",
         "pushapk-mobile-dev",
         "pushapk-mobile-fake-prod",
         "pushapk-mobile-prod",

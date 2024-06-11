@@ -6,9 +6,6 @@ Supported scope prefixes:
 * `project:comm:thunderbird:releng:signing`
   * Used for Thunderbird style signing tasks
 
-* `project:mobile:firefox-android:releng:signing`
-  * Used for firefox-android style signing tasks
-
 # Scopes
 
 * `{scope_prefix}:cert:dep-signing`

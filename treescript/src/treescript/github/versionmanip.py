@@ -20,12 +20,12 @@ ALLOWED_BUMP_FILES = ("version.txt",)
 FileContents = Dict[str, str]
 
 
-_VERSION_CLASS_PER_BEGINNING_OF_PATH = {
-    "mobile/android/": MobileVersion,
-}
+_VERSION_CLASS_PER_BEGINNING_OF_PATH = {}
 
 _VERSION_CLASS_PER_END_OF_SOURCE_REPO = {
-    "firefox-android": MobileVersion,
+    # previously, this mapped mobile github repos to the MobileVersion; now there are no remaining
+    # repos on github requiring version bumps
+    "placeholder-repo": MobileVersion,
 }
 
 
