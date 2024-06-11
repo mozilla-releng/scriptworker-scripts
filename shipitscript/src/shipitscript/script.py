@@ -62,8 +62,27 @@ def create_new_release_action(context):
     ship_actions.start_new_release(shipit_config, product, product_key, branch, version, shippable_revision, phase)
 
 
+def update_product_channel_version_action(context):
+    """Update product channel version in shipit (if needed.)"""
+    payload = context.task["payload"]
+    shipit_config = context.ship_it_instance_config
+    product = payload["product"]
+    channel = payload["channel"]
+    version = payload["version"]
+    log.info(f"Determining the current {product} {channel} version")
+    current_product_channel_version = ship_actions.get_product_channel_version(shipit_config, product, channel)
+    if current_product_channel_version == version:
+        log.info(f"The {product} {channel} version is already {version}. Nothing to do!")
+    else:
+        ship_actions.update_product_channel_version(shipit_config, product, channel, version)
+
+
 # ACTION_MAP {{{1
-ACTION_MAP = {"mark-as-shipped": mark_as_shipped_action, "create-new-release": create_new_release_action}
+ACTION_MAP = {
+    "mark-as-shipped": mark_as_shipped_action,
+    "create-new-release": create_new_release_action,
+    "update-product-channel-version": update_product_channel_version_action,
+}
 
 
 def get_default_config():

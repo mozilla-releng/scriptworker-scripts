@@ -300,15 +300,20 @@ async def l10n_bump_github(config: dict, task: dict, repo_path: str) -> int:
     """
     log.info("Preparing to bump l10n changesets.")
 
+    ignore_closed_tree = get_ignore_closed_tree(task)
+    if not ignore_closed_tree:
+        if not await check_treestatus(config, task):
+            log.info("Treestatus is closed; skipping l10n bump.")
+            return 0
+
     dontbuild = get_dontbuild(task)
     l10n_bump_info = get_l10n_bump_info(task)
     changes = 0
-    ignore_closed_tree = False
 
     for bump_config in l10n_bump_info:
         l10n_repo_url = bump_config.get("l10n_repo_url")
         if not l10n_repo_url:
-            raise Exception("fail")
+            raise Exception("Cannot bump l10n revisions from github repo without an l10n_repo_url")
 
         owner, repo = extract_github_repo_owner_and_name(l10n_repo_url)
         async with GithubClient(config, owner, repo) as client:

@@ -1,6 +1,7 @@
 work_dir: { "$eval": "WORK_DIR" }
 mark_as_shipped_schema_file: { "$eval": "MARK_AS_SHIPPED_SCHEMA_FILE" }
 create_new_release_schema_file: { "$eval": "CREATE_NEW_RELEASE_SCHEMA_FILE" }
+update_product_channel_version_schema_file: { "$eval": "UPDATE_PRODUCT_CHANNEL_VERSION_SCHEMA_FILE" }
 taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 shipit_instance:

@@ -102,3 +102,17 @@ def mark_as_shipped_v2(shipit_config, release_name):
     log.info("Marking the release as shipped...")
     release_api.update_status(release_name, status="shipped", headers=headers)
     check_release_has_values_v2(release_api, release_name, headers, status="shipped")
+
+
+def get_product_channel_version(shipit_config, product, channel):
+    release_api, headers = get_shipit_api_instance(shipit_config)
+    log.info(f"Getting the current version of {product} {channel}...")
+    product_channel_version = release_api.get_product_channel_version(product, channel, headers=headers)
+    return product_channel_version
+
+
+def update_product_channel_version(shipit_config, product, channel, version):
+    release_api, headers = get_shipit_api_instance(shipit_config)
+    log.info(f"Updating the current version of {product} {channel} to {version}...")
+    response = release_api.update_product_channel_version(product, channel, version, headers=headers)
+    log.info(response["message"])
