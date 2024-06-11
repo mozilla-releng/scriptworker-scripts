@@ -7,7 +7,11 @@ from scriptworker.utils import get_single_item_from_sequence
 log = logging.getLogger(__name__)
 
 # SCHEMA_MAP {{{1
-SCHEMA_MAP = {"mark-as-shipped": "mark_as_shipped_schema_file", "create-new-release": "create_new_release_schema_file"}
+SCHEMA_MAP = {
+    "mark-as-shipped": "mark_as_shipped_schema_file",
+    "create-new-release": "create_new_release_schema_file",
+    "update-product-channel-version": "update_product_channel_version_schema_file",
+}
 
 
 def _get_scope(context, suffix):

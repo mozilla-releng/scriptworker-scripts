@@ -38,5 +38,6 @@ def test_config():
         "TASKCLUSTER_CLIENT_ID": "",
         "TASKCLUSTER_ACCESS_TOKEN": "",
         "CREATE_NEW_RELEASE_SCHEMA_FILE": "",
+        "UPDATE_PRODUCT_CHANNEL_VERSION_SCHEMA_FILE": "",
     }
     _validate_config(context)

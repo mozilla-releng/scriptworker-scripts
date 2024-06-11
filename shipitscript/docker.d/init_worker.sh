@@ -52,3 +52,4 @@ esac
 
 export MARK_AS_SHIPPED_SCHEMA_FILE="/app/shipitscript/src/shipitscript/data/mark_as_shipped_task_schema.json"
 export CREATE_NEW_RELEASE_SCHEMA_FILE="/app/shipitscript/src/shipitscript/data/create_new_release_task_schema.json"
+export UPDATE_PRODUCT_CHANNEL_VERSION_SCHEMA_FILE="/app/shipitscript/src/shipitscript/data/update_product_channel_version_schema.json"
