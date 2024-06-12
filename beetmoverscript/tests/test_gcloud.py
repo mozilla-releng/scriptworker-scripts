@@ -65,6 +65,59 @@ class FakeClient:
         return [blob, blob, blob]
 
 
+class FakeLogClient:
+    class FakeBlob:
+        PATH = "/foo.log"
+        _exists = False
+
+        content_type = ""
+        cache_control = ""
+        name = "fakelogname"
+        md5_hash = "fakelogmd5hash"
+
+        def copy_blob(*args, **kwargs):
+            pass
+
+        def upload_from_filename(self, path, content_type, retry=DEFAULT_RETRY_IF_GENERATION_SPECIFIED, if_generation_match=None):
+            assert path == self.PATH
+            assert content_type == "text/plain"
+            assert isinstance(retry, (Retry, ConditionalRetryPolicy))
+            assert isinstance(if_generation_match, (int, type(None)))
+
+        def exists(self):
+            return self._exists
+
+    class FakeBucket:
+        FAKE_BUCKET_NAME = "existingbucket"
+
+        def __init__(self, client, name, *args):
+            self.client = client
+            self.name = name
+
+        def exists(self):
+            return self.name == self.FAKE_BUCKET_NAME
+
+        def blob(*args):
+            return FakeLogClient.FakeBlob()
+
+        def copy_blob(*args, **kwargs):
+            pass
+
+    class FakeBucketExisting(FakeBucket):
+        def blob(*args):
+            blob = FakeLogClient.FakeBlob()
+            blob._exists = True
+            return blob
+
+    def bucket(self, bucket_name):
+        return self.FakeBucket(self, bucket_name)
+
+    def list_blobs(self, bucket, prefix):
+        blob = self.FakeBlob()
+        blob.name = f"{prefix}/{blob.name}"
+        return [blob, blob, blob]
+
+
 def test_cleanup_gcloud(monkeypatch, context):
     beetmoverscript.gcloud.cleanup_gcloud(context)
     monkeypatch.setattr(beetmoverscript.gcloud.os, "remove", noop_sync)
@@ -149,6 +202,13 @@ async def test_upload_to_gcs(context, monkeypatch):
     # With existing file
     monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeClient.FakeBucketExisting)
     await beetmoverscript.gcloud.upload_to_gcs(context, "path/target", FakeClient.FakeBlob.PATH)
+
+
+@pytest.mark.asyncio
+async def test_upload_to_gcs_log_file(context, monkeypatch):
+    context.gcs_client = "FakeLogClient"
+    monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeLogClient.FakeBucket)
+    await beetmoverscript.gcloud.upload_to_gcs(context, "path/target", FakeLogClient.FakeBlob.PATH)
 
 
 @pytest.mark.parametrize(
