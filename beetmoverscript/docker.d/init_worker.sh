@@ -116,6 +116,19 @@ case $COT_PRODUCT in
         ;;
     esac
     ;;
+  translations)
+    case $ENV in
+      dev|fake-prod)
+        test_var_set 'GCS_DEP_CREDS'
+        ;;
+      prod)
+        test_var_set 'GCS_RELEASE_CREDS'
+        ;;
+      *)
+        exit 1
+        ;;
+    esac
+    ;;
   *)
     exit 1
     ;;

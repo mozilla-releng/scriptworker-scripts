@@ -19,6 +19,8 @@ taskcluster_scope_prefixes:
         - 'project:xpi:beetmover:'
       'COT_PRODUCT == "mozillavpn"':
         - 'project:mozillavpn:releng:beetmover:'
+      'COT_PRODUCT == "translations"':
+        - 'project:translations:releng:beetmover:'
 verbose: { "$eval": "VERBOSE == 'true'" }
 url_prefix:
   # we need to $merge as $match returns an array
@@ -44,6 +46,10 @@ url_prefix:
         dep: 'https://ftp.stage.mozaws.net'
       'COT_PRODUCT == "mozillavpn" && ENV == "prod"':
         release: 'https://archive.mozilla.org'
+      'COT_PRODUCT == "translations"':
+        # There is no public facing domain for the buckets that we upload
+        # translations artifacts to.
+        dep: 'unused'
 
 clouds:
   gcloud:
@@ -177,6 +183,20 @@ clouds:
             enabled: True
             product_buckets:
               appservices: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+        'COT_PRODUCT == "translations" && (ENV == "dev" || ENV == "fake-prod")':
+          dep:
+            credentials: { "$eval": "GCS_DEP_CREDS" }
+            fail_task_on_error: True
+            enabled: True
+            product_buckets:
+              translations: 'moz-fx-translations-data--5f91-stage-translations-data'
+        'COT_PRODUCT == "translations" && ENV == "prod"':
+          release:
+            credentials: { "$eval": "GCS_RELEASE_CREDS" }
+            fail_task_on_error: True
+            enabled: True
+            product_buckets:
+              translations: 'moz-fx-translations-data--303e-prod-translations-data'
 
   aws:
     $merge:
@@ -359,3 +379,13 @@ clouds:
               key: { "$eval": "RELEASE_KEY" }
             product_buckets:
               vpn: 'net-mozaws-prod-delivery-archive'
+
+        # There are no AWS buckets for translations
+        'COT_PRODUCT == "translations"':
+          dep:
+            fail_task_on_error: True
+            enabled: False
+            credentials:
+              id: 'unused'
+              key: 'unused'
+            product_buckets: {}
