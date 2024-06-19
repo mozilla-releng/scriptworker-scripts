@@ -66,7 +66,7 @@ tasks:
         resources:
             - configloader
     githubscript:
-        python-versions: [39]
+        python-versions: [311]
         resources:
             - githubscript
             - scriptworker_client
