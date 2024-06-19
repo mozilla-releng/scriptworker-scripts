@@ -54,7 +54,7 @@ tasks:
         resources:
             - beetmoverscript
     bitrisescript:
-        python-versions: [39]
+        python-versions: [311]
         resources:
             - bitrisescript
     bouncerscript:
