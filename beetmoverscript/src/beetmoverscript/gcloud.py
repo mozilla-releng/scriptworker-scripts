@@ -104,7 +104,6 @@ def setup_gcs_credentials(raw_creds):
 
 async def upload_to_gcs(context, target_path, path):
     product = get_product_name(context.task, context.config)
-    mimetypes.add_type("text/plain", ".log")
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
         raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
