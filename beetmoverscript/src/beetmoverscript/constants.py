@@ -9,6 +9,7 @@ MIME_MAP = {
     ".bz2": "application/octet-stream",
     ".checksums": "text/plain",
     ".dmg": "application/x-iso9660-image",
+    ".log": "text/plain",
     ".jar": "application/java-archive",
     ".json": "application/json",
     ".mar": "application/octet-stream",
