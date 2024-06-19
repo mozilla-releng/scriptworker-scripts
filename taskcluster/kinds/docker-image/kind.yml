@@ -59,7 +59,7 @@ tasks:
             SCRIPT_NAME: beetmoverscript
     bouncerscript:
         definition: script
-        parent: base
+        parent: base-3.11
         args:
             SCRIPT_NAME: bouncerscript
     githubscript:
