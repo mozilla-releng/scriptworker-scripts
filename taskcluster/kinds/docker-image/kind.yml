@@ -73,7 +73,7 @@ tasks:
         args:
             SCRIPT_NAME: shipitscript
     pushapkscript:
-        parent: base
+        parent: base-3.11
     pushflatpakscript:
         parent: base-3.11
     pushmsixscript:
@@ -84,10 +84,10 @@ tasks:
         parent: base
 
     # Testing images
-    pushapkscript-test-py39:
+    pushapkscript-test-py311:
         definition: base-test
         args:
-            BASE_IMAGE: python:3.9.7
+            BASE_IMAGE: python:3.11.9
             APT_PACKAGES: default-jdk
 
     pushflatpakscript-test-py311:
