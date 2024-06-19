@@ -58,7 +58,7 @@ tasks:
         resources:
             - bitrisescript
     bouncerscript:
-        python-versions: [39]
+        python-versions: [311]
         resources:
             - bouncerscript
     configloader:

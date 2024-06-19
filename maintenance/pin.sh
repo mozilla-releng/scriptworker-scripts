@@ -36,7 +36,6 @@ PY_38_SCRIPTS=(
 )
 PY_39_SCRIPTS=(
     bitrisescript
-    bouncerscript
     configloader
     githubscript
     pushapkscript
@@ -51,6 +50,7 @@ PY_311_SCRIPTS=(
     addonscript
     balrogscript
     beetmoverscript
+    bouncerscript
     pushflatpakscript
 )
 
