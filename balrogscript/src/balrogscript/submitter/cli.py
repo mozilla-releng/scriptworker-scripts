@@ -217,7 +217,7 @@ class NightlySubmitterBase(object):
         self.url_replacements = url_replacements
         self.backend_version = backend_version
 
-    def _replace_canocical_url(self, url):
+    def _replace_canonical_url(self, url):
         if self.url_replacements:
             for string_from, string_to in self.url_replacements:
                 if string_from in url:
@@ -400,7 +400,7 @@ class MultipleUpdatesNightlyMixin(object):
                 else:
                     from_ = "*"
                 data["completes"].append(
-                    {"from": from_, "filesize": info["size"], "hashValue": info["hash"], "fileUrl": self._replace_canocical_url(info["url"])}
+                    {"from": from_, "filesize": info["size"], "hashValue": info["hash"], "fileUrl": self._replace_canonical_url(info["url"])}
                 )
         if partialInfo:
             data["partials"] = []
@@ -410,7 +410,7 @@ class MultipleUpdatesNightlyMixin(object):
                         "from": get_nightly_blob_name(productName, branch, self.build_type, info["from_buildid"], self.dummy),
                         "filesize": info["size"],
                         "hashValue": info["hash"],
-                        "fileUrl": self._replace_canocical_url(info["url"]),
+                        "fileUrl": self._replace_canonical_url(info["url"]),
                     }
                 )
 
