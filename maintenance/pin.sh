@@ -35,7 +35,6 @@ PY_38_SCRIPTS=(
     notarization_poller
 )
 PY_39_SCRIPTS=(
-    bitrisescript
     configloader
     githubscript
     pushapkscript
@@ -50,6 +49,7 @@ PY_311_SCRIPTS=(
     addonscript
     balrogscript
     beetmoverscript
+    bitrisescript
     bouncerscript
     pushflatpakscript
 )
