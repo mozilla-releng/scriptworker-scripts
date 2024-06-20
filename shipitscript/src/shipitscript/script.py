@@ -54,7 +54,7 @@ def create_new_release_action(context):
     log.info("Determining most recent shippable revision")
     shippable_revision = ship_actions.get_shippable_revision(branch, last_shipped_revision, cron_revision)
     if not shippable_revision:
-        log.info("No valid shippable revisison found, silent exit ...")
+        log.info("No valid shippable revision found, silent exit ...")
         return
     log.info(f"The shippable revision found is {shippable_revision}")
 
