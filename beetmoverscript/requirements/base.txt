@@ -111,13 +111,13 @@ attrs==23.2.0 \
     #   jsonschema
     #   mozilla-version
     #   referencing
-boto3==1.34.120 \
-    --hash=sha256:38893db8269d25b72cc6fbab97633bfc863eefde5456847169d06149a16aa6e0 \
-    --hash=sha256:3c42bc309246a761413f6e152f307f009e80e7c9fd03dd9e6c0dc8ab8b3a8fc1
+boto3==1.34.130 \
+    --hash=sha256:b781d267dd5e7583966e05697f6bd45e2f46c01dc619ba0860b042963ee69296 \
+    --hash=sha256:c163fb7135a94e7b8c8c478a44071c843f05e212fa4bec3105f8a437ecbf1bcb
     # via -r requirements/base.in
-botocore==1.34.120 \
-    --hash=sha256:5cc0fca43cb2aad54917a394a001ac9ba774d21ad6a08828002d54b601776f78 \
-    --hash=sha256:92bd739938078c7a0b110689a3eee21ecb3954d90653da013d9f98ef1165d6f7
+botocore==1.34.130 \
+    --hash=sha256:a242b3b0a836b14f308a309565cd63e88654cec238f9b73abbbd3c0526db4c81 \
+    --hash=sha256:a3b36e9dac1ed31c4cb3a5c5e540a7d8a9b90ff1d17f87734e674154b41776d8
     # via
     #   boto3
     #   s3transfer
@@ -407,9 +407,9 @@ google-api-core[grpc]==2.19.0 \
     #   google-cloud-artifact-registry
     #   google-cloud-core
     #   google-cloud-storage
-google-auth==2.29.0 \
-    --hash=sha256:672dff332d073227550ffc7457868ac4218d6c500b155fe6cc17d2b13602c360 \
-    --hash=sha256:d452ad095688cd52bae0ad6fafe027f6a6d6f560e810fec20914e17a09526415
+google-auth==2.30.0 \
+    --hash=sha256:8df7da660f62757388b8a7f249df13549b3373f24388cb5d2f1dd91cc18180b5 \
+    --hash=sha256:ab630a1320f6720909ad76a7dbdb6841cdf5c66b328d690027e4867bdfb16688
     # via
     #   google-api-core
     #   google-cloud-artifact-registry
@@ -423,9 +423,9 @@ google-cloud-core==2.4.1 \
     --hash=sha256:9b7749272a812bde58fff28868d0c5e2f585b82f37e09a1f6ed2d4d10f134073 \
     --hash=sha256:a9e6a4422b9ac5c29f79a0ede9485473338e2ce78d91f2370c01e730eab22e61
     # via google-cloud-storage
-google-cloud-storage==2.16.0 \
-    --hash=sha256:91a06b96fb79cf9cdfb4e759f178ce11ea885c79938f89590344d079305f5852 \
-    --hash=sha256:dda485fa503710a828d01246bd16ce9db0823dc51bbca742ce96a6817d58669f
+google-cloud-storage==2.17.0 \
+    --hash=sha256:49378abff54ef656b52dca5ef0f2eba9aa83dc2b2c72c78714b03a1a95fe9388 \
+    --hash=sha256:5b393bc766b7a3bc6f5407b9e665b2450d36282614b7945e570b3480a456d1e1
     # via -r requirements/base.in
 google-crc32c==1.5.0 \
     --hash=sha256:024894d9d3cfbc5943f8f230e23950cd4906b2fe004c72e29b209420a1e6b05a \
@@ -499,9 +499,9 @@ google-crc32c==1.5.0 \
     # via
     #   google-cloud-storage
     #   google-resumable-media
-google-resumable-media==2.7.0 \
-    --hash=sha256:5f18f5fa9836f4b083162064a1c2c98c17239bfda9ca50ad970ccf905f3e625b \
-    --hash=sha256:79543cfe433b63fd81c0844b7803aba1bb8950b47bedf7d980c38fa123937e08
+google-resumable-media==2.7.1 \
+    --hash=sha256:103ebc4ba331ab1bfdac0250f8033627a2cd7cde09e7ccff9181e31ba4315b2c \
+    --hash=sha256:eae451a7b2e2cdbaaa0fd2eb00cc8a1ee5e95e16b55597359cbc3d27d7d90e33
     # via google-cloud-storage
 googleapis-common-protos[grpc]==1.63.1 \
     --hash=sha256:0e1c2cdfcbc354b76e4a211a35ea35d6926a835cba1377073c4861db904a1877 \
@@ -766,9 +766,9 @@ multidict==6.0.5 \
     # via
     #   aiohttp
     #   yarl
-proto-plus==1.23.0 \
-    --hash=sha256:89075171ef11988b3fa157f5dbd8b9cf09d65fffee97e29ce403cd8defba19d2 \
-    --hash=sha256:a829c79e619e1cf632de091013a4173deed13a55f326ef84f05af6f50ff4c82c
+proto-plus==1.24.0 \
+    --hash=sha256:30b72a5ecafe4406b0d339db35b56c4059064e69227b8c3bda7462397f966445 \
+    --hash=sha256:402576830425e5f6ce4c2a6702400ac79897dab0b4343821aa5188b0fab81a12
     # via
     #   google-api-core
     #   google-cloud-artifact-registry
@@ -1032,9 +1032,9 @@ uritemplate==4.1.1 \
     --hash=sha256:4346edfc5c3b79f694bccd6d6099a322bbeb628dbf2cd86eea55a456ce5124f0 \
     --hash=sha256:830c08b8d99bdd312ea4ead05994a38e8936266f84b9a7878232db50b044e02e
     # via github3-py
-urllib3==2.2.1 \
-    --hash=sha256:450b20ec296a467077128bff42b73080516e71b56ff59a60a02bef2232c4fa9d \
-    --hash=sha256:d0570876c61ab9e520d776c38acbbb5b05a776d3f9ff98a5c8fd5162a444cf19
+urllib3==2.2.2 \
+    --hash=sha256:a448b2f64d686155468037e1ace9f2d2199776e17f0a46610480d311f73e3472 \
+    --hash=sha256:dd505485549a7a552833da5e6063639d0d177c04f23bc3864e41e5dc5f612168
     # via
     #   botocore
     #   requests

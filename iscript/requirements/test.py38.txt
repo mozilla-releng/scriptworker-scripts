@@ -128,9 +128,9 @@ mypy-extensions==1.0.0 \
     --hash=sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d \
     --hash=sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782
     # via mypy
-pip-compile-multi==2.6.3 \
-    --hash=sha256:50f7db9f5c57a2d11035805b6d86620c4d640c560f22e3c8b509e133456d8a53 \
-    --hash=sha256:f0b950a2175d0b86fd5a186d2f786bc8f7c013acd2e856a2bc948d194e0e4c92
+pip-compile-multi==2.6.4 \
+    --hash=sha256:1cf1f1eaa68b7993303edf83e0dc40b8b9bb4dced334b0c18332f4aeae318e3b \
+    --hash=sha256:487741913c0eba7aeee6e0cd79fe123df3a22f3489e565c9851eb259dd3c3d52
     # via -r requirements/test.in
 pip-tools==7.4.1 \
     --hash=sha256:4c690e5fbae2f21e87843e89c26191f0d9454f362d8acdbd695716493ec8b3a9 \
@@ -241,9 +241,9 @@ types-requests==2.32.0.20240602 \
     --hash=sha256:3f98d7bbd0dd94ebd10ff43a7fbe20c3b8528acace6d8efafef0b6a184793f06 \
     --hash=sha256:ed3946063ea9fbc6b5fc0c44fa279188bae42d582cb63760be6cb4b9d06c3de8
     # via -r requirements/test.in
-typing-extensions==4.12.1 \
-    --hash=sha256:6024b58b69089e5a89c347397254e35f1bf02a907728ec7fee9bf0fe837d203a \
-    --hash=sha256:915f5e35ff76f56588223f15fdd5938f9a1cf9195c0de25130c627e4d597f6d1
+typing-extensions==4.12.2 \
+    --hash=sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d \
+    --hash=sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8
     # via mypy
 wheel==0.43.0 \
     --hash=sha256:465ef92c69fa5c5da2d1cf8ac40559a8c940886afcef87dcf14b9470862f1d85 \
