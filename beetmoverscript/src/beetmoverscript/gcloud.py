@@ -221,6 +221,12 @@ async def push_to_releases_gcs(context):
             release_exclude.discard(r"^.*\.deb$")
             if not matches_exclude(blob_path, release_exclude):
                 blobs_to_copy[blob_path] = blob_path.replace(candidates_prefix, releases_prefix)
+        elif version.is_esr and version > FirefoxVersion.parse("128.0esr"): # If we are shipping a esr build after 128, we want to archive the .deb
+            # release_exclude is RELEASE_EXCLUDE minus r"^.*\.deb$"
+            release_exclude = set(RELEASE_EXCLUDE)
+            release_exclude.discard(r"^.*\.deb$")
+            if not matches_exclude(blob_path, release_exclude):
+                blobs_to_copy[blob_path] = blob_path.replace(candidates_prefix, releases_prefix)
         # EOF hacky fix for archiving beta and devedition .debs, if there's no 'b' in the version number carry on as normal
         elif not matches_exclude(blob_path, RELEASE_EXCLUDE):
             blobs_to_copy[blob_path] = blob_path.replace(candidates_prefix, releases_prefix)
