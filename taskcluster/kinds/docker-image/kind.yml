@@ -64,7 +64,7 @@ tasks:
             SCRIPT_NAME: bouncerscript
     githubscript:
         definition: script
-        parent: base
+        parent: base-3.11
         args:
             SCRIPT_NAME: githubscript
     shipitscript:
