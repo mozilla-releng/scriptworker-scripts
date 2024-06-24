@@ -98,7 +98,7 @@ tasks:
             - notarization_poller
             - scriptworker_client
     pushapkscript:
-        python-versions: [39]
+        python-versions: [311]
         worker:
             docker-image: {in-tree: 'pushapkscript-test-py{python_version}'}
         resources:

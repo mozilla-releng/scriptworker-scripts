@@ -36,7 +36,6 @@ PY_38_SCRIPTS=(
 )
 PY_39_SCRIPTS=(
     configloader
-    pushapkscript
     pushmsixscript
     scriptworker_client
     shipitscript
@@ -51,6 +50,7 @@ PY_311_SCRIPTS=(
     bitrisescript
     bouncerscript
     githubscript
+    pushapkscript
     pushflatpakscript
 )
 
