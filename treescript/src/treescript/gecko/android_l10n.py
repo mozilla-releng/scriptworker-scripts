@@ -61,23 +61,23 @@ def get_android_l10n_files_toml(toml_path, search_path=None):
 
 
 # copy_android_l10n_files {{{1
-async def copy_android_l10n_files(config, l10n_files, src_repo_path, dest_repo_path):
+async def copy_android_l10n_files(config, l10n_files, repo_path, src_path, dest_path):
     """Copy localized files in code repository"""
 
     log.info(f"Copying {len(l10n_files)} files:")
     for l10n_file in l10n_files:
-        if src_repo_path:
-            src_file = os.path.join(src_repo_path, l10n_file["rel_path"])
+        if src_path:
+            src_file = os.path.join(src_path, l10n_file["rel_path"])
         else:
             src_file = l10n_file["abs_path"]
-        dest_file = os.path.join(dest_repo_path, l10n_file["rel_path"])
+        dest_file = os.path.join(dest_path, l10n_file["rel_path"])
         log.info(f"  {src_file} -> {dest_file}")
         dest_existed = os.path.exists(dest_file)
         # Make sure that the folder exists, then copy file as is
         os.makedirs(os.path.dirname(dest_file), exist_ok=True)
         shutil.copy2(src_file, dest_file)
         if not dest_existed:
-            await vcs.run_hg_command(config, "add", dest_file, repo_path=dest_repo_path)
+            await vcs.run_hg_command(config, "add", dest_file, repo_path=repo_path)
             log.info(f"  {dest_file} added to commit")
 
 
@@ -140,7 +140,7 @@ async def android_l10n_action(config, task, task_info, repo_path, from_repo_path
         else:
             dest_path = repo_path
         os.makedirs(dest_path, exist_ok=True)
-        await copy_android_l10n_files(config, l10n_files, src_path, dest_path)
+        await copy_android_l10n_files(config, l10n_files, repo_path, src_path, dest_path)
         shutil.copy2(toml_path, dest_path)
 
     changes = 0
