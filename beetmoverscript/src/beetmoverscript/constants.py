@@ -103,7 +103,6 @@ RELEASE_EXCLUDE = (
     r"^.*/mar-tools/.*$",
     r"^.*contrib.*",
     r"^.*/beetmover-checksums/.*$",
-    r"^.*\.deb$",
 )
 
 CACHE_CONTROL_MAXAGE = 3600 * 4

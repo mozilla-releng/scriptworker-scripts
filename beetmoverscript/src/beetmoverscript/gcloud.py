@@ -11,7 +11,6 @@ from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import artifactregistry_v1
 from google.cloud.storage import Bucket, Client
 from google.cloud.storage.retry import DEFAULT_RETRY
-from mozilla_version.gecko import FirefoxVersion
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 from beetmoverscript.constants import CACHE_CONTROL_MAXAGE, RELEASE_EXCLUDE
@@ -201,9 +200,6 @@ async def push_to_releases_gcs(context):
     # Weed out RELEASE_EXCLUDE matches, but allow partners specified in the payload
     push_partners = context.task["payload"].get("partners", [])
 
-    # TODO: Remove this variable when it's time to archive all the released .debs
-    version = FirefoxVersion.parse(context.task["payload"]["version"])
-
     for blob_path in candidates_blobs.keys():
         if "/partner-repacks/" in blob_path:
             partner_match = get_partner_match(blob_path, candidates_prefix, push_partners)
@@ -214,14 +210,6 @@ async def push_to_releases_gcs(context):
                 )
             else:
                 log.debug("Excluding partner repack {}".format(blob_path))
-        # TODO: Remove this block when it's time to archive all the released .debs
-        elif not version.is_esr:  # If we are shipping a non esr build, we want to archive the .deb
-            # release_exclude is RELEASE_EXCLUDE minus r"^.*\.deb$"
-            release_exclude = set(RELEASE_EXCLUDE)
-            release_exclude.discard(r"^.*\.deb$")
-            if not matches_exclude(blob_path, release_exclude):
-                blobs_to_copy[blob_path] = blob_path.replace(candidates_prefix, releases_prefix)
-        # EOF hacky fix for archiving beta and devedition .debs, if there's no 'b' in the version number carry on as normal
         elif not matches_exclude(blob_path, RELEASE_EXCLUDE):
             blobs_to_copy[blob_path] = blob_path.replace(candidates_prefix, releases_prefix)
         else:
