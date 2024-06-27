@@ -4,6 +4,7 @@ import shutil
 import pytest
 
 import treescript.gecko.android_l10n as android_l10n
+import treescript.gecko.mercurial as mercurial
 
 from unittest.mock import AsyncMock
 
@@ -58,12 +59,20 @@ locales = [
 
 
 # copy_android_l10n_files {{{1
-def test_copy_android_l10n_files(mocker):
+@pytest.mark.asyncio
+async def test_copy_android_l10n_files(mocker):
     mocker.patch.object(os, "makedirs")
+
+    async def check_params(*args, **kwargs):
+        assert "add" in args
+        assert "dest/relsource" in args
+
+    mocker.patch.object(mercurial, "run_hg_command", new=check_params)
+
     copy = mocker.patch.object(shutil, "copy2")
-    android_l10n.copy_android_l10n_files([{"abs_path": "abssource", "rel_path": "relsource"}], None, "dest")
+    await android_l10n.copy_android_l10n_files({}, [{"abs_path": "abssource", "rel_path": "relsource"}], None, "dest")
     copy.assert_called_with("abssource", "dest/relsource")
-    android_l10n.copy_android_l10n_files([{"abs_path": "abssource", "rel_path": "relsource"}], "src", "dest")
+    await android_l10n.copy_android_l10n_files({}, [{"abs_path": "abssource", "rel_path": "relsource"}], "src", "dest")
     copy.assert_called_with("src/relsource", "dest/relsource")
 
 
@@ -87,10 +96,10 @@ async def test_android_l10n_action(mocker):
 
     # like import
     await android_l10n.android_l10n_action({}, {}, task_info, "repo/path", "fromrepo/path", "", "", None, "dest_path")
-    copy.assert_called_with(["l10n1", "l10n2"], None, "repo/path/x")
+    copy.assert_called_with({}, ["l10n1", "l10n2"], None, "repo/path/x")
     # like sync
     await android_l10n.android_l10n_action({}, {}, task_info, "repo/path", "fromrepo/path", "", "", "srcpath", None)
-    copy.assert_called_with(["l10n1", "l10n2"], "srcpath", "repo/path")
+    copy.assert_called_with({}, ["l10n1", "l10n2"], "srcpath", "repo/path")
 
 
 # android_l10n_import {{{1
