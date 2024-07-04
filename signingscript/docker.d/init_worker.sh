@@ -30,23 +30,21 @@ export GPG_PUBKEY_PATH=$APP_DIR/signingscript/src/signingscript/data/gpg_pubkey_
 export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
 export AUTHENTICODE_TIMESTAMP_STYLE=old
 export AUTHENTICODE_TIMESTAMP_URL=http://timestamp.digicert.com
-export AUTHENTICODE_CERT_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_dep.crt
-export AUTHENTICODE_CERT_PATH_202005=$APP_DIR/signingscript/src/signingscript/data/authenticode_dep.crt
 export AUTHENTICODE_CERT_PATH_202404=$APP_DIR/signingscript/src/signingscript/data/authenticode_dep.crt
+export AUTHENTICODE_CERT_PATH="$AUTHENTICODE_CERT_PATH_202404"
 export AUTHENTICODE_CERT_PATH_EV="$AUTHENTICODE_CERT_PATH"
-export AUTHENTICODE_CA_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_dep_ca.crt
 export AUTHENTICODE_CA_PATH_202404=$APP_DIR/signingscript/src/signingscript/data/authenticode_dep_ca.crt
+export AUTHENTICODE_CA_PATH="$AUTHENTICODE_CA_PATH_202404"
 export AUTHENTICODE_CA_PATH_EV="$AUTHENTICODE_CA_PATH"
 export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
 export AUTHENTICODE_CROSS_CERT_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_stub.crt
 if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_TIMESTAMP_STYLE=old
-  export AUTHENTICODE_CERT_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
-  export AUTHENTICODE_CERT_PATH_202005=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CERT_PATH_202404=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202404.crt
+  export AUTHENTICODE_CERT_PATH="$AUTHENTICODE_CERT_PATH_202404"
   export AUTHENTICODE_CERT_PATH_EV=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_ev.crt
-  export AUTHENTICODE_CA_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_202005.crt
   export AUTHENTICODE_CA_PATH_202404=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_ca_202404.crt
+  export AUTHENTICODE_CA_PATH="$AUTHENTICODE_CA_PATH_202404"
   export AUTHENTICODE_CA_PATH_EV=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_ev.crt
   export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
   export GPG_PUBKEY_PATH=$APP_DIR/signingscript/src/signingscript/data/gpg_pubkey_20230505.asc
@@ -87,7 +85,6 @@ case $ENV in
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
-        test_var_set 'AUTHENTICODE_CERT_PATH_202005'
         test_var_set 'AUTHENTICODE_CA_PATH'
         test_var_set 'AUTHENTICODE_CA_TIMESTAMP_PATH'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
@@ -163,7 +160,6 @@ case $ENV in
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
-        test_var_set 'AUTHENTICODE_CERT_PATH_202005'
         test_var_set 'AUTHENTICODE_CA_PATH'
         test_var_set 'AUTHENTICODE_CA_TIMESTAMP_PATH'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'

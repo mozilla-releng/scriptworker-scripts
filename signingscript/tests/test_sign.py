@@ -1254,10 +1254,10 @@ async def test_authenticode_sign_single_file(tmpdir, mocker, context):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("keyid", ("202005", "foo"))
+@pytest.mark.parametrize("keyid", ("202404", "foo"))
 async def test_authenticode_sign_keyids(tmpdir, mocker, context, keyid):
     context.config["authenticode_cert"] = os.path.join(TEST_DATA_DIR, "windows.crt")
-    context.config["authenticode_cert_202005"] = os.path.join(TEST_DATA_DIR, "windows.crt")
+    context.config["authenticode_cert_202404"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_cert_foo"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_ca"] = os.path.join(TEST_DATA_DIR, "windows.crt")
     context.config["authenticode_ca_foo"] = os.path.join(TEST_DATA_DIR, "windows_foo.crt")
