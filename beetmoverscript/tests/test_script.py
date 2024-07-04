@@ -337,7 +337,7 @@ async def test_move_beets(partials, mocker, restore_buildhub_file):
     def sort_manifest(manifest):
         manifest.sort(key=lambda entry: entry.get("blob_suffix", ""))
 
-    async def fake_move_beet(context, source, destinations, locale, update_balrog_manifest, balrog_format, artifact_pretty_name, from_buildid):
+    async def fake_move_beet(context, source, destinations, locale, update_balrog_manifest, balrog_format, artifact_pretty_name, from_buildid, expiry=None):
         actual_sources.append(source)
         actual_destinations.append(destinations)
         if update_balrog_manifest:

@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from datetime import datetime
 from google.api_core.exceptions import Forbidden
 from google.api_core.retry import Retry
 from google.auth.exceptions import DefaultCredentialsError
@@ -21,6 +22,8 @@ class FakeClient:
         cache_control = ""
         name = "fakename"
         md5_hash = "fakemd5hash"
+        _properties = {}
+        custom_time = None
 
         def copy_blob(*args, **kwargs):
             pass
@@ -30,9 +33,16 @@ class FakeClient:
             assert content_type == "application/zip"
             assert isinstance(retry, (Retry, ConditionalRetryPolicy))
             assert isinstance(if_generation_match, (int, type(None)))
+            return self
 
         def exists(self):
             return self._exists
+
+        def rewrite(self, source, *args, **kwargs):
+            assert source
+
+        def __init__(self) -> None:
+            pass
 
     class FakeBucket:
         FAKE_BUCKET_NAME = "existingbucket"
@@ -146,6 +156,8 @@ async def test_upload_to_gcs(context, monkeypatch):
     context.gcs_client = "FakeClient"
     monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeClient.FakeBucket)
     await beetmoverscript.gcloud.upload_to_gcs(context, "path/target", FakeClient.FakeBlob.PATH)
+    # With expiry
+    await beetmoverscript.gcloud.upload_to_gcs(context, "path/target", FakeClient.FakeBlob.PATH, datetime.now().isoformat())
     # With existing file
     monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeClient.FakeBucketExisting)
     await beetmoverscript.gcloud.upload_to_gcs(context, "path/target", FakeClient.FakeBlob.PATH)

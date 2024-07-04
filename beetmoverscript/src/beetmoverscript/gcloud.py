@@ -5,6 +5,7 @@ import logging
 import mimetypes
 import os
 import tempfile
+from datetime import datetime
 
 from google.api_core.exceptions import Forbidden
 from google.auth.exceptions import DefaultCredentialsError
@@ -101,7 +102,7 @@ def setup_gcs_credentials(raw_creds):
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = fp.name
 
 
-async def upload_to_gcs(context, target_path, path):
+async def upload_to_gcs(context, target_path, path, expiry=None):
     product = get_product_name(context.task, context.config)
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
@@ -112,10 +113,12 @@ async def upload_to_gcs(context, target_path, path):
     blob = bucket.blob(target_path)
     blob.content_type = mime_type
     blob.cache_control = "public, max-age=%d" % CACHE_CONTROL_MAXAGE
+    if expiry:
+        blob.custom_time = datetime.fromisoformat(expiry)
 
     if blob.exists():
         log.warning("upload_to_gcs: Overriding file: %s", target_path)
-    log.info("upload_to_gcs: %s -> Bucket: gs://%s/%s", path, bucket_name, target_path)
+    log.info("upload_to_gcs: %s -> Bucket: gs://%s/%s  (custom_time: %s)", path, bucket_name, target_path, expiry)
     """
     In certain cases, such as when handling *-latest directories, we need to overwrite existing file blobs.
     Since we don't use `DELETE` requests in beetmover, the race condition mentioned in the GCS documentation [1] should not occur.
@@ -223,6 +226,9 @@ def list_bucket_objects_gcs(client, bucket, prefix):
 
 
 def move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, releases_blobs):
+    """Moves artifacts in a bucket from one location to another.
+    It does not copy any metadata such as custom_time
+    """
     bucket = Bucket(client, bucket_name)
     for source, destination in blobs_to_copy.items():
         if destination in releases_blobs:
@@ -240,4 +246,10 @@ def move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, release
         else:
             log.info("Copying {} to {}".format(source, destination))
             source_blob = bucket.blob(source)
-            bucket.copy_blob(source_blob, bucket, destination, retry=DEFAULT_RETRY)
+            dest_blob = bucket.blob(destination)
+            # We need to set the data payload with some information so the metadata is NOT copied over.
+            # This prevents custom_time metadata from being copied unintentionally
+            # https://cloud.google.com/storage/docs/json_api/v1/objects/rewrite#request-body
+            dest_blob._properties["name"] = destination
+            dest_blob._properties["bucket"] = bucket.name
+            dest_blob.rewrite(source=source_blob, retry=DEFAULT_RETRY)
