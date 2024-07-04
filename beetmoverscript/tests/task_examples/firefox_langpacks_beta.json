@@ -15,7 +15,8 @@
 			"destinations": [
 			    "pub/devedition/candidates/83.0b6-candidates/build1/win64/xpi/en-US.xpi"
 			],
-			"checksums_path": "win64/xpi/en-US.xpi"
+			"checksums_path": "win64/xpi/en-US.xpi",
+			"expiry": "2034-07-04T20:45:57.481875+00:00"
 		    }
 		},
 		"locale": "en-US",
