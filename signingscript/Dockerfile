@@ -1,6 +1,6 @@
-# python:3.9.7 docker image contains osslsigncode 2.1.0.
+# python:3.11.9 docker image contains osslsigncode 2.5.
 # if the image changes, verify version of osslsigncode and make sure winsign works as well
-FROM python:3.9.7
+FROM python:3.11.9
 
 RUN groupadd --gid 10001 app && \
     useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app && \
