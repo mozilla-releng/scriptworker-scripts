@@ -110,7 +110,7 @@ tasks:
         resources:
             - pushflatpakscript
     pushmsixscript:
-        python-versions: [39]
+        python-versions: [311]
         resources:
             - pushmsixscript
     scriptworker_client:

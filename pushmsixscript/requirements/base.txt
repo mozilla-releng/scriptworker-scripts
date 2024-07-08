@@ -100,9 +100,7 @@ arrow==1.3.0 \
 async-timeout==4.0.3 \
     --hash=sha256:4640d96be84d82d02ed59ea2b7105a0f7b33abe8703703cd0ab0bf87c427522f \
     --hash=sha256:7405140ff1230c310e51dc27b3145b9092d659ce68ff733fb0cefe3ee42be028
-    # via
-    #   aiohttp
-    #   taskcluster
+    # via taskcluster
 attrs==23.2.0 \
     --hash=sha256:935dc3b529c262f6cf76e50877d35a4bd3c1de194fd41f47a2b7ae8f19971f30 \
     --hash=sha256:99b87a485a5820b23b879f04c2305b44b951b502fd64be915879d77a7e8fc6f1
@@ -118,9 +116,9 @@ azure-storage-blob==12.20.0 \
     --hash=sha256:de6b3bf3a90e9341a6bcb96a2ebe981dffff993e9045818f6549afea827a52a9 \
     --hash=sha256:eeb91256e41d4b5b9bad6a87fd0a8ade07dd58aa52344e2c8d2746e27a017d3b
     # via -r requirements/base.in
-certifi==2024.6.2 \
-    --hash=sha256:3cd43f1c6fa7dedc5899d69d3ad0398fd018ad1a17fba83ddaf78aa46c747516 \
-    --hash=sha256:ddc6c8ce995e6987e7faf5e3f1b02b302836a0e5d98ece18392cb1a36c72ad56
+certifi==2024.7.4 \
+    --hash=sha256:5a1e7645bc0ec61a09e26c36f6106dd4cf40c6db3a1fb6352b0244e7fb057c7b \
+    --hash=sha256:c198e21b1289c2ab85ee4e67bb4b4ef3ead0892059901a8d5b622f24a1101e90
     # via requests
 cffi==1.16.0 \
     --hash=sha256:0c9ef6ff37e974b73c25eecc13952c55bceed9112be2d9d938ded8e856138bcc \
@@ -408,9 +406,9 @@ isodate==0.6.1 \
     --hash=sha256:0751eece944162659049d35f4f549ed815792b38793f07cf73381c1c87cbed96 \
     --hash=sha256:48c5881de7e8b0a0d648cb024c8062dc84e7b840ed81e864c7614fd3c127bde9
     # via azure-storage-blob
-json-e==4.7.0 \
-    --hash=sha256:c12b00552111ab2c43e1a87111a7113a73aee903709df96d7a778f45dc0a7ea8 \
-    --hash=sha256:e5df7be84bf80d4e9bb8217580b50602f59fa7df6af0ba5c5473a7388afb85ae
+json-e==4.7.1 \
+    --hash=sha256:27f6856dc2e1774eb26c83d76efe1fb20b69b62b830c7cf71faea70311855fe4 \
+    --hash=sha256:5733fbfca8e982cddf4114bcc70926d8bbf9d336cf98d69633e2db1e65ff75c4
     # via scriptworker
 jsonschema==4.22.0 \
     --hash=sha256:5b22d434a45935119af990552c862e5d6d564e8f6601206b305a61fdf661a2b7 \
@@ -702,9 +700,9 @@ rpds-py==0.18.1 \
     # via
     #   jsonschema
     #   referencing
-scriptworker==60.0.0 \
-    --hash=sha256:713bebe0b4d2280963e1cbcd39cb477ae2b3a0ac9044a7fc364f5c31e1e48557 \
-    --hash=sha256:a4d4191304c092e453574b2169652f3266aeb2d6ba6e76d81057cf013a26e8a3
+scriptworker==60.1.0 \
+    --hash=sha256:e33b52c50e925b8211018cebcd42bc31ca9f67eb800bdc239e4f944e05b119ee \
+    --hash=sha256:e679986acbbc16cfb1f19b62a39a97b9fd8efea12bca7fdafa9f6109aef48dcb
     # via -r requirements/base.in
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
@@ -718,9 +716,9 @@ slugid==2.0.0 \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
     # via taskcluster
-taskcluster==65.1.0 \
-    --hash=sha256:dd1e25daa6dc160b830a30482da21ad8b0b0be846df3630078c2cde7037e17a6 \
-    --hash=sha256:fefca91c68f096067bbeb25926e78f4c1656164423d46a71206fa0f293e365e9
+taskcluster==66.0.0 \
+    --hash=sha256:6bf3cfa52c88faa532ddbf0b8033625aeea59f14e74f6157a94b417a22c8ac07 \
+    --hash=sha256:828fcd7fd42994caba85ce2c823f80429e197a53216b41c0aa6acf3c948ca818
     # via
     #   -r requirements/base.in
     #   scriptworker
