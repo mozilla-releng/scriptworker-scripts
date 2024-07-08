@@ -29,7 +29,6 @@ hfsplus: { "$eval": "HFSPLUS_PATH" }
 gpg_pubkey: { "$eval": "GPG_PUBKEY_PATH" }
 widevine_cert: { "$eval": "WIDEVINE_CERT_PATH" }
 authenticode_cert: { "$eval": "AUTHENTICODE_CERT_PATH" }
-authenticode_cert_202005: { "$eval": "AUTHENTICODE_CERT_PATH_202005" }
 authenticode_cert_202404: { "$eval": "AUTHENTICODE_CERT_PATH_202404" }
 authenticode_cert_ev: { "$eval": "AUTHENTICODE_CERT_PATH_EV" }
 authenticode_ca: { "$eval": "AUTHENTICODE_CA_PATH" }

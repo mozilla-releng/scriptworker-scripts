@@ -154,8 +154,8 @@ async def test_sign(context, mocker, format, filename, post_files):
         ("default", stask.sign_file),
         # Key id cases
         ("autograph_hash_only_mar384:firefox_20190321_dev", stask.sign_mar384_with_autograph_hash),
-        ("autograph_authenticode_sha2:202005", stask.sign_authenticode),
-        ("autograph_authenticode_sha2_stub:202005", stask.sign_authenticode),
+        ("autograph_authenticode_sha2:202404", stask.sign_authenticode),
+        ("autograph_authenticode_sha2_stub:202404", stask.sign_authenticode),
         # XPI cases
         ("autograph_xpi", stask.sign_xpi),
         ("autograph_xpi_sha256_es256", stask.sign_xpi),
