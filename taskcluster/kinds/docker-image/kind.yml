@@ -77,7 +77,7 @@ tasks:
     pushflatpakscript:
         parent: base-3.11
     pushmsixscript:
-        parent: base
+        parent: base-3.11
     signingscript:
         parent: base
     treescript:
