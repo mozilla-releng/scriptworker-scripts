@@ -30,6 +30,16 @@
             "from_buildid": 19991231235959,
             "update_balrog_manifest": true
           },
+          "target_expires.txt": {
+            "destinations": [
+              "pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_expires.txt",
+              "pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_expires.txt"
+            ],
+            "checksums_path": "",
+            "from_buildid": 19991231235959,
+            "update_balrog_manifest": false,
+            "expiry": "2034-02-03T04:05:06.123Z"
+          },
           "target.mozinfo.json": {
             "destinations": [
               "pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.mozinfo.json",
@@ -84,6 +94,7 @@
       {
         "paths": [
           "public/build/target.txt",
+          "public/build/target_expires.txt",
           "public/build/target.mozinfo.json",
           "public/build/target_info.txt",
           "public/build/target.test_packages.json"

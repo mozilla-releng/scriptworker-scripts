@@ -198,7 +198,7 @@ def prepare_scriptworker_config(path, config, task):
         ("geckoview_nightly", "project:releng:beetmover:", 16),
         ("glean_release", "project:mozilla:glean:releng:beetmover:", 20),
         ("firefox_desktop_nightly", "project:releng:beetmover:", 52),
-        ("firefox_langpacks_beta", "project:releng:beetmover:", 1),
+        ("firefox_langpacks_beta", "project:releng:beetmover:", 2),
         ("firefox_generated_screenshots_release", "project:releng:beetmover:", 7),
     ),
 )
