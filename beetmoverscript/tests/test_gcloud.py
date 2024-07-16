@@ -1,4 +1,6 @@
 import os
+from datetime import datetime
+from unittest.mock import MagicMock
 
 import pytest
 from google.api_core.exceptions import Forbidden
@@ -14,14 +16,6 @@ from . import get_fake_valid_task, noop_sync
 
 class FakeClient:
     class FakeBlob:
-        PATH = "/foo.zip"
-        _exists = False
-
-        content_type = ""
-        cache_control = ""
-        name = "fakename"
-        md5_hash = "fakemd5hash"
-
         def copy_blob(*args, **kwargs):
             pass
 
@@ -30,9 +24,23 @@ class FakeClient:
             assert content_type == "application/zip"
             assert isinstance(retry, (Retry, ConditionalRetryPolicy))
             assert isinstance(if_generation_match, (int, type(None)))
+            return self
 
         def exists(self):
             return self._exists
+
+        def rewrite(self, source, *args, **kwargs):
+            assert source
+
+        def __init__(self) -> None:
+            self.PATH = "/foo.zip"
+            self._exists = False
+            self.content_type = ""
+            self.cache_control = ""
+            self.name = "fakename"
+            self.md5_hash = "fakemd5hash"
+            self._properties = {}
+            self.custom_time = None
 
     class FakeBucket:
         FAKE_BUCKET_NAME = "existingbucket"
@@ -135,20 +143,58 @@ def test_setup_gcs_credentials(monkeypatch):
     monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
 
 
+@pytest.mark.parametrize(
+    "path,expiry,exists,raise_class",
+    (
+        # Raise when can't find a mimetype
+        ("foo/nomimetype", None, False, ScriptWorkerTaskException),
+        # No expiration given
+        ("foo/target.zip", None, False, None),
+        # With expiration
+        ("foo/target.zip", datetime.now().isoformat(), False, None),
+        # With existing file
+        ("foo/target.zip", None, True, None),
+    ),
+    ids=["no mimetype", "no expiry", "with expiry", "with existing file"],
+)
 @pytest.mark.asyncio
-async def test_upload_to_gcs_fail(context):
-    with pytest.raises(ScriptWorkerTaskException):
-        await beetmoverscript.gcloud.upload_to_gcs(context, "/target_path", "/noextension")
+async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, raise_class):
+    context.gcs_client = FakeClient()
+    blob = FakeClient.FakeBlob()
+    blob._exists = exists
+    blob.upload_from_filename = MagicMock()
+    bucket = FakeClient.FakeBucket(FakeClient, "foobucket")
+    bucket.blob = MagicMock()
+    bucket.blob.side_effect = [blob]
+    log_warn = MagicMock()
 
+    monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", lambda client, name: bucket)
+    monkeypatch.setattr(beetmoverscript.gcloud.log, "warning", log_warn)
 
-@pytest.mark.asyncio
-async def test_upload_to_gcs(context, monkeypatch):
-    context.gcs_client = "FakeClient"
-    monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeClient.FakeBucket)
-    await beetmoverscript.gcloud.upload_to_gcs(context, "path/target", FakeClient.FakeBlob.PATH)
-    # With existing file
-    monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeClient.FakeBucketExisting)
-    await beetmoverscript.gcloud.upload_to_gcs(context, "path/target", FakeClient.FakeBlob.PATH)
+    if raise_class:
+        with pytest.raises(raise_class):
+            await beetmoverscript.gcloud.upload_to_gcs(
+                context=context,
+                target_path="path/target",
+                path=path,
+                expiry=expiry,
+            )
+    else:
+        await beetmoverscript.gcloud.upload_to_gcs(
+            context=context,
+            target_path="path/target",
+            path=path,
+            expiry=expiry,
+        )
+
+        if expiry:
+            assert isinstance(blob.custom_time, datetime)
+        else:
+            assert blob.custom_time is None
+        if exists:
+            log_warn.assert_called()
+        else:
+            log_warn.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -186,3 +232,50 @@ async def test_push_to_releases_gcs_no_moves(context, monkeypatch, candidate_blo
 
 def test_list_bucket_objects_gcs():
     beetmoverscript.gcloud.list_bucket_objects_gcs(FakeClient(), "foobucket", "prefix")
+
+
+def test_move_artifacts_removing_custom_time(monkeypatch):
+    source_blob = FakeClient.FakeBlob()
+    dest_blob = FakeClient.FakeBlob()
+    dest_blob.rewrite = MagicMock()
+    bucket = FakeClient.FakeBucket(FakeClient, "foo")
+    bucket.blob = MagicMock()
+    bucket.blob.side_effect = [source_blob, dest_blob]
+
+    monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", lambda x, y: bucket)
+    beetmoverscript.gcloud.move_artifacts(
+        client=FakeClient,
+        bucket_name=bucket.name,
+        blobs_to_copy={"source/path": "destination/path"},
+        candidates_blobs={},
+        releases_blobs={},
+    )
+    # Setting name and bucket makes blob.rewrite remove any metadata from the source object
+    assert dest_blob._properties.get("name") == "destination/path"
+    assert dest_blob._properties.get("bucket") == bucket.name
+    dest_blob.rewrite.assert_called_with(source=source_blob, retry=beetmoverscript.gcloud.DEFAULT_RETRY)
+
+
+def test_move_artifacts_existing(monkeypatch):
+    monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", FakeClient.FakeBucket)
+    # Throws exception if etags are different
+    with pytest.raises(ScriptWorkerTaskException):
+        beetmoverscript.gcloud.move_artifacts(
+            client=FakeClient,
+            bucket_name="foo",
+            blobs_to_copy={"source/path": "destination/path"},
+            candidates_blobs={"source/path": "different_etag2"},
+            releases_blobs={"destination/path": "etag1"},
+        )
+
+    # Warns if same etags/content and no exception
+    log_warn = MagicMock()
+    monkeypatch.setattr(beetmoverscript.gcloud.log, "warning", log_warn)
+    beetmoverscript.gcloud.move_artifacts(
+        client=FakeClient,
+        bucket_name="foo",
+        blobs_to_copy={"source/path": "destination/path"},
+        candidates_blobs={"source/path": "same_etag"},
+        releases_blobs={"destination/path": "same_etag"},
+    )
+    log_warn.assert_called()

@@ -114,6 +114,12 @@
                                     },
                                     "checksums_path": {
                                         "type": "string"
+                                    },
+                                    "expiry": {
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
                                     }
                                 }
                             }

@@ -253,6 +253,7 @@ async def test_move_beets(partials, mocker, restore_buildhub_file):
     expected_sources = [
         os.path.abspath("tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.mozinfo.json"),
         os.path.abspath("tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.txt"),
+        os.path.abspath("tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target_expires.txt"),
         os.path.abspath("tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target_info.txt"),
         os.path.abspath("tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/target.test_packages.json"),
         os.path.abspath("tests/test_work_dir/cot/eSzfNqMZT_mSiQQXu8hyqg/public/build/buildhub.json"),
@@ -272,6 +273,10 @@ async def test_move_beets(partials, mocker, restore_buildhub_file):
             "pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.txt",
         ],
         [
+            "pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_expires.txt",
+            "pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target_expires.txt",
+        ],
+        [
             "pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json",
             "pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.test_packages.json",
         ],
@@ -283,6 +288,9 @@ async def test_move_beets(partials, mocker, restore_buildhub_file):
             "pub/mobile/nightly/2016/09/2016-09-01-16-26-14-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.apk",
             "pub/mobile/nightly/latest-mozilla-central-fake/en-US/fake-99.0a1.en-US.target.apk",
         ],
+    ]
+    expected_expires = [
+        "2034-02-03T04:05:06.123Z",
     ]
 
     expected_balrog_manifest = []
@@ -333,13 +341,16 @@ async def test_move_beets(partials, mocker, restore_buildhub_file):
 
     actual_sources = []
     actual_destinations = []
+    actual_expires = []
 
     def sort_manifest(manifest):
         manifest.sort(key=lambda entry: entry.get("blob_suffix", ""))
 
-    async def fake_move_beet(context, source, destinations, locale, update_balrog_manifest, balrog_format, artifact_pretty_name, from_buildid):
+    async def fake_move_beet(context, source, destinations, locale, update_balrog_manifest, balrog_format, artifact_pretty_name, from_buildid, expiry=None):
         actual_sources.append(source)
         actual_destinations.append(destinations)
+        if expiry:
+            actual_expires.append(expiry)
         if update_balrog_manifest:
             data = {"hash": "dummyhash", "size": 123456, "url": destinations[0]}
             context.raw_balrog_manifest.setdefault(locale, {})
@@ -357,6 +368,7 @@ async def test_move_beets(partials, mocker, restore_buildhub_file):
 
     assert sorted(expected_sources) == sorted(actual_sources)
     assert sorted(expected_destinations) == sorted(actual_destinations)
+    assert sorted(expected_expires) == sorted(actual_expires)
 
     # Deal with different-sorted completeInfo
     sort_manifest(context.balrog_manifest)
@@ -441,7 +453,7 @@ async def test_move_beet(update_manifest, action):
     }
     actual_upload_args = []
 
-    async def fake_retry_upload(context, destinations, path):
+    async def fake_retry_upload(context, destinations, path, expiry=None):
         actual_upload_args.extend([destinations, path])
 
     with mock.patch("beetmoverscript.script.retry_upload", fake_retry_upload):
