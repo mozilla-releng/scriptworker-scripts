@@ -38,7 +38,6 @@ def create_new_release_action(context):
     payload = context.task["payload"]
     shipit_config = context.ship_it_instance_config
     product = payload["product"]
-    product_key = payload.get("product_key")
     branch = payload["branch"]
     phase = payload["phase"]
     version = payload["version"]
@@ -59,7 +58,7 @@ def create_new_release_action(context):
     log.info(f"The shippable revision found is {shippable_revision}")
 
     log.info("Starting a new release in Ship-it ...")
-    ship_actions.start_new_release(shipit_config, product, product_key, branch, version, shippable_revision, phase)
+    ship_actions.start_new_release(shipit_config, product, branch, version, shippable_revision, phase)
 
 
 def update_product_channel_version_action(context):
