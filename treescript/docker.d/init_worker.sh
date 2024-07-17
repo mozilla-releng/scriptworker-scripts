@@ -43,6 +43,7 @@ case $COT_PRODUCT in
     test_var_set 'SSH_USER'
     test_var_set 'SSH_KEY'
     export NEEDS_HG="1"
+    export NEEDS_GIT="1"
     export TRUST_DOMAIN="comm"
     export UPSTREAM_REPO="https://hg.mozilla.org/comm-unified"
     export MERGE_DAY_CLOBBER_FILE=""

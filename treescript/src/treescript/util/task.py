@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 # These sets should be listed in the order the actions should be taken for
 # human reference.
 VALID_ACTIONS = {
-    "comm": {"tag", "version_bump", "l10n_bump", "push", "merge_day"},
+    "comm": {"tag", "version_bump", "l10n_bump", "l10n_bump_github", "push", "merge_day"},
     "gecko": {"tag", "version_bump", "l10n_bump", "l10n_bump_github", "push", "merge_day", "android_l10n_import", "android_l10n_sync"},
     "mobile": {"version_bump"},
 }
