@@ -430,6 +430,7 @@ async def move_beets(context, artifacts_to_beetmove, artifact_map):
             update_balrog_manifest = map_entry.get("update_balrog_manifest", False)
             balrog_format = map_entry.get("balrog_format", "")
             from_buildid = map_entry.get("from_buildid")
+            expiry = map_entry.get("expiry")
 
             beets.append(
                 asyncio.ensure_future(
@@ -442,6 +443,7 @@ async def move_beets(context, artifacts_to_beetmove, artifact_map):
                         balrog_format=balrog_format,
                         from_buildid=from_buildid,
                         artifact_pretty_name=artifact_pretty_name,
+                        expiry=expiry,
                     )
                 )
             )
@@ -471,8 +473,9 @@ async def move_beet(
     balrog_format,
     from_buildid,
     artifact_pretty_name,
+    expiry=None,
 ):
-    await retry_upload(context=context, destinations=destinations, path=source)
+    await retry_upload(context=context, destinations=destinations, path=source, expiry=expiry)
 
     if context.checksums.get(artifact_pretty_name) is None:
         context.checksums[artifact_pretty_name] = {algo: get_hash(source, algo) for algo in context.config["checksums_digests"]}
@@ -647,7 +650,7 @@ def enrich_balrog_manifest(context, locale):
 
 
 # retry_upload {{{1
-async def retry_upload(context, destinations, path):
+async def retry_upload(context, destinations, path, expiry=None):
     """Manage upload of `path` to `destinations`."""
     cloud_uploads = {key: [] for key in context.config["clouds"]}
 
@@ -662,7 +665,7 @@ async def retry_upload(context, destinations, path):
 
         # GCS upload
         if is_cloud_enabled(context.config, "gcloud", context.resource):
-            cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path)))
+            cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path, expiry=expiry)))
 
     await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.resource)
 
