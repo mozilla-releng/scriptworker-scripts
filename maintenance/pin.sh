@@ -37,7 +37,6 @@ PY_38_SCRIPTS=(
 PY_39_SCRIPTS=(
     configloader
     scriptworker_client
-    signingscript
     treescript
     .
 )
@@ -52,6 +51,7 @@ PY_311_SCRIPTS=(
     pushflatpakscript
     pushmsixscript
     shipitscript
+    signingscript
 )
 
 RUNCMD="RUN apt-get update && \
