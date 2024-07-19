@@ -118,7 +118,7 @@ tasks:
         resources:
             - scriptworker_client
     shipitscript:
-        python-versions: [39]
+        python-versions: [311]
         resources:
             - shipitscript
     signingscript:

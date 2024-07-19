@@ -69,7 +69,7 @@ tasks:
             SCRIPT_NAME: githubscript
     shipitscript:
         definition: script
-        parent: base
+        parent: base-3.11
         args:
             SCRIPT_NAME: shipitscript
     pushapkscript:
