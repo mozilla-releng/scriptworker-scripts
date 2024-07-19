@@ -129,7 +129,7 @@ tasks:
             - signingscript
             - vendored/mozbuild
     treescript:
-        python-versions: [39]
+        python-versions: [311]
         resources:
             - treescript
             - scriptworker_client

@@ -83,7 +83,7 @@ tasks:
         # if the image changes, verify version of osslsigncode and make sure winsign works as well
         parent: base-3.11
     treescript:
-        parent: base
+        parent: base-3.11
 
     # Testing images
     pushapkscript-test-py311:
