@@ -62,7 +62,7 @@ tasks:
         resources:
             - bouncerscript
     configloader:
-        python-versions: [38, 39, 311]
+        python-versions: [38, 311]
         resources:
             - configloader
     githubscript:
@@ -71,7 +71,7 @@ tasks:
             - githubscript
             - scriptworker_client
     init:
-        python-versions: [39]
+        python-versions: [311]
         resources:
             - docker.d
             - addonscript/docker.d
@@ -114,7 +114,7 @@ tasks:
         resources:
             - pushmsixscript
     scriptworker_client:
-        python-versions: [38, 39, 311]
+        python-versions: [38, 311]
         resources:
             - scriptworker_client
     shipitscript:

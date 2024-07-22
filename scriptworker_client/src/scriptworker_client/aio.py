@@ -9,7 +9,11 @@ import random
 import sys
 
 import aiohttp
-import async_timeout
+
+if sys.version_info < (3, 11):
+    import async_timeout
+else:
+    import asyncio as async_timeout
 
 from scriptworker_client.exceptions import Download404, DownloadError, LockfileError, RetryError, TaskError, TimeoutError
 from scriptworker_client.utils import makedirs, rm

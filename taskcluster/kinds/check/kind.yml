@@ -19,12 +19,12 @@ task-defaults:
         code-review: true
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: 'python39'}
+        docker-image: {in-tree: 'python311'}
         max-run-time: 1800
 
 tasks:
     ruff-lint:
-        description: "ruff-py39"
+        description: "ruff-py311"
         run:
             using: run-task
             cache-dotcache: false
@@ -34,7 +34,7 @@ tasks:
             command:
                 - sh
                 - -lxce
-                - tox -e ruff-py39
+                - tox -e ruff-py311
 
     ruff-format:
         description: "ruff-format"

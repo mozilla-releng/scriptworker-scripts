@@ -17,10 +17,6 @@ tasks:
         definition: python
         args:
             PYTHON_VERSION: "3.11.9"
-    python39:
-        definition: python
-        args:
-            PYTHON_VERSION: "3.9.7"
     python38:
         definition: python
         args:
@@ -32,58 +28,54 @@ tasks:
 
     base:
         args:
-            BASE_IMAGE: python:3.9.7
-    base-3.11:
-        definition: base
-        args:
             BASE_IMAGE: python:3.11.9
     addonscript:
         definition: script
-        parent: base-3.11
+        parent: base
         args:
             SCRIPT_NAME: addonscript
     balrogscript:
         definition: script
-        parent: base-3.11
+        parent: base
         args:
             SCRIPT_NAME: balrogscript
     bitrisescript:
         definition: script
-        parent: base-3.11
+        parent: base
         args:
             SCRIPT_NAME: bitrisescript
     beetmoverscript:
         definition: script
-        parent: base-3.11
+        parent: base
         args:
             SCRIPT_NAME: beetmoverscript
     bouncerscript:
         definition: script
-        parent: base-3.11
+        parent: base
         args:
             SCRIPT_NAME: bouncerscript
     githubscript:
         definition: script
-        parent: base-3.11
+        parent: base
         args:
             SCRIPT_NAME: githubscript
     shipitscript:
         definition: script
-        parent: base-3.11
+        parent: base
         args:
             SCRIPT_NAME: shipitscript
     pushapkscript:
-        parent: base-3.11
+        parent: base
     pushflatpakscript:
-        parent: base-3.11
+        parent: base
     pushmsixscript:
-        parent: base-3.11
+        parent: base
     signingscript:
         # python:3.11.9 docker image contains osslsigncode 2.5.
         # if the image changes, verify version of osslsigncode and make sure winsign works as well
-        parent: base-3.11
+        parent: base
     treescript:
-        parent: base-3.11
+        parent: base
 
     # Testing images
     pushapkscript-test-py311:
