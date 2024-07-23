@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import tempfile
@@ -214,11 +215,9 @@ def _update_submission(config, channel, session, submission_request, headers, fi
             submission_request["packageDeliveryOptions"]["packageRollout"]["isPackageRollout"] = True
             submission_request["packageDeliveryOptions"]["packageRollout"]["packageRolloutPercentage"] = config["release_rollout_percentage"]
 
-    # The Store expects all-lower-case 'true' and 'false' in the submission request.
-    submission_request = str(submission_request)
-    submission_request = submission_request.replace("True", "true").replace("False", "false")
+    submission_json_string = json.dumps(submission_request)
     url = _store_url(config, f"{application_id}/submissions/{submission_id}")
-    response = session.put(url, submission_request.encode(encoding), headers=headers)
+    response = session.put(url, submission_json_string.encode(encoding), headers=headers)
     _log_response(response)
     response.raise_for_status()
     # Wrap all the msix files in a zip file and upload the zip
