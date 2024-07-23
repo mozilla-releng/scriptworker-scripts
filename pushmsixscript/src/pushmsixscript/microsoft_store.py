@@ -5,6 +5,7 @@ import tempfile
 import time
 import traceback
 import zipfile
+from copy import copy
 
 import requests
 from azure.storage.blob import BlobClient
@@ -158,8 +159,31 @@ def _update_submission(config, channel, session, submission_request, headers, fi
     # update the in-progress submission, including uploading the new msix files
     application_id = config["application_ids"][channel]
     submission_id = submission_request.get("id")
+    submission_request, upload_file_names = _craft_new_submission_request_and_upload_file_names(config, channel, submission_request, file_paths, publish_mode)
     upload_url = submission_request.get("fileUploadUrl")
     upload_url = upload_url.replace("+", "%2B")
+
+    submission_json_string = json.dumps(submission_request)
+    url = _store_url(config, f"{application_id}/submissions/{submission_id}")
+    response = session.put(url, submission_json_string.encode(encoding), headers=headers)
+    _log_response(response)
+    response.raise_for_status()
+    # Wrap all the msix files in a zip file and upload the zip
+    with tempfile.TemporaryDirectory() as work_dir:
+        zip_file_name = os.path.join(work_dir, "pushmsix.zip")
+        with zipfile.ZipFile(zip_file_name, "w") as zf:
+            for file_path in file_paths:
+                zf.write(file_path, arcname=upload_file_names[file_path])
+        # Note that simple HTTP uploads fail for large files (like ours!), so
+        # using the BlobClient is required.
+        blob_client = BlobClient.from_blob_url(upload_url)
+        with open(zip_file_name, "rb") as f:
+            d = blob_client.upload_blob(f, blob_type="BlockBlob", logging_enable=False)
+            log.debug(f"upload response: {d}")
+
+
+def _craft_new_submission_request_and_upload_file_names(config, channel, submission_request, file_paths, publish_mode):
+    submission_request = copy(submission_request)
     # submission_request is a copy of the submission info used for the
     # previous successful submission; normally, no content changes are
     # needed for this new submission. However, when creating the first
@@ -215,23 +239,7 @@ def _update_submission(config, channel, session, submission_request, headers, fi
             submission_request["packageDeliveryOptions"]["packageRollout"]["isPackageRollout"] = True
             submission_request["packageDeliveryOptions"]["packageRollout"]["packageRolloutPercentage"] = config["release_rollout_percentage"]
 
-    submission_json_string = json.dumps(submission_request)
-    url = _store_url(config, f"{application_id}/submissions/{submission_id}")
-    response = session.put(url, submission_json_string.encode(encoding), headers=headers)
-    _log_response(response)
-    response.raise_for_status()
-    # Wrap all the msix files in a zip file and upload the zip
-    with tempfile.TemporaryDirectory() as work_dir:
-        zip_file_name = os.path.join(work_dir, "pushmsix.zip")
-        with zipfile.ZipFile(zip_file_name, "w") as zf:
-            for file_path in file_paths:
-                zf.write(file_path, arcname=upload_file_names[file_path])
-        # Note that simple HTTP uploads fail for large files (like ours!), so
-        # using the BlobClient is required.
-        blob_client = BlobClient.from_blob_url(upload_url)
-        with open(zip_file_name, "rb") as f:
-            d = blob_client.upload_blob(f, blob_type="BlockBlob", logging_enable=False)
-            log.debug(f"upload response: {d}")
+    return submission_request, upload_file_names
 
 
 def _commit_submission(config, channel, session, submission_id, headers):
