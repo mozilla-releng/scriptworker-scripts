@@ -471,8 +471,25 @@ def test_craft_new_submission_request_and_upload_file_names(
     )
 
 
-@pytest.mark.parametrize("submission_request, encoding, expected", (({}, b"{}"),))
-def test_encode_submission_request(submission_request, encoding, expected):
+@pytest.mark.parametrize(
+    "submission_request, expected",
+    (
+        ({}, b"{}"),
+        (
+            {
+                "listings": {
+                    "id": {
+                        "baseListing": {
+                            "description": "AMAN.\xa0\nPeramban",  # Bug 1909434
+                        }
+                    }
+                }
+            },
+            b'{"listings": {"id": {"baseListing": {"description": "AMAN.\\u00a0\\nPeramban"}}}}',
+        ),
+    ),
+)
+def test_encode_submission_request(submission_request, expected):
     assert microsoft_store._encode_submission_request(submission_request, "utf-8") == expected
 
 
