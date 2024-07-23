@@ -163,9 +163,8 @@ def _update_submission(config, channel, session, submission_request, headers, fi
     upload_url = submission_request.get("fileUploadUrl")
     upload_url = upload_url.replace("+", "%2B")
 
-    submission_json_string = json.dumps(submission_request)
     url = _store_url(config, f"{application_id}/submissions/{submission_id}")
-    response = session.put(url, submission_json_string.encode(encoding), headers=headers)
+    response = session.put(url, _encode_submission_request(submission_request, encoding), headers=headers)
     _log_response(response)
     response.raise_for_status()
     # Wrap all the msix files in a zip file and upload the zip
@@ -242,6 +241,11 @@ def _craft_new_submission_request_and_upload_file_names(config, channel, submiss
             package_rollout["packageRolloutPercentage"] = config["release_rollout_percentage"]
 
     return submission_request, upload_file_names
+
+
+def _encode_submission_request(submission_request, encoding):
+    submission_json_string = json.dumps(submission_request)
+    return submission_json_string.encode(encoding)
 
 
 def _commit_submission(config, channel, session, submission_id, headers):

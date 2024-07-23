@@ -471,6 +471,11 @@ def test_craft_new_submission_request_and_upload_file_names(
     )
 
 
+@pytest.mark.parametrize("submission_request, encoding, expected", (({}, b"{}"),))
+def test_encode_submission_request(submission_request, encoding, expected):
+    assert microsoft_store._encode_submission_request(submission_request, "utf-8") == expected
+
+
 @pytest.mark.parametrize(
     "status_code, raises",
     (
