@@ -139,6 +139,54 @@ def test_update_submission(status_code, raises, publish_mode):
 
 
 @pytest.mark.parametrize(
+    "config, channel, submission_request, file_paths, publish_mode, expected_submission_request, expected_upload_file_names",
+    (
+        (
+            {},
+            "beta",
+            {},
+            [],
+            None,
+            {
+                "allowTargetFutureDeviceFamilies": {
+                    "Desktop": True,
+                    "Holographic": False,
+                    "Mobile": False,
+                    "Xbox": False,
+                },
+                "listings": {
+                    "en-us": {
+                        "baseListing": {
+                            "copyrightAndTrademarkInfo": "",
+                            "description": "Description",
+                            "features": [],
+                            "images": [],
+                            "keywords": [],
+                            "licenseTerms": "",
+                            "privacyPolicy": "",
+                            "recommendedHardware": [],
+                            "releaseNotes": "",
+                            "supportContact": "",
+                            "title": "Firefox Nightly",
+                            "websiteUrl": "",
+                        },
+                    },
+                },
+            },
+            {},
+        ),
+    ),
+)
+def test_craft_new_submission_request_and_upload_file_names(
+    config, channel, submission_request, file_paths, publish_mode, expected_submission_request, expected_upload_file_names
+):
+    assert microsoft_store._craft_new_submission_request_and_upload_file_names(config, channel, submission_request, file_paths, publish_mode) == (
+        expected_submission_request,
+        expected_upload_file_names,
+    )
+
+
+@pytest.mark.parametrize(
     "status_code, raises",
     (
         (200, False),
