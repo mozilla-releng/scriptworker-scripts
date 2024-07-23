@@ -297,6 +297,49 @@ def test_update_submission(status_code, raises, publish_mode):
             },
             {},
         ),
+        (
+            {},
+            "beta",
+            {
+                "applicationPackages": [
+                    {"fileStatus": "PendingUpload"},
+                    {"fileStatus": "PendingUpload"},
+                ]
+            },
+            [],
+            None,
+            {
+                "allowTargetFutureDeviceFamilies": {
+                    "Desktop": True,
+                    "Holographic": False,
+                    "Mobile": False,
+                    "Xbox": False,
+                },
+                "applicationPackages": [
+                    {"fileStatus": "PendingDelete"},
+                    {"fileStatus": "PendingDelete"},
+                ],
+                "listings": {
+                    "en-us": {
+                        "baseListing": {
+                            "copyrightAndTrademarkInfo": "",
+                            "description": "Description",
+                            "features": [],
+                            "images": [],
+                            "keywords": [],
+                            "licenseTerms": "",
+                            "privacyPolicy": "",
+                            "recommendedHardware": [],
+                            "releaseNotes": "",
+                            "supportContact": "",
+                            "title": "Firefox Nightly",
+                            "websiteUrl": "",
+                        },
+                    },
+                },
+            },
+            {},
+        ),
     ),
 )
 def test_craft_new_submission_request_and_upload_file_names(
