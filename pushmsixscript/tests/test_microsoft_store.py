@@ -262,6 +262,41 @@ def test_update_submission(status_code, raises, publish_mode):
             },
             {},
         ),
+        (
+            {},
+            "beta",
+            {},
+            [],
+            "Immediate",
+            {
+                "allowTargetFutureDeviceFamilies": {
+                    "Desktop": True,
+                    "Holographic": False,
+                    "Mobile": False,
+                    "Xbox": False,
+                },
+                "listings": {
+                    "en-us": {
+                        "baseListing": {
+                            "copyrightAndTrademarkInfo": "",
+                            "description": "Description",
+                            "features": [],
+                            "images": [],
+                            "keywords": [],
+                            "licenseTerms": "",
+                            "privacyPolicy": "",
+                            "recommendedHardware": [],
+                            "releaseNotes": "",
+                            "supportContact": "",
+                            "title": "Firefox Nightly",
+                            "websiteUrl": "",
+                        },
+                    },
+                },
+                "targetPublishMode": "Immediate",
+            },
+            {},
+        ),
     ),
 )
 def test_craft_new_submission_request_and_upload_file_names(
