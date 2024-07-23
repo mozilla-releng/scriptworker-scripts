@@ -236,8 +236,10 @@ def _craft_new_submission_request_and_upload_file_names(config, channel, submiss
     # intervention.
     if channel == "release":
         if "release_rollout_percentage" in config:
-            submission_request["packageDeliveryOptions"]["packageRollout"]["isPackageRollout"] = True
-            submission_request["packageDeliveryOptions"]["packageRollout"]["packageRolloutPercentage"] = config["release_rollout_percentage"]
+            delivery_options = submission_request.setdefault("packageDeliveryOptions", {})
+            package_rollout = delivery_options.setdefault("packageRollout", {})
+            package_rollout["isPackageRollout"] = True
+            package_rollout["packageRolloutPercentage"] = config["release_rollout_percentage"]
 
     return submission_request, upload_file_names
 
