@@ -212,6 +212,25 @@ def test_update_submission(status_code, raises, publish_mode):
             },
             {},
         ),
+        (
+            {},
+            "beta",
+            {
+                "listings": {"dummy-locale": {"dummy key": "dummy value"}},
+            },
+            [],
+            None,
+            {
+                "allowTargetFutureDeviceFamilies": {
+                    "Desktop": True,
+                    "Holographic": False,
+                    "Mobile": False,
+                    "Xbox": False,
+                },
+                "listings": {"dummy-locale": {"dummy key": "dummy value"}},
+            },
+            {},
+        ),
     ),
 )
 def test_craft_new_submission_request_and_upload_file_names(
