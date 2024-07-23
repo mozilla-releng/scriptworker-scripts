@@ -417,6 +417,48 @@ def test_update_submission(status_code, raises, publish_mode):
                 "win64-aarch64.msix": "target.store.240101.3.msix",
             },
         ),
+        (
+            {
+                "release_rollout_percentage": 10,
+            },
+            "release",
+            {},
+            [],
+            None,
+            {
+                "allowTargetFutureDeviceFamilies": {
+                    "Desktop": True,
+                    "Holographic": False,
+                    "Mobile": False,
+                    "Xbox": False,
+                },
+                "listings": {
+                    "en-us": {
+                        "baseListing": {
+                            "copyrightAndTrademarkInfo": "",
+                            "description": "Description",
+                            "features": [],
+                            "images": [],
+                            "keywords": [],
+                            "licenseTerms": "",
+                            "privacyPolicy": "",
+                            "recommendedHardware": [],
+                            "releaseNotes": "",
+                            "supportContact": "",
+                            "title": "Firefox Nightly",
+                            "websiteUrl": "",
+                        },
+                    },
+                },
+                "packageDeliveryOptions": {
+                    "packageRollout": {
+                        "isPackageRollout": True,
+                        "packageRolloutPercentage": 10,
+                    }
+                },
+            },
+            {},
+        ),
     ),
 )
 def test_craft_new_submission_request_and_upload_file_names(
