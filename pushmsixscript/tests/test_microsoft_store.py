@@ -340,11 +340,89 @@ def test_update_submission(status_code, raises, publish_mode):
             },
             {},
         ),
+        (
+            {},
+            "beta",
+            {
+                "applicationPackages": [
+                    {
+                        "fileName": "some-old.msix",
+                        "fileStatus": "PendingUpload",
+                        "minimumDirectXVersion": 1,
+                        "minimumSystemRam": 2,
+                    }
+                ],
+            },
+            [
+                "win32.msix",
+                "win64.msix",
+                "win64-aarch64.msix",
+            ],
+            None,
+            {
+                "allowTargetFutureDeviceFamilies": {
+                    "Desktop": True,
+                    "Holographic": False,
+                    "Mobile": False,
+                    "Xbox": False,
+                },
+                "applicationPackages": [
+                    {
+                        "fileName": "some-old.msix",
+                        "fileStatus": "PendingDelete",
+                        "minimumDirectXVersion": 1,
+                        "minimumSystemRam": 2,
+                    },
+                    {
+                        "fileName": "target.store.240101.1.msix",
+                        "fileStatus": "PendingUpload",
+                        "minimumDirectXVersion": 1,
+                        "minimumSystemRam": 2,
+                    },
+                    {
+                        "fileName": "target.store.240101.2.msix",
+                        "fileStatus": "PendingUpload",
+                        "minimumDirectXVersion": 1,
+                        "minimumSystemRam": 2,
+                    },
+                    {
+                        "fileName": "target.store.240101.3.msix",
+                        "fileStatus": "PendingUpload",
+                        "minimumDirectXVersion": 1,
+                        "minimumSystemRam": 2,
+                    },
+                ],
+                "listings": {
+                    "en-us": {
+                        "baseListing": {
+                            "copyrightAndTrademarkInfo": "",
+                            "description": "Description",
+                            "features": [],
+                            "images": [],
+                            "keywords": [],
+                            "licenseTerms": "",
+                            "privacyPolicy": "",
+                            "recommendedHardware": [],
+                            "releaseNotes": "",
+                            "supportContact": "",
+                            "title": "Firefox Nightly",
+                            "websiteUrl": "",
+                        },
+                    },
+                },
+            },
+            {
+                "win32.msix": "target.store.240101.1.msix",
+                "win64.msix": "target.store.240101.2.msix",
+                "win64-aarch64.msix": "target.store.240101.3.msix",
+            },
+        ),
     ),
 )
 def test_craft_new_submission_request_and_upload_file_names(
-    config, channel, submission_request, file_paths, publish_mode, expected_submission_request, expected_upload_file_names
+    monkeypatch, config, channel, submission_request, file_paths, publish_mode, expected_submission_request, expected_upload_file_names
 ):
+    monkeypatch.setattr(microsoft_store.time, "strftime", lambda _: "240101")
     assert microsoft_store._craft_new_submission_request_and_upload_file_names(config, channel, submission_request, file_paths, publish_mode) == (
         expected_submission_request,
         expected_upload_file_names,
