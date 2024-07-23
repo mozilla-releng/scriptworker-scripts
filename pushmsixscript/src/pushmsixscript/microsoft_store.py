@@ -201,7 +201,7 @@ def _craft_new_submission_request_and_upload_file_names(config, channel, submiss
         log.info(f"using targetPublishMode override: {publish_mode}")
     else:
         log.info("using existing targetPublishMode (task publishMode not specified)")
-    for package in submission_request.get("applicationPackages"):
+    for package in submission_request.get("applicationPackages", []):
         package["fileStatus"] = "PendingDelete"
     # "Upload file names" are file names specified in the submission request.
     # The zip file's members must match the upload file names.
