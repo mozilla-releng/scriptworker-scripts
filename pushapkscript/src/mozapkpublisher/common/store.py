@@ -15,6 +15,8 @@ from mozapkpublisher.common.exceptions import WrongArgumentGiven
 
 logger = logging.getLogger(__name__)
 
+NUM_RETRIES = 3
+
 
 def add_general_google_play_arguments(parser):
     parser.add_argument('--credentials', dest='google_play_credentials_filename',
@@ -32,7 +34,7 @@ class _ExecuteDummy:
     def __init__(self, return_value):
         self._return_value = return_value
 
-    def execute(self):
+    def execute(self, **kwargs):
         return self._return_value
 
 
@@ -70,7 +72,7 @@ class GooglePlayEdit:
             editId=self._edit_id,
             track=track,
             packageName=self._package_name
-        ).execute()
+        ).execute(num_retries=NUM_RETRIES)
         logger.debug('Track "{}" has status: {}'.format(track, response))
         return response
 
@@ -84,7 +86,7 @@ class GooglePlayEdit:
                 media_body=apk_path,
                 # Seems like mime type need not be specified for apk files:
                 # media_mime_type='application/octet-stream',
-            ).execute()
+            ).execute(num_retries=NUM_RETRIES)
             logger.info('"{}" uploaded'.format(apk_path))
             logger.debug('Upload response: {}'.format(response))
         except HttpError as e:
@@ -116,7 +118,7 @@ class GooglePlayEdit:
                 packageName=self._package_name,
                 media_body=aab_path,
                 media_mime_type='application/octet-stream',
-            ).execute()
+            ).execute(num_retries=NUM_RETRIES)
             logger.info('"{}" uploaded'.format(aab_path))
             logger.debug('Upload response: {}'.format(response))
         except Exception:
@@ -158,7 +160,7 @@ class GooglePlayEdit:
 
         response = self._edit_resource.tracks().update(
             editId=self._edit_id, track=track, packageName=self._package_name, body=body
-        ).execute()
+        ).execute(num_retries=NUM_RETRIES)
         logger.info('Track "{}" updated with: {}'.format(track, body))
         logger.debug('Track update response: {}'.format(response))
 
@@ -170,7 +172,7 @@ class GooglePlayEdit:
         }
         response = self._edit_resource.listings().update(
             editId=self._edit_id, packageName=self._package_name, language=language, body=body
-        ).execute()
+        ).execute(num_retries=NUM_RETRIES)
         logger.info(u'Listing for language "{}" has been updated with: {}'.format(language, body))
         logger.debug(u'Listing response: {}'.format(response))
 
@@ -178,7 +180,7 @@ class GooglePlayEdit:
         response = self._edit_resource.apklistings().update(
             editId=self._edit_id, packageName=self._package_name, language=language,
             apkVersionCode=apk_version_code, body={'recentChanges': whats_new}
-        ).execute()
+        ).execute(num_retries=NUM_RETRIES)
         logger.info(u'What\'s new listing for ("{}", "{}") has been updated to: "{}"'.format(
             language, apk_version_code, whats_new
         ))
@@ -188,11 +190,11 @@ class GooglePlayEdit:
     @contextmanager
     def transaction(credentials_file_name, package_name, *, contact_server, dry_run):
         edit_resource = _create_google_edit_resource(contact_server, credentials_file_name)
-        edit_id = edit_resource.insert(body={}, packageName=package_name).execute()['id']
+        edit_id = edit_resource.insert(body={}, packageName=package_name).execute(num_retries=NUM_RETRIES)['id']
         google_play = GooglePlayEdit(edit_resource, edit_id, package_name)
         yield google_play
         if not dry_run:
-            edit_resource.commit(editId=edit_id, packageName=package_name).execute()
+            edit_resource.commit(editId=edit_id, packageName=package_name).execute(num_retries=NUM_RETRIES)
             logger.info('Changes committed')
             logger.debug('edit_id "{}" for "{}" has been committed'.format(edit_id, package_name))
         else:
@@ -209,7 +211,8 @@ def _create_google_edit_resource(contact_google_play, credentials_file_name):
 
         service = build(serviceName='androidpublisher', version='v3',
                         credentials=credentials,
-                        cache_discovery=False)
+                        cache_discovery=False,
+                        num_retries=NUM_RETRIES)
 
         return service.edits()
     else:
