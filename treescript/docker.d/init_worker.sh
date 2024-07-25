@@ -34,7 +34,6 @@ case $COT_PRODUCT in
     export UPSTREAM_REPO="https://hg.mozilla.org/mozilla-unified"
     ;;
   mobile)
-    test_var_set 'GITHUB_PRIVKEY'
     export NEEDS_GIT="1"
     export TRUST_DOMAIN="mobile"
     export UPSTREAM_REPO=""
@@ -76,6 +75,7 @@ hg.mozilla.org,63.245.215.102 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDEsS2fK+TVkH
 EOF
 fi
 if [ "$NEEDS_GIT" == "1" ]; then
+  test_var_set 'GITHUB_PRIVKEY'
   export GITHUB_PRIVKEY_FILE="$CONFIG_DIR/github_privkey"
   echo "$GITHUB_PRIVKEY" | base64 -d > "$GITHUB_PRIVKEY_FILE"
   chmod 400 "$GITHUB_PRIVKEY_FILE"
