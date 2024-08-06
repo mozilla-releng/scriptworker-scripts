@@ -52,7 +52,7 @@ def _check_tarball_size(tarball_path):
     tar_size_in_mb = tar_size // (1024 * 1024)
 
     if tar_size_in_mb > TAR_MAX_SIZE_IN_MB:
-        raise TaskVerificationError(f"Tar {tarball_path} is too big. Max accepted size is {TAR_MAX_SIZE_IN_MB}")
+        raise TaskVerificationError(f"Tar {tarball_path} is too big. Max accepted size is {TAR_MAX_SIZE_IN_MB}MB")
 
 
 def _check_tar_itself(tar_file_path):
