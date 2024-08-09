@@ -237,8 +237,8 @@ case $ENV in
         test_var_set 'AUTOGRAPH_AUTHENTICODE_EV_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_RELEASE_PASSWORD'
         test_var_set 'AUTOGRAPH_MAR_RELEASE_USERNAME'
-        test_var_set 'AUTOGRAPH_FENIX_PASSWORD'
-        test_var_set 'AUTOGRAPH_FENIX_USERNAME'
+        test_var_set 'AUTOGRAPH_FENNEC_RELEASE_PASSWORD'
+        test_var_set 'AUTOGRAPH_FENNEC_RELEASE_USERNAME'
         ;;
     esac
     ;;
