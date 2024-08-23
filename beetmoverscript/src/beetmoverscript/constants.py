@@ -109,7 +109,9 @@ CACHE_CONTROL_MAXAGE = 3600 * 4
 
 PRODUCT_TO_PATH = {
     "devedition": "pub/devedition/",
+    "fenix": "pub/fenix/",
     "firefox": "pub/firefox/",
+    "focus": "pub/focus/",
     "thunderbird": "pub/thunderbird/",
     "vpn": "pub/vpn/",
 }
