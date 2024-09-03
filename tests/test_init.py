@@ -132,12 +132,10 @@ CONTEXT = {
         "AUTOGRAPH_WIDEVINE_USERNAME": "1",
         "AUTOGRAPH_XPI_PRIVILEGED_PASSWORD": "1",
         "AUTOGRAPH_XPI_PRIVILEGED_USERNAME": "1",
-        "AUTOGRAPH_STAGE_XPI_PRIVILEGED_PASSWORD": "1",
-        "AUTOGRAPH_STAGE_XPI_PRIVILEGED_USERNAME": "1",
     },
     re.compile(r"signing:adhoc:(dev|fake-prod)"): {
-        "AUTOGRAPH_STAGE_XPI_PASSWORD": "1",
-        "AUTOGRAPH_STAGE_XPI_USERNAME": "1",
+        "AUTOGRAPH_XPI_PASSWORD": "1",
+        "AUTOGRAPH_XPI_USERNAME": "1",
     },
     re.compile(r"tree:.*"): {
         "SSH_KEY": "Zm9vYmFyCg==",
