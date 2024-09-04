@@ -46,6 +46,12 @@ ALIASES_REGEXES = {
     "firefox-esr-next-msix-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-msix-SSL$",
     "firefox-esr-next-pkg-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-pkg-SSL$",
     "firefox-esr-next-langpack-latest-ssl": r"^Firefox-\d+\.\d+(\.\d+)?esr-langpack-SSL$",
+    "firefox-esr115-latest": r"^Firefox-115\.\d+(\.\d+)?esr$",
+    "firefox-esr115-latest-ssl": r"^Firefox-115\.\d+(\.\d+)?esr-SSL$",
+    "firefox-esr115-msi-latest-ssl": r"^Firefox-115\.\d+(\.\d+)?esr-msi-SSL$",
+    "firefox-esr115-msix-latest-ssl": r"^Firefox-115\.\d+(\.\d+)?esr-msix-SSL$",
+    "firefox-esr115-pkg-latest-ssl": r"^Firefox-115\.\d+(\.\d+)?esr-pkg-SSL$",
+    "firefox-esr115-langpack-latest-ssl": r"^Firefox-115\.\d+(\.\d+)?esr-langpack-SSL$",
 }
 
 PARTNER_ALIASES_REGEX = {
