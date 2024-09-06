@@ -199,10 +199,6 @@ The config json looks like this (comments are not valid json, but I'm inserting 
       // this should be an absolute path.
       "artifact_dir": "/src/signing/artifact_dir",
 
-      // the IP that docker-signing-server thinks you're coming from.
-      // I got this value from running `docker network inspect bridge` and using the gateway.
-      "my_ip": "172.17.0.1",
-
       // how many seconds should the signing token be valid for?
       "token_duration_seconds": 1200,
 

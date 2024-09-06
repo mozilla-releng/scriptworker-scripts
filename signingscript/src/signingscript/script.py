@@ -91,7 +91,6 @@ def get_default_config(base_dir=None):
     default_config = {
         "work_dir": os.path.join(base_dir, "work_dir"),
         "artifact_dir": os.path.join(base_dir, "/src/signing/artifact_dir"),
-        "my_ip": "127.0.0.1",
         "schema_file": os.path.join(os.path.dirname(__file__), "data", "signing_task_schema.json"),
         "verbose": True,
         "dmg": "dmg",

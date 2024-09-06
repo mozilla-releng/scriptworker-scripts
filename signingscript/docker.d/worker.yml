@@ -1,7 +1,6 @@
 work_dir: { "$eval": "WORK_DIR" }
 artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
-my_ip: { "$eval": "PUBLIC_IP" }
 autograph_configs: { "$eval": "PASSWORDS_PATH" }
 apple_notarization_configs: { "$eval": "APPLE_NOTARIZATION_CREDS_PATH" }
 taskcluster_scope_prefixes:
