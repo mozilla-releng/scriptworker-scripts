@@ -3,7 +3,6 @@
     "type": "object",
     "required": [
         "taskcluster_scope_prefixes",
-        "my_ip",
         "autograph_configs"
     ],
     "properties": {
@@ -14,9 +13,6 @@
             "items": {
                 "type": "string"
             }
-        },
-        "my_ip": {
-            "type": "string"
         },
         "autograph_configs": {
             "type": "string"
