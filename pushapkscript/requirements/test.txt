@@ -6,9 +6,9 @@
 #    pip-compile-multi
 #
 -r base.txt
-build==1.2.1 \
-    --hash=sha256:526263f4870c26f26c433545579475377b2b7588b6f1eac76a001e873ae3e19d \
-    --hash=sha256:75e10f767a433d9a86e50d83f418e83efc18ede923ee5ff7df93b6cb0306c5d4
+build==1.2.2 \
+    --hash=sha256:119b2fb462adef986483438377a13b2f42064a2a3a4161f24a0cca698a07ac8c \
+    --hash=sha256:277ccc71619d98afdd841a0e96ac9fe1593b823af481d3b0cea748e8894e0613
     # via
     #   check-manifest
     #   pip-tools
@@ -114,9 +114,9 @@ pyproject-hooks==1.1.0 \
     # via
     #   build
     #   pip-tools
-pytest==8.3.2 \
-    --hash=sha256:4ba08f9ae7dcf84ded419494d229b48d0903ea6407b030eaec46df5e6a73bba5 \
-    --hash=sha256:c132345d12ce551242c87269de812483f5bcc87cdbb4722e48487ba194f9fdce
+pytest==8.3.3 \
+    --hash=sha256:70b98107bd648308a7952b06e6ca9a50bc660be218d53c257cc1fc94fda10181 \
+    --hash=sha256:a6853c7375b2663155079443d2e45de913a911a11d669df02a50814944db57b2
     # via
     #   -r requirements/test.in
     #   pytest-asyncio
