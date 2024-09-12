@@ -18,7 +18,6 @@ test_var_set 'CONFIG_DIR'
 test_var_set 'CONFIG_LOADER'
 test_var_set 'COT_PRODUCT'
 test_var_set 'PROJECT_NAME'
-test_var_set 'PUBLIC_IP'
 test_var_set 'TEMPLATE_DIR'
 
 export DMG_PATH=$APP_DIR/signingscript/files/dmg
