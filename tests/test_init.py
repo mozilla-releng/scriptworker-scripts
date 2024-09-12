@@ -82,7 +82,6 @@ CONTEXT = {
         "CLIENT_SECRET": "Zm9vYmFyCg==",
     },
     re.compile(r"signing:.*"): {
-        "PUBLIC_IP": "127.0.0.1",
         "WIDEVINE_CERT": "Zm9vYmFyCg==",
         "AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD": "1",
         "AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME": "1",
