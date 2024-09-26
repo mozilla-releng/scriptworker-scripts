@@ -694,12 +694,27 @@ async def test_zipfile_append_write(context):
 
 # tarfile {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("path,compression", ((os.path.join(TEST_DATA_DIR, "test.tar.bz2"), "bz2"), (os.path.join(TEST_DATA_DIR, "test.tar.gz"), "gz")))
+@pytest.mark.parametrize(
+    "path,compression",
+    (
+        (os.path.join(TEST_DATA_DIR, "test.tar.bz2"), "bz2"),
+        (os.path.join(TEST_DATA_DIR, "test.tar.gz"), "gz"),
+        (os.path.join(TEST_DATA_DIR, "test.tar.xz"), "xz"),
+    ),
+)
 async def test_get_tarfile_files(path, compression):
     assert sorted(await sign._get_tarfile_files(path, compression)) == ["./a", "./b", "./c/d", "./c/e/f"]
 
 
-@pytest.mark.parametrize("compression,expected,raises", ((".gz", "gz", False), ("bz2", "bz2", False), ("superstrong_compression!!!", None, True)))
+@pytest.mark.parametrize(
+    "compression,expected,raises",
+    (
+        (".gz", "gz", False),
+        ("bz2", "bz2", False),
+        (".xz", "xz", False),
+        ("superstrong_compression!!!", None, True),
+    ),
+)
 def test_get_tarfile_compression(compression, expected, raises):
     if raises:
         with pytest.raises(SigningScriptError):
