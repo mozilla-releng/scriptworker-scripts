@@ -9,6 +9,7 @@ import glob
 import hashlib
 import json
 import logging
+import lzma
 import os
 import re
 import resource
@@ -250,7 +251,12 @@ async def sign_widevine(context, orig_path, fmt, **kwargs):
     if file_extension == ".dmg":
         await _convert_dmg_to_tar_gz(context, orig_path)
         orig_path = "{}.tar.gz".format(file_base)
-    ext_to_fn = {".zip": sign_widevine_zip, ".tar.bz2": sign_widevine_tar, ".tar.gz": sign_widevine_tar}
+    ext_to_fn = {
+        ".zip": sign_widevine_zip,
+        ".tar.bz2": sign_widevine_tar,
+        ".tar.gz": sign_widevine_tar,
+        ".tar.xz": sign_widevine_tar,
+    }
     for ext, signing_func in ext_to_fn.items():
         if orig_path.endswith(ext):
             return await signing_func(context, orig_path, fmt)
@@ -383,7 +389,12 @@ async def sign_omnija(context, orig_path, fmt, **kwargs):
     if file_extension == ".dmg":
         await _convert_dmg_to_tar_gz(context, orig_path)
         orig_path = "{}.tar.gz".format(file_base)
-    ext_to_fn = {".zip": sign_omnija_zip, ".tar.bz2": sign_omnija_tar, ".tar.gz": sign_omnija_tar}
+    ext_to_fn = {
+        ".zip": sign_omnija_zip,
+        ".tar.bz2": sign_omnija_tar,
+        ".tar.gz": sign_omnija_tar,
+        ".tar.xz": sign_omnija_tar,
+    }
     for ext, signing_func in ext_to_fn.items():
         if orig_path.endswith(ext):
             return await signing_func(context, orig_path, fmt)
@@ -687,7 +698,8 @@ async def _create_zipfile(context, to, files, tmp_dir=None, mode="w"):
 # _get_tarfile_compression {{{1
 def _get_tarfile_compression(compression):
     compression = compression.lstrip(".")
-    if compression not in ("bz2", "gz"):
+    # All compression formats accepted by tarfile module
+    if compression not in ("bz2", "gz", "xz"):
         raise SigningScriptError("{} not a supported tarfile compression format!".format(compression))
     return compression
 
@@ -731,6 +743,18 @@ def _owner_filter(tarinfo_obj):
     return tarinfo_obj
 
 
+def _create_xz_tarfile(to, files, rel_dir):
+    """Creates an xz tarball with max compression"""
+    filters = [
+        {"id": lzma.FILTER_LZMA2, "preset": 9 | lzma.PRESET_EXTREME},
+    ]
+    with lzma.open(to, "wb", filters=filters) as dest, tarfile.open(mode="w|", fileobj=dest) as tf:
+        for f in files:
+            relpath = os.path.relpath(f, rel_dir)
+            tf.add(f, arcname=relpath, filter=_owner_filter)
+    return to
+
+
 # _create_tarfile {{{1
 @time_async_function
 async def _create_tarfile(context, to, files, compression, tmp_dir=None):
@@ -739,6 +763,9 @@ async def _create_tarfile(context, to, files, compression, tmp_dir=None):
     compression = _get_tarfile_compression(compression)
     try:
         log.info("Creating tarfile {}...".format(to))
+        if compression == "xz":
+            return _create_xz_tarfile(to, files, tmp_dir)
+
         with tarfile.open(to, mode="w:{}".format(compression)) as t:
             for f in files:
                 relpath = os.path.relpath(f, tmp_dir)
