@@ -16,7 +16,6 @@ import requests
 from mozpack import mozjar
 from requests_hawk import HawkAuth
 
-from iscript.createprecomplete import generate_precomplete
 from iscript.exceptions import IScriptError
 from scriptworker_client.aio import raise_future_exceptions, retry_async
 from scriptworker_client.utils import makedirs, rm
@@ -101,9 +100,9 @@ async def sign_widevine_dir(config, sign_config, app_dir):
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(app_dir, all_files)
-        # Regenerate the `precomplete` file, which is used for cleanup before
+        # Update the `precomplete` file, which is used for cleanup before
         # applying a complete mar.
-        _run_generate_precomplete(config, app_dir)
+        _update_precomplete(config, app_dir)
     return app_dir
 
 
@@ -143,16 +142,26 @@ def _get_widevine_signing_files(file_list):
     return files
 
 
-# _run_generate_precomplete {{{1
-def _run_generate_precomplete(config, app_dir):
+# _update_precomplete {{{1
+def _update_precomplete(config, app_dir):
     """Regenerate `precomplete` file with widevine sig paths for complete mar."""
     log.info("Generating `precomplete` file...")
-    path = _ensure_one_precomplete(app_dir, "before")
-    with open(path, "r") as fh:
+    precomplete = _ensure_one_precomplete(app_dir)
+    with open(precomplete, "r") as fh:
         before = fh.readlines()
-    generate_precomplete(os.path.dirname(path))
-    path = _ensure_one_precomplete(app_dir, "after")
-    with open(path, "r") as fh:
+    with open(precomplete, "w") as fh:
+        for line in before:
+            fh.write(line)
+            instr, path = line.strip().split(None, 1)
+            if instr != "remove":
+                continue
+            if not path or path[0] != '"' or path[-1] != '"':
+                continue
+            file = path[1:-1]
+            if _get_widevine_signing_files([file]):
+                sigfile = _get_mac_sigpath(file)
+                fh.write('remove "{}"\n'.format(sigfile))
+    with open(precomplete, "r") as fh:
         after = fh.readlines()
     # Create diff file
     makedirs(os.path.join(config["artifact_dir"], "public", "logs"))
@@ -163,13 +172,13 @@ def _run_generate_precomplete(config, app_dir):
 
 
 # _ensure_one_precomplete {{{1
-def _ensure_one_precomplete(tmp_dir, adj):
+def _ensure_one_precomplete(tmp_dir):
     """Ensure we only have one `precomplete` file in `tmp_dir`."""
     precompletes = glob.glob(os.path.join(tmp_dir, "**", "precomplete"), recursive=True)
     if len(precompletes) < 1:
         raise IScriptError('No `precomplete` file found in "%s"', tmp_dir)
     if len(precompletes) > 1:
-        raise IScriptError('More than one `precomplete` file %s in "%s"', adj, tmp_dir)
+        raise IScriptError('More than one `precomplete` file in "%s"', tmp_dir)
     return precompletes[0]
 
 
