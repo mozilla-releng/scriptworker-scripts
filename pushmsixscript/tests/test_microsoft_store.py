@@ -4,9 +4,9 @@ from unittest.mock import patch
 import pytest
 import requests
 import requests_mock
-from scriptworker_client.exceptions import TaskVerificationError
 
 from pushmsixscript import microsoft_store
+from scriptworker_client.exceptions import TaskVerificationError, TimeoutError
 
 CONFIG = {
     "push_to_store": True,
@@ -549,6 +549,28 @@ def test_get_submission_status(status_code, raises, mocked_response, exc):
                 if mocked_response.get("status") != "CommitStarted":
                     status = microsoft_store._wait_for_commit_completion(CONFIG, channel, session, submission_id, headers)
                     assert status
+
+
+@pytest.mark.parametrize(
+    "submission_response, raises, exc",
+    (
+        # TODO: Confirm the status for a complete submission
+        ({"status": "Complete"}, False, None),
+        # Max polling attempts
+        ({"status": "CommitStarted"}, True, TimeoutError),
+        # Failed
+        ({"status": "Failed"}, True, TaskVerificationError),
+    ),
+)
+def test_wait_for_commit_completion(monkeypatch, submission_response, raises, exc):
+    monkeypatch.setattr(microsoft_store, "_get_submission_status", lambda *x: submission_response)
+    # Make sure we don't wait between attempts
+    monkeypatch.setattr(microsoft_store, "COMMIT_POLL_WAIT_SECONDS", 0)
+    if raises:
+        with pytest.raises(exc):
+            microsoft_store._wait_for_commit_completion({}, "channel", {}, "id", {})
+    else:
+        microsoft_store._wait_for_commit_completion({}, "channel", {}, "id", {})
 
 
 @pytest.mark.parametrize(

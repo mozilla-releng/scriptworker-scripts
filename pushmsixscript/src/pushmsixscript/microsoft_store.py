@@ -11,13 +11,13 @@ import requests
 from azure.storage.blob import BlobClient
 
 from pushmsixscript import task
-from scriptworker_client.exceptions import TaskVerificationError
+from scriptworker_client.exceptions import TaskVerificationError, TimeoutError
 
 log = logging.getLogger(__name__)
 
 # When committing a new submission, poll for completion, with
 # this many attempts, waiting this long between attempts.
-COMMIT_POLL_MAX_ATTEMPTS = 10
+COMMIT_POLL_MAX_ATTEMPTS = 40
 COMMIT_POLL_WAIT_SECONDS = 30
 # Max requests retries
 MAX_RETRIES = 5
@@ -270,10 +270,19 @@ def _get_submission_status(config, channel, session, submission_id, headers):
 def _wait_for_commit_completion(config, channel, session, submission_id, headers):
     # pull submission status until commit process is completed
     response_json = _get_submission_status(config, channel, session, submission_id, headers)
+    log.info(response_json.get("status"))
     attempts = 1
+    # TODO: Confirm what the status is for a complete submission!
     while response_json.get("status") == "CommitStarted":
         if attempts > COMMIT_POLL_MAX_ATTEMPTS:
-            return False
+            log.error(
+                "This task reached the max polling attempts for a submission and may "
+                "have left a pending submission in the Store. "
+                "It may be possible to edit it and submit it manually from the Partner "
+                "Center. Otherwise, try deleting the pending submission and retry this "
+                "task."
+            )
+            raise TimeoutError("push to Store failed on polling commits")
         attempts += 1
         time.sleep(COMMIT_POLL_WAIT_SECONDS)
         response_json = _get_submission_status(config, channel, session, submission_id, headers)
