@@ -11,7 +11,7 @@ import requests
 from azure.storage.blob import BlobClient
 
 from pushmsixscript import task
-from scriptworker_client.exceptions import TaskVerificationError, TimeoutError
+from scriptworker_client.exceptions import TaskError, TimeoutError
 
 log = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ def push(config, msix_file_paths, channel, publish_mode=None):
     if access_token:
         _push_to_store(config, channel, msix_file_paths, publish_mode, access_token)
     else:
-        raise TaskVerificationError("unable to push: missing access token")
+        raise TaskError("unable to push: missing access token")
 
 
 def _store_url(config, tail):
@@ -141,7 +141,7 @@ def _check_for_pending_submission(config, channel, session, headers):
             "the Microsoft Store. Wait for the pending submission to "
             "complete, or delete the pending submission. Then retry this task."
         )
-        raise TaskVerificationError("push to Store aborted: pending submission found")
+        raise TaskError("push to Store aborted: pending submission found")
 
 
 def _create_submission(config, channel, session, headers):
@@ -294,5 +294,5 @@ def _wait_for_commit_completion(config, channel, session, submission_id, headers
             "Center. Otherwise, try deleting the pending submission and retry this "
             "task."
         )
-        raise TaskVerificationError("push to Store failed on commit")
+        raise TaskError("push to Store failed on commit")
     return True
