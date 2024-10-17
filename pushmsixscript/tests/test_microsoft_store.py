@@ -6,7 +6,7 @@ import requests
 import requests_mock
 
 from pushmsixscript import microsoft_store
-from scriptworker_client.exceptions import TaskVerificationError, TimeoutError
+from scriptworker_client.exceptions import TaskError, TimeoutError
 
 CONFIG = {
     "push_to_store": True,
@@ -50,7 +50,7 @@ def test_store_session(status_code, raises):
 @pytest.mark.parametrize(
     "status_code, pending, raises, exc",
     (
-        (200, True, True, TaskVerificationError),
+        (200, True, True, TaskError),
         (200, False, False, None),
         (404, False, True, requests.exceptions.HTTPError),
         (503, False, True, requests.exceptions.HTTPError),
@@ -523,7 +523,7 @@ def test_commit_submission(status_code, raises):
     (
         (200, False, {"status": "CommitStarted"}, None),
         (200, False, {"status": "Done"}, None),
-        (200, True, {"status": "CommitFailed"}, TaskVerificationError),
+        (200, True, {"status": "CommitFailed"}, TaskError),
         (404, True, {}, requests.exceptions.HTTPError),
         (503, True, {}, requests.exceptions.HTTPError),
     ),
@@ -538,7 +538,7 @@ def test_get_submission_status(status_code, raises, mocked_response, exc):
             url = microsoft_store._store_url(CONFIG, f"{application_id}/submissions/{submission_id}/status")
             m.get(url, headers=headers, json=mocked_response, status_code=status_code)
             if raises:
-                if exc != TaskVerificationError:
+                if exc != TaskError:
                     with pytest.raises(exc):
                         status = microsoft_store._get_submission_status(CONFIG, channel, session, submission_id, headers)
                 with pytest.raises(exc):
@@ -559,7 +559,7 @@ def test_get_submission_status(status_code, raises, mocked_response, exc):
         # Max polling attempts
         ({"status": "CommitStarted"}, True, TimeoutError),
         # Failed
-        ({"status": "Failed"}, True, TaskVerificationError),
+        ({"status": "Failed"}, True, TaskError),
     ),
 )
 def test_wait_for_commit_completion(monkeypatch, submission_response, raises, exc):
