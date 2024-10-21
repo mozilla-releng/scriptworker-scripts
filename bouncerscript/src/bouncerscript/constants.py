@@ -66,38 +66,38 @@ PARTNER_ALIASES_REGEX = {
 PRODUCT_TO_DESTINATIONS_REGEXES = {
     "firefox-rc": (
         r"^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox)"
-        r".*\.(?:bz2|dmg|exe|mar))$"
+        r".*\.(?:bz2|xz|dmg|exe|mar))$"
     ),
     "firefox": (
         r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:(?:\:lang|multi)/(?:firefox|Firefox)"
-        r".*\.(?:bz2|dmg|exe|mar|msi|msix|pkg)|xpi/:lang.xpi))$"
+        r".*\.(?:bz2|xz|dmg|exe|mar|msi|msix|pkg)|xpi/:lang.xpi))$"
     ),
     "devedition": (
         r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox)"
-        r".*\.(?:bz2|dmg|exe|mar|msi|msix))$"
+        r".*\.(?:bz2|xz|dmg|exe|mar|msi|msix))$"
     ),
     "thunderbird": (
         r"^(/thunderbird/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/"
-        r"(?:thunderbird|Thunderbird).*\.(?:bz2|dmg|exe|mar|msi|msix))$"
+        r"(?:thunderbird|Thunderbird).*\.(?:bz2|xz|dmg|exe|mar|msi|msix))$"
     ),
 }
 
 _BOUNCER_PATH_REGEXES_PER_PRODUCT_DEFAULT = {
     "firefox-nightly-latest": (
         r"^(/firefox/nightly/latest-(mozilla-central|try)-l10n/firefox-\d+\.0a1\.:lang\."
-        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|linux-aarch64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
+        r"(?:linux-i686\.tar\.(bz2|xz)|linux-x86_64\.tar\.(bz2|xz)|linux-aarch64\.tar\.(bz2|xz)|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "firefox-nightly-latest-ssl": (
         r"^(/firefox/nightly/latest-(mozilla-central|try)/firefox-\d+\.0a1\.en-US\."
-        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|linux-aarch64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
+        r"(?:linux-i686\.tar\.(bz2|xz)|linux-x86_64\.tar\.(bz2|xz)|linux-aarch64\.tar\.(bz2|xz)|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "firefox-nightly-latest-l10n": (
         r"^(/firefox/nightly/latest-(mozilla-central|try)-l10n/firefox-\d+\.0a1\.:lang\."
-        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|linux-aarch64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
+        r"(?:linux-i686\.tar\.(bz2|xz)|linux-x86_64\.tar\.(bz2|xz)|linux-aarch64\.tar\.(bz2|xz)|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "firefox-nightly-latest-l10n-ssl": (
         r"^(/firefox/nightly/latest-(mozilla-central|try)-l10n/firefox-\d+\.0a1\.:lang\."
-        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|linux-aarch64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
+        r"(?:linux-i686\.tar\.(bz2|xz)|linux-x86_64\.tar\.(bz2|xz)|linux-aarch64\.tar\.(bz2|xz)|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
 }
 
@@ -122,19 +122,19 @@ _BOUNCER_PATH_REGEXES_PER_ALTERNATIVE_PACKAGE_FORMAT_WITH_MSIX = {
 _BOUNCER_PATH_REGEXES_PRODUCT_THUNDERBIRD = {
     "thunderbird-nightly-latest": (
         r"^(/thunderbird/nightly/latest-comm-central/thunderbird-\d+\.0a1\.en-US\."
-        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
+        r"(?:linux-i686\.tar\.(bz2|xz)|linux-x86_64\.tar\.(bz2|xz)|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "thunderbird-nightly-latest-ssl": (
         r"^(/thunderbird/nightly/latest-comm-central/thunderbird-\d+\.0a1\.en-US\."
-        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
+        r"(?:linux-i686\.tar\.(bz2|xz)|linux-x86_64\.tar\.(bz2|xz)|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "thunderbird-nightly-latest-l10n": (
         r"^(/thunderbird/nightly/latest-comm-central-l10n/thunderbird-\d+\.0a1\.:lang\."
-        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
+        r"(?:linux-i686\.tar\.(bz2|xz)|linux-x86_64\.tar\.(bz2|xz)|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "thunderbird-nightly-latest-l10n-ssl": (
         r"^(/thunderbird/nightly/latest-comm-central-l10n/thunderbird-\d+\.0a1\.:lang\."
-        r"(?:linux-i686\.tar\.bz2|linux-x86_64\.tar\.bz2|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
+        r"(?:linux-i686\.tar\.(bz2|xz)|linux-x86_64\.tar\.(bz2|xz)|mac\.dmg|win32\.installer\.exe|win64\.installer\.exe|win64-aarch64\.installer\.exe))$"
     ),
     "thunderbird-nightly-msi-latest-ssl": (
         r"^(/thunderbird/nightly/latest-comm-central/thunderbird-\d+\.0a1\.en-US\." r"(?:win32\.installer\.msi|win64(?:|-aarch64)\.installer\.msi))$"
