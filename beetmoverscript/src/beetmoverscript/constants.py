@@ -27,6 +27,7 @@ MIME_MAP = {
     ".sig": "application/octet-stream",
     ".snap": "application/octet-stream",
     ".xpi": "application/x-xpinstall",
+    ".xz": "application/x-xz",
 }
 
 STAGE_PLATFORM_MAP = {
@@ -135,4 +136,4 @@ CHECKSUMS_CUSTOM_FILE_NAMING = {"beetmover-source": "-source", "release-beetmove
 BUILDHUB_ARTIFACT = "buildhub.json"
 
 # the installer artifact for each platform
-INSTALLER_ARTIFACTS = ("target.tar.bz2", "target.installer.exe", "target.dmg", "target.apk")
+INSTALLER_ARTIFACTS = ("target.tar.bz2", "target.tar.xz", "target.installer.exe", "target.dmg", "target.apk")

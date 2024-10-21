@@ -525,6 +525,13 @@ async def test_move_partner_beets(context, mocker):
             False,
             "partner-repacks/ghost/ghost-variant/v1/linux-i686/en-US",
         ),
+        (
+            "releng/partner/ghost/ghost-variant/en-US/target.tar.xz",
+            "pub/firefox/candidates/9999.0-candidates/build99/partner-repacks/ghost/ghost-variant/v1/linux-i686/en-US/firefox-9999.0.tar.xz",
+            "dep",
+            False,
+            "partner-repacks/ghost/ghost-variant/v1/linux-i686/en-US",
+        ),
     ),
 )
 def test_get_destination_for_partner_repack_path(context, full_path, expected, bucket, raises, locale):

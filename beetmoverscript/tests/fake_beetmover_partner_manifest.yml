@@ -8,6 +8,8 @@ mapping:
     {{ 'en-US' }}:
         target.tar.bz2: firefox-{{ version }}.tar.bz2
         target.tar.bz2.asc: firefox-{{ version }}.tar.bz2.asc
+        target.tar.xz: firefox-{{ version }}.tar.xz
+        target.tar.xz.asc: firefox-{{ version }}.tar.xz.asc
         target.installer.exe: Firefox Setup {{ version }}.exe
         target.installer.exe.asc: Firefox Setup {{ version }}.exe.asc
         target.dmg: Firefox {{ version }}.dmg
