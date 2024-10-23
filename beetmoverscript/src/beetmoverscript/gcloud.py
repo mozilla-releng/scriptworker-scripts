@@ -252,4 +252,6 @@ def move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, release
             # https://cloud.google.com/storage/docs/json_api/v1/objects/rewrite#request-body
             dest_blob._properties["name"] = destination
             dest_blob._properties["bucket"] = bucket.name
+            dest_blob.content_type = source_blob.content_type
+            dest_blob.cache_control = source_blob.cache_control
             dest_blob.rewrite(source=source_blob, retry=DEFAULT_RETRY)
