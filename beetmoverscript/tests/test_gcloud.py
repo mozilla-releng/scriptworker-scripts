@@ -236,6 +236,8 @@ def test_list_bucket_objects_gcs():
 
 def test_move_artifacts_removing_custom_time(monkeypatch):
     source_blob = FakeClient.FakeBlob()
+    source_blob.content_type = "application/x-xz"
+    source_blob.cache_control = "public, max-age=100"
     dest_blob = FakeClient.FakeBlob()
     dest_blob.rewrite = MagicMock()
     bucket = FakeClient.FakeBucket(FakeClient, "foo")
@@ -253,6 +255,8 @@ def test_move_artifacts_removing_custom_time(monkeypatch):
     # Setting name and bucket makes blob.rewrite remove any metadata from the source object
     assert dest_blob._properties.get("name") == "destination/path"
     assert dest_blob._properties.get("bucket") == bucket.name
+    assert dest_blob.content_type == "application/x-xz"
+    assert dest_blob.cache_control == "public, max-age=100"
     dest_blob.rewrite.assert_called_with(source=source_blob, retry=beetmoverscript.gcloud.DEFAULT_RETRY)
 
 
