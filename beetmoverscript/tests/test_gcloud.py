@@ -55,6 +55,9 @@ class FakeClient:
         def blob(*args):
             return FakeClient.FakeBlob()
 
+        def get_blob(*args):
+            return FakeClient.FakeBlob()
+
         def copy_blob(*args, **kwargs):
             pass
 
@@ -242,7 +245,9 @@ def test_move_artifacts_removing_custom_time(monkeypatch):
     dest_blob.rewrite = MagicMock()
     bucket = FakeClient.FakeBucket(FakeClient, "foo")
     bucket.blob = MagicMock()
-    bucket.blob.side_effect = [source_blob, dest_blob]
+    bucket.blob.side_effect = [dest_blob]
+    bucket.get_blob = MagicMock()
+    bucket.get_blob.side_effect = [source_blob]
 
     monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", lambda x, y: bucket)
     beetmoverscript.gcloud.move_artifacts(
