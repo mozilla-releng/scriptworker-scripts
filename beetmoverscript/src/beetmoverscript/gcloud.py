@@ -245,11 +245,13 @@ def move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, release
                 log.warning("{} already exists with the same content ({}), " "skipping copy".format(destination, releases_blobs[destination]))
         else:
             log.info("Copying {} to {}".format(source, destination))
-            source_blob = bucket.blob(source)
+            source_blob = bucket.get_blob(source)
             dest_blob = bucket.blob(destination)
             # We need to set the data payload with some information so the metadata is NOT copied over.
             # This prevents custom_time metadata from being copied unintentionally
             # https://cloud.google.com/storage/docs/json_api/v1/objects/rewrite#request-body
             dest_blob._properties["name"] = destination
             dest_blob._properties["bucket"] = bucket.name
+            dest_blob.content_type = source_blob.content_type
+            dest_blob.cache_control = source_blob.cache_control
             dest_blob.rewrite(source=source_blob, retry=DEFAULT_RETRY)
