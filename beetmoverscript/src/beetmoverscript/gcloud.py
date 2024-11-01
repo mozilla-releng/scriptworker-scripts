@@ -175,6 +175,7 @@ async def import_from_gcs_to_artifact_registry(context):
     result = await async_operation.result()
     if len(result.errors) != 0:
         log.error(result.errors)
+        raise Exception("Got error(s) trying to import artifacts: {}", result.errors)
     else:
         log.info(result)
 
