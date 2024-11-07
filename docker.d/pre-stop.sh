@@ -15,7 +15,7 @@ case ${PROJECT_NAME} in
     bitrise)
         POLL_DURATION=7080 # 118 minutes
         ;;
-    tree|signing)
+    tree|signing|pushmsix)
         POLL_DURATION=3480 # 58 minutes
         ;;
     beetmover)
