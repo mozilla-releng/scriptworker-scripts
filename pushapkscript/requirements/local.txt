@@ -10,9 +10,9 @@ chardet==5.2.0 \
     --hash=sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7 \
     --hash=sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970
     # via tox
-distlib==0.3.8 \
-    --hash=sha256:034db59a0b96f8ca18035f36290806a9a6e6bd9d1ff91e45a7f172eb17e51784 \
-    --hash=sha256:1530ea13e350031b6312d8580ddb6b27a104275a31106523b8f123787f494f64
+distlib==0.3.9 \
+    --hash=sha256:47f8c22fd27c27e25a65601af709b38e4f0a45ea4fc2e710f65755fa8caaaf87 \
+    --hash=sha256:a60f20dea646b8a33f3e7772f74dc0b2d0772d2837ee1342a00645c81edf9403
     # via virtualenv
 filelock==3.16.1 \
     --hash=sha256:2082e5703d51fbf98ea75855d9d5527e33d8ff23099bec374a134febee6946b0 \
@@ -30,13 +30,13 @@ pyproject-api==1.8.0 \
     --hash=sha256:3d7d347a047afe796fd5d1885b1e391ba29be7169bd2f102fcd378f04273d228 \
     --hash=sha256:77b8049f2feb5d33eefcc21b57f1e279636277a8ac8ad6b5871037b243778496
     # via tox
-tox==4.20.0 \
-    --hash=sha256:21a8005e3d3fe5658a8e36b8ca3ed13a4230429063c5cc2a2fdac6ee5aa0de34 \
-    --hash=sha256:5b78a49b6eaaeab3ae4186415e7c97d524f762ae967c63562687c3e5f0ec23d5
+tox==4.23.2 \
+    --hash=sha256:452bc32bb031f2282881a2118923176445bac783ab97c874b8770ab4c3b76c38 \
+    --hash=sha256:86075e00e555df6e82e74cfc333917f91ecb47ffbc868dcafbd2672e332f4a2c
     # via -r requirements/local.in
-virtualenv==20.26.5 \
-    --hash=sha256:4f3ac17b81fba3ce3bd6f4ead2749a72da5929c01774948e243db9ba41df4ff6 \
-    --hash=sha256:ce489cac131aa58f4b25e321d6d186171f78e6cb13fafbf32a840cee67733ff4
+virtualenv==20.27.1 \
+    --hash=sha256:142c6be10212543b32c6c45d3d3893dff89112cc588b7d0879ae5a1ec03a47ba \
+    --hash=sha256:f11f1b8a29525562925f745563bfd48b189450f61fb34c4f9cc79dd5aa32a1f4
     # via tox
 
 # WARNING: The following packages were not pinned, but pip requires them to be
