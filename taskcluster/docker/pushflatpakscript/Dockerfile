@@ -26,7 +26,7 @@ RUN cp -R /app/pushflatpakscript/docker.d/* /app/docker.d/ \
  && python -m venv /app/flat_manager_venv \
  && /app/flat_manager_venv/bin/pip install --no-deps -r /app/pushflatpakscript/requirements/flat-manager.txt \
  && curl -Ls \
-    https://github.com/flatpak/flat-manager/raw/d9d7972b24de6022c7079f8721fd8335c3319dc5/flat-manager-client | \
+    https://github.com/flatpak/flat-manager/raw/100d44f761ba765552d2a799b5b7254b6a8b1e38/flat-manager-client | \
     sed -e '1i#!/app/flat_manager_venv/bin/python' -e '1d' > /app/flat_manager_venv/bin/flat-manager-client \
  && chmod 755 /app/flat_manager_venv/bin/flat-manager-client \
- && echo "5024c853d7529e82fc4a9fb9b982e561598df033545187238c9be8c791a6797c /app/flat_manager_venv/bin/flat-manager-client" | sha256sum -c
+ && echo "2e55c0d3797f948b5b2eb86b897d42ce318b829749a23b903d8a9ed7b3bcea59 /app/flat_manager_venv/bin/flat-manager-client" | sha256sum -c

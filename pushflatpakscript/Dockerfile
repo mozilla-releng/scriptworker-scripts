@@ -23,10 +23,10 @@ RUN python -m venv /app \
  && python -m venv /app/flat_manager_venv \
  && /app/flat_manager_venv/bin/pip install --no-deps -r /app/pushflatpakscript/requirements/flat-manager.txt \
  && curl -Ls \
-    https://github.com/flatpak/flat-manager/raw/13841c5a6667d6ab9d0849523c9e49ad5f34dda8/flat-manager-client | \
+    https://github.com/flatpak/flat-manager/raw/100d44f761ba765552d2a799b5b7254b6a8b1e38/flat-manager-client | \
     sed -e '1i#!/app/flat_manager_venv/bin/python' -e '1d' > /app/flat_manager_venv/bin/flat-manager-client \
  && chmod 755 /app/flat_manager_venv/bin/flat-manager-client \
- && echo "e246baafc6311b2c867af6838b1eaf0869643032143caab1ec4bf59ed7e9c79a /app/flat_manager_venv/bin/flat-manager-client" | sha256sum -c \
+ && echo "2e55c0d3797f948b5b2eb86b897d42ce318b829749a23b903d8a9ed7b3bcea59 /app/flat_manager_venv/bin/flat-manager-client" | sha256sum -c \
  && cd /app
 
 
