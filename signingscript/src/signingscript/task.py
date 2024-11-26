@@ -30,6 +30,7 @@ from signingscript.sign import (
     sign_widevine,
     sign_xpi,
 )
+from signingscript.utils import split_autograph_format
 
 log = logging.getLogger(__name__)
 
@@ -39,8 +40,6 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "autograph_hash_only_mar384": sign_mar384_with_autograph_hash,
         "autograph_stage_mar384": sign_mar384_with_autograph_hash,
         "autograph_gpg": sign_gpg_with_autograph,
-        "macapp": sign_macapp,
-        "widevine": sign_widevine,
         "autograph_debsign": sign_debian_pkg,
         "autograph_widevine": sign_widevine,
         "autograph_omnija": sign_omnija,
@@ -54,8 +53,10 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "privileged_webextension": sign_xpi,
         "system_addon": sign_xpi,
         "autograph_rsa": sign_file_detached,
+        "widevine": sign_widevine,
         "apple_notarization": apple_notarize,
         "apple_notarization_geckodriver": apple_notarize_geckodriver,
+        "macapp": sign_macapp,
         # This format is handled in script.py
         # Should be refactored in https://github.com/mozilla-releng/scriptworker-scripts/issues/980
         # "apple_notarization_stacked": apple_notarize_stacked,
@@ -163,10 +164,17 @@ async def sign(context, path, signing_formats, **kwargs):
     return output
 
 
-def _get_signing_function_from_format(fmt):
-    if fmt.startswith("autograph_xpi"):
+def _get_signing_function_from_format(fmt_and_key_id):
+    fmt, _ = split_autograph_format(fmt_and_key_id)
+
+    if fmt.startswith(("autograph_xpi", "stage_autograph_xpi")):
         return sign_xpi
-    return FORMAT_TO_SIGNING_FUNCTION.get(fmt.split(":")[0], FORMAT_TO_SIGNING_FUNCTION["default"])
+    if fn := FORMAT_TO_SIGNING_FUNCTION.get(fmt):
+        return fn
+    if fn := FORMAT_TO_SIGNING_FUNCTION.get(fmt.removeprefix("stage_")):
+        return fn
+
+    return FORMAT_TO_SIGNING_FUNCTION["default"]
 
 
 # _sort_formats {{{1
@@ -185,7 +193,7 @@ def _sort_formats(formats):
     """
     # Widevine formats must be after other formats other than macapp; GPG must
     # be last.
-    for fmt in ("widevine", "autograph_widevine", "autograph_omnija", "macapp", "autograph_rsa", "autograph_gpg"):
+    for fmt in ("widevine", "autograph_widevine", "stage_autograph_widevine", "autograph_omnija", "stage_autograph_omnija", "macapp", "autograph_rsa", "stage_autograph_rsa", "autograph_gpg", "stage_autograph_gpg"):
         if fmt in formats:
             formats.remove(fmt)
             formats.append(fmt)

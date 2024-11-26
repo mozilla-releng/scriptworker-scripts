@@ -84,6 +84,8 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
 _DEFAULT_MAR_VERIFY_KEYS = {
     "autograph_stage_mar384": {"dep-signing": "autograph_stage.pem"},
     "autograph_hash_only_mar384": {"release-signing": "release_primary.pem", "nightly-signing": "nightly_aurora_level3_primary.pem", "dep-signing": "dep1.pem"},
+    "stage_autograph_stage_mar384": {"dep-signing": "autograph_stage.pem"},
+    "stage_autograph_hash_only_mar384": {"release-signing": "release_primary.pem", "nightly-signing": "nightly_aurora_level3_primary.pem", "dep-signing": "dep1.pem"},
 }
 
 # Langpacks expect the following re to match for addon id
@@ -924,9 +926,9 @@ def b64encode(input_bytes):
 def _is_xpi_format(fmt):
     if "omnija" in fmt or "langpack" in fmt:
         return True
-    if fmt in ("privileged_webextension", "system_addon"):
+    if fmt in ("privileged_webextension", "system_addon", "stage_privileged_webextension", "stage_system_addon"):
         return True
-    if fmt.startswith("autograph_xpi"):
+    if fmt.startswith(("autograph_xpi", "stage_autograph_xpi")):
         return True
     return False
 
