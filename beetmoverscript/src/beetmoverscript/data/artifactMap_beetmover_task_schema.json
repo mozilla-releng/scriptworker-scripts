@@ -102,25 +102,28 @@
                             },
                             "paths": {
                                 "type": "object",
-                                "minItems": 1,
-                                "uniqueItems": true,
-                                "properties": {
-                                    "destinations": {
-                                        "type": "array",
-                                        "minItems": 1,
-                                        "items": {
+                                "additionalProperties": {
+                                    "type": "object",
+                                    "properties": {
+                                        "destinations": {
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "checksums_path": {
                                             "type": "string"
+                                        },
+                                        "expiry": {
+                                            "type": "string",
+                                            "format": "date-time"
                                         }
                                     },
-                                    "checksums_path": {
-                                        "type": "string"
-                                    },
-                                    "expiry": {
-                                        "type": "object",
-                                        "additionalProperties": {
-                                            "type": "string"
-                                        }
-                                    }
+                                    "required": [
+                                        "destinations",
+                                        "checksums_path"
+                                    ]
                                 }
                             }
                         },

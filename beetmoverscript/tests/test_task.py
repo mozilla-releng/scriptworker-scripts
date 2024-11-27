@@ -96,6 +96,17 @@ def test_validate_task(context):
     validate_task_schema(context)
 
 
+def test_validate_task_invalid(context):
+    context.task = get_fake_valid_task(taskjson="task_artifact_map.json")
+    context.task["scopes"] = ["project:releng:beetmover:action:direct-push-to-bucket"]
+    validate_task_schema(context)
+
+    # expiry should be a date-time string
+    context.task["payload"]["artifactMap"][0]["paths"]["target.apk"]["expiry"] = 0
+    with pytest.raises(Exception):
+        validate_task_schema(context)
+
+
 # get_task_bucket {{{1
 @pytest.mark.parametrize(
     "scopes,expected,raises",
