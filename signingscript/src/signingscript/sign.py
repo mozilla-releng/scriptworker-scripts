@@ -1408,10 +1408,10 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
     cafile_key = "authenticode_ca"
     cert_key = "authenticode_cert"
 
-    if fmt == "autograph_authenticode_ev":
+    if fmt in ("autograph_authenticode_ev", "stage_autograph_authenticode_ev"):
         cafile_key = f"{cafile_key}_ev"
         cert_key = f"{cert_key}_ev"
-    elif fmt.startswith("autograph_authenticode_202404"):
+    elif fmt.startswith(("autograph_authenticode_202404", "stage_autograph_authenticode_202404")):
         cafile_key += "_202404"
         cert_key += "_202404"
 
@@ -1426,8 +1426,8 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         certs = load_pem_certs(open(context.config[cert_key], "rb").read())
 
     url = context.config["authenticode_url"]
-    if fmt == "autograph_authenticode_sha2_rfc3161_stub":
-        fmt = "autograph_authenticode_sha2_stub"
+    if fmt in ("autograph_authenticode_sha2_rfc3161_stub", "stage_autograph_authenticode_sha2_rfc3161_stub"):
+        fmt = fmt.removesuffix("_rfc3161_stub")
         timestamp_style = "rfc3161"
     else:
         timestamp_style = context.config["authenticode_timestamp_style"]
