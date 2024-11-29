@@ -1012,6 +1012,7 @@ async def sign_with_autograph(session, server, input_file, fmt, autograph_method
 
     url = f"{server.url}/sign/{autograph_method}"
 
+    log.debug(f"sign_with_autograph: url: {url}, keyid: {keyid}, client_id: {server.client_id}")
     sign_resp = await retry_async(
         call_autograph, args=(session, url, server.client_id, server.access_key, sign_req), attempts=3, sleeptime_kwargs={"delay_factor": 2.0}
     )
@@ -1045,7 +1046,9 @@ async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=No
 
     """
     cert_type = task.task_cert_type(context)
+    log.debug(f"sign_file_with_autograph: cert_type: {cert_type}, fmt: {fmt}")
     a = get_autograph_config(context.autograph_configs, cert_type, [fmt], raise_on_empty=True)
+    log.debug(f"got autograph config: url: {a.url}, id: {a.client_id}, formats: {a.formats}, key_id: {a.key_id}")
     to = to or from_
     input_file = open(from_, "rb")
     signed_bytes = base64.b64decode(await sign_with_autograph(context.session, a, input_file, fmt, "file", extension_id=extension_id))
@@ -1276,6 +1279,7 @@ async def sign_widevine_with_autograph(context, from_, blessed, to=None):
     if not widevine:
         raise ImportError("widevine module not available")
 
+    log.debug(f"sign_widevine_with_autograph: blessed is {blessed}")
     to = to or f"{from_}.sig"
     flags = 1 if blessed else 0
     fmt = "autograph_widevine"
