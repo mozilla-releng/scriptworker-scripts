@@ -298,10 +298,10 @@ async def sign_widevine_zip(context, orig_path, fmt):
         all_files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
         tasks = []
         # Sign the appropriate inner files
-        for from_, fmt in files_to_sign.items():
+        for from_, blessed in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
             to = f"{from_}.sig"
-            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(context, from_, "blessed" in fmt, to=to)))
+            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(context, from_, blessed, fmt, to=to)))
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(tmp_dir, all_files)
@@ -349,7 +349,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
         all_files = await _extract_tarfile(context, orig_path, compression, tmp_dir=tmp_dir)
         tasks = []
         # Sign the appropriate inner files
-        for from_, fmt in files_to_sign.items():
+        for from_, blessed in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
             # Don't try to sign directories
             if not os.path.isfile(from_):
@@ -358,7 +358,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
             to = _get_mac_sigpath(from_)
             log.debug("Adding %s to the sigfile paths...", to)
             makedirs(os.path.dirname(to))
-            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(context, from_, "blessed" in fmt, to=to)))
+            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(context, from_, blessed, fmt, to=to)))
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(tmp_dir, all_files)
@@ -537,22 +537,24 @@ def _get_mac_sigpath(from_):
 
 # _get_widevine_signing_files {{{1
 def _get_widevine_signing_files(file_list):
-    """Return a dict of path:signing_format for each path to be signed."""
+    """Return a dict of path:is_blessed for each path to be signed."""
     files = {}
     for filename in file_list:
-        fmt = None
         base_filename = os.path.basename(filename)
+        if base_filename not in _WIDEVINE_BLESSED_FILENAMES and base_filename not in _WIDEVINE_NONBLESSED_FILENAMES:
+            log.debug(f"{filename} is not a widevine signing file")
+            continue
+
+        blessed = False
         if base_filename in _WIDEVINE_BLESSED_FILENAMES:
-            fmt = "widevine_blessed"
-        elif base_filename in _WIDEVINE_NONBLESSED_FILENAMES:
-            fmt = "widevine"
-        if fmt:
-            log.debug("Found {} to sign {}".format(filename, fmt))
-            sigpath = _get_mac_sigpath(filename)
-            if sigpath not in file_list:
-                files[filename] = fmt
-            else:
-                log.debug("{} is already signed! Skipping...".format(filename))
+            blessed = True
+
+        log.debug("Found {} to sign {}".format(filename, blessed))
+        sigpath = _get_mac_sigpath(filename)
+        if sigpath not in file_list:
+            files[filename] = blessed
+        else:
+            log.debug("{} is already signed! Skipping...".format(filename))
     return files
 
 
@@ -1257,7 +1259,7 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None, **kwargs
 
 
 @time_async_function
-async def sign_widevine_with_autograph(context, from_, blessed, to=None):
+async def sign_widevine_with_autograph(context, from_, blessed, fmt, to=None):
     """Create a widevine signature using autograph as a backend.
 
     Args:
@@ -1280,9 +1282,9 @@ async def sign_widevine_with_autograph(context, from_, blessed, to=None):
         raise ImportError("widevine module not available")
 
     log.debug(f"sign_widevine_with_autograph: blessed is {blessed}")
+    log.debug(f"sign_widevine_with_autograph: fmt is {fmt}")
     to = to or f"{from_}.sig"
     flags = 1 if blessed else 0
-    fmt = "autograph_widevine"
 
     h = widevine.generate_widevine_hash(from_, flags)
 
