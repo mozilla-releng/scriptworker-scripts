@@ -939,7 +939,7 @@ async def test_omnija_sign(tmpdir, mocker, context, orig, signed, sha256_expecte
         shutil.copyfile(os.path.join(TEST_DATA_DIR, signed), to)
 
     mocker.patch.object(sign, "sign_file_with_autograph", mocked_autograph)
-    await sign.sign_omnija_with_autograph(context, copy_from)
+    await sign.sign_omnija_with_autograph(context, copy_from, "autograph_omnija")
     sha256_actual = sha256(open(copy_from, "rb").read()).hexdigest()
     assert sha256_actual == sha256_expected
 
