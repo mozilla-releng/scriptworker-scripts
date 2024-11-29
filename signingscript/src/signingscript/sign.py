@@ -432,9 +432,9 @@ async def sign_omnija_zip(context, orig_path, fmt):
         all_files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
         tasks = []
         # Sign the appropriate inner files
-        for from_, fmt in files_to_sign.items():
+        for from_, _ in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
-            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(context, from_)))
+            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(context, from_, fmt)))
         await raise_future_exceptions(tasks)
         await _create_zipfile(context, orig_path, all_files, mode="w", tmp_dir=tmp_dir)
     return orig_path
@@ -473,12 +473,12 @@ async def sign_omnija_tar(context, orig_path, fmt):
         all_files = await _extract_tarfile(context, orig_path, compression, tmp_dir=tmp_dir)
         tasks = []
         # Sign the appropriate inner files
-        for from_, fmt in files_to_sign.items():
+        for from_, _ in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
             # Don't try to sign directories
             if not os.path.isfile(from_):
                 continue
-            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(context, from_)))
+            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(context, from_, fmt)))
         await raise_future_exceptions(tasks)
         await _create_tarfile(context, orig_path, all_files, compression, tmp_dir=tmp_dir)
     return orig_path
@@ -1298,7 +1298,7 @@ async def sign_widevine_with_autograph(context, from_, blessed, fmt, to=None):
 
 
 @time_async_function
-async def sign_omnija_with_autograph(context, from_):
+async def sign_omnija_with_autograph(context, from_, fmt):
     """Sign the omnija file specified using autograph.
 
     This function overwrites from_
@@ -1320,7 +1320,7 @@ async def sign_omnija_with_autograph(context, from_):
     signed_out = tempfile.mkstemp(prefix="oj_signed", suffix=".ja", dir=context.config["work_dir"])[1]
     merged_out = tempfile.mkstemp(prefix="oj_merged", suffix=".ja", dir=context.config["work_dir"])[1]
 
-    await sign_file_with_autograph(context, from_, "autograph_omnija", to=signed_out, extension_id="omni.ja@mozilla.org")
+    await sign_file_with_autograph(context, from_, fmt, to=signed_out, extension_id="omni.ja@mozilla.org")
     await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
     with open(from_, "wb") as fout:
         with open(merged_out, "rb") as fin:
