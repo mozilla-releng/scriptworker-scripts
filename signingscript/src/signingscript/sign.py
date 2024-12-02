@@ -85,7 +85,11 @@ _DEFAULT_MAR_VERIFY_KEYS = {
     "autograph_stage_mar384": {"dep-signing": "autograph_stage.pem"},
     "autograph_hash_only_mar384": {"release-signing": "release_primary.pem", "nightly-signing": "nightly_aurora_level3_primary.pem", "dep-signing": "dep1.pem"},
     "stage_autograph_stage_mar384": {"dep-signing": "autograph_stage.pem"},
-    "stage_autograph_hash_only_mar384": {"release-signing": "release_primary.pem", "nightly-signing": "nightly_aurora_level3_primary.pem", "dep-signing": "dep1.pem"},
+    "stage_autograph_hash_only_mar384": {
+        "release-signing": "release_primary.pem",
+        "nightly-signing": "nightly_aurora_level3_primary.pem",
+        "dep-signing": "dep1.pem",
+    },
 }
 
 # Langpacks expect the following re to match for addon id

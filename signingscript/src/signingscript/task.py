@@ -193,7 +193,18 @@ def _sort_formats(formats):
     """
     # Widevine formats must be after other formats other than macapp; GPG must
     # be last.
-    for fmt in ("widevine", "autograph_widevine", "stage_autograph_widevine", "autograph_omnija", "stage_autograph_omnija", "macapp", "autograph_rsa", "stage_autograph_rsa", "autograph_gpg", "stage_autograph_gpg"):
+    for fmt in (
+        "widevine",
+        "autograph_widevine",
+        "stage_autograph_widevine",
+        "autograph_omnija",
+        "stage_autograph_omnija",
+        "macapp",
+        "autograph_rsa",
+        "stage_autograph_rsa",
+        "autograph_gpg",
+        "stage_autograph_gpg",
+    ):
         if fmt in formats:
             formats.remove(fmt)
             formats.append(fmt)
