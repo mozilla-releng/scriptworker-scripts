@@ -152,7 +152,18 @@ async def test_sign(context, mocker, format, filename, post_files):
         ("autograph_authenticode_sha2_stub", stask.sign_authenticode),
         ("apple_notarization", stask.apple_notarize),
         ("default", stask.sign_file),
-        # Stage-prefixed cases
+        # GCP prod
+        ("gcp_prod_autograph_hash_only_mar384", stask.sign_mar384_with_autograph_hash),
+        ("gcp_prod_autograph_gpg", stask.sign_gpg_with_autograph),
+        ("gcp_prod_macapp", stask.sign_macapp),
+        ("gcp_prod_widevine", stask.sign_widevine),
+        ("gcp_prod_autograph_authenticode_sha2", stask.sign_authenticode),
+        ("gcp_prod_autograph_authenticode_sha2_stub", stask.sign_authenticode),
+        ("gcp_prod_apple_notarization", stask.apple_notarize),
+        ("gcp_prod_autograph_xpi", stask.sign_xpi),
+        ("gcp_prod_autograph_xpi_sha256_es256", stask.sign_xpi),
+        ("gcp_prod_autograph_xpi_foobar", stask.sign_xpi),
+        # GCP stage
         ("stage_autograph_hash_only_mar384", stask.sign_mar384_with_autograph_hash),
         ("stage_autograph_gpg", stask.sign_gpg_with_autograph),
         ("stage_macapp", stask.sign_macapp),

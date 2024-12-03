@@ -89,6 +89,12 @@ _DEFAULT_MAR_VERIFY_KEYS = {
         "nightly-signing": "nightly_aurora_level3_primary.pem",
         "dep-signing": "dep1.pem",
     },
+    "gcp_prod_autograph_stage_mar384": {"dep-signing": "autograph_stage.pem"},
+    "gcp_prod_autograph_hash_only_mar384": {
+        "release-signing": "release_primary.pem",
+        "nightly-signing": "nightly_aurora_level3_primary.pem",
+        "dep-signing": "dep1.pem",
+    },
 }
 
 # Langpacks expect the following re to match for addon id
@@ -875,9 +881,16 @@ def b64encode(input_bytes):
 def _is_xpi_format(fmt):
     if "omnija" in fmt or "langpack" in fmt:
         return True
-    if fmt in ("privileged_webextension", "system_addon", "stage_privileged_webextension", "stage_system_addon"):
+    if fmt in (
+        "privileged_webextension",
+        "system_addon",
+        "gcp_prod_privileged_webextension",
+        "gcp_prod_system_addon",
+        "stage_privileged_webextension",
+        "stage_system_addon",
+    ):
         return True
-    if fmt.startswith(("autograph_xpi", "stage_autograph_xpi")):
+    if fmt.startswith(("autograph_xpi", "gcp_prod_autograph_xpi", "stage_autograph_xpi")):
         return True
     return False
 
@@ -1348,10 +1361,10 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
     cafile_key = "authenticode_ca"
     cert_key = "authenticode_cert"
 
-    if fmt in ("autograph_authenticode_ev", "stage_autograph_authenticode_ev"):
+    if fmt in ("autograph_authenticode_ev", "gcp_prod_autograph_authenticode_ev", "stage_autograph_authenticode_ev"):
         cafile_key = f"{cafile_key}_ev"
         cert_key = f"{cert_key}_ev"
-    elif fmt.startswith(("autograph_authenticode_202404", "stage_autograph_authenticode_202404")):
+    elif fmt.startswith(("autograph_authenticode_202404", "gcp_prod_autograph_authenticode_202404", "stage_autograph_authenticode_202404")):
         cafile_key += "_202404"
         cert_key += "_202404"
 
@@ -1366,7 +1379,11 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         certs = load_pem_certs(open(context.config[cert_key], "rb").read())
 
     url = context.config["authenticode_url"]
-    if fmt in ("autograph_authenticode_sha2_rfc3161_stub", "stage_autograph_authenticode_sha2_rfc3161_stub"):
+    if fmt in (
+        "autograph_authenticode_sha2_rfc3161_stub",
+        "gcp_prod_autograph_authenticode_sha2_rfc3161_stub",
+        "stage_autograph_authenticode_sha2_rfc3161_stub",
+    ):
         fmt = fmt.removesuffix("_rfc3161_stub")
         timestamp_style = "rfc3161"
     else:
