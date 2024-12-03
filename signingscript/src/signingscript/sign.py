@@ -84,6 +84,12 @@ _WIDEVINE_NONBLESSED_FILENAMES = (
 _DEFAULT_MAR_VERIFY_KEYS = {
     "autograph_stage_mar384": {"dep-signing": "autograph_stage.pem"},
     "autograph_hash_only_mar384": {"release-signing": "release_primary.pem", "nightly-signing": "nightly_aurora_level3_primary.pem", "dep-signing": "dep1.pem"},
+    "stage_autograph_stage_mar384": {"dep-signing": "autograph_stage.pem"},
+    "stage_autograph_hash_only_mar384": {
+        "release-signing": "release_primary.pem",
+        "nightly-signing": "nightly_aurora_level3_primary.pem",
+        "dep-signing": "dep1.pem",
+    },
 }
 
 # Langpacks expect the following re to match for addon id
@@ -296,10 +302,10 @@ async def sign_widevine_zip(context, orig_path, fmt):
         all_files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
         tasks = []
         # Sign the appropriate inner files
-        for from_, fmt in files_to_sign.items():
+        for from_, blessed in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
             to = f"{from_}.sig"
-            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(context, from_, "blessed" in fmt, to=to)))
+            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(context, from_, blessed, fmt, to=to)))
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(tmp_dir, all_files)
@@ -347,7 +353,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
         all_files = await _extract_tarfile(context, orig_path, compression, tmp_dir=tmp_dir)
         tasks = []
         # Sign the appropriate inner files
-        for from_, fmt in files_to_sign.items():
+        for from_, blessed in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
             # Don't try to sign directories
             if not os.path.isfile(from_):
@@ -356,7 +362,7 @@ async def sign_widevine_tar(context, orig_path, fmt):
             to = _get_mac_sigpath(from_)
             log.debug("Adding %s to the sigfile paths...", to)
             makedirs(os.path.dirname(to))
-            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(context, from_, "blessed" in fmt, to=to)))
+            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(context, from_, blessed, fmt, to=to)))
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(tmp_dir, all_files)
@@ -430,9 +436,9 @@ async def sign_omnija_zip(context, orig_path, fmt):
         all_files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
         tasks = []
         # Sign the appropriate inner files
-        for from_, fmt in files_to_sign.items():
+        for from_, _ in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
-            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(context, from_)))
+            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(context, from_, fmt)))
         await raise_future_exceptions(tasks)
         await _create_zipfile(context, orig_path, all_files, mode="w", tmp_dir=tmp_dir)
     return orig_path
@@ -471,12 +477,12 @@ async def sign_omnija_tar(context, orig_path, fmt):
         all_files = await _extract_tarfile(context, orig_path, compression, tmp_dir=tmp_dir)
         tasks = []
         # Sign the appropriate inner files
-        for from_, fmt in files_to_sign.items():
+        for from_, _ in files_to_sign.items():
             from_ = os.path.join(tmp_dir, from_)
             # Don't try to sign directories
             if not os.path.isfile(from_):
                 continue
-            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(context, from_)))
+            tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(context, from_, fmt)))
         await raise_future_exceptions(tasks)
         await _create_tarfile(context, orig_path, all_files, compression, tmp_dir=tmp_dir)
     return orig_path
@@ -535,22 +541,25 @@ def _get_mac_sigpath(from_):
 
 # _get_widevine_signing_files {{{1
 def _get_widevine_signing_files(file_list):
-    """Return a dict of path:signing_format for each path to be signed."""
+    """Return a dict of path:is_blessed for each path to be signed."""
     files = {}
     for filename in file_list:
-        fmt = None
         base_filename = os.path.basename(filename)
+        if base_filename not in _WIDEVINE_BLESSED_FILENAMES and base_filename not in _WIDEVINE_NONBLESSED_FILENAMES:
+            continue
+
+        blessed = False
         if base_filename in _WIDEVINE_BLESSED_FILENAMES:
-            fmt = "widevine_blessed"
-        elif base_filename in _WIDEVINE_NONBLESSED_FILENAMES:
-            fmt = "widevine"
-        if fmt:
-            log.debug("Found {} to sign {}".format(filename, fmt))
-            sigpath = _get_mac_sigpath(filename)
-            if sigpath not in file_list:
-                files[filename] = fmt
-            else:
-                log.debug("{} is already signed! Skipping...".format(filename))
+            log.debug("_get_widevine_signing_file: Signing {} as blessed".format(filename))
+            blessed = True
+        else:
+            log.debug("_get_widevine_signing_file: Signing {} as not blessed".format(filename))
+
+        sigpath = _get_mac_sigpath(filename)
+        if sigpath not in file_list:
+            files[filename] = blessed
+        else:
+            log.debug("{} is already signed! Skipping...".format(filename))
     return files
 
 
@@ -924,9 +933,9 @@ def b64encode(input_bytes):
 def _is_xpi_format(fmt):
     if "omnija" in fmt or "langpack" in fmt:
         return True
-    if fmt in ("privileged_webextension", "system_addon"):
+    if fmt in ("privileged_webextension", "system_addon", "stage_privileged_webextension", "stage_system_addon"):
         return True
-    if fmt.startswith("autograph_xpi"):
+    if fmt.startswith(("autograph_xpi", "stage_autograph_xpi")):
         return True
     return False
 
@@ -1010,6 +1019,7 @@ async def sign_with_autograph(session, server, input_file, fmt, autograph_method
 
     url = f"{server.url}/sign/{autograph_method}"
 
+    log.debug(f"sign_with_autograph: url: {url}, keyid: {keyid}, client_id: {server.client_id}")
     sign_resp = await retry_async(
         call_autograph, args=(session, url, server.client_id, server.access_key, sign_req), attempts=3, sleeptime_kwargs={"delay_factor": 2.0}
     )
@@ -1043,7 +1053,9 @@ async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=No
 
     """
     cert_type = task.task_cert_type(context)
+    log.debug(f"sign_file_with_autograph: cert_type: {cert_type}, fmt: {fmt}")
     a = get_autograph_config(context.autograph_configs, cert_type, [fmt], raise_on_empty=True)
+    log.debug(f"got autograph config: url: {a.url}, id: {a.client_id}, formats: {a.formats}, key_id: {a.key_id}")
     to = to or from_
     input_file = open(from_, "rb")
     signed_bytes = base64.b64decode(await sign_with_autograph(context.session, a, input_file, fmt, "file", extension_id=extension_id))
@@ -1252,7 +1264,7 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None, **kwargs
 
 
 @time_async_function
-async def sign_widevine_with_autograph(context, from_, blessed, to=None):
+async def sign_widevine_with_autograph(context, from_, blessed, fmt, to=None):
     """Create a widevine signature using autograph as a backend.
 
     Args:
@@ -1274,9 +1286,10 @@ async def sign_widevine_with_autograph(context, from_, blessed, to=None):
     if not widevine:
         raise ImportError("widevine module not available")
 
+    log.debug(f"sign_widevine_with_autograph: blessed is {blessed}")
+    log.debug(f"sign_widevine_with_autograph: fmt is {fmt}")
     to = to or f"{from_}.sig"
     flags = 1 if blessed else 0
-    fmt = "autograph_widevine"
 
     h = widevine.generate_widevine_hash(from_, flags)
 
@@ -1290,7 +1303,7 @@ async def sign_widevine_with_autograph(context, from_, blessed, to=None):
 
 
 @time_async_function
-async def sign_omnija_with_autograph(context, from_):
+async def sign_omnija_with_autograph(context, from_, fmt):
     """Sign the omnija file specified using autograph.
 
     This function overwrites from_
@@ -1312,7 +1325,7 @@ async def sign_omnija_with_autograph(context, from_):
     signed_out = tempfile.mkstemp(prefix="oj_signed", suffix=".ja", dir=context.config["work_dir"])[1]
     merged_out = tempfile.mkstemp(prefix="oj_merged", suffix=".ja", dir=context.config["work_dir"])[1]
 
-    await sign_file_with_autograph(context, from_, "autograph_omnija", to=signed_out, extension_id="omni.ja@mozilla.org")
+    await sign_file_with_autograph(context, from_, fmt, to=signed_out, extension_id="omni.ja@mozilla.org")
     await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
     with open(from_, "wb") as fout:
         with open(merged_out, "rb") as fin:
@@ -1400,10 +1413,10 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
     cafile_key = "authenticode_ca"
     cert_key = "authenticode_cert"
 
-    if fmt == "autograph_authenticode_ev":
+    if fmt in ("autograph_authenticode_ev", "stage_autograph_authenticode_ev"):
         cafile_key = f"{cafile_key}_ev"
         cert_key = f"{cert_key}_ev"
-    elif fmt.startswith("autograph_authenticode_202404"):
+    elif fmt.startswith(("autograph_authenticode_202404", "stage_autograph_authenticode_202404")):
         cafile_key += "_202404"
         cert_key += "_202404"
 
@@ -1418,8 +1431,8 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         certs = load_pem_certs(open(context.config[cert_key], "rb").read())
 
     url = context.config["authenticode_url"]
-    if fmt == "autograph_authenticode_sha2_rfc3161_stub":
-        fmt = "autograph_authenticode_sha2_stub"
+    if fmt in ("autograph_authenticode_sha2_rfc3161_stub", "stage_autograph_authenticode_sha2_rfc3161_stub"):
+        fmt = fmt.removesuffix("_rfc3161_stub")
         timestamp_style = "rfc3161"
     else:
         timestamp_style = context.config["authenticode_timestamp_style"]

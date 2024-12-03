@@ -81,57 +81,83 @@ case $ENV in
   dev|fake-prod)
     case $COT_PRODUCT in
       firefox|thunderbird)
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
-        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
         test_var_set 'AUTHENTICODE_CA_PATH'
         test_var_set 'AUTHENTICODE_CA_TIMESTAMP_PATH'
         test_var_set 'AUTHENTICODE_CROSS_CERT_PATH'
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
+        test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
-        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_LANGPACK_PASSWORD'
         test_var_set 'AUTOGRAPH_LANGPACK_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_PASSWORD'
         test_var_set 'AUTOGRAPH_MAR_USERNAME'
-        test_var_set 'AUTOGRAPH_STAGE_MAR_PASSWORD'
-        test_var_set 'AUTOGRAPH_STAGE_MAR_USERNAME'
         test_var_set 'AUTOGRAPH_OMNIJA_PASSWORD'
         test_var_set 'AUTOGRAPH_OMNIJA_USERNAME'
         test_var_set 'AUTOGRAPH_WIDEVINE_PASSWORD'
         test_var_set 'AUTOGRAPH_WIDEVINE_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_GPG_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_GPG_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_LANGPACK_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_LANGPACK_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_MAR_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_MAR_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_OMNIJA_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_OMNIJA_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_WIDEVINE_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_WIDEVINE_USERNAME'
         if [ "$COT_PRODUCT" = "firefox" ]; then
             test_var_set 'AUTOGRAPH_FENIX_PASSWORD'
             test_var_set 'AUTOGRAPH_FENIX_USERNAME'
             test_var_set 'AUTOGRAPH_FOCUS_PASSWORD'
             test_var_set 'AUTOGRAPH_FOCUS_USERNAME'
+            test_var_set 'AUTOGRAPH_STAGE_FENIX_USERNAME'
+            test_var_set 'AUTOGRAPH_STAGE_FENIX_PASSWORD'
+            test_var_set 'AUTOGRAPH_STAGE_FOCUS_USERNAME'
+            test_var_set 'AUTOGRAPH_STAGE_FOCUS_PASSWORD'
         fi
         ;;
       mobile)
-        test_var_set 'AUTOGRAPH_GPG_PASSWORD'
-        test_var_set 'AUTOGRAPH_GPG_USERNAME'
-        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_PASSWORD'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_REFERENCE_BROWSER_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_REFERENCE_BROWSER_PASSWORD'
         ;;
       app-services)
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
-        test_var_set 'GPG_PUBKEY_PATH'
+        test_var_set 'AUTOGRAPH_STAGE_GPG_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_GPG_PASSWORD'
         ;;
       glean)
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
-        test_var_set 'GPG_PUBKEY_PATH'
+        test_var_set 'AUTOGRAPH_STAGE_GPG_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_GPG_PASSWORD'
         ;;
       xpi)
         test_var_set 'AUTOGRAPH_XPI_PRIVILEGED_PASSWORD'
         test_var_set 'AUTOGRAPH_XPI_PRIVILEGED_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_XPI_PRIVILEGED_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_XPI_PRIVILEGED_PASSWORD'
         ;;
       mozillavpn)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
+        test_var_set 'AUTOGRAPH_MOZILLAVPN_DEBSIGN_PASSWORD'
+        test_var_set 'AUTOGRAPH_MOZILLAVPN_DEBSIGN_USERNAME'
+        test_var_set 'AUTOGRAPH_MOZILLAVPN_ADDONS_PASSWORD'
+        test_var_set 'AUTOGRAPH_MOZILLAVPN_ADDONS_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_MOZILLAVPN_DEBSIGN_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_MOZILLAVPN_DEBSIGN_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_MOZILLAVPN_ADDONS_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_MOZILLAVPN_ADDONS_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
         test_var_set 'AUTHENTICODE_CA_PATH'
         test_var_set 'AUTHENTICODE_CA_TIMESTAMP_PATH'
@@ -143,15 +169,22 @@ case $ENV in
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_PASSWORD'
         test_var_set 'AUTOGRAPH_MAR_USERNAME'
-        test_var_set 'AUTOGRAPH_STAGE_MAR_PASSWORD'
-        test_var_set 'AUTOGRAPH_STAGE_MAR_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         test_var_set 'AUTOGRAPH_XPI_PASSWORD'
         test_var_set 'AUTOGRAPH_XPI_USERNAME'
-        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_FENIX_PASSWORD'
         test_var_set 'AUTOGRAPH_FENIX_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_MAR_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_MAR_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_GPG_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_GPG_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_XPI_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_XPI_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_FENIX_PASSWORD'
+        test_var_set 'AUTOGRAPH_STAGE_FENIX_USERNAME'
         ;;
     esac
     ;;
@@ -167,7 +200,6 @@ case $ENV in
         test_var_set 'AUTHENTICODE_TIMESTAMP_STYLE'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
-        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_LANGPACK_PASSWORD'
         test_var_set 'AUTOGRAPH_LANGPACK_USERNAME'
         test_var_set 'AUTOGRAPH_MAR_NIGHTLY_PASSWORD'
@@ -192,7 +224,6 @@ case $ENV in
       mobile)
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
-        test_var_set 'GPG_PUBKEY_PATH'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_PASSWORD'
         test_var_set 'AUTOGRAPH_REFERENCE_BROWSER_USERNAME'
         test_var_set 'AUTOGRAPH_STAGE_REFERENCE_BROWSER_PASSWORD'
@@ -201,12 +232,10 @@ case $ENV in
       app-services)
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
-        test_var_set 'GPG_PUBKEY_PATH'
         ;;
       glean)
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
-        test_var_set 'GPG_PUBKEY_PATH'
         ;;
       xpi)
         test_var_set 'AUTOGRAPH_XPI_PRIVILEGED_PASSWORD'

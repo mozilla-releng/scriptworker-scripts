@@ -547,35 +547,6 @@ def test_should_sign_windows(filenames, expected):
         assert sign._should_sign_windows(f) == expected
 
 
-# _get_widevine_signing_files {{{1
-@pytest.mark.parametrize(
-    "filenames,expected",
-    (
-        (["firefox.dll", "XUL.so", "firefox.bin", "blah"], {}),
-        (
-            ("firefox", "blah/XUL", "foo/bar/libclearkey.dylib", "baz/plugin-container", "ignore"),
-            {"firefox": "widevine", "blah/XUL": "widevine", "foo/bar/libclearkey.dylib": "widevine", "baz/plugin-container": "widevine_blessed"},
-        ),
-        (
-            # Test for existing signature files
-            (
-                "firefox",
-                "blah/XUL",
-                "blah/XUL.sig",
-                "foo/bar/libclearkey.dylib",
-                "foo/bar/libclearkey.dylib.sig",
-                "plugin-container",
-                "plugin-container.sig",
-                "ignore",
-            ),
-            {"firefox": "widevine"},
-        ),
-    ),
-)
-def test_get_widevine_signing_files(filenames, expected):
-    assert sign._get_widevine_signing_files(filenames) == expected
-
-
 # _run_generate_precomplete {{{1
 @pytest.mark.parametrize("num_precomplete,raises", ((1, False), (0, True), (2, True)))
 def test_run_generate_precomplete(context, num_precomplete, raises, mocker):
@@ -824,7 +795,7 @@ async def test_widevine_autograph(context, mocker, tmp_path, blessed):
     context.config["widevine_cert"] = cert
 
     to = tmp_path / "signed.sig"
-    to = await sign.sign_widevine_with_autograph(context, "from", blessed, to=to)
+    to = await sign.sign_widevine_with_autograph(context, "from", blessed, "autograph_widevine", to=to)
 
     assert b"sigwidevinesig" == to.read_bytes()
     assert called_format == "autograph_widevine"
@@ -839,7 +810,7 @@ async def test_no_widevine(context, mocker, tmp_path):
 
     with pytest.raises(ImportError):
         to = tmp_path / "signed.sig"
-        to = await sign.sign_widevine_with_autograph(context, "from", True, to=to)
+        to = await sign.sign_widevine_with_autograph(context, "from", True, "autograph_widevine", to=to)
 
 
 @pytest.mark.asyncio
@@ -968,7 +939,7 @@ async def test_omnija_sign(tmpdir, mocker, context, orig, signed, sha256_expecte
         shutil.copyfile(os.path.join(TEST_DATA_DIR, signed), to)
 
     mocker.patch.object(sign, "sign_file_with_autograph", mocked_autograph)
-    await sign.sign_omnija_with_autograph(context, copy_from)
+    await sign.sign_omnija_with_autograph(context, copy_from, "autograph_omnija")
     sha256_actual = sha256(open(copy_from, "rb").read()).hexdigest()
     assert sha256_actual == sha256_expected
 
