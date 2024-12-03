@@ -939,7 +939,14 @@ def b64encode(input_bytes):
 def _is_xpi_format(fmt):
     if "omnija" in fmt or "langpack" in fmt:
         return True
-    if fmt in ("privileged_webextension", "system_addon", "gcp_prod_privileged_webextension", "gcp_prod_system_addon", "stage_privileged_webextension", "stage_system_addon"):
+    if fmt in (
+        "privileged_webextension",
+        "system_addon",
+        "gcp_prod_privileged_webextension",
+        "gcp_prod_system_addon",
+        "stage_privileged_webextension",
+        "stage_system_addon",
+    ):
         return True
     if fmt.startswith(("autograph_xpi", "gcp_prod_autograph_xpi", "stage_autograph_xpi")):
         return True
@@ -1437,7 +1444,11 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
         certs = load_pem_certs(open(context.config[cert_key], "rb").read())
 
     url = context.config["authenticode_url"]
-    if fmt in ("autograph_authenticode_sha2_rfc3161_stub", "gcp_prod_autograph_authenticode_sha2_rfc3161_stub", "stage_autograph_authenticode_sha2_rfc3161_stub"):
+    if fmt in (
+        "autograph_authenticode_sha2_rfc3161_stub",
+        "gcp_prod_autograph_authenticode_sha2_rfc3161_stub",
+        "stage_autograph_authenticode_sha2_rfc3161_stub",
+    ):
         fmt = fmt.removesuffix("_rfc3161_stub")
         timestamp_style = "rfc3161"
     else:
