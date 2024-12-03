@@ -213,8 +213,17 @@ def is_apk_autograph_signing_format(format_):
     # TODO Remove autograph_focus once format is migrated
     return (
         format_
-        and format_.startswith(("autograph_apk_", "stage_autograph_apk_"))
-        or format_ in ("autograph_focus", "autograph_stage_aab", "autograph_aab", "stage_autograph_focus", "stage_autograph_aab")
+        and format_.startswith(("autograph_apk_", "gcp_prod_autograph_apk_", "stage_autograph_apk_"))
+        or format_
+        in (
+            "autograph_focus",
+            "autograph_stage_aab",
+            "autograph_aab",
+            "gcp_prod_autograph_focus",
+            "gcp_prod_autograph_aab",
+            "stage_autograph_focus",
+            "stage_autograph_aab",
+        )
     )
 
 
