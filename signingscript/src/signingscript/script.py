@@ -27,13 +27,13 @@ async def async_main(context):
     work_dir = context.config["work_dir"]
     async with aiohttp.ClientSession() as session:
         all_signing_formats = task_signing_formats(context)
-        if {"autograph_gpg", "stage_autograph_gpg"}.intersection(all_signing_formats):
+        if {"autograph_gpg", "gcp_prod_autograph_gpg", "stage_autograph_gpg"}.intersection(all_signing_formats):
             if not context.config.get("gpg_pubkey"):
                 raise Exception("GPG format is enabled but gpg_pubkey is not defined")
             if not os.path.exists(context.config["gpg_pubkey"]):
                 raise Exception("gpg_pubkey ({}) doesn't exist!".format(context.config["gpg_pubkey"]))
 
-        if {"autograph_widevine", "stage_autograph_widevine"}.intersection(all_signing_formats):
+        if {"autograph_widevine", "gcp_prod_autograph_widevine", "stage_autograph_widevine"}.intersection(all_signing_formats):
             if not context.config.get("widevine_cert"):
                 raise Exception("Widevine format is enabled, but widevine_cert is not defined")
 
@@ -61,7 +61,7 @@ async def async_main(context):
             for source in output_files:
                 source = os.path.relpath(source, work_dir)
                 copy_to_dir(os.path.join(work_dir, source), context.config["artifact_dir"], target=source)
-            if {"autograph_gpg", "stage_autograph_gpg"}.intersection(set(path_dict["formats"])):
+            if {"autograph_gpg", "gcp_prod_autograph_gpg", "stage_autograph_gpg"}.intersection(set(path_dict["formats"])):
                 copy_to_dir(context.config["gpg_pubkey"], context.config["artifact_dir"], target="public/build/KEY")
 
         # notarization_stacked is a special format that takes in all files at once instead of sequentially like other formats
