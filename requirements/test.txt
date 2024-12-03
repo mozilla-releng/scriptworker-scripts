@@ -59,9 +59,9 @@ pyproject-api==1.8.0 \
     --hash=sha256:3d7d347a047afe796fd5d1885b1e391ba29be7169bd2f102fcd378f04273d228 \
     --hash=sha256:77b8049f2feb5d33eefcc21b57f1e279636277a8ac8ad6b5871037b243778496
     # via tox
-pytest==8.3.3 \
-    --hash=sha256:70b98107bd648308a7952b06e6ca9a50bc660be218d53c257cc1fc94fda10181 \
-    --hash=sha256:a6853c7375b2663155079443d2e45de913a911a11d669df02a50814944db57b2
+pytest==8.3.4 \
+    --hash=sha256:50e16d954148559c9a74109af1eaf0c945ba2d8f30f0a3d3335edde19788b6f6 \
+    --hash=sha256:965370d062bce11e73868e0335abac31b4d3de0e82f4007408d242b4f8610761
     # via
     #   -r requirements/test.in
     #   pytest-xdist
@@ -73,7 +73,7 @@ tox==4.23.2 \
     --hash=sha256:452bc32bb031f2282881a2118923176445bac783ab97c874b8770ab4c3b76c38 \
     --hash=sha256:86075e00e555df6e82e74cfc333917f91ecb47ffbc868dcafbd2672e332f4a2c
     # via -r requirements/test.in
-virtualenv==20.27.1 \
-    --hash=sha256:142c6be10212543b32c6c45d3d3893dff89112cc588b7d0879ae5a1ec03a47ba \
-    --hash=sha256:f11f1b8a29525562925f745563bfd48b189450f61fb34c4f9cc79dd5aa32a1f4
+virtualenv==20.28.0 \
+    --hash=sha256:23eae1b4516ecd610481eda647f3a7c09aea295055337331bb4e6892ecce47b0 \
+    --hash=sha256:2c9c3262bb8e7b87ea801d715fae4495e6032450c71d2309be9550e7364049aa
     # via tox
