@@ -546,14 +546,15 @@ def _get_widevine_signing_files(file_list):
     for filename in file_list:
         base_filename = os.path.basename(filename)
         if base_filename not in _WIDEVINE_BLESSED_FILENAMES and base_filename not in _WIDEVINE_NONBLESSED_FILENAMES:
-            log.debug(f"{filename} is not a widevine signing file")
             continue
 
         blessed = False
         if base_filename in _WIDEVINE_BLESSED_FILENAMES:
+            log.debug("_get_widevine_signing_file: Signing {} as blessed".format(filename))
             blessed = True
+        else:
+            log.debug("_get_widevine_signing_file: Signing {} as not blessed".format(filename))
 
-        log.debug("Found {} to sign {}".format(filename, blessed))
         sigpath = _get_mac_sigpath(filename)
         if sigpath not in file_list:
             files[filename] = blessed
