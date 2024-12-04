@@ -226,6 +226,8 @@ async def push_to_releases_s3(context):
 
     # Weed out RELEASE_EXCLUDE matches, but allow partners specified in the payload
     push_partners = context.task["payload"].get("partners", [])
+    exclude = context.task["payload"].get("exclude", []) + list(RELEASE_EXCLUDE)
+
     for k in candidates_keys_checksums.keys():
         if "/partner-repacks/" in k:
             partner_match = get_partner_match(k, candidates_prefix, push_partners)
@@ -236,7 +238,7 @@ async def push_to_releases_s3(context):
                 )
             else:
                 log.debug("Excluding partner repack {}".format(k))
-        elif not matches_exclude(k, RELEASE_EXCLUDE):
+        elif not matches_exclude(k, exclude):
             context.artifacts_to_beetmove[k] = k.replace(candidates_prefix, releases_prefix)
         else:
             log.debug("Excluding {}".format(k))
