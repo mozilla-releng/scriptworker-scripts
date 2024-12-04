@@ -259,6 +259,7 @@ async def test_push_to_releases_gcs_exclude(context, monkeypatch, candidate_blob
             return {}
 
     expect_blobs = {f"{test_candidate_prefix}{key}": f"{test_release_prefix}{key}" for key in results}
+
     def fake_move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, releases_blobs):
         assert blobs_to_copy == expect_blobs
 

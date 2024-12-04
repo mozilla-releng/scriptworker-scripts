@@ -69,6 +69,7 @@ async def test_push_to_releases_s3(context, mocker, candidates_keys, releases_ke
     else:
         await push_to_releases_s3(context)
 
+
 # push_to_releases_s3_exclude {{{1
 @pytest.mark.parametrize(
     "candidates_keys,exclude,results",
@@ -88,6 +89,7 @@ async def test_push_to_releases_s3_exclude(context, mocker, candidates_keys, exc
     objects = [{f"{test_candidate_prefix}{key}": candidates_keys[key] for key in candidates_keys}, {}]
 
     expect_artifacts = {f"{test_candidate_prefix}{key}": f"{test_release_prefix}{key}" for key in results}
+
     def check(ctx, _, r):
         assert ctx.artifacts_to_beetmove == expect_artifacts
 
@@ -99,6 +101,7 @@ async def test_push_to_releases_s3_exclude(context, mocker, candidates_keys, exc
     mocker.patch.object(beetmoverscript.script, "copy_beets", new=check)
 
     await push_to_releases_s3(context)
+
 
 # copy_beets {{{1
 @pytest.mark.parametrize("releases_keys,raises", (({}, False), ({"to2": "from2_md5"}, False), ({"to1": "to1_md5"}, True)))
