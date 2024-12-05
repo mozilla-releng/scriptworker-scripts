@@ -352,3 +352,16 @@ async def test_get_running_builds(responses):
 async def test_find_running_build(responses, running_builds, build_params, expected):
     result = bitrise.find_running_build(running_builds, build_params)
     assert result == expected
+
+
+@pytest.mark.asyncio
+async def test_abort_build(mocker, client):
+    build_slug = "123"
+
+    m_request = mocker.patch.object(client, "request", return_value=mocker.AsyncMock())
+
+    await bitrise.abort_build(build_slug, "out of baguettes")
+
+    m_request.assert_called_once_with(
+        f"/builds/{build_slug}/abort", method="post", json={"abort_reason": "out of baguettes", "abort_with_success": False, "skip_notifications": False}
+    )

@@ -313,3 +313,21 @@ def find_running_build(running_builds: list[dict], build_params: Any):
             return build["slug"]
     # Nothing found
     return None
+
+
+async def abort_build(build_slug: str, reason: str) -> None:
+    """Abort a specific build
+
+    Args:
+        build_slug (str): The Bitrise build to abort
+        reason (str): The reason for the build cancellation
+    """
+    log.info(f'Aborting build {build_slug} with reason "{reason}"')
+    client = BitriseClient()
+    build_abort_params = {
+        "abort_reason": reason,
+        "abort_with_success": False,
+        "skip_notifications": False,
+    }
+
+    await client.request(f"/builds/{build_slug}/abort", method="post", json=build_abort_params)
