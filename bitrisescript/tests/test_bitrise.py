@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import logging
 from asyncio import Future
@@ -365,3 +366,34 @@ async def test_abort_build(mocker, client):
     m_request.assert_called_once_with(
         f"/builds/{build_slug}/abort", method="post", json={"abort_reason": "out of baguettes", "abort_with_success": False, "skip_notifications": False}
     )
+
+
+@pytest.mark.asyncio
+async def test_cancel_running_build(mocker, client, tmp_path):
+    build_slug = "abc"
+    build_response = {"status": "ok", "build_slug": build_slug}
+    artifacts_dir = tmp_path / "artifacts"
+    wf_id = "test"
+
+    build_event = asyncio.Event()
+
+    async def wait_for_build_finish(*args):
+        build_event.set()
+        await asyncio.sleep(1)
+        assert False, "The task should have gotten cancelled"
+
+    m_request = mocker.patch.object(client, "request", return_value=mocker.AsyncMock())
+    m_request.return_value = build_response
+
+    m_wait = mocker.patch.object(bitrise, "wait_for_build_finish", wait_for_build_finish)
+    m_dl_log = mocker.patch.object(bitrise, "download_log", return_value=mocker.AsyncMock())
+    m_abort_build = mocker.patch.object(bitrise, "abort_build", return_value=mocker.AsyncMock())
+
+    loop = asyncio.get_event_loop()
+
+    task = loop.create_task(bitrise.run_build(artifacts_dir, wf_id, foo="bar"))
+    await build_event.wait()
+    task.cancel()
+    await task
+
+    m_abort_build.assert_called_once_with(build_slug, "Build cancelled")
