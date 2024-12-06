@@ -65,15 +65,15 @@ PARTNER_ALIASES_REGEX = {
 
 PRODUCT_TO_DESTINATIONS_REGEXES = {
     "firefox-rc": (
-        r"^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox)"
+        r"^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|linux-aarch64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox)"
         r".*\.(?:bz2|xz|dmg|exe|mar))$"
     ),
     "firefox": (
-        r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:(?:\:lang|multi)/(?:firefox|Firefox)"
+        r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|linux-aarch64|mac|win32|win64(?:|-aarch64))/(?:(?:\:lang|multi)/(?:firefox|Firefox)"
         r".*\.(?:bz2|xz|dmg|exe|mar|msi|msix|pkg)|xpi/:lang.xpi))$"
     ),
     "devedition": (
-        r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox)"
+        r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|linux-aarch64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox)"
         r".*\.(?:bz2|xz|dmg|exe|mar|msi|msix))$"
     ),
     "thunderbird": (
