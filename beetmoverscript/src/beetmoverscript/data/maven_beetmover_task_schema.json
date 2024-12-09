@@ -82,6 +82,14 @@
                     },
                     "minItems": 1,
                     "uniqueItems": true
+                },
+                "exclude": {
+                    "type": "array",
+                    "minItems": 0,
+                    "uniqueItems": false,
+                    "items": {
+                        "type": "string"
+                    }
                 }
             },
             "required": ["upstreamArtifacts", "releaseProperties"]
