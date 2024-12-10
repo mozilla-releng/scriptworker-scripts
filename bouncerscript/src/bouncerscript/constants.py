@@ -163,7 +163,7 @@ PRODUCT_TO_PRODUCT_ENTRY = [
     ("thunderbird", r"^Thunderbird-.*$"),
 ]
 
-BOUNCER_LOCATION_PLATFORMS = ["linux", "linux64", "osx", "win", "win64", "android-x86", "android", "win64-aarch64", "linux64-aarch64"]
+BOUNCER_LOCATION_PLATFORMS = ["linux", "linux64", "linux64-aarch64", "osx", "win", "win64", "android-x86", "android", "win64-aarch64", "linux64-aarch64"]
 
 GO_BOUNCER_URL_TMPL = {
     "project:releng:bouncer:server:production": "https://download.mozilla.org/?product={}&print=yes",
