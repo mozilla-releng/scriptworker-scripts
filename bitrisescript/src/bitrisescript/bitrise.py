@@ -236,14 +236,19 @@ async def wait_and_download_workflow_log(artifacts_dir: str, build_slug: str) ->
         artifacts_dir (str): Directory to download artifacts to.
         build_slug (str): Identifier of workflow to run.
     """
+    skip_log_retrieval = False
     try:
         await wait_for_build_finish(build_slug)
         log.info(f"Build '{build_slug}' is successful. Retrieving artifacts...")
         await download_artifacts(build_slug, artifacts_dir)
+    except asyncio.CancelledError:
+        skip_log_retrieval = True
+        raise
     finally:
-        log.info(f"Retrieving bitrise log for '{build_slug}'...")
-        await download_log(build_slug, artifacts_dir)
-        await dump_perfherder_data(artifacts_dir)
+        if not skip_log_retrieval:
+            log.info(f"Retrieving bitrise log for '{build_slug}'...")
+            await download_log(build_slug, artifacts_dir)
+            await dump_perfherder_data(artifacts_dir)
 
 
 async def run_build(artifacts_dir: str, workflow_id: str, **build_params: Any) -> None:
