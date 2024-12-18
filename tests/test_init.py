@@ -80,6 +80,9 @@ CONTEXT = {
         "TENANT_ID": "Zm9vYmFyCg==",
         "CLIENT_ID": "Zm9vYmFyCg==",
         "CLIENT_SECRET": "Zm9vYmFyCg==",
+        "TB_TENANT_ID": "Zm9vYmFyCg==",
+        "TB_CLIENT_ID": "Zm9vYmFyCg==",
+        "TB_CLIENT_SECRET": "Zm9vYmFyCg==",
     },
     re.compile(r"signing:.*"): {
         "WIDEVINE_CERT": "Zm9vYmFyCg==",
@@ -226,7 +229,7 @@ def get_expected_return_code(app, product, env):
         if product not in ("firefox", "thunderbird"):
             return 1
     elif app == "pushmsix":
-        if product != "firefox":
+        if product not in ("firefox", "thunderbird"):
             return 1
     elif app == "shipit":
         if product not in ("adhoc", "app-services", "firefox", "mobile", "mozillavpn", "thunderbird", "xpi"):
