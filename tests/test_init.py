@@ -267,14 +267,7 @@ def generate_params():
         "dev",
     )
     xfail = {
-        # pushapk needs keytool and certs
-        "pushapk-firefox-dev",
-        "pushapk-firefox-fake-prod",
-        "pushapk-firefox-prod",
-        "pushapk-mobile-dev",
-        "pushapk-mobile-fake-prod",
-        "pushapk-mobile-prod",
-        "pushapk-mozillavpn-prod",
+        # Add here any tests that are xfail
     }
     for app in apps:
         for product in products:
@@ -302,6 +295,10 @@ def test_init_script(tmp_path, app_dir, app, product, environment):
         "TASKCLUSTER_CLIENT_ID": "/static/test/client",
         "TASKCLUSTER_ACCESS_TOKEN": "12345",
     }
+
+    if app == "pushapk":
+        mocks = (Path(__file__).parent / "mocks").resolve()
+        env["PATH"] = f"{mocks}:{os.environ.get('PATH', '')}"
 
     if env["ENV"] == "prod":
         env["ED25519_PRIVKEY"] = "secret"
