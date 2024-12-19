@@ -65,15 +65,15 @@ PARTNER_ALIASES_REGEX = {
 
 PRODUCT_TO_DESTINATIONS_REGEXES = {
     "firefox-rc": (
-        r"^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox)"
+        r"^(/firefox/candidates/.*?/build[0-9]+/(update/)?(?:linux-i686|linux-x86_64|linux-aarch64|mac|win32|win64(?:|-aarch64))/\:lang/(?:firefox|Firefox)"
         r".*\.(?:bz2|xz|dmg|exe|mar))$"
     ),
     "firefox": (
-        r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:(?:\:lang|multi)/(?:firefox|Firefox)"
+        r"^(/firefox/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|linux-aarch64|mac|win32|win64(?:|-aarch64))/(?:(?:\:lang|multi)/(?:firefox|Firefox)"
         r".*\.(?:bz2|xz|dmg|exe|mar|msi|msix|pkg)|xpi/:lang.xpi))$"
     ),
     "devedition": (
-        r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox)"
+        r"^(/devedition/releases/.*?/(update/)?(?:linux-i686|linux-x86_64|linux-aarch64|mac|win32|win64(?:|-aarch64))/(?:\:lang|multi)/(?:firefox|Firefox)"
         r".*\.(?:bz2|xz|dmg|exe|mar|msi|msix))$"
     ),
     "thunderbird": (
@@ -163,7 +163,7 @@ PRODUCT_TO_PRODUCT_ENTRY = [
     ("thunderbird", r"^Thunderbird-.*$"),
 ]
 
-BOUNCER_LOCATION_PLATFORMS = ["linux", "linux64", "osx", "win", "win64", "android-x86", "android", "win64-aarch64", "linux64-aarch64"]
+BOUNCER_LOCATION_PLATFORMS = ["linux", "linux64", "linux64-aarch64", "osx", "win", "win64", "android-x86", "android", "win64-aarch64", "linux64-aarch64"]
 
 GO_BOUNCER_URL_TMPL = {
     "project:releng:bouncer:server:production": "https://download.mozilla.org/?product={}&print=yes",
