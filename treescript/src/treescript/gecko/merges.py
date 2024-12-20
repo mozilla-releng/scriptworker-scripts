@@ -277,16 +277,19 @@ async def do_merge(config, task, repo_path, l10n_bump_action):
 
 async def _bump_l10n(config, task, repo_path, l10n_bump_action):
     if l10n_bump_action == "l10n_bump":
-        await l10n_bump(config, task, repo_path)
+        commits = await l10n_bump(config, task, repo_path)
     elif l10n_bump_action == "l10n_bump_github":
-        await l10n_bump_github(config, task, repo_path)
+        commits = await l10n_bump_github(config, task, repo_path)
     else:
         # This should be unreachable as we validate this before we get here,
         # but that may change in the future...
         raise TreeScriptError(f"Unknown l10n_bump_action: '{l10n_bump_action}'")
 
-    output = await run_hg_command(config, "log", "--patch", "--verbose", "-r", ".", repo_path=repo_path, return_output=True, expected_exit_codes=(0, 1))
-    path = os.path.join(config["artifact_dir"], "public", "logs", "l10n_bump.diff")
-    makedirs(os.path.dirname(path))
-    with open(path, "w") as fh:
-        fh.write(output)
+    if commits:
+        output = await run_hg_command(
+            config, "log", "--patch", "--verbose", "--follow", "--limit", f"{commits}", repo_path=repo_path, return_output=True, expected_exit_codes=(0, 1)
+        )
+        path = os.path.join(config["artifact_dir"], "public", "logs", "l10n_bump.diff")
+        makedirs(os.path.dirname(path))
+        with open(path, "w") as fh:
+            fh.write(output)
