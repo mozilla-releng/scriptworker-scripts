@@ -1,7 +1,9 @@
 -r base.in
 
+aioresponses
 mock
 pytest
+pytest-aioresponses
 pytest-asyncio>=0.6.0
 pytest-cov
 pytest-mock

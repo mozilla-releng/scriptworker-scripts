@@ -1,186 +1,277 @@
-import builtins
 import os
-from unittest.mock import MagicMock, mock_open
+import shutil
 
-import mock
+from aiohttp import ClientResponseError
 import pytest
-import scriptworker.client
-from conftest import APPLE_CONFIG_PATH, BASE_DIR, TEST_CERT_TYPE, noop_sync
+import yarl
+from scriptworker.utils import json
+from winsign.makemsix import base64
 
-from signingscript import script
-from signingscript.exceptions import SigningScriptError
-from signingscript.utils import AppleNotarization
+from signingscript import sign
+from signingscript.script import async_main
 
-# helper constants, fixtures, functions {{{1
-EXAMPLE_CONFIG = os.path.join(BASE_DIR, "config_example.json")
-
-
-# async_main {{{1
-async def async_main_helper(tmpdir, mocker, formats, extra_config={}, server_type="signing_server", use_comment=None):
-    def fake_filelist_dict(*args, **kwargs):
-        ret = {"path1": {"full_path": "full_path1", "formats": formats}}
-        if use_comment:
-            ret = {"path1": {"full_path": "full_path1", "formats": formats, "comment": "Some authenticode comment"}}
-        return ret
-
-    async def fake_sign(_, val, *args, authenticode_comment=None):
-        if not use_comment:
-            assert authenticode_comment is None
-        else:
-            assert authenticode_comment == "Some authenticode comment"
-        return [val]
-
-    async def fake_notarize_stacked(_, filelist_dict, *args, **kwargs):
-        return filelist_dict.keys()
-
-    mocker.patch.object(script, "load_autograph_configs", new=noop_sync)
-    mocker.patch.object(script, "load_apple_notarization_configs", new=noop_sync)
-    mocker.patch.object(script, "setup_apple_notarization_credentials", new=noop_sync)
-    # mocker.patch.object(script, "task_cert_type", new=noop_sync)
-    mocker.patch.object(script, "task_signing_formats", return_value=formats)
-    mocker.patch.object(script, "build_filelist_dict", new=fake_filelist_dict)
-    mocker.patch.object(script, "sign", new=fake_sign)
-    mocker.patch.object(script, "apple_notarize_stacked", new=fake_notarize_stacked)
-    context = mock.MagicMock()
-    context.config = {"work_dir": tmpdir, "artifact_dir": tmpdir, "autograph_configs": {}, "apple_notarization_configs": "fake"}
-    context.config.update(extra_config)
-    await script.async_main(context)
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 
-@pytest.mark.asyncio
-async def test_async_main_gpg(tmpdir, tmpfile, mocker):
-    formats = ["autograph_gpg"]
-    fake_gpg_pubkey = tmpfile
-    mocked_copy_to_dir = mocker.Mock()
-    mocker.patch.object(script, "copy_to_dir", new=mocked_copy_to_dir)
+def setup_artifacts(work_dir: str, artifacts: list[str], taskid: str):
+    taskdir = os.path.join(work_dir, "cot", taskid)
+    os.makedirs(taskdir)
+    for a in artifacts:
+        shutil.copy(os.path.join(DATA_DIR, a), os.path.join(taskdir, a))
 
-    await async_main_helper(tmpdir, mocker, formats, {"gpg_pubkey": fake_gpg_pubkey})
-    for call in mocked_copy_to_dir.call_args_list:
-        if call[1].get("target") == "public/build/KEY":
-            break
-    else:
-        assert False, "couldn't find copy_to_dir call that created KEY"
+
+def assert_sign_data_req(req, keyid):
+    assert "Authorization" in req.kwargs["headers"]
+    assert "Content-Length" in req.kwargs["headers"]
+    assert req.kwargs["headers"]["Content-Type"] == "application/json"
+    assert "data" in req.kwargs
+    data = json.loads(req.kwargs["data"].read().decode("utf-8"))
+    for entry in data:
+        assert entry["keyid"] == keyid
+
+
+def assert_sign_hash_req(req, keyid):
+    assert "Authorization" in req.kwargs["headers"]
+    assert "Content-Length" in req.kwargs["headers"]
+    assert req.kwargs["headers"]["Content-Type"] == "application/json"
+    assert "data" in req.kwargs
+    data = json.loads(req.kwargs["data"].read().decode("utf-8"))
+    for entry in data:
+        assert entry["keyid"] == keyid
+
+
+def make_base64_encoded_string(length: int) -> str:
+    """Returns the base64-encoded version of a string of the given length
+    as a string."""
+    # Make a string of the required length
+    input_str = "{:<" + str(length) + "}"
+    input_str = input_str.format("A")
+    # Encode it into bytes, because that's what b64encode requires
+    bytestr = input_str.encode()
+    # base64 encode it
+    encoded = base64.b64encode(bytestr)
+    # and finally, convert the bytes that are returned back to a str
+    return encoded.decode("utf-8")
 
 
 @pytest.mark.asyncio
-async def test_async_main_gpg_no_pubkey_defined(tmpdir, mocker):
-    formats = ["autograph_gpg"]
+@pytest.mark.parametrize(
+    "formats,server,keyid,files,method",
+    [
+        pytest.param(
+            ["autograph_gpg"],
+            "https://prod",
+            "gpgkey",
+            ["target.tar.gz"],
+            "data",
+            id="autograph_gpg",
+        ),
+        pytest.param(
+            ["stage_autograph_gpg"],
+            "https://stage",
+            "gpgkey",
+            ["target.tar.gz"],
+            "data",
+            id="stage_autograph_gpg",
+        ),
+        # TODO: test for multiple files at once
+        # TODO: tests for multiple formats at once, like we do in prod
+    ],
+)
+async def test_signing(aioresponses, context, formats: list[str], server: str, keyid: str, files: list[str], method: str):
+    taskid = "faketask"
+    setup_artifacts(context.config["work_dir"], files, taskid)
+    context.task["payload"] = {
+        "upstreamArtifacts": [
+            {
+                "formats": formats,
+                "paths": files,
+                "taskId": taskid,
+                "taskType": "build",
+            },
+        ],
+    }
+
+    url = yarl.URL(f"{server}/sign/{method}")
+    aioresponses.post(
+        url,
+        status=200,
+        payload=[
+            {
+                "signature": "foo",
+            },
+        ],
+    )
+
+    await async_main(context)
+
+    assert len(aioresponses.requests) == 1
+    reqs = aioresponses.requests[("POST", url)]
+    assert len(reqs) == 1
+    assert_sign_data_req(reqs[0], keyid)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "formats,server,keyid,files,method",
+    [
+        pytest.param(
+            ["widevine"],
+            "https://prod",
+            "widevinekey",
+            ["widevine.tar.gz"],
+            "hash",
+            id="widevine",
+        ),
+        pytest.param(
+            ["stage_widevine"],
+            "https://stage",
+            "widevinekey",
+            ["widevine.zip"],
+            "hash",
+            id="stage_widevine",
+        ),
+        # TODO: test for multiple files at once
+        # TODO: tests for multiple formats at once, like we do in prod
+    ],
+)
+async def test_widevine_signing(mocker, aioresponses, context, formats: list[str], server: str, keyid: str, files: list[str], method: str):
+    taskid = "faketask"
+    setup_artifacts(context.config["work_dir"], files, taskid)
+    context.task["payload"] = {
+        "upstreamArtifacts": [
+            {
+                "formats": formats,
+                "paths": files,
+                "taskId": taskid,
+                "taskType": "build",
+            },
+        ],
+    }
+
+    url = yarl.URL(f"{server}/sign/{method}")
+    # two calls because there are two widevine signing files
+    # in our test files
+    for _ in range(0, 2):
+        aioresponses.post(
+            url,
+            status=200,
+            payload=[
+                {
+                    "signature": base64.b64encode(b"foo").decode(),
+                },
+            ],
+        )
+
+    class FakeWidevine(object):
+        def generate_widevine_hash(self, *args, **kwargs):
+            return b"blah"
+
+        def generate_widevine_signature(self, *args, **kwargs):
+            return b"blah"
+
+    mocker.patch.object(sign, "widevine", FakeWidevine)
+
+    await async_main(context)
+
+    assert len(aioresponses.requests) == 1
+    reqs = aioresponses.requests[("POST", url)]
+    assert len(reqs) == 2
+    assert_sign_data_req(reqs[0], keyid)
+    assert_sign_data_req(reqs[1], keyid)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "formats,server",
+    [
+        pytest.param(
+            ["autograph_gpg"],
+            "https://prod",
+            id="autograph_gpg",
+        ),
+    ],
+)
+async def test_gpg_signing_fail(aioresponses, context, formats: list[str], server: str):
+    taskid = "faketask"
+    setup_artifacts(context.config["work_dir"], ["target.tar.gz"], taskid)
+    context.task["payload"] = {
+        "upstreamArtifacts": [
+            {
+                "formats": formats,
+                "paths": ["target.tar.gz"],
+                "taskId": taskid,
+                "taskType": "build",
+            },
+        ],
+    }
+
+    url = yarl.URL(f"{server}/sign/data")
+    # we have 3 hardcoded retries
+    # TODO: we should remove sleep time for retries during tests
+    for _ in range(0, 3):
+        aioresponses.post(
+            url,
+            status=400,
+        )
 
     try:
-        await async_main_helper(tmpdir, mocker, formats)
-    except Exception as e:
-        assert e.args[0] == "GPG format is enabled but gpg_pubkey is not defined"
+        await async_main(context)
+        assert False, "should've raised ClientResponseError"
+    except ClientResponseError:
+        pass
 
 
 @pytest.mark.asyncio
-async def test_async_main_gpg_pubkey_doesnt_exist(tmpdir, mocker):
-    formats = ["autograph_gpg"]
+@pytest.mark.parametrize(
+    "formats,server,keyid",
+    [
+        pytest.param(
+            ["autograph_hash_only_mar384"],
+            "https://prod",
+            "markey",
+            id="autograph_hash_only_mar384",
+        ),
+        pytest.param(
+            ["stage_autograph_hash_only_mar384"],
+            "https://stage",
+            "markey",
+            id="stage_autograph_hash_only_mar384",
+        ),
+    ],
+)
+async def test_mar_signing(mocker, aioresponses, context, formats: list[str], server: str, keyid: str):
+    taskid = "faketask"
+    setup_artifacts(context.config["work_dir"], ["partial1.mar"], taskid)
+    context.task["payload"] = {
+        "upstreamArtifacts": [
+            {
+                "formats": formats,
+                "paths": ["partial1.mar"],
+                "taskId": taskid,
+                "taskType": "build",
+            },
+        ],
+    }
 
-    try:
-        await async_main_helper(tmpdir, mocker, formats, {"gpg_pubkey": "faaaaaaake"})
-    except Exception as e:
-        assert e.args[0] == "gpg_pubkey (faaaaaaake) doesn't exist!"
+    # Unfortunately, mocking `verify_mar_signature` cannot be avoided, because
+    # we can't make real MAR signatures in tests.
+    mocker.patch.object(sign, "verify_mar_signature", lambda *_: True)
 
+    url = yarl.URL(f"{server}/sign/hash")
+    aioresponses.post(
+        url,
+        status=200,
+        payload=[
+            {
+                "signature": make_base64_encoded_string(512),
+            }
+        ],
+    )
 
-@pytest.mark.asyncio
-async def test_async_main_multiple_formats(tmpdir, mocker):
-    formats = ["mar", "jar"]
-    mocker.patch.object(script, "copy_to_dir", new=noop_sync)
-    await async_main_helper(tmpdir, mocker, formats)
+    await async_main(context)
 
-
-@pytest.mark.asyncio
-async def test_async_main_autograph(tmpdir, mocker):
-    formats = ["autograph_mar"]
-    mocker.patch.object(script, "copy_to_dir", new=noop_sync)
-    await async_main_helper(tmpdir, mocker, formats, {})
-
-
-@pytest.mark.asyncio
-async def test_async_main_apple_notarization(tmpdir, mocker):
-    formats = ["apple_notarization"]
-    mocker.patch.object(script, "copy_to_dir", new=noop_sync)
-    await async_main_helper(tmpdir, mocker, formats)
-
-
-@pytest.mark.asyncio
-async def test_async_main_apple_notarization_stacked(tmpdir, mocker):
-    formats = ["apple_notarization_stacked"]
-    mocker.patch.object(script, "copy_to_dir", new=noop_sync)
-    await async_main_helper(tmpdir, mocker, formats)
-
-
-@pytest.mark.asyncio
-async def test_async_main_apple_notarization_stacked_mixed_fail(tmpdir, mocker):
-    formats = ["autograph_mar", "apple_notarization_stacked"]
-    mocker.patch.object(script, "copy_to_dir", new=noop_sync)
-    with pytest.raises(SigningScriptError):
-        await async_main_helper(tmpdir, mocker, formats)
-
-
-@pytest.mark.asyncio
-async def test_async_main_apple_notarization_no_config(tmpdir, mocker):
-    formats = ["apple_notarization"]
-    try:
-        await async_main_helper(tmpdir, mocker, formats, {"apple_notarization_configs": None})
-    except Exception as e:
-        assert e.args[0] == "Apple notarization is enabled but apple_notarization_configs is not defined"
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("use_comment", (True, False))
-async def test_async_main_autograph_authenticode(tmpdir, mocker, use_comment):
-    formats = ["autograph_authenticode_sha2"]
-    mocker.patch.object(script, "copy_to_dir", new=noop_sync)
-    await async_main_helper(tmpdir, mocker, formats, {}, "autograph", use_comment=use_comment)
-
-
-def test_get_default_config():
-    parent_dir = os.path.dirname(os.getcwd())
-    c = script.get_default_config()
-    assert c["work_dir"] == os.path.join(parent_dir, "work_dir")
-
-
-def test_main(monkeypatch):
-    sync_main_mock = MagicMock()
-    monkeypatch.setattr(scriptworker.client, "sync_main", sync_main_mock)
-    script.main()
-    sync_main_mock.asset_called_once_with(script.async_main, default_config=script.get_default_config())
-
-
-@pytest.mark.asyncio
-async def test_async_main_widevine_no_cert_defined(tmpdir, mocker):
-    formats = ["autograph_widevine"]
-    with pytest.raises(Exception) as e:
-        await async_main_helper(tmpdir, mocker, formats)
-        assert e.args[0] == "Widevine format is enabled, but widevine_cert is not defined"
-
-
-@pytest.mark.asyncio
-async def test_async_main_widevine(tmp_path, mocker):
-    mocker.patch.object(script, "copy_to_dir")
-    tmp_cert = tmp_path / "widevine.crt"
-    formats = ["autograph_widevine"]
-    await async_main_helper(tmp_path, mocker, formats, {"widevine_cert": tmp_cert})
-
-
-def test_setup_apple_notarization_credentials_fail_scope(context, mocker):
-    mocker.patch.object(script, "load_apple_notarization_configs", lambda _: {"invalidscope": "foobar"})
-    with pytest.raises(SigningScriptError, match=r"Credentials not found for scope.*"):
-        script.setup_apple_notarization_credentials(context)
-
-    mocker.patch.object(script, "load_apple_notarization_configs", lambda _: {TEST_CERT_TYPE: ["one", "too many"]})
-    with pytest.raises(SigningScriptError, match=r"There should only be 1 scope credential.*"):
-        script.setup_apple_notarization_credentials(context)
-
-
-def test_setup_apple_notarization_credentials_exit_early(context, mocker):
-    mocker.patch.object(os.path, "exists", lambda _: True)
-    script.setup_apple_notarization_credentials(context)
-
-
-def test_setup_apple_notarization_credentials(context, mocker):
-    mocker.patch.object(builtins, "open", lambda *_: MagicMock())
-    fake_key = AppleNotarization("1", "2", "3")
-    mocker.patch.object(script, "load_apple_notarization_configs", lambda _: {TEST_CERT_TYPE: [fake_key]})
-    script.setup_apple_notarization_credentials(context)
+    assert len(aioresponses.requests) == 1
+    reqs = aioresponses.requests[("POST", url)]
+    assert len(reqs) == 1
+    assert_sign_hash_req(reqs[0], keyid)
