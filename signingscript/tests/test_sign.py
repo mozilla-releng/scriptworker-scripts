@@ -63,9 +63,8 @@ def is_tarfile(archive):
 
 
 class MockedSession:
-    def __init__(self, signed_file=None, signed_files=None, signature=None, exception=None):
+    def __init__(self, signed_file=None, signature=None, exception=None):
         self.signed_file = signed_file
-        self.signed_files = signed_files
         self.exception = exception
         self.signature = signature
         self.post = mock.MagicMock(wraps=self.post)
@@ -76,8 +75,6 @@ class MockedSession:
         resp.json.return_value = asyncio.Future()
         if self.signed_file:
             resp.json.return_value.set_result([{"signed_file": self.signed_file}])
-        if self.signed_files:
-            resp.json.return_value.set_result([{"signed_files": self.signed_files}])
         if self.signature:
             resp.json.return_value.set_result([{"signature": self.signature}])
         if self.exception:
@@ -1317,50 +1314,6 @@ async def test_authenticode_sign_ev(tmpdir, mocker, context, keyid):
     result = await sign.sign_authenticode(context, test_file, fmt)
     assert result == test_file
     assert os.path.exists(result)
-
-
-@pytest.mark.asyncio
-async def test_sign_debian_pkg(tmpdir, mocker, context):
-    context.autograph_configs = {TEST_CERT_TYPE: [utils.Autograph(*["https://autograph.dev.mozaws.net", "user", "pass", ["autograph_debsign"]])]}
-    tmp_dir = os.path.join(context.config["work_dir"], "test_untarred")
-    path = os.path.join(context.config["work_dir"], "test_tar", "target.tar.gz")
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    shutil.copy2(os.path.join(TEST_DATA_DIR, "target.tar.gz"), path)
-    extensions = (".dsc", ".buildinfo", ".changes")
-    _, compression = os.path.splitext(path)
-    all_file_names = await sign._extract_tarfile(context, path, compression, tmp_dir=tmp_dir)
-    input_file_names = [input_file_name for input_file_name in all_file_names if input_file_name.endswith(extensions)]
-    signed_files = [{"name": os.path.basename(input_file_name), "content": sign.b64encode(b"<DATA>")} for input_file_name in input_file_names]
-    mocked_session = MockedSession(signed_files=signed_files)
-    mocker.patch.object(context, "session", new=mocked_session)
-    result = await sign.sign_debian_pkg(context, path, "autograph_debsign")
-    assert result == path
-    assert os.path.exists(result)
-
-
-def test_encode_multiple_files(tmpdir, mocker, context):
-    output_file = tempfile.TemporaryFile("w+b")
-    input_files = [
-        {"name": "uawum.txt", "content": BufferedRandom(BytesIO(b"RmUOX3AesiyzSlh"))},
-        {"name": "mweut.txt", "content": BufferedRandom(BytesIO(b"dhD52zxxKoKjKls"))},
-        {"name": "xbtnd.txt", "content": BufferedRandom(BytesIO(b"I0XvQRZh7CcYme6"))},
-    ]
-    signing_req = {"keyid": "rvkgu", "options": {"zip": "passthrough"}, "files": input_files}
-    sign.write_signing_req_to_disk(output_file, signing_req)
-    output_file.seek(0)
-    result = json.loads(output_file.read().decode())
-    expected = [
-        {
-            "keyid": "rvkgu",
-            "options": {"zip": "passthrough"},
-            "files": [
-                {"name": "uawum.txt", "content": "Um1VT1gzQWVzaXl6U2xo"},
-                {"name": "mweut.txt", "content": "ZGhENTJ6eHhLb0tqS2xz"},
-                {"name": "xbtnd.txt", "content": "STBYdlFSWmg3Q2NZbWU2"},
-            ],
-        }
-    ]
-    assert result == expected
 
 
 def test_encode_single_file(tmpdir, mocker, context):
