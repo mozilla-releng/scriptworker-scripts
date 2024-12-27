@@ -20,7 +20,6 @@ from signingscript.sign import (
     apple_notarize_geckodriver,
     apple_notarize_stacked,  # noqa: F401
     sign_authenticode,
-    sign_debian_pkg,
     sign_file,
     sign_file_detached,
     sign_gpg_with_autograph,
@@ -40,7 +39,6 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "autograph_hash_only_mar384": sign_mar384_with_autograph_hash,
         "autograph_stage_mar384": sign_mar384_with_autograph_hash,
         "autograph_gpg": sign_gpg_with_autograph,
-        "autograph_debsign": sign_debian_pkg,
         "autograph_widevine": sign_widevine,
         "autograph_omnija": sign_omnija,
         "autograph_langpack": sign_xpi,
