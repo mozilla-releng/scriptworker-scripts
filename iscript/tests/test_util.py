@@ -35,4 +35,5 @@ def test_get_config_key(scopes, base_key, key, product, raises):
         sign_config = util.get_sign_config(config, task, base_key=base_key)
         expected = deepcopy(PRODUCT_CONFIG[base_key][product])
         expected.update(config[base_key][key])
+        expected.update({"release_type": key})
         assert sign_config == expected

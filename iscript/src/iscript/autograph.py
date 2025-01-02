@@ -16,6 +16,7 @@ import requests
 from mozpack import mozjar
 from requests_hawk import HawkAuth
 
+from iscript.constants import LANGPACK_AUTOGRAPH_KEY_ID, OMNIJA_AUTOGRAPH_KEY_ID
 from iscript.createprecomplete import generate_precomplete
 from iscript.exceptions import IScriptError
 from scriptworker_client.aio import raise_future_exceptions, retry_async
@@ -290,7 +291,7 @@ async def sign_with_autograph(sign_config, input_bytes, fmt, autograph_method, k
         return sign_resp[0]["signature"]
 
 
-async def sign_file_with_autograph(sign_config, from_, fmt, to=None, extension_id=None):
+async def sign_file_with_autograph(sign_config, from_, fmt, to=None, keyid=None, extension_id=None):
     """Signs file with autograph and writes the results to a file.
 
     Args:
@@ -310,7 +311,16 @@ async def sign_file_with_autograph(sign_config, from_, fmt, to=None, extension_i
     """
     to = to or from_
     input_bytes = open(from_, "rb").read()
-    signed_bytes = base64.b64decode(await sign_with_autograph(sign_config, input_bytes, fmt, "file", extension_id=extension_id))
+    signed_bytes = base64.b64decode(
+        await sign_with_autograph(
+            sign_config,
+            input_bytes,
+            fmt,
+            "file",
+            keyid=keyid,
+            extension_id=extension_id,
+        )
+    )
     with open(to, "wb") as fout:
         fout.write(signed_bytes)
     return to
@@ -380,7 +390,14 @@ async def sign_omnija_with_autograph(config, sign_config, app_path):
         signed_out = tempfile.mkstemp(prefix="oj_signed", suffix=".ja", dir=config["work_dir"])[1]
         merged_out = tempfile.mkstemp(prefix="oj_merged", suffix=".ja", dir=config["work_dir"])[1]
 
-        await sign_file_with_autograph(sign_config, from_, "autograph_omnija", to=signed_out, extension_id="omni.ja@mozilla.org")
+        await sign_file_with_autograph(
+            sign_config,
+            from_,
+            "autograph_omnija",
+            to=signed_out,
+            keyid=OMNIJA_AUTOGRAPH_KEY_ID[sign_config.get("release_type", "dep")],
+            extension_id="omni.ja@mozilla.org",
+        )
         await merge_omnija_files(orig=from_, signed=signed_out, to=merged_out)
         with open(from_, "wb") as fout:
             with open(merged_out, "rb") as fin:
@@ -500,4 +517,11 @@ async def sign_langpacks(config, sign_config, all_paths):
         id = langpack_id(app)
         log.info("Identified {} as extension id: {}".format(app.orig_path, id))
         makedirs(os.path.dirname(app.target_bundle_path))
-        await sign_file_with_autograph(sign_config, app.orig_path, "autograph_langpack", to=app.target_bundle_path, extension_id=id)
+        await sign_file_with_autograph(
+            sign_config,
+            app.orig_path,
+            "autograph_langpack",
+            to=app.target_bundle_path,
+            keyid=LANGPACK_AUTOGRAPH_KEY_ID[sign_config.get("release_type", "dep")],
+            extension_id=id,
+        )

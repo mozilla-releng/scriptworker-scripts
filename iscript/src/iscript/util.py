@@ -75,6 +75,7 @@ def get_sign_config(config, task, base_key="mac_config"):
         cert_type = task_cert_type(config, task)
         sign_config = deepcopy(PRODUCT_CONFIG[base_key][get_product(task)])
         sign_config.update(config[base_key][_CERT_TYPE_TO_KEY_CONFIG[cert_type]])
+        sign_config["release_type"] = _CERT_TYPE_TO_KEY_CONFIG[cert_type]
         return sign_config
     except KeyError as exc:
         raise IScriptError("get_sign_config error: {}".format(str(exc))) from exc
