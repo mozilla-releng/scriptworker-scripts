@@ -322,9 +322,10 @@ async def test_omnija_sign(tmpdir, mocker, orig, signed, sha256_expected):
     config = {"work_dir": tmpdir}
     sign_config = {}
 
-    async def mocked_autograph(sign_config, from_, fmt, to, extension_id):
+    async def mocked_autograph(sign_config, from_, fmt, to, keyid, extension_id):
         assert fmt == "autograph_omnija"
         assert extension_id == "omni.ja@mozilla.org"
+        assert keyid
         shutil.copyfile(os.path.join(TEST_DATA_DIR, signed), to)
 
     mocker.patch.object(autograph, "sign_file_with_autograph", mocked_autograph)

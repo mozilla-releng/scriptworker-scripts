@@ -1,6 +1,20 @@
 #!/usr/bin/env python
 """iscript constants."""
 
+# Autograph key ids used - must match signinscript config
+# See signingscript/docker.d/passwords.yml
+LANGPACK_AUTOGRAPH_KEY_ID = {
+    "nightly": "webextensions_rsa_202404",
+    "release": "webextensions_rsa_202404",
+    "dep": "webextensions_rsa_dep_202402",
+}
+
+OMNIJA_AUTOGRAPH_KEY_ID = {
+    "nightly": "systemaddon_rsa_rel_202404",
+    "release": "systemaddon_rsa_rel_202404",
+    "dep": "systemaddon_rsa_dep_202402",
+}
+
 MAC_PRODUCT_CONFIG = {
     "firefox": {
         "designated_requirements": (
