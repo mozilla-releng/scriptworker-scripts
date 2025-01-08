@@ -280,6 +280,7 @@ def set_up_merge_mocks(mocker, called_args):
 
     async def noop_l10n_bump(*arguments, **kwargs):
         called_args.append("l10n_bump")
+        return 1
 
     orig_commit = merges.commit
 
