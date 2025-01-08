@@ -130,13 +130,13 @@ binaryornot==0.4.4 \
     --hash=sha256:359501dfc9d40632edc9fac890e19542db1a287bbcfa58175b66658392018061 \
     --hash=sha256:b8b71173c917bddcd2c16070412e369c3ed7f0528926f70cac18a6c97fd563e4
     # via cookiecutter
-boto3==1.37.0 \
-    --hash=sha256:01015b38017876d79efd7273f35d9a4adfba505237159621365bed21b9b65eca \
-    --hash=sha256:03bd8c93b226f07d944fd6b022e11a307bff94ab6a21d51675d7e3ea81ee8424
+boto3==1.37.1 \
+    --hash=sha256:4320441f904435a1b85e6ecb81793192e522c737cc9ed6566014e29f0a11cb22 \
+    --hash=sha256:96d18f7feb0c1fcb95f8837b74b6c8880e1b4e35ce5f8a8f8cb243a090c278ed
     # via -r requirements/base.in
-botocore==1.37.0 \
-    --hash=sha256:b129d091a8360b4152ab65327186bf4e250de827c4a9b7ddf40a72b1acf1f3c1 \
-    --hash=sha256:d01661f38c0edac87424344cdf4169f3ab9bc1bf1b677c8b230d025eb66c54a3
+botocore==1.37.1 \
+    --hash=sha256:b194db8fb2a0ffba53568c364ae26166e7eec0445496b2ac86a6e142f3dd982f \
+    --hash=sha256:c1db1bfc5d8c6b3b6d1ca6794f605294b4264e82a7e727b88e0fef9c2b9fbb9c
     # via
     #   boto3
     #   s3transfer
@@ -1196,9 +1196,9 @@ s3transfer==0.11.2 \
     --hash=sha256:3b39185cb72f5acc77db1a58b6e25b977f28d20496b6e58d6813d75f464d632f \
     --hash=sha256:be6ecb39fadd986ef1701097771f87e4d2f821f27f6071c872143884d2950fbc
     # via boto3
-scriptworker==60.7.0 \
-    --hash=sha256:9ebbae8c81ad27fa62d5c8f0b8d9b8e8792fee2d2f6b3fb9d711953327c70e4e \
-    --hash=sha256:a3286420970afbee519dd61c04dab83973483163c987666f239276aa6e823e0c
+scriptworker==60.7.1 \
+    --hash=sha256:a5c0e6e87ecc4df9ca1eccd7bb246e3f892b33ac2852d02825e7de417d24d9d1 \
+    --hash=sha256:ed2dcad392744654ec36d210ebc943f40d219d457769ac3b6123775309a4e037
     # via -r requirements/base.in
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
@@ -1213,9 +1213,9 @@ slugid==2.0.0 \
     # via
     #   taskcluster
     #   taskcluster-taskgraph
-taskcluster==82.0.0 \
-    --hash=sha256:6b31d731aead974c980fd85dd7367167cf0b34e1ab32a3ad3cf4897544f3ed03 \
-    --hash=sha256:adb73f4a92b06442208ab80f2e768afb601188bbfbf6e895b68226770fbde459
+taskcluster==82.0.1 \
+    --hash=sha256:399096c79ded948048e215a50a4e02937aaee8ef1c9a655a2c2b49a4cea452b3 \
+    --hash=sha256:f5d09cba026ee0f902aa04e662a9c6079ddb78f999661af9b956c607d12033a2
     # via
     #   -r requirements/base.in
     #   scriptworker

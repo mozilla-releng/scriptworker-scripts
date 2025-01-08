@@ -609,9 +609,9 @@ google-api-core==2.24.1 \
     --hash=sha256:bc78d608f5a5bf853b80bd70a795f703294de656c096c0968320830a4bc280f1 \
     --hash=sha256:f8b36f5456ab0dd99a1b693a40a31d1e7757beea380ad1b38faaf8941eae9d8a
     # via google-api-python-client
-google-api-python-client==2.161.0 \
-    --hash=sha256:324c0cce73e9ea0a0d2afd5937e01b7c2d6a4d7e2579cdb6c384f9699d6c9f37 \
-    --hash=sha256:9476a5a4f200bae368140453df40f9cda36be53fa7d0e9a9aac4cdb859a26448
+google-api-python-client==2.162.0 \
+    --hash=sha256:49365fa4f7795fe81a747f5544d6528ea94314fa59664e0ea1005f603facf1ec \
+    --hash=sha256:5f8bc934a5b6eea73a7d12d999e6585c1823179f48340234acb385e2502e735a
     # via mozapkpublisher
 google-auth==2.38.0 \
     --hash=sha256:8285113607d3b80a3f1543b75962447ba8a09fe85783432a784fdeef6ac094c4 \
@@ -1660,9 +1660,9 @@ rsa==4.9 \
     --hash=sha256:90260d9058e514786967344d0ef75fa8727eed8a7d2e43ce9f4bcf1b536174f7 \
     --hash=sha256:e38464a49c6c85d7f1351b0126661487a7e0a14a50f1675ec50eb34d4f20ef21
     # via google-auth
-scriptworker==60.7.0 \
-    --hash=sha256:9ebbae8c81ad27fa62d5c8f0b8d9b8e8792fee2d2f6b3fb9d711953327c70e4e \
-    --hash=sha256:a3286420970afbee519dd61c04dab83973483163c987666f239276aa6e823e0c
+scriptworker==60.7.1 \
+    --hash=sha256:a5c0e6e87ecc4df9ca1eccd7bb246e3f892b33ac2852d02825e7de417d24d9d1 \
+    --hash=sha256:ed2dcad392744654ec36d210ebc943f40d219d457769ac3b6123775309a4e037
     # via -r requirements/base.in
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
@@ -1681,9 +1681,9 @@ stack-data==0.6.3 \
     --hash=sha256:836a778de4fec4dcd1dcd89ed8abff8a221f58308462e1c4aa2a3cf30148f0b9 \
     --hash=sha256:d5558e0c25a4cb0853cddad3d77da9891a08cb85dd9f9f91b9f8cd66e511e695
     # via ipython
-taskcluster==82.0.0 \
-    --hash=sha256:6b31d731aead974c980fd85dd7367167cf0b34e1ab32a3ad3cf4897544f3ed03 \
-    --hash=sha256:adb73f4a92b06442208ab80f2e768afb601188bbfbf6e895b68226770fbde459
+taskcluster==82.0.1 \
+    --hash=sha256:399096c79ded948048e215a50a4e02937aaee8ef1c9a655a2c2b49a4cea452b3 \
+    --hash=sha256:f5d09cba026ee0f902aa04e662a9c6079ddb78f999661af9b956c607d12033a2
     # via scriptworker
 taskcluster-taskgraph==14.0.0 \
     --hash=sha256:04be28c01ea244930d25a0d0474aa8109c2d9273b74c628ab447b4356858d60f \

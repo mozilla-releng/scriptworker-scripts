@@ -1022,9 +1022,9 @@ rpds-py==0.23.1 \
     # via
     #   jsonschema
     #   referencing
-scriptworker==60.7.0 \
-    --hash=sha256:9ebbae8c81ad27fa62d5c8f0b8d9b8e8792fee2d2f6b3fb9d711953327c70e4e \
-    --hash=sha256:a3286420970afbee519dd61c04dab83973483163c987666f239276aa6e823e0c
+scriptworker==60.7.1 \
+    --hash=sha256:a5c0e6e87ecc4df9ca1eccd7bb246e3f892b33ac2852d02825e7de417d24d9d1 \
+    --hash=sha256:ed2dcad392744654ec36d210ebc943f40d219d457769ac3b6123775309a4e037
     # via -r requirements/base.in
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
@@ -1040,9 +1040,9 @@ slugid==2.0.0 \
     # via
     #   taskcluster
     #   taskcluster-taskgraph
-taskcluster==82.0.0 \
-    --hash=sha256:6b31d731aead974c980fd85dd7367167cf0b34e1ab32a3ad3cf4897544f3ed03 \
-    --hash=sha256:adb73f4a92b06442208ab80f2e768afb601188bbfbf6e895b68226770fbde459
+taskcluster==82.0.1 \
+    --hash=sha256:399096c79ded948048e215a50a4e02937aaee8ef1c9a655a2c2b49a4cea452b3 \
+    --hash=sha256:f5d09cba026ee0f902aa04e662a9c6079ddb78f999661af9b956c607d12033a2
     # via
     #   -r requirements/base.in
     #   scriptworker
