@@ -19,6 +19,8 @@ def read_file(path):
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SERVER_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "example_server_config.json")
 APPLE_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "example_apple_notarization_config.json")
+GPG_PUBKEY = os.path.join(os.path.dirname(__file__), "data", "gpg_testkey.asc")
+WIDEVINE_CERT = os.path.join(os.path.dirname(__file__), "data", "windows.crt")
 DEFAULT_SCOPE_PREFIX = "project:releng:signing:"
 TEST_CERT_TYPE = f"{DEFAULT_SCOPE_PREFIX}cert:dep-signing"
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -55,6 +57,8 @@ def context(tmpdir):
     context.config["artifact_dir"] = os.path.join(tmpdir, "artifact")
     context.config["taskcluster_scope_prefixes"] = [DEFAULT_SCOPE_PREFIX]
     context.config["apple_notarization_configs"] = APPLE_CONFIG_PATH
+    context.config["gpg_pubkey"] = GPG_PUBKEY
+    context.config["widevine_cert"] = WIDEVINE_CERT
     context.autograph_configs = load_autograph_configs(SERVER_CONFIG_PATH)
     context.apple_credentials_path = "fakepath"
     mkdir(context.config["work_dir"])

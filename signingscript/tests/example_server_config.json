@@ -7,6 +7,12 @@
   ],
   "project:releng:signing:cert:dep-signing": [
     ["https://127.0.0.3", "hawk_user", "hawk_secret", ["autograph_marsha384"]],
-    ["https://127.0.0.3", "hawk_user", "hawk_secret", ["autograph_authenticode_sha2"], "keyid"]
+    ["https://127.0.0.3", "hawk_user", "hawk_secret", ["autograph_authenticode_sha2"], "keyid"],
+    ["https://prod", "hawk_user", "hawk_secret", ["autograph_gpg"], "gpgkey"],
+    ["https://stage", "hawk_user", "hawk_secret", ["stage_autograph_gpg"], "gpgkey"],
+    ["https://prod", "hawk_user", "hawk_secret", ["autograph_hash_only_mar384"], "markey"],
+    ["https://stage", "hawk_user", "hawk_secret", ["stage_autograph_hash_only_mar384"], "markey"],
+    ["https://prod", "hawk_user", "hawk_secret", ["widevine"], "widevinekey"],
+    ["https://stage", "hawk_user", "hawk_secret", ["stage_widevine"], "widevinekey"]
   ]
 }
