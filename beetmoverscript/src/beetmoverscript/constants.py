@@ -36,6 +36,7 @@ STAGE_PLATFORM_MAP = {
     "linux64": "linux-x86_64",
     "linux64-asan-reporter": "linux-x86_64-asan-reporter",
     "linux64-devedition": "linux-x86_64",
+    "linux64-aarch64-devedition": "linux-aarch64",
     "macosx64": "mac",
     "macosx64-asan-reporter": "mac-asan-reporter",
     "macosx64-devedition": "mac",
@@ -47,6 +48,7 @@ STAGE_PLATFORM_MAP = {
 NORMALIZED_BALROG_PLATFORMS = {
     "linux-devedition": "linux",
     "linux64-devedition": "linux64",
+    "linux64-aarch64-devedition": "linux64-aarch64",
     "macosx64-devedition": "macosx64",
     "win32-devedition": "win32",
     "win64-devedition": "win64",
