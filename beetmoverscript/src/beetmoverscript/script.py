@@ -293,7 +293,7 @@ def copy_beets(context, from_keys_checksums, to_keys_checksums):
                         )
                     )
                 else:
-                    log.warning("{} already exists with the same content ({}), " "skipping copy".format(destination, to_keys_checksums[destination]))
+                    log.warning("{} already exists with the same content ({}), skipping copy".format(destination, to_keys_checksums[destination]))
             else:
                 log.info("Copying {} to {}".format(source, destination))
                 boto_client.copy_object(
@@ -689,7 +689,7 @@ async def upload_to_s3(context, s3_key, path):
     product = get_product_name(context.task, context.config)
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
-        raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
+        raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), mimetypes.guess_type() returned {}".format(path, mime_type))
     api_kwargs = {
         "Bucket": get_bucket_name(context, product, "aws"),
         "Key": s3_key,

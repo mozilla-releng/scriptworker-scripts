@@ -61,7 +61,7 @@ def _get_channel_publish_config(product_config, task):
     # target - if so, then use that target store.
     if target_store:
         if not publish_config.get(target_store):
-            raise ValueError('Task had `target_store` set to "{}", but the "{}" channel does not support ' "that target".format(target_store, task["channel"]))
+            raise ValueError('Task had `target_store` set to "{}", but the "{}" channel does not support that target'.format(target_store, task["channel"]))
     elif publish_config.get("google"):
         target_store = "google"
     else:

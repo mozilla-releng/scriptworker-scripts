@@ -147,7 +147,7 @@ def process_locations_from_xml(locations_found):
     for location in locations_found:
         os = location.getAttribute("os")
         if os not in BOUNCER_LOCATION_PLATFORMS:
-            err_msg = "Unexpected os found in bouncer. Found {} while " "expected {}.".format(os, BOUNCER_LOCATION_PLATFORMS)
+            err_msg = "Unexpected os found in bouncer. Found {} while expected {}.".format(os, BOUNCER_LOCATION_PLATFORMS)
             raise ScriptWorkerTaskException(err_msg)
         id_ = location.getAttribute("id")
         path = location.firstChild.data

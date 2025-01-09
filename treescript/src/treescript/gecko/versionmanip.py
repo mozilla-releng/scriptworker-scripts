@@ -161,7 +161,7 @@ async def do_bump_version(repo_path, files, next_version, source_repo):
             next_version = VersionClass.parse("{}esr".format(next_version))
 
         if next_version < curr_version:
-            log.warning("Version bumping skipped due to conflicting values: " "(next version {} is < current version {})".format(next_version, curr_version))
+            log.warning("Version bumping skipped due to conflicting values: (next version {} is < current version {})".format(next_version, curr_version))
             continue
         elif next_version == curr_version:
             log.info("Version bumping skipped due to unchanged values")

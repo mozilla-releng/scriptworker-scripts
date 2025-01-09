@@ -118,7 +118,7 @@ async def bouncer_locations(context):
         locations_info = await get_locations_info(context, product_name)
         for entry in locations_info:
             platform, path = entry["os"], entry["path"]
-            log.info("Sanity check product {} platform {}, path {} before bumping" " its version ...".format(product_name, platform, path))
+            log.info("Sanity check product {} platform {}, path {} before bumping its version ...".format(product_name, platform, path))
 
             check_location_path_matches_destination(product_name, path)
             current_version = get_nightly_version(product_name, path)
@@ -140,12 +140,12 @@ async def bouncer_locations(context):
             locations_info = await get_locations_info(context, product_name)
             for entry in locations_info:
                 platform, path = entry["os"], entry["path"]
-                log.info("Sanity check product {} platform {}, path {} after bumping its " "version ...".format(product_name, platform, path))
+                log.info("Sanity check product {} platform {}, path {} after bumping its version ...".format(product_name, platform, path))
                 check_location_path_matches_destination(product_name, path)
 
                 log.info("Sanity checking to make sure the bump was successful...")
                 if payload_version not in path:
-                    err_msg = "Couldn't find in-tree version {} in the updated " "bouncer path {}".format(payload_version, path)
+                    err_msg = "Couldn't find in-tree version {} in the updated bouncer path {}".format(payload_version, path)
                     raise ScriptWorkerTaskException(err_msg)
         log.info("All bumped bouncer products look good!")
 
