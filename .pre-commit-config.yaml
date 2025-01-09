@@ -12,7 +12,8 @@ repos:
       - id: trailing-whitespace
       - id: check-added-large-files
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.8.6'
+    # keep in sync with tox.ini
+    rev: 'v0.9.0'
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
