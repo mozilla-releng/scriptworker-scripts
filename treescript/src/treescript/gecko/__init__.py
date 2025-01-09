@@ -88,7 +88,7 @@ async def do_actions(config, task):
 
     num_outgoing = await vcs.log_outgoing(config, task, repo_path)
     if num_outgoing != num_changes:
-        raise TreeScriptError("Outgoing changesets don't match number of expected changesets!" " {} vs {}".format(num_outgoing, num_changes))
+        raise TreeScriptError("Outgoing changesets don't match number of expected changesets! {} vs {}".format(num_outgoing, num_changes))
     if should_push(task, actions):
         if num_changes:
             await vcs.push(config, task, repo_path, target_repo=get_source_repo(task))

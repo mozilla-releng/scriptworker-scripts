@@ -135,7 +135,7 @@ def check_location_path_matches_destination(product_name, path):
         if match:
             break  # Nothing more to check
     if match is None:
-        err_msg = "Corrupt location for product {} " "path {}".format(product_name, path)
+        err_msg = "Corrupt location for product {} path {}".format(product_name, path)
         raise ScriptWorkerTaskException(err_msg)
 
 

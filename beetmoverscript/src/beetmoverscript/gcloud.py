@@ -106,7 +106,7 @@ async def upload_to_gcs(context, target_path, path, expiry=None):
     product = get_product_name(context.task, context.config)
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
-        raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), " "mimetypes.guess_type() returned {}".format(path, mime_type))
+        raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), mimetypes.guess_type() returned {}".format(path, mime_type))
     bucket_name = get_bucket_name(context, product, "gcloud")
 
     bucket = Bucket(context.gcs_client, name=bucket_name)
@@ -243,7 +243,7 @@ def move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, release
                     )
                 )
             else:
-                log.warning("{} already exists with the same content ({}), " "skipping copy".format(destination, releases_blobs[destination]))
+                log.warning("{} already exists with the same content ({}), skipping copy".format(destination, releases_blobs[destination]))
         else:
             log.info("Copying {} to {}".format(source, destination))
             source_blob = bucket.get_blob(source)

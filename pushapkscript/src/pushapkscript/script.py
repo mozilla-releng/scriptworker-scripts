@@ -46,7 +46,7 @@ async def async_main(context):
             jarsigner.verify(context, publish_config, aab_path)
             manifest.verify(product_config, aab_path)
     else:
-        log.info('This product is configured with "skip_check_signature", so the signing of the ' "files will not be verified.")
+        log.info('This product is configured with "skip_check_signature", so the signing of the files will not be verified.')
 
     log.info("Delegating publication to mozapkpublisher...")
     with contextlib.ExitStack() as stack:
@@ -71,11 +71,11 @@ def _get_product_config(context, android_product):
 
     if len(matching_products) == 0:
         raise TaskVerificationError(
-            'Android "{}" does not exist in the configuration of this ' "instance. Are you sure you allowed to push such an " "APK?".format(android_product)
+            'Android "{}" does not exist in the configuration of this instance. Are you sure you allowed to push such an APK?'.format(android_product)
         )
 
     if len(matching_products) > 1:
-        raise TaskVerificationError("The configuration is invalid: multiple product configs match " 'the product "{}"'.format(android_product))
+        raise TaskVerificationError('The configuration is invalid: multiple product configs match the product "{}"'.format(android_product))
 
     return matching_products[0]
 

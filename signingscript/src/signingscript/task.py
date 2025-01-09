@@ -131,7 +131,7 @@ def _check_scopes_exist_and_all_have_the_same_prefix(scopes, prefixes):
         if all(scope.startswith(prefix) for scope in scopes):
             break
     else:
-        raise TaskVerificationError("Scopes must exist and all have the same prefix. " "Given scopes: {}. Allowed prefixes: {}".format(scopes, prefixes))
+        raise TaskVerificationError("Scopes must exist and all have the same prefix. Given scopes: {}. Allowed prefixes: {}".format(scopes, prefixes))
 
 
 # sign {{{1
