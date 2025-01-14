@@ -31,6 +31,9 @@ def sign_config():
         "langpack_url": "https://autograph-hsm.dev.mozaws.net/langpack",
         "langpack_user": "langpack_user",
         "langpack_pass": "langpack_pass",
+        "omnija_url": "https://autograph-hsm.dev.mozaws.net/omnija",
+        "omnija_user": "omnija_user",
+        "omnija_pass": "omnija_pass",
         "stage_widevine_url": "https://autograph-stage.dev.mozaws.net",
         "stage_widevine_user": "widevine_user",
         "stage_widevine_pass": "widevine_pass",
@@ -38,6 +41,9 @@ def sign_config():
         "stage_langpack_url": "https://autograph-stage.dev.mozaws.net/langpack",
         "stage_langpack_user": "langpack_user",
         "stage_langpack_pass": "langpack_pass",
+        "stage_omnija_url": "https://autograph-stage.dev.mozaws.net/omnija",
+        "stage_omnija_user": "omnija_user",
+        "stage_omnija_pass": "omnija_pass",
         "gcp_prod_widevine_url": "https://autograph-gcp.dev.mozaws.net",
         "gcp_prod_widevine_user": "widevine_user",
         "gcp_prod_widevine_pass": "widevine_pass",
@@ -45,6 +51,9 @@ def sign_config():
         "gcp_prod_langpack_url": "https://autograph-gcp.dev.mozaws.net/langpack",
         "gcp_prod_langpack_user": "langpack_user",
         "gcp_prod_langpack_pass": "langpack_pass",
+        "gcp_prod_omnija_url": "https://autograph-gcp.dev.mozaws.net/omnija",
+        "gcp_prod_omnija_user": "omnija_user",
+        "gcp_prod_omnija_pass": "omnija_pass",
     }
 
 
@@ -279,6 +288,33 @@ async def test_widevine_autograph(mocker, tmp_path, blessed, sign_config, fmt, e
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fmt,expected_url",
+    (
+        ("autograph_omnija", "https://autograph-hsm.dev.mozaws.net"),
+        ("autograph_omnija", "https://autograph-hsm.dev.mozaws.net"),
+        ("stage_autograph_omnija", "https://autograph-stage.dev.mozaws.net"),
+        ("gcp_prod_autograph_omnija", "https://autograph-gcp.dev.mozaws.net"),
+    ),
+)
+async def test_omnija_autograph(mocker, tmp_path, sign_config, fmt, expected_url):
+    orig = tmp_path / "omni.ja"
+    with open(orig, "w+") as f:
+        f.write("")
+
+    merge = mocker.patch("iscript.autograph.merge_omnija_files")
+    merge.side_effect = lambda orig, signed, to: shutil.copy(signed, to)
+
+    async def fake_call(url, *args, **kwargs):
+        assert expected_url in url
+        return [{"signed_file": base64.b64encode(b"sigomnijasig")}]
+
+    mocker.patch.object(autograph, "call_autograph", fake_call)
+
+    config = {"work_dir": tmp_path}
+    await autograph.sign_omnija_with_autograph(config, sign_config, tmp_path, fmt)
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "fmt,expected_url",
@@ -356,7 +392,7 @@ async def test_omnija_sign(tmpdir, mocker, orig, signed, sha256_expected):
         shutil.copyfile(os.path.join(TEST_DATA_DIR, signed), to)
 
     mocker.patch.object(autograph, "sign_file_with_autograph", mocked_autograph)
-    await autograph.sign_omnija_with_autograph(config, sign_config, tmpdir)
+    await autograph.sign_omnija_with_autograph(config, sign_config, tmpdir, "autograph_omnija")
     sha256_actual = sha256(open(copy_from, "rb").read()).hexdigest()
     assert sha256_actual == sha256_expected
 

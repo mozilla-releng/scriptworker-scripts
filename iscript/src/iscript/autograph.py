@@ -361,7 +361,7 @@ def _get_omnija_signing_files(file_list):
     return files
 
 
-async def sign_omnija_with_autograph(config, sign_config, app_path):
+async def sign_omnija_with_autograph(config, sign_config, app_path, fmt):
     """Sign the omnija file specified using autograph.
 
     This function overwrites from_
@@ -393,7 +393,7 @@ async def sign_omnija_with_autograph(config, sign_config, app_path):
         await sign_file_with_autograph(
             sign_config,
             from_,
-            "autograph_omnija",
+            fmt,
             to=signed_out,
             keyid=OMNIJA_AUTOGRAPH_KEY_ID[sign_config.get("release_type", "dep")],
             extension_id="omni.ja@mozilla.org",

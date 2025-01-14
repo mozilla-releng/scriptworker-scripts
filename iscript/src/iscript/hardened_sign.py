@@ -177,8 +177,9 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
     # sign omni.ja
     futures = []
     for app in all_apps:
-        if {"autograph_omnija", "omnija"} & set(app.formats):
-            futures.append(asyncio.ensure_future(sign_omnija_with_autograph(config, sign_config, app.app_path)))
+        fmt = next((f for f in app.formats if "omnija" in f), None)
+        if fmt:
+            futures.append(asyncio.ensure_future(sign_omnija_with_autograph(config, sign_config, app.app_path, fmt)))
     await raise_future_exceptions(futures)
 
     # sign widevine
