@@ -128,7 +128,14 @@ async def pipe_to_log(pipe, filehandles=(), level=logging.INFO):
 
     """
     while True:
-        line = await pipe.readline()
+        try:
+            line = await pipe.readuntil()
+        except asyncio.exceptions.IncompleteReadError as e:
+            line = e.partial
+        except asyncio.exceptions.LimitOverrunError:
+            # line too long
+            line = bytes(pipe._buffer)
+            pipe._buffer.clear()
         if line:
             line = to_unicode(line)
             log.log(level, line.rstrip())

@@ -179,6 +179,15 @@ def test_get_log_filehandle(path, tmpdir):
             None,
             True,
         ),
+        (
+            ["echo", "a" * 100_000],
+            0,
+            ["a" * 100_000 + "\n"],
+            None,
+            False,
+            None,
+            False,
+        ),
     ),
 )
 @pytest.mark.asyncio
