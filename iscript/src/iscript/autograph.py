@@ -65,7 +65,7 @@ LANGPACK_RE = re.compile(r"^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|dev
 
 
 # sign_widevine_dir {{{1
-async def sign_widevine_dir(config, sign_config, app_dir):
+async def sign_widevine_dir(config, sign_config, app_dir, autograph_fmt):
     """Sign the internals of a tarfile with the widevine key.
 
     Extract the entire tarball, but only sign a handful of files (see
@@ -98,7 +98,7 @@ async def sign_widevine_dir(config, sign_config, app_dir):
             to = _get_mac_sigpath(from_)
             log.debug("Adding %s to the sigfile paths...", to)
             makedirs(os.path.dirname(to))
-            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(sign_config, from_, "blessed" in fmt, to=to)))
+            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(sign_config, from_, autograph_fmt, "blessed" in fmt, to=to)))
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(app_dir, all_files)
@@ -439,7 +439,7 @@ async def merge_omnija_files(orig, signed, to):
 
 
 # sign_widevine_with_autograph {{{1
-async def sign_widevine_with_autograph(sign_config, from_, blessed, to=None):
+async def sign_widevine_with_autograph(sign_config, from_, fmt, blessed, to=None):
     """Create a widevine signature using autograph as a backend.
 
     Args:
@@ -462,7 +462,6 @@ async def sign_widevine_with_autograph(sign_config, from_, blessed, to=None):
 
     to = to or f"{from_}.sig"
     flags = 1 if blessed else 0
-    fmt = "autograph_widevine"
 
     h = widevine.generate_widevine_hash(from_, flags)
 

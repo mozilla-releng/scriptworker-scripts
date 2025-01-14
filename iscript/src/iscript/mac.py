@@ -648,8 +648,9 @@ async def sign_all_apps(config, sign_config, entitlements_path, all_paths, provi
     # sign widevine
     futures = []
     for app in all_paths:
-        if {"autograph_widevine", "widevine"} & set(app.formats):
-            futures.append(asyncio.ensure_future(sign_widevine_dir(config, sign_config, app.app_path)))
+        fmt = next((f for f in app.formats if "widevine" in f), None)
+        if fmt:
+            futures.append(asyncio.ensure_future(sign_widevine_dir(config, sign_config, app.app_path, fmt)))
     await raise_future_exceptions(futures)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     futures = []
