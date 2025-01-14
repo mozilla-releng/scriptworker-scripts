@@ -45,7 +45,13 @@
                         "autograph_omnija",
                         "mac_geckodriver",
                         "mac_single_file",
-                        "autograph_langpack"
+                        "autograph_langpack",
+                        "stage_autograph_widevine",
+                        "stage_autograph_omnija",
+                        "stage_autograph_langpack",
+                        "gcp_prod_autograph_widevine",
+                        "gcp_prod_autograph_omnija",
+                        "gcp_prod_autograph_langpack"
                       ]
                     }
                   },
