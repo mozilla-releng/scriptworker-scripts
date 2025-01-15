@@ -10,6 +10,7 @@ from google.cloud.storage.retry import DEFAULT_RETRY_IF_GENERATION_SPECIFIED, Co
 from scriptworker.exceptions import ScriptWorkerTaskException
 
 import beetmoverscript.gcloud
+from beetmoverscript.utils import get_candidates_prefix, get_releases_prefix
 
 from . import get_fake_valid_task, noop_sync
 
@@ -231,6 +232,41 @@ async def test_push_to_releases_gcs_no_moves(context, monkeypatch, candidate_blo
             await beetmoverscript.gcloud.push_to_releases_gcs(context)
     else:
         await beetmoverscript.gcloud.push_to_releases_gcs(context)
+
+
+@pytest.mark.parametrize(
+    "candidate_blobs,exclude,results",
+    [
+        ({"foo/bar.zip": "md5hash", "foo/baz.exe": "abcd", "foo/qux.js": "shasum"}, [], ["foo/baz.exe", "foo/qux.js"]),
+        ({"foo/bar.zip": "md5hash", "foo/baz.exe": "abcd", "foo/qux.js": "shasum"}, [r"^.*\.exe$"], ["foo/qux.js"]),
+        ({"foo/bar.zip": "md5hash", "foo/baz.exe": "abcd", "foo/qux.js": "shasum"}, [r"^.*\.exe$", r"^.*\.js"], []),
+    ],
+)
+@pytest.mark.asyncio
+async def test_push_to_releases_gcs_exclude(context, monkeypatch, candidate_blobs, exclude, results):
+    context.gcs_client = FakeClient()
+    context.task = get_fake_valid_task("task_push_to_releases.json")
+
+    payload = context.task["payload"]
+    payload["exclude"] = exclude
+    test_candidate_prefix = get_candidates_prefix(payload["product"], payload["version"], payload["build_number"])
+    test_release_prefix = get_releases_prefix(payload["product"], payload["version"])
+
+    def fake_list_bucket_objects_gcs_same(client, bucket, prefix):
+        if "candidates" in prefix:
+            return {f"{prefix}{key}": value for (key, value) in candidate_blobs.items()}
+        if "releases" in prefix:
+            return {}
+
+    expect_blobs = {f"{test_candidate_prefix}{key}": f"{test_release_prefix}{key}" for key in results}
+
+    def fake_move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, releases_blobs):
+        assert blobs_to_copy == expect_blobs
+
+    monkeypatch.setattr(beetmoverscript.gcloud, "list_bucket_objects_gcs", fake_list_bucket_objects_gcs_same)
+    monkeypatch.setattr(beetmoverscript.gcloud, "move_artifacts", fake_move_artifacts)
+
+    await beetmoverscript.gcloud.push_to_releases_gcs(context)
 
 
 def test_list_bucket_objects_gcs():

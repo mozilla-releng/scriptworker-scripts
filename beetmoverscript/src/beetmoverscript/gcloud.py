@@ -203,6 +203,7 @@ async def push_to_releases_gcs(context):
 
     # Weed out RELEASE_EXCLUDE matches, but allow partners specified in the payload
     push_partners = context.task["payload"].get("partners", [])
+    exclude = context.task["payload"].get("exclude", []) + list(RELEASE_EXCLUDE)
 
     for blob_path in candidates_blobs.keys():
         if "/partner-repacks/" in blob_path:
@@ -214,7 +215,7 @@ async def push_to_releases_gcs(context):
                 )
             else:
                 log.debug("Excluding partner repack {}".format(blob_path))
-        elif not matches_exclude(blob_path, RELEASE_EXCLUDE):
+        elif not matches_exclude(blob_path, exclude):
             blobs_to_copy[blob_path] = blob_path.replace(candidates_prefix, releases_prefix)
         else:
             log.debug("Excluding {}".format(blob_path))
