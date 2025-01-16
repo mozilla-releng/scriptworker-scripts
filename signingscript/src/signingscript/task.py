@@ -165,11 +165,11 @@ async def sign(context, path, signing_formats, **kwargs):
 def _get_signing_function_from_format(fmt_and_key_id):
     fmt, _ = split_autograph_format(fmt_and_key_id)
 
-    if fmt.startswith(("autograph_xpi", "stage_autograph_xpi")):
+    if fmt.startswith(("autograph_xpi", "gcp_prod_autograph_xpi", "stage_autograph_xpi")):
         return sign_xpi
     if fn := FORMAT_TO_SIGNING_FUNCTION.get(fmt):
         return fn
-    if fn := FORMAT_TO_SIGNING_FUNCTION.get(fmt.removeprefix("stage_")):
+    if fn := FORMAT_TO_SIGNING_FUNCTION.get(fmt.removeprefix("stage_").removeprefix("gcp_prod_")):
         return fn
 
     return FORMAT_TO_SIGNING_FUNCTION["default"]
@@ -194,13 +194,17 @@ def _sort_formats(formats):
     for fmt in (
         "widevine",
         "autograph_widevine",
+        "gcp_prod_autograph_widevine",
         "stage_autograph_widevine",
         "autograph_omnija",
+        "gcp_prod_autograph_omnija",
         "stage_autograph_omnija",
         "macapp",
         "autograph_rsa",
+        "gcp_prod_autograph_rsa",
         "stage_autograph_rsa",
         "autograph_gpg",
+        "gcp_prod_autograph_gpg",
         "stage_autograph_gpg",
     ):
         if fmt in formats:
