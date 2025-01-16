@@ -488,19 +488,8 @@ def get_app_paths(config, task):
     return all_paths
 
 
-def filter_apps(all_paths, fmt, inverted=False):
-    """Filter all_apps by format.
-
-    Args:
-        all_paths: list of App objects
-        fmt: format name to filter
-        inverted (default: False): whether or not to invert the list.
-
-    """
-    filter_fn = filter
-    if inverted:
-        filter_fn = filterfalse
-    return list(filter_fn(lambda app: fmt in app.formats, all_paths))
+def get_langpack_format(app):
+    return next((f for f in app.formats if "langpack" in f), None)
 
 
 # extract_all_apps {{{1
@@ -1202,17 +1191,18 @@ async def notarize_behavior(config, task):
 
     path_attrs = ["app_path"]
 
-    all_paths = get_app_paths(config, task)
-    langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
-    if langpack_apps:
-        await sign_langpacks(config, sign_config, langpack_apps)
-        all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
+    non_langpack_apps = []
+    for app in get_app_paths(config, task):
+        if fmt := get_langpack_format(app):
+            await sign_langpacks(config, sign_config, [app], fmt)
+        else:
+            non_langpack_apps.append(app)
 
     # app
-    await extract_all_apps(config, all_paths)
+    await extract_all_apps(config, non_langpack_apps)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_all_apps(config, sign_config, entitlements_path, all_paths, provisioning_profile_path)
+    await sign_all_apps(config, sign_config, entitlements_path, non_langpack_apps, provisioning_profile_path)
 
     # pkg
     if sign_config["create_pkg"]:
@@ -1220,26 +1210,26 @@ async def notarize_behavior(config, task):
         # Unlock keychain again in case it's locked since previous unlock
         await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
         await update_keychain_search_path(config, sign_config["signing_keychain"])
-        await create_pkg_files(config, sign_config, all_paths, requirements_plist_path=requirements_plist_path)
+        await create_pkg_files(config, sign_config, non_langpack_apps, requirements_plist_path=requirements_plist_path)
 
     log.info("Notarizing")
     if sign_config["notarize_type"] == "multi_account":
-        await create_all_notarization_zipfiles(all_paths, path_attrs=path_attrs)
-        poll_uuids = await wrap_notarization_with_sudo(config, sign_config, all_paths, path_attr="zip_path")
+        await create_all_notarization_zipfiles(non_langpack_apps, path_attrs=path_attrs)
+        poll_uuids = await wrap_notarization_with_sudo(config, sign_config, non_langpack_apps, path_attr="zip_path")
     else:
-        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, sign_config, path_attrs=path_attrs)
+        zip_path = await create_one_notarization_zipfile(work_dir, non_langpack_apps, sign_config, path_attrs=path_attrs)
         poll_uuids = await notarize_no_sudo(work_dir, sign_config, zip_path)
 
     await poll_all_notarization_status(sign_config, poll_uuids)
 
     # app
-    await staple_notarization(all_paths, path_attr="app_path")
-    await tar_apps(config, all_paths)
+    await staple_notarization(non_langpack_apps, path_attr="app_path")
+    await tar_apps(config, non_langpack_apps)
 
     # pkg
     if sign_config["create_pkg"]:
-        await staple_notarization(all_paths, path_attr="pkg_path")
-        await copy_pkgs_to_artifact_dir(config, all_paths)
+        await staple_notarization(non_langpack_apps, path_attr="pkg_path")
+        await copy_pkgs_to_artifact_dir(config, non_langpack_apps)
 
     log.info("Done signing and notarizing apps.")
 
@@ -1267,17 +1257,18 @@ async def notarize_1_behavior(config, task):
     requirements_plist_path = await download_requirements_plist_file(config, task)
     path_attrs = ["app_path"]
 
-    all_paths = get_app_paths(config, task)
-    langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
-    if langpack_apps:
-        await sign_langpacks(config, sign_config, langpack_apps)
-        all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
+    non_langpack_apps = []
+    for app in get_app_paths(config, task):
+        if fmt := get_langpack_format(app):
+            await sign_langpacks(config, sign_config, [app], fmt)
+        else:
+            non_langpack_apps.append(app)
 
     # app
-    await extract_all_apps(config, all_paths)
+    await extract_all_apps(config, non_langpack_apps)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_all_apps(config, sign_config, entitlements_path, all_paths, provisioning_profile_path)
+    await sign_all_apps(config, sign_config, entitlements_path, non_langpack_apps, provisioning_profile_path)
 
     # pkg
     if sign_config["create_pkg"]:
@@ -1285,14 +1276,14 @@ async def notarize_1_behavior(config, task):
         # Unlock keychain again in case it's locked since previous unlock
         await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
         await update_keychain_search_path(config, sign_config["signing_keychain"])
-        await create_pkg_files(config, sign_config, all_paths, requirements_plist_path=requirements_plist_path)
+        await create_pkg_files(config, sign_config, non_langpack_apps, requirements_plist_path=requirements_plist_path)
 
     log.info("Submitting for notarization.")
     if sign_config["notarize_type"] == "multi_account":
-        await create_all_notarization_zipfiles(all_paths, path_attrs=path_attrs)
-        poll_uuids = await wrap_notarization_with_sudo(config, sign_config, all_paths, path_attr="zip_path")
+        await create_all_notarization_zipfiles(non_langpack_apps, path_attrs=path_attrs)
+        poll_uuids = await wrap_notarization_with_sudo(config, sign_config, non_langpack_apps, path_attr="zip_path")
     else:
-        zip_path = await create_one_notarization_zipfile(work_dir, all_paths, sign_config, path_attrs)
+        zip_path = await create_one_notarization_zipfile(work_dir, non_langpack_apps, sign_config, path_attrs)
         poll_uuids = await notarize_no_sudo(work_dir, sign_config, zip_path)
 
     # create uuid_manifest.json
@@ -1301,8 +1292,8 @@ async def notarize_1_behavior(config, task):
     with open(uuids_path, "w") as fh:
         json.dump(sorted(poll_uuids.keys()), fh)
 
-    await tar_apps(config, all_paths)
-    await copy_pkgs_to_artifact_dir(config, all_paths)
+    await tar_apps(config, non_langpack_apps)
+    await copy_pkgs_to_artifact_dir(config, non_langpack_apps)
 
     log.info("Done signing apps and submitting them for notarization.")
 
@@ -1364,17 +1355,17 @@ async def sign_behavior(config, task):
     entitlements_path = await download_entitlements_file(config, sign_config, task)
     provisioning_profile_path = await download_provisioning_profile(config, task)
 
-    all_paths = get_app_paths(config, task)
-    all_paths = get_app_paths(config, task)
-    langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
-    if langpack_apps:
-        await sign_langpacks(config, sign_config, langpack_apps)
-        all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
-    await extract_all_apps(config, all_paths)
+    non_langpack_apps = []
+    for app in get_app_paths(config, task):
+        if fmt := get_langpack_format(app):
+            await sign_langpacks(config, sign_config, [app], fmt)
+        else:
+            non_langpack_apps.append(app)
+    await extract_all_apps(config, non_langpack_apps)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_all_apps(config, sign_config, entitlements_path, all_paths, provisioning_profile_path)
-    await tar_apps(config, all_paths)
+    await sign_all_apps(config, sign_config, entitlements_path, non_langpack_apps, provisioning_profile_path)
+    await tar_apps(config, non_langpack_apps)
     log.info("Done signing apps.")
 
 
@@ -1395,22 +1386,23 @@ async def sign_and_pkg_behavior(config, task):
     provisioning_profile_path = await download_provisioning_profile(config, task)
     requirements_plist_path = await download_requirements_plist_file(config, task)
 
-    all_paths = get_app_paths(config, task)
-    langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
-    if langpack_apps:
-        await sign_langpacks(config, sign_config, langpack_apps)
-        all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
-    await extract_all_apps(config, all_paths)
+    non_langpack_apps = []
+    for app in get_app_paths(config, task):
+        if fmt := get_langpack_format(app):
+            await sign_langpacks(config, sign_config, [app], fmt)
+        else:
+            non_langpack_apps.append(app)
+    await extract_all_apps(config, non_langpack_apps)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_all_apps(config, sign_config, entitlements_path, all_paths, provisioning_profile_path)
-    await tar_apps(config, all_paths)
+    await sign_all_apps(config, sign_config, entitlements_path, non_langpack_apps, provisioning_profile_path)
+    await tar_apps(config, non_langpack_apps)
 
     # pkg
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await create_pkg_files(config, sign_config, all_paths, requirements_plist_path=requirements_plist_path)
-    await copy_pkgs_to_artifact_dir(config, all_paths)
+    await create_pkg_files(config, sign_config, non_langpack_apps, requirements_plist_path=requirements_plist_path)
+    await copy_pkgs_to_artifact_dir(config, non_langpack_apps)
 
     log.info("Done signing apps and creating pkgs.")
 
@@ -1429,18 +1421,19 @@ async def single_file_behavior(config, task, notarize=True):
     """
     sign_config = get_sign_config(config, task, base_key="mac_config")
 
-    all_paths = get_app_paths(config, task)
-    langpack_apps = filter_apps(all_paths, fmt="autograph_langpack")
-    if langpack_apps:
-        await sign_langpacks(config, sign_config, langpack_apps)
-        all_paths = filter_apps(all_paths, fmt="autograph_langpack", inverted=True)
-    await extract_all_apps(config, all_paths)
+    non_langpack_apps = []
+    for app in get_app_paths(config, task):
+        if fmt := get_langpack_format(app):
+            await sign_langpacks(config, sign_config, [app], fmt)
+        else:
+            non_langpack_apps.append(app)
+    await extract_all_apps(config, non_langpack_apps)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_single_files(config, sign_config, all_paths)
+    await sign_single_files(config, sign_config, non_langpack_apps)
 
     if notarize:
-        for app in all_paths:
+        for app in non_langpack_apps:
             if app.target_bundle_path.endswith(".zip"):
                 zip_path = app.target_bundle_path
                 log.info("Notarizing...")
@@ -1461,7 +1454,7 @@ async def single_file_behavior(config, task, notarize=True):
                     raise IScriptError("Unexpected number of files found for notarization")
                 app.single_path = os.path.join(app.parent_dir, single_paths[0])
                 path_attrs = ["single_path"]
-                zip_path = await create_one_notarization_zipfile(config["work_dir"], all_paths, sign_config, path_attrs)
+                zip_path = await create_one_notarization_zipfile(config["work_dir"], non_langpack_apps, sign_config, path_attrs)
                 poll_uuids = await notarize_no_sudo(config["work_dir"], sign_config, zip_path)
                 await poll_all_notarization_status(sign_config, poll_uuids)
                 log.info(f"{zip_path} notarized")

@@ -319,6 +319,38 @@ async def test_omnija_autograph(mocker, tmp_path, sign_config, fmt, expected_url
 @pytest.mark.parametrize(
     "fmt,expected_url",
     (
+        ("autograph_langpack", "https://autograph-hsm.dev.mozaws.net"),
+        ("stage_autograph_langpack", "https://autograph-stage.dev.mozaws.net"),
+        ("gcp_prod_autograph_langpack", "https://autograph-gcp.dev.mozaws.net"),
+    ),
+)
+async def test_langpack_autograph(mocker, tmp_path, sign_config, fmt, expected_url):
+    dir = tmp_path / "public" / "build"
+    os.makedirs(dir)
+    orig = dir / "test.xpi"
+    with open(orig, "w+") as f:
+        f.write("")
+
+    lid = mocker.patch("iscript.autograph.langpack_id")
+    lid.return_value = "test-xpi"
+
+    async def fake_call(url, *args, **kwargs):
+        assert expected_url in url
+        return [{"signed_file": base64.b64encode(b"siglangpacksig")}]
+
+    mocker.patch.object(autograph, "call_autograph", fake_call)
+
+    config = {"artifact_dir": tmp_path}
+    app = App()
+    app.orig_path = orig.as_posix()
+    app.artifact_prefix = "public/build"
+    await autograph.sign_langpacks(config, sign_config, [app], fmt)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fmt,expected_url",
+    (
         ("autograph_widevine", "https://autograph-hsm.dev.mozaws.net"),
         ("stage_autograph_widevine", "https://autograph-stage.dev.mozaws.net"),
         ("gcp_prod_autograph_widevine", "https://autograph-gcp.dev.mozaws.net"),
@@ -484,25 +516,7 @@ async def test_langpack_sign(sign_config, mocker, tmp_path):
 
     mock_obj = mocker.patch.object(autograph, "call_autograph", new=mocked_call_autograph)
 
-    await autograph.sign_langpacks(config, sign_config, [langpack_app])
+    await autograph.sign_langpacks(config, sign_config, [langpack_app], "autograph_langpack")
     expected_hash = "7f4292927b4a26589ee912918de941f498e58ce100041ec3565a82da57a42eab"
     assert sha256(open(langpack_app.target_bundle_path, "rb").read()).hexdigest() == expected_hash
     assert mock_ever_called[0]
-
-
-@pytest.mark.asyncio
-async def test_langpack_sign_wrong_format(sign_config, mocker, tmp_path):
-    mock_ever_called = [False]
-    filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
-    langpack_app = App(orig_path=filename, formats=["invalid"], artifact_prefix=TEST_DATA_DIR)
-    config = {"artifact_dir": tmp_path / "artifacts"}
-
-    async def mocked_call_autograph(url, user, password, request_json):
-        mock_ever_called[0] = True
-        return [{"signed_file": base64.b64encode(open(filename, "rb").read())}]
-
-    mock_obj = mocker.patch.object(autograph, "call_autograph", new=mocked_call_autograph)
-
-    with pytest.raises(IScriptError):
-        await autograph.sign_langpacks(config, sign_config, [langpack_app])
-    assert not mock_ever_called[0]

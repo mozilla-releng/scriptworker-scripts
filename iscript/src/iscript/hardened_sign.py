@@ -16,8 +16,8 @@ from iscript.mac import (
     create_pkg_files,
     download_requirements_plist_file,
     extract_all_apps,
-    filter_apps,
     get_app_paths,
+    get_langpack_format,
     set_app_path_and_name,
     sign_omnija_with_autograph,
     sign_widevine_dir,
@@ -163,20 +163,21 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
     hardened_sign_config = task["payload"]["hardened-sign-config"]
     sign_config_files = await download_signing_resources(hardened_sign_config, tempdir)
 
-    all_apps = get_app_paths(config, task)
-    langpack_apps = filter_apps(all_apps, fmt="autograph_langpack")
-    if langpack_apps:
-        await sign_langpacks(config, sign_config, langpack_apps)
-        all_apps = filter_apps(all_apps, fmt="autograph_langpack", inverted=True)
-    await extract_all_apps(config, all_apps)
+    non_langpack_apps = []
+    for app in get_app_paths(config, task):
+        if fmt := get_langpack_format(app):
+            await sign_langpacks(config, sign_config, [app], fmt)
+        else:
+            non_langpack_apps.append(app)
+    await extract_all_apps(config, non_langpack_apps)
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
-    for app in all_apps:
+    for app in non_langpack_apps:
         set_app_path_and_name(app)
 
     # sign omni.ja
     futures = []
-    for app in all_apps:
+    for app in non_langpack_apps:
         fmt = next((f for f in app.formats if "omnija" in f), None)
         if fmt:
             futures.append(asyncio.ensure_future(sign_omnija_with_autograph(config, sign_config, app.app_path, fmt)))
@@ -184,7 +185,7 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
 
     # sign widevine
     futures = []
-    for app in all_apps:
+    for app in non_langpack_apps:
         fmt = next((f for f in app.formats if "widevine" in f), None)
         if fmt:
             futures.append(asyncio.ensure_future(sign_widevine_dir(config, sign_config, app.app_path, fmt)))
@@ -198,7 +199,7 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
         copy_provisioning_profile(pprofile, app.app_path, config)
 
     # sign apps concurrently
-    for app in all_apps:
+    for app in non_langpack_apps:
         for config_settings in hardened_sign_config:
             check_globs(app.app_path, config_settings["globs"])
             command = build_sign_command(
@@ -214,11 +215,11 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
                 exception=IScriptError,
             )
 
-    await tar_apps(config, all_apps)
+    await tar_apps(config, non_langpack_apps)
     log.info("Done signing apps.")
 
     if create_pkg:
         requirements_plist_path = await download_requirements_plist_file(config, task)
-        await create_pkg_files(config, sign_config, all_apps, requirements_plist_path)
-        await copy_pkgs_to_artifact_dir(config, all_apps)
+        await create_pkg_files(config, sign_config, non_langpack_apps, requirements_plist_path)
+        await copy_pkgs_to_artifact_dir(config, non_langpack_apps)
         log.info("Done creating pkgs.")

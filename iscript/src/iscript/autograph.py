@@ -500,17 +500,10 @@ def langpack_id(app):
     return id
 
 
-async def sign_langpacks(config, sign_config, all_paths):
-    """Signs langpacks that are specified in all_paths.
-
-    Raises:
-        IScriptError if we don't have any valid language packs to sign in any path.
-
-    """
+async def sign_langpacks(config, sign_config, all_paths, fmt):
+    """Signs langpacks that are specified in all_paths."""
     for app in all_paths:
-        app.check_required_attrs(["orig_path", "formats", "artifact_prefix"])
-        if not {"autograph_langpack"} & set(app.formats):
-            raise IScriptError(f"{app.formats} does not contain 'autograph_langpack'")
+        app.check_required_attrs(["orig_path", "artifact_prefix"])
         app.target_bundle_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
 
         id = langpack_id(app)
@@ -519,7 +512,7 @@ async def sign_langpacks(config, sign_config, all_paths):
         await sign_file_with_autograph(
             sign_config,
             app.orig_path,
-            "autograph_langpack",
+            fmt,
             to=app.target_bundle_path,
             keyid=LANGPACK_AUTOGRAPH_KEY_ID[sign_config.get("release_type", "dep")],
             extension_id=id,
