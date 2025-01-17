@@ -31,6 +31,29 @@ def sign_config():
         "langpack_url": "https://autograph-hsm.dev.mozaws.net/langpack",
         "langpack_user": "langpack_user",
         "langpack_pass": "langpack_pass",
+        "omnija_url": "https://autograph-hsm.dev.mozaws.net/omnija",
+        "omnija_user": "omnija_user",
+        "omnija_pass": "omnija_pass",
+        "stage_widevine_url": "https://autograph-stage.dev.mozaws.net",
+        "stage_widevine_user": "widevine_user",
+        "stage_widevine_pass": "widevine_pass",
+        "stage_widevine_cert": "widevine_cert",
+        "stage_langpack_url": "https://autograph-stage.dev.mozaws.net/langpack",
+        "stage_langpack_user": "langpack_user",
+        "stage_langpack_pass": "langpack_pass",
+        "stage_omnija_url": "https://autograph-stage.dev.mozaws.net/omnija",
+        "stage_omnija_user": "omnija_user",
+        "stage_omnija_pass": "omnija_pass",
+        "gcp_prod_widevine_url": "https://autograph-gcp.dev.mozaws.net",
+        "gcp_prod_widevine_user": "widevine_user",
+        "gcp_prod_widevine_pass": "widevine_pass",
+        "gcp_prod_widevine_cert": "widevine_cert",
+        "gcp_prod_langpack_url": "https://autograph-gcp.dev.mozaws.net/langpack",
+        "gcp_prod_langpack_user": "langpack_user",
+        "gcp_prod_langpack_pass": "langpack_pass",
+        "gcp_prod_omnija_url": "https://autograph-gcp.dev.mozaws.net/omnija",
+        "gcp_prod_omnija_user": "omnija_user",
+        "gcp_prod_omnija_pass": "omnija_pass",
     }
 
 
@@ -42,8 +65,16 @@ def noop_sync(*args, **kwargs): ...
 
 # sign_file_with_autograph {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("to,expected,format,options", ((None, "from", "autograph_widevine", None), ("to", "to", "autograph_widevine", None)))
-async def test_sign_file_with_autograph(sign_config, mocker, to, expected, format, options):
+@pytest.mark.parametrize(
+    "to,expected,format,url",
+    (
+        (None, "from", "autograph_widevine", "https://autograph-hsm.dev.mozaws.net"),
+        ("to", "to", "autograph_widevine", "https://autograph-hsm.dev.mozaws.net"),
+        ("to", "to", "stage_autograph_widevine", "https://autograph-stage.dev.mozaws.net"),
+        ("to", "to", "gcp_prod_autograph_widevine", "https://autograph-gcp.dev.mozaws.net"),
+    ),
+)
+async def test_sign_file_with_autograph(sign_config, mocker, to, expected, format, url):
     open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
     mocker.patch("builtins.open", open_mock, create=True)
 
@@ -58,9 +89,8 @@ async def test_sign_file_with_autograph(sign_config, mocker, to, expected, forma
     assert await autograph.sign_file_with_autograph(sign_config, "from", format, to=to) == expected
     open_mock.assert_called()
     kwargs = {"input": "MHhkZWFkYmVlZg=="}
-    if options:
-        kwargs["options"] = options
-    session_mock.post.assert_called_with("https://autograph-hsm.dev.mozaws.net/sign/file", auth=mocker.ANY, json=[kwargs])
+    expected_url = f"{url}/sign/file"
+    session_mock.post.assert_called_with(expected_url, auth=mocker.ANY, json=[kwargs])
 
 
 @pytest.mark.asyncio
@@ -117,19 +147,6 @@ async def test_sign_widevine_dir(sign_config, mocker, filename, fmt, should_sign
 
     config = {"artifact_dir": tmp_path / "artifacts"}
 
-    async def fake_filelist(*args, **kwargs):
-        return files
-
-    async def fake_sign(_, f, fmt, **kwargs):
-        if f.endswith("firefox"):
-            assert fmt == "widevine"
-        elif f.endswith("container"):
-            assert fmt == "widevine_blessed"
-        else:
-            assert False, "unexpected file and format {} {}!".format(f, fmt)
-        if "MacOS" in f:
-            assert f not in files, "We should have renamed this file!"
-
     def fake_isfile(path):
         return "isdir" not in path
 
@@ -140,7 +157,7 @@ async def test_sign_widevine_dir(sign_config, mocker, filename, fmt, should_sign
     mocker.patch.object(os.path, "isfile", new=fake_isfile)
     mocker.patch.object(os, "walk", new=fake_walk)
 
-    await autograph.sign_widevine_dir(config, sign_config, filename)
+    await autograph.sign_widevine_dir(config, sign_config, filename, fmt)
 
 
 # _get_widevine_signing_files {{{1
@@ -240,13 +257,22 @@ async def test_bad_autograph_method():
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("blessed", (True, False))
-async def test_widevine_autograph(mocker, tmp_path, blessed, sign_config):
+@pytest.mark.parametrize(
+    "blessed,fmt,expected_url",
+    (
+        (True, "autograph_widevine", "https://autograph-hsm.dev.mozaws.net"),
+        (False, "autograph_widevine", "https://autograph-hsm.dev.mozaws.net"),
+        (False, "stage_autograph_widevine", "https://autograph-stage.dev.mozaws.net"),
+        (False, "gcp_prod_autograph_widevine", "https://autograph-gcp.dev.mozaws.net"),
+    ),
+)
+async def test_widevine_autograph(mocker, tmp_path, blessed, sign_config, fmt, expected_url):
     wv = mocker.patch("iscript.autograph.widevine")
     wv.generate_widevine_hash.return_value = b"hashhashash"
     wv.generate_widevine_signature.return_value = b"sigwidevinesig"
 
-    async def fake_call(*args, **kwargs):
+    async def fake_call(url, *args, **kwargs):
+        assert expected_url in url
         return [{"signature": base64.b64encode(b"sigwidevinesig")}]
 
     mocker.patch.object(autograph, "call_autograph", fake_call)
@@ -256,21 +282,90 @@ async def test_widevine_autograph(mocker, tmp_path, blessed, sign_config):
     sign_config["widevine_cert"] = cert
 
     to = tmp_path / "signed.sig"
-    to = await autograph.sign_widevine_with_autograph(sign_config, "from", blessed, to=to)
+    to = await autograph.sign_widevine_with_autograph(sign_config, "from", fmt, blessed, to=to)
 
     assert b"sigwidevinesig" == to.read_bytes()
 
 
 @pytest.mark.asyncio
-async def test_no_widevine(mocker, tmp_path):
-    async def fake_call(*args, **kwargs):
+@pytest.mark.parametrize(
+    "fmt,expected_url",
+    (
+        ("autograph_omnija", "https://autograph-hsm.dev.mozaws.net"),
+        ("autograph_omnija", "https://autograph-hsm.dev.mozaws.net"),
+        ("stage_autograph_omnija", "https://autograph-stage.dev.mozaws.net"),
+        ("gcp_prod_autograph_omnija", "https://autograph-gcp.dev.mozaws.net"),
+    ),
+)
+async def test_omnija_autograph(mocker, tmp_path, sign_config, fmt, expected_url):
+    orig = tmp_path / "omni.ja"
+    with open(orig, "w+") as f:
+        f.write("")
+
+    merge = mocker.patch("iscript.autograph.merge_omnija_files")
+    merge.side_effect = lambda orig, signed, to: shutil.copy(signed, to)
+
+    async def fake_call(url, *args, **kwargs):
+        assert expected_url in url
+        return [{"signed_file": base64.b64encode(b"sigomnijasig")}]
+
+    mocker.patch.object(autograph, "call_autograph", fake_call)
+
+    config = {"work_dir": tmp_path}
+    await autograph.sign_omnija_with_autograph(config, sign_config, tmp_path, fmt)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fmt,expected_url",
+    (
+        ("autograph_langpack", "https://autograph-hsm.dev.mozaws.net"),
+        ("stage_autograph_langpack", "https://autograph-stage.dev.mozaws.net"),
+        ("gcp_prod_autograph_langpack", "https://autograph-gcp.dev.mozaws.net"),
+    ),
+)
+async def test_langpack_autograph(mocker, tmp_path, sign_config, fmt, expected_url):
+    dir = tmp_path / "public" / "build"
+    os.makedirs(dir)
+    orig = dir / "test.xpi"
+    with open(orig, "w+") as f:
+        f.write("")
+
+    lid = mocker.patch("iscript.autograph.langpack_id")
+    lid.return_value = "test-xpi"
+
+    async def fake_call(url, *args, **kwargs):
+        assert expected_url in url
+        return [{"signed_file": base64.b64encode(b"siglangpacksig")}]
+
+    mocker.patch.object(autograph, "call_autograph", fake_call)
+
+    config = {"artifact_dir": tmp_path}
+    app = App()
+    app.orig_path = orig.as_posix()
+    app.artifact_prefix = "public/build"
+    await autograph.sign_langpacks(config, sign_config, [app], fmt)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fmt,expected_url",
+    (
+        ("autograph_widevine", "https://autograph-hsm.dev.mozaws.net"),
+        ("stage_autograph_widevine", "https://autograph-stage.dev.mozaws.net"),
+        ("gcp_prod_autograph_widevine", "https://autograph-gcp.dev.mozaws.net"),
+    ),
+)
+async def test_no_widevine(mocker, tmp_path, fmt, expected_url):
+    async def fake_call(url, *args, **kwargs):
+        assert expected_url in url
         return [{"signature": b"sigautographsig"}]
 
     mocker.patch.object(autograph, "call_autograph", fake_call)
 
     with pytest.raises(ImportError):
         to = tmp_path / "signed.sig"
-        to = await autograph.sign_widevine_with_autograph({}, "from", True, to=to)
+        to = await autograph.sign_widevine_with_autograph({}, "from", fmt, True, to=to)
 
 
 # omnija {{{1
@@ -329,7 +424,7 @@ async def test_omnija_sign(tmpdir, mocker, orig, signed, sha256_expected):
         shutil.copyfile(os.path.join(TEST_DATA_DIR, signed), to)
 
     mocker.patch.object(autograph, "sign_file_with_autograph", mocked_autograph)
-    await autograph.sign_omnija_with_autograph(config, sign_config, tmpdir)
+    await autograph.sign_omnija_with_autograph(config, sign_config, tmpdir, "autograph_omnija")
     sha256_actual = sha256(open(copy_from, "rb").read()).hexdigest()
     assert sha256_actual == sha256_expected
 
@@ -421,25 +516,7 @@ async def test_langpack_sign(sign_config, mocker, tmp_path):
 
     mock_obj = mocker.patch.object(autograph, "call_autograph", new=mocked_call_autograph)
 
-    await autograph.sign_langpacks(config, sign_config, [langpack_app])
+    await autograph.sign_langpacks(config, sign_config, [langpack_app], "autograph_langpack")
     expected_hash = "7f4292927b4a26589ee912918de941f498e58ce100041ec3565a82da57a42eab"
     assert sha256(open(langpack_app.target_bundle_path, "rb").read()).hexdigest() == expected_hash
     assert mock_ever_called[0]
-
-
-@pytest.mark.asyncio
-async def test_langpack_sign_wrong_format(sign_config, mocker, tmp_path):
-    mock_ever_called = [False]
-    filename = os.path.join(TEST_DATA_DIR, "en-CA.xpi")
-    langpack_app = App(orig_path=filename, formats=["invalid"], artifact_prefix=TEST_DATA_DIR)
-    config = {"artifact_dir": tmp_path / "artifacts"}
-
-    async def mocked_call_autograph(url, user, password, request_json):
-        mock_ever_called[0] = True
-        return [{"signed_file": base64.b64encode(open(filename, "rb").read())}]
-
-    mock_obj = mocker.patch.object(autograph, "call_autograph", new=mocked_call_autograph)
-
-    with pytest.raises(IScriptError):
-        await autograph.sign_langpacks(config, sign_config, [langpack_app])
-    assert not mock_ever_called[0]

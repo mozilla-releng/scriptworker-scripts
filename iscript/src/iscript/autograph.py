@@ -65,7 +65,7 @@ LANGPACK_RE = re.compile(r"^langpack-[a-zA-Z]+(?:-[a-zA-Z]+){0,2}@(?:firefox|dev
 
 
 # sign_widevine_dir {{{1
-async def sign_widevine_dir(config, sign_config, app_dir):
+async def sign_widevine_dir(config, sign_config, app_dir, autograph_fmt):
     """Sign the internals of a tarfile with the widevine key.
 
     Extract the entire tarball, but only sign a handful of files (see
@@ -98,7 +98,7 @@ async def sign_widevine_dir(config, sign_config, app_dir):
             to = _get_mac_sigpath(from_)
             log.debug("Adding %s to the sigfile paths...", to)
             makedirs(os.path.dirname(to))
-            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(sign_config, from_, "blessed" in fmt, to=to)))
+            tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(sign_config, from_, autograph_fmt, "blessed" in fmt, to=to)))
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(app_dir, all_files)
@@ -361,7 +361,7 @@ def _get_omnija_signing_files(file_list):
     return files
 
 
-async def sign_omnija_with_autograph(config, sign_config, app_path):
+async def sign_omnija_with_autograph(config, sign_config, app_path, fmt):
     """Sign the omnija file specified using autograph.
 
     This function overwrites from_
@@ -393,7 +393,7 @@ async def sign_omnija_with_autograph(config, sign_config, app_path):
         await sign_file_with_autograph(
             sign_config,
             from_,
-            "autograph_omnija",
+            fmt,
             to=signed_out,
             keyid=OMNIJA_AUTOGRAPH_KEY_ID[sign_config.get("release_type", "dep")],
             extension_id="omni.ja@mozilla.org",
@@ -439,7 +439,7 @@ async def merge_omnija_files(orig, signed, to):
 
 
 # sign_widevine_with_autograph {{{1
-async def sign_widevine_with_autograph(sign_config, from_, blessed, to=None):
+async def sign_widevine_with_autograph(sign_config, from_, fmt, blessed, to=None):
     """Create a widevine signature using autograph as a backend.
 
     Args:
@@ -462,7 +462,6 @@ async def sign_widevine_with_autograph(sign_config, from_, blessed, to=None):
 
     to = to or f"{from_}.sig"
     flags = 1 if blessed else 0
-    fmt = "autograph_widevine"
 
     h = widevine.generate_widevine_hash(from_, flags)
 
@@ -501,17 +500,10 @@ def langpack_id(app):
     return id
 
 
-async def sign_langpacks(config, sign_config, all_paths):
-    """Signs langpacks that are specified in all_paths.
-
-    Raises:
-        IScriptError if we don't have any valid language packs to sign in any path.
-
-    """
+async def sign_langpacks(config, sign_config, all_paths, fmt):
+    """Signs langpacks that are specified in all_paths."""
     for app in all_paths:
-        app.check_required_attrs(["orig_path", "formats", "artifact_prefix"])
-        if not {"autograph_langpack"} & set(app.formats):
-            raise IScriptError(f"{app.formats} does not contain 'autograph_langpack'")
+        app.check_required_attrs(["orig_path", "artifact_prefix"])
         app.target_bundle_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
 
         id = langpack_id(app)
@@ -520,7 +512,7 @@ async def sign_langpacks(config, sign_config, all_paths):
         await sign_file_with_autograph(
             sign_config,
             app.orig_path,
-            "autograph_langpack",
+            fmt,
             to=app.target_bundle_path,
             keyid=LANGPACK_AUTOGRAPH_KEY_ID[sign_config.get("release_type", "dep")],
             extension_id=id,
