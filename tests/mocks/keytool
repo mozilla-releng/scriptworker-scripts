@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# fake keytool
+echo "Mocked keytool called with: $@"
+exit 0
