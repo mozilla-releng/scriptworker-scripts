@@ -29,7 +29,7 @@ RUN chown -R app:app /app && \
     cd .. && \
     rm -rf msix-packaging && \
     wget -qO- \
-    https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign%2F0.22.0/apple-codesign-0.22.0-x86_64-unknown-linux-musl.tar.gz \
+    https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign%2F0.29.0/apple-codesign-0.29.0-x86_64-unknown-linux-musl.tar.gz \
     | tar xvz -C /usr/bin --transform 's/.*\///g' --wildcards --no-anchored 'rcodesign' && \
     chmod +x /usr/bin/rcodesign
 
