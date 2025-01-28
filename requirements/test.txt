@@ -6,9 +6,9 @@
 #    pip-compile-multi
 #
 -r ../configloader/requirements/base.txt
-cachetools==5.5.0 \
-    --hash=sha256:02134e8439cdc2ffb62023ce1debca2944c3f289d66bb17ead3ab3dede74b292 \
-    --hash=sha256:2cc24fb4cbe39633fb7badd9db9ca6295d766d9c2995f245725a46715d050f2a
+cachetools==5.5.1 \
+    --hash=sha256:70f238fbba50383ef62e55c6aff6d9673175fe59f7c6782c7a0b9e38f4a9df95 \
+    --hash=sha256:b76651fdc3b24ead3c648bbdeeb940c1b04d365b38b4af66788f9ec4a81d42bb
     # via tox
 chardet==5.2.0 \
     --hash=sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7 \
@@ -26,9 +26,9 @@ execnet==2.1.1 \
     --hash=sha256:26dee51f1b80cebd6d0ca8e74dd8745419761d3bef34163928cbebbdc4749fdc \
     --hash=sha256:5189b52c6121c24feae288166ab41b32549c7e2348652736540b9e6e7d4e72e3
     # via pytest-xdist
-filelock==3.16.1 \
-    --hash=sha256:2082e5703d51fbf98ea75855d9d5527e33d8ff23099bec374a134febee6946b0 \
-    --hash=sha256:c249fbfcd5db47e5e2d6d62198e565475ee65e4831e2561c8e313fa7eb961435
+filelock==3.17.0 \
+    --hash=sha256:533dc2f7ba78dc2f0f531fc6c4940addf7b70a481e269a5a3b93be94ffbe8338 \
+    --hash=sha256:ee4e77401ef576ebb38cd7f13b9b28893194acc20a8e68e18730ba9c0e54660e
     # via
     #   tox
     #   virtualenv
@@ -55,9 +55,9 @@ pluggy==1.5.0 \
     # via
     #   pytest
     #   tox
-pyproject-api==1.8.0 \
-    --hash=sha256:3d7d347a047afe796fd5d1885b1e391ba29be7169bd2f102fcd378f04273d228 \
-    --hash=sha256:77b8049f2feb5d33eefcc21b57f1e279636277a8ac8ad6b5871037b243778496
+pyproject-api==1.9.0 \
+    --hash=sha256:326df9d68dea22d9d98b5243c46e3ca3161b07a1b9b18e213d1e24fd0e605766 \
+    --hash=sha256:7e8a9854b2dfb49454fae421cb86af43efbb2b2454e5646ffb7623540321ae6e
     # via tox
 pytest==8.3.4 \
     --hash=sha256:50e16d954148559c9a74109af1eaf0c945ba2d8f30f0a3d3335edde19788b6f6 \
@@ -69,11 +69,11 @@ pytest-xdist==3.6.1 \
     --hash=sha256:9ed4adfb68a016610848639bb7e02c9352d5d9f03d04809919e2dafc3be4cca7 \
     --hash=sha256:ead156a4db231eec769737f57668ef58a2084a34b2e55c4a8fa20d861107300d
     # via -r requirements/test.in
-tox==4.23.2 \
-    --hash=sha256:452bc32bb031f2282881a2118923176445bac783ab97c874b8770ab4c3b76c38 \
-    --hash=sha256:86075e00e555df6e82e74cfc333917f91ecb47ffbc868dcafbd2672e332f4a2c
+tox==4.24.1 \
+    --hash=sha256:083a720adbc6166fff0b7d1df9d154f9d00bfccb9403b8abf6bc0ee435d6a62e \
+    --hash=sha256:57ba7df7d199002c6df8c2db9e6484f3de6ca8f42013c083ea2d4d1e5c6bdc75
     # via -r requirements/test.in
-virtualenv==20.28.0 \
-    --hash=sha256:23eae1b4516ecd610481eda647f3a7c09aea295055337331bb4e6892ecce47b0 \
-    --hash=sha256:2c9c3262bb8e7b87ea801d715fae4495e6032450c71d2309be9550e7364049aa
+virtualenv==20.29.1 \
+    --hash=sha256:4e4cb403c0b0da39e13b46b1b2476e505cb0046b25f242bee80f62bf990b2779 \
+    --hash=sha256:b8b8970138d32fb606192cb97f6cd4bb644fa486be9308fb9b63f81091b5dc35
     # via tox
