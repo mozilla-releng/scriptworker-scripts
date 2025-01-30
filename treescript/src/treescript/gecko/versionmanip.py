@@ -4,6 +4,7 @@
 import logging
 import os
 
+import attr
 from mozilla_version.gecko import FirefoxVersion, GeckoVersion, ThunderbirdVersion
 from mozilla_version.mobile import MobileVersion
 
@@ -79,7 +80,7 @@ async def bump_version(config, task, repo_path):
 
     This function takes its inputs from task by using the ``get_version_bump_info``
     function from treescript.task. Using `next_version` and `files`, then
-    calls do_version_bump to perform the work.
+    calls do_version_bump to perform the work.1786807
 
     Args:
         config (dict): the running config
@@ -142,23 +143,24 @@ async def do_bump_version(repo_path, files, next_version, source_repo):
         next_version = VersionClass.parse(saved_next_version)
 
         try:
-            is_esr = curr_version.is_esr
+            curr_is_esr = curr_version.is_esr
+            next_is_esr = next_version.is_esr
         except AttributeError:  # Fenix does not expose the is_esr attribute
-            is_esr = False
+            curr_is_esr = next_is_esr = False
 
         # XXX In the case of ESR, some files (like version.txt) show version numbers without `esr`
-        # at the end. next_version is usually provided without `esr` too.
+        # at the end.
+        # For release-version-bump, next_version is provided with `esr` by Shipit, wuth
+        # a list of files to bump. The esr suffix needs to be dropped from files
+        # that do not have it.
+        # For merge automation, `create_new_version` will keep the original suffix
+        # by default, or change it if new_suffix is set for the file. There should
+        # not be any cases where a suffix needs to be added or removed since create_new_version
+        # handled it already.
         # That's why we do this late minute replacement and why we reset `next_version` at every
         # cycle of the loop
-        if is_esr and not any(
-            (
-                next_version.is_esr,  # No need to append esr again
-                # We don't want XX.Ya1esr nor XX.YbNesr
-                next_version.is_aurora_or_devedition,
-                next_version.is_beta,
-            )
-        ):
-            next_version = VersionClass.parse("{}esr".format(next_version))
+        if next_is_esr and not curr_is_esr:
+            next_version = attr.evolve(next_version, is_esr=False)
 
         if next_version < curr_version:
             log.warning("Version bumping skipped due to conflicting values: (next version {} is < current version {})".format(next_version, curr_version))
