@@ -4,12 +4,18 @@
 import asyncio
 import logging
 import os
+import signal
 
 from bitrisescript.bitrise import BitriseClient, find_running_build, get_running_builds, run_build, wait_and_download_workflow_log
 from bitrisescript.task import get_artifact_dir, get_bitrise_app, get_bitrise_workflows, get_build_params
 from scriptworker_client.client import sync_main
 
 log = logging.getLogger(__name__)
+
+
+def handle_sigterm(futures):
+    log.info("SIGTERM received, cancelling futures")
+    futures.cancel()
 
 
 async def async_main(config, task):
@@ -36,7 +42,10 @@ async def async_main(config, task):
                     futures.append(run_build(artifact_dir, **build_params))
 
         await client.set_app_prefix(app)
-        await asyncio.gather(*futures)
+        future_group = asyncio.gather(*futures)
+        loop = asyncio.get_event_loop()
+        loop.add_signal_handler(signal.SIGTERM, handle_sigterm, future_group)
+        await future_group
     finally:
         if client:
             await client.close()
