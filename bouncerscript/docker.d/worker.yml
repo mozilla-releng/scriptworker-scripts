@@ -8,7 +8,7 @@ bouncer_config:
     $match:
       'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
         project:releng:bouncer:server:staging:
-          api_root: 'https://dev.bounceradmin.nonprod.webservices.mozgcp.net/api'
+          api_root: 'https://admin.dev.bouncer.nonprod.webservices.mozgcp.net/api'
           timeout_in_seconds: 60
           username: { "$eval": "BOUNCER_USERNAME" }
           password: { "$eval": "BOUNCER_PASSWORD" }
@@ -22,7 +22,7 @@ bouncer_config:
 
       'COT_PRODUCT == "thunderbird" && (ENV == "dev" || ENV == "fake-prod")':
         project:comm:thunderbird:releng:bouncer:server:staging:
-          api_root: 'https://dev.bounceradmin.nonprod.webservices.mozgcp.net/api'
+          api_root: 'https://admin.dev.bouncer.nonprod.webservices.mozgcp.net/api'
           timeout_in_seconds: 60
           username: { "$eval": "BOUNCER_USERNAME" }
           password: { "$eval": "BOUNCER_PASSWORD" }
