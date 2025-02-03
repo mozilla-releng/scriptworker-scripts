@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-"""Test iscript.util
-"""
+"""Test iscript.util"""
 from copy import deepcopy
 
 import pytest
