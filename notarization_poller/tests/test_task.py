@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-"""Test notarization_poller.task
-"""
+"""Test notarization_poller.task"""
 import asyncio
 import logging
 from contextlib import asynccontextmanager
