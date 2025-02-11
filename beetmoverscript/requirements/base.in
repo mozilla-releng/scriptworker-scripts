@@ -5,5 +5,5 @@ mozilla-version
 redo
 scriptworker
 taskcluster
-google-cloud-storage
+google-cloud-storage<3
 google-cloud-artifact-registry
