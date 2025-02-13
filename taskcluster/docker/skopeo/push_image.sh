@@ -15,9 +15,10 @@ test $VCS_HEAD_REV
 
 echo "=== Generating dockercfg ==="
 PASSWORD_URL=http://taskcluster/secrets/v1/secret/project/releng/scriptworker-scripts/deploy
-install -m 600 /dev/null $HOME/.dockercfg
+mkdir -m 700 $HOME/.docker
 # curl --fail forces curl to return a non-zero exit code if the response isn't HTTP 200 (i.e.: HTTP 403 Unauthorized)
-curl --fail -v $PASSWORD_URL | jq '.secret.dockercfg' > $HOME/.dockercfg
+curl --fail -v $PASSWORD_URL | jq '.secret.dockercfg' > $HOME/.docker/config.json
+chmod 600 $HOME/.docker/config.json
 
 cd $MOZ_FETCHES_DIR
 unzstd image.tar.zst
