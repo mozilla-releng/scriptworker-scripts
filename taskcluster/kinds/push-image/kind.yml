@@ -53,6 +53,7 @@ tasks:
     beetmoverscript: {}
     bouncerscript: {}
     githubscript: {}
+    landoscript: {}
     pushapkscript: {}
     pushflatpakscript: {}
     pushmsixscript: {}
