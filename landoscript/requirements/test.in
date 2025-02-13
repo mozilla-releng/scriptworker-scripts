@@ -1,0 +1,4 @@
+-r base.in
+
+pytest
+pytest-asyncio
