@@ -236,14 +236,19 @@ async def wait_and_download_workflow_log(artifacts_dir: str, build_slug: str) ->
         artifacts_dir (str): Directory to download artifacts to.
         build_slug (str): Identifier of workflow to run.
     """
+    should_retrieve_log = True
     try:
         await wait_for_build_finish(build_slug)
         log.info(f"Build '{build_slug}' is successful. Retrieving artifacts...")
         await download_artifacts(build_slug, artifacts_dir)
+    except asyncio.CancelledError:
+        should_retrieve_log = False
+        raise
     finally:
-        log.info(f"Retrieving bitrise log for '{build_slug}'...")
-        await download_log(build_slug, artifacts_dir)
-        await dump_perfherder_data(artifacts_dir)
+        if should_retrieve_log:
+            log.info(f"Retrieving bitrise log for '{build_slug}'...")
+            await download_log(build_slug, artifacts_dir)
+            await dump_perfherder_data(artifacts_dir)
 
 
 async def run_build(artifacts_dir: str, workflow_id: str, **build_params: Any) -> None:
@@ -268,15 +273,20 @@ async def run_build(artifacts_dir: str, workflow_id: str, **build_params: Any) -
         "build_params": build_params,
     }
 
-    response = await client.request("/builds", method="post", json=data)
-    if response.get("status", "") != "ok":
-        raise Exception(f"Bitrise status for '{workflow_id}' is not ok. Got: {response}")
+    build_slug = None
+    try:
+        response = await client.request("/builds", method="post", json=data)
+        if response.get("status", "") != "ok":
+            raise Exception(f"Bitrise status for '{workflow_id}' is not ok. Got: {response}")
 
-    build_slug = response["build_slug"]
+        build_slug = response["build_slug"]
 
-    log.info(f"Created new job for '{workflow_id}'. Slug: {build_slug}")
+        log.info(f"Created new job for '{workflow_id}'. Slug: {build_slug}")
 
-    await wait_and_download_workflow_log(artifacts_dir, build_slug)
+        await wait_and_download_workflow_log(artifacts_dir, build_slug)
+    except asyncio.CancelledError:
+        if build_slug is not None:
+            await abort_build(build_slug, "Build cancelled")
 
 
 async def get_running_builds(workflow_id: str, **kwargs) -> Optional[str]:
@@ -313,3 +323,21 @@ def find_running_build(running_builds: list[dict], build_params: Any):
             return build["slug"]
     # Nothing found
     return None
+
+
+async def abort_build(build_slug: str, reason: str) -> None:
+    """Abort a specific build
+
+    Args:
+        build_slug (str): The Bitrise build to abort
+        reason (str): The reason for the build cancellation
+    """
+    log.info(f'Aborting build {build_slug} with reason "{reason}"')
+    client = BitriseClient()
+    build_abort_params = {
+        "abort_reason": reason,
+        "abort_with_success": False,
+        "skip_notifications": False,
+    }
+
+    await client.request(f"/builds/{build_slug}/abort", method="post", json=build_abort_params)
