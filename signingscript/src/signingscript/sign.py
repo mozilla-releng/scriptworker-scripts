@@ -1540,11 +1540,13 @@ async def _notarize_geckodriver(context, path, workdir):
     # Return original signed file
     return path
 
+
 async def _notarize_openh264_plugin(context, path, workdir):
     """Notarizes an openh264 plugin binary"""
     # the artifact from the openh264 plugin build task is already a .zip file
     await _notarize_single(path, context.apple_credentials_path, staple=False)
     return path
+
 
 async def _notarize_all(context, path, workdir):
     """
