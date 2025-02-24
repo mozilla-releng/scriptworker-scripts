@@ -18,6 +18,7 @@ from scriptworker.utils import get_single_item_from_sequence
 from signingscript.sign import (
     apple_notarize,
     apple_notarize_geckodriver,
+    apple_notarize_openh264_plugin,
     apple_notarize_stacked,  # noqa: F401
     sign_authenticode,
     sign_file,
@@ -57,6 +58,7 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "widevine": sign_widevine,
         "apple_notarization": apple_notarize,
         "apple_notarization_geckodriver": apple_notarize_geckodriver,
+        "apple_notarization_openh264_plugin": apple_notarize_openh264_plugin,
         "macapp": sign_macapp,
         # This format is handled in script.py
         # Should be refactored in https://github.com/mozilla-releng/scriptworker-scripts/issues/980

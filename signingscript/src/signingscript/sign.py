@@ -1541,6 +1541,13 @@ async def _notarize_geckodriver(context, path, workdir):
     return path
 
 
+async def _notarize_openh264_plugin(context, path, workdir):
+    """Notarizes an openh264 plugin binary"""
+    # the artifact from the openh264 plugin build task is already a .zip file
+    await _notarize_single(path, context.apple_credentials_path, staple=False)
+    return path
+
+
 async def _notarize_all(context, path, workdir):
     """
     Notarizes all files in a tarball
@@ -1601,6 +1608,19 @@ async def apple_notarize_geckodriver(context, path, *args, **kwargs):
     utils.mkdir(notarization_workdir)
 
     return await _notarize_geckodriver(context, path, notarization_workdir)
+
+
+@time_async_function
+async def apple_notarize_openh264_plugin(context, path, *args, **kwargs):
+    """
+    Notarizes given geckodriver package using rcodesign.
+    """
+    # Setup workdir
+    notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
+    shutil.rmtree(notarization_workdir, ignore_errors=True)
+    utils.mkdir(notarization_workdir)
+
+    return await _notarize_openh264_plugin(context, path, notarization_workdir)
 
 
 @time_async_function
