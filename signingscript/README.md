@@ -39,6 +39,7 @@ This is a best effort list of supported signing formats and what they correspond
 - `autograph_rsa`: get a detached signature for a file using autograph's hash signing endpoint
 - `apple_notarization`: notarize and staple a mac pkg or tarball
 - `apple_notarization_geckodriver`: notarize a mac binary (without stapling)
+- `apple_notarize_openh264_plugin`: notarize a mac openh264 plugin (without stapling)
 
 
 Testing
