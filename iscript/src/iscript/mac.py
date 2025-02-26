@@ -27,7 +27,7 @@ from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_comma
 log = logging.getLogger(__name__)
 
 
-KNOWN_ARTIFACT_PREFIXES = ("public/", "releng/partner/", "private/openh264/")
+KNOWN_ARTIFACT_PREFIXES = ("public/", "releng/partner/", "private/openh264/", "releng/adhoc/")
 
 
 # App {{{1
