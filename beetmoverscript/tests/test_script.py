@@ -29,7 +29,7 @@ from beetmoverscript.script import (
     setup_mimetypes,
 )
 from beetmoverscript.task import get_release_props, get_upstream_artifacts
-from beetmoverscript.utils import generate_beetmover_manifest, is_promotion_action
+from beetmoverscript.utils import get_candidates_prefix, get_releases_prefix, generate_beetmover_manifest, is_promotion_action
 
 from . import get_fake_valid_config, get_fake_valid_task, get_test_jinja_env, noop_async, noop_sync
 
@@ -68,6 +68,39 @@ async def test_push_to_releases_s3(context, mocker, candidates_keys, releases_ke
             await push_to_releases_s3(context)
     else:
         await push_to_releases_s3(context)
+
+
+# push_to_releases_s3_exclude {{{1
+@pytest.mark.parametrize(
+    "candidates_keys,exclude,results",
+    [
+        ({"foo.zip": "x", "bar.exe": "y", "baz.js": "z"}, [], ["bar.exe", "baz.js"]),
+        ({"foo.zip": "x", "bar.exe": "y", "baz.js": "z"}, [r"^.*\.exe$"], ["baz.js"]),
+        ({"foo.zip": "x", "bar.exe": "y", "baz.js": "z"}, [r"^.*\.exe$", r"^.*\.js"], []),
+    ],
+)
+@pytest.mark.asyncio
+async def test_push_to_releases_s3_exclude(context, mocker, candidates_keys, exclude, results):
+    payload = {"product": "devedition", "build_number": 33, "version": "99.0b44", "exclude": exclude}
+    context.task = {"payload": payload}
+    test_candidate_prefix = get_candidates_prefix(payload["product"], payload["version"], payload["build_number"])
+    test_release_prefix = get_releases_prefix(payload["product"], payload["version"])
+
+    objects = [{f"{test_candidate_prefix}{key}": candidates_keys[key] for key in candidates_keys}, {}]
+
+    expect_artifacts = {f"{test_candidate_prefix}{key}": f"{test_release_prefix}{key}" for key in results}
+
+    def check(ctx, _, r):
+        assert ctx.artifacts_to_beetmove == expect_artifacts
+
+    def fake_list(*args):
+        return objects.pop(0)
+
+    mocker.patch.object(boto3, "resource")
+    mocker.patch.object(beetmoverscript.script, "list_bucket_objects", new=fake_list)
+    mocker.patch.object(beetmoverscript.script, "copy_beets", new=check)
+
+    await push_to_releases_s3(context)
 
 
 # copy_beets {{{1
