@@ -279,7 +279,7 @@ async def push_to_maven(context):
 
 
 # TODO: maybe call upstreamArtifactPaths something different?
-def get_concrete_artifact_map_from_globbed(upstreamArtifactPaths, artifactMap, strip_prefixes = ["public/build", "public/logs"]):
+def get_concrete_artifact_map_from_globbed(upstreamArtifactPaths, artifactMap, strip_prefixes=["public/build", "public/logs"]):
     # Sanity check inputs. Each file in upstreamArtifactPaths should match either:
     # - One non "*" glob in artifactMap
     # - A non "*" glob and "*" (in which case the former takes precedence)
@@ -332,7 +332,7 @@ def get_concrete_artifact_map_from_globbed(upstreamArtifactPaths, artifactMap, s
                 retained_artifact_path = artifact
                 for sp in strip_prefixes:
                     if sp in artifact:
-                        retained_artifact_path = retained_artifact_path[retained_artifact_path.find(sp) + len(sp):]
+                        retained_artifact_path = retained_artifact_path[retained_artifact_path.find(sp) + len(sp) :]
                 destinations = []
                 # We need to look at non-'*' paths separate from '*' paths.
 
@@ -352,13 +352,12 @@ def get_concrete_artifact_map_from_globbed(upstreamArtifactPaths, artifactMap, s
                     else:
                         destinations.extend(output["destinations"])
 
-                
                 # If we have destinations for the "*" glob any artifacts that
                 # aren't accounted for by any of the `other_paths` will go to
                 # the "*" destinations.
                 if full_glob_destinations and not destinations:
                     destinations.extend(full_glob_destinations)
-                
+
                 if destinations:
                     concretePaths[artifact] = {"destinations": []}
                     for d in destinations:
@@ -366,10 +365,12 @@ def get_concrete_artifact_map_from_globbed(upstreamArtifactPaths, artifactMap, s
                             d = os.path.normpath(f"{d}{retained_artifact_path}")
                         concretePaths[artifact]["destinations"].append(d)
 
-        concreteArtifactMap.append({
-            "paths": concretePaths,
-            "taskId": map_["taskId"],
-        })
+        concreteArtifactMap.append(
+            {
+                "paths": concretePaths,
+                "taskId": map_["taskId"],
+            }
+        )
 
     if errors:
         raise ScriptWorkerTaskException(*errors)
@@ -411,7 +412,7 @@ async def upload_translations_artifacts(context):
             else:
                 log.info(f"Uploading {input_path} to {outputs['destinations']}")
                 await retry_upload(context, outputs["destinations"], input_path)
-    
+
 
 # copy_beets {{{1
 def copy_beets(context, from_keys_checksums, to_keys_checksums):

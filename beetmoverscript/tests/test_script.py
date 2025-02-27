@@ -606,9 +606,11 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "*": {"destinations": [
-                            "some/dir/",
-                            ]},
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -616,12 +618,16 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "/path/to/cot/dir/dep1/public/build/foo": {"destinations": [
-                            "some/dir/foo",
-                        ]},
-                        "/path/to/cot/dir/dep1/public/build/bar": {"destinations": [
-                            "some/dir/bar",
-                        ]},
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -640,12 +646,16 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "/path/to/cot/dir/dep1/public/build/foo": {"destinations": [
-                            "some/dir/foo",
-                        ]},
-                        "*.log": {"destinations": [
-                            "some/log/dir/",
-                        ]},
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "*.log": {
+                            "destinations": [
+                                "some/log/dir/",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -653,12 +663,16 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "/path/to/cot/dir/dep1/public/build/foo": {"destinations": [
-                            "some/dir/foo",
-                        ]},
-                        "/path/to/cot/dir/dep1/public/logs/live.log": {"destinations": [
-                            "some/log/dir/live.log",
-                        ]},
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/logs/live.log": {
+                            "destinations": [
+                                "some/log/dir/live.log",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -677,9 +691,11 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "/path/to/cot/dir/dep1/public/build/foo": {"destinations": [
-                            "some/dir/foo",
-                        ]},
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -687,9 +703,11 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "/path/to/cot/dir/dep1/public/build/foo": {"destinations": [
-                            "some/dir/foo",
-                        ]},
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -708,12 +726,16 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "/path/to/cot/dir/dep1/public/build/foo": {"destinations": [
-                            "some/dir/foo",
-                        ]},
-                        "/path/to/cot/dir/dep1/public/build/bar": {"destinations": [
-                            "some/dir/bar",
-                        ]},
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -721,12 +743,16 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "/path/to/cot/dir/dep1/public/build/foo": {"destinations": [
-                            "some/dir/foo",
-                        ]},
-                        "/path/to/cot/dir/dep1/public/build/bar": {"destinations": [
-                            "some/dir/bar",
-                        ]},
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -745,9 +771,11 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "*.log": {"destinations": [
-                            "some/log/dir",
-                        ]},
+                        "*.log": {
+                            "destinations": [
+                                "some/log/dir",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -755,9 +783,11 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "/path/to/cot/dir/dep1/public/logs/live.log": {"destinations": [
-                            "some/log/dir/live.log",
-                        ]},
+                        "/path/to/cot/dir/dep1/public/logs/live.log": {
+                            "destinations": [
+                                "some/log/dir/live.log",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -777,15 +807,21 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "*.log": {"destinations": [
-                            "some/log/dir/",
-                        ]},
-                        "*.txt": {"destinations": [
-                            "some/txt/dir/",
-                        ]},
-                        "*": {"destinations": [
-                            "some/dir/",
-                        ]},
+                        "*.log": {
+                            "destinations": [
+                                "some/log/dir/",
+                            ]
+                        },
+                        "*.txt": {
+                            "destinations": [
+                                "some/txt/dir/",
+                            ]
+                        },
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -793,18 +829,26 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "/path/to/cot/dir/dep1/public/logs/live.log": {"destinations": [
-                            "some/log/dir/live.log",
-                        ]},
-                        "/path/to/cot/dir/dep1/public/build/test.txt": {"destinations": [
-                            "some/txt/dir/test.txt",
-                        ]},
-                        "/path/to/cot/dir/dep1/public/build/foo": {"destinations": [
-                            "some/dir/foo",
-                        ]},
-                        "/path/to/cot/dir/dep1/public/build/bar": {"destinations": [
-                            "some/dir/bar",
-                        ]},
+                        "/path/to/cot/dir/dep1/public/logs/live.log": {
+                            "destinations": [
+                                "some/log/dir/live.log",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/test.txt": {
+                            "destinations": [
+                                "some/txt/dir/test.txt",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -822,9 +866,11 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "*": {"destinations": [
-                            "some/dir/",
-                        ]},
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -832,12 +878,16 @@ def test_sanity_check_partner_path(path, raises):
             [
                 {
                     "paths": {
-                        "/path/to/cot/dir/dep1/public/build/deeply/nested/foo": {"destinations": [
-                            "some/dir/deeply/nested/foo",
-                        ]},
-                        "/path/to/cot/dir/dep1/public/build/deeply/nested/bar": {"destinations": [
-                            "some/dir/deeply/nested/bar",
-                        ]},
+                        "/path/to/cot/dir/dep1/public/build/deeply/nested/foo": {
+                            "destinations": [
+                                "some/dir/deeply/nested/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/deeply/nested/bar": {
+                            "destinations": [
+                                "some/dir/deeply/nested/bar",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -855,12 +905,16 @@ def test_sanity_check_partner_path(path, raises):
                 # TODO: do we want to support this at all?
                 {
                     "paths": {
-                        "*.log": {"destinations": [
-                            "some/log/dir/",
-                        ]},
-                        "*og": {"destinations": [
-                            "some/og/dir/",
-                        ]},
+                        "*.log": {
+                            "destinations": [
+                                "some/log/dir/",
+                            ]
+                        },
+                        "*og": {
+                            "destinations": [
+                                "some/og/dir/",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -869,8 +923,7 @@ def test_sanity_check_partner_path(path, raises):
             "'/path/to/cot/dir/dep1/public/logs/live.log' matched multiple concrete paths",
             id="multiple_glob_suffix_with_overlap",
         ),
-
-    )
+    ),
 )
 def test_get_concrete_artifact_map_from_globbed(upstream_artifact_paths, artifact_map, concrete_artifact_map, error):
     try:
@@ -888,62 +941,78 @@ def test_get_concrete_artifact_map_from_globbed(upstream_artifact_paths, artifac
     (
         pytest.param(
             [
-               {
-                   "paths": {
-                       "/path/to/cot/dir/dep1/public/build/foo": {"destinations": [
-                           "some/dir/foo",
-                       ]},
-                       "/path/to/cot/dir/dep1/public/build/bar": {"destinations": [
-                           "some/dir/bar",
-                       ]},
-                   },
-                   "taskId": "dep1",
-               },
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
             ],
             (),
             id="no_overwrites",
         ),
         pytest.param(
             [
-               {
-                   "paths": {
-                       "/path/to/cot/dir/dep1/public/build/foo": {"destinations": [
-                           "some/dir/foo",
-                       ]},
-                       "/path/to/cot/dir/dep1/public/build/deeply/nested/foo": {"destinations": [
-                           "some/dir/foo",
-                       ]},
-                   },
-                   "taskId": "dep1",
-               },
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/deeply/nested/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
             ],
             ("'some/dir/foo' would be written to more than once",),
             id="one_overwrite",
         ),
         pytest.param(
             [
-               {
-                   "paths": {
-                       "/path/to/cot/dir/dep1/public/build/foo": {"destinations": [
-                           "some/dir/foo",
-                       ]},
-                       "/path/to/cot/dir/dep1/public/build/deeply/nested/foo": {"destinations": [
-                           "some/dir/foo",
-                       ]},
-                       "/path/to/cot/dir/dep1/public/build/bar": {"destinations": [
-                           "some/dir/bar",
-                       ]},
-                       "/path/to/cot/dir/dep1/public/build/deeply/nested/bar": {"destinations": [
-                           "some/dir/bar",
-                       ]},
-                   },
-                   "taskId": "dep1",
-               },
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/deeply/nested/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/deeply/nested/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
             ],
             ("'some/dir/foo' would be written to more than once", "'some/dir/bar' would be written to more than once"),
             id="multiple_overwrites",
         ),
-    )
+    ),
 )
 def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
     try:
@@ -955,6 +1024,7 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
             assert e.args == errors
         else:
             assert False, "Unexpected exception"
+
 
 @pytest.mark.parametrize(
     "upstream_artifacts,artifact_map,expected_uploads",
@@ -972,9 +1042,11 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
             [
                 {
                     "paths": {
-                        "*": {"destinations": [
-                            "some/dir/",
-                            ]},
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -996,11 +1068,13 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
             [
                 {
                     "paths": {
-                        "*": {"destinations": [
-                            "some/dir/",
-                            "some/other/",
-                            "a/third/",
-                            ]},
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                                "some/other/",
+                                "a/third/",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -1023,9 +1097,11 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
             [
                 {
                     "paths": {
-                        "*": {"destinations": [
-                            "some/dir/",
-                            ]},
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -1057,11 +1133,13 @@ async def test_upload_translations_artifacts(context, upstream_artifacts, artifa
 
         expected_calls = []
         for file, dests in expected_uploads.items():
-            expected_calls.append(mock.call(
-                context,
-                dests,
-                os.path.join(tmp, "cot", "dep1", file),
-            ))
+            expected_calls.append(
+                mock.call(
+                    context,
+                    dests,
+                    os.path.join(tmp, "cot", "dep1", file),
+                )
+            )
 
         assert sorted(mocked_retry_upload.call_args_list) == sorted([*expected_calls])
 
