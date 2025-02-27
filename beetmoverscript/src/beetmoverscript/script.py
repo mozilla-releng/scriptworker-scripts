@@ -661,11 +661,17 @@ async def retry_upload(context, destinations, path, expiry=None, fail_on_unknown
         # S3 upload
         enabled = is_cloud_enabled(context.config, "aws", context.resource)
         if enabled is True or (enabled == "buildhub-only" and path.endswith("buildhub.json")):
-            cloud_uploads["aws"].append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path, fail_on_unknown_mimetype=fail_on_unknown_mimetype)))
+            cloud_uploads["aws"].append(
+                asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path, fail_on_unknown_mimetype=fail_on_unknown_mimetype))
+            )
 
         # GCS upload
         if is_cloud_enabled(context.config, "gcloud", context.resource):
-            cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path, expiry=expiry, fail_on_unknown_mimetype=fail_on_unknown_mimetype)))
+            cloud_uploads["gcloud"].append(
+                asyncio.ensure_future(
+                    upload_to_gcs(context=context, target_path=dest, path=path, expiry=expiry, fail_on_unknown_mimetype=fail_on_unknown_mimetype)
+                )
+            )
 
     await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.resource)
 
