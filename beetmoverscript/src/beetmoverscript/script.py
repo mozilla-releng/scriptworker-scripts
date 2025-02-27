@@ -2,17 +2,22 @@
 """Beetmover script"""
 
 import asyncio
+import copy
+import fnmatch
 import logging
 import mimetypes
 import os
+import os.path
 import re
 import sys
+from collections import defaultdict
 from multiprocessing.pool import ThreadPool
 
 import aiohttp
 import boto3
 from botocore.exceptions import ClientError
 from redo import retry
+from scriptworker import artifacts as scriptworker_artifacts
 from scriptworker import client
 from scriptworker.exceptions import (
     ScriptWorkerRetryException,
@@ -273,6 +278,142 @@ async def push_to_maven(context):
     )
 
 
+# TODO: maybe call upstreamArtifactPaths something different?
+def get_concrete_artifact_map_from_globbed(upstreamArtifactPaths, artifactMap, strip_prefixes=["public/build", "public/logs"]):
+    # Sanity check inputs. Each file in upstreamArtifactPaths should match either:
+    # - One non "*" glob in artifactMap
+    # - A non "*" glob and "*" (in which case the former takes precedence)
+    # - "*" only
+    # TODO: maybe move this sanity check out elsewhere?
+    # Additionally, each destination should only have one matching artifact
+    # (ie: nothing should be overridden)
+
+    # upstreamArtifactPaths here is in the form of:
+    # {
+    #   "taskId1": [
+    #     "/path/to/file",
+    #     "/path/to/file2",
+    #   ],
+    #   "taskId2": [
+    #     "/path/to/file",
+    #     "/path/to/file2",
+    #   ],
+    # }
+    # artifactMap is in the form of:
+    # [
+    #   {
+    #     "taskId": "taskId1",
+    #     "paths": {
+    #       "*": {
+    #         "destinations": [
+    #           "dest1",
+    #         ]
+    #       }
+    #     },
+    #   }
+    # ]
+
+    concreteArtifactMap = []
+    errors = []
+
+    for map_ in artifactMap:
+        concretePaths = {}
+
+        full_glob_destinations = map_["paths"].get("*", {}).get("destinations")
+        other_paths = copy.deepcopy(map_["paths"])
+        if "*" in other_paths:
+            del other_paths["*"]
+
+        for taskId, artifacts in upstreamArtifactPaths.items():
+            if map_["taskId"] != taskId:
+                continue
+
+            for artifact in artifacts:
+                retained_artifact_path = artifact
+                for sp in strip_prefixes:
+                    if sp in artifact:
+                        retained_artifact_path = retained_artifact_path[retained_artifact_path.find(sp) + len(sp) :]
+                destinations = []
+                # We need to look at non-'*' paths separate from '*' paths.
+
+                for input_path, output in other_paths.items():
+                    # Skip any input paths that don't match the artifact name.
+                    if "*" in input_path:
+                        if not fnmatch.fnmatch(retained_artifact_path, input_path):
+                            continue
+                    else:
+                        if input_path != artifact:
+                            continue
+
+                    # If there's already destinations, we've already seen this artifact,
+                    # and we have a clash.
+                    if destinations:
+                        errors.append(f"'{artifact}' matched multiple concrete paths")
+                    else:
+                        destinations.extend(output["destinations"])
+
+                # If we have destinations for the "*" glob any artifacts that
+                # aren't accounted for by any of the `other_paths` will go to
+                # the "*" destinations.
+                if full_glob_destinations and not destinations:
+                    destinations.extend(full_glob_destinations)
+
+                if destinations:
+                    concretePaths[artifact] = {"destinations": []}
+                    for d in destinations:
+                        if not d.endswith(retained_artifact_path):
+                            d = os.path.normpath(f"{d}{retained_artifact_path}")
+                        concretePaths[artifact]["destinations"].append(d)
+
+        concreteArtifactMap.append(
+            {
+                "paths": concretePaths,
+                "taskId": map_["taskId"],
+            }
+        )
+
+    if errors:
+        raise ScriptWorkerTaskException(*errors)
+
+    return concreteArtifactMap
+
+
+def ensure_no_overwrites_in_artifact_map(artifactMap):
+    dest_counts = defaultdict(int)
+    for map_ in artifactMap:
+        for output_path in map_["paths"].values():
+            for dest in output_path["destinations"]:
+                dest_counts[dest] += 1
+
+    errors = []
+    for dest, count in dest_counts.items():
+        if count > 1:
+            errors.append(f"'{dest}' would be written to more than once")
+
+    if errors:
+        raise ScriptWorkerTaskException(*errors)
+
+    return False
+
+
+async def upload_translations_artifacts(context):
+    dryrun = context.task["payload"]["dryrun"]
+    artifactMap = context.task["payload"]["artifactMap"]
+
+    # Ignore any failed artifacts; we'll take whatever we can get. All artifacts are considered optional.
+    # TODO: cal lensure_no_overwrites somewhere. here or in get_concrete ?
+    upstreamArtifactPaths = scriptworker_artifacts.get_upstream_artifacts_full_paths_per_task_id(context)[0]
+    concreteArtifactMap = get_concrete_artifact_map_from_globbed(upstreamArtifactPaths, artifactMap)
+
+    for map_ in concreteArtifactMap:
+        for input_path, outputs in map_["paths"].items():
+            if dryrun:
+                log.info(f"Would've uploaded {input_path} to {outputs['destinations']}")
+            else:
+                log.info(f"Uploading {input_path} to {outputs['destinations']}")
+                await retry_upload(context, outputs["destinations"], input_path)
+
+
 # copy_beets {{{1
 def copy_beets(context, from_keys_checksums, to_keys_checksums):
     creds = get_credentials(context, "aws")
@@ -334,6 +475,7 @@ action_map = {
     "direct-push-to-bucket": direct_push_to_bucket,
     "push-to-maven": push_to_maven,
     "import-from-gcs-to-artifact-registry": import_from_gcs_to_artifact_registry,
+    "upload-translations-artifacts": upload_translations_artifacts,
 }
 
 
@@ -731,6 +873,7 @@ def main(config_path=None):
         "maven_schema_file": os.path.join(data_dir, "maven_beetmover_task_schema.json"),
         "artifactMap_schema_file": os.path.join(data_dir, "artifactMap_beetmover_task_schema.json"),
         "import_from_gcs_to_artifact_registry_schema_file": os.path.join(data_dir, "import_from_gcs_to_artifact_registry_task_schema.json"),
+        "upload_translations_artifacts": os.path.join(data_dir, "upload_translations_artifacts_task_schema.json"),
     }
 
     # There are several task schema. Validation occurs in async_main

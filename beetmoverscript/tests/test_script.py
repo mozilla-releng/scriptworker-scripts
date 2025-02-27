@@ -1,7 +1,9 @@
 import logging
 import mimetypes
 import os
+import pathlib
 import shutil
+import tempfile
 
 import boto3
 import mock
@@ -16,6 +18,8 @@ from beetmoverscript.script import (
     async_main,
     copy_beets,
     enrich_balrog_manifest,
+    ensure_no_overwrites_in_artifact_map,
+    get_concrete_artifact_map_from_globbed,
     get_destination_for_partner_repack_path,
     list_bucket_objects,
     main,
@@ -27,6 +31,7 @@ from beetmoverscript.script import (
     put,
     sanity_check_partner_path,
     setup_mimetypes,
+    upload_translations_artifacts,
 )
 from beetmoverscript.task import get_release_props, get_upstream_artifacts
 from beetmoverscript.utils import generate_beetmover_manifest, is_promotion_action
@@ -585,6 +590,558 @@ def test_sanity_check_partner_path(path, raises):
             sanity_check_partner_path(path, repl_dict, PARTNER_REPACK_REGEXES)
     else:
         sanity_check_partner_path(path, repl_dict, PARTNER_REPACK_REGEXES)
+
+
+@pytest.mark.parametrize(
+    "upstream_artifact_paths,artifact_map,concrete_artifact_map,error",
+    (
+        # TODO: do we need full paths in upstream_artifact_paths ?
+        pytest.param(
+            {
+                "dep1": [
+                    "/path/to/cot/dir/dep1/public/build/foo",
+                    "/path/to/cot/dir/dep1/public/build/bar",
+                ],
+            },
+            [
+                {
+                    "paths": {
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            "",
+            id="glob_only",
+        ),
+        pytest.param(
+            {
+                "dep1": [
+                    "/path/to/cot/dir/dep1/public/build/foo",
+                    "/path/to/cot/dir/dep1/public/build/bar",
+                    "/path/to/cot/dir/dep1/public/logs/live.log",
+                ],
+            },
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "*.log": {
+                            "destinations": [
+                                "some/log/dir/",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/logs/live.log": {
+                            "destinations": [
+                                "some/log/dir/live.log",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            "",
+            id="glob_and_nonglob",
+        ),
+        pytest.param(
+            {
+                "dep1": [
+                    "/path/to/cot/dir/dep1/public/build/foo",
+                    "/path/to/cot/dir/dep1/public/build/bar",
+                    "/path/to/cot/dir/dep1/public/logs/live.log",
+                ],
+            },
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            "",
+            id="nonglob_only",
+        ),
+        pytest.param(
+            {
+                "dep1": [
+                    "/path/to/cot/dir/dep1/public/build/foo",
+                    "/path/to/cot/dir/dep1/public/build/bar",
+                    "/path/to/cot/dir/dep1/public/logs/live.log",
+                ],
+            },
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            "",
+            id="multiple_nonglob",
+        ),
+        pytest.param(
+            {
+                "dep1": [
+                    "/path/to/cot/dir/dep1/public/build/foo",
+                    "/path/to/cot/dir/dep1/public/build/bar",
+                    "/path/to/cot/dir/dep1/public/logs/live.log",
+                ],
+            },
+            [
+                {
+                    "paths": {
+                        "*.log": {
+                            "destinations": [
+                                "some/log/dir",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/logs/live.log": {
+                            "destinations": [
+                                "some/log/dir/live.log",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            "",
+            id="glob_suffix",
+        ),
+        pytest.param(
+            {
+                "dep1": [
+                    "/path/to/cot/dir/dep1/public/build/foo",
+                    "/path/to/cot/dir/dep1/public/build/bar",
+                    "/path/to/cot/dir/dep1/public/logs/live.log",
+                    "/path/to/cot/dir/dep1/public/build/test.txt",
+                ],
+            },
+            [
+                {
+                    "paths": {
+                        "*.log": {
+                            "destinations": [
+                                "some/log/dir/",
+                            ]
+                        },
+                        "*.txt": {
+                            "destinations": [
+                                "some/txt/dir/",
+                            ]
+                        },
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/logs/live.log": {
+                            "destinations": [
+                                "some/log/dir/live.log",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/test.txt": {
+                            "destinations": [
+                                "some/txt/dir/test.txt",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            "",
+            id="multiple_glob_suffix_no_overlap",
+        ),
+        pytest.param(
+            {
+                "dep1": [
+                    "/path/to/cot/dir/dep1/public/build/deeply/nested/foo",
+                    "/path/to/cot/dir/dep1/public/build/deeply/nested/bar",
+                ],
+            },
+            [
+                {
+                    "paths": {
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/deeply/nested/foo": {
+                            "destinations": [
+                                "some/dir/deeply/nested/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/deeply/nested/bar": {
+                            "destinations": [
+                                "some/dir/deeply/nested/bar",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            "",
+            id="glob_with_subdir",
+        ),
+        pytest.param(
+            {
+                "dep1": [
+                    "/path/to/cot/dir/dep1/public/logs/live.log",
+                ],
+            },
+            [
+                # TODO: do we want to support this at all?
+                {
+                    "paths": {
+                        "*.log": {
+                            "destinations": [
+                                "some/log/dir/",
+                            ]
+                        },
+                        "*og": {
+                            "destinations": [
+                                "some/og/dir/",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            [],
+            "'/path/to/cot/dir/dep1/public/logs/live.log' matched multiple concrete paths",
+            id="multiple_glob_suffix_with_overlap",
+        ),
+    ),
+)
+def test_get_concrete_artifact_map_from_globbed(upstream_artifact_paths, artifact_map, concrete_artifact_map, error):
+    try:
+        got = get_concrete_artifact_map_from_globbed(upstream_artifact_paths, artifact_map)
+        assert got == concrete_artifact_map
+    except ScriptWorkerTaskException as e:
+        if error:
+            assert error in e.args[0]
+        else:
+            assert False, "Unexpected exception"
+
+
+@pytest.mark.parametrize(
+    "artifact_map,errors",
+    (
+        pytest.param(
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            (),
+            id="no_overwrites",
+        ),
+        pytest.param(
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/deeply/nested/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            ("'some/dir/foo' would be written to more than once",),
+            id="one_overwrite",
+        ),
+        pytest.param(
+            [
+                {
+                    "paths": {
+                        "/path/to/cot/dir/dep1/public/build/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/deeply/nested/foo": {
+                            "destinations": [
+                                "some/dir/foo",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
+                        "/path/to/cot/dir/dep1/public/build/deeply/nested/bar": {
+                            "destinations": [
+                                "some/dir/bar",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            ("'some/dir/foo' would be written to more than once", "'some/dir/bar' would be written to more than once"),
+            id="multiple_overwrites",
+        ),
+    ),
+)
+def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
+    try:
+        got = ensure_no_overwrites_in_artifact_map(artifact_map)
+        if errors:
+            assert False, f"Expected errors: {errors}"
+    except ScriptWorkerTaskException as e:
+        if errors:
+            assert e.args == errors
+        else:
+            assert False, "Unexpected exception"
+
+
+@pytest.mark.parametrize(
+    "upstream_artifacts,artifact_map,expected_uploads",
+    (
+        pytest.param(
+            [
+                {
+                    "paths": [
+                        "public/build/*",
+                        "public/logs/*",
+                    ],
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            {
+                "public/build/foo": ["some/dir/foo"],
+            },
+            id="one_file_one_dest",
+        ),
+        pytest.param(
+            [
+                {
+                    "paths": [
+                        "public/build*",
+                    ],
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                                "some/other/",
+                                "a/third/",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            {
+                "public/build/foo": ["some/dir/foo", "some/other/foo", "a/third/foo"],
+            },
+            id="one_file_multiple_dests",
+        ),
+        pytest.param(
+            [
+                {
+                    "paths": [
+                        "public/build/*",
+                        "public/logs/*",
+                    ],
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            {
+                "public/build/foo": ["some/dir/foo"],
+                "public/build/bar": ["some/dir/bar"],
+                "public/logs/live.log": ["some/dir/live.log"],
+            },
+            id="multiple_files_one_dest_each",
+        ),
+        # multiple files multiple dests
+        # some error cases
+    ),
+)
+@pytest.mark.asyncio
+async def test_upload_translations_artifacts(context, upstream_artifacts, artifact_map, expected_uploads, mocker):
+    with tempfile.TemporaryDirectory() as tmp:
+        context.config["work_dir"] = tmp
+        for artifact in expected_uploads.keys():
+            artifact_path = os.path.join(tmp, "cot", "dep1", artifact)
+            artifact_dir = os.path.dirname(artifact_path)
+            os.makedirs(artifact_dir, exist_ok=True)
+            pathlib.Path(artifact_path).touch()
+
+        mocked_retry_upload = mocker.patch.object(beetmoverscript.script, "retry_upload")
+        context.task = {"payload": {"upstreamArtifacts": upstream_artifacts, "artifactMap": artifact_map, "dryrun": False}}
+        await upload_translations_artifacts(context)
+
+        expected_calls = []
+        for file, dests in expected_uploads.items():
+            expected_calls.append(
+                mock.call(
+                    context,
+                    dests,
+                    os.path.join(tmp, "cot", "dep1", file),
+                )
+            )
+
+        assert sorted(mocked_retry_upload.call_args_list) == sorted([*expected_calls])
 
 
 # async_main {{{1

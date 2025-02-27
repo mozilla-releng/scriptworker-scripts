@@ -105,8 +105,8 @@ def setup_gcs_credentials(raw_creds):
 async def upload_to_gcs(context, target_path, path, expiry=None):
     product = get_product_name(context.task, context.config)
     mime_type = mimetypes.guess_type(path)[0]
-    if not mime_type:
-        raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), mimetypes.guess_type() returned {}".format(path, mime_type))
+    # if not mime_type:
+    #     raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), mimetypes.guess_type() returned {}".format(path, mime_type))
     bucket_name = get_bucket_name(context, product, "gcloud")
 
     bucket = Bucket(context.gcs_client, name=bucket_name)
