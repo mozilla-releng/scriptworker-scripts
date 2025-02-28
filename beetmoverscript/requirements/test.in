@@ -5,6 +5,7 @@ coverage
 mock
 pip-compile-multi
 pytest
+pytest-aioresponses
 pytest-asyncio
 pytest-cov
 pytest-mock
