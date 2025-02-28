@@ -208,6 +208,7 @@ async def test_retry_upload(context, mocker):
 # upload_to_s3 {{{1
 @pytest.mark.asyncio
 async def test_upload_to_s3(context, mocker):
+    setup_mimetypes()
     context.release_props["appName"] = "fake"
     mocker.patch.object(beetmoverscript.script, "retry_async", new=noop_async)
     mocker.patch.object(beetmoverscript.script, "boto3")
@@ -216,11 +217,39 @@ async def test_upload_to_s3(context, mocker):
 
 @pytest.mark.asyncio
 async def test_upload_to_s3_raises(context, mocker):
+    setup_mimetypes()
     context.release_props["appName"] = "fake"
     mocker.patch.object(beetmoverscript.script, "retry_async", new=noop_async)
     mocker.patch.object(beetmoverscript.script, "boto3")
     with pytest.raises(ScriptWorkerTaskException):
         await beetmoverscript.script.upload_to_s3(context, "foo", "mime.invalid")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fail_on_unknown_mime_type",
+    (
+        pytest.param(
+            True,
+            id="fail_on_unknown_mime_type",
+        ),
+        pytest.param(
+            False,
+            id="dont_fail_on_unknown_mime_type",
+        ),
+    ),
+)
+async def test_upload_to_s3_fail_on_missing_mime_type(context, mocker, fail_on_unknown_mime_type):
+    setup_mimetypes()
+    context.release_props["appName"] = "fake"
+    mocked_retry_async = mocker.patch.object(beetmoverscript.script, "retry_async")
+    mocker.patch.object(beetmoverscript.script, "boto3")
+    if fail_on_unknown_mime_type:
+        with pytest.raises(ScriptWorkerTaskException):
+            await beetmoverscript.script.upload_to_s3(context, "foo", "mime.invalid", fail_on_unknown_mime_type)
+    else:
+        await beetmoverscript.script.upload_to_s3(context, "foo", "mime.invalid", fail_on_unknown_mime_type)
+        assert mocked_retry_async.call_args[1]["args"][2].get("Content-Type") == "application/octet-stream"
 
 
 @pytest.fixture
