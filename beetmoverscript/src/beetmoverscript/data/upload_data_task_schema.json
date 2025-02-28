@@ -1,0 +1,57 @@
+{
+  "title": "Upload data directly into files schema",
+  "type": "object",
+  "properties": {
+    "dependencies": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "releaseProperties": {
+            "type": "object",
+            "properties": {
+                "appName": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "appName"
+            ]
+        },
+        "dataMap": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "string",
+                        "description": "base64 encoded version of the data to be uploaded"
+                    },
+                    "contentType": {
+                        "type": "string"
+                    },
+                    "destinations": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": ["data", "contentType", "destinations"]
+            }
+        }
+      },
+      "required": ["releaseProperties", "dataMap"]
+    }
+  },
+  "required": ["payload", "dependencies"]
+}

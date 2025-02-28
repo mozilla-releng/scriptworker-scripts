@@ -1,8 +1,13 @@
+from io import BytesIO
 import logging
 import mimetypes
 import os
+import pathlib
+import re
 import shutil
+import tempfile
 
+import aiohttp
 import boto3
 import mock
 import pytest
@@ -10,6 +15,7 @@ from scriptworker.context import Context
 from scriptworker.exceptions import ScriptWorkerRetryException, ScriptWorkerTaskException
 from yarl import URL
 
+import beetmoverscript.gcloud
 import beetmoverscript.script
 from beetmoverscript.constants import PARTNER_REPACK_REGEXES
 from beetmoverscript.script import (
@@ -27,11 +33,13 @@ from beetmoverscript.script import (
     put,
     sanity_check_partner_path,
     setup_mimetypes,
+    upload_data,
 )
 from beetmoverscript.task import get_release_props, get_upstream_artifacts
 from beetmoverscript.utils import generate_beetmover_manifest, is_promotion_action
 
 from . import get_fake_valid_config, get_fake_valid_task, get_test_jinja_env, noop_async, noop_sync
+from .test_gcloud import FakeClient
 
 
 # push_to_partner {{{1
@@ -151,7 +159,7 @@ async def test_put_success(fake_session):
     context = Context()
     context.config = get_fake_valid_config()
     context.session = fake_session
-    response = await put(context, url=URL("https://foo.com/packages/fake.package"), headers={}, abs_filename="tests/fake_artifact.json", session=fake_session)
+    response = await put(context, url=URL("https://foo.com/packages/fake.package"), headers={}, fh=BytesIO(b"foo"), session=fake_session)
     assert response.status == 200
     assert response.resp == [b"asdf", b"asdf"]
 
@@ -162,7 +170,7 @@ async def test_put_failure(fake_session_500):
     context.config = get_fake_valid_config()
     context.session = fake_session_500
     with pytest.raises(ScriptWorkerRetryException):
-        await put(context, url=URL("https://foo.com/packages/fake.package"), headers={}, abs_filename="tests/fake_artifact.json", session=fake_session_500)
+        await put(context, url=URL("https://foo.com/packages/fake.package"), headers={}, fh=BytesIO(b"foo"), session=fake_session_500)
 
 
 # enrich_balrog_manifest {{{1
@@ -212,7 +220,8 @@ async def test_upload_to_s3(context, mocker):
     context.release_props["appName"] = "fake"
     mocker.patch.object(beetmoverscript.script, "retry_async", new=noop_async)
     mocker.patch.object(beetmoverscript.script, "boto3")
-    await beetmoverscript.script.upload_to_s3(context, "foo", "bar")
+    with tempfile.NamedTemporaryFile() as f:
+        await beetmoverscript.script.upload_to_s3(context, "foo", f.name)
 
 
 @pytest.mark.asyncio
@@ -244,12 +253,15 @@ async def test_upload_to_s3_fail_on_missing_mime_type(context, mocker, fail_on_u
     context.release_props["appName"] = "fake"
     mocked_retry_async = mocker.patch.object(beetmoverscript.script, "retry_async")
     mocker.patch.object(beetmoverscript.script, "boto3")
-    if fail_on_unknown_mime_type:
-        with pytest.raises(ScriptWorkerTaskException):
-            await beetmoverscript.script.upload_to_s3(context, "foo", "mime.invalid", fail_on_unknown_mime_type)
-    else:
-        await beetmoverscript.script.upload_to_s3(context, "foo", "mime.invalid", fail_on_unknown_mime_type)
-        assert mocked_retry_async.call_args[1]["args"][2].get("Content-Type") == "application/octet-stream"
+    with tempfile.TemporaryDirectory() as tmpd:
+        fn = pathlib.Path(tmpd, "mime.invalid")
+        fn.touch()
+        if fail_on_unknown_mime_type:
+            with pytest.raises(ScriptWorkerTaskException):
+                await beetmoverscript.script.upload_to_s3(context, "foo", fn.absolute(), fail_on_unknown_mime_type)
+        else:
+            await beetmoverscript.script.upload_to_s3(context, "foo", fn.absolute(), fail_on_unknown_mime_type)
+            assert mocked_retry_async.call_args[1]["args"][2].get("Content-Type") == "application/octet-stream"
 
 
 @pytest.fixture
@@ -614,6 +626,111 @@ def test_sanity_check_partner_path(path, raises):
             sanity_check_partner_path(path, repl_dict, PARTNER_REPACK_REGEXES)
     else:
         sanity_check_partner_path(path, repl_dict, PARTNER_REPACK_REGEXES)
+
+
+@pytest.mark.parametrize(
+    "data_map,expected_uploads",
+    (
+        pytest.param(
+            [
+                {
+                    # base64 encoded version of a simple yaml file
+                    "data": "Zm9vOiBiYXIKZm9vMjogYmFyMgo=",
+                    "contentType": "application/yaml",
+                    "destinations": [
+                        "foo/bar/config.yml",
+                    ],
+                },
+            ],
+            [
+                "foo/bar/config.yml",
+            ],
+            id="one_data_one_dest",
+        ),
+        pytest.param(
+            [
+                {
+                    # base64 encoded version of a simple yaml file
+                    "data": "Zm9vOiBiYXIKZm9vMjogYmFyMgo=",
+                    "contentType": "application/yaml",
+                    "destinations": [
+                        "foo/bar/config.yml",
+                        "foo/bar/config2.yml",
+                        "foo/bar/config3.yml",
+                    ],
+                },
+            ],
+            [
+                "foo/bar/config.yml",
+                "foo/bar/config2.yml",
+                "foo/bar/config3.yml",
+            ],
+            id="one_data_multiple_dest",
+        ),
+        pytest.param(
+            [
+                {
+                    # base64 encoded version of a simple yaml file
+                    "data": "Zm9vOiBiYXIKZm9vMjogYmFyMgo=",
+                    "contentType": "application/yaml",
+                    "destinations": [
+                        "foo/bar/config.yml",
+                    ],
+                },
+                {
+                    # base64 encoded version of a simple yaml file
+                    "data": "Zm9vOiBiYXIKZm9vMzogYmFyMwo=",
+                    "contentType": "application/yaml",
+                    "destinations": [
+                        "foo/bar/config2.yml",
+                    ],
+                },
+                {
+                    # base64 encoded version of a simple yaml file
+                    "data": "Zm9vOiBiYXIKZm9vNDogYmFyNAo=",
+                    "contentType": "application/yaml",
+                    "destinations": [
+                        "foo/bar/config3.yml",
+                    ],
+                },
+            ],
+            [
+                "foo/bar/config.yml",
+                "foo/bar/config2.yml",
+                "foo/bar/config3.yml",
+            ],
+            id="multiple_data,multiple_dest",
+        ),
+    ),
+)
+@pytest.mark.asyncio
+async def test_upload_data(monkeypatch, aioresponses, context, data_map, expected_uploads):
+    async with aiohttp.ClientSession() as session:
+        # needed for mocking AWS uploads
+        context.session = session
+        for upload in expected_uploads:
+            aioresponses.put(re.compile(f"https://dummy.s3.amazonaws.com/{upload}?.*"), status=200)
+
+        # needed for mocking GCS ploads
+        context.gcs_client = FakeClient()
+        blob = FakeClient.FakeBlob()
+        blob._exists = False
+        blob.upload_from_string = mock.MagicMock()
+        bucket = FakeClient.FakeBucket(FakeClient, "foobucket")
+        bucket.blob = mock.MagicMock()
+        bucket.blob.return_value = blob
+        monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", lambda client, name: bucket)
+
+        # now actually run the test!
+        context.action = "upload-data"
+        context.task = {"payload": {"dataMap": data_map, "releaseProperties": {"appName": "fake"}}, "scopes": ["project:releng:beetmover:action:upload-data"]}
+
+        await upload_data(context)
+
+        # verify GCS expectations
+        assert blob.upload_from_string.call_count == len(expected_uploads)
+
+        # AWS expectations are implicitly verified by `aioresponses`
 
 
 # async_main {{{1

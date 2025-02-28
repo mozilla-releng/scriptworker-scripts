@@ -17,6 +17,7 @@ def get_fake_valid_config():
         "schema_file": "src/beetmoverscript/data/beetmover_task_schema.json",
         "maven_schema_file": "src/beetmoverscript/data/maven_beetmover_task_schema.json",
         "artifactMap_schema_file": "src/beetmoverscript/data/artifactMap_beetmover_task_schema.json",
+        "upload_data_schema_file": "src/beetmoverscript/data/upload_data_task_schema.json",
     }
     config.update(load_json(path="tests/fake_config.json"))
     return config
