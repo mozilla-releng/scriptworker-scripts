@@ -185,6 +185,23 @@ async def download_log(build_slug: str, artifacts_dir: str, poll_interval: int =
         log.error(f"Bitrise has no log for build '{build_slug}'. Please check https://app.bitrise.io/build/{build_slug}")
 
 
+async def download_workflow_info(build_slug: str, target_file: str) -> None:
+    """Download and save a workflow json.
+
+    Args:
+        build_slug (str): The Bitrise build slug id
+        target_file (str): The artifacts path
+    """
+    client = BitriseClient()
+    endpoint = f"/builds/{build_slug}"
+
+    workflow_data = await client.request(endpoint)
+    os.makedirs(os.path.dirname(target_file), exist_ok=True)
+    with open(target_file, "wt") as fd:
+        # Save the workflow data as pretty-printed json
+        fd.writelines(pformat(workflow_data))
+
+
 async def dump_perfherder_data(artifacts_dir: str) -> None:
     """Dumps any detected PERFHERDER_DATA log lines to stdout.
 
@@ -249,6 +266,11 @@ async def wait_and_download_workflow_log(artifacts_dir: str, build_slug: str) ->
             log.info(f"Retrieving bitrise log for '{build_slug}'...")
             await download_log(build_slug, artifacts_dir)
             await dump_perfherder_data(artifacts_dir)
+            # Once everything is done, download the workflow data
+            await download_workflow_info(
+                build_slug,
+                os.path.join(artifacts_dir, f"workflows/{build_slug}.json"),
+            )
 
 
 async def run_build(artifacts_dir: str, workflow_id: str, **build_params: Any) -> None:

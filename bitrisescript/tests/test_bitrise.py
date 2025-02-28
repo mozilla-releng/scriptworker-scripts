@@ -232,6 +232,16 @@ async def test_download_log(mocker, client):
 
 
 @pytest.mark.asyncio
+async def test_download_workflow_info(mocker, client):
+    m_open = mocker.patch("builtins.open", mocker.mock_open())
+    m_request = mocker.patch.object(client, "request", return_value=mocker.AsyncMock())
+    m_request.side_effect = [{"slug": "123", "status": 1, "status_text": "success"}]
+    await bitrise.download_workflow_info("123", "path/to/data.json")
+    m_request.assert_called_once_with("/builds/123")
+    m_open.assert_called_with("path/to/data.json", "wt")
+
+
+@pytest.mark.asyncio
 async def test_dump_perfherder_data(mocker, caplog):
     caplog.set_level(logging.INFO)
     artifacts_dir = "artifacts"
@@ -318,6 +328,7 @@ async def test_run_build(mocker, tmp_path, client, build_response, expectation):
     m_wait = mocker.patch.object(bitrise, "wait_for_build_finish", return_value=mocker.AsyncMock())
     m_dl_artifacts = mocker.patch.object(bitrise, "download_artifacts", return_value=mocker.AsyncMock())
     m_dl_log = mocker.patch.object(bitrise, "download_log", return_value=mocker.AsyncMock())
+    m_dl_wfl_info = mocker.patch.object(bitrise, "download_workflow_info", return_value=mocker.AsyncMock())
 
     assert not artifacts_dir.is_dir()
     with expectation:
@@ -329,6 +340,7 @@ async def test_run_build(mocker, tmp_path, client, build_response, expectation):
         m_wait.assert_called_once_with(slug)
         m_dl_artifacts.assert_called_once_with(slug, f"{artifacts_dir}/{wf_id}")
         m_dl_log.assert_called_once_with(slug, f"{artifacts_dir}/{wf_id}")
+        m_dl_wfl_info.assert_called_once_with(slug, f"{artifacts_dir}/test/workflows/{slug}.json")
 
     assert artifacts_dir.is_dir()
 

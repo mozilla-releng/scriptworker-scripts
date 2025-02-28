@@ -8,6 +8,7 @@ import pytest
 from unittest.mock import AsyncMock
 
 import bitrisescript.script as script
+from bitrisescript import bitrise
 from scriptworker_client.exceptions import TaskVerificationError
 
 
@@ -35,14 +36,17 @@ async def test_async_main(mocker, config, task, expectation, expected_num_future
     client_mock.close.return_value.set_result(None)
     client_mock.set_app_prefix.return_value.set_result(None)
     mocker.patch("bitrisescript.script.BitriseClient", return_value=client_mock)
+    mocker.patch("bitrisescript.script.get_running_builds", return_value=mocker.AsyncMock())
+    mocker.patch("bitrisescript.script.find_running_build", return_value=mocker.Mock())
+    mocker.patch("bitrisescript.script.wait_and_download_workflow_log", return_value=mocker.AsyncMock())
+    mocker.patch("bitrisescript.script.run_build", return_value=mocker.AsyncMock())
+
+    # Mock signal handler
+    mocker.patch("bitrisescript.script.asyncio.get_event_loop", return_value=mocker.Mock())
 
     # Mock out asyncio.gather
     mock_gather = mocker.patch("bitrisescript.script.asyncio.gather", return_value=Future())
     mock_gather.return_value.set_result(None)
-
-    async_mock = AsyncMock()
-    mocker.patch("bitrisescript.script.get_running_builds", side_effect=async_mock)
-    async_mock.return_value = []
 
     task_def = {
         "scopes": [],
