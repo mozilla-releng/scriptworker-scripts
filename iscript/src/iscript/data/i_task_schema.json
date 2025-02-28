@@ -102,6 +102,7 @@
               "type": "string",
               "enum": [
                 "firefox",
+                "hiro-redux",
                 "mozillavpn",
                 "mozregression"
               ]
