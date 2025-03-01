@@ -39,7 +39,9 @@ async def test_main_run_workflow(responses, tmp_path, config):
         responses.post(f"{BITRISE_API_URL}/apps/{app_slug}/builds", status=200, payload={"status": "ok", "build_slug": build_slug})
         responses.get(f"{BITRISE_API_URL}/apps/{app_slug}/builds/{build_slug}/log", status=200, payload={"is_archived": True, "expiring_raw_log_url": log_url})
         responses.get(log_url, status=200, body="log")
-        responses.get(f"{BITRISE_API_URL}/apps/{app_slug}/builds/{build_slug}", status=200, payload={"data": {"finished_at": "now", "status_text": "success"}})
+        responses.get(
+            f"{BITRISE_API_URL}/apps/{app_slug}/builds/{build_slug}", status=200, payload={"data": {"finished_at": "now", "status_text": "success"}}, repeat=2
+        )
         responses.get(
             f"{BITRISE_API_URL}/apps/{app_slug}/builds/{build_slug}/artifacts",
             status=200,
