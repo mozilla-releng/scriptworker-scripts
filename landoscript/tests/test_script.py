@@ -48,7 +48,9 @@ async def test_version_bump(aioresponses, config, payload, version_files, expect
 
     # expect a request to lando with a new version and maybe other things in the payload
     # you should be able to inspect the requests with something on `aioresponses`
-    import pdb; pdb.set_trace()
+    import pdb
+
+    pdb.set_trace()
 
 
 # tsets for each action on their own
