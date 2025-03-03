@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-"""Test scriptworker_client.client
-"""
+"""Test scriptworker_client.client"""
 import json
 import logging
 import os

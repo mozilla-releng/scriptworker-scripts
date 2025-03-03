@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-"""Test scriptworker_client.aio
-"""
+"""Test scriptworker_client.aio"""
 import asyncio
 import os
 import re
