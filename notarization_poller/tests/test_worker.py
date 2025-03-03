@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-"""Test notarization_poller.worker
-"""
+"""Test notarization_poller.worker"""
 import asyncio
 import json
 import os
