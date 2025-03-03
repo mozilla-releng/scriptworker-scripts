@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-"""Test notarization_poller.config
-"""
+"""Test notarization_poller.config"""
 import json
 import os
 from copy import deepcopy

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-"""Test notarization_poller.constants
-"""
+"""Test notarization_poller.constants"""
 from immutabledict import immutabledict
 
 import notarization_poller.constants as constants
