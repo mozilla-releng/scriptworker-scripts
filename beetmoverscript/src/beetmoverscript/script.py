@@ -650,7 +650,7 @@ def enrich_balrog_manifest(context, locale):
 
 
 # retry_upload {{{1
-async def retry_upload(context, destinations, path, expiry=None):
+async def retry_upload(context, destinations, path, expiry=None, fail_on_unknown_mimetype=True):
     """Manage upload of `path` to `destinations`."""
     cloud_uploads = {key: [] for key in context.config["clouds"]}
 
@@ -661,11 +661,17 @@ async def retry_upload(context, destinations, path, expiry=None):
         # S3 upload
         enabled = is_cloud_enabled(context.config, "aws", context.resource)
         if enabled is True or (enabled == "buildhub-only" and path.endswith("buildhub.json")):
-            cloud_uploads["aws"].append(asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path)))
+            cloud_uploads["aws"].append(
+                asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path, fail_on_unknown_mimetype=fail_on_unknown_mimetype))
+            )
 
         # GCS upload
         if is_cloud_enabled(context.config, "gcloud", context.resource):
-            cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_to_gcs(context=context, target_path=dest, path=path, expiry=expiry)))
+            cloud_uploads["gcloud"].append(
+                asyncio.ensure_future(
+                    upload_to_gcs(context=context, target_path=dest, path=path, expiry=expiry, fail_on_unknown_mimetype=fail_on_unknown_mimetype)
+                )
+            )
 
     await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.resource)
 
@@ -685,11 +691,15 @@ async def put(context, url, headers, abs_filename, session=None):
 
 
 # upload_to_s3 {{{1
-async def upload_to_s3(context, s3_key, path):
+async def upload_to_s3(context, s3_key, path, fail_on_unknown_mimetype=True):
     product = get_product_name(context.task, context.config)
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
-        raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), mimetypes.guess_type() returned {}".format(path, mime_type))
+        if fail_on_unknown_mimetype:
+            raise ScriptWorkerTaskException("Unable to discover valid mime-type for path ({}), mimetypes.guess_type() returned {}".format(path, mime_type))
+        else:
+            mime_type = "application/octet-stream"
+
     api_kwargs = {
         "Bucket": get_bucket_name(context, product, "aws"),
         "Key": s3_key,
@@ -699,6 +709,7 @@ async def upload_to_s3(context, s3_key, path):
         "Content-Type": mime_type,
         "Cache-Control": "public, max-age=%d" % CACHE_CONTROL_MAXAGE,
     }
+
     creds = get_credentials(context, "aws")
     s3 = boto3.client("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
     url = s3.generate_presigned_url("put_object", api_kwargs, ExpiresIn=1800, HttpMethod="PUT")

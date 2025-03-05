@@ -147,21 +147,23 @@ def test_setup_gcs_credentials(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "path,expiry,exists,raise_class",
+    "path,expiry,exists,expected_mimetype,raise_class,fail_on_unknown_mimetype",
     (
         # Raise when can't find a mimetype
-        ("foo/nomimetype", None, False, ScriptWorkerTaskException),
+        ("foo/nomimetype", None, False, None, ScriptWorkerTaskException, True),
+        # Don't raise when can't find a mimetype
+        ("foo/nomimetype", None, False, "application/octet-stream", None, False),
         # No expiration given
-        ("foo/target.zip", None, False, None),
+        ("foo/target.zip", None, False, "application/zip", None, True),
         # With expiration
-        ("foo/target.zip", datetime.now().isoformat(), False, None),
+        ("foo/target.zip", datetime.now().isoformat(), False, "application/zip", None, True),
         # With existing file
-        ("foo/target.zip", None, True, None),
+        ("foo/target.zip", None, True, "application/zip", None, True),
     ),
-    ids=["no mimetype", "no expiry", "with expiry", "with existing file"],
+    ids=["no mimetype", "no mimetype no fail", "no expiry", "with expiry", "with existing file"],
 )
 @pytest.mark.asyncio
-async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, raise_class):
+async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, expected_mimetype, raise_class, fail_on_unknown_mimetype):
     context.gcs_client = FakeClient()
     blob = FakeClient.FakeBlob()
     blob._exists = exists
@@ -181,6 +183,7 @@ async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, raise_c
                 target_path="path/target",
                 path=path,
                 expiry=expiry,
+                fail_on_unknown_mimetype=fail_on_unknown_mimetype,
             )
     else:
         await beetmoverscript.gcloud.upload_to_gcs(
@@ -188,6 +191,7 @@ async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, raise_c
             target_path="path/target",
             path=path,
             expiry=expiry,
+            fail_on_unknown_mimetype=fail_on_unknown_mimetype,
         )
 
         if expiry:
@@ -198,6 +202,8 @@ async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, raise_c
             log_warn.assert_called()
         else:
             log_warn.assert_not_called()
+
+        assert blob.upload_from_filename.call_args[1].get("content_type") == expected_mimetype
 
 
 @pytest.mark.parametrize(
