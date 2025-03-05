@@ -303,6 +303,7 @@ async def test_version_bump(aioresponses, context: Context, payload: Payload, in
         else:
             assert False, f"no version bump found for {file}: {diffs}"
 
+
 # tsets for each action on their own
 # tests for combinations of actions
 # tests for failures
