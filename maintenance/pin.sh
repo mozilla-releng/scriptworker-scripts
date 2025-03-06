@@ -15,6 +15,7 @@ else
         configloader
         githubscript
         iscript
+        landoscript
         notarization_poller
         pushapkscript
         pushflatpakscript
@@ -42,6 +43,7 @@ PY_311_SCRIPTS=(
     bouncerscript
     configloader
     githubscript
+    landoscript
     pushapkscript
     pushflatpakscript
     pushmsixscript
