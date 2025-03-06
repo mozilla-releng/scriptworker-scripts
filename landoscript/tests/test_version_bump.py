@@ -331,18 +331,17 @@ async def test_success_with_bumps(aioresponses, github_installation_responses, c
     submit_uri, status_uri, job_id = setup_test(aioresponses, github_installation_responses, context, payload)
     setup_fetch_files_response(aioresponses, 200, initial_values)
 
-    aioresponses.post(submit_uri, status=202, payload={
-        "job_id": job_id,
-        "status_url": str(status_uri),
-        "message": "foo",
-        "started_at": "2025-03-08T12:25:00Z"
-    })
+    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
 
-    aioresponses.get(status_uri, status=200, payload={
-        "commits": ["abcdef123"],
-        "push_id": job_id,
-        "status": "completed",
-    })
+    aioresponses.get(
+        status_uri,
+        status=200,
+        payload={
+            "commits": ["abcdef123"],
+            "push_id": job_id,
+            "status": "completed",
+        },
+    )
 
     context.task = {"payload": payload}
     await async_main(context)
@@ -412,24 +411,18 @@ async def test_success_with_retries(aioresponses, github_installation_responses,
     setup_fetch_files_response(aioresponses, 200, initial_values)
 
     aioresponses.post(submit_uri, status=500)
-    aioresponses.post(submit_uri, status=202, payload={
-        "job_id": job_id,
-        "status_url": str(status_uri),
-        "message": "foo",
-        "started_at": "2025-03-08T12:25:00Z"
-    })
+    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
 
-    aioresponses.get(status_uri, status=202, payload={
-        "status": "pending",
-        "job_id": job_id,
-        "message": "foo",
-        "started_at": "2025-03-08T12:25:00Z"
-    })
-    aioresponses.get(status_uri, status=200, payload={
-        "commits": ["abcdef123"],
-        "push_id": job_id,
-        "status": "completed",
-    })
+    aioresponses.get(status_uri, status=202, payload={"status": "pending", "job_id": job_id, "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
+    aioresponses.get(
+        status_uri,
+        status=200,
+        payload={
+            "commits": ["abcdef123"],
+            "push_id": job_id,
+            "status": "completed",
+        },
+    )
 
     context.task = {"payload": payload}
     await async_main(context)
