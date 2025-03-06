@@ -29,14 +29,6 @@ MAC_PRODUCT_CONFIG = {
         "create_pkg": True,
         "hardened_runtime_only_files": "geckodriver",
     },
-    "hiro-redux": {
-        "designated_requirements": """=designated => certificate leaf[subject.OU] = "%(subject_ou)s" """,
-        "sign_dirs": ("MacOS", "Resources"),
-        "skip_dirs": tuple(),
-        "zipfile_cmd": "ditto",
-        "create_pkg": False,
-        "hardened_runtime_only_files": tuple(),
-    },
     "mozillavpn": {
         "designated_requirements": """=designated => certificate leaf[subject.OU] = "%(subject_ou)s" """,
         "sign_dirs": ("MacOS", "Frameworks", "Resources"),
