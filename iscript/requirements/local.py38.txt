@@ -38,13 +38,13 @@ pyproject-api==1.8.0 \
     --hash=sha256:3d7d347a047afe796fd5d1885b1e391ba29be7169bd2f102fcd378f04273d228 \
     --hash=sha256:77b8049f2feb5d33eefcc21b57f1e279636277a8ac8ad6b5871037b243778496
     # via tox
-tox==4.24.1 \
-    --hash=sha256:083a720adbc6166fff0b7d1df9d154f9d00bfccb9403b8abf6bc0ee435d6a62e \
-    --hash=sha256:57ba7df7d199002c6df8c2db9e6484f3de6ca8f42013c083ea2d4d1e5c6bdc75
+tox==4.24.2 \
+    --hash=sha256:92e8290e76ad4e15748860a205865696409a2d014eedeb796a34a0f3b5e7336e \
+    --hash=sha256:d5948b350f76fae436d6545a5e87c2b676ab7a0d7d88c1308651245eadbe8aea
     # via -r requirements/local.in
-virtualenv==20.29.2 \
-    --hash=sha256:fdaabebf6d03b5ba83ae0a02cfe96f48a716f4fae556461d180825866f75b728 \
-    --hash=sha256:febddfc3d1ea571bdb1dc0f98d7b45d24def7428214d4fb73cc486c9568cce6a
+virtualenv==20.29.3 \
+    --hash=sha256:3e3d00f5807e83b234dfb6122bf37cfadf4be216c53a49ac059d02414f819170 \
+    --hash=sha256:95e39403fcf3940ac45bc717597dba16110b74506131845d9b687d5e73d947ac
     # via tox
 
 # WARNING: The following packages were not pinned, but pip requires them to be

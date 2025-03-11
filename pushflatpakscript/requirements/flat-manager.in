@@ -1,3 +1,3 @@
 aiohttp
-pygobject
+pygobject<3.52
 tenacity
