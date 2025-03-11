@@ -8,9 +8,7 @@ FROM $DOCKER_IMAGE_PARENT
 ADD --chown=app:app topsrcdir/pushflatpakscript /app/pushflatpakscript
 
 USER root
-RUN apt-get update \
- && apt-get install -y gir1.2-ostree-1.0 libgirepository1.0-dev ostree \
- && apt-get clean
+RUN /app/pushflatpakscript/docker.d/image_setup.sh
 
 USER app
 
