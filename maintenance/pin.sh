@@ -1,3 +1,4 @@
+#!/bin/bash
 set -e
 set -x
 
@@ -56,7 +57,7 @@ RUNCMD="RUN apt-get update && \
     apt-get install -y \
         gir1.2-ostree-1.0 \
         libgirepository1.0-dev \
-        libsodium-dev && \
+        && \
     rm -rf /var/lib/apt/lists/* && \
     pip install --upgrade pip && \
     pip install pip-compile-multi
