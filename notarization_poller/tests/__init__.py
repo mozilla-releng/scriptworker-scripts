@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-"""Test base files
-"""
+"""Test base files"""
 import arrow
 
 

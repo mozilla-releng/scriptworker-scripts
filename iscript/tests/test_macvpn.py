@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-"""Test iscript.mac
-"""
+"""Test iscript.mac"""
 import os
 import plistlib
 import pytest
