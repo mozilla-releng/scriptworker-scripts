@@ -2,5 +2,4 @@ compare-locales
 mercurial
 mozilla-version
 scriptworker  # required for docker, even if treescript doesn't import it
-simple-github
 taskcluster

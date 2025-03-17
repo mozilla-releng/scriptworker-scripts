@@ -1,5 +1,6 @@
 -r base.in
 async_generator; python_version < '3.7'
+gql
 mypy
 tox
 coverage
@@ -7,6 +8,8 @@ flake8
 flake8_docstrings
 mock
 pytest
+pytest-aioresponses
 pytest-asyncio
 pytest-cov
 pytest-mock
+yarl
