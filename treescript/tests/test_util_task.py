@@ -4,6 +4,7 @@ import os
 import pytest
 from scriptworker_client.client import verify_task_schema
 from scriptworker_client.exceptions import TaskVerificationError
+import yaml
 
 from treescript.util import task as ttask
 from treescript.script import get_default_config
@@ -30,8 +31,15 @@ def task_defn():
                 {"taskType": "build", "taskId": "VALID_TASK_ID", "formats": ["gpg"], "paths": ["public/build/firefox-52.0a1.en-US.win64.installer.exe"]}
             ]
         },
-        "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source" "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
+        "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
     }
+
+
+@pytest.fixture(scope="function")
+def merge_day_task_defn(task_defn):
+    with open(os.path.join(os.path.dirname(__file__), "data", "gecko_merge_example.yml")) as payload:
+        task_defn["payload"] = yaml.safe_load(payload)
+    return task_defn
 
 
 @pytest.fixture(scope="function")
@@ -72,6 +80,10 @@ def test_tag_info_invalid(config, task_defn, tag_info):
 
 def test_no_error_is_reported_when_no_missing_url(config, task_defn):
     verify_task_schema(config, task_defn)
+
+
+def test_no_error_merge_day_schema(config, merge_day_task_defn):
+    verify_task_schema(config, merge_day_task_defn)
 
 
 @pytest.mark.parametrize(
