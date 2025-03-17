@@ -81,6 +81,7 @@ tasks:
               - bouncerscript
               - githubscript
               # - iscript (iscript has special release via ronin_puppet repo)
+              - landoscript
               - pushapkscript
               - pushflatpakscript
               - pushmsixscript

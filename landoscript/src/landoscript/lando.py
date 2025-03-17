@@ -1,0 +1,76 @@
+import asyncio
+import logging
+from pprint import pprint
+from typing import Any, Callable
+
+from aiohttp import ClientResponseError, ClientSession
+from async_timeout import timeout
+from scriptworker.utils import calculate_sleep_time, retry_async
+
+from landoscript.errors import LandoscriptError
+
+log = logging.getLogger(__name__)
+
+
+LandoAction = dict[str, str]
+
+
+async def submit(
+    session: ClientSession, lando_api: str, lando_repo: str, actions: list[LandoAction], sleeptime_callback: Callable[..., Any] = calculate_sleep_time
+) -> str:
+    """Submit the provided `actions` to the given `lando_repo` through the `lando_api`."""
+    url = f"{lando_api}/api/v1/{lando_repo}"
+    json = {"actions": actions}
+
+    log.info(f"submitting actions to lando: {actions}")
+    async with timeout(30):
+        log.info(f"submitting POST request to {url}")
+        log.info("message body is:")
+        log.info(pprint(json))
+
+        submit_resp = await retry_async(
+            session.post,
+            args=(url,),
+            kwargs={
+                "json": json,
+                "raise_for_status": True,
+            },
+            attempts=10,
+            retry_exceptions=ClientResponseError,
+            sleeptime_callback=sleeptime_callback,
+        )
+
+    log.info(f"success! got {submit_resp.status} response")
+
+    status_url = (await submit_resp.json()).get("status_url")
+    if not status_url:
+        raise LandoscriptError("couldn't find status url!")
+
+    return status_url
+
+
+async def poll_until_complete(session: ClientSession, poll_time: int, status_url: str):
+    while True:
+        log.info(f"sleeping {poll_time} seconds before polling for status")
+        await asyncio.sleep(poll_time)
+
+        log.info(f"polling lando for status: {status_url}")
+        status_resp = await session.get(status_url)
+
+        # just retry if something went wrong...
+        if not status_resp.ok:
+            log.info(f"lando response is not ok (code {status_resp.status}), trying again...")
+            continue
+
+        if status_resp.status == 200:
+            body = await status_resp.json()
+            if body.get("status") != "completed":
+                raise LandoscriptError("code is 200, status is not completed...result is unclear...failing!")
+
+            log.info("success! got 200 response with 'completed' status")
+
+            log.info("Commits are:")
+            for commit in body["commits"]:
+                log.info(commit)
+
+            break
