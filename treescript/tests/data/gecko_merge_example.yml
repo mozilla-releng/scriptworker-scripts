@@ -1,0 +1,98 @@
+actions:
+  - l10n_bump_github
+  - merge_day
+  - push
+dry_run: true
+ignore_closed_tree: true
+l10n_bump_info:
+  - ignore_config:
+      ja:
+        - macosx64
+        - macosx64-devedition
+      ja-JP-mac:
+        - linux
+        - linux-devedition
+        - linux64
+        - linux64-aarch64
+        - linux64-devedition
+        - linux64-aarch64-devedition
+        - win32
+        - win32-devedition
+        - win64
+        - win64-devedition
+        - win64-aarch64
+        - win64-aarch64-devedition
+    l10n_repo_target_branch: main
+    l10n_repo_url: https://github.com/mozilla-l10n/firefox-l10n
+    name: Firefox l10n changesets
+    path: browser/locales/l10n-changesets.json
+    platform_configs:
+      - path: browser/locales/shipped-locales
+        platforms:
+          - linux
+          - linux-devedition
+          - linux64
+          - linux64-aarch64
+          - linux64-devedition
+          - linux64-aarch64-devedition
+          - macosx64
+          - macosx64-devedition
+          - win32
+          - win32-devedition
+          - win64
+          - win64-devedition
+          - win64-aarch64
+          - win64-aarch64-devedition
+    version_path: browser/config/version.txt
+  - l10n_repo_target_branch: main
+    l10n_repo_url: https://github.com/mozilla-l10n/firefox-l10n
+    name: mobile l10n changesets
+    path: mobile/locales/l10n-changesets.json
+    platform_configs:
+      - path: mobile/android/locales/all-locales
+        platforms:
+          - android
+          - android-arm
+          - android-multilocale
+    version_path: mobile/android/version.txt
+merge_info:
+  base_tag: FIREFOX_BETA_{major_version}_BASE
+  end_tag: FIREFOX_BETA_{major_version}_END
+  fetch_version_from: browser/config/version.txt
+  from_branch: central
+  from_repo: https://hg.mozilla.org/mozilla-central
+  merge_old_head: true
+  replacements:
+    - - browser/config/mozconfigs/linux32/l10n-mozconfig
+      - ac_add_options --with-branding=browser/branding/nightly
+      - ac_add_options --enable-official-branding
+    - - browser/config/mozconfigs/linux64/l10n-mozconfig
+      - ac_add_options --with-branding=browser/branding/nightly
+      - ac_add_options --enable-official-branding
+    - - browser/config/mozconfigs/win32/l10n-mozconfig
+      - ac_add_options --with-branding=browser/branding/nightly
+      - ac_add_options --enable-official-branding
+    - - browser/config/mozconfigs/win64/l10n-mozconfig
+      - ac_add_options --with-branding=browser/branding/nightly
+      - ac_add_options --enable-official-branding
+    - - browser/config/mozconfigs/win64-aarch64/l10n-mozconfig
+      - ac_add_options --with-branding=browser/branding/nightly
+      - ac_add_options --enable-official-branding
+    - - browser/config/mozconfigs/macosx64/l10n-mozconfig
+      - ac_add_options --with-branding=browser/branding/nightly
+      - ac_add_options --enable-official-branding
+    - - .arcconfig
+      - MOZILLACENTRAL
+      - BETA
+  to_branch: beta
+  to_repo: https://hg.mozilla.org/releases/mozilla-beta
+  version_files:
+    - filename: config/milestone.txt
+      new_suffix: ''
+    - filename: browser/config/version.txt
+      new_suffix: ''
+    - filename: browser/config/version_display.txt
+      new_suffix: b1
+    - filename: mobile/android/version.txt
+      new_suffix: b1
+ssh_user: merge_user
