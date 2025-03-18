@@ -203,7 +203,7 @@ async def test_build_revision_dict(mocker, old_contents, expected):
 
 # build_revision_dict_github {{{1
 @pytest.mark.asyncio
-async def test_build_revision_dict_github(mocker, aioresponses, client):
+async def test_build_revision_dict_github(mocker, aioresponses, github_client):
     platform_dict = {"one": {"platforms": ["platform"]}, "two": {"platforms": ["platform"]}, "three": {"platforms": ["platform"]}}
     bump_config = {"l10n_repo_target_branch": "branchy"}
 
@@ -213,7 +213,7 @@ async def test_build_revision_dict_github(mocker, aioresponses, client):
     aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {"object": {"oid": "new_revision"}}}})
 
     mocker.patch.object(l10n, "build_platform_dict", new=build_platform_dict)
-    got = await l10n.build_revision_dict_github(client, bump_config, "")
+    got = await l10n.build_revision_dict_github(github_client, bump_config, "")
     assert got == {
         "one": {"pin": False, "revision": "new_revision", "platforms": ["platform"]},
         "two": {"pin": False, "revision": "new_revision", "platforms": ["platform"]},
@@ -236,7 +236,7 @@ async def test_build_revision_dict_github_branch_not_in_config(mocker):
 
 
 @pytest.mark.asyncio
-async def test_build_revision_dict_github_branch_not_in_repo(mocker, aioresponses, client):
+async def test_build_revision_dict_github_branch_not_in_repo(mocker, aioresponses, github_client):
     platform_dict = {"one": {"platforms": ["platform"]}, "two": {"platforms": ["platform"]}, "three": {"platforms": ["platform"]}}
     bump_config = {"l10n_repo_target_branch": "branchy"}
 
@@ -248,7 +248,7 @@ async def test_build_revision_dict_github_branch_not_in_repo(mocker, aioresponse
     mocker.patch.object(l10n, "build_platform_dict", new=build_platform_dict)
 
     with pytest.raises(TreeScriptError, match="branch 'branchy' not found in repo!"):
-        await l10n.build_revision_dict_github(client, bump_config, "")
+        await l10n.build_revision_dict_github(github_client, bump_config, "")
 
 
 # build_commit_message {{{1

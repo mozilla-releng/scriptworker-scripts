@@ -20,10 +20,10 @@ class UnknownBranchError(Exception):
 
 
 class GithubClient:
-    def __init__(self, config, owner, repo):
-        with open(config["github_config"]["privkey_file"]) as fh:
+    def __init__(self, github_config, owner, repo):
+        with open(github_config["privkey_file"]) as fh:
             privkey = fh.read()
-        self.app_id = config["github_config"]["app_id"]
+        self.app_id = github_config["app_id"]
         self.owner = owner
         self.repo = repo
         self._client = AppClient(self.app_id, privkey, owner=owner, repositories=[repo])
@@ -103,8 +103,9 @@ class GithubClient:
         if isinstance(files, str):
             files = [files]
 
-        # Periods are not legal GraphQL key names.
+        # Periods and slashes are not legal GraphQL key names.
         sentinel_dot = "__dot__"
+        sentinel_slash = "__slash__"
         query = Template(
             dedent(
                 """
@@ -129,12 +130,13 @@ class GithubClient:
         )
         fields = []
         for f in files:
-            fields.append(field.substitute(branch=branch, file=f, name=f.replace(".", sentinel_dot)))
+            name = f.replace(".", sentinel_dot).replace("/", sentinel_slash)
+            fields.append(field.substitute(branch=branch, file=f, name=name))
 
-        query = query.substitute(owner=self.owner, repo=self.repo, fields=",".join(fields))
+        str_query = query.substitute(owner=self.owner, repo=self.repo, fields=",".join(fields))
 
-        contents = (await self._client.execute(query))["repository"]
-        return {k.replace(sentinel_dot, "."): v["text"] for k, v in contents.items()}
+        contents = (await self._client.execute(str_query))["repository"]
+        return {k.replace(sentinel_dot, ".").replace(sentinel_slash, "/"): v["text"] for k, v in contents.items()}
 
     async def get_branch_head_oid(self, branch: str) -> str:
         """Get the revision of the tip of the given branch.
@@ -155,9 +157,9 @@ class GithubClient:
             }
             """
         )
-        oid_query = oid_query.substitute(owner=self.owner, repo=self.repo, branch=branch)
+        str_oid_query = oid_query.substitute(owner=self.owner, repo=self.repo, branch=branch)
 
-        repo = (await self._client.execute(oid_query))["repository"]
+        repo = (await self._client.execute(str_oid_query))["repository"]
         if "object" not in repo:
             raise UnknownBranchError(f"branch '{branch}' not found in repo!")
 
