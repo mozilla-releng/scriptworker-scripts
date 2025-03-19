@@ -17,8 +17,8 @@ from scriptworker.utils import get_single_item_from_sequence
 
 from signingscript.sign import (
     apple_notarize,
-    apple_notarize_openh264_plugin,
     apple_notarize_geckodriver,
+    apple_notarize_openh264_plugin,
     apple_notarize_stacked,  # noqa: F401
     sign_authenticode,
     sign_file,
