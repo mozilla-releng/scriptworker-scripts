@@ -1,0 +1,6 @@
+aiohttp
+async-timeout
+gql
+mozilla-version
+scriptworker
+yarl

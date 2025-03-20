@@ -59,6 +59,11 @@ tasks:
         parent: base
         args:
             SCRIPT_NAME: githubscript
+    landoscript:
+        definition: script
+        parent: base
+        args:
+            SCRIPT_NAME: landoscript
     shipitscript:
         definition: script
         parent: base
