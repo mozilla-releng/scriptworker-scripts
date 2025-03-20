@@ -6,12 +6,13 @@ import pytest
 from aioresponses import CallbackResult
 from gql.transport.exceptions import TransportQueryError
 from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
-from treescript.github.client import UnknownBranchError
 from yarl import URL
+
+from scriptworker_client.github_client import UnknownBranchError
 
 
 @pytest.mark.asyncio
-async def test_commit(aioresponses, client):
+async def test_commit(aioresponses, github_client):
     branch = "main"
     message = "Commit it!"
     additions = {"version.txt": "foobar"}
@@ -25,7 +26,7 @@ async def test_commit(aioresponses, client):
     # Second query is to commit
     aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {}})
 
-    await client.commit(branch, message, additions, deletions)
+    await github_client.commit(branch, message, additions, deletions)
 
     aioresponses.assert_called()
     key = ("POST", URL(GITHUB_GRAPHQL_ENDPOINT))
@@ -47,7 +48,7 @@ async def test_commit(aioresponses, client):
         ).strip(),
         "variables": {
             "input": {
-                "branch": {"branchName": branch, "repositoryNameWithOwner": f"{client.owner}/{client.repo}"},
+                "branch": {"branchName": branch, "repositoryNameWithOwner": f"{github_client.owner}/{github_client.repo}"},
                 "expectedHeadOid": head_oid,
                 "fileChanges": {"additions": expected_additions, "deletions": expected_deletions},
                 "message": {"headline": message},
@@ -57,7 +58,7 @@ async def test_commit(aioresponses, client):
 
 
 @pytest.mark.asyncio
-async def test_commit_retry(aioresponses, client):
+async def test_commit_retry(aioresponses, github_client):
     head_oid = "123"
     branch = "main"
     message = "Commit it!"
@@ -88,20 +89,20 @@ async def test_commit_retry(aioresponses, client):
     aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, callback=callback, repeat=True)
 
     with pytest.raises(TransportQueryError):
-        await client.commit(branch, message, additions)
+        await github_client.commit(branch, message, additions)
 
     assert counter == expected_attempts * 2  # two queries per attempt
 
 
 @pytest.mark.asyncio
-async def test_get_files(aioresponses, client):
+async def test_get_files(aioresponses, github_client):
     branch = "main"
     expected = {"README.md": "Hello!", "version.txt": "109.1.0"}
     files = list(expected)
 
     aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {k: {"text": v} for k, v in expected.items()}}})
 
-    result = await client.get_files(files, branch)
+    result = await github_client.get_files(files, branch)
     assert result == expected
 
     aioresponses.assert_called()
@@ -113,7 +114,7 @@ async def test_get_files(aioresponses, client):
         "query": dedent(
             f"""
             query getFileContents {{
-              repository(owner: "{client.owner}", name: "{client.repo}") {{
+              repository(owner: "{github_client.owner}", name: "{github_client.repo}") {{
                 {files[0].stem}__dot__{files[0].suffix[1:]}: object(expression: "{branch}:{files[0]}") {{
                   ... on Blob {{
                     text
@@ -132,13 +133,13 @@ async def test_get_files(aioresponses, client):
 
 
 @pytest.mark.asyncio
-async def test_get_branch_head_oid(aioresponses, client):
+async def test_get_branch_head_oid(aioresponses, github_client):
     branch = "main"
     head_oid = "123"
 
     aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {"object": {"oid": head_oid}}}})
 
-    result = await client.get_branch_head_oid(branch)
+    result = await github_client.get_branch_head_oid(branch)
     assert result == head_oid
 
     aioresponses.assert_called()
@@ -149,7 +150,7 @@ async def test_get_branch_head_oid(aioresponses, client):
         "query": dedent(
             f"""
             query getLatestCommit {{
-              repository(owner: "{client.owner}", name: "{client.repo}") {{
+              repository(owner: "{github_client.owner}", name: "{github_client.repo}") {{
                 object(expression: "{branch}") {{
                   oid
                 }}
@@ -161,8 +162,8 @@ async def test_get_branch_head_oid(aioresponses, client):
 
 
 @pytest.mark.asyncio
-async def test_get_branch_head_oid_branch_not_found(aioresponses, client):
+async def test_get_branch_head_oid_branch_not_found(aioresponses, github_client):
     aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {"ref": None}}})
 
     with pytest.raises(UnknownBranchError, match="branch 'branchy' not found in repo!"):
-        await client.get_branch_head_oid("branchy")
+        await github_client.get_branch_head_oid("branchy")

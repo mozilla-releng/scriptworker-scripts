@@ -1,7 +1,7 @@
 import logging
 
 from scriptworker_client.github import extract_github_repo_owner_and_name
-from treescript.github.client import GithubClient
+from scriptworker_client.github_client import GithubClient
 from treescript.github.versionmanip import bump_version
 from treescript.util.task import get_source_repo, task_action_types
 
@@ -21,6 +21,6 @@ async def do_actions(config, task):
     owner, repo = extract_github_repo_owner_and_name(source_repo)
     actions = task_action_types(config, task)
 
-    async with GithubClient(config, owner, repo) as client:
+    async with GithubClient(config["github_config"], owner, repo) as client:
         if "version_bump" in actions:
             await bump_version(client, task)

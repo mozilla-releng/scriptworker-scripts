@@ -16,10 +16,10 @@ from copy import deepcopy
 from scriptworker_client.aio import download_file, retry_async, semaphore_wrapper
 from scriptworker_client.exceptions import DownloadError
 from scriptworker_client.github import extract_github_repo_owner_and_name
+from scriptworker_client.github_client import GithubClient, UnknownBranchError
 from scriptworker_client.utils import load_json_or_yaml
 from treescript.exceptions import TaskVerificationError, TreeScriptError
 from treescript.gecko import mercurial as vcs
-from treescript.github.client import GithubClient, UnknownBranchError
 from treescript.util.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_l10n_bump_info
 from treescript.util.treestatus import check_treestatus
 
@@ -316,7 +316,7 @@ async def l10n_bump_github(config: dict, task: dict, repo_path: str) -> int:
             raise Exception("Cannot bump l10n revisions from github repo without an l10n_repo_url")
 
         owner, repo = extract_github_repo_owner_and_name(l10n_repo_url)
-        async with GithubClient(config, owner, repo) as client:
+        async with GithubClient(config["github_config"], owner, repo) as client:
             path = os.path.join(repo_path, bump_config["path"])
             old_contents = load_json_or_yaml(path, is_path=True)
             # find latest revision in l10n_repo_url

@@ -8,7 +8,7 @@ from treescript.github import versionmanip as vmanip
 
 
 @pytest.mark.asyncio
-async def test_bump_version_mobile(aioresponses, client):
+async def test_bump_version_mobile(aioresponses, github_client):
     head_rev = "abcdef"
     next_version = "110.1.0"
     task = {
@@ -31,7 +31,7 @@ async def test_bump_version_mobile(aioresponses, client):
     # Third query is to commit
     aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {}})
 
-    await vmanip.bump_version(client, task)
+    await vmanip.bump_version(github_client, task)
 
     aioresponses.assert_called()
     key = ("POST", URL(GITHUB_GRAPHQL_ENDPOINT))
