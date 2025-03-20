@@ -5,7 +5,7 @@ import aiohttp
 import scriptworker.client
 
 from landoscript import lando
-from landoscript.actions import version_bump
+from landoscript.actions import tag, version_bump
 from scriptworker_client.github_client import GithubClient
 
 log = logging.getLogger(__name__)
@@ -69,6 +69,9 @@ async def async_main(context):
                 # sometimes version bumps are no-ops
                 if version_bump_action:
                     lando_actions.append(version_bump_action)
+            elif action == "tag":
+                tag_actions = await tag.run(payload["tags"])
+                lando_actions.extend(tag_actions)
 
     if lando_actions:
         if payload.get("dry_run", False):
