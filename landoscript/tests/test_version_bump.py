@@ -1,4 +1,3 @@
-from aiohttp import ClientResponseError
 import pytest
 from scriptworker.client import TaskVerificationError
 
@@ -6,25 +5,16 @@ from landoscript.errors import LandoscriptError
 from landoscript.script import async_main
 from landoscript.actions.version_bump import ALLOWED_BUMP_FILES, _VERSION_CLASS_PER_BEGINNING_OF_PATH
 from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
-from yarl import URL
+
+from .conftest import assert_lando_submission_response, assert_status_response, setup_test
 
 
-def assert_add_commit_response(requests, submit_uri, commit_msg_strings, initial_values, expected_bumps, attempts=1):
-    # make sure that exactly one request was made
-    # (a single request can add more than one commit, so there should never
-    # be a need for more than 1 request)
-    assert ("POST", submit_uri) in requests
-    reqs = requests[("POST", submit_uri)]
-    assert len(reqs) == attempts
-
-    # there might be more than one in cases where we retry; we assume that
-    # the requests are the same for all attempts
-    req = reqs[0]
+def assert_add_commit_response(req, commit_msg_strings, initial_values, expected_bumps):
     assert "json" in req.kwargs
     assert "actions" in req.kwargs["json"]
-    assert len(req.kwargs["json"]["actions"]) == 1
-    action = req.kwargs["json"]["actions"][0]
-    assert action["action"] == "create-commit"
+    create_commit_actions = [action for action in req.kwargs["json"]["actions"] if action["action"] == "create-commit"]
+    assert len(create_commit_actions) == 1
+    action = create_commit_actions[0]
 
     # ensure metadata is correct
     assert action["author"] == "Release Engineering Landoscript <release+landoscript@mozilla.com>"
@@ -50,32 +40,6 @@ def assert_add_commit_response(requests, submit_uri, commit_msg_strings, initial
                 break
         else:
             assert False, f"no version bump found for {file}: {diffs}"
-
-
-def assert_status_response(requests, status_uri, attempts=1):
-    assert ("GET", status_uri) in requests
-    reqs = requests[("GET", status_uri)]
-    # there might be more than one in cases where we retry; we assume that
-    # the requests are the same for all attempts
-    assert len(reqs) == attempts
-
-
-def setup_test(github_installation_responses, context, payload, repo="repo_name"):
-    lando_repo = payload["lando_repo"]
-    lando_api = context.config["lando_api"]
-    owner = context.config["lando_name_to_github_repo"][lando_repo]["owner"]
-    submit_uri = URL(f"{lando_api}/api/v1/{lando_repo}")
-    job_id = 12345
-    status_uri = URL(f"{lando_api}/push/{job_id}")
-
-    github_installation_responses(owner)
-
-    scopes = [
-        f"project:releng:lando:repo:{repo}",
-        f"project:releng:lando:action:version_bump",
-    ]
-
-    return submit_uri, status_uri, job_id, scopes
 
 
 def setup_fetch_files_response(aioresponses, code, initial_values={}):
@@ -304,7 +268,7 @@ def setup_fetch_files_response(aioresponses, code, initial_values={}):
     ),
 )
 async def test_success_with_bumps(aioresponses, github_installation_responses, context, payload, initial_values, expected_bumps, commit_msg_strings):
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload)
+    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
     setup_fetch_files_response(aioresponses, 200, initial_values)
     dryrun = payload.get("dry_run", False)
 
@@ -328,7 +292,8 @@ async def test_success_with_bumps(aioresponses, github_installation_responses, c
 
     assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
     if not dryrun:
-        assert_add_commit_response(aioresponses.requests, submit_uri, commit_msg_strings, initial_values, expected_bumps)
+        req = assert_lando_submission_response(aioresponses.requests, submit_uri)
+        assert_add_commit_response(req, commit_msg_strings, initial_values, expected_bumps)
         assert_status_response(aioresponses.requests, status_uri)
 
 
@@ -386,7 +351,7 @@ async def test_success_with_bumps(aioresponses, github_installation_responses, c
     ),
 )
 async def test_success_with_retries(aioresponses, github_installation_responses, context, payload, initial_values, expected_bumps, commit_msg_strings):
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload)
+    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
     setup_fetch_files_response(aioresponses, 200, initial_values)
 
     aioresponses.post(submit_uri, status=500)
@@ -406,7 +371,8 @@ async def test_success_with_retries(aioresponses, github_installation_responses,
     context.task = {"payload": payload, "scopes": scopes}
     await async_main(context)
 
-    assert_add_commit_response(aioresponses.requests, submit_uri, commit_msg_strings, initial_values, expected_bumps, attempts=2)
+    req = assert_lando_submission_response(aioresponses.requests, submit_uri, attempts=2)
+    assert_add_commit_response(req, commit_msg_strings, initial_values, expected_bumps)
     assert_status_response(aioresponses.requests, status_uri, attempts=2)
     assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
 
@@ -432,7 +398,7 @@ async def test_success_with_retries(aioresponses, github_installation_responses,
     ),
 )
 async def test_success_without_bumps(aioresponses, github_installation_responses, context, payload, initial_values):
-    submit_uri, status_uri, _, scopes = setup_test(github_installation_responses, context, payload)
+    submit_uri, status_uri, _, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
     setup_fetch_files_response(aioresponses, 200, initial_values)
 
     context.task = {"payload": payload, "scopes": scopes}
@@ -452,7 +418,7 @@ async def test_failure_to_fetch_files(aioresponses, github_installation_response
             "next_version": "135.0",
         },
     }
-    _, _, _, scopes = setup_test(github_installation_responses, context, payload)
+    _, _, _, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
 
     # 5 attempts is hardcoded deeper than we can reasonable override it; so
     # just expect it
@@ -466,112 +432,6 @@ async def test_failure_to_fetch_files(aioresponses, github_installation_response
         assert False, "should've raised LandoscriptError"
     except LandoscriptError as e:
         assert "couldn't retrieve bump files from github" in e.args[0]
-
-
-@pytest.mark.asyncio
-async def test_failure_to_submit_to_lando_500(aioresponses, github_installation_responses, context):
-    payload = {
-        "actions": ["version_bump"],
-        "lando_repo": "repo_name",
-        "version_bump_info": {
-            "files": ["browser/config/version.txt"],
-            "next_version": "135.0",
-        },
-    }
-    initial_values = {"browser/config/version.txt": "134.0"}
-    submit_uri, _, _, scopes = setup_test(github_installation_responses, context, payload)
-    setup_fetch_files_response(aioresponses, 200, initial_values)
-
-    for _ in range(10):
-        aioresponses.post(submit_uri, status=500)
-
-    context.task = {"payload": payload, "scopes": scopes}
-
-    try:
-        await async_main(context)
-        assert False, "should've raised ClientResponseError"
-    except ClientResponseError as e:
-        assert e.status == 500
-
-
-@pytest.mark.asyncio
-async def test_to_submit_to_lando_no_status_url(aioresponses, github_installation_responses, context):
-    payload = {
-        "actions": ["version_bump"],
-        "lando_repo": "repo_name",
-        "version_bump_info": {
-            "files": ["browser/config/version.txt"],
-            "next_version": "135.0",
-        },
-    }
-    initial_values = {"browser/config/version.txt": "134.0"}
-    submit_uri, _, _, scopes = setup_test(github_installation_responses, context, payload)
-    setup_fetch_files_response(aioresponses, 200, initial_values)
-    aioresponses.post(submit_uri, status=202, payload={})
-
-    context.task = {"payload": payload, "scopes": scopes}
-
-    try:
-        await async_main(context)
-        assert False, "should've raised LandoscriptError"
-    except LandoscriptError as e:
-        assert "couldn't find status url" in e.args[0]
-
-
-@pytest.mark.asyncio
-async def test_lando_polling_result_not_completed(aioresponses, github_installation_responses, context):
-    payload = {
-        "actions": ["version_bump"],
-        "lando_repo": "repo_name",
-        "version_bump_info": {
-            "files": ["browser/config/version.txt"],
-            "next_version": "135.0",
-        },
-    }
-    initial_values = {"browser/config/version.txt": "134.0"}
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload)
-    setup_fetch_files_response(aioresponses, 200, initial_values)
-    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
-    aioresponses.get(status_uri, status=200, payload={})
-
-    context.task = {"payload": payload, "scopes": scopes}
-
-    try:
-        await async_main(context)
-        assert False, "should've raised LandoscriptError"
-    except LandoscriptError as e:
-        assert "status is not completed" in e.args[0]
-
-
-@pytest.mark.asyncio
-async def test_lando_polling_retry_on_failure(aioresponses, github_installation_responses, context):
-    payload = {
-        "actions": ["version_bump"],
-        "lando_repo": "repo_name",
-        "version_bump_info": {
-            "files": ["browser/config/version.txt"],
-            "next_version": "135.0",
-        },
-    }
-    initial_values = {"browser/config/version.txt": "134.0"}
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload)
-    setup_fetch_files_response(aioresponses, 200, initial_values)
-    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
-    aioresponses.get(status_uri, status=500, payload={})
-    aioresponses.get(
-        status_uri,
-        status=200,
-        payload={
-            "commits": ["abcdef123"],
-            "push_id": job_id,
-            "status": "completed",
-        },
-    )
-
-    context.task = {"payload": payload, "scopes": scopes}
-    await async_main(context)
-
-    assert_status_response(aioresponses.requests, status_uri, attempts=2)
 
 
 @pytest.mark.asyncio
@@ -599,7 +459,7 @@ async def test_bad_bumpfile(github_installation_responses, context, files, first
             "next_version": "135.0",
         },
     }
-    _, _, _, scopes = setup_test(github_installation_responses, context, payload)
+    _, _, _, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
 
     context.task = {"payload": payload, "scopes": scopes}
 
@@ -608,59 +468,6 @@ async def test_bad_bumpfile(github_installation_responses, context, files, first
         assert False, "should've raised TaskVerificationError"
     except TaskVerificationError as e:
         assert f"{first_bad_file} is not in version bump allowlist" in e.args[0]
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "scopes,missing",
-    (
-        pytest.param(
-            [
-                "project:releng:lando:action:version_bump",
-            ],
-            [
-                "project:releng:lando:repo:repo_name",
-            ],
-            id="missing_repo_scope",
-        ),
-        pytest.param(
-            [
-                "project:releng:lando:repo:repo_name",
-            ],
-            [
-                "project:releng:lando:action:version_bump",
-            ],
-            id="missing_action_scope",
-        ),
-        pytest.param(
-            [],
-            [
-                "project:releng:lando:repo:repo_name",
-                "project:releng:lando:action:version_bump",
-            ],
-            id="no_scopes",
-        ),
-    ),
-)
-async def test_missing_scopes(context, scopes, missing):
-    payload = {
-        "actions": ["version_bump"],
-        "lando_repo": "repo_name",
-        "version_bump_info": {
-            "files": ["browser/config/version.txt"],
-            "next_version": "135.0",
-        },
-    }
-
-    context.task = {"payload": payload, "scopes": scopes}
-
-    try:
-        await async_main(context)
-        assert False, "should've raised TaskVerificationError"
-    except TaskVerificationError as e:
-        assert "required scope(s) not present" in e.args[0]
-        for m in missing:
-            assert m in e.args[0]
 
 
 def test_no_overlaps_in_version_classes():

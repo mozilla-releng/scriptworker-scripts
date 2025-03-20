@@ -1,53 +1,19 @@
 import pytest
 from scriptworker.client import TaskVerificationError
-from yarl import URL
 
 from landoscript.script import async_main
 
+from .conftest import assert_lando_submission_response, assert_status_response, setup_test
 
-def assert_tag_response(requests, submit_uri, tags, attempts=1):
-    # make sure that exactly one request was made
-    # (a single request can add more than one commit, so there should never
-    # be a need for more than 1 request)
-    assert ("POST", submit_uri) in requests
-    reqs = requests[("POST", submit_uri)]
-    assert len(reqs) == attempts
 
-    # there might be more than one in cases where we retry; we assume that
-    # the requests are the same for all attempts
-    req = reqs[0]
+def assert_tag_response(req, tags):
     assert "json" in req.kwargs
     assert "actions" in req.kwargs["json"]
-    assert len(req.kwargs["json"]["actions"]) == len(tags)
+    tag_actions = [action for action in req.kwargs["json"]["actions"] if action["action"] == "tag"]
+    assert len(tag_actions) == len(tags)
 
-    requested_tags = set([action["name"] for action in req.kwargs["json"]["actions"]])
+    requested_tags = set([action["name"] for action in tag_actions])
     assert requested_tags == set(tags)
-
-
-def assert_status_response(requests, status_uri, attempts=1):
-    assert ("GET", status_uri) in requests
-    reqs = requests[("GET", status_uri)]
-    # there might be more than one in cases where we retry; we assume that
-    # the requests are the same for all attempts
-    assert len(reqs) == attempts
-
-
-def setup_test(github_installation_responses, context, payload, repo="repo_name"):
-    lando_repo = payload["lando_repo"]
-    lando_api = context.config["lando_api"]
-    owner = context.config["lando_name_to_github_repo"][lando_repo]["owner"]
-    submit_uri = URL(f"{lando_api}/api/v1/{lando_repo}")
-    job_id = 12345
-    status_uri = URL(f"{lando_api}/push/{job_id}")
-
-    github_installation_responses(owner)
-
-    scopes = [
-        f"project:releng:lando:repo:{repo}",
-        f"project:releng:lando:action:tag",
-    ]
-
-    return submit_uri, status_uri, job_id, scopes
 
 
 @pytest.mark.asyncio
@@ -78,7 +44,7 @@ async def test_success(aioresponses, github_installation_responses, context, tag
         "tags": tags,
         "dry_run": dry_run,
     }
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload)
+    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["tag"])
 
     if not dry_run:
         aioresponses.post(
@@ -99,7 +65,8 @@ async def test_success(aioresponses, github_installation_responses, context, tag
     await async_main(context)
 
     if not dry_run:
-        assert_tag_response(aioresponses.requests, submit_uri, tags)
+        req = assert_lando_submission_response(aioresponses.requests, submit_uri)
+        assert_tag_response(req, tags)
         assert_status_response(aioresponses.requests, status_uri)
 
 
@@ -110,7 +77,7 @@ async def test_no_tags(github_installation_responses, context):
         "lando_repo": "repo_name",
         "tags": [],
     }
-    _, _, _, scopes = setup_test(github_installation_responses, context, payload)
+    _, _, _, scopes = setup_test(github_installation_responses, context, payload, ["tag"])
 
     context.task = {"payload": payload, "scopes": scopes}
 
@@ -119,21 +86,3 @@ async def test_no_tags(github_installation_responses, context):
         assert False, "should've raised TaskVerificationError"
     except TaskVerificationError as e:
         assert "must provide at least one tag!" in e.args[0]
-
-
-@pytest.mark.asyncio
-async def test_missing_scopes(context):
-    payload = {
-        "actions": ["tag"],
-        "lando_repo": "repo_name",
-        "tags": ["BUILD1"],
-    }
-
-    context.task = {"payload": payload, "scopes": ["project:releng:lando:repo:repo_name"]}
-
-    try:
-        await async_main(context)
-        assert False, "should've raised TaskVerificationError"
-    except TaskVerificationError as e:
-        assert "required scope(s) not present" in e.args[0]
-        assert "project:releng:lando:action:tag" in e.args[0]

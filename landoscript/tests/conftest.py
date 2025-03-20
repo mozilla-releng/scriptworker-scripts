@@ -1,4 +1,5 @@
 from pathlib import Path
+from yarl import URL
 
 import pytest
 from scriptworker.context import Context
@@ -39,3 +40,37 @@ def datadir():
 @pytest.fixture(scope="session")
 def privkey_file(datadir):
     return datadir / "test_private_key.pem"
+
+
+def setup_test(github_installation_responses, context, payload, actions, repo="repo_name"):
+    lando_repo = payload["lando_repo"]
+    lando_api = context.config["lando_api"]
+    owner = context.config["lando_name_to_github_repo"][lando_repo]["owner"]
+    submit_uri = URL(f"{lando_api}/api/v1/{lando_repo}")
+    job_id = 12345
+    status_uri = URL(f"{lando_api}/push/{job_id}")
+
+    github_installation_responses(owner)
+
+    scopes = [f"project:releng:lando:repo:{repo}"]
+    for action in actions:
+        scopes.append(f"project:releng:lando:action:{action}")
+
+    return submit_uri, status_uri, job_id, scopes
+
+
+def assert_lando_submission_response(requests, submit_uri, attempts=1):
+    assert ("POST", submit_uri) in requests
+    reqs = requests[("POST", submit_uri)]
+    assert len(reqs) == attempts
+    # there might be more than one in cases where we retry; we assume that
+    # the requests are the same for all attempts
+    return reqs[0]
+
+
+def assert_status_response(requests, status_uri, attempts=1):
+    assert ("GET", status_uri) in requests
+    reqs = requests[("GET", status_uri)]
+    # there might be more than one in cases where we retry; we assume that
+    # the requests are the same for all attempts
+    assert len(reqs) == attempts

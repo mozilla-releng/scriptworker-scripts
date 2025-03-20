@@ -3,6 +3,7 @@ import os.path
 
 import aiohttp
 import scriptworker.client
+from scriptworker.exceptions import TaskVerificationError
 
 from landoscript import lando
 from landoscript.actions import tag, version_bump
@@ -57,6 +58,8 @@ async def async_main(context):
 
     # validate scopes - these raise if there's any scope issues
     validate_scopes(scopes, lando_repo, payload["actions"])
+    if len(payload["actions"]) < 1:
+        raise TaskVerificationError("must provide at least one action!")
 
     os.makedirs(public_artifact_dir)
 
