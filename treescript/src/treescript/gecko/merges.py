@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 import shutil
 import string
 from datetime import date
@@ -38,12 +39,17 @@ class BashFormatter(string.Formatter):
             return string.Formatter().get_value(key, args, kwds)
 
 
-def replace(file_name, from_, to_):
+def replace(file_name, from_, to_, use_regex=False):
     """Replace text in a file."""
     log.info("Replacing %s -> %s inside %s", from_, to_, file_name)
     with open(file_name) as f:
         text = f.read()
-    new_text = text.replace(from_, to_)
+
+    if use_regex:
+        new_text = re.sub(from_, to_, text)
+    else:
+        new_text = text.replace(from_, to_)
+
     if text == new_text:
         raise ValueError(f"{file_name} does not contain {from_}")
     with open(file_name, "w") as f:
@@ -136,6 +142,11 @@ async def apply_rebranding(config, repo_path, merge_config, source_repo):
         from_ = fmt.format(from_, **format_options)
         to = fmt.format(to, **format_options)
         replace(os.path.join(repo_path, f), from_, to)
+
+    for f, from_, to in merge_config.get("regex_replacements", list()):
+        from_ = from_.format(**format_options)
+        to = fmt.format(to, **format_options)
+        replace(os.path.join(repo_path, f), from_, to, use_regex=True)
 
     touch_clobber_file(config, repo_path)
 

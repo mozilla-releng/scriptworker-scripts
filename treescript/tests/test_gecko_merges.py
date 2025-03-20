@@ -41,6 +41,7 @@ def merge_info():
                 "ac_add_options --enable-official-branding",
             ],
         ],
+        "regex_replacements": [["browser/extensions/webcompat/manifest.json", '"version": "[0-9]+.[0-9]+.0"', '"version": "{next_major_version}.0.0"']],
         "from_branch": "central",
         "to_branch": "beta",
         "from_repo": "https://hg.mozilla.org/mozilla-central",
@@ -91,6 +92,9 @@ def repo_context(tmpdir, config, request, mocker):
     clobber_file = os.path.join(context.repo, config["merge_day_clobber_file"])
     with open(clobber_file, "w") as f:
         f.write("# A comment\n\nthiswillgetremoved")
+    regex_file = os.path.join(context.repo, "config", "regexme.txt")
+    with open(regex_file, "w") as f:
+        f.write("dummytext123")
 
     for platform in ("linux32", "linux64"):
         mozconfig = os.path.join(context.repo, "browser/config/mozconfigs", platform, "l10n-mozconfig")
@@ -104,6 +108,10 @@ def repo_context(tmpdir, config, request, mocker):
         f.write("51.0")
     with open(milestone_file, "w") as f:
         f.write("51.0a1")
+    os.makedirs(os.path.join(context.repo, "browser/extensions/webcompat"))
+    manifest_file = os.path.join(context.repo, "browser/extensions/webcompat/manifest.json")
+    with open(manifest_file, "w") as f:
+        f.write('{"version": "137.5.0"}\n')
     with hglib.open(context.repo) as repo:
         repo.addremove()
         repo.commit("init")
@@ -136,6 +144,21 @@ def test_replace(repo_context, expectation, filename, from_, to_):
     file_path = os.path.join(repo_context.repo, filename)
     with expectation:
         merges.replace(file_path, from_, to_)
+        with open(file_path) as f:
+            assert f.read() == to_
+
+
+@pytest.mark.parametrize(
+    "expectation,filename,from_,to_",
+    (
+        (does_not_raise(), "config/regexme.txt", "dummytext[0-9]+", "dummytext140"),
+        (pytest.raises(ValueError), "config/regexme.txt", "differenttext[0-9]+", "dummytext140"),
+    ),
+)
+def test_replace_regex(repo_context, expectation, filename, from_, to_):
+    file_path = os.path.join(repo_context.repo, filename)
+    with expectation:
+        merges.replace(file_path, from_, to_, use_regex=True)
         with open(file_path) as f:
             assert f.read() == to_
 
