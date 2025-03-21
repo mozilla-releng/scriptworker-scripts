@@ -37,7 +37,9 @@ async def async_main(context):
             if not context.config.get("widevine_cert"):
                 raise Exception("Widevine format is enabled, but widevine_cert is not defined")
 
-        if {"apple_notarization", "apple_notarization_geckodriver", "apple_notarization_stacked"}.intersection(all_signing_formats):
+        if {"apple_notarization", "apple_notarization_geckodriver", "apple_notarization_stacked", "apple_notarize_openh264_plugin"}.intersection(
+            all_signing_formats
+        ):
             if not context.config.get("apple_notarization_configs", False):
                 raise Exception("Apple notarization is enabled but apple_notarization_configs is not defined")
             setup_apple_notarization_credentials(context)

@@ -1604,6 +1604,20 @@ async def apple_notarize_geckodriver(context, path, *args, **kwargs):
 
 
 @time_async_function
+async def apple_notarize_openh264_plugin(context, path, *args, **kwargs):
+    """
+    Notarizes given openh264 plugin using rcodesign.
+    """
+    # Setup workdir.
+    notarization_workdir = os.path.join(context.config["work_dir"], "apple_notarize")
+    shutil.rmtree(notarization_workdir, ignore_errors=True)
+    utils.mkdir(notarization_workdir)
+    # The artifact from the openh264 plugin build task is already a .zip file.
+    await _notarize_single(path, context.apple_credentials_path, staple=False)
+    return path
+
+
+@time_async_function
 async def apple_notarize_stacked(context, filelist_dict):
     """
     Notarizes multiple packages using rcodesign.
