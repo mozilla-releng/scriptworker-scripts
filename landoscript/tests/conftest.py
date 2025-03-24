@@ -3,6 +3,7 @@ from yarl import URL
 
 import pytest
 from scriptworker.context import Context
+from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
 
 pytest_plugins = ("pytest-scriptworker-client",)
 
@@ -28,6 +29,7 @@ def context(privkey_file, tmpdir):
         },
         "poll_time": 0,
         "sleeptime_callback": lambda _: 0,
+        "treestatus_url": "https://treestatus.fake",
     }
     return context
 
@@ -57,6 +59,23 @@ def setup_test(github_installation_responses, context, payload, actions, repo="r
         scopes.append(f"project:releng:lando:action:{action}")
 
     return submit_uri, status_uri, job_id, scopes
+
+
+def setup_fetch_files_response(aioresponses, code, initial_values={}):
+    if initial_values:
+        github_response = {}
+        for file, contents in initial_values.items():
+            github_response[file] = f"{contents}"
+
+        payload = {
+            "data": {
+                "repository": {k: {"text": v} for k, v in github_response.items()},
+            }
+        }
+    else:
+        payload = {}
+
+    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=code, payload=payload)
 
 
 def assert_lando_submission_response(requests, submit_uri, attempts=1):

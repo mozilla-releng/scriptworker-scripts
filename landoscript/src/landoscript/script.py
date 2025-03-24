@@ -6,7 +6,8 @@ import scriptworker.client
 from scriptworker.exceptions import TaskVerificationError
 
 from landoscript import lando
-from landoscript.actions import tag, version_bump
+from landoscript.actions import l10n_bump, tag, version_bump
+from landoscript.treestatus import is_tree_open
 from scriptworker_client.github_client import GithubClient
 
 log = logging.getLogger(__name__)
@@ -46,6 +47,8 @@ async def async_main(context):
     # Note: `lando_repo` is not necessarily the same as the repository's name
     # on Github.
     lando_repo = payload["lando_repo"]
+    dontbuild = payload.get("dontbuild", False)
+    ignore_closed_tree = payload.get("ignore_closed_tree", False)
 
     # pull owner, repo, and branch from config
     # TODO: replace this with a lookup through the lando API when that API exists
@@ -64,42 +67,58 @@ async def async_main(context):
     os.makedirs(public_artifact_dir)
 
     lando_actions: list[lando.LandoAction] = []
-    async with GithubClient(context.config["github_config"], owner, repo) as gh_client:
-        for action in payload["actions"]:
-            log.info(f"processing action: {action}")
+    async with aiohttp.ClientSession() as session:
+        async with GithubClient(context.config["github_config"], owner, repo) as gh_client:
+            for action in payload["actions"]:
+                log.info(f"processing action: {action}")
 
-            if action == "version_bump":
-                version_bump_action = await version_bump.run(
-                    gh_client,
-                    public_artifact_dir,
-                    branch,
-                    payload["version_bump_info"],
-                    payload.get("dontbuild", False),
-                )
-                # sometimes version bumps are no-ops
-                if version_bump_action:
-                    lando_actions.append(version_bump_action)
-            elif action == "tag":
-                tag_actions = tag.run(payload["tags"])
-                lando_actions.extend(tag_actions)
+                if action == "version_bump":
+                    version_bump_action = await version_bump.run(
+                        gh_client,
+                        public_artifact_dir,
+                        branch,
+                        payload["version_bump_info"],
+                        payload.get("dontbuild", False),
+                    )
+                    # sometimes version bumps are no-ops
+                    if version_bump_action:
+                        lando_actions.append(version_bump_action)
+                elif action == "tag":
+                    tag_actions = tag.run(payload["tags"])
+                    lando_actions.extend(tag_actions)
+                elif action == "l10n_bump":
+                    if not ignore_closed_tree:
+                        # despite `ignore_closed_tree` being at the top level of the
+                        # payload, only l10n bumps pay attention to it. we should probably
+                        # set it to true for all other actions so we can actually make
+                        # this a global check
+                        if not await is_tree_open(session, config["treestatus_url"], lando_repo, config["sleeptime_callback"]):
+                            log.info("Treestatus is closed; skipping l10n bump.")
+                            continue
 
-            log.info("finished processing action")
+                    l10n_bump_actions = await l10n_bump.run(
+                        gh_client, context.config["github_config"], public_artifact_dir, branch, payload["l10n_bump_info"], dontbuild, ignore_closed_tree
+                    )
+                    # sometimes nothing has changed!
+                    if l10n_bump_actions:
+                        lando_actions.extend(l10n_bump_actions)
 
-    if lando_actions:
-        if payload.get("dry_run", False):
-            log.info("dry run...would've submitted lando actions:")
-            for la in lando_actions:
-                log.info(la)
-        else:
-            log.info("not a dry run...submitting lando actions:")
-            for la in lando_actions:
-                log.info(la)
+                log.info("finished processing action")
 
-            async with aiohttp.ClientSession() as session:
+        if lando_actions:
+            if payload.get("dry_run", False):
+                log.info("Dry run...would've submitted lando actions:")
+                for la in lando_actions:
+                    log.info(la)
+            else:
+                log.info("Not a dry run...submitting lando actions:")
+                for la in lando_actions:
+                    log.info(la)
+
                 status_url = await lando.submit(session, config["lando_api"], lando_repo, lando_actions, config["sleeptime_callback"])
                 await lando.poll_until_complete(session, config["poll_time"], status_url)
-    else:
-        log.info("no lando actions to submit!")
+        else:
+            log.info("No lando actions to submit!")
 
 
 def main(config_path: str = ""):

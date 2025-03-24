@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import logging
 from pprint import pprint
 from typing import Any, Callable
@@ -13,6 +14,14 @@ log = logging.getLogger(__name__)
 
 
 LandoAction = dict[str, str]
+
+
+def create_commit_action(commitmsg: str, diff: str) -> LandoAction:
+    """Return a `create-commit` lando action. Primarily exists to centralize the author name."""
+    author = "Release Engineering Landoscript <release+landoscript@mozilla.com>"
+    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    return {"action": "create-commit", "commitmsg": commitmsg, "diff": diff, "date": timestamp, "author": author}
 
 
 async def submit(

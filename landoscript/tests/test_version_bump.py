@@ -4,9 +4,8 @@ from scriptworker.client import TaskVerificationError
 from landoscript.errors import LandoscriptError
 from landoscript.script import async_main
 from landoscript.actions.version_bump import ALLOWED_BUMP_FILES, _VERSION_CLASS_PER_BEGINNING_OF_PATH
-from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
 
-from .conftest import assert_lando_submission_response, assert_status_response, setup_test
+from .conftest import assert_lando_submission_response, assert_status_response, setup_test, setup_fetch_files_response
 
 
 def assert_add_commit_response(req, commit_msg_strings, initial_values, expected_bumps):
@@ -40,23 +39,6 @@ def assert_add_commit_response(req, commit_msg_strings, initial_values, expected
                 break
         else:
             assert False, f"no version bump found for {file}: {diffs}"
-
-
-def setup_fetch_files_response(aioresponses, code, initial_values={}):
-    if initial_values:
-        github_response = {}
-        for file, contents in initial_values.items():
-            github_response[file] = f"{contents}"
-
-        payload = {
-            "data": {
-                "repository": {k: {"text": v} for k, v in github_response.items()},
-            }
-        }
-    else:
-        payload = {}
-
-    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=code, payload=payload)
 
 
 @pytest.mark.asyncio

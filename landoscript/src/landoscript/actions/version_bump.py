@@ -1,4 +1,3 @@
-import datetime
 import logging
 import os.path
 import typing
@@ -11,8 +10,9 @@ from mozilla_version.version import BaseVersion
 from scriptworker.exceptions import TaskVerificationError
 
 from landoscript.errors import LandoscriptError
-from landoscript.lando import LandoAction
+from landoscript.lando import LandoAction, create_commit_action
 from landoscript.util.diffs import diff_contents
+from landoscript.util.log import log_file_contents
 from scriptworker_client.github_client import GithubClient
 
 log = logging.getLogger(__name__)
@@ -34,11 +34,6 @@ _VERSION_CLASS_PER_BEGINNING_OF_PATH = {
     "mobile/android/": MobileVersion,
     "mail/": ThunderbirdVersion,
 }
-
-
-def log_file_contents(contents):
-    for line in contents.splitlines():
-        log.info(line)
 
 
 class VersionBumpInfo(TypedDict):
@@ -70,7 +65,7 @@ async def run(
     log.info("got files")
     for file, contents in orig_files.items():
         log.info(f"{file} contents:")
-        log_file_contents(contents)
+        log_file_contents(str(contents))
 
     diff = ""
     for file, orig in orig_files.items():
@@ -105,14 +100,12 @@ async def run(
     log.info("adding version bump commit! diff contents are:")
     log_file_contents(diff)
 
-    author = "Release Engineering Landoscript <release+landoscript@mozilla.com>"
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
     # version bumps always ignore a closed tree
     commitmsg = "Subject: Automatic version bump NO BUG a=release CLOSED TREE"
     if dontbuild:
         commitmsg += " DONTBUILD"
 
-    return {"action": "create-commit", "commitmsg": commitmsg, "diff": diff, "date": timestamp, "author": author}
+    return create_commit_action(commitmsg, diff)
 
 
 def find_what_version_parser_to_use(file):
