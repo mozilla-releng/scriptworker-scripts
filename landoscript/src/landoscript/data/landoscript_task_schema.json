@@ -251,9 +251,6 @@
                             "name": {
                                 "type": "string"
                             },
-                            "version_path": {
-                                "type": "string"
-                            },
                             "l10n_repo_url": {
                                 "type": "string"
                             },
@@ -273,8 +270,7 @@
                         "required": [
                             "path",
                             "name",
-                            "platform_configs",
-                            "version_path"
+                            "platform_configs"
                         ]
                     }
                 },

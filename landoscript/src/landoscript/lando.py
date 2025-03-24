@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import logging
 from pprint import pprint
 
@@ -9,6 +10,13 @@ from scriptworker.utils import calculate_sleep_time, retry_async
 from landoscript.errors import LandoscriptError
 
 log = logging.getLogger(__name__)
+
+
+def create_commit_action(commitmsg, diff):
+    author = "Release Engineering Landoscript <release+landoscript@mozilla.com>"
+    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    return {"action": "create-commit", "commitmsg": commitmsg, "diff": diff, "date": timestamp, "author": author}
 
 
 async def submit(session, lando_api, lando_repo, actions, sleeptime_callback=calculate_sleep_time):
