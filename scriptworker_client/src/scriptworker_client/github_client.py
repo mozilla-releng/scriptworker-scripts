@@ -103,9 +103,10 @@ class GithubClient:
         if isinstance(files, str):
             files = [files]
 
-        # Periods and slashes are not legal GraphQL key names.
+        # Certain characters are not legal GraphQL key names.
         sentinel_dot = "__dot__"
         sentinel_slash = "__slash__"
+        sentinel_dash = "__dash__"
         query = Template(
             dedent(
                 """
@@ -130,13 +131,13 @@ class GithubClient:
         )
         fields = []
         for f in files:
-            name = f.replace(".", sentinel_dot).replace("/", sentinel_slash)
+            name = f.replace(".", sentinel_dot).replace("/", sentinel_slash).replace("-", sentinel_dash)
             fields.append(field.substitute(branch=branch, file=f, name=name))
 
         str_query = query.substitute(owner=self.owner, repo=self.repo, fields=",".join(fields))
 
         contents = (await self._client.execute(str_query))["repository"]
-        return {k.replace(sentinel_dot, ".").replace(sentinel_slash, "/"): v["text"] for k, v in contents.items()}
+        return {k.replace(sentinel_dot, ".").replace(sentinel_slash, "/").replace(sentinel_dash, "-"): v["text"] for k, v in contents.items()}
 
     async def get_branch_head_oid(self, branch: str) -> str:
         """Get the revision of the tip of the given branch.
