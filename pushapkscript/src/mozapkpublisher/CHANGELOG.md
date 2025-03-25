@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 
 * Removed `get_apk.py`
+* Dropped support for python 3.8, 3.9 and 3.10
 
 ## [7.0.0] - 2023-11-17
 
