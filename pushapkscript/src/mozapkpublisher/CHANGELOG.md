@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Removed
+
+* Removed `get_apk.py`
+
 ## [7.0.0] - 2023-11-17
 
 ### Changed
