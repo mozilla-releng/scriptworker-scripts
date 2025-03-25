@@ -1,7 +1,5 @@
 import hashlib
-import humanize
 import logging
-import os
 import requests
 
 from mozilla_version.gecko import FennecVersion
