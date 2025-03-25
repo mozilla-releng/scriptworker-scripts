@@ -24,6 +24,6 @@ for dir in $DIRS; do
     echo $ARGS
     pushd "$dir"
     pip-compile-multi --backtracking -u -o "$SUFFIX" $ARGS
-    chmod 644 requirements/*.txt
+    chmod 644 requirements/*.txt || :
     popd
 done
