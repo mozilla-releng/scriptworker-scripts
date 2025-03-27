@@ -1,11 +1,10 @@
-import json
 import pytest
 from scriptworker.client import TaskVerificationError
 from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
 
 from landoscript.script import async_main
 
-from .conftest import assert_lando_submission_response, assert_status_response, setup_test, setup_fetch_files_response
+from .conftest import assert_lando_submission_response, assert_status_response, setup_test, setup_l10n_file_responses, assert_l10n_bump_response
 
 
 def setup_treestatus_response(aioresponses, context, tree="repo_name", status="open", has_err=False):
@@ -25,143 +24,6 @@ def setup_treestatus_response(aioresponses, context, tree="repo_name", status="o
             },
         }
         aioresponses.get(url, status=200, payload=resp)
-
-
-def get_locale_block(locale, platforms, rev):
-    # fmt: off
-    locale_block = [
-        f'    "{locale}": {{',
-         '        "pin": false,',
-         '        "platforms": ['
-    ]
-    platform_entries = []
-    for platform in sorted(platforms):
-        platform_entries.append(f'            "{platform}"')
-    locale_block.extend(",\n".join(platform_entries).split("\n"))
-    locale_block.extend([
-         "        ],",
-        f'        "revision": "{rev}"',
-         # closing brace omitted because these blocks are used to generate
-         # diffs, and in diffs, these end up using context from the subsequent
-         # locale
-         # "    }",
-    ])
-    # fmt: on
-
-    return locale_block
-
-
-def assert_l10n_bump_response(req, l10n_bump_info, expected_changes, initial_values, expected_values, dontbuild, ignore_closed_tree):
-    assert "json" in req.kwargs
-    assert "actions" in req.kwargs["json"]
-    create_commit_actions = [action for action in req.kwargs["json"]["actions"] if action["action"] == "create-commit"]
-    assert len(create_commit_actions) == expected_changes
-
-    for lbi in l10n_bump_info:
-        name = lbi["name"]
-
-        action = None
-        for cca in create_commit_actions:
-            if name in cca["commitmsg"]:
-                action = cca
-
-        if not action:
-            assert False, f"couldn't find create-commit action for {name}!"
-
-        if dontbuild:
-            assert "DONTBUILD" in action["commitmsg"]
-
-        if ignore_closed_tree:
-            assert "CLOSED TREE" in action["commitmsg"]
-
-        # ensure metadata is correct
-        assert action["author"] == "Release Engineering Landoscript <release+landoscript@mozilla.com>"
-        # we don't actually verify the value here; it's not worth the trouble of mocking
-        assert "date" in action
-
-        diffs = action["diff"].split("diff\n")
-        assert len(diffs) == 1
-        diff = diffs[0]
-
-        initial_locales = set(initial_values[name]["locales"])
-        expected_locales = set(expected_values[name]["locales"])
-        initial_platforms = set(initial_values[name]["platforms"])
-        expected_platforms = set(expected_values[name]["platforms"])
-        added_locales = expected_locales - initial_locales
-        removed_locales = initial_locales - expected_locales
-
-        # ensure each expected locale has the new revision
-        before_rev = initial_values[name]["revision"]
-        after_rev = expected_values[name]["revision"]
-
-        if before_rev != after_rev:
-            revision_replacements = diff.count(f'-        "revision": "{before_rev}"\n+        "revision": "{after_rev}')
-            # even if new locales are added, we only expect revision replacements
-            # for initial ones that are not being removed. added locales are checked
-            # further down.
-            expected_revision_replacements = len(initial_locales - removed_locales)
-            assert revision_replacements == expected_revision_replacements, "wrong number of revisions replaced!"
-
-        # ensure any added locales are now present
-        if added_locales:
-            for locale in added_locales:
-                expected = "+" + "\n+".join(get_locale_block(locale, expected_platforms, after_rev))
-                assert expected in diff
-
-        # ensure any removed locales are no longer present
-        if removed_locales:
-            for locale in removed_locales:
-                expected = "-" + "\n-".join(get_locale_block(locale, expected_platforms, before_rev))
-                assert expected in diff
-
-        # ensure any added platforms are now present
-        added_platforms = expected_platforms - initial_platforms
-        for platform in added_platforms:
-            expected_additions = len(expected_locales)
-            for plats in lbi["ignore_config"].values():
-                if platform in plats:
-                    expected_additions -= 1
-            expected = f'+            "{platform}"'
-            assert diff.count(expected) == expected_additions
-
-        # ensure any removed platforms are no longer present
-        removed_platforms = initial_platforms - expected_platforms
-        for platform in removed_platforms:
-            expected_additions = len(expected_locales)
-            for plats in lbi["ignore_config"].values():
-                if platform in plats:
-                    expected_additions -= 1
-            expected = f'-            "{platform}"'
-            assert diff.count(expected) == expected_additions
-
-
-def setup_file_responses(aioresponses, l10n_bump_info, initial_values, expected_locales):
-    file_responses = {}
-    name = l10n_bump_info["name"]
-    ignore_config = l10n_bump_info.get("ignore_config", {})
-    revision = initial_values[name]["revision"]
-    locales = initial_values[name]["locales"]
-    platforms = initial_values[name]["platforms"]
-    for pc in l10n_bump_info["platform_configs"]:
-        file_responses[pc["path"]] = "\n".join(expected_locales)
-
-    changesets_data = {}
-    for locale in locales:
-        locale_platforms = []
-        for platform in platforms:
-            if platform not in ignore_config.get(locale, []):
-                locale_platforms.append(platform)
-
-        changesets_data[locale] = {
-            "pin": False,
-            "platforms": [],
-            "revision": revision,
-            "platforms": sorted(locale_platforms),
-        }
-
-    file_responses[l10n_bump_info["path"]] = json.dumps(changesets_data)
-
-    setup_fetch_files_response(aioresponses, 200, file_responses)
 
 
 @pytest.mark.asyncio
@@ -704,7 +566,7 @@ async def test_success(
         # `setup_test`. we have to call it again for each bump info, because
         # the repository information exists in that part of the payload
         github_installation_responses("mozilla-l10n")
-        setup_file_responses(aioresponses, lbi, initial_values, expected_values[lbi["name"]]["locales"])
+        setup_l10n_file_responses(aioresponses, lbi, initial_values, expected_values[lbi["name"]]["locales"])
         revision = expected_values[lbi["name"]]["revision"]
         aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {"object": {"oid": revision}}}})
 
