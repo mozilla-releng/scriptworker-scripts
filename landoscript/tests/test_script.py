@@ -4,9 +4,19 @@ from scriptworker.client import TaskVerificationError
 
 from landoscript.errors import LandoscriptError
 from landoscript.script import async_main
-from .conftest import assert_lando_submission_response, assert_status_response, setup_test
+from .conftest import assert_lando_submission_response, assert_status_response, setup_test, assert_add_commit_response
 from .test_tag import assert_tag_response
-from .test_version_bump import assert_add_commit_response, setup_fetch_files_response
+from .test_version_bump import setup_fetch_files_response
+
+
+def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
+    assert "json" in req.kwargs
+    assert "actions" in req.kwargs["json"]
+    create_commit_actions = [action for action in req.kwargs["json"]["actions"] if action["action"] == "create-commit"]
+    assert len(create_commit_actions) == 1
+    action = create_commit_actions[0]
+
+    assert_add_commit_response(action, commit_msg_strings, initial_values, expected_bumps)
 
 
 @pytest.mark.asyncio
@@ -83,7 +93,7 @@ async def test_tag_and_bump(aioresponses, github_installation_responses, context
     assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
     if not dry_run:
         req = assert_lando_submission_response(aioresponses.requests, submit_uri)
-        assert_add_commit_response(req, commit_msg_strings, initial_values, expected_bumps)
+        assert_success(req, commit_msg_strings, initial_values, expected_bumps)
         assert_status_response(aioresponses.requests, status_uri)
         assert_tag_response(req, tags)
 
@@ -163,7 +173,7 @@ async def test_success_with_retries(aioresponses, github_installation_responses,
     await async_main(context)
 
     req = assert_lando_submission_response(aioresponses.requests, submit_uri, attempts=2)
-    assert_add_commit_response(req, commit_msg_strings, initial_values, expected_bumps)
+    assert_success(req, commit_msg_strings, initial_values, expected_bumps)
     assert_status_response(aioresponses.requests, status_uri, attempts=2)
     assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
 
@@ -355,3 +365,6 @@ async def test_lando_polling_retry_on_failure(aioresponses, github_installation_
     await async_main(context)
 
     assert_status_response(aioresponses.requests, status_uri, attempts=2)
+
+
+# TODO: add real world merge day test for central-to-beta (merge+l10n bump)

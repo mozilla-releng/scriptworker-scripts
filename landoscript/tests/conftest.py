@@ -98,3 +98,30 @@ def assert_status_response(requests, status_uri, attempts=1):
     # there might be more than one in cases where we retry; we assume that
     # the requests are the same for all attempts
     assert len(reqs) == attempts
+
+
+def assert_add_commit_response(action, commit_msg_strings, initial_values, expected_bumps):
+    # ensure metadata is correct
+    assert action["author"] == "Release Engineering Landoscript <release+landoscript@mozilla.com>"
+    # we don't actually verify the value here; it's not worth the trouble of mocking
+    assert "date" in action
+
+    # ensure required substrings are in the diff header
+    for msg in commit_msg_strings:
+        assert msg in action["commitmsg"]
+
+    diffs = action["diff"].split("diff\n")
+
+    # ensure expected bumps are present to a reasonable degree of certainty
+    for file, after in expected_bumps.items():
+        for diff in diffs:
+            # if the version is the last line in the file it may or may not
+            # have a trailing newline. either way, there will be one (and
+            # only one) in the `-` line of the diff. account for this.
+            # the `after` version will only have a newline if the file is
+            # intended to have one after the diff has been applied.
+            before = initial_values[file].rstrip("\n") + "\n"
+            if file in diff and f"\n-{before}+{after}" in diff:
+                break
+        else:
+            assert False, f"no version bump found for {file}: {diffs}"
