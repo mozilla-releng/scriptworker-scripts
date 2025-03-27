@@ -3,42 +3,20 @@ from scriptworker.client import TaskVerificationError
 
 from landoscript.errors import LandoscriptError
 from landoscript.script import async_main
-from landoscript.actions.version_bump import ALLOWED_BUMP_FILES, _VERSION_CLASS_PER_BEGINNING_OF_PATH
+from landoscript.actions.version_bump import ALLOWED_BUMP_FILES
+from landoscript.util.version import _VERSION_CLASS_PER_BEGINNING_OF_PATH
 
-from .conftest import assert_lando_submission_response, assert_status_response, setup_test, setup_fetch_files_response
+from .conftest import assert_lando_submission_response, assert_status_response, setup_test, setup_fetch_files_response, assert_add_commit_response
 
 
-def assert_add_commit_response(req, commit_msg_strings, initial_values, expected_bumps):
+def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
     assert "json" in req.kwargs
     assert "actions" in req.kwargs["json"]
     create_commit_actions = [action for action in req.kwargs["json"]["actions"] if action["action"] == "create-commit"]
     assert len(create_commit_actions) == 1
     action = create_commit_actions[0]
 
-    # ensure metadata is correct
-    assert action["author"] == "Release Engineering Landoscript <release+landoscript@mozilla.com>"
-    # we don't actually verify the value here; it's not worth the trouble of mocking
-    assert "date" in action
-
-    # ensure required substrings are in the diff header
-    for msg in commit_msg_strings:
-        assert msg in action["commitmsg"]
-
-    diffs = action["diff"].split("diff\n")
-
-    # ensure expected bumps are present to a reasonable degree of certainty
-    for file, after in expected_bumps.items():
-        for diff in diffs:
-            # if the version is the last line in the file it may or may not
-            # have a trailing newline. either way, there will be one (and
-            # only one) in the `-` line of the diff. account for this.
-            # the `after` version will only have a newline if the file is
-            # intended to have one after the diff has been applied.
-            before = initial_values[file].rstrip("\n") + "\n"
-            if file in diff and f"\n-{before}+{after}" in diff:
-                break
-        else:
-            assert False, f"no version bump found for {file}: {diffs}"
+    assert_add_commit_response(action, commit_msg_strings, initial_values, expected_bumps)
 
 
 @pytest.mark.asyncio
@@ -275,7 +253,7 @@ async def test_success_with_bumps(aioresponses, github_installation_responses, c
     assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
     if not dryrun:
         req = assert_lando_submission_response(aioresponses.requests, submit_uri)
-        assert_add_commit_response(req, commit_msg_strings, initial_values, expected_bumps)
+        assert_success(req, commit_msg_strings, initial_values, expected_bumps)
         assert_status_response(aioresponses.requests, status_uri)
 
 
@@ -354,7 +332,7 @@ async def test_success_with_retries(aioresponses, github_installation_responses,
     await async_main(context)
 
     req = assert_lando_submission_response(aioresponses.requests, submit_uri, attempts=2)
-    assert_add_commit_response(req, commit_msg_strings, initial_values, expected_bumps)
+    assert_success(req, commit_msg_strings, initial_values, expected_bumps)
     assert_status_response(aioresponses.requests, status_uri, attempts=2)
     assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
 

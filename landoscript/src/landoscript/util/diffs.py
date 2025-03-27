@@ -10,5 +10,7 @@ def diff_contents(orig: str, modified: str, file: str) -> str:
     diff += "\n".join(unified_diff(orig.splitlines(), modified.splitlines(), fromfile=fromfile, tofile=tofile, lineterm=""))
     if modified.endswith("\n"):
         diff += "\n"
+    else:
+        diff += "\n\\ No newline at end of file\n"
 
     return diff

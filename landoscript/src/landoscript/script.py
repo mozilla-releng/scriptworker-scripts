@@ -6,7 +6,7 @@ import scriptworker.client
 from scriptworker.exceptions import TaskVerificationError
 
 from landoscript import lando
-from landoscript.actions import l10n_bump, tag, version_bump
+from landoscript.actions import l10n_bump, merge_day, tag, version_bump
 from landoscript.treestatus import is_tree_open
 from scriptworker_client.github_client import GithubClient
 
@@ -77,8 +77,8 @@ async def async_main(context):
                         gh_client,
                         public_artifact_dir,
                         branch,
-                        payload["version_bump_info"],
-                        payload.get("dontbuild", False),
+                        [version_bump.VersionBumpInfo(payload["version_bump_info"])],
+                        dontbuild,
                     )
                     # sometimes version bumps are no-ops
                     if version_bump_action:
@@ -86,6 +86,9 @@ async def async_main(context):
                 elif action == "tag":
                     tag_actions = tag.run(payload["tags"])
                     lando_actions.extend(tag_actions)
+                elif action == "merge_day":
+                    merge_day_actions = await merge_day.run(gh_client, public_artifact_dir, payload["merge_info"])
+                    lando_actions.extend(merge_day_actions)
                 elif action == "l10n_bump":
                     if not ignore_closed_tree:
                         # despite `ignore_closed_tree` being at the top level of the

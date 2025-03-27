@@ -1,12 +1,33 @@
 from aiohttp import ClientResponseError
+from collections import defaultdict
 import pytest
 from scriptworker.client import TaskVerificationError
+from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
 
 from landoscript.errors import LandoscriptError
 from landoscript.script import async_main
-from .conftest import assert_lando_submission_response, assert_status_response, setup_test
+from .conftest import (
+    assert_l10n_bump_response,
+    assert_lando_submission_response,
+    assert_status_response,
+    setup_test,
+    assert_add_commit_response,
+    setup_l10n_file_responses,
+    assert_merge_response,
+    setup_fetch_files_response,
+    setup_fetch_files_responses,
+)
 from .test_tag import assert_tag_response
-from .test_version_bump import assert_add_commit_response, setup_fetch_files_response
+
+
+def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
+    assert "json" in req.kwargs
+    assert "actions" in req.kwargs["json"]
+    create_commit_actions = [action for action in req.kwargs["json"]["actions"] if action["action"] == "create-commit"]
+    assert len(create_commit_actions) == 1
+    action = create_commit_actions[0]
+
+    assert_add_commit_response(action, commit_msg_strings, initial_values, expected_bumps)
 
 
 @pytest.mark.asyncio
@@ -83,7 +104,7 @@ async def test_tag_and_bump(aioresponses, github_installation_responses, context
     assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
     if not dry_run:
         req = assert_lando_submission_response(aioresponses.requests, submit_uri)
-        assert_add_commit_response(req, commit_msg_strings, initial_values, expected_bumps)
+        assert_success(req, commit_msg_strings, initial_values, expected_bumps)
         assert_status_response(aioresponses.requests, status_uri)
         assert_tag_response(req, tags)
 
@@ -163,7 +184,7 @@ async def test_success_with_retries(aioresponses, github_installation_responses,
     await async_main(context)
 
     req = assert_lando_submission_response(aioresponses.requests, submit_uri, attempts=2)
-    assert_add_commit_response(req, commit_msg_strings, initial_values, expected_bumps)
+    assert_success(req, commit_msg_strings, initial_values, expected_bumps)
     assert_status_response(aioresponses.requests, status_uri, attempts=2)
     assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
 
@@ -355,3 +376,213 @@ async def test_lando_polling_retry_on_failure(aioresponses, github_installation_
     await async_main(context)
 
     assert_status_response(aioresponses.requests, status_uri, attempts=2)
+
+
+@pytest.mark.asyncio
+async def test_success_central_to_beta_merge_day(aioresponses, github_installation_responses, context):
+    # despite it looking weird, these beta looking versions _are_ the correct
+    # "before" versions after we've "merged" the central into beta
+    initial_values = {
+        "browser/config/version.txt": "139.0a1",
+        "browser/config/version_display.txt": "139.0a1",
+        "config/milestone.txt": "139.0a1",
+        "mobile/android/version.txt": "139.0a1",
+    }
+    expected_bumps = {
+        "browser/config/version.txt": "140.0",
+        "browser/config/version_display.txt": "140.0b1",
+        "config/milestone.txt": "140.0",
+        "mobile/android/version.txt": "140.0b1",
+    }
+    initial_replacement_values = {
+        ".arcconfig": '  "repository.callsign": "MOZILLACENTRAL",',
+        "browser/config/mozconfigs/linux64/l10n-mozconfig": "ac_add_options --with-branding=browser/branding/nightly",
+        "browser/config/mozconfigs/win32/l10n-mozconfig": "ac_add_options --with-branding=browser/branding/nightly",
+        "browser/config/mozconfigs/win64/l10n-mozconfig": "ac_add_options --with-branding=browser/branding/nightly",
+        "browser/config/mozconfigs/macosx64/l10n-mozconfig": "ac_add_options --with-branding=browser/branding/nightly",
+    }
+    expected_replacement_values = {
+        ".arcconfig": '  "repository.callsign": "BETA",',
+        "browser/config/mozconfigs/linux64/l10n-mozconfig": "ac_add_options --enable-official-branding",
+        "browser/config/mozconfigs/win32/l10n-mozconfig": "ac_add_options --enable-official-branding",
+        "browser/config/mozconfigs/win64/l10n-mozconfig": "ac_add_options --enable-official-branding",
+        "browser/config/mozconfigs/macosx64/l10n-mozconfig": "ac_add_options --enable-official-branding",
+    }
+    # end tag, base tag, merge, version bump , replacements, mobile l10n bump, firefox l10n bump
+    expected_actions = ["tag", "tag", "merge-onto", "create-commit", "create-commit", "create-commit", "create-commit"]
+    base_tag = "FIREFOX_BETA_140_BASE"
+    end_tag = "FIREFOX_BETA_139_END"
+    target_ref = "central"
+    initial_l10n_changesets = {
+        "Firefox l10n changesets": {
+            "revision": "abcdef",
+            "locales": ["af", "ja", "ja-JP-mac", "zh-TW"],
+            "platforms": ["linux64", "macosx64", "win64"],
+        },
+        "Mobile l10n changesets": {
+            "revision": "abcdef",
+            "locales": ["de", "ja"],
+            "platforms": ["android", "android-arm"],
+        },
+    }
+    expected_l10n_changesets = {
+        "Firefox l10n changesets": {
+            "revision": "ghijkl",
+            "locales": ["af", "ja", "ja-JP-mac", "zh-TW"],
+            "platforms": ["linux64", "macosx64", "win64"],
+        },
+        "Mobile l10n changesets": {
+            "revision": "ghijkl",
+            "locales": ["de", "ja"],
+            "platforms": ["android", "android-arm"],
+        },
+    }
+    l10n_bump_info = [
+        {
+            "ignore_config": {
+                "ja": ["macosx64"],
+                "ja-JP-mac": ["linux64", "win64"],
+            },
+            "l10n_repo_target_branch": "main",
+            "l10n_repo_url": "https://github.com/mozilla-l10n/firefox-l10n",
+            "name": "Firefox l10n changesets",
+            "path": "browser/locales/l10n-changesets.json",
+            "platform_configs": [
+                {
+                    "path": "browser/locales/shipped-locales",
+                    "platforms": ["linux64", "macosx64", "win64"],
+                }
+            ],
+        },
+        {
+            "l10n_repo_target_branch": "main",
+            "l10n_repo_url": "https://github.com/mozilla-l10n/firefox-l10n",
+            "name": "Mobile l10n changesets",
+            "path": "mobile/locales/l10n-changesets.json",
+            "platform_configs": [
+                {
+                    "path": "mobile/android/locales/all-locales",
+                    "platforms": ["android", "android-arm"],
+                }
+            ],
+        },
+    ]
+    merge_info = {
+        "end_tag": "FIREFOX_BETA_{major_version}_END",
+        "to_repo": "https://hg.mozilla.org/releases/mozilla-beta",
+        "base_tag": "FIREFOX_BETA_{major_version}_BASE",
+        "from_repo": "https://hg.mozilla.org/mozilla-central",
+        "to_branch": "beta",
+        "from_branch": "central",
+        "replacements": [
+            [
+                "browser/config/mozconfigs/linux64/l10n-mozconfig",
+                "ac_add_options --with-branding=browser/branding/nightly",
+                "ac_add_options --enable-official-branding",
+            ],
+            [
+                "browser/config/mozconfigs/win32/l10n-mozconfig",
+                "ac_add_options --with-branding=browser/branding/nightly",
+                "ac_add_options --enable-official-branding",
+            ],
+            [
+                "browser/config/mozconfigs/win64/l10n-mozconfig",
+                "ac_add_options --with-branding=browser/branding/nightly",
+                "ac_add_options --enable-official-branding",
+            ],
+            [
+                "browser/config/mozconfigs/macosx64/l10n-mozconfig",
+                "ac_add_options --with-branding=browser/branding/nightly",
+                "ac_add_options --enable-official-branding",
+            ],
+            [".arcconfig", "MOZILLACENTRAL", "BETA"],
+        ],
+        "version_files": [
+            {"filename": "config/milestone.txt", "new_suffix": ""},
+            {"filename": "browser/config/version.txt", "new_suffix": ""},
+            {"filename": "browser/config/version_display.txt", "new_suffix": "b1"},
+            {"filename": "mobile/android/version.txt", "new_suffix": "b1"},
+        ],
+        "merge_old_head": True,
+        "fetch_version_from": "browser/config/version.txt",
+    }
+    payload = {
+        "actions": ["merge_day", "l10n_bump"],
+        "lando_repo": "repo_name",
+        "l10n_bump_info": l10n_bump_info,
+        "merge_info": merge_info,
+        "ignore_closed_tree": True,
+    }
+    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["merge_day", "l10n_bump"])
+
+    # version bump files are fetched in groups, by initial version
+    initial_values_by_expected_version = defaultdict(dict)
+    for file, version in expected_bumps.items():
+        initial_values_by_expected_version[version][file] = initial_values[file]
+
+    setup_fetch_files_responses(
+        aioresponses,
+        [
+            # existing version in `to_branch`
+            {merge_info["fetch_version_from"]: "139.0b11"},
+            # existing version in `from_branch`
+            {merge_info["fetch_version_from"]: "140.0a1"},
+            # fetch of original contents of files to bump
+            *initial_values_by_expected_version.values(),
+            # fetch of original contents of `replacements` and `regex_replacements` files
+            initial_replacement_values,
+            # clobber file
+            {"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"},
+        ],
+    )
+
+    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
+
+    # because the github graphql endpoint is generic we need to make sure we create
+    # these responses in the correct order...
+    for lbi in l10n_bump_info:
+        # this is called once for the repository we're bumping files in in
+        # `setup_test`. we have to call it again for each bump info, because
+        # the repository information exists in that part of the payload
+        github_installation_responses("mozilla-l10n")
+        setup_l10n_file_responses(aioresponses, lbi, initial_l10n_changesets, expected_l10n_changesets[lbi["name"]]["locales"])
+        revision = expected_l10n_changesets[lbi["name"]]["revision"]
+        aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {"object": {"oid": revision}}}})
+
+    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
+
+    aioresponses.get(
+        status_uri,
+        status=200,
+        payload={
+            "commits": ["abcdef123"],
+            "push_id": job_id,
+            "status": "completed",
+        },
+    )
+
+    context.task = {"payload": payload, "scopes": scopes}
+    await async_main(context)
+
+    req = assert_lando_submission_response(aioresponses.requests, submit_uri)
+    assert_merge_response(
+        context.config["artifact_dir"],
+        req,
+        expected_actions,
+        initial_values,
+        expected_bumps,
+        initial_replacement_values,
+        expected_replacement_values,
+        end_tag,
+        base_tag,
+        target_ref,
+    )
+    expected_changes = 0
+    for initial_info, expected_info in zip(initial_l10n_changesets.values(), expected_l10n_changesets.values()):
+        for k in initial_info.keys():
+            if initial_info[k] != expected_info[k]:
+                expected_changes += 1
+                break
+
+    assert_l10n_bump_response(req, l10n_bump_info, expected_changes, initial_l10n_changesets, expected_l10n_changesets)
+    assert_status_response(aioresponses.requests, status_uri)
