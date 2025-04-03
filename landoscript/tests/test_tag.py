@@ -1,9 +1,7 @@
 import pytest
 from scriptworker.client import TaskVerificationError
 
-from landoscript.script import async_main
-
-from .conftest import assert_lando_submission_response, assert_status_response, setup_test
+from .conftest import run_test
 
 
 def assert_tag_response(req, tags):
@@ -44,45 +42,18 @@ async def test_success(aioresponses, github_installation_responses, context, tag
         "tags": tags,
         "dry_run": dry_run,
     }
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["tag"])
 
-    if not dry_run:
-        aioresponses.post(
-            submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"}
-        )
-
-        aioresponses.get(
-            status_uri,
-            status=200,
-            payload={
-                "commits": ["abcdef123"],
-                "push_id": job_id,
-                "status": "completed",
-            },
-        )
-
-    context.task = {"payload": payload, "scopes": scopes}
-    await async_main(context)
-
-    if not dry_run:
-        req = assert_lando_submission_response(aioresponses.requests, submit_uri)
+    def assert_func(req):
         assert_tag_response(req, tags)
-        assert_status_response(aioresponses.requests, status_uri)
+
+    await run_test(aioresponses, github_installation_responses, context, payload, ["tag"], dry_run, assert_func)
 
 
 @pytest.mark.asyncio
-async def test_no_tags(github_installation_responses, context):
+async def test_no_tags(aioresponses, github_installation_responses, context):
     payload = {
         "actions": ["tag"],
         "lando_repo": "repo_name",
         "tags": [],
     }
-    _, _, _, scopes = setup_test(github_installation_responses, context, payload, ["tag"])
-
-    context.task = {"payload": payload, "scopes": scopes}
-
-    try:
-        await async_main(context)
-        assert False, "should've raised TaskVerificationError"
-    except TaskVerificationError as e:
-        assert "must provide at least one tag!" in e.args[0]
+    await run_test(aioresponses, github_installation_responses, context, payload, ["tag"], err=TaskVerificationError, errmsg="must provide at least one tag!")
