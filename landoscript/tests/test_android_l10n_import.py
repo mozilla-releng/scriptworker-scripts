@@ -14,7 +14,7 @@ rootdir: /mnt/data/repos/scriptworker-scripts
 configfile: setup.cfg
 plugins: cov-6.0.0, aioresponses-0.3.0, anyio-4.9.0, scriptworker-client-0.1.0, xdist-3.6.1, asyncio-0.25.3
 asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
-collected 4 items                                                                                                                                                                                 
+collected 4 items
 
 tests/test_android_l10n_import.py FFFF                                                                                                                                                      [100%]
 
