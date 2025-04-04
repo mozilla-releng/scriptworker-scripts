@@ -36,7 +36,7 @@ def config(tmpdir):
     yield config_
 
 
-@pytest.fixture(scope="function", params=("52.5.0", "52.0b3", "# foobar\n52.0a1", "60.1.3esr"))
+@pytest.fixture(scope="function", params=("52.5.0", "52.0b3", "# foobar\n52.0a1", "60.1.3"))
 def repo_context(tmpdir, config, request, mocker):
     context = mocker.MagicMock()
     context.repo = os.path.join(tmpdir, "repo")
@@ -47,9 +47,16 @@ def repo_context(tmpdir, config, request, mocker):
         context.xtest_version = [line for line in request.param.splitlines() if not line.startswith("#")][0]
     os.mkdir(context.repo)
     os.mkdir(os.path.join(context.repo, "config"))
+    os.makedirs(os.path.join(context.repo, "browser", "config"))
     version_file = os.path.join(context.repo, "config", "milestone.txt")
     with open(version_file, "w") as f:
         f.write(request.param)
+    display_version_file = os.path.join("browser", "config", "version.txt")
+    with open(os.path.join(context.repo, display_version_file), "w") as f:
+        f.write(context.xtest_version)
+    display_version_file = os.path.join("browser", "config", "version_display.txt")
+    with open(os.path.join(context.repo, display_version_file), "w") as f:
+        f.write(context.xtest_version)
     yield context
 
 
@@ -90,24 +97,6 @@ def test_replace_ver_in_file_invalid_old_ver(repo_context, new_version):
 def test_find_what_version_parser_to_use(file, source_repo, expectation, expected_result):
     with expectation:
         assert vmanip._find_what_version_parser_to_use(file, source_repo) == expected_result
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("new_version, should_append_esr", (("68.0", True), ("68.0b3", False)))
-async def test_bump_version(mocker, repo_context, new_version, should_append_esr):
-    test_version = new_version
-    if repo_context.xtest_version.endswith("esr") and should_append_esr:
-        test_version = new_version + "esr"
-
-    relative_files = [os.path.join("config", "milestone.txt")]
-    bump_info = {"files": relative_files, "next_version": new_version}
-    mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
-    mocked_bump_info.return_value = bump_info
-    vcs_mock = AsyncMock()
-    mocker.patch.object(vmanip, "vcs", new=vcs_mock)
-    await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
-    assert test_version == vmanip.get_version(relative_files[0], repo_context.repo, "https://hg.mozilla.org/repo")
-    assert vcs_mock.commit.call_args_list[0][0][2] == "Automatic version bump CLOSED TREE NO BUG a=release"
 
 
 @pytest.mark.asyncio
@@ -161,6 +150,9 @@ async def test_bump_version_invalid_file(mocker, repo_context, new_version):
 @pytest.mark.parametrize("new_version", ("68.0", "68.0b3", "68.9.10esr"))
 async def test_bump_version_missing_file(mocker, repo_context, new_version):
     # Test only creates config/milestone.txt
+    remove_file = os.path.join(repo_context.repo, "browser", "config", "version_display.txt")
+    os.remove(remove_file)
+
     relative_files = [os.path.join("browser", "config", "version_display.txt"), os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
     mocked_bump_info = mocker.patch.object(vmanip, "get_version_bump_info")
@@ -188,10 +180,10 @@ async def test_bump_version_smaller_version(mocker, repo_context, new_version):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version,expect_version", (("60.2.0", "60.2.0esr"), ("68.0.1", "68.0.1esr"), ("68.9.10esr", "68.9.10esr")))
+@pytest.mark.parametrize("new_version,expect_version", (("60.2.0esr", "60.2.0"), ("68.0.1esr", "68.0.1"), ("68.9.10esr", "68.9.10")))
 async def test_bump_version_esr(mocker, repo_context, new_version, expect_version):
     if not repo_context.xtest_version.endswith("esr"):
-        # XXX pytest.skip raised exceptions here for some reason.
+        # XXX pytest.skip raised exceptions here because betas don't turn into esrs
         return
 
     relative_files = [os.path.join("config", "milestone.txt")]
@@ -200,14 +192,21 @@ async def test_bump_version_esr(mocker, repo_context, new_version, expect_versio
     mocked_bump_info.return_value = bump_info
     vcs_mock = AsyncMock()
     mocker.patch.object(vmanip, "vcs", new=vcs_mock)
+    display_version_file = os.path.join("browser", "config", "version_display.txt")
+    with open(os.path.join(repo_context.repo, display_version_file), "r+") as f:
+        f.seek(0, os.SEEK_END)
+        f.write("esr")
+
     await vmanip.bump_version(repo_context.config, repo_context.task, repo_context.repo)
     assert expect_version == vmanip.get_version(relative_files[0], repo_context.repo, "https://hg.mozilla.org/repo")
+    assert expect_version == vmanip.get_version(relative_files[1], repo_context.repo, "https://hg.mozilla.org/repo")
+    assert new_version == vmanip.get_version(relative_files[2], repo_context.repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("new_version,expect_esr_version", (("60.0", "60.0esr"), ("68.0.1", "68.0.1esr")))
-async def test_bump_version_esr_dont_bump_non_esr(mocker, config, tmpdir, new_version, expect_esr_version):
+@pytest.mark.parametrize("new_version", ("60.0", "68.0.1"))
+async def test_bump_version_non_esr(mocker, config, tmpdir, new_version):
     version = "52.0.1"
     repo = os.path.join(tmpdir, "repo")
     os.mkdir(repo)
@@ -218,7 +217,7 @@ async def test_bump_version_esr_dont_bump_non_esr(mocker, config, tmpdir, new_ve
         f.write(version)
     display_version_file = os.path.join("browser", "config", "version_display.txt")
     with open(os.path.join(repo, display_version_file), "w") as f:
-        f.write(version + "esr")
+        f.write(version)
 
     relative_files = [os.path.join("browser", "config", "version_display.txt"), os.path.join("config", "milestone.txt")]
     bump_info = {"files": relative_files, "next_version": new_version}
@@ -232,7 +231,7 @@ async def test_bump_version_esr_dont_bump_non_esr(mocker, config, tmpdir, new_ve
     vcs_mock = AsyncMock()
     mocker.patch.object(vmanip, "vcs", new=vcs_mock)
     await vmanip.bump_version(config, task, repo)
-    assert expect_esr_version == vmanip.get_version(display_version_file, repo, "https://hg.mozilla.org/repo")
+    assert new_version == vmanip.get_version(display_version_file, repo, "https://hg.mozilla.org/repo")
     assert new_version == vmanip.get_version(version_file, repo, "https://hg.mozilla.org/repo")
     vcs_mock.commit.assert_called_once()
 
