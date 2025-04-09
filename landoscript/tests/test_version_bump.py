@@ -1,12 +1,21 @@
 import pytest
 from scriptworker.client import TaskVerificationError
+from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
 
 from landoscript.errors import LandoscriptError
 from landoscript.script import async_main
 from landoscript.actions.version_bump import ALLOWED_BUMP_FILES
 from landoscript.util.version import _VERSION_CLASS_PER_BEGINNING_OF_PATH
 
-from .conftest import assert_lando_submission_response, assert_status_response, run_test, setup_test, setup_fetch_files_response, assert_add_commit_response
+from .conftest import (
+    assert_lando_submission_response,
+    assert_status_response,
+    fetch_files_payload,
+    run_test,
+    setup_github_graphql_responses,
+    setup_test,
+    assert_add_commit_response,
+)
 
 
 def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
@@ -228,13 +237,13 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
     ),
 )
 async def test_success_with_bumps(aioresponses, github_installation_responses, context, payload, initial_values, expected_bumps, commit_msg_strings):
-    setup_fetch_files_response(aioresponses, 200, initial_values)
+    setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
     dryrun = payload.get("dry_run", False)
 
     def assert_func(req):
         assert_success(req, commit_msg_strings, initial_values, expected_bumps)
 
-    await run_test(aioresponses, github_installation_responses, context, payload, ["version_bump"], dryrun, assert_func)
+    await run_test(aioresponses, github_installation_responses, context, payload, ["version_bump"], not dryrun, assert_func)
 
 
 @pytest.mark.asyncio
@@ -292,7 +301,7 @@ async def test_success_with_bumps(aioresponses, github_installation_responses, c
 )
 async def test_success_with_retries(aioresponses, github_installation_responses, context, payload, initial_values, expected_bumps, commit_msg_strings):
     submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
-    setup_fetch_files_response(aioresponses, 200, initial_values)
+    setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
 
     aioresponses.post(submit_uri, status=500)
     aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
@@ -339,7 +348,7 @@ async def test_success_with_retries(aioresponses, github_installation_responses,
 )
 async def test_success_without_bumps(aioresponses, github_installation_responses, context, payload, initial_values):
     submit_uri, status_uri, _, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
-    setup_fetch_files_response(aioresponses, 200, initial_values)
+    setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
 
     context.task = {"payload": payload, "scopes": scopes}
     await async_main(context)
@@ -363,7 +372,7 @@ async def test_failure_to_fetch_files(aioresponses, github_installation_response
     # 5 attempts is hardcoded deeper than we can reasonable override it; so
     # just expect it
     for _ in range(5):
-        setup_fetch_files_response(aioresponses, 500)
+        aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=500)
 
     context.task = {"payload": payload, "scopes": scopes}
 

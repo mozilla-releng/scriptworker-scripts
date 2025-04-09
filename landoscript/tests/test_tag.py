@@ -46,7 +46,7 @@ async def test_success(aioresponses, github_installation_responses, context, tag
     def assert_func(req):
         assert_tag_response(req, tags)
 
-    await run_test(aioresponses, github_installation_responses, context, payload, ["tag"], dry_run, assert_func)
+    await run_test(aioresponses, github_installation_responses, context, payload, ["tag"], not dry_run, assert_func)
 
 
 @pytest.mark.asyncio

@@ -3,7 +3,7 @@ import pytest
 
 from landoscript.script import async_main
 
-from .conftest import run_test, setup_fetch_files_responses, assert_merge_response
+from .conftest import fetch_files_payload, run_test, assert_merge_response, setup_github_graphql_responses
 
 
 @pytest.mark.asyncio
@@ -150,18 +150,16 @@ async def test_success_bump_central(
         "dry_run": dry_run,
     }
 
-    setup_fetch_files_responses(
+    setup_github_graphql_responses(
         aioresponses,
-        [
-            # existing version in `to_branch`
-            {merge_info["fetch_version_from"]: "137.0a1"},
-            # fetch of original contents of files to bump, if we expect any replacements
-            initial_values if expected_bumps else {},
-            # fetch of original contents of `replacements` and `regex_replacements` files
-            initial_replacement_values if expected_replacement_bumps else {},
-            # clobber file
-            {"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"},
-        ],
+        # existing version in `to_branch`
+        fetch_files_payload({merge_info["fetch_version_from"]: "137.0a1"}),
+        # fetch of original contents of files to bump, if we expect any replacements
+        fetch_files_payload(initial_values if expected_bumps else {}),
+        # fetch of original contents of `replacements` and `regex_replacements` files
+        fetch_files_payload(initial_replacement_values if expected_replacement_bumps else {}),
+        # clobber file
+        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     def assert_func(req):
@@ -176,7 +174,7 @@ async def test_success_bump_central(
             end_tag,
         )
 
-    await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], dry_run, assert_func)
+    await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], not dry_run, assert_func)
 
 
 @pytest.mark.asyncio
@@ -214,16 +212,14 @@ async def test_success_bump_esr(aioresponses, github_installation_responses, con
     for file, version in expected_bumps.items():
         initial_values_by_expected_version[version][file] = initial_values[file]
 
-    setup_fetch_files_responses(
+    setup_github_graphql_responses(
         aioresponses,
-        [
-            # existing version in `to_branch`
-            {merge_info["fetch_version_from"]: "128.9.0"},
-            # fetch of original contents of files to bump
-            *initial_values_by_expected_version.values(),
-            # clobber file
-            {"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"},
-        ],
+        # existing version in `to_branch`
+        fetch_files_payload({merge_info["fetch_version_from"]: "128.9.0"}),
+        # fetch of original contents of files to bump
+        *[fetch_files_payload(iv) for iv in initial_values_by_expected_version.values()],
+        # clobber file
+        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     def assert_func(req):
@@ -235,7 +231,7 @@ async def test_success_bump_esr(aioresponses, github_installation_responses, con
             expected_bumps,
         )
 
-    await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], assert_func=assert_func)
+    await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], True, assert_func=assert_func)
 
 
 @pytest.mark.asyncio
@@ -263,17 +259,15 @@ async def test_success_early_to_late_beta(aioresponses, github_installation_resp
         "merge_info": merge_info,
     }
 
-    setup_fetch_files_responses(
+    setup_github_graphql_responses(
         aioresponses,
-        [
-            # initial version fetch; technically not needed for this use case
-            # but it keeps the merge day code cleaner to keep it
-            {merge_info["fetch_version_from"]: "139.0"},
-            # fetch of original contents of `replacements` file
-            initial_replacement_values,
-            # clobber file
-            {"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"},
-        ],
+        # initial version fetch; technically not needed for this use case
+        # but it keeps the merge day code cleaner to keep it
+        fetch_files_payload({merge_info["fetch_version_from"]: "139.0"}),
+        # fetch of original contents of `replacements` file
+        fetch_files_payload(initial_replacement_values),
+        # clobber file
+        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     def assert_func(req):
@@ -373,20 +367,18 @@ async def test_success_central_to_beta(aioresponses, github_installation_respons
     for file, version in expected_bumps.items():
         initial_values_by_expected_version[version][file] = initial_values[file]
 
-    setup_fetch_files_responses(
+    setup_github_graphql_responses(
         aioresponses,
-        [
-            # existing version in `to_branch`
-            {merge_info["fetch_version_from"]: "139.0b11"},
-            # existing version in `from_branch`
-            {merge_info["fetch_version_from"]: "140.0a1"},
-            # fetch of original contents of files to bump
-            *initial_values_by_expected_version.values(),
-            # fetch of original contents of `replacements` and `regex_replacements` files
-            initial_replacement_values,
-            # clobber file
-            {"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"},
-        ],
+        # existing version in `to_branch`
+        fetch_files_payload({merge_info["fetch_version_from"]: "139.0b11"}),
+        # existing version in `from_branch`
+        fetch_files_payload({merge_info["fetch_version_from"]: "140.0a1"}),
+        # fetch of original contents of files to bump
+        *[fetch_files_payload(iv) for iv in initial_values_by_expected_version.values()],
+        # fetch of original contents of `replacements` and `regex_replacements` files
+        fetch_files_payload(initial_replacement_values),
+        # clobber file
+        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     def assert_func(req):
@@ -449,20 +441,18 @@ async def test_success_beta_to_release(aioresponses, github_installation_respons
         "merge_info": merge_info,
     }
 
-    setup_fetch_files_responses(
+    setup_github_graphql_responses(
         aioresponses,
-        [
-            # existing version in `to_branch`
-            {merge_info["fetch_version_from"]: "135.0"},
-            # existing version in `from_branch`
-            {merge_info["fetch_version_from"]: "136.0"},
-            # fetch of original contents of files to bump, if we expect any replacements
-            initial_values,
-            # fetch of original contents of `replacements` and `regex_replacements` files
-            initial_replacement_values,
-            # clobber file
-            {"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"},
-        ],
+        # existing version in `to_branch`
+        fetch_files_payload({merge_info["fetch_version_from"]: "135.0"}),
+        # existing version in `from_branch`
+        fetch_files_payload({merge_info["fetch_version_from"]: "136.0"}),
+        # fetch of original contents of files to bump, if we expect any replacements
+        fetch_files_payload(initial_values),
+        # fetch of original contents of `replacements` and `regex_replacements` files
+        fetch_files_payload(initial_replacement_values),
+        # clobber file
+        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     def assert_func(req):
@@ -518,18 +508,16 @@ async def test_success_release_to_esr(aioresponses, github_installation_response
         "ignore_closed_tree": True,
     }
 
-    setup_fetch_files_responses(
+    setup_github_graphql_responses(
         aioresponses,
-        [
-            # existing version in `to_branch`
-            {merge_info["fetch_version_from"]: "128.0"},
-            # fetch of original contents of files to bump, if we expect any replacements
-            initial_values if expected_bumps else {},
-            # fetch of original contents of `replacements` and `regex_replacements` files
-            initial_replacement_values,
-            # clobber file
-            {"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"},
-        ],
+        # existing version in `to_branch`
+        fetch_files_payload({merge_info["fetch_version_from"]: "128.0"}),
+        # fetch of original contents of files to bump, if we expect any replacements
+        fetch_files_payload(initial_values if expected_bumps else {}),
+        # fetch of original contents of `replacements` and `regex_replacements` files
+        fetch_files_payload(initial_replacement_values),
+        # clobber file
+        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     def assert_func(req):

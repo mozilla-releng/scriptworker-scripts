@@ -84,11 +84,11 @@ def setup_test(github_installation_responses, context, payload, actions, repo="r
 
 
 async def run_test(
-    aioresponses, github_installation_responses, context, payload, actions, dry_run=False, assert_func=None, repo="repo_name", err=None, errmsg=""
+    aioresponses, github_installation_responses, context, payload, actions, should_submit=True, assert_func=None, repo="repo_name", err=None, errmsg=""
 ):
     submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, actions, repo)
 
-    if not dry_run:
+    if should_submit:
         aioresponses.post(
             submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"}
         )
@@ -116,7 +116,7 @@ async def run_test(
             assert errmsg in e.args[0]
     else:
         await async_main(context)
-        if not dry_run:
+        if should_submit:
             req = assert_lando_submission_response(aioresponses.requests, submit_uri)
             assert_status_response(aioresponses.requests, status_uri)
             if assert_func:
@@ -126,26 +126,51 @@ async def run_test(
             assert ("GET", status_uri) not in aioresponses.requests
 
 
-def setup_fetch_files_response(aioresponses, code, initial_values={}):
+def fetch_files_payload(initial_values={}):
     if initial_values:
-        github_response = {}
-        for file, contents in initial_values.items():
-            github_response[file] = f"{contents}"
+        payload = {"data": {"repository": {}}}
 
-        payload = {
-            "data": {
-                "repository": {k: {"text": v} for k, v in github_response.items()},
-            }
-        }
+        for file, contents in initial_values.items():
+            if contents is None:
+                payload["data"]["repository"][file] = None
+            else:
+                payload["data"]["repository"][file] = {"text": contents}
     else:
         payload = {}
 
-    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=code, payload=payload)
+    return payload
 
 
-def setup_fetch_files_responses(aioresponses, file_contents):
-    for fc in file_contents:
-        setup_fetch_files_response(aioresponses, 200, fc)
+def setup_github_graphql_responses(aioresponses, *payloads):
+    for payload in payloads:
+        aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload=payload)
+
+
+def get_file_listing_payload(paths):
+    def make_entry(path):
+        parts = path.split("/", 1)
+        type_ = "blob" if len(parts) == 1 else "tree"
+        obj = {}
+        if type_ == "tree":
+            # this obviously does not handle multiple files in the same directory
+            # properly; this is being ignored until the case comes up
+            obj["entries"] = [make_entry(parts[1])]
+        return {
+            "name": parts[0],
+            "type": type_,
+            "object": obj,
+        }
+
+    entries = [make_entry(path) for path in paths]
+    return {
+        "data": {
+            "repository": {
+                "object": {
+                    "entries": entries,
+                }
+            }
+        }
+    }
 
 
 def setup_l10n_file_responses(aioresponses, l10n_bump_info, initial_values, expected_locales):
@@ -174,7 +199,7 @@ def setup_l10n_file_responses(aioresponses, l10n_bump_info, initial_values, expe
 
     file_responses[l10n_bump_info["path"]] = json.dumps(changesets_data)
 
-    setup_fetch_files_response(aioresponses, 200, file_responses)
+    setup_github_graphql_responses(aioresponses, fetch_files_payload(file_responses))
 
 
 def assert_lando_submission_response(requests, submit_uri, attempts=1):
@@ -214,11 +239,24 @@ def assert_add_commit_response(action, commit_msg_strings, initial_values, expec
             # only one) in the `-` line of the diff. account for this.
             # the `after` version will only have a newline if the file is
             # intended to have one after the diff has been applied.
-            before = initial_values[file].rstrip("\n") + "\n"
-            if file in diff and f"\n-{before}+{after}" in diff:
-                break
+            if initial_values[file] is None:
+                before = None
+            else:
+                before = initial_values[file].rstrip("\n") + "\n"
+            if file in diff:
+                if not before:
+                    # addition
+                    if f"\n+{after}" in diff:
+                        break
+                elif not after:
+                    # removal
+                    if f"\n-{before}" in diff:
+                        break
+                else:
+                    if f"\n-{before}+{after}" in diff:
+                        break
         else:
-            assert False, f"no version bump found for {file}: {diffs}"
+            assert False, f"no bump found for {file}: {diffs}"
 
 
 def get_locale_block(locale, platforms, rev):

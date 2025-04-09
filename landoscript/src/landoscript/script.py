@@ -6,7 +6,7 @@ import scriptworker.client
 from scriptworker.exceptions import TaskVerificationError
 
 from landoscript import lando
-from landoscript.actions import l10n_bump, merge_day, tag, version_bump
+from landoscript.actions import android_l10n_import, android_l10n_sync, l10n_bump, merge_day, tag, version_bump
 from landoscript.treestatus import is_tree_open
 from scriptworker_client.github_client import GithubClient
 
@@ -105,6 +105,18 @@ async def async_main(context):
                     # sometimes nothing has changed!
                     if l10n_bump_actions:
                         lando_actions.extend(l10n_bump_actions)
+                elif action == "android_l10n_import":
+                    android_l10n_import_info = payload["android_l10n_import_info"]
+                    import_action = await android_l10n_import.run(
+                        gh_client, context.config["github_config"], public_artifact_dir, android_l10n_import_info, branch
+                    )
+                    if import_action:
+                        lando_actions.append(import_action)
+                elif action == "android_l10n_sync":
+                    android_l10n_sync_info = payload["android_l10n_sync_info"]
+                    import_action = await android_l10n_sync.run(gh_client, public_artifact_dir, android_l10n_sync_info, branch)
+                    if import_action:
+                        lando_actions.append(import_action)
 
                 log.info("finished processing action")
 
