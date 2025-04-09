@@ -10,6 +10,7 @@ from .conftest import (
     assert_l10n_bump_response,
     assert_lando_submission_response,
     assert_status_response,
+    run_test,
     setup_test,
     assert_add_commit_response,
     setup_l10n_file_responses,
@@ -80,33 +81,14 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
     ),
 )
 async def test_tag_and_bump(aioresponses, github_installation_responses, context, payload, dry_run, initial_values, expected_bumps, commit_msg_strings, tags):
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, payload["actions"])
     setup_fetch_files_response(aioresponses, 200, initial_values)
 
-    if not dry_run:
-        aioresponses.post(
-            submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"}
-        )
-
-        aioresponses.get(
-            status_uri,
-            status=200,
-            payload={
-                "commits": ["abcdef123"],
-                "push_id": job_id,
-                "status": "completed",
-            },
-        )
-
-    context.task = {"payload": payload, "scopes": scopes}
-    await async_main(context)
-
-    assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
-    if not dry_run:
-        req = assert_lando_submission_response(aioresponses.requests, submit_uri)
+    def assert_func(req):
         assert_success(req, commit_msg_strings, initial_values, expected_bumps)
-        assert_status_response(aioresponses.requests, status_uri)
         assert_tag_response(req, tags)
+        assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
+
+    await run_test(aioresponses, github_installation_responses, context, payload, payload["actions"], dry_run, assert_func)
 
 
 @pytest.mark.asyncio
@@ -190,20 +172,14 @@ async def test_success_with_retries(aioresponses, github_installation_responses,
 
 
 @pytest.mark.asyncio
-async def test_no_actions(github_installation_responses, context):
+async def test_no_actions(aioresponses, github_installation_responses, context):
     payload = {
         "actions": [],
         "lando_repo": "repo_name",
     }
-    _, _, _, scopes = setup_test(github_installation_responses, context, payload, [])
-
-    context.task = {"payload": payload, "scopes": scopes}
-
-    try:
-        await async_main(context)
-        assert False, "should've raised TaskVerificationError"
-    except TaskVerificationError as e:
-        assert "must provide at least one action!" in e.args[0]
+    await run_test(
+        aioresponses, github_installation_responses, context, payload, ["tag"], err=TaskVerificationError, errmsg="must provide at least one action!"
+    )
 
 
 @pytest.mark.asyncio

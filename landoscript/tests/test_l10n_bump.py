@@ -4,26 +4,15 @@ from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
 
 from landoscript.script import async_main
 
-from .conftest import assert_lando_submission_response, assert_status_response, setup_test, setup_l10n_file_responses, assert_l10n_bump_response
-
-
-def setup_treestatus_response(aioresponses, context, tree="repo_name", status="open", has_err=False):
-    url = f'{context.config["treestatus_url"]}/trees/{tree}'
-    if has_err:
-        aioresponses.get(url, status=500)
-    else:
-        resp = {
-            "result": {
-                "category": "development",
-                "log_id": 12345,
-                "message_of_the_day": "",
-                "reason": "",
-                "status": status,
-                "tags": [],
-                "tree": tree,
-            },
-        }
-        aioresponses.get(url, status=200, payload=resp)
+from .conftest import (
+    assert_lando_submission_response,
+    assert_status_response,
+    run_test,
+    setup_test,
+    setup_l10n_file_responses,
+    assert_l10n_bump_response,
+    setup_treestatus_response,
+)
 
 
 @pytest.mark.asyncio
@@ -675,16 +664,8 @@ async def test_l10n_repo_errors(aioresponses, github_installation_responses, con
         "lando_repo": "repo_name",
         "l10n_bump_info": l10n_bump_info,
     }
-    _, _, _, scopes = setup_test(github_installation_responses, context, payload, ["l10n_bump"])
     setup_treestatus_response(aioresponses, context)
-
-    context.task = {"payload": payload, "scopes": scopes}
-
-    try:
-        await async_main(context)
-        assert False, "should've raised TaskVerificationError"
-    except TaskVerificationError as e:
-        assert errmsg in e.args[0]
+    await run_test(aioresponses, github_installation_responses, context, payload, ["l10n_bump"], err=TaskVerificationError, errmsg=errmsg)
 
 
 @pytest.mark.asyncio

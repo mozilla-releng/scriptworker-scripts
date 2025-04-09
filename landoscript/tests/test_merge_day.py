@@ -1,19 +1,9 @@
 from collections import defaultdict
-import json
-from os import major
 import pytest
-from scriptworker.client import TaskVerificationError
-from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
 
 from landoscript.script import async_main
 
-from .conftest import (
-    assert_lando_submission_response,
-    assert_status_response,
-    setup_fetch_files_responses,
-    setup_test,
-    assert_merge_response,
-)
+from .conftest import run_test, setup_fetch_files_responses, assert_merge_response
 
 
 @pytest.mark.asyncio
@@ -159,7 +149,6 @@ async def test_success_bump_central(
         "merge_info": merge_info,
         "dry_run": dry_run,
     }
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["merge_day"])
 
     setup_fetch_files_responses(
         aioresponses,
@@ -175,26 +164,7 @@ async def test_success_bump_central(
         ],
     )
 
-    if not dry_run:
-        aioresponses.post(
-            submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"}
-        )
-
-        aioresponses.get(
-            status_uri,
-            status=200,
-            payload={
-                "commits": ["abcdef123"],
-                "push_id": job_id,
-                "status": "completed",
-            },
-        )
-
-    context.task = {"payload": payload, "scopes": scopes}
-    await async_main(context)
-
-    if not dry_run:
-        req = assert_lando_submission_response(aioresponses.requests, submit_uri)
+    def assert_func(req):
         assert_merge_response(
             context.config["artifact_dir"],
             req,
@@ -205,10 +175,8 @@ async def test_success_bump_central(
             expected_replacement_bumps,
             end_tag,
         )
-        assert_status_response(aioresponses.requests, status_uri)
-    else:
-        assert ("POST", submit_uri) not in aioresponses.requests
-        assert ("GET", status_uri) not in aioresponses.requests
+
+    await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], dry_run, assert_func)
 
 
 @pytest.mark.asyncio
@@ -240,7 +208,6 @@ async def test_success_bump_esr(aioresponses, github_installation_responses, con
         "lando_repo": "repo_name",
         "merge_info": merge_info,
     }
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["merge_day"])
 
     # version bump files are fetched in groups, by initial version
     initial_values_by_expected_version = defaultdict(dict)
@@ -259,30 +226,16 @@ async def test_success_bump_esr(aioresponses, github_installation_responses, con
         ],
     )
 
-    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
+    def assert_func(req):
+        assert_merge_response(
+            context.config["artifact_dir"],
+            req,
+            expected_actions,
+            initial_values,
+            expected_bumps,
+        )
 
-    aioresponses.get(
-        status_uri,
-        status=200,
-        payload={
-            "commits": ["abcdef123"],
-            "push_id": job_id,
-            "status": "completed",
-        },
-    )
-
-    context.task = {"payload": payload, "scopes": scopes}
-    await async_main(context)
-
-    req = assert_lando_submission_response(aioresponses.requests, submit_uri)
-    assert_merge_response(
-        context.config["artifact_dir"],
-        req,
-        expected_actions,
-        initial_values,
-        expected_bumps,
-    )
-    assert_status_response(aioresponses.requests, status_uri)
+    await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], assert_func=assert_func)
 
 
 @pytest.mark.asyncio
@@ -309,7 +262,6 @@ async def test_success_early_to_late_beta(aioresponses, github_installation_resp
         "lando_repo": "repo_name",
         "merge_info": merge_info,
     }
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["merge_day"])
 
     setup_fetch_files_responses(
         aioresponses,
@@ -324,32 +276,18 @@ async def test_success_early_to_late_beta(aioresponses, github_installation_resp
         ],
     )
 
-    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
+    def assert_func(req):
+        assert_merge_response(
+            context.config["artifact_dir"],
+            req,
+            expected_actions,
+            {},
+            {},
+            initial_replacement_values,
+            expected_replacement_bumps,
+        )
 
-    aioresponses.get(
-        status_uri,
-        status=200,
-        payload={
-            "commits": ["abcdef123"],
-            "push_id": job_id,
-            "status": "completed",
-        },
-    )
-
-    context.task = {"payload": payload, "scopes": scopes}
-    await async_main(context)
-
-    req = assert_lando_submission_response(aioresponses.requests, submit_uri)
-    assert_merge_response(
-        context.config["artifact_dir"],
-        req,
-        expected_actions,
-        {},
-        {},
-        initial_replacement_values,
-        expected_replacement_bumps,
-    )
-    assert_status_response(aioresponses.requests, status_uri)
+    await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], assert_func=assert_func)
 
 
 @pytest.mark.asyncio
@@ -429,7 +367,6 @@ async def test_success_central_to_beta(aioresponses, github_installation_respons
         "lando_repo": "repo_name",
         "merge_info": merge_info,
     }
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["merge_day"])
 
     # version bump files are fetched in groups, by initial version
     initial_values_by_expected_version = defaultdict(dict)
@@ -452,35 +389,21 @@ async def test_success_central_to_beta(aioresponses, github_installation_respons
         ],
     )
 
-    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
+    def assert_func(req):
+        assert_merge_response(
+            context.config["artifact_dir"],
+            req,
+            expected_actions,
+            initial_values,
+            expected_bumps,
+            initial_replacement_values,
+            expected_replacement_values,
+            end_tag,
+            base_tag,
+            target_ref,
+        )
 
-    aioresponses.get(
-        status_uri,
-        status=200,
-        payload={
-            "commits": ["abcdef123"],
-            "push_id": job_id,
-            "status": "completed",
-        },
-    )
-
-    context.task = {"payload": payload, "scopes": scopes}
-    await async_main(context)
-
-    req = assert_lando_submission_response(aioresponses.requests, submit_uri)
-    assert_merge_response(
-        context.config["artifact_dir"],
-        req,
-        expected_actions,
-        initial_values,
-        expected_bumps,
-        initial_replacement_values,
-        expected_replacement_values,
-        end_tag,
-        base_tag,
-        target_ref,
-    )
-    assert_status_response(aioresponses.requests, status_uri)
+    await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], assert_func=assert_func)
 
 
 @pytest.mark.asyncio
@@ -525,7 +448,6 @@ async def test_success_beta_to_release(aioresponses, github_installation_respons
         "lando_repo": "repo_name",
         "merge_info": merge_info,
     }
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["merge_day"])
 
     setup_fetch_files_responses(
         aioresponses,
@@ -543,35 +465,21 @@ async def test_success_beta_to_release(aioresponses, github_installation_respons
         ],
     )
 
-    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
+    def assert_func(req):
+        assert_merge_response(
+            context.config["artifact_dir"],
+            req,
+            expected_actions,
+            initial_values,
+            expected_bumps,
+            initial_replacement_values,
+            expected_replacement_values,
+            end_tag,
+            base_tag,
+            target_ref,
+        )
 
-    aioresponses.get(
-        status_uri,
-        status=200,
-        payload={
-            "commits": ["abcdef123"],
-            "push_id": job_id,
-            "status": "completed",
-        },
-    )
-
-    context.task = {"payload": payload, "scopes": scopes}
-    await async_main(context)
-
-    req = assert_lando_submission_response(aioresponses.requests, submit_uri)
-    assert_merge_response(
-        context.config["artifact_dir"],
-        req,
-        expected_actions,
-        initial_values,
-        expected_bumps,
-        initial_replacement_values,
-        expected_replacement_values,
-        end_tag,
-        base_tag,
-        target_ref,
-    )
-    assert_status_response(aioresponses.requests, status_uri)
+    await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], assert_func=assert_func)
 
 
 @pytest.mark.asyncio
@@ -609,7 +517,6 @@ async def test_success_release_to_esr(aioresponses, github_installation_response
         "merge_info": merge_info,
         "ignore_closed_tree": True,
     }
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["merge_day"])
 
     setup_fetch_files_responses(
         aioresponses,
@@ -625,31 +532,17 @@ async def test_success_release_to_esr(aioresponses, github_installation_response
         ],
     )
 
-    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
+    def assert_func(req):
+        assert_merge_response(
+            context.config["artifact_dir"],
+            req,
+            expected_actions,
+            initial_values,
+            expected_bumps,
+            initial_replacement_values,
+            expected_replacement_bumps,
+            end_tag,
+            target_ref=target_ref,
+        )
 
-    aioresponses.get(
-        status_uri,
-        status=200,
-        payload={
-            "commits": ["abcdef123"],
-            "push_id": job_id,
-            "status": "completed",
-        },
-    )
-
-    context.task = {"payload": payload, "scopes": scopes}
-    await async_main(context)
-
-    req = assert_lando_submission_response(aioresponses.requests, submit_uri)
-    assert_merge_response(
-        context.config["artifact_dir"],
-        req,
-        expected_actions,
-        initial_values,
-        expected_bumps,
-        initial_replacement_values,
-        expected_replacement_bumps,
-        end_tag,
-        target_ref=target_ref,
-    )
-    assert_status_response(aioresponses.requests, status_uri)
+    await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], assert_func=assert_func)

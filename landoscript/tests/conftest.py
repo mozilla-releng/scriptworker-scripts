@@ -6,6 +6,8 @@ import pytest
 from scriptworker.context import Context
 from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
 
+from landoscript.script import async_main
+
 pytest_plugins = ("pytest-scriptworker-client",)
 
 here = Path(__file__).parent
@@ -45,6 +47,25 @@ def privkey_file(datadir):
     return datadir / "test_private_key.pem"
 
 
+def setup_treestatus_response(aioresponses, context, tree="repo_name", status="open", has_err=False):
+    url = f'{context.config["treestatus_url"]}/trees/{tree}'
+    if has_err:
+        aioresponses.get(url, status=500)
+    else:
+        resp = {
+            "result": {
+                "category": "development",
+                "log_id": 12345,
+                "message_of_the_day": "",
+                "reason": "",
+                "status": status,
+                "tags": [],
+                "tree": tree,
+            },
+        }
+        aioresponses.get(url, status=200, payload=resp)
+
+
 def setup_test(github_installation_responses, context, payload, actions, repo="repo_name"):
     lando_repo = payload["lando_repo"]
     lando_api = context.config["lando_api"]
@@ -60,6 +81,49 @@ def setup_test(github_installation_responses, context, payload, actions, repo="r
         scopes.append(f"project:releng:lando:action:{action}")
 
     return submit_uri, status_uri, job_id, scopes
+
+
+async def run_test(
+    aioresponses, github_installation_responses, context, payload, actions, dry_run=False, assert_func=None, repo="repo_name", err=None, errmsg=""
+):
+    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, actions, repo)
+
+    if not dry_run:
+        aioresponses.post(
+            submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"}
+        )
+
+        aioresponses.get(
+            status_uri,
+            status=200,
+            payload={
+                "commits": ["abcdef123"],
+                "push_id": job_id,
+                "status": "completed",
+            },
+        )
+
+    context.task = {"payload": payload, "scopes": scopes}
+
+    # error cases and success cases are different enough that it's clearer to call
+    # `async_main` in different blocks than try to account for them both in one block.
+    if err:
+        try:
+            await async_main(context)
+            assert False, f"should've raised {err}"
+        except Exception as e:
+            assert isinstance(e, err)
+            assert errmsg in e.args[0]
+    else:
+        await async_main(context)
+        if not dry_run:
+            req = assert_lando_submission_response(aioresponses.requests, submit_uri)
+            assert_status_response(aioresponses.requests, status_uri)
+            if assert_func:
+                assert_func(req)
+        else:
+            assert ("POST", submit_uri) not in aioresponses.requests
+            assert ("GET", status_uri) not in aioresponses.requests
 
 
 def setup_fetch_files_response(aioresponses, code, initial_values={}):

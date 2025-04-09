@@ -6,7 +6,7 @@ from landoscript.script import async_main
 from landoscript.actions.version_bump import ALLOWED_BUMP_FILES
 from landoscript.util.version import _VERSION_CLASS_PER_BEGINNING_OF_PATH
 
-from .conftest import assert_lando_submission_response, assert_status_response, setup_test, setup_fetch_files_response, assert_add_commit_response
+from .conftest import assert_lando_submission_response, assert_status_response, run_test, setup_test, setup_fetch_files_response, assert_add_commit_response
 
 
 def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
@@ -228,33 +228,13 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
     ),
 )
 async def test_success_with_bumps(aioresponses, github_installation_responses, context, payload, initial_values, expected_bumps, commit_msg_strings):
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
     setup_fetch_files_response(aioresponses, 200, initial_values)
     dryrun = payload.get("dry_run", False)
 
-    if not dryrun:
-        aioresponses.post(
-            submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"}
-        )
-
-        aioresponses.get(
-            status_uri,
-            status=200,
-            payload={
-                "commits": ["abcdef123"],
-                "push_id": job_id,
-                "status": "completed",
-            },
-        )
-
-    context.task = {"payload": payload, "scopes": scopes}
-    await async_main(context)
-
-    assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
-    if not dryrun:
-        req = assert_lando_submission_response(aioresponses.requests, submit_uri)
+    def assert_func(req):
         assert_success(req, commit_msg_strings, initial_values, expected_bumps)
-        assert_status_response(aioresponses.requests, status_uri)
+
+    await run_test(aioresponses, github_installation_responses, context, payload, ["version_bump"], dryrun, assert_func)
 
 
 @pytest.mark.asyncio
@@ -410,7 +390,7 @@ async def test_failure_to_fetch_files(aioresponses, github_installation_response
         ),
     ),
 )
-async def test_bad_bumpfile(github_installation_responses, context, files, first_bad_file):
+async def test_bad_bumpfile(aioresponses, github_installation_responses, context, files, first_bad_file):
     payload = {
         "actions": ["version_bump"],
         "lando_repo": "repo_name",
@@ -419,15 +399,15 @@ async def test_bad_bumpfile(github_installation_responses, context, files, first
             "next_version": "135.0",
         },
     }
-    _, _, _, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
-
-    context.task = {"payload": payload, "scopes": scopes}
-
-    try:
-        await async_main(context)
-        assert False, "should've raised TaskVerificationError"
-    except TaskVerificationError as e:
-        assert f"{first_bad_file} is not in version bump allowlist" in e.args[0]
+    await run_test(
+        aioresponses,
+        github_installation_responses,
+        context,
+        payload,
+        ["version_bump"],
+        err=TaskVerificationError,
+        errmsg=f"{first_bad_file} is not in version bump allowlist",
+    )
 
 
 def test_no_overlaps_in_version_classes():
