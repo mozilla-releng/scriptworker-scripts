@@ -87,7 +87,7 @@ class GithubClient:
 
         await retry_async(_execute, attempts=3, retry_exceptions=(TransportQueryError,), sleeptime_kwargs={"delay_factor": 0})
 
-    async def get_files(self, files: Union[str, List[str]], branch: Optional[str] = None) -> Dict[str, str]:
+    async def get_files(self, files: Union[str, List[str]], branch: Optional[str] = None) -> Dict[str, Union[str, None]]:
         """Get the contents of the specified files.
 
         Args:
@@ -137,7 +137,15 @@ class GithubClient:
         str_query = query.substitute(owner=self.owner, repo=self.repo, fields=",".join(fields))
 
         contents = (await self._client.execute(str_query))["repository"]
-        return {k.replace(sentinel_dot, ".").replace(sentinel_slash, "/").replace(sentinel_dash, "-"): v["text"] for k, v in contents.items()}
+        ret: Dict[str, Union[str, None]] = {}
+        for k, v in contents.items():
+            if v is None:
+                ret[k] = None
+            else:
+                subbed_k = k.replace(sentinel_dot, ".").replace(sentinel_slash, "/").replace(sentinel_dash, "-")
+                ret[subbed_k] = v["text"]
+
+        return ret
 
     async def get_branch_head_oid(self, branch: str) -> str:
         """Get the revision of the tip of the given branch.
