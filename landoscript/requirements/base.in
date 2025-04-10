@@ -1,0 +1,8 @@
+aiohttp
+async-timeout
+gql
+mozilla-version
+moz.l10n
+scriptworker
+tomli
+yarl
