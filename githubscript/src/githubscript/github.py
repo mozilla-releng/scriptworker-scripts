@@ -102,6 +102,10 @@ def _get_github_release_kwargs(release_config, include_target_commitish=True):
         draft=False,
         prerelease=release_config["is_prerelease"],
     )
+
+    if release_config["release_body"] is not None:
+        release_kwargs["body"] = release_config["release_body"]
+
     if include_target_commitish:
         release_kwargs["target_commitish"] = release_config["git_revision"]
 
@@ -118,6 +122,7 @@ async def _update_release_if_needed(existing_release, release_config):
 
 
 def _does_release_need_to_be_updated(existing_release, release_config):
+    OPTIONAL_FIELDS = ("release_body",)
     should_release_be_updated = False
     for config_field, github_field in (
         # XXX `git_revision` and `target_commitish` are ignored because a github release is usually
@@ -127,10 +132,13 @@ def _does_release_need_to_be_updated(existing_release, release_config):
         # Github API doesn't expose both the branch and the commit hash on its Github release
         # enpoint and event.
         ("git_tag", "tag_name"),
+        ("release_body", "body"),
         ("release_name", "name"),
         ("is_prerelease", "prerelease"),
     ):
         target_value = release_config[config_field]
+        if target_value is None and config_field in OPTIONAL_FIELDS:
+            continue
         existing_value = getattr(existing_release, github_field, None)
         if target_value != existing_value:
             log.info(f'Field "{config_field}" differ. Expected: {target_value}. Got: {existing_value}')

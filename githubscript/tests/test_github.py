@@ -21,7 +21,15 @@ def release_config():
         "github_token": "some_secret_token",
         "release_name": "SomeProduct v1.0.0",
         "is_prerelease": False,
+        "release_body": None,
     }
+
+
+@pytest.fixture
+def release_config_with_body(release_config):
+    release_config["release_body"] = "Some body"
+
+    return release_config
 
 
 @dataclass
@@ -29,6 +37,7 @@ class _DummyRelease:
     tag_name: str = "v1.0.0"
     target_commitish: str = "some/gitbranch"
     name: str = "SomeProduct v1.0.0"
+    body: str = "Some body"
     prerelease: bool = False
 
 
@@ -106,28 +115,55 @@ async def test_get_release_from_tag():
 
 
 @pytest.mark.asyncio
-async def test_create_release(release_config):
+@pytest.mark.parametrize(
+    "release,expects_body",
+    (
+        ("release_config", False),
+        ("release_config_with_body", True),
+    ),
+)
+async def test_create_release(release, expects_body, request):
     github_repository = MagicMock()
-    await github._create_release(github_repository, release_config)
-    github_repository.create_release.assert_called_once_with(
-        tag_name="v1.0.0",
-        target_commitish="somecommithash",
-        name="SomeProduct v1.0.0",
-        draft=False,
-        prerelease=False,
-    )
+    await github._create_release(github_repository, request.getfixturevalue(release))
+
+    expected_args = {
+        "tag_name": "v1.0.0",
+        "target_commitish": "somecommithash",
+        "name": "SomeProduct v1.0.0",
+        "draft": False,
+        "prerelease": False,
+    }
+
+    if expects_body:
+        expected_args["body"] = "Some body"
+
+    github_repository.create_release.assert_called_once_with(**expected_args)
 
 
 @pytest.mark.asyncio
-async def test_edit_existing_release(release_config):
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "release,expects_body",
+    (
+        ("release_config", False),
+        ("release_config_with_body", True),
+    ),
+)
+async def test_edit_existing_release(release, expects_body, request):
     existing_release = MagicMock()
-    await github._edit_existing_release(existing_release, release_config)
-    existing_release.edit.assert_called_once_with(
-        tag_name="v1.0.0",
-        name="SomeProduct v1.0.0",
-        draft=False,
-        prerelease=False,
-    )
+    await github._edit_existing_release(existing_release, request.getfixturevalue(release))
+
+    expected_args = {
+        "tag_name": "v1.0.0",
+        "name": "SomeProduct v1.0.0",
+        "draft": False,
+        "prerelease": False,
+    }
+
+    if expects_body:
+        expected_args["body"] = "Some body"
+
+    existing_release.edit.assert_called_once_with(**expected_args)
 
 
 @pytest.mark.asyncio
@@ -211,10 +247,11 @@ async def test_update_release_if_needed(monkeypatch, release_config, update_rele
         (_DummyRelease(prerelease=True), True),
         # We don't want to update target_commitish otherwise it breaks CoT
         (_DummyRelease(target_commitish="somegithash"), False),
+        (_DummyRelease(body="once told me"), True),
     ),
 )
-def test_does_release_need_to_be_updated(release_config, existing_release, expected_result):
-    assert github._does_release_need_to_be_updated(existing_release, release_config) == expected_result
+def test_does_release_need_to_be_updated(release_config_with_body, existing_release, expected_result):
+    assert github._does_release_need_to_be_updated(existing_release, release_config_with_body) == expected_result
 
 
 @pytest.mark.asyncio

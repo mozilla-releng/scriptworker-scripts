@@ -47,7 +47,7 @@ The important entries to edit are the:
  * `payload.upstreamArtifacts`: tell where the artifacts should be taken from (you need to download and create the directories locally if you run the script outside of scriptworker)
  * `payload.artifactMap`: tell where the artifacts should be uploaded to
  * `dependencies`: need to match the `taskId` in `payload.upstreamArtifacts`.
- * `payload.gitTag`, `payload.gitRevision`, `payload.isPrerelease`, `payload.releaseName`, are the release data given to Github.
+ * `payload.gitTag`, `payload.gitRevision`, `payload.isPrerelease`, `payload.releaseName`, `payload.releaseBody` are the release data given to Github.
  * `scopes`: `project:releng:github:*`, tells which Github project should be updated and what action it will do
 
 ### run

@@ -37,6 +37,7 @@ def get_release_config(product_config, task_payload, config):
         "github_token": product_config["github_token"],
         "is_prerelease": task_payload["isPrerelease"],
         "release_name": task_payload["releaseName"],
+        "release_body": task_payload.get("releaseBody"),
     }
 
 
