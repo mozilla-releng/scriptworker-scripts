@@ -505,7 +505,6 @@ async def test_success_release_to_esr(aioresponses, github_installation_response
         "actions": ["merge_day"],
         "lando_repo": "repo_name",
         "merge_info": merge_info,
-        "ignore_closed_tree": True,
     }
 
     setup_github_graphql_responses(

@@ -414,7 +414,7 @@ def assert_merge_response(
 
         action = next(create_commit_actions)
 
-        commit_msg_strings = ["Automatic version bump"]
+        commit_msg_strings = ["Automatic version bump", "CLOSED TREE"]
         assert_add_commit_response(action, commit_msg_strings, initial_values, expected_bumps)
 
     # - `replacements` bumps

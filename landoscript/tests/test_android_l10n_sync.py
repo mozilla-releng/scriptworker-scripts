@@ -215,7 +215,6 @@ async def test_success(
         "actions": ["android_l10n_sync"],
         "lando_repo": "repo_name",
         "android_l10n_sync_info": android_l10n_sync_info,
-        "ignore_closed_tree": True,
     }
 
     setup_github_graphql_responses(

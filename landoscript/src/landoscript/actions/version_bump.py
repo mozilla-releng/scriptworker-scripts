@@ -36,7 +36,7 @@ async def run(
     public_artifact_dir: str,
     branch: str,
     version_bump_infos: list[VersionBumpInfo],
-    dontbuild: bool,
+    dontbuild: bool = True,
 ) -> LandoAction:
     """Perform version bumps on the files given in each `version_bump_info`, if necessary."""
 

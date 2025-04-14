@@ -64,6 +64,10 @@ async def async_main(context):
     if len(payload["actions"]) < 1:
         raise TaskVerificationError("must provide at least one action!")
 
+    if not any([action == "l10n_bump" for action in payload["actions"]]):
+        if "dontbuild" in payload or "ignore_closed_tree" in payload:
+            raise TaskVerificationError("dontbuild and ignore_closed_tree are only respected in l10n_bump!")
+
     os.makedirs(public_artifact_dir)
 
     lando_actions: list[lando.LandoAction] = []
@@ -78,7 +82,6 @@ async def async_main(context):
                         public_artifact_dir,
                         branch,
                         [version_bump.VersionBumpInfo(payload["version_bump_info"])],
-                        dontbuild,
                     )
                     # sometimes version bumps are no-ops
                     if version_bump_action:

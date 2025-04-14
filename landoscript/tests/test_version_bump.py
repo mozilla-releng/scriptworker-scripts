@@ -48,7 +48,7 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
             {
                 "browser/config/version.txt": "135.0",
             },
-            ["Automatic version bump", "NO BUG", "a=release"],
+            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE", "DONTBUILD"],
             id="dryrun",
         ),
         pytest.param(
@@ -66,7 +66,7 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
             {
                 "browser/config/version.txt": "135.0",
             },
-            ["Automatic version bump", "NO BUG", "a=release"],
+            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE", "DONTBUILD"],
             id="one_file_new_version",
         ),
         pytest.param(
@@ -84,7 +84,7 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
             {
                 "browser/config/version.txt": "135.0\n",
             },
-            ["Automatic version bump", "NO BUG", "a=release"],
+            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE", "DONTBUILD"],
             id="one_file_new_version_retains_newline",
         ),
         pytest.param(
@@ -102,7 +102,7 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
             {
                 "browser/config/version.txt": "134.0.1",
             },
-            ["Automatic version bump", "NO BUG", "a=release"],
+            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE", "DONTBUILD"],
             id="one_file_minor_bump",
         ),
         pytest.param(
@@ -120,7 +120,7 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
             {
                 "browser/config/version.txt": "134.0b3",
             },
-            ["Automatic version bump", "NO BUG", "a=release"],
+            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE", "DONTBUILD"],
             id="beta_bump_display",
         ),
         pytest.param(
@@ -138,7 +138,7 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
             {
                 "browser/config/version.txt": "128.2.1",
             },
-            ["Automatic version bump", "NO BUG", "a=release"],
+            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE", "DONTBUILD"],
             id="esr_bump",
         ),
         pytest.param(
@@ -156,7 +156,7 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
             {
                 "browser/config/version_display.txt": "128.2.1esr",
             },
-            ["Automatic version bump", "NO BUG", "a=release"],
+            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE", "DONTBUILD"],
             id="esr_bump_display",
         ),
         pytest.param(
@@ -185,7 +185,7 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
                 "config/milestone.txt": "135.0",
                 "mobile/android/version.txt": "135.0",
             },
-            ["Automatic version bump", "NO BUG", "a=release"],
+            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE", "DONTBUILD"],
             id="many_files_all_changed",
         ),
         pytest.param(
@@ -212,27 +212,8 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
                 "browser/config/version_display.txt": "135.0b3",
                 "mobile/android/version.txt": "135.0b3",
             },
-            ["Automatic version bump", "NO BUG", "a=release"],
+            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE", "DONTBUILD"],
             id="many_files_some_changed",
-        ),
-        pytest.param(
-            {
-                "actions": ["version_bump"],
-                "lando_repo": "repo_name",
-                "version_bump_info": {
-                    "files": ["browser/config/version.txt"],
-                    "next_version": "135.0",
-                },
-                "dontbuild": True,
-            },
-            {
-                "browser/config/version.txt": "134.0",
-            },
-            {
-                "browser/config/version.txt": "135.0",
-            },
-            ["Automatic version bump", "NO BUG", "a=release", "DONTBUILD"],
-            id="dontbuild_includes_correct_commit_message",
         ),
     ),
 )

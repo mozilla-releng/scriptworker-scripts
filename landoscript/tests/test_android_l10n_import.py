@@ -240,7 +240,6 @@ async def test_success(
         "actions": ["android_l10n_import"],
         "lando_repo": "repo_name",
         "android_l10n_import_info": android_l10n_import_info,
-        "ignore_closed_tree": True,
     }
     # done here because setup_test sets up github_installation_response too soon...argh
     from yarl import URL
