@@ -133,7 +133,7 @@ async def async_main(context):
                 for la in lando_actions:
                     log.info(la)
 
-                status_url = await lando.submit(session, config["lando_api"], lando_repo, lando_actions, config["sleeptime_callback"])
+                status_url = await lando.submit(session, config["lando_api"], config["lando_token"], lando_repo, lando_actions, config["sleeptime_callback"])
                 await lando.poll_until_complete(session, config["poll_time"], status_url)
         else:
             log.info("No lando actions to submit!")

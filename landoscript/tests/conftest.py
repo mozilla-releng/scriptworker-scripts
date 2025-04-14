@@ -19,6 +19,7 @@ def context(privkey_file, tmpdir):
     context.config = {
         "artifact_dir": tmpdir,
         "lando_api": "https://lando.fake",
+        "lando_token": "super secret",
         "lando_name_to_github_repo": {
             "repo_name": {
                 "owner": "faker",
@@ -208,6 +209,8 @@ def assert_lando_submission_response(requests, submit_uri, attempts=1):
     assert len(reqs) == attempts
     # there might be more than one in cases where we retry; we assume that
     # the requests are the same for all attempts
+    assert "Authorization" in reqs[0].kwargs["headers"]
+    assert reqs[0].kwargs["headers"]["Authorization"] == "Bearer super secret"
     return reqs[0]
 
 

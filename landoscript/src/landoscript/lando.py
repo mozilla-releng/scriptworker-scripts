@@ -25,7 +25,12 @@ def create_commit_action(commitmsg: str, diff: str) -> LandoAction:
 
 
 async def submit(
-    session: ClientSession, lando_api: str, lando_repo: str, actions: list[LandoAction], sleeptime_callback: Callable[..., Any] = calculate_sleep_time
+    session: ClientSession,
+    lando_api: str,
+    lando_token: str,
+    lando_repo: str,
+    actions: list[LandoAction],
+    sleeptime_callback: Callable[..., Any] = calculate_sleep_time,
 ) -> str:
     """Submit the provided `actions` to the given `lando_repo` through the `lando_api`."""
     url = f"{lando_api}/api/v1/{lando_repo}"
@@ -43,6 +48,8 @@ async def submit(
             kwargs={
                 "json": json,
                 "raise_for_status": True,
+                # TODO: is this a bearer token?
+                "headers": {"Authorization": f"Bearer {lando_token}"},
             },
             attempts=10,
             retry_exceptions=ClientResponseError,
