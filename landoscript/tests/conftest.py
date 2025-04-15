@@ -71,7 +71,7 @@ def setup_test(github_installation_responses, context, payload, actions, repo="r
     lando_repo = payload["lando_repo"]
     lando_api = context.config["lando_api"]
     owner = context.config["lando_name_to_github_repo"][lando_repo]["owner"]
-    submit_uri = URL(f"{lando_api}/api/v1/{lando_repo}")
+    submit_uri = URL(f"{lando_api}/api/{lando_repo}")
     job_id = 12345
     status_uri = URL(f"{lando_api}/push/{job_id}")
 
@@ -100,7 +100,7 @@ async def run_test(
             payload={
                 "commits": ["abcdef123"],
                 "push_id": job_id,
-                "status": "completed",
+                "status": "LANDED",
             },
         )
 
@@ -211,6 +211,7 @@ def assert_lando_submission_response(requests, submit_uri, attempts=1):
     # the requests are the same for all attempts
     assert "Authorization" in reqs[0].kwargs["headers"]
     assert reqs[0].kwargs["headers"]["Authorization"] == "Bearer super secret"
+    assert reqs[0].kwargs["headers"]["User-Agent"] == "Lando-User/release+landoscript@mozilla.com"
     return reqs[0]
 
 

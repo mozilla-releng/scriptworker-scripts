@@ -570,7 +570,7 @@ async def test_success(
             payload={
                 "commits": ["abcdef123"],
                 "push_id": job_id,
-                "status": "completed",
+                "status": "LANDED",
             },
         )
 

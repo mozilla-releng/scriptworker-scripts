@@ -294,7 +294,7 @@ async def test_success_with_retries(aioresponses, github_installation_responses,
         payload={
             "commits": ["abcdef123"],
             "push_id": job_id,
-            "status": "completed",
+            "status": "LANDED",
         },
     )
 

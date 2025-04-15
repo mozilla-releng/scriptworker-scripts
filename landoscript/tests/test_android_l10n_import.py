@@ -247,7 +247,7 @@ async def test_success(
     lando_repo = payload["lando_repo"]
     lando_api = context.config["lando_api"]
     owner = context.config["lando_name_to_github_repo"][lando_repo]["owner"]
-    submit_uri = URL(f"{lando_api}/api/v1/{lando_repo}")
+    submit_uri = URL(f"{lando_api}/api/{lando_repo}")
     job_id = 12345
     status_uri = URL(f"{lando_api}/push/{job_id}")
 
@@ -284,7 +284,7 @@ async def test_success(
         payload={
             "commits": ["abcdef123"],
             "push_id": job_id,
-            "status": "completed",
+            "status": "LANDED",
         },
     )
 

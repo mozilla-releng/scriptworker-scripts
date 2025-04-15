@@ -33,7 +33,7 @@ async def submit(
     sleeptime_callback: Callable[..., Any] = calculate_sleep_time,
 ) -> str:
     """Submit the provided `actions` to the given `lando_repo` through the `lando_api`."""
-    url = f"{lando_api}/api/v1/{lando_repo}"
+    url = f"{lando_api}/api/repo/{lando_repo}"
     json = {"actions": actions}
 
     log.info(f"submitting actions to lando: {actions}")
@@ -49,7 +49,10 @@ async def submit(
                 "json": json,
                 "raise_for_status": True,
                 # TODO: is this a bearer token?
-                "headers": {"Authorization": f"Bearer {lando_token}"},
+                "headers": {
+                    "Authorization": f"Bearer {lando_token}",
+                    "User-Agent": "Lando-User/release+landoscript@mozilla.com",
+                },
             },
             attempts=10,
             retry_exceptions=ClientResponseError,
@@ -80,10 +83,10 @@ async def poll_until_complete(session: ClientSession, poll_time: int, status_url
 
         if status_resp.status == 200:
             body = await status_resp.json()
-            if body.get("status") != "completed":
-                raise LandoscriptError("code is 200, status is not completed...result is unclear...failing!")
+            if body.get("status") != "LANDED":
+                raise LandoscriptError("code is 200, status is not LANDED...result is unclear...failing!")
 
-            log.info("success! got 200 response with 'completed' status")
+            log.info("success! got 200 response with 'LANDED' status")
 
             log.info("Commits are:")
             for commit in body["commits"]:

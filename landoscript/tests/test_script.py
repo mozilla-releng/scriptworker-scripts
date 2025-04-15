@@ -158,7 +158,7 @@ async def test_success_with_retries(aioresponses, github_installation_responses,
         payload={
             "commits": ["abcdef123"],
             "push_id": job_id,
-            "status": "completed",
+            "status": "LANDED",
         },
     )
 
@@ -299,7 +299,7 @@ async def test_to_submit_to_lando_no_status_url(aioresponses, github_installatio
 
 
 @pytest.mark.asyncio
-async def test_lando_polling_result_not_completed(aioresponses, github_installation_responses, context):
+async def test_lando_polling_result_not_correct(aioresponses, github_installation_responses, context):
     payload = {
         "actions": ["version_bump"],
         "lando_repo": "repo_name",
@@ -320,7 +320,7 @@ async def test_lando_polling_result_not_completed(aioresponses, github_installat
         await async_main(context)
         assert False, "should've raised LandoscriptError"
     except LandoscriptError as e:
-        assert "status is not completed" in e.args[0]
+        assert "status is not LANDED" in e.args[0]
 
 
 @pytest.mark.asyncio
@@ -344,7 +344,7 @@ async def test_lando_polling_retry_on_failure(aioresponses, github_installation_
         payload={
             "commits": ["abcdef123"],
             "push_id": job_id,
-            "status": "completed",
+            "status": "LANDED",
         },
     )
 
@@ -531,7 +531,7 @@ async def test_success_central_to_beta_merge_day(aioresponses, github_installati
         payload={
             "commits": ["abcdef123"],
             "push_id": job_id,
-            "status": "completed",
+            "status": "LANDED",
         },
     )
 
