@@ -2,6 +2,13 @@ work_dir: { "$eval": "WORK_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 github_projects:
   $switch:
+    'COT_PRODUCT == "mobile" && ENV == "prod"':
+      firefox-ios:
+        allowed_actions: ["release"]
+        github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_PROD" }
+        github_owner: mozilla-mobile
+        github_repo_name: firefox-ios
+        contact_github: true
     'COT_PRODUCT == "mobile" && ENV == "fake-prod"':
       mock:
         allowed_actions: ["release"]
@@ -9,6 +16,12 @@ github_projects:
         github_owner: non-existing-owner
         github_repo_name: non-existing-repo
         contact_github: false
+      staging-firefox-ios:
+        allowed_actions: ["release"]
+        github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
+        github_owner: mozilla-mobile
+        github_repo_name: staging-firefox-ios
+        contact_github: true
     'COT_PRODUCT == "mobile" && ENV == "dev"':
       mock:
         allowed_actions: ["release"]
@@ -16,6 +29,12 @@ github_projects:
         github_owner: non-existing-owner
         github_repo_name: non-existing-repo
         contact_github: false
+      staging-firefox-ios:
+        allowed_actions: ["release"]
+        github_token: { "$eval": "GITHUB_TOKEN_WRITE_ACCESS_STAGING" }
+        github_owner: mozilla-mobile
+        github_repo_name: staging-firefox-ios
+        contact_github: true
     'COT_PRODUCT == "xpi" && ENV == "prod"':
       mozilla-extensions/*:
         allowed_actions: ["release"]
@@ -37,5 +56,7 @@ github_projects:
 
 taskcluster_scope_prefixes:
   $switch:
+    'COT_PRODUCT == "mobile"':
+      ["project:mobile:firefox-ios:releng:github:"]
     'COT_PRODUCT == "xpi"':
       ["project:xpi:releng:github:"]
