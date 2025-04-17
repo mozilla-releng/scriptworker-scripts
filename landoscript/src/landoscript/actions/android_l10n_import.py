@@ -51,12 +51,13 @@ async def run(
         toml_contents = await l10n_github_client.get_files(toml_files)
         l10n_files: list[L10nFile] = []
 
+        missing = [fn for fn, contents in toml_contents.items() if contents is None]
+        if missing:
+            raise LandoscriptError(f"toml_file(s) {' '.join(missing)} are not present in repository")
+
         for info in android_l10n_import_info.toml_info:
             toml_file = info.toml_path
             log.info(f"processing toml file: {toml_file}")
-
-            if toml_contents[toml_file] is None:
-                raise LandoscriptError(f"toml_file '{toml_file}' is not present in repository")
 
             contents = tomllib.loads(str(toml_contents[toml_file]))
             src_file_prefix = Path(toml_file).parent
