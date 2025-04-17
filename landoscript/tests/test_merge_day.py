@@ -13,7 +13,7 @@ from .conftest import fetch_files_payload, run_test, assert_merge_response, setu
         pytest.param(
             {
                 "end_tag": "FIREFOX_NIGHTLY_{major_version}_END",
-                "to_branch": "central",
+                "to_branch": "main",
                 "replacements": [
                     [
                         "services/sync/modules/constants.sys.mjs",
@@ -52,12 +52,12 @@ from .conftest import fetch_files_payload, run_test, assert_merge_response, setu
             # end tag, bump configs, bump replacements
             ["tag", "create-commit", "create-commit"],
             "FIREFOX_NIGHTLY_137_END",
-            id="bump_central",
+            id="bump_main",
         ),
         pytest.param(
             {
                 "end_tag": "FIREFOX_NIGHTLY_{major_version}_END",
-                "to_branch": "central",
+                "to_branch": "main",
                 "replacements": [
                     [
                         "services/sync/modules/constants.sys.mjs",
@@ -96,12 +96,12 @@ from .conftest import fetch_files_payload, run_test, assert_merge_response, setu
             # end tag, bump configs, bump replacements
             ["tag", "create-commit", "create-commit"],
             "FIREFOX_NIGHTLY_137_END",
-            id="bump_central_dry_run",
+            id="bump_main_dry_run",
         ),
         pytest.param(
             {
                 "end_tag": "FIREFOX_NIGHTLY_{major_version}_END",
-                "to_branch": "central",
+                "to_branch": "main",
                 "regex_replacements": [
                     [
                         "browser/extensions/webcompat/manifest.json",
@@ -130,7 +130,7 @@ from .conftest import fetch_files_payload, run_test, assert_merge_response, setu
         ),
     ),
 )
-async def test_success_bump_central(
+async def test_success_bump_main(
     aioresponses,
     github_installation_responses,
     context,
@@ -285,12 +285,12 @@ async def test_success_early_to_late_beta(aioresponses, github_installation_resp
 
 
 @pytest.mark.asyncio
-async def test_success_central_to_beta(aioresponses, github_installation_responses, context):
+async def test_success_main_to_beta(aioresponses, github_installation_responses, context):
     merge_info = {
         "end_tag": "FIREFOX_BETA_{major_version}_END",
         "base_tag": "FIREFOX_BETA_{major_version}_BASE",
         "to_branch": "beta",
-        "from_branch": "central",
+        "from_branch": "main",
         "replacements": [
             [
                 "browser/config/mozconfigs/linux64/l10n-mozconfig",
@@ -324,7 +324,7 @@ async def test_success_central_to_beta(aioresponses, github_installation_respons
         "fetch_version_from": "browser/config/version.txt",
     }
     # despite it looking weird, these beta looking versions _are_ the correct
-    # "before" versions after we've "merged" central into beta
+    # "before" versions after we've "merged" main into beta
     initial_values = {
         "browser/config/version.txt": "140.0a1",
         "browser/config/version_display.txt": "140.0a1",
@@ -355,7 +355,7 @@ async def test_success_central_to_beta(aioresponses, github_installation_respons
     expected_actions = ["tag", "tag", "merge-onto", "create-commit", "create-commit"]
     base_tag = "FIREFOX_BETA_140_BASE"
     end_tag = "FIREFOX_BETA_139_END"
-    target_ref = "central"
+    target_ref = "main"
     payload = {
         "actions": ["merge_day"],
         "lando_repo": "repo_name",
