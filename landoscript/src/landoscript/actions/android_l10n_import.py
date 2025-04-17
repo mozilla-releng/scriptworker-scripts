@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Self
 
-import tomli
+import tomllib
 
 from landoscript.errors import LandoscriptError
 from landoscript.lando import LandoAction, create_commit_action
@@ -58,7 +58,7 @@ async def run(
             if toml_contents[toml_file] is None:
                 raise LandoscriptError(f"toml_file '{toml_file}' is not present in repository")
 
-            contents = tomli.loads(str(toml_contents[toml_file]))
+            contents = tomllib.loads(str(toml_contents[toml_file]))
             src_file_prefix = Path(toml_file).parent
             dst_file_prefix = Path(info.dest_path)
             if "**" in contents["paths"][0]["reference"]:
