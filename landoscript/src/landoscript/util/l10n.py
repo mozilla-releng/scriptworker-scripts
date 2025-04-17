@@ -1,10 +1,11 @@
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TypedDict
 
 from moz.l10n.paths import L10nConfigPaths, get_android_locale
 
 
-class L10nFile(TypedDict):
+@dataclass
+class L10nFile:
     src_name: str
     dst_name: str
 

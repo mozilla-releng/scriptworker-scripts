@@ -1,6 +1,6 @@
 import logging
 import os.path
-from typing import TypedDict
+from dataclasses import dataclass
 
 from gql.transport.exceptions import TransportError
 from mozilla_version.version import BaseVersion
@@ -26,7 +26,8 @@ ALLOWED_BUMP_FILES = (
 )
 
 
-class VersionBumpInfo(TypedDict):
+@dataclass(frozen=True)
+class VersionBumpInfo:
     next_version: str
     files: list[str]
 
@@ -43,15 +44,15 @@ async def run(
     diff = ""
 
     for version_bump_info in version_bump_infos:
-        next_version = version_bump_info["next_version"]
+        next_version = version_bump_info.next_version
 
-        for file in version_bump_info["files"]:
+        for file in version_bump_info.files:
             if file not in ALLOWED_BUMP_FILES:
                 raise TaskVerificationError("{} is not in version bump allowlist".format(file))
 
         try:
             log.info("fetching bump files from github")
-            orig_files = await github_client.get_files(version_bump_info["files"], branch)
+            orig_files = await github_client.get_files(version_bump_info.files, branch)
         except TransportError as e:
             raise LandoscriptError("couldn't retrieve bump files from github") from e
 

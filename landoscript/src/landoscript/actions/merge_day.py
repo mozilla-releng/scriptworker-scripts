@@ -2,8 +2,10 @@ import logging
 import os.path
 import re
 import string
+from copy import deepcopy
+from dataclasses import dataclass, field
 from datetime import date
-from typing import TypedDict
+from typing import Self
 
 import attr
 from mozilla_version.gecko import GeckoVersion
@@ -21,32 +23,41 @@ from scriptworker_client.github_client import GithubClient, defaultdict
 log = logging.getLogger(__name__)
 
 
-class VersionFile(TypedDict):
+@dataclass(frozen=True)
+class VersionFile:
     filename: str
-    new_suffix: str
-    version_bump: str
+    new_suffix: str = ""
+    version_bump: str = ""
 
 
-class MergeInfo(TypedDict):
+@dataclass(frozen=True)
+class MergeInfo:
     to_branch: str
-    from_branch: str
-    base_tag: str
-    end_tag: str
-    merge_old_head: bool
     fetch_version_from: str
-    touch_clobber_file: bool
-    version_files: list[VersionFile]
-    replacements: list[list[str]]
-    regex_replacements: list[list[str]]
+    from_branch: str = ""
+    base_tag: str = ""
+    end_tag: str = ""
+    merge_old_head: bool = False
+    touch_clobber_file: bool = True
+    version_files: list[VersionFile] = field(default_factory=list)
+    replacements: list[list[str]] = field(default_factory=list)
+    regex_replacements: list[list[str]] = field(default_factory=list)
+
+    @classmethod
+    def from_payload_data(cls, payload_data) -> Self:
+        # copy to avoid modifying the original
+        kwargs = deepcopy(payload_data)
+        kwargs["version_files"] = [VersionFile(**v) for v in payload_data.get("version_files", [])]
+        return cls(**kwargs)
 
 
 async def run(github_client: GithubClient, public_artifact_dir: str, merge_info: MergeInfo) -> list[LandoAction]:
-    to_branch = merge_info["to_branch"]
-    from_branch = merge_info.get("from_branch")
-    end_tag = merge_info.get("end_tag")
-    base_tag = merge_info.get("base_tag")
-    merge_old_head = merge_info.get("merge_old_head")
-    version_file = merge_info["fetch_version_from"]
+    to_branch = merge_info.to_branch
+    from_branch = merge_info.from_branch
+    end_tag = merge_info.end_tag
+    base_tag = merge_info.base_tag
+    merge_old_head = merge_info.merge_old_head
+    version_file = merge_info.fetch_version_from
     actions = []
 
     log.info("Starting merge day operations!")
@@ -88,14 +99,14 @@ async def run(github_client: GithubClient, public_artifact_dir: str, merge_info:
         merge_msg = f"Update {to_branch} to {from_branch}"
         actions.append({"action": "merge-onto", "target": from_branch, "strategy": "theirs", "message": merge_msg})
 
-    if merge_info.get("version_files"):
+    if merge_info.version_files:
         log.info("Performing version bumps")
         files_by_new_suffix = defaultdict(list)
         bump_types = set()
-        for vf in merge_info["version_files"]:
-            if bump_type := vf.get("version_bump"):
+        for vf in merge_info.version_files:
+            if bump_type := vf.version_bump:
                 bump_types.add(bump_type)
-            files_by_new_suffix[vf.get("new_suffix", "")].append(vf["filename"])
+            files_by_new_suffix[vf.new_suffix].append(vf.filename)
 
         if len(bump_types) == 0:
             bump_types.add("")
@@ -109,12 +120,7 @@ async def run(github_client: GithubClient, public_artifact_dir: str, merge_info:
             # _not_ happen. ie: we may end up with a new suffix but the same version
             # number.
             next_version = get_new_version(bump_version, new_suffix, bump_type)
-            version_bump_infos.append(
-                {
-                    "files": files,
-                    "next_version": next_version,
-                }
-            )
+            version_bump_infos.append(version_bump.VersionBumpInfo(files=files, next_version=next_version))
 
         log.info(f"version_bump_infos is: {version_bump_infos}")
         actions.append(
@@ -128,8 +134,8 @@ async def run(github_client: GithubClient, public_artifact_dir: str, merge_info:
         )
 
     # process replacements, regex-replacements, and update clobber file
-    replacements = merge_info.get("replacements", [])
-    regex_replacements = merge_info.get("regex_replacements", [])
+    replacements = merge_info.replacements
+    regex_replacements = merge_info.regex_replacements
     diff = ""
     if replacements or regex_replacements:
         log.info("Performing replacements and regex_replacements")
@@ -149,7 +155,7 @@ async def run(github_client: GithubClient, public_artifact_dir: str, merge_info:
 
             diff += diff_contents(str(orig_contents[fn]), new_contents[fn], fn)
 
-    if merge_info.get("touch_clobber_file", True):
+    if merge_info.touch_clobber_file:
         log.info("Touching clobber file")
         orig_clobber_file = (await github_client.get_files("CLOBBER", to_branch))["CLOBBER"]
         if orig_clobber_file is None:

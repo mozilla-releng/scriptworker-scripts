@@ -34,6 +34,10 @@ def validate_scopes(scopes: set, lando_repo: str, actions: list[str]):
         raise scriptworker.client.TaskVerificationError(f"required scope(s) not present: {', '.join(missing)}")
 
 
+def sanity_check_payload(payload):
+    pass
+
+
 # `context` is kept explicitly untyped because all of its members are typed as
 # Optional. This never happens in reality (only in tests), but as things stand
 # at the time of writing, it means we need noisy and unnecessary None checking
@@ -79,7 +83,7 @@ async def async_main(context):
                         gh_client,
                         public_artifact_dir,
                         branch,
-                        [version_bump.VersionBumpInfo(payload["version_bump_info"])],
+                        [version_bump.VersionBumpInfo(**payload["version_bump_info"])],
                     )
                     # sometimes version bumps are no-ops
                     if version_bump_action:
@@ -88,7 +92,7 @@ async def async_main(context):
                     tag_actions = tag.run(payload["tags"])
                     lando_actions.extend(tag_actions)
                 elif action == "merge_day":
-                    merge_day_actions = await merge_day.run(gh_client, public_artifact_dir, payload["merge_info"])
+                    merge_day_actions = await merge_day.run(gh_client, public_artifact_dir, merge_day.MergeInfo.from_payload_data(payload["merge_info"]))
                     lando_actions.extend(merge_day_actions)
                 elif action == "l10n_bump":
                     if not ignore_closed_tree:
@@ -100,21 +104,22 @@ async def async_main(context):
                             log.info("Treestatus is closed; skipping l10n bump.")
                             continue
 
+                    l10n_bump_info = [l10n_bump.L10nBumpInfo.from_payload_data(lbi) for lbi in payload["l10n_bump_info"]]
                     l10n_bump_actions = await l10n_bump.run(
-                        gh_client, context.config["github_config"], public_artifact_dir, branch, payload["l10n_bump_info"], dontbuild, ignore_closed_tree
+                        gh_client, context.config["github_config"], public_artifact_dir, branch, l10n_bump_info, dontbuild, ignore_closed_tree
                     )
                     # sometimes nothing has changed!
                     if l10n_bump_actions:
                         lando_actions.extend(l10n_bump_actions)
                 elif action == "android_l10n_import":
-                    android_l10n_import_info = payload["android_l10n_import_info"]
+                    android_l10n_import_info = android_l10n_import.AndroidL10nImportInfo.from_payload_data(payload["android_l10n_import_info"])
                     import_action = await android_l10n_import.run(
                         gh_client, context.config["github_config"], public_artifact_dir, android_l10n_import_info, branch
                     )
                     if import_action:
                         lando_actions.append(import_action)
                 elif action == "android_l10n_sync":
-                    android_l10n_sync_info = payload["android_l10n_sync_info"]
+                    android_l10n_sync_info = android_l10n_sync.AndroidL10nSyncInfo.from_payload_data(payload["android_l10n_sync_info"])
                     import_action = await android_l10n_sync.run(gh_client, public_artifact_dir, android_l10n_sync_info, branch)
                     if import_action:
                         lando_actions.append(import_action)

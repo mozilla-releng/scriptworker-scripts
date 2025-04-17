@@ -1,7 +1,9 @@
 import logging
 import os.path
+from copy import deepcopy
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TypedDict
+from typing import Self
 
 import tomli
 
@@ -15,26 +17,34 @@ from scriptworker_client.github_client import GithubClient
 log = logging.getLogger(__name__)
 
 
-class TomlInfo(TypedDict):
+@dataclass(frozen=True)
+class TomlInfo:
     toml_path: str
 
 
-class AndroidL10nSyncInfo(TypedDict):
-    from_repo_url: str
+@dataclass(frozen=True)
+class AndroidL10nSyncInfo:
     from_branch: str
     toml_info: list[TomlInfo]
+
+    @classmethod
+    def from_payload_data(cls, payload_data) -> Self:
+        # copy to avoid modifying the original
+        kwargs = deepcopy(payload_data)
+        kwargs["toml_info"] = [TomlInfo(**ti) for ti in payload_data["toml_info"]]
+        return cls(**kwargs)
 
 
 async def run(github_client: GithubClient, public_artifact_dir: str, android_l10n_sync_info: AndroidL10nSyncInfo, to_branch: str) -> LandoAction:
     log.info("Preparing to sync android l10n changesets.")
-    from_branch = android_l10n_sync_info["from_branch"]
+    from_branch = android_l10n_sync_info.from_branch
 
-    toml_files = [info["toml_path"] for info in android_l10n_sync_info["toml_info"]]
+    toml_files = [info.toml_path for info in android_l10n_sync_info.toml_info]
     toml_contents = await github_client.get_files(toml_files, branch=from_branch)
     l10n_files: list[L10nFile] = []
 
-    for info in android_l10n_sync_info["toml_info"]:
-        toml_file = info["toml_path"]
+    for info in android_l10n_sync_info.toml_info:
+        toml_file = info.toml_path
         log.info(f"processing toml file: {toml_file}")
 
         if toml_contents[toml_file] is None:
@@ -55,32 +65,32 @@ async def run(github_client: GithubClient, public_artifact_dir: str, android_l10
             l10n_files.append(L10nFile(src_name=str(src_name), dst_name=str(dst_name)))
 
     # fetch l10n_files from `from_branch` in the gecko repo
-    src_files = [f["src_name"] for f in l10n_files]
+    src_files = [f.src_name for f in l10n_files]
     log.info(f"fetching updated files from l10n repository: {src_files}")
     new_files = await github_client.get_files(src_files, branch=from_branch)
 
     # fetch l10n_files from gecko repo
-    dst_files = [f["dst_name"] for f in l10n_files]
+    dst_files = [f.dst_name for f in l10n_files]
     log.info(f"fetching original files from l10n repository: {dst_files}")
     orig_files = await github_client.get_files(dst_files, branch=to_branch)
 
     diff = ""
     for l10n_file in l10n_files:
-        if l10n_file["dst_name"] not in orig_files:
-            log.warning(f"WEIRD: {l10n_file['dst_name']} not in dst_files, continuing anyways...")
+        if l10n_file.dst_name not in orig_files:
+            log.warning(f"WEIRD: {l10n_file.dst_name} not in dst_files, continuing anyways...")
             continue
 
-        if l10n_file["src_name"] not in new_files:
-            log.warning(f"WEIRD: {l10n_file['src_name']} not in src_files, continuing anyways...")
+        if l10n_file.src_name not in new_files:
+            log.warning(f"WEIRD: {l10n_file.src_name} not in src_files, continuing anyways...")
             continue
 
-        orig_file = orig_files[l10n_file["dst_name"]]
-        new_file = new_files[l10n_file["src_name"]]
+        orig_file = orig_files[l10n_file.dst_name]
+        new_file = new_files[l10n_file.src_name]
         if orig_file == new_file:
             log.warning(f"old and new contents of {new_file} are the same, skipping bump...")
             continue
 
-        diff += diff_contents(orig_file, new_file, l10n_file["dst_name"])
+        diff += diff_contents(orig_file, new_file, l10n_file.dst_name)
 
     if not diff:
         return {}

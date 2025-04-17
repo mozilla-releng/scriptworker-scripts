@@ -18,7 +18,6 @@
                 "version_files",
                 "replacements",
                 "to_branch",
-                "to_repo",
                 "merge_old_head"
             ],
             "properties": {
@@ -86,18 +85,6 @@
                     "type": "string",
                     "examples": [
                         "beta"
-                    ]
-                },
-                "from_repo": {
-                    "type": "string",
-                    "examples": [
-                        "https://hg.mozilla.org/releases/mozilla-beta"
-                    ]
-                },
-                "to_repo": {
-                    "type": "string",
-                    "examples": [
-                        "https://hg.mozilla.org/releases/mozilla-beta"
                     ]
                 },
                 "merge_old_head": {
@@ -274,7 +261,9 @@
                         "required": [
                             "path",
                             "name",
-                            "platform_configs"
+                            "platform_configs",
+                            "l10n_repo_url",
+                            "l10n_repo_target_branch"
                         ]
                     }
                 },

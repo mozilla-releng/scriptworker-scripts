@@ -2,10 +2,11 @@ import json
 import logging
 import os.path
 import pprint
-from typing import TypedDict
+from copy import deepcopy
+from dataclasses import dataclass, field
+from typing import Self
 
 from gql.transport.exceptions import TransportError
-from scriptworker.client import TaskVerificationError
 
 from landoscript.errors import LandoscriptError
 from landoscript.lando import LandoAction, create_commit_action
@@ -17,18 +18,27 @@ from scriptworker_client.github_client import GithubClient
 log = logging.getLogger(__name__)
 
 
-class PlatformConfig(TypedDict):
+@dataclass(frozen=True)
+class PlatformConfig:
     platforms: list[str]
     path: str
 
 
-class L10nBumpInfo(TypedDict):
+@dataclass(frozen=True)
+class L10nBumpInfo:
     path: str
     name: str
     l10n_repo_url: str
     l10n_repo_target_branch: str
-    ignore_config: dict[str, list[str]]
     platform_configs: list[PlatformConfig]
+    ignore_config: dict[str, list[str]] = field(default_factory=dict)
+
+    @classmethod
+    def from_payload_data(cls, payload_data) -> Self:
+        # copy to avoid modifying the original
+        kwargs = deepcopy(payload_data)
+        kwargs["platform_configs"] = [PlatformConfig(**pc) for pc in payload_data["platform_configs"]]
+        return cls(**kwargs)
 
 
 async def run(
@@ -44,20 +54,16 @@ async def run(
 
     lando_actions = []
     for bump_config in l10n_bump_infos:
-        log.info(f"considering {bump_config['name']}")
-        l10n_repo_url = bump_config.get("l10n_repo_url")
-        l10n_repo_target_branch = bump_config.get("l10n_repo_target_branch")
-        if not l10n_repo_url:
-            raise TaskVerificationError("Cannot bump l10n revisions from github repo without an l10n_repo_url")
-        if not l10n_repo_target_branch:
-            raise TaskVerificationError("l10n_repo_target_branch must be present in bump_config!")
+        log.info(f"considering {bump_config.name}")
+        l10n_repo_url = bump_config.l10n_repo_url
+        l10n_repo_target_branch = bump_config.l10n_repo_target_branch
 
         l10n_owner, l10n_repo = extract_github_repo_owner_and_name(l10n_repo_url)
 
         async with GithubClient(github_config, l10n_owner, l10n_repo) as l10n_github_client:
             # fetch initial files from github
-            platform_config_files = [pc["path"] for pc in bump_config["platform_configs"]]
-            files = [bump_config["path"], *platform_config_files]
+            platform_config_files = [pc.path for pc in bump_config.platform_configs]
+            files = [bump_config.path, *platform_config_files]
             try:
                 log.info(f"fetching bump files from github: {files}")
                 orig_files = await github_client.get_files(files, branch)
@@ -69,10 +75,10 @@ async def run(
                 log.debug(f"{fn}:")
                 log.debug(contents)
 
-            if orig_files[bump_config["path"]] is None:
-                raise LandoscriptError(f"{bump_config['path']} does not exist, cannot perform bump!")
+            if orig_files[bump_config.path] is None:
+                raise LandoscriptError(f"{bump_config.path} does not exist, cannot perform bump!")
 
-            old_contents = json.loads(str(orig_files[bump_config["path"]]))
+            old_contents = json.loads(str(orig_files[bump_config.path]))
             orig_platform_files = {k: v for k, v in orig_files.items() if k in platform_config_files}
 
             # get new revision
@@ -81,30 +87,30 @@ async def run(
             log.info(f"new l10n revision is {new_revision}")
 
             # build new versions of files
-            new_contents = build_revision_dict(bump_config.get("ignore_config", {}), bump_config["platform_configs"], orig_platform_files, new_revision)
-            log.debug(f"new contents of of {bump_config['path']} are:")
+            new_contents = build_revision_dict(bump_config.ignore_config, bump_config.platform_configs, orig_platform_files, new_revision)
+            log.debug(f"new contents of of {bump_config.path} are:")
             log.debug(new_contents)
 
             if old_contents == new_contents:
-                log.warning(f"old and new contents of {bump_config['path']} are the same, skipping bump...")
+                log.warning(f"old and new contents of {bump_config.path} are the same, skipping bump...")
                 continue
 
             # make diff
             diff = diff_contents(
                 json.dumps(old_contents, sort_keys=True, indent=4, separators=(",", ": ")),
                 json.dumps(new_contents, sort_keys=True, indent=4, separators=(",", ": ")),
-                bump_config["path"],
+                bump_config.path,
             )
 
-            with open(os.path.join(public_artifact_dir, f"l10n-bump-{bump_config['name']}.diff"), "w+") as f:
+            with open(os.path.join(public_artifact_dir, f"l10n-bump-{bump_config.name}.diff"), "w+") as f:
                 f.write(diff)
 
-            log.info(f"adding l10n bump commit for {bump_config['name']}! diff contents are:")
+            log.info(f"adding l10n bump commit for {bump_config.name}! diff contents are:")
             log_file_contents(diff)
 
             # create commit message
             locale_map = build_locale_map(old_contents, new_contents)
-            commitmsg = build_commit_message(bump_config["name"], locale_map, dontbuild, ignore_closed_tree)
+            commitmsg = build_commit_message(bump_config.name, locale_map, dontbuild, ignore_closed_tree)
 
             # create action
             lando_actions.append(create_commit_action(commitmsg, diff))
@@ -112,7 +118,7 @@ async def run(
     return lando_actions
 
 
-def build_platform_dict(ignore_config, platform_configs, orig_platform_files):
+def build_platform_dict(ignore_config, platform_configs: list[PlatformConfig], orig_platform_files):
     """Build a dictionary of locale to list of platforms.
 
     Args:
@@ -132,12 +138,12 @@ def build_platform_dict(ignore_config, platform_configs, orig_platform_files):
     """
     platform_dict = {}
     for platform_config in platform_configs:
-        orig_contents = orig_platform_files[platform_config["path"]]
+        orig_contents = orig_platform_files[platform_config.path]
         for locale in orig_contents.splitlines():
             if locale in ("en-US",):
                 continue
             existing_platforms = set(platform_dict.get(locale, {}).get("platforms", []))
-            platforms = set(platform_config["platforms"])
+            platforms = set(platform_config.platforms)
             ignore_platforms = set(ignore_config.get(locale, []))
             platforms = (platforms | existing_platforms) - ignore_platforms
             platform_dict[locale] = {"platforms": sorted(list(platforms))}
@@ -146,7 +152,7 @@ def build_platform_dict(ignore_config, platform_configs, orig_platform_files):
 
 
 # build_revision_dict_github {{{1
-def build_revision_dict(ignore_config, platform_configs, orig_platform_files, revision) -> dict:
+def build_revision_dict(ignore_config, platform_configs: list[PlatformConfig], orig_platform_files, revision) -> dict:
     """Add l10n revision information to the ``platform_dict``. All locales will
     be bumped to head revision of the branch given in `l10n_repo_target_branch`
     in the repository that `client` is configured with.

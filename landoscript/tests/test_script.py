@@ -447,9 +447,7 @@ async def test_success_central_to_beta_merge_day(aioresponses, github_installati
     ]
     merge_info = {
         "end_tag": "FIREFOX_BETA_{major_version}_END",
-        "to_repo": "https://hg.mozilla.org/releases/mozilla-beta",
         "base_tag": "FIREFOX_BETA_{major_version}_BASE",
-        "from_repo": "https://hg.mozilla.org/mozilla-central",
         "to_branch": "beta",
         "from_branch": "central",
         "replacements": [
