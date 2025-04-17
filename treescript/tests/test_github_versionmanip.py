@@ -2,7 +2,7 @@ import base64
 
 import pytest
 from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
-from mozilla_version.mobile import MobileVersion
+from mozilla_version.ios import MobileIosVersion
 from yarl import URL
 from pytest_scriptworker_client import get_files_payload
 
@@ -53,8 +53,8 @@ async def test_bump_version_mobile(aioresponses, github_client):
 @pytest.mark.parametrize(
     "file, source_repo, expectation, expected_result",
     (
-        ("version.txt", "https://github.com/mozilla-mobile/firefox-ios", does_not_raise(), MobileVersion),
-        ("version.txt", "https://github.com/mozilla-mobile/staging-firefox-ios", does_not_raise(), MobileVersion),
+        ("version.txt", "https://github.com/mozilla-mobile/firefox-ios", does_not_raise(), MobileIosVersion),
+        ("version.txt", "https://github.com/mozilla-mobile/staging-firefox-ios", does_not_raise(), MobileIosVersion),
         ("version.txt", "https://github.com/mozilla-mobile/firefox-android", pytest.raises(TreeScriptError), None),
     ),
 )
