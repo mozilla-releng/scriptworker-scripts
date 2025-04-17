@@ -3,9 +3,10 @@
 import base64
 import logging
 from collections import defaultdict
+from pathlib import Path
 from string import Template
 from textwrap import dedent
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from gql.transport.exceptions import TransportQueryError
 from simple_github import AppClient
@@ -173,3 +174,123 @@ class GithubClient:
             raise UnknownBranchError(f"branch '{branch}' not found in repo!")
 
         return repo["object"]["oid"]
+
+    async def get_file_listing(self, path: str = "", branch: Optional[str] = None, depth_per_query=10) -> List[str]:
+        """Get the recursive file and directory listings of the given path on
+        the given branch, `depth_per_query` levels deep at a time.
+
+        Args:
+            path (str): The path, relative to the root of the repository, to
+                fetch file listings for. Fetches the listings for the entire
+                repository if not given.
+            branch (str): The branch to find file listings for. If not given,
+                `HEAD` is used.
+            depth_per_query (int): The number of directories deep to query
+                with each request to the GraphQL API. Repositories containing
+                very large numbers of files or directories will need to use
+                lower `depth_per_query` values to avoid timeouts.
+        """
+
+        branch = branch or "HEAD"
+
+        query = Template(
+            dedent(
+                """
+            query RepoFiles {
+              repository(owner: "$owner", name: "$repo") {
+                object(expression: "$branch:$path") {
+                  $file_expr
+                }
+              }
+            }
+                """
+            )
+        )
+        leaf_expr = dedent(
+            """
+                    ... on Tree {
+                      entries {
+                        name
+                        type
+                      }
+                    }
+                    """
+        )
+        recursive_expr = Template(
+            dedent(
+                """
+                    ... on Tree {
+                      entries {
+                        name
+                        type
+                        object {
+                          $obj_expr
+                        }
+                      }
+                    }
+                    """
+            )
+        )
+        file_expr = leaf_expr
+        for _ in range(depth_per_query - 1):
+            file_expr = recursive_expr.substitute(obj_expr=file_expr)
+
+        str_query = query.substitute(owner=self.owner, repo=self.repo, branch=branch, path=path, file_expr=file_expr)
+        # Fetch all of the file listings in `path` up to `depth_per_query`
+        resp = await self._client.execute(str_query)
+
+        # Process the returing entries
+        entries = resp["repository"]["object"].get("entries")
+        files, refetches = self._process_file_listings(entries)
+        # Any subtrees that were not fully traversed will be returned in `refetches`
+        # We need to refetch data starting at each of these subtrees to ensure we
+        # don't miss anything.
+        for refetch in refetches:
+            for deep_file in await self.get_file_listing(str(refetch), branch, depth_per_query):
+                # Any files returned be a nested call need to have some path munging done.
+
+                # First we strip off the last part of the subtree we're fetching because
+                # it will already be included in the files returned.
+                prefix = str(refetch.parent)
+                # Then we combine the proper prefix with each returned file, giving us
+                # the full path to the file from the root of the repository.
+                files.append(f"{prefix}/{deep_file}")
+
+        return files
+
+    def _process_file_listings(self, entries: List[Dict[str, Any]], prefix: Path = Path("")) -> Tuple[List[str], List[Path]]:
+        """Process the `entries` from a response from a `get_file_listings` query.
+
+        Args:
+            entries (List): A list of entries returned from `get_file_listings` query.
+            prefix (Path): A prefix to apply to each entry. This should be the same as
+                the `path` given to `get_file_listings` in order to ensure paths are correct.
+
+        Returns: A tuple of `files` and `refetches`. Files are a list of all `blob` entries
+            found. Refetches are a list of all `tree` entries found that whose contents
+            were not in the `entries` given. Both of these lists returned paths relative to
+            `prefix`.
+        """
+
+        files = []
+        refetches = []
+        for entry in entries:
+            name = prefix / entry["name"]
+            if entry["type"] == "blob":
+                # blobs are just files, easy!
+                files.append(str(name))
+            elif entry["type"] == "tree":
+                # trees are directories.
+                if "object" in entry:
+                    # if there's an `object` in the entry it means we've fetched the
+                    # directory contents; we just need to pull out its files & refetches
+                    files_, refetches_ = self._process_file_listings(entry["object"].get("entries", []), name)
+                    files.extend(files_)
+                    refetches.extend(refetches_)
+                else:
+                    # if there's no `object` in the entry it means this directory
+                    # was deep enough in the query that its contents were not fetched
+                    # if the caller wants them, it will need to requery for them.
+                    refetches.append(name)
+
+        return files, refetches

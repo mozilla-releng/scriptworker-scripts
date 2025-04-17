@@ -1,5 +1,6 @@
 import base64
 from pathlib import Path
+from string import Template
 from textwrap import dedent
 
 import pytest
@@ -214,3 +215,290 @@ async def test_get_branch_head_oid_branch_not_found(aioresponses, github_client)
 
     with pytest.raises(UnknownBranchError, match="branch 'branchy' not found in repo!"):
         await github_client.get_branch_head_oid("branchy")
+
+
+@pytest.mark.asyncio
+async def test_get_repository_files(aioresponses, github_client):
+    branch = "main"
+    expected = [
+        "file1",
+        "file2",
+        "a/b/bfile1",
+        "a/b/c/d/e/deepfile1",
+    ]
+
+    # we expect more than one request because of the deeply nested file
+    aioresponses.post(
+        GITHUB_GRAPHQL_ENDPOINT,
+        status=200,
+        payload={
+            "data": {
+                "repository": {
+                    "object": {
+                        "entries": [
+                            {
+                                "name": "file1",
+                                "type": "blob",
+                                "object": {},
+                            },
+                            {
+                                "name": "file2",
+                                "type": "blob",
+                                "object": {},
+                            },
+                            {
+                                "name": "a",
+                                "type": "tree",
+                                "object": {
+                                    "entries": [
+                                        {
+                                            "name": "b",
+                                            "type": "tree",
+                                            "object": {
+                                                "entries": [
+                                                    {
+                                                        "name": "bfile1",
+                                                        "type": "blob",
+                                                        "object": {},
+                                                    },
+                                                    {
+                                                        "name": "c",
+                                                        "type": "tree",
+                                                        "object": {
+                                                            "entries": [
+                                                                {
+                                                                    "name": "d",
+                                                                    "type": "tree",
+                                                                }
+                                                            ]
+                                                        },
+                                                    },
+                                                ],
+                                            },
+                                        },
+                                    ]
+                                },
+                            },
+                        ]
+                    }
+                }
+            }
+        },
+    )
+    aioresponses.post(
+        GITHUB_GRAPHQL_ENDPOINT,
+        status=200,
+        payload={
+            "data": {
+                "repository": {
+                    "object": {
+                        "entries": [
+                            {
+                                "name": "d",
+                                "type": "tree",
+                                "object": {
+                                    "entries": [{"name": "e", "type": "tree", "object": {"entries": [{"name": "deepfile1", "type": "blob", "object": {}}]}}]
+                                },
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+    )
+
+    result = await github_client.get_file_listing(branch=branch, depth_per_query=4)
+    assert result == expected
+
+    aioresponses.assert_called()
+
+    key = ("POST", URL(GITHUB_GRAPHQL_ENDPOINT))
+    first_request = aioresponses.requests[key][-2][1]["json"]
+    second_request = aioresponses.requests[key][-1][1]["json"]
+
+    assert first_request == {
+        "query": Template(
+            dedent(
+                f"""
+            query RepoFiles {{
+              repository(owner: "$owner", name: "$repo") {{
+                object(expression: "main:") {{
+                  ... on Tree {{
+                    entries {{
+                      name
+                      type
+                      object {{
+                        ... on Tree {{
+                          entries {{
+                            name
+                            type
+                            object {{
+                              ... on Tree {{
+                                entries {{
+                                  name
+                                  type
+                                  object {{
+                                    ... on Tree {{
+                                      entries {{
+                                        name
+                                        type
+                                      }}
+                                    }}
+                                  }}
+                                }}
+                              }}
+                            }}
+                          }}
+                        }}
+                      }}
+                    }}
+                  }}
+                }}
+              }}
+            }}
+            """
+            ).strip(),
+        ).substitute(owner=github_client.owner, repo=github_client.repo)
+    }
+    assert second_request == {
+        "query": Template(
+            dedent(
+                f"""
+            query RepoFiles {{
+              repository(owner: "$owner", name: "$repo") {{
+                object(expression: "main:a/b/c/d") {{
+                  ... on Tree {{
+                    entries {{
+                      name
+                      type
+                      object {{
+                        ... on Tree {{
+                          entries {{
+                            name
+                            type
+                            object {{
+                              ... on Tree {{
+                                entries {{
+                                  name
+                                  type
+                                  object {{
+                                    ... on Tree {{
+                                      entries {{
+                                        name
+                                        type
+                                      }}
+                                    }}
+                                  }}
+                                }}
+                              }}
+                            }}
+                          }}
+                        }}
+                      }}
+                    }}
+                  }}
+                }}
+              }}
+            }}
+            """
+            ).strip(),
+        ).substitute(owner=github_client.owner, repo=github_client.repo)
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_repository_files_with_initial_subtree(aioresponses, github_client):
+    branch = "main"
+    expected = [
+        "a/b/file",
+    ]
+
+    # we expect more than one request because of the deeply nested file
+    aioresponses.post(
+        GITHUB_GRAPHQL_ENDPOINT,
+        status=200,
+        payload={
+            "data": {
+                "repository": {
+                    "object": {
+                        "entries": [
+                            {
+                                "name": "a",
+                                "type": "tree",
+                                "object": {
+                                    "entries": [
+                                        {
+                                            "name": "b",
+                                            "type": "tree",
+                                            "object": {
+                                                "entries": [
+                                                    {
+                                                        "name": "file",
+                                                        "type": "blob",
+                                                        "object": {},
+                                                    },
+                                                ],
+                                            },
+                                        },
+                                    ]
+                                },
+                            },
+                        ]
+                    }
+                }
+            }
+        },
+    )
+
+    result = await github_client.get_file_listing("a/b", branch=branch, depth_per_query=4)
+    assert result == expected
+
+    aioresponses.assert_called()
+
+    key = ("POST", URL(GITHUB_GRAPHQL_ENDPOINT))
+    first_request = aioresponses.requests[key][-1][1]["json"]
+
+    assert first_request == {
+        "query": Template(
+            dedent(
+                f"""
+            query RepoFiles {{
+              repository(owner: "$owner", name: "$repo") {{
+                object(expression: "main:a/b") {{
+                  ... on Tree {{
+                    entries {{
+                      name
+                      type
+                      object {{
+                        ... on Tree {{
+                          entries {{
+                            name
+                            type
+                            object {{
+                              ... on Tree {{
+                                entries {{
+                                  name
+                                  type
+                                  object {{
+                                    ... on Tree {{
+                                      entries {{
+                                        name
+                                        type
+                                      }}
+                                    }}
+                                  }}
+                                }}
+                              }}
+                            }}
+                          }}
+                        }}
+                      }}
+                    }}
+                  }}
+                }}
+              }}
+            }}
+            """
+            ).strip(),
+        ).substitute(owner=github_client.owner, repo=github_client.repo)
+    }
