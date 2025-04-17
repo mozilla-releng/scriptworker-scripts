@@ -633,9 +633,9 @@ mozilla-repo-urls==0.1.1 \
     --hash=sha256:30510d3519479aa70211145d0ac9cf6e2fadcb8d30fa3b196bb957bd773502ba \
     --hash=sha256:7364da790751db2a060eb45adbf1d7db89a145ed279ba235f3425db9dd255915
     # via taskcluster-taskgraph
-mozilla-version==3.1.0 \
-    --hash=sha256:3a9463ebcf2249dc8bcf504e246b6b5977c902dfa819de31602e10bce032ed93 \
-    --hash=sha256:f798e716da9063608a0b49ca1ec0a51b73ac810c3cc8a4bcc2c461df902b147c
+mozilla-version==3.2.0 \
+    --hash=sha256:5825d94ae5e859df30414a24c190aed34fbc6d7ecbd7b20f194d78eee02f4a22 \
+    --hash=sha256:b2a1ce11d261ce4f83cc1dff482e43a101a9c1e05c5b08ab63041c6c3dd794a6
     # via -r requirements/base.in
 multidict==6.3.2 \
     --hash=sha256:01489b0c3592bb9d238e5690e9566db7f77a5380f054b57077d2c4deeaade0eb \
