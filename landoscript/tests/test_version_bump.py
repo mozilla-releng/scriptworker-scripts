@@ -281,7 +281,7 @@ async def test_success_with_bumps(aioresponses, github_installation_responses, c
     ),
 )
 async def test_success_with_retries(aioresponses, github_installation_responses, context, payload, initial_values, expected_bumps, commit_msg_strings):
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
+    submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
     setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
 
     aioresponses.post(submit_uri, status=500)
@@ -328,7 +328,7 @@ async def test_success_with_retries(aioresponses, github_installation_responses,
     ),
 )
 async def test_success_without_bumps(aioresponses, github_installation_responses, context, payload, initial_values):
-    submit_uri, status_uri, _, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
+    submit_uri, status_uri, _, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
     setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
 
     context.task = {"payload": payload, "scopes": scopes}
@@ -348,7 +348,7 @@ async def test_failure_to_fetch_files(aioresponses, github_installation_response
             "next_version": "135.0",
         },
     }
-    _, _, _, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
+    _, _, _, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
 
     # 5 attempts is hardcoded deeper than we can reasonable override it; so
     # just expect it

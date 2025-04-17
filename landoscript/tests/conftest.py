@@ -20,13 +20,6 @@ def context(privkey_file, tmpdir):
         "artifact_dir": tmpdir,
         "lando_api": "https://lando.fake",
         "lando_token": "super secret",
-        "lando_name_to_github_repo": {
-            "repo_name": {
-                "owner": "faker",
-                "repo": "fake_repo",
-                "branch": "fake_branch",
-            }
-        },
         "github_config": {
             "app_id": 12345,
             "privkey_file": privkey_file,
@@ -67,13 +60,24 @@ def setup_treestatus_response(aioresponses, context, tree="repo_name", status="o
         aioresponses.get(url, status=200, payload=resp)
 
 
-def setup_test(github_installation_responses, context, payload, actions, repo="repo_name"):
+def setup_test(aioresponses, github_installation_responses, context, payload, actions, repo="repo_name"):
     lando_repo = payload["lando_repo"]
     lando_api = context.config["lando_api"]
-    owner = context.config["lando_name_to_github_repo"][lando_repo]["owner"]
-    submit_uri = URL(f"{lando_api}/api/{lando_repo}")
+    owner = "faker"
+    repo_info_uri = URL(f"{lando_api}/api/repoinfo/{repo}")
+    submit_uri = URL(f"{lando_api}/api/repo/{lando_repo}")
     job_id = 12345
     status_uri = URL(f"{lando_api}/push/{job_id}")
+
+    aioresponses.get(
+        repo_info_uri,
+        status=200,
+        payload={
+            "repo_url": f"https://github.com/{owner}/{repo}",
+            "branch_name": "fake_branch",
+            "scm_level": "whatever",
+        },
+    )
 
     github_installation_responses(owner)
 
@@ -87,7 +91,7 @@ def setup_test(github_installation_responses, context, payload, actions, repo="r
 async def run_test(
     aioresponses, github_installation_responses, context, payload, actions, should_submit=True, assert_func=None, repo="repo_name", err=None, errmsg=""
 ):
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, actions, repo)
+    submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, actions, repo)
 
     if should_submit:
         aioresponses.post(

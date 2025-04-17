@@ -3,10 +3,3 @@ artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 lando_api: { "$eval": "LANDO_API" }
 lando_token: { "$eval": "LANDO_TOKEN" }
-# maps the repo+branch portion of lando URLs to github repo information
-# TODO: switch this to lookup in lando when that API exists
-lando_name_to_github_repo:
-  autoland:
-    owner: mozilla-firefox
-    repo: firefox
-    branch: autoland

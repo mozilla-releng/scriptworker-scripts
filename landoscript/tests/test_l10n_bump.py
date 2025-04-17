@@ -545,7 +545,7 @@ async def test_success(
         "dontbuild": dontbuild,
         "ignore_closed_tree": ignore_closed_tree,
     }
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["l10n_bump"])
+    submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["l10n_bump"])
     setup_treestatus_response(aioresponses, context)
 
     # because the github graphql endpoint is generic we need to make sure we create
@@ -693,7 +693,7 @@ async def test_tree_is_closed_noop(aioresponses, github_installation_responses, 
         ],
         "ignore_closed_tree": False,
     }
-    submit_uri, status_uri, _, scopes = setup_test(github_installation_responses, context, payload, ["l10n_bump"])
+    submit_uri, status_uri, _, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["l10n_bump"])
     setup_treestatus_response(aioresponses, context, status="closed")
 
     context.task = {"payload": payload, "scopes": scopes}

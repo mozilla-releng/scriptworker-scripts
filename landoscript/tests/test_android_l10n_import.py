@@ -246,8 +246,9 @@ async def test_success(
 
     lando_repo = payload["lando_repo"]
     lando_api = context.config["lando_api"]
-    owner = context.config["lando_name_to_github_repo"][lando_repo]["owner"]
-    submit_uri = URL(f"{lando_api}/api/{lando_repo}")
+    owner = "faker"
+    repo_info_uri = URL(f"{lando_api}/api/repoinfo/repo_name")
+    submit_uri = URL(f"{lando_api}/api/repo/{lando_repo}")
     job_id = 12345
     status_uri = URL(f"{lando_api}/push/{job_id}")
 
@@ -270,6 +271,16 @@ async def test_success(
         get_file_listing_payload(file_listing_files),
         # string values in the android l10n repository
         fetch_files_payload(android_l10n_values),
+    )
+
+    aioresponses.get(
+        repo_info_uri,
+        status=200,
+        payload={
+            "repo_url": f"https://github.com/{owner}/repo_name",
+            "branch_name": "fake_branch",
+            "scm_level": "whatever",
+        },
     )
 
     github_installation_responses(owner)

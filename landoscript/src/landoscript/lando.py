@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import logging
 from pprint import pprint
-from typing import Any, Callable
+from typing import Any, Callable, Tuple
 
 from aiohttp import ClientResponseError, ClientSession
 from async_timeout import timeout
@@ -74,7 +74,10 @@ async def poll_until_complete(session: ClientSession, poll_time: int, status_url
         await asyncio.sleep(poll_time)
 
         log.info(f"polling lando for status: {status_url}")
-        status_resp = await session.get(status_url)
+        status_resp = await session.get(
+            status_url,
+            headers={"User-Agent": "Lando-User/release+landoscript@mozilla.com"},
+        )
 
         # just retry if something went wrong...
         if not status_resp.ok:
@@ -93,3 +96,27 @@ async def poll_until_complete(session: ClientSession, poll_time: int, status_url
                 log.info(commit)
 
             break
+
+
+async def get_repo_info(session: ClientSession, lando_api: str, lando_repo: str) -> Tuple[str, str]:
+    """Returns the URL and branch name for the given `lando_repo`, as provided
+    by the `lando_api`."""
+    url = f"{lando_api}/api/repoinfo/{lando_repo}"
+
+    log.info(f"looking up repo info for {lando_repo}")
+    async with timeout(30):
+        resp = await retry_async(
+            session.get,
+            args=(url,),
+            kwargs={
+                "raise_for_status": True,
+                "headers": {
+                    "User-Agent": "Lando-User/release+landoscript@mozilla.com",
+                },
+            },
+        )
+
+        repo_info = await resp.json()
+        log.info(f"found repo info: {repo_info}")
+
+        return (repo_info["repo_url"], repo_info["branch_name"])

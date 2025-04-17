@@ -145,7 +145,7 @@ async def test_tag_and_bump(aioresponses, github_installation_responses, context
     ),
 )
 async def test_success_with_retries(aioresponses, github_installation_responses, context, payload, initial_values, expected_bumps, commit_msg_strings):
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
+    submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
     setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
 
     aioresponses.post(submit_uri, status=500)
@@ -227,7 +227,7 @@ async def test_no_actions(aioresponses, github_installation_responses, context):
         ),
     ),
 )
-async def test_missing_scopes(context, scopes, missing):
+async def test_missing_scopes(aioresponses, github_installation_responses, context, scopes, missing):
     payload = {
         "actions": ["tag", "version_bump"],
         "lando_repo": "repo_name",
@@ -236,6 +236,8 @@ async def test_missing_scopes(context, scopes, missing):
             "next_version": "135.0",
         },
     }
+
+    setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
 
     context.task = {"payload": payload, "scopes": scopes}
 
@@ -259,7 +261,7 @@ async def test_failure_to_submit_to_lando_500(aioresponses, github_installation_
         },
     }
     initial_values = {"browser/config/version.txt": "134.0"}
-    submit_uri, _, _, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
+    submit_uri, _, _, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
     setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
 
     for _ in range(10):
@@ -285,7 +287,7 @@ async def test_to_submit_to_lando_no_status_url(aioresponses, github_installatio
         },
     }
     initial_values = {"browser/config/version.txt": "134.0"}
-    submit_uri, _, _, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
+    submit_uri, _, _, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
     setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
     aioresponses.post(submit_uri, status=202, payload={})
 
@@ -309,7 +311,7 @@ async def test_lando_polling_result_not_correct(aioresponses, github_installatio
         },
     }
     initial_values = {"browser/config/version.txt": "134.0"}
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
+    submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
     setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
     aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
     aioresponses.get(status_uri, status=200, payload={})
@@ -334,7 +336,7 @@ async def test_lando_polling_retry_on_failure(aioresponses, github_installation_
         },
     }
     initial_values = {"browser/config/version.txt": "134.0"}
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["version_bump"])
+    submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
     setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
     aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
     aioresponses.get(status_uri, status=500, payload={})
@@ -489,7 +491,7 @@ async def test_success_central_to_beta_merge_day(aioresponses, github_installati
         "merge_info": merge_info,
         "ignore_closed_tree": True,
     }
-    submit_uri, status_uri, job_id, scopes = setup_test(github_installation_responses, context, payload, ["merge_day", "l10n_bump"])
+    submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["merge_day", "l10n_bump"])
 
     # version bump files are fetched in groups, by initial version
     initial_values_by_expected_version = defaultdict(dict)

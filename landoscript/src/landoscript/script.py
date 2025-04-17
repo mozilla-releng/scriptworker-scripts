@@ -8,6 +8,7 @@ from scriptworker.exceptions import TaskVerificationError
 from landoscript import lando
 from landoscript.actions import android_l10n_import, android_l10n_sync, l10n_bump, merge_day, tag, version_bump
 from landoscript.treestatus import is_tree_open
+from scriptworker_client.github import extract_github_repo_owner_and_name
 from scriptworker_client.github_client import GithubClient
 
 log = logging.getLogger(__name__)
@@ -38,40 +39,37 @@ def validate_scopes(scopes: set, lando_repo: str, actions: list[str]):
 # at the time of writing, it means we need noisy and unnecessary None checking
 # to avoid linter complaints.
 async def async_main(context):
-    config = context.config
-    payload = context.task["payload"]
-    scopes = set(context.task["scopes"])
-    artifact_dir = config["artifact_dir"]
-    public_artifact_dir = os.path.join(artifact_dir, "public", "build")
-
-    # Note: `lando_repo` is not necessarily the same as the repository's name
-    # on Github.
-    lando_repo = payload["lando_repo"]
-    dontbuild = payload.get("dontbuild", False)
-    ignore_closed_tree = payload.get("ignore_closed_tree", False)
-
-    # pull owner, repo, and branch from config
-    # TODO: replace this with a lookup through the lando API when that API exists
-    log.info(f"looking up repository details for lando repo: {lando_repo}")
-    repo_details = context.config["lando_name_to_github_repo"][lando_repo]
-    owner = repo_details["owner"]
-    repo = repo_details["repo"]
-    branch = repo_details["branch"]
-    log.info(f"Got owner: {owner}, repo: {repo}, branch: {branch}")
-
-    # validate scopes - these raise if there's any scope issues
-    validate_scopes(scopes, lando_repo, payload["actions"])
-    if len(payload["actions"]) < 1:
-        raise TaskVerificationError("must provide at least one action!")
-
-    if not any([action == "l10n_bump" for action in payload["actions"]]):
-        if "dontbuild" in payload or "ignore_closed_tree" in payload:
-            raise TaskVerificationError("dontbuild and ignore_closed_tree are only respected in l10n_bump!")
-
-    os.makedirs(public_artifact_dir)
-
-    lando_actions: list[lando.LandoAction] = []
     async with aiohttp.ClientSession() as session:
+        config = context.config
+        payload = context.task["payload"]
+        scopes = set(context.task["scopes"])
+        artifact_dir = config["artifact_dir"]
+        public_artifact_dir = os.path.join(artifact_dir, "public", "build")
+
+        # Note: `lando_repo` is not necessarily the same as the repository's name
+        # on Github.
+        lando_api = config["lando_api"]
+        lando_repo = payload["lando_repo"]
+        dontbuild = payload.get("dontbuild", False)
+        ignore_closed_tree = payload.get("ignore_closed_tree", False)
+
+        # pull owner, repo, and branch from config
+        repo_url, branch = await lando.get_repo_info(session, lando_api, lando_repo)
+        owner, repo = extract_github_repo_owner_and_name(repo_url)
+        log.info(f"Got owner: {owner}, repo: {repo}, branch: {branch}")
+
+        # validate scopes - these raise if there's any scope issues
+        validate_scopes(scopes, lando_repo, payload["actions"])
+        if len(payload["actions"]) < 1:
+            raise TaskVerificationError("must provide at least one action!")
+
+        if not any([action == "l10n_bump" for action in payload["actions"]]):
+            if "dontbuild" in payload or "ignore_closed_tree" in payload:
+                raise TaskVerificationError("dontbuild and ignore_closed_tree are only respected in l10n_bump!")
+
+        os.makedirs(public_artifact_dir)
+
+        lando_actions: list[lando.LandoAction] = []
         async with GithubClient(context.config["github_config"], owner, repo) as gh_client:
             for action in payload["actions"]:
                 log.info(f"processing action: {action}")
@@ -133,7 +131,7 @@ async def async_main(context):
                 for la in lando_actions:
                     log.info(la)
 
-                status_url = await lando.submit(session, config["lando_api"], config["lando_token"], lando_repo, lando_actions, config["sleeptime_callback"])
+                status_url = await lando.submit(session, lando_api, config["lando_token"], lando_repo, lando_actions, config["sleeptime_callback"])
                 await lando.poll_until_complete(session, config["poll_time"], status_url)
         else:
             log.info("No lando actions to submit!")
