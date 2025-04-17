@@ -157,8 +157,10 @@ def get_file_listing_payload(paths):
         type_ = "blob" if len(parts) == 1 else "tree"
         obj = {}
         if type_ == "tree":
-            # this obviously does not handle multiple files in the same directory
-            # properly; this is being ignored until the case comes up
+            # Note: this does not handle multiple files in the same directory
+            # properly (we'll only end up with an entry for the last file seen).
+            # This is being ignored to avoid complicating this code until
+            # an actual use case for it comes up.
             obj["entries"] = [make_entry(parts[1])]
         return {
             "name": parts[0],
