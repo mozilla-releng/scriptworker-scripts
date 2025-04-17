@@ -251,6 +251,28 @@ async def test_missing_scopes(aioresponses, github_installation_responses, conte
 
 
 @pytest.mark.asyncio
+async def test_dontbuild_properly_errors(aioresponses, github_installation_responses, context):
+    payload = {"actions": ["tag"], "lando_repo": "repo_name", "tags": ["FIREFOX_139_0_RELEASE"], "dontbuild": True}
+    await run_test(
+        aioresponses, github_installation_responses, context, payload, ["tag"], err=TaskVerificationError, errmsg="dontbuild is only respected in l10n_bump"
+    )
+
+
+@pytest.mark.asyncio
+async def test_ignore_closed_tree_properly_errors(aioresponses, github_installation_responses, context):
+    payload = {"actions": ["tag"], "lando_repo": "repo_name", "tags": ["FIREFOX_139_0_RELEASE"], "ignore_closed_tree": True}
+    await run_test(
+        aioresponses,
+        github_installation_responses,
+        context,
+        payload,
+        ["tag"],
+        err=TaskVerificationError,
+        errmsg="ignore_closed_tree is only respected in l10n_bump and android_l10n_sync",
+    )
+
+
+@pytest.mark.asyncio
 async def test_failure_to_submit_to_lando_500(aioresponses, github_installation_responses, context):
     payload = {
         "actions": ["version_bump"],
