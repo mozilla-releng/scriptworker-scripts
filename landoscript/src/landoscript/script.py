@@ -142,7 +142,7 @@ async def async_main(context):
             log.info("No lando actions to submit!")
 
 
-def main(config_path: str = ""):
+def main(config_path: str | None = None):
     return scriptworker.client.sync_main(async_main, config_path=config_path, default_config=get_default_config())
 
 
