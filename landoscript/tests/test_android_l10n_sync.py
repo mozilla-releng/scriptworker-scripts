@@ -68,7 +68,7 @@ def assert_success(req, initial_values, expected_bumps):
     (
         pytest.param(
             {
-                "from_branch": "central",
+                "from_branch": "main",
                 "toml_info": [
                     {
                         "toml_path": "mobile/android/fenix/l10n.toml",
@@ -103,7 +103,7 @@ def assert_success(req, initial_values, expected_bumps):
         ),
         pytest.param(
             {
-                "from_branch": "central",
+                "from_branch": "main",
                 "toml_info": [
                     {
                         "toml_path": "mobile/android/fenix/l10n.toml",
@@ -138,7 +138,7 @@ def assert_success(req, initial_values, expected_bumps):
         ),
         pytest.param(
             {
-                "from_branch": "central",
+                "from_branch": "main",
                 "toml_info": [
                     {
                         "toml_path": "mobile/android/fenix/l10n.toml",
@@ -173,7 +173,7 @@ def assert_success(req, initial_values, expected_bumps):
         ),
         pytest.param(
             {
-                "from_branch": "central",
+                "from_branch": "main",
                 "toml_info": [
                     {
                         "toml_path": "mobile/android/fenix/l10n.toml",

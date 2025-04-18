@@ -357,9 +357,9 @@ async def test_lando_polling_retry_on_failure(aioresponses, github_installation_
 
 
 @pytest.mark.asyncio
-async def test_success_central_to_beta_merge_day(aioresponses, github_installation_responses, context):
+async def test_success_main_to_beta_merge_day(aioresponses, github_installation_responses, context):
     # despite it looking weird, these beta looking versions _are_ the correct
-    # "before" versions after we've "merged" the central into beta
+    # "before" versions after we've "merged" the main into beta
     initial_values = {
         "browser/config/version.txt": "139.0a1",
         "browser/config/version_display.txt": "139.0a1",
@@ -390,7 +390,7 @@ async def test_success_central_to_beta_merge_day(aioresponses, github_installati
     expected_actions = ["tag", "tag", "merge-onto", "create-commit", "create-commit", "create-commit", "create-commit"]
     base_tag = "FIREFOX_BETA_140_BASE"
     end_tag = "FIREFOX_BETA_139_END"
-    target_ref = "central"
+    target_ref = "main"
     initial_l10n_changesets = {
         "Firefox l10n changesets": {
             "revision": "abcdef",
@@ -449,7 +449,7 @@ async def test_success_central_to_beta_merge_day(aioresponses, github_installati
         "end_tag": "FIREFOX_BETA_{major_version}_END",
         "base_tag": "FIREFOX_BETA_{major_version}_BASE",
         "to_branch": "beta",
-        "from_branch": "central",
+        "from_branch": "main",
         "replacements": [
             [
                 "browser/config/mozconfigs/linux64/l10n-mozconfig",
