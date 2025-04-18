@@ -1,12 +1,14 @@
 import pytest
-from scriptworker_client.github_client import TransportQueryError
 
+from landoscript.script import async_main
 from tests.conftest import (
     assert_add_commit_response,
     get_file_listing_payload,
     run_test,
     setup_github_graphql_responses,
     fetch_files_payload,
+    setup_test,
+    setup_treestatus_response,
 )
 
 ac_l10n_toml = """
@@ -215,8 +217,10 @@ async def test_success(
         "actions": ["android_l10n_sync"],
         "lando_repo": "repo_name",
         "android_l10n_sync_info": android_l10n_sync_info,
+        "ignore_closed_tree": False,
     }
 
+    setup_treestatus_response(aioresponses, context, status="open")
     setup_github_graphql_responses(
         aioresponses,
         # toml files needed before fetching anything else
@@ -246,3 +250,34 @@ async def test_success(
         should_submit = True
 
     await run_test(aioresponses, github_installation_responses, context, payload, ["android_l10n_sync"], should_submit, assert_func)
+
+
+@pytest.mark.asyncio
+async def test_tree_is_closed_noop(aioresponses, github_installation_responses, context):
+    payload = {
+        "actions": ["android_l10n_sync"],
+        "lando_repo": "repo_name",
+        "android_l10n_sync_info": {
+            "from_branch": "main",
+            "toml_info": [
+                {
+                    "toml_path": "mobile/android/fenix/l10n.toml",
+                },
+                {
+                    "toml_path": "mobile/android/focus-android/l10n.toml",
+                },
+                {
+                    "toml_path": "mobile/android/android-components/l10n.toml",
+                },
+            ],
+        },
+        "ignore_closed_tree": False,
+    }
+    submit_uri, status_uri, _, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["android_l10n_sync"])
+    setup_treestatus_response(aioresponses, context, status="closed")
+
+    context.task = {"payload": payload, "scopes": scopes}
+    await async_main(context)
+
+    assert ("POST", submit_uri) not in aioresponses.requests
+    assert ("GET", status_uri) not in aioresponses.requests
