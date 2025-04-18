@@ -80,6 +80,7 @@ tasks:
             - bitrisescript/docker.d
             - bouncerscript/docker.d
             - githubscript/docker.d
+            - landoscript/docker.d
             - pushapkscript/docker.d
             - pushflatpakscript/docker.d
             - pushmsixscript/docker.d
@@ -92,6 +93,11 @@ tasks:
             - iscript
             - scriptworker_client
             - vendored/mozbuild
+    landoscript:
+        python-versions: [311]
+        resources:
+            - landoscript
+            - scriptworker_client
     notarization_poller:
         python-versions: [38]
         resources:

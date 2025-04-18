@@ -1,0 +1,309 @@
+{
+    "title": "Landoscript task schema",
+    "type": "object",
+    "definitions": {
+        "hg_mozilla_uri": {
+            "type": "string",
+            "format": "uri",
+            "title": "The Mozilla URI Schema",
+            "default": "",
+            "examples": [
+                "https://hg.mozilla.org/mozilla-unified"
+            ],
+            "pattern": "^(https://hg.mozilla.org/.*)$"
+        },
+        "merge_day_payload": {
+            "type": "object",
+            "required": [
+                "version_files",
+                "replacements",
+                "to_branch",
+                "merge_old_head"
+            ],
+            "properties": {
+                "fetch_version_from": {
+                    "type": "string",
+                    "description": "File path to query for version information, used in tags.",
+                    "default": "browser/config/version.txt",
+                    "examples": [
+                        "browser/config/version.txt"
+                    ]
+                },
+                "version_files": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "filename"
+                        ],
+                        "properties": {
+                            "filename": {
+                                "type": "string",
+                                "description": "Path to filename containing a version."
+                            },
+                            "new_suffix": {
+                                "type": "string",
+                                "description": "Replace the current suffix (b1, a1, esr) with this string. Empty is valid."
+                            },
+                            "version_bump": {
+                                "type": "string",
+                                "enum": [
+                                    "major",
+                                    "minor"
+                                ],
+                                "description": "Increment either the major or minor version number, or neither if empty"
+                            }
+                        }
+                    }
+                },
+                "replacements": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                        "type": "array",
+                        "minItems": 3,
+                        "maxItems": 3,
+                        "items": {
+                            "type": "string"
+                        },
+                        "examples": [
+                            [
+                                "browser/config/mozconfigs/linux32/l10n-mozconfig",
+                                "ac_add_options --with-branding=browser/branding/nightly",
+                                "ac_add_options --enable-official-branding"
+                            ]
+                        ]
+                    }
+                },
+                "from_branch": {
+                    "type": "string",
+                    "examples": [
+                        "central"
+                    ]
+                },
+                "to_branch": {
+                    "type": "string",
+                    "examples": [
+                        "beta"
+                    ]
+                },
+                "merge_old_head": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "incr_major_version": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Control whether the major version number should be incremented"
+                },
+                "base_tag": {
+                    "type": "string",
+                    "examples": [
+                        "FIREFOX_BETA_{major_version}_BASE"
+                    ],
+                    "pattern": "^(.*{major_version}.*)$"
+                },
+                "end_tag": {
+                    "type": "string",
+                    "examples": [
+                        "FIREFOX_BETA_{major_version}_END"
+                    ],
+                    "pattern": "^(.*{major_version}.*)$"
+                }
+            }
+        }
+    },
+    "properties": {
+        "dependencies": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "payload": {
+            "type": "object",
+            "properties": {
+                "tag_info": {
+                    "type": "object",
+                    "properties": {
+                        "tags": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "revision": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "tags",
+                        "revision"
+                    ]
+                },
+                "version_bump_info": {
+                    "type": "object",
+                    "properties": {
+                        "next_version": {
+                            "type": "string"
+                        },
+                        "files": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": [
+                        "next_version",
+                        "files"
+                    ]
+                },
+                "android_l10n_import_info": {
+                    "type": "object",
+                    "properties": {
+                        "from_repo_url": {
+                            "type": "string"
+                        },
+                        "toml_info": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "toml_path": {
+                                        "type": "string"
+                                    },
+                                    "dest_path": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "toml_path",
+                                    "dest_path"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "from_repo_url",
+                        "toml_info"
+                    ]
+                },
+                "android_l10n_sync_info": {
+                    "type": "object",
+                    "properties": {
+                        "from_repo_url": {
+                            "type": "string"
+                        },
+                        "from_branch": {
+                            "type": "string"
+                        },
+                        "toml_info": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "toml_path": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "toml_path"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "from_repo_url",
+                        "from_branch",
+                        "toml_info"
+                    ]
+                },
+                "l10n_bump_info": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "path": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "l10n_repo_url": {
+                                "type": "string"
+                            },
+                            "l10n_repo_target_branch": {
+                                "type": "string"
+                            },
+                            "ignore_config": {
+                                "type": "object"
+                            },
+                            "platform_configs": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "required": [
+                            "path",
+                            "name",
+                            "platform_configs",
+                            "l10n_repo_url",
+                            "l10n_repo_target_branch"
+                        ]
+                    }
+                },
+                "merge_info": {
+                    "$ref": "#/definitions/merge_day_payload"
+                },
+                "lando_repo": {
+                    "type": "string",
+                    "description": "A short repo identifier used in Lando API URLs. Note that this is _not_ necessarily the same as the repository's name on GitHub (but it can be used to look that up)."
+                },
+                "dry_run": {
+                    "type": "boolean"
+                },
+                "dontbuild": {
+                    "type": "boolean"
+                },
+                "ignore_closed_tree": {
+                    "type": "boolean"
+                },
+                "actions": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "tag",
+                            "version_bump",
+                            "l10n_bump",
+                            "l10n_bump_github",
+                            "merge_day",
+                            "android_l10n_import",
+                            "android_l10n_sync"
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "required": [
+        "payload"
+    ]
+}
