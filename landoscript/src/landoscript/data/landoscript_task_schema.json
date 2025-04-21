@@ -202,9 +202,6 @@
                 "android_l10n_sync_info": {
                     "type": "object",
                     "properties": {
-                        "from_repo_url": {
-                            "type": "string"
-                        },
                         "from_branch": {
                             "type": "string"
                         },
@@ -226,7 +223,6 @@
                         }
                     },
                     "required": [
-                        "from_repo_url",
                         "from_branch",
                         "toml_info"
                     ]
