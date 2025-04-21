@@ -140,10 +140,10 @@ class GithubClient:
         contents = (await self._client.execute(str_query))["repository"]
         ret: Dict[str, Union[str, None]] = {}
         for k, v in contents.items():
+            subbed_k = k.replace(sentinel_dot, ".").replace(sentinel_slash, "/").replace(sentinel_dash, "-")
             if v is None:
-                ret[k] = None
+                ret[subbed_k] = None
             else:
-                subbed_k = k.replace(sentinel_dot, ".").replace(sentinel_slash, "/").replace(sentinel_dash, "-")
                 ret[subbed_k] = v["text"]
 
         return ret
