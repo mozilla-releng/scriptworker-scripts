@@ -28,6 +28,7 @@ def context(privkey_file, tmpdir):
         "sleeptime_callback": lambda _: 0,
         "treestatus_url": "https://treestatus.fake",
     }
+
     return context
 
 
