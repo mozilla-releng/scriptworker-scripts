@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -48,3 +49,19 @@ def github_installation_responses(aioresponses):
         )
 
     return inner
+
+
+def get_files_payload(file_contents={}):
+    if file_contents:
+        payload = {"data": {"repository": {}}}
+
+        for file, contents in file_contents.items():
+            hash_ = "a" + hashlib.md5(file.encode()).hexdigest()
+            if contents is None:
+                payload["data"]["repository"][hash_] = None
+            else:
+                payload["data"]["repository"][hash_] = {"text": contents}
+    else:
+        payload = {}
+
+    return payload
