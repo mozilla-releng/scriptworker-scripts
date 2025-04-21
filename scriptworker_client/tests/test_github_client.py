@@ -1,4 +1,5 @@
 import base64
+import hashlib
 from pathlib import Path
 from string import Template
 from textwrap import dedent
@@ -99,9 +100,13 @@ async def test_commit_retry(aioresponses, github_client):
 async def test_get_files(aioresponses, github_client):
     branch = "main"
     expected = {"README.md": "Hello!", "version.txt": "109.1.0"}
+    aliases = {
+        "README.md": "a" + hashlib.md5("README.md".encode()).hexdigest(),
+        "version.txt": "a" + hashlib.md5("version.txt".encode()).hexdigest(),
+    }
     files = list(expected)
 
-    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {k: {"text": v} for k, v in expected.items()}}})
+    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {aliases[k]: {"text": v} for k, v in expected.items()}}})
 
     result = await github_client.get_files(files, branch)
     assert result == expected
@@ -116,12 +121,12 @@ async def test_get_files(aioresponses, github_client):
             f"""
             query getFileContents {{
               repository(owner: "{github_client.owner}", name: "{github_client.repo}") {{
-                {files[0].stem}__dot__{files[0].suffix[1:]}: object(expression: "{branch}:{files[0]}") {{
+                {aliases[str(files[0])]}: object(expression: "{branch}:{files[0]}") {{
                   ... on Blob {{
                     text
                   }}
                 }}
-                {files[1].stem}__dot__{files[1].suffix[1:]}: object(expression: "{branch}:{files[1]}") {{
+                {aliases[str(files[1])]}: object(expression: "{branch}:{files[1]}") {{
                   ... on Blob {{
                     text
                   }}
@@ -138,11 +143,16 @@ async def test_get_files_with_missing(aioresponses, github_client):
     branch = "main"
     files = ["README.md", "version.txt", "missing.txt"]
     expected = {"README.md": "Hello!", "version.txt": "109.1.0", "missing.txt": None}
+    aliases = {
+        "README.md": "a" + hashlib.md5("README.md".encode()).hexdigest(),
+        "version.txt": "a" + hashlib.md5("version.txt".encode()).hexdigest(),
+        "missing.txt": "a" + hashlib.md5("missing.txt".encode()).hexdigest(),
+    }
 
     aioresponses.post(
         GITHUB_GRAPHQL_ENDPOINT,
         status=200,
-        payload={"data": {"repository": {"README.md": {"text": "Hello!"}, "version.txt": {"text": "109.1.0"}, "missing.txt": None}}},
+        payload={"data": {"repository": {aliases["README.md"]: {"text": "Hello!"}, aliases["version.txt"]: {"text": "109.1.0"}, aliases["missing.txt"]: None}}},
     )
 
     result = await github_client.get_files(files, branch)
@@ -158,17 +168,17 @@ async def test_get_files_with_missing(aioresponses, github_client):
             f"""
             query getFileContents {{
               repository(owner: "{github_client.owner}", name: "{github_client.repo}") {{
-                {files[0].stem}__dot__{files[0].suffix[1:]}: object(expression: "{branch}:{files[0]}") {{
+                {aliases[str(files[0])]}: object(expression: "{branch}:{files[0]}") {{
                   ... on Blob {{
                     text
                   }}
                 }}
-                {files[1].stem}__dot__{files[1].suffix[1:]}: object(expression: "{branch}:{files[1]}") {{
+                {aliases[str(files[1])]}: object(expression: "{branch}:{files[1]}") {{
                   ... on Blob {{
                     text
                   }}
                 }}
-                {files[2].stem}__dot__{files[2].suffix[1:]}: object(expression: "{branch}:{files[2]}") {{
+                {aliases[str(files[2])]}: object(expression: "{branch}:{files[2]}") {{
                   ... on Blob {{
                     text
                   }}
