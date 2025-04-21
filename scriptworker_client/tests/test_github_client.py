@@ -291,7 +291,17 @@ async def test_get_repository_files(aioresponses, github_client):
         payload={
             "data": {
                 "repository": {
-                    "object": {"entries": [{"name": "e", "type": "tree", "object": {"entries": [{"name": "deepfile1", "type": "blob", "object": {}}]}}]}
+                    "object": {
+                        "entries": [
+                            {
+                                "name": "d",
+                                "type": "tree",
+                                "object": {
+                                    "entries": [{"name": "e", "type": "tree", "object": {"entries": [{"name": "deepfile1", "type": "blob", "object": {}}]}}]
+                                },
+                            }
+                        ]
+                    }
                 }
             }
         },
@@ -413,9 +423,25 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
                     "object": {
                         "entries": [
                             {
-                                "name": "file",
-                                "type": "blob",
-                                "object": {},
+                                "name": "a",
+                                "type": "tree",
+                                "object": {
+                                    "entries": [
+                                        {
+                                            "name": "b",
+                                            "type": "tree",
+                                            "object": {
+                                                "entries": [
+                                                    {
+                                                        "name": "file",
+                                                        "type": "blob",
+                                                        "object": {},
+                                                    },
+                                                ],
+                                            },
+                                        },
+                                    ]
+                                },
                             },
                         ]
                     }
