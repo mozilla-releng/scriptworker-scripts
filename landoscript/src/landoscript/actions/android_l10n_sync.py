@@ -56,7 +56,7 @@ async def run(github_client: GithubClient, public_artifact_dir: str, android_l10
         if "**" in contents["paths"][0]["reference"]:
             # localized file paths contain globs; we need that directory
             # structure to determine the files we need to fetch
-            force_paths = await github_client.get_file_listing(str(src_file_prefix), branch=from_branch)
+            force_paths = await github_client.get_file_listing(str(src_file_prefix), branch=from_branch, depth_per_query=4)
         else:
             force_paths = []
 
