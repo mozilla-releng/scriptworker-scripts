@@ -78,7 +78,9 @@
                 "from_branch": {
                     "type": "string",
                     "examples": [
-                        "central"
+                        "main",
+                        "beta",
+                        "release"
                     ]
                 },
                 "to_branch": {
