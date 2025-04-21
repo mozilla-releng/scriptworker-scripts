@@ -1,5 +1,6 @@
 import pytest
 from scriptworker_client.github_client import TransportQueryError
+from pytest_scriptworker_client import get_files_payload
 
 from landoscript.errors import LandoscriptError
 from tests.conftest import (
@@ -7,7 +8,6 @@ from tests.conftest import (
     get_file_listing_payload,
     run_test,
     setup_github_graphql_responses,
-    fetch_files_payload,
 )
 
 ac_l10n_toml = """
@@ -221,7 +221,7 @@ async def test_success(
     setup_github_graphql_responses(
         aioresponses,
         # toml files needed before fetching anything else
-        fetch_files_payload(
+        get_files_payload(
             {
                 "mobile/android/fenix/l10n.toml": fenix_l10n_toml,
                 "mobile/android/focus-android/l10n.toml": focus_l10n_toml,
@@ -232,9 +232,9 @@ async def test_success(
         # android-components l10n.toml
         get_file_listing_payload(file_listing_files),
         # string values in the android l10n repository
-        fetch_files_payload(android_l10n_values),
+        get_files_payload(android_l10n_values),
         # current string values in the destination repository
-        fetch_files_payload(initial_values),
+        get_files_payload(initial_values),
     )
 
     def assert_func(req):
@@ -273,7 +273,7 @@ async def test_missing_toml_file(aioresponses, github_installation_responses, co
     setup_github_graphql_responses(
         aioresponses,
         # toml files needed before fetching anything else
-        fetch_files_payload(
+        get_files_payload(
             {
                 "mobile/android/fenix/l10n.toml": None,
                 "mobile/android/focus-android/l10n.toml": focus_l10n_toml,
