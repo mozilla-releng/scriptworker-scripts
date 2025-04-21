@@ -8,7 +8,6 @@ from tests.conftest import (
     assert_add_commit_response,
     assert_lando_submission_response,
     assert_status_response,
-    get_file_listing_payload,
     setup_github_graphql_responses,
 )
 
@@ -67,7 +66,7 @@ def assert_success(req, initial_values, expected_bumps):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "android_l10n_import_info,android_l10n_values,file_listing_files,initial_values,expected_values",
+    "android_l10n_import_info,android_l10n_values,initial_values,expected_values",
     (
         pytest.param(
             {
@@ -93,9 +92,6 @@ def assert_success(req, initial_values, expected_bumps):
                 "mozilla-mobile/focus-android/app/src/main/res/values-zam/strings.xml": "zam expected contents",
                 "mozilla-mobile/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": "ab expected contents",
             },
-            [
-                "mozilla-mobile/android-components/components/browser/toolbar/src/main/res/values/strings.xml",
-            ],
             {
                 # paths in gecko
                 "mobile/android/fenix/app/src/main/res/values-my/strings.xml": "my initial contents",
@@ -134,9 +130,6 @@ def assert_success(req, initial_values, expected_bumps):
                 "mozilla-mobile/focus-android/app/src/main/res/values-zam/strings.xml": "zam expected contents",
                 "mozilla-mobile/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": "ab expected contents",
             },
-            [
-                "mozilla-mobile/android-components/components/browser/toolbar/src/main/res/values/strings.xml",
-            ],
             {
                 # paths in gecko
                 "mobile/android/fenix/app/src/main/res/values-my/strings.xml": None,
@@ -175,9 +168,6 @@ def assert_success(req, initial_values, expected_bumps):
                 "mozilla-mobile/focus-android/app/src/main/res/values-zam/strings.xml": None,
                 "mozilla-mobile/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": None,
             },
-            [
-                "mozilla-mobile/android-components/components/browser/toolbar/src/main/res/values/strings.xml",
-            ],
             {
                 # paths in gecko
                 "mobile/android/fenix/app/src/main/res/values-my/strings.xml": "my initial contents",
@@ -216,9 +206,6 @@ def assert_success(req, initial_values, expected_bumps):
                 "mozilla-mobile/focus-android/app/src/main/res/values-zam/strings.xml": "zam initial contents",
                 "mozilla-mobile/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": "ab initial contents",
             },
-            [
-                "mozilla-mobile/android-components/components/browser/toolbar/src/main/res/values/strings.xml",
-            ],
             {
                 # paths in gecko
                 "mobile/android/fenix/app/src/main/res/values-my/strings.xml": "my initial contents",
@@ -235,9 +222,7 @@ def assert_success(req, initial_values, expected_bumps):
         ),
     ),
 )
-async def test_success(
-    aioresponses, github_installation_responses, context, android_l10n_import_info, android_l10n_values, file_listing_files, initial_values, expected_values
-):
+async def test_success(aioresponses, github_installation_responses, context, android_l10n_import_info, android_l10n_values, initial_values, expected_values):
     payload = {
         "actions": ["android_l10n_import"],
         "lando_repo": "repo_name",
@@ -259,6 +244,85 @@ async def test_success(
     scopes = [f"project:releng:lando:repo:repo_name"]
     scopes.append(f"project:releng:lando:action:android_l10n_import")
 
+    file_listing_payloads = [
+        {
+            "data": {
+                "repository": {
+                    "object": {
+                        "entries": [
+                            {
+                                "name": "components",
+                                "type": "tree",
+                                "object": {
+                                    "entries": [
+                                        {
+                                            "name": "browser",
+                                            "type": "tree",
+                                            "object": {
+                                                "entries": [
+                                                    {
+                                                        "name": "toolbar",
+                                                        "type": "tree",
+                                                        "object": {
+                                                            "entries": [
+                                                                {
+                                                                    "name": "src",
+                                                                    "type": "tree",
+                                                                }
+                                                            ],
+                                                        },
+                                                    }
+                                                ],
+                                            },
+                                        }
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                },
+            },
+        },
+        {
+            "data": {
+                "repository": {
+                    "object": {
+                        "entries": [
+                            {
+                                "name": "main",
+                                "type": "tree",
+                                "object": {
+                                    "entries": [
+                                        {
+                                            "name": "res",
+                                            "type": "tree",
+                                            "object": {
+                                                "entries": [
+                                                    {
+                                                        "name": "values",
+                                                        "type": "tree",
+                                                        "object": {
+                                                            "entries": [
+                                                                {
+                                                                    "name": "strings.xml",
+                                                                    "type": "blob",
+                                                                    "object": {},
+                                                                }
+                                                            ]
+                                                        },
+                                                    }
+                                                ],
+                                            },
+                                        }
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                },
+            },
+        },
+    ]
     github_installation_responses("mozilla-l10n")
     setup_github_graphql_responses(
         aioresponses,
@@ -272,7 +336,7 @@ async def test_success(
         ),
         # directory tree information needed to correctly interpret the
         # android-components l10n.toml
-        get_file_listing_payload(file_listing_files),
+        *file_listing_payloads,
         # string values in the android l10n repository
         get_files_payload(android_l10n_values),
     )
