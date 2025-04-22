@@ -1,6 +1,7 @@
 import pytest
 from scriptworker_client.github_client import TransportQueryError
 
+from landoscript.errors import LandoscriptError
 from tests.conftest import (
     assert_add_commit_response,
     get_file_listing_payload,
@@ -246,3 +247,47 @@ async def test_success(
         should_submit = True
 
     await run_test(aioresponses, github_installation_responses, context, payload, ["android_l10n_sync"], should_submit, assert_func)
+
+
+@pytest.mark.asyncio
+async def test_missing_toml_file(aioresponses, github_installation_responses, context):
+    payload = {
+        "actions": ["android_l10n_sync"],
+        "lando_repo": "repo_name",
+        "android_l10n_sync_info": {
+            "from_branch": "main",
+            "toml_info": [
+                {
+                    "toml_path": "mobile/android/fenix/l10n.toml",
+                },
+                {
+                    "toml_path": "mobile/android/focus-android/l10n.toml",
+                },
+                {
+                    "toml_path": "mobile/android/android-components/l10n.toml",
+                },
+            ],
+        },
+    }
+
+    setup_github_graphql_responses(
+        aioresponses,
+        # toml files needed before fetching anything else
+        fetch_files_payload(
+            {
+                "mobile/android/fenix/l10n.toml": None,
+                "mobile/android/focus-android/l10n.toml": focus_l10n_toml,
+                "mobile/android/android-components/l10n.toml": ac_l10n_toml,
+            }
+        ),
+    )
+
+    await run_test(
+        aioresponses,
+        github_installation_responses,
+        context,
+        payload,
+        ["android_l10n_sync"],
+        err=LandoscriptError,
+        errmsg="toml_file(s) mobile/android/fenix/l10n.toml are not present",
+    )

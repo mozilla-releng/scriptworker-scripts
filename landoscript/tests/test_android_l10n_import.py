@@ -1,5 +1,7 @@
 import pytest
+from yarl import URL
 
+from landoscript.errors import LandoscriptError
 from landoscript.script import async_main
 from tests.conftest import (
     assert_add_commit_response,
@@ -241,7 +243,9 @@ async def test_success(
         "lando_repo": "repo_name",
         "android_l10n_import_info": android_l10n_import_info,
     }
-    # done here because setup_test sets up github_installation_response too soon...argh
+    # this is the same setup that's done in `setup_test`, but in a slightly different
+    # order to accommodate the fact that we query the `mozilla-l10n` repository before
+    # the `lando_repo` repository.
     from yarl import URL
 
     lando_repo = payload["lando_repo"]
@@ -309,3 +313,63 @@ async def test_success(
     else:
         assert ("POST", submit_uri) not in aioresponses.requests
         assert ("GET", status_uri) not in aioresponses.requests
+
+
+@pytest.mark.asyncio
+async def test_missing_toml_file(aioresponses, github_installation_responses, context):
+    payload = {
+        "actions": ["android_l10n_import"],
+        "lando_repo": "repo_name",
+        "android_l10n_import_info": {
+            "from_repo_url": "https://github.com/mozilla-l10n/android-l10n",
+            "toml_info": [
+                {
+                    "dest_path": "mobile/android/fenix",
+                    "toml_path": "mozilla-mobile/fenix/l10n.toml",
+                },
+                {
+                    "dest_path": "mobile/android/focus-android",
+                    "toml_path": "mozilla-mobile/focus-android/l10n.toml",
+                },
+                {
+                    "dest_path": "mobile/android/android-components",
+                    "toml_path": "mozilla-mobile/android-components/l10n.toml",
+                },
+            ],
+        },
+    }
+
+    scopes = [f"project:releng:lando:repo:repo_name"]
+    scopes.append(f"project:releng:lando:action:android_l10n_import")
+
+    lando_api = context.config["lando_api"]
+    repo_info_uri = URL(f"{lando_api}/api/repoinfo/repo_name")
+    aioresponses.get(
+        repo_info_uri,
+        status=200,
+        payload={
+            "repo_url": f"https://github.com/faker/repo_name",
+            "branch_name": "fake_branch",
+            "scm_level": "whatever",
+        },
+    )
+
+    github_installation_responses("mozilla-l10n")
+    setup_github_graphql_responses(
+        aioresponses,
+        # toml files needed before fetching anything else
+        fetch_files_payload(
+            {
+                "mozilla-mobile/fenix/l10n.toml": None,
+                "mozilla-mobile/focus-android/l10n.toml": focus_l10n_toml,
+                "mozilla-mobile/android-components/l10n.toml": ac_l10n_toml,
+            }
+        ),
+    )
+
+    context.task = {"payload": payload, "scopes": scopes}
+    try:
+        await async_main(context)
+        assert False, "should've raised LandoscriptError"
+    except LandoscriptError as e:
+        assert "toml_file(s) mozilla-mobile/fenix/l10n.toml are not present" in e.args[0]
