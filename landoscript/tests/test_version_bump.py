@@ -128,36 +128,20 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
                 "actions": ["version_bump"],
                 "lando_repo": "repo_name",
                 "version_bump_info": {
-                    "files": ["browser/config/version.txt"],
+                    "files": ["browser/config/version.txt", "browser/config/version_display.txt"],
                     "next_version": "128.2.1esr",
                 },
             },
             {
                 "browser/config/version.txt": "128.2.0",
-            },
-            {
-                "browser/config/version.txt": "128.2.1",
-            },
-            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE", "DONTBUILD"],
-            id="esr_bump",
-        ),
-        pytest.param(
-            {
-                "actions": ["version_bump"],
-                "lando_repo": "repo_name",
-                "version_bump_info": {
-                    "files": ["browser/config/version_display.txt"],
-                    "next_version": "128.2.1esr",
-                },
-            },
-            {
                 "browser/config/version_display.txt": "128.2.0esr",
             },
             {
+                "browser/config/version.txt": "128.2.1",
                 "browser/config/version_display.txt": "128.2.1esr",
             },
             ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE", "DONTBUILD"],
-            id="esr_bump_display",
+            id="esr_bump",
         ),
         pytest.param(
             {
