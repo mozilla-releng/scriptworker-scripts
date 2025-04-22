@@ -301,17 +301,7 @@ async def test_get_repository_files(aioresponses, github_client):
         payload={
             "data": {
                 "repository": {
-                    "object": {
-                        "entries": [
-                            {
-                                "name": "d",
-                                "type": "tree",
-                                "object": {
-                                    "entries": [{"name": "e", "type": "tree", "object": {"entries": [{"name": "deepfile1", "type": "blob", "object": {}}]}}]
-                                },
-                            }
-                        ]
-                    }
+                    "object": {"entries": [{"name": "e", "type": "tree", "object": {"entries": [{"name": "deepfile1", "type": "blob", "object": {}}]}}]}
                 }
             }
         },
@@ -420,7 +410,7 @@ async def test_get_repository_files(aioresponses, github_client):
 async def test_get_repository_files_with_initial_subtree(aioresponses, github_client):
     branch = "main"
     expected = [
-        "a/b/file",
+        "a/b/c/d/e/deepfile1",
     ]
 
     # we expect more than one request because of the deeply nested file
@@ -433,22 +423,13 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
                     "object": {
                         "entries": [
                             {
-                                "name": "a",
+                                "name": "d",
                                 "type": "tree",
                                 "object": {
                                     "entries": [
                                         {
-                                            "name": "b",
+                                            "name": "e",
                                             "type": "tree",
-                                            "object": {
-                                                "entries": [
-                                                    {
-                                                        "name": "file",
-                                                        "type": "blob",
-                                                        "object": {},
-                                                    },
-                                                ],
-                                            },
                                         },
                                     ]
                                 },
@@ -459,14 +440,30 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
             }
         },
     )
+    aioresponses.post(
+        GITHUB_GRAPHQL_ENDPOINT,
+        status=200,
+        payload={
+            "data": {
+                "repository": {
+                    "object": {
+                        "entries": [
+                            {"name": "deepfile1", "type": "blob", "object": {}},
+                        ]
+                    }
+                }
+            }
+        },
+    )
 
-    result = await github_client.get_file_listing("a/b", branch=branch, depth_per_query=4)
+    result = await github_client.get_file_listing("a/b/c", branch=branch, depth_per_query=2)
     assert result == expected
 
     aioresponses.assert_called()
 
     key = ("POST", URL(GITHUB_GRAPHQL_ENDPOINT))
-    first_request = aioresponses.requests[key][-1][1]["json"]
+    first_request = aioresponses.requests[key][-2][1]["json"]
+    second_request = aioresponses.requests[key][-1][1]["json"]
 
     assert first_request == {
         "query": Template(
@@ -474,7 +471,7 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
                 f"""
             query RepoFiles {{
               repository(owner: "$owner", name: "$repo") {{
-                object(expression: "main:a/b") {{
+                object(expression: "main:a/b/c") {{
                   ... on Tree {{
                     entries {{
                       name
@@ -484,22 +481,34 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
                           entries {{
                             name
                             type
-                            object {{
-                              ... on Tree {{
-                                entries {{
-                                  name
-                                  type
-                                  object {{
-                                    ... on Tree {{
-                                      entries {{
-                                        name
-                                        type
-                                      }}
-                                    }}
-                                  }}
-                                }}
-                              }}
-                            }}
+                          }}
+                        }}
+                      }}
+                    }}
+                  }}
+                }}
+              }}
+            }}
+            """
+            ).strip(),
+        ).substitute(owner=github_client.owner, repo=github_client.repo)
+    }
+    assert second_request == {
+        "query": Template(
+            dedent(
+                f"""
+            query RepoFiles {{
+              repository(owner: "$owner", name: "$repo") {{
+                object(expression: "main:a/b/c/d/e") {{
+                  ... on Tree {{
+                    entries {{
+                      name
+                      type
+                      object {{
+                        ... on Tree {{
+                          entries {{
+                            name
+                            type
                           }}
                         }}
                       }}

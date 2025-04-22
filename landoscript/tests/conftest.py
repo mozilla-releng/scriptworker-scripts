@@ -138,35 +138,6 @@ def setup_github_graphql_responses(aioresponses, *payloads):
         aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload=payload)
 
 
-def get_file_listing_payload(paths):
-    def make_entry(path):
-        parts = path.split("/", 1)
-        type_ = "blob" if len(parts) == 1 else "tree"
-        obj = {}
-        if type_ == "tree":
-            # Note: this does not handle multiple files in the same directory
-            # properly (we'll only end up with an entry for the last file seen).
-            # This is being ignored to avoid complicating this code until
-            # an actual use case for it comes up.
-            obj["entries"] = [make_entry(parts[1])]
-        return {
-            "name": parts[0],
-            "type": type_,
-            "object": obj,
-        }
-
-    entries = [make_entry(path) for path in paths]
-    return {
-        "data": {
-            "repository": {
-                "object": {
-                    "entries": entries,
-                }
-            }
-        }
-    }
-
-
 def setup_l10n_file_responses(aioresponses, l10n_bump_info, initial_values, expected_locales):
     file_responses = {}
     name = l10n_bump_info["name"]

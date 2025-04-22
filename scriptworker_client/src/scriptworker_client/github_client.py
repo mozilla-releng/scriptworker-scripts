@@ -252,20 +252,12 @@ class GithubClient:
 
         # Process the returing entries
         entries = resp["repository"]["object"].get("entries")
-        files, refetches = self._process_file_listings(entries)
+        files, refetches = self._process_file_listings(entries, prefix=Path(path))
         # Any subtrees that were not fully traversed will be returned in `refetches`
         # We need to refetch data starting at each of these subtrees to ensure we
         # don't miss anything.
         for refetch in refetches:
-            for deep_file in await self.get_file_listing(str(refetch), branch, depth_per_query):
-                # Any files returned be a nested call need to have some path munging done.
-
-                # First we strip off the last part of the subtree we're fetching because
-                # it will already be included in the files returned.
-                prefix = str(refetch.parent)
-                # Then we combine the proper prefix with each returned file, giving us
-                # the full path to the file from the root of the repository.
-                files.append(f"{prefix}/{deep_file}")
+            files.extend(await self.get_file_listing(str(refetch), branch, depth_per_query))
 
         return files
 
