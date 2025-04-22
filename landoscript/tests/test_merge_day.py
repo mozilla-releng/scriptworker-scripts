@@ -1,9 +1,10 @@
 from collections import defaultdict
 import pytest
+from pytest_scriptworker_client import get_files_payload
 
 from landoscript.script import async_main
 
-from .conftest import fetch_files_payload, run_test, assert_merge_response, setup_github_graphql_responses
+from .conftest import run_test, assert_merge_response, setup_github_graphql_responses
 
 
 @pytest.mark.asyncio
@@ -153,13 +154,13 @@ async def test_success_bump_main(
     setup_github_graphql_responses(
         aioresponses,
         # existing version in `to_branch`
-        fetch_files_payload({merge_info["fetch_version_from"]: "137.0a1"}),
+        get_files_payload({merge_info["fetch_version_from"]: "137.0a1"}),
         # fetch of original contents of files to bump, if we expect any replacements
-        fetch_files_payload(initial_values if expected_bumps else {}),
+        get_files_payload(initial_values if expected_bumps else {}),
         # fetch of original contents of `replacements` and `regex_replacements` files
-        fetch_files_payload(initial_replacement_values if expected_replacement_bumps else {}),
+        get_files_payload(initial_replacement_values if expected_replacement_bumps else {}),
         # clobber file
-        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
+        get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     def assert_func(req):
@@ -215,11 +216,11 @@ async def test_success_bump_esr(aioresponses, github_installation_responses, con
     setup_github_graphql_responses(
         aioresponses,
         # existing version in `to_branch`
-        fetch_files_payload({merge_info["fetch_version_from"]: "128.9.0"}),
+        get_files_payload({merge_info["fetch_version_from"]: "128.9.0"}),
         # fetch of original contents of files to bump
-        *[fetch_files_payload(iv) for iv in initial_values_by_expected_version.values()],
+        *[get_files_payload(iv) for iv in initial_values_by_expected_version.values()],
         # clobber file
-        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
+        get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     def assert_func(req):
@@ -263,11 +264,11 @@ async def test_success_early_to_late_beta(aioresponses, github_installation_resp
         aioresponses,
         # initial version fetch; technically not needed for this use case
         # but it keeps the merge day code cleaner to keep it
-        fetch_files_payload({merge_info["fetch_version_from"]: "139.0"}),
+        get_files_payload({merge_info["fetch_version_from"]: "139.0"}),
         # fetch of original contents of `replacements` file
-        fetch_files_payload(initial_replacement_values),
+        get_files_payload(initial_replacement_values),
         # clobber file
-        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
+        get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     def assert_func(req):
@@ -370,15 +371,15 @@ async def test_success_main_to_beta(aioresponses, github_installation_responses,
     setup_github_graphql_responses(
         aioresponses,
         # existing version in `to_branch`
-        fetch_files_payload({merge_info["fetch_version_from"]: "139.0b11"}),
+        get_files_payload({merge_info["fetch_version_from"]: "139.0b11"}),
         # existing version in `from_branch`
-        fetch_files_payload({merge_info["fetch_version_from"]: "140.0a1"}),
+        get_files_payload({merge_info["fetch_version_from"]: "140.0a1"}),
         # fetch of original contents of files to bump
-        *[fetch_files_payload(iv) for iv in initial_values_by_expected_version.values()],
+        *[get_files_payload(iv) for iv in initial_values_by_expected_version.values()],
         # fetch of original contents of `replacements` and `regex_replacements` files
-        fetch_files_payload(initial_replacement_values),
+        get_files_payload(initial_replacement_values),
         # clobber file
-        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
+        get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     def assert_func(req):
@@ -416,7 +417,6 @@ async def test_success_beta_to_release(aioresponses, github_installation_respons
     # despite it looking weird, these beta looking versions _are_ the correct
     # "before" versions after we've "merged" the beta branch into release
     initial_values = {
-        "browser/config/version.txt": "136.0",
         "browser/config/version_display.txt": "136.0b11",
         "mobile/android/version.txt": "136.0b11",
     }
@@ -444,15 +444,15 @@ async def test_success_beta_to_release(aioresponses, github_installation_respons
     setup_github_graphql_responses(
         aioresponses,
         # existing version in `to_branch`
-        fetch_files_payload({merge_info["fetch_version_from"]: "135.0"}),
+        get_files_payload({merge_info["fetch_version_from"]: "135.0"}),
         # existing version in `from_branch`
-        fetch_files_payload({merge_info["fetch_version_from"]: "136.0"}),
+        get_files_payload({merge_info["fetch_version_from"]: "136.0"}),
         # fetch of original contents of files to bump, if we expect any replacements
-        fetch_files_payload(initial_values),
+        get_files_payload(initial_values),
         # fetch of original contents of `replacements` and `regex_replacements` files
-        fetch_files_payload(initial_replacement_values),
+        get_files_payload(initial_replacement_values),
         # clobber file
-        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
+        get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     def assert_func(req):
@@ -510,13 +510,13 @@ async def test_success_release_to_esr(aioresponses, github_installation_response
     setup_github_graphql_responses(
         aioresponses,
         # existing version in `to_branch`
-        fetch_files_payload({merge_info["fetch_version_from"]: "128.0"}),
+        get_files_payload({merge_info["fetch_version_from"]: "128.0"}),
         # fetch of original contents of files to bump, if we expect any replacements
-        fetch_files_payload(initial_values if expected_bumps else {}),
+        get_files_payload(initial_values if expected_bumps else {}),
         # fetch of original contents of `replacements` and `regex_replacements` files
-        fetch_files_payload(initial_replacement_values),
+        get_files_payload(initial_replacement_values),
         # clobber file
-        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
+        get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     def assert_func(req):

@@ -1,6 +1,7 @@
 """Treescript git functions."""
 
 import base64
+import hashlib
 import logging
 from collections import defaultdict
 from pathlib import Path
@@ -104,10 +105,6 @@ class GithubClient:
         if isinstance(files, str):
             files = [files]
 
-        # Certain characters are not legal GraphQL key names.
-        sentinel_dot = "__dot__"
-        sentinel_slash = "__slash__"
-        sentinel_dash = "__dash__"
         query = Template(
             dedent(
                 """
@@ -131,20 +128,34 @@ class GithubClient:
             )
         )
         fields = []
+
+        # Many characters (slashes, dashes, dots, and more) are not supported
+        # in graphql key names. Additionally, key names have a maximum length
+        # of 320 characters. To avoid running afoul of these things, we map
+        # file paths to their hashes, and use the hashes as the key names
+        # in the query.
+        aliases = {}
         for f in files:
-            name = f.replace(".", sentinel_dot).replace("/", sentinel_slash).replace("-", sentinel_dash)
-            fields.append(field.substitute(branch=branch, file=f, name=name))
+            # Graphql assumes that any string that starts with a digit is an
+            # integer, which will cause errors when the query is submitted.
+            # We force these hashes to start with a letter to avoid hitting
+            # this.
+            hash_ = "a" + hashlib.md5(f.encode()).hexdigest()
+            aliases[hash_] = f
+            fields.append(field.substitute(branch=branch, file=f, name=hash_))
 
         str_query = query.substitute(owner=self.owner, repo=self.repo, fields=",".join(fields))
 
         contents = (await self._client.execute(str_query))["repository"]
         ret: Dict[str, Union[str, None]] = {}
         for k, v in contents.items():
-            subbed_k = k.replace(sentinel_dot, ".").replace(sentinel_slash, "/").replace(sentinel_dash, "-")
+            # Map the key names (which are the hashes we set-up above) back
+            # to their actual file paths.
+            name = aliases[k]
             if v is None:
-                ret[subbed_k] = None
+                ret[name] = None
             else:
-                ret[subbed_k] = v["text"]
+                ret[name] = v["text"]
 
         return ret
 

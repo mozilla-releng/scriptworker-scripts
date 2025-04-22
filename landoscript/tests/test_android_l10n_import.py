@@ -1,5 +1,6 @@
 import pytest
 from yarl import URL
+from pytest_scriptworker_client import get_files_payload
 
 from landoscript.errors import LandoscriptError
 from landoscript.script import async_main
@@ -7,7 +8,6 @@ from tests.conftest import (
     assert_add_commit_response,
     assert_lando_submission_response,
     assert_status_response,
-    fetch_files_payload,
     get_file_listing_payload,
     setup_github_graphql_responses,
 )
@@ -263,7 +263,7 @@ async def test_success(
     setup_github_graphql_responses(
         aioresponses,
         # toml files needed before fetching anything else
-        fetch_files_payload(
+        get_files_payload(
             {
                 "mozilla-mobile/fenix/l10n.toml": fenix_l10n_toml,
                 "mozilla-mobile/focus-android/l10n.toml": focus_l10n_toml,
@@ -274,7 +274,7 @@ async def test_success(
         # android-components l10n.toml
         get_file_listing_payload(file_listing_files),
         # string values in the android l10n repository
-        fetch_files_payload(android_l10n_values),
+        get_files_payload(android_l10n_values),
     )
 
     aioresponses.get(
@@ -289,7 +289,7 @@ async def test_success(
 
     github_installation_responses(owner)
     # current string values in the destination repository
-    setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
+    setup_github_graphql_responses(aioresponses, get_files_payload(initial_values))
 
     aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
 
@@ -358,7 +358,7 @@ async def test_missing_toml_file(aioresponses, github_installation_responses, co
     setup_github_graphql_responses(
         aioresponses,
         # toml files needed before fetching anything else
-        fetch_files_payload(
+        get_files_payload(
             {
                 "mozilla-mobile/fenix/l10n.toml": None,
                 "mozilla-mobile/focus-android/l10n.toml": focus_l10n_toml,

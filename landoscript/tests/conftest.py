@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from yarl import URL
+from pytest_scriptworker_client import get_files_payload
 
 import pytest
 from scriptworker.context import Context
@@ -132,21 +133,6 @@ async def run_test(
             assert ("GET", status_uri) not in aioresponses.requests
 
 
-def fetch_files_payload(initial_values={}):
-    if initial_values:
-        payload = {"data": {"repository": {}}}
-
-        for file, contents in initial_values.items():
-            if contents is None:
-                payload["data"]["repository"][file] = None
-            else:
-                payload["data"]["repository"][file] = {"text": contents}
-    else:
-        payload = {}
-
-    return payload
-
-
 def setup_github_graphql_responses(aioresponses, *payloads):
     for payload in payloads:
         aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload=payload)
@@ -207,7 +193,7 @@ def setup_l10n_file_responses(aioresponses, l10n_bump_info, initial_values, expe
 
     file_responses[l10n_bump_info["path"]] = json.dumps(changesets_data)
 
-    setup_github_graphql_responses(aioresponses, fetch_files_payload(file_responses))
+    setup_github_graphql_responses(aioresponses, get_files_payload(file_responses))
 
 
 def assert_lando_submission_response(requests, submit_uri, attempts=1):

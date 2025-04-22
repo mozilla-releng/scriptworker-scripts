@@ -3,6 +3,7 @@ from collections import defaultdict
 import pytest
 from scriptworker.client import TaskVerificationError
 from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
+from pytest_scriptworker_client import get_files_payload
 
 from landoscript.errors import LandoscriptError
 from landoscript.script import async_main
@@ -10,7 +11,6 @@ from .conftest import (
     assert_l10n_bump_response,
     assert_lando_submission_response,
     assert_status_response,
-    fetch_files_payload,
     run_test,
     setup_github_graphql_responses,
     setup_test,
@@ -81,7 +81,7 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
     ),
 )
 async def test_tag_and_bump(aioresponses, github_installation_responses, context, payload, dry_run, initial_values, expected_bumps, commit_msg_strings, tags):
-    setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
+    setup_github_graphql_responses(aioresponses, get_files_payload(initial_values))
 
     def assert_func(req):
         assert_success(req, commit_msg_strings, initial_values, expected_bumps)
@@ -146,7 +146,7 @@ async def test_tag_and_bump(aioresponses, github_installation_responses, context
 )
 async def test_success_with_retries(aioresponses, github_installation_responses, context, payload, initial_values, expected_bumps, commit_msg_strings):
     submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
-    setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
+    setup_github_graphql_responses(aioresponses, get_files_payload(initial_values))
 
     aioresponses.post(submit_uri, status=500)
     aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
@@ -262,7 +262,7 @@ async def test_failure_to_submit_to_lando_500(aioresponses, github_installation_
     }
     initial_values = {"browser/config/version.txt": "134.0"}
     submit_uri, _, _, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
-    setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
+    setup_github_graphql_responses(aioresponses, get_files_payload(initial_values))
 
     for _ in range(10):
         aioresponses.post(submit_uri, status=500)
@@ -288,7 +288,7 @@ async def test_to_submit_to_lando_no_status_url(aioresponses, github_installatio
     }
     initial_values = {"browser/config/version.txt": "134.0"}
     submit_uri, _, _, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
-    setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
+    setup_github_graphql_responses(aioresponses, get_files_payload(initial_values))
     aioresponses.post(submit_uri, status=202, payload={})
 
     context.task = {"payload": payload, "scopes": scopes}
@@ -312,7 +312,7 @@ async def test_lando_polling_result_not_correct(aioresponses, github_installatio
     }
     initial_values = {"browser/config/version.txt": "134.0"}
     submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
-    setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
+    setup_github_graphql_responses(aioresponses, get_files_payload(initial_values))
     aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
     aioresponses.get(status_uri, status=200, payload={})
 
@@ -337,7 +337,7 @@ async def test_lando_polling_retry_on_failure(aioresponses, github_installation_
     }
     initial_values = {"browser/config/version.txt": "134.0"}
     submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
-    setup_github_graphql_responses(aioresponses, fetch_files_payload(initial_values))
+    setup_github_graphql_responses(aioresponses, get_files_payload(initial_values))
     aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
     aioresponses.get(status_uri, status=500, payload={})
     aioresponses.get(
@@ -499,15 +499,15 @@ async def test_success_main_to_beta_merge_day(aioresponses, github_installation_
     setup_github_graphql_responses(
         aioresponses,
         # existing version in `to_branch`
-        fetch_files_payload({merge_info["fetch_version_from"]: "139.0b11"}),
+        get_files_payload({merge_info["fetch_version_from"]: "139.0b11"}),
         # existing version in `from_branch`
-        fetch_files_payload({merge_info["fetch_version_from"]: "140.0a1"}),
+        get_files_payload({merge_info["fetch_version_from"]: "140.0a1"}),
         # fetch of original contents of files to bump
-        *[fetch_files_payload(iv) for iv in initial_values_by_expected_version.values()],
+        *[get_files_payload(iv) for iv in initial_values_by_expected_version.values()],
         # fetch of original contents of `replacements` and `regex_replacements` files
-        fetch_files_payload(initial_replacement_values),
+        get_files_payload(initial_replacement_values),
         # clobber file
-        fetch_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
+        get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
     aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
