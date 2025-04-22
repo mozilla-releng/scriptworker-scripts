@@ -448,11 +448,7 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
                 "repository": {
                     "object": {
                         "entries": [
-                            {
-                                "name": "deepfile1",
-                                "type": "blob",
-                                "object": {}
-                            },
+                            {"name": "deepfile1", "type": "blob", "object": {}},
                         ]
                     }
                 }
