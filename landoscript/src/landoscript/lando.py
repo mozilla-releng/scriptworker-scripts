@@ -48,7 +48,6 @@ async def submit(
             kwargs={
                 "json": json,
                 "raise_for_status": True,
-                # TODO: is this a bearer token?
                 "headers": {
                     "Authorization": f"Bearer {lando_token}",
                     "User-Agent": "Lando-User/release+landoscript@mozilla.com",
