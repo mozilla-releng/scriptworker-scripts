@@ -53,12 +53,13 @@ async def async_main(context):
         # Note: `lando_repo` is not necessarily the same as the repository's name
         # on Github.
         lando_api = config["lando_api"]
+        lando_token = config["lando_token"]
         lando_repo = payload["lando_repo"]
         dontbuild = payload.get("dontbuild", False)
         ignore_closed_tree = payload.get("ignore_closed_tree", False)
 
         # pull owner, repo, and branch from config
-        repo_url, branch = await lando.get_repo_info(session, lando_api, lando_repo)
+        repo_url, branch = await lando.get_repo_info(session, lando_api, lando_token, lando_repo)
         owner, repo = extract_github_repo_owner_and_name(repo_url)
         log.info(f"Got owner: {owner}, repo: {repo}, branch: {branch}")
 
@@ -136,8 +137,8 @@ async def async_main(context):
                 for la in lando_actions:
                     log.info(la)
 
-                status_url = await lando.submit(session, lando_api, config["lando_token"], lando_repo, lando_actions, config["sleeptime_callback"])
-                await lando.poll_until_complete(session, config["poll_time"], status_url)
+                status_url = await lando.submit(session, lando_api, lando_token, lando_repo, lando_actions, config["sleeptime_callback"])
+                await lando.poll_until_complete(session, lando_token, config["poll_time"], status_url)
         else:
             log.info("No lando actions to submit!")
 
