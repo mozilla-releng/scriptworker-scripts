@@ -1,8 +1,10 @@
 import logging
 import os.path
+import typing
 from dataclasses import dataclass
 
 from gql.transport.exceptions import TransportError
+from mozilla_version.gecko import GeckoVersion
 from mozilla_version.version import BaseVersion
 from scriptworker.exceptions import TaskVerificationError
 
@@ -38,8 +40,14 @@ async def run(
     branch: str,
     version_bump_infos: list[VersionBumpInfo],
     dontbuild: bool = True,
+    munge_next_version: bool = True,
 ) -> LandoAction:
-    """Perform version bumps on the files given in each `version_bump_info`, if necessary."""
+    """Perform version bumps on the files given in each `version_bump_info`, if necessary.
+
+    If `munge_next_version` is True, the calculated next_version may be adjusted
+    based on the contents of each file being bumped. The only known use case for this at
+    the time of writing is when running the `release-to-esr` merge automation. Future uses
+    are discouraged, and should be avoided if at all possible."""
 
     diff = ""
 
@@ -66,7 +74,7 @@ async def run(
                 raise LandoscriptError(f"{file} does not exist!")
 
             log.info(f"considering {file}")
-            cur, next_ = get_cur_and_next_version(file, orig, next_version)
+            cur, next_ = get_cur_and_next_version(file, orig, next_version, munge_next_version)
             if next_ < cur:
                 log.warning(f"{file}: Version bumping skipped due to conflicting values: (next version {next_} is < current version {cur})")
                 continue
@@ -101,7 +109,7 @@ async def run(
     return create_commit_action(commitmsg, diff)
 
 
-def get_cur_and_next_version(filename, orig_contents, next_version):
+def get_cur_and_next_version(filename, orig_contents, next_version, munge_next_version):
     VersionClass: BaseVersion = find_what_version_parser_to_use(filename)
     lines = [line for line in orig_contents.splitlines() if line and not line.startswith("#")]
     cur = VersionClass.parse(lines[-1])
@@ -109,8 +117,8 @@ def get_cur_and_next_version(filename, orig_contents, next_version):
     # Special case for ESRs; make sure the next version is consistent with the
     # current version with respect to whether or not it includes the `esr`
     # suffix.
-    # if next_version.endswith("esr") and not typing.cast(GeckoVersion, cur).is_esr:
-    #     next_version = next_version.replace("esr", "")
+    if munge_next_version and next_version.endswith("esr") and not typing.cast(GeckoVersion, cur).is_esr:
+        next_version = next_version.replace("esr", "")
 
     next_ = VersionClass.parse(next_version)
 
