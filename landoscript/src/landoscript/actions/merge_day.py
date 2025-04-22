@@ -78,6 +78,7 @@ async def run(github_client: GithubClient, public_artifact_dir: str, merge_info:
     # is correct.
     if from_branch:
         bump_version = await get_version(github_client, version_file, from_branch)
+        bump_branch = from_branch
         log.info(f"from_branch is present, got bump_version from it: {bump_version}")
 
         # base tagging _only_ happens when we have a `from_branch` -- these are
@@ -88,7 +89,11 @@ async def run(github_client: GithubClient, public_artifact_dir: str, merge_info:
             log.info(f"Adding base_tag: {base_tag_fmted}")
             actions.extend(tag.run([base_tag_fmted]))
     else:
+        if merge_old_head:
+            raise TaskVerificationError("'from_branch' is required when merge_old_head is True or version_files are present")
+
         bump_version = to_version
+        bump_branch = to_branch
         log.info(f"from_branch is not present, using to_version as bump_version: {bump_version}")
 
     if merge_old_head:
@@ -127,7 +132,7 @@ async def run(github_client: GithubClient, public_artifact_dir: str, merge_info:
             await version_bump.run(
                 github_client,
                 public_artifact_dir,
-                to_branch,
+                bump_branch,
                 version_bump_infos,
                 dontbuild=False,
             )
