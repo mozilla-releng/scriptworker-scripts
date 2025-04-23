@@ -11,8 +11,11 @@ test_var_set() {
 }
 
 case $COT_PRODUCT in
-  firefox|mobile)
+  firefox)
     export TASKCLUSTER_SCOPE_PREFIX="project:releng:ship-it:"
+    ;;
+  mobile)
+    export TASKCLUSTER_SCOPE_PREFIX="project:mobile:releng:ship-it:"
     ;;
   thunderbird)
     export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:ship-it:"
