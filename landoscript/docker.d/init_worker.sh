@@ -10,6 +10,10 @@ test_var_set() {
   fi
 }
 
+test_var_set "CONFIG_DIR"
+test_var_set "LANDO_TOKEN"
+test_var_set "GITHUB_PRIVATE_KEY"
+
 # TODO: real URLs
 if [ "$ENV" == "prod" ]; then
   export LANDO_API="https://lando.prod"
@@ -17,4 +21,6 @@ else
   export LANDO_API="https://lando.dev"
 fi
 
-test_var_set "LANDO_TOKEN"
+export GITHUB_PRIVATE_KEY_FILE="${CONFIG_DIR}/github_private_key"
+echo "${GITHUB_PRIVATE_KEY}" + base64 -d > "${GITHUB_PRIVATE_KEY_FILE}"
+chmod 400 "${GITHUB_PRIVATE_KEY_FILE}"
