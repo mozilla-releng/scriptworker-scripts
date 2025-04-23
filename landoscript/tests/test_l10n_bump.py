@@ -546,7 +546,7 @@ async def test_success(
         "ignore_closed_tree": ignore_closed_tree,
     }
     submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["l10n_bump"])
-    setup_treestatus_response(aioresponses, context)
+    setup_treestatus_response(aioresponses, context, status="open")
 
     # because the github graphql endpoint is generic we need to make sure we create
     # these responses in the correct order...
