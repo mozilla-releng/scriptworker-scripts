@@ -43,7 +43,7 @@ def privkey_file(datadir):
     return datadir / "test_private_key.pem"
 
 
-def setup_treestatus_response(aioresponses, context, tree="repo_name", status="open", has_err=False):
+def setup_treestatus_response(aioresponses, context, tree="repo_name", status="approval required", has_err=False):
     url = f'{context.config["treestatus_url"]}/trees/{tree}'
     if has_err:
         aioresponses.get(url, status=500)

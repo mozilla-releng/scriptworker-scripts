@@ -3,10 +3,13 @@ from scriptworker_client.github_client import TransportQueryError
 from pytest_scriptworker_client import get_files_payload
 
 from landoscript.errors import LandoscriptError
+from landoscript.script import async_main
 from tests.conftest import (
     assert_add_commit_response,
     run_test,
     setup_github_graphql_responses,
+    setup_test,
+    setup_treestatus_response,
 )
 
 ac_l10n_toml = """
@@ -201,6 +204,7 @@ async def test_success(aioresponses, github_installation_responses, context, and
         "actions": ["android_l10n_sync"],
         "lando_repo": "repo_name",
         "android_l10n_sync_info": android_l10n_sync_info,
+        "ignore_closed_tree": False,
     }
 
     file_listing_payloads = [
@@ -283,6 +287,7 @@ async def test_success(aioresponses, github_installation_responses, context, and
         },
     ]
 
+    setup_treestatus_response(aioresponses, context, status="open")
     setup_github_graphql_responses(
         aioresponses,
         # toml files needed before fetching anything else
@@ -356,3 +361,34 @@ async def test_missing_toml_file(aioresponses, github_installation_responses, co
         err=LandoscriptError,
         errmsg="toml_file(s) mobile/android/fenix/l10n.toml are not present",
     )
+
+
+@pytest.mark.asyncio
+async def test_tree_is_closed_noop(aioresponses, github_installation_responses, context):
+    payload = {
+        "actions": ["android_l10n_sync"],
+        "lando_repo": "repo_name",
+        "android_l10n_sync_info": {
+            "from_branch": "main",
+            "toml_info": [
+                {
+                    "toml_path": "mobile/android/fenix/l10n.toml",
+                },
+                {
+                    "toml_path": "mobile/android/focus-android/l10n.toml",
+                },
+                {
+                    "toml_path": "mobile/android/android-components/l10n.toml",
+                },
+            ],
+        },
+        "ignore_closed_tree": False,
+    }
+    submit_uri, status_uri, _, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["android_l10n_sync"])
+    setup_treestatus_response(aioresponses, context, status="closed")
+
+    context.task = {"payload": payload, "scopes": scopes}
+    await async_main(context)
+
+    assert ("POST", submit_uri) not in aioresponses.requests
+    assert ("GET", status_uri) not in aioresponses.requests
