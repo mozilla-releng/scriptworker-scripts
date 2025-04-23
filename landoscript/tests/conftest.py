@@ -185,6 +185,9 @@ def assert_status_response(requests, status_uri, attempts=1):
     # there might be more than one in cases where we retry; we assume that
     # the requests are the same for all attempts
     assert len(reqs) == attempts
+    assert "Authorization" in reqs[0].kwargs["headers"]
+    assert reqs[0].kwargs["headers"]["Authorization"] == "Bearer super secret"
+    assert reqs[0].kwargs["headers"]["User-Agent"] == "Lando-User/release+landoscript@mozilla.com"
 
 
 def assert_add_commit_response(action, commit_msg_strings, initial_values, expected_bumps):

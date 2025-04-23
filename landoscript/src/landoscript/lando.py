@@ -24,6 +24,13 @@ def create_commit_action(commitmsg: str, diff: str) -> LandoAction:
     return {"action": "create-commit", "commitmsg": commitmsg, "diff": diff, "date": timestamp, "author": author}
 
 
+def _get_auth_headers(lando_token: str):
+    return {
+        "Authorization": f"Bearer {lando_token}",
+        "User-Agent": "Lando-User/release+landoscript@mozilla.com",
+    }
+
+
 async def submit(
     session: ClientSession,
     lando_api: str,
@@ -48,10 +55,7 @@ async def submit(
             kwargs={
                 "json": json,
                 "raise_for_status": True,
-                "headers": {
-                    "Authorization": f"Bearer {lando_token}",
-                    "User-Agent": "Lando-User/release+landoscript@mozilla.com",
-                },
+                "headers": _get_auth_headers(lando_token),
             },
             attempts=10,
             retry_exceptions=ClientResponseError,
@@ -67,7 +71,7 @@ async def submit(
     return status_url
 
 
-async def poll_until_complete(session: ClientSession, poll_time: int, status_url: str):
+async def poll_until_complete(session: ClientSession, lando_token: str, poll_time: int, status_url: str):
     while True:
         log.info(f"sleeping {poll_time} seconds before polling for status")
         await asyncio.sleep(poll_time)
@@ -75,7 +79,7 @@ async def poll_until_complete(session: ClientSession, poll_time: int, status_url
         log.info(f"polling lando for status: {status_url}")
         status_resp = await session.get(
             status_url,
-            headers={"User-Agent": "Lando-User/release+landoscript@mozilla.com"},
+            headers=_get_auth_headers(lando_token),
         )
 
         # just retry if something went wrong...
@@ -97,7 +101,7 @@ async def poll_until_complete(session: ClientSession, poll_time: int, status_url
             break
 
 
-async def get_repo_info(session: ClientSession, lando_api: str, lando_repo: str) -> Tuple[str, str]:
+async def get_repo_info(session: ClientSession, lando_api: str, lando_token: str, lando_repo: str) -> Tuple[str, str]:
     """Returns the URL and branch name for the given `lando_repo`, as provided
     by the `lando_api`."""
     url = f"{lando_api}/api/repoinfo/{lando_repo}"
@@ -109,9 +113,7 @@ async def get_repo_info(session: ClientSession, lando_api: str, lando_repo: str)
             args=(url,),
             kwargs={
                 "raise_for_status": True,
-                "headers": {
-                    "User-Agent": "Lando-User/release+landoscript@mozilla.com",
-                },
+                "headers": _get_auth_headers(lando_token),
             },
         )
 
