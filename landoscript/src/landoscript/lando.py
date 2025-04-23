@@ -40,7 +40,7 @@ async def submit(
     sleeptime_callback: Callable[..., Any] = calculate_sleep_time,
 ) -> str:
     """Submit the provided `actions` to the given `lando_repo` through the `lando_api`."""
-    url = f"{lando_api}/api/repo/{lando_repo}"
+    url = f"{lando_api}/repo/{lando_repo}"
     json = {"actions": actions}
 
     log.info(f"submitting actions to lando: {actions}")
@@ -104,7 +104,7 @@ async def poll_until_complete(session: ClientSession, lando_token: str, poll_tim
 async def get_repo_info(session: ClientSession, lando_api: str, lando_token: str, lando_repo: str) -> Tuple[str, str]:
     """Returns the URL and branch name for the given `lando_repo`, as provided
     by the `lando_api`."""
-    url = f"{lando_api}/api/repoinfo/{lando_repo}"
+    url = f"{lando_api}/repoinfo/{lando_repo}"
 
     log.info(f"looking up repo info for {lando_repo}")
     async with timeout(30):

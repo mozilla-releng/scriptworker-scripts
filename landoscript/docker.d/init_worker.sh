@@ -14,11 +14,10 @@ test_var_set "CONFIG_DIR"
 test_var_set "LANDO_TOKEN"
 test_var_set "GITHUB_PRIVATE_KEY"
 
-# TODO: real URLs
 if [ "$ENV" == "prod" ]; then
-  export LANDO_API="https://lando.prod"
+  export LANDO_API="https://lando.moz.tools/api"
 else
-  export LANDO_API="https://lando.dev"
+  export LANDO_API="https://dev.lando.nonprod.webservices.mozgcp.net/api"
 fi
 
 export GITHUB_PRIVATE_KEY_FILE="${CONFIG_DIR}/github_private_key"
