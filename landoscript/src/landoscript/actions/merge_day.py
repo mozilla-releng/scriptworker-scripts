@@ -135,6 +135,7 @@ async def run(github_client: GithubClient, public_artifact_dir: str, merge_info:
                 bump_branch,
                 version_bump_infos,
                 dontbuild=False,
+                munge_next_version=False,
             )
         )
 

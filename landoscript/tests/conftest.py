@@ -201,6 +201,11 @@ def assert_add_commit_response(action, commit_msg_strings, initial_values, expec
 
     # ensure expected bumps are present to a reasonable degree of certainty
     for file, after in expected_bumps.items():
+        # if present, ensure `after` has a newline in it. even if it the last
+        # line of a file without a newline character, there will still be
+        # a newline in the diff (followed by the "no newline" escape sequence)
+        if after:
+            after = after.rstrip("\n") + "\n"
         for diff in diffs:
             # if the version is the last line in the file it may or may not
             # have a trailing newline. either way, there will be one (and
