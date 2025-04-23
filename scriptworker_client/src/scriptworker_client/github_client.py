@@ -89,13 +89,16 @@ class GithubClient:
 
         await retry_async(_execute, attempts=3, retry_exceptions=(TransportQueryError,), sleeptime_kwargs={"delay_factor": 0})
 
-    async def get_files(self, files: Union[str, List[str]], branch: Optional[str] = None) -> Dict[str, Union[str, None]]:
+    async def get_files(self, files: Union[str, List[str]], branch: Optional[str] = None, files_per_request: int = 200) -> Dict[str, Union[str, None]]:
         """Get the contents of the specified files.
 
         Args:
             files (List): The list of files to retrieve.
             branch (str): The branch to retrieve the files from. Uses the
                 repository's default branch if unspecified.
+            files_per_request (int): The number of files to request per GraphQL
+                call. When fetching larger files, this number may need to be
+                decreased to avoid timeouts. Defaults to 200.
 
         Returns:
             Dict: The dictionary of file contents of the form `{<path>: <contents>}`.
@@ -127,35 +130,38 @@ class GithubClient:
             """
             )
         )
-        fields = []
-
         # Many characters (slashes, dashes, dots, and more) are not supported
         # in graphql key names. Additionally, key names have a maximum length
         # of 320 characters. To avoid running afoul of these things, we map
         # file paths to their hashes, and use the hashes as the key names
         # in the query.
         aliases = {}
-        for f in files:
-            # Graphql assumes that any string that starts with a digit is an
-            # integer, which will cause errors when the query is submitted.
-            # We force these hashes to start with a letter to avoid hitting
-            # this.
-            hash_ = "a" + hashlib.md5(f.encode()).hexdigest()
-            aliases[hash_] = f
-            fields.append(field.substitute(branch=branch, file=f, name=hash_))
-
-        str_query = query.substitute(owner=self.owner, repo=self.repo, fields=",".join(fields))
-
-        contents = (await self._client.execute(str_query))["repository"]
         ret: Dict[str, Union[str, None]] = {}
-        for k, v in contents.items():
-            # Map the key names (which are the hashes we set-up above) back
-            # to their actual file paths.
-            name = aliases[k]
-            if v is None:
-                ret[name] = None
-            else:
-                ret[name] = v["text"]
+
+        # yields the starting index for each batch
+        for i in range(0, len(files), files_per_request):
+            fields = []
+            # iterate over only the files in the current batch
+            for f in files[i : i + files_per_request]:
+                # Graphql assumes that any string that starts with a digit is an
+                # integer, which will cause errors when the query is submitted.
+                # We force these hashes to start with a letter to avoid hitting
+                # this.
+                hash_ = "a" + hashlib.md5(f.encode()).hexdigest()
+                aliases[hash_] = f
+                fields.append(field.substitute(branch=branch, file=f, name=hash_))
+
+            str_query = query.substitute(owner=self.owner, repo=self.repo, fields=",".join(fields))
+
+            contents = (await self._client.execute(str_query))["repository"]
+            for k, v in contents.items():
+                # Map the key names (which are the hashes we set-up above) back
+                # to their actual file paths.
+                name = aliases[k]
+                if v is None:
+                    ret[name] = None
+                else:
+                    ret[name] = v["text"]
 
         return ret
 
