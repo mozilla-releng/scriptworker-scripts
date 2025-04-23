@@ -154,7 +154,7 @@ async def async_main(context):
             log.info("No lando actions to submit!")
 
 
-def main(config_path: str = ""):
+def main(config_path=None):
     # gql is extremely noisy at our typical log level (it logs all request and response bodies)
     logging.getLogger("gql").setLevel(logging.WARNING)
     return scriptworker.client.sync_main(async_main, config_path=config_path, default_config=get_default_config())
