@@ -19,7 +19,7 @@ def context(privkey_file, tmpdir):
     context = Context()
     context.config = {
         "artifact_dir": tmpdir,
-        "lando_api": "https://lando.fake",
+        "lando_api": "https://lando.fake/api",
         "lando_token": "super secret",
         "github_config": {
             "app_id": 12345,
@@ -66,10 +66,10 @@ def setup_test(aioresponses, github_installation_responses, context, payload, ac
     lando_repo = payload["lando_repo"]
     lando_api = context.config["lando_api"]
     owner = "faker"
-    repo_info_uri = URL(f"{lando_api}/api/repoinfo/{repo}")
-    submit_uri = URL(f"{lando_api}/api/repo/{lando_repo}")
+    repo_info_uri = URL(f"{lando_api}/repoinfo/{repo}")
+    submit_uri = URL(f"{lando_api}/repo/{lando_repo}")
     job_id = 12345
-    status_uri = URL(f"{lando_api}/push/{job_id}")
+    status_uri = URL(f"{lando_api}/job/{job_id}")
 
     aioresponses.get(
         repo_info_uri,

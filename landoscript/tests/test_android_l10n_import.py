@@ -236,10 +236,10 @@ async def test_success(aioresponses, github_installation_responses, context, and
     lando_repo = payload["lando_repo"]
     lando_api = context.config["lando_api"]
     owner = "faker"
-    repo_info_uri = URL(f"{lando_api}/api/repoinfo/repo_name")
-    submit_uri = URL(f"{lando_api}/api/repo/{lando_repo}")
+    repo_info_uri = URL(f"{lando_api}/repoinfo/repo_name")
+    submit_uri = URL(f"{lando_api}/repo/{lando_repo}")
     job_id = 12345
-    status_uri = URL(f"{lando_api}/push/{job_id}")
+    status_uri = URL(f"{lando_api}/job/{job_id}")
 
     scopes = [f"project:releng:lando:repo:repo_name"]
     scopes.append(f"project:releng:lando:action:android_l10n_import")
@@ -407,7 +407,7 @@ async def test_missing_toml_file(aioresponses, github_installation_responses, co
     scopes.append(f"project:releng:lando:action:android_l10n_import")
 
     lando_api = context.config["lando_api"]
-    repo_info_uri = URL(f"{lando_api}/api/repoinfo/repo_name")
+    repo_info_uri = URL(f"{lando_api}/repoinfo/repo_name")
     aioresponses.get(
         repo_info_uri,
         status=200,
