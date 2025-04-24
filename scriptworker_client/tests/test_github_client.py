@@ -139,6 +139,60 @@ async def test_get_files(aioresponses, github_client):
 
 
 @pytest.mark.asyncio
+async def test_get_files_multiple_requests(aioresponses, github_client):
+    branch = "main"
+    expected = {"README.md": "Hello!", "version.txt": "109.1.0"}
+    aliases = {
+        "README.md": "a" + hashlib.md5("README.md".encode()).hexdigest(),
+        "version.txt": "a" + hashlib.md5("version.txt".encode()).hexdigest(),
+    }
+    files = list(expected)
+
+    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {aliases["README.md"]: {"text": expected["README.md"]}}}})
+    aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {aliases["version.txt"]: {"text": expected["version.txt"]}}}})
+
+    result = await github_client.get_files(files, branch, files_per_request=1)
+    assert result == expected
+
+    aioresponses.assert_called()
+    key = ("POST", URL(GITHUB_GRAPHQL_ENDPOINT))
+    first_request = aioresponses.requests[key][-2][1]["json"]
+    second_request = aioresponses.requests[key][-1][1]["json"]
+
+    files = [Path(file) for file in files]
+    assert first_request == {
+        "query": dedent(
+            f"""
+            query getFileContents {{
+              repository(owner: "{github_client.owner}", name: "{github_client.repo}") {{
+                {aliases["README.md"]}: object(expression: "{branch}:README.md") {{
+                  ... on Blob {{
+                    text
+                  }}
+                }}
+              }}
+            }}
+            """
+        ).strip(),
+    }
+    assert second_request == {
+        "query": dedent(
+            f"""
+            query getFileContents {{
+              repository(owner: "{github_client.owner}", name: "{github_client.repo}") {{
+                {aliases["version.txt"]}: object(expression: "{branch}:version.txt") {{
+                  ... on Blob {{
+                    text
+                  }}
+                }}
+              }}
+            }}
+            """
+        ).strip(),
+    }
+
+
+@pytest.mark.asyncio
 async def test_get_files_with_missing(aioresponses, github_client):
     branch = "main"
     files = ["README.md", "version.txt", "missing.txt"]
