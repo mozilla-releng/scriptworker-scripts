@@ -151,10 +151,14 @@ async def test_success_bump_main(
         "dry_run": dry_run,
     }
 
+    end_tag_target_ref = "ghijkl654321"
+
     setup_github_graphql_responses(
         aioresponses,
         # existing version in `to_branch`
         get_files_payload({merge_info["fetch_version_from"]: "137.0a1"}),
+        # branch ref for `end` tag
+        {"data": {"repository": {"object": {"oid": end_tag_target_ref}}}},
         # fetch of original contents of files to bump, if we expect any replacements
         get_files_payload(initial_values if expected_bumps else {}),
         # fetch of original contents of `replacements` and `regex_replacements` files
@@ -173,6 +177,7 @@ async def test_success_bump_main(
             initial_replacement_values,
             expected_replacement_bumps,
             end_tag,
+            end_tag_target_ref,
         )
 
     await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], not dry_run, assert_func)
@@ -356,12 +361,13 @@ async def test_success_main_to_beta(aioresponses, github_installation_responses,
     expected_actions = ["tag", "tag", "merge-onto", "create-commit", "create-commit"]
     base_tag = "FIREFOX_BETA_140_BASE"
     end_tag = "FIREFOX_BETA_139_END"
-    target_ref = "main"
     payload = {
         "actions": ["merge_day"],
         "lando_repo": "repo_name",
         "merge_info": merge_info,
     }
+    end_tag_target_ref = "ghijkl654321"
+    base_tag_target_ref = "mnopqr987654"
 
     # version bump files are fetched in groups, by initial version
     initial_values_by_expected_version = defaultdict(dict)
@@ -372,8 +378,12 @@ async def test_success_main_to_beta(aioresponses, github_installation_responses,
         aioresponses,
         # existing version in `to_branch`
         get_files_payload({merge_info["fetch_version_from"]: "139.0b11"}),
+        # branch ref for `end` tag
+        {"data": {"repository": {"object": {"oid": end_tag_target_ref}}}},
         # existing version in `from_branch`
         get_files_payload({merge_info["fetch_version_from"]: "140.0a1"}),
+        # branch ref for `base` tag
+        {"data": {"repository": {"object": {"oid": base_tag_target_ref}}}},
         # fetch of original contents of files to bump
         *[get_files_payload(iv) for iv in initial_values_by_expected_version.values()],
         # fetch of original contents of `replacements` and `regex_replacements` files
@@ -392,8 +402,10 @@ async def test_success_main_to_beta(aioresponses, github_installation_responses,
             initial_replacement_values,
             expected_replacement_values,
             end_tag,
+            end_tag_target_ref,
             base_tag,
-            target_ref,
+            base_tag_target_ref,
+            base_tag_target_ref,
         )
 
     await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], assert_func=assert_func)
@@ -434,19 +446,24 @@ async def test_success_beta_to_release(aioresponses, github_installation_respons
     expected_actions = ["tag", "tag", "merge-onto", "create-commit", "create-commit"]
     base_tag = "FIREFOX_RELEASE_136_BASE"
     end_tag = "FIREFOX_RELEASE_135_END"
-    target_ref = "beta"
     payload = {
         "actions": ["merge_day"],
         "lando_repo": "repo_name",
         "merge_info": merge_info,
     }
+    end_tag_target_ref = "ghijkl654321"
+    base_tag_target_ref = "mnopqr987654"
 
     setup_github_graphql_responses(
         aioresponses,
         # existing version in `to_branch`
         get_files_payload({merge_info["fetch_version_from"]: "135.0"}),
+        # branch ref for `end` tag
+        {"data": {"repository": {"object": {"oid": end_tag_target_ref}}}},
         # existing version in `from_branch`
         get_files_payload({merge_info["fetch_version_from"]: "136.0"}),
+        # branch ref for `base` tag
+        {"data": {"repository": {"object": {"oid": base_tag_target_ref}}}},
         # fetch of original contents of files to bump, if we expect any replacements
         get_files_payload(initial_values),
         # fetch of original contents of `replacements` and `regex_replacements` files
@@ -465,8 +482,10 @@ async def test_success_beta_to_release(aioresponses, github_installation_respons
             initial_replacement_values,
             expected_replacement_values,
             end_tag,
+            end_tag_target_ref,
             base_tag,
-            target_ref,
+            base_tag_target_ref,
+            base_tag_target_ref,
         )
 
     await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], assert_func=assert_func)
@@ -500,17 +519,19 @@ async def test_success_release_to_esr(aioresponses, github_installation_response
     # end tag, version bump, replacements
     expected_actions = ["tag", "create-commit", "create-commit"]
     end_tag = "FIREFOX_ESR_128_BASE"
-    target_ref = "release"
     payload = {
         "actions": ["merge_day"],
         "lando_repo": "repo_name",
         "merge_info": merge_info,
     }
+    end_tag_target_ref = "ghijkl654321"
 
     setup_github_graphql_responses(
         aioresponses,
         # existing version in `to_branch`
         get_files_payload({merge_info["fetch_version_from"]: "128.0"}),
+        # branch ref for `end` tag
+        {"data": {"repository": {"object": {"oid": end_tag_target_ref}}}},
         # fetch of original contents of files to bump, if we expect any replacements
         get_files_payload(initial_values if expected_bumps else {}),
         # fetch of original contents of `replacements` and `regex_replacements` files
@@ -529,7 +550,7 @@ async def test_success_release_to_esr(aioresponses, github_installation_response
             initial_replacement_values,
             expected_replacement_bumps,
             end_tag,
-            target_ref=target_ref,
+            end_tag_target_ref,
         )
 
     await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], assert_func=assert_func)

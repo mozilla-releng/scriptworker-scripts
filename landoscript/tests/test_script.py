@@ -1,3 +1,4 @@
+from os import walk
 from aiohttp import ClientResponseError
 from collections import defaultdict
 import pytest
@@ -33,7 +34,7 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "payload,initial_values,expected_bumps,commit_msg_strings,tags,dry_run",
+    "payload,initial_values,expected_bumps,commit_msg_strings,dry_run",
     (
         pytest.param(
             {
@@ -43,7 +44,11 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
                     "files": ["browser/config/version.txt"],
                     "next_version": "135.0",
                 },
-                "tags": ["RELEASE"],
+                "tag_info": {
+                    "revision": "abcdef123456",
+                    "hg_repo_url": "https://hg.testing/repo",
+                    "tags": ["RELEASE"],
+                },
                 "dry_run": True,
             },
             {
@@ -53,7 +58,6 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
                 "browser/config/version.txt": "135.0",
             },
             ["Automatic version bump", "NO BUG", "a=release"],
-            ["RELEASE"],
             True,
             id="tag_and_bump",
         ),
@@ -65,7 +69,11 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
                     "files": ["browser/config/version.txt"],
                     "next_version": "135.0",
                 },
-                "tags": ["RELEASE"],
+                "tag_info": {
+                    "revision": "abcdef123456",
+                    "hg_repo_url": "https://hg.testing/repo",
+                    "tags": ["RELEASE"],
+                },
             },
             {
                 "browser/config/version.txt": "134.0",
@@ -74,18 +82,29 @@ def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
                 "browser/config/version.txt": "135.0",
             },
             ["Automatic version bump", "NO BUG", "a=release"],
-            ["RELEASE"],
             False,
             id="tag_and_bump",
         ),
     ),
 )
-async def test_tag_and_bump(aioresponses, github_installation_responses, context, payload, dry_run, initial_values, expected_bumps, commit_msg_strings, tags):
+async def test_tag_and_bump(aioresponses, github_installation_responses, context, payload, dry_run, initial_values, expected_bumps, commit_msg_strings):
     setup_github_graphql_responses(aioresponses, get_files_payload(initial_values))
+
+    tag_info = payload["tag_info"]
+    git_commit = "ghijkl654321"
+    # TODO: update this URL when you figure out how to map land repos back to hg repos
+    aioresponses.get(
+        f"{tag_info['hg_repo_url']}/json-rev/{tag_info['revision']}",
+        status=200,
+        payload={
+            # TODO: update this when you know what field this will be in
+            "git_commit": git_commit
+        },
+    )
 
     def assert_func(req):
         assert_success(req, commit_msg_strings, initial_values, expected_bumps)
-        assert_tag_response(req, tags)
+        assert_tag_response(req, tag_info, git_commit)
         assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
 
     await run_test(aioresponses, github_installation_responses, context, payload, payload["actions"], not dry_run, assert_func)
@@ -252,7 +271,7 @@ async def test_missing_scopes(aioresponses, github_installation_responses, conte
 
 @pytest.mark.asyncio
 async def test_dontbuild_properly_errors(aioresponses, github_installation_responses, context):
-    payload = {"actions": ["tag"], "lando_repo": "repo_name", "tags": ["FIREFOX_139_0_RELEASE"], "dontbuild": True}
+    payload = {"actions": ["tag"], "lando_repo": "repo_name", "tag_info": {"tags": ["FIREFOX_139_0_RELEASE"]}, "dontbuild": True}
     await run_test(
         aioresponses, github_installation_responses, context, payload, ["tag"], err=TaskVerificationError, errmsg="dontbuild is only respected in l10n_bump"
     )
@@ -260,7 +279,7 @@ async def test_dontbuild_properly_errors(aioresponses, github_installation_respo
 
 @pytest.mark.asyncio
 async def test_ignore_closed_tree_properly_errors(aioresponses, github_installation_responses, context):
-    payload = {"actions": ["tag"], "lando_repo": "repo_name", "tags": ["FIREFOX_139_0_RELEASE"], "ignore_closed_tree": True}
+    payload = {"actions": ["tag"], "lando_repo": "repo_name", "tag_info": {"tags": ["FIREFOX_139_0_RELEASE"]}, "ignore_closed_tree": True}
     await run_test(
         aioresponses,
         github_installation_responses,
@@ -412,7 +431,6 @@ async def test_success_main_to_beta_merge_day(aioresponses, github_installation_
     expected_actions = ["tag", "tag", "merge-onto", "create-commit", "create-commit", "create-commit", "create-commit"]
     base_tag = "FIREFOX_BETA_140_BASE"
     end_tag = "FIREFOX_BETA_139_END"
-    target_ref = "main"
     initial_l10n_changesets = {
         "Firefox l10n changesets": {
             "revision": "abcdef",
@@ -511,6 +529,9 @@ async def test_success_main_to_beta_merge_day(aioresponses, github_installation_
         "merge_info": merge_info,
         "ignore_closed_tree": True,
     }
+    end_tag_target_ref = "ghijkl654321"
+    base_tag_target_ref = "mnopqr987654"
+
     submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["merge_day", "l10n_bump"])
 
     # version bump files are fetched in groups, by initial version
@@ -522,8 +543,12 @@ async def test_success_main_to_beta_merge_day(aioresponses, github_installation_
         aioresponses,
         # existing version in `to_branch`
         get_files_payload({merge_info["fetch_version_from"]: "139.0b11"}),
+        # branch ref for `end` tag
+        {"data": {"repository": {"object": {"oid": end_tag_target_ref}}}},
         # existing version in `from_branch`
         get_files_payload({merge_info["fetch_version_from"]: "140.0a1"}),
+        # branch ref for `base` tag
+        {"data": {"repository": {"object": {"oid": base_tag_target_ref}}}},
         # fetch of original contents of files to bump
         *[get_files_payload(iv) for iv in initial_values_by_expected_version.values()],
         # fetch of original contents of `replacements` and `regex_replacements` files
@@ -570,8 +595,10 @@ async def test_success_main_to_beta_merge_day(aioresponses, github_installation_
         initial_replacement_values,
         expected_replacement_values,
         end_tag,
+        end_tag_target_ref,
         base_tag,
-        target_ref,
+        base_tag_target_ref,
+        base_tag_target_ref,
     )
     expected_changes = 0
     for initial_info, expected_info in zip(initial_l10n_changesets.values(), expected_l10n_changesets.values()):
