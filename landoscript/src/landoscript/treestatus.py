@@ -8,7 +8,7 @@ from scriptworker.utils import calculate_sleep_time, retry_async
 log = logging.getLogger(__name__)
 
 
-async def is_tree_open(session: ClientSession, treestatus_url: str, lando_repo: str, sleeptime_callback: Callable[..., Any] = calculate_sleep_time) -> bool:
+async def is_tree_open(session: ClientSession, treestatus_url: str, lando_repo: str, sleeptime_callback: Callable[..., Any] | None) -> bool:
     """Return True if we can land based on treestatus.
 
     Args:
@@ -28,7 +28,7 @@ async def is_tree_open(session: ClientSession, treestatus_url: str, lando_repo: 
             kwargs={"raise_for_status": True},
             attempts=10,
             retry_exceptions=ClientResponseError,
-            sleeptime_callback=sleeptime_callback,
+            sleeptime_callback=sleeptime_callback or calculate_sleep_time,
         )
 
     log.info(f"success! got {resp.status} response")
