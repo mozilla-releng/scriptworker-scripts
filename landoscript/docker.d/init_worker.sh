@@ -21,5 +21,5 @@ else
 fi
 
 export GITHUB_PRIVATE_KEY_FILE="${CONFIG_DIR}/github_private_key"
-echo "${GITHUB_PRIVATE_KEY}" + base64 -d > "${GITHUB_PRIVATE_KEY_FILE}"
+echo "${GITHUB_PRIVATE_KEY}" | base64 -d > "${GITHUB_PRIVATE_KEY_FILE}"
 chmod 400 "${GITHUB_PRIVATE_KEY_FILE}"
