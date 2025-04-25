@@ -10,7 +10,7 @@ treestatus_url: https://treestatus.prod.lando.prod.cloudops.mozgcp.net
 github_config:
   app_id:
     # note: prod covers both L3 and L1 workers (the latter is sometimes called "fake-prod", but not here!)
-    $if: 'env == "prod"'
+    $if: 'ENV == "prod"'
     then: 1175984 # releng-read-only
     else: 1227773 # releng-read-only-dev
   privkey_file: { "$eval": "GITHUB_PRIVATE_KEY_FILE" }
