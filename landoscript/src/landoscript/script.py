@@ -79,7 +79,7 @@ async def async_main(context):
 
         is_tree_open = True
         if not ignore_closed_tree:
-            is_tree_open = await treestatus.is_tree_open(session, config["treestatus_url"], lando_repo, config["sleeptime_callback"])
+            is_tree_open = await treestatus.is_tree_open(session, config["treestatus_url"], lando_repo, config.get("sleeptime_callback"))
 
         lando_actions: list[lando.LandoAction] = []
         async with GithubClient(context.config["github_config"], owner, repo) as gh_client:
@@ -143,7 +143,7 @@ async def async_main(context):
                 for la in lando_actions:
                     log.info(la)
 
-                status_url = await lando.submit(session, lando_api, lando_token, lando_repo, lando_actions, config["sleeptime_callback"])
+                status_url = await lando.submit(session, lando_api, lando_token, lando_repo, lando_actions, config.get("sleeptime_callback"))
                 await lando.poll_until_complete(session, lando_token, config["poll_time"], status_url)
         else:
             log.info("No lando actions to submit!")

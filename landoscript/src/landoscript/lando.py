@@ -37,7 +37,7 @@ async def submit(
     lando_token: str,
     lando_repo: str,
     actions: list[LandoAction],
-    sleeptime_callback: Callable[..., Any] = calculate_sleep_time,
+    sleeptime_callback: Callable[..., Any] | None,
 ) -> str:
     """Submit the provided `actions` to the given `lando_repo` through the `lando_api`."""
     url = f"{lando_api}/repo/{lando_repo}"
@@ -59,7 +59,7 @@ async def submit(
             },
             attempts=10,
             retry_exceptions=ClientResponseError,
-            sleeptime_callback=sleeptime_callback,
+            sleeptime_callback=sleeptime_callback or calculate_sleep_time,
         )
 
     log.info(f"success! got {submit_resp.status} response")
