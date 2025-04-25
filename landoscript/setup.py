@@ -11,6 +11,7 @@ setup(
     url="https://github.com/mozilla-releng/scriptworker-scripts",
     packages=find_packages("src"),
     package_dir={"": "src"},
+    include_package_data=True,
     entry_points={"console_scripts": ["landoscript = landoscript.script:main"]},
     python_requires=">=3.11",
     license="MPL2",
