@@ -11,7 +11,6 @@ from landoscript.errors import LandoscriptError
 from landoscript.lando import LandoAction, create_commit_action
 from landoscript.util.diffs import diff_contents
 from landoscript.util.l10n import L10nFile, getL10nFilesFromToml
-from landoscript.util.log import log_file_contents
 from scriptworker_client.github_client import GithubClient
 
 log = logging.getLogger(__name__)
@@ -99,8 +98,7 @@ async def run(github_client: GithubClient, public_artifact_dir: str, android_l10
     with open(os.path.join(public_artifact_dir, "android-sync.diff"), "w+") as f:
         f.write(diff)
 
-    log.info("adding android l10n sync! diff contents are:")
-    log_file_contents(diff)
+    log.info("adding android l10n sync diff! contents omitted from log for brevity")
 
     commitmsg = f"Import translations from {from_branch}"
     return create_commit_action(commitmsg, diff)
