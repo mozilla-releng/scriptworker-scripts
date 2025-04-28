@@ -105,7 +105,7 @@ async def run(
             with open(os.path.join(public_artifact_dir, f"l10n-bump-{bump_config.name}.diff"), "w+") as f:
                 f.write(diff)
 
-            log.info(f"adding l10n bump commit for {bump_config.name}! diff contents are:")
+            log.info(f"adding l10n bump commit for {bump_config.name}! diff contents omitted from log for brevity")
             log_file_contents(diff)
 
             # create commit message

@@ -11,7 +11,6 @@ from landoscript.errors import LandoscriptError
 from landoscript.lando import LandoAction, create_commit_action
 from landoscript.util.diffs import diff_contents
 from landoscript.util.l10n import L10nFile, getL10nFilesFromToml
-from landoscript.util.log import log_file_contents
 from scriptworker_client.github import extract_github_repo_owner_and_name
 from scriptworker_client.github_client import GithubClient
 
@@ -107,8 +106,7 @@ async def run(
         with open(os.path.join(public_artifact_dir, "android-import.diff"), "w+") as f:
             f.write(diff)
 
-        log.info("adding android l10n import! diff contents are:")
-        log_file_contents(diff)
+        log.info("adding android l10n import diff! contents omitted from log for brevity")
 
         # We always ignore closed trees for android l10n imports.
         commitmsg = f"Import translations from {l10n_repo_url} CLOSED TREE"

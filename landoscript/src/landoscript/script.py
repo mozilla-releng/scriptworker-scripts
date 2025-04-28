@@ -151,6 +151,8 @@ async def async_main(context):
 
 
 def main(config_path: str = ""):
+    # gql is extremely noisy at our typical log level (it logs all request and response bodies)
+    logging.getLogger("gql").setLevel(logging.WARNING)
     return scriptworker.client.sync_main(async_main, config_path=config_path, default_config=get_default_config())
 
 

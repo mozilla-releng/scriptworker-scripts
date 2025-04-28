@@ -1,7 +1,6 @@
 import asyncio
 import datetime
 import logging
-from pprint import pprint
 from typing import Any, Callable, Tuple
 
 from aiohttp import ClientResponseError, ClientSession
@@ -43,11 +42,16 @@ async def submit(
     url = f"{lando_api}/repo/{lando_repo}"
     json = {"actions": actions}
 
-    log.info(f"submitting actions to lando: {actions}")
+    log.info("submitting actions to lando:")
+    for action in actions:
+        print_action = action.copy()
+        if "diff" in print_action:
+            print_action["diff"] = "<omitted for brevity>"
+        log.info(print_action)
+
     async with timeout(30):
         log.info(f"submitting POST request to {url}")
         log.info("message body is:")
-        log.info(pprint(json))
 
         submit_resp = await retry_async(
             session.post,
