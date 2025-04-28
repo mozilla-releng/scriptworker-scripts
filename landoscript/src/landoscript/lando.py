@@ -1,7 +1,6 @@
 import asyncio
 import datetime
 import logging
-from pprint import pprint
 from typing import Any, Callable, Tuple
 
 from aiohttp import ClientResponseError, ClientSession
