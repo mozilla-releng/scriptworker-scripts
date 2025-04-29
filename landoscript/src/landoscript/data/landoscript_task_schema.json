@@ -140,6 +140,9 @@
                         },
                         "revision": {
                             "type": "string"
+                        },
+                        "hg_repo_url": {
+                            "type": "string"
                         }
                     },
                     "required": [

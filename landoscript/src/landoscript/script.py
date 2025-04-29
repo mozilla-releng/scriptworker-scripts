@@ -98,10 +98,14 @@ async def async_main(context):
                     if version_bump_action:
                         lando_actions.append(version_bump_action)
                 elif action == "tag":
-                    tag_actions = tag.run(payload["tags"])
+                    if "hg_repo_url" not in payload["tag_info"]:
+                        raise TaskVerificationError("must provide hg_repo_url!")
+                    tag_actions = await tag.run(session, tag.HgTagInfo(**payload["tag_info"]))
                     lando_actions.extend(tag_actions)
                 elif action == "merge_day":
-                    merge_day_actions = await merge_day.run(gh_client, public_artifact_dir, merge_day.MergeInfo.from_payload_data(payload["merge_info"]))
+                    merge_day_actions = await merge_day.run(
+                        session, gh_client, public_artifact_dir, merge_day.MergeInfo.from_payload_data(payload["merge_info"])
+                    )
                     lando_actions.extend(merge_day_actions)
                 elif action == "l10n_bump":
                     if not is_tree_open:

@@ -8,6 +8,7 @@ from datetime import date
 from typing import Self
 
 import attr
+from aiohttp import ClientSession
 from mozilla_version.gecko import GeckoVersion
 from mozilla_version.version import BaseVersion
 from scriptworker.client import TaskVerificationError
@@ -51,7 +52,7 @@ class MergeInfo:
         return cls(**kwargs)
 
 
-async def run(github_client: GithubClient, public_artifact_dir: str, merge_info: MergeInfo) -> list[LandoAction]:
+async def run(session: ClientSession, github_client: GithubClient, public_artifact_dir: str, merge_info: MergeInfo) -> list[LandoAction]:
     to_branch = merge_info.to_branch
     from_branch = merge_info.from_branch
     end_tag = merge_info.end_tag
@@ -64,11 +65,12 @@ async def run(github_client: GithubClient, public_artifact_dir: str, merge_info:
     to_version = await get_version(github_client, version_file, to_branch)
     log.info(f"to_version is: {to_version}")
     if end_tag:
+        end_revision = await github_client.get_branch_head_oid(to_branch)
         # End tag specifically uses the `to_version` _before_ we bump it
         # (because we're declaring its current version as "done")
         end_tag_fmted = end_tag.format(major_version=to_version.major_number)
         log.info(f"Adding end_tag: {end_tag_fmted}")
-        actions.extend(tag.run([end_tag_fmted]))
+        actions.extend(await tag.run(session, tag.GitTagInfo(revision=end_revision, tags=[end_tag_fmted])))
 
     # We need to determine `bump_version`, which is what we will use when
     # performing version bumps later on. This version must be whatever version
@@ -80,6 +82,7 @@ async def run(github_client: GithubClient, public_artifact_dir: str, merge_info:
         bump_version = await get_version(github_client, version_file, from_branch)
         bump_branch = from_branch
         log.info(f"from_branch is present, got bump_version from it: {bump_version}")
+        end_revision = await github_client.get_branch_head_oid(from_branch)
 
         # base tagging _only_ happens when we have a `from_branch` -- these are
         # scenarios where we're uplifting one branch to another, and beginning a new
@@ -87,7 +90,14 @@ async def run(github_client: GithubClient, public_artifact_dir: str, merge_info:
         if base_tag:
             base_tag_fmted = base_tag.format(major_version=bump_version.major_number)
             log.info(f"Adding base_tag: {base_tag_fmted}")
-            actions.extend(tag.run([base_tag_fmted]))
+            actions.extend(await tag.run(session, tag.GitTagInfo(revision=end_revision, tags=[base_tag_fmted])))
+        if merge_old_head:
+            log.info(f"Merging old head. target is from_branch ({from_branch}), strategy is theirs")
+            # perform merge
+            # `theirs` strategy means that the repo being modified will have its tree updated to match that
+            # of the `target`.
+            merge_msg = f"Update {to_branch} to {from_branch}"
+            actions.append({"action": "merge-onto", "target": end_revision, "strategy": "theirs", "message": merge_msg})
     else:
         if merge_old_head:
             raise TaskVerificationError("'from_branch' is required when merge_old_head is True or version_files are present")
@@ -95,14 +105,6 @@ async def run(github_client: GithubClient, public_artifact_dir: str, merge_info:
         bump_version = to_version
         bump_branch = to_branch
         log.info(f"from_branch is not present, using to_version as bump_version: {bump_version}")
-
-    if merge_old_head:
-        log.info(f"Merging old head. target is from_branch ({from_branch}), strategy is theirs")
-        # perform merge
-        # `theirs` strategy means that the repo being modified will have its tree updated to match that
-        # of the `target`.
-        merge_msg = f"Update {to_branch} to {from_branch}"
-        actions.append({"action": "merge-onto", "target": from_branch, "strategy": "theirs", "message": merge_msg})
 
     if merge_info.version_files:
         log.info("Performing version bumps")

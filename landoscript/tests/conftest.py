@@ -357,7 +357,9 @@ def assert_merge_response(
     initial_replacement_values={},
     expected_replacement_bumps={},
     end_tag="",
+    end_tag_target_ref="",
     base_tag="",
+    base_tag_target_ref="",
     target_ref="",
 ):
     actions = req.kwargs["json"]["actions"]
@@ -369,10 +371,13 @@ def assert_merge_response(
         assert len(tag_actions) == 2
         # if it exists, base tag happens second
         assert tag_actions[0]["name"] == end_tag
+        assert tag_actions[0]["target"] == end_tag_target_ref
         assert tag_actions[1]["name"] == base_tag
+        assert tag_actions[1]["target"] == base_tag_target_ref
     elif end_tag:
         assert len(tag_actions) == 1
         assert tag_actions[0]["name"] == end_tag
+        assert tag_actions[0]["target"] == end_tag_target_ref
 
     if "merge-onto" in expected_actions:
         # `merge-onto` action w/ target revision, commit message, and `ours` strategy
