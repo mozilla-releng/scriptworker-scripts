@@ -97,10 +97,6 @@ async def poll_until_complete(session: ClientSession, lando_token: str, poll_tim
 
             log.info("success! got 200 response with 'LANDED' status")
 
-            log.info("Commits are:")
-            for commit in body["commits"]:
-                log.info(commit)
-
             break
 
 
