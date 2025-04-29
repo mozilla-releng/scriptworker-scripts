@@ -51,7 +51,6 @@ async def submit(
 
     async with timeout(30):
         log.info(f"submitting POST request to {url}")
-        log.info("message body is:")
 
         submit_resp = await retry_async(
             session.post,

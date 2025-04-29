@@ -87,7 +87,7 @@ async def run(github_client: GithubClient, public_artifact_dir: str, android_l10
         orig_file = orig_files[l10n_file.dst_name]
         new_file = new_files[l10n_file.src_name]
         if orig_file == new_file:
-            log.warning(f"old and new contents of {new_file} are the same, skipping bump...")
+            log.warning(f"old and new contents of {l10n_file.dst_name} are the same, skipping bump...")
             continue
 
         diff += diff_contents(orig_file, new_file, l10n_file.dst_name)
