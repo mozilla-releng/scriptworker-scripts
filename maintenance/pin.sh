@@ -1,11 +1,10 @@
 #!/bin/bash
 set -e
-set -x
 
 EXTRA_ARGS=${EXTRA_ARGS:-""}
 
 if [ $# -gt 0 ]; then
-    DIRS=( $@ )
+    read -r -a DIRS <<< "$@"
 else
     DIRS=(
         addonscript
@@ -55,33 +54,40 @@ PY_311_SCRIPTS=(
     .
 )
 
-RUNCMD="RUN apt-get update && \
-    apt-get install -y \
-        gir1.2-ostree-1.0 \
-        libgirepository1.0-dev \
-        && \
-    rm -rf /var/lib/apt/lists/* && \
-    pip install --upgrade pip && \
-    pip install pip-compile-multi
-"
-
-
+# Create a list of directories that need to be compiled for each python version
 PY38_DIRS=()
 PY311_DIRS=()
 for idx in "${!DIRS[@]}"; do
-    if [[ ${PY_38_SCRIPTS[@]} =~ "${DIRS[$idx]}" ]]; then
-        PY38_DIRS+=("${DIRS[$idx]}")
-    fi
-    if [[ ${PY_311_SCRIPTS[@]} =~ "${DIRS[$idx]}" ]]; then
-        PY311_DIRS+=("${DIRS[$idx]}")
-    fi
+    for script in "${PY_38_SCRIPTS[@]}"; do
+        if [[ "${DIRS[$idx]}" == "$script" ]]; then
+            PY38_DIRS+=("${DIRS[$idx]}")
+        fi
+    done
+    for script in "${PY_311_SCRIPTS[@]}"; do
+        if [[ "${DIRS[$idx]}" == "$script" ]]; then
+            PY311_DIRS+=("${DIRS[$idx]}")
+        fi
+    done
 done
 
+INSTALLED_PYTHON_VERSIONS=$(uv python list)
+check_python_version() {
+    local version=$1
+    if ! echo $INSTALLED_PYTHON_VERSIONS | grep -q "$version"; then
+        echo "ERROR: Python $version is not installed. Hint: run 'uv python install $version'. If you are using a virtualenv, make sure to activate it first."
+        exit 1
+    fi
+}
+
 if [ ${#PY38_DIRS} -gt 0 ]; then
-    printf "FROM python:3.8\n${RUNCMD}" | docker build --platform linux/x86_64 --pull --tag "scriptworker-script-pin:3.8" -
-    echo "${PY38_DIRS[@]}" | xargs -n4 -P4 docker run --platform linux/x86_64 --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -e SUFFIX=py38.txt -w /src scriptworker-script-pin:3.8 maintenance/pin-helper.sh
+    # Make sure python 3.8 is installed
+    # This is the version used in the old mac signers, once the new signers are in place, we can remove this
+    # and just use python 3.11 for everything
+    check_python_version 3.8
+    PYTHON_VERSION=3.8 SUFFIX=py38.txt maintenance/pin-helper.sh "${PY38_DIRS[@]}"
 fi
 if [ ${#PY311_DIRS} -gt 0 ]; then
-    printf "FROM python:3.11\n${RUNCMD}" | docker build --platform linux/x86_64 --pull --tag "scriptworker-script-pin:3.11" -
-    echo "${PY311_DIRS[@]}" | xargs -n4 -P4 docker run --platform linux/x86_64 --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -w /src scriptworker-script-pin:3.11 maintenance/pin-helper.sh
+    # Make sure python 3.11 is installed
+    check_python_version 3.11
+    PYTHON_VERSION=3.11 SUFFIX=txt maintenance/pin-helper.sh "${PY311_DIRS[@]}"
 fi
