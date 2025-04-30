@@ -92,8 +92,15 @@ async def poll_until_complete(session: ClientSession, lando_token: str, poll_tim
 
         if status_resp.status == 200:
             body = await status_resp.json()
-            if body.get("status") != "LANDED":
-                raise LandoscriptError("code is 200, status is not LANDED...result is unclear...failing!")
+            status = body.get("status")
+
+            # IN_PROGRESS jobs still return 200
+            if status == "IN_PROGRESS":
+                log.info("landing IN_PROGRESS still...trying again")
+                continue
+
+            if status != "LANDED":
+                raise LandoscriptError(f"code is 200, status is not LANDED (it's {status})...result is unclear...failing!")
 
             log.info("success! got 200 response with 'LANDED' status")
 

@@ -367,6 +367,45 @@ async def test_lando_polling_result_not_correct(aioresponses, github_installatio
 
 
 @pytest.mark.asyncio
+async def test_lando_in_progress_retries(aioresponses, github_installation_responses, context):
+    payload = {
+        "actions": ["version_bump"],
+        "lando_repo": "repo_name",
+        "version_bump_info": {
+            "files": ["browser/config/version.txt"],
+            "next_version": "135.0",
+        },
+    }
+    initial_values = {"browser/config/version.txt": "134.0"}
+    submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
+    setup_github_graphql_responses(aioresponses, get_files_payload(initial_values))
+    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
+    aioresponses.get(
+        status_uri,
+        status=200,
+        payload={
+            "commits": ["abcdef123"],
+            "push_id": job_id,
+            "status": "IN_PROGRESS",
+        },
+    )
+    aioresponses.get(
+        status_uri,
+        status=200,
+        payload={
+            "commits": ["abcdef123"],
+            "push_id": job_id,
+            "status": "LANDED",
+        },
+    )
+
+    context.task = {"payload": payload, "scopes": scopes}
+    await async_main(context)
+
+    assert_status_response(aioresponses.requests, status_uri, attempts=2)
+
+
+@pytest.mark.asyncio
 async def test_lando_polling_retry_on_failure(aioresponses, github_installation_responses, context):
     payload = {
         "actions": ["version_bump"],
