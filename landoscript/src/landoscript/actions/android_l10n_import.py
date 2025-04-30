@@ -109,5 +109,5 @@ async def run(
         log.info("adding android l10n import diff! contents omitted from log for brevity")
 
         # We always ignore closed trees for android l10n imports.
-        commitmsg = f"Import translations from {l10n_repo_url} CLOSED TREE"
+        commitmsg = f"No Bug - Import translations from {l10n_repo_url} CLOSED TREE"
         return create_commit_action(commitmsg, diff)

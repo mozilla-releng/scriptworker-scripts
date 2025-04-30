@@ -100,5 +100,5 @@ async def run(github_client: GithubClient, public_artifact_dir: str, android_l10
 
     log.info("adding android l10n sync diff! contents omitted from log for brevity")
 
-    commitmsg = f"Import translations from {from_branch}"
+    commitmsg = f"No Bug - Import translations from {from_branch}"
     return create_commit_action(commitmsg, diff)

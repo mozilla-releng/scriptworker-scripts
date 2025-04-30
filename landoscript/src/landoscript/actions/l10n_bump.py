@@ -208,7 +208,7 @@ def build_commit_message(name, locale_map, dontbuild=False, ignore_closed_tree=F
         approval_str += " DONTBUILD"
     if ignore_closed_tree:
         approval_str += " CLOSED TREE"
-    message = "no bug - Bumping %s %s\n\n" % (name, approval_str)
+    message = "No Bug - Bumping %s %s\n\n" % (name, approval_str)
     message += comments
     return message
 
