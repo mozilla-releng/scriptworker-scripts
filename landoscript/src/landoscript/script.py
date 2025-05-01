@@ -1,3 +1,4 @@
+import json
 import logging
 import os.path
 
@@ -139,6 +140,9 @@ async def async_main(context):
                 log.info("finished processing action")
 
         if lando_actions:
+            with open(os.path.join(public_artifact_dir, "lando-actions.json"), "w+") as f:
+                f.write(json.dumps(lando_actions, indent=2))
+
             if payload.get("dry_run", False):
                 log.info("Dry run...would've submitted lando actions:")
                 lando.print_actions(lando_actions)
