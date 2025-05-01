@@ -98,9 +98,7 @@ async def test_tag_and_bump(aioresponses, github_installation_responses, context
     aioresponses.get(
         f"{tag_info['hg_repo_url']}/json-rev/{tag_info['revision']}",
         status=200,
-        payload={
-            "git_commit": git_commit
-        },
+        payload={"git_commit": git_commit},
     )
 
     def assert_func(req):

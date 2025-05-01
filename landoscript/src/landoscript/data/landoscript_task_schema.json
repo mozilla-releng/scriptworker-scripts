@@ -5,7 +5,6 @@
         "merge_day_payload": {
             "type": "object",
             "required": [
-                "version_files",
                 "replacements",
                 "to_branch",
                 "merge_old_head"
