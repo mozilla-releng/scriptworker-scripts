@@ -39,7 +39,6 @@ class MergeInfo:
     base_tag: str = ""
     end_tag: str = ""
     merge_old_head: bool = False
-    touch_clobber_file: bool = True
     version_files: list[VersionFile] = field(default_factory=list)
     replacements: list[list[str]] = field(default_factory=list)
     regex_replacements: list[list[str]] = field(default_factory=list)
@@ -163,14 +162,13 @@ async def run(session: ClientSession, github_client: GithubClient, public_artifa
 
             diff += diff_contents(str(orig_contents[fn]), new_contents[fn], fn)
 
-    if merge_info.touch_clobber_file:
-        log.info("Touching clobber file")
-        orig_clobber_file = (await github_client.get_files("CLOBBER", to_branch))["CLOBBER"]
-        if orig_clobber_file is None:
-            raise LandoscriptError("Couldn't find CLOBBER file in repository!")
+    log.info("Touching clobber file")
+    orig_clobber_file = (await github_client.get_files("CLOBBER", to_branch))["CLOBBER"]
+    if orig_clobber_file is None:
+        raise LandoscriptError("Couldn't find CLOBBER file in repository!")
 
-        new_clobber_file = get_new_clobber_file(orig_clobber_file)
-        diff += diff_contents(orig_clobber_file, new_clobber_file, "CLOBBER")
+    new_clobber_file = get_new_clobber_file(orig_clobber_file)
+    diff += diff_contents(orig_clobber_file, new_clobber_file, "CLOBBER")
 
     log.info("replacements and clobber diff is:")
     log_file_contents(diff)
