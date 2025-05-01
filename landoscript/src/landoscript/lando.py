@@ -30,6 +30,14 @@ def _get_auth_headers(lando_token: str):
     }
 
 
+def print_actions(actions):
+    for action in actions:
+        print_action = action.copy()
+        if "diff" in print_action:
+            print_action["diff"] = "<omitted for brevity>"
+        log.info(print_action)
+
+
 async def submit(
     session: ClientSession,
     lando_api: str,
@@ -41,13 +49,6 @@ async def submit(
     """Submit the provided `actions` to the given `lando_repo` through the `lando_api`."""
     url = f"{lando_api}/repo/{lando_repo}"
     json = {"actions": actions}
-
-    log.info("submitting actions to lando:")
-    for action in actions:
-        print_action = action.copy()
-        if "diff" in print_action:
-            print_action["diff"] = "<omitted for brevity>"
-        log.info(print_action)
 
     async with timeout(30):
         log.info(f"submitting POST request to {url}")

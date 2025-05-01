@@ -141,12 +141,10 @@ async def async_main(context):
         if lando_actions:
             if payload.get("dry_run", False):
                 log.info("Dry run...would've submitted lando actions:")
-                for la in lando_actions:
-                    log.info(la)
+                lando.print_actions(lando_actions)
             else:
                 log.info("Not a dry run...submitting lando actions:")
-                for la in lando_actions:
-                    log.info(la)
+                lando.print_actions(lando_actions)
 
                 status_url = await lando.submit(session, lando_api, lando_token, lando_repo, lando_actions, config.get("sleeptime_callback"))
                 await lando.poll_until_complete(session, lando_token, config["poll_time"], status_url)
