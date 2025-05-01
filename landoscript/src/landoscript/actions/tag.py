@@ -31,7 +31,6 @@ async def run(session: ClientSession, tag_info: HgTagInfo | GitTagInfo) -> list[
     if len(tag_info.tags) < 1:
         raise TaskVerificationError("must provide at least one tag!")
 
-    git_commit = None
     if isinstance(tag_info, GitTagInfo):
         git_commit = tag_info.revision
     else:
@@ -51,8 +50,7 @@ async def run(session: ClientSession, tag_info: HgTagInfo | GitTagInfo) -> list[
     actions = []
     for tag in tag_info.tags:
         action = {"action": "tag", "name": tag}
-        if git_commit:
-            action["target"] = git_commit
+        action["target"] = git_commit
         actions.append(action)
 
     return actions
