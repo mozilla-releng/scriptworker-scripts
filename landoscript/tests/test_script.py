@@ -366,8 +366,9 @@ async def test_lando_polling_result_not_correct(aioresponses, github_installatio
         assert "status is not LANDED" in e.args[0]
 
 
+@pytest.mark.parametrize("status", ["SUBMITTED", "IN_PROGRESS", "DEFERRED"])
 @pytest.mark.asyncio
-async def test_lando_in_progress_retries(aioresponses, github_installation_responses, context):
+async def test_lando_200_status_retries(aioresponses, github_installation_responses, context, status):
     payload = {
         "actions": ["version_bump"],
         "lando_repo": "repo_name",
@@ -386,7 +387,7 @@ async def test_lando_in_progress_retries(aioresponses, github_installation_respo
         payload={
             "commits": ["abcdef123"],
             "push_id": job_id,
-            "status": "IN_PROGRESS",
+            "status": status,
         },
     )
     aioresponses.get(
