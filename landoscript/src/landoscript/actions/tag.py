@@ -42,8 +42,8 @@ async def run(session: ClientSession, tag_info: HgTagInfo | GitTagInfo) -> list[
             kwargs={"raise_for_status": True},
         )
         hg_revision_info = await resp.json()
-        # TODO: fail if `git_commit` is None. We can only start doing this
-        # when it will be non-fatal for Try though.
+        # TODO: figure out how to make this work on Try. At the moment, this
+        # must be commented out because Try revisions don't have this metadata.
         if hg_revision_info.get("git_commit") is None:
             raise LandoscriptError("Couldn't look up target revision for tag(s) in hg, can't proceed!")
         git_commit = hg_revision_info["git_commit"]

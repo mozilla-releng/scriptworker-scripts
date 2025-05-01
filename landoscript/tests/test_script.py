@@ -95,12 +95,10 @@ async def test_tag_and_bump(aioresponses, github_installation_responses, context
 
     tag_info = payload["tag_info"]
     git_commit = "ghijkl654321"
-    # TODO: update this URL when you figure out how to map land repos back to hg repos
     aioresponses.get(
         f"{tag_info['hg_repo_url']}/json-rev/{tag_info['revision']}",
         status=200,
         payload={
-            # TODO: update this when you know what field this will be in
             "git_commit": git_commit
         },
     )
