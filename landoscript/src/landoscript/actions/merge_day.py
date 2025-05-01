@@ -178,7 +178,7 @@ async def run(session: ClientSession, github_client: GithubClient, public_artifa
     with open(os.path.join(public_artifact_dir, "replacements.diff"), "w+") as f:
         f.write(diff)
 
-    commitmsg = "Subject: Update configs after merge day operations"
+    commitmsg = "No Bug - Update configs after merge day operations"
     actions.append(create_commit_action(commitmsg, diff))
 
     return actions

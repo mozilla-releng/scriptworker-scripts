@@ -102,7 +102,7 @@ async def run(
     log_file_contents(diff)
 
     # version bumps always ignore a closed tree
-    commitmsg = "Subject: Automatic version bump NO BUG a=release CLOSED TREE"
+    commitmsg = "Automatic version bump NO BUG a=release CLOSED TREE"
     if dontbuild:
         commitmsg += " DONTBUILD"
 
