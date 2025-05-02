@@ -386,6 +386,7 @@ def assert_merge_response(
         action = merge_actions[0]
         assert action["target"] == target_ref
         assert action["strategy"] == "theirs"
+        assert "commit_message" in action
 
     # `create-commit` action. check diff for:
     # - firefox version bumps
