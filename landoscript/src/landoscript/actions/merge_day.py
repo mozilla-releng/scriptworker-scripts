@@ -97,7 +97,7 @@ async def run(session: ClientSession, github_client: GithubClient, public_artifa
             # `theirs` strategy means that the repo being modified will have its tree updated to match that
             # of the `target`.
             merge_msg = f"Update {to_branch} to {from_branch}"
-            actions.append({"action": "merge-onto", "target": end_revision, "strategy": "theirs", "message": merge_msg})
+            actions.append({"action": "merge-onto", "target": end_revision, "strategy": "theirs", "commit_message": merge_msg})
     else:
         if merge_old_head:
             raise TaskVerificationError("'from_branch' is required when merge_old_head is True or version_files are present")
