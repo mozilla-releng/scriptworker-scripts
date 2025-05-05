@@ -22,7 +22,10 @@ from .conftest import (
 from .test_tag import assert_tag_response
 
 
-def assert_success(req, commit_msg_strings, initial_values, expected_bumps):
+def assert_success(artifact_dir, req, commit_msg_strings, initial_values, expected_bumps, has_actions=True):
+    if has_actions:
+        assert (artifact_dir / "public/build/lando-actions.json").exists()
+
     assert "json" in req.kwargs
     assert "actions" in req.kwargs["json"]
     create_commit_actions = [action for action in req.kwargs["json"]["actions"] if action["action"] == "create-commit"]
@@ -92,18 +95,14 @@ async def test_tag_and_bump(aioresponses, github_installation_responses, context
 
     tag_info = payload["tag_info"]
     git_commit = "ghijkl654321"
-    # TODO: update this URL when you figure out how to map land repos back to hg repos
     aioresponses.get(
         f"{tag_info['hg_repo_url']}/json-rev/{tag_info['revision']}",
         status=200,
-        payload={
-            # TODO: update this when you know what field this will be in
-            "git_commit": git_commit
-        },
+        payload={"git_commit": git_commit},
     )
 
     def assert_func(req):
-        assert_success(req, commit_msg_strings, initial_values, expected_bumps)
+        assert_success(context.config["artifact_dir"], req, commit_msg_strings, initial_values, expected_bumps)
         assert_tag_response(req, tag_info, git_commit)
         assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
 
@@ -185,7 +184,7 @@ async def test_success_with_retries(aioresponses, github_installation_responses,
     await async_main(context)
 
     req = assert_lando_submission_response(aioresponses.requests, submit_uri, attempts=2)
-    assert_success(req, commit_msg_strings, initial_values, expected_bumps)
+    assert_success(context.config["artifact_dir"], req, commit_msg_strings, initial_values, expected_bumps)
     assert_status_response(aioresponses.requests, status_uri, attempts=2)
     assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
 

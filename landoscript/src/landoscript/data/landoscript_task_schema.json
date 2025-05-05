@@ -2,20 +2,9 @@
     "title": "Landoscript task schema",
     "type": "object",
     "definitions": {
-        "hg_mozilla_uri": {
-            "type": "string",
-            "format": "uri",
-            "title": "The Mozilla URI Schema",
-            "default": "",
-            "examples": [
-                "https://hg.mozilla.org/mozilla-unified"
-            ],
-            "pattern": "^(https://hg.mozilla.org/.*)$"
-        },
         "merge_day_payload": {
             "type": "object",
             "required": [
-                "version_files",
                 "replacements",
                 "to_branch",
                 "merge_old_head"

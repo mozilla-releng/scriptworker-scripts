@@ -244,7 +244,6 @@ async def test_success_bump_esr(aioresponses, github_installation_responses, con
 async def test_success_early_to_late_beta(aioresponses, github_installation_responses, context):
     merge_info = {
         "to_branch": "beta",
-        "version_files": [],
         "replacements": [
             [
                 "build/defines.sh",
