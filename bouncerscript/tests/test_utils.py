@@ -49,7 +49,7 @@ async def test_api_call(submission_context, mocker, retry_config):
 
 # _do_api_call {{{1
 @pytest.mark.parametrize("data,credentials", (({}, False), ({"product": "dummy"}, True)))
-def test_do_successful_api_call(submission_context, mocker, event_loop, fake_session, data, credentials):
+def test_do_successful_api_call(submission_context, mocker, _session_event_loop, fake_session, data, credentials):
     context = submission_context
     context.server = get_task_server(context.task, context.config)
     context.action = get_task_action(context.task, context.config)
@@ -60,47 +60,47 @@ def test_do_successful_api_call(submission_context, mocker, event_loop, fake_ses
         del context.config["bouncer_config"][context.server]["password"]
 
         with pytest.raises(KeyError):
-            response = event_loop.run_until_complete(_do_api_call(context, "dummy", data))
+            response = _session_event_loop.run_until_complete(_do_api_call(context, "dummy", data))
 
         return
 
-    response = event_loop.run_until_complete(_do_api_call(context, "dummy", data))
+    response = _session_event_loop.run_until_complete(_do_api_call(context, "dummy", data))
 
     assert response == "{}"
 
 
 # _do_api_call {{{1
-def test_do_failed_api_call(submission_context, mocker, event_loop, fake_session_500):
+def test_do_failed_api_call(submission_context, mocker, _session_event_loop, fake_session_500):
     context = submission_context
     context.server = get_task_server(context.task, context.config)
     context.action = get_task_action(context.task, context.config)
     context.session = fake_session_500
 
-    response = event_loop.run_until_complete(_do_api_call(context, "dummy", {}))
+    response = _session_event_loop.run_until_complete(_do_api_call(context, "dummy", {}))
 
     assert response == "{}"
 
 
 # _do_api_call {{{1
-def test_do_failed_with_ClientError_api_call(submission_context, mocker, event_loop, fake_ClientError_throwing_session):
+def test_do_failed_with_ClientError_api_call(submission_context, mocker, _session_event_loop, fake_ClientError_throwing_session):
     context = submission_context
     context.server = get_task_server(context.task, context.config)
     context.action = get_task_action(context.task, context.config)
     context.session = fake_ClientError_throwing_session
 
     with pytest.raises(aiohttp.ClientError):
-        event_loop.run_until_complete(_do_api_call(context, "dummy", {}))
+        _session_event_loop.run_until_complete(_do_api_call(context, "dummy", {}))
 
 
 # _do_api_call {{{1
-def test_do_failed_with_TimeoutError_api_call(submission_context, mocker, event_loop, fake_TimeoutError_throwing_session):
+def test_do_failed_with_TimeoutError_api_call(submission_context, mocker, _session_event_loop, fake_TimeoutError_throwing_session):
     context = submission_context
     context.server = get_task_server(context.task, context.config)
     context.action = get_task_action(context.task, context.config)
     context.session = fake_TimeoutError_throwing_session
 
     with pytest.raises(aiohttp.ServerTimeoutError):
-        event_loop.run_until_complete(_do_api_call(context, "dummy", {}))
+        _session_event_loop.run_until_complete(_do_api_call(context, "dummy", {}))
 
 
 # does_product_exist {{{1
