@@ -17,7 +17,7 @@ test_var_set "GITHUB_PRIVATE_KEY"
 if [ "$ENV" == "prod" ]; then
   export LANDO_API="https://lando.moz.tools/api"
 else
-  export LANDO_API="https://dev.lando.nonprod.webservices.mozgcp.net/api"
+  export LANDO_API="https://stage.lando.nonprod.webservices.mozgcp.net/api"
 fi
 
 export GITHUB_PRIVATE_KEY_FILE="${CONFIG_DIR}/github_private_key"
