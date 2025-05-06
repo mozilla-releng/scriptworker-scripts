@@ -49,6 +49,7 @@ for dir in "${DIRS[@]}"; do
             --output-file "requirements/$req_file.$SUFFIX" \
             --python-version "$PYTHON_VERSION" \
             --universal \
+            --upgrade \
             --generate-hashes > /dev/null
         chmod 644 "requirements/$req_file.$SUFFIX"
     done
