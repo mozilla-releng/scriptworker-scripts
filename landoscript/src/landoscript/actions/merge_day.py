@@ -152,7 +152,7 @@ async def run(session: ClientSession, github_client: GithubClient, public_artifa
         for r in regex_replacements:
             needed_files.append(r[0])
 
-        orig_contents = await github_client.get_files(needed_files, to_branch)
+        orig_contents = await github_client.get_files(needed_files, bump_branch)
         # At the moment, there are no known cases of needing to replace with
         # a suffix...so we simply don't handle that here!
         new_contents = process_replacements(bump_version, replacements, regex_replacements, orig_contents)
@@ -163,7 +163,7 @@ async def run(session: ClientSession, github_client: GithubClient, public_artifa
             diff += diff_contents(str(orig_contents[fn]), new_contents[fn], fn)
 
     log.info("Touching clobber file")
-    orig_clobber_file = (await github_client.get_files("CLOBBER", to_branch))["CLOBBER"]
+    orig_clobber_file = (await github_client.get_files("CLOBBER", bump_branch))["CLOBBER"]
     if orig_clobber_file is None:
         raise LandoscriptError("Couldn't find CLOBBER file in repository!")
 
