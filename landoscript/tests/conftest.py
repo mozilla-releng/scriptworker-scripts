@@ -390,7 +390,9 @@ def assert_merge_response(
 
     # `create-commit` action. check diff for:
     # - firefox version bumps
-    create_commit_actions = iter([action for action in req.kwargs["json"]["actions"] if action["action"] == "create-commit"])
+    create_commit_actions = iter(
+        [action for action in req.kwargs["json"]["actions"] if action["action"] == "create-commit" and "l10n changesets" not in action["commitmsg"]]
+    )
     if expected_bumps:
         assert (artifact_dir / "public/build/version-bump.diff").exists()
 
