@@ -126,13 +126,13 @@ packaging==25.0 \
     #   pyproject-api
     #   pytest
     #   tox
-pip==25.1 \
-    --hash=sha256:13b4aa0aaad055020a11bec8a1c2a70a2b2d080e12d89b962266029fff0a16ba \
-    --hash=sha256:272bdd1289f80165e9070a4f881e8f9e1001bbb50378561d1af20e49bf5a2200
+pip==25.1.1 \
+    --hash=sha256:2913a38a2abf4ea6b64ab507bd9e967f3b53dc1ede74b01b0931e1ce548751af \
+    --hash=sha256:3de45d411d308d5054c2168185d8da7f9a2cd753dbac8acbfa88a8909ecd9077
     # via pip-tools
-pip-compile-multi==2.8.0 \
-    --hash=sha256:17159e83c2e354358921ee34e6b750223ae76aef2beb301286b68a4886076f63 \
-    --hash=sha256:59bb8bea7291b9dec95cb3e380f0f77a936b2e98d64cf9346c0c4ca0012fb6a2
+pip-compile-multi==3.0.0 \
+    --hash=sha256:61b29a68a0eb01c3db6ce8a449fb3f79635e4cf372dbd84f56701a7f75bcea16 \
+    --hash=sha256:b1e0c4b79c8be01bdbd76f3baa957ce227801764c311587fb20690f12184b317
     # via -r requirements/test.in
 pip-tools==7.4.1 \
     --hash=sha256:4c690e5fbae2f21e87843e89c26191f0d9454f362d8acdbd695716493ec8b3a9 \
@@ -225,9 +225,9 @@ pyyaml==6.0.2 \
     --hash=sha256:f753120cb8181e736c57ef7636e83f31b9c0d1722c516f7e86cf15b7aa57ff12 \
     --hash=sha256:ff3824dc5261f50c9b0dfb3be22b4567a6f938ccce4587b38952d85fd9e9afe4
     # via -r requirements/base.in
-setuptools==80.1.0 \
-    --hash=sha256:2e308396e1d83de287ada2c2fd6e64286008fe6aca5008e0b6a8cb0e2c86eedd \
-    --hash=sha256:ea0e7655c05b74819f82e76e11a85b31779fee7c4969e82f72bab0664e8317e4
+setuptools==80.3.1 \
+    --hash=sha256:31e2c58dbb67c99c289f51c16d899afedae292b978f8051efaf6262d8212f927 \
+    --hash=sha256:ea8e00d7992054c4c592aeb892f6ad51fe1b4d90cc6947cc45c45717c40ec537
     # via
     #   check-manifest
     #   pip-tools
@@ -277,9 +277,9 @@ tox==4.25.0 \
     --hash=sha256:4dfdc7ba2cc6fdc6688dde1b21e7b46ff6c41795fb54586c91a3533317b5255c \
     --hash=sha256:dd67f030317b80722cf52b246ff42aafd3ed27ddf331c415612d084304cf5e52
     # via -r requirements/local.in
-virtualenv==20.30.0 \
-    --hash=sha256:800863162bcaa5450a6e4d721049730e7f2dae07720e0902b0e4040bd6f9ada8 \
-    --hash=sha256:e34302959180fca3af42d1800df014b35019490b119eba981af27f2fa486e5d6
+virtualenv==20.31.1 \
+    --hash=sha256:65442939608aeebb9284cd30baca5865fcd9f12b58bb740a24b220030df46d26 \
+    --hash=sha256:f448cd2f1604c831afb9ea238021060be2c0edbcad8eb0a4e8b4e14ff11a5482
     # via tox
 wheel==0.45.1 \
     --hash=sha256:661e1abd9198507b1409a20c02106d9670b2576e916d58f520316666abca6729 \
