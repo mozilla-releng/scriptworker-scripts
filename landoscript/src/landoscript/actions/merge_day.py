@@ -13,7 +13,7 @@ from mozilla_version.gecko import GeckoVersion
 from mozilla_version.version import BaseVersion
 from scriptworker.client import TaskVerificationError
 
-from landoscript.actions import tag, version_bump
+from landoscript.actions import l10n_bump, tag, version_bump
 from landoscript.errors import LandoscriptError
 from landoscript.lando import LandoAction, create_commit_action
 from landoscript.util.diffs import diff_contents
@@ -39,6 +39,7 @@ class MergeInfo:
     base_tag: str = ""
     end_tag: str = ""
     merge_old_head: bool = False
+    l10n_bump_info: list[l10n_bump.L10nBumpInfo] = field(default_factory=list)
     version_files: list[VersionFile] = field(default_factory=list)
     replacements: list[list[str]] = field(default_factory=list)
     regex_replacements: list[list[str]] = field(default_factory=list)
@@ -48,10 +49,13 @@ class MergeInfo:
         # copy to avoid modifying the original
         kwargs = deepcopy(payload_data)
         kwargs["version_files"] = [VersionFile(**v) for v in payload_data.get("version_files", [])]
+        kwargs["l10n_bump_info"] = [l10n_bump.L10nBumpInfo.from_payload_data(lbi) for lbi in payload_data.get("l10n_bump_info", [])]
         return cls(**kwargs)
 
 
-async def run(session: ClientSession, github_client: GithubClient, public_artifact_dir: str, merge_info: MergeInfo) -> list[LandoAction]:
+async def run(
+    session: ClientSession, github_client: GithubClient, github_config: dict[str, str], public_artifact_dir: str, merge_info: MergeInfo
+) -> list[LandoAction]:
     to_branch = merge_info.to_branch
     from_branch = merge_info.from_branch
     end_tag = merge_info.end_tag
@@ -104,6 +108,9 @@ async def run(session: ClientSession, github_client: GithubClient, public_artifa
         bump_version = to_version
         bump_branch = to_branch
         log.info(f"from_branch is not present, using to_version as bump_version: {bump_version}")
+
+    if merge_info.l10n_bump_info:
+        actions.extend(await l10n_bump.run(github_client, github_config, public_artifact_dir, bump_branch, merge_info.l10n_bump_info, False, True))
 
     if merge_info.version_files:
         log.info("Performing version bumps")
