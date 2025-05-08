@@ -89,15 +89,14 @@ async def async_main(context):
                 log.info(f"processing action: {action}")
 
                 if action == "version_bump":
-                    version_bump_action = await version_bump.run(
+                    version_bump_actions = await version_bump.run(
                         gh_client,
                         public_artifact_dir,
                         branch,
                         [version_bump.VersionBumpInfo(**payload["version_bump_info"])],
                     )
-                    # sometimes version bumps are no-ops
-                    if version_bump_action:
-                        lando_actions.append(version_bump_action)
+                    if version_bump_actions:
+                        lando_actions.extend(version_bump_actions)
                 elif action == "tag":
                     if "hg_repo_url" not in payload["tag_info"]:
                         raise TaskVerificationError("must provide hg_repo_url!")
@@ -117,25 +116,24 @@ async def async_main(context):
                     l10n_bump_actions = await l10n_bump.run(
                         gh_client, context.config["github_config"], public_artifact_dir, branch, l10n_bump_info, dontbuild, ignore_closed_tree
                     )
-                    # sometimes nothing has changed!
                     if l10n_bump_actions:
                         lando_actions.extend(l10n_bump_actions)
                 elif action == "android_l10n_import":
                     android_l10n_import_info = android_l10n_import.AndroidL10nImportInfo.from_payload_data(payload["android_l10n_import_info"])
-                    import_action = await android_l10n_import.run(
+                    import_actions = await android_l10n_import.run(
                         gh_client, context.config["github_config"], public_artifact_dir, android_l10n_import_info, branch
                     )
-                    if import_action:
-                        lando_actions.append(import_action)
+                    if import_actions:
+                        lando_actions.extend(import_actions)
                 elif action == "android_l10n_sync":
                     if not is_tree_open:
                         log.info("Treestatus is closed; skipping android l10n sync.")
                         continue
 
                     android_l10n_sync_info = android_l10n_sync.AndroidL10nSyncInfo.from_payload_data(payload["android_l10n_sync_info"])
-                    import_action = await android_l10n_sync.run(gh_client, public_artifact_dir, android_l10n_sync_info, branch)
-                    if import_action:
-                        lando_actions.append(import_action)
+                    import_actions = await android_l10n_sync.run(gh_client, public_artifact_dir, android_l10n_sync_info, branch)
+                    if import_actions:
+                        lando_actions.extend(import_actions)
 
                 log.info("finished processing action")
 

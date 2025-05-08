@@ -34,7 +34,7 @@ class AndroidL10nSyncInfo:
         return cls(**kwargs)
 
 
-async def run(github_client: GithubClient, public_artifact_dir: str, android_l10n_sync_info: AndroidL10nSyncInfo, to_branch: str) -> LandoAction:
+async def run(github_client: GithubClient, public_artifact_dir: str, android_l10n_sync_info: AndroidL10nSyncInfo, to_branch: str) -> list[LandoAction]:
     log.info("Preparing to sync android l10n changesets.")
     from_branch = android_l10n_sync_info.from_branch
 
@@ -114,7 +114,7 @@ async def run(github_client: GithubClient, public_artifact_dir: str, android_l10
         diff += diff_contents(orig_file, new_file, toml_info.toml_path)
 
     if not diff:
-        return {}
+        return []
 
     with open(os.path.join(public_artifact_dir, "android-sync.diff"), "w+") as f:
         f.write(diff)
@@ -122,4 +122,4 @@ async def run(github_client: GithubClient, public_artifact_dir: str, android_l10
     log.info("adding android l10n sync diff! contents omitted from log for brevity")
 
     commitmsg = f"No Bug - Import translations from {from_branch}"
-    return create_commit_action(commitmsg, diff)
+    return [create_commit_action(commitmsg, diff)]
