@@ -68,20 +68,28 @@ async def run(github_client: GithubClient, public_artifact_dir: str, android_l10
     src_files = [f.src_name for f in l10n_files]
     log.info(f"fetching updated files from l10n repository: {src_files}")
     new_files = await github_client.get_files(src_files, branch=from_branch)
+    # we also need to update the toml files with locale metadata. we've
+    # already fetched them above; so just add their contents by hand
+    new_files.update(toml_contents)
 
     # fetch l10n_files from gecko repo
+    # `l10n_files` will give us all of the files with translations in them
     dst_files = [f.dst_name for f in l10n_files]
+    # we also need the gecko locations of the toml files
+    for toml_info in android_l10n_sync_info.toml_info:
+        dst_files.append(toml_info.toml_path)
+
     log.info(f"fetching original files from l10n repository: {dst_files}")
     orig_files = await github_client.get_files(dst_files, branch=to_branch)
 
     diff = ""
     for l10n_file in l10n_files:
         if l10n_file.dst_name not in orig_files:
-            log.warning(f"WEIRD: {l10n_file.dst_name} not in dst_files, continuing anyways...")
+            log.warning(f"WEIRD: {l10n_file.dst_name} not in orig_files, continuing anyways...")
             continue
 
         if l10n_file.src_name not in new_files:
-            log.warning(f"WEIRD: {l10n_file.src_name} not in src_files, continuing anyways...")
+            log.warning(f"WEIRD: {l10n_file.src_name} not in new_files, continuing anyways...")
             continue
 
         orig_file = orig_files[l10n_file.dst_name]
@@ -91,6 +99,19 @@ async def run(github_client: GithubClient, public_artifact_dir: str, android_l10
             continue
 
         diff += diff_contents(orig_file, new_file, l10n_file.dst_name)
+
+    for toml_info in android_l10n_sync_info.toml_info:
+        if toml_info.toml_path not in new_files or toml_info.toml_path not in orig_files:
+            raise LandoscriptError(f"{toml_info.toml_path} is not available in the src and dest, cannot continue")
+
+        orig_file = orig_files[toml_info.toml_path]
+        new_file = new_files[toml_info.toml_path]
+
+        if orig_file == new_file:
+            log.warning(f"old and new contents of {toml_info.toml_path} are the same, skipping bump...")
+            continue
+
+        diff += diff_contents(orig_file, new_file, toml_info.toml_path)
 
     if not diff:
         return {}
