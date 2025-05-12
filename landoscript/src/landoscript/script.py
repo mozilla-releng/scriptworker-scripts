@@ -105,7 +105,7 @@ async def async_main(context):
                     lando_actions.extend(tag_actions)
                 elif action == "merge_day":
                     merge_day_actions = await merge_day.run(
-                        session, gh_client, public_artifact_dir, merge_day.MergeInfo.from_payload_data(payload["merge_info"])
+                        session, gh_client, context.config["github_config"], public_artifact_dir, merge_day.MergeInfo.from_payload_data(payload["merge_info"])
                     )
                     lando_actions.extend(merge_day_actions)
                 elif action == "l10n_bump":

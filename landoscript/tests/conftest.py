@@ -204,32 +204,22 @@ def assert_add_commit_response(action, commit_msg_strings, initial_values, expec
 
     # ensure expected bumps are present to a reasonable degree of certainty
     for file, after in expected_bumps.items():
-        # if present, ensure `after` has a newline in it. even if it the last
-        # line of a file without a newline character, there will still be
-        # a newline in the diff (followed by the "no newline" escape sequence)
-        if after:
-            after = after.rstrip("\n") + "\n"
         for diff in diffs:
-            # if the version is the last line in the file it may or may not
-            # have a trailing newline. either way, there will be one (and
-            # only one) in the `-` line of the diff. account for this.
-            # the `after` version will only have a newline if the file is
-            # intended to have one after the diff has been applied.
             if initial_values[file] is None:
                 before = None
             else:
-                before = initial_values[file].rstrip("\n") + "\n"
+                before = initial_values[file]
             if file in diff:
                 if not before:
                     # addition
-                    if f"\n+{after}" in diff and "new file mode 100644" in diff:
+                    if f"+{after}" in diff and "new file mode 100644" in diff:
                         break
                 elif not after:
                     # removal
-                    if f"\n-{before}" in diff and "deleted file mode 100644" in diff:
+                    if f"-{before}" in diff and "deleted file mode 100644" in diff:
                         break
                 else:
-                    if f"\n-{before}+{after}" in diff:
+                    if f"-{before}" in diff and f"+{after}":
                         break
         else:
             assert False, f"no bump found for {file}: {diffs}"
@@ -390,7 +380,9 @@ def assert_merge_response(
 
     # `create-commit` action. check diff for:
     # - firefox version bumps
-    create_commit_actions = iter([action for action in req.kwargs["json"]["actions"] if action["action"] == "create-commit"])
+    create_commit_actions = iter(
+        [action for action in req.kwargs["json"]["actions"] if action["action"] == "create-commit" and "l10n changesets" not in action["commitmsg"]]
+    )
     if expected_bumps:
         assert (artifact_dir / "public/build/version-bump.diff").exists()
 
