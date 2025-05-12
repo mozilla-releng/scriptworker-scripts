@@ -14,6 +14,8 @@ test_var_set "CONFIG_DIR"
 test_var_set "LANDO_TOKEN"
 test_var_set "GITHUB_PRIVATE_KEY"
 
+# prod means L3 only. (the "prod" env in helm sets the "ENV" environment variable for L1
+# workers to "fake-prod").
 if [ "$ENV" == "prod" ]; then
   export LANDO_API="https://lando.moz.tools/api"
 else

@@ -9,7 +9,8 @@ lando_token: { "$eval": "LANDO_TOKEN" }
 treestatus_url: https://treestatus.prod.lando.prod.cloudops.mozgcp.net
 github_config:
   app_id:
-    # note: prod covers both L3 and L1 workers (the latter is sometimes called "fake-prod", but not here!)
+    # prod means L3 only. (the "prod" env in helm sets the "ENV" environment variable for L1
+    # workers to "fake-prod").
     $if: 'ENV == "prod"'
     then: 1175984 # releng-read-only
     else: 1227773 # releng-read-only-dev
