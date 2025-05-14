@@ -26,11 +26,40 @@ locales = [
   l10n = "components/**/src/main/res/values-{android_locale}/strings.xml"
 """
 
+ac_l10n_toml_new_locale = """
+basepath = "."
+
+locales = [
+    "ab",
+    "de",
+]
+
+[env]
+
+[[paths]]
+  reference = "components/**/src/main/res/values/strings.xml"
+  l10n = "components/**/src/main/res/values-{android_locale}/strings.xml"
+"""
+
 fenix_l10n_toml = """
 basepath = "."
 
 locales = [
     "my",
+]
+
+[env]
+
+[[paths]]
+  reference = "app/src/main/res/values/strings.xml"
+  l10n = "app/src/main/res/values-{android_locale}/strings.xml"
+"""
+
+fenix_l10n_toml_removed_locale = """
+basepath = "."
+
+locales = [
+    "zh",
 ]
 
 [env]
@@ -67,7 +96,7 @@ def assert_success(req, initial_values, expected_bumps):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "android_l10n_sync_info,android_l10n_values,initial_values,expected_values",
+    "android_l10n_sync_info,android_l10n_values,initial_values,expected_values,ac_toml,fenix_toml,focus_toml",
     (
         pytest.param(
             {
@@ -90,15 +119,24 @@ def assert_success(req, initial_values, expected_bumps):
                 "mobile/android/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": "ab expected contents",
             },
             {
+                "mobile/android/fenix/l10n.toml": fenix_l10n_toml,
+                "mobile/android/focus-android/l10n.toml": focus_l10n_toml,
+                "mobile/android/android-components/l10n.toml": ac_l10n_toml,
                 "mobile/android/fenix/app/src/main/res/values-my/strings.xml": "my initial contents",
                 "mobile/android/focus-android/app/src/main/res/values-zam/strings.xml": "zam initial contents",
                 "mobile/android/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": "ab initial contents",
             },
             {
+                "mobile/android/fenix/l10n.toml": fenix_l10n_toml,
+                "mobile/android/focus-android/l10n.toml": focus_l10n_toml,
+                "mobile/android/android-components/l10n.toml": ac_l10n_toml,
                 "mobile/android/fenix/app/src/main/res/values-my/strings.xml": "my expected contents",
                 "mobile/android/focus-android/app/src/main/res/values-zam/strings.xml": "zam expected contents",
                 "mobile/android/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": "ab expected contents",
             },
+            ac_l10n_toml,
+            fenix_l10n_toml,
+            focus_l10n_toml,
             id="only_changes",
         ),
         pytest.param(
@@ -122,15 +160,24 @@ def assert_success(req, initial_values, expected_bumps):
                 "mobile/android/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": "ab expected contents",
             },
             {
+                "mobile/android/fenix/l10n.toml": fenix_l10n_toml,
+                "mobile/android/focus-android/l10n.toml": focus_l10n_toml,
+                "mobile/android/android-components/l10n.toml": ac_l10n_toml,
                 "mobile/android/fenix/app/src/main/res/values-my/strings.xml": None,
                 "mobile/android/focus-android/app/src/main/res/values-zam/strings.xml": None,
                 "mobile/android/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": None,
             },
             {
+                "mobile/android/fenix/l10n.toml": fenix_l10n_toml,
+                "mobile/android/focus-android/l10n.toml": focus_l10n_toml,
+                "mobile/android/android-components/l10n.toml": ac_l10n_toml,
                 "mobile/android/fenix/app/src/main/res/values-my/strings.xml": "my expected contents",
                 "mobile/android/focus-android/app/src/main/res/values-zam/strings.xml": "zam expected contents",
                 "mobile/android/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": "ab expected contents",
             },
+            ac_l10n_toml,
+            fenix_l10n_toml,
+            focus_l10n_toml,
             id="new files",
         ),
         pytest.param(
@@ -154,15 +201,24 @@ def assert_success(req, initial_values, expected_bumps):
                 "mobile/android/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": None,
             },
             {
+                "mobile/android/fenix/l10n.toml": fenix_l10n_toml,
+                "mobile/android/focus-android/l10n.toml": focus_l10n_toml,
+                "mobile/android/android-components/l10n.toml": ac_l10n_toml,
                 "mobile/android/fenix/app/src/main/res/values-my/strings.xml": "my initial contents",
                 "mobile/android/focus-android/app/src/main/res/values-zam/strings.xml": "zam initial contents",
                 "mobile/android/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": "ab initial contents",
             },
             {
+                "mobile/android/fenix/l10n.toml": fenix_l10n_toml,
+                "mobile/android/focus-android/l10n.toml": focus_l10n_toml,
+                "mobile/android/android-components/l10n.toml": ac_l10n_toml,
                 "mobile/android/fenix/app/src/main/res/values-my/strings.xml": None,
                 "mobile/android/focus-android/app/src/main/res/values-zam/strings.xml": None,
                 "mobile/android/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": None,
             },
+            ac_l10n_toml,
+            fenix_l10n_toml,
+            focus_l10n_toml,
             id="removed file",
         ),
         pytest.param(
@@ -186,20 +242,40 @@ def assert_success(req, initial_values, expected_bumps):
                 "mobile/android/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": "ab initial contents",
             },
             {
+                "mobile/android/fenix/l10n.toml": fenix_l10n_toml,
+                "mobile/android/focus-android/l10n.toml": focus_l10n_toml,
+                "mobile/android/android-components/l10n.toml": ac_l10n_toml,
                 "mobile/android/fenix/app/src/main/res/values-my/strings.xml": "my initial contents",
                 "mobile/android/focus-android/app/src/main/res/values-zam/strings.xml": "zam initial contents",
                 "mobile/android/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": "ab initial contents",
             },
             {
+                "mobile/android/fenix/l10n.toml": fenix_l10n_toml,
+                "mobile/android/focus-android/l10n.toml": focus_l10n_toml,
+                "mobile/android/android-components/l10n.toml": ac_l10n_toml,
                 "mobile/android/fenix/app/src/main/res/values-my/strings.xml": "my initial contents",
                 "mobile/android/focus-android/app/src/main/res/values-zam/strings.xml": "zam initial contents",
                 "mobile/android/android-components/components/browser/toolbar/src/main/res/values-ab/strings.xml": "ab initial contents",
             },
+            ac_l10n_toml,
+            fenix_l10n_toml,
+            focus_l10n_toml,
             id="no_changes",
         ),
     ),
 )
-async def test_success(aioresponses, github_installation_responses, context, android_l10n_sync_info, android_l10n_values, initial_values, expected_values):
+async def test_success(
+    aioresponses,
+    github_installation_responses,
+    context,
+    android_l10n_sync_info,
+    android_l10n_values,
+    initial_values,
+    expected_values,
+    ac_toml,
+    fenix_toml,
+    focus_toml,
+):
     payload = {
         "actions": ["android_l10n_sync"],
         "lando_repo": "repo_name",
@@ -293,9 +369,9 @@ async def test_success(aioresponses, github_installation_responses, context, and
         # toml files needed before fetching anything else
         get_files_payload(
             {
-                "mobile/android/fenix/l10n.toml": fenix_l10n_toml,
-                "mobile/android/focus-android/l10n.toml": focus_l10n_toml,
-                "mobile/android/android-components/l10n.toml": ac_l10n_toml,
+                "mobile/android/fenix/l10n.toml": fenix_toml,
+                "mobile/android/focus-android/l10n.toml": focus_toml,
+                "mobile/android/android-components/l10n.toml": ac_toml,
             }
         ),
         # directory tree information needed to correctly interpret the
@@ -307,14 +383,16 @@ async def test_success(aioresponses, github_installation_responses, context, and
         get_files_payload(initial_values),
     )
 
-    def assert_func(req):
-        assert_success(req, initial_values, expected_values)
-        # check for diff on disk
+    expected_bumps = {k: v for k, v in expected_values.items() if initial_values.get(k) != v}
 
-    if initial_values == expected_values:
-        should_submit = False
-    else:
+    def assert_func(req):
+        if expected_bumps:
+            assert_success(req, initial_values, expected_bumps)
+
+    if expected_bumps:
         should_submit = True
+    else:
+        should_submit = False
 
     await run_test(aioresponses, github_installation_responses, context, payload, ["android_l10n_sync"], should_submit, assert_func)
 

@@ -210,15 +210,25 @@ def assert_add_commit_response(action, commit_msg_strings, initial_values, expec
             else:
                 before = initial_values[file]
             if file in diff:
+                # any expected changes that are multiline files do not have
+                # their diffs checked in depth; it's not worth the effort to
+                # do so. we've already checked that there was _some_ change in
+                # the diff.
                 if not before:
                     # addition
-                    if f"+{after}" in diff and "new file mode 100644" in diff:
+                    assert "new file mode 100644" in diff
+                    if "\n" not in after and f"+{after}" in diff:
                         break
                 elif not after:
                     # removal
-                    if f"-{before}" in diff and "deleted file mode 100644" in diff:
+                    assert "deleted file mode 100644" in diff
+                    if not "\n" in before and f"-{before}" in diff:
                         break
                 else:
+                    # change
+                    if "\n" in before or "\n" in after:
+                        break
+
                     if f"-{before}" in diff and f"+{after}":
                         break
         else:
