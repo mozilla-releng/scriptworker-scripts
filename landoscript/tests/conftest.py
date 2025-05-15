@@ -120,7 +120,8 @@ async def run_test(
             assert False, f"should've raised {err}"
         except Exception as e:
             assert isinstance(e, err)
-            assert errmsg in e.args[0]
+            if errmsg is not None:
+                assert errmsg in e.args[0]
     else:
         await async_main(context)
         if should_submit:

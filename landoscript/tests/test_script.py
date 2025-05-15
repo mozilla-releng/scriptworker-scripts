@@ -1,9 +1,9 @@
 from aiohttp import ClientResponseError
 import pytest
-from scriptworker.client import TaskVerificationError
+from scriptworker.client import STATUSES, TaskVerificationError
 from pytest_scriptworker_client import get_files_payload
 
-from landoscript.errors import LandoscriptError
+from landoscript.errors import LandoscriptError, MergeConflictError
 from landoscript.script import async_main
 from .conftest import (
     assert_lando_submission_response,
@@ -56,7 +56,7 @@ def assert_success(artifact_dir, req, commit_msg_strings, initial_values, expect
             },
             ["Automatic version bump", "NO BUG", "a=release"],
             True,
-            id="tag_and_bump",
+            id="tag_and_bump_dry_run",
         ),
         pytest.param(
             {
@@ -101,6 +101,65 @@ async def test_tag_and_bump(aioresponses, github_installation_responses, context
         assert (context.config["artifact_dir"] / "public/build/version-bump.diff").exists()
 
     await run_test(aioresponses, github_installation_responses, context, payload, payload["actions"], not dry_run, assert_func)
+
+
+@pytest.mark.asyncio
+async def test_tag_and_bump_with_race_returns_intermittent_task(aioresponses, github_installation_responses, context):
+    """Tests to ensure that when two simultaneously running version bump tasks
+    race with each other, and we've lost the race, that we fail with intermittent
+    task to force a retry. See https://bugzilla.mozilla.org/show_bug.cgi?id=1966092
+    for a real world example."""
+    payload = {
+        "actions": ["tag", "version_bump"],
+        "lando_repo": "repo_name",
+        "version_bump_info": {
+            "files": ["browser/config/version.txt"],
+            "next_version": "135.0",
+        },
+        "tag_info": {
+            "revision": "abcdef123456",
+            "hg_repo_url": "https://hg.testing/repo",
+            "tags": ["RELEASE"],
+        },
+    }
+    initial_values = {
+        "browser/config/version.txt": "134.0",
+    }
+    setup_github_graphql_responses(aioresponses, get_files_payload(initial_values))
+
+    tag_info = payload["tag_info"]
+    git_commit = "ghijkl654321"
+    aioresponses.get(
+        f"{tag_info['hg_repo_url']}/json-rev/{tag_info['revision']}",
+        status=200,
+        payload={"git_commit": git_commit},
+    )
+
+    submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["tag", "version_bump"], "repo_name")
+
+    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
+
+    aioresponses.get(
+        status_uri,
+        status=200,
+        payload={
+            "job_id": job_id,
+            "status_url": str(status_uri),
+            "message": "Job is in the FAILED state.",
+            "created_at": "2025-03-08T12:25:00Z",
+            "status": "FAILED",
+            "error": "Merge conflict while creating commit in create-commit, action #1.\n\nChecking patch browser/config/version.txt...\nerror: while searching for:\n138.0.3\n\nerror: patch failed: browser/config/version.txt:1\nChecking patch browser/config/version_display.txt...\nerror: while searching for:\n138.0.3\n\nerror: patch failed: browser/config/version_display.txt:1\nChecking patch config/milestone.txt...\nerror: while searching for:\n# hardcoded milestones in the tree from these two files.\n#--------------------------------------------------------\n\n138.0.3\n\nerror: patch failed: config/milestone.txt:10\nChecking patch mobile/android/version.txt...\nerror: while searching for:\n138.0.3\n\nerror: patch failed: mobile/android/version.txt:1\nApplying patch browser/config/version.txt with 1 reject...\nRejected hunk #1.\nApplying patch browser/config/version_display.txt with 1 reject...\nRejected hunk #1.\nApplying patch config/milestone.txt with 1 reject...\nRejected hunk #1.\nApplying patch mobile/android/version.txt with 1 reject...\nRejected hunk #1.\n",
+        },
+    )
+
+    context.task = {"payload": payload, "scopes": scopes}
+
+    try:
+        await async_main(context)
+        assert False, "should've raised MergeConflictError"
+    except MergeConflictError as e:
+        assert e.exit_code == STATUSES["intermittent-task"]
+        pass
 
 
 @pytest.mark.asyncio
