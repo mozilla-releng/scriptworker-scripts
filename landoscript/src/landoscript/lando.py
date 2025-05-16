@@ -7,7 +7,7 @@ from aiohttp import ClientResponseError, ClientSession
 from async_timeout import timeout
 from scriptworker.utils import calculate_sleep_time, retry_async
 
-from landoscript.errors import LandoscriptError
+from landoscript.errors import LandoscriptError, MergeConflictError
 
 log = logging.getLogger(__name__)
 
@@ -101,6 +101,9 @@ async def poll_until_complete(session: ClientSession, lando_token: str, poll_tim
                 continue
 
             if status == "FAILED":
+                if body.get("error", "").startswith("Merge conflict while creating commit"):
+                    raise MergeConflictError(body["error"])
+
                 raise LandoscriptError(f"Landing status is FAILED: {body}")
 
             if status == "CANCELLED":
