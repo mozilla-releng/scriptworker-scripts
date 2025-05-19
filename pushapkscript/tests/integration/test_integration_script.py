@@ -230,6 +230,8 @@ class MainTest(unittest.TestCase):
             skip_check_ordered_version_codes=False,
             skip_check_same_locales=False,
             skip_checks_fennec=False,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -256,6 +258,8 @@ class MainTest(unittest.TestCase):
             skip_check_ordered_version_codes=True,
             skip_check_same_locales=False,
             skip_checks_fennec=True,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -282,6 +286,8 @@ class MainTest(unittest.TestCase):
             skip_check_ordered_version_codes=False,
             skip_check_same_locales=True,
             skip_checks_fennec=True,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -308,6 +314,8 @@ class MainTest(unittest.TestCase):
             skip_check_ordered_version_codes=False,
             skip_check_same_locales=False,
             skip_checks_fennec=False,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -334,6 +342,8 @@ class MainTest(unittest.TestCase):
             skip_check_ordered_version_codes=False,
             skip_check_same_locales=False,
             skip_checks_fennec=False,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -361,4 +371,6 @@ class MainTest(unittest.TestCase):
             skip_check_ordered_version_codes=False,
             skip_check_same_locales=False,
             skip_checks_fennec=False,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
         )
