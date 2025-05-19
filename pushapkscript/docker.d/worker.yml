@@ -39,6 +39,9 @@ products:
               google:
                 default_track: 'alpha'
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH" }
+              samsung:
+                service_account_id: { "$eval": "SGS_SERVICE_ACCOUNT_ID" }
+                access_token: { "$eval": "SGS_ACCESS_TOKEN" }
         - product_names: ["focus-android" ]
           digest_algorithm: 'SHA-256'
           skip_check_ordered_version_codes: true
@@ -64,6 +67,9 @@ products:
               google:
                 default_track: 'alpha'
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_PATH" }
+              samsung:
+                service_account_id: { "$eval": "SGS_SERVICE_ACCOUNT_ID" }
+                access_token: { "$eval": "SGS_ACCESS_TOKEN" }
             klar-release:
               package_names: ["org.mozilla.klar"]
               certificate_alias: 'focus'
@@ -95,6 +101,9 @@ products:
               google:
                 default_track: 'alpha'
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FENIX_DEP_PATH" }
+              samsung:
+                service_account_id: { "$eval": "SGS_SERVICE_ACCOUNT_ID_DEP" }
+                access_token: { "$eval": "SGS_ACCESS_TOKEN_DEP" }
         - product_names: ["focus-android" ]
           digest_algorithm: "SHA-256"
           skip_check_ordered_version_codes: true
@@ -120,6 +129,9 @@ products:
               google:
                 default_track: 'alpha'
                 credentials_file: { "$eval": "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH" }
+              samsung:
+                service_account_id: { "$eval": "SGS_SERVICE_ACCOUNT_ID_DEP" }
+                access_token: { "$eval": "SGS_ACCESS_TOKEN_DEP" }
             klar-release:
               package_names: ["org.mozilla.klar"]
               certificate_alias: 'focus'

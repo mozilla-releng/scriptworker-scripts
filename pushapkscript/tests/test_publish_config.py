@@ -1,4 +1,4 @@
-from pushapkscript.publish_config import _google_should_do_dry_run, get_publish_config
+from pushapkscript.publish_config import _should_do_dry_run, get_publish_config
 
 AURORA_CONFIG = {
     "override_channel_model": "choose_google_app_with_scope",
@@ -27,6 +27,7 @@ FENIX_CONFIG = {
             "package_names": ["org.mozilla.fenix"],
             "certificate_alias": "fenix",
             "google": {"default_track": "internal", "credentials_file": "fenix.json"},
+            "samsung": {"service_account_id": "123456", "access_token": "abcdef"},
         }
     }
 }
@@ -48,7 +49,7 @@ def test_get_publish_config_fennec():
         "dry_run": True,
         "certificate_alias": "aurora",
         "google_track": "beta",
-        "google_rollout_percentage": None,
+        "rollout_percentage": None,
         "secret": "aurora.json",
         "package_names": ["org.mozilla.fennec_aurora"],
     }
@@ -60,7 +61,7 @@ def test_get_publish_config_fennec_track_override():
         "dry_run": True,
         "certificate_alias": "aurora",
         "google_track": "internal_qa",
-        "google_rollout_percentage": None,
+        "rollout_percentage": None,
         "secret": "aurora.json",
         "package_names": ["org.mozilla.fennec_aurora"],
     }
@@ -72,7 +73,7 @@ def test_get_publish_config_fennec_rollout():
         "dry_run": True,
         "certificate_alias": "aurora",
         "google_track": "beta",
-        "google_rollout_percentage": 10,
+        "rollout_percentage": 10,
         "secret": "aurora.json",
         "package_names": ["org.mozilla.fennec_aurora"],
     }
@@ -85,7 +86,7 @@ def test_get_publish_config_focus():
         "dry_run": True,
         "certificate_alias": "focus",
         "google_track": "beta",
-        "google_rollout_percentage": None,
+        "rollout_percentage": None,
         "secret": "focus.json",
         "package_names": ["org.mozilla.focus"],
     }
@@ -98,7 +99,7 @@ def test_get_publish_config_focus_rollout():
         "dry_run": True,
         "certificate_alias": "focus",
         "google_track": "production",
-        "google_rollout_percentage": 10,
+        "rollout_percentage": 10,
         "secret": "focus.json",
         "package_names": ["org.mozilla.focus"],
     }
@@ -111,7 +112,7 @@ def test_get_publish_config_fenix():
         "dry_run": True,
         "certificate_alias": "fenix",
         "google_track": "internal",
-        "google_rollout_percentage": None,
+        "rollout_percentage": None,
         "secret": "fenix.json",
         "package_names": ["org.mozilla.fenix"],
     }
@@ -124,7 +125,7 @@ def test_get_publish_config_fenix_rollout():
         "dry_run": True,
         "certificate_alias": "fenix",
         "google_track": "internal",
-        "google_rollout_percentage": 10,
+        "rollout_percentage": 10,
         "secret": "fenix.json",
         "package_names": ["org.mozilla.fenix"],
     }
@@ -137,18 +138,57 @@ def test_target_google():
         "dry_run": True,
         "certificate_alias": "flex",
         "google_track": "internal",
-        "google_rollout_percentage": None,
+        "rollout_percentage": None,
         "secret": "flex.json",
         "package_names": ["org.mozilla.flex"],
     }
 
 
-def test_google_should_do_dry_run():
+def test_target_samsung():
+    payload = {"channel": "production", "target_store": "samsung"}
+
+    assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
+        "target_store": "samsung",
+        "dry_run": True,
+        "sgs_service_account_id": "123456",
+        "sgs_access_token": "abcdef",
+        "package_names": ["org.mozilla.fenix"],
+        "rollout_percentage": None,
+    }
+
+
+def test_target_samsung_with_commit():
+    payload = {"channel": "production", "target_store": "samsung", "commit": True}
+
+    assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
+        "target_store": "samsung",
+        "dry_run": False,
+        "sgs_service_account_id": "123456",
+        "sgs_access_token": "abcdef",
+        "package_names": ["org.mozilla.fenix"],
+        "rollout_percentage": None,
+    }
+
+
+def test_target_samsung_rollout():
+    payload = {"channel": "production", "target_store": "samsung", "rollout_percentage": 50}
+
+    assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
+        "target_store": "samsung",
+        "dry_run": True,
+        "sgs_service_account_id": "123456",
+        "sgs_access_token": "abcdef",
+        "package_names": ["org.mozilla.fenix"],
+        "rollout_percentage": 50,
+    }
+
+
+def test_should_do_dry_run():
     task_payload = {"commit": True}
-    assert _google_should_do_dry_run(task_payload) is False
+    assert _should_do_dry_run(task_payload) is False
 
     task_payload = {"commit": False}
-    assert _google_should_do_dry_run(task_payload) is True
+    assert _should_do_dry_run(task_payload) is True
 
     task_payload = {}
-    assert _google_should_do_dry_run(task_payload) is True
+    assert _should_do_dry_run(task_payload) is True
