@@ -65,5 +65,21 @@ def test_firefox_fake_prod():
         "ENV": "fake-prod",
         "GOOGLE_CREDENTIALS_FENIX_DEP_PATH": "fenix",
         "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH": "focus",
+        "SGS_SERVICE_ACCOUNT_ID_DEP": "123456",
+        "SGS_ACCESS_TOKEN_DEP": "abcdef",
+    }
+    _validate_config(context)
+
+
+def test_firefox_prod():
+    context = {
+        "COT_PRODUCT": "firefox",
+        "ENV": "prod",
+        "GOOGLE_CREDENTIALS_FENIX_BETA_PATH": "beta",
+        "GOOGLE_CREDENTIALS_FENIX_RELEASE_PATH": "release",
+        "GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH": "nightly",
+        "GOOGLE_CREDENTIALS_FOCUS_PATH": "focus",
+        "SGS_SERVICE_ACCOUNT_ID": "123456",
+        "SGS_ACCESS_TOKEN": "abcdef",
     }
     _validate_config(context)

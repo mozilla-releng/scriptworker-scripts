@@ -125,6 +125,22 @@
                                             "type": "string"
                                         }
                                     }
+                                },
+                                "samsung": {
+                                    "type": "object",
+                                    "required": [
+                                        "service_account_id",
+                                        "access_token"
+                                    ],
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "service_account_id": {
+                                            "type": "string"
+                                        },
+                                        "access_token": {
+                                            "type": "string"
+                                        }
+                                    }
                                 }
                             }
                         }
