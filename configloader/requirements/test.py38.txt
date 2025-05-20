@@ -10,9 +10,16 @@ check-manifest==0.50 \
     --hash=sha256:6ab3e3aa72a008da3314b432f4c768c9647b4d6d8032f9e1a4672a572118e48c \
     --hash=sha256:d300f9f292986aa1a30424af44eb45c5644e0a810e392e62d553b24bb3393494
     # via -r requirements/test.in
-click==8.1.8 \
+click==8.1.8 ; python_full_version < '3.10' \
     --hash=sha256:63c132bbbed01578a06712a2d1f497bb62d9c1c0d329b7903a866228027263b2 \
     --hash=sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a
+    # via
+    #   -r requirements/base.in
+    #   pip-compile-multi
+    #   pip-tools
+click==8.2.0 ; python_full_version >= '3.10' \
+    --hash=sha256:6b303f0b2aa85f1cb4e5303078fadcbcd4e476f114fab9b5007005711839325c \
+    --hash=sha256:f5452aeddd9988eefa20f90f05ab66f17fce1ee2a36907fd30b05bbb5953814d
     # via
     #   -r requirements/base.in
     #   pip-compile-multi
@@ -167,9 +174,9 @@ coverage==7.8.0 ; python_full_version >= '3.9' \
     # via
     #   -r requirements/test.in
     #   pytest-cov
-exceptiongroup==1.2.2 ; python_full_version < '3.11' \
-    --hash=sha256:3111b9d131c238bec2f8f516e123e14ba243563fb135d3fe885990585aa7795b \
-    --hash=sha256:47c2edf7c6738fafb49fd34290706d1a1a2f4d1c6df275526b62cbb4aa5393cc
+exceptiongroup==1.3.0 ; python_full_version < '3.11' \
+    --hash=sha256:4d111e6e0c13d0644cad6ddaa7ed0261a0b36971f6d23e7ec9b4b9097da78a10 \
+    --hash=sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88
     # via pytest
 importlib-metadata==8.5.0 ; python_full_version < '3.9' \
     --hash=sha256:45e54197d28b7a7f1559e60b95e7c567032b602131fbd588f1497f47880aa68b \
@@ -213,9 +220,13 @@ pip-tools==7.4.1 \
     --hash=sha256:4c690e5fbae2f21e87843e89c26191f0d9454f362d8acdbd695716493ec8b3a9 \
     --hash=sha256:864826f5073864450e24dbeeb85ce3920cdfb09848a3d69ebf537b521f14bcc9
     # via pip-compile-multi
-pluggy==1.5.0 \
+pluggy==1.5.0 ; python_full_version < '3.9' \
     --hash=sha256:2cffa88e94fdc978c4c574f15f9e59b7f4201d439195c3715ca9e2486f1d0cf1 \
     --hash=sha256:44e1ad92c8ca002de6377e165f3e0f1be63266ab4d554740532335b9d75ea669
+    # via pytest
+pluggy==1.6.0 ; python_full_version >= '3.9' \
+    --hash=sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3 \
+    --hash=sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746
     # via pytest
 pyproject-hooks==1.2.0 \
     --hash=sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8 \
@@ -298,9 +309,9 @@ setuptools==75.3.2 ; python_full_version < '3.9' \
     # via
     #   check-manifest
     #   pip-tools
-setuptools==80.3.1 ; python_full_version >= '3.9' \
-    --hash=sha256:31e2c58dbb67c99c289f51c16d899afedae292b978f8051efaf6262d8212f927 \
-    --hash=sha256:ea8e00d7992054c4c592aeb892f6ad51fe1b4d90cc6947cc45c45717c40ec537
+setuptools==80.7.1 ; python_full_version >= '3.9' \
+    --hash=sha256:ca5cc1069b85dc23070a6628e6bcecb3292acac802399c7f8edc0100619f9009 \
+    --hash=sha256:f6ffc5f0142b1bd8d0ca94ee91b30c0ca862ffd50826da1ea85258a06fd94552
     # via
     #   check-manifest
     #   pip-tools
@@ -351,6 +362,10 @@ toposort==1.10 \
     --hash=sha256:bfbb479c53d0a696ea7402601f4e693c97b0367837c8898bc6471adfca37a6bd \
     --hash=sha256:cbdbc0d0bee4d2695ab2ceec97fe0679e9c10eab4b2a87a9372b929e70563a87
     # via pip-compile-multi
+typing-extensions==4.13.2 ; python_full_version < '3.11' \
+    --hash=sha256:a439e7c04b49fec3e5d3e2beaa21755cadbbdc391694e28ccdd36ca4a1408f8c \
+    --hash=sha256:e6c81219bd689f51865d9e372991c540bda33a0379d5573cddb9a3a23f7caaef
+    # via exceptiongroup
 wheel==0.45.1 \
     --hash=sha256:661e1abd9198507b1409a20c02106d9670b2576e916d58f520316666abca6729 \
     --hash=sha256:708e7481cc80179af0e556bbf0cc00b8444c7321e2700b8d8580231d13017248
