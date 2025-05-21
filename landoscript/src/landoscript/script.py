@@ -5,11 +5,14 @@ import os.path
 import aiohttp
 import scriptworker.client
 from scriptworker.exceptions import TaskVerificationError
+from scriptworker.utils import calculate_sleep_time
 
+import taskcluster
 from landoscript import lando, treestatus
 from landoscript.actions import android_l10n_import, android_l10n_sync, l10n_bump, merge_day, tag, version_bump
 from scriptworker_client.github import extract_github_repo_owner_and_name
 from scriptworker_client.github_client import GithubClient
+from scriptworker_client.utils import retry_async
 
 log = logging.getLogger(__name__)
 
@@ -120,6 +123,41 @@ async def process_actions(session, context, owner, repo, public_artifact_dir, br
     return lando_actions
 
 
+async def get_status_url_from_earlier_run(session: aiohttp.ClientSession) -> str | None:
+    root_url = os.environ.get("TASKCLUSTER_ROOT_URL")
+    task_id = os.environ.get("TASK_ID")
+    run_id = os.environ.get("RUN_ID")
+    if not root_url or not task_id or not run_id:
+        log.warning("Taskcluster environment variables are not set; not trying to resume an earlier run!")
+        return
+
+    run_id = int(run_id)
+    while run_id > 0:
+        run_id -= 1
+        queue = taskcluster.Queue(options={"rootUrl": root_url})
+        try:
+            # `getArtifact` has built in retries, and automatically raises on failure
+            artifactInfo = queue.getArtifact(task_id, run_id, "public/build/lando-status.txt")
+            assert artifactInfo
+            url = artifactInfo.get("url")
+            assert url
+            resp = await retry_async(
+                session.get,
+                args=(str(url),),
+                kwargs={"raise_for_status": True},
+                attempts=5,
+                retry_exceptions=aiohttp.ClientResponseError,
+                sleeptime_callback=calculate_sleep_time,
+            )
+            return (await resp.content.read()).decode()
+        except taskcluster.TaskclusterRestFailure as e:
+            if e.status_code >= 500:
+                log.error("taskcluster is unavailable...cannot continue!")
+                raise
+            # error is 4xx; most likely, the artifact doesn't exist...
+            # carry on and try the next latest run
+
+
 # `context` is kept explicitly untyped because all of its members are typed as
 # Optional. This never happens in reality (only in tests), but as things stand
 # at the time of writing, it means we need noisy and unnecessary None checking
@@ -145,23 +183,34 @@ async def async_main(context):
         sanity_check_payload(payload, scopes, lando_repo)
 
         os.makedirs(public_artifact_dir)
-        lando_actions = await process_actions(session, context, owner, repo, public_artifact_dir, branch)
 
-        if lando_actions:
-            with open(os.path.join(public_artifact_dir, "lando-actions.json"), "w+") as f:
-                f.write(json.dumps(lando_actions, indent=2))
+        # check for status url in earlier run
+        status_url = await get_status_url_from_earlier_run(session)
 
-            if payload.get("dry_run", False):
-                log.info("Dry run...would've submitted lando actions:")
-                lando.print_actions(lando_actions)
-            else:
-                log.info("Not a dry run...submitting lando actions:")
-                lando.print_actions(lando_actions)
-
-                status_url = await lando.submit(session, lando_api, lando_token, lando_repo, lando_actions, config.get("sleeptime_callback"))
-                await lando.poll_until_complete(session, lando_token, config["poll_time"], status_url)
+        if status_url:
+            log.info(f"Polling status url from earlier run: {status_url}")
+            await lando.poll_until_complete(session, lando_token, config["poll_time"], status_url)
         else:
-            log.info("No lando actions to submit!")
+            lando_actions = await process_actions(session, context, owner, repo, public_artifact_dir, branch)
+
+            if lando_actions:
+                with open(os.path.join(public_artifact_dir, "lando-actions.json"), "w+") as f:
+                    f.write(json.dumps(lando_actions, indent=2))
+
+                if payload.get("dry_run", False):
+                    log.info("Dry run...would've submitted lando actions:")
+                    lando.print_actions(lando_actions)
+                else:
+                    log.info("Not a dry run...submitting lando actions:")
+                    lando.print_actions(lando_actions)
+
+                    status_url = await lando.submit(session, lando_api, lando_token, lando_repo, lando_actions, config.get("sleeptime_callback"))
+                    with open(os.path.join(public_artifact_dir, "lando-status.txt"), "w+") as f:
+                        f.write(status_url)
+
+                    await lando.poll_until_complete(session, lando_token, config["poll_time"], status_url)
+            else:
+                log.info("No lando actions to submit!")
 
 
 def main(config_path=None):
