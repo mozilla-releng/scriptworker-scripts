@@ -108,3 +108,21 @@ def test_main_google(monkeypatch):
             True,
             True,
         )
+
+
+def test_main_samsung(monkeypatch):
+    file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
+    fail_manual_validation_args = [
+        'script',
+        '--store', 'samsung',
+        '--sgs-service-account-id', '123',
+        '--sgs-access-token', '456',
+        'alpha',
+        file,
+    ]
+    monkeypatch.setattr(sys, 'argv', fail_manual_validation_args)
+
+    with pytest.raises(SystemExit) as exception:
+        main()
+
+    assert exception.value.code == 2

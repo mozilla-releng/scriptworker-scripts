@@ -6,7 +6,7 @@ import logging
 from mozapkpublisher.common import main_logging
 from mozapkpublisher.common.aab import add_aab_checks_arguments, extract_aabs_metadata
 from mozapkpublisher.common.store import GooglePlayEdit
-from mozapkpublisher.common.utils import add_push_arguments, metadata_by_package_name
+from mozapkpublisher.common.utils import add_push_arguments, metadata_by_package_name, check_push_arguments
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,10 @@ def main():
     add_push_arguments(parser)
     add_aab_checks_arguments(parser)
     config = parser.parse_args()
+    check_push_arguments(parser, config)
+
+    if config.store != "google":
+        parser.error("Pushing AABs is only support for the google store")
 
     push_aab(
         config.aabs,
