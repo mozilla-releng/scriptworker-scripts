@@ -70,24 +70,17 @@ for idx in "${!DIRS[@]}"; do
     done
 done
 
-INSTALLED_PYTHON_VERSIONS=$(uv python list)
-check_python_version() {
+build_python_image() {
     local version=$1
-    if ! echo $INSTALLED_PYTHON_VERSIONS | grep -q "$version"; then
-        echo "ERROR: Python $version is not installed. Hint: run 'uv python install $version'. If you are using a virtualenv, make sure to activate it first."
-        exit 1
-    fi
+    local tag=$2
+    printf "FROM python:${version}-slim\nCOPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/" | docker build --platform linux/x86_64 --pull --tag "$tag" -
 }
 
 if [ ${#PY38_DIRS} -gt 0 ]; then
-    # Make sure python 3.8 is installed
-    # This is the version used in the old mac signers, once the new signers are in place, we can remove this
-    # and just use python 3.11 for everything
-    check_python_version 3.8
-    PYTHON_VERSION=3.8 SUFFIX=py38.txt maintenance/pin-helper.sh "${PY38_DIRS[@]}"
+    build_python_image 3.8.3 "scriptworker-script-pin:3.8.3"
+    docker run --platform linux/x86_64 --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -e SUFFIX=py38.txt -e PYTHON_VERSION=3.8.3 -w /src scriptworker-script-pin:3.8.3 maintenance/pin-helper.sh "${PY38_DIRS[@]}"
 fi
 if [ ${#PY311_DIRS} -gt 0 ]; then
-    # Make sure python 3.11 is installed
-    check_python_version 3.11
-    PYTHON_VERSION=3.11 SUFFIX=txt maintenance/pin-helper.sh "${PY311_DIRS[@]}"
+    build_python_image 3.11.9 "scriptworker-script-pin:3.11.9"
+    docker run --platform linux/x86_64 --rm -t -v "$PWD":/src -e EXTRA_ARGS="$EXTRA_ARGS" -e PYTHON_VERSION=3.11.9 -w /src scriptworker-script-pin:3.11.9 maintenance/pin-helper.sh "${PY311_DIRS[@]}"
 fi
