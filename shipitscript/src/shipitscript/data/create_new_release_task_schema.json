@@ -35,6 +35,9 @@
                 },
                 "cron_revision": {
                   "type": "string"
+                },
+                "repository_type": {
+                    "type": "string"
                 }
             },
             "required": ["product", "branch", "phase", "version", "cron_revision"],
