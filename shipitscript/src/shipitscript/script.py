@@ -42,20 +42,28 @@ def create_new_release_action(context):
     phase = payload["phase"]
     version = payload["version"]
     cron_revision = payload["cron_revision"]  # rev that cron triggered on
+    repository_type = payload.get("repository_type", "hg")
 
-    log.info("Determining most recent shipped revision based off we released")
-    last_shipped_revision = ship_actions.get_most_recent_shipped_revision(shipit_config, product, branch)
-    if not last_shipped_revision:
-        log.error("Something is broken under the sun if no shipped revision")
-        sys.exit(1)
-    log.info(f"Last shipped revision is {last_shipped_revision}")
+    if repository_type == "hg":
+        log.info("Determining most recent shipped revision based off we released")
+        last_shipped_revision = ship_actions.get_most_recent_shipped_revision(shipit_config, product, branch)
+        if not last_shipped_revision:
+            log.error("Something is broken under the sun if no shipped revision")
+            sys.exit(1)
+        log.info(f"Last shipped revision is {last_shipped_revision}")
 
-    log.info("Determining most recent shippable revision")
-    shippable_revision = ship_actions.get_shippable_revision(branch, last_shipped_revision, cron_revision)
-    if not shippable_revision:
-        log.info("No valid shippable revision found, silent exit ...")
+        log.info("Determining most recent shippable revision")
+        shippable_revision = ship_actions.get_shippable_revision(branch, last_shipped_revision, cron_revision)
+        if not shippable_revision:
+            log.info("No valid shippable revision found, silent exit ...")
+            return
+        log.info(f"The shippable revision found is {shippable_revision}")
+    elif repository_type == "github":
+        shippable_revision = cron_revision
+        log.info(f"Repository type is github, shipping `cron_revision` {shippable_revision} without checking")
+    else:
+        log.error(f"Unknown repository type: {repository_type}. Exiting...")
         return
-    log.info(f"The shippable revision found is {shippable_revision}")
 
     log.info("Starting a new release in Ship-it ...")
     ship_actions.start_new_release(shipit_config, product, branch, version, shippable_revision, phase)
