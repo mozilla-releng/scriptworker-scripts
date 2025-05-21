@@ -110,10 +110,12 @@ class Release_V2(object):
                 log.error(f"Response code: {resp.status_code}")
             raise
 
-    def create_new_release(self, product, branch, version, build_number, revision, headers={}):
+    def create_new_release(self, product, branch, version, build_number, revision, repository_url, headers={}):
         """Method to map over the POST /releases/ API in Ship-it"""
         resp = None
         params = {"product": product, "branch": branch, "version": version, "build_number": build_number, "revision": revision, "partial_updates": "auto"}
+        if repository_url is not None:
+            params["repo_url"] = repository_url
 
         # guard the partials parameter to non-mobile to prevent 400 BAD REQUEST
         if product in ("firefox-android", "firefox-ios"):
