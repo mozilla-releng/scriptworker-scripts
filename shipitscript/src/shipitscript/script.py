@@ -6,6 +6,7 @@ import os
 import sys
 
 from scriptworker import client
+from scriptworker.exceptions import TaskVerificationError
 
 from shipitscript import ship_actions
 from shipitscript.task import get_ship_it_instance_config_from_scope, get_task_action, validate_task_schema
@@ -62,8 +63,7 @@ def create_new_release_action(context):
         shippable_revision = cron_revision
         log.info(f"Repository type is github, shipping `cron_revision` {shippable_revision} without checking")
     else:
-        log.error(f"Unknown repository type: {repository_type}. Exiting...")
-        return
+        raise TaskVerificationError(f"Unknown repository type: {repository_type}.")
 
     log.info("Starting a new release in Ship-it ...")
     ship_actions.start_new_release(shipit_config, product, branch, version, shippable_revision, phase)
