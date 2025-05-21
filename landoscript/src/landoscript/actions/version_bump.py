@@ -41,7 +41,7 @@ async def run(
     version_bump_infos: list[VersionBumpInfo],
     dontbuild: bool = True,
     munge_next_version: bool = True,
-) -> LandoAction:
+) -> list[LandoAction]:
     """Perform version bumps on the files given in each `version_bump_info`, if necessary.
 
     If `munge_next_version` is True, the calculated next_version may be adjusted
@@ -93,7 +93,7 @@ async def run(
 
     if not diff:
         log.info("no files to bump")
-        return {}
+        return []
 
     with open(os.path.join(public_artifact_dir, "version-bump.diff"), "w+") as f:
         f.write(diff)
@@ -106,7 +106,7 @@ async def run(
     if dontbuild:
         commitmsg += " DONTBUILD"
 
-    return create_commit_action(commitmsg, diff)
+    return [create_commit_action(commitmsg, diff)]
 
 
 def get_cur_and_next_version(filename, orig_contents, next_version, munge_next_version):

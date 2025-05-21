@@ -38,7 +38,7 @@ class AndroidL10nImportInfo:
 
 async def run(
     github_client: GithubClient, github_config: dict[str, str], public_artifact_dir: str, android_l10n_import_info: AndroidL10nImportInfo, to_branch: str
-) -> LandoAction:
+) -> list[LandoAction]:
     log.info("Preparing to import android l10n changesets.")
 
     l10n_repo_url = android_l10n_import_info.from_repo_url
@@ -125,7 +125,7 @@ async def run(
             diff += diff_contents(orig_file, new_file, dst_path)
 
         if not diff:
-            return {}
+            return []
 
         with open(os.path.join(public_artifact_dir, "android-import.diff"), "w+") as f:
             f.write(diff)
@@ -134,4 +134,4 @@ async def run(
 
         # We always ignore closed trees for android l10n imports.
         commitmsg = f"No Bug - Import translations from {l10n_repo_url} CLOSED TREE"
-        return create_commit_action(commitmsg, diff)
+        return [create_commit_action(commitmsg, diff)]

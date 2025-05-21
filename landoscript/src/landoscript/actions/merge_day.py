@@ -136,7 +136,7 @@ async def run(
             version_bump_infos.append(version_bump.VersionBumpInfo(files=files, next_version=next_version))
 
         log.info(f"version_bump_infos is: {version_bump_infos}")
-        actions.append(
+        actions.extend(
             await version_bump.run(
                 github_client,
                 public_artifact_dir,
