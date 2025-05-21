@@ -43,9 +43,10 @@ def create_new_release_action(context):
     phase = payload["phase"]
     version = payload["version"]
     cron_revision = payload["cron_revision"]  # rev that cron triggered on
-    repository_type = payload.get("repository_type", "hg")
+    repository_url = payload.get("repository_url")
 
-    if repository_type == "hg":
+    # Default to HG if no repository URL is passed
+    if repository_url is None:
         log.info("Determining most recent shipped revision based off we released")
         last_shipped_revision = ship_actions.get_most_recent_shipped_revision(shipit_config, product, branch)
         if not last_shipped_revision:
@@ -59,14 +60,14 @@ def create_new_release_action(context):
             log.info("No valid shippable revision found, silent exit ...")
             return
         log.info(f"The shippable revision found is {shippable_revision}")
-    elif repository_type == "github":
+    elif "github.com" in repository_url:
         shippable_revision = cron_revision
-        log.info(f"Repository type is github, shipping `cron_revision` {shippable_revision} without checking")
+        log.info(f"Repository is a github repo, shipping `cron_revision` {shippable_revision} without checking")
     else:
-        raise TaskVerificationError(f"Unknown repository type: {repository_type}.")
+        raise TaskVerificationError(f"Unknown repository type for URL: {repository_url}.")
 
     log.info("Starting a new release in Ship-it ...")
-    ship_actions.start_new_release(shipit_config, product, branch, version, shippable_revision, phase)
+    ship_actions.start_new_release(shipit_config, product, branch, version, shippable_revision, phase, repository_url)
 
 
 def update_product_channel_version_action(context):
