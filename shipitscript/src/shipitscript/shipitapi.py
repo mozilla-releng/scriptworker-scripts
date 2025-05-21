@@ -115,8 +115,8 @@ class Release_V2(object):
         resp = None
         params = {"product": product, "branch": branch, "version": version, "build_number": build_number, "revision": revision, "partial_updates": "auto"}
 
-        # guard the partials parameter to non-android to prevent 400 BAD REQUEST
-        if product == "firefox-android":
+        # guard the partials parameter to non-mobile to prevent 400 BAD REQUEST
+        if product in ("firefox-android", "firefox-ios"):
             del params["partial_updates"]
         data = json.dumps(params)
 
