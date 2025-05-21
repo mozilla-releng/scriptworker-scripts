@@ -35,7 +35,7 @@ def test_create_new_release_hg(context, monkeypatch):
 
     headers = {"X-Forwarded-Port": "80", "X-Forwarded-Proto": "https"}
     get_shippable_revision.assert_called_with("release", "12345", "5e37f358c4cc77de5e140b82e89e2f0c7be5c2a4")
-    release_instance_mock.create_new_release.assert_called_with("firefox", "release", "59.0", 1, "7891011", headers=headers)
+    release_instance_mock.create_new_release.assert_called_with("firefox", "release", "59.0", 1, "7891011", None, headers=headers)
     release_instance_mock.trigger_release_phase.assert_called_with("Firefox-59.0-build1", "push", headers=headers)
 
 
@@ -46,7 +46,7 @@ def test_create_new_release_github(context, monkeypatch):
         "phase": "push",
         "version": "59.0",
         "cron_revision": "5e37f358c4cc77de5e140b82e89e2f0c7be5c2a4",
-        "repository_type": "github",
+        "repository_url": "https://github.com/mozilla-mobile/staging-firefox-ios",
     }
     context.task["payload"] = payload
     ship_it_instance_config = {"taskcluster_client_id": "some-id", "taskcluster_access_token": "some-token", "api_root_v2": "http://some.ship-it.tld/api/root"}
@@ -62,5 +62,5 @@ def test_create_new_release_github(context, monkeypatch):
     shipitscript.script.create_new_release_action(context)
 
     headers = {"X-Forwarded-Port": "80", "X-Forwarded-Proto": "https"}
-    release_instance_mock.create_new_release.assert_called_with("firefox", "release", "59.0", 1, "5e37f358c4cc77de5e140b82e89e2f0c7be5c2a4", headers=headers)
+    release_instance_mock.create_new_release.assert_called_with("firefox", "release", "59.0", 1, "5e37f358c4cc77de5e140b82e89e2f0c7be5c2a4", "https://github.com/mozilla-mobile/staging-firefox-ios", headers=headers)
     release_instance_mock.trigger_release_phase.assert_called_with("Firefox-59.0-build1", "push", headers=headers)

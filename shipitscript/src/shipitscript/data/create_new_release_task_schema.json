@@ -36,7 +36,7 @@
                 "cron_revision": {
                   "type": "string"
                 },
-                "repository_type": {
+                "repository_url": {
                     "type": "string"
                 }
             },
