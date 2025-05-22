@@ -35,8 +35,89 @@ def validate_scopes(scopes: set, lando_repo: str, actions: list[str]):
         raise scriptworker.client.TaskVerificationError(f"required scope(s) not present: {', '.join(missing)}")
 
 
-def sanity_check_payload(payload):
-    pass
+def sanity_check_payload(payload, scopes, lando_repo):
+    """Additional verification past what the task schema does."""
+    # validate scopes - these raise if there's any scope issues
+    validate_scopes(scopes, lando_repo, payload["actions"])
+    if len(payload["actions"]) < 1:
+        raise TaskVerificationError("must provide at least one action!")
+
+    if not any([action == "l10n_bump" for action in payload["actions"]]):
+        if "dontbuild" in payload:
+            raise TaskVerificationError("dontbuild is only respected in l10n_bump!")
+
+    if not any([action in ("android_l10n_sync", "l10n_bump") for action in payload["actions"]]):
+        if "ignore_closed_tree" in payload:
+            raise TaskVerificationError("ignore_closed_tree is only respected in l10n_bump and android_l10n_sync!")
+
+
+async def process_actions(session, context, owner, repo, public_artifact_dir, branch) -> list[lando.LandoAction]:
+    config = context.config
+    payload = context.task["payload"]
+    lando_repo = payload["lando_repo"]
+    dontbuild = payload.get("dontbuild", False)
+    ignore_closed_tree = payload.get("ignore_closed_tree", True)
+
+    is_tree_open = True
+    if not ignore_closed_tree:
+        is_tree_open = await treestatus.is_tree_open(session, config["treestatus_url"], lando_repo, config.get("sleeptime_callback"))
+
+    lando_actions: list[lando.LandoAction] = []
+
+    async with GithubClient(context.config["github_config"], owner, repo) as gh_client:
+        for action in payload["actions"]:
+            log.info(f"processing action: {action}")
+
+            if action == "version_bump":
+                version_bump_actions = await version_bump.run(
+                    gh_client,
+                    public_artifact_dir,
+                    branch,
+                    [version_bump.VersionBumpInfo(**payload["version_bump_info"])],
+                )
+                if version_bump_actions:
+                    lando_actions.extend(version_bump_actions)
+            elif action == "tag":
+                if "hg_repo_url" not in payload["tag_info"]:
+                    raise TaskVerificationError("must provide hg_repo_url!")
+                tag_actions = await tag.run(session, tag.HgTagInfo(**payload["tag_info"]))
+                lando_actions.extend(tag_actions)
+            elif action == "merge_day":
+                merge_day_actions = await merge_day.run(
+                    session, gh_client, context.config["github_config"], public_artifact_dir, merge_day.MergeInfo.from_payload_data(payload["merge_info"])
+                )
+                lando_actions.extend(merge_day_actions)
+            elif action == "l10n_bump":
+                if not is_tree_open:
+                    log.info("Treestatus is closed; skipping l10n bump.")
+                    continue
+
+                l10n_bump_info = [l10n_bump.L10nBumpInfo.from_payload_data(lbi) for lbi in payload["l10n_bump_info"]]
+                l10n_bump_actions = await l10n_bump.run(
+                    gh_client, context.config["github_config"], public_artifact_dir, branch, l10n_bump_info, dontbuild, ignore_closed_tree
+                )
+                if l10n_bump_actions:
+                    lando_actions.extend(l10n_bump_actions)
+            elif action == "android_l10n_import":
+                android_l10n_import_info = android_l10n_import.AndroidL10nImportInfo.from_payload_data(payload["android_l10n_import_info"])
+                import_actions = await android_l10n_import.run(
+                    gh_client, context.config["github_config"], public_artifact_dir, android_l10n_import_info, branch
+                )
+                if import_actions:
+                    lando_actions.extend(import_actions)
+            elif action == "android_l10n_sync":
+                if not is_tree_open:
+                    log.info("Treestatus is closed; skipping android l10n sync.")
+                    continue
+
+                android_l10n_sync_info = android_l10n_sync.AndroidL10nSyncInfo.from_payload_data(payload["android_l10n_sync_info"])
+                import_actions = await android_l10n_sync.run(gh_client, public_artifact_dir, android_l10n_sync_info, branch)
+                if import_actions:
+                    lando_actions.extend(import_actions)
+
+            log.info("finished processing action")
+
+    return lando_actions
 
 
 # `context` is kept explicitly untyped because all of its members are typed as
@@ -50,92 +131,21 @@ async def async_main(context):
         scopes = set(context.task["scopes"])
         artifact_dir = config["artifact_dir"]
         public_artifact_dir = os.path.join(artifact_dir, "public", "build")
-
         # Note: `lando_repo` is not necessarily the same as the repository's name
         # on Github.
         lando_api = config["lando_api"]
         lando_token = config["lando_token"]
         lando_repo = payload["lando_repo"]
-        dontbuild = payload.get("dontbuild", False)
-        ignore_closed_tree = payload.get("ignore_closed_tree", True)
 
         # pull owner, repo, and branch from config
         repo_url, branch = await lando.get_repo_info(session, lando_api, lando_token, lando_repo)
         owner, repo = extract_github_repo_owner_and_name(repo_url)
         log.info(f"Got owner: {owner}, repo: {repo}, branch: {branch}")
 
-        # validate scopes - these raise if there's any scope issues
-        validate_scopes(scopes, lando_repo, payload["actions"])
-        if len(payload["actions"]) < 1:
-            raise TaskVerificationError("must provide at least one action!")
-
-        if not any([action == "l10n_bump" for action in payload["actions"]]):
-            if "dontbuild" in payload:
-                raise TaskVerificationError("dontbuild is only respected in l10n_bump!")
-
-        if not any([action in ("android_l10n_sync", "l10n_bump") for action in payload["actions"]]):
-            if "ignore_closed_tree" in payload:
-                raise TaskVerificationError("ignore_closed_tree is only respected in l10n_bump and android_l10n_sync!")
+        sanity_check_payload(payload, scopes, lando_repo)
 
         os.makedirs(public_artifact_dir)
-
-        is_tree_open = True
-        if not ignore_closed_tree:
-            is_tree_open = await treestatus.is_tree_open(session, config["treestatus_url"], lando_repo, config.get("sleeptime_callback"))
-
-        lando_actions: list[lando.LandoAction] = []
-        async with GithubClient(context.config["github_config"], owner, repo) as gh_client:
-            for action in payload["actions"]:
-                log.info(f"processing action: {action}")
-
-                if action == "version_bump":
-                    version_bump_actions = await version_bump.run(
-                        gh_client,
-                        public_artifact_dir,
-                        branch,
-                        [version_bump.VersionBumpInfo(**payload["version_bump_info"])],
-                    )
-                    if version_bump_actions:
-                        lando_actions.extend(version_bump_actions)
-                elif action == "tag":
-                    if "hg_repo_url" not in payload["tag_info"]:
-                        raise TaskVerificationError("must provide hg_repo_url!")
-                    tag_actions = await tag.run(session, tag.HgTagInfo(**payload["tag_info"]))
-                    lando_actions.extend(tag_actions)
-                elif action == "merge_day":
-                    merge_day_actions = await merge_day.run(
-                        session, gh_client, context.config["github_config"], public_artifact_dir, merge_day.MergeInfo.from_payload_data(payload["merge_info"])
-                    )
-                    lando_actions.extend(merge_day_actions)
-                elif action == "l10n_bump":
-                    if not is_tree_open:
-                        log.info("Treestatus is closed; skipping l10n bump.")
-                        continue
-
-                    l10n_bump_info = [l10n_bump.L10nBumpInfo.from_payload_data(lbi) for lbi in payload["l10n_bump_info"]]
-                    l10n_bump_actions = await l10n_bump.run(
-                        gh_client, context.config["github_config"], public_artifact_dir, branch, l10n_bump_info, dontbuild, ignore_closed_tree
-                    )
-                    if l10n_bump_actions:
-                        lando_actions.extend(l10n_bump_actions)
-                elif action == "android_l10n_import":
-                    android_l10n_import_info = android_l10n_import.AndroidL10nImportInfo.from_payload_data(payload["android_l10n_import_info"])
-                    import_actions = await android_l10n_import.run(
-                        gh_client, context.config["github_config"], public_artifact_dir, android_l10n_import_info, branch
-                    )
-                    if import_actions:
-                        lando_actions.extend(import_actions)
-                elif action == "android_l10n_sync":
-                    if not is_tree_open:
-                        log.info("Treestatus is closed; skipping android l10n sync.")
-                        continue
-
-                    android_l10n_sync_info = android_l10n_sync.AndroidL10nSyncInfo.from_payload_data(payload["android_l10n_sync_info"])
-                    import_actions = await android_l10n_sync.run(gh_client, public_artifact_dir, android_l10n_sync_info, branch)
-                    if import_actions:
-                        lando_actions.extend(import_actions)
-
-                log.info("finished processing action")
+        lando_actions = await process_actions(session, context, owner, repo, public_artifact_dir, branch)
 
         if lando_actions:
             with open(os.path.join(public_artifact_dir, "lando-actions.json"), "w+") as f:
