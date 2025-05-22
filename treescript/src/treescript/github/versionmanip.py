@@ -91,7 +91,7 @@ async def bump_version(client: GithubClient, task: Dict) -> None:
     if get_dontbuild(task):
         commit_msg += DONTBUILD_MSG
 
-    push = should_push(task, [])
+    push = should_push(task)
     verb = "Committing" if push else "Would commit"
     log.info(f"{verb} the following patch:\n\n{commit_msg}\n{diff}\n")
 

@@ -358,25 +358,14 @@ def test_task_action_types_scopes(config, task, expected):
         assert actions == expected
 
 
-@pytest.mark.parametrize("task", ({"payload": {"push": True}}, {"payload": {"dry_run": False, "push": True}}, {"payload": {"actions": ["push"]}}))
+@pytest.mark.parametrize("task", ({"payload": {"dry_run": False}},))
 def test_should_push_true(task):
-    actions = ttask.task_action_types(SCRIPT_CONFIG, task)
-    assert True is ttask.should_push(task, actions)
+    assert True is ttask.should_push(task)
 
 
-@pytest.mark.parametrize(
-    "task",
-    (
-        {"payload": {"dry_run": True}},
-        {"payload": {"dry_run": True, "actions": ["push"]}},
-        {"payload": {"dry_run": True, "push": True}},
-        {"payload": {"push": False, "actions": ["push"]}},
-        {"payload": {}},
-    ),
-)
+@pytest.mark.parametrize("task", ({"payload": {"dry_run": True}},))
 def test_should_push_false(task):
-    actions = ttask.task_action_types(SCRIPT_CONFIG, task)
-    assert False is ttask.should_push(task, actions)
+    assert False is ttask.should_push(task)
 
 
 @pytest.mark.parametrize("ssh_user,expected", ((None, "default"), ("merge_user", "merge_user")))
