@@ -3,5 +3,5 @@ async-timeout
 gql
 mozilla-version
 moz.l10n
-scriptworker
+scriptworker@https://github.com/bhearsum/scriptworker/archive/refs/heads/upload-all.zip
 yarl
