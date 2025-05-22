@@ -12,6 +12,9 @@ WORKDIR /app
 COPY . /app
 
 RUN python -m venv /app \
+ && cd /app/scriptworker_client \
+ && /app/bin/pip install --no-deps -r requirements/base.txt \
+ && /app/bin/pip install . \
  && cd shipitscript \
  && /app/bin/pip install --no-deps -r requirements/base.txt \
  && /app/bin/pip install . \
