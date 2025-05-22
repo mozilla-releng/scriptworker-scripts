@@ -1294,6 +1294,124 @@ import shipitscript.pushlog_scan as pushlog
         ),
     ],
 )
-def test_get_shippable_revision_build(requests_mock, branch, last_shipped_rev, cron_rev, ret_json, shippable_rev):
+def test_get_shippable_revision_build_hg(requests_mock, branch, last_shipped_rev, cron_rev, ret_json, shippable_rev):
     requests_mock.get(pushlog.URL.format(branch=branch), json=ret_json)
-    assert pushlog.get_shippable_revision_build(branch, last_shipped_rev, cron_rev) == shippable_rev
+    assert pushlog.get_shippable_revision_build(branch, last_shipped_rev, cron_rev, None) == shippable_rev
+
+
+@pytest.mark.parametrize(
+    "last_shipped_rev,cron_rev,ret_json,shippable_rev",
+    [
+        ("123", "123", [], None),
+        (
+            "123",
+            "456",
+            [
+                {
+                    "sha": "456",
+                    "commit": {
+                        "author": {"name": "a_random_person"},
+                        "message": "Very important fix",
+                    },
+                }
+            ],
+            "456",
+        ),
+        (
+            "123",
+            "789",
+            [
+                {
+                    "sha": "789",
+                    "commit": {
+                        "author": {"name": "a_random_person"},
+                        "message": "fix typo in readme DONTBUILD",
+                    },
+                },
+                {
+                    "sha": "456",
+                    "commit": {
+                        "author": {"name": "a_random_person"},
+                        "message": "Very important fix",
+                    },
+                },
+            ],
+            "456",
+        ),
+        (
+            "123",
+            "789",
+            [
+                {
+                    "sha": "789",
+                    "commit": {
+                        "author": {"name": "a_random_person"},
+                        "message": "Another typo DONTBUILD",
+                    },
+                },
+                {
+                    "sha": "456",
+                    "commit": {
+                        "author": {"name": "a_random_person"},
+                        "message": "fix typo in readme DONTBUILD",
+                    },
+                },
+            ],
+            None,
+        ),
+        (
+            "123",
+            "789",
+            [
+                {
+                    "sha": "789",
+                    "commit": {
+                        "author": {"name": "releng-treescript-dev[bot]"},
+                        "message": "version bump",
+                    },
+                },
+                {
+                    "sha": "456",
+                    "commit": {
+                        "author": {"name": "a_random_person"},
+                        "message": "fix typo in readme DONTBUILD",
+                    },
+                },
+            ],
+            None,
+        ),
+        (
+            "123",
+            "abc",
+            [
+                {
+                    "sha": "abc",
+                    "commit": {
+                        "author": {"name": "a_random_person"},
+                        "message": "another important fix",
+                    },
+                },
+                {
+                    "sha": "789",
+                    "commit": {
+                        "author": {"name": "a_random_person"},
+                        "message": "fix typo in readme DONTBUILD",
+                    },
+                },
+                {
+                    "sha": "456",
+                    "commit": {
+                        "author": {"name": "a_random_person"},
+                        "message": "Very important fix",
+                    },
+                },
+            ],
+            "abc",
+        ),
+    ],
+)
+def test_get_shippable_revision_build_git(requests_mock, last_shipped_rev, cron_rev, ret_json, shippable_rev):
+    requests_mock.get(
+        "https://api.github.com/repos/mozilla-mobile/staging-firefox-ios/compare/{}...{}".format(last_shipped_rev, cron_rev), json={"commits": ret_json}
+    )
+    assert pushlog.get_shippable_revision_build("main", last_shipped_rev, cron_rev, "https://github.com/mozilla-mobile/staging-firefox-ios") == shippable_rev
