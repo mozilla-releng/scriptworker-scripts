@@ -1,9 +1,10 @@
 import logging
 import os
 from enum import IntEnum, auto, unique
-from scriptworker_client.github import extract_github_repo_owner_and_name
 
 import requests
+
+from scriptworker_client.github import extract_github_repo_owner_and_name
 
 log = logging.getLogger(__name__)
 
