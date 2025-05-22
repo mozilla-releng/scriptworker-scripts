@@ -282,12 +282,11 @@ def task_action_types(config, task):
 
 
 # is_dry_run {{{1
-def should_push(task, actions):
+def should_push(task):
     """Determine whether this task should push the changes it makes.
 
     If `dry_run` is true on the task, there will not be a push.
-    Otherwise, if `push` is specified, that determines if there should be a push.
-    Otherwise, there is a push if the `push` action is specified.
+    Otherwise, there will be a push.
 
     Args:
         task (dict): the task definition.
@@ -297,21 +296,9 @@ def should_push(task, actions):
 
     """
     dry_run = task["payload"].get("dry_run", False)
-    push = task["payload"].get("push")
-    push_action = "push" in actions
     if dry_run:
         log.info("Not pushing changes, dry_run was forced")
-        return False
-    elif push is not None:
-        if not push and push_action:
-            log.warning("Push disabled, but push action provided; ignore push action")
-        return push
-    elif push_action:
-        log.warning("Specifying push as an action is deprecated; task.payload.push instead.")
-        return True
-    else:
-        log.info("Not pushing changes, no push requested")
-        return False
+    return not dry_run
 
 
 # get_ssh_user {{{1

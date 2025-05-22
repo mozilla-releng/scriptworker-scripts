@@ -38,7 +38,7 @@ async def perform_merge_actions(config, task, actions, repo_path):
 
     push_activity = await do_merge(config, task, repo_path, l10n_bump_action)
 
-    if should_push(task, actions) and push_activity:
+    if should_push(task) and push_activity:
         log.info("%d branches to push", len(push_activity))
         for target_repo, revision in push_activity:
             log.info("pushing %s to %s", revision, target_repo)
@@ -89,7 +89,7 @@ async def do_actions(config, task):
     num_outgoing = await vcs.log_outgoing(config, task, repo_path)
     if num_outgoing != num_changes:
         raise TreeScriptError("Outgoing changesets don't match number of expected changesets! {} vs {}".format(num_outgoing, num_changes))
-    if should_push(task, actions):
+    if should_push(task):
         if num_changes:
             await vcs.push(config, task, repo_path, target_repo=get_source_repo(task))
         else:

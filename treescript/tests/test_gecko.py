@@ -9,21 +9,14 @@ from treescript.exceptions import TreeScriptError
 # do_actions {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "push_scope,push_payload,dry_run,push_expect_called",
+    "dry_run,push_expect_called",
     (
-        (["push"], False, False, False),
-        (["push"], False, True, False),
-        (["push"], True, False, True),
-        (["push"], True, True, False),
-        ([], False, False, False),
-        ([], False, True, False),
-        ([], True, False, True),
-        ([], True, True, False),
+        (False, True),
+        (True, False),
     ),
 )
-async def test_do_actions(mocker, push_scope, push_payload, dry_run, push_expect_called):
+async def test_do_actions(mocker, dry_run, push_expect_called):
     actions = ["tag", "version_bump", "l10n_bump"]
-    actions += push_scope
     called = {"version_bump": False, "l10n_bump": False, "merge": False}
 
     async def mocked_bump(*args, **kwargs):
@@ -47,7 +40,7 @@ async def test_do_actions(mocker, push_scope, push_payload, dry_run, push_expect
     mocker.patch.object(gecko, "perform_merge_actions", new=mocked_perform_merge_actions)
 
     task_defn = {
-        "payload": {"push": push_payload, "dry_run": dry_run, "actions": actions},
+        "payload": {"dry_run": dry_run, "actions": actions},
         "metadata": {"source": "https://hg.mozilla.org/releases/mozilla-test-source" "/file/1b4ab9a276ce7bb217c02b83057586e7946860f9/taskcluster/ci/foobar"},
     }
     await gecko.do_actions({"work_dir": "foo", "trust_domain": "gecko"}, task_defn)
