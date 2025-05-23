@@ -2,21 +2,7 @@ from landoscript.errors import LandoscriptError
 import pytest
 from scriptworker.client import TaskVerificationError
 
-from .conftest import run_test
-
-
-def assert_tag_response(req, tag_info, target_revision):
-    assert "json" in req.kwargs
-    assert "actions" in req.kwargs["json"]
-    tag_actions = [action for action in req.kwargs["json"]["actions"] if action["action"] == "tag"]
-    assert len(tag_actions) == len(tag_info["tags"])
-
-    requested_tags = set([action["name"] for action in tag_actions])
-    assert requested_tags == set(tag_info["tags"])
-
-    revisions = set([action["target"] for action in tag_actions])
-    assert len(revisions) == 1
-    assert revisions.pop() == target_revision
+from .conftest import assert_tag_response, run_test
 
 
 @pytest.mark.asyncio
