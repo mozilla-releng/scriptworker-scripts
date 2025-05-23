@@ -6,6 +6,7 @@ import os
 import sys
 
 from scriptworker import client
+from scriptworker.exceptions import TaskVerificationError
 
 from shipitscript import ship_actions
 from shipitscript.task import get_ship_it_instance_config_from_scope, get_task_action, validate_task_schema
@@ -42,23 +43,40 @@ def create_new_release_action(context):
     phase = payload["phase"]
     version = payload["version"]
     cron_revision = payload["cron_revision"]  # rev that cron triggered on
+    repository_url = payload.get("repository_url")
 
     log.info("Determining most recent shipped revision based off we released")
     last_shipped_revision = ship_actions.get_most_recent_shipped_revision(shipit_config, product, branch)
-    if not last_shipped_revision:
-        log.error("Something is broken under the sun if no shipped revision")
-        sys.exit(1)
-    log.info(f"Last shipped revision is {last_shipped_revision}")
 
-    log.info("Determining most recent shippable revision")
-    shippable_revision = ship_actions.get_shippable_revision(branch, last_shipped_revision, cron_revision)
+    # Default to HG if no repository URL is passed
+    if repository_url is None:
+        if not last_shipped_revision:
+            log.error("Something is broken under the sun if no shipped revision")
+            sys.exit(1)
+        log.info(f"Last shipped revision is {last_shipped_revision}")
+
+        log.info("Determining most recent shippable revision")
+        shippable_revision = ship_actions.get_shippable_revision(branch, last_shipped_revision, cron_revision, repository_url)
+    elif "github.com" in repository_url:
+        if last_shipped_revision:
+            log.info(f"Last shipped revision is {last_shipped_revision}")
+
+            log.info("Determining if cron revision is shippable")
+            shippable_revision = ship_actions.get_shippable_revision(branch, last_shipped_revision, cron_revision, repository_url)
+        else:
+            shippable_revision = cron_revision
+            log.info("This is the first release on this branch, shipping `cron_revision` {shippable_revision}")
+    else:
+        raise TaskVerificationError(f"Unknown repository type for URL: {repository_url}.")
+
     if not shippable_revision:
         log.info("No valid shippable revision found, silent exit ...")
         return
+
     log.info(f"The shippable revision found is {shippable_revision}")
 
     log.info("Starting a new release in Ship-it ...")
-    ship_actions.start_new_release(shipit_config, product, branch, version, shippable_revision, phase)
+    ship_actions.start_new_release(shipit_config, product, branch, version, shippable_revision, phase, repository_url)
 
 
 def update_product_channel_version_action(context):
