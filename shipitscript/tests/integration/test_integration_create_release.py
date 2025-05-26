@@ -49,7 +49,7 @@ def test_create_new_release_hg(context, monkeypatch):
         "5e37f358c4cc77de5e140b82e89e2f0c7be5c2a4",
         mozilla_repo_urls.parse("https://hg.mozilla.org/releases/mozilla-beta/file/8a2c52b9488e5ae5a8dc8500d3430d5ebe3d9a85/taskcluster/kinds/maybe-release"),
     )
-    release_instance_mock.create_new_release.assert_called_with("firefox", "release", "59.0", 1, "7891011", None, headers=headers)
+    release_instance_mock.create_new_release.assert_called_with("firefox", "release", "59.0", 1, "7891011", "https://hg.mozilla.org/releases/mozilla-beta", headers=headers)
     release_instance_mock.trigger_release_phase.assert_called_with("Firefox-59.0-build1", "push", headers=headers)
 
 
