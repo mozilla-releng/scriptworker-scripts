@@ -65,11 +65,12 @@ def create_new_release_action(context):
 
         shippable_revision = ship_actions.get_shippable_revision(branch, last_shipped_revision, cron_revision, source_url)
     elif source_url.platform == "github":
+        repository_url = f"https://github.com/{source_url.owner}/{source_url.repo}"
+
         if last_shipped_revision:
             log.info(f"Last shipped revision is {last_shipped_revision}")
 
             log.info("Determining if cron revision is shippable")
-            repository_url = f"https://github.com/{source_url.owner}/{source_url.repo}"
 
             shippable_revision = ship_actions.get_shippable_revision(branch, last_shipped_revision, cron_revision, source_url)
         else:
