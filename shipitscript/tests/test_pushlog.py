@@ -1,3 +1,4 @@
+import mozilla_repo_urls
 import pytest
 
 import shipitscript.pushlog_scan as pushlog
@@ -1414,4 +1415,9 @@ def test_get_shippable_revision_build_git(requests_mock, last_shipped_rev, cron_
     requests_mock.get(
         "https://api.github.com/repos/mozilla-mobile/staging-firefox-ios/compare/{}...{}".format(last_shipped_rev, cron_rev), json={"commits": ret_json}
     )
-    assert pushlog.get_shippable_revision_build("main", last_shipped_rev, cron_rev, "https://github.com/mozilla-mobile/staging-firefox-ios") == shippable_rev
+    assert (
+        pushlog.get_shippable_revision_build(
+            "main", last_shipped_rev, cron_rev, mozilla_repo_urls.parse("https://github.com/mozilla-mobile/staging-firefox-ios")
+        )
+        == shippable_rev
+    )

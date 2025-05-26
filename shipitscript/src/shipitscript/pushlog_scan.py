@@ -1,7 +1,6 @@
 import logging
 import os
 from enum import IntEnum, auto, unique
-from scriptworker_client.github import extract_github_repo_owner_and_name
 
 import requests
 
@@ -27,9 +26,9 @@ def push_check_hg(func):
     return func
 
 
-def get_shippable_revision_build(branch, last_shipped_rev, cron_rev, repository_url):
-    if repository_url is not None and "github.com" in repository_url:
-        return _get_shippable_revision_build_github(repository_url, last_shipped_rev, cron_rev)
+def get_shippable_revision_build(branch, last_shipped_rev, cron_rev, parsed_repository_url):
+    if parsed_repository_url is not None and parsed_repository_url.platform == "github":
+        return _get_shippable_revision_build_github(parsed_repository_url, last_shipped_rev, cron_rev)
 
     return _get_shippable_revision_build_hg(branch, last_shipped_rev, cron_rev)
 
@@ -56,8 +55,7 @@ def _get_shippable_revision_build_hg(branch, last_shipped_rev, cron_rev):
             return None
 
 
-def _get_shippable_revision_build_github(repository_url, last_shipped_rev, cron_rev):
-    owner, repository_name = extract_github_repo_owner_and_name(repository_url)
+def _get_shippable_revision_build_github(parsed_repository_url, last_shipped_rev, cron_rev):
     headers = {
         "User-Agent": "shipitscript",
     }
@@ -65,7 +63,10 @@ def _get_shippable_revision_build_github(repository_url, last_shipped_rev, cron_
     if "GITHUB_TOKEN" in os.environ:
         headers["Authorization"] = "Bearer {}".format(os.environ["GITHUB_TOKEN"])
 
-    resp = requests.get(GITHUB_URL.format(owner=owner, repository_name=repository_name, base=last_shipped_rev, compare=cron_rev), headers=headers)
+    resp = requests.get(
+        GITHUB_URL.format(owner=parsed_repository_url.owner, repository_name=parsed_repository_url.repo, base=last_shipped_rev, compare=cron_rev),
+        headers=headers,
+    )
     resp.raise_for_status()
 
     pushlog = resp.json()["commits"]
