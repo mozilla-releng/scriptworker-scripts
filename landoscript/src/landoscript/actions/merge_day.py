@@ -183,7 +183,13 @@ async def run(
     with open(os.path.join(public_artifact_dir, "replacements.diff"), "w+") as f:
         f.write(diff)
 
-    commitmsg = "No Bug - Update configs after merge day operations"
+    commitmsg = "No Bug - Update configs after merge day operations a=release"
+    # keep the uglier magic strings out of the first line
+    # also put them on their own lines to make it clear that they are
+    # distinct from one another
+    commitmsg += "\n"
+    commitmsg += "\nIGNORE BROKEN CHANGESETS"
+    commitmsg += "\nCLOSED TREE"
     actions.append(create_commit_action(commitmsg, diff))
 
     return actions

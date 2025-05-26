@@ -410,5 +410,5 @@ def assert_merge_response(
 
         action = next(create_commit_actions)
 
-        commit_msg_strings = ["Update configs"]
+        commit_msg_strings = ["Update configs", "a=release", "IGNORE BROKEN CHANGESETS", "CLOSED TREE"]
         assert_add_commit_response(action, commit_msg_strings, initial_replacement_values, expected_replacement_bumps)
