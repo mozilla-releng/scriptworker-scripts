@@ -115,7 +115,7 @@ class Release_V2(object):
         resp = None
         params = {"product": product, "branch": branch, "version": version, "build_number": build_number, "revision": revision, "partial_updates": "auto"}
         if repository_url is not None:
-            params["repo_url"] = repository_url
+            params["repo_url"] = repository_url.format()
 
         # guard the partials parameter to non-mobile to prevent 400 BAD REQUEST
         if product in ("firefox-android", "firefox-ios"):

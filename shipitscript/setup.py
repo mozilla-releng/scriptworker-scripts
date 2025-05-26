@@ -9,7 +9,7 @@ with open(os.path.join(project_dir, "version.txt")) as f:
 
 # We allow commented lines in this file
 with open(os.path.join(project_dir, "requirements/base.in")) as f:
-    requirements = ["scriptworker_client"] + [line.rstrip("\n") for line in f if not line.startswith("#")]
+    requirements = [line.rstrip("\n") for line in f if not line.startswith("#")]
 
 
 setup(
@@ -27,5 +27,5 @@ setup(
     entry_points={"console_scripts": ["shipitscript = shipitscript.script:main"]},
     license="MPL2",
     install_requires=requirements,
-    classifiers=("Programming Language :: Python :: 3.6", "Programming Language :: Python :: 3.7"),
+    classifiers=["Programming Language :: Python :: 3.6", "Programming Language :: Python :: 3.7"],
 )
