@@ -17,8 +17,8 @@ def get_shipit_api_instance(shipit_config):
     return release_api, headers
 
 
-def get_shippable_revision(branch, last_shipped_revision, cron_revision, repository_url):
-    return pushlog_scan.get_shippable_revision_build(branch, last_shipped_revision, cron_revision, repository_url)
+def get_shippable_revision(branch, last_shipped_revision, cron_revision, parsed_repository_url):
+    return pushlog_scan.get_shippable_revision_build(branch, last_shipped_revision, cron_revision, parsed_repository_url)
 
 
 def get_most_recent_shipped_revision(shipit_config, product, branch):
