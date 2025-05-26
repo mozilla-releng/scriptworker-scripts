@@ -9,6 +9,7 @@ from scriptworker.exceptions import TaskVerificationError
 import taskcluster
 from landoscript import lando, treestatus
 from landoscript.actions import android_l10n_import, android_l10n_sync, l10n_bump, merge_day, tag, version_bump
+from landoscript.errors import MergeConflictError
 from scriptworker_client.github import extract_github_repo_owner_and_name
 from scriptworker_client.github_client import GithubClient
 
@@ -199,6 +200,9 @@ async def async_main(context):
                     status_url = await lando.submit(session, lando_api, lando_token, lando_repo, lando_actions, config.get("sleeptime_callback"))
                     with open(os.path.join(public_artifact_dir, "lando-status.txt"), "w+") as f:
                         f.write(status_url)
+
+                    # force a rerun for testing puproses
+                    raise MergeConflictError()
 
                     await lando.poll_until_complete(session, lando_token, config["poll_time"], status_url)
             else:
