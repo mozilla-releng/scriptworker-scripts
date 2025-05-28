@@ -1,5 +1,6 @@
 import logging
 import os
+import shlex
 import stat
 import subprocess
 import tarfile
@@ -23,8 +24,10 @@ def validate_publish_build_output(context, content):
 
 def run_flat_manager_client_process(context, args):
     flat_manager_client = context.config["flat_manager_client"]
+    log.info("Running %s %s", flat_manager_client, shlex.join(args))
     process = subprocess.Popen([flat_manager_client] + args, stdout=subprocess.PIPE)
     output, err = process.communicate()
+    log.info("Command output: %s", output)
     exit_code = process.wait()
 
     if exit_code != 0:
