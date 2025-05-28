@@ -30,6 +30,7 @@ class PublishTest(unittest.TestCase):
             secret="/google_credentials.json",
             track="beta",
             expected_package_names=["org.mozilla.fennec_aurora"],
+            store="google",
             rollout_percentage=None,
             dry_run=True,
             contact_server=True,
