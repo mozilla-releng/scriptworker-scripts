@@ -10,7 +10,7 @@ def publish(product_config, publish_config, apk_files, contact_server):
     if apk_files:
         push_apk(
             apks=apk_files,
-            secret=publish_config["secret"],
+            secret=publish_config.get("secret"),
             expected_package_names=publish_config["package_names"],
             track=publish_config.get("google_track"),
             rollout_percentage=publish_config.get("rollout_percentage"),
@@ -31,7 +31,7 @@ def publish_aab(product_config, publish_config, aab_files, contact_server):
     if aab_files:
         push_aab(
             aabs=aab_files,
-            secret=publish_config["secret"],
+            secret=publish_config.get("secret"),
             track=publish_config.get("google_track"),
             rollout_percentage=publish_config.get("rollout_percentage"),
             dry_run=publish_config["dry_run"],
