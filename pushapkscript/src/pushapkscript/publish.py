@@ -15,6 +15,7 @@ def publish(product_config, publish_config, apk_files, contact_server):
             track=publish_config.get("google_track"),
             rollout_percentage=publish_config.get("rollout_percentage"),
             dry_run=publish_config["dry_run"],
+            store=publish_config.get("target_store", "google"),
             # Only allowed to connect to store server if the configuration of the pushapkscript
             # instance allows it
             contact_server=contact_server,

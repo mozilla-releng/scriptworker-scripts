@@ -1,9 +1,10 @@
 class TaskGenerator(object):
-    def __init__(self, rollout_percentage=None, should_commit_transaction=False):
+    def __init__(self, rollout_percentage=None, should_commit_transaction=False, store=None):
         self.arm_task_id = "fwk3elTDSe6FLoqg14piWg"
         self.x86_task_id = "PKP2v4y0RdqOuLCqhevD2A"
         self.should_commit_transaction = should_commit_transaction
         self.rollout_percentage = rollout_percentage
+        self.store = store
 
     def generate_task(self, product_name, channel=None):
         arm_task_id = self.arm_task_id
@@ -36,5 +37,8 @@ class TaskGenerator(object):
 
         if self.should_commit_transaction:
             task["payload"]["commit"] = True
+
+        if self.store:
+            task["payload"]["target_store"] = self.store
 
         return task
