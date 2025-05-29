@@ -10,7 +10,8 @@ SCRIPTWORKER_PID=${SCRIPTWORKER_PID:-1}
 # in case the task takes too long, this script exits 2 minutes before
 # `terminationGracePeriodSeconds` (as set e.g. in
 # https://github.com/mozilla-services/cloudops-infra/blob/d94d5fd6a7704ffd2c829d870206f5c0ed8d75e7/projects/relengworker/k8s/charts/beetmover/templates/deployment.yaml)
-# to let scriptworker upload files and report `worker-shutdown` to Taskcluster.
+# this will cause kubernetes to send SIGTERM earlier, and allow
+# scriptworker time to upload files and report `worker-shutdown` to Taskcluster.
 case ${PROJECT_NAME} in
     bitrise)
         POLL_DURATION=7080 # 118 minutes

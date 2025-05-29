@@ -19,6 +19,7 @@ from .test_tag import assert_tag_response
 def assert_success(artifact_dir, req, commit_msg_strings, initial_values, expected_bumps, has_actions=True):
     if has_actions:
         assert (artifact_dir / "public/build/lando-actions.json").exists()
+        assert (artifact_dir / "public/build/lando-status.txt").exists()
 
     assert "json" in req.kwargs
     assert "actions" in req.kwargs["json"]
