@@ -30,6 +30,7 @@ class PublishTest(unittest.TestCase):
             secret="/google_credentials.json",
             track="beta",
             expected_package_names=["org.mozilla.fennec_aurora"],
+            store="google",
             rollout_percentage=None,
             dry_run=True,
             contact_server=True,
@@ -37,6 +38,8 @@ class PublishTest(unittest.TestCase):
             skip_check_ordered_version_codes=False,
             skip_check_same_locales=False,
             skip_checks_fennec=False,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
         )
 
     def test_publish_aab_config(self, mock_push_aab, mock_push_apk):
@@ -56,7 +59,7 @@ class PublishTest(unittest.TestCase):
             "target_store": "google",
             "dry_run": True,
             "google_track": "production",
-            "google_rollout_percentage": 10,
+            "rollout_percentage": 10,
             "package_names": ["org.mozilla.fennec_aurora"],
             "secret": "/google_credentials.json",
         }
@@ -69,7 +72,7 @@ class PublishTest(unittest.TestCase):
         publish_config = {
             "dry_run": True,
             "google_track": "production",
-            "google_rollout_percentage": 10,
+            "rollout_percentage": 10,
             "package_names": ["org.mozilla.fennec_aurora"],
             "secret": "/google_credentials.json",
         }

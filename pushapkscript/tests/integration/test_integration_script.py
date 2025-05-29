@@ -161,6 +161,10 @@ class ConfigFileGenerator(object):
                                     "default_track": "production",
                                     "credentials_file": "/fenix-production.json",
                                 },
+                                "samsung": {
+                                    "service_account_id": "123",
+                                    "access_token": "456",
+                                },
                             },
                         },
                     }
@@ -223,6 +227,7 @@ class MainTest(unittest.TestCase):
             secret="/firefox-nightly.json",
             track="beta",
             expected_package_names=["org.mozilla.fennec_aurora"],
+            store="google",
             rollout_percentage=None,
             dry_run=True,
             contact_server=True,
@@ -230,6 +235,8 @@ class MainTest(unittest.TestCase):
             skip_check_ordered_version_codes=False,
             skip_check_same_locales=False,
             skip_checks_fennec=False,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -249,6 +256,7 @@ class MainTest(unittest.TestCase):
             secret="/focus.json",
             track="production",
             expected_package_names=["org.mozilla.focus", "org.mozilla.klar"],
+            store="google",
             rollout_percentage=None,
             dry_run=True,
             contact_server=True,
@@ -256,6 +264,8 @@ class MainTest(unittest.TestCase):
             skip_check_ordered_version_codes=True,
             skip_check_same_locales=False,
             skip_checks_fennec=True,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -275,6 +285,7 @@ class MainTest(unittest.TestCase):
             secret="/fenix-nightly.json",
             track="beta",
             expected_package_names=["org.mozilla.fenix.nightly"],
+            store="google",
             rollout_percentage=None,
             dry_run=True,
             contact_server=True,
@@ -282,6 +293,8 @@ class MainTest(unittest.TestCase):
             skip_check_ordered_version_codes=False,
             skip_check_same_locales=True,
             skip_checks_fennec=True,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -301,6 +314,7 @@ class MainTest(unittest.TestCase):
             secret="/firefox-nightly.json",
             track="beta",
             expected_package_names=["org.mozilla.fennec_aurora"],
+            store="google",
             rollout_percentage=None,
             dry_run=True,
             contact_server=True,
@@ -308,6 +322,8 @@ class MainTest(unittest.TestCase):
             skip_check_ordered_version_codes=False,
             skip_check_same_locales=False,
             skip_checks_fennec=False,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -327,6 +343,7 @@ class MainTest(unittest.TestCase):
             secret="/firefox-nightly.json",
             track="beta",
             expected_package_names=["org.mozilla.fennec_aurora"],
+            store="google",
             rollout_percentage=25,
             dry_run=True,
             contact_server=True,
@@ -334,6 +351,8 @@ class MainTest(unittest.TestCase):
             skip_check_ordered_version_codes=False,
             skip_check_same_locales=False,
             skip_checks_fennec=False,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -354,6 +373,7 @@ class MainTest(unittest.TestCase):
             secret="/firefox-nightly.json",
             track="beta",
             expected_package_names=["org.mozilla.fennec_aurora"],
+            store="google",
             rollout_percentage=None,
             dry_run=False,
             contact_server=True,
@@ -361,4 +381,36 @@ class MainTest(unittest.TestCase):
             skip_check_ordered_version_codes=False,
             skip_check_same_locales=False,
             skip_checks_fennec=False,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
+        )
+
+    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    def test_main_with_samsung_store(self, push_apk):
+        task_generator = TaskGenerator(should_commit_transaction=True, store="samsung")
+
+        self.write_task_file(task_generator.generate_task("fenix", channel="release"))
+
+        self._copy_all_apks_to_test_temp_dir(task_generator)
+        self.keystore_manager.add_certificate("nightly")
+        main(config_path=self.config_generator.generate_fenix_config())
+
+        push_apk.assert_called_with(
+            apks=[
+                MockFile("{}/work/cot/{}/public/build/target.apk".format(self.test_temp_dir, task_generator.arm_task_id)),
+                MockFile("{}/work/cot/{}/public/build/target.apk".format(self.test_temp_dir, task_generator.x86_task_id)),
+            ],
+            secret=None,
+            track=None,
+            expected_package_names=["org.mozilla.fenix"],
+            store="samsung",
+            rollout_percentage=None,
+            dry_run=False,
+            contact_server=True,
+            skip_check_multiple_locales=True,
+            skip_check_ordered_version_codes=False,
+            skip_check_same_locales=True,
+            skip_checks_fennec=True,
+            sgs_service_account_id="123",
+            sgs_access_token="456",
         )

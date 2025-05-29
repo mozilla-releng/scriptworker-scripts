@@ -71,6 +71,8 @@ case $COT_PRODUCT in
         echo "dummy" > $CONFIG_DIR/fake_cert.json
         export GOOGLE_CREDENTIALS_FENIX_DEP_PATH=$CONFIG_DIR/fake_cert.json
         export GOOGLE_CREDENTIALS_FOCUS_DEP_PATH=$CONFIG_DIR/fake_cert.json
+        export SGS_SERVICE_ACCOUNT_ID_DEP="0123456"
+        export SGS_ACCESS_TOKEN_DEP="dummy"
 
         import_cert fenix $CERT_DIR/fenix_dep.pem
         import_cert focus $CERT_DIR/focus_dep.pem
@@ -81,6 +83,8 @@ case $COT_PRODUCT in
         test_var_set 'GOOGLE_SERVICE_ACCOUNT_FENIX_NIGHTLY'
         test_var_set 'GOOGLE_SERVICE_ACCOUNT_FENIX_BETA'
         test_var_set 'GOOGLE_SERVICE_ACCOUNT_FENIX_RELEASE'
+        test_var_set 'SGS_SERVICE_ACCOUNT_ID'
+        test_var_set 'SGS_ACCESS_TOKEN'
 
         export GOOGLE_CREDENTIALS_FOCUS_PATH=$CONFIG_DIR/focus.json
         export GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH=$CONFIG_DIR/fenix_nightly.json
