@@ -292,100 +292,100 @@ async def upload_data(context):
 
 def get_concrete_artifact_map_from_globbed(upstreamArtifactPaths, artifactMap, strip_segments=["public/build", "public/logs"]):
     """Given a list of artifacts from tasks (`upstreamArtifactPaths`) and a
-    mapping of names and/or patterns to destinations (`artifactMap`), return a
-    mapping that maps all of the specific artifacts from tasks int
-    destinations. Artifacts will have `strip_segments` removed from them before
-    being compared against `artifactMap` patterns.
+     mapping of names and/or patterns to destinations (`artifactMap`), return a
+     mapping that maps all of the specific artifacts from tasks int
+     destinations. Artifacts will have `strip_segments` removed from them before
+     being compared against `artifactMap` patterns.
 
-   `upstreamArtifactPaths` takes the form of:
-    {
-      "taskId1": [
-        "/path/to/public/build/file",
-        "/path/to/public/build/file2",
-        "/path/to/public/logs.live.log",
-      ],
-      "taskId2": [
-        "/path/to/public/build/file3",
-        "/path/to/public/logs.live.log",
-      ],
-    }
+    `upstreamArtifactPaths` takes the form of:
+     {
+       "taskId1": [
+         "/path/to/public/build/file",
+         "/path/to/public/build/file2",
+         "/path/to/public/logs.live.log",
+       ],
+       "taskId2": [
+         "/path/to/public/build/file3",
+         "/path/to/public/logs.live.log",
+       ],
+     }
 
-    `artifactMap` takes the form of:
-    [
-      {
-        "taskId": "taskId1",
-        "paths": {
-          "*": {
-            "destinations": [
-              "dest1",
-            ]
-          }
-        },
-      },
-      {
-        "taskId": "taskId2",
-        "paths": {
-          "*.log": {
-            "destinations": [
-              "logdest",
-            ]
-          },
-          "*": {
-            "destinations": [
-              "dest1",
-            ]
-          }
-        },
-      }
-    ]
+     `artifactMap` takes the form of:
+     [
+       {
+         "taskId": "taskId1",
+         "paths": {
+           "*": {
+             "destinations": [
+               "dest1",
+             ]
+           }
+         },
+       },
+       {
+         "taskId": "taskId2",
+         "paths": {
+           "*.log": {
+             "destinations": [
+               "logdest",
+             ]
+           },
+           "*": {
+             "destinations": [
+               "dest1",
+             ]
+           }
+         },
+       }
+     ]
 
-    The return value takes the form of:
-    [
-        {
-            "taskId": "taskId1",
-            "paths": {
-                "/path/to/public/build/file": {
-                    "destinations": [
-                        "dest1/file",
-                    ]
-                },
-                "/path/to/public/build/file2": {
-                    "destinations": [
-                        "dest1/file2",
-                    ]
-                },
-                "/path/to/public/logs/live.log": {
-                    "destinations": [
-                        "dest1/live.log",
-                    ]
-                },
-            }
-        },
-        {
-            "taskId": "taskId2",
-            "paths": {
-                "/path/to/public/build/file3": {
-                    "destinations": [
-                        "dest1/file3",
-                    ]
-                },
-                "/path/to/public/logs/live.log": {
-                    "destinations": [
-                        "logdest/live.log",
-                    ]
-                },
-            }
-        }
-    ]
+     The return value takes the form of:
+     [
+         {
+             "taskId": "taskId1",
+             "paths": {
+                 "/path/to/public/build/file": {
+                     "destinations": [
+                         "dest1/file",
+                     ]
+                 },
+                 "/path/to/public/build/file2": {
+                     "destinations": [
+                         "dest1/file2",
+                     ]
+                 },
+                 "/path/to/public/logs/live.log": {
+                     "destinations": [
+                         "dest1/live.log",
+                     ]
+                 },
+             }
+         },
+         {
+             "taskId": "taskId2",
+             "paths": {
+                 "/path/to/public/build/file3": {
+                     "destinations": [
+                         "dest1/file3",
+                     ]
+                 },
+                 "/path/to/public/logs/live.log": {
+                     "destinations": [
+                         "logdest/live.log",
+                     ]
+                 },
+             }
+         }
+     ]
 
-    Each artifact may match up to two `paths` in the `artifactMap`: a `*` path
-    and one other path. If an artifact matches both of these, the non-`*` one
-    takes precedence, and it will _not_ be written to the `*` path destinations.
-    This allows us to have specific filenames (or extensions, prefixes, etc.)
-    grouped together, and to have a "catch-all" for any unmatched artifacts.
+     Each artifact may match up to two `paths` in the `artifactMap`: a `*` path
+     and one other path. If an artifact matches both of these, the non-`*` one
+     takes precedence, and it will _not_ be written to the `*` path destinations.
+     This allows us to have specific filenames (or extensions, prefixes, etc.)
+     grouped together, and to have a "catch-all" for any unmatched artifacts.
 
-    Sanity checking is done to ensure that no destination files would overwrite
-    each other.
+     Sanity checking is done to ensure that no destination files would overwrite
+     each other.
     """
 
     concreteArtifactMap = []
@@ -458,7 +458,7 @@ def get_concrete_artifact_map_from_globbed(upstreamArtifactPaths, artifactMap, s
 def remove_segments(string, prefixes):
     for p in prefixes:
         if p in string:
-            string = string[string.find(p) + len(p):]
+            string = string[string.find(p) + len(p) :]
 
     return string
 

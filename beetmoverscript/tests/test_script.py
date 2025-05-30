@@ -1167,6 +1167,7 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
         else:
             assert False, "Unexpected exception"
 
+
 @pytest.mark.parametrize(
     "upstream_artifacts,artifact_map,expected_uploads",
     (
@@ -1183,9 +1184,11 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
             [
                 {
                     "paths": {
-                        "*": {"destinations": [
-                            "some/dir/",
-                            ]},
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -1207,11 +1210,13 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
             [
                 {
                     "paths": {
-                        "*": {"destinations": [
-                            "some/dir/",
-                            "some/other/",
-                            "a/third/",
-                            ]},
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                                "some/other/",
+                                "a/third/",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -1234,9 +1239,11 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
             [
                 {
                     "paths": {
-                        "*": {"destinations": [
-                            "some/dir/",
-                            ]},
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -1261,14 +1268,18 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
             [
                 {
                     "paths": {
-                        "*.log": {"destinations": [
-                            "some/dir/",
-                            "some/log/",
-                            ]},
-                        "*": {"destinations": [
-                            "some/dir/",
-                            "some/other/",
-                            ]},
+                        "*.log": {
+                            "destinations": [
+                                "some/dir/",
+                                "some/log/",
+                            ]
+                        },
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                                "some/other/",
+                            ]
+                        },
                     },
                     "taskId": "dep1",
                 },
@@ -1310,7 +1321,10 @@ async def test_upload_translations_artifacts(aioresponses, monkeypatch, context,
             monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", lambda client, name: bucket)
 
             context.action = "upload-translations-artifacts"
-            context.task = {"payload": {"releaseProperties": {"appName": "fake"}, "upstreamArtifacts": upstream_artifacts, "artifactMap": artifact_map}, "scopes": ["project:releng:beetmover:action:upload-translations-artifacts"]}
+            context.task = {
+                "payload": {"releaseProperties": {"appName": "fake"}, "upstreamArtifacts": upstream_artifacts, "artifactMap": artifact_map},
+                "scopes": ["project:releng:beetmover:action:upload-translations-artifacts"],
+            }
             await upload_translations_artifacts(context)
 
             # verify GCS expectations
