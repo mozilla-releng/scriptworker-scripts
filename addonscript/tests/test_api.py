@@ -18,7 +18,7 @@ def does_not_raise():
 
 
 @pytest_asyncio.fixture(scope="function")
-async def fake_session(event_loop):
+async def fake_session():
     async with aiohttp.ClientSession() as session:
         yield session
 
