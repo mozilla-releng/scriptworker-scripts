@@ -3,11 +3,15 @@
 
 import asyncio
 import base64
+import copy
+import fnmatch
 import logging
 import mimetypes
 import os
+import os.path
 import re
 import sys
+from collections import defaultdict
 from io import BytesIO
 from multiprocessing.pool import ThreadPool
 
@@ -283,6 +287,195 @@ async def upload_data(context):
     for dataUpload in dataMap:
         data = base64.b64decode(dataUpload["data"])
         await retry_data_upload(context, dataUpload["destinations"], data, dataUpload["contentType"])
+
+
+def get_concrete_artifact_map_from_globbed(upstreamArtifactPaths, artifactMap, strip_segments=["public/build", "public/logs"]):
+    """Given a list of artifacts from tasks (`upstreamArtifactPaths`) and a
+    mapping of names and/or patterns to destinations (`artifactMap`), return a
+    mapping that maps all of the specific artifacts from tasks int
+    destinations. Artifacts will have `strip_segments` removed from them before
+    being compared against `artifactMap` patterns.
+
+   `upstreamArtifactPaths` takes the form of:
+    {
+      "taskId1": [
+        "/path/to/public/build/file",
+        "/path/to/public/build/file2",
+        "/path/to/public/logs.live.log",
+      ],
+      "taskId2": [
+        "/path/to/public/build/file3",
+        "/path/to/public/logs.live.log",
+      ],
+    }
+
+    `artifactMap` takes the form of:
+    [
+      {
+        "taskId": "taskId1",
+        "paths": {
+          "*": {
+            "destinations": [
+              "dest1",
+            ]
+          }
+        },
+      },
+      {
+        "taskId": "taskId2",
+        "paths": {
+          "*.log": {
+            "destinations": [
+              "logdest",
+            ]
+          },
+          "*": {
+            "destinations": [
+              "dest1",
+            ]
+          }
+        },
+      }
+    ]
+
+    The return value takes the form of:
+    [
+        {
+            "taskId": "taskId1",
+            "paths": {
+                "/path/to/public/build/file": {
+                    "destinations": [
+                        "dest1/file",
+                    ]
+                },
+                "/path/to/public/build/file2": {
+                    "destinations": [
+                        "dest1/file2",
+                    ]
+                },
+                "/path/to/public/logs/live.log": {
+                    "destinations": [
+                        "dest1/live.log",
+                    ]
+                },
+            }
+        },
+        {
+            "taskId": "taskId2",
+            "paths": {
+                "/path/to/public/build/file3": {
+                    "destinations": [
+                        "dest1/file3",
+                    ]
+                },
+                "/path/to/public/logs/live.log": {
+                    "destinations": [
+                        "logdest/live.log",
+                    ]
+                },
+            }
+        }
+    ]
+
+    Each artifact may match up to two `paths` in the `artifactMap`: a `*` path
+    and one other path. If an artifact matches both of these, the non-`*` one
+    takes precedence, and it will _not_ be written to the `*` path destinations.
+    This allows us to have specific filenames (or extensions, prefixes, etc.)
+    grouped together, and to have a "catch-all" for any unmatched artifacts.
+
+    Sanity checking is done to ensure that no destination files would overwrite
+    each other.
+    """
+
+    concreteArtifactMap = []
+    errors = []
+
+    for map_ in artifactMap:
+        concretePaths = {}
+
+        full_glob_destinations = map_["paths"].get("*", {}).get("destinations")
+        other_paths = copy.deepcopy(map_["paths"])
+        if "*" in other_paths:
+            del other_paths["*"]
+
+        for taskId, artifacts in upstreamArtifactPaths.items():
+            if map_["taskId"] != taskId:
+                continue
+
+            for artifact in artifacts:
+                dest_artifact = remove_segments(artifact, strip_segments)
+
+                destinations = []
+                # We need to look at non-'*' paths separate from '*' paths.
+
+                for input_path, output in other_paths.items():
+                    # Skip any input paths that don't match the artifact name.
+                    if "*" in input_path:
+                        if not fnmatch.fnmatch(dest_artifact, input_path):
+                            continue
+                    else:
+                        if input_path != artifact:
+                            continue
+
+                    # If there's already destinations, we've already seen this artifact,
+                    # and we have a clash.
+                    if destinations:
+                        errors.append(f"'{artifact}' matched multiple concrete paths")
+                    else:
+                        destinations.extend(output["destinations"])
+
+                # If we didn't find any destinations for the artifact above, and
+                # there are full glob destinations, it should go there.
+                if full_glob_destinations and not destinations:
+                    destinations.extend(full_glob_destinations)
+
+                # If there are destinations, create a fully concrete entry,
+                # mapping the full path to the file on disk to destinations
+                # it belongs, with any requested segments removed.
+                if destinations:
+                    concretePaths[artifact] = {"destinations": []}
+                    for d in destinations:
+                        if not d.endswith(dest_artifact):
+                            d = os.path.normpath(f"{d}{dest_artifact}")
+                        concretePaths[artifact]["destinations"].append(d)
+
+        concreteArtifactMap.append(
+            {
+                "paths": concretePaths,
+                "taskId": map_["taskId"],
+            }
+        )
+
+    ensure_no_overwrites_in_artifact_map(concreteArtifactMap)
+
+    if errors:
+        raise ScriptWorkerTaskException(*errors)
+
+    return concreteArtifactMap
+
+
+def remove_segments(string, prefixes):
+    for p in prefixes:
+        if p in string:
+            string = string[string.find(p) + len(p):]
+
+    return string
+
+
+def ensure_no_overwrites_in_artifact_map(artifactMap):
+    dest_counts = defaultdict(int)
+    for map_ in artifactMap:
+        for output_path in map_["paths"].values():
+            for dest in output_path["destinations"]:
+                dest_counts[dest] += 1
+
+    errors = []
+    for dest, count in dest_counts.items():
+        if count > 1:
+            errors.append(f"'{dest}' would be written to more than once")
+
+    if errors:
+        raise ScriptWorkerTaskException(*errors)
 
 
 # copy_beets {{{1
