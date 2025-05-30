@@ -1690,9 +1690,9 @@ rpds-py==0.25.0 ; python_full_version >= '3.9' \
     # via
     #   jsonschema
     #   referencing
-simple-github==2.1.0 \
-    --hash=sha256:efebd6165d96994966ff2dde2d8036d3368c62d5e661a7c939864bac07c3f064 \
-    --hash=sha256:fa3eb28107337b3363dbb6fdf90be943737cb80fe82c3fa6b47b57c3d5965771
+simple-github==2.2.1 \
+    --hash=sha256:417e870918190789cac1c51b2ecb72d9c9c62634e604fc3d60c076b465eed7e8 \
+    --hash=sha256:88addb238a5d32b1a0f85eff6bc69496c8a1b27e40fd9f3a172a3049f5a588b7
     # via -r requirements/base.in
 sniffio==1.3.1 \
     --hash=sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2 \
