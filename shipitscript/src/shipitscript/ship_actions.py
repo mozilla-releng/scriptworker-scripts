@@ -17,8 +17,8 @@ def get_shipit_api_instance(shipit_config):
     return release_api, headers
 
 
-def get_shippable_revision(branch, last_shipped_revision, cron_revision):
-    return pushlog_scan.get_shippable_revision_build(branch, last_shipped_revision, cron_revision)
+def get_shippable_revision(branch, last_shipped_revision, cron_revision, parsed_repository_url):
+    return pushlog_scan.get_shippable_revision_build(branch, last_shipped_revision, cron_revision, parsed_repository_url)
 
 
 def get_most_recent_shipped_revision(shipit_config, product, branch):
@@ -65,7 +65,7 @@ def releases_are_disabled(shipit_config, product, branch):
     return branch in disabled_products.get(product, [])
 
 
-def start_new_release(shipit_config, product, branch, version, revision, phase):
+def start_new_release(shipit_config, product, branch, version, revision, phase, repository_url):
     # safeguard to avoid creating releases if they have been disabled from UI
     if releases_are_disabled(shipit_config, product, branch):
         log.info("Releases are disabled. Silently exit ...")
@@ -79,7 +79,7 @@ def start_new_release(shipit_config, product, branch, version, revision, phase):
 
     release_api, headers = get_shipit_api_instance(shipit_config)
     log.info("creating a new release...")
-    release_details = release_api.create_new_release(product, branch, version, build_number, revision, headers=headers)
+    release_details = release_api.create_new_release(product, branch, version, build_number, revision, repository_url, headers=headers)
 
     # grab the release name from the Ship-it create-release response
     release_name = release_details["name"]
