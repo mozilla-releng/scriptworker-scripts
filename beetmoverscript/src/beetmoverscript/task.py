@@ -28,6 +28,8 @@ def get_schema_key_by_action(context):
         return "artifactMap_schema_file"
     elif utils.is_import_from_gcs_to_artifact_registry_action(action):
         return "import_from_gcs_to_artifact_registry_schema_file"
+    elif utils.is_upload_data_action(action):
+        return "upload_data_schema_file"
 
     return "schema_file"
 

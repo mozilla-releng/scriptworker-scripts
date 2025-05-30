@@ -2,11 +2,13 @@
 """Beetmover script"""
 
 import asyncio
+import base64
 import logging
 import mimetypes
 import os
 import re
 import sys
+from io import BytesIO
 from multiprocessing.pool import ThreadPool
 
 import aiohttp
@@ -37,6 +39,7 @@ from beetmoverscript.gcloud import (
     import_from_gcs_to_artifact_registry,
     push_to_releases_gcs,
     setup_gcloud,
+    upload_data_to_gcs,
     upload_to_gcs,
 )
 from beetmoverscript.task import (
@@ -273,6 +276,15 @@ async def push_to_maven(context):
     )
 
 
+# upload_data {{{1
+async def upload_data(context):
+    dataMap = context.task["payload"]["dataMap"]
+
+    for dataUpload in dataMap:
+        data = base64.b64decode(dataUpload["data"])
+        await retry_data_upload(context, dataUpload["destinations"], data, dataUpload["contentType"])
+
+
 # copy_beets {{{1
 def copy_beets(context, from_keys_checksums, to_keys_checksums):
     creds = get_credentials(context, "aws")
@@ -334,6 +346,7 @@ action_map = {
     "direct-push-to-bucket": direct_push_to_bucket,
     "push-to-maven": push_to_maven,
     "import-from-gcs-to-artifact-registry": import_from_gcs_to_artifact_registry,
+    "upload-data": upload_data,
 }
 
 
@@ -649,6 +662,27 @@ def enrich_balrog_manifest(context, locale):
     return enrich_dict
 
 
+# retry_data_upload {{{1
+async def retry_data_upload(context, destinations, data, contentType):
+    """Manage upload of `path` to `destinations`."""
+    cloud_uploads = {key: [] for key in context.config["clouds"]}
+
+    # TODO: There's a "bug" where if you define
+    #  "gcloud.release" but not "aws.release", the context.resource will fail here
+    #  we don't have that use case right now, but might be worth fixing
+    for dest in destinations:
+        # S3 upload
+        enabled = is_cloud_enabled(context.config, "aws", context.resource)
+        if enabled:
+            cloud_uploads["aws"].append(asyncio.ensure_future(upload_data_to_s3(context=context, s3_key=dest, data=data, contentType=contentType)))
+
+        # GCS upload
+        if is_cloud_enabled(context.config, "gcloud", context.resource):
+            cloud_uploads["gcloud"].append(asyncio.ensure_future(upload_data_to_gcs(context=context, target_path=dest, data=data, contentType=contentType)))
+
+    await await_and_raise_uploads(cloud_uploads, context.config["clouds"], context.resource)
+
+
 # retry_upload {{{1
 async def retry_upload(context, destinations, path, expiry=None, fail_on_unknown_mimetype=True):
     """Manage upload of `path` to `destinations`."""
@@ -677,17 +711,43 @@ async def retry_upload(context, destinations, path, expiry=None, fail_on_unknown
 
 
 # put {{{1
-async def put(context, url, headers, abs_filename, session=None):
+async def put(context, url, headers, fh, session=None):
     session = session or context.session
-    with open(abs_filename, "rb") as fh:
-        async with session.put(url, data=fh, headers=headers, compress=False) as resp:
-            log.info("put {}: {}".format(abs_filename, resp.status))
-            response_text = await resp.text()
-            if response_text:
-                log.info(response_text)
-            if resp.status not in (200, 204):
-                raise ScriptWorkerRetryException("Bad status {}".format(resp.status))
+    async with session.put(url, data=fh, headers=headers, compress=False) as resp:
+        log.info("put: {}".format(resp.status))
+        response_text = await resp.text()
+        if response_text:
+            log.info(response_text)
+        if resp.status not in (200, 204):
+            raise ScriptWorkerRetryException("Bad status {}".format(resp.status))
     return resp
+
+
+# upload_data_to_s3 {{{1
+async def upload_data_to_s3(context, s3_key, data, contentType):
+    product = get_product_name(context.task, context.config)
+
+    api_kwargs = {
+        "Bucket": get_bucket_name(context, product, "aws"),
+        "Key": s3_key,
+        "ContentType": contentType,
+    }
+    headers = {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=%d" % CACHE_CONTROL_MAXAGE,
+    }
+
+    creds = get_credentials(context, "aws")
+    s3 = boto3.client("s3", aws_access_key_id=creds["id"], aws_secret_access_key=creds["key"])
+    url = s3.generate_presigned_url("put_object", api_kwargs, ExpiresIn=1800, HttpMethod="PUT")
+
+    log.info("upload_data_to_s3: %s -> s3://%s/%s", data, api_kwargs.get("Bucket"), s3_key)
+    await retry_async(
+        put,
+        args=(context, url, headers, BytesIO(data)),
+        retry_exceptions=(Exception,),
+        kwargs={"session": context.session},
+    )
 
 
 # upload_to_s3 {{{1
@@ -715,12 +775,13 @@ async def upload_to_s3(context, s3_key, path, fail_on_unknown_mimetype=True):
     url = s3.generate_presigned_url("put_object", api_kwargs, ExpiresIn=1800, HttpMethod="PUT")
 
     log.info("upload_to_s3: %s -> s3://%s/%s", path, api_kwargs.get("Bucket"), s3_key)
-    await retry_async(
-        put,
-        args=(context, url, headers, path),
-        retry_exceptions=(Exception,),
-        kwargs={"session": context.session},
-    )
+    with open(path, "rb") as fh:
+        await retry_async(
+            put,
+            args=(context, url, headers, fh),
+            retry_exceptions=(Exception,),
+            kwargs={"session": context.session},
+        )
 
 
 def setup_mimetypes():
@@ -742,6 +803,7 @@ def main(config_path=None):
         "maven_schema_file": os.path.join(data_dir, "maven_beetmover_task_schema.json"),
         "artifactMap_schema_file": os.path.join(data_dir, "artifactMap_beetmover_task_schema.json"),
         "import_from_gcs_to_artifact_registry_schema_file": os.path.join(data_dir, "import_from_gcs_to_artifact_registry_task_schema.json"),
+        "upload_data_schema_file": os.path.join(data_dir, "upload_data_task_schema.json"),
     }
 
     # There are several task schema. Validation occurs in async_main

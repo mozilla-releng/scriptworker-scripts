@@ -27,6 +27,7 @@ from beetmoverscript.constants import (
     PRODUCT_TO_PATH,
     PROMOTION_ACTIONS,
     RELEASE_ACTIONS,
+    UPLOAD_DATA_ACTIONS,
 )
 
 log = logging.getLogger(__name__)
@@ -141,6 +142,10 @@ def is_maven_action(action):
     Geckoview uploads to maven, for instance. Does that by checking the action type.
     """
     return action in MAVEN_ACTIONS
+
+
+def is_upload_data_action(action):
+    return action in UPLOAD_DATA_ACTIONS
 
 
 def get_product_name(task, config, lowercase_app_name=True):

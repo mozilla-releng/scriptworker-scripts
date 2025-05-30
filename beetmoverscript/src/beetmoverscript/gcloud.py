@@ -102,6 +102,21 @@ def setup_gcs_credentials(raw_creds):
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = fp.name
 
 
+async def upload_data_to_gcs(context, target_path, data, contentType):
+    product = get_product_name(context.task, context.config)
+    bucket_name = get_bucket_name(context, product, "gcloud")
+
+    bucket = Bucket(context.gcs_client, name=bucket_name)
+    blob = bucket.blob(target_path)
+    blob.content_type = contentType
+    blob.cache_control = "public, max-age=%d" % CACHE_CONTROL_MAXAGE
+
+    if blob.exists():
+        log.warning("upload_to_gcs: Overriding file: %s", target_path)
+    log.info("upload_data_to_gcs: Bucket: gs://%s/%s", bucket_name, target_path)
+    return blob.upload_from_string(data, content_type=contentType)
+
+
 async def upload_to_gcs(context, target_path, path, expiry=None, fail_on_unknown_mimetype=True):
     product = get_product_name(context.task, context.config)
     mime_type = mimetypes.guess_type(path)[0]
