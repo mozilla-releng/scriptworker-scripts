@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [9.0.1] - 2025-06-02
+
+### Fixed
+
+* `dry_run` runs won't try to contact the samsung galaxy store at all anymore if the target store is samsung
+
 ## [9.0.0] - 2025-06-02
 
 ### Changed
