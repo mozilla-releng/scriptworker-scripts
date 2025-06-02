@@ -54,9 +54,9 @@ async def async_main(context):
         socket.setdefaulttimeout(300)
 
         files = [stack.enter_context(open(apk_file_name)) for apk_file_name in all_apks_paths]
-        publish.publish(product_config, publish_config, files, contact_server)
+        await publish.publish(product_config, publish_config, files, contact_server)
         files = [stack.enter_context(open(aab_file_name)) for aab_file_name in all_aabs_paths]
-        publish.publish_aab(product_config, publish_config, files, contact_server)
+        await publish.publish_aab(product_config, publish_config, files, contact_server)
 
     log.info("Done!")
 

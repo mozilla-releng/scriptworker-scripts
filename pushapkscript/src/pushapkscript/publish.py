@@ -6,9 +6,9 @@ from mozapkpublisher.push_apk import push_apk
 log = logging.getLogger(__name__)
 
 
-def publish(product_config, publish_config, apk_files, contact_server):
+async def publish(product_config, publish_config, apk_files, contact_server):
     if apk_files:
-        push_apk(
+        await push_apk(
             apks=apk_files,
             secret=publish_config.get("secret"),
             expected_package_names=publish_config["package_names"],
@@ -28,9 +28,9 @@ def publish(product_config, publish_config, apk_files, contact_server):
         )
 
 
-def publish_aab(product_config, publish_config, aab_files, contact_server):
+async def publish_aab(product_config, publish_config, aab_files, contact_server):
     if aab_files:
-        push_aab(
+        await push_aab(
             aabs=aab_files,
             secret=publish_config.get("secret"),
             track=publish_config.get("google_track"),

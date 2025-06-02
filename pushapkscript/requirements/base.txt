@@ -1026,9 +1026,9 @@ mohawk==1.1.0 \
     --hash=sha256:3ed296a30453d0b724679e0fd41e4e940497f8e461a9a9c3b7f36e43bab0fa09 \
     --hash=sha256:d2a0e3ab10a209cc79e95e28f2dd54bd4a73fd1998ffe27b7ba0f962b6be9723
     # via taskcluster
-mozapkpublisher==8.0.0 \
-    --hash=sha256:4b976d966cc04a759ccd22c927ef174d5807e2e36c60a7829c14a618d84167aa \
-    --hash=sha256:9c2dc1194490c7d1443b187e209b0463e86ac2a2c8190e383d545ee967a56cd8
+mozapkpublisher==9.0.1 \
+    --hash=sha256:6cdc3871e9f847364cccfca975ae85b9e48988a799f0720ab6cd1dd820176aed \
+    --hash=sha256:c264333be9be698755be14e288085520886d7c3c221845d26ffc17dc8ed74374
     # via -r requirements/base.in
 mozilla-repo-urls==0.1.1 \
     --hash=sha256:30510d3519479aa70211145d0ac9cf6e2fadcb8d30fa3b196bb957bd773502ba \
