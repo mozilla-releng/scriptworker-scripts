@@ -742,10 +742,6 @@ httplib2==0.22.0 \
     # via
     #   google-api-python-client
     #   google-auth-httplib2
-humanize==4.12.3 \
-    --hash=sha256:2cbf6370af06568fa6d2da77c86edb7886f3160ecd19ee1ffef07979efc597f6 \
-    --hash=sha256:8430be3a615106fdfceb0b2c1b41c4c98c6b0fc5cc59663a5539b111dd325fb0
-    # via mozapkpublisher
 idna==3.10 \
     --hash=sha256:12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9 \
     --hash=sha256:946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3
@@ -1130,9 +1126,9 @@ mohawk==1.1.0 \
     --hash=sha256:3ed296a30453d0b724679e0fd41e4e940497f8e461a9a9c3b7f36e43bab0fa09 \
     --hash=sha256:d2a0e3ab10a209cc79e95e28f2dd54bd4a73fd1998ffe27b7ba0f962b6be9723
     # via taskcluster
-mozapkpublisher==7.0.2 \
-    --hash=sha256:0e7a56010f0663e0ee29ac2223454198e943ab5a985e9f60a0bd7eb0eb13062d \
-    --hash=sha256:be083c26244028fc178f5bd95533c5270405be86df6c39dcc33cbab264e1bd63
+mozapkpublisher==9.0.1 \
+    --hash=sha256:6cdc3871e9f847364cccfca975ae85b9e48988a799f0720ab6cd1dd820176aed \
+    --hash=sha256:c264333be9be698755be14e288085520886d7c3c221845d26ffc17dc8ed74374
     # via -r requirements/base.in
 mozilla-repo-urls==0.1.1 \
     --hash=sha256:30510d3519479aa70211145d0ac9cf6e2fadcb8d30fa3b196bb957bd773502ba \
@@ -1598,7 +1594,9 @@ pygments==2.19.1 \
 pyjwt==2.10.1 \
     --hash=sha256:3cc5772eb20009233caf06e9d8a0577824723b44e6648ee0a2aedb6cf9381953 \
     --hash=sha256:dcdd193e30abefd5debf142f9adfcdd2b58004e644f25406ffaebd50bd98dacb
-    # via github3-py
+    # via
+    #   github3-py
+    #   mozapkpublisher
 pyparsing==3.2.3 \
     --hash=sha256:a749938e02d6fd0b59b356ca504a24982314bb090c383e3cf201c95ef7e2bfcf \
     --hash=sha256:b9c13f1ab8b3b542f72e28f634bad4de758ab3ce4546e4301970ad6fa77c38be

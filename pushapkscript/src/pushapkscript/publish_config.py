@@ -3,7 +3,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def _google_should_do_dry_run(task):
+def _should_do_dry_run(task):
     # Don't commit anything by default. Committed APKs can't be unpublished,
     # unless you push a newer set of APKs.
     return not task.get("commit", False)
@@ -27,12 +27,12 @@ def _get_single_google_app_publish_config(product_config, task):
     google_track = _handle_legacy_google_track(google_track)
     return {
         "target_store": "google",
-        "dry_run": _google_should_do_dry_run(task),
+        "dry_run": _should_do_dry_run(task),
         "certificate_alias": publish_config.get("certificate_alias"),
         "secret": publish_config["credentials_file"],
         "package_names": publish_config["package_names"],
         "google_track": google_track,
-        "google_rollout_percentage": rollout_percentage,
+        "rollout_percentage": rollout_percentage,
     }
 
 
@@ -43,12 +43,12 @@ def _get_google_app_by_scope_publish_config(product_config, task, scope_product)
     google_track = _handle_legacy_google_track(google_track)
     return {
         "target_store": "google",
-        "dry_run": _google_should_do_dry_run(task),
+        "dry_run": _should_do_dry_run(task),
         "certificate_alias": publish_config.get("certificate_alias"),
         "secret": publish_config["credentials_file"],
         "package_names": publish_config["package_names"],
         "google_track": google_track,
-        "google_rollout_percentage": rollout_percentage,
+        "rollout_percentage": rollout_percentage,
     }
 
 
@@ -69,17 +69,31 @@ def _get_channel_publish_config(product_config, task):
 
     store_config = publish_config[target_store]
     rollout_percentage = task.get("rollout_percentage")
+
+    if target_store == "samsung":
+        if task.get("google_play_track"):
+            raise ValueError("`google_play_track` is not allowed on the task if the target store is samsung")
+
+        return {
+            "target_store": target_store,
+            "dry_run": _should_do_dry_run(task),
+            "package_names": publish_config["package_names"],
+            "rollout_percentage": rollout_percentage,
+            "sgs_service_account_id": store_config["service_account_id"],
+            "sgs_access_token": store_config["access_token"],
+        }
+
     google_track = task.get("google_play_track", store_config["default_track"])
     google_track = _handle_legacy_google_track(google_track)
 
     return {
         "target_store": target_store,
-        "dry_run": _google_should_do_dry_run(task),
+        "dry_run": _should_do_dry_run(task),
         "certificate_alias": publish_config.get("certificate_alias"),
         "secret": store_config["credentials_file"],
         "package_names": publish_config["package_names"],
         "google_track": google_track,
-        "google_rollout_percentage": rollout_percentage,
+        "rollout_percentage": rollout_percentage,
     }
 
 

@@ -64,6 +64,10 @@
                 "google": {
                     "default_track": "production",
                     "credentials_file": "/fenix-production.json"
+                },
+                "samsung": {
+                    "sgs_service_account_id": "0123456",
+                    "sgs_access_token": "abcdef"
                 }
             }
         }
