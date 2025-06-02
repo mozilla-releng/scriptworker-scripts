@@ -53,6 +53,7 @@ async def test_async_main(monkeypatch, android_product, upstream_artifacts, is_a
     context.task = {"payload": {"channel": android_product}}
 
     if is_aab:
+
         async def assert_google_play_call_aab(_, __, all_aabs_files, ___):
             assert sorted([file.name for file in all_aabs_files]) == ["/some/path/to/another.aab", "/some/path/to/one.aab", "/some/path/to/yet_another.aab"]
 
