@@ -5,9 +5,7 @@
         "merge_day_payload": {
             "type": "object",
             "required": [
-                "replacements",
-                "to_branch",
-                "merge_old_head"
+                "to_branch"
             ],
             "properties": {
                 "fetch_version_from": {
@@ -48,6 +46,7 @@
                 "replacements": {
                     "type": "array",
                     "minItems": 0,
+                    "default": [],
                     "items": {
                         "type": "array",
                         "minItems": 3,
