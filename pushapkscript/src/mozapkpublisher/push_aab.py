@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import asyncio
 import logging
 
 from mozapkpublisher.common import main_logging
@@ -11,7 +12,7 @@ from mozapkpublisher.common.utils import add_push_arguments, metadata_by_package
 logger = logging.getLogger(__name__)
 
 
-def push_aab(
+async def push_aab(
     aabs,
     secret,
     track,
@@ -64,14 +65,14 @@ def main():
     if config.store != "google":
         parser.error("Pushing AABs is only support for the google store")
 
-    push_aab(
+    asyncio.run(push_aab(
         config.aabs,
         config.secret,
         config.track,
         config.rollout_percentage,
         config.dry_run,
         config.contact_server,
-    )
+    ))
 
 
 __name__ == '__main__' and main()

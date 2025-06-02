@@ -14,7 +14,7 @@ from mozapkpublisher.sgs_api import SamsungGalaxyStore
 logger = logging.getLogger(__name__)
 
 
-def push_apk(
+async def push_apk(
     apks,
     secret,
     expected_package_names,
@@ -83,13 +83,9 @@ def push_apk(
         if not (sgs_service_account_id and sgs_access_token):
             raise RuntimeError("You must provided an account id and access token for the samsung galaxy store")
 
-        async def sgs_push():
-            async with SamsungGalaxyStore(sgs_service_account_id, sgs_access_token, dry_run=dry_run) as sgs:
-                for package_name, apks in apks_by_package_name.items():
-                    await sgs.upload_apks(package_name, apks, rollout_percentage)
-
-        loop = asyncio.new_event_loop()
-        loop.run_until_complete(sgs_push())
+        async with SamsungGalaxyStore(sgs_service_account_id, sgs_access_token, dry_run=dry_run) as sgs:
+            for package_name, apks in apks_by_package_name.items():
+                await sgs.upload_apks(package_name, apks, rollout_percentage)
     else:
         raise WrongArgumentGiven("Unkown target store: {}".format(store))
 
@@ -101,7 +97,7 @@ def main():
     config = parser.parse_args()
     check_push_arguments(parser, config)
 
-    push_apk(
+    asyncio.run(push_apk(
         config.apks,
         config.secret,
         config.expected_package_names,
@@ -116,7 +112,7 @@ def main():
         config.skip_checks_fennec,
         sgs_service_account_id=config.sgs_service_account_id,
         sgs_access_token=config.sgs_access_token,
-    )
+    ))
 
 
 __name__ == '__main__' and main()

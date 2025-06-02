@@ -58,24 +58,26 @@ def patch_store_transaction(monkeypatch_, patch_target):
     return mock_edit
 
 
-def test_google(monkeypatch):
+@pytest.mark.asyncio
+async def test_google(monkeypatch):
     mock_metadata = patch_extract_metadata(monkeypatch)
     edit_mock = patch_store_transaction(monkeypatch, store.GooglePlayEdit)
-    push_aab(AABS, credentials, 'production', rollout_percentage=50,
-             contact_server=False)
+    await push_aab(AABS, credentials, 'production', rollout_percentage=50,
+                   contact_server=False)
     edit_mock.update_aab.assert_called_once_with([
         (aab1, mock_metadata[aab1]),
         (aab2, mock_metadata[aab2]),
     ], 'production', 50)
 
 
-def test_push_aab_tunes_down_logs(monkeypatch):
+@pytest.mark.asyncio
+async def test_push_aab_tunes_down_logs(monkeypatch):
     main_logging_mock = MagicMock()
     monkeypatch.setattr('mozapkpublisher.push_aab.main_logging', main_logging_mock)
     monkeypatch.setattr('mozapkpublisher.push_aab.extract_aabs_metadata', MagicMock())
     monkeypatch.setattr('mozapkpublisher.common.utils.metadata_by_package_name', MagicMock())
 
-    push_aab(AABS, credentials, 'alpha', contact_server=False)
+    await push_aab(AABS, credentials, 'alpha', contact_server=False)
 
     main_logging_mock.init.assert_called_once_with()
 

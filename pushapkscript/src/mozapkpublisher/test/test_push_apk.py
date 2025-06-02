@@ -83,24 +83,26 @@ def patch_store_transaction(monkeypatch_, patch_target):
     return mock_edit
 
 
-def test_google(monkeypatch):
+@pytest.mark.asyncio
+async def test_google(monkeypatch):
     mock_metadata = patch_extract_metadata(monkeypatch)
     edit_mock = patch_store_transaction(monkeypatch, store.GooglePlayEdit)
-    push_apk(APKS, credentials, [], 'rollout', rollout_percentage=50,
-             contact_server=False)
+    await push_apk(APKS, credentials, [], 'rollout', rollout_percentage=50,
+                   contact_server=False)
     edit_mock.update_app.assert_called_once_with([
         (apk_arm, mock_metadata[apk_arm]),
         (apk_x86, mock_metadata[apk_x86]),
     ], 'rollout', 50)
 
 
-def test_push_apk_tunes_down_logs(monkeypatch):
+@pytest.mark.asyncio
+async def test_push_apk_tunes_down_logs(monkeypatch):
     main_logging_mock = MagicMock()
     monkeypatch.setattr('mozapkpublisher.push_apk.main_logging', main_logging_mock)
     monkeypatch.setattr('mozapkpublisher.push_apk.extract_and_check_apks_metadata', MagicMock())
     monkeypatch.setattr('mozapkpublisher.common.utils.metadata_by_package_name', MagicMock())
 
-    push_apk(APKS, credentials, [], 'alpha', contact_server=False)
+    await push_apk(APKS, credentials, [], 'alpha', contact_server=False)
 
     main_logging_mock.init.assert_called_once_with()
 

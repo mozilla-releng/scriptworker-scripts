@@ -293,13 +293,13 @@ class ExpectedFormData:
         return self
 
 
-def run_push_apk(monkeypatch, rollout_rate=None):
+async def run_push_apk(monkeypatch, rollout_rate=None):
     file = os.path.join(os.path.dirname(__file__), "../", "data", "blob")
     monkeypatch.setattr(
         mozapkpublisher.push_apk, "extract_and_check_apks_metadata", fake_apk_metadata
     )
 
-    push_apk(
+    await push_apk(
         [file],
         None,
         ["org.mozilla.focus"],
@@ -318,9 +318,10 @@ def run_push_apk(monkeypatch, rollout_rate=None):
 
 
 @pytest.mark.parametrize("rollout_rate", (25, None))
-def test_update_ok(responses, monkeypatch, rollout_rate):
+@pytest.mark.asyncio
+async def test_update_ok(responses, monkeypatch, rollout_rate):
     setup_default_sgs_api(responses)
-    run_push_apk(monkeypatch, rollout_rate)
+    await run_push_apk(monkeypatch, rollout_rate)
 
     expected_file_upload = (
         ExpectedFormData()
@@ -475,7 +476,8 @@ def test_update_ok(responses, monkeypatch, rollout_rate):
     )
 
 
-def test_update_when_app_in_wrong_state(responses, monkeypatch):
+@pytest.mark.asyncio
+async def test_update_when_app_in_wrong_state(responses, monkeypatch):
     responses.get(
         "https://devapi.samsungapps.com/seller/contentList",
         status=200,
@@ -521,13 +523,14 @@ def test_update_when_app_in_wrong_state(responses, monkeypatch):
     )
 
     with pytest.raises(SgsUpdateException, match="cancel it manually"):
-        run_push_apk(monkeypatch)
+        await run_push_apk(monkeypatch)
 
 
-def test_update_with_content_id_missing(responses, monkeypatch):
+@pytest.mark.asyncio
+async def test_update_with_content_id_missing(responses, monkeypatch):
     responses.get(
         "https://devapi.samsungapps.com/seller/contentList", status=200, payload=[]
     )
 
     with pytest.raises(SgsUpdateException, match="Couldn't find a content ID"):
-        run_push_apk(monkeypatch)
+        await run_push_apk(monkeypatch)
