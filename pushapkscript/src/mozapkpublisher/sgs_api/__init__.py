@@ -36,6 +36,10 @@ class SamsungGalaxyStore:
 
         Notes: The app needs to be in the `FOR_SALE` status and needs to not be in the middle of an update.
         """
+        if self._dry_run:
+            logger.warning('No APKs were uploaded since `dry_run` was `True`')
+            return
+
         content_id = await self.infer_content_id_from_package_name(package_name)
         content_info = await self.api.get_content_info(content_id)
 
@@ -43,10 +47,6 @@ class SamsungGalaxyStore:
             raise SgsUpdateException(
                 f"The app with the content ID {content_id} is currently being updated. You'll have to cancel it manually before proceeding"
             )
-
-        if self._dry_run:
-            logger.warning('No APKs were uploaded since `dry_run` was `True`')
-            return
 
         current_info = content_info[0]
 
