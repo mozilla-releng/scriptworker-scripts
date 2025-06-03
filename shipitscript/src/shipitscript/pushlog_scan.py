@@ -1,4 +1,5 @@
 import logging
+import os
 from enum import IntEnum, auto, unique
 
 import requests
@@ -6,6 +7,7 @@ import requests
 log = logging.getLogger(__name__)
 
 URL = "https://hg.mozilla.org/{branch}/json-pushes"
+GITHUB_URL = "https://api.github.com/repos/{owner}/{repository_name}/compare/{base}...{compare}"
 
 
 @unique
@@ -16,15 +18,22 @@ class Importance(IntEnum):
     SKIP = auto()
 
 
-_push_checks = []
+_push_checks_hg = []
 
 
-def push_check(func):
-    _push_checks.append(func)
+def push_check_hg(func):
+    _push_checks_hg.append(func)
     return func
 
 
-def get_shippable_revision_build(branch, last_shipped_rev, cron_rev):
+def get_shippable_revision_build(branch, last_shipped_rev, cron_rev, parsed_repository_url):
+    if parsed_repository_url is not None and parsed_repository_url.platform == "github":
+        return _get_shippable_revision_build_github(parsed_repository_url, last_shipped_rev, cron_rev)
+
+    return _get_shippable_revision_build_hg(branch, last_shipped_rev, cron_rev)
+
+
+def _get_shippable_revision_build_hg(branch, last_shipped_rev, cron_rev):
     """This method queries the hg.mozilla.org server and retrieves all the commits
     that have happened between `last_shipped_rev` and the `cron_rev`. Sorted
     decreasingly over time, it iterates through them and attempts to retrieve the
@@ -37,7 +46,7 @@ def get_shippable_revision_build(branch, last_shipped_rev, cron_rev):
     # we strip out all the pushes that contain other branches' commits (e.g. relbranch)
     reversed_pushes = [pushlog[k] for k in sorted(pushlog.keys(), reverse=True) if pushlog[k]["changesets"][0]["branch"] == "default"]
     for push in reversed_pushes:
-        push_importance = is_push_important(push)
+        push_importance = is_push_important_hg(push)
         if push_importance == Importance.IMPORTANT:
             # Tell caller that we want to build.
             return push["changesets"][-1]["node"]
@@ -46,14 +55,47 @@ def get_shippable_revision_build(branch, last_shipped_rev, cron_rev):
             return None
 
 
-def is_push_important(push):
+def _get_shippable_revision_build_github(parsed_repository_url, last_shipped_rev, cron_rev):
+    headers = {
+        "User-Agent": "shipitscript",
+    }
+
+    if "GITHUB_TOKEN" in os.environ:
+        headers["Authorization"] = "Bearer {}".format(os.environ["GITHUB_TOKEN"])
+
+    resp = requests.get(
+        GITHUB_URL.format(owner=parsed_repository_url.owner, repository_name=parsed_repository_url.repo, base=last_shipped_rev, compare=cron_rev),
+        headers=headers,
+    )
+    resp.raise_for_status()
+
+    pushlog = resp.json()["commits"]
+
+    for commit in pushlog:
+        if is_commit_important_github(commit["commit"]):
+            return commit["sha"]
+
+    return None
+
+
+def is_commit_important_github(commit):
+    if "DONTBUILD" in commit["message"]:
+        return False
+
+    if commit["author"]["name"].startswith("releng-treescript"):
+        return False
+
+    return True
+
+
+def is_push_important_hg(push):
     """
-    Run through all `@push_check`s to find if this `push` is important or not.
+    Run through all `@push_check_hg`s to find if this `push` is important or not.
 
     See the help on `Importance` for more information.
     """
     isimportant = Importance.MAYBE
-    for check in _push_checks:
+    for check in _push_checks_hg:
         isimportant = max(isimportant, check(push))
     if not isimportant == Importance.MAYBE:
         return isimportant
@@ -65,7 +107,7 @@ def is_push_important(push):
     return Importance.IMPORTANT
 
 
-@push_check
+@push_check_hg
 def skip_dontbuild(push):
     """
     Commits that contain the DONTBUILD syntax in their message"
@@ -75,7 +117,7 @@ def skip_dontbuild(push):
     return Importance.MAYBE
 
 
-@push_check
+@push_check_hg
 def is_l10n_bump(push):
     """
     L10n bumps are important.
@@ -86,7 +128,7 @@ def is_l10n_bump(push):
     return Importance.MAYBE
 
 
-@push_check
+@push_check_hg
 def skip_test_only(push):
     """
     Treat a=test-only (or a=testonly) as unimportant if present on every changeset in a push.
@@ -104,7 +146,7 @@ def skip_test_only(push):
     return Importance.UNIMPORTANT
 
 
-@push_check
+@push_check_hg
 def skip_version_bump(push):
     """
     Do not treat version bumps as important to determine if we should build.
