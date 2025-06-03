@@ -5,6 +5,7 @@ coverage
 mock
 pip-compile-multi
 pytest
-pytest-asyncio
+# we use the event_loop fixture
+pytest-asyncio<1.0
 pytest-cov
 pytest-mock
