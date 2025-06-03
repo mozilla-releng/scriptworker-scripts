@@ -1,6 +1,6 @@
 # pyup: ignore file
 aiohttp
 async-timeout
-python-jose
+pyjwt
 scriptworker
 taskcluster

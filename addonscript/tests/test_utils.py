@@ -9,8 +9,7 @@ import pytest
 import pytest_asyncio
 from aioresponses import aioresponses
 from freezegun import freeze_time
-from jose import jws
-from jose.constants import ALGORITHMS
+import jwt
 from scriptworker.context import Context
 
 import addonscript.utils as utils
@@ -50,8 +49,8 @@ async def fake_session(event_loop):
 def test_generate_JWT(mocker, context, payload):
     mocker.patch.object(utils, "uuid4", side_effect=lambda: payload["jti"])
     token = utils.generate_JWT(context)
-    verify_bytes = jws.verify(token, "secret", ALGORITHMS.HS256)
-    assert json.loads(verify_bytes.decode("UTF-8")) == payload
+    verify_payload = jwt.decode(token, "secret", algorithms=["HS256"])
+    assert verify_payload == payload
 
 
 @pytest.mark.asyncio

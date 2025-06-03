@@ -21,5 +21,5 @@ setup(
     entry_points={"console_scripts": ["addonscript = addonscript.script:main"]},
     python_requires=">=3.6",
     license="MPL2",
-    install_requires=["scriptworker", "python-jose", "aiohttp>3", "async_timeout"],
+    install_requires=["scriptworker", "pyjwt", "aiohttp>3", "async_timeout"],
 )
